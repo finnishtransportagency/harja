@@ -233,43 +233,40 @@
      [:table
       [sopimushintaiset-tyot-header]
       [:tbody
-       (map-indexed
-         (fn [index komponentin-hinta]
-           ^{:key index}
-           (let [otsikko (fn [k]
-                           (str (get-in k [::tkomp/komponenttityyppi ::tktyyppi/nimi])
-                                (when-let [tila (komp-tila/komponentin-tilakoodi->str (::komp-tila/tilakoodi k))] (str ", " tila))
-                                " (" (::tkomp/sarjanumero k) ")"))]
-             [:tr
-             [:td
-              [yleiset/livi-pudotusvalikko
-               {:valitse-fn #(do
-                               (e! (tiedot/->AsetaKomponenttirivilleTiedot
-                                     {::hinta/id (::hinta/id komponentin-hinta)
-                                      ::hinta/otsikko (otsikko %)
-                                      ::hinta/komponentti-tilamuutos (::komp-tila/tilakoodi %)
-                                      ::hinta/komponentti-id (::tkomp/id %)})))
-                :format-fn #(if %
-                              (otsikko %)
-                              "Valitse komponentti")
-                :class "livi-alasveto-250 inline-block"
-                :valinta (some
-                           #(when (and (= (::tkomp/id %) (::hinta/komponentti-id komponentin-hinta))
-                                       (= (::komp-tila/tilakoodi %) (::hinta/komponentti-tilamuutos komponentin-hinta)))
-                              %)
-                           (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*)))}
-               (tiedot/hinnoiteltavan-toimenpiteen-komponentit-ilman-hintaa app*)]]
-             [:td.tasaa-oikealle
-              [kentta-hinnalle e! komponentin-hinta ::hinta/yksikkohinta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
-             [:td.tasaa-oikealle
-              [kentta-hinnalle e! komponentin-hinta ::hinta/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
-             [:td
-              [kentta-hinnalle e! komponentin-hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
-             [:td (fmt/euro (* (::hinta/maara komponentin-hinta) (::hinta/yksikkohinta komponentin-hinta)))]
-             [:td.keskita [yleiskustannuslisakentta e! nil]] ;; TODO YK-lisä
-             [:td.keskita
-              [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaKomponenttirivi komponentin-hinta))]]])) ; TODO
-         komponenttien-hinnat)]]
+       (for* [komponentin-hinta komponenttien-hinnat]
+         (let [otsikko (fn [k]
+                         (str (get-in k [::tkomp/komponenttityyppi ::tktyyppi/nimi])
+                              (when-let [tila (komp-tila/komponentin-tilakoodi->str (::komp-tila/tilakoodi k))] (str ", " tila))
+                              " (" (::tkomp/sarjanumero k) ")"))]
+           [:tr
+            [:td
+             [yleiset/livi-pudotusvalikko
+              {:valitse-fn #(do
+                              (e! (tiedot/->AsetaKomponenttirivilleTiedot
+                                    {::hinta/id (::hinta/id komponentin-hinta)
+                                     ::hinta/otsikko (otsikko %)
+                                     ::hinta/komponentti-tilamuutos (::komp-tila/tilakoodi %)
+                                     ::hinta/komponentti-id (::tkomp/id %)})))
+               :format-fn #(if %
+                             (otsikko %)
+                             "Valitse komponentti")
+               :class "livi-alasveto-250 inline-block"
+               :valinta (some
+                          #(when (and (= (::tkomp/id %) (::hinta/komponentti-id komponentin-hinta))
+                                      (= (::komp-tila/tilakoodi %) (::hinta/komponentti-tilamuutos komponentin-hinta)))
+                             %)
+                          (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*)))}
+              (tiedot/hinnoiteltavan-toimenpiteen-komponentit-ilman-hintaa app*)]]
+            [:td.tasaa-oikealle
+             [kentta-hinnalle e! komponentin-hinta ::hinta/yksikkohinta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
+            [:td.tasaa-oikealle
+             [kentta-hinnalle e! komponentin-hinta ::hinta/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
+            [:td
+             [kentta-hinnalle e! komponentin-hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
+            [:td (fmt/euro (* (::hinta/maara komponentin-hinta) (::hinta/yksikkohinta komponentin-hinta)))]
+            [:td.keskita [yleiskustannuslisakentta e! komponentin-hinta]] ;; TODO YK-lisä
+            [:td.keskita
+             [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaKomponenttirivi komponentin-hinta))]]]))]]
      [rivinlisays "Lisää komponenttirivi"
       #(e! (tiedot/->LisaaHinnoiteltavaKomponenttirivi))
       {:disabled (= 0
