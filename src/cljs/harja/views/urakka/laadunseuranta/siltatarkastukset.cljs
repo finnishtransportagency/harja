@@ -61,10 +61,11 @@
                         muut-tarkastukset))]
     (reset! muokattava-tarkastus
             (assoc (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
-              :kohteet kohteet))))
+              :kohteet kohteet
+              :tultu-sillan-tarkastuksista? true))))
 
 (defn- muokkaa-tarkastusta! [tarkastus]
-  (reset! muokattava-tarkastus (assoc tarkastus :tultu-sillan-tarkastuksista? true)))
+  (reset! muokattava-tarkastus tarkastus))
 
 (defn tarkastuksen-tekija-ja-aika [silta-tai-tarkastus]
   (let [tarkastuksia? (or (> (count @st/valitun-sillan-tarkastukset) 0)
@@ -375,10 +376,16 @@
         alkuperainen-tarkastusaika (:tarkastusaika @muokattava-tarkastus)]
     (komp/luo
       (komp/piirretty
-        #(when (not (:tultu-sillan-tarkastuksista? @muokattava-tarkastus))
-          (viesti/nayta! (str "Lomakkeella on tallentamatonta dattaa ajalta " (pvm/pvm-aika-opt alkuperainen-tarkastusaika))
-                         :info
-                         viesti/viestin-nayttoaika-pitka)))
+        #(do (when (not (:tultu-sillan-tarkastuksista? @muokattava-tarkastus))
+               (let [viimeisin-liite (first (sort-by :luotu pvm/jalkeen? (filter :luotu (apply concat (vals @uudet-liitteet)))))
+                     viimeisimman-liitteen-aika (:luotu viimeisin-liite)
+                     tarkastuksen-muokkaus-aika alkuperainen-tarkastusaika
+                     lomakkeen-viimeisin-muokkaus-aika (if (pvm/jalkeen? viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)
+                                                         viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)]
+                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dattaa ajalta " (pvm/pvm-aika-opt lomakkeen-viimeisin-muokkaus-aika))
+                                :info
+                                viesti/viestin-nayttoaika-pitka)))
+             (swap! muokattava-tarkastus assoc :tultu-sillan-tarkastuksista? false)))
       (fn [muokattava-tarkastus]
         (let [tarkastus @muokattava-tarkastus
               tarkastusrivit (dissoc
