@@ -155,6 +155,26 @@
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
 
+(defn- hintakentta
+  [hinta]
+  (merge
+    {::hinta/summa (cond
+                     (or (nil? (::hinta/ryhma hinta))
+                         (#{:muu} (::hinta/ryhma hinta)))
+                     0
+
+                     (#{:komponentti :tyo} (::hinta/ryhma hinta))
+                     nil)
+     ::hinta/yleiskustannuslisa 0
+     ::hinta/otsikko ""}
+    hinta))
+
+(defn- tyokentta
+  [tyo]
+  (merge
+    {::tyo/maara 0}
+    tyo))
+
 (defn- poista-hintarivi-toimenpiteelta* [id id-avain tyot-tai-hinnat app]
   (let [rivit (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
         paivitetyt
@@ -172,6 +192,35 @@
 
 (defn poista-hintarivi-toimenpiteelta [id app]
   (poista-hintarivi-toimenpiteelta* id ::hinta/id ::h/hinnat app))
+
+(defn- lisaa-hintarivi-toimenpiteelle* [id-avain tyot-tai-hinnat kentta-fn app]
+  (let [jutut (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
+        idt (map id-avain jutut)
+        seuraava-vapaa-id (dec (apply min (conj idt 0)))
+        paivitetyt (conj jutut (kentta-fn seuraava-vapaa-id))]
+    (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
+
+(defn lisaa-tyorivi-toimenpiteelle
+  ([app] (lisaa-tyorivi-toimenpiteelle {} app))
+  ([tyo app]
+   (lisaa-hintarivi-toimenpiteelle*
+     ::tyo/id
+     ::h/tyot
+     (fn [id]
+       (tyokentta
+         (merge {::tyo/id id} tyo)))
+     app)))
+
+(defn lisaa-hintarivi-toimenpiteelle
+  ([app] (lisaa-hintarivi-toimenpiteelle {} app))
+  ([hinta app]
+   (lisaa-hintarivi-toimenpiteelle*
+     ::hinta/id
+     ::h/hinnat
+     (fn [id]
+       (hintakentta
+         (merge {::hinta/id id} hinta)))
+     app)))
 
 (defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
   (boolean
@@ -204,25 +253,6 @@
 
 (defn poista-hintaryhmien-korostus [app]
   (assoc app :korostettu-hintaryhma false))
-
-(defn- hintakentta
-  [hinta]
-  (merge
-    {::hinta/summa (cond
-                     (or (nil? (::hinta/ryhma hinta))
-                         (#{:muu} (::hinta/ryhma hinta)))
-                     0
-
-                     (#{:komponentti :tyo} (::hinta/ryhma hinta))
-                     nil)
-     ::hinta/yleiskustannuslisa 0}
-    hinta))
-
-(defn- tyokentta
-  [tyo]
-  (merge
-    {::tyo/maara 0}
-    tyo))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
@@ -531,46 +561,25 @@
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
-    (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          tyo-idt (map ::tyo/id tyot)
-          seuraava-vapaa-id (dec (apply min (conj tyo-idt 0)))
-          paivitetyt-tyot (conj tyot (tyokentta {::tyo/id seuraava-vapaa-id}))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
+    (lisaa-tyorivi-toimenpiteelle app))
 
   LisaaHinnoiteltavaKomponenttirivi
   (process-event [_ app]
-    (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
-          hinta-idt (map ::hinta/id hinnat)
-          seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
-          paivitetyt-hinnat (conj hinnat (hintakentta
-                                           {::hinta/id seuraava-vapaa-id
-                                            ::hinta/otsikko ""
-                                            ::hinta/ryhma :komponentti}))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma :komponentti}
+      app))
 
   LisaaMuuKulurivi
   (process-event [_ app]
-    (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
-          hinta-idt (map ::hinta/id hinnat)
-          seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
-          paivitetyt-hinnat (conj hinnat (hintakentta
-                                           {::hinta/id seuraava-vapaa-id
-                                            ::hinta/otsikko ""
-                                            ::hinta/summa 0
-                                            ::hinta/ryhma :muu}))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma :muu}
+      app))
 
   LisaaMuuTyorivi
   (process-event [_ app]
-    (let [hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
-          hinta-idt (map ::hinta/id hinnat)
-          seuraava-vapaa-id (dec (apply min (conj hinta-idt 0)))
-          paivitetyt-hinnat (conj hinnat (hintakentta
-                                           {::hinta/id seuraava-vapaa-id
-                                            ::hinta/otsikko ""
-                                            ::hinta/summa nil
-                                            ::hinta/ryhma :tyo}))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma :tyo}
+      app))
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tyo :tyo} app]
