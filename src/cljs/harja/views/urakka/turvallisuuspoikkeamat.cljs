@@ -421,15 +421,16 @@
                 :tyyppi :valinta
                 :valinnat turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
                 :valinta-nayta #(or (turpodomain/vahingoittunut-ruumiinosa %) "- valitse -")}))
-           {:otsikko "Kommentit" :nimi :kommentit
+           {:otsikko "Kommentit" :nimi :uusi-kommentti
             :tyyppi :komponentti
             :palstoja 2
-            :komponentti (fn [_]
+            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                            [kommentit/kommentit {:voi-kommentoida? true
                                                  :voi-liittaa true
+                                                 :liita-nappi-teksti " Lisää liite kommenttiin"
                                                  :placeholder "Kirjoita kommentti..."
                                                  :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
-                                                                         #(swap! turvallisuuspoikkeama assoc :uusi-kommentti %))}
+                                                                         #(muokkaa-lomaketta (assoc data :uusi-kommentti %)))}
                             (:kommentit @turvallisuuspoikkeama)])}
            (lomake/ryhma {:otsikko "Poikkeaman käsittely"}
                          {:otsikko "Poikkeama kirjattu" :nimi :luotu :fmt pvm/pvm-aika-opt :tyyppi :string
