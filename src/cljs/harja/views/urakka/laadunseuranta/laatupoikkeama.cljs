@@ -338,7 +338,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                              (not (sanktiorivit-ok? sisalto (cond yllapito? :yllapito
                                                                                   vesivayla? :vesivayla
                                                                                   :default :hoito)))
-                                             (not (lomake/voi-tallentaa? sisalto)))
+                                             (not (lomake/voi-tallentaa-ja-muokattu? sisalto)))
                                  :virheviesti "Laatupoikkeaman tallennus epäonnistui"
                                  :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]))}
 
@@ -439,14 +439,14 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 (when-not uusi?
                   (lomake/ryhma
                     "Kommentit"
-                    {:otsikko "" :nimi :kommentit :tyyppi :komponentti
-                     :komponentti (fn [_]
+                    {:otsikko "" :nimi :uusi-kommentti :tyyppi :komponentti
+                     :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                                     [kommentit/kommentit {:voi-kommentoida? true
                                                           :voi-liittaa true
                                                           :liita-nappi-teksti " Lisää liite kommenttiin"
                                                           :placeholder "Kirjoita kommentti..."
                                                           :uusi-kommentti (r/wrap (:uusi-kommentti @laatupoikkeama)
-                                                                                  #(swap! laatupoikkeama assoc :uusi-kommentti %))}
+                                                                                  #(muokkaa-lomaketta (assoc data :uusi-kommentti %)))}
                                      (:kommentit @laatupoikkeama)])}))
 
                 ;; Päätös
