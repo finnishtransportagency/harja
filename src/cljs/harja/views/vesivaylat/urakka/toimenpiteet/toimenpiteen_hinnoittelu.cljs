@@ -210,7 +210,7 @@
                         {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
    [:td
     [kentta-hinnalle e! hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
-   [:td (fmt/euro (* (::hinta/maara hinta) (::hinta/yksikkohinta hinta)))]
+   [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen hinta))]
    [:td.keskita [yleiskustannuslisakentta e! hinta]]
    [:td.keskita
     [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuTyorivi hinta))]]])
@@ -263,7 +263,7 @@
              [kentta-hinnalle e! komponentin-hinta ::hinta/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
             [:td
              [kentta-hinnalle e! komponentin-hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
-            [:td (fmt/euro (* (::hinta/maara komponentin-hinta) (::hinta/yksikkohinta komponentin-hinta)))]
+            [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen komponentin-hinta))]
             [:td.keskita [yleiskustannuslisakentta e! komponentin-hinta]] ;; TODO YK-lisä
             [:td.keskita
              [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaKomponenttirivi komponentin-hinta))]]]))]]

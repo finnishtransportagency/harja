@@ -47,27 +47,31 @@
 ;; Yleinen yleiskustannuslisä (%), joka käytössä sopimuksissa
 (def yleinen-yleiskustannuslisa 12)
 
+(defn hinnan-yklisan-osuus [hinta]
+  (let [maara (or (::summa hinta) (* (::yksikkohinta hinta) (::maara hinta)))
+        yleiskustannuslisa (::yleiskustannuslisa hinta)]
+    (when yleiskustannuslisa
+      (- (* (+ (/ yleiskustannuslisa 100) 1) maara) maara))))
+
 (defn yklisien-osuus
   "Palauttaa hintojen yleiskustannusten osuuden"
   [hinnat]
   (reduce + 0
           (keep
-            (fn [hinta]
-              (let [maara (::summa hinta)
-                    yleiskustannuslisa (::yleiskustannuslisa hinta)]
-                (when yleiskustannuslisa
-                  (- (* (+ (/ yleiskustannuslisa 100) 1) maara) maara))))
+            hinnan-yklisan-osuus
             hinnat)))
+
+(defn hinnan-summa-ilman-yklisaa [hinta]
+  (if (and (::yksikkohinta hinta) (::maara hinta))
+    (* (::yksikkohinta hinta) (::maara hinta))
+    (::summa hinta)))
 
 (defn hintojen-summa-ilman-yklisaa
   "Palauttaa hintojen summan ilman yleiskustannuslisiä"
   [hinnat]
   (reduce + 0
           (map
-            (fn [hinta]
-              (if (and (::yksikkohinta hinta) (::maara hinta))
-                (* (::yksikkohinta hinta) (::maara hinta))
-                (::summa hinta)))
+            hinnan-summa-ilman-yklisaa
             hinnat)))
 
 (defn hinnan-ominaisuus-otsikolla [hinnat otsikko ominaisuus]
@@ -78,6 +82,10 @@
 
 (defn hinnan-summa-otsikolla [hinnat otsikko]
   (hinnan-ominaisuus-otsikolla hinnat otsikko ::summa))
+
+(defn hinnan-kokonaishinta-yleiskustannuslisineen [hinta]
+  (+ (hinnan-summa-ilman-yklisaa hinta)
+     (hinnan-yklisan-osuus hinta)))
 
 (defn kokonaishinta-yleiskustannuslisineen [hinnat]
   (+ (hintojen-summa-ilman-yklisaa hinnat)
