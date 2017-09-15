@@ -87,7 +87,7 @@
    [:td.keskita [yleiskustannuslisakentta e! hinta]]
    [:td
     (when-not ainoa-vakiokentta?
-      [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuKulurivi {::hinta/id (::hinta/id hinta)}))])]])
+      [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi {::hinta/id (::hinta/id hinta)}))])]])
 
 (defn- toimenpiteen-hinnoittelutaulukko-yhteenvetorivi [otsikko arvo]
   [:tr.hinnoittelun-yhteenveto-rivi
@@ -213,7 +213,7 @@
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen hinta))]
    [:td.keskita [yleiskustannuslisakentta e! hinta]]
    [:td.keskita
-    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaMuuTyorivi hinta))]]])
+    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi hinta))]]])
 
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
@@ -266,7 +266,7 @@
             [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen komponentin-hinta))]
             [:td.keskita [yleiskustannuslisakentta e! komponentin-hinta]] ;; TODO YK-lisä
             [:td.keskita
-             [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaKomponenttirivi komponentin-hinta))]]]))]]
+             [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi komponentin-hinta))]]]))]]
      [rivinlisays "Lisää komponenttirivi"
       #(e! (tiedot/->LisaaHinnoiteltavaKomponenttirivi))
       {:disabled (= 0 (count (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*))))}]]))

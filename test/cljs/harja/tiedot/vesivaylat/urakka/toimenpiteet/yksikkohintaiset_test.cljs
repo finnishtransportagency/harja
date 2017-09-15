@@ -1292,25 +1292,6 @@
                {:hinnoittele-toimenpide {::h/hinnat hinnat}})
            {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
 
-(deftest poista-muu-kulurivi
-  (let [hinnat [{::hinta/id 1}
-                {::hinta/id 2}
-                {::hinta/id -1}
-                {::hinta/id -2}]]
-    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id 1})
-               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1
-                                                  ::m/poistettu? true}
-                                                 {::hinta/id 2}
-                                                 {::hinta/id -1}
-                                                 {::hinta/id -2}]}}))
-
-    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id -1})
-               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1}
-                                                 {::hinta/id 2}
-                                                 {::hinta/id -2}]}}))))
-
 (deftest lisaa-muu-tyorivi
   (let [hinnat [{::hinta/id 1}
                 {::hinta/id 2}]
@@ -1334,22 +1315,3 @@
     (is (= (e! (tiedot/->LisaaMuuTyorivi)
                {:hinnoittele-toimenpide {::h/hinnat hinnat}})
            {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
-
-(deftest poista-muu-tyorivi
-  (let [hinnat [{::hinta/id 1}
-                {::hinta/id 2}
-                {::hinta/id -1}
-                {::hinta/id -2}]]
-    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id 1})
-               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1
-                                                  ::m/poistettu? true}
-                                                 {::hinta/id 2}
-                                                 {::hinta/id -1}
-                                                 {::hinta/id -2}]}}))
-
-    (is (= (e! (tiedot/->PoistaMuuKulurivi {::hinta/id -1})
-               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1}
-                                                 {::hinta/id 2}
-                                                 {::hinta/id -2}]}}))))

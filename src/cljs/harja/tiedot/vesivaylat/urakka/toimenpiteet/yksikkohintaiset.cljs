@@ -139,10 +139,8 @@
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
 (defrecord LisaaMuuKulurivi [])
 (defrecord LisaaMuuTyorivi [])
-(defrecord PoistaHinnoiteltavaTyorivi [tiedot])
-(defrecord PoistaMuuKulurivi [rivi])
-(defrecord PoistaMuuTyorivi [tiedot])
-(defrecord PoistaHinnoiteltavaKomponenttirivi [tiedot])
+(defrecord PoistaHinnoiteltavaTyorivi [tyo])
+(defrecord PoistaHinnoiteltavaHintarivi [hinta])
 (defrecord TallennaToimenpiteenHinnoittelu [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
@@ -156,6 +154,24 @@
 ;; Kartta
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
+
+(defn- poista-hintarivi-toimenpiteelta* [id id-avain tyot-tai-hinnat app]
+  (let [rivit (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
+        paivitetyt
+        (if-not (id-olemassa? id)
+          (filterv #(not= (id-avain %) id) rivit)
+
+          (mapv #(if (= (id-avain %) id)
+                   (assoc % ::m/poistettu? true)
+                   %)
+                rivit))]
+    (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
+
+(defn poista-tyorivi-toimenpiteelta [id app]
+  (poista-hintarivi-toimenpiteelta* id ::tyo/id ::h/tyot app))
+
+(defn poista-hintarivi-toimenpiteelta [id app]
+  (poista-hintarivi-toimenpiteelta* id ::hinta/id ::h/hinnat app))
 
 (defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
   (boolean
@@ -557,65 +573,12 @@
       (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
 
   PoistaHinnoiteltavaTyorivi
-  (process-event [{tiedot :tiedot} app]
-    (let [id (::tyo/id tiedot)
-          tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          ;; TODO Vaikuttaa pitkälti samalta kuin hintarivin poisto. Tee yhteinen funkkari?
-          paivitetyt-tyot
-          (if-not (id-olemassa? id)
-            ;; Uusi lisätty rivi poistetaan kokonaan
-            (filterv #(not= (::tyo/id %) id) tyot)
-            ;; Kannassa oleva rivi merkitään poistetuksi
-            (mapv #(if (= (::tyo/id %) id)
-                     (assoc % ::m/poistettu? true)
-                     %)
-                  tyot))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
+  (process-event [{tyo :tyo} app]
+    (poista-tyorivi-toimenpiteelta (::tyo/id tyo) app))
 
-  PoistaMuuKulurivi
-  (process-event [{rivi :rivi} app]
-    (let [id (::hinta/id rivi)
-          hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
-          paivitetyt-hinnat
-          (if-not (id-olemassa? id)
-            ;; Uusi lisätty rivi poistetaan kokonaan
-            (filterv #(not= (::hinta/id %) id) hinnat)
-            ;; Kannassa oleva rivi merkitään poistetuksi
-            (mapv #(if (= (::hinta/id %) id)
-                     (assoc % ::m/poistettu? true)
-                     %)
-                  hinnat))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
-
-  PoistaMuuTyorivi
-  (process-event [{tiedot :tiedot} app]
-    (let [id (::hinta/id tiedot)
-          hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
-          paivitetyt-hinnat
-          (if-not (id-olemassa? id)
-            ;; Uusi lisätty rivi poistetaan kokonaan
-            (filterv #(not= (::hinta/id %) id) hinnat)
-            ;; Kannassa oleva rivi merkitään poistetuksi
-            (mapv #(if (= (::hinta/id %) id)
-                     (assoc % ::m/poistettu? true)
-                     %)
-                  hinnat))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
-
-  PoistaHinnoiteltavaKomponenttirivi
-  (process-event [{tiedot :tiedot} app]
-    (let [id (::hinta/id tiedot)
-          hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
-          paivitetyt-hinnat
-          (if-not (id-olemassa? id)
-            ;; Uusi lisätty rivi poistetaan kokonaan
-            (filterv #(not= (::hinta/id %) id) hinnat)
-            ;; Kannassa oleva rivi merkitään poistetuksi
-            (mapv #(if (= (::hinta/id %) id)
-                     (assoc % ::m/poistettu? true)
-                     %)
-                  hinnat))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/hinnat] paivitetyt-hinnat)))
+  PoistaHinnoiteltavaHintarivi
+  (process-event [{hinta :hinta} app]
+    (poista-hintarivi-toimenpiteelta (::hinta/id hinta) app))
 
   TallennaToimenpiteenHinnoittelu
   (process-event [{tiedot :tiedot} app]
