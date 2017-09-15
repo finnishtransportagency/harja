@@ -10,7 +10,7 @@ ALTER TABLE vv_hinta RENAME COLUMN maara TO summa;
 ALTER TABLE vv_hinta ALTER COLUMN summa DROP NOT NULL; -- Ks. constraint alta
 ALTER TABLE vv_hinta ADD COLUMN maara NUMERIC(6, 2);
 ALTER TABLE vv_hinta ADD COLUMN yksikko VARCHAR(64);
-ALTER TABLE vv_hinta ADD COLUMN yksikkohinta NUMERIC(6, 2);
+ALTER TABLE vv_hinta ADD COLUMN yksikkohinta NUMERIC(8, 2);
 
 ALTER TABLE vv_hinta
   ADD CONSTRAINT validi_hinta CHECK (

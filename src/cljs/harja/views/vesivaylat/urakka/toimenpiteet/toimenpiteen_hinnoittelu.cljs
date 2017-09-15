@@ -205,7 +205,7 @@
   [:tr
    [:td [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}]]
    [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/yksikkohinta
-                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
    [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/maara
                         {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
    [:td
@@ -258,9 +258,9 @@
                           (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*)))}
               (tiedot/hinnoiteltavan-toimenpiteen-komponentit-ilman-hintaa app*)]]
             [:td.tasaa-oikealle
-             [kentta-hinnalle e! komponentin-hinta ::hinta/yksikkohinta {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
+             [kentta-hinnalle e! komponentin-hinta ::hinta/yksikkohinta {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
             [:td.tasaa-oikealle
-             [kentta-hinnalle e! komponentin-hinta ::hinta/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
+             [kentta-hinnalle e! komponentin-hinta ::hinta/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
             [:td
              [kentta-hinnalle e! komponentin-hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
             [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen komponentin-hinta))]
