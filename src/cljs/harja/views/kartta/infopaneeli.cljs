@@ -11,13 +11,24 @@
             [harja.ui.kartta.infopaneelin-sisalto :as infopaneelin-sisalto])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
+
 (defn otsikko
   "Näyttää infopaneelin asialle otsikon, jota klikkaamalla asian saa auki/kiinni"
   [{:keys [otsikko] :as asia} toggle-asia!]
   [:div.ip-osio
    [:div.ip-otsikko
     {:on-click toggle-asia!}
-    [:span.ip-haitari-otsikko.klikattava otsikko]]])
+    (if (vector? otsikko)
+      (let [[vasen oikea] otsikko]
+        [:span
+         [:span.ip-haitari-otsikko.klikattava.ip-otsikko-sarake-vasen vasen]
+         [:span.ip-haitari-otsikko.klikattava oikea]
+         ]
+        )
+      ;;else
+      (do
+        [:span.ip-haitari-otsikko.klikattava otsikko]
+        ))]])
 
 (defn- kentan-arvo [skeema data]
   (let [fmt (or (:fmt skeema) identity)

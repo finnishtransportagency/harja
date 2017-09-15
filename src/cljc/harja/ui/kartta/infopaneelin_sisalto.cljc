@@ -32,7 +32,9 @@
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-    #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
+    #?(:cljs
+       [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
+
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
@@ -44,6 +46,11 @@
             [harja.domain.vesivaylat.vayla :as v]
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri.varusteet :as varusteet]))
+
+; [harja.loki :refer [log tarkkaile! error] :as log]) ERNO tää aiheuttaa käännösvirheen
+; CompilerException java.lang.RuntimeException: Feature should be a keyword: [harja.loki :refer [log tarkkaile! error] :as log],
+; compiling:(/Users/maaritla/Sources/harja/src/cljc/harja/ui/kartta/infopaneelin_sisalto.cljc:37:58)
+
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -316,12 +323,12 @@
                        #?(:clj (constantly nil))
                        #?(:cljs
                           (->> (conj []
-                                 (:havainnot t)
-                                 (tarkastukset/formatoi-vakiohavainnot (:vakiohavainnot t))
-                                 (tarkastukset/formatoi-talvihoitomittaukset (:talvihoitomittaus t))
-                                 (tarkastukset/formatoi-soratiemittaukset (:soratiemittaus t)))
-                              (remove empty?)
-                              (string/join " & "))))]
+                                     (:havainnot t)
+                                     (tarkastukset/formatoi-vakiohavainnot (:vakiohavainnot t))
+                                     (tarkastukset/formatoi-talvihoitomittaukset (:talvihoitomittaus t))
+                                     (tarkastukset/formatoi-soratiemittaukset (:soratiemittaus t)))
+                               (remove empty?)
+                               (string/join " & "))))]
     {:tyyppi :tarkastus
      :jarjesta-fn :aika
      :otsikko (let [tila (cond
@@ -338,360 +345,363 @@
                            "havaintoja"
 
                            :else nil)
-                    tila-str (when tila (str ", " tila))]
-                (str (pvm/pvm-aika (:aika tarkastus)) " - " (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str))
+                    tila-str (when tila (str ", " tila))
+                    otsikko-vektori [(str (pvm/pvm-aika (:aika tarkastus))) (str(tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str)]
+                 ]
+                otsikko-vektori
+                )
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
               {:otsikko "Havainnot" :hae (hakufunktio
                                            #(and (contains? % :havainnot)
-                                                (contains? % :vakiohavainnot)
-                                                (contains? % :talvihoitomittaus)
-                                                (contains? % :soratiemittaus))
+                                                 (contains? % :vakiohavainnot)
+                                                 (contains? % :talvihoitomittaus)
+                                                 (contains? % :soratiemittaus))
                                            havainnot-fn)}]
      :data tarkastus}))
 
-(defmethod infopaneeli-skeema :laatupoikkeama [laatupoikkeama]
-  (let [paatos #(get-in % [:paatos :paatos])
-        kasittelyaika #(get-in % [:paatos :kasittelyaika])]
-    {:tyyppi :laatupoikkeama
+  (defmethod infopaneeli-skeema :laatupoikkeama [laatupoikkeama]
+    (let [paatos #(get-in % [:paatos :paatos])
+          kasittelyaika #(get-in % [:paatos :kasittelyaika])]
+      {:tyyppi :laatupoikkeama
+       :jarjesta-fn :aika
+       :otsikko (str (pvm/pvm-aika (:aika laatupoikkeama)) " - Laatupoikkeama")
+       :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
+                {:otsikko "Tekijä" :hae (hakufunktio
+                                          #{:tekijanimi :tekija}
+                                          #(str (:tekijanimi %) ", " (name (:tekija %))))}
+                {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string}
+                {:otsikko "Tierekisteriosoite" :hae (hakufunktio
+                                                      #(or (sisaltaa? % [:yllapitokohde :tr])
+                                                           (sisaltaa? % :tr))
+                                                      #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
+                                                         (tr-domain/tierekisteriosoite-tekstina
+                                                           yllapitokohde-tie)
+                                                         (tr-domain/tierekisteriosoite-tekstina
+                                                           (:tr %))))}
+                (when (:yllapitokohde laatupoikkeama)
+                  {:otsikko "Kohde" :hae (hakufunktio
+                                           #{[:yllapitokohde :numero] [:yllapitokohde :nimi]}
+                                           #(let [yllapitokohde (:yllapitokohde %)]
+                                              (str (:numero yllapitokohde)
+                                                   ", "
+                                                   (:nimi yllapitokohde))))})
+                (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
+                  {:otsikko "Päätös"
+                   :hae (hakufunktio
+                          #{[:paatos :paatos] [:paatos :kasittelyaika]}
+                          #(str (kuvaile-paatostyyppi (paatos %))
+                                " (" (pvm/pvm-aika (kasittelyaika %)) ")"))})]
+       :data laatupoikkeama}))
+
+  (defmethod infopaneeli-skeema :suljettu-tieosuus [osuus]
+    {:tyyppi :suljettu-tieosuus
      :jarjesta-fn :aika
-     :otsikko (str (pvm/pvm-aika (:aika laatupoikkeama)) " - Laatupoikkeama")
-     :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
-              {:otsikko "Tekijä" :hae (hakufunktio
-                                        #{:tekijanimi :tekija}
-                                        #(str (:tekijanimi %) ", " (name (:tekija %))))}
-              {:otsikko "Kuvaus" :nimi :kuvaus :tyyppi :string}
-              {:otsikko "Tierekisteriosoite" :hae (hakufunktio
-                                                    #(or (sisaltaa? % [:yllapitokohde :tr])
-                                                         (sisaltaa? % :tr))
-                                                    #(if-let [yllapitokohde-tie (get-in % [:yllapitokohde :tr])]
-                                                       (tr-domain/tierekisteriosoite-tekstina
-                                                         yllapitokohde-tie)
-                                                       (tr-domain/tierekisteriosoite-tekstina
-                                                         (:tr %))))}
-              (when (:yllapitokohde laatupoikkeama)
-                {:otsikko "Kohde" :hae (hakufunktio
-                                         #{[:yllapitokohde :numero] [:yllapitokohde :nimi]}
-                                         #(let [yllapitokohde (:yllapitokohde %)]
-                                            (str (:numero yllapitokohde)
-                                                 ", "
-                                                 (:nimi yllapitokohde))))})
-              (when (and (paatos laatupoikkeama) (kasittelyaika laatupoikkeama))
-                {:otsikko "Päätös"
-                 :hae (hakufunktio
-                        #{[:paatos :paatos] [:paatos :kasittelyaika]}
-                        #(str (kuvaile-paatostyyppi (paatos %))
-                              " (" (pvm/pvm-aika (kasittelyaika %)) ")"))})]
-     :data laatupoikkeama}))
+     :otsikko "Suljettu tieosuus"
+     :tiedot [{:otsikko "Ylläpitokohde" :hae (hakufunktio
+                                               #{:yllapitokohteen-nimi :yllapitokohteen-numero}
+                                               #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")"))}
+              {:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
+              {:otsikko "Osoite" :tyyppi :tierekisteriosoite :nimi :tr}
+              {:otsikko "Kaistat" :hae (hakufunktio
+                                         :kaistat
+                                         #(string/join ", " (map str (:kaistat %))))}
+              {:otsikko "Ajoradat" :hae (hakufunktio
+                                          :ajoradat
+                                          #(string/join ", " (map str (:ajoradat %))))}]
+     :data osuus})
 
-(defmethod infopaneeli-skeema :suljettu-tieosuus [osuus]
-  {:tyyppi :suljettu-tieosuus
-   :jarjesta-fn :aika
-   :otsikko "Suljettu tieosuus"
-   :tiedot [{:otsikko "Ylläpitokohde" :hae (hakufunktio
-                                             #{:yllapitokohteen-nimi :yllapitokohteen-numero}
-                                             #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")"))}
-            {:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
-            {:otsikko "Osoite" :tyyppi :tierekisteriosoite :nimi :tr}
-            {:otsikko "Kaistat" :hae (hakufunktio
-                                       :kaistat
-                                       #(string/join ", " (map str (:kaistat %))))}
-            {:otsikko "Ajoradat" :hae (hakufunktio
-                                        :ajoradat
-                                        #(string/join ", " (map str (:ajoradat %))))}]
-   :data osuus})
+  (defmethod infopaneeli-skeema :toteuma [toteuma]
+    {:tyyppi :toteuma
+     :jarjesta-fn :alkanut
+     :otsikko (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))]
+                (str (pvm/pvm-aika (:alkanut toteuma)) " - "
+                     (if (empty? toimenpiteet)
+                       "Toteuma"
+                       (string/join ", " toimenpiteet))))
+     :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
+                           {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
+                           {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
+                            ;; Arvioitu aika pisteessä saa puuttua, eli validointifunktio on (constantly true)
+                            :hae (hakufunktio (constantly true) :aika-pisteessa)}
+                           {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
+                            :nimi :tierekisteriosoite}
+                           {:otsikko "Suorittaja" :hae (hakufunktio
+                                                         #{[:suorittaja :nimi]}
+                                                         #(get-in % [:suorittaja :nimi]))}]
 
-(defmethod infopaneeli-skeema :toteuma [toteuma]
-  {:tyyppi :toteuma
-   :jarjesta-fn :alkanut
-   :otsikko (let [toimenpiteet (map :toimenpide (:tehtavat toteuma))]
-              (str (pvm/pvm-aika (:alkanut toteuma)) " - "
-                   (if (empty? toimenpiteet)
-                     "Toteuma"
-                     (string/join ", " toimenpiteet))))
-   :tiedot (vec (concat [{:otsikko "Alkanut" :tyyppi :pvm-aika :nimi :alkanut}
-                         {:otsikko "Päättynyt" :tyyppi :pvm-aika :nimi :paattynyt}
-                         {:otsikko "Klo (arvio)" :tyyppi :pvm-aika
-                          ;; Arvioitu aika pisteessä saa puuttua, eli validointifunktio on (constantly true)
-                          :hae (hakufunktio (constantly true) :aika-pisteessa)}
-                         {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite
-                          :nimi :tierekisteriosoite}
-                         {:otsikko "Suorittaja" :hae (hakufunktio
-                                                       #{[:suorittaja :nimi]}
-                                                       #(get-in % [:suorittaja :nimi]))}]
+                          (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
+                            {:otsikko toimenpide
+                             :hae (hakufunktio
+                                    ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
+                                    ;; tarvita erityistä validointia.
+                                    (constantly true)
+                                    (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
 
-                        (for [{:keys [toimenpide maara yksikko]} (:tehtavat toteuma)]
-                          {:otsikko toimenpide
-                           :hae (hakufunktio
-                                  ;; Näitä ei edes tehdä jos arvot puuttuvat, joten ei
-                                  ;; tarvita erityistä validointia.
-                                  (constantly true)
-                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
+                          (for [{{:keys [nimi yksikko]} :materiaali maara :maara} (:materiaalit toteuma)]
+                            {:otsikko nimi
+                             :hae (hakufunktio
+                                    (constantly true)
+                                    (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
+                          (when (:lisatieto toteuma)
+                            [{:otsikko "Lisätieto" :nimi :lisatieto}])))
+     :data toteuma})
 
-                        (for [{{:keys [nimi yksikko]} :materiaali maara :maara} (:materiaalit toteuma)]
-                          {:otsikko nimi
-                           :hae (hakufunktio
-                                  (constantly true)
-                                  (constantly (when maara (str (fmt/desimaaliluku maara) " " yksikko))))})
-                        (when (:lisatieto toteuma)
-                          [{:otsikko "Lisätieto" :nimi :lisatieto}])))
-   :data toteuma})
+  (defmethod infopaneeli-skeema :tietyoilmoitus [tietyoilmoitus]
+    {:tyyppi :tietyoilmoitus
+     :jarjesta-fn ::t-domain/alku
+     :otsikko "Tietyöilmoitus"
+     :tiedot [{:otsikko "Ilmoittaja" :hae (hakufunktio
+                                            #{[::t-domain/ilmoittaja ::t-domain/etunimi]
+                                              [::t-domain/ilmoittaja ::t-domain/sukunimi]}
+                                            t-domain/ilmoittaja->str)}
+              {:otsikko "Urakka" :nimi ::t-domain/urakan-nimi}
+              {:otsikko "Urakoitsija" :nimi ::t-domain/urakoitsijan-nimi}
+              {:otsikko "Urakoitsijan yhteyshenkilo" :hae (hakufunktio
+                                                            #{[::t-domain/urakoitsijayhteyshenkilo ::t-domain/etunimi]
+                                                              [::t-domain/urakoitsijayhteyshenkilo ::t-domain/sukunimi]}
+                                                            t-domain/urakoitsijayhteyshenkilo->str)}
+              {:otsikko "Tilaaja" :nimi ::t-domain/tilaajan-nimi}
+              {:otsikko "Tilaajan yhteyshenkilö" :hae (hakufunktio
+                                                        #{[::t-domain/tilaajayhteyshenkilo ::t-domain/etunimi]
+                                                          [::t-domain/tilaajayhteyshenkilo ::t-domain/sukunimi]}
+                                                        t-domain/tilaajayhteyshenkilo->str)}
+              {:otsikko "Kunnat" :nimi ::t-domain/kunnat}
+              {:otsikko "Osoite" :hae (hakufunktio
+                                        #{[::t-domain/osoite ::tr-domain/aet] [::t-domain/osoite ::tr-domain/tie] [::t-domain/osoite ::tr-domain/let]}
+                                        #(tr-domain/tierekisteriosoite-tekstina (::t-domain/osoite %) {:teksti-tie? false}))}
+              {:otsikko "Tien nimi" :nimi ::t-domain/tien-nimi}
+              {:otsikko "Alkusijainnin kuvaus" :nimi ::t-domain/alkusijainnin-kuvaus}
+              {:otsikko "Loppusijainnin kuvaus" :nimi ::t-domain/loppusijainnin-kuvaus}
+              {:otsikko "Alku" :nimi ::t-domain/alku :tyyppi :pvm-aika}
+              {:otsikko "Loppu" :nimi ::t-domain/loppu :tyyppi :pvm-aika}
+              {:otsikko "Työtyypit" :hae (hakufunktio
+                                           ::t-domain/tyotyypit
+                                           t-domain/tyotyypit->str)}
+              #_{:otsikko "Työajat" :hae (hakufunktio
+                                           ::t-domain/tyoajat
+                                           t-domain/tyoajat->str)}
+              #_{:otsikko "Vaikutussuunta" :nimi ::t-domain/vaikutussuunta}
+              {:otsikko "Kaistajärjestelyt" :hae (hakufunktio
+                                                   ::t-domain/kaistajarjestelyt
+                                                   t-domain/kaistajarjestelyt->str)}
+              {:otsikko "Nopeusrajoitukset" :hae (hakufunktio
+                                                   ::t-domain/nopeusrajoitukset
+                                                   t-domain/nopeusrajoitukset->str)}
+              {:otsikko "Tienpinnat" :hae (hakufunktio
+                                            ::t-domain/tienpinnat
+                                            t-domain/tienpinnat->str)}
+              {:otsikko "Kiertotien pituus" :nimi ::t-domain/kiertotien-pituus}
+              #_{:otsikko "Kiertotien mutkaisuus" :nimi ::t-domain/kiertotien-mutkaisuus}
+              {:otsikko "Kiertotien pinnat" :hae (hakufunktio
+                                                   ::t-domain/kiertotienpinnat
+                                                   t-domain/kiertotienpinnat->str)}
+              #_{:otsikko "Liikenteenohjaus" :nimi ::t-domain/liikenteenohjaus}
+              #_{:otsikko "Liikenteenohjaaja" :nimi ::t-domain/liikenteenohjaaja}
+              #_{:otsikko "Viivästys normaalisti" :nimi ::t-domain/viivastys-normaali-liikenteessa}
+              #_{:otsikko "Viivästys ruuhkassa" :nimi ::t-domain/viivastys-ruuhka-aikana}
+              #_{:otsikko "Ajoneuvorajoitukset" :hae (hakufunktio
+                                                       ::t-domain/ajoneuvorajoitukset
+                                                       t-domain/ajoneuvorajoitukset->str)}
+              #_{:otsikko "Huomautukset" :hae (hakufunktio
+                                                ::t-domain/huomautukset
+                                                t-domain/huomautukset->str)}
+              #_{:otsikko "Ajoittaiset pysäytykset" :hae (hakufunktio
+                                                           ::t-domain/ajoittaiset-pysaytykset
+                                                           t-domain/ajoittaiset-pysaytykset->str)}
+              #_{:otsikko "Ajoittain suljettu tie" :hae (hakufunktio
+                                                          ::t-domain/ajoittain-suljettu-tie
+                                                          t-domain/ajoittain-suljettu-tie->str)}
+              #_{:otsikko "Pysäytysten alku" :nimi ::t-domain/pysaytysten-alku}
+              #_{:otsikko "Pysäytysten loppu" :nimi ::t-domain/pysaytysten-loppu}
+              {:otsikko "Lisätietoja" :nimi ::t-domain/lisatietoja}
+              #_{:otsikko "Urakoitsijan nimi" :nimi ::t-domain/urakoitsijan-nimi}
+              ]
+     :data tietyoilmoitus})
 
-(defmethod infopaneeli-skeema :tietyoilmoitus [tietyoilmoitus]
-  {:tyyppi :tietyoilmoitus
-   :jarjesta-fn ::t-domain/alku
-   :otsikko "Tietyöilmoitus"
-   :tiedot [{:otsikko "Ilmoittaja" :hae (hakufunktio
-                                          #{[::t-domain/ilmoittaja ::t-domain/etunimi]
-                                            [::t-domain/ilmoittaja ::t-domain/sukunimi]}
-                                          t-domain/ilmoittaja->str)}
-            {:otsikko "Urakka" :nimi ::t-domain/urakan-nimi}
-            {:otsikko "Urakoitsija" :nimi ::t-domain/urakoitsijan-nimi}
-            {:otsikko "Urakoitsijan yhteyshenkilo" :hae (hakufunktio
-                                                          #{[::t-domain/urakoitsijayhteyshenkilo ::t-domain/etunimi]
-                                                            [::t-domain/urakoitsijayhteyshenkilo ::t-domain/sukunimi]}
-                                                          t-domain/urakoitsijayhteyshenkilo->str)}
-            {:otsikko "Tilaaja" :nimi ::t-domain/tilaajan-nimi}
-            {:otsikko "Tilaajan yhteyshenkilö" :hae (hakufunktio
-                                                      #{[::t-domain/tilaajayhteyshenkilo ::t-domain/etunimi]
-                                                        [::t-domain/tilaajayhteyshenkilo ::t-domain/sukunimi]}
-                                                      t-domain/tilaajayhteyshenkilo->str)}
-            {:otsikko "Kunnat" :nimi ::t-domain/kunnat}
-            {:otsikko "Osoite" :hae (hakufunktio
-                                      #{[::t-domain/osoite ::tr-domain/aet] [::t-domain/osoite ::tr-domain/tie] [::t-domain/osoite ::tr-domain/let]}
-                                      #(tr-domain/tierekisteriosoite-tekstina (::t-domain/osoite %) {:teksti-tie? false}))}
-            {:otsikko "Tien nimi" :nimi ::t-domain/tien-nimi}
-            {:otsikko "Alkusijainnin kuvaus" :nimi ::t-domain/alkusijainnin-kuvaus}
-            {:otsikko "Loppusijainnin kuvaus" :nimi ::t-domain/loppusijainnin-kuvaus}
-            {:otsikko "Alku" :nimi ::t-domain/alku :tyyppi :pvm-aika}
-            {:otsikko "Loppu" :nimi ::t-domain/loppu :tyyppi :pvm-aika}
-            {:otsikko "Työtyypit" :hae (hakufunktio
-                                         ::t-domain/tyotyypit
-                                         t-domain/tyotyypit->str)}
-            #_{:otsikko "Työajat" :hae (hakufunktio
-                                         ::t-domain/tyoajat
-                                         t-domain/tyoajat->str)}
-            #_{:otsikko "Vaikutussuunta" :nimi ::t-domain/vaikutussuunta}
-            {:otsikko "Kaistajärjestelyt" :hae (hakufunktio
-                                                 ::t-domain/kaistajarjestelyt
-                                                 t-domain/kaistajarjestelyt->str)}
-            {:otsikko "Nopeusrajoitukset" :hae (hakufunktio
-                                                 ::t-domain/nopeusrajoitukset
-                                                 t-domain/nopeusrajoitukset->str)}
-            {:otsikko "Tienpinnat" :hae (hakufunktio
-                                          ::t-domain/tienpinnat
-                                          t-domain/tienpinnat->str)}
-            {:otsikko "Kiertotien pituus" :nimi ::t-domain/kiertotien-pituus}
-            #_{:otsikko "Kiertotien mutkaisuus" :nimi ::t-domain/kiertotien-mutkaisuus}
-            {:otsikko "Kiertotien pinnat" :hae (hakufunktio
-                                                 ::t-domain/kiertotienpinnat
-                                                 t-domain/kiertotienpinnat->str)}
-            #_{:otsikko "Liikenteenohjaus" :nimi ::t-domain/liikenteenohjaus}
-            #_{:otsikko "Liikenteenohjaaja" :nimi ::t-domain/liikenteenohjaaja}
-            #_{:otsikko "Viivästys normaalisti" :nimi ::t-domain/viivastys-normaali-liikenteessa}
-            #_{:otsikko "Viivästys ruuhkassa" :nimi ::t-domain/viivastys-ruuhka-aikana}
-            #_{:otsikko "Ajoneuvorajoitukset" :hae (hakufunktio
-                                                     ::t-domain/ajoneuvorajoitukset
-                                                     t-domain/ajoneuvorajoitukset->str)}
-            #_{:otsikko "Huomautukset" :hae (hakufunktio
-                                              ::t-domain/huomautukset
-                                              t-domain/huomautukset->str)}
-            #_{:otsikko "Ajoittaiset pysäytykset" :hae (hakufunktio
-                                                         ::t-domain/ajoittaiset-pysaytykset
-                                                         t-domain/ajoittaiset-pysaytykset->str)}
-            #_{:otsikko "Ajoittain suljettu tie" :hae (hakufunktio
-                                                        ::t-domain/ajoittain-suljettu-tie
-                                                        t-domain/ajoittain-suljettu-tie->str)}
-            #_{:otsikko "Pysäytysten alku" :nimi ::t-domain/pysaytysten-alku}
-            #_{:otsikko "Pysäytysten loppu" :nimi ::t-domain/pysaytysten-loppu}
-            {:otsikko "Lisätietoja" :nimi ::t-domain/lisatietoja}
-            #_{:otsikko "Urakoitsijan nimi" :nimi ::t-domain/urakoitsijan-nimi}
-            ]
-   :data tietyoilmoitus})
+  (defmethod infopaneeli-skeema :silta [silta]
+    {:tyyppi :silta
+     :jarjesta-fn (let [fn :tarkastusaika]
+                    (if (fn silta)
+                      fn
+                      (constantly false)))
+     :otsikko (or (:siltanimi silta) "Silta")
+     :tiedot [{:otsikko "Nimi" :nimi :siltanimi}
+              {:otsikko "Sillan tunnus" :nimi :siltatunnus}
+              {:otsikko "Edellinen tarkastus" :tyyppi :pvm :nimi :tarkastusaika}
+              {:otsikko "Edellinen tarkastaja" :nimi :tarkastaja}]
+     :data silta})
 
-(defmethod infopaneeli-skeema :silta [silta]
-  {:tyyppi :silta
-   :jarjesta-fn (let [fn :tarkastusaika]
-                  (if (fn silta)
-                    fn
-                    (constantly false)))
-   :otsikko (or (:siltanimi silta) "Silta")
-   :tiedot [{:otsikko "Nimi" :nimi :siltanimi}
-            {:otsikko "Sillan tunnus" :nimi :siltatunnus}
-            {:otsikko "Edellinen tarkastus" :tyyppi :pvm :nimi :tarkastusaika}
-            {:otsikko "Edellinen tarkastaja" :nimi :tarkastaja}]
-   :data silta})
+  (defmethod infopaneeli-skeema :tietyomaa [tietyomaa]
+    {:tyyppi :tietyomaa
+     :jarjesta-fn :aika
+     :otsikko (str (when (:aika tietyomaa)
+                     (str (pvm/pvm-aika (:aika tietyomaa)) " - ")) "Tietyömaa")
+     :tiedot [{:otsikko "Ylläpitokohde" :hae (hakufunktio
+                                               #{:yllapitokohteen-nimi :yllapitokohteen-numero}
+                                               #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")"))}
+              {:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
+              {:otsikko "Osoite" :hae (hakufunktio
+                                        #(some true? (map (partial contains? %) [:numero :tr-numero :tie]))
+                                        #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false}))}
+              {:otsikko "Kaistat" :hae (hakufunktio
+                                         :kaistat
+                                         #(clojure.string/join ", " (map str (:kaistat %))))}
+              {:otsikko "Ajoradat" :hae (hakufunktio
+                                          :ajoradat
+                                          #(clojure.string/join ", " (map str (:ajoradat %))))}
+              {:otsikko "Nopeusrajoitus" :nimi :nopeusrajoitus}]
+     :data tietyomaa})
 
-(defmethod infopaneeli-skeema :tietyomaa [tietyomaa]
-  {:tyyppi :tietyomaa
-   :jarjesta-fn :aika
-   :otsikko (str (when (:aika tietyomaa)
-                   (str (pvm/pvm-aika (:aika tietyomaa)) " - ")) "Tietyömaa")
-   :tiedot [{:otsikko "Ylläpitokohde" :hae (hakufunktio
-                                             #{:yllapitokohteen-nimi :yllapitokohteen-numero}
-                                             #(str (:yllapitokohteen-nimi %) " (" (:yllapitokohteen-numero %) ")"))}
-            {:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
-            {:otsikko "Osoite" :hae (hakufunktio
-                                      #(some true? (map (partial contains? %) [:numero :tr-numero :tie]))
-                                      #(tr-domain/tierekisteriosoite-tekstina % {:teksti-tie? false}))}
-            {:otsikko "Kaistat" :hae (hakufunktio
-                                       :kaistat
-                                       #(clojure.string/join ", " (map str (:kaistat %))))}
-            {:otsikko "Ajoradat" :hae (hakufunktio
-                                        :ajoradat
-                                        #(clojure.string/join ", " (map str (:ajoradat %))))}
-            {:otsikko "Nopeusrajoitus" :nimi :nopeusrajoitus}]
-   :data tietyomaa})
+  (defmethod infopaneeli-skeema :turvalaite [turvalaite]
+    (let [nayta-max-toimenpidetta 10]
+      {:tyyppi :turvalaite
+       :jarjesta-fn (constantly false)
+       :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
+       :tiedot (vec
+                 (concat
+                   [{:otsikko "Turvalaitenumero" :nimi ::tu/turvalaitenro :tyyppi :string}
+                    {:otsikko "Tyyppi" :nimi ::tu/tyyppi :tyyppi :string}
+                    {:otsikko "Väylä" :tyyppi :string :hae
+                     (hakufunktio
+                       #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
+                       #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}
+                    {:otsikko "Tehdyt toimenpiteet" :nimi :toimenpiteet :tyyppi :komponentti
+                     :komponentti
+                     (fn []
+                       (let [kaikkia-ei-piirretty? (> (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)]
+                         [:div
+                          (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take nayta-max-toimenpidetta (:toimenpiteet turvalaite)))]
+                            ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
+                            [:div (str (if-let [s (or (::to/pvm toimenpide)
+                                                      (::to/suoritettu toimenpide))]
+                                         (pvm/pvm s)
+                                         "-")
+                                       " - " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))
+                                       " - " (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)))])
+                          (when kaikkia-ei-piirretty?
+                            [:div (str "...sekä "
+                                       (- (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)
+                                       " muuta toimenpidettä.")])
+                          ]))}]))
+       :data turvalaite}))
 
-(defmethod infopaneeli-skeema :turvalaite [turvalaite]
-  (let [nayta-max-toimenpidetta 10]
-    {:tyyppi :turvalaite
-     :jarjesta-fn (constantly false)
-     :otsikko (or (::tu/nimi turvalaite) "Turvalaite")
-     :tiedot (vec
-               (concat
-                 [{:otsikko "Turvalaitenumero" :nimi ::tu/turvalaitenro :tyyppi :string}
-                  {:otsikko "Tyyppi" :nimi ::tu/tyyppi :tyyppi :string}
-                  {:otsikko "Väylä" :tyyppi :string :hae
-                   (hakufunktio
-                     #{[:toimenpiteet 0 ::to/vayla ::v/nimi]}
-                     #(get-in % [:toimenpiteet 0 ::to/vayla ::v/nimi]))}
-                  {:otsikko "Tehdyt toimenpiteet" :nimi :toimenpiteet :tyyppi :komponentti
-                   :komponentti
-                   (fn []
-                     (let [kaikkia-ei-piirretty? (> (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)]
-                       [:div
-                        (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take nayta-max-toimenpidetta (:toimenpiteet turvalaite)))]
-                          ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
-                          [:div (str (if-let [s (or (::to/pvm toimenpide)
-                                                    (::to/suoritettu toimenpide))]
-                                       (pvm/pvm s)
-                                       "-")
-                                     " - " (to/reimari-tyolaji-fmt (::to/tyoluokka toimenpide))
-                                     " - " (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)))])
-                        (when kaikkia-ei-piirretty?
-                          [:div (str "...sekä "
-                                     (- (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)
-                                     " muuta toimenpidettä.")])
-                        ]))}]))
-     :data turvalaite}))
+  (defmethod infopaneeli-skeema :default [x]
+    (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
+              ", palautetaan tyhjä itemille " (pr-str x))
+    nil)
 
-(defmethod infopaneeli-skeema :default [x]
-  (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
-            ", palautetaan tyhjä itemille " (pr-str x))
-  nil)
+  (defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
+    (do
+      (log/debug viesti
+                 ", rivin-skeema: " (pr-str rivin-skeema)
+                 ", infopaneeli-skeema: " (pr-str infopaneeli-skeema))
+      nil))
 
-(defn- rivin-skeemavirhe [viesti rivin-skeema infopaneeli-skeema]
-  (do
-    (log/debug viesti
-               ", rivin-skeema: " (pr-str rivin-skeema)
-               ", infopaneeli-skeema: " (pr-str infopaneeli-skeema))
-    nil))
+  (defn- rivin-skeema-ilman-haun-validointia [skeema]
+    (if-let [hae (:hae skeema)]
+      (assoc skeema :hae (:haku-fn hae))
 
-(defn- rivin-skeema-ilman-haun-validointia [skeema]
-  (if-let [hae (:hae skeema)]
-    (assoc skeema :hae (:haku-fn hae))
+      skeema))
 
-    skeema))
+  (defn- validoi-rivin-skeema
+    "Validoi rivin skeeman annetulle infopaneeli skeemalle. Palauttaa skeeman, jos se on validi.
+    Jos skeema ei ole validi tiedolle, logittaa virheen ja palauttaa nil."
+    [infopaneeli-skeema {:keys [nimi hae otsikko] :as rivin-skeema}]
+    (let [data (:data infopaneeli-skeema)
+          get-fn (or nimi (:haku-fn hae))]
+      (cond
+        ;; Ei ole otsikkoa
+        (nil? otsikko)
+        (rivin-skeemavirhe "Rivin skeemasta puuttuu otsikko"
+                           rivin-skeema infopaneeli-skeema)
 
-(defn- validoi-rivin-skeema
-  "Validoi rivin skeeman annetulle infopaneeli skeemalle. Palauttaa skeeman, jos se on validi.
-  Jos skeema ei ole validi tiedolle, logittaa virheen ja palauttaa nil."
-  [infopaneeli-skeema {:keys [nimi hae otsikko] :as rivin-skeema}]
-  (let [data (:data infopaneeli-skeema)
-        get-fn (or nimi (:haku-fn hae))]
+        ;; Hakutapa puuttuu kokonaan
+        (nil? get-fn)
+        (rivin-skeemavirhe (str otsikko " skeemasta puuttuu :nimi tai :hae")
+                           rivin-skeema infopaneeli-skeema)
+
+        ;; Hakutapa on nimi, mutta datassa ei ole kyseistä avainta
+        (and nimi (not (contains? data nimi)))
+        (rivin-skeemavirhe
+          (str otsikko " tiedossa ei ole nimen mukaista avainta, nimi: "
+               (str nimi))
+          rivin-skeema infopaneeli-skeema)
+
+        ;; Hakutapa on funktio, jolta puuttuu validointi
+        (and hae (nil? (:validointi-fn hae)))
+        (rivin-skeemavirhe (str otsikko " :hae avaimen pitää sisältää map, jossa on :haku-fn ja :validointi-fn. " (:otsikko rivin-skeema))
+                           rivin-skeema infopaneeli-skeema)
+
+        ;; Haun validointi epäonnistuu
+        (and hae (not ((:validointi-fn hae) data)))
+        (rivin-skeemavirhe (str otsikko " :hae kentän :validointi-fn epäonnistui. Puuttuuko avaimia?")
+                           rivin-skeema infopaneeli-skeema)
+
+        ;; Kaikki kunnossa
+        :default
+        (rivin-skeema-ilman-haun-validointia rivin-skeema))))
+
+  (defn- validoi-infopaneeli-skeema
+    "Validoi infopaneeli-skeema metodin muodostaman skeeman ja kaikki sen kentät.
+    Jos skeema on validi, palauttaa skeeman sen valideilla kentillä.
+    Jos skeema ei ole validi, logittaa virheen ja palauttaa nil."
+    ([skeema] (validoi-infopaneeli-skeema skeema false))
+    ([{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema} vaadi-kaikki-skeemat?]
+     (let [validoidut-skeemat (map (partial validoi-rivin-skeema infopaneeli-skeema)
+                                   tiedot)
+           validit-skeemat (vec (keep identity validoidut-skeemat))
+           epaonnistuneet-skeemat-lkm (count (filter nil? validoidut-skeemat))]
+       (cond
+         (nil? otsikko)
+         (do (log/warn (str "Otsikko puuttuu " (pr-str infopaneeli-skeema)))
+             nil)
+
+         (nil? jarjesta-fn)
+         (do (log/warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
+             nil)
+
+         (empty? validit-skeemat)
+         (do (log/warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
+             nil)
+
+         (and vaadi-kaikki-skeemat? (pos? epaonnistuneet-skeemat-lkm))
+         (do
+           (log/warn
+             (str
+               epaonnistuneet-skeemat-lkm
+               " puutteellista skeemaa, kun yksikään ei saisi epäonnistua "
+               (pr-str data)))
+           nil)
+
+         ;; Järjestäminen yritetään tehdä avaimella, jota ei datasta löydy
+         (nil? (jarjesta-fn data))
+         (do
+           (log/warn (str "jarjesta-fn on määritelty, mutta avaimella ei löydy dataa skeemasta " (pr-str infopaneeli-skeema)))
+           nil)
+
+         :default
+         (assoc infopaneeli-skeema :tiedot validit-skeemat)))))
+
+  (defn- jarjesta [eka toka]
     (cond
-      ;; Ei ole otsikkoa
-      (nil? otsikko)
-      (rivin-skeemavirhe "Rivin skeemasta puuttuu otsikko"
-                         rivin-skeema infopaneeli-skeema)
+      (false? eka)
+      false
 
-      ;; Hakutapa puuttuu kokonaan
-      (nil? get-fn)
-      (rivin-skeemavirhe (str otsikko " skeemasta puuttuu :nimi tai :hae")
-                         rivin-skeema infopaneeli-skeema)
+      (false? toka)
+      true
 
-      ;; Hakutapa on nimi, mutta datassa ei ole kyseistä avainta
-      (and nimi (not (contains? data nimi)))
-      (rivin-skeemavirhe
-        (str otsikko " tiedossa ei ole nimen mukaista avainta, nimi: "
-             (str nimi))
-        rivin-skeema infopaneeli-skeema)
+      :default (pvm/jalkeen? eka toka)))
 
-      ;; Hakutapa on funktio, jolta puuttuu validointi
-      (and hae (nil? (:validointi-fn hae)))
-      (rivin-skeemavirhe (str otsikko " :hae avaimen pitää sisältää map, jossa on :haku-fn ja :validointi-fn. " (:otsikko rivin-skeema))
-                         rivin-skeema infopaneeli-skeema)
+  (defn- skeema-ilman-tyhjia-riveja [skeema]
+    (assoc skeema :tiedot (keep identity (:tiedot skeema))))
 
-      ;; Haun validointi epäonnistuu
-      (and hae (not ((:validointi-fn hae) data)))
-      (rivin-skeemavirhe (str otsikko " :hae kentän :validointi-fn epäonnistui. Puuttuuko avaimia?")
-                         rivin-skeema infopaneeli-skeema)
-
-      ;; Kaikki kunnossa
-      :default
-      (rivin-skeema-ilman-haun-validointia rivin-skeema))))
-
-(defn- validoi-infopaneeli-skeema
-  "Validoi infopaneeli-skeema metodin muodostaman skeeman ja kaikki sen kentät.
-  Jos skeema on validi, palauttaa skeeman sen valideilla kentillä.
-  Jos skeema ei ole validi, logittaa virheen ja palauttaa nil."
-  ([skeema] (validoi-infopaneeli-skeema skeema false))
-  ([{:keys [otsikko tiedot data jarjesta-fn] :as infopaneeli-skeema} vaadi-kaikki-skeemat?]
-   (let [validoidut-skeemat (map (partial validoi-rivin-skeema infopaneeli-skeema)
-                                 tiedot)
-         validit-skeemat (vec (keep identity validoidut-skeemat))
-         epaonnistuneet-skeemat-lkm (count (filter nil? validoidut-skeemat))]
-     (cond
-       (nil? otsikko)
-       (do (log/warn (str "Otsikko puuttuu " (pr-str infopaneeli-skeema)))
-           nil)
-
-       (nil? jarjesta-fn)
-       (do (log/warn (str "jarjesta-fn puuttuu tiedolta " (pr-str infopaneeli-skeema)))
-           nil)
-
-       (empty? validit-skeemat)
-       (do (log/warn (str "Tiedolla ei ole yhtään validia skeemaa: " (pr-str infopaneeli-skeema)))
-           nil)
-
-       (and vaadi-kaikki-skeemat? (pos? epaonnistuneet-skeemat-lkm))
-       (do
-         (log/warn
-           (str
-             epaonnistuneet-skeemat-lkm
-             " puutteellista skeemaa, kun yksikään ei saisi epäonnistua "
-             (pr-str data)))
-         nil)
-
-       ;; Järjestäminen yritetään tehdä avaimella, jota ei datasta löydy
-       (nil? (jarjesta-fn data))
-       (do
-         (log/warn (str "jarjesta-fn on määritelty, mutta avaimella ei löydy dataa skeemasta " (pr-str infopaneeli-skeema)))
-         nil)
-
-       :default
-       (assoc infopaneeli-skeema :tiedot validit-skeemat)))))
-
-(defn- jarjesta [eka toka]
-  (cond
-    (false? eka)
-    false
-
-    (false? toka)
-    true
-
-    :default (pvm/jalkeen? eka toka)))
-
-(defn- skeema-ilman-tyhjia-riveja [skeema]
-  (assoc skeema :tiedot (keep identity (:tiedot skeema))))
-
-(defn skeemamuodossa
-  ([asiat]
-   (as-> asiat $
-         (keep infopaneeli-skeema $)
-         (map skeema-ilman-tyhjia-riveja $)
-         (keep validoi-infopaneeli-skeema $)
-         (sort-by #((:jarjesta-fn %) (:data %)) jarjesta $)
-         (vec $))))
+  (defn skeemamuodossa
+    ([asiat]
+     (as-> asiat $
+           (keep infopaneeli-skeema $)
+           (map skeema-ilman-tyhjia-riveja $)
+           (keep validoi-infopaneeli-skeema $)
+           (sort-by #((:jarjesta-fn %) (:data %)) jarjesta $)
+           (vec $))))
