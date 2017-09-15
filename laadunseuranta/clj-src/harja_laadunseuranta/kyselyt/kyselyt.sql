@@ -154,7 +154,7 @@ WITH ur AS (SELECT
               a.alue
             FROM urakka u
               INNER JOIN alueurakka a ON u.urakkanro = a.alueurakkanro
-            WHERE NOW() BETWEEN u.alkupvm AND u.loppupvm
+            WHERE current_date BETWEEN u.alkupvm AND u.loppupvm
                   AND u.nimi NOT ILIKE '%testi%')
 SELECT ur.id
 FROM tarkastusreitti r
