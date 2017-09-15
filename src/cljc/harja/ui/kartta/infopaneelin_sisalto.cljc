@@ -111,7 +111,7 @@
                                      kuittauksien-maara (count kuittaukset)
                                      kaikkia-ei-piirretty? (> kuittauksien-maara nayta-max-kuittausta)]
                                  [:div
-                                  (for [ilmoitus (sort-by :kuitattu pvm/jalkeen? (take nayta-max-kuittausta kuittaukset))]
+                                  (for [ilmoitus (take nayta-max-kuittausta (sort-by :kuitattu pvm/jalkeen? kuittaukset))]
                                     ^{:key (:id ilmoitus)}
                                     [:div.tietorivi.tietorivi-ilman-alaviivaa
                                      [:span.tietokentta {:style {:display     "auto"
