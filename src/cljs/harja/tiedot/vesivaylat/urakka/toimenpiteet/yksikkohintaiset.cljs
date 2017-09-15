@@ -300,12 +300,6 @@
        %)
     (:toimenpiteet app)))
 
-(defn hinnoiteltavan-toimenpiteen-komponentit-ilman-hintaa [app]
-  (let [toimenpide (hinnoiteltava-toimenpide app)
-        komponentit (::to/komponentit toimenpide)
-        komponentit-hinnoilla (into #{} (map ::hinta/komponentti-id (komponenttien-hinnat app)))]
-    (remove (comp komponentit-hinnoilla ::tkomp/id) komponentit)))
-
 (extend-protocol tuck/Event
 
   Nakymassa?
