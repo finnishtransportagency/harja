@@ -47,10 +47,6 @@
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri.varusteet :as varusteet]))
 
-; [harja.loki :refer [log tarkkaile! error] :as log]) ERNO tää aiheuttaa käännösvirheen
-; CompilerException java.lang.RuntimeException: Feature should be a keyword: [harja.loki :refer [log tarkkaile! error] :as log],
-; compiling:(/Users/maaritla/Sources/harja/src/cljc/harja/ui/kartta/infopaneelin_sisalto.cljc:37:58)
-
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
