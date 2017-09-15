@@ -134,7 +134,6 @@
 (defrecord PeruToimenpiteenHinnoittelu [])
 (defrecord AsetaHintakentalleTiedot [tiedot])
 (defrecord AsetaTyorivilleTiedot [tiedot])
-(defrecord AsetaKomponenttirivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
 (defrecord LisaaMuuKulurivi [])
@@ -550,14 +549,6 @@
     (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
               (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide ::h/tyot])
                                              tiedot)))
-
-  AsetaKomponenttirivilleTiedot
-  (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
-              (hinta/paivita-hintajoukon-hinnan-tiedot-idlla
-                (get-in app [:hinnoittele-toimenpide
-                             ::h/hinnat])
-                tiedot)))
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]

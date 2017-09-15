@@ -242,7 +242,7 @@
             [:td
              [yleiset/livi-pudotusvalikko
               {:valitse-fn #(do
-                              (e! (tiedot/->AsetaKomponenttirivilleTiedot
+                              (e! (tiedot/->AsetaHintakentalleTiedot
                                     {::hinta/id (::hinta/id komponentin-hinta)
                                      ::hinta/otsikko (otsikko %)
                                      ::hinta/komponentti-tilamuutos (::komp-tila/tilakoodi %)
