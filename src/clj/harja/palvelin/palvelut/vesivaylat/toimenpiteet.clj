@@ -50,8 +50,7 @@
       (oikeudet/vaadi-oikeus "siirrä-yksikköhintaisiin" oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset user urakka-id)
       (q/vaadi-toimenpiteet-kuuluvat-urakkaan db (::to/idt tiedot) urakka-id)
       (jdbc/with-db-transaction [db db]
-        (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)
-        (kiintiot-q/irrota-toimenpiteet-kiintiosta db user tiedot)))
+        (q/paivita-toimenpiteiden-tyyppi db (::to/idt tiedot) :yksikkohintainen)))
     (::to/idt tiedot)))
 
 (defn lisaa-toimenpiteelle-liite [db user tiedot]
