@@ -35,12 +35,11 @@
         sopimus-id (::kiintio/sopimus-id tiedot)]
     (into
       []
-      (comp
-        (map #(if toimenpiteet?
-                (assoc % ::kiintio/toimenpiteet (into []
-                                                      to-q/toimenpiteet-xf
-                                                      (::kiintio/toimenpiteet %)))
-                %)))
+      (map #(if toimenpiteet?
+              (assoc % ::kiintio/toimenpiteet (into []
+                                                    to-q/toimenpiteet-xf
+                                                    (::kiintio/toimenpiteet %)))
+              %))
       (fetch db
              ::kiintio/kiintio
              (set/union kiintio/perustiedot

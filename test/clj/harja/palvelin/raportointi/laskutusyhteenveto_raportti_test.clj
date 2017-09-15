@@ -53,6 +53,8 @@
     (let [odotettu-otsikko "Oulun alueurakka 2014-2019, 01.10.2014-30.09.2015"
           saatu-otsikko (second (nth vastaus 2))
 
+          oulun-au-talvihoito-kok-hint-maksueranumero (first (first (nth (nth (last vastaus) 0) 3)))
+
           kok-hint (arvo-raportin-nnesta-elementista vastaus 0)
           yks-hint (arvo-raportin-nnesta-elementista vastaus 1)
           sanktiot (arvo-raportin-nnesta-elementista vastaus 2)
@@ -80,6 +82,8 @@
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
+
+      (is (= "Talvihoito (#17)" oulun-au-talvihoito-kok-hint-maksueranumero))
 
       (is (=marginaalissa? kok-hint 162010.00M))
       (is (=marginaalissa? yks-hint 6000.00M))
