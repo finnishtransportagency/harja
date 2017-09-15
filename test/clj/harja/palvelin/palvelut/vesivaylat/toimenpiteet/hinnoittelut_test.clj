@@ -169,7 +169,8 @@
 
 (deftest tallenna-tyot-eri-urakan-toimenpiteelle
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        helsinki-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (some (comp not (partial = helsinki-id)) (range 100))
         toimenpidekoodi-id (ffirst (q "SELECT id
                                         FROM toimenpidekoodi
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
@@ -184,8 +185,8 @@
                          ::tyo/maara 123
                          ::tyo/id 2}]}]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
-                                                   insert-params)))))
+                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                         insert-params)))))
 
 (deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
@@ -333,6 +334,7 @@
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
+                                                   ::hinta/ryhma :muu
                                                    ::hinta/summa 666}]
                        ::h/tallennettavat-tyot []}]
 
