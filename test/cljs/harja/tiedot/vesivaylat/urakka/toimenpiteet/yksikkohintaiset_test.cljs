@@ -1062,7 +1062,9 @@
                                                         {::hinta/ryhma  :muu
                                                          ::hinta/otsikko "Foobar"
                                                          ::hinta/summa 200}]}})))
-    (is (false? (tiedot/hinnoittelun-voi-tallentaa?
+
+    ;; Saa tallentaa, jos otsikko+yksikkö yhdistelmä on uniikki
+    (is (true? (tiedot/hinnoittelun-voi-tallentaa?
                   {:hinnoittele-toimenpide {::h/tyot []
                                             ::h/hinnat [{::hinta/ryhma :tyo
                                                          ::hinta/otsikko "Foobar"

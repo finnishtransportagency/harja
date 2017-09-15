@@ -191,7 +191,13 @@
 (defn- hintakentta
   [hinta]
   (merge
-    {::hinta/summa (if (= :muu (::hinta/ryhma hinta)) 0 nil)
+    {::hinta/summa (cond
+                     (or (nil? (::hinta/ryhma hinta))
+                         (#{:muu} (::hinta/ryhma hinta)))
+                     0
+
+                     (#{:komponentti :tyo} (::hinta/ryhma hinta))
+                     nil)
      ::hinta/yleiskustannuslisa 0}
     hinta))
 
