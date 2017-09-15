@@ -92,7 +92,8 @@
         hae-urakan-tyot (fn [ur]
                           (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                             (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
-                          (when (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                          (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                                    (oikeudet/urakat-toteumat-yksikkohintaisettyot (:id ur)))
                             (go (reset! u/urakan-yks-hint-tyot
                                         (s/prosessoi-tyorivit ur
                                                               (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]

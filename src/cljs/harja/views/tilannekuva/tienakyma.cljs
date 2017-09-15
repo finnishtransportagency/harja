@@ -22,6 +22,7 @@
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.views.kartta.infopaneeli :as infopaneeli]
+            [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.kartta.tasot :as tasot]))
 
@@ -77,7 +78,10 @@
    [{:teksti "Toteumanäkymään"
      :tooltip "Siirry urakan varustetoteumiin"
      :ikoni [ikonit/livicon-eye]
-     :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}]})
+     :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}]
+   :ilmoitus
+    {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))
+     :teksti "Näytä kuittaukset"}})
 
 (defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
   ;; Poistetaan TR-valinnan katkoviiva häiritsemästä
