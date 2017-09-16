@@ -8,7 +8,7 @@ SELECT
   hintaryhma.nimi                   AS "hinnoittelu",
   -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki hinnoittelut, eli
   -- hintaryhmän oma hinnoittelu ja toimenpiteiden omat hinnoittelut. Summaa kaikki yhteen.
-  (SELECT COALESCE(SUM(maara), 0)
+  (SELECT COALESCE(SUM(summa), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" IN
          -- Hinta kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
@@ -86,7 +86,7 @@ WHERE "urakka-id" = :urakkaid
 -- tällaiset tapaukset summataan jo hintaryhmien hintaan (ks. kysely: hae-yksikkohintaisten-toimenpiteiden-hintaryhmat)
 SELECT
   oma_hinnoittelu.nimi                              AS "hinnoittelu",
-  (SELECT COALESCE(SUM(maara), 0)
+  (SELECT COALESCE(SUM(summa), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" = oma_hinnoittelu.id
          AND poistettu IS NOT TRUE)
