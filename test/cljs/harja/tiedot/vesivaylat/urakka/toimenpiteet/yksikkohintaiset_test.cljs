@@ -1,4 +1,10 @@
 (ns harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test
+
+  ;;; **************
+  ;;; Namespacen alussa on tuck-eventtien testit, niiden jälkeen funktioiden testit
+  ;;; 16.9.2017 eventtien ja funktioiden järjestys vastaa varsinaisen namespacen järjestystä
+  ;;; **************
+
   (:require [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
@@ -111,6 +117,10 @@
                                 ::to/liitteet [{:id 666}]
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
+;;; **************
+;;; TUCK-EVENTIEN TESTIT
+;;; **************
+
 (deftest nakymaan-tuleminen
   (is (= {:nakymassa? true
           :karttataso-nakyvissa? true}
@@ -167,6 +177,44 @@
         (is (nil? (:valinnat vanha-tila)))
         (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu}))))))
 
+(deftest kokonaishintaisiin-siirto
+  (testing "Siirron aloittaminen"
+    (vaadi-async-kutsut
+      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
+      (let [vanha-tila testitila
+            uusi-tila (e! (tiedot/->SiirraValitutKokonaishintaisiin)
+                          vanha-tila)]
+        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
+
+(deftest suunniteltujen-toiden-haku
+  (testing "Haun aloittaminen"
+    (vaadi-async-kutsut
+      #{tiedot/->SuunnitellutTyotHaettu tiedot/->SuunnitellutTyotEiHaettu}
+
+      (is (true? (:suunniteltujen-toiden-haku-kaynnissa? (e! (tiedot/->HaeSuunnitellutTyot)
+                                                             {:valinnat {:urakka-id 1}}))))))
+
+  (testing "Uusi haku kun haku on jo käynnissä"
+    (vaadi-async-kutsut
+      ;; Ei saa aloittaa uusia hakuja
+      #{}
+
+      (let [tila {:suunniteltujen-toiden-haku-kaynnissa? true
+                  :valinnat {:urakka-id 1}}]
+        (is (= tila
+               (e! (tiedot/->HaeSuunnitellutTyot) tila)))))))
+
+(deftest suunniteltujen-toiden-hakemisen-valmistuminen
+  (is (= (e! (tiedot/->SuunnitellutTyotHaettu [{:id 1}])
+             {:suunniteltujen-toiden-haku-kaynnissa? true})
+         {:suunniteltujen-toiden-haku-kaynnissa? false
+          :suunnitellut-tyot [{:id 1}]})))
+
+(deftest suunniteltujen-toiden-hakemisen-epaonnistuminen
+  (is (= (e! (tiedot/->SuunnitellutTyotEiHaettu)
+             {:suunniteltujen-toiden-haku-kaynnissa? true})
+         {:suunniteltujen-toiden-haku-kaynnissa? false})))
+
 (deftest toimenpiteiden-hakemisen-aloitus
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
@@ -222,28 +270,6 @@
 (deftest hintaryhman-nimen-paivitys
   (is (= {:foo :bar :uusi-hintaryhma "Bar"}
          (e! (tiedot/->UudenHintaryhmanNimeaPaivitetty "Bar") {:foo :bar}))))
-
-(deftest kokonaishintaisiin-siirto
-  (testing "Siirron aloittaminen"
-    (vaadi-async-kutsut
-      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
-      (let [vanha-tila testitila
-            uusi-tila (e! (tiedot/->SiirraValitutKokonaishintaisiin)
-                          vanha-tila)]
-        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
-
-(deftest kokonaishintaisiin-siirretty
-  (let [vanha-tila testitila
-        siirretyt #{1 2 3}
-        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
-        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
-                      vanha-tila)
-        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
-
-    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
-    (is (empty? (filter #(siirretyt (::to/id %))
-                        (:toimenpiteet uusi-tila)))
-        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
 
 (deftest hintaryhman-luonti
   (vaadi-async-kutsut
@@ -403,6 +429,19 @@
                          ::tyo/toimenpidekoodi-id 1
                          ::tyo/maara 60}]})))))
 
+(deftest kokonaishintaisiin-siirretty
+  (let [vanha-tila testitila
+        siirretyt #{1 2 3}
+        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
+        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
+                      vanha-tila)
+        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
+
+    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
+    (is (empty? (filter #(siirretyt (::to/id %))
+                        (:toimenpiteet uusi-tila)))
+        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
+
 (deftest hintaryhman-hinnoittelu
   (testing "Aloita hintaryhmän hinnoittelu, ei aiempia hinnoittelutietoja"
     (let [vanha-tila testitila
@@ -428,6 +467,11 @@
                 ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                 ::hinta/summa 600
                 ::hinta/yleiskustannuslisa 0}]})))))
+
+(deftest suunniteltujen-toiden-tyhjennys
+  (is (= (e! (tiedot/->TyhjennaSuunnitellutTyot)
+             {:suunnitellut-tyot [1 2 3]})
+         {:suunnitellut-tyot nil})))
 
 (deftest toimenpiteen-kentan-hinnoittelu
   (testing "Hinnoittele kentän rahamäärä"
@@ -484,20 +528,132 @@
                          ::tyo/toimenpidekoodi-id 1
                          ::tyo/maara 60}]})))))
 
-(deftest hintaryhman-kentan-hinnoittelu
-  (testing "Hinnoittele hintaryhmän kentän rahamäärä"
-    (let [vanha-tila testitila
-          uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
-                         (e! (tiedot/->AsetaHintaryhmakentalleTiedot {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                                                                      ::hinta/summa 123})))]
-      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
-      (is (= (:hinnoittele-hintaryhma uusi-tila)
-             {::h/id 666
-              ::h/hinnat
-              [{::hinta/id 1
-                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                ::hinta/summa 123
-                ::hinta/yleiskustannuslisa 0}]})))))
+(deftest toimenpiteen-hinnoittelun-peruminen
+  (let [vanha-tila testitila
+        uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
+                      vanha-tila)]
+    (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hinnat])))))
+
+(deftest aseta-tyoriville-tiedot
+  (is (= (e! (tiedot/->AsetaTyorivilleTiedot {::tyo/id 2
+                                              ::tyo/maara 666
+                                              ::tyo/toimenpidekoodi-id 1})
+             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::tyo/maara 0}
+                                                 {::tyo/id 2 ::tyo/maara 1}
+                                                 {::tyo/id 3 ::tyo/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::tyo/maara 0}
+                                             {::tyo/id 2 ::tyo/maara 666 ::tyo/toimenpidekoodi-id 1}
+                                             {::tyo/id 3 ::tyo/maara 2}]}})))
+
+(deftest lisaa-hinnoiteltava-tyorivi
+  (is (= (e! (tiedot/->LisaaHinnoiteltavaTyorivi))
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}]}})))
+
+(deftest lisaa-hinnoiteltava-komponenttirivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}]
+        uusi-hinta {::hinta/id -1
+                    ::hinta/otsikko ""
+                    ::hinta/summa nil
+                    ::hinta/ryhma :komponentti
+                    ::hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaHinnoiteltavaKomponenttirivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
+
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}]
+        uusi-hinta {::hinta/id -2
+                    ::hinta/otsikko ""
+                    ::hinta/summa nil
+                    ::hinta/ryhma :komponentti
+                    ::hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaHinnoiteltavaKomponenttirivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
+
+(deftest lisaa-muu-kulurivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}]
+        uusi-hinta {::hinta/id -1
+                    ::hinta/otsikko ""
+                    ::hinta/summa 0
+                    ::hinta/ryhma :muu
+                    ::hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+              {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
+
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}]
+        uusi-hinta {::hinta/id -2
+                    ::hinta/otsikko ""
+                    ::hinta/summa 0
+                    ::hinta/ryhma :muu
+                    ::hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
+
+(deftest lisaa-muu-tyorivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}]
+        uusi-hinta {::hinta/id -1
+                    ::hinta/otsikko ""
+                    ::hinta/summa nil
+                    ::hinta/ryhma :tyo
+                    ::hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaMuuTyorivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
+
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}]
+        uusi-hinta {::hinta/id -2
+                    ::hinta/otsikko ""
+                    ::hinta/summa nil
+                    ::hinta/ryhma :tyo
+                    ::hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaMuuTyorivi)
+               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
+
+(deftest poista-hinnoiteltava-tyorivi
+  ;; Uusi lisätty rivi katoaa kokonaan
+  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id -1})
+             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
+                                                 {::tyo/id 2 ::tyo/maara 1}
+                                                 {::tyo/id 3 ::tyo/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 2 ::tyo/maara 1}
+                                             {::tyo/id 3 ::tyo/maara 2}]}}))
+  ;; Kannassa jo oleva rivi merkitään poistetuksi
+  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id 2})
+             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
+                                                 {::tyo/id 2 ::tyo/maara 1}
+                                                 {::tyo/id 3 ::tyo/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
+                                             {::tyo/id 2 ::tyo/maara 1 ::m/poistettu? true}
+                                             {::tyo/id 3 ::tyo/maara 2}]}})))
+
+(deftest poista-hinnoiteltava-hintarivi
+  ;; Uusi lisätty rivi katoaa kokonaan
+  (is (= (e! (tiedot/->PoistaHinnoiteltavaHintarivi {::hinta/id -1})
+             {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -1 ::hinta/maara 0}
+                                                   {::hinta/id 2 ::hinta/maara 1}
+                                                   {::hinta/id 3 ::hinta/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id 2 ::hinta/maara 1}
+                                               {::hinta/id 3 ::hinta/maara 2}]}}))
+  ;; Kannassa jo oleva rivi merkitään poistetuksi
+  (is (= (e! (tiedot/->PoistaHinnoiteltavaHintarivi {::hinta/id 2})
+             {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -1 ::hinta/maara 0}
+                                                   {::hinta/id 2 ::hinta/maara 1}
+                                                   {::hinta/id 3 ::hinta/maara 2}]}})
+         {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -1 ::hinta/maara 0}
+                                               {::hinta/id 2 ::hinta/maara 1 ::m/poistettu? true}
+                                               {::hinta/id 3 ::hinta/maara 2}]}})))
 
 (deftest toimenpiteen-hinnoittelun-tallennus
   (vaadi-async-kutsut
@@ -507,15 +663,6 @@
     (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}
            (e! (tiedot/->TallennaToimenpiteenHinnoittelu 1)
                {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false})))))
-
-(deftest hintaryhman-hinnoittelun-tallennus
-  (vaadi-async-kutsut
-    #{tiedot/->HintaryhmanHinnoitteluTallennettu
-      tiedot/->HintaryhmanHinnoitteluEiTallennettu}
-
-    (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}
-           (e! (tiedot/->TallennaHintaryhmanHinnoittelu 1)
-               {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false})))))
 
 (deftest toimenpiteen-hinnoittelu-tallennettu
   (let [hinnoiteltava-toimenpide-id 1
@@ -576,6 +723,41 @@
             ::h/nimi "Hinnoittelu"
             :harja.domain.muokkaustiedot/poistettu? false}))))
 
+(deftest toimenpiteen-hinnoittelu-ei-tallennettu
+  (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false}
+         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})
+             {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}))))
+
+(deftest hintaryhman-kentan-hinnoittelu
+  (testing "Hinnoittele hintaryhmän kentän rahamäärä"
+    (let [vanha-tila testitila
+          uusi-tila (->> (e! (tiedot/->AloitaHintaryhmanHinnoittelu 666) vanha-tila)
+                         (e! (tiedot/->AsetaHintaryhmakentalleTiedot {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                                                                      ::hinta/summa 123})))]
+      (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
+      (is (= (:hinnoittele-hintaryhma uusi-tila)
+             {::h/id 666
+              ::h/hinnat
+              [{::hinta/id 1
+                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+                ::hinta/summa 123
+                ::hinta/yleiskustannuslisa 0}]})))))
+
+(deftest hintaryhman-hinnoittelun-peruminen
+  (let [vanha-tila testitila
+        uusi-tila (e! (tiedot/->PeruHintaryhmanHinnoittelu)
+                      vanha-tila)]
+    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hinnat])))))
+
+(deftest hintaryhman-hinnoittelun-tallennus
+  (vaadi-async-kutsut
+    #{tiedot/->HintaryhmanHinnoitteluTallennettu
+      tiedot/->HintaryhmanHinnoitteluEiTallennettu}
+
+    (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}
+           (e! (tiedot/->TallennaHintaryhmanHinnoittelu 1)
+               {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false})))))
+
 (deftest hintaryhman-hinnoittelu-tallennettu
   (let [hinnoiteltava-hintaryhma-id 1
         ;; Asetetaan hinnoittelu päälle ja testataan miten tila muuttuu,
@@ -608,27 +790,10 @@
     ;; Hintaryhmiksi asetettiin palvelimen vastaus
     (is (= paivitetyt-hintaryhmat palvelimen-vastaus))))
 
-(deftest toimenpiteen-hinnoittelu-ei-tallennettu
-  (is (= {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? false}
-         (e! (tiedot/->ToimenpiteenHinnoitteluEiTallennettu {:msg :error})
-             {:toimenpiteen-hinnoittelun-tallennus-kaynnissa? true}))))
-
 (deftest hintaryhman-hinnoittelu-ei-tallennettu
   (is (= {:hintaryhman-hinnoittelun-tallennus-kaynnissa? false}
          (e! (tiedot/->HintaryhmanHinnoitteluEiTallennettu {:msg :error})
              {:hintaryhman-hinnoittelun-tallennus-kaynnissa? true}))))
-
-(deftest toimenpiteen-hinnoittelun-peruminen
-  (let [vanha-tila testitila
-        uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
-                      vanha-tila)]
-    (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::h/hinnat])))))
-
-(deftest hintaryhman-hinnoittelun-peruminen
-  (let [vanha-tila testitila
-        uusi-tila (e! (tiedot/->PeruHintaryhmanHinnoittelu)
-                      vanha-tila)]
-    (is (nil? (get-in uusi-tila [:hinnoittele-hintaryhma ::h/hinnat])))))
 
 (deftest hintaryhman-korostaminen
   (testing "Hintaryhmän korostus"
@@ -647,6 +812,267 @@
       ;; false, koska näkymässä on hintaryhmä jonka id on nil
       (is (= false (:korostettu-hintaryhma tulos)))
       (is (nil? (:korostetut-turvalaitteet tulos))))))
+
+;;; **************
+;;; FUNKTIOIDEN TESTIT
+;;; **************
+
+
+(deftest hintakentan-luonti
+  (is (= {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {})))
+
+  (is (= {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""
+          ::hinta/id 1}
+         (tiedot/hintakentta {::hinta/id 1})))
+
+  (is (= {::hinta/summa 10
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {::hinta/summa 10})))
+
+  (is (= {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 10
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {::hinta/yleiskustannuslisa 10})))
+
+  (is (= {::hinta/summa nil
+          ::hinta/ryhma :tyo
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {::hinta/ryhma :tyo})))
+
+  (is (= {::hinta/summa 0
+          ::hinta/ryhma :muu
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {::hinta/ryhma :muu})))
+
+  (is (= {::hinta/summa 10
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/ryhma :tyo
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {::hinta/ryhma :tyo
+                              ::hinta/summa 10})))
+
+  (is (= {::hinta/summa 10
+          ::hinta/ryhma :muu
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {::hinta/ryhma :muu
+                              ::hinta/summa 10})))
+
+  (is (= {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {})))
+  (is (= {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""
+          ::hinta/ryhma :muu}
+         (tiedot/hintakentta {::hinta/ryhma :muu})))
+  (is (= {::hinta/summa nil
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""
+          ::hinta/ryhma :komponentti}
+         (tiedot/hintakentta {::hinta/ryhma :komponentti})))
+  (is (= {::hinta/summa nil
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""
+          ::hinta/ryhma :tyo}
+         (tiedot/hintakentta {::hinta/ryhma :tyo})))
+  (is (= {::hinta/summa 0
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""
+          :foo :bar}
+         (tiedot/hintakentta {:foo :bar})))
+  (is (= {::hinta/summa 100
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko ""}
+         (tiedot/hintakentta {::hinta/summa 100})))
+
+  (is (= {::hinta/summa 100
+          ::hinta/yleiskustannuslisa 0
+          ::hinta/otsikko "Foobar"}
+         (tiedot/hintakentta {::hinta/summa 100
+                              ::hinta/otsikko "Foobar"})))
+
+  (is (= {::hinta/summa 100
+          ::hinta/yleiskustannuslisa 100
+          ::hinta/otsikko "Foobar"}
+         (tiedot/hintakentta {::hinta/summa 100
+                              ::hinta/otsikko "Foobar"
+                              ::hinta/yleiskustannuslisa 100})))
+
+  (is (= {::hinta/summa 100
+          ::hinta/yleiskustannuslisa 12
+          ::hinta/otsikko "Foobar"
+          :foo :bar}
+         (tiedot/hintakentta {::hinta/summa 100
+                              ::hinta/otsikko "Foobar"
+                              ::hinta/yleiskustannuslisa 12
+                              :foo :bar}))))
+
+(deftest tyokentan-luonti
+  (is (= (tiedot/tyokentta {})
+         {::tyo/maara 0}))
+
+  (is (= (tiedot/tyokentta {::tyo/maara 10})
+         {::tyo/maara 10}))
+
+  (is (= (tiedot/tyokentta {::tyo/id 1})
+         {::tyo/maara 0
+          ::tyo/id 1}))
+
+  (is (= {::tyo/maara 0}
+         (tiedot/tyokentta {})))
+  (is (= {::tyo/maara 0
+          :foo :bar}
+         (tiedot/tyokentta {:foo :bar})))
+  (is (= {::tyo/maara 100}
+         (tiedot/tyokentta {::tyo/maara 100}))))
+
+(deftest poista-hintarivi-toimenpiteelta*
+  (is (= {:baz :bar
+          :hinnoittele-toimenpide {:foobars [{:foo 1 ::m/poistettu? true}
+                                             {:foo 2}]}}
+         (tiedot/poista-hintarivi-toimenpiteelta*
+           1 :foo :foobars
+           {:baz :bar
+            :hinnoittele-toimenpide {:foobars [{:foo 1}
+                                               {:foo 2}]}})))
+
+  (is (= {:baz :bar
+          :hinnoittele-toimenpide {:foobars [{:foo 2}]}}
+         (tiedot/poista-hintarivi-toimenpiteelta*
+           -1 :foo :foobars
+           {:baz :bar
+            :hinnoittele-toimenpide {:foobars [{:foo -1}
+                                               {:foo 2}]}}))))
+
+(deftest poista-tyorivi-toimenpiteelta
+  (is (= {:foo :bar
+          :hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::m/poistettu? true}
+                                             {::tyo/id 2}]
+                                   ::h/hinnat [{:foo :bar}]}}
+         (tiedot/poista-tyorivi-toimenpiteelta
+           1 {:foo :bar
+              :hinnoittele-toimenpide {::h/tyot [{::tyo/id 1}
+                                                 {::tyo/id 2}]
+                                       ::h/hinnat [{:foo :bar}]}})))
+
+  (is (= {:foo :bar
+          :hinnoittele-toimenpide {::h/tyot [{::tyo/id 2}]
+                                   ::h/hinnat [{:foo :bar}]}}
+         (tiedot/poista-tyorivi-toimenpiteelta
+           -1 {:foo :bar
+              :hinnoittele-toimenpide {::h/tyot [{::tyo/id -1}
+                                                 {::tyo/id 2}]
+                                       ::h/hinnat [{:foo :bar}]}}))))
+
+(deftest poista-hintarivi-toimenpiteelta
+  (is (= {:foo :bar
+          :hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1 ::m/poistettu? true}
+                                               {::hinta/id 2}]
+                                   ::h/tyot [{:foo :bar}]}}
+         (tiedot/poista-hintarivi-toimenpiteelta
+           1 {:foo :bar
+              :hinnoittele-toimenpide {::h/hinnat [{::hinta/id 1}
+                                                   {::hinta/id 2}]
+                                       ::h/tyot [{:foo :bar}]}})))
+
+  (is (= {:foo :bar
+          :hinnoittele-toimenpide {::h/hinnat [{::hinta/id 2}]
+                                   ::h/tyot [{:foo :bar}]}}
+         (tiedot/poista-hintarivi-toimenpiteelta
+           -1 {:foo :bar
+               :hinnoittele-toimenpide {::h/hinnat [{::hinta/id -1}
+                                                    {::hinta/id 2}]
+                                        ::h/tyot [{:foo :bar}]}}))))
+
+(deftest lisaa-hintarivi-toimenpiteelle*
+  (is (= {:hinnoittele-toimenpide {:foobars [{:otsikko "Moi" :id -1}]}}
+         (tiedot/lisaa-hintarivi-toimenpiteelle*
+           :id :foobars (fn [id] {:otsikko "Moi" :id id})
+           {:hinnoittele-toimenpide {:foobars []}})))
+
+  (is (= {:hinnoittele-toimenpide {:foobars [{:otsikko "Moi" :id 10}
+                                             {:otsikko "Moi" :id -1}]}}
+         (tiedot/lisaa-hintarivi-toimenpiteelle*
+           :id :foobars (fn [id] {:otsikko "Moi" :id id})
+           {:hinnoittele-toimenpide {:foobars [{:otsikko "Moi" :id 10}]}})))
+
+  (is (= {:hinnoittele-toimenpide {:foobars [{:otsikko "Moi" :id -1}
+                                             {:otsikko "Moi" :id -2}]}}
+         (tiedot/lisaa-hintarivi-toimenpiteelle*
+           :id :foobars (fn [id] {:otsikko "Moi" :id id})
+           {:hinnoittele-toimenpide {:foobars [{:otsikko "Moi" :id -1}]}}))))
+
+(deftest lisaa-tyorivi-toimenpiteelle
+  (is (= {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1
+                                              ::tyo/maara 0}]}}
+         (tiedot/lisaa-tyorivi-toimenpiteelle
+           {:hinnoittele-toimenpide {::h/tyot []}})))
+
+  (is (= {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -2
+                                              ::tyo/maara 10}
+                                             {::tyo/id -3
+                                              ::tyo/maara 0}]}}
+         (tiedot/lisaa-tyorivi-toimenpiteelle
+           {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -2
+                                                ::tyo/maara 10}]}})))
+
+  (is (= {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -2
+                                              ::tyo/maara 10}
+                                             {::tyo/id -3
+                                              ::tyo/maara 0
+                                              :foo :bar}]}}
+         (tiedot/lisaa-tyorivi-toimenpiteelle
+           {:foo :bar}
+           {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -2
+                                                ::tyo/maara 10}]}}))))
+
+(deftest lisaa-hintarivi-toimenpiteelle
+  (is (= {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -1
+                                                ::hinta/summa 0
+                                                ::hinta/yleiskustannuslisa 0
+                                                ::hinta/otsikko ""}]}}
+         (tiedot/lisaa-hintarivi-toimenpiteelle
+           {:hinnoittele-toimenpide {::h/hinnat []}})))
+
+  (is (= {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -2
+                                                ::hinta/summa 0
+                                                ::hinta/yleiskustannuslisa 0
+                                                ::hinta/otsikko ""}
+                                               {::hinta/id -3
+                                                ::hinta/summa 0
+                                                ::hinta/yleiskustannuslisa 0
+                                                ::hinta/otsikko ""}]}}
+         (tiedot/lisaa-hintarivi-toimenpiteelle
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -2
+                                                  ::hinta/summa 0
+                                                  ::hinta/yleiskustannuslisa 0
+                                                  ::hinta/otsikko ""}]}})))
+
+  (is (= {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -2
+                                                ::hinta/summa 0
+                                                ::hinta/yleiskustannuslisa 0
+                                                ::hinta/otsikko ""}
+                                               {::hinta/id -3
+                                                ::hinta/summa 0
+                                                ::hinta/yleiskustannuslisa 0
+                                                ::hinta/otsikko ""
+                                                :foo :bar}]}}
+         (tiedot/lisaa-hintarivi-toimenpiteelle
+           {:foo :bar}
+           {:hinnoittele-toimenpide {::h/hinnat [{::hinta/id -2
+                                                  ::hinta/summa 0
+                                                  ::hinta/yleiskustannuslisa 0
+                                                  ::hinta/otsikko ""}]}}))))
 
 (deftest toimenpiteiden-vaylat
   (testing "Valitaan toimenpiteiden väylät"
@@ -681,39 +1107,6 @@
   (is (false? (tiedot/valiaikainen-hintaryhma? {::h/id 2})))
   (is (false? (tiedot/valiaikainen-hintaryhma? nil))))
 
-(deftest hintakentan-luonti
-  (is (= {::hinta/summa 0
-          ::hinta/yleiskustannuslisa 0}
-         (tiedot/hintakentta {})))
-  (is (= {::hinta/summa 0
-          ::hinta/yleiskustannuslisa 0
-          ::hinta/ryhma :muu}
-         (tiedot/hintakentta {::hinta/ryhma :muu})))
-  (is (= {::hinta/summa nil
-          ::hinta/yleiskustannuslisa 0
-          ::hinta/ryhma :komponentti}
-         (tiedot/hintakentta {::hinta/ryhma :komponentti})))
-  (is (= {::hinta/summa nil
-          ::hinta/yleiskustannuslisa 0
-          ::hinta/ryhma :tyo}
-         (tiedot/hintakentta {::hinta/ryhma :tyo})))
-  (is (= {::hinta/summa 0
-          ::hinta/yleiskustannuslisa 0
-          :foo :bar}
-         (tiedot/hintakentta {:foo :bar})))
-  (is (= {::hinta/summa 100
-          ::hinta/yleiskustannuslisa 0}
-         (tiedot/hintakentta {::hinta/summa 100}))))
-
-(deftest tyokentan-luonti
-  (is (= {::tyo/maara 0}
-         (tiedot/tyokentta {})))
-  (is (= {::tyo/maara 0
-          :foo :bar}
-         (tiedot/tyokentta {:foo :bar})))
-  (is (= {::tyo/maara 100}
-         (tiedot/tyokentta {::tyo/maara 100}))))
-
 (deftest toimenpiteet-valiaikaisiin-ryhmiin
   (is (= [1 -1 -2 -1]
          (mapv ::to/hintaryhma-id
@@ -727,57 +1120,6 @@
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {})))
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma false})))
   (is (= {:korostettu-hintaryhma false} (tiedot/poista-hintaryhmien-korostus {:korostettu-hintaryhma true}))))
-
-(deftest hintakentan-luonti
-  (is (= (tiedot/hintakentta {})
-         {::hinta/summa 0
-          ::hinta/yleiskustannuslisa 0}))
-
-  (is (= (tiedot/hintakentta {::hinta/id 1})
-         {::hinta/summa 0
-          ::hinta/yleiskustannuslisa 0
-          ::hinta/id 1}))
-
-  (is (= (tiedot/hintakentta {::hinta/summa 10})
-         {::hinta/summa 10
-          ::hinta/yleiskustannuslisa 0}))
-
-  (is (= (tiedot/hintakentta {::hinta/yleiskustannuslisa 10})
-         {::hinta/summa 0
-          ::hinta/yleiskustannuslisa 10}))
-
-  (is (= (tiedot/hintakentta {::hinta/ryhma :tyo})
-         {::hinta/summa nil
-          ::hinta/ryhma :tyo
-          ::hinta/yleiskustannuslisa 0}))
-
-  (is (= (tiedot/hintakentta {::hinta/ryhma :muu})
-         {::hinta/summa 0
-          ::hinta/ryhma :muu
-          ::hinta/yleiskustannuslisa 0}))
-
-  (is (= (tiedot/hintakentta {::hinta/ryhma :tyo
-                              ::hinta/summa 10})
-         {::hinta/summa 10
-          ::hinta/yleiskustannuslisa 0
-          ::hinta/ryhma :tyo}))
-
-  (is (= (tiedot/hintakentta {::hinta/ryhma :muu
-                              ::hinta/summa 10})
-         {::hinta/summa 10
-          ::hinta/ryhma :muu
-          ::hinta/yleiskustannuslisa 0})))
-
-(deftest tyokentan-luonti
-  (is (= (tiedot/tyokentta {})
-         {::tyo/maara 0}))
-
-  (is (= (tiedot/tyokentta {::tyo/maara 10})
-         {::tyo/maara 10}))
-
-  (is (= (tiedot/tyokentta {::tyo/id 1})
-         {::tyo/maara 0
-          ::tyo/id 1})))
 
 (deftest vakiohintakentta?
   (is (true? (tiedot/vakiohintakentta? "Yleiset materiaalit")))
@@ -1186,19 +1528,17 @@
                                                         ::hinta/otsikko "Foobar"
                                                         ::hinta/maara 10
                                                         ::hinta/yksikkohinta 10
+                                                        ::hinta/yksikko "h"}
+                                                       {::hinta/ryhma :komponentti
+                                                        ::hinta/otsikko "Foobar"
+                                                        ::hinta/maara 10
+                                                        ::hinta/yksikkohinta 10
                                                         ::hinta/yksikko "kpl"}
                                                        {::hinta/ryhma :komponentti
                                                         ::hinta/otsikko "Foobar"
-                                                        ::hinta/yksikko "h"
-                                                        ::hinta/summa 200}
-                                                       {::hinta/ryhma :komponentti
-                                                        ::hinta/otsikko "Foobar"
-                                                        ::hinta/summa 200}]}})))))
-
-(deftest suunniteltujen-toiden-tyhjennys
-  (is (= (e! (tiedot/->TyhjennaSuunnitellutTyot)
-             {:suunnitellut-tyot [1 2 3]})
-         {:suunnitellut-tyot nil})))
+                                                        ::hinta/maara 10
+                                                        ::hinta/yksikkohinta 10
+                                                        ::hinta/yksikko "km"}]}})))))
 
 (deftest hinnoiteltava-toimenpide
   (is (= {:foo :bar
@@ -1206,112 +1546,3 @@
          (tiedot/hinnoiteltava-toimenpide
            {:hinnoittele-toimenpide {::to/id 1}
             :toimenpiteet [{::to/id 2} {::to/id 1 :foo :bar}]}))))
-
-(deftest suunniteltujen-toiden-haku
-  (testing "Haun aloittaminen"
-    (vaadi-async-kutsut
-      #{tiedot/->SuunnitellutTyotHaettu tiedot/->SuunnitellutTyotEiHaettu}
-
-      (is (true? (:suunniteltujen-toiden-haku-kaynnissa? (e! (tiedot/->HaeSuunnitellutTyot)
-                                                             {:valinnat {:urakka-id 1}}))))))
-
-  (testing "Uusi haku kun haku on jo käynnissä"
-    (vaadi-async-kutsut
-      ;; Ei saa aloittaa uusia hakuja
-      #{}
-
-      (let [tila {:suunniteltujen-toiden-haku-kaynnissa? true
-                  :valinnat {:urakka-id 1}}]
-        (is (= tila
-               (e! (tiedot/->HaeSuunnitellutTyot) tila)))))))
-
-(deftest suunniteltujen-toiden-hakemisen-valmistuminen
-  (is (= (e! (tiedot/->SuunnitellutTyotHaettu [{:id 1}])
-             {:suunniteltujen-toiden-haku-kaynnissa? true})
-         {:suunniteltujen-toiden-haku-kaynnissa? false
-          :suunnitellut-tyot [{:id 1}]})))
-
-(deftest suunniteltujen-toiden-hakemisen-epaonnistuminen
-  (is (= (e! (tiedot/->SuunnitellutTyotEiHaettu)
-             {:suunniteltujen-toiden-haku-kaynnissa? true})
-         {:suunniteltujen-toiden-haku-kaynnissa? false})))
-
-(deftest lisaa-hinnoiteltava-tyorivi
-  (is (= (e! (tiedot/->LisaaHinnoiteltavaTyorivi))
-         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}]}})))
-
-(deftest poista-hinnoiteltava-tyorivi
-  ;; Uusi lisätty rivi katoaa kokonaan
-  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id -1})
-             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
-                                                 {::tyo/id 2 ::tyo/maara 1}
-                                                 {::tyo/id 3 ::tyo/maara 2}]}})
-         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 2 ::tyo/maara 1}
-                                             {::tyo/id 3 ::tyo/maara 2}]}}))
-  ;; Kannassa jo oleva rivi merkitään poistetuksi
-  (is (= (e! (tiedot/->PoistaHinnoiteltavaTyorivi {::tyo/id 2})
-             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
-                                                 {::tyo/id 2 ::tyo/maara 1}
-                                                 {::tyo/id 3 ::tyo/maara 2}]}})
-         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id -1 ::tyo/maara 0}
-                                             {::tyo/id 2 ::tyo/maara 1 ::m/poistettu? true}
-                                             {::tyo/id 3 ::tyo/maara 2}]}})))
-
-(deftest aseta-tyoriville-tiedot
-  (is (= (e! (tiedot/->AsetaTyorivilleTiedot {::tyo/id 2
-                                              ::tyo/maara 666
-                                              ::tyo/toimenpidekoodi-id 1})
-             {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::tyo/maara 0}
-                                                 {::tyo/id 2 ::tyo/maara 1}
-                                                 {::tyo/id 3 ::tyo/maara 2}]}})
-         {:hinnoittele-toimenpide {::h/tyot [{::tyo/id 1 ::tyo/maara 0}
-                                             {::tyo/id 2 ::tyo/maara 666 ::tyo/toimenpidekoodi-id 1}
-                                             {::tyo/id 3 ::tyo/maara 2}]}})))
-
-(deftest lisaa-muu-kulurivi
-  (let [hinnat [{::hinta/id 1}
-                {::hinta/id 2}]
-        uusi-hinta {::hinta/id -1
-                    ::hinta/otsikko ""
-                    ::hinta/summa 0
-                    ::hinta/ryhma :muu
-                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
-    (is (= (e! (tiedot/->LisaaMuuKulurivi)
-              {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
-
-  (let [hinnat [{::hinta/id 1}
-                {::hinta/id 2}
-                {::hinta/id -1}]
-        uusi-hinta {::hinta/id -2
-                    ::hinta/otsikko ""
-                    ::hinta/summa 0
-                    ::hinta/ryhma :muu
-                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
-    (is (= (e! (tiedot/->LisaaMuuKulurivi)
-               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
-
-(deftest lisaa-muu-tyorivi
-  (let [hinnat [{::hinta/id 1}
-                {::hinta/id 2}]
-        uusi-hinta {::hinta/id -1
-                    ::hinta/otsikko ""
-                    ::hinta/summa nil
-                    ::hinta/ryhma :tyo
-                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
-    (is (= (e! (tiedot/->LisaaMuuTyorivi)
-               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}})))
-
-  (let [hinnat [{::hinta/id 1}
-                {::hinta/id 2}
-                {::hinta/id -1}]
-        uusi-hinta {::hinta/id -2
-                    ::hinta/otsikko ""
-                    ::hinta/summa nil
-                    ::hinta/ryhma :tyo
-                    :harja.domain.vesivaylat.hinta/yleiskustannuslisa 0}]
-    (is (= (e! (tiedot/->LisaaMuuTyorivi)
-               {:hinnoittele-toimenpide {::h/hinnat hinnat}})
-           {:hinnoittele-toimenpide {::h/hinnat (conj hinnat uusi-hinta)}}))))
