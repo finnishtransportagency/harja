@@ -264,7 +264,7 @@
             [:td
              [kentta-hinnalle e! komponentin-hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
             [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen komponentin-hinta))]
-            [:td.keskita [yleiskustannuslisakentta e! komponentin-hinta]] ;; TODO YK-lisä
+            [:td.keskita [yleiskustannuslisakentta e! komponentin-hinta]]
             [:td.keskita
              [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi komponentin-hinta))]]]))]]
      [rivinlisays "Lisää komponenttirivi"
