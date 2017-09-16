@@ -39,6 +39,7 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.tietyoilmoitukset :as t-domain]
+            [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
@@ -88,23 +89,43 @@
    :data tyokone})
 
 (defn- ilmoituksen-tiedot [ilmoitus]
-  {:tyyppi :ilmoitus
-   :jarjesta-fn :ilmoitettu
-   :otsikko (str
-              (pvm/pvm-aika (:ilmoitettu ilmoitus)) " - "
-              (condp = (:ilmoitustyyppi ilmoitus)
-                :toimenpidepyynto "Toimenpidepyyntö"
-                :tiedoitus "Tiedotus"
-                (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
-   :tiedot [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
-            {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
-            {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
-            {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
-            {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
-            {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
-            {:otsikko "Kuittaukset" :tyyppi :positiivinen-numero :kokonaisluku? true
-             :hae (hakufunktio :kuittaukset #(count (:kuittaukset %)))}]
-   :data ilmoitus})
+  (let [nayta-max-kuittausta 10]
+    {:tyyppi      :ilmoitus
+     :jarjesta-fn :ilmoitettu
+     :otsikko     (str
+                    (pvm/pvm-aika (:ilmoitettu ilmoitus)) " - "
+                    (condp = (:ilmoitustyyppi ilmoitus)
+                      :toimenpidepyynto "Toimenpidepyyntö"
+                      :tiedoitus "Tiedotus"
+                      (string/capitalize (name (:ilmoitustyyppi ilmoitus)))))
+     :tiedot      [{:otsikko "Id" :tyyppi :string :nimi :ilmoitusid}
+                   {:otsikko "Tunniste" :tyyppi :string :nimi :tunniste}
+                   {:otsikko "Ilmoitettu" :tyyppi :pvm-aika :nimi :ilmoitettu}
+                   {:otsikko "Otsikko" :tyyppi :string :nimi :otsikko}
+                   {:otsikko "Paikan kuvaus" :tyyppi :string :nimi :paikankuvaus}
+                   {:otsikko "Lisätietoja" :tyyppi :string :nimi :lisatieto}
+                   {:otsikko "Kuittaukset" :nimi :kuittaukset :tyyppi :komponentti
+                    :komponentti
+                             (fn []
+                               (let [kuittaukset (filterv #(not= :valitys (:kuittaustyyppi %)) (:kuittaukset ilmoitus))
+                                     kuittauksien-maara (count kuittaukset)
+                                     kaikkia-ei-piirretty? (> kuittauksien-maara nayta-max-kuittausta)]
+                                 [:div
+                                  (for [ilmoitus (take nayta-max-kuittausta (sort-by :kuitattu pvm/jalkeen? kuittaukset))]
+                                    ^{:key (:id ilmoitus)}
+                                    [:div.tietorivi.tietorivi-ilman-alaviivaa
+                                     [:span.tietokentta {:style {:display     "auto"
+                                                                 :font-weight "normal"}}
+                                      (str (if (keyword? (:kuittaustyyppi ilmoitus))
+                                             (-> ilmoitus :kuittaustyyppi apurit/kuittaustyypin-otsikko)
+                                             "-"))]
+                                     [:span.tietoarvo (pvm/pvm (:kuitattu ilmoitus))]])
+                                  (when kaikkia-ei-piirretty?
+                                    [:div (str "...sekä "
+                                               (- kuittauksien-maara nayta-max-kuittausta)
+                                               " muuta toimenpidettä.")])
+                                  ]))}]
+     :data        ilmoitus}))
 
 (defmethod infopaneeli-skeema :toimenpidepyynto [ilmoitus]
   (ilmoituksen-tiedot ilmoitus))
