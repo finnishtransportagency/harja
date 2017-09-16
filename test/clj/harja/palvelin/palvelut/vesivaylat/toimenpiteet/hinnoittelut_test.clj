@@ -170,7 +170,7 @@
 (deftest tallenna-tyot-eri-urakan-toimenpiteelle
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         helsinki-id (hae-helsingin-vesivaylaurakan-id)
-        urakka-id (some (comp not (partial = helsinki-id)) (range 100))
+        urakka-id (some #(when-not (= helsinki-id %) %) (range 100))
         toimenpidekoodi-id (ffirst (q "SELECT id
                                         FROM toimenpidekoodi
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
@@ -220,6 +220,7 @@
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
+                                                   ::hinta/ryhma :muu
                                                    ::hinta/summa 666}]
                        ::h/tallennettavat-tyot []}]
 
@@ -316,10 +317,12 @@
                        ::h/id hinnoittelu-id
                        ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/summa 666}
+                                                   ::hinta/summa 666
+                                                   ::hinta/ryhma :muu}
                                                   {::hinta/otsikko "Testihinta 2"
                                                    ::hinta/yleiskustannuslisa 12
-                                                   ::hinta/summa 123}]
+                                                   ::hinta/summa 123
+                                                   ::hinta/ryhma :muu}]
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -349,10 +352,12 @@
                        ::h/id hinnoittelu-id
                        ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
-                                                   ::hinta/summa 666}
+                                                   ::hinta/summa 666
+                                                   ::hinta/ryhma :muu}
                                                   {::hinta/otsikko "Testihinta 2"
                                                    ::hinta/yleiskustannuslisa 12
-                                                   ::hinta/summa 123}]
+                                                   ::hinta/summa 123
+                                                   ::hinta/ryhma :muu}]
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
