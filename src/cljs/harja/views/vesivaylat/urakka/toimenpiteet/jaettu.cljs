@@ -255,11 +255,15 @@
         (tiedot/toimenpiteet-tyolajilla $ tyolaji)
         (ryhmittele-toimenpiteet-vaylalla e! $ vaylan-checkbox-sijainti)))
 
+(def *c (atom 0))
+
 (defn- paneelin-sisalto [e! app listaus-tunniste toimenpiteet sarakkeet
                          {:keys [infolaatikon-tila-muuttui
                                  rivi-klikattu]}]
+  (log "paneelin-sisalto: toimenpide ::to/id:t" (pr-str (map ::to/id  toimenpiteet)))
+
   [grid/grid
-   {:tunniste ::to/id
+   {:tunniste #(str (get % ::to/id "_") "/" listaus-tunniste)
     :infolaatikon-tila-muuttui (fn [nakyvissa?]
                                  (e! (tiedot/->AsetaInfolaatikonTila
                                        listaus-tunniste
@@ -272,34 +276,46 @@
     :ei-footer-muokkauspaneelia? true
     :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
     :valiotsikoiden-alkutila :kaikki-kiinni}
-   sarakkeet
-   toimenpiteet])
+                                            sarakkeet
+                                            ;; (for* [t toimenpiteet] t)
+                                            toimenpiteet])
 
 (defn- luo-otsikkorivit
   [{:keys [e! app listaus-tunniste toimenpiteet toimenpiteiden-haku-kaynnissa?
            gridin-sarakkeet vaylan-checkbox-sijainti infolaatikon-tila-muuttui rivi-klikattu]}]
+  (log "luo-otsikkorivit: tunniste" (clj->js listaus-tunniste))
   (let [tyolajit (keys (group-by ::to/tyolaji toimenpiteet))]
+    (log "tyolajit" (pr-str tyolajit)) ;; -> poijut testidatalla
     (vec (mapcat
-           (fn [tyolaji]
-             [tyolaji
-              [:span
-               (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
-                                         (count (tiedot/toimenpiteet-tyolajilla
+          (fn [tyolaji]
+            #_(log "suodata" (pr-str tyolaji) "palauttaa otsikon" (pr-str (:teksti (first  (suodata-ja-ryhmittele-toimenpiteet-gridiin
+                                                                                           e!
+                                                                                           toimenpiteet
+                                                                                           tyolaji
+                                                                                           vaylan-checkbox-sijainti)))))
+            (let [suodatetut-ja-ryhmitellyt-toimenpiteet (suodata-ja-ryhmittele-toimenpiteet-gridiin
+                                                          e!
+                                                          toimenpiteet
+                                                          tyolaji
+                                                          vaylan-checkbox-sijainti)
+                  react-id (str listaus-tunniste "/" (:teksti (first suodatetut-ja-ryhmitellyt-toimenpiteet)))]
+              (log "tyolaji-komponentille id:ksi" (pr-str react-id))
+              ^{:key react-id}
+              [tyolaji
+               [:span
+                (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
+                                          (count (tiedot/toimenpiteet-tyolajilla
                                                   toimenpiteet
                                                   tyolaji)))
-               (when toimenpiteiden-haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
-              [paneelin-sisalto
-               e!
-               app
-               listaus-tunniste
-               (suodata-ja-ryhmittele-toimenpiteet-gridiin
-                 e!
-                 toimenpiteet
-                 tyolaji
-                 vaylan-checkbox-sijainti)
-               gridin-sarakkeet
-               {:infolaatikon-tila-muuttui infolaatikon-tila-muuttui
-                :rivi-klikattu rivi-klikattu}]])
+                (when toimenpiteiden-haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
+               [paneelin-sisalto
+                e!
+                app
+                react-id ;; oli listaus-tunniste
+                suodatetut-ja-ryhmitellyt-toimenpiteet
+                gridin-sarakkeet
+                {:infolaatikon-tila-muuttui infolaatikon-tila-muuttui
+                 :rivi-klikattu rivi-klikattu}]]))
            tyolajit))))
 
 (defn hintaryhman-otsikko [otsikko]
@@ -325,15 +341,15 @@
                                                           :valinta uusi}
                                                          toimenpiteet))))]))}]}]
          (luo-otsikkorivit
-           {:e! e!
-            :app app
-            :listaus-tunniste listaus-tunniste
-            :toimenpiteet toimenpiteet
-            :toimenpiteiden-haku-kaynnissa? toimenpiteiden-haku-kaynnissa?
-            :gridin-sarakkeet gridin-sarakkeet
-            :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
-            :rivi-klikattu rivi-klikattu
-            :infolaatikon-tila-muuttui infolaatikon-tila-muuttui}))
+          {:e! e!
+           :app app
+           :listaus-tunniste listaus-tunniste
+           :toimenpiteet toimenpiteet
+           :toimenpiteiden-haku-kaynnissa? toimenpiteiden-haku-kaynnissa?
+           :gridin-sarakkeet gridin-sarakkeet
+           :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
+           :rivi-klikattu rivi-klikattu
+           :infolaatikon-tila-muuttui infolaatikon-tila-muuttui}))
    (when footer
      [:div.toimenpiteet-listaus-footer footer])])
 
