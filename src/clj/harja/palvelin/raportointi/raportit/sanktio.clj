@@ -113,13 +113,11 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        naytettavat-alueet (map
-                             #(select-keys % [:urakka-id :nimi])
-                             (yleinen/naytettavat-alueet db konteksti {:urakka urakka-id
-                                                                       :hallintayksikko hallintayksikko-id
-                                                                       :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-                                                                       :alku alkupvm
-                                                                       :loppu loppupvm}))
+        naytettavat-alueet (yleinen/naytettavat-alueet db konteksti {:urakka urakka-id
+                                                                     :hallintayksikko hallintayksikko-id
+                                                                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                     :alku alkupvm
+                                                                     :loppu loppupvm})
         sanktiot-kannassa (into []
                                 (comp
                                   (map #(konv/string->keyword % :sakkoryhma))
@@ -131,7 +129,7 @@
                                                :alku alkupvm
                                                :loppu loppupvm}))
 
-        urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi]) sanktiot-kannassa))
+        urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi :loppupvm]) sanktiot-kannassa))
         ;; jos on jostain syystä sanktioita urakassa joka ei käynnissä, spesiaalikäsittely, I'm sorry
         naytettavat-alueet (if (= konteksti :hallintayksikko)
                              (vec (sort-by :nimi (set/union (into #{} naytettavat-alueet)
