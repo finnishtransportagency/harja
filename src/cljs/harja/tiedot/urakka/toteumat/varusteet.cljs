@@ -57,7 +57,8 @@
                 ;; Tierekisterin varusteiden hakuehdot ja tulokset
                 :tierekisterin-varusteet {:hakuehdot {:haku-kaynnissa? false
                                                       :tietolaji (ffirst (vec tierekisteri-varusteet/tietolaji->selitys))
-                                                      :varusteiden-haun-tila :sijainnilla}
+                                                      :varusteiden-haun-tila :sijainnilla
+                                                      :voimassaolopvm (pvm/nyt)}
                                           ;; Tällä hetkellä näytettävä tietolaji ja varusteet
                                           :tietolaji nil
                                           :varusteet nil}}))
