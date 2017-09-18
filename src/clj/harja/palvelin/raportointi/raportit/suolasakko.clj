@@ -14,18 +14,35 @@
 (defqueries "harja/kyselyt/suolasakkoraportti.sql"
   {:positional? true})
 
+(defn- suolasakko-ei-osu-aikavalille?
+  ; Suolasakko hoitokaudelle 2016-2017 laskutetaan yhtenä kk:na touko-syyskuun aikana vuonna 2017.
+  ; Samposta tulee usein hoitourakat niin että urakan loppupvm on 31.12., vaikka oikeasti
+  ; viimeinen hoitokausi urakassa loppuikin jo 30.9. Tällöin voi olla sama alueurakka kahteen kertaan
+  ; elykohtaisessa raportissa. Korjataan tästä aiheutuva bugi HAR-6145 tutkimalla urakan loppupvm:ää tarkemmin.
+  "Kertoo meneekö urakan suolasakon laskutuskk varmuudella ohi valitusta aikavälistä"
+  [valitun-hkn-loppupvm urakka]
+  (let [urakan-loppupvm (pvm/joda-timeksi (:loppupvm urakka))
+        valitun-hoitokauden-loppuvuosi (pvm/vuosi valitun-hkn-loppupvm)
+        ensimmainen-mahdollinen-suolasakon-laskutuskuukausi
+        (pvm/joda-timeksi (pvm/->pvm (str "1.5." valitun-hoitokauden-loppuvuosi)))]
+    (pvm/jalkeen? ensimmainen-mahdollinen-suolasakon-laskutuskuukausi urakan-loppupvm)))
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id urakkatyyppi]
                         :as parametrit}]
-  (let [urakat (into #{}
+  (let [urakat (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
+                                                      :hallintayksikko hallintayksikko-id
+                                                      :alku alkupvm
+                                                      :loppu loppupvm
+                                                      :urakkatyyppi "hoito"})
+        urakat-aikavalin-sisalla (filter
+                                   #(not (suolasakko-ei-osu-aikavalille? loppupvm %))
+                                   urakat)
+        urakka-idt (into #{}
                      (map :urakka-id)
-                     (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
-                                                        :hallintayksikko hallintayksikko-id
-                                                        :alku alkupvm
-                                                        :loppu loppupvm
-                                                        :urakkatyyppi "hoito"}))
+                     urakat-aikavalin-sisalla)
         raportin-data (hae-suolasakot db {:alkupvm (konv/sql-date alkupvm)
                                           :loppupvm (konv/sql-date loppupvm)
-                                          :urakat  urakat})
+                                          :urakat  urakka-idt})
         konteksti (cond
                     (and urakka-id alkupvm loppupvm)
                     :urakka

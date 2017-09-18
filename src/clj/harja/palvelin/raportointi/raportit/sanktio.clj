@@ -129,7 +129,7 @@
                                                :alku alkupvm
                                                :loppu loppupvm}))
 
-        urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi]) sanktiot-kannassa))
+        urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi :loppupvm]) sanktiot-kannassa))
         ;; jos on jostain syystä sanktioita urakassa joka ei käynnissä, spesiaalikäsittely, I'm sorry
         naytettavat-alueet (if (= konteksti :hallintayksikko)
                              (vec (sort-by :nimi (set/union (into #{} naytettavat-alueet)
