@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut-test
+(ns harja.palvelin.palvelut.vesivaylat.hinnoittelut-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
             [harja
@@ -12,7 +12,7 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as u]
             [harja.palvelin.palvelut.vesivaylat.toimenpiteet.apurit :as apurit]
-            [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as hin]
+            [harja.palvelin.palvelut.vesivaylat.hinnoittelut :as hin]
             [harja.palvelin.palvelut.yllapito-toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
