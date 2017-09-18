@@ -28,13 +28,11 @@
     (assoc app :yhteydenotto yhteydenotto))
 
   Laheta
-  (process-event [yhteydenotto app]
+  (process-event [{yhteydenotto :yhteydenotto} app]
     (let [tulos! (t/send-async! ->LahetysOnnistui)
           virhe! (t/send-async! ->LahetysEpaonnistui)]
-      (log "--->>> lähtee")
       (go
-        (let [vastaus (<! (k/post! :laheta-sahkoposti-kaikille-kayttajille yhteydenotto))]
-          (log "--->>> vastaus " (pr-str vastaus))
+        (let [vastaus (<! (k/post! :laheta-sahkoposti-kaikille-kayttajille (select-keys yhteydenotto [:otsikko :sisalto])))]
           (if (k/virhe? vastaus)
             (virhe!)
             (tulos!))))

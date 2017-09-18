@@ -11,7 +11,8 @@
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
             [clj-time.core :as t]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
 
 (defn oletusurakkatyyppi
   [db user]
@@ -138,10 +139,22 @@
                  hallintayksikot)
    (pvm/nyt) (pvm/nyt)))
 
+(defn laheta-sahkoposti-kaikille-kayttajille
+  "Lähettää annetun viestin kaikille Harjan käyttäjille, joille löytyy sähköpostiosoite"
+  [sahkoposti db user {:keys [otsikko sisalto]}]
+  (let [vastaanottajat (hae-yhteydenpidon-vastaanottajat db user)]
+    (doseq [{sahkopostiosoite :sahkoposti} vastaanottajat]
+      (println "-->>> Lähetetään" sahkopostiosoite otsikko sisalto)
+      (sahkoposti/laheta-viesti!
+        sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto)))
+  true)
+
 (defrecord Kayttajatiedot []
   component/Lifecycle
   (start [{http :http-palvelin
-           db :db :as this}]
+           db :db
+           sahkoposti :solita-sahkoposti
+           :as this}]
     (julkaise-palvelu http
                       :kayttajatiedot
                       (fn [user alku]
@@ -152,6 +165,10 @@
                       :yhteydenpito-vastaanottajat
                       (fn [user _]
                         (hae-yhteydenpidon-vastaanottajat db user)))
+    (julkaise-palvelu http
+                      :laheta-sahkoposti-kaikille-kayttajille
+                      (fn [user yhteydenotto]
+                        (laheta-sahkoposti-kaikille-kayttajille sahkoposti db user yhteydenotto)))
     (julkaise-palvelu http
                       :kayttajan-urakat
                       (fn [user hallintayksikot]

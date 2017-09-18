@@ -31,12 +31,14 @@
     [{:nimi :otsikko
       :otsikko "Otsikko"
       :tyyppi :string
-      :palstoja 2}
+      :palstoja 2
+      :pakollinen? true}
      {:nimi :sisalto
       :otsikko "Sisältö"
       :tyyppi :text
       :koko [640 4]
-      :palstoja 2}]
+      :palstoja 2
+      :pakollinen? true}]
     yhteydenotto]])
 
 (defn yhteydenpito* []
