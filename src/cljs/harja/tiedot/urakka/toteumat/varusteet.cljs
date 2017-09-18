@@ -132,7 +132,6 @@
         toteuma {:id id
                  :arvot arvot
                  :sijainti sijainti
-                 :puoli puoli
                  :ajorata ajorata
                  :tierekisteriosoite tierekisteriosoite
                  :lisatieto lisatieto
@@ -145,6 +144,11 @@
                  :alkupvm alkupvm
                  :loppupvm loppupvm
                  :uusi-liite uusi-liite}
+
+        toteuma (if (varusteet/tien-puolellinen-tietolaji? tietolaji)
+                  (assoc toteuma :puoli puoli)
+                  toteuma)
+
         hakuehdot {:urakka-id urakka-id
                    :sopimus-id sopimus-id
                    :alkupvm (first aikavali)
