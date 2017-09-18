@@ -227,13 +227,14 @@
        :pakollinen? muokattava?
        :leveys 1
        :muokattava? (constantly muokattava?)}
-      {:nimi :puoli
-       :otsikko "Tien puoli"
-       :tyyppi :valinta
-       :valinnat (tierekisteri-varusteet/tien-puolet tietolaji)
-       :pituus 1
-       :pakollinen? muokattava?
-       :muokattava? (constantly muokattava?)}
+      (when (tierekisteri-varusteet/tien-puolellinen-tietolaji? tietolaji)
+        {:nimi :puoli
+         :otsikko "Tien puoli"
+         :tyyppi :valinta
+         :valinnat (tierekisteri-varusteet/tien-puolet tietolaji)
+         :pituus 1
+         :pakollinen? muokattava?
+         :muokattava? (constantly muokattava?)})
       {:nimi :alkupvm
        :otsikko "Alkupäivämäärä"
        :tyyppi :pvm
