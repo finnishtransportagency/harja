@@ -146,7 +146,7 @@
       {:fim fim
        :email email
        :urakka-sampoid urakka-sampoid
-       :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "rakennuttajakonsultti"}
+       :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
        :viesti-otsikko viestin-otsikko
        :viesti-body viestin-vartalo})
     (when (:sahkoposti ilmoittaja)
@@ -207,7 +207,7 @@
         {:fim fim
          :email email
          :urakka-sampoid tiemerkintaurakka-sampo-id
-         :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "rakennuttajakonsultti"}
+         :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))

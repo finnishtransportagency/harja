@@ -1,11 +1,12 @@
 (ns harja.fmt
   "Yleisiä apureita erityyppisen datan formatointiin."
   (:require [harja.pvm :as pvm]
-    #?(:cljs [goog.i18n.currencyCodeMap])
-    #?(:cljs [goog.i18n.NumberFormatSymbols])
-    #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
-    #?(:cljs [goog.i18n.NumberFormat])
-      [clojure.string :as str])
+            #?(:cljs [goog.i18n.currencyCodeMap])
+            #?(:cljs [goog.i18n.NumberFormatSymbols])
+            #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
+            #?(:cljs [goog.i18n.NumberFormat])
+            [clojure.string :as str]
+            [harja.tyokalut.big :as big])
   #?(:clj
      (:import (java.text NumberFormat)
               (java.util Locale))))
@@ -28,24 +29,27 @@
   "Formatoi summan euroina näyttämistä varten. Tuhaterottimien ja valinnaisen euromerkin kanssa."
   ([eur] (euro true eur))
   ([nayta-euromerkki eur]
-   #?(:cljs
-       ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
-       ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
-       ;; vasta IE11 versiosta lähtien.
-      (let [tulos (.format euro-number-format eur)]
-        (if (or
-              (or (nil? eur) (and (string? eur) (empty? eur)))
-              (frontin-formatointivirheviestit tulos))
-          (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-          (str tulos " \u20AC")))
+   (if (big/big? eur)
+     (str (big/fmt-full eur 2)
+          (when nayta-euromerkki " \u20AC"))
+     #?(:cljs
+        ;; NOTE: lisätään itse perään euro symboli, koska googlella oli jotain ihan sotkua.
+        ;; Käytetään googlen formatointia, koska toLocaleString tukee tarvittavia optioita, mutta
+        ;; vasta IE11 versiosta lähtien.
+        (let [tulos (.format euro-number-format eur)]
+          (if (or
+               (or (nil? eur) (and (string? eur) (empty? eur)))
+               (frontin-formatointivirheviestit tulos))
+            (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
+            (str tulos " \u20AC")))
 
-      :clj
-      (.format (doto
-                 (if nayta-euromerkki
-                   (NumberFormat/getCurrencyInstance)
-                   (NumberFormat/getNumberInstance))
-                 (.setMaximumFractionDigits 2)
-                 (.setMinimumFractionDigits 2)) eur))))
+        :clj
+        (.format (doto
+                     (if nayta-euromerkki
+                       (NumberFormat/getCurrencyInstance)
+                       (NumberFormat/getNumberInstance))
+                   (.setMaximumFractionDigits 2)
+                   (.setMinimumFractionDigits 2)) eur)))))
 
 
 

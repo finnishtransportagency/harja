@@ -48,16 +48,16 @@ FROM urakka u
 LEFT JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
 -- Urakka on käynnissä
-(u.alkupvm <= now() AND
-u.loppupvm > now())
+(u.alkupvm <= current_date AND
+u.loppupvm >= current_date)
 OR
 -- Urakka on käynnissä (loppua ei tiedossa)
-(u.alkupvm <= now() AND
+(u.alkupvm <= current_date AND
 u.loppupvm IS NULL)
 OR
 -- Urakan takuuaika on voimassa
-(u.alkupvm <= now() AND
-u.takuu_loppupvm > now())
+(u.alkupvm <= current_date AND
+u.takuu_loppupvm >= current_date)
 ORDER BY etaisyys;
 
 -- name: hae-kaikki-urakat-aikavalilla
@@ -545,8 +545,8 @@ SELECT u.id
 FROM urakka u
   LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
 WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
-      AND (u.alkupvm IS NULL OR u.alkupvm <= current_timestamp)
-      AND (u.loppupvm IS NULL OR u.loppupvm > current_timestamp)
+      AND (u.alkupvm IS NULL OR u.alkupvm <= current_date)
+      AND (u.loppupvm IS NULL OR u.loppupvm >= current_date)
       AND
       ((:urakkatyyppi = 'hoito' AND (st_contains(ua.alue, ST_MakePoint(:x, :y))))
       OR
@@ -673,8 +673,8 @@ SELECT
 FROM urakka u
 JOIN alueurakka au ON au.alueurakkanro = u.urakkanro
 WHERE
-u.alkupvm <= now() AND
-u.loppupvm > now() AND
+u.alkupvm <= current_date AND
+u.loppupvm >= current_date AND
 st_distance(au.alue, st_makepoint(:x, :y)) <= :maksimietaisyys
 ORDER BY etaisyys ASC
 LIMIT 1;
@@ -698,8 +698,8 @@ FROM urakka u
   JOIN organisaatio e ON e.id = u.hallintayksikko
   JOIN organisaatio o ON o.id = u.urakoitsija
 WHERE urakkanro = :urakkanro AND
-      alkupvm <= now() AND
-      loppupvm > now();
+      alkupvm <= current_date AND
+      loppupvm >= current_date;
 
 -- name: onko-olemassa-urakkanro?
 -- single?: true

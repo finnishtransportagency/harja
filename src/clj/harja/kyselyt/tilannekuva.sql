@@ -41,6 +41,8 @@ SELECT
   it.kuitattu                         AS kuittaus_kuitattu,
   it.vapaateksti                      AS kuittaus_vapaateksti,
   it.kuittaustyyppi                   AS kuittaus_kuittaustyyppi,
+  it.kanava                           AS kuittaus_kanava,
+  it.vakiofraasi                      AS kuittaus_vakiofraasi,
 
   it.kuittaaja_henkilo_etunimi        AS kuittaus_kuittaaja_etunimi,
   it.kuittaaja_henkilo_sukunimi       AS kuittaus_kuittaaja_sukunimi,

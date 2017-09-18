@@ -140,7 +140,10 @@
                  [devcards "0.2.2" :exclusions [cljsjs/react]]
 
                   ;; Parsi sourcemapit
-                 [com.atlassian.sourcemap/sourcemap "1.7.5"]]
+                 [com.atlassian.sourcemap/sourcemap "1.7.5"]
+
+                 ;; Arbitrary precision math frontilla
+                 [cljsjs/big "3.1.3-1"]]
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]

@@ -117,7 +117,7 @@ SELECT
   alkupvm,
   loppupvm
 FROM urakka
-WHERE loppupvm >= NOW();
+WHERE loppupvm >= current_date;
 
 -- name: paivita-valtakunnallinen-valitavoite!
 -- Päivittää valtakunnallisen välitavoitteen tiedot

@@ -3,6 +3,7 @@
   (:require [harja.kyselyt.laskutusyhteenveto :as laskutus-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.maksuerat :as maksuerat-q]
 
             [taoensso.timbre :as log]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
@@ -69,7 +70,8 @@
 (defn taulukko-elementti
   [otsikko taulukon-tiedot kyseessa-kk-vali?
    laskutettu-teksti laskutetaan-teksti
-   yhteenveto yhteenveto-teksti summa-fmt]
+   yhteenveto yhteenveto-teksti summa-fmt
+   tyypin-maksuerat]
   [:taulukko {:oikealle-tasattavat-kentat #{1 2 3}
               :viimeinen-rivi-yhteenveto? true}
    (rivi
@@ -82,10 +84,13 @@
 
    (into []
          (concat
-           (map (fn [[nimi {laskutettu :tulos laskutettu-ind-puuttui? :indeksi-puuttui?}
-                      {laskutetaan :tulos laskutetaan-ind-puuttui? :indeksi-puuttui?}]]
+           (map (fn [[nimi
+                      {laskutettu :tulos laskutettu-ind-puuttui? :indeksi-puuttui?}
+                      {laskutetaan :tulos laskutetaan-ind-puuttui? :indeksi-puuttui?}
+                      tpi]]
                   (rivi
-                    nimi
+                    (str nimi (when (= 1 (count (filter #(= (:toimenpideinstanssi %) tpi) tyypin-maksuerat)))
+                                (str " (#" (:numero (first (filter #(= (:toimenpideinstanssi %) tpi) tyypin-maksuerat))) ")")))
                     (when kyseessa-kk-vali?
                       [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
                                            :fmt (when laskutettu :raha)
@@ -158,14 +163,16 @@
     (when-not (empty? taulukon-rivit)
       (taulukko-elementti otsikko taulukon-rivit kyseessa-kk-vali?
                           laskutettu-teksti laskutetaan-teksti
-                          yhteenveto yhteenveto-teksti summa-fmt))))
+                          yhteenveto yhteenveto-teksti summa-fmt
+                          nil))))
 
 (defn- taulukko
   ([otsikko otsikko-jos-tyhja
     laskutettu-teksti laskutettu-kentta
     laskutetaan-teksti laskutetaan-kentta
     yhteenveto-teksti kyseessa-kk-vali?
-    tiedot summa-fmt kentat-joiden-laskennan-indeksipuute-sotki]
+    tiedot summa-fmt kentat-joiden-laskennan-indeksipuute-sotki
+    tyypin-maksuerat]
   (let [laskutettu-kentat (map laskutettu-kentta tiedot)
         laskutetaan-kentat (map laskutetaan-kentta tiedot)
         kaikkien-toimenpiteiden-summa (fn [kentat]
@@ -196,12 +203,14 @@
                                               :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutettu-kentta)})
                                            (fn [rivi]
                                              {:tulos (laskutetaan-kentta rivi)
-                                              :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)}))
+                                              :indeksi-puuttui? (kentat-joiden-laskennan-indeksipuute-sotki laskutetaan-kentta)})
+                                           :tpi)
                                      tiedot))]
     (when-not (empty? taulukon-tiedot)
       (taulukko-elementti otsikko taulukon-tiedot kyseessa-kk-vali?
                           laskutettu-teksti laskutetaan-teksti
-                          yhteenveto yhteenveto-teksti summa-fmt)))))
+                          yhteenveto yhteenveto-teksti summa-fmt
+                          tyypin-maksuerat)))))
 
 (defn- aseta-sheet-nimi [[ensimmainen & muut]]
   (when ensimmainen
@@ -216,7 +225,7 @@
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotus"))
    (keyword (str kentan-kantanimi "_laskutetaan_ind_korotettuna"))])
 
-(defn- laskettavat-kentat [rivi]
+(defn- laskettavat-kentat [rivi konteksti]
   (let [kustannusten-kentat (into []
                                   (apply concat [(kustannuslajin-kaikki-kentat "kht")
                                                  (kustannuslajin-kaikki-kentat "yht")
@@ -227,7 +236,8 @@
                                                  (kustannuslajin-kaikki-kentat "bonukset")
                                                  (kustannuslajin-kaikki-kentat "erilliskustannukset")
                                                  (kustannuslajin-kaikki-kentat "kaikki_paitsi_kht")
-                                                 (kustannuslajin-kaikki-kentat "kaikki")]))]
+                                                 (kustannuslajin-kaikki-kentat "kaikki")
+                                                 (when (= :urakka konteksti) [:tpi])]))]
     (if (and (some? (:suolasakot_laskutettu rivi))
              (some?(:suolasakot_laskutetaan rivi)))
       (into []
@@ -320,6 +330,10 @@
     "vahinkojen_korjaukset" "bonukset" "erilliskustannukset"})
 (def kentat-kaikki (conj kentat-kaikki-paitsi-kht "kht"))
 
+(defn- tyypin-maksuerat
+  [tyyppi maksuerat]
+  (get maksuerat tyyppi))
+
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [;; Aikavälit ja otsikkotekstit
@@ -381,11 +395,14 @@
         kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
                                          (fmap #(apply merge-with (fnil + 0 0)
                                                        (map (fn [rivi]
-                                                              (select-keys rivi (laskettavat-kentat rivi)))
+                                                              (select-keys rivi (laskettavat-kentat rivi konteksti)))
                                                             %))
                                                kaikki-tuotteittain))
         tiedot (into []
                      (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
+
+        maksueratiedot (when (= :urakka konteksti)
+                         (group-by :tyyppi (maksuerat-q/hae-urakan-maksueratiedot db {:urakka_id urakka-id})))
 
         ;; Varoitustekstit raportille
         varoitus-indeksilaskennan-perusluku-puuttuu (varoitus-indeksilaskennan-perusluku-puuttuu urakat-joissa-indeksilaskennan-perusluku-puuttuu)
@@ -399,7 +416,7 @@
         taulukot
         (aseta-sheet-nimi
           (concat
-            (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt :as taulukko-rivi]]
+            (keep (fn [[otsikko tyhja laskutettu laskutetaan tiedot summa-fmt tyypin-maksuerat :as taulukko-rivi]]
                     (when taulukko-rivi
                       (taulukko otsikko tyhja
                                 laskutettu-teksti laskutettu
@@ -409,24 +426,31 @@
                                            (if ainakin-yhdessa-urakassa-indeksit-kaytossa?
                                              fmt/luku-indeksikorotus
                                              fmt/euro-opt))
-                                kentat-joiden-laskennan-indeksipuute-sotki)))
+                                kentat-joiden-laskennan-indeksipuute-sotki
+                                tyypin-maksuerat)))
                   [[" Kokonaishintaiset työt " " Ei kokonaishintaisia töitä "
-                    :kht_laskutettu :kht_laskutetaan tiedot]
+                    :kht_laskutettu :kht_laskutetaan tiedot nil
+                    (tyypin-maksuerat "kokonaishintainen" maksueratiedot)]
                    [" Yksikköhintaiset työt " " Ei yksikköhintaisia töitä "
-                    :yht_laskutettu :yht_laskutetaan tiedot]
+                    :yht_laskutettu :yht_laskutetaan tiedot nil
+                    (tyypin-maksuerat "yksikkohintainen" maksueratiedot)]
                    [" Sanktiot " " Ei sanktioita "
-                    :sakot_laskutettu :sakot_laskutetaan tiedot]
+                    :sakot_laskutettu :sakot_laskutetaan tiedot nil
+                    (tyypin-maksuerat "sakko" maksueratiedot)]
                    (when ainakin-yhdessa-urakassa-suolasakko-kaytossa?
                      [" Talvisuolasakko/\u00ADbonus (autom. laskettu) " " Ei talvisuolasakkoa "
                       :suolasakot_laskutettu :suolasakot_laskutetaan tiedot fmt/euro-ei-voitu-laskea])
                    [" Muutos- ja lisätyöt " " Ei muutos- ja lisätöitä "
-                    :muutostyot_laskutettu :muutostyot_laskutetaan tiedot]
+                    :muutostyot_laskutettu :muutostyot_laskutetaan tiedot nil
+                    (tyypin-maksuerat "lisatyo" maksueratiedot)]
                    [" Äkilliset hoitotyöt " " Ei äkillisiä hoitotöitä "
-                    :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot]
+                    :akilliset_hoitotyot_laskutettu :akilliset_hoitotyot_laskutetaan tiedot nil
+                    (tyypin-maksuerat "akillinen-hoitotyo" maksueratiedot)]
                    [" Vahinkojen korjaukset " " Ei vahinkojen korjauksia "
                     :vahinkojen_korjaukset_laskutettu :vahinkojen_korjaukset_laskutetaan tiedot]
                    [" Bonukset " " Ei bonuksia "
-                    :bonukset_laskutettu :bonukset_laskutetaan tiedot]
+                    :bonukset_laskutettu :bonukset_laskutetaan tiedot nil
+                    (tyypin-maksuerat "bonus" maksueratiedot)]
                    [" Erilliskustannukset (muut kuin bonukset) " " Ei erilliskustannuksia "
                     :erilliskustannukset_laskutettu :erilliskustannukset_laskutetaan tiedot]
                    (when ainakin-yhdessa-urakassa-indeksit-kaytossa?
@@ -461,7 +485,8 @@
                       :kaikki_paitsi_kht_laskutettu_ind_korotus :kaikki_paitsi_kht_laskutetaan_ind_korotus tiedot])
                    (when ainakin-yhdessa-urakassa-indeksit-kaytossa?
                      [" Kaikki indeksitarkistukset yhteensä " " Ei indeksitarkistuksia "
-                      :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot])])
+                      :kaikki_laskutettu_ind_korotus :kaikki_laskutetaan_ind_korotus tiedot nil
+                      (tyypin-maksuerat "indeksi" maksueratiedot)])])
 
             [(summataulukko " Kaikki paitsi kok.hint. työt yhteensä " kentat-kaikki-paitsi-kht
                             laskutettu-teksti laskutetaan-teksti

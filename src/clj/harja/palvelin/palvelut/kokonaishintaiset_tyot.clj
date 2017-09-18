@@ -9,7 +9,11 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.kokonaishintaiset-tyot :as q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.kyselyt.toimenpideinstanssit :as tpi-q]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.tyokalut.big :as big]
+            [clojure.set :as set]
+            [harja.domain.roolit :as roolit]))
 
 (declare hae-urakan-kokonaishintaiset-tyot tallenna-kokonaishintaiset-tyot)
 
@@ -36,8 +40,12 @@
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kokonaishintaisettyot user urakka-id)
   (into []
-        (map #(assoc %
-                :summa (if (:summa %) (double (:summa %)))))
+        (comp
+         (map #(assoc %
+                      :summa (if (:summa %) (double (:summa %)))))
+         (map #(if (:osuus-hoitokauden-summasta %)
+                 (update % :osuus-hoitokauden-summasta big/->big)
+                 %)))
         (q/listaa-kokonaishintaiset-tyot db urakka-id)))
 
 (defn tallenna-kokonaishintaiset-tyot
@@ -57,24 +65,32 @@
                                                   (= (:sopimus %) sopimusnumero)
                                                   (valitut-vuosi-ja-kk [(:vuosi %) (:kuukausi %)]))
                                                nykyiset-arvot)))
-          uniikit-toimenpideninstanssit (into #{} (map #(:toimenpideinstanssi %) tyot))]
-      (doseq [tyo tyot]
-        (let [params [(:summa tyo) (:maksupvm tyo) (:toimenpideinstanssi tyo)
-                      sopimusnumero (:vuosi tyo) (:kuukausi tyo)]]
-          (if (not (tyot-kannassa (tyo-avain tyo)))
-            ;; insert
-            (q/lisaa-kokonaishintainen-tyo<! c (:summa tyo)
-                                             (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
-                                             (:toimenpideinstanssi tyo)
-                                             sopimusnumero (:vuosi tyo) (:kuukausi tyo)
-                                             (:id user))
-            ;;update
-            (q/paivita-kokonaishintainen-tyo! c (:summa tyo)
-                                              (if (:maksupvm tyo) (konv/sql-date (:maksupvm tyo)) nil)
-                                              (:toimenpideinstanssi tyo)
-                                              sopimusnumero (:vuosi tyo) (:kuukausi tyo)))))
+          urakan-toimenpideinstanssit (into #{}
+                                            (map :id)
+                                            (tpi-q/urakan-toimenpideinstanssi-idt c urakka-id))
+          tallennettavat-toimenpideinstanssit (into #{} (map #(:toimenpideinstanssi %) tyot))]
 
-      (when (not (empty? uniikit-toimenpideninstanssit))
-        (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " uniikit-toimenpideninstanssit)
-        (q/merkitse-kustannussuunnitelmat-likaisiksi! c uniikit-toimenpideninstanssit))
+      ;; Varmistetaan ettei päivitystä voi tehdä toimenpideinstanssille, joka ei kuulu
+      ;; tähän urakkaan.
+      (when-not (empty? (set/difference tallennettavat-toimenpideinstanssit
+                                        urakan-toimenpideinstanssit))
+        (throw (roolit/->EiOikeutta "virheellinen toimenpideinstanssi")))
+
+      (doseq [tyo tyot]
+        (as-> tyo t
+          (update t :summa big/unwrap)
+          (update t :maksupvm #(when % (konv/sql-date %)))
+          (assoc t :sopimus sopimusnumero)
+          (assoc t :osuus-hoitokauden-summasta
+                 (when-let [p (:prosentti t)]
+                   (big/unwrap (big/div p (big/->big 100)))))
+          (assoc t :luoja (:id user))
+
+          (if (not (tyot-kannassa (tyo-avain t)))
+            (q/lisaa-kokonaishintainen-tyo<! c t)
+            (q/paivita-kokonaishintainen-tyo! c t))))
+
+      (when (not (empty? tallennettavat-toimenpideinstanssit))
+        (log/info "Merkitään kustannussuunnitelmat likaiseksi toimenpideinstansseille: " tallennettavat-toimenpideinstanssit)
+        (q/merkitse-kustannussuunnitelmat-likaisiksi! c tallennettavat-toimenpideinstanssit))
       (hae-urakan-kokonaishintaiset-tyot c user urakka-id))))
