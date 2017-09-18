@@ -36,11 +36,13 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        naytettavat-alueet (yleinen/naytettavat-alueet db konteksti {:urakka urakka-id
-                                                                     :hallintayksikko hallintayksikko-id
-                                                                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-                                                                     :alku alkupvm
-                                                                     :loppu loppupvm})
+        naytettavat-alueet (map
+                             #(select-keys % [:urakka-id :nimi])
+                             (yleinen/naytettavat-alueet db konteksti {:urakka urakka-id
+                                                                       :hallintayksikko hallintayksikko-id
+                                                                       :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                       :alku alkupvm
+                                                                       :loppu loppupvm}))
         sanktiot-kannassa (into []
                                 (comp
                                   (map #(konv/string->keyword % :sakkoryhma))
