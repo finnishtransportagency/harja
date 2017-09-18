@@ -142,9 +142,9 @@
 (defn laheta-sahkoposti-kaikille-kayttajille
   "Lähettää annetun viestin kaikille Harjan käyttäjille, joille löytyy sähköpostiosoite"
   [sahkoposti db user {:keys [otsikko sisalto]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit user)
   (let [vastaanottajat (hae-yhteydenpidon-vastaanottajat db user)]
     (doseq [{sahkopostiosoite :sahkoposti} vastaanottajat]
-      (println "-->>> Lähetetään" sahkopostiosoite otsikko sisalto)
       (sahkoposti/laheta-viesti!
         sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto)))
   true)
