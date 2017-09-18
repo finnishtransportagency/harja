@@ -36,7 +36,8 @@
      {:nimi :sisalto
       :otsikko "Sisältö"
       :tyyppi :text
-      :koko [640 4]
+      :koko [80 :auto]
+      :pituus-max 2048
       :palstoja 2
       :pakollinen? true}]
     yhteydenotto]])
