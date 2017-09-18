@@ -75,13 +75,12 @@
     "inspire"
     "turvalaitteiden-haku"
     (fn [konteksti]
-      (try
-        (let [http-asetukset {:metodi :GET :url url}
-              {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (kasittele-turvalaitteet db vastaus))
-        (catch Exception e
-          ;; lokittuu laheta-funktiossa, eikä tarvita muuta käsittelyä
-          ))))
+      (let [http-asetukset {:metodi :GET :url url}
+            {vastaus :body} (try
+                              (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                              (catch Exception e))]
+        (when vastaus
+          (kasittele-turvalaitteet db vastaus)))))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
