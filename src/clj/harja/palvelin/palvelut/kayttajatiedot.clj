@@ -143,14 +143,15 @@
   "Lähettää annetun viestin kaikille Harjan käyttäjille, joille löytyy sähköpostiosoite"
   [sahkoposti db user {:keys [otsikko sisalto]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit user)
-  (let [vastaanottajat (hae-yhteydenpidon-vastaanottajat db user)]
+  (let [vastaanottajat (hae-yhteydenpidon-vastaanottajat db user)
+        sisalto (str "<html><body>" (.replace sisalto "\n" "<br>") "</body>")]
     (doseq [{sahkopostiosoite :sahkoposti} vastaanottajat]
       (sahkoposti/laheta-viesti!
         sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto)))
   true)
 
 (defrecord Kayttajatiedot []
-  component/Lifecycle
+  component/Lifecycle                                                   20
   (start [{http :http-palvelin
            db :db
            sahkoposti :solita-sahkoposti
