@@ -21,10 +21,13 @@
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]))
 
-(defn vaadi-hinnoittelut-kuuluvat-urakkaan* [tulos hinnoittelu-idt urakka-id]
-  (when-not (->> tulos
-                 (keep ::h/urakka-id)
-                 (every? (partial = urakka-id)))
+(defn- vaadi-hinnoittelut-kuuluvat-urakkaan* [tulos hinnoittelu-idt urakka-id]
+  (when (or
+          (nil? urakka-id)
+          (some nil? hinnoittelu-idt)
+          (not (->> tulos
+                   (map ::h/urakka-id)
+                   (every? (partial = urakka-id)))))
     (throw (SecurityException. (str "Hinnoittelut " hinnoittelu-idt " eivät kuulu urakkaan " urakka-id)))))
 
 (defn vaadi-hinnoittelut-kuuluvat-urakkaan [db hinnoittelu-idt urakka-id]
@@ -43,7 +46,10 @@
                                     (mapcat (comp ::h/hinnat ::h/hinnoittelut))
                                     (map ::hinta/id)
                                     (into #{}))]
-    (when-not (set/subset? (set hinta-idt) toimenpiteen-hinta-idt)
+    (when (or
+            (some nil? hinta-idt)
+            (some nil? toimenpiteen-hinta-idt)
+            (not (set/subset? (set hinta-idt) toimenpiteen-hinta-idt)))
       (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
 (defn vaadi-hinnat-kuuluvat-toimenpiteeseen [db hinta-idt toimenpide-id]
@@ -56,13 +62,13 @@
     hinta-idt
     toimenpide-id))
 
-(defn vaadi-tyot-kuuluvat-toimenpiteeseen* [toimenpiteet tyot tyo-idt toimenpide-id]
+(defn- vaadi-tyot-kuuluvat-toimenpiteeseen* [toimenpiteet tyot tyo-idt toimenpide-id]
   (let [toimenpiteen-hinnoittelu-idt (set (->> toimenpiteet
                                                (mapcat ::to/hinnoittelu-linkit)
                                                (map ::h/hinnoittelut)
                                                (map ::h/id)))
         toiden-hinnoittelu-idt (set (map ::tyo/hinnoittelu-id tyot))]
-    (when-not (every? #(toimenpiteen-hinnoittelu-idt %) toiden-hinnoittelu-idt)
+    (when (not (every? #(toimenpiteen-hinnoittelu-idt %) toiden-hinnoittelu-idt))
       (throw (SecurityException. (str "Työt " tyo-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
 (defn vaadi-tyot-kuuluvat-toimenpiteeseen [db tyo-idt toimenpide-id]
@@ -80,10 +86,13 @@
     tyo-idt
     toimenpide-id))
 
-(defn vaadi-hinnat-kuuluvat-hinnoitteluun* [hinnat hinta-idt hinnoittelu-id]
-  (when-not (->> hinnat
-                 (keep ::hinta/hinnoittelu-id)
-                 (every? (partial = hinnoittelu-id)))
+(defn- vaadi-hinnat-kuuluvat-hinnoitteluun* [hinnat hinta-idt hinnoittelu-id]
+  (when (or
+          (nil? hinnoittelu-id)
+          (not
+           (->> hinnat
+                (map ::hinta/hinnoittelu-id)
+                (every? (partial = hinnoittelu-id)))))
     (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu hinnoiteluun " hinnoittelu-id)))))
 
 (defn vaadi-hinnat-kuuluvat-hinnoitteluun [db hinta-idt hinnoittelu-id]
