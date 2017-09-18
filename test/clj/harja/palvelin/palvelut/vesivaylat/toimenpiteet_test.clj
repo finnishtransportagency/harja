@@ -91,11 +91,28 @@
 
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
+
     (is (>= (count vastaus) 2))
+
     (is (some #(not (empty? (get-in % [::toi/oma-hinnoittelu ::h/hinnat]))) vastaus))
     (is (some #(not (empty? (get-in % [::toi/oma-hinnoittelu ::h/tyot]))) vastaus))
     (is (some #(not (empty? (::toi/oma-hinnoittelu %))) vastaus))
-    (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))))
+    (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))
+
+    (is (every? #(integer? (::toi/id %)) vastaus))
+    (is (every? #(or (and (string? (::toi/lisatieto %))
+                          (>= (count (::toi/lisatieto %)) 1))
+                     (nil? (::toi/lisatieto %))) vastaus))
+    (is (every? #(keyword? (::toi/tyolaji %)) vastaus))
+    (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
+    (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
+    (is (some #(not (empty? (::toi/liitteet %))) vastaus))
+    (is (some #(>= (count (::toi/liitteet %)) 2) vastaus))
+    (is (some #(number? (::toi/reimari-henkilo-lkm %)) vastaus))
+    (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
+                  (mapcat ::toi/liitteet vastaus)))
+    (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
+    (is (some #(> (count (get-in % [::toi/komponentit])) 0) vastaus))))
 
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)

@@ -394,6 +394,7 @@ VALUES
 
 INSERT INTO liite (nimi, tyyppi, lahde) VALUES ('vv_liite.jpg', 'image/jpeg', 'harja-ui' :: LAHDE);
 INSERT INTO liite (nimi, tyyppi, lahde) VALUES ('vv_liite2.jpg', 'image/jpeg', 'harja-ui' :: LAHDE);
+INSERT INTO liite (nimi, tyyppi, lahde) VALUES ('vv_liite3.jpg', 'image/jpeg', 'harja-ui' :: LAHDE);
 INSERT INTO liite (nimi, tyyppi, lahde) VALUES ('POISTETTU LIITE EI SAA NÄKYÄ', 'image/jpeg', 'harja-ui' :: LAHDE);
 INSERT INTO reimari_toimenpide_liite ("toimenpide-id", "liite-id") VALUES ((SELECT id
                                                                             FROM reimari_toimenpide
@@ -580,6 +581,7 @@ VALUES
 
 INSERT INTO reimari_toimenpide
 (hintatyyppi,
+  "reimari-komponentit",
  "reimari-lisatyo",
  "urakka-id",
  "reimari-id",
@@ -600,9 +602,11 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
+  "reimari-henkilo-lkm",
  "vayla-id")
 VALUES
   ('yksikkohintainen',
+    '{"(-2139967544,nimitahan,1022540401)","(-2139967548,toinennimi,1022540402)"}',
     TRUE,
     (SELECT id
      FROM urakka
@@ -633,9 +637,17 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
+    3,
    (SELECT id
     FROM vv_vayla
     WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
+
+INSERT INTO reimari_toimenpide_liite ("toimenpide-id", "liite-id") VALUES ((SELECT id
+                                                                            FROM reimari_toimenpide
+                                                                            WHERE lisatieto = 'Poijujen korjausta kuten on sovittu otos 2'),
+                                                                           (SELECT id
+                                                                            FROM liite
+                                                                            WHERE nimi = 'vv_liite3.jpg'));
 
 -- ***********************************************
 -- REIMARISTA YKSIKKÖHINTAISENA RAPORTOITU, KÖNTTÄSUMMALLA
@@ -1011,6 +1023,17 @@ VALUES
    'Yleiset materiaalit', 70, (SELECT id
                                FROM kayttaja
                                WHERE kayttajanimi = 'tero'), 'muu');
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, summa, luoja, ryhma, yksikkohinta, yksikko, maara, "komponentti-id", "komponentti-tilamuutos")
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Hietasaaren poijujen korjausta otos 2'),
+   'KOMPONENTIN OTSIKKO EI NÄY', NULL, (SELECT id
+                               FROM kayttaja
+                               WHERE kayttajanimi = 'tero'), 'komponentti',
+  1500, 'kpl', 1, '-2139967544', '1');
 
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)
