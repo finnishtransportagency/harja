@@ -476,19 +476,14 @@
           (mapcat #(keep identity %)
                   (map-indexed
                    (fn [i rivi]
-                     (log "grid-rivi: naytetaan" i (pr-str rivi))
-                     #_(when )
                      (if (otsikko? rivi)
-                       (do
-                         (log "meta :keyksi" (pr-str
-                                              (str "kek" i (:teksti rivi) "//" (tunniste rivi))))
-                         [^{:key (str "kek-" i (:teksti rivi) "//" (tunniste rivi))}
-                          [valiotsikko {:colspan colspan :teksti (:teksti rivi)
-                                        :otsikko-record rivi
-                                        :piilotetut-valiotsikot piilotetut-valiotsikot
-                                        :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]])
+                       [^{:key (str i (:teksti rivi) "//" (tunniste rivi))}
+                        [valiotsikko {:colspan colspan :teksti (:teksti rivi)
+                                      :otsikko-record rivi
+                                      :piilotetut-valiotsikot piilotetut-valiotsikot
+                                      :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
-                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
+                       (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)]
                             [^{:key id}
                             [nayttorivi {:ohjaus ohjaus
