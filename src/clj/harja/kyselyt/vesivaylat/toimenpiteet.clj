@@ -55,19 +55,26 @@
                           ::vv-toimenpide/reimari-henkilo-lkm
                           ::vv-toimenpide/hintatyyppi]))))
 
-(defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
-  (when-not (->> (fetch
-                   db
-                   ::vv-toimenpide/reimari-toimenpide
-                   (set/union vv-toimenpide/perustiedot vv-toimenpide/viittaus-idt)
-                   {::vv-toimenpide/id (op/in toimenpide-idt)})
-                 (keep ::vv-toimenpide/urakka-id)
-                 (every? (partial = urakka-id)))
+(defn- vaadi-toimenpiteet-kuuluvat-urakkaan* [toimenpiteet toimenpide-idt urakka-id]
+  (when (or
+          (nil? urakka-id)
+          (not (->> toimenpiteet
+                   (map ::vv-toimenpide/urakka-id)
+                   (every? (partial = urakka-id)))))
     (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
 
+(defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
+  (vaadi-toimenpiteet-kuuluvat-urakkaan*
+    (fetch
+     db
+     ::vv-toimenpide/reimari-toimenpide
+     (set/union vv-toimenpide/perustiedot vv-toimenpide/viittaus-idt)
+     {::vv-toimenpide/id (op/in toimenpide-idt)})
+    toimenpide-idt
+    urakka-id))
+
 (defn- hinnoittelu-ilman-poistettuja-hintoja [hinnoittelu]
-  (assoc hinnoittelu ::vv-hinnoittelu/hinnat
-                     (vec (remove ::m/poistettu? (::vv-hinnoittelu/hinnat hinnoittelu)))))
+  (update hinnoittelu ::vv-hinnoittelu/hinnat #(remove ::m/poistettu? %)))
 
 (defn hae-hinnoittelut [hinnoittelu-linkit hintaryhma?]
   (let [sopivat-hintaryhmat
@@ -76,9 +83,9 @@
                          ::vv-hinnoittelu/hintaryhma?])
               hintaryhma?)
           hinnoittelu-linkit)]
-    (->> (map #(hinnoittelu-ilman-poistettuja-hintoja
-                 (::vv-hinnoittelu/hinnoittelut %))
-              sopivat-hintaryhmat)
+    (->> sopivat-hintaryhmat
+         (map #(hinnoittelu-ilman-poistettuja-hintoja
+                 (::vv-hinnoittelu/hinnoittelut %)))
          (remove ::m/poistettu?))))
 
 (defn toimenpide-siistitylla-hintatiedolla [hintaryhma? avain toimenpiteet]
@@ -103,24 +110,23 @@
                 (remove ::m/poistettu? linkit))))
     toimenpiteet))
 
+(defn- toimenpiteet-tyotiedoilla* [tyot toimenpiteet]
+  (map
+    (fn [toimenpide]
+      (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
+            hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)]
+        (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot] hinnoittelun-tyot)))
+    toimenpiteet))
+
 (defn- toimenpiteet-tyotiedoilla
   "Liittää toimenpiteiden omiin hinnoittelutietoihin mukaan työt."
   [db toimenpiteet]
   (let [hinnoittelu-idt (set (map #(get-in % [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id]) toimenpiteet))
         tyot (tyot-q/hae-hinnoittelujen-tyot db hinnoittelu-idt)]
-    (map
-      (fn [toimenpide]
-        (let [toimenpiteen-hinnoittelu-id (get-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/id])
-              hinnoittelun-tyot (filter #(= (::vv-tyo/hinnoittelu-id %) toimenpiteen-hinnoittelu-id) tyot)]
-          (assoc-in toimenpide [::vv-toimenpide/oma-hinnoittelu ::vv-hinnoittelu/tyot] hinnoittelun-tyot)))
-      toimenpiteet)))
+    (toimenpiteet-tyotiedoilla* tyot toimenpiteet)))
 
-(defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
-  (->> (fetch db
-              ::vv-toimenpide/reimari-toimenpide
-              (set/union vv-toimenpide/perustiedot vv-toimenpide/hinnoittelu)
-              (op/and
-                {::vv-toimenpide/id (op/in toimenpide-idt)}))
+(defn- hae-hinnoittelutiedot-toimenpiteille* [toimenpiteet]
+  (->> toimenpiteet
        (ilman-poistettuja-linkkeja)
        (toimenpiteet-omalla-hinnoittelulla)
        (toimenpiteet-hintaryhmalla)
@@ -134,7 +140,15 @@
        (map #(if-let [hinnoitteluryhma-id (get-in % [::vv-toimenpide/hintaryhma ::vv-hinnoittelu/id])]
                (assoc % ::vv-toimenpide/hintaryhma-id hinnoitteluryhma-id)
                %))
-       (map #(dissoc % ::vv-toimenpide/hintaryhma))
+       (map #(dissoc % ::vv-toimenpide/hintaryhma))))
+
+(defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-idt]
+  (->> (fetch db
+              ::vv-toimenpide/reimari-toimenpide
+              (set/union vv-toimenpide/perustiedot vv-toimenpide/hinnoittelu)
+              (op/and
+                {::vv-toimenpide/id (op/in toimenpide-idt)}))
+       hae-hinnoittelutiedot-toimenpiteille*
        ;; Liitetään vielä mukaan työt (specql ei osannut joinia näitä suoraan)
        (toimenpiteet-tyotiedoilla db)))
 
@@ -156,40 +170,26 @@
 
 (defn- suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
-        (filter #(not (empty? (::vv-toimenpide/reimari-viat %))) toimenpiteet)
+        (remove #(empty? (::vv-toimenpide/reimari-viat %)) toimenpiteet)
         :default toimenpiteet))
 
-(defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
+(defn- toimenpiteet-hintatiedoilla* [hinnoittelutiedot toimenpiteet]
   (let [;; Esim. {1 [{:toimenpide-id 1 :oma-hinta {:hinnoittelu-id 2} :hintaryhma {:hinnoittelu-id 3}}]}
-        hintatiedot (group-by ::vv-toimenpide/id
-                              (hae-hinnoittelutiedot-toimenpiteille
-                                db
-                                (into #{} (map ::vv-toimenpide/id toimenpiteet))))]
+        hintatiedot (group-by ::vv-toimenpide/id hinnoittelutiedot)]
     (map
       (fn [toimenpide]
         (merge toimenpide (first (hintatiedot (::vv-toimenpide/id toimenpide)))))
       toimenpiteet)))
 
-(defn- lisaa-toimenpiteen-komponentit [toimenpiteet db]
-  (let [tilat (fetch db
-                     ::komp-tila/tpk-tilat
-                     #{::komp-tila/toimenpide-id
-                       ::komp-tila/komponentti-id
-                       ::komp-tila/tilakoodi}
-                     {::komp-tila/toimenpide-id
-                      (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
-        komponentit (group-by
-                      ::tkomp/id
-                      (fetch db
-                             ::tkomp/turvalaitekomponentti
-                             (set/union #{::tkomp/id
-                                          ::tkomp/lisatiedot
-                                          ::tkomp/turvalaitenro
-                                          ::tkomp/sarjanumero
-                                          ::tkomp/valiaikainen}
-                                        tkomp/komponenttityyppi)
-                             {::tkomp/id
-                              (op/in (set (map ::komp-tila/komponentti-id tilat)))}))
+(defn- toimenpiteet-hintatiedoilla [db toimenpiteet]
+  (toimenpiteet-hintatiedoilla*
+    (hae-hinnoittelutiedot-toimenpiteille
+     db
+     (into #{} (map ::vv-toimenpide/id toimenpiteet)))
+    toimenpiteet))
+
+(defn- lisaa-toimenpiteen-komponentit* [toimenpiteet tilat komponentit]
+  (let [komponentit (group-by ::tkomp/id komponentit)
         tilat (group-by ::komp-tila/toimenpide-id tilat)]
     (for [tp toimenpiteet]
       (assoc tp ::vv-toimenpide/komponentit
@@ -208,39 +208,67 @@
                       (get komponentit (::komp-tila/komponentti-id tila))))
                   (get tilat (::vv-toimenpide/id tp)))))))
 
+(defn- lisaa-toimenpiteen-komponentit [toimenpiteet db]
+  (let [tilat (fetch db
+                     ::komp-tila/tpk-tilat
+                     #{::komp-tila/toimenpide-id
+                       ::komp-tila/komponentti-id
+                       ::komp-tila/tilakoodi}
+                     {::komp-tila/toimenpide-id
+                      (op/in (set (map ::vv-toimenpide/id toimenpiteet)))})
+        komponentit (fetch db
+                           ::tkomp/turvalaitekomponentti
+                           (set/union #{::tkomp/id
+                                        ::tkomp/lisatiedot
+                                        ::tkomp/turvalaitenro
+                                        ::tkomp/sarjanumero
+                                        ::tkomp/valiaikainen}
+                                      tkomp/komponenttityyppi)
+                           {::tkomp/id
+                            (op/in (set (map ::komp-tila/komponentti-id tilat)))})]
+    (lisaa-toimenpiteen-komponentit* toimenpiteet tilat komponentit)))
+
+(defn- toimenpiteiden-liite-idt* [liite-linkit]
+  (fmap #(map ::vv-toimenpide/liite-id %)
+        (group-by ::vv-toimenpide/toimenpide-id
+                  liite-linkit)))
+
 (defn- toimenpiteiden-liite-idt
   "Hakee annetuille toimenpiteille liitteet, jotka eivät ole poistettuja.
   Palauttaa mäpin toimenpide id:stä listaan liite id:tä."
   [db toimenpiteet]
-  (fmap #(map ::vv-toimenpide/liite-id %)
-        (group-by ::vv-toimenpide/toimenpide-id
-                  (fetch db ::vv-toimenpide/toimenpide<->liite
+  (toimenpiteiden-liite-idt*
+    (fetch db ::vv-toimenpide/toimenpide<->liite
 
-                         #{::vv-toimenpide/liite-id ::vv-toimenpide/toimenpide-id}
+          #{::vv-toimenpide/liite-id ::vv-toimenpide/toimenpide-id}
 
-                         ;; Haetaan liitelinkit kaikille toimenpiteille
-                         {::vv-toimenpide/toimenpide-id
-                          (op/in (map ::vv-toimenpide/id toimenpiteet))
-                          ::m/poistettu? false}))))
+          ;; Haetaan liitelinkit kaikille toimenpiteille
+          {::vv-toimenpide/toimenpide-id
+           (op/in (map ::vv-toimenpide/id toimenpiteet))
+           ::m/poistettu? false})))
 
-(defn- lisaa-liitteet [toimenpiteet db]
-  (let [;; Hae kaikki liite id:t reimari toimenpiteille
-        liite-idt-toimenpiteelle (toimenpiteiden-liite-idt db toimenpiteet)
-
-        ;; Listataan IN listaa varten kaikki liitteet
-        liite-idt (mapcat val liite-idt-toimenpiteelle)
-
-        ;; Haetaan liitteet {liiteid liitteen-tiedot} mäppiin
+(defn- lisaa-liitteet* [toimenpiteet liite-idt-toimenpiteille liitteet]
+  (let [;; Haetaan liitteet {liiteid liitteen-tiedot} mäppiin
         liitteet (into {}
                        (map (juxt ::liite/id identity))
-                       (fetch db ::liite/liite
-                              liite/perustiedot
-                              {::liite/id (op/in liite-idt)}))]
+                       liitteet)]
     (for [{id ::vv-toimenpide/id :as toimenpide} toimenpiteet
-          :let [toimenpiteen-liitteet (liite-idt-toimenpiteelle id)]]
+          :let [toimenpiteen-liitteet (liite-idt-toimenpiteille id)]]
       (assoc toimenpide
         ::vv-toimenpide/liitteet
         (map (comp namespacefy/unnamespacefy liitteet) toimenpiteen-liitteet)))))
+
+(defn- lisaa-liitteet [toimenpiteet db]
+  (let [;; Hae kaikki liite id:t reimari toimenpiteille
+        liite-idt-toimenpiteille (toimenpiteiden-liite-idt db toimenpiteet)
+
+        ;; Listataan IN listaa varten kaikki liitteet
+        liite-idt (mapcat val liite-idt-toimenpiteille)]
+    (lisaa-liitteet* toimenpiteet
+                     liite-idt-toimenpiteille
+                     (fetch db ::liite/liite
+                            liite/perustiedot
+                            {::liite/id (op/in liite-idt)}))))
 
 (defn hae-toimenpiteet [db {:keys [alku loppu vikailmoitukset?
                                    tyyppi urakoitsija-id] :as tiedot}]
