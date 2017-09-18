@@ -2,7 +2,8 @@
 -- Listaa kaikki ne urakat, joita haku koskee
 SELECT
   u.id           AS "urakka-id",
-  u.nimi         AS "nimi"
+  u.nimi         AS "nimi",
+  u.loppupvm     AS loppupvm
 FROM urakka u
 WHERE
   ((:urakka :: INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
