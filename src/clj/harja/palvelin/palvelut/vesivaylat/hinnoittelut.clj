@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut
+(ns harja.palvelin.palvelut.vesivaylat.hinnoittelut
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
