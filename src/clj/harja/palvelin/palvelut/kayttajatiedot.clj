@@ -151,7 +151,7 @@
   true)
 
 (defrecord Kayttajatiedot []
-  component/Lifecycle                                                   20
+  component/Lifecycle                                                   
   (start [{http :http-palvelin
            db :db
            sahkoposti :solita-sahkoposti
