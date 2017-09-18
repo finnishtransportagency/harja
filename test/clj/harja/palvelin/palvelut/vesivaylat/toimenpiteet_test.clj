@@ -107,7 +107,7 @@
     (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
     (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
     (is (some #(not (empty? (::toi/liitteet %))) vastaus))
-    (is (some #(>= (count (::toi/liitteet %)) 2) vastaus))
+    (is (some #(>= (count (::toi/liitteet %)) 1) vastaus))
     (is (some #(number? (::toi/reimari-henkilo-lkm %)) vastaus))
     (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
                   (mapcat ::toi/liitteet vastaus)))
