@@ -318,7 +318,6 @@
         komponenttien-hinnat (filter #(= :komponentti (::hinta/ryhma %)) hinnat)
         muut-tyot (filter #(= :tyo (::hinta/ryhma %)) hinnat)
         muut (filter #(= :muu (::hinta/ryhma %)) hinnat)
-        ;; TODO: Liitä otsikoihin toimenpidekoodien otsikot
         hintojen-otsikot (map (juxt ::hinta/otsikko ::hinta/yksikko) (remove ::m/poistettu? hinnat))]
     (and (every? #(and (::tyo/toimenpidekoodi-id %)
                        (::tyo/maara %))
