@@ -297,7 +297,11 @@
                                vv-toimenpide/vayla
                                vv-toimenpide/kiintio
                                vv-toimenpide/reimari-kentat
-                               vv-toimenpide/metatiedot)
+                               vv-toimenpide/metatiedot
+                               ;; Myös hinnoittelut pitää hakea erikseen, eli hinnoittelutietojen
+                               ;; täydentäminen aiheuttaa ylimääräisen haun samaan tauluun
+                               ;; vv-toimenpide/hinnoittelu
+                               )
                              (op/and
                                {::m/poistettu? false}
                                {::vv-toimenpide/urakka-id urakka-id}
