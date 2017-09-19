@@ -249,16 +249,13 @@ reimari-toimenpidetyypit
 (defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
   (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
 
-(def ^{:doc "Reimarin toimenpiteen tilat"}
-reimari-tilat
+(def
+  ^{:doc "Reimarin toimenpiteen tilat"}
+  reimari-tilat
   {"1022541202" :suoritettu
    "1022541201" :suunniteltu
    "1022541203" :peruttu})
 
-(def ^{:doc "Reimarin toimenpiteen komponenttikohtaiset tilat (Reimarin ACTCOMP_STATE_CDE)"}
-  reimari-tp-komponentin-tilat {"1022540401" :kaytossa
-                                "1022540402" :poistetttu
-                                "1022540403" :varastoon})
 (define-tables
   ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
   ["toimenpidehaun_vika" :harja.domain.vesivaylat.vika/toimenpidehaun-vika]
@@ -272,8 +269,6 @@ reimari-tilat
                  ::liite-id
                  :harja.domain.liite/liite
                  :harja.domain.liite/id)}]
-
-  ["reimari_toimenpiteen_komponenttien_tilamuutokset" ::tpk-tilat]
   ["reimari_toimenpide" ::reimari-toimenpide
    {"muokattu" ::m/muokattu
     "muokkaaja" ::m/muokkaaja-id
@@ -313,7 +308,7 @@ reimari-tilat
 (s/def ::reimari-toimenpidetyyppi (set (keys reimari-toimenpidetyypit)))
 (s/def ::reimari-toimenpidetyypit (s/and set? (s/every ::reimari-toimenpidetyyppi)))
 
-(s/def ::turvalaitekomponentit (s/every ::tkomp/turvalaitekomponentti))
+(s/def ::komponentit (s/every ::tkomp/turvalaitekomponentti))
 (s/def ::vayla (s/keys :opt [::vv-vayla/tyyppi
                              ::vv-vayla/id
                              ::vv-vayla/nimi]))
@@ -438,7 +433,7 @@ reimari-tilat
   (s/coll-of (s/keys :req [::id ::tyolaji
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite ::reimari-urakoitsija
-                           ::reimari-sopimus ::turvalaitekomponentit]
+                           ::reimari-sopimus ::komponentit]
                      :opt [::vikakorjauksia? ::vayla
                            ::suoritettu ::hintatyyppi ::lisatieto
                            ::oma-hinnoittelu ::hintaryhma-id])))
@@ -447,7 +442,7 @@ reimari-tilat
   (s/coll-of (s/keys :req [::id ::tyolaji
                            ::tyoluokka ::toimenpide ::pvm
                            ::turvalaite ::reimari-urakoitsija
-                           ::reimari-sopimus ::turvalaitekomponentit]
+                           ::reimari-sopimus ::komponentit]
                      :opt [::vikakorjauksia?  ::vayla
                            ::suoritettu ::hintatyyppi ::lisatieto])))
 
