@@ -62,7 +62,7 @@
         :salasana #=(slurp "../.harja/turi-salasana")
         :paivittainen-lahetysaika [12 50 00]}
 
- :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@liikennevirasto.fi"
+ :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true
                     :palvelin "solita-service-1.solita.fi"
                     :jonot {:sahkoposti-sisaan-jono "Harja.Incoming.Email.InQ"
