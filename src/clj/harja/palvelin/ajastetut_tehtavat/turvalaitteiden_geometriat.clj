@@ -79,8 +79,9 @@
             {vastaus :body} (try
                               (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                               (catch Exception e))]
-        (when vastaus
-          (kasittele-turvalaitteet db vastaus)))))
+        (if vastaus
+          (kasittele-turvalaitteet db vastaus)
+          (log/debug "Turvalaitteita ei käsitelty, vastausta ei saatu")))))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
@@ -98,6 +99,7 @@
 (defrecord TurvalaitteidenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
   (start [{:keys [integraatioloki db] :as this}]
+    (log/debug "turvalaitteiden geometriahaku-komponentti käynnistyy")
     (assoc this :turvalaitteiden-geometriahaku
                 (turvalaitteiden-geometriahakutehtava
                   integraatioloki
