@@ -159,7 +159,7 @@ E'Reimari-toimenpiteet kuuluvat hinnoitteluihin vv_hinnoittelu_toimenpide taulun
 COMMENT ON TABLE vv_hinta IS
 E'Hinta liittyy aina hinnoitteluun. Hinta annetaan joko summana TAI syötetään määrä, yksikkö ja yksikköhinta';
 COMMENT ON COLUMN vv_hinta.ryhma IS 'Tämä on tarkoitettu pääasiassa frontille, jotta hinnat voidaan näyttää oikeiden otsikoiden alla.';
-
+COMMENT ON COLUMN vv_hinta."komponentti-tilamuutos" IS 'Viittaa reimari_toimenpide taulussa olevaan array-tyyppiseen sarakkeeseen reimari-komponentit ja siinä olevaan tilakoodiin.';
 
 COMMENT ON TABLE vv_tyo IS
 E'Taulua käytetään ilmaisemaan vesiväylien toimenpiteen hinnoittelussa tehdyn työn toimenpidekoodi ja määrä.';

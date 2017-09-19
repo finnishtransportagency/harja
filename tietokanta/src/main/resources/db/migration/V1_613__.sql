@@ -43,7 +43,7 @@ WHERE "hinnoittelu-id" IN (SELECT id
       AND otsikko = 'Päivän hinta' OR otsikko = 'Omakustannushinta';
 
 ALTER TABLE vv_hinta ADD COLUMN "komponentti-id" TEXT REFERENCES reimari_turvalaitekomponentti (id);
-ALTER TABLE vv_hinta ADD COLUMN "komponentti-tilamuutos" TEXT;
+ALTER TABLE vv_hinta ADD COLUMN "komponentti-tilamuutos" TEXT; -- reimari_toimenpide."reimari-komponnetit" -> tilakoodi
 ALTER TABLE vv_hinta
   ADD CONSTRAINT komponentin_hinnalla_id_ja_tila CHECK (
   (ryhma = 'komponentti' AND "komponentti-id" IS NOT NULL AND "komponentti-tilamuutos" IS NOT NULL)
