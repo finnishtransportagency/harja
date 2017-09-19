@@ -132,7 +132,7 @@
     ;; Vesiväylät
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet :as vv-toimenpiteet]
     [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
-    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut]
+    [harja.palvelin.palvelut.vesivaylat.hinnoittelut :as vv-hinnoittelut]
     [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot]
     [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
     [harja.palvelin.palvelut.vesivaylat.turvalaitteet :as vv-turvalaitteet])
@@ -199,6 +199,12 @@
             (sonja-sahkoposti/luo-sahkoposti vastausosoite jonot)))
         [:sonja :integraatioloki :db])
 
+      :solita-sahkoposti
+      (component/using
+        (let [{:keys [vastausosoite palvelin]} (:solita-sahkoposti asetukset)]
+          (sahkoposti/luo-vain-lahetys palvelin vastausosoite))
+        [:integraatioloki :db])
+
       ;; FIM REST rajapinta
       :fim (component/using
              (if (and kehitysmoodi (:tiedosto (:fim asetukset)))
@@ -262,7 +268,7 @@
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
                         (kayttajatiedot/->Kayttajatiedot)
-                        [:http-palvelin :db])
+                        [:http-palvelin :db :solita-sahkoposti])
       :urakoitsijat (component/using
                       (urakoitsijat/->Urakoitsijat)
                       [:http-palvelin :db :pois-kytketyt-ominaisuudet])

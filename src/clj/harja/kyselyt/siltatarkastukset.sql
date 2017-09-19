@@ -267,17 +267,17 @@ SELECT
   tulos,
   lisatieto
 FROM siltatarkastuskohde
-WHERE siltatarkastus = ANY(:siltatarkastus_idt);
+WHERE siltatarkastus = ANY (:siltatarkastus_idt);
 
 -- name: paivita-siltatarkastus!
 -- Päivittää siltatarkastuksen tiedot
 UPDATE siltatarkastus
-  SET
-  tarkastaja = :tarkastaja,
+SET
+  tarkastaja    = :tarkastaja,
   tarkastusaika = :tarkastusaika,
-  muokattu = NOW(),
-  muokkaaja = :kayttaja
-  WHERE id = :id
+  muokattu      = NOW(),
+  muokkaaja     = :kayttaja
+WHERE id = :id
       AND urakka = :urakka;
 
 -- name: paivita-siltatarkastuksen-kohteet!
@@ -305,12 +305,12 @@ WHERE id = :id AND
 -- name: poista-siltatarkastukset-ulkoisilla-idlla-ja-luojalla!
 -- Merkitsee annetun siltatarkastuksen poistetuksi
 UPDATE siltatarkastus
-  SET poistettu = TRUE,
-  muokattu = NOW(),
-  muokkaaja = :kayttaja-id
+SET poistettu = TRUE,
+  muokattu    = NOW(),
+  muokkaaja   = :kayttaja-id
 WHERE ulkoinen_id::integer IN (:ulkoiset-idt)
-  AND luoja = :kayttaja-id
-  AND urakka = :urakka-id;
+      AND luoja = :kayttaja-id
+      AND urakka = :urakka-id;
 
 -- name: poista-siltatarkastuskohteet!
 -- Poistaa siltatarkastuksen kohteet siltatarkastuksen
@@ -342,11 +342,12 @@ SELECT exists(SELECT id
               FROM siltatarkastus
               WHERE silta = :silta AND
                     ulkoinen_id != :ulkoinen_id AND
-                    tarkastusaika = :tarkastusaika);
+                    tarkastusaika = :tarkastusaika AND
+                    poistettu IS NOT TRUE);
 
 -- name: lisaa-liite-siltatarkastuskohteelle<!
 INSERT INTO siltatarkastus_kohde_liite (siltatarkastus, kohde, liite)
-    VALUES (:siltatarkastus, :kohde, :liite);
+VALUES (:siltatarkastus, :kohde, :liite);
 
 -- name: hae-sillan-urakat
 SELECT urakka FROM sillat_alueurakoittain WHERE silta = :siltaid;

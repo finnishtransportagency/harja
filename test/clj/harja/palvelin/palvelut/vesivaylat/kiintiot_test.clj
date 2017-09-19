@@ -99,6 +99,7 @@
         (is (not (some (comp (partial = "Testi123") ::kiintio/kuvaus) kiintiot)))
         (is (some #(not (empty? (::kiintio/toimenpiteet %))) kiintiot))
         (is (>= (count vastaus) 2))
+        (is (>= (count (::kiintio/toimenpiteet (first vastaus))) 1))
         (is (some (comp (partial = "Testi123") ::kiintio/kuvaus) vastaus))
         (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) vastaus)))))
 
