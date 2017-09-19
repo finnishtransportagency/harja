@@ -21,63 +21,101 @@
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]))
 
-(defn vaadi-hinnoittelut-kuuluvat-urakkaan [db hinnoittelu-idt urakka-id]
-  (when-not (->> (specql/fetch
-                   db
-                   ::h/hinnoittelu
-                   (set/union h/perustiedot h/viittaus-idt)
-                   {::h/id (op/in hinnoittelu-idt)})
-                 (keep ::h/urakka-id)
-                 (every? (partial = urakka-id)))
+(defn- vaadi-hinnoittelut-kuuluvat-urakkaan* [tulos hinnoittelu-idt urakka-id]
+  (when (or
+          (nil? urakka-id)
+          (some nil? hinnoittelu-idt)
+          (not (->> tulos
+                   (map ::h/urakka-id)
+                   (every? (partial = urakka-id)))))
     (throw (SecurityException. (str "Hinnoittelut " hinnoittelu-idt " eivät kuulu urakkaan " urakka-id)))))
 
-(defn vaadi-hinnat-kuuluvat-toimenpiteeseen [db hinta-idt toimenpide-id]
-  (let [toimenpiteen-hinnat (->> (specql/fetch
-                                   db
-                                   ::to/reimari-toimenpide
-                                   (set/union to/perustiedot to/hinnoittelu)
-                                   {::to/id toimenpide-id})
-                                 (mapcat ::to/hinnoittelu-linkit)
-                                 (mapcat (comp ::h/hinnat ::h/hinnoittelut))
-                                 (map ::hinta/id)
-                                 (into #{}))]
-    (when-not (set/subset? (set hinta-idt) toimenpiteen-hinnat)
+(defn vaadi-hinnoittelut-kuuluvat-urakkaan [db hinnoittelu-idt urakka-id]
+  (vaadi-hinnoittelut-kuuluvat-urakkaan*
+    (specql/fetch
+     db
+     ::h/hinnoittelu
+     (set/union h/perustiedot h/viittaus-idt)
+     {::h/id (op/in hinnoittelu-idt)})
+    hinnoittelu-idt
+    urakka-id))
+
+(defn- vaadi-hinnat-kuuluvat-toimenpiteeseen* [tulos hinta-idt toimenpide-id]
+  (let [toimenpiteen-hinta-idt (->> tulos
+                                    (mapcat ::to/hinnoittelu-linkit)
+                                    (mapcat (comp ::h/hinnat ::h/hinnoittelut))
+                                    (map ::hinta/id)
+                                    (into #{}))]
+    (when (or
+            (some nil? hinta-idt)
+            (some nil? toimenpiteen-hinta-idt)
+            (not (set/subset? (set hinta-idt) toimenpiteen-hinta-idt)))
       (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
-(defn vaadi-tyot-kuuluvat-toimenpiteeseen [db tyo-idt toimenpide-id]
-  (let [toimenpiteen-hinnoittelu-idt (set (->> (specql/fetch
-                                                 db
-                                                 ::to/reimari-toimenpide
-                                                 (set/union to/perustiedot to/hinnoittelu)
-                                                 {::to/id toimenpide-id})
+(defn vaadi-hinnat-kuuluvat-toimenpiteeseen [db hinta-idt toimenpide-id]
+  (vaadi-hinnat-kuuluvat-toimenpiteeseen*
+    (specql/fetch
+     db
+     ::to/reimari-toimenpide
+     (set/union to/perustiedot to/hinnoittelu)
+     {::to/id toimenpide-id})
+    hinta-idt
+    toimenpide-id))
+
+(defn- vaadi-tyot-kuuluvat-toimenpiteeseen* [toimenpiteet tyot tyo-idt toimenpide-id]
+  (let [toimenpiteen-hinnoittelu-idt (set (->> toimenpiteet
                                                (mapcat ::to/hinnoittelu-linkit)
                                                (map ::h/hinnoittelut)
                                                (map ::h/id)))
-        toiden-hinnoittelu-idt (set (map ::tyo/hinnoittelu-id (specql/fetch
-                                                                db
-                                                                ::tyo/tyo
-                                                                tyo/viittaus-idt
-                                                                {::tyo/id (op/in tyo-idt)})))]
-    (when-not (every? #(toimenpiteen-hinnoittelu-idt %) toiden-hinnoittelu-idt)
+        toiden-hinnoittelu-idt (set (map ::tyo/hinnoittelu-id tyot))]
+    (when (not (every? #(toimenpiteen-hinnoittelu-idt %) toiden-hinnoittelu-idt))
       (throw (SecurityException. (str "Työt " tyo-idt " eivät kuulu toimenpiteeseen " toimenpide-id))))))
 
-(defn vaadi-hinnat-kuuluvat-hinnoitteluun [db hinta-idt hinnoittelu-id]
-  (when-not (->> (specql/fetch
-                   db
-                   ::hinta/hinta
-                   (set/union hinta/perustiedot hinta/viittaus-idt)
-                   {::hinta/id (op/in hinta-idt)})
-                 (keep ::hinta/hinnoittelu-id)
-                 (every? (partial = hinnoittelu-id)))
+(defn vaadi-tyot-kuuluvat-toimenpiteeseen [db tyo-idt toimenpide-id]
+  (vaadi-tyot-kuuluvat-toimenpiteeseen*
+    (specql/fetch
+     db
+     ::to/reimari-toimenpide
+     (set/union to/perustiedot to/hinnoittelu)
+     {::to/id toimenpide-id})
+    (specql/fetch
+      db
+      ::tyo/tyo
+      tyo/viittaus-idt
+      {::tyo/id (op/in tyo-idt)})
+    tyo-idt
+    toimenpide-id))
+
+(defn- vaadi-hinnat-kuuluvat-hinnoitteluun* [hinnat hinta-idt hinnoittelu-id]
+  (when (or
+          (nil? hinnoittelu-id)
+          (not
+           (->> hinnat
+                (map ::hinta/hinnoittelu-id)
+                (every? (partial = hinnoittelu-id)))))
     (throw (SecurityException. (str "Hinnat " hinta-idt " eivät kuulu hinnoiteluun " hinnoittelu-id)))))
 
+(defn vaadi-hinnat-kuuluvat-hinnoitteluun [db hinta-idt hinnoittelu-id]
+  (vaadi-hinnat-kuuluvat-hinnoitteluun*
+    (specql/fetch
+     db
+     ::hinta/hinta
+     (set/union hinta/perustiedot hinta/viittaus-idt)
+     {::hinta/id (op/in hinta-idt)})
+    hinta-idt
+    hinnoittelu-id))
+
+(defn hinnoitteluun-kuuluu-toimenpiteita?* [toimenpiteet]
+  (not (empty? toimenpiteet)))
+
 (defn hinnoitteluun-kuuluu-toimenpiteita? [db hinnoittelu-id]
-  (not (empty? (specql/fetch
-                 db
-                 ::h/hinnoittelu<->toimenpide
-                 #{::h/hinnoittelu-id}
-                 {::h/hinnoittelu-id (op/in #{hinnoittelu-id})
-                  ::m/poistettu? false}))))
+  (hinnoitteluun-kuuluu-toimenpiteita?*
+    (specql/fetch
+     db
+     ::h/hinnoittelu<->toimenpide
+     #{::h/hinnoittelu-id}
+     {::h/hinnoittelu-id (op/in #{hinnoittelu-id})
+      ::m/poistettu? false})))
 
 (defn vaadi-hinnoitteluun-ei-kuulu-toimenpiteita [db hinnoittelu-id]
   (when (hinnoitteluun-kuuluu-toimenpiteita? db hinnoittelu-id)
@@ -208,15 +246,14 @@
 
       (::h/id hinnoittelu))))
 
-(defn tallenna-hinnoittelun-hinta! [{:keys [db user hinnoittelu-id hinnat]}]
+(defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnoittelu-id hinnat]}]
   (doseq [hinta hinnat]
     (if (id-olemassa? (::hinta/id hinta))
       (specql/update! db
                       ::hinta/hinta
                       (merge
                         hinta
-                        ;; Jos määrä on tyhjä tai 0, merkataan hinta poistetuksi
-                        (if ((some-fn nil? zero?) (::hinta/maara hinta))
+                        (if (::m/poistettu? hinta)
                           {::m/poistettu? true
                            ::m/poistaja-id (:id user)}
                           {::m/muokattu (pvm/nyt)
@@ -226,41 +263,29 @@
       (specql/insert! db
                       ::hinta/hinta
                       (merge
-                        hinta
+                        (dissoc hinta ::hinta/id)
                         {::m/luotu (pvm/nyt)
                          ::m/luoja-id (:id user)
                          ::hinta/hinnoittelu-id hinnoittelu-id})))))
 
-(defn poista-hinnoittelun-tyot! [db user hinnoittelu-id]
-  (specql/update! db
-                  ::tyo/tyo
-                  {::m/poistettu? true
-                   ::m/poistaja-id (:id user)}
-                  {::tyo/hinnoittelu-id hinnoittelu-id})
-  (specql/update! db
-                  ::hinta/hinta
-                  {::m/poistettu? true
-                   ::m/poistaja-id (:id user)}
-                  {::hinta/otsikko (op/in tyo/tyo-hinnat)}))
-
-(defn luo-hinnoittelun-tyot! [{:keys [db user hinnoittelu-id tyot]}]
+(defn tallenna-toimenpiteen-tyot! [{:keys [db user hinnoittelu-id tyot]}]
   (doseq [tyo tyot]
-    (cond
-      ;; Työrivi
-      (::tyo/toimenpidekoodi-id tyo)
+    (if (id-olemassa? (::tyo/id tyo))
+      (specql/update! db
+                      ::tyo/tyo
+                      (merge
+                        {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
+                         ::tyo/maara (::tyo/maara tyo)}
+                        (if (::m/poistettu? tyo)
+                          {::m/poistettu? true
+                           ::m/poistaja-id (:id user)}
+                          {::m/muokattu (pvm/nyt)
+                           ::m/muokkaaja-id (:id user)}))
+                      {::tyo/id (::tyo/id tyo)})
       (specql/insert! db
                       ::tyo/tyo
-                      {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
-                       ::tyo/hinnoittelu-id hinnoittelu-id
-                       ::tyo/maara (::tyo/maara tyo)
-                       ::m/luotu (pvm/nyt)
-                       ::m/luoja-id (:id user)})
-      ;; Hintarivi
-      (::hinta/otsikko tyo)
-      (specql/insert! db
-                      ::hinta/hinta
-                      {::hinta/otsikko (::hinta/otsikko tyo)
-                       ::hinta/hinnoittelu-id hinnoittelu-id
-                       ::hinta/maara (::hinta/maara tyo)
-                       ::m/luotu (pvm/nyt)
-                       ::m/luoja-id (:id user)}))))
+                      (merge
+                        (dissoc tyo ::tyo/id)
+                        {::tyo/hinnoittelu-id hinnoittelu-id
+                        ::m/luotu (pvm/nyt)
+                        ::m/luoja-id (:id user)})))))

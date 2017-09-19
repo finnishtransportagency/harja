@@ -126,7 +126,7 @@
   [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
                 alkupvm loppupvm tyyppi urakka-id] :as parametrit}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
-                             user :urakka-id)
+                             user urakka-id)
   {:urakka urakka-id
    :alku alkupvm :loppu loppupvm
    :rajaa_tienumerolla (some? tienumero) :tienumero tienumero

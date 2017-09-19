@@ -404,7 +404,9 @@ SELECT exists(
 
 -- name: hae-yhteydenpidon-vastaanottajat
 SELECT
+  DISTINCT
   etunimi,
   sukunimi,
   sahkoposti
-FROM kayttaja;
+FROM kayttaja
+WHERE sahkoposti IS NOT NULL;

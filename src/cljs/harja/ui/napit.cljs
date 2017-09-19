@@ -168,11 +168,12 @@
 (defn uusi
   ([toiminto] (uusi "Uusi" toiminto {}))
   ([teksti toiminto] (uusi teksti toiminto {}))
-  ([teksti toiminto {:keys [luokka] :as optiot}]
+  ([teksti toiminto {:keys [luokka disabled] :as optiot}]
    [nappi teksti toiminto (merge
                             optiot
                             {:luokka (str "nappi-ensisijainen" " " luokka)
-                             :ikoni (ikonit/livicon-plus)})]))
+                             :ikoni (ikonit/livicon-plus)
+                             :disabled disabled})]))
 
 (defn hyvaksy
   ([toiminto] (hyvaksy "OK" toiminto {}))

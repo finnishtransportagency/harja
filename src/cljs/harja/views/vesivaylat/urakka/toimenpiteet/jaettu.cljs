@@ -19,6 +19,7 @@
             [harja.domain.vesivaylat.urakoitsija :as urakoitsija]
             [harja.domain.vesivaylat.sopimus :as sop]
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
+            [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
             [harja.domain.vesivaylat.komponenttityyppi :as ktyyppi]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
             [harja.fmt :as fmt]
@@ -71,18 +72,18 @@
     "Lisätiedot" (::to/lisatieto toimenpide)]
    [:footer.livi-grid-infolaatikko-footer
     [:h5 "Turvalaitteen komponentit"]
-    (if (empty? (::to/turvalaitekomponentit toimenpide))
+    (if (empty? (::to/komponentit toimenpide))
       [:p "Ei komponentteja"]
       [:table
        [:thead
         [:tr
-         [:th {:style {:width "25%"}} "Sarja\u00ADnumero"]
-         [:th {:style {:width "75%"}} "Kompo\u00ADnent\u00ADti"]]]
+         [:th {:style {:width "75%"}} "Kompo\u00ADnent\u00ADti"]
+         [:th {:style {:width "25%"}} "Tila"]]]
        [:tbody
-        (for* [turvalaitekomponentti (::to/turvalaitekomponentit toimenpide)]
+        (for* [turvalaitekomponentti (::to/komponentit toimenpide)]
           [:tr
-           [:td (::tkomp/sarjanumero turvalaitekomponentti)]
-           [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi])]])]])]])
+           [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi])]
+           [:td (komp-tila/komponentin-tilakoodi->str (::komp-tila/tilakoodi turvalaitekomponentti))]])]])]])
 
 (defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}

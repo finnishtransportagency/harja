@@ -9,6 +9,10 @@
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
+            [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
+            [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
+            [harja.domain.muokkaustiedot :as m]
+            [harja.id :refer [id-olemassa?]]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
@@ -28,11 +32,6 @@
 (def alustettu-toimenpiteen-hinnoittelu
   {::to/id nil
    ::h/hinnat nil
-   ;; Työt-taulukossa on sekä tehtyjä töitä (vesivaylat.tyo domain) sekä hinnoitteluja, kuten
-   ;; päivän hinta ja omakustannushinta (vesivaylat.hinta domain). Tästä syystä nämä käsiteltävät
-   ;; työrivit eivät ole namespacetettuja, koska tyyppiä voidaan vaihdella UI:lla.
-   ;; Kannasta nostettu data unnamespacetetaan työriveiksi, ja
-   ;; vasta tallennuksessa avaimet namespacetetaan jälleen sen mukaan kuvaako rivi työtä vai hintaa.
    ::h/tyot []})
 
 (def alustettu-hintaryhman-hinnoittelu
@@ -100,6 +99,128 @@
       (go (let [vastaus (<! (k/post! :hae-turvalaitteet-tekstilla {:hakuteksti teksti}))]
             vastaus)))))
 
+;; Yleiset eventit
+(defrecord Nakymassa? [nakymassa?])
+(defrecord PaivitaValinnat [tiedot])
+;; Siirto
+(defrecord SiirraValitutKokonaishintaisiin [])
+;; Suunnitellut työt
+(defrecord TyhjennaSuunnitellutTyot [])
+(defrecord HaeSuunnitellutTyot [])
+(defrecord SuunnitellutTyotHaettu [vastaus])
+(defrecord SuunnitellutTyotEiHaettu [])
+;; Toimenpiteet
+(defrecord HaeToimenpiteet [valinnat])
+(defrecord ToimenpiteetHaettu [toimenpiteet])
+(defrecord ToimenpiteetEiHaettu [virhe])
+;; Hintaryhmät
+(defrecord UudenHintaryhmanLisays? [lisays-auki?])
+(defrecord UudenHintaryhmanNimeaPaivitetty [nimi])
+(defrecord LuoHintaryhma [nimi])
+(defrecord HintaryhmaLuotu [vastaus])
+(defrecord HintaryhmaEiLuotu [virhe])
+(defrecord HaeHintaryhmat [])
+(defrecord HintaryhmatHaettu [vastaus])
+(defrecord HintaryhmatEiHaettu [virhe])
+(defrecord ValitseHintaryhma [hintaryhma])
+(defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
+(defrecord ValitutLiitettyHintaryhmaan [])
+(defrecord ValitutEiLiitettyHintaryhmaan [virhe])
+(defrecord PoistaHintaryhmat [hintaryhma-idt])
+(defrecord HintaryhmatPoistettu [vastaus])
+(defrecord HintaryhmatEiPoistettu [])
+;; Toimenpiteen hinnoittelu
+(defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
+(defrecord PeruToimenpiteenHinnoittelu [])
+(defrecord AsetaHintakentalleTiedot [tiedot])
+(defrecord AsetaTyorivilleTiedot [tiedot])
+(defrecord LisaaHinnoiteltavaTyorivi [])
+(defrecord LisaaHinnoiteltavaKomponenttirivi [])
+(defrecord LisaaMuuKulurivi [])
+(defrecord LisaaMuuTyorivi [])
+(defrecord PoistaHinnoiteltavaTyorivi [tyo])
+(defrecord PoistaHinnoiteltavaHintarivi [hinta])
+(defrecord TallennaToimenpiteenHinnoittelu [tiedot])
+(defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
+(defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
+;; Hintaryhmän hinnoittelu
+(defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
+(defrecord PeruHintaryhmanHinnoittelu [])
+(defrecord AsetaHintaryhmakentalleTiedot [tiedot])
+(defrecord TallennaHintaryhmanHinnoittelu [tiedot])
+(defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
+(defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
+;; Kartta
+(defrecord KorostaHintaryhmaKartalla [hintaryhma])
+(defrecord PoistaHintaryhmanKorostus [])
+
+(defn- hintakentta
+  [hinta]
+  (merge
+    {::hinta/summa (cond
+                     (or (nil? (::hinta/ryhma hinta))
+                         (#{:muu} (::hinta/ryhma hinta)))
+                     0
+
+                     (#{:komponentti :tyo} (::hinta/ryhma hinta))
+                     nil)
+     ::hinta/yleiskustannuslisa 0
+     ::hinta/otsikko ""}
+    hinta))
+
+(defn- tyokentta
+  [tyo]
+  (merge
+    {::tyo/maara 0}
+    tyo))
+
+(defn- poista-hintarivi-toimenpiteelta* [id id-avain tyot-tai-hinnat app]
+  (let [rivit (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
+        paivitetyt
+        (if-not (id-olemassa? id)
+          (filterv #(not= (id-avain %) id) rivit)
+
+          (mapv #(if (= (id-avain %) id)
+                   (assoc % ::m/poistettu? true)
+                   %)
+                rivit))]
+    (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
+
+(defn poista-tyorivi-toimenpiteelta [id app]
+  (poista-hintarivi-toimenpiteelta* id ::tyo/id ::h/tyot app))
+
+(defn poista-hintarivi-toimenpiteelta [id app]
+  (poista-hintarivi-toimenpiteelta* id ::hinta/id ::h/hinnat app))
+
+(defn- lisaa-hintarivi-toimenpiteelle* [id-avain tyot-tai-hinnat kentta-fn app]
+  (let [jutut (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
+        idt (map id-avain jutut)
+        seuraava-vapaa-id (dec (apply min (conj idt 0)))
+        paivitetyt (conj jutut (kentta-fn seuraava-vapaa-id))]
+    (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
+
+(defn lisaa-tyorivi-toimenpiteelle
+  ([app] (lisaa-tyorivi-toimenpiteelle {} app))
+  ([tyo app]
+   (lisaa-hintarivi-toimenpiteelle*
+     ::tyo/id
+     ::h/tyot
+     (fn [id]
+       (tyokentta
+         (merge {::tyo/id id} tyo)))
+     app)))
+
+(defn lisaa-hintarivi-toimenpiteelle
+  ([app] (lisaa-hintarivi-toimenpiteelle {} app))
+  ([hinta app]
+   (lisaa-hintarivi-toimenpiteelle*
+     ::hinta/id
+     ::h/hinnat
+     (fn [id]
+       (hintakentta
+         (merge {::hinta/id id} hinta)))
+     app)))
+
 (defn hintaryhma-korostettu? [hintaryhma {:keys [korostettu-hintaryhma]}]
   (boolean
     (when-not (false? korostettu-hintaryhma)
@@ -132,98 +253,97 @@
 (defn poista-hintaryhmien-korostus [app]
   (assoc app :korostettu-hintaryhma false))
 
-(defrecord Nakymassa? [nakymassa?])
-(defrecord TyhjennaSuunnitellutTyot [])
-(defrecord PaivitaValinnat [tiedot])
-(defrecord HaeToimenpiteet [valinnat])
-(defrecord HaeSuunnitellutTyot [])
-(defrecord SuunnitellutTyotHaettu [vastaus])
-(defrecord SuunnitellutTyotEiHaettu [])
-(defrecord ToimenpiteetHaettu [toimenpiteet])
-(defrecord ToimenpiteetEiHaettu [virhe])
-(defrecord UudenHintaryhmanLisays? [lisays-auki?])
-(defrecord UudenHintaryhmanNimeaPaivitetty [nimi])
-(defrecord SiirraValitutKokonaishintaisiin [])
-(defrecord LuoHintaryhma [nimi])
-(defrecord HintaryhmaLuotu [vastaus])
-(defrecord HintaryhmaEiLuotu [virhe])
-(defrecord HaeHintaryhmat [])
-(defrecord HintaryhmatHaettu [vastaus])
-(defrecord HintaryhmatEiHaettu [virhe])
-(defrecord ValitseHintaryhma [hintaryhma])
-(defrecord LiitaValitutHintaryhmaan [hintaryhma valitut])
-(defrecord ValitutLiitettyHintaryhmaan [])
-(defrecord ValitutEiLiitettyHintaryhmaan [virhe])
-(defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
-(defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
-(defrecord HinnoitteleToimenpideKentta [tiedot])
-(defrecord HinnoitteleHintaryhmaKentta [tiedot])
-(defrecord HinnoitteleToimenpide [tiedot])
-(defrecord HinnoitteleHintaryhma [tiedot])
-(defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
-(defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
-(defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
-(defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
-(defrecord PeruToimenpiteenHinnoittelu [])
-(defrecord PeruHintaryhmanHinnoittelu [])
-(defrecord PoistaHintaryhmat [hintaryhma-idt])
-(defrecord HintaryhmatPoistettu [vastaus])
-(defrecord HintaryhmatEiPoistettu [])
-(defrecord KorostaHintaryhmaKartalla [hintaryhma])
-(defrecord PoistaHintaryhmanKorostus [])
-(defrecord AsetaTyorivilleTiedot [tiedot])
-(defrecord LisaaHinnoiteltavaTyorivi [])
-(defrecord PoistaHinnoiteltavaTyorivi [tiedot])
+;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
+(def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
 
-(defn- hintakentta [otsikko hinta]
-  {::hinta/id (::hinta/id hinta)
-   ::hinta/otsikko otsikko
-   ::hinta/maara (or (::hinta/maara hinta) 0)
-   ::hinta/yleiskustannuslisa (if-let [yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)]
-                                yleiskustannuslisa
-                                0)})
+(defn vakiohintakentta? [otsikko]
+  (boolean ((set vakiohinnat) otsikko)))
 
 (defn- toimenpiteen-hintakentat [hinnat]
-  [(hintakentta "Komponentit" (hinta/hinta-otsikolla "Komponentit" hinnat))
-   (hintakentta "Yleiset materiaalit" (hinta/hinta-otsikolla "Yleiset materiaalit" hinnat))
-   (hintakentta "Matkakulut" (hinta/hinta-otsikolla "Matkakulut" hinnat))
-   (hintakentta "Muut kulut" (hinta/hinta-otsikolla "Muut kulut" hinnat))])
+  (vec (concat
+         ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
+         (map-indexed (fn [index otsikko]
+                        (let [olemassa-oleva-hinta (hinta/hinta-otsikolla hinnat otsikko)]
+                          (hintakentta
+                            (merge
+                              {::hinta/id (dec (- index))
+                               ::hinta/otsikko otsikko
+                               ::hinta/ryhma :muu}
+                              olemassa-oleva-hinta))))
+                      vakiohinnat)
+         ;; Loput kentät ovat käyttäjän itse lisäämiä
+         (map
+           hintakentta
+           (remove #((set vakiohinnat) (::hinta/otsikko %))
+                   hinnat)))))
 
+;; Hintaryhmän hinta tallennetaan aina tällä hardkoodatulla nimellä
 (def hintaryhman-hintakentta-otsikko "Ryhmähinta")
 
+(defn muut-hinnat [app]
+  (filter
+    #(and (= (::hinta/ryhma %) :muu) (not (::m/poistettu? %)))
+    (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
+
+(defn muut-tyot [app]
+  (filter
+    #(and (= (::hinta/ryhma %) :tyo) (not (::m/poistettu? %)))
+    (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
+
+(defn komponenttien-hinnat [app]
+  (filter
+    #(and (= (::hinta/ryhma %) :komponentti) (not (::m/poistettu? %)))
+    (get-in app [:hinnoittele-toimenpide ::h/hinnat])))
+
+(defn ainoa-otsikon-vakiokentta? [hinnat otsikko]
+  (and
+    (vakiohintakentta? otsikko)
+    (-> (group-by ::hinta/otsikko hinnat)
+       (get otsikko)
+       count
+       (= 1))))
+
 (defn- hintaryhman-hintakentat [hinnat]
-  [(hintakentta hintaryhman-hintakentta-otsikko (hinta/hinta-otsikolla hintaryhman-hintakentta-otsikko hinnat))])
+  (let [ryhmahinta (hinta/hinta-otsikolla hinnat hintaryhman-hintakentta-otsikko)]
+    ;; Luodaan ryhmähinnalle hintakenttä olemassa olevan ryhmähinnan perusteella.
+    ;; Jos ei ole aiempaa ryhmähintaa, luo uuden hintakentän ilman id:tä.
+    [(hintakentta
+       (merge
+         ryhmahinta
+         {::hinta/otsikko hintaryhman-hintakentta-otsikko}))]))
 
-(defn- drop-index [col idx]
-  (filter identity (map-indexed #(if (not= %1 idx) %2) col)))
+(defn- hinnoittelun-voi-tallentaa? [app]
+  (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
+        hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+        komponenttien-hinnat (filter #(= :komponentti (::hinta/ryhma %)) hinnat)
+        muut-tyot (filter #(= :tyo (::hinta/ryhma %)) hinnat)
+        muut (filter #(= :muu (::hinta/ryhma %)) hinnat)
+        hintojen-otsikot (map (juxt ::hinta/otsikko ::hinta/yksikko) (remove ::m/poistettu? hinnat))]
+    (and (every? #(and (::tyo/toimenpidekoodi-id %)
+                       (::tyo/maara %))
+                 tyot)
+         (every? #(and (not-empty (::hinta/otsikko %))
+                       (::hinta/maara %)
+                       (::hinta/yksikkohinta %)
+                       (::hinta/yksikko %))
+                 muut-tyot)
+         (every? #(and (not-empty (::hinta/otsikko %))
+                       (::hinta/maara %)
+                       (::hinta/yksikkohinta %)
+                       (::hinta/yksikko %))
+                 komponenttien-hinnat)
+         (every? #(and (not-empty (::hinta/otsikko %))
+                       (::hinta/summa %))
+                 muut)
+         (or (empty? hintojen-otsikot)
+             (apply distinct? hintojen-otsikot)))))
 
-(defn- tyo->taulukkomuotoon [tyot]
-  (mapv (fn [rivi]
-          (cond
-            ;; Työrivi
-            (::tyo/toimenpidekoodi-id rivi)
-            {:toimenpidekoodi-id (::tyo/toimenpidekoodi-id rivi)
-             :hinta-nimi nil
-             :maara (::tyo/maara rivi)}
-            ;; Hintarivi
-            (::hinta/otsikko rivi)
-            {:toimenpidekoodi-id nil
-             :hinta-nimi (::hinta/otsikko rivi)
-             :maara (::hinta/maara rivi)}))
-        tyot))
-
-(defn- tyorivit-taulukosta->tallennusmuotoon [tyot]
-  (mapv (fn [rivi]
-          (cond
-            ;; Työrivi
-            (:toimenpidekoodi-id rivi)
-            {::tyo/toimenpidekoodi-id (:toimenpidekoodi-id rivi)
-             ::tyo/maara (:maara rivi)}
-            ;; Hintarivi
-            (:hinta-nimi rivi)
-            {::hinta/otsikko (:hinta-nimi rivi)
-             ::hinta/maara (:maara rivi)}))
-        tyot))
+(defn hinnoiteltava-toimenpide [app]
+  (some
+    #(when (= (get-in app [:hinnoittele-toimenpide ::to/id])
+              (::to/id %))
+       %)
+    (:toimenpiteet app)))
 
 (extend-protocol tuck/Event
 
@@ -231,10 +351,6 @@
   (process-event [{nakymassa? :nakymassa?} app]
     (assoc app :nakymassa? nakymassa?
                :karttataso-nakyvissa? nakymassa?))
-
-  TyhjennaSuunnitellutTyot
-  (process-event [_ app]
-    (assoc app :suunnitellut-tyot nil))
 
   PaivitaValinnat
   ;; Valintojen päivittäminen laukaisee aina myös kantahaun uusimmilla valinnoilla (ellei ole jo käynnissä),
@@ -249,6 +365,31 @@
   SiirraValitutKokonaishintaisiin
   (process-event [_ app]
     (jaettu/siirra-valitut! :siirra-toimenpiteet-kokonaishintaisiin app))
+
+  TyhjennaSuunnitellutTyot
+  (process-event [_ app]
+    (assoc app :suunnitellut-tyot nil))
+
+  HaeSuunnitellutTyot
+  (process-event [_ app]
+    (let [urakka-id (get-in app [:valinnat :urakka-id])]
+      (if (and (not (:suunniteltujen-toiden-haku-kaynnissa? app)) (some? urakka-id))
+        (do (tuck-tyokalut/palvelukutsu :yksikkohintaiset-tyot
+                                        {:urakka urakka-id}
+                                        {:onnistui ->SuunnitellutTyotHaettu
+                                         :epaonnistui ->SuunnitellutTyotEiHaettu})
+            (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
+        app)))
+
+  SuunnitellutTyotHaettu
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :suunnitellut-tyot vastaus
+               :suunniteltujen-toiden-haku-kaynnissa? false))
+
+  SuunnitellutTyotEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Suunniteltujen töiden haku epäonnistui!" :danger)
+    (assoc app :suunniteltujen-toiden-haku-kaynnissa? false))
 
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
@@ -274,27 +415,6 @@
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :toimenpiteiden-haku-kaynnissa? false))
-
-  HaeSuunnitellutTyot
-  (process-event [_ app]
-    (let [urakka-id (get-in app [:valinnat :urakka-id])]
-      (if (and (not (:suunniteltujen-toiden-haku-kaynnissa? app)) (some? urakka-id))
-        (do (tuck-tyokalut/palvelukutsu :yksikkohintaiset-tyot
-                                        {:urakka urakka-id}
-                                        {:onnistui ->SuunnitellutTyotHaettu
-                                         :epaonnistui ->SuunnitellutTyotEiHaettu})
-            (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
-        app)))
-
-  SuunnitellutTyotHaettu
-  (process-event [{vastaus :vastaus} app]
-    (assoc app :suunnitellut-tyot vastaus
-               :suunniteltujen-toiden-haku-kaynnissa? false))
-
-  SuunnitellutTyotEiHaettu
-  (process-event [_ app]
-    (viesti/nayta! "Suunniteltujen töiden haku epäonnistui!" :danger)
-    (assoc app :suunniteltujen-toiden-haku-kaynnissa? false))
 
   UudenHintaryhmanLisays?
   (process-event [{lisays-auki? :lisays-auki?} app]
@@ -379,79 +499,98 @@
     (viesti/nayta! "Toimenpiteiden liittäminen tilaukseen epäonnistui!" :danger)
     (assoc app :hintaryhmien-liittaminen-kaynnissa? false))
 
+  PoistaHintaryhmat
+  (process-event [{hintaryhma-idt :hintaryhma-idt} app]
+    (if-not (:hintaryhmien-poisto-kaynnissa? app)
+      (do (tuck-tyokalut/palvelukutsu :poista-tyhjat-hinnoittelut
+                                      {::h/urakka-id (get-in app [:valinnat :urakka-id])
+                                       ::h/idt hintaryhma-idt}
+                                      {:onnistui ->HintaryhmatPoistettu
+                                       :epaonnistui ->HintaryhmatEiPoistettu})
+          (assoc app :hintaryhmien-poisto-kaynnissa? true))
+      app))
+
+  HintaryhmatPoistettu
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :hintaryhmien-poisto-kaynnissa? false
+               :hintaryhmat (h/hinnoittelut-ilman (:hintaryhmat app)
+                                                  (::h/idt vastaus))))
+
+  HintaryhmatEiPoistettu
+  (process-event [_ app]
+    (viesti/nayta! "Tilauksen poisto epäonnistui!" :danger)
+    (assoc app :hintaryhmien-poisto-kaynnissa? false))
+
   AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]
     (let [hinnoiteltava-toimenpide (to/toimenpide-idlla (:toimenpiteet app) toimenpide-id)
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
-          hinnat (::h/hinnat toimenpiteen-oma-hinnoittelu)
-          tyot (::h/tyot toimenpiteen-oma-hinnoittelu)
-          tyo-hinnat (filter #(tyo/tyo-hinnat (::hinta/otsikko %)) hinnat)]
+          hinnat (or (::h/hinnat toimenpiteen-oma-hinnoittelu) [])
+          tyot (or (::h/tyot toimenpiteen-oma-hinnoittelu) [])]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
-                  ::h/tyot (tyo->taulukkomuotoon (concat tyot tyo-hinnat))})))
+                  ::h/tyot tyot})))
 
-  AloitaHintaryhmanHinnoittelu
-  (process-event [{hintaryhma-id :hintaryhma-id} app]
-    (let [hinnoiteltava-hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
-          hinnat (::h/hinnat hinnoiteltava-hintaryhma)]
-      (assoc app :hinnoittele-hintaryhma
-                 {::h/id hintaryhma-id
-                  ::h/hinnat (hintaryhman-hintakentat hinnat)})))
+  PeruToimenpiteenHinnoittelu
+  (process-event [_ app]
+    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
+               :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
 
-  HinnoitteleToimenpideKentta
+  AsetaHintakentalleTiedot
   (process-event [{tiedot :tiedot} app]
     (assoc-in app [:hinnoittele-toimenpide ::h/hinnat]
-              (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-toimenpide
-                                                                              ::h/hinnat]) tiedot)))
+              (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
+                                                                          ::h/hinnat]) tiedot)))
 
-  HinnoitteleHintaryhmaKentta
+  AsetaTyorivilleTiedot
   (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-hintaryhma ::h/hinnat]
-              (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-hintaryhma
-                                                                              ::h/hinnat]) tiedot)))
+    (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
+              (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide ::h/tyot])
+                                             tiedot)))
 
-  HinnoitteleToimenpide
+  LisaaHinnoiteltavaTyorivi
+  (process-event [_ app]
+    (lisaa-tyorivi-toimenpiteelle app))
+
+  LisaaHinnoiteltavaKomponenttirivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma :komponentti}
+      app))
+
+  LisaaMuuKulurivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma :muu}
+      app))
+
+  LisaaMuuTyorivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma :tyo}
+      app))
+
+  PoistaHinnoiteltavaTyorivi
+  (process-event [{tyo :tyo} app]
+    (poista-tyorivi-toimenpiteelta (::tyo/id tyo) app))
+
+  PoistaHinnoiteltavaHintarivi
+  (process-event [{hinta :hinta} app]
+    (poista-hintarivi-toimenpiteelta (::hinta/id hinta) app))
+
+  TallennaToimenpiteenHinnoittelu
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/palvelukutsu
             :tallenna-toimenpiteelle-hinta
             {::to/urakka-id (get-in app [:valinnat :urakka-id])
              ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
-             ::h/tallennettavat-hinnat (mapv
-                                         (fn [hinta]
-                                           (merge
-                                             (when-let [id (::hinta/id hinta)]
-                                               {::hinta/id id})
-                                             {::hinta/otsikko (::hinta/otsikko hinta)
-                                              ::hinta/maara (::hinta/maara hinta)
-                                              ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                         (get-in app [:hinnoittele-toimenpide ::h/hinnat]))
-             ::h/tallennettavat-tyot (tyorivit-taulukosta->tallennusmuotoon
-                                       (get-in app [:hinnoittele-toimenpide ::h/tyot]))}
+             ::h/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
+             ::h/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
-      app))
-
-  HinnoitteleHintaryhma
-  (process-event [{tiedot :tiedot} app]
-    (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :tallenna-hintaryhmalle-hinta
-                                      {::ur/id (get-in app [:valinnat :urakka-id])
-                                       ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
-                                       ::h/tallennettavat-hinnat (mapv
-                                                                   (fn [hinta]
-                                                                     (merge
-                                                                       (when-let [id (::hinta/id hinta)]
-                                                                         {::hinta/id id})
-                                                                       {::hinta/otsikko (::hinta/otsikko hinta)
-                                                                        ::hinta/maara (::hinta/maara hinta)
-                                                                        ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
-                                                                   (get-in app [:hinnoittele-hintaryhma ::h/hinnat]))}
-                                      {:onnistui ->HintaryhmanHinnoitteluTallennettu
-                                       :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
-          (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? true))
       app))
 
   ToimenpiteenHinnoitteluTallennettu
@@ -475,6 +614,46 @@
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
     (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false))
 
+  AloitaHintaryhmanHinnoittelu
+  (process-event [{hintaryhma-id :hintaryhma-id} app]
+    (let [hinnoiteltava-hintaryhma (h/hinnoittelu-idlla (:hintaryhmat app) hintaryhma-id)
+          hinnat (::h/hinnat hinnoiteltava-hintaryhma)]
+      (assoc app :hinnoittele-hintaryhma
+                 {::h/id hintaryhma-id
+                  ::h/hinnat (hintaryhman-hintakentat hinnat)})))
+
+  PeruHintaryhmanHinnoittelu
+  (process-event [_ app]
+    (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
+               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu))
+
+  AsetaHintaryhmakentalleTiedot
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:hinnoittele-hintaryhma ::h/hinnat]
+              (hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla (get-in app [:hinnoittele-hintaryhma
+                                                                              ::h/hinnat]) tiedot)))
+
+  TallennaHintaryhmanHinnoittelu
+  (process-event [{tiedot :tiedot} app]
+    (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
+      (do (tuck-tyokalut/palvelukutsu :tallenna-hintaryhmalle-hinta
+                                      {::ur/id (get-in app [:valinnat :urakka-id])
+                                       ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
+                                       ::h/tallennettavat-hinnat (mapv
+                                                                   (fn [hinta]
+                                                                     (merge
+                                                                       (when-let [id (::hinta/id hinta)]
+                                                                         {::hinta/id id})
+                                                                       {::hinta/otsikko (::hinta/otsikko hinta)
+                                                                        ::hinta/summa (::hinta/summa hinta)
+                                                                        ::hinta/ryhma :muu
+                                                                        ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
+                                                                   (get-in app [:hinnoittele-hintaryhma ::h/hinnat]))}
+                                      {:onnistui ->HintaryhmanHinnoitteluTallennettu
+                                       :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
+          (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? true))
+      app))
+
   HintaryhmanHinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
@@ -487,38 +666,6 @@
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
     (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false))
 
-  PeruToimenpiteenHinnoittelu
-  (process-event [_ app]
-    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
-               :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
-
-  PeruHintaryhmanHinnoittelu
-  (process-event [_ app]
-    (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false
-               :hinnoittele-hintaryhma alustettu-hintaryhman-hinnoittelu))
-
-  PoistaHintaryhmat
-  (process-event [{hintaryhma-idt :hintaryhma-idt} app]
-    (if-not (:hintaryhmien-poisto-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :poista-tyhjat-hinnoittelut
-                                      {::h/urakka-id (get-in app [:valinnat :urakka-id])
-                                       ::h/idt hintaryhma-idt}
-                                      {:onnistui ->HintaryhmatPoistettu
-                                       :epaonnistui ->HintaryhmatEiPoistettu})
-          (assoc app :hintaryhmien-poisto-kaynnissa? true))
-      app))
-
-  HintaryhmatPoistettu
-  (process-event [{vastaus :vastaus} app]
-    (assoc app :hintaryhmien-poisto-kaynnissa? false
-               :hintaryhmat (h/hinnoittelut-ilman (:hintaryhmat app)
-                                                  (::h/idt vastaus))))
-
-  HintaryhmatEiPoistettu
-  (process-event [_ app]
-    (viesti/nayta! "Tilauksen poisto epäonnistui!" :danger)
-    (assoc app :hintaryhmien-poisto-kaynnissa? false))
-
   KorostaHintaryhmaKartalla
   (process-event [{hintaryhma :hintaryhma} {:keys [toimenpiteet] :as app}]
     (let [korostettavat-turvalaitteet (->>
@@ -528,28 +675,6 @@
                                         (into #{}))]
       (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
           (assoc :korostettu-hintaryhma (::h/id hintaryhma)))))
-
-  AsetaTyorivilleTiedot
-  (process-event [{tiedot :tiedot} app]
-    (let [nykyiset-tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          index (:index tiedot)
-          paivitettava-rivi (get nykyiset-tyot index)
-          paivitetyt-tyot (assoc nykyiset-tyot index (merge paivitettava-rivi
-                                                                    (dissoc tiedot :index)))]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
-
-  LisaaHinnoiteltavaTyorivi
-  (process-event [_ app]
-    (let [tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])
-          paivitetyt-tyot (conj tyot {:maara 0})]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot] paivitetyt-tyot)))
-
-  PoistaHinnoiteltavaTyorivi
-  (process-event [{tiedot :tiedot} app]
-    (let [index (:index tiedot)
-          tyot (get-in app [:hinnoittele-toimenpide ::h/tyot])]
-      (assoc-in app [:hinnoittele-toimenpide ::h/tyot]
-                (vec (drop-index tyot index)))))
 
   PoistaHintaryhmanKorostus
   (process-event [_ app]

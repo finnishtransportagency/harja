@@ -28,7 +28,7 @@
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :sonja :sonja-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
+    :integraatioloki :sonja :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
     :turi :yha-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot
