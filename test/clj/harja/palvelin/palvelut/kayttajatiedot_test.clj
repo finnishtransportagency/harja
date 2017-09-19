@@ -28,7 +28,7 @@
   (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)]
 
-    (is (= (count tulos) 14))
+    (is (= (count tulos) 7))
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
 
