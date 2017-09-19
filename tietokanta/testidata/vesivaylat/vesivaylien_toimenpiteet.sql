@@ -1033,7 +1033,7 @@ VALUES
    'KOMPONENTIN OTSIKKO EI NÄY', NULL, (SELECT id
                                FROM kayttaja
                                WHERE kayttajanimi = 'tero'), 'komponentti',
-  1500, 'kpl', 1, '-2139967544', '1');
+  1500, 'kpl', 1, (SELECT id FROM reimari_turvalaitekomponentti WHERE lisatiedot = 'Hieno komponentti 1'), '1');
 
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)
