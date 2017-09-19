@@ -267,7 +267,8 @@
 
     Sonja
     (kuuntele [this jonon-nimi kuuntelija-fn]
-      (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi))
+      (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
+      (constantly nil))
     (laheta [this jonon-nimi viesti otsikot]
       (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
       (str "ID:" (System/currentTimeMillis)))

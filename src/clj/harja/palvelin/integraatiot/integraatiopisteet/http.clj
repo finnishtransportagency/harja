@@ -3,7 +3,8 @@
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [new-reliquary.core :as nr])
+            [new-reliquary.core :as nr]
+            [harja.fmt :as fmt])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net ConnectException)
            (org.httpkit.client TimeoutException)))
