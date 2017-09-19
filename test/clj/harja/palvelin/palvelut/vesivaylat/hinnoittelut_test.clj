@@ -184,12 +184,11 @@
 
 (deftest tallenna-tyot-eri-urakan-toimenpiteelle
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        helsinki-id (hae-helsingin-vesivaylaurakan-id)
-        urakka-id (some #(when-not (= helsinki-id %) %) (range 100))
+        muhos-id (hae-muhoksen-paallystysurakan-id)
         toimenpidekoodi-id (ffirst (q "SELECT id
                                         FROM toimenpidekoodi
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
-        insert-params {::toi/urakka-id urakka-id
+        insert-params {::toi/urakka-id muhos-id
                        ::toi/id toimenpide-id
                        ::h/tallennettavat-hinnat []
                        ::h/tallennettavat-tyot
