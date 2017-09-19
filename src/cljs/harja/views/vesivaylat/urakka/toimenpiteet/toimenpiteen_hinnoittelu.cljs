@@ -161,7 +161,7 @@
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
      [:table
-      ;; TODO Tehdäänkö combobox? --> ehkä, mutta ei ainakaan ennen kuin varsinainen hintojen anto toimii
+      ;; TODO Tämä voisi olla käytännöllisempää muuttaa comboboksiksi
       [sopimushintaiset-tyot-header {:yk-lisa? false}]
       [:tbody
        (map-indexed
