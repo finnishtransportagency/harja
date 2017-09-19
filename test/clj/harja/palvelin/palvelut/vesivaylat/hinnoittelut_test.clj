@@ -182,13 +182,24 @@
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= tyot-ennen tyot-jalkeen)))))))
 
-(deftest tallenna-tyot-eri-urakan-toimenpiteelle
+(deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         muhos-id (hae-muhoksen-paallystysurakan-id)
+        insert-params {::toi/urakka-id muhos-id
+                       ::toi/id toimenpide-id
+                       ::h/tallennettavat-hinnat []
+                       ::h/tallennettavat-tyot []}]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                         insert-params)))))
+
+(deftest tallenna-tyot-jotka-eivat-kuulu-toimenpiteeseen
+  (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
         toimenpidekoodi-id (ffirst (q "SELECT id
                                         FROM toimenpidekoodi
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
-        insert-params {::toi/urakka-id muhos-id
+        insert-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/tallennettavat-hinnat []
                        ::h/tallennettavat-tyot
@@ -199,8 +210,8 @@
                          ::tyo/maara 123
                          ::tyo/id 2}]}]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
-                         insert-params)))))
+                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   insert-params)))))
 
 (deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)

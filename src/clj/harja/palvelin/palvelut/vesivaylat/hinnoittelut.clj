@@ -81,9 +81,12 @@
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
       (let [olemassa-olevat-hinta-idt (->> (keep ::hinta/id (::h/tallennettavat-hinnat tiedot))
                                            (filter id/id-olemassa?)
-                                           (set))]
-        ;; TODO Sama homma töille: vaadi kuuluu toimenpiteeseen
-        (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db olemassa-olevat-hinta-idt toimenpide-id))
+                                           (set))
+            olemassa-olevat-tyo-idt (->> (keep ::tyo/id (::h/tallennettavat-tyot tiedot))
+                                         (filter id/id-olemassa?)
+                                         (set))]
+        (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db olemassa-olevat-hinta-idt toimenpide-id)
+        (q/vaadi-tyot-kuuluvat-toimenpiteeseen db olemassa-olevat-tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
           (q/tallenna-toimenpiteen-omat-hinnat!
