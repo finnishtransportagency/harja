@@ -78,7 +78,7 @@
      :parametrit parametrit}
     #(do
       (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s"
-                         metodi url metodi kutsudata otsikot parametrit))
+                         metodi url metodi (fmt/merkkijonon-alku kutsudata 800) otsikot parametrit))
 
       (let [sisaltotyyppi (get otsikot " Content-Type ")]
         (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))

@@ -617,3 +617,9 @@
          (p minuutit)
          (when sekunnit
            (str ":" (p sekunnit))))))
+
+(defn merkkijonon-alku [s max-pituus]
+  (let [lyhyt-s (str/subs s 0 (min (count s) max-pituus))]
+    (if (= lyhyt-s s)
+      s
+      (str lyhyt-s "[...]"))))
