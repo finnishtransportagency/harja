@@ -109,6 +109,9 @@ INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "kompo
 VALUES ('-2139967544', 'Hieno komponentti 1', '8881', '1', '123', '2016-02-18 10:39:14.39', '2017-05-31', 'MERITAITO',
                        'MERITAITO', '2016-02-18 10:39:14.39', '2017-01-01', FALSE, '2017-12-12');
 INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
+VALUES ('-2139967548', 'Tosi hieno komponentti', '8881', '4', '1234', '2016-02-18 10:39:14.39', '2017-05-31', 'MERITAITO',
+                       'MERITAITO', '2016-02-18 10:39:14.39', '2017-01-01', FALSE, '2017-12-12');
+INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
 VALUES ('-2139967545', 'Hieno komponentti 2', '8882', '1', '123', '2016-02-18 10:39:14.39', '2017-05-31', 'MERITAITO',
                        'MERITAITO', '2016-02-18 10:39:14.39', '2017-01-01', FALSE, '2017-12-12');
 INSERT INTO reimari_turvalaitekomponentti (id, lisatiedot, turvalaitenro, "komponentti-id", sarjanumero, paivitysaika, luontiaika, luoja, muokkaaja, muokattu, alkupvm, valiaikainen, loppupvm)
