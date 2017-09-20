@@ -28,8 +28,6 @@
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
 
-(def tyo-hinnat #{"Päivän hinta" "Omakustannushinta"})
-
 (def perustiedot
   #{::id
     ::maara})
@@ -48,3 +46,12 @@
                                   (::toimenpidekoodi-id tyo))]
                    (* (::maara tyo) (:yksikkohinta tyon-tpk))))
                tyot)))
+
+(defn- paivita-tyon-tiedot-idlla
+  "Päivittää töiden joukosta yksittäisen työn, jolla annettu id."
+  [tyot tiedot]
+  (mapv (fn [tyo]
+          (if (= (::id tyo) (::id tiedot))
+            (merge tyo tiedot)
+            tyo))
+        tyot))

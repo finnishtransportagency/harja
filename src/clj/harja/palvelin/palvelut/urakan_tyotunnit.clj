@@ -10,7 +10,7 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]))
 
 (defn hae-urakan-tyotunnit [db kayttaja urakka-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset kayttaja urakka-id)
   (let [tunnit (q/hae-urakan-tyotunnit db {::ut/urakka-id urakka-id})]
     tunnit))
 
@@ -21,7 +21,7 @@
                                   urakan-tyotunnit ::ut/urakan-tyotunnit-vuosikolmanneksittain}]
   (jdbc/with-db-transaction [db db]
     (doseq [{urakka-id ::ut/urakka-id :as tyotunnit} urakan-tyotunnit]
-      (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset kayttaja urakka-id)
       (q/tallenna-urakan-tyotunnit db tyotunnit)))
 
   (doseq [{urakka-id ::ut/urakka-id
@@ -37,7 +37,7 @@
   (hae-urakan-tyotunnit db kayttaja urakka-id))
 
 (defn hae-urakan-kuluvan-vuosikolmanneksen-tyotunnit [db kayttaja urakka-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat kayttaja urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset kayttaja urakka-id)
   (let [tunnit (q/hae-kuluvan-vuosikolmanneksen-tyotunnit db urakka-id)]
     (spec-apurit/poista-nil-avaimet {::ut/urakan-tyotunnit tunnit} false)))
 
