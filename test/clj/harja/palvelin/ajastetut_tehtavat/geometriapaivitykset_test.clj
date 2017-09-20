@@ -10,9 +10,11 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
-            [clj-time.coerce :as time-coerce])
+            [clj-time.coerce :as time-coerce]
+            [clojure.java.io :as io])
   (:use org.httpkit.fake)
-  (:import (java.util Date)))
+  (:import (java.util Date)
+           (org.apache.commons.io IOUtils)))
 
 (defn aja-tieverkon-paivitys
   "REPL-testiajofunktio"
@@ -98,13 +100,16 @@
                            testitietokanta integraatioloki "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
         (is (= muokkausaika (time-coerce/to-sql-time (Date. fake-muokkausaika))))))))
 
-(deftest testaa-tiedoston-lataus-alustalla
+(deftest testaa-tiedoston-lataus-ava-alustalla
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        lahdetiedosto "test/resurssit/arkistot/test_zip.zip"
-        kohdetiedosto "test/resurssit/download_test.zip"]
+        fake-tiedosto-url "http://www.example.com/test_file.zip"
+        kohdetiedosto "test/resurssit/download_test.zip"
+        fake-vastaus {:status 200 :body (IOUtils/toByteArray (io/input-stream "test/resurssit/arkistot/test_zip.zip"))}]
     (component/start integraatioloki)
 
-    (alk/hae-tiedosto integraatioloki "tieverkko-haku" lahdetiedosto kohdetiedosto)
-    (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
-    (clojure.java.io/delete-file kohdetiedosto)))
+    (with-fake-http
+      [{:url fake-tiedosto-url :method :get} fake-vastaus]
+      (alk/hae-tiedosto integraatioloki testitietokanta "tieverkko-haku" fake-tiedosto-url kohdetiedosto)
+      (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
+      (clojure.java.io/delete-file kohdetiedosto))))
