@@ -176,6 +176,7 @@
   (let [paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)
         tiemerkintaurakoiden-kohteet (group-by :tiemerkintaurakka-id kohteiden-tiedot)]
     ;; Päällystysurakkakohtaiset mailit
+    ;; TODO Tässä ei nyt varmaan tarvi kopioita olleskaan?
     (doseq [urakan-kohteet (vals paallystysurakoiden-kohteet)]
       (kasittele-yhden-urakan-tiemerkityt-kohteet
         {:fim fim :email email
