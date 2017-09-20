@@ -17,21 +17,27 @@
       (time-coerce/to-sql-time (java.util.Date. muutospaivamaara))
       nil)))
 
-(defn hae-tiedoston-muutospaivamaara [db integraatioloki integraatio url kayttajatunnus salasana]
-  (log/debug "Haetaan tiedoston muutospäivämäärä AVA:sta URL:lla: " url)
-  (let [http-asetukset {:metodi :HEAD
-                        :url url
-                        :kayttajatunnus kayttajatunnus
-                        :salasana salasana}]
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "ptj" integraatio
-      (fn [konteksti]
-        (let [{otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-          (kasittele-tiedoston-muutospaivamaaran-hakuvastaus otsikot))))))
+(defn hae-tiedoston-muutospaivamaara
+  ([db integraatioloki integraatio url]
+   (hae-tiedoston-muutospaivamaara db integraatioloki integraatio url nil nil))
+  ([db integraatioloki integraatio url kayttajatunnus salasana]
+   (log/debug "Haetaan tiedoston muutospäivämäärä AVA:sta URL:lla: " url)
+   (let [http-asetukset (cond-> {:metodi :HEAD
+                                 :url url}
+                                (not (nil? kayttajatunnus)) (assoc :kayttajatunnus kayttajatunnus)
+                                (not (nil? salasana)) (assoc :salasana salasana))]
+     (integraatiotapahtuma/suorita-integraatio
+       db integraatioloki "ptj" integraatio
+       (fn [konteksti]
+         (let [{otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
+           (kasittele-tiedoston-muutospaivamaaran-hakuvastaus otsikot)))))))
 
-(defn hae-tiedosto [integraatioloki db integraatio url kohde kayttajatunnus salasana]
-  (log/debug "Haetaan tiedosto AVA:sta URL:lla: " url " kohteeseen: " kohde)
-  (tiedosto/lataa-tiedosto-http integraatioloki db "ptj" integraatio url kohde kayttajatunnus salasana))
+(defn hae-tiedosto
+  ([integraatioloki db integraatio url kohde]
+   (hae-tiedosto integraatioloki db integraatio url kohde nil nil))
+  ([integraatioloki db integraatio url kohde kayttajatunnus salasana]
+   (log/debug "Haetaan tiedosto AVA:sta URL:lla: " url " kohteeseen: " kohde)
+   (tiedosto/lataa-tiedosto integraatioloki db "ptj" integraatio url kohde kayttajatunnus salasana)))
 
 (defn aja-paivitys [integraatioloki
                     db
