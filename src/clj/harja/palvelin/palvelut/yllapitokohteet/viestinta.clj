@@ -136,7 +136,7 @@
                                   nakokulma-urakka-nimi
                                   (or (:kohde-nimi eka-kohde)
                                       (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
-                                  (get valmistumispvmt (:id eka-kohde))))
+                                  (fmt/pvm-opt (get valmistumispvmt (:id eka-kohde)))))
         viestin-vartalo (if (> (count yhden-urakan-kohteet) 1)
                           (viesti-kohteiden-tiemerkinta-valmis yhden-urakan-kohteet valmistumispvmt ilmoittaja)
                           (viesti-kohteen-tiemerkinta-valmis
@@ -157,14 +157,7 @@
        :urakka-sampoid urakka-sampo-id
        :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
        :viesti-otsikko viestin-otsikko
-       :viesti-body viestin-vartalo})
-    (when (:sahkoposti ilmoittaja)
-      (viestinta/laheta-sahkoposti-itselle
-        {:email email
-         :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle ja urakoitsijan vastuuhenkilölle."
-         :sahkoposti (:sahkoposti ilmoittaja)
-         :viesti-otsikko viestin-otsikko
-         :viesti-body viestin-vartalo}))))
+       :viesti-body viestin-vartalo})))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Käy kohteet läpi päällystys- sekä tiemerkintäurakkakohtaisesti ja
