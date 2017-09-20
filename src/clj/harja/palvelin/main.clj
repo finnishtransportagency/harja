@@ -132,7 +132,7 @@
     ;; Vesiväylät
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet :as vv-toimenpiteet]
     [harja.palvelin.palvelut.vesivaylat.vaylat :as vv-vaylat]
-    [harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut :as vv-hinnoittelut]
+    [harja.palvelin.palvelut.vesivaylat.hinnoittelut :as vv-hinnoittelut]
     [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot]
     [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
     [harja.palvelin.palvelut.vesivaylat.turvalaitteet :as vv-turvalaitteet])
