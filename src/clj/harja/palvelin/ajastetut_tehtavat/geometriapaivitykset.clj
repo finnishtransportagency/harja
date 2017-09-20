@@ -8,7 +8,7 @@
             [clj-time.coerce :as coerce]
             [clojure.java.io :as io]
             [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.alk :as alk]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.ava :as ava]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
@@ -31,7 +31,7 @@
   (log/debug (format "Ajastetaan geometria-aineiston %s päivitys ajettavaksi %s minuutin välein." paivitystunnus tuontivali))
   (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
             (fn [_]
-              (alk/kaynnista-paivitys (:integraatioloki this)
+              (ava/kaynnista-paivitys (:integraatioloki this)
                                       (:db this)
                                       paivitystunnus
                                       osoite
@@ -61,37 +61,37 @@
       false)))
 
 (defn maarittele-paivitystehtava [paivitystunnus
-                                  alk-osoite-avain
-                                  alk-tuontikohde-avain
+                                  url-avain
+                                  tuontikohdepolku-avain
                                   shapefile-avain
                                   paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [alk-osoite (get asetukset alk-osoite-avain)
-          alk-tuontikohde (get asetukset alk-tuontikohde-avain)
+    (let [url (get asetukset url-avain)
+          tuontikohdepolku (get asetukset tuontikohdepolku-avain)
           shapefile (get asetukset shapefile-avain)
           kayttajatunnus (:kayttajatunnus asetukset)
           salasana (:salasana asetukset)]
       (when (and tuontivali
-                 alk-osoite
-                 alk-tuontikohde
+                 url
+                 tuontikohdepolku
                  shapefile)
         (ajasta-paivitys this
                          paivitystunnus
                          tuontivali
-                         alk-osoite
-                         alk-tuontikohde
+                         url
+                         tuontikohdepolku
                          (fn [] (paivitys (:db this) shapefile))
                          kayttajatunnus
                          salasana)))))
 
-(defn maarittele-paikallinen-paivitystehtava [paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys]
+(defn maarittele-paikallinen-paivitystehtava [paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [alk-osoite (get asetukset alk-osoite-avain)
-          alk-tuontikohde (get asetukset alk-tuontikohde-avain)
+    (let [url (get asetukset url-avain)
+          tuontikohdepolku (get asetukset tuontikohdepolku-avain)
           shapefile (get asetukset shapefile-avain)
           db (:db this)]
-      (log/debug "Paikallinen päivitystehtävä: " paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys)
-      (when (and (not alk-osoite) (not alk-tuontikohde))
+      (log/debug "Paikallinen päivitystehtävä: " paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys)
+      (when (and (not url) (not tuontikohdepolku))
         (log/debug "Käynnistetään paikallinen paivitystehtava tiedostosta:" shapefile)
         (chime-at
           (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))

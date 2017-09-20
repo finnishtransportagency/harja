@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.paikkatietojarjestelma.alk
+(ns harja.palvelin.integraatiot.paikkatietojarjestelma.ava
   (:require
     [taoensso.timbre :as log]
     [clojure.java.io :as io]
@@ -18,7 +18,7 @@
       nil)))
 
 (defn hae-tiedoston-muutospaivamaara [db integraatioloki integraatio url kayttajatunnus salasana]
-  (log/debug "Haetaan tiedoston muutospäivämäärä ALK:sta URL:lla: " url)
+  (log/debug "Haetaan tiedoston muutospäivämäärä AVA:sta URL:lla: " url)
   (let [http-asetukset {:metodi :HEAD
                         :url url
                         :kayttajatunnus kayttajatunnus
@@ -30,7 +30,7 @@
           (kasittele-tiedoston-muutospaivamaaran-hakuvastaus otsikot))))))
 
 (defn hae-tiedosto [integraatioloki db integraatio url kohde kayttajatunnus salasana]
-  (log/debug "Haetaan tiedosto ALK:sta URL:lla: " url " kohteeseen: " kohde)
+  (log/debug "Haetaan tiedosto AVA:sta URL:lla: " url " kohteeseen: " kohde)
   (tiedosto/lataa-tiedosto-http integraatioloki db "ptj" integraatio url kohde kayttajatunnus salasana))
 
 (defn aja-paivitys [integraatioloki
@@ -60,7 +60,7 @@
       false)))
 
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku paivitys kayttajatunnus salasana]
-  (log/debug (format "Tarkistetaan onko geometria-aineisto: %s päivittynyt ALK:ssa." paivitystunnus))
+  (log/debug (format "Tarkistetaan onko geometria-aineisto: %s päivittynyt AVA:ssa." paivitystunnus))
   (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdetiedoston-polku))
     (try+
       (let [integraatio (str paivitystunnus "-muutospaivamaaran-haku")
@@ -71,7 +71,7 @@
                                   tiedostourl
                                   kayttajatunnus
                                   salasana)
-            alk-paivitys (fn [] (aja-paivitys
+            ava-paivitys (fn [] (aja-paivitys
                                   integraatioloki
                                   db
                                   paivitystunnus
@@ -82,7 +82,7 @@
                                   kayttajatunnus
                                   salasana))]
         (if (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm)
-          (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus alk-paivitys)
+          (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)
           (log/debug (format "Geometria-aineisto: %s, ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä." paivitystunnus))))
       (catch Exception e
         (log/error e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus." paivitystunnus))))))
