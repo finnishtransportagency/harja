@@ -1,7 +1,9 @@
 (ns harja.palvelin.integraatiot.integraatiopisteet.tiedosto
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [org.httpkit.client :as http]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn lataa-tiedosto [integraatioloki jarjestelma integraatio lahde kohde]
@@ -25,3 +27,21 @@
             {:type    :tiedoston-lataus-epaonnistui
              :virheet [{:koodi :poikkeus :viesti (str "Poikkeus :" (.toString e))}]}))))))
 
+(defn lataa-tiedosto-http [integraatioloki db jarjestelma integraatio url kohde kayttajatunnus salasana]
+  (integraatiotapahtuma/suorita-integraatio
+    db integraatioloki jarjestelma integraatio nil
+    (fn [konteksti]
+      (let [http-asetukset {:metodi :POST
+                            :url url
+                            :kayttajatunnus kayttajatunnus
+                            :salasana salasana
+                            :otsikot {"Content-Type" "text/xml"}}
+            {body :body} (integraatiotapahtuma/laheta
+                           konteksti
+                           :http
+                           http-asetukset)]
+        (with-open [in (io/input-stream body)
+                    out (io/output-stream kohde)]
+          (io/copy in out))))
+    {:virhekasittelija (fn [_ _]
+                         (log/error (format "Tiedoston lataaminen osoitteesta: %s epäonnistui." url)))}))

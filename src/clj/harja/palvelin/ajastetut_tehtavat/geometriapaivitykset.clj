@@ -27,11 +27,18 @@
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
 
-(defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku paivitys]
+(defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku paivitys kayttajatunnus salasana]
   (log/debug (format "Ajastetaan geometria-aineiston %s päivitys ajettavaksi %s minuutin välein." paivitystunnus tuontivali))
   (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
             (fn [_]
-              (alk/kaynnista-paivitys (:integraatioloki this) (:db this) paivitystunnus osoite kohdetiedoston-polku paivitys))))
+              (alk/kaynnista-paivitys (:integraatioloki this)
+                                      (:db this)
+                                      paivitystunnus
+                                      osoite
+                                      kohdetiedoston-polku
+                                      paivitys
+                                      kayttajatunnus
+                                      salasana))))
 
 (defn tarvitaanko-paikallinen-paivitys? [db paivitystunnus tiedostourl]
   (try
@@ -53,11 +60,17 @@
       (log/warn e (format "Tarkistettaessa paikallista ajoa geometriapäivitykselle: %s tapahtui poikkeus." paivitystunnus))
       false)))
 
-(defn maarittele-alk-paivitystehtava [paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys]
+(defn maarittele-paivitystehtava [paivitystunnus
+                                  alk-osoite-avain
+                                  alk-tuontikohde-avain
+                                  shapefile-avain
+                                  paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
     (let [alk-osoite (get asetukset alk-osoite-avain)
           alk-tuontikohde (get asetukset alk-tuontikohde-avain)
-          shapefile (get asetukset shapefile-avain)]
+          shapefile (get asetukset shapefile-avain)
+          kayttajatunnus (:kayttajatunnus asetukset)
+          salasana (:salasana asetukset)]
       (when (and tuontivali
                  alk-osoite
                  alk-tuontikohde
@@ -67,7 +80,9 @@
                          tuontivali
                          alk-osoite
                          alk-tuontikohde
-                         (fn [] (paivitys (:db this) shapefile)))))))
+                         (fn [] (paivitys (:db this) shapefile))
+                         kayttajatunnus
+                         salasana)))))
 
 (defn maarittele-paikallinen-paivitystehtava [paivitystunnus alk-osoite-avain alk-tuontikohde-avain shapefile-avain paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
@@ -89,179 +104,179 @@
               (catch Exception e
                 (log/debug e (format "Paikallisessa geometriapäivityksessä %s tapahtui poikkeus." paivitystunnus))))))))))
 
-(def tee-tieverkon-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-tieverkon-paivitystehtava
+  (maarittele-paivitystehtava
     "tieverkko"
-    :tieosoiteverkon-alk-osoite
-    :tieosoiteverkon-alk-tuontikohde
+    :tieosoiteverkon-osoite
+    :tieosoiteverkon-tuontikohde
     :tieosoiteverkon-shapefile
     tieverkon-tuonti/vie-tieverkko-kantaan))
 
 (def tee-tieverkon-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "tieverkko"
-    :tieosoiteverkon-alk-osoite
-    :tieosoiteverkon-alk-tuontikohde
+    :tieosoiteverkon-osoite
+    :tieosoiteverkon-tuontikohde
     :tieosoiteverkon-shapefile
     tieverkon-tuonti/vie-tieverkko-kantaan))
 
-(def tee-pohjavesialueiden-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-pohjavesialueiden-paivitystehtava
+  (maarittele-paivitystehtava
     "pohjavesialueet"
-    :pohjavesialueen-alk-osoite
-    :pohjavesialueen-alk-tuontikohde
+    :pohjavesialueen-osoite
+    :pohjavesialueen-tuontikohde
     :pohjavesialueen-shapefile
     pohjavesialueen-tuonti/vie-pohjavesialueet-kantaan))
 
 (def tee-pohjavesialueiden-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "pohjavesialueet"
-    :pohjavesialueen-alk-osoite
-    :pohjavesialueen-alk-tuontikohde
+    :pohjavesialueen-osoite
+    :pohjavesialueen-tuontikohde
     :pohjavesialueen-shapefile
     pohjavesialueen-tuonti/vie-pohjavesialueet-kantaan))
 
-(def tee-siltojen-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-siltojen-paivitystehtava
+  (maarittele-paivitystehtava
     "sillat"
-    :siltojen-alk-osoite
-    :siltojen-alk-tuontikohde
+    :siltojen-osoite
+    :siltojen-tuontikohde
     :siltojen-shapefile
     siltojen-tuonti/vie-sillat-kantaan))
 
 (def tee-siltojen-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "sillat"
-    :siltojen-alk-osoite
-    :siltojen-alk-tuontikohde
+    :siltojen-osoite
+    :siltojen-tuontikohde
     :siltojen-shapefile
     siltojen-tuonti/vie-sillat-kantaan))
 
-(def tee-talvihoidon-hoitoluokkien-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-talvihoidon-hoitoluokkien-paivitystehtava
+  (maarittele-paivitystehtava
     "talvihoitoluokat"
-    :talvihoidon-hoitoluokkien-alk-osoite
-    :talvihoidon-hoitoluokkien-alk-tuontikohde
+    :talvihoidon-hoitoluokkien-osoite
+    :talvihoidon-hoitoluokkien-tuontikohde
     :talvihoidon-hoitoluokkien-shapefile
     talvihoidon-tuonti/vie-hoitoluokat-kantaan))
 
 (def tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "talvihoitoluokat"
-    :talvihoidon-hoitoluokkien-alk-osoite
-    :talvihoidon-hoitoluokkien-alk-tuontikohde
+    :talvihoidon-hoitoluokkien-osoite
+    :talvihoidon-hoitoluokkien-tuontikohde
     :talvihoidon-hoitoluokkien-shapefile
     talvihoidon-tuonti/vie-hoitoluokat-kantaan))
 
-(def tee-soratien-hoitoluokkien-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-soratien-hoitoluokkien-paivitystehtava
+  (maarittele-paivitystehtava
     "soratieluokat"
-    :soratien-hoitoluokkien-alk-osoite
-    :soratien-hoitoluokkien-alk-tuontikohde
+    :soratien-hoitoluokkien-osoite
+    :soratien-hoitoluokkien-tuontikohde
     :soratien-hoitoluokkien-shapefile
     soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan))
 
 (def tee-soratien-hoitoluokkien-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "soratieluokat"
-    :soratien-hoitoluokkien-alk-osoite
-    :soratien-hoitoluokkien-alk-tuontikohde
+    :soratien-hoitoluokkien-osoite
+    :soratien-hoitoluokkien-tuontikohde
     :soratien-hoitoluokkien-shapefile
     soratien-hoitoluokkien-tuonti/vie-hoitoluokat-kantaan))
 
-(def tee-urakoiden-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-urakoiden-paivitystehtava
+  (maarittele-paivitystehtava
     "urakat"
-    :urakoiden-alk-osoite
-    :urakoiden-alk-tuontikohde
+    :urakoiden-osoite
+    :urakoiden-tuontikohde
     :urakoiden-shapefile
     urakoiden-tuonti/vie-urakat-kantaan))
 
 (def tee-urakoiden-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "urakat"
-    :urakoiden-alk-osoite
-    :urakoiden-alk-tuontikohde
+    :urakoiden-osoite
+    :urakoiden-tuontikohde
     :urakoiden-shapefile
     urakoiden-tuonti/vie-urakat-kantaan))
 
-(def tee-elyjen-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-elyjen-paivitystehtava
+  (maarittele-paivitystehtava
     "ely-alueet"
-    :ely-alueiden-alk-osoite
-    :ely-alueiden-alk-tuontikohde
+    :ely-alueiden-osoite
+    :ely-alueiden-tuontikohde
     :ely-alueiden-shapefile
     elyjen-tuonti/vie-elyt-kantaan))
 
 (def tee-elyjen-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "ely-alueet"
-    :ely-alueiden-alk-osoite
-    :ely-alueiden-alk-tuontikohde
+    :ely-alueiden-osoite
+    :ely-alueiden-tuontikohde
     :ely-alueiden-shapefile
     elyjen-tuonti/vie-elyt-kantaan))
 
-(def tee-valaistusurakoiden-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-valaistusurakoiden-paivitystehtava
+  (maarittele-paivitystehtava
     "valaistusurakat"
-    :valaistusurakoiden-alk-osoite
-    :valaistusurakoiden-alk-tuontikohde
+    :valaistusurakoiden-osoite
+    :valaistusurakoiden-tuontikohde
     :valaistusurakoiden-shapefile
     valaistusurakoiden-tuonti/vie-urakat-kantaan))
 
 (def tee-valaistusurakoiden-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "valaistusurakat"
-    :valaistusurakoiden-alk-osoite
-    :valaistusurakoiden-alk-tuontikohde
+    :valaistusurakoiden-osoite
+    :valaistusurakoiden-tuontikohde
     :valaistusurakoiden-shapefile
     valaistusurakoiden-tuonti/vie-urakat-kantaan))
 
-(def tee-paallystyspalvelusopimusten-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-paallystyspalvelusopimusten-paivitystehtava
+  (maarittele-paivitystehtava
     "paallystyspalvelusopimukset"
-    :paallystyspalvelusopimusten-alk-osoite
-    :paallystyspalvelusopimusten-alk-tuontikohde
+    :paallystyspalvelusopimusten-osoite
+    :paallystyspalvelusopimusten-tuontikohde
     :paallystyspalvelusopimusten-shapefile
     paallystyspalvelusopimusten-tuonti/vie-urakat-kantaan))
 
 (def tee-paallystyspalvelusopimusten-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "paallystyspalvelusopimukset"
-    :paallystyspalvelusopimusten-alk-osoite
-    :paallystyspalvelusopimusten-alk-tuontikohde
+    :paallystyspalvelusopimusten-osoite
+    :paallystyspalvelusopimusten-tuontikohde
     :paallystyspalvelusopimusten-shapefile
     paallystyspalvelusopimusten-tuonti/vie-urakat-kantaan))
 
-(def tee-tekniset-laitteet-urakoiden-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-tekniset-laitteet-urakoiden-paivitystehtava
+  (maarittele-paivitystehtava
     "tekniset-laitteet-urakat"
-    :tekniset-laitteet-urakat-alk-osoite
-    :tekniset-laitteet-urakat-alk-tuontikohde
+    :tekniset-laitteet-urakat-osoite
+    :tekniset-laitteet-urakat-tuontikohde
     :tekniset-laitteet-urakat-shapefile
     tekniset-laitteet-urakat-tuonti/vie-tekniset-laitteet-urakat-kantaan))
 
 (def tee-tekniset-laitteet-urakoiden-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "tekniset-laitteet-urakat"
-    :tekniset-laitteet-urakat-alk-osoite
-    :tekniset-laitteet-urakat-alk-tuontikohde
+    :tekniset-laitteet-urakat-osoite
+    :tekniset-laitteet-urakat-tuontikohde
     :tekniset-laitteet-urakat-shapefile
     tekniset-laitteet-urakat-tuonti/vie-tekniset-laitteet-urakat-kantaan))
 
-(def tee-siltojen-palvelusopimusten-alk-paivitystehtava
-  (maarittele-alk-paivitystehtava
+(def tee-siltojen-palvelusopimusten-paivitystehtava
+  (maarittele-paivitystehtava
     "siltojen-palvelusopimukset"
-    :siltojenpalvelusopimusten-alk-osoite
-    :siltojenpalvelusopimusten-alk-tuontikohde
+    :siltojenpalvelusopimusten-osoite
+    :siltojenpalvelusopimusten-tuontikohde
     :siltojenpalvelusopimusten-shapefile
     siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
 
 (def tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
     "siltojen-palvelusopimukset"
-    :siltojenpalvelusopimusten-alk-osoite
-    :siltojenpalvelusopimusten-alk-tuontikohde
+    :siltojenpalvelusopimusten-osoite
+    :siltojenpalvelusopimusten-tuontikohde
     :siltojenpalvelusopimusten-shapefile
     siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
 
@@ -269,27 +284,27 @@
   component/Lifecycle
   (start [this]
     (assoc this
-      :tieverkon-hakutehtava (tee-tieverkon-alk-paivitystehtava this asetukset)
+      :tieverkon-hakutehtava (tee-tieverkon-paivitystehtava this asetukset)
       :tieverkon-paivitystehtava (tee-tieverkon-paikallinen-paivitystehtava this asetukset)
-      :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-alk-paivitystehtava this asetukset)
+      :pohjavesialueiden-hakutehtava (tee-pohjavesialueiden-paivitystehtava this asetukset)
       :pohjavesialueiden-paivitystehtava (tee-pohjavesialueiden-paikallinen-paivitystehtava this asetukset)
-      :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-alk-paivitystehtava this asetukset)
+      :talvihoidon-hoitoluokkien-hakutehtava (tee-talvihoidon-hoitoluokkien-paivitystehtava this asetukset)
       :talvihoidon-hoitoluokkien-paivitystehtava (tee-talvihoidon-hoitoluokkien-paikallinen-paivitystehtava this asetukset)
-      :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-alk-paivitystehtava this asetukset)
+      :soratien-hoitoluokkien-hakutehtava (tee-soratien-hoitoluokkien-paivitystehtava this asetukset)
       :soratien-hoitoluokkien-paivitystehtava (tee-soratien-hoitoluokkien-paikallinen-paivitystehtava this asetukset)
-      :siltojen-hakutehtava (tee-siltojen-alk-paivitystehtava this asetukset)
+      :siltojen-hakutehtava (tee-siltojen-paivitystehtava this asetukset)
       :siltojen-paivitystehtava (tee-siltojen-paikallinen-paivitystehtava this asetukset)
-      :urakoiden-hakutehtava (tee-urakoiden-alk-paivitystehtava this asetukset)
+      :urakoiden-hakutehtava (tee-urakoiden-paivitystehtava this asetukset)
       :urakoiden-paivitystehtava (tee-urakoiden-paikallinen-paivitystehtava this asetukset)
-      :elyjen-hakutehtava (tee-elyjen-alk-paivitystehtava this asetukset)
+      :elyjen-hakutehtava (tee-elyjen-paivitystehtava this asetukset)
       :elyjen-paivitystehtava (tee-elyjen-paikallinen-paivitystehtava this asetukset)
-      :valaistusurakoiden-hakutehtava (tee-valaistusurakoiden-alk-paivitystehtava this asetukset)
+      :valaistusurakoiden-hakutehtava (tee-valaistusurakoiden-paivitystehtava this asetukset)
       :valaistusurakoiden-paivitystehtava (tee-valaistusurakoiden-paikallinen-paivitystehtava this asetukset)
-      :paallystyspalvelusopimusten-hakutehtava (tee-paallystyspalvelusopimusten-alk-paivitystehtava this asetukset)
+      :paallystyspalvelusopimusten-hakutehtava (tee-paallystyspalvelusopimusten-paivitystehtava this asetukset)
       :paallystyspalvelusopimusten-paivitystehtava (tee-paallystyspalvelusopimusten-paikallinen-paivitystehtava this asetukset)
-      :tekniset-laitteet-urakoiden-hakutehtava (tee-tekniset-laitteet-urakoiden-alk-paivitystehtava this asetukset)
+      :tekniset-laitteet-urakoiden-hakutehtava (tee-tekniset-laitteet-urakoiden-paivitystehtava this asetukset)
       :tekniset-laitteet-urakoiden-paivitystehtava (tee-tekniset-laitteet-urakoiden-paikallinen-paivitystehtava this asetukset)
-      :siltojen-palvelusopimusten-hakutehtava (tee-siltojen-palvelusopimusten-alk-paivitystehtava this asetukset)
+      :siltojen-palvelusopimusten-hakutehtava (tee-siltojen-palvelusopimusten-paivitystehtava this asetukset)
       :siltojen-palvelusopimusten-paivitystehtava (tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava this asetukset)))
 
   (stop [this]

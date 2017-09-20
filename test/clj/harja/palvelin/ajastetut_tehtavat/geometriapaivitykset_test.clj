@@ -84,7 +84,7 @@
 
 (def kayttaja "jvh")
 
-(deftest testaa-tiedoston-muokkausajan-selvitys-alk-alustalla
+(deftest testaa-tiedoston-muokkausajan-selvitys-alustalla
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         fake-tiedosto-url "http://www.example.com/file.zip"
@@ -98,7 +98,7 @@
                            testitietokanta integraatioloki "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
         (is (= muokkausaika (time-coerce/to-sql-time (Date. fake-muokkausaika))))))))
 
-(deftest testaa-tiedoston-lataus-alk-alustalla
+(deftest testaa-tiedoston-lataus-alustalla
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         lahdetiedosto "test/resurssit/arkistot/test_zip.zip"
