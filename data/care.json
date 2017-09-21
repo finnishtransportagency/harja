@@ -1,5 +1,15 @@
 [
   {
+    "date": "2017-09-21",
+    "title": "Maksuerä- ja kustannussuunnitelmalähetykset rikki Sampoon",
+    "body": "Maksuerä- ja kustannussuunnitelmalähetykset eivät tällä hetkellä toimi Harjasta Sampoon. Vika johtuu Sampoon tehtävistä huoltotoimenpiteistä. Tällä hetkellä lähetykset on katkaistu. Aikataulua vian korjaamisesta ei valitettavasti vielä ole."
+  },
+  {
+    "date": "2017-09-21",
+    "title": "Varusteiden hallinta harjassa",
+    "body": "Harjassa on tästä päivästä (21.9.2017) lähtien mahdollista hakea, lisätä, muokata ja päivittää varusteita Tierekisteriin rajapinnan kautta. Toiminnallisuus löytyy urakan TOTEUMAT/Varusteet -välilehden alta. Tehdyt muokkaukset välitetään välittömästi Tierekisteriin. Oikeus varusteiden muokkaamiseen on ELY:n pääkäyttäjillä, urakanvalvojilla ja rakennuttajakonsulteilla sekä urakoitsijan yrityksen pääkäyttäjillä, urakan vastuuhenkilöillä ja urakan laadunvalvojilla. Mikäli törmäät ongelmiin varusteiden kanssa tai haluat raportoida kehitysideoita, lähetä palautetta palautenapin kautta tai suoraan osoitteeseen harjapalaute@solita.fi. Tarkempia ohjeita varsinaiseen miten varusteita pitäisi Harjan kautta hallita seuraa perästä."
+  },
+  {
     "date": "2017-09-13",
     "title": "Urakan työtunnit Harjan kautta TURI:n",
     "body": "Urakan työtunnit on nyt mahdollista kirjata Harjaan joko urakan yleiset välilehden tai suoraan turvallisuuspoikkeaman kautta. Työtunnit välitetään automaattisesti turvallaisuusasioiden hallintajärjestelmään TURI:n."
