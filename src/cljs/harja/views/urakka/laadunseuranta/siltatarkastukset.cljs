@@ -203,12 +203,12 @@
 (defn muut-tarkastukset-sarakkeet [muut-tarkastukset]
   (mapv (fn [tarkastus]
           {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
-           :nimi (pvm/pvm (:tarkastusaika tarkastus))
+           :nimi (pvm/pvm-aika-sek (:tarkastusaika tarkastus))
            :leveys 2.5
            :tasaa :keskita
            :tyyppi :komponentti
            :komponentti (fn [rivi]
-                          (let [sarake-arvo (get rivi (pvm/pvm (:tarkastusaika tarkastus)))
+                          (let [sarake-arvo (get rivi (pvm/pvm-aika-sek (:tarkastusaika tarkastus)))
                                 tulos (:tulos sarake-arvo)
                                 liitteet (:liitteet sarake-arvo)]
                             [tarkastustulos-ja-liitteet tulos liitteet]))})
@@ -263,7 +263,7 @@
               ;; Muut tarkastukset (avain on tarkastuspvm ja arvo mappi, jossa tulos ja liitteet)
               (into {}
                     (map (fn [tarkastus]
-                           [(pvm/pvm (:tarkastusaika tarkastus))
+                           [(pvm/pvm-aika-sek (:tarkastusaika tarkastus))
                             {:tulos (first (get (:kohteet tarkastus) kohdenro))
                              :liitteet (filterv #(= (:kohde %) kohdenro)
                                                 (:liitteet tarkastus))}])
