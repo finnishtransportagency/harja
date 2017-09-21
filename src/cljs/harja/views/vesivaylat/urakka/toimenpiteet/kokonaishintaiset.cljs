@@ -87,11 +87,13 @@
        [jaettu/tulokset e! app
         [jaettu/listaus e! app
          {:otsikko "Kokonaishintaiset toimenpiteet"
-          :sarakkeet [jaettu/sarake-tyoluokka
+          :sarakkeet [jaettu/sarake-tyolaji
+                      jaettu/sarake-tyoluokka
                       jaettu/sarake-toimenpide
                       {:otsikko "Kiintiö" :tyyppi :string :leveys 10
                        :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
                       jaettu/sarake-pvm
+                      jaettu/sarake-vayla
                       jaettu/sarake-turvalaite
                       jaettu/sarake-turvalaitenumero
                       jaettu/sarake-vikakorjaus

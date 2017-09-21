@@ -295,9 +295,11 @@
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
                   [jaettu/listaus e! app*
                    {:sarakkeet
-                    [jaettu/sarake-tyoluokka
+                    [jaettu/sarake-tyolaji
+                     jaettu/sarake-tyoluokka
                      jaettu/sarake-toimenpide
                      jaettu/sarake-pvm
+                     jaettu/sarake-vayla
                      jaettu/sarake-turvalaite
                      jaettu/sarake-turvalaitenumero
                      jaettu/sarake-vikakorjaus

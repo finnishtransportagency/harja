@@ -178,14 +178,16 @@
 ;; GRID / LISTAUS
 ;;;;;;;;;;;;;;;;;
 
+(def sarake-tyolaji {:otsikko "Työ\u00ADlaji" :nimi ::to/tyolaji :fmt to/reimari-tyolaji-fmt :leveys 5})
 (def sarake-tyoluokka {:otsikko "Työ\u00ADluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
 (def sarake-toimenpide {:otsikko "Toimen\u00ADpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
-(def sarake-pvm {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 5})
+(def sarake-pvm {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-aika-opt :leveys 6})
 (def sarake-turvalaite {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
 (def sarake-turvalaitenumero {:otsikko "Turva\u00ADlaite\u00ADnumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
-(def sarake-vikakorjaus {:otsikko "Vika\u00ADkorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 5})
+(def sarake-vikakorjaus {:otsikko "Vika\u00ADkorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 4})
+(def sarake-vayla {:otsikko "Väylä" :nimi :vayla :hae (comp ::va/nimi ::to/vayla) :leveys 10})
 (defn sarake-liitteet [e! app oikeus-fn]
-  {:otsikko "Liit\u00ADteet" :nimi :liitteet :tyyppi :komponentti :leveys 10
+  {:otsikko "Liit\u00ADteet" :nimi :liitteet :tyyppi :komponentti :leveys 6
    :komponentti (fn [rivi]
                   [liitteet/liitteet-ja-lisays
                    (get-in app [:valinnat :urakka-id])
@@ -218,7 +220,7 @@
                              (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
                                                               :valinta uusi}
                                                              toimenpiteet))))])
-   :leveys 5})
+   :leveys 3})
 
 (defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
@@ -310,33 +312,22 @@
                              gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti
                                                       rivi-klikattu infolaatikon-tila-muuttui]}]
-  [:div.vv-toimenpideryhma-sisalto
-   (into [otsikkopaneeli
-          {:otsikkoluokat (when (get infolaatikko-nakyvissa listaus-tunniste) ["livi-grid-infolaatikolla"])
-           :paneelikomponentit
-           [{:sijainti paneelin-checkbox-sijainti
-             :sisalto
-             (fn [{:keys [tunniste]}]
-               (let [tyolajin-toimenpiteet (tiedot/toimenpiteet-tyolajilla toimenpiteet tunniste)]
-                 [kentat/tee-kentta
-                  {:tyyppi :checkbox}
-                  (r/wrap (tiedot/valinnan-tila tyolajin-toimenpiteet)
-                          (fn [uusi]
-                            (e! (tiedot/->ValitseTyolaji {:tyolaji tunniste
-                                                          :valinta uusi}
-                                                         toimenpiteet))))]))}]}]
-         (luo-otsikkorivit
-           {:e! e!
-            :app app
-            :listaus-tunniste listaus-tunniste
-            :toimenpiteet toimenpiteet
-            :toimenpiteiden-haku-kaynnissa? toimenpiteiden-haku-kaynnissa?
-            :gridin-sarakkeet gridin-sarakkeet
-            :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
-            :rivi-klikattu rivi-klikattu
-            :infolaatikon-tila-muuttui infolaatikon-tila-muuttui}))
-   (when footer
-     [:div.toimenpiteet-listaus-footer footer])])
+  [grid/grid
+   {:tunniste ::to/id
+    :infolaatikon-tila-muuttui (fn [nakyvissa?]
+                                 (e! (tiedot/->AsetaInfolaatikonTila
+                                       listaus-tunniste
+                                       nakyvissa?
+                                       infolaatikon-tila-muuttui)))
+    :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
+    :rivin-infolaatikko (fn [rivi data]
+                          [toimenpide-infolaatikossa rivi])
+    :salli-valiotsikoiden-piilotus? true
+    :ei-footer-muokkauspaneelia? true
+    :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
+    :valiotsikoiden-alkutila :kaikki-kiinni}
+   gridin-sarakkeet
+   (to/jarjesta-toimenpiteet-pvm-mukaan toimenpiteet)])
 
 (defn tulokset [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa?] :as app} sisalto]
   (cond (and toimenpiteiden-haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
