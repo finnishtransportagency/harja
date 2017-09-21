@@ -73,7 +73,13 @@
                           (not (:poistettu %)))
                     valitavoitteet)]
 
-      (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
+      (q/paivita-urakan-valitavoite! db
+                                     {:nimi nimi
+                                      :takaraja (konv/sql-date takaraja)
+                                      :aloituspvm nil
+                                      :muokkaaja (:id user)
+                                      :urakka urakka-id
+                                      :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
         (merkitse-valitavoite-valmiiksi! db user urakka-id valitavoite)))))
 
