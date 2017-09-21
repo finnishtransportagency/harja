@@ -26,9 +26,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.tyokalut.local-storage :as local-storage]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [clojure.string :as clj-str])
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -40,7 +38,6 @@
 (defonce uudet-liitteet (local-storage/local-storage-atom :uuden-siltatarkastuksen-liitteet
                                                           nil
                                                           nil))
-(defonce kuuntelija (chan))
 
 (def +valitse-tulos+ "- Valitse tulos -")
 (def +ei-kirjattu+ "Ei kirjattu")
@@ -237,10 +234,8 @@
   (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))]
         ()
         (if (k/virhe? res)
-          (let [kuuntelu-tulos (<! kuuntelija)]
-            (if (and kuuntelu-tulos (= (:virhe-tyyppi kuuntelu-tulos) :illegal-state-exception))
-              (viesti/nayta! (str "Tallentaminen epäonnistui, koska " (clj-str/lower-case (:virhe kuuntelu-tulos))) :warning viesti/viestin-nayttoaika-keskipitka)
-              (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt))
+          (do
+            (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
             (reset! tallennus-kaynnissa-atom false))
           (let [olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
                 kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
@@ -372,9 +367,6 @@
   [muokattava-tarkastus]
   (let [tallennus-kaynnissa? (atom false)
         muut-tarkastukset @st/valitun-sillan-tarkastukset
-
-        olemassa-olevat-tarkastus-pvmt
-        (reaction (map :tarkastusaika @st/valitun-sillan-tarkastukset))
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
                   (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
@@ -419,12 +411,7 @@
              {:otsikko "Sillan tunnus" :nimi :siltatunnus :hae (fn [_] (:siltatunnus @st/valittu-silta)) :muokattava? (constantly false)}
              {:otsikko  "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true
               :tyyppi   :pvm
-              :validoi  [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
-                         #(when (some (fn [tarkastusaika]
-                                        (and (pvm/sama-pvm? tarkastusaika %1)
-                                             (not= tarkastusaika %1)))
-                                      @olemassa-olevat-tarkastus-pvmt)
-                            "Tälle päivälle on jo kirjattu tarkastus.")]
+              :validoi  [[:ei-tyhja "Anna tarkastuksen päivämäärä"]]
               :huomauta [[:urakan-aikana]]}
              ;; maksimipituus tarkastajalle tietokannassa varchar(128)
              {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
@@ -515,7 +502,6 @@
 
   (komp/luo
     (komp/sisaan-ulos #(do
-                         (tapahtumat/kuuntele! :palvelinvirhe kuuntelija)
                          (kartta-tasot/taso-paalle! :sillat)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :L))
