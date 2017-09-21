@@ -293,6 +293,7 @@
                                                                  oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                  (:id @nav/valittu-urakka))))}]]
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+
                   [jaettu/listaus e! app*
                    {:sarakkeet
                     [jaettu/sarake-tyolaji
@@ -316,7 +317,6 @@
                     :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
                     :footer (when nayta-hintaryhman-yhteenveto?
                               [hintaryhman-hinnoittelu e! app* hintaryhma])
-                    :otsikko (h/hintaryhman-nimi hintaryhma)
                     :paneelin-checkbox-sijainti "95.5%"
                     :vaylan-checkbox-sijainti "95.5%"}])]))]]]))))
 

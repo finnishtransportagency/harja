@@ -309,7 +309,7 @@
   [:h1.vv-hintaryhman-otsikko otsikko])
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
-                             gridin-sarakkeet {:keys [otsikko paneelin-checkbox-sijainti footer
+                             gridin-sarakkeet {:keys [paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti
                                                       rivi-klikattu infolaatikon-tila-muuttui]}]
   [grid/grid
@@ -336,13 +336,12 @@
 
 (defn listaus
   ([e! app] (listaus e! app {}))
-  ([e! app {:keys [otsikko paneelin-checkbox-sijainti vaylan-checkbox-sijainti
+  ([e! app {:keys [paneelin-checkbox-sijainti vaylan-checkbox-sijainti
                    footer listaus-tunniste sarakkeet rivi-klikattu infolaatikon-tila-muuttui]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     sarakkeet
-    {:otsikko otsikko
-     :footer footer
+    {:footer footer
      :listaus-tunniste listaus-tunniste
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
      :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
