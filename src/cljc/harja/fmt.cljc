@@ -5,7 +5,7 @@
             #?(:cljs [goog.i18n.NumberFormatSymbols])
             #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
             #?(:cljs [goog.i18n.NumberFormat])
-            [clojure.string :as str]
+            [clojure.string :as s]
             [harja.tyokalut.big :as big])
   #?(:clj
      (:import (java.text NumberFormat)
@@ -114,264 +114,264 @@
            ;; tyhjällä merkkijonolla,
            ;; voi ottaa loppuvälilyönnin pois. Eli esim "harja-sampo " -> "harja-sampo"
            ;(re-find #"^\s*" nimi)
-           ;(str/replace nimi #"^\s*" "")
+           ;(s/replace nimi #"^\s*" "")
 
            ;; Ylimääräiset välilyönnit pois
            (re-find #"\s\s+" nimi)
-           (str/replace nimi #"\s\s+" " ")
+           (s/replace nimi #"\s\s+" " ")
 
            ;; "  - " -> "-"
            ;; Täytyy etsiä nämä kaksi erikseen, koska
            ;; \s*-\s* osuisi myös korjattuun "-" merkkijonoon,
            ;; ja "\s+-\s+" osuisi vain jos molemmilla puolilla on välilyönti.
            (or (re-find #"\s+-" nimi) (re-find #"-\s+" nimi))
-           (str/replace nimi #"\s*-\s*" "-")
+           (s/replace nimi #"\s*-\s*" "-")
 
-           ;; (?i) case insensitive ei toimi str/replacessa
+           ;; (?i) case insensitive ei toimi s/replacessa
            ;; cljs puolella. Olisi mahdollista käyttää vain
            ;; clj puolella käyttäen reader conditionaleja, mutta
            ;; samapa se on toistaa kaikki näin.
 
            ;; Nämä voinee ottaa pois kunhan käytössä on oikeaa oikeaa dataa
            (re-find #"testiurakka" nimi)
-           (str/replace nimi #"testiurakka" "u.")
+           (s/replace nimi #"testiurakka" "u.")
 
            (re-find #"Testiurakka" nimi)
-           (str/replace nimi #"Testiurakka" "u.")
+           (s/replace nimi #"Testiurakka" "u.")
 
            (re-find #"TESTIURAKKA" nimi)
-           (str/replace nimi #"TESTIURAKKA" "u.")
+           (s/replace nimi #"TESTIURAKKA" "u.")
 
            (re-find #"harja-sampo " nimi)
-           (str/replace nimi #"harja-sampo " "")
+           (s/replace nimi #"harja-sampo " "")
 
            (re-find #"Harja-Sampo " nimi)
-           (str/replace nimi #"Harja-Sampo " "")
+           (s/replace nimi #"Harja-Sampo " "")
 
            (re-find #"HARJA-SAMPO " nimi)
-           (str/replace nimi #"HARJA-SAMPO " "")
+           (s/replace nimi #"HARJA-SAMPO " "")
 
            ;; Yleisiä leikkauksia
            (re-find #"alueurakka" nimi)
-           (str/replace nimi #"alueurakka" "au.")
+           (s/replace nimi #"alueurakka" "au.")
 
            (re-find #"Alueurakka" nimi)
-           (str/replace nimi #"Alueurakka" "au.")
+           (s/replace nimi #"Alueurakka" "au.")
 
            (re-find #"ALUEURAKKA" nimi)
-           (str/replace nimi #"ALUEURAKKA" "au.")
+           (s/replace nimi #"ALUEURAKKA" "au.")
 
            (re-find #"urakka" nimi)
-           (str/replace nimi #"urakka" "u.")
+           (s/replace nimi #"urakka" "u.")
 
            (re-find #"Urakka" nimi)
-           (str/replace nimi #"Urakka" "u.")
+           (s/replace nimi #"Urakka" "u.")
 
            (re-find #"URAKKA" nimi)
-           (str/replace nimi #"URAKKA" "u.")
+           (s/replace nimi #"URAKKA" "u.")
 
            (re-find #"palvelusopimus" nimi)
-           (str/replace nimi #"palvelusopimus" "ps.")
+           (s/replace nimi #"palvelusopimus" "ps.")
 
            (re-find #"Palvelusopimus" nimi)
-           (str/replace nimi #"Palvelusopimus" "ps.")
+           (s/replace nimi #"Palvelusopimus" "ps.")
 
            (re-find #"PALVELUSOPIMUS" nimi)
-           (str/replace nimi #"PALVELUSOPIMUS" "ps.")
+           (s/replace nimi #"PALVELUSOPIMUS" "ps.")
 
            (re-find #"hankintakustannukset" nimi)
-           (str/replace nimi #"hankintakustannukset" "hk.")
+           (s/replace nimi #"hankintakustannukset" "hk.")
 
            (re-find #"Hankintakustannukset" nimi)
-           (str/replace nimi #"Hankintakustannukset" "hk.")
+           (s/replace nimi #"Hankintakustannukset" "hk.")
 
            (re-find #"HANKINTAKUSTANNUKSET" nimi)
-           (str/replace nimi #"HANKINTAKUSTANNUKSET" "hk.")
+           (s/replace nimi #"HANKINTAKUSTANNUKSET" "hk.")
 
            ;; Turhat POP ja ELY pois
            (re-find #"POP " nimi)
-           (str/replace nimi #"POP " "")
+           (s/replace nimi #"POP " "")
 
            (re-find #"ELY " nimi)
-           (str/replace nimi #"ELY " "")
+           (s/replace nimi #"ELY " "")
 
            ;; Leikataan redundantti hallintayksikön nimi pois
            (re-find #"Uusimaa " nimi)
-           (str/replace nimi #"Uusimaa " "")
+           (s/replace nimi #"Uusimaa " "")
 
            (re-find #"Varsinais-Suomi " nimi)
-           (str/replace nimi #"Varsinais-Suomi " "")
+           (s/replace nimi #"Varsinais-Suomi " "")
 
            (re-find #"Kaakkois-Suomi " nimi)
-           (str/replace nimi #"Kaakkois-Suomi " "")
+           (s/replace nimi #"Kaakkois-Suomi " "")
 
            (re-find #"KAS " nimi)
-           (str/replace nimi #"KAS " "")
+           (s/replace nimi #"KAS " "")
 
            (re-find #"Pirkanmaa " nimi)
-           (str/replace nimi #"Pirkanmaa " "")
+           (s/replace nimi #"Pirkanmaa " "")
 
            (re-find #"Pohjois-Savo " nimi)
-           (str/replace nimi #"Pohjois-Savo " "")
+           (s/replace nimi #"Pohjois-Savo " "")
 
            (re-find #"Keski-Suomi " nimi)
-           (str/replace nimi #"Keski-Suomi " "")
+           (s/replace nimi #"Keski-Suomi " "")
 
            (re-find #"Etelä-Pohjanmaa " nimi)
-           (str/replace nimi #"Etelä-Pohjanmaa " "")
+           (s/replace nimi #"Etelä-Pohjanmaa " "")
 
            (re-find #"Pohjois-Pohjanmaa " nimi)
-           (str/replace nimi #"Pohjois-Pohjanmaa " "")
+           (s/replace nimi #"Pohjois-Pohjanmaa " "")
 
            (re-find #"Lappi " nimi)
-           (str/replace nimi #"Lappi " "")
+           (s/replace nimi #"Lappi " "")
 
            ;; Kunnossapidon
            (re-find #"kunnossapidon" nimi)
-           (str/replace nimi #"kunnossapidon" "kp.")
+           (s/replace nimi #"kunnossapidon" "kp.")
 
            (re-find #"Kunnossapidon" nimi)
-           (str/replace nimi #"Kunnossapidon" "kp.")
+           (s/replace nimi #"Kunnossapidon" "kp.")
 
            (re-find #"KUNNOSSAPIDON" nimi)
-           (str/replace nimi #"KUNNOSSAPIDON" "kp.")
+           (s/replace nimi #"KUNNOSSAPIDON" "kp.")
 
            ;; Ylläpidon
            (re-find #"ylläpidon" nimi)
-           (str/replace nimi #"ylläpidon" "yp.")
+           (s/replace nimi #"ylläpidon" "yp.")
 
            (re-find #"Ylläpidon" nimi)
-           (str/replace nimi #"Ylläpidon" "yp.")
+           (s/replace nimi #"Ylläpidon" "yp.")
 
            (re-find #"YLLÄPIDON" nimi)
-           (str/replace nimi #"YLLÄPIDON" "yp.")
+           (s/replace nimi #"YLLÄPIDON" "yp.")
 
            ;; Päällystys
            (re-find #"tienpäällystys" nimi)
-           (str/replace nimi #"tienpäällystys" "pääl.")
+           (s/replace nimi #"tienpäällystys" "pääl.")
 
            (re-find #"Tienpäällystys" nimi)
-           (str/replace nimi #"Tienpäällystys" "pääl.")
+           (s/replace nimi #"Tienpäällystys" "pääl.")
 
            (re-find #"TIENPÄÄLLYSTYS" nimi)
-           (str/replace nimi #"TIENPÄÄLLYSTYS" "pääl.")
+           (s/replace nimi #"TIENPÄÄLLYSTYS" "pääl.")
 
            (re-find #"päällystys" nimi)
-           (str/replace nimi #"päällystys" "pääl.")
+           (s/replace nimi #"päällystys" "pääl.")
 
            (re-find #"Päällystys" nimi)
-           (str/replace nimi #"Päällystys" "pääl.")
+           (s/replace nimi #"Päällystys" "pääl.")
 
            (re-find #"PÄÄLLYSTYS" nimi)
-           (str/replace nimi #"PÄÄLLYSTYS" "pääl.")
+           (s/replace nimi #"PÄÄLLYSTYS" "pääl.")
 
            (re-find #"päällysteiden" nimi)
-           (str/replace nimi #"päällysteiden" "pääl.")
+           (s/replace nimi #"päällysteiden" "pääl.")
 
            (re-find #"Päällysteiden" nimi)
-           (str/replace nimi #"Päällysteiden" "pääl.")
+           (s/replace nimi #"Päällysteiden" "pääl.")
 
            (re-find #"PÄÄLLYSTEIDEN" nimi)
-           (str/replace nimi #"PÄÄLLYSTEIDEN" "pääl.")
+           (s/replace nimi #"PÄÄLLYSTEIDEN" "pääl.")
 
            (re-find #"päällystyksen" nimi)
-           (str/replace nimi #"päällystyksen" "pääl.")
+           (s/replace nimi #"päällystyksen" "pääl.")
 
            (re-find #"Päällystyksen" nimi)
-           (str/replace nimi #"Päällystyksen" "pääl.")
+           (s/replace nimi #"Päällystyksen" "pääl.")
 
            (re-find #"PÄÄLLYSTYKSEN" nimi)
-           (str/replace nimi #"PÄÄLLYSTYKSEN" "pääl.")
+           (s/replace nimi #"PÄÄLLYSTYKSEN" "pääl.")
 
            ;; Paikkaus
            (re-find #"paikkaus" nimi)
-           (str/replace nimi #"paikkaus" "paik.")
+           (s/replace nimi #"paikkaus" "paik.")
 
            (re-find #"Paikkaus" nimi)
-           (str/replace nimi #"Paikkaus" "paik.")
+           (s/replace nimi #"Paikkaus" "paik.")
 
            (re-find #"PAIKKAUS" nimi)
-           (str/replace nimi #"PAIKKAUS" "paik.")
+           (s/replace nimi #"PAIKKAUS" "paik.")
 
            (re-find #"paikkauksen" nimi)
-           (str/replace nimi #"paikkauksen" "paik.")
+           (s/replace nimi #"paikkauksen" "paik.")
 
            (re-find #"Paikkauksen" nimi)
-           (str/replace nimi #"Paikkauksen" "paik.")
+           (s/replace nimi #"Paikkauksen" "paik.")
 
            (re-find #"PAIKKAUKSEN" nimi)
-           (str/replace nimi #"PAIKKAUKSEN" "paik.")
+           (s/replace nimi #"PAIKKAUKSEN" "paik.")
 
            ;; Valaistus
            (re-find #"valaistuksen" nimi)
-           (str/replace nimi #"valaistuksen" "v.")
+           (s/replace nimi #"valaistuksen" "v.")
 
            (re-find #"Valaistuksen" nimi)
-           (str/replace nimi #"Valaistuksen" "v.")
+           (s/replace nimi #"Valaistuksen" "v.")
 
            (re-find #"VALAISTUKSEN" nimi)
-           (str/replace nimi #"VALAISTUKSEN" "v.")
+           (s/replace nimi #"VALAISTUKSEN" "v.")
 
            (re-find #"valaistus" nimi)
-           (str/replace nimi #"valaistus" "v.")
+           (s/replace nimi #"valaistus" "v.")
 
            (re-find #"Valaistus" nimi)
-           (str/replace nimi #"Valaistus" "v.")
+           (s/replace nimi #"Valaistus" "v.")
 
            (re-find #"VALAISTUS" nimi)
-           (str/replace nimi #"VALAISTUS" "v.")
+           (s/replace nimi #"VALAISTUS" "v.")
 
            ;; Tiemerkintä
            (re-find #"merkinnän" nimi)
-           (str/replace nimi #"merkinnän" "m.")
+           (s/replace nimi #"merkinnän" "m.")
 
            (re-find #"Merkinnän" nimi)
-           (str/replace nimi #"Merkinnän" "m.")
+           (s/replace nimi #"Merkinnän" "m.")
 
            (re-find #"MERKINNÄN" nimi)
-           (str/replace nimi #"MERKINNÄN" "m.")
+           (s/replace nimi #"MERKINNÄN" "m.")
 
            (re-find #"merkintä" nimi)
-           (str/replace nimi #"merkintä" "m.")
+           (s/replace nimi #"merkintä" "m.")
 
            (re-find #"Merkintä" nimi)
-           (str/replace nimi #"Merkintä" "m.")
+           (s/replace nimi #"Merkintä" "m.")
 
            (re-find #"MERKINTÄ" nimi)
-           (str/replace nimi #"MERKINTÄ" "m.")
+           (s/replace nimi #"MERKINTÄ" "m.")
 
            (re-find #"merkintöjen" nimi)
-           (str/replace nimi #"merkintöjen" "m.")
+           (s/replace nimi #"merkintöjen" "m.")
 
            (re-find #"Merkintöjen" nimi)
-           (str/replace nimi #"Merkintöjen" "m.")
+           (s/replace nimi #"Merkintöjen" "m.")
 
            (re-find #"MERKINTÖJEN" nimi)
-           (str/replace nimi #"MERKINTÖJEN" "m.")
+           (s/replace nimi #"MERKINTÖJEN" "m.")
 
            ;; ", " -> " "
            (re-find #"\s*,\s*" nimi)
-           (str/replace nimi #"\s*,\s*" " ")
+           (s/replace nimi #"\s*,\s*" " ")
 
            ;; Lyhennetään tie. Ilman tätä esim "tievalaistus" on "tiev"., joka on ihan ok,
            ;; mutta jos on pakko niin on pakko
            (re-find #"tien" nimi)
-           (str/replace nimi #"tien" "")
+           (s/replace nimi #"tien" "")
 
            (re-find #"Tien" nimi)
-           (str/replace nimi #"Tien" "")
+           (s/replace nimi #"Tien" "")
 
            (re-find #"TIEN" nimi)
-           (str/replace nimi #"TIEN" "")
+           (s/replace nimi #"TIEN" "")
 
            (re-find #"tie" nimi)
-           (str/replace nimi #"tie" "")
+           (s/replace nimi #"tie" "")
 
            (re-find #"Tie" nimi)
-           (str/replace nimi #"Tie" "")
+           (s/replace nimi #"Tie" "")
 
            (re-find #"TIE" nimi)
-           (str/replace nimi #"TIE" "")
+           (s/replace nimi #"TIE" "")
 
            :else (lyhenna-keskelta pituus nimi)))))))
 
@@ -475,7 +475,7 @@
             formatoitu
 
             :default
-            (str/replace formatoitu #" " ""))))
+            (s/replace formatoitu #" " ""))))
       :clj
       (.format (doto (java.text.DecimalFormat.)
                  (.setDecimalFormatSymbols desimaali-symbolit)
@@ -617,3 +617,10 @@
          (p minuutit)
          (when sekunnit
            (str ":" (p sekunnit))))))
+
+(defn merkkijonon-alku [s max-pituus]
+  (when (string? s)
+    (let [lyhyt-s (subs s 0 (min (count s) max-pituus))]
+      (if (= lyhyt-s s)
+        s
+        (str lyhyt-s "[...]")))))
