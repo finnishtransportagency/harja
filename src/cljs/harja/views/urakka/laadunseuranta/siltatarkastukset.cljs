@@ -238,12 +238,12 @@
           (let [olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
                 kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
             (reset! muokattava-tarkastus nil)
+            (reset! uudet-liitteet nil)
             (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
             (reset! st/valittu-tarkastus res)
             (paivita-valittu-silta)
             (reset! tallennus-kaynnissa-atom false)
             (reset! muokattava-tarkastus nil)
-            (reset! uudet-liitteet nil)
             (viesti/nayta! "Siltatarkastus tallennettu" :success))))))
 
 (defn siltatarkastusten-rivit
@@ -367,13 +367,10 @@
         muut-tarkastukset @st/valitun-sillan-tarkastukset
 
         olemassa-olevat-tarkastus-pvmt
-        (reaction (into #{}
-                        (map :tarkastusaika)
-                        @st/valitun-sillan-tarkastukset))
+        (reaction (map :tarkastusaika @st/valitun-sillan-tarkastukset))
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
-                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
-        alkuperainen-tarkastusaika (:tarkastusaika @muokattava-tarkastus)]
+                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
     (komp/luo
       (komp/piirretty
         #(do (when (not (:tultu-sillan-tarkastuksista? @muokattava-tarkastus))
@@ -416,8 +413,10 @@
              {:otsikko  "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true
               :tyyppi   :pvm
               :validoi  [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
-                         #(when (and (@olemassa-olevat-tarkastus-pvmt %1)
-                                     (not= %1 alkuperainen-tarkastusaika))
+                         #(when (some (fn [tarkastusaika]
+                                        (and (pvm/sama-pvm? tarkastusaika %1)
+                                             (not= tarkastusaika %1)))
+                                      @olemassa-olevat-tarkastus-pvmt)
                             "Tälle päivälle on jo kirjattu tarkastus.")]
               :huomauta [[:urakan-aikana]]}
              ;; maksimipituus tarkastajalle tietokannassa varchar(128)
