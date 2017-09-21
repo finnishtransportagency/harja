@@ -153,7 +153,8 @@
 
                             ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
                             ;; ja sen kohteet, jos kannassa ei ole jo samalla pvm olevaa tarkastusta.
-                            (if-let [kannasta-loytynyt-silta (some #(when (pvm/sama-tyyppiriippumaton-pvm? (:tarkastusaika %) tarkastusaika)
+                            (if-let [kannasta-loytynyt-silta (some #(when (pvm/sama-tyyppiriippumaton-pvm? (:tarkastusaika %)
+                                                                                                           (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi tarkastusaika)))
                                                                       %)
                                                                    olemassa-olevat-tarkastukset)]
                               (do

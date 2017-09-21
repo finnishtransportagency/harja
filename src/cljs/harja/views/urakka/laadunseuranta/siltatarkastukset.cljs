@@ -40,6 +40,8 @@
 (defonce uudet-liitteet (local-storage/local-storage-atom :uuden-siltatarkastuksen-liitteet
                                                           nil
                                                           nil))
+(defonce kuuntelija (chan))
+
 (def +valitse-tulos+ "- Valitse tulos -")
 (def +ei-kirjattu+ "Ei kirjattu")
 
@@ -232,9 +234,8 @@
 (defn tallenna-siltatarkastus!
   "Ottaa tallennettavan tarkastuksen, jossa tarkastustietojen lisäksi mahdollinen uusi-liite ja urakka-id"
   [tarkastus tallennus-kaynnissa-atom]
-  (go (let [kuuntelija (chan)
-            _ (tapahtumat/kuuntele! :palvelinvirhe kuuntelija)
-            res (<! (st/tallenna-siltatarkastus! tarkastus))]
+  (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))]
+        ()
         (if (k/virhe? res)
           (let [kuuntelu-tulos (<! kuuntelija)]
             (if (and kuuntelu-tulos (= (:virhe-tyyppi kuuntelu-tulos) :illegal-state-exception))
@@ -514,6 +515,7 @@
 
   (komp/luo
     (komp/sisaan-ulos #(do
+                         (tapahtumat/kuuntele! :palvelinvirhe kuuntelija)
                          (kartta-tasot/taso-paalle! :sillat)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :L))
