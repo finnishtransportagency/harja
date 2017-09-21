@@ -26,7 +26,9 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [harja.asiakas.tapahtumat :as tapahtumat]
+            [clojure.string :as clj-str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -230,10 +232,14 @@
 (defn tallenna-siltatarkastus!
   "Ottaa tallennettavan tarkastuksen, jossa tarkastustietojen lisäksi mahdollinen uusi-liite ja urakka-id"
   [tarkastus tallennus-kaynnissa-atom]
-  (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))]
+  (go (let [kuuntelija (chan)
+            _ (tapahtumat/kuuntele! :palvelinvirhe kuuntelija)
+            res (<! (st/tallenna-siltatarkastus! tarkastus))]
         (if (k/virhe? res)
-          (do
-            (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
+          (let [kuuntelu-tulos (<! kuuntelija)]
+            (if (and kuuntelu-tulos (= (:virhe-tyyppi kuuntelu-tulos) :illegal-state-exception))
+              (viesti/nayta! (str "Tallentaminen epäonnistui, koska " (clj-str/lower-case (:virhe kuuntelu-tulos))) :warning viesti/viestin-nayttoaika-keskipitka)
+              (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt))
             (reset! tallennus-kaynnissa-atom false))
           (let [olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
                 kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]

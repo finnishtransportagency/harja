@@ -146,23 +146,26 @@
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
     (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
-    (let [olemassa-olevat-tarkastukset (q/hae-sillan-tarkastukset db silta-id)
-          tarkastus (if id
-                      ;; Olemassaoleva tarkastus, päivitetään kohteet
-                      (paivita-siltatarkastus! db user urakka-id siltatarkastus)
+    (try (let [olemassa-olevat-tarkastukset (q/hae-sillan-tarkastukset db silta-id)
+               tarkastus (if id
+                            ;; Olemassaoleva tarkastus, päivitetään kohteet
+                            (paivita-siltatarkastus! db user urakka-id siltatarkastus)
 
-                      ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
-                      ;; ja sen kohteet, jos kannassa ei ole jo samalla pvm olevaa tarkastusta.
-                      (if-let [kannasta-loytynyt-silta (some #(when (pvm/sama-tyyppiriippumaton-pvm? (:tarkastusaika %) tarkastusaika)
-                                                                %)
-                                                             olemassa-olevat-tarkastukset)]
-                        (do
-                          (log/warn "Sillalle " (pr-str kannasta-loytynyt-silta) " yritettiin luoda toista tarkastusta " (pr-str siltatarkastus))
-                          (throw (IllegalStateException. "Siltatarkastuksella on jo tarkastus tällä pvm:llä.")))
-                        (luo-siltatarkastus db user siltatarkastus)))]
-      (log/debug "Kohteet tallennettu!")
-      (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
-      (hae-siltatarkastus db (:id tarkastus)))))
+                            ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
+                            ;; ja sen kohteet, jos kannassa ei ole jo samalla pvm olevaa tarkastusta.
+                            (if-let [kannasta-loytynyt-silta (some #(when (pvm/sama-tyyppiriippumaton-pvm? (:tarkastusaika %) tarkastusaika)
+                                                                      %)
+                                                                   olemassa-olevat-tarkastukset)]
+                              (do
+                                (log/warn "Sillalle " (pr-str kannasta-loytynyt-silta) " yritettiin luoda toista tarkastusta " (pr-str siltatarkastus))
+                                (throw (IllegalStateException. "Siltatarkastuksella on jo tarkastus tällä pvm:llä.")))
+                              (luo-siltatarkastus db user siltatarkastus)))]
+            (log/debug "Kohteet tallennettu!")
+            (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)
+            (hae-siltatarkastus db (:id tarkastus)))
+         (catch IllegalStateException e
+           {:virhe (.getMessage e)
+            :virhe-tyyppi :illegal-state-exception}))))
 
 (defn poista-siltatarkastus!
   "Merkitsee siltatarkastuksen poistetuksi"
