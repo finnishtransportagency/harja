@@ -69,16 +69,12 @@
          :otsikko "Tierekisteriosoite"
          :tyyppi :tierekisteriosoite
          :sijainti (atom nil) ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
-         :aseta (fn [rivi arvo]
-                  (assoc rivi :tierekisteriosoite arvo :tunniste nil) )
          :pakollinen? (= :sijainnilla varusteiden-haun-tila)})
       (when (= :tunnisteella varusteiden-haun-tila)
         {:nimi :tunniste
          :otsikko "Varusteen tunniste"
          :uusi-rivi? true
          :tyyppi :string
-         :aseta (fn [rivi arvo]
-                  (assoc rivi :tunniste arvo :tierekisteriosoite nil))
          :pakollinen? (= :tunnisteella varusteiden-haun-tila)})]
      hakuehdot]))
 
