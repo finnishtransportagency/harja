@@ -13,7 +13,7 @@
   (integraatioloki/lokittaja il db "sonja" nimi))
 
 (defn- tee-vastaanottokuuntelija [{:keys [db sonja] :as this} sahkoposti-sisaan-jono kuuntelijat]
-  (when (not (empty? sahkoposti-sisaan-jono))
+  (if (not (empty? sahkoposti-sisaan-jono))
     (jms/kuuntele (lokittaja this "sahkoposti-vastaanotto")
                   sonja
                   sahkoposti-sisaan-jono
@@ -22,15 +22,17 @@
                      (doseq [kuuntelija @kuuntelijat]
                        (kuuntelija %))
                      (catch Exception e
-                       (log/error e "Sähköpostin vastaanotossa tapahtui poikkeus"))))))
+                       (log/error e "Sähköpostin vastaanotossa tapahtui poikkeus"))))
+    (constantly nil)))
 
 (defn- tee-lahetyksen-kuittauskuuntelija [{:keys [db sonja] :as this} sahkoposti-ulos-kuittausjono]
-  (when (not (empty? sahkoposti-ulos-kuittausjono))
+  (if (not (empty? sahkoposti-ulos-kuittausjono))
     (let [integraatio (q/integraation-id db "sonja" "sahkoposti-lahetys")]
       (jms/kuittausjonokuuntelija (lokittaja this "sahkoposti-lahetys") sonja sahkoposti-ulos-kuittausjono
                                   sanomat/lue-kuittaus :viesti-id :onnistunut
                                   (fn [viesti viesti-id onnistunut]
-                                    (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id))))))
+                                    (q/kuittaa-integraatiotapahtuma! db onnistunut "" integraatio viesti-id))))
+    (constantly nil)))
 
 (defrecord SonjaSahkoposti [vastausosoite jonot kuuntelijat]
   component/Lifecycle
@@ -63,6 +65,3 @@
 
 (defn luo-sahkoposti [vastausosoite jonot]
   (->SonjaSahkoposti vastausosoite jonot (atom #{})))
-
-
-
