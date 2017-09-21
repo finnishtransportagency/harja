@@ -111,14 +111,14 @@
           ::id
           ::ur/id]))
 
-(s/def ::tallennettava-hinta (s/keys :req [::hinta/maara ::hinta/otsikko ::hinta/yleiskustannuslisa]
-                                     :opt [::id]))
+(s/def ::tallennettava-hinta (s/keys :req [::hinta/summa ::hinta/otsikko ::hinta/yleiskustannuslisa ::hinta/ryhma]
+                                     :opt [::hinta/id ::m/poistettu?]))
 
 (s/def ::tallennettavat-hinnat
   (s/coll-of ::tallennettava-hinta))
 
-(s/def ::tallennettava-tyo (s/keys :opt [::tyo/toimenpidekoodi-id ::tyo/maara
-                                         ::hinta/otsikko ::hinta/maara]))
+(s/def ::tallennettava-tyo (s/keys :req [::tyo/toimenpidekoodi-id ::tyo/maara]
+                                   :opt [::tyo/id ::m/poistettu?]))
 
 (s/def ::tallennettavat-tyot (s/coll-of ::tallennettava-tyo))
 

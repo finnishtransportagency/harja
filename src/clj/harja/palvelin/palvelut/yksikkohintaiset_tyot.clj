@@ -15,7 +15,9 @@
 (defn hae-urakan-yksikkohintaiset-tyot
   "Palvelu, joka palauttaa urakan yksikkohintaiset työt."
   [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
+  (or (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-yksikkohintaisettyot urakka-id user)
+      (oikeudet/voi-lukea? oikeudet/urakat-toteumat-yksikkohintaisettyot urakka-id user))
+  (oikeudet/ei-oikeustarkistusta!)
   (into []
         (map #(assoc %
                      :maara (if (:maara %) (double (:maara %)))

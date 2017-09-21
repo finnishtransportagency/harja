@@ -168,6 +168,9 @@
 							<xs:enumeration value="EPO ELY" />
 							<xs:enumeration value="POP ELY" />
 							<xs:enumeration value="LAP ELY" />
+							<xs:enumeration value="KAN ELY" />
+							<xs:enumeration value="SV ELY" />
+							<xs:enumeration value="MV ELY" />
 						</xs:restriction>
 					</xs:simpleType>
 				</xs:element>

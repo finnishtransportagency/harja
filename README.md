@@ -1,4 +1,4 @@
-# Liikenneviraston Harja järjestelmä #
+# Liikenneviraston Harja-järjestelmä #
 
 [![Build Status](https://travis-ci.org/finnishtransportagency/harja.svg?branch=develop)](https://travis-ci.org/finnishtransportagency/harja)
 
@@ -282,7 +282,10 @@ Harja käyttää Labyrintin SMS-gatewaytä SMS-viestien lähettämiseen. Labyrin
 
 Jos haluat kehityskäytössä testata SMS-gatewayta, vaihda main.clj tiedostosta oikea Labyrinttikomponentti käyttöön feikin sijasta.
 
-Oikeiden Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
+SMS:n lähetys kehitystympäristöstä vaatii SSH-putken, jonka voi avata seuraavalla komennolla: ssh -L 28080:gw.labyrintti.com:28080 harja-app1-stg
+
+Huom! Tätä ei saa enää käyttää kuin hätätilanteessa. Labyrintin liikenne ohjautuu tällöin devausympäristöön
+tuotannon sijasta. Oikeiden Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
 harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan
 harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
 
@@ -290,7 +293,7 @@ harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
 harja-front1 palvelimelle: ssh -R 6666:localhost:8000 harja-front1
 harja-front2 palvelimelle: ssh -R 6666:localhost:8000 harja-front2
 2. Avaa NginX:n konfiguraatio: sudo vi /etc/nginx/conf.d/site.conf
-3. Vaihda SMS-käsittelijä upstreamiin localhost:6666
+3. Vaihda SMS-käsittelijä upstreamiin localhost:6666                                                           
 upstream sms-kasittelija {
    server localhost:6666;
 }
@@ -350,3 +353,10 @@ Harja käyttää FIM:iä käyttäjätietojen hakemiseen. FIM-komponentista on ka
 Oikean FIM:n testikäyttö:
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity sekä poista :tiedosto avain.
 2. Avaa SSH-yhteys ssh -L6666:testioag.liikennevirasto.fi:443 harja-app1-stg
+
+## Active MQ
+Käynnistys docker imagesta:
+docker run -p 61616:61616 -p 8161:8161 rmohr/activemq
+
+URL konsoliin:
+localhost:8161/admin/queues.jsp (admin/admin)

@@ -174,6 +174,9 @@
                "tl750",
                "tl751"} tietolaji))
 
+(defn tien-puolellinen-tietolaji? [tietolaji]
+  (not (= "tl509" tietolaji)))
+
 (defn tarkastaminen-sallittu? [tietolaji]
   (nil? (#{"tl524" "tl523"} tietolaji)))
 

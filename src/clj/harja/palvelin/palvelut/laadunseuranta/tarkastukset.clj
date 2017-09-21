@@ -124,11 +124,12 @@
 
 (defn- tarkastusreittien-parametrit
   [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
-                alkupvm loppupvm tyyppi urakka-id] :as parametrit}]
+                alkupvm loppupvm tyyppi urakka-id valittu] :as parametrit}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
-                             user :urakka-id)
+                             user urakka-id)
   {:urakka urakka-id
    :alku alkupvm :loppu loppupvm
+   :valittu (:id valittu)
    :rajaa_tienumerolla (some? tienumero) :tienumero tienumero
    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
    :havaintoja_sisaltavat havaintoja-sisaltavat?

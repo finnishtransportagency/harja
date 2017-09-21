@@ -22,7 +22,8 @@
             [harja.ui.bootstrap :as bs]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]
                    [harja.tyokalut.ui :refer [for*]]))
@@ -187,7 +188,6 @@
     (fn [tyyppi]
       [asetuskokoelma
        (urakkatyypin-otsikot tyyppi)
-       ;; TODO: poista kuollut koodi kunhan todetaan kumpi on parempi
        {:salli-piilotus? true
         :auki-atomi? (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
         :luokka "taustavari-taso2 ylaraja"
@@ -355,7 +355,10 @@ suodatinryhmat
     :tooltip "Siirry urakan varustetoteumiin"
 
     ;; Näytä vain, jos käyttäjällä oikeus urakan varustetoteumiin
-    :when (comp oikeudet/urakat-toteumat-varusteet :urakka-id)}})
+    :when (comp oikeudet/urakat-toteumat-varusteet :urakka-id)}
+   :ilmoitus
+    {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))
+     :teksti "Näytä kuittaukset"}})
 
 (defn tilannekuva []
   (komp/luo

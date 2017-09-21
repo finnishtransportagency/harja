@@ -30,7 +30,8 @@
                      (let [arvo (summa-kk kk kentta)
                            indekseja-puuttuu? (some nil? (map kentta (laskutusyhteenvedot-kk kk)))]
                        [:varillinen-teksti {:arvo arvo
-                                            :tyyli (when indekseja-puuttuu? :virhe)}]))
+                                            :tyyli (when indekseja-puuttuu? :virhe)
+                                            :fmt :raha}]))
         summa-solun-arvo (fn [solu]
                            (:arvo (second solu)))
         suola? (#{"Kaikki yhteensä" "Talvihoito"} nimi)

@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.vesivaylat.toimenpiteet.hinnoittelut
+(ns harja.palvelin.palvelut.vesivaylat.hinnoittelut
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
@@ -12,7 +12,8 @@
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
-            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]))
+            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
+            [harja.id :as id]))
 
 (defn hae-hintaryhmat [db user urakka-id]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -78,27 +79,22 @@
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
       (to-q/vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::to/id tiedot)} urakka-id)
-      (let [hinta-idt (set (keep ::hinta/id (::h/tallennettavat-hinnat tiedot)))
-            tyo-idt (set (keep ::tyo/id (::h/tallennettavat-tyot tiedot)))]
-        ;; Tarkistetaan, että olemassa olevat hinnat kuuluvat annettuun toimenpiteeseen
-        (when-not (empty? hinta-idt)
-          (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db hinta-idt toimenpide-id))
-        ;; Tarkistetaan, että olemassa olevat työt kuuluvat annettuun toimenpiteeseen
-        (q/vaadi-tyot-kuuluvat-toimenpiteeseen db tyo-idt toimenpide-id))
+      (let [olemassa-olevat-hinta-idt (->> (keep ::hinta/id (::h/tallennettavat-hinnat tiedot))
+                                           (filter id/id-olemassa?)
+                                           (set))
+            olemassa-olevat-tyo-idt (->> (keep ::tyo/id (::h/tallennettavat-tyot tiedot))
+                                         (filter id/id-olemassa?)
+                                         (set))]
+        (q/vaadi-hinnat-kuuluvat-toimenpiteeseen db olemassa-olevat-hinta-idt toimenpide-id)
+        (q/vaadi-tyot-kuuluvat-toimenpiteeseen db olemassa-olevat-tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
-          ;; Hinnat-taulukossa on könttähinnat, jotka voidaan luoda uutena tai päivittää
-          (q/tallenna-hinnoittelun-hinta!
+          (q/tallenna-toimenpiteen-omat-hinnat!
             {:db db
              :user user
              :hinnoittelu-id hinnoittelu-id
              :hinnat (::h/tallennettavat-hinnat tiedot)})
-          ;; Töiden osalta oletetaan, että saatu payload on uusi totuus, toisin sanoen poistetaan nykyiset työt
-          ;; ja luodaan payloadin perusteella uudet. Näin siksi, että työt-taulukossa voi olla sekä töitä että hintoja,
-          ;; ja frontissa niiden tyyppejä on saatettu myös vaihdella, joten päivittämiseen vaadittava päättelyketju olisi
-          ;; turhan monimutkainen.
-          (q/poista-hinnoittelun-tyot! db user hinnoittelu-id)
-          (q/luo-hinnoittelun-tyot!
+          (q/tallenna-toimenpiteen-tyot!
             {:db db
              :user user
              :hinnoittelu-id hinnoittelu-id

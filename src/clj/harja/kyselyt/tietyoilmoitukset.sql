@@ -58,8 +58,7 @@ WHERE id = :id;
 SELECT id
 FROM tietyoilmoitus
 WHERE
-  (tila IS NULL OR tila = 'virhe') AND
-  kuittaustyyppi != 'valitys';
+  (tila IS NULL OR tila = 'virhe');
 
 -- name: lahetetty
 SELECT tila = 'lahetetty' as "lahetetty?"

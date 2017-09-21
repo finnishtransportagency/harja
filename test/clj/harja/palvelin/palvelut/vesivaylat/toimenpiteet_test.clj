@@ -76,9 +76,7 @@
     (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
                   (mapcat ::toi/liitteet vastaus)))
     (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
-    (is (some #(> (count (get-in % [::toi/turvalaitekomponentit])) 0) vastaus))
-    (is (= (some #(-> % ::toi/komponenttien-tilat not-empty) vastaus)
-            tp-komponenttien-tilat-referenssidata))))
+    (is (some #(> (count (get-in % [::toi/komponentit])) 0) vastaus))))
 
 (deftest yks-hint-toimenpiteiden-haku
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -93,11 +91,28 @@
 
     (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
     (is (s/valid? ::toi/hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus vastaus))
+
     (is (>= (count vastaus) 2))
+
     (is (some #(not (empty? (get-in % [::toi/oma-hinnoittelu ::h/hinnat]))) vastaus))
     (is (some #(not (empty? (get-in % [::toi/oma-hinnoittelu ::h/tyot]))) vastaus))
     (is (some #(not (empty? (::toi/oma-hinnoittelu %))) vastaus))
-    (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))))
+    (is (some #(integer? (::toi/hintaryhma-id %)) vastaus))
+
+    (is (every? #(integer? (::toi/id %)) vastaus))
+    (is (every? #(or (and (string? (::toi/lisatieto %))
+                          (>= (count (::toi/lisatieto %)) 1))
+                     (nil? (::toi/lisatieto %))) vastaus))
+    (is (every? #(keyword? (::toi/tyolaji %)) vastaus))
+    (is (every? #(keyword? (::toi/tyoluokka %)) vastaus))
+    (is (every? #(keyword? (::toi/toimenpide %)) vastaus))
+    (is (some #(not (empty? (::toi/liitteet %))) vastaus))
+    (is (some #(>= (count (::toi/liitteet %)) 1) vastaus))
+    (is (some #(number? (::toi/reimari-henkilo-lkm %)) vastaus))
+    (is (not-any? #(str/includes? (str/lower-case (:nimi %)) "poistettu")
+                  (mapcat ::toi/liitteet vastaus)))
+    (is (every? #(nil? (::toi/liite-linkit %)) vastaus))
+    (is (some #(> (count (get-in % [::toi/komponentit])) 0) vastaus))))
 
 (deftest kokonaishintaisiin-siirto
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
@@ -435,7 +450,7 @@
     (is (empty? nykyiset-kokonaishintaiset-toimenpide-idt) "Kaikki siirrettiin")
     (is (every? #(= % "yksikkohintainen") siirrettyjen-uudet-tyypit) "Uudet tyypit on oikein")
 
-    (is (empty? toimenpiteiden-kiintio-idt-jalkeen) "Toimenpiteet irrotettiin kiintiöistä")))
+    (is (not-empty toimenpiteiden-kiintio-idt-jalkeen) "Toimenpiteitä ei irrotettu kiintiöistä")))
 
 (deftest siirra-toimenpide-yksikkohintaisiin-kun-ei-kuulu-urakkaan
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)

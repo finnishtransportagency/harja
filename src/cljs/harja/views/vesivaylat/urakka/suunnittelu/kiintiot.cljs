@@ -29,6 +29,7 @@
     :tunniste ::to/id}
    [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
     {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
+    {:otsikko "Hintatyyppi" :nimi ::to/hintatyyppi :fmt to/hintatyyppi-fmt :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
     {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita

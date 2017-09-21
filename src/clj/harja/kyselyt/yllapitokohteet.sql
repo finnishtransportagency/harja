@@ -625,7 +625,7 @@ SELECT
   nimi,
   hallintayksikko
 FROM urakka
-WHERE (loppupvm IS NULL OR loppupvm >= NOW())
+WHERE (loppupvm IS NULL OR loppupvm >= current_date)
       AND tyyppi = 'tiemerkinta' :: URAKKATYYPPI;
 
 -- name: tallenna-paallystyskohteen-aikataulu!
