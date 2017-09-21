@@ -122,6 +122,19 @@
      [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
+(defn- komponentit-header
+  ([] (komponentit-header {:yk-lisa? true}))
+  ([{:keys [yk-lisa?] :as optiot}]
+   [:thead
+    [:tr
+     [:th {:style {:width "40%"}} "Työt ja materiaalikulut"]
+     [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
+     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
+     [:th {:style {:width "5%"}} "Yks."]
+     [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
+     [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
+     [:th {:style {:width "5%"}} ""]]]))
+
 (defn- muu-hinnoittelu-header
   ([] (muu-hinnoittelu-header {:otsikot? false}))
   ([{:keys [otsikot?] :as optiot}]
@@ -231,7 +244,7 @@
     [:div.hinnoitteluosio.komponentit-osio
      [valiotsikko "Komponentit"]
      [:table
-      [sopimushintaiset-tyot-header]
+      [komponentit-header]
       [:tbody
        (for* [komponentin-hinta komponenttien-hinnat]
          (let [otsikko (fn [k]
