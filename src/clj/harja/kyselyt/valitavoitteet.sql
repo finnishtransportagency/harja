@@ -9,6 +9,7 @@ SELECT
   v.urakka as "urakka-id",
   v.valtakunnallinen_valitavoite as "valtakunnallinen-id",
   vv.nimi as "valtakunnallinen-nimi",
+  vv.aloituspvm,
   vv.takaraja as "valtakunnallinen-takaraja",
   vv.takaraja_toistopaiva as "valtakunnallinen-takarajan-toistopaiva",
   vv.takaraja_toistokuukausi as "valtakunnallinen-takarajan-toistokuukausi",
@@ -65,23 +66,29 @@ UPDATE valitavoite
 -- Lisää uuden välitavoitteen urakalle
 INSERT
   INTO valitavoite
-       (urakka,
-        takaraja,
-        valtakunnallinen_valitavoite,
-        nimi,
-        luoja,
-        luotu)
-VALUES (:urakka,
-        :takaraja,
-        :valtakunnallinen_valitavoite,
-        :nimi,
-        :luoja,
-        NOW());
+  (urakka,
+   aloituspvm,
+   takaraja,
+   valtakunnallinen_valitavoite,
+   nimi,
+   luoja,
+   luotu)
+  VALUES (:urakka,
+          :aloituspvm,
+          :takaraja,
+          :valtakunnallinen_valitavoite,
+          :nimi,
+          :luoja,
+          NOW());
 
 -- name: paivita-urakan-valitavoite!
 -- Päivittää urakan välitavoitteen tiedot
 UPDATE valitavoite
-   SET nimi = :nimi, takaraja = :takaraja, muokattu = NOW(), muokkaaja = :user
+   SET nimi = :nimi,
+     takaraja = :takaraja,
+     aloituspvm = :aloituspvm,
+     muokattu = NOW(),
+     muokkaaja = :user
  WHERE urakka = :urakka AND id = :id;
 
 -- name: lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!

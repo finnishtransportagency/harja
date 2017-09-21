@@ -16,7 +16,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot]
             [harja.tiedot.urakka :as urakka]
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.domain.urakka :as u-domain])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -51,7 +52,8 @@
 (defn urakan-omat-valitavoitteet
   [{:keys [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet valittu-urakan-vuosi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
-        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
+        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
+        vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)]
     [grid/grid
      {:otsikko "Urakan välitavoitteet"
       :tyhja (if (nil? urakan-valitavoitteet)
@@ -68,6 +70,12 @@
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
      [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 256}
+      (when vesivaylaurakka?
+        {:otsikko "Aloituspäivä" :leveys 20 :tyyppi :pvm
+        :nimi :aloituspvm
+        :fmt #(if %
+                (pvm/pvm-opt %)
+                "-")})
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                     (pvm/pvm-opt %)
                                                                     "Ei takarajaa")
