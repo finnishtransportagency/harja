@@ -8,22 +8,22 @@ SELECT
   v.sakko,
   v.urakka as "urakka-id",
   v.valtakunnallinen_valitavoite as "valtakunnallinen-id",
-  vv.nimi as "valtakunnallinen-nimi",
-  vv.aloituspvm,
-  vv.takaraja as "valtakunnallinen-takaraja",
-  vv.takaraja_toistopaiva as "valtakunnallinen-takarajan-toistopaiva",
-  vv.takaraja_toistokuukausi as "valtakunnallinen-takarajan-toistokuukausi",
+  v.aloituspvm,
   v.valmis_pvm as "valmispvm",
   v.valmis_kommentti "valmis-kommentti",
   v.valmis_merkitsija as "valmis-merkitsija",
   v.valmis_merkitty as "valmis-merkitty",
-  merkitsija.etunimi as "valmis-merkitsija-etunimi",
-  merkitsija.sukunimi as "valmis-merkitsija-sukunimi",
   v.luotu,
   v.muokattu,
   v.luoja,
-  v.muokkaaja
-FROM valitavoite v
+  v.muokkaaja,
+  vv.nimi as "valtakunnallinen-nimi",
+  vv.takaraja as "valtakunnallinen-takaraja",
+  vv.takaraja_toistopaiva as "valtakunnallinen-takarajan-toistopaiva",
+  vv.takaraja_toistokuukausi as "valtakunnallinen-takarajan-toistokuukausi",
+  merkitsija.etunimi as "valmis-merkitsija-etunimi",
+  merkitsija.sukunimi as "valmis-merkitsija-sukunimi"
+  FROM valitavoite v
   LEFT JOIN valitavoite vv ON v.valtakunnallinen_valitavoite = vv.id
   LEFT JOIN kayttaja merkitsija ON v.valmis_merkitsija = merkitsija.id
 WHERE v.poistettu = FALSE
@@ -88,7 +88,7 @@ UPDATE valitavoite
      takaraja = :takaraja,
      aloituspvm = :aloituspvm,
      muokattu = NOW(),
-     muokkaaja = :user
+     muokkaaja = :muokkaaja
  WHERE urakka = :urakka AND id = :id;
 
 -- name: lisaa-valtakunnallinen-kertaluontoinen-valitavoite<!
