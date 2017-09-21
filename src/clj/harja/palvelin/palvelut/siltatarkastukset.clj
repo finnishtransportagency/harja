@@ -157,7 +157,7 @@
                                                                       %)
                                                                    olemassa-olevat-tarkastukset)]
                               (do
-                                (log/warn "Sillalle " (pr-str kannasta-loytynyt-silta) " yritettiin luoda toista tarkastusta " (pr-str siltatarkastus))
+                                (log/warn "Sillalle " (pr-str kannasta-loytynyt-silta) " yritettiin luoda samana päivänä toista tarkastusta " (pr-str siltatarkastus))
                                 (throw (IllegalStateException. "Siltatarkastuksella on jo tarkastus tällä pvm:llä.")))
                               (luo-siltatarkastus db user siltatarkastus)))]
             (log/debug "Kohteet tallennettu!")
