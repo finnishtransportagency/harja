@@ -400,6 +400,9 @@ reimari-toimenpidetyypit
 (defn toimenpiteet-hintaryhmalla [toimenpiteet hintaryhma-id]
   (filter #(= (::hintaryhma-id %) hintaryhma-id) toimenpiteet))
 
+(defn toimenpiteet-kiintiolla [toimenpiteet kiintio-id]
+  (filter #(= (get-in % [::kiintio ::kiintio/id]) kiintio-id) toimenpiteet))
+
 (defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
   (filter #(= (get-in % [::vayla ::vv-vayla/id]) vayla-id) toimenpiteet))
 

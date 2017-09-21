@@ -39,6 +39,11 @@
 (defn kiintio-idlla [kiintiot id]
   (first (filter #(= (::id %) id) kiintiot)))
 
+(defn jarjesta-kiintiot [kiintiot]
+  (remove
+    (comp neg? ::id) ;; Poistetaan väliaikaiset kiintiöt
+    (sort-by #(str/lower-case (::nimi %)) kiintiot)))
+
 ;; Palvelut
 
 (s/def ::hae-kiintiot-kysely
