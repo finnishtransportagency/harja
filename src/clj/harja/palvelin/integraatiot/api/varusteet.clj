@@ -237,7 +237,7 @@
 (defn hae-varusteita
   "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
   tierekisteriosoitteen perusteella"
-  [user tierekisteri db {:keys [tunniste tierekisteriosoite tietolaji] :as tiedot}]
+  [user tierekisteri db {:keys [tunniste tierekisteriosoite tietolaji voimassaolopvm] :as tiedot}]
   (oikeudet/ei-oikeustarkistusta!)
   (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
@@ -258,7 +258,10 @@
                :let (:loppuetaisyys tierekisteriosoite)
                :losa (:loppuosa tierekisteriosoite)}
               tietolaji
-              nyt nyt)
+              (if voimassaolopvm
+                (pvm/joda-timeksi voimassaolopvm)
+                nyt)
+              nyt)
 
             :default
             {:error "Ei hakuehtoja"})]
