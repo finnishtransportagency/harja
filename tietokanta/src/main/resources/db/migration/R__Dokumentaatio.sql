@@ -7,6 +7,8 @@ Kohteet ovat joko päällystys- tai paikkaustyyppisiä, joka päätellään yllo
 
 Ylläpitokohde koostuu yleensä vähintään yhdestä ylläpitokohdeosasta (ks. taulu yllapitokohdeosa).\n
 
+Kohdenumero on käyttäjän itse syöttämä (yleensä YHA-kohdenumerosta muokattu, esim. laitettu kirjain perään).\n
+
 Ylläpitokohteella voi olla ylläpitoluokka, jonka arvot ovat kokonaislukuja 1-10, koodit menevät YHA:an.\n
 Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohde.\n
 Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohtee "ensisijaista" urakkkaa. Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuva kohteen suorittavaa tiemerkintäurakkaa. Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta.';
