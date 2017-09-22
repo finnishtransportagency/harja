@@ -5,8 +5,7 @@
   "properties": {
     "nimi": {
       "id": "urn:harja/nimi",
-      "type": "string",
-      "required": false
+      "type": "string"
     },
     "numero": {
       "id": "urn:harja/sijainti/tie/numero",
@@ -84,6 +83,13 @@
       "id": "urn:harja/sijainti/tie/karttapvm",
       "type": "string",
       "format": "date-time"
+    },
+    "sijoitus": {
+      "id": "urn:harja/sijainti/tie/sijoitus",
+      "enum": [
+        "oikea",
+        "vasen"
+      ]
     }
   }
 }
