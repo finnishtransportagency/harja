@@ -232,7 +232,6 @@
                                   (nil? pikakuittaus))
                          (or valitse-ilmoitus!
                              #(e! (v/->ValitseIlmoitus %))))
-        :mahdollista-rivin-valinta? true
         :piilota-toiminnot true
         :max-rivimaara 500
         :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
