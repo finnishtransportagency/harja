@@ -547,6 +547,70 @@
           }
         }
       }
+    },
+    "mainoslupa": {
+      "id": "urn:harja/tielupa/mainoslupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mainostettava-asia": {
+          "id": "urn:harja/tielupa/mainoslupa/mainostettava-asia",
+          "type": "string",
+          "required": true
+        },
+        "lisatiedot": {
+          "id": "urn:harja/tielupa/mainoslupa/lisatiedot",
+          "type": "string"
+        },
+        "valitoimenpiteet": {
+          "id": "urn:harja/tielupa/mainoslupa/valitoimenpiteet",
+          "type": "string"
+        },
+        "vakiotekstit": {
+          "id": "urn:harja/tielupa/mainoslupa/vakiotekstit",
+          "type": "string"
+        },
+        "asemakaava-alueella": {
+          "id": "urn:harja/tielupa/mainoslupa/asemakaava-alueella",
+          "type": "boolean"
+        },
+        "suoja-alueen-leveys": {
+          "id": "urn:harja/tielupa/mainoslupa/suoja-alueen-leveys",
+          "type": "number"
+        },
+        "lainkohdat-ja-ohjeet": {
+          "id": "urn:harja/tielupa/mainoslupa/lainkohdat-ja-ohjeet",
+          "type": "string"
+        },
+        "mainokset": {
+          "id": "urn:harja/tielupa/mainoslupa/mainokset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/mainoslupa/mainokset/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mainos": {
+                "id": "urn:harja/tielupa/mainoslupa/mainokset/0/mainos",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kuvaus": {
+                    "id": "urn:harja/tielupa/mainoslupa/mainokset/0/kuvaus",
+                    "type": "string"
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
