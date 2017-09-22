@@ -87,7 +87,11 @@
     (let [tulos! (t/send-async! map->VarusteHakuTulos)
           virhe! (t/send-async! ->VarusteHakuEpaonnistui)]
       (go
-        (let [vastaus (<! (k/post! :hae-varusteita hakuehdot))]
+        (let [hakuehdot (dissoc hakuehdot (if (= (:varusteiden-haun-tila hakuehdot) :sijainnilla)
+                                            :tunniste
+                                            :tierekisteriosoite)
+                                :varusteiden-haun-tila)
+              vastaus (<! (k/post! :hae-varusteita hakuehdot))]
           (log "[TR] Varustehaun vastaus: " (pr-str vastaus))
           (if (or (k/virhe? vastaus) (false? (:onnistunut vastaus)))
             (virhe! vastaus)

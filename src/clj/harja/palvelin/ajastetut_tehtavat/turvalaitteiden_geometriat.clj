@@ -76,8 +76,12 @@
     "turvalaitteiden-haku"
     (fn [konteksti]
       (let [http-asetukset {:metodi :GET :url url}
-            {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-        (kasittele-turvalaitteet db vastaus))))
+            {vastaus :body} (try
+                              (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                              (catch Exception e))]
+        (if vastaus
+          (kasittele-turvalaitteet db vastaus)
+          (log/debug "Turvalaitteita ei käsitelty, vastausta ei saatu")))))
   (log/debug "Turvalaitteidein päivitys tehty"))
 
 (defn- turvalaitteiden-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
@@ -95,6 +99,7 @@
 (defrecord TurvalaitteidenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
   (start [{:keys [integraatioloki db] :as this}]
+    (log/debug "turvalaitteiden geometriahaku-komponentti käynnistyy")
     (assoc this :turvalaitteiden-geometriahaku
                 (turvalaitteiden-geometriahakutehtava
                   integraatioloki
