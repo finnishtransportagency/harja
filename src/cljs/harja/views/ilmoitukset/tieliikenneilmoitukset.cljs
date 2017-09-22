@@ -67,7 +67,6 @@
   [:div
    [:span
     [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta))]
-    (vihjeet)
     [it/ilmoitus e! ilmoitus]]])
 
 (defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus} napin-kuittaustyypi kuitattu? oikeus?]
