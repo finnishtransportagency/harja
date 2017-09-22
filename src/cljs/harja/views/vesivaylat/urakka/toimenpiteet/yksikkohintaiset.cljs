@@ -311,7 +311,7 @@
                      {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                       :komponentti (fn [rivi]
                                      [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
-                     (jaettu/sarake-checkbox e! app)]
+                     (jaettu/sarake-checkbox e! app*)]
                     :listaus-tunniste listaus-tunniste
                     :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
                     :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]

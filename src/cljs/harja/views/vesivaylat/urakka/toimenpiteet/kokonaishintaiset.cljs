@@ -129,7 +129,7 @@
                                                                "lisää-liite"
                                                                oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                                                (:id @nav/valittu-urakka)))
-                             (jaettu/sarake-checkbox e! app)]
+                             (jaettu/sarake-checkbox e! app*)]
                  :listaus-tunniste :kokonaishintaiset-toimenpiteet
                  :paneelin-checkbox-sijainti "95.5%"
                  :vaylan-checkbox-sijainti "95.5%"}]]))]]]))))
