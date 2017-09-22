@@ -72,13 +72,16 @@
      [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 256}
       (when vesivaylaurakka?
         {:otsikko "Aloituspäivä" :leveys 20 :tyyppi :pvm
-        :nimi :aloituspvm
-        :fmt #(if %
-                (pvm/pvm-opt %)
-                "-")})
-      {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
-                                                                    (pvm/pvm-opt %)
-                                                                    "Ei takarajaa")
+         :nimi :aloituspvm
+         :fmt #(if %
+                 (pvm/pvm-opt %)
+                 "-")})
+      {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja
+       :fmt #(if %
+               (pvm/pvm-opt %)
+               "Ei takarajaa")
+       :validoi [[:pvm-kentan-jalkeen :aloituspvm
+                  "Takaraja ei voi olla ennen aloituspäivää."]]
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
@@ -144,18 +147,18 @@
                                                      valtakunnallinen-takarajan-toistopaiva
                                                      valtakunnallinen-takarajan-toistokuukausi]}]
   (boolean
-   (or
-    ;; Kertaluontoinen takaraja poikkeaa
-    (and valtakunnallinen-takaraja
-         (not= takaraja valtakunnallinen-takaraja))
-    ;; Toistuva takaraja poikkeaa
-    (and valtakunnallinen-takarajan-toistopaiva
-         valtakunnallinen-takarajan-toistokuukausi
-         (or (nil? takaraja)
-             (not= valtakunnallinen-takarajan-toistopaiva
-                   (t/day takaraja))
-             (not= valtakunnallinen-takarajan-toistokuukausi
-                   (t/month takaraja)))))))
+    (or
+      ;; Kertaluontoinen takaraja poikkeaa
+      (and valtakunnallinen-takaraja
+           (not= takaraja valtakunnallinen-takaraja))
+      ;; Toistuva takaraja poikkeaa
+      (and valtakunnallinen-takarajan-toistopaiva
+           valtakunnallinen-takarajan-toistokuukausi
+           (or (nil? takaraja)
+               (not= valtakunnallinen-takarajan-toistopaiva
+                     (t/day takaraja))
+               (not= valtakunnallinen-takarajan-toistokuukausi
+                     (t/month takaraja)))))))
 
 (defn ainakin-yksi-tavoite-muutettu-urakkaan? [rivit]
   (boolean (some #(or (takaraja-poikkeaa-valtakunnallisesta? %)
