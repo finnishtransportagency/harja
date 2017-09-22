@@ -139,6 +139,9 @@
                                :epaonnistui ->ToimenpiteetEiSiirretty})
   (assoc app :siirto-kaynnissa? true))
 
+(defn kaikki-toimenpiteet-valittu? [app]
+  (every? true? (map :valittu? (:toimenpiteet app))))
+
 (extend-protocol tuck/Event
   ValitseToimenpide
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]

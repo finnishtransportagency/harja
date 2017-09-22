@@ -210,10 +210,10 @@
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko [napit/nappi
              nil
-             #(if (every? true? (map :valittu? toimenpiteet))
+             #(if (tiedot/kaikki-toimenpiteet-valittu? app)
                (e! (tiedot/->ValitseToimenpiteet false toimenpiteet))
                (e! (tiedot/->ValitseToimenpiteet true toimenpiteet)))
-             {:ikoni (if (every? true? (map :valittu? toimenpiteet))
+             {:ikoni (if (tiedot/kaikki-toimenpiteet-valittu? app)
                        (ikonit/livicon-square)
                        (ikonit/livicon-check))
               :ikoninappi? true}]
