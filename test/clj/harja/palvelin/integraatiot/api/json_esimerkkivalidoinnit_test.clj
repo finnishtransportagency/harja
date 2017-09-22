@@ -78,3 +78,6 @@
   (is (nil? (validoi json-skeemat/urakan-tyotuntien-kirjaus-request json-esimerkit/+urakan-tyotuntien-kirjaus-request+)))
 
   (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request+))))
+
+(deftest asdf
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request+))))
