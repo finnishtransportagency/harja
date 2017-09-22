@@ -210,10 +210,10 @@
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko [napit/nappi
              nil
-             #(if (tiedot/kaikki-toimenpiteet-valittu? app)
-               (e! (tiedot/->ValitseToimenpiteet false toimenpiteet))
-               (e! (tiedot/->ValitseToimenpiteet true toimenpiteet)))
-             {:ikoni (if (tiedot/kaikki-toimenpiteet-valittu? app)
+             #(if (tiedot/kaikki-valittu? (:toimenpiteet app))
+                (e! (tiedot/->ValitseToimenpiteet false toimenpiteet))
+                (e! (tiedot/->ValitseToimenpiteet true toimenpiteet)))
+             {:ikoni (if (tiedot/kaikki-valittu? (:toimenpiteet app))
                        (ikonit/livicon-square)
                        (ikonit/livicon-check))
               :ikoninappi? true}]
@@ -339,7 +339,7 @@
     :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
     :valiotsikoiden-alkutila :kaikki-kiinni}
    gridin-sarakkeet
-   (to/jarjesta-toimenpiteet-pvm-mukaan toimenpiteet)])
+   (tiedot/toimenpiteet-aikajarjestyksessa toimenpiteet)])
 
 (defn tulokset [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa?] :as app} sisalto]
   (cond (and toimenpiteiden-haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]

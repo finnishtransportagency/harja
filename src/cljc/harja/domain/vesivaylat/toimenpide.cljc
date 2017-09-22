@@ -283,11 +283,6 @@ reimari-toimenpidetyypit
   (set (filter #(= (get reimari-toimenpidetyypit %) avain)
                (keys reimari-toimenpidetyypit))))
 
-(defn jarjesta-toimenpiteet-pvm-mukaan [toimenpiteet]
-  (sort-by #(or (::pvm %) (::suoritettu %))
-           pvm/jalkeen?
-           toimenpiteet))
-
 (defn reimari-lisatyo-fmt [lisatyo?]
   (when lisatyo? "Kyllä"))
 
