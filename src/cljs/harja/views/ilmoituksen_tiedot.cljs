@@ -20,7 +20,7 @@
             [reagent.core :refer [atom] :as r]))
 
 (defn selitelista [{:keys [selitteet] :as ilmoitus}]
-  (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]
+  (let [virka-apu? true]
     [:div.selitelista.inline-block
      (when virka-apu?
        [:div.selite-virkaapu
