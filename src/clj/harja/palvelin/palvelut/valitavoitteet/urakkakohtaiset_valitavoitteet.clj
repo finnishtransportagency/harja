@@ -35,12 +35,13 @@
                            (:id user) urakka-id id)))
 
 (defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [takaraja nimi] :as valitavoite} (filter
+  (doseq [{:keys [aloituspvm takaraja nimi] :as valitavoite} (filter
                                                     #(and (not (id-olemassa? (:id %)))
                                                           (not (:poistettu %)))
                                                     valitavoitteet)]
     (log/debug "Luodaan uusi välitavoite: " nimi)
     (let [lisatty-vt-id (:id (q/lisaa-urakan-valitavoite<! db {:urakka urakka-id
+                                                               :aloituspvm (konv/sql-date aloituspvm)
                                                                :takaraja (konv/sql-date takaraja)
                                                                :nimi nimi
                                                                :valtakunnallinen_valitavoite nil
@@ -50,12 +51,18 @@
 
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
   (let [valitavoitteet (filter (comp not :valtakunnallinen-id) valitavoitteet)]
-    (doseq [{:keys [id takaraja nimi] :as valitavoite}
+    (doseq [{:keys [id takaraja nimi aloituspvm] :as valitavoite}
             (filter #(and (id-olemassa? (:id %))
                           (not (:poistettu %)))
                     valitavoitteet)]
       (log/debug "Päivitetään välitavoite: " nimi)
-      (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
+      (q/paivita-urakan-valitavoite! db
+                                     {:nimi nimi
+                                      :takaraja (konv/sql-date takaraja)
+                                      :aloituspvm (konv/sql-date aloituspvm)
+                                      :muokkaaja (:id user)
+                                      :urakka urakka-id
+                                      :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
         (merkitse-valitavoite-valmiiksi! db user urakka-id valitavoite)))))
 
@@ -66,7 +73,13 @@
                           (not (:poistettu %)))
                     valitavoitteet)]
 
-      (q/paivita-urakan-valitavoite! db nimi (konv/sql-date takaraja) (:id user) urakka-id id)
+      (q/paivita-urakan-valitavoite! db
+                                     {:nimi nimi
+                                      :takaraja (konv/sql-date takaraja)
+                                      :aloituspvm nil
+                                      :muokkaaja (:id user)
+                                      :urakka urakka-id
+                                      :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
         (merkitse-valitavoite-valmiiksi! db user urakka-id valitavoite)))))
 
