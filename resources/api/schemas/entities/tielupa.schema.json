@@ -287,133 +287,135 @@
       "id": "urn:harja/tielupa/johto-ja-kaapelilupa",
       "type": "object",
       "additionalProperties": false,
-      "erikoisehdot": {
-        "id": "urn:harja/tielupa/johto-ja-kaapelilupa/erikoisehdot",
-        "type": "string"
-      },
-      "maakaapelia-metreissa": {
-        "id": "urn:harja/tielupa/johto-ja-kaapelilupa/maakaapelia-metreissa",
-        "type": "number"
-      },
-      "ilmakaapelia-metreissa": {
-        "id": "urn:harja/tielupa/johto-ja-kaapelilupa/ilmajohtoa-metreissa",
-        "type": "number"
-      },
-      "tienylityksia": {
-        "id": "urn:harja/tielupa/johto-ja-kaapelilupa/tienylityksia",
-        "type": "integer"
-      },
-      "silta-asennuksia": {
-        "id": "urn:harja/tielupa/johto-ja-kaapelilupa/silta-asennuksia",
-        "type": "integer"
-      },
-      "kaapeliasennukset": {
-        "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset",
-        "type": "array",
-        "items": {
-          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0",
-          "type": "object",
-          "properties": {
-            "kaapeliasennus": {
-              "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus",
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "laite": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/laite",
-                  "required": true,
-                  "enum": [
-                    ""
-                  ]
-                },
-                "tyyppi": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/tyyppi",
-                  "required": true,
-                  "enum": [
-                    ""
-                  ]
-                },
-                "kommentit": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/kommentit",
-                  "type": "string"
-                },
-                "toiminnot": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/toiminnot",
-                  "required": true,
-                  "enum": [
-                    ""
-                  ]
-                }  ,
-                "sijainti": {
-                  "id": "urn:harja/tielupa/sijainnit/0/sijainti",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
-                },
-                "nopeusrajoitus": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/nopeusrajoitus",
-                  "type": "integer"
-                },
-                "liikennemaara": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/liikennemaara",
-                  "type": "number"
-                },
-                "maakaapelia-metreissa": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/maakaapelia-metreissa",
-                  "type": "number"
-                },
-                "ilmakaapelia-metreissa": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/ilmakaapelia-metreissa",
-                  "type": "number"
+      "properties": {
+        "erikoisehdot": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/erikoisehdot",
+          "type": "string"
+        },
+        "maakaapelia-metreissa": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/maakaapelia-metreissa",
+          "type": "number"
+        },
+        "ilmakaapelia-metreissa": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/ilmajohtoa-metreissa",
+          "type": "number"
+        },
+        "tienylityksia": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/tienylityksia",
+          "type": "integer"
+        },
+        "silta-asennuksia": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/silta-asennuksia",
+          "type": "integer"
+        },
+        "kaapeliasennukset": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0",
+            "type": "object",
+            "properties": {
+              "kaapeliasennus": {
+                "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "laite": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/laite",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "tyyppi": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/tyyppi",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "kommentit": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/kommentit",
+                    "type": "string"
+                  },
+                  "toiminnot": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/toiminnot",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  },
+                  "nopeusrajoitus": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/nopeusrajoitus",
+                    "type": "integer"
+                  },
+                  "liikennemaara": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/liikennemaara",
+                    "type": "number"
+                  },
+                  "maakaapelia-metreissa": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/maakaapelia-metreissa",
+                    "type": "number"
+                  },
+                  "ilmakaapelia-metreissa": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/ilmakaapelia-metreissa",
+                    "type": "number"
+                  }
                 }
               }
             }
           }
-        }
-      },
-      "johtoasennus": {
-        "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennus",
-        "type": "array",
-        "items": {
-          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennus/0",
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "johtoasennus": {
-              "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennus/0/johtoasennus",
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "laite": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennus/0/johtoasennus/laite",
-                  "required": true,
-                  "enum": [
-                    ""
-                  ]
-                },
-                "tyyppi": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennus/0/johtoasennus/tyyppi",
-                  "required": true,
-                  "enum": [
-                    ""
-                  ]
-                },
-                "kommentit": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennus/0/johtoasennus/kommentit",
-                  "type": "string"
-                },
-                "toiminnot": {
-                  "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennus/0/johtoasennus/toiminnot",
-                  "required": true,
-                  "enum": [
-                    ""
-                  ]
-                }  ,
-                "sijainti": {
-                  "id": "urn:harja/tielupa/sijainnit/0/sijainti",
-                  "type": "object",
-                  "additionalProperties": false,
-                  "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+        },
+        "johtoasennukset": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "johtoasennus": {
+                "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "laite": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/laite",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "tyyppi": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/tyyppi",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "kommentit": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/kommentit",
+                    "type": "string"
+                  },
+                  "toiminnot": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/toiminnot",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
                 }
               }
             }
