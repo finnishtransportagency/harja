@@ -79,6 +79,34 @@
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
+(deftest kaikki-toimenpiteet-valittu
+  (is (true? (tiedot/kaikki-toimenpiteet-valittu?
+               {:toimenpiteet [{:valittu? true
+                                :foo :bar}
+                               {:valittu? true}
+                               {:valittu? true}
+                               {:valittu? true}]})))
+
+  (is (false? (tiedot/kaikki-toimenpiteet-valittu?
+               {:toimenpiteet [{:valittu? true
+                                :foo :bar}
+                               {:valittu? nil}
+                               {:valittu? true}
+                               {:valittu? true}]})))
+
+  (is (false? (tiedot/kaikki-toimenpiteet-valittu?
+                {:toimenpiteet [{:valittu? true
+                                 :foo :bar}
+                                {:valittu? false}
+                                {:valittu? true}
+                                {:valittu? true}]})))
+
+  (is (false? (tiedot/kaikki-toimenpiteet-valittu?
+               {:toimenpiteet [{:foo :bar}
+                               {:valittu? true}
+                               {:valittu? true}
+                               {:valittu? true}]}))))
+
 (deftest rivin-valinta
   (testing "Rivin asettaminen valituksi"
     (let [vanha-tila testitila
@@ -97,6 +125,41 @@
           muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 1)]
       (is (true? (:valittu? vanha-kohde)))
       (is (false? (:valittu? muokattu-kohde))))))
+
+(deftest rivien-valinta
+  (testing "Rivien valitseminen"
+    (is (= {:toimenpiteet [{:valittu? true ::to/id 1}
+                           {:valittu? false ::to/id 2}
+                           {:valittu? true ::to/id 3}
+                           {:valittu? false ::to/id 4}
+                           {:valittu? true ::to/id 5}]}
+           (e! (tiedot/->ValitseToimenpiteet
+                 true
+                 [{::to/id 1}
+                  {::to/id 3}
+                  {::to/id 5}])
+               {:toimenpiteet [{:valittu? false ::to/id 1}
+                               {:valittu? false ::to/id 2}
+                               {:valittu? false ::to/id 3}
+                               {:valittu? false ::to/id 4}
+                               {:valittu? false ::to/id 5}]}))))
+
+  (testing "Rivien valinnan poistaminen"
+    (is (= {:toimenpiteet [{:valittu? false ::to/id 1}
+                           {:valittu? true ::to/id 2}
+                           {:valittu? false ::to/id 3}
+                           {:valittu? true ::to/id 4}
+                           {:valittu? false ::to/id 5}]}
+           (e! (tiedot/->ValitseToimenpiteet
+                 false
+                 [{::to/id 1}
+                  {::to/id 3}
+                  {::to/id 5}])
+               {:toimenpiteet [{:valittu? false ::to/id 1}
+                               {:valittu? true ::to/id 2}
+                               {:valittu? true ::to/id 3}
+                               {:valittu? true ::to/id 4}
+                               {:valittu? false ::to/id 5}]})))))
 
 
 (deftest tyolajin-rivien-valinta
