@@ -22,7 +22,7 @@
       "alkuaika": "2017-09-22T12:00:00+02:00",
       "loppuaika": "2018-09-22T12:00:00+02:00",
       "paatoksen-paattymisaika": "2020-09-22T12:00:00+02:00",
-      "sisalto": "Lupa vetää uutta kaapelia ja johtoa.",
+      "sisalto": "Lupa rakentaa uusi liittymä mökkitielle",
       "url": "https://tilu.fi/1234",
       "ely": "Pohjois-Pohjanmaa",
       "alueurakka": "Oulun alueurakka",
@@ -36,7 +36,7 @@
     },
     "sijainnit": [
       {
-        "sijainti": {
+        "sijainfti": {
           "numero": 20,
           "aet": 2631,
           "aosa": 6,
@@ -82,52 +82,32 @@
       "palautettu": true,
       "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
     },
-    "johto-ja-kaapelilupa": {
-      "erikoisehdot": "",
-      "maakaapelia-metreissa": 44.3,
-      "ilmakaapelia-metreissa": 10.3,
-      "tienylityksia": 1,
-      "silta-asennuksia": 2,
-      "kaapeliasennukset": [
-        {
-          "kaapeliasennus": {
-            "laite": "",
-            "tyyppi": "",
-            "kommentit": "Vedetään uutta kaapelia",
-            "toiminnot": "",
-            "sijainti": {
-              "numero": 20,
-              "aet": 2631,
-              "aosa": 6,
-              "ajorata": 0,
-              "kaista": 1,
-              "puoli:": 0
-            },
-            "nopeusrajoitus" : 30,
-            "liikennemaara": 10.2,
-            "maakaapelia-metreissa": 44.3,
-            "ilmakaapelia-metreissa": 10.3
-          }
-        }
-      ],
-      "johtoasennukset": [
-        {
-          "johtoasennus": {
-            "laite": "",
-            "tyyppi": "",
-            "kommentit": "Vedetään uutta johtoa",
-            "toiminnot": "",
-            "sijainti": {
-              "numero": 20,
-              "aet": 2631,
-              "aosa": 6,
-              "ajorata": 0,
-              "kaista": 1,
-              "puoli:": 0
-            }
-          }
-        }
-      ]
+    "liittymalupa": {
+      "myonnetty-kauttotarkoitus": "lomakiintiesto",
+      "haettu-kayttotarkoitus": "lomakiinteistolle-kulku",
+      "liittyman-siirto": true,
+      "tarkoituksen-kuvaus": "Kulku kesämökille",
+      "tilapainen": false,
+      "arvioitu-kokonaisliikenne": 22,
+      "arvioitu-kuorma-autoliikenne": 5,
+      "nykyisen-liittyman-numero": 123,
+      "nykyisen-liittyman-paivays": "2011-09-22T12:00:00+02:00",
+      "muut-kulkuyhteydet": "",
+      "valmistumisen-takaraja": "2018-01-01T00:00:00+02:00",
+      "kyla": "Kiiminki",
+      "ajosuunta": "Pohjoiseen Kuusamon suuntaan",
+      "maastomerkinta": "",
+      "liittymaohje": {
+        "liittymakaari": "",
+        "leveys-metreissa": 4,
+        "rumpu": true,
+        "rummun-halkaisija": 1,
+        "rummun-etaisyys-metreissa": 4,
+        "odotustila-metreissa": 4,
+        "nakemapisteen-etaisyys": 6,
+        "liikennemerkit": "Tieviitta",
+        "lisaohjeet": ""
+      }
     }
   }
 }

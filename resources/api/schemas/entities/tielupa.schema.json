@@ -422,6 +422,131 @@
           }
         }
       }
+    },
+    "liittymalupa": {
+      "id": "urn:harja/tielupa/liittymalupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "myonnetty-kauttotarkoitus": {
+          "id": "urn:harja/tielupa/liittymalupa/myonnetty-kauttotarkoitus",
+          "enum": [
+            "elinkeinon-harjoittaminen",
+            "asuinkiinteisto",
+            "lomakiintiesto",
+            "maa-ja-metsatalauskaytto",
+            "maatalous",
+            "katu",
+            "muu"
+          ]
+        },
+        "haettu-kayttotarkoitus": {
+          "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus",
+          "enum": [
+            "maa-ja-metsatalous",
+            "asuinkiinteistolle-kulkeminen",
+            "liike-tai-teollisuuskiinteistölle-kulkeminen",
+            "jalankulku-tai-pyoraliikenne",
+            "lomakiinteistolle-kulku",
+            "muu"
+          ]
+        },
+        "liittyman-siirto": {
+          "id": "urn:harja/tielupa/liittymalupa/liittyman-siirto",
+          "type": "boolean"
+        },
+        "tarkoituksen-kuvaus": {
+          "id": "urn:harja/tielupa/liittymalupa/tarkoituksen-kuvaus",
+          "type": "string"
+        },
+        "tilapainen": {
+          "id": "urn:harja/tielupa/liittymalupa/tilapainen",
+          "type": "boolean"
+        },
+        "arvioitu-kokonaisliikenne": {
+          "id": "urn:harja/tielupa/liittymalupa/arvioitu-kokonaisliikenne",
+          "type": "integer"
+        },
+        "arvioitu-kuorma-autoliikenne": {
+          "id": "urn:harja/tielupa/liittymalupa/arvioitu-kuorma-autoliikenne",
+          "type": "integer"
+        },
+        "nykyisen-liittyman-numero": {
+          "id": "urn:harja/tielupa/liittymalupa/nykyisen-liittyman-numero",
+          "type": "integer"
+        },
+        "nykyisen-liittyman-paivays": {
+          "id": "urn:harja/tielupa/liittymalupa/nykyisen-liittyman-paivays",
+          "type": "string",
+          "format": "date-time"
+        },
+        "muut-kulkuyhteydet": {
+          "id": "urn:harja/tielupa/liittymalupa/muut-kulkuyhteydet",
+          "type": "string"
+        },
+        "valmistumisen-takaraja": {
+          "id": "urn:harja/tielupa/liittymalupa/valmistumisen-takaraja",
+          "type": "string",
+          "format": "date-time"
+        },
+        "kyla": {
+          "id": "urn:harja/tielupa/liittymalupa/kyla",
+          "type": "string"
+        },
+        "ajosuunta": {
+          "id": "urn:harja/tielupa/liittymalupa/ajosuunta",
+          "type": "string"
+        },
+        "maastomerkinta": {
+          "id": "urn:harja/tielupa/liittymalupa/maastomerkinta",
+          "type": "string"
+        },
+        "liittymaohje": {
+          "id": "urn:harja/tielupa/liittymalupa/liittymaohje",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "liittymakaari": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liittymakaari",
+              "enum": [
+                ""
+              ]
+            },
+            "leveys-metreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/leveys-metreissa",
+              "type": "integer"
+            },
+            "rumpu": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rumpu",
+              "type": "boolean"
+            },
+            "rummun-halkaisija": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-halkaisija",
+              "type": "number"
+            },
+            "rummun-etaisyys-metreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-etaisyys-metreissa",
+              "type": "integer"
+            },
+            "odotustila-metreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/odotustila-metreissa",
+              "type": "integer"
+            },
+            "nakemapisteen-etaisyys": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/nakemapisteen-etaisyys",
+              "type": "integer"
+            },
+            "liikennemerkit": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liikennemerkit",
+              "type": "string"
+            },
+            "lisaohjeet": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/lisaohjeet",
+              "type": "string"
+            }
+          }
+        }
+      }
     }
   }
 }
