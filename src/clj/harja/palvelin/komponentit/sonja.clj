@@ -236,12 +236,16 @@
 
   Sonja
   (kuuntele [this jonon-nimi kuuntelija-fn]
-    (assert (some? jonon-nimi) "Ei voida yhdistää tyhjään jonoon")
-    (log/debug (format "Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
-    (send tila
-          (fn [tila]
-            (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)))
-    #(send tila poista-kuuntelija jonon-nimi kuuntelija-fn))
+    (if (some? jonon-nimi)
+      (do
+        (log/debug (format "Aloitetaan JMS-jonon kuuntelu: %s" jonon-nimi))
+        (send tila
+              (fn [tila]
+                (yhdista-kuuntelija tila jonon-nimi kuuntelija-fn)))
+        #(send tila poista-kuuntelija jonon-nimi kuuntelija-fn))
+      (do
+        (log/warn "jonon nimeä ei annettu, JMS-jonon kuuntelijaa ei käynnistetä")
+        (constantly nil))))
 
   (laheta [this jonon-nimi viesti {:keys [correlation-id]}]
     (if-not @yhteys-ok?
@@ -263,7 +267,8 @@
 
     Sonja
     (kuuntele [this jonon-nimi kuuntelija-fn]
-      (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi))
+      (log/debug "Feikki Sonja, aloita muka kuuntelu jonossa: " jonon-nimi)
+      (constantly nil))
     (laheta [this jonon-nimi viesti otsikot]
       (log/debug "Feikki Sonja, lähetä muka viesti jonoon: " jonon-nimi)
       (str "ID:" (System/currentTimeMillis)))
