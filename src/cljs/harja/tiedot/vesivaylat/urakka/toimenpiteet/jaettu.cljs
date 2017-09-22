@@ -114,6 +114,7 @@
       (paivita-kartta)))
 
 (defrecord ValitseToimenpide [tiedot toimenpiteet])
+(defrecord ValitseToimenpiteet [tila toimenpiteet])
 (defrecord ValitseTyolaji [tiedot toimenpiteet])
 (defrecord ValitseVayla [tiedot toimenpiteet])
 (defrecord AsetaInfolaatikonTila [tunniste uusi-tila lisa-funktiot])
@@ -148,6 +149,14 @@
       (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
                                  (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
                                        toimenpiteet)))))
+
+  ValitseToimenpiteet
+  (process-event [{tila :tila valittavat :toimenpiteet} {:keys [toimenpiteet] :as app}]
+    (let [idt (into #{} (map ::to/id valittavat))]
+      (assoc app :toimenpiteet (map #(if (idt (::to/id %))
+                                       (assoc % :valittu? tila)
+                                       %)
+                                    toimenpiteet))))
 
   ValitseTyolaji
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]

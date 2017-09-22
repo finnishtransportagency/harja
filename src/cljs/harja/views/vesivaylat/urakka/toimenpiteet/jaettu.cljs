@@ -10,6 +10,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :refer [debug]]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.vayla :as va]
@@ -207,7 +208,18 @@
                     ; vaan ne linkitetään toimenpiteeseen heti
                     :grid? true}])})
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
-  {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
+  {:otsikko [napit/nappi
+             nil
+             #(if (every? true? (map :valittu? toimenpiteet))
+               (e! (tiedot/->ValitseToimenpiteet false toimenpiteet))
+               (e! (tiedot/->ValitseToimenpiteet true toimenpiteet)))
+             {:ikoni (if (every? true? (map :valittu? toimenpiteet))
+                       (ikonit/livicon-square)
+                       (ikonit/livicon-check))
+              :ikoninappi? true}]
+   :nimi :valinta
+   :tyyppi :komponentti
+   :tasaa :keskita
    :solu-klikattu (fn [rivi]
                     (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
                                                      :valinta (not (:valittu? rivi))}
