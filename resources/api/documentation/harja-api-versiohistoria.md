@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.27</b>  
-<b>Julkaistu: 15.5.2017</b>
+<b>Nykyinen versio: 1.0.28</b>  
+<b>Julkaistu: 22.5.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.28 Julkaistu: 22.9.2017:
+    - Lisätty uusi rajapinta tielupien kirjaamiselle Harjaan
 - Versionumero: 1.0.27 Julkaistu: 11.9.2017:
     - Mahdollisuus merkitä näytetäänkö tarkastuksia urakoitsijoille vai ei
 - Versionumero: 1.0.26 Julkaistu: 26.5.2017:

@@ -1,6 +1,6 @@
 #%RAML 0.8
 title: Harja API
-version: 1.0.27
+version: 1.0.28
 baseUri: https://testioag.liikennevirasto.fi/harja/api (testi) & https://oag.liikennevirasto.fi/harja/api (tuotanto)
 protocols: [HTTPS]
 mediaType: application/json
@@ -30,6 +30,7 @@ schemas:
  - paivystyksen-poisto-request: !include schemas/paivystyksen-poisto-request.schema.json
  - tietolajien-haku-response: !include schemas/tietolajien-haku-response.schema.json
  - virhe-response: !include schemas/virhe-response.schema.json
+ - tieluvan-kirjaus-request: !include schemas/tieluvan-kirjaus-request.schema.json
  - tielupien-haku-request: !include schemas/tielupien-haku-request.schema.json
  - tielupien-haku-response: !include schemas/tielupien-haku-response.schema.json
  - tietyoilmoituksen-kirjaus-request: !include schemas/tietyoilmoituksen-kirjaus-request.schema.json
@@ -1238,6 +1239,13 @@ documentation:
               schema: virhe-response
 /tieluvat:
   description: Tielupien haku
+  post:
+    is: [secured]
+    description: Uuden tieluvan kirjaus
+    body:
+      application/json:
+        example: !include examples/tieluvan-kirjaus-request.json
+        schema: tieluvan-kirjaus-request
   get:
     is: [secured]
     description: Tielupien haku alueurakan tai sijainnin perusteella.
