@@ -37,6 +37,7 @@
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-toimii
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
+                         :aloituspvm (c/to-date (t/now))
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
                         {:nimi "testi34554", :takaraja (c/to-date (t/now)),
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}
@@ -69,6 +70,7 @@
 
       ;; VT1 tallentui oikein
       (is (some? (:valmis-merkitsija vt1)))
+      (is (some? (:aloituspvm vt1)))
       (is (some? (:valmispvm vt1)))
       (is (nil? (:valtakunnallinen-id vt1)))
       (is (= (:urakka-id vt1) urakka-id))
