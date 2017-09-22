@@ -26,6 +26,7 @@
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.urakka :as urakka-domain]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k])
@@ -161,14 +162,18 @@
                   :muokkaa! (fn [uusi]
                               (log "MUOKATAAN " (pr-str uusi))
                               (reset! muokattu uusi))
-                  :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka))
+                  :voi-muokata? (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
+                                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset (:id @nav/valittu-urakka))
+                                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka)))
                   :footer [:span
                            [napit/palvelinkutsu-nappi
                             " Tallenna kustannus"
                             #(tallenna-erilliskustannus @muokattu)
                             {:luokka "nappi-ensisijainen"
                              :disabled (or (not @valmis-tallennettavaksi?)
-                                           (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka))))
+                                           (not (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
+                                                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset (:id @nav/valittu-urakka))
+                                                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id @nav/valittu-urakka)))))
                              :kun-onnistuu #(let [muokatun-id (or (:id @muokattu) %)]
                                               (do
                                                 (korosta-rivia muokatun-id)
@@ -176,7 +181,9 @@
                                                 (reset! valittu-kustannus nil)))
                              :kun-virhe (reset! tallennus-kaynnissa false)}]
                            (when (and
-                                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id ur))
+                                   (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
+                                     (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset (:id ur))
+                                     (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-erilliskustannukset (:id ur)))
                                    (:id @muokattu))
                              [:button.nappi-kielteinen
                               {:class (when @tallennus-kaynnissa "disabled")
@@ -286,9 +293,14 @@
                                                      @u/erilliskustannukset-hoitokaudella))))))]
     (fn []
       (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
-            oikeus? (oikeudet/voi-kirjoittaa?
-                      oikeudet/urakat-toteumat-erilliskustannukset
-                      (:id @nav/valittu-urakka))]
+            oikeus? (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
+                      (oikeudet/voi-kirjoittaa?
+                        oikeudet/urakat-toteumat-vesivaylaerilliskustannukset
+                        (:id @nav/valittu-urakka))
+
+                      (oikeudet/voi-kirjoittaa?
+                       oikeudet/urakat-toteumat-erilliskustannukset
+                       (:id @nav/valittu-urakka)))]
         [:div.erilliskustannusten-toteumat
          [ui-valinnat/urakkavalinnat {:urakka urakka}
           ^{:key "valinnat"}
@@ -297,7 +309,9 @@
             (not oikeus?)
             [yleiset/tooltip {} :%
              (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                             oikeudet/urakat-toteumat-erilliskustannukset)]
+                                             (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
+                                               oikeudet/urakat-toteumat-vesivaylaerilliskustannukset
+                                               oikeudet/urakat-toteumat-erilliskustannukset))]
             ^{:key "toiminnot"}
             [ui-valinnat/urakkatoiminnot {:urakka urakka}
              ^{:key "lisaa-kustannus"}

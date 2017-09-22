@@ -26,5 +26,5 @@
          [yks-hint/yksikkohintaiset-toimenpiteet])
 
        "Erilliskustannukset" :erilliskustannukset
-       (when (oikeudet/urakat-toteumat-erilliskustannukset id)
+       (when (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id)
          [erilliskustannukset/erilliskustannusten-toteumat ur])])))
