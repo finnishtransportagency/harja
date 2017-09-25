@@ -611,6 +611,99 @@
           }
         }
       }
+    },
+    "opastelupa": {
+      "id": "urn:harja/tielupa/opastelupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nimi": {
+          "id": "urn:harja/tielupa/opastelupa/nimi",
+          "type": "string"
+        },
+        "opastaulu": {
+          "id": "urn:harja/tielupa/opastelupa/opastaulu",
+          "type": "boolean"
+        },
+        "palvelukohteen-osoiteviitta": {
+          "id": "urn:harja/tielupa/opastelupa/palvelukohteen-osoiteviitta",
+          "type": "boolean"
+        },
+        "osoiteviitta": {
+          "id": "urn:harja/tielupa/opastelupa/osoiteviitta",
+          "type": "boolean"
+        },
+        "ennakkomerkki": {
+          "id": "urn:harja/tielupa/opastelupa/ennakkomerkki",
+          "type": "boolean"
+        },
+        "opasteen-teksti": {
+          "id": "urn:harja/tielupa/opastelupa/opasteen-teksti",
+          "type": "string"
+        },
+        "osoiteviitan-tunnus": {
+          "id": "urn:harja/tielupa/opastelupa/osoiteviitan-tunnus",
+          "type": "string"
+        },
+        "lisatiedot": {
+          "id": "urn:harja/tielupa/opastelupa/lisatiedot",
+          "type": "string"
+        },
+        "url": {
+          "id": "urn:harja/tielupa/opastelupa/url",
+          "type": "string"
+        },
+        "jatkolupa": {
+          "id": "urn:harja/tielupa/opastelupa/jatkolupa",
+          "type": "boolean"
+        },
+        "alkuperainen-lupanro": {
+          "id": "urn:harja/tielupa/opastelupa/alkuperainen-lupanro",
+          "type": "integer"
+        },
+        "alkuperaisen-luvan-alkupvm": {
+          "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-alkupvm",
+          "type": "string"
+        },
+        "alkuperaisen-luvan-loppupvm": {
+          "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-loppupvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "nykyinen-opastus": {
+          "id": "urn:harja/tielupa/opastelupa/nykyinen-opastus",
+          "type": "string"
+        },
+        "valmistumisilmoitus": {
+          "id": "urn:harja/tielupa/opastelupa/valmistumisilmoitus",
+          "type": "string"
+        },
+        "lainkohdat-ja-ohjeet": {
+          "id": "urn:harja/tielupa/opastelupa/lainkohdat-ja-ohjeet",
+          "type": "string"
+        },
+        "sijoituspaikka": {
+          "id": "urn:harja/tielupa/opastelupa/sijoituspaikka",
+          "type": "string"
+        },
+        "opasteet": {
+          "id": "urn:harja/tielupa/opastelupa/opasteet",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/opastelupa/opasteet/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mainos": {
+                "id": "urn:harja/tielupa/opastelupa/opasteet/0/opeaste",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {}
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
