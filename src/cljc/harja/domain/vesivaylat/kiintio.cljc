@@ -3,6 +3,7 @@
             [clojure.string :as str]
             [clojure.set :as set]
             [specql.rel :as rel]
+            [harja.id :refer [id-olemassa?]]
             [harja.domain.muokkaustiedot :as m]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
@@ -38,6 +39,11 @@
 
 (defn kiintio-idlla [kiintiot id]
   (first (filter #(= (::id %) id) kiintiot)))
+
+(defn jarjesta-kiintiot [kiintiot]
+  (filter
+    (comp id-olemassa? ::id) ;; Poistetaan väliaikaiset kiintiöt
+    (sort-by #(str/lower-case (::nimi %)) kiintiot)))
 
 ;; Palvelut
 

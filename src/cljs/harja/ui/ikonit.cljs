@@ -552,6 +552,8 @@
   [:span.livicon-eye])
 (defn livicon-delete []
   [:span.livicon-delete])
+(defn livicon-square []
+  [:div.livicon-square])
 
 ;; Tiettyjen toimintojen vakioikonit
 
