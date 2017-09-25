@@ -61,7 +61,7 @@
 
           [{:otsikko "Kohde\u00ADnumero" :leveys 5 :nimi :kohdenumero
             :tyyppi :string :muokattava? (constantly false)}
-           {:otsikko "Tunnus" :leveys 10 :nimi :tunnus}
+           {:otsikko "Tunnus" :leveys 10 :nimi :tunnus :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Nimi" :leveys 10 :nimi :nimi
             :tyyppi :string :muokattava? (constantly false)}
            {:otsikko "Kokonais\u00ADhinta" :leveys 5 :nimi :kokonaishinta

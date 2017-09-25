@@ -79,6 +79,7 @@
     (doseq [urakka linkitettavat-urakat]
       (log/debug "Lisätään kertaluontoinen välitavoite " nimi " urakkaan " (:nimi urakka))
       (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
+                                        :aloituspvm nil
                                         :takaraja (konv/sql-date takaraja)
                                         :nimi nimi
                                         :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
@@ -127,6 +128,7 @@
               (log/debug "Lisätään toistuva välitavoite " nimi " urakkaan " (:nimi urakka) " takarajalla "
                          vuosi "-" takaraja-toistokuukausi "-" takaraja-toistopaiva)
               (q/lisaa-urakan-valitavoite<! db {:urakka (:id urakka)
+                                                :aloituspvm nil
                                                 :takaraja (konv/sql-date (c/to-date tarkka-takaraja))
                                                 :nimi nimi
                                                 :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
