@@ -82,18 +82,28 @@
       "palautettu": true,
       "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
     },
-    "mainoslupa": {
-      "mainostettava-asia": "Koitelin Kosket",
-      "lisatiedot": "Mainostaulu koitelinkoskista",
-      "valitoimenpiteet": "",
-      "vakiotekstit": "",
-      "asemakaava-alueella": true,
-      "suoja-alueen-leveys": 1.2,
+    "opastelupa": {
+      "nimi": "Koitelinkosken lomamökeille viitan pystyttäminen",
+      "opastaulu": true,
+      "palvelukohteen-osoiteviitta": true,
+      "osoiteviitta": true,
+      "ennakkomerkki": true,
+      "opasteen-teksti": "Koitelinkosken lomamökit",
+      "osoiteviitan-tunnus": "123",
+      "lisatiedot": "",
+      "url": "http://example.com",
+      "jatkolupa": false,
+      "alkuperainen-lupanro": 123,
+      "alkuperaisen-luvan-alkupvm": "2012-09-22T12:00:00+02:00",
+      "alkuperaisen-luvan-loppupvm": "2017-09-22T12:00:00+02:00",
+      "nykyinen-opastus": "",
       "lainkohdat-ja-ohjeet": "",
-      "mainokset": [
+      "sijoituspaikka": "Risteyksen viereen",
+      "opasteet": [
         {
-          "mainos": {
-            "kuvaus": "Koitelin Koskien mainos",
+          "opaste": {
+            "kuvaus": "",
+            "tulostenumero": 123,
             "sijainti": {
               "numero": 20,
               "aet": 2631,

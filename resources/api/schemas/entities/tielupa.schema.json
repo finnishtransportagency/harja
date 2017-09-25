@@ -597,7 +597,10 @@
                 "properties": {
                   "kuvaus": {
                     "id": "urn:harja/tielupa/mainoslupa/mainokset/0/kuvaus",
-                    "type": "string"
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
                   },
                   "sijainti": {
                     "id": "urn:harja/tielupa/sijainnit/0/sijainti",
@@ -674,10 +677,6 @@
           "id": "urn:harja/tielupa/opastelupa/nykyinen-opastus",
           "type": "string"
         },
-        "valmistumisilmoitus": {
-          "id": "urn:harja/tielupa/opastelupa/valmistumisilmoitus",
-          "type": "string"
-        },
         "lainkohdat-ja-ohjeet": {
           "id": "urn:harja/tielupa/opastelupa/lainkohdat-ja-ohjeet",
           "type": "string"
@@ -694,11 +693,29 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
-              "mainos": {
-                "id": "urn:harja/tielupa/opastelupa/opasteet/0/opeaste",
+              "opaste": {
+                "id": "urn:harja/tielupa/opastelupa/opasteet/0/opaste",
                 "type": "object",
                 "additionalProperties": false,
-                "properties": {}
+                "properties": {
+                  "tulostenumero": {
+                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/tulostenumero",
+                    "type": "integer"
+                  },
+                  "kuvaus": {
+                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/opaste",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
               }
             }
           }
