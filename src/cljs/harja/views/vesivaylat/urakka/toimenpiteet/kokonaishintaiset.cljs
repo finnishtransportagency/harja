@@ -15,7 +15,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [harja.views.kartta :as kartta]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -73,36 +74,65 @@
                       #(do
                          (u/valitse-oletussopimus-jos-valittuna-kaikki!)
                          (e! (tiedot/->Nakymassa? false))))
-    (fn [e! app]
+    (fn [e! {:keys [toimenpiteet] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
-      [:div
-       [kartta/kartan-paikka]
-       [jaettu/suodattimet e!
-        tiedot/->PaivitaValinnat
-        app (:urakka valinnat)
-        tiedot/vaylahaku
-        tiedot/turvalaitehaku
-        {:urakkatoiminnot (urakkatoiminnot e! app)}]
-       [jaettu/tulokset e! app
-        [jaettu/listaus e! app
-         {:otsikko "Kokonaishintaiset toimenpiteet"
-          :sarakkeet [jaettu/sarake-tyoluokka
-                      jaettu/sarake-toimenpide
-                      {:otsikko "Kiintiö" :tyyppi :string :leveys 10
-                       :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
-                      jaettu/sarake-pvm
-                      jaettu/sarake-turvalaite
-                      jaettu/sarake-turvalaitenumero
-                      jaettu/sarake-vikakorjaus
-                      (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
-                                                        "lisää-liite"
-                                                        oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
-                                                        (:id @nav/valittu-urakka)))
-                      (jaettu/sarake-checkbox e! app)]
-          :listaus-tunniste :kokonaishintaiset-toimenpiteet
-          :paneelin-checkbox-sijainti "95.5%"
-          :vaylan-checkbox-sijainti "95.5%"}]]])))
+      (let [; Kiintiöttömät toimenpiteet liitetään väliaikaiseen kiintiöön kun ne palautuvat
+            ; palvelimelta
+            kiintiot (concat
+                       [tiedot/valiaikainen-kiintio]
+                       (kiintio/jarjesta-kiintiot (into #{} (keep ::to/kiintio toimenpiteet))))]
+        [:div
+        [kartta/kartan-paikka]
+        [jaettu/suodattimet e!
+         tiedot/->PaivitaValinnat
+         app (:urakka valinnat)
+         tiedot/vaylahaku
+         tiedot/turvalaitehaku
+         {:urakkatoiminnot (urakkatoiminnot e! app)}]
+        [jaettu/tulokset e! app
+         [:div
+          (for* [kiintio kiintiot
+                 :let [kiintio-id (::kiintio/id kiintio)
+                       kiintion-toimenpiteet (to/toimenpiteet-kiintiolla toimenpiteet kiintio-id)
+                       app* (assoc app :toimenpiteet kiintion-toimenpiteet)
+                       kiintio-tyhja? (empty? (:toimenpiteet app*))]]
+            (when-not kiintio-tyhja?
+              [:div.vv-toimenpideryhma
+               [:span [napit/nappi
+                       (ikonit/map-marker)
+                       #(if (tiedot/kiintio-korostettu? kiintio app)
+                          (e! (tiedot/->PoistaKiintionKorostus))
+
+                          (e! (tiedot/->KorostaKiintioKartalla kiintio)))
+                       {:ikoninappi? true
+                        :disabled kiintio-tyhja?
+                        :luokka (str "vv-hintaryhma-korostus-nappi "
+                                     (if (tiedot/kiintio-korostettu? kiintio app)
+                                       "nappi-ensisijainen"
+                                       "nappi-toissijainen"))}]
+                [jaettu/hintaryhman-otsikko (::kiintio/nimi kiintio)]]
+
+               [jaettu/listaus e! app*
+                {:otsikko (or (::kiintio/nimi kiintio) "Kiintiö")
+                 :sarakkeet [jaettu/sarake-tyolaji
+                             jaettu/sarake-tyoluokka
+                             jaettu/sarake-toimenpide
+                             {:otsikko "Kiintiö" :tyyppi :string :leveys 10
+                              :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
+                             jaettu/sarake-pvm
+                             jaettu/sarake-vayla
+                             jaettu/sarake-turvalaite
+                             jaettu/sarake-turvalaitenumero
+                             jaettu/sarake-vikakorjaus
+                             (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
+                                                               "lisää-liite"
+                                                               oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
+                                                               (:id @nav/valittu-urakka)))
+                             (jaettu/sarake-checkbox e! app*)]
+                 :listaus-tunniste :kokonaishintaiset-toimenpiteet
+                 :paneelin-checkbox-sijainti "95.5%"
+                 :vaylan-checkbox-sijainti "95.5%"}]]))]]]))))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka
