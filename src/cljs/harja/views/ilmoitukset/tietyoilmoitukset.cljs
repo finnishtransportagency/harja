@@ -14,24 +14,27 @@
             [harja.tiedot.hallintayksikot :as hallintayksikot-tiedot]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
-            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake])
+            [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
+            [harja.tyokalut.spec-apurit :as spec-apurit])
   (:require-macros
-   [cljs.core.async.macros :refer [go]]))
+    [cljs.core.async.macros :refer [go]]))
 
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
     (komp/lippu tiedot/karttataso-tietyoilmoitukset)
-    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (tiedot/->ValitseIlmoitus i))))
+    (komp/kuuntelija :ilmoitus-klikattu (fn [_ ilmoitus]
+                                          (e! (tiedot/->ValitseIlmoitus
+                                                (spec-apurit/poista-ei-namespacetetut-avaimet ilmoitus)))))
     (komp/sisaan-ulos #(do
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:tietyoilmoitus {:toiminto (fn [tietyoilmoitus-infopaneelista]
-                                                   (e! (tiedot/->ValitseIlmoitus tietyoilmoitus-infopaneelista)))
-                                       :teksti "Valitse ilmoitus"}}))
+                                                         (e! (tiedot/->ValitseIlmoitus tietyoilmoitus-infopaneelista)))
+                                             :teksti "Valitse ilmoitus"}}))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
