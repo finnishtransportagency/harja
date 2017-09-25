@@ -855,6 +855,82 @@
           "type": "string"
         }
       }
+    },
+    "vesihuoltolupa": {
+      "id": "urn:harja/tielupa/vesihuoltolupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "erikoisehdot": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/erikoisehdot",
+          "type": "string"
+        },
+        "maakaapelia-metreissa": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/maakaapelia-metreissa",
+          "type": "number"
+        },
+        "ilmakaapelia-metreissa": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/ilmajohtoa-metreissa",
+          "type": "number"
+        },
+        "tienylityksia": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/tienylityksia",
+          "type": "integer"
+        },
+        "silta-asennuksia": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/silta-asennuksia",
+          "type": "integer"
+        },
+        "johtoasennukset": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "johtoasennus": {
+                "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "laite": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/laite",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "tyyppi": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/tyyppi",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "kommentit": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/kommentit",
+                    "type": "string"
+                  },
+                  "toiminnot": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/toiminnot",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

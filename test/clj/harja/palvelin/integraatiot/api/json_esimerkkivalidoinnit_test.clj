@@ -80,4 +80,4 @@
   (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request+))))
 
 (deftest asdf
-  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request+))))
+  )
