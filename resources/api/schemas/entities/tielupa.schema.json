@@ -756,6 +756,29 @@
           ]
         }
       }
+    },
+    "tilapainen-myyntilupa": {
+      "id": "urn:harja/tielupa/tilapainen-myyntilupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aihe": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/aihe",
+          "type": "string"
+        },
+        "alueen-nimi": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/alueen-nimi",
+          "type": "string"
+        },
+        "aikaisempi-myyntilupa": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/aikaisempi-myyntilupa",
+          "type": "string"
+        },
+        "opastusmerkit": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/opastusmerkit",
+          "type": "string"
+        }
+      }
     }
   }
 }
