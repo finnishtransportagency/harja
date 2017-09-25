@@ -703,14 +703,14 @@
                     "type": "integer"
                   },
                   "kuvaus": {
-                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/opaste",
+                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/kuvaus",
                     "required": true,
                     "enum": [
                       ""
                     ]
                   },
                   "sijainti": {
-                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/sijainti",
                     "type": "object",
                     "additionalProperties": false,
                     "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
@@ -719,6 +719,41 @@
               }
             }
           }
+        }
+      }
+    },
+    "suoja-aluerakentamislupa": {
+      "id": "urn:harja/tielupa/suoja-aluerakentamislupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rakennettava-asia": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/rakennettava-asia",
+          "type": "string",
+          "required": true
+        },
+        "lisatiedot": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/lisatiedot",
+          "type": "string"
+        },
+        "etaisyys-tien-keskilinjaan": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/etaisyys-tien-keskilinjaan",
+          "type": "number"
+        },
+        "valitoimenpiteet": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/valitoimenpiteet",
+          "type": "string"
+        },
+        "suoja-alueen-leveys": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/suoja-alueen-leveys",
+          "type": "number"
+        },
+        "sijoitus": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/sijoitus",
+          "enum": [
+            "suoja-alue",
+            "nakema-alue"
+          ]
         }
       }
     }

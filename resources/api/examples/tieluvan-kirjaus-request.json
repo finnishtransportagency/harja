@@ -17,12 +17,12 @@
       "tunniste": {
         "id": 1234
       },
-      "tyyppi": "johto- tai kaapeli-ilmoitus",
+      "tyyppi": "suoja-aluerakentaminen",
       "diaarinumero": 123456789,
       "alkuaika": "2017-09-22T12:00:00+02:00",
       "loppuaika": "2018-09-22T12:00:00+02:00",
       "paatoksen-paattymisaika": "2020-09-22T12:00:00+02:00",
-      "sisalto": "Lupa lisätä mainos tielle",
+      "sisalto": "Lupa rakentaa aitta suoja-alueelle",
       "url": "https://tilu.fi/1234",
       "ely": "Pohjois-Pohjanmaa",
       "alueurakka": "Oulun alueurakka",
@@ -82,40 +82,13 @@
       "palautettu": true,
       "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
     },
-    "opastelupa": {
-      "nimi": "Koitelinkosken lomamökeille viitan pystyttäminen",
-      "opastaulu": true,
-      "palvelukohteen-osoiteviitta": true,
-      "osoiteviitta": true,
-      "ennakkomerkki": true,
-      "opasteen-teksti": "Koitelinkosken lomamökit",
-      "osoiteviitan-tunnus": "123",
-      "lisatiedot": "",
-      "url": "http://example.com",
-      "jatkolupa": false,
-      "alkuperainen-lupanro": 123,
-      "alkuperaisen-luvan-alkupvm": "2012-09-22T12:00:00+02:00",
-      "alkuperaisen-luvan-loppupvm": "2017-09-22T12:00:00+02:00",
-      "nykyinen-opastus": "",
-      "lainkohdat-ja-ohjeet": "",
-      "sijoituspaikka": "Risteyksen viereen",
-      "opasteet": [
-        {
-          "opaste": {
-            "kuvaus": "",
-            "tulostenumero": 123,
-            "sijainti": {
-              "numero": 20,
-              "aet": 2631,
-              "aosa": 6,
-              "ajorata": 0,
-              "kaista": 1,
-              "puoli:": 0,
-              "sijoitus": "oikea"
-            }
-          }
-        }
-      ]
+    "suoja-aluerakentamislupa": {
+      "rakennettava-asia": "Aitta",
+      "lisatiedot": "Komia aiatta",
+      "etaisyys-tien-keskilinjaan": 48,
+      "valitoimenpiteet": "Pohjien tekeminen",
+      "suoja-alueen-leveys": 4,
+      "sijoitus": "suoja-alue"
     }
   }
 }
