@@ -779,6 +779,33 @@
           "type": "string"
         }
       }
+    },
+    "tilapaiset-liikennemerkkijarjestelyt": {
+      "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aihe": {
+          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/aihe",
+          "type": "string"
+        },
+        "tapahtuman-tiedot": {
+          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/tapahtuman-tiedot",
+          "type": "string"
+        },
+        "nopeusrajoituksen-syy": {
+          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/nopesurajoituksen-syy",
+          "type": "string"
+        },
+        "lisatiedot-nopeusrajoituksesta": {
+          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
+          "type": "string"
+        },
+        "muut-liikennemerkit": {
+          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
+          "type": "string"
+        }
+      }
     }
   }
 }
