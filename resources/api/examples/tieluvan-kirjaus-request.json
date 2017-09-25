@@ -17,12 +17,12 @@
       "tunniste": {
         "id": 1234
       },
-      "tyyppi": "tilapäiset liikennemerkkijärjestelyt",
+      "tyyppi": "työlupa",
       "diaarinumero": 123456789,
       "alkuaika": "2017-09-22T12:00:00+02:00",
       "loppuaika": "2018-09-22T12:00:00+02:00",
       "paatoksen-paattymisaika": "2020-09-22T12:00:00+02:00",
-      "sisalto": "Lupa vaihtaa liikennejärjestelyjä festivaalien ajaksi",
+      "sisalto": "Lupa tehdä töitä",
       "url": "https://tilu.fi/1234",
       "ely": "Pohjois-Pohjanmaa",
       "alueurakka": "Oulun alueurakka",
@@ -82,12 +82,17 @@
       "palautettu": true,
       "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
     },
-    "tilapaiset-liikennemerkkijarjestelyt": {
-      "aihe": "Nopeusrajoitusten laskeminen festivaalien ajaksi",
-      "tapahtuman-tiedot": "Kiiminki kolisee",
-      "nopeusrajoituksen-syy": "Paljon ihmisiä tien läheisyydessä liikenteessä",
-      "lisatiedot-nopeusrajoituksesta": "",
-      "muut-liikennemerkit": ""
+    "tyolupa": {
+      "tyon-sisalto": "Töitä",
+      "tyon-saa-aloittaa": "2017-09-22T12:00:00+02:00",
+      "viimeistely-oltava": "2017-10-22T12:00:00+02:00",
+      "ohjeet-tyon-suorittamiseen": "",
+      "los-puuttuu": false,
+      "ilmoitus-tieliikennekeskukseen": true,
+      "tilapainen-nopeusrajoitus": true,
+      "liikenteenohjaustekstit": "",
+      "los-lisatiedot": "",
+      "tieliikennekusksen-sahkopostiosoite": ""
     }
   }
 }

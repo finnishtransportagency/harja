@@ -781,28 +781,77 @@
       }
     },
     "tilapaiset-liikennemerkkijarjestelyt": {
-      "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt",
+      "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "aihe": {
-          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/aihe",
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/aihe",
           "type": "string"
         },
         "tapahtuman-tiedot": {
-          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/tapahtuman-tiedot",
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/tapahtuman-tiedot",
           "type": "string"
         },
         "nopeusrajoituksen-syy": {
-          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/nopesurajoituksen-syy",
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/nopesurajoituksen-syy",
           "type": "string"
         },
         "lisatiedot-nopeusrajoituksesta": {
-          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
           "type": "string"
         },
         "muut-liikennemerkit": {
-          "id": "urn:harja/tielupa/tilapäiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
+          "type": "string"
+        }
+      }
+    },
+    "tyolupa": {
+      "id": "urn:harja/tielupa/tyolupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tyon-sisalto": {
+          "id": "urn:harja/tielupa/tyolupa/tyon-sisalto",
+          "type": "string"
+        },
+        "tyon-saa-aloittaa": {
+          "id": "urn:harja/tielupa/tyolupa/tyon-saa-aloittaa",
+          "type": "string",
+          "format": "date-time"
+        },
+        "viimeistely-oltava": {
+          "id": "urn:harja/tielupa/tyolupa/viimeistely-oltava",
+          "type": "string",
+          "format": "date-time"
+        },
+        "ohjeet-tyon-suorittamiseen": {
+          "id": "urn:harja/tielupa/tyolupa/ohjeet-tyon-suorittamiseen",
+          "type": "string"
+        },
+        "los-puuttuu": {
+          "id": "urn:harja/tielupa/tyolupa/los-puuttuu",
+          "type": "boolean"
+        },
+        "ilmoitus-tieliikennekeskukseen": {
+          "id": "urn:harja/tielupa/tyolupa/ilmoitus-tieliikennekeskukseen",
+          "type": "boolean"
+        },
+        "tilapainen-nopeusrajoitus": {
+          "id": "urn:harja/tielupa/tyolupa/tilapainen-nopeusrajoitus",
+          "type": "boolean"
+        },
+        "liikenteenohjaustekstit": {
+          "id": "urn:harja/tielupa/tyolupa/liikenteenohjaustekstit",
+          "type": "string"
+        },
+        "los-lisatiedot": {
+          "id": "urn:harja/tielupa/tyolupa/los-lisatiedot",
+          "type": "string"
+        },
+        "tieliikennekusksen-sahkopostiosoite": {
+          "id": "urn:harja/tielupa/tyolupa/tieliikennekusksen-sahkopostiosoite",
           "type": "string"
         }
       }
