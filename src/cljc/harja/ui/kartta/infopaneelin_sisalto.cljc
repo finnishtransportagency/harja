@@ -38,7 +38,7 @@
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.tietyoilmoitukset :as t-domain]
+            [harja.domain.tietyoilmoitus :as t-domain]
             [harja.domain.tieliikenneilmoitukset :as apurit]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]

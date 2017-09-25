@@ -14,7 +14,7 @@
                                       kuvaus-ja-avainarvopareja]]
             [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.muokkaustiedot :as m]
             [clojure.string :as str]
             [harja.ui.napit :as napit]
