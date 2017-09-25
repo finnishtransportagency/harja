@@ -79,87 +79,6 @@
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
-(deftest rivin-valinta
-  (testing "Rivin asettaminen valituksi"
-    (let [vanha-tila testitila
-          vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 0)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}
-                                                    (:toimenpiteet vanha-tila)) vanha-tila)
-          muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 0)]
-      (is (not (:valittu? vanha-kohde)))
-      (is (true? (:valittu? muokattu-kohde)))))
-
-  (testing "Rivin asettaminen ei-valituksi"
-    (let [vanha-tila testitila
-          vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 1)
-          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}
-                                                    (:toimenpiteet vanha-tila)) vanha-tila)
-          muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 1)]
-      (is (true? (:valittu? vanha-kohde)))
-      (is (false? (:valittu? muokattu-kohde))))))
-
-
-(deftest tyolajin-rivien-valinta
-  (testing "Valitaan viitat"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
-                                                  :valinta true}
-                                                 (:toimenpiteet vanha-tila))
-                        vanha-tila)
-          viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
-      (is (every? true? (map :valittu? viitat)))))
-
-  (testing "Asetetaan valinnat pois viitoilta"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
-                                                  :valinta false}
-                                                 (:toimenpiteet vanha-tila))
-                        vanha-tila)
-          viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
-      (is (every? false? (map :valittu? viitat))))))
-
-(deftest infolaatikon-tila
-  (testing "Asetetaan infolaatikko näkyviin"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->AsetaInfolaatikonTila :listaus-1 true []) vanha-tila)]
-      (is (nil? (:listaus-1 (:infolaatikko-nakyvissa vanha-tila))))
-      (is (true? (:listaus-1 (:infolaatikko-nakyvissa uusi-tila))))))
-
-  (testing "Lisäfunktiot ajetaan kun infolaatikon tila asetetaan"
-    (let [vanha-tila (assoc testitila :numero 0)
-          mun-inc (fn [app] (update app :numero inc))
-          uusi-tila (e! (tiedot/->AsetaInfolaatikonTila :listaus-1 true [mun-inc mun-inc]) vanha-tila)]
-      (is (nil? (:listaus-1 (:infolaatikko-nakyvissa vanha-tila))))
-      (is (= 2 (:numero uusi-tila)))
-      (is (true? (:listaus-1 (:infolaatikko-nakyvissa uusi-tila)))))))
-
-(deftest vaylan-rivien-valinta
-  (testing "Valitaan Iisalmen väylä"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
-                                                :valinta true}
-                                               (:toimenpiteet vanha-tila))
-                        vanha-tila)
-          viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
-      (is (every? true? (map :valittu? viitat)))))
-
-  (testing "Asetetaan valinnat pois Iisalmen väylältä"
-    (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
-                                                :valinta false}
-                                               (:toimenpiteet vanha-tila))
-                        vanha-tila)
-          viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
-      (is (every? false? (map :valittu? viitat))))))
-
-(deftest toimenpiteiden-vaylat
-  (testing "Valitaan toimenpiteiden väylät"
-    (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
-           [{::va/nimi "Kuopio, Iisalmen väylä"
-             ::va/id 1}
-            {::va/nimi "Varkaus, Kuopion väylä"
-             ::va/id 2}]))))
-
 (deftest pudotusvalikko-valinnat
   (is (= [nil 1 2 3] (tiedot/arvot-pudotusvalikko-valinnoiksi {:1 1 :1a 1 :2 2 :3 3}))))
 
@@ -203,6 +122,50 @@
       (is (false? (tiedot/valinnan-tila mitaan-ei-valittu)))
       (is (= indeterminate (tiedot/valinnan-tila osa-valittu))))))
 
+
+(deftest valitut-toimenpiteet
+  (is (= '({:id 1 :valittu? true}
+            {:id 3 :valittu? true}
+            {:id 4 :valittu? true})
+         (tiedot/valitut-toimenpiteet [{:id 1 :valittu? true}
+                                       {:id 2 :valittu? false}
+                                       {:id 3 :valittu? true}
+                                       {:id 4 :valittu? true}
+                                       {:id 5 :valittu? false}]))))
+
+(deftest poista-toimenpiteet
+  (is (= '({::to/id 1}
+            {::to/id 3}
+            {::to/id 4})
+         (tiedot/poista-toimenpiteet '({::to/id 1}
+                                        {::to/id 2}
+                                        {::to/id 3}
+                                        {::to/id 4}
+                                        {::to/id 5})
+                                     #{2 5}))))
+
+(deftest toimenpiteiden-toiminto-str
+  (is (= "2 toimenpidettä heitetty." (tiedot/toimenpiteiden-toiminto-suoritettu 2 "heitetty")))
+  (is (= "1 toimenpide keitetty." (tiedot/toimenpiteiden-toiminto-suoritettu 1 "keitetty"))))
+
+(deftest tilan-yhdistaminen
+
+  (testing "Tilan yhdistäminen muuttaa vain valintoja"
+    (let [a (atom {:id 1 :foo :bar})
+         b (atom {:id 2 :baz :barbaz})]
+     (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin")
+     (is (= @a @(tiedot/yhdista-tilat! a b)) "Sisältö ei muuttunut kutsun aikana")))
+
+  (testing "Tilan yhdistäminen yhdistää :valinnat mäpin"
+    (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
+          b (atom {:id 2 :baz {:urakka 2 :organisaatio 2}})]
+      (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin"))
+
+    (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
+          b (atom {:id 2 :valinnat {:urakka 2 :organisaatio 2}})]
+      (is (= {:id 1 :valinnat {:sopimus 1 :urakka 2 :organisaatio 2}}
+            @(tiedot/yhdista-tilat! a b)) ":valinnat avain yhdistettiin"))))
+
 (deftest korosta-kartalla?
   (let [korosta? (tiedot/korosta-turvalaite-kartalla? {:korostetut-turvalaitteet #{1 2}})]
     (is (fn? korosta?))
@@ -216,12 +179,12 @@
 
 (deftest turvalaitteen-toimenpiteet
   (let [tulos (tiedot/turvalaitteen-toimenpiteet {::tu/turvalaitenro 1}
-                                          {:toimenpiteet [{::to/turvalaite {::tu/turvalaitenro 1}
-                                                           ::to/id 1}
-                                                          {::to/turvalaite {::tu/turvalaitenro 1}
-                                                           ::to/id 2}
-                                                          {::to/turvalaite {::tu/turvalaitenro 2}
-                                                           ::to/id 3}]})]
+                                                 {:toimenpiteet [{::to/turvalaite {::tu/turvalaitenro 1}
+                                                                  ::to/id 1}
+                                                                 {::to/turvalaite {::tu/turvalaitenro 1}
+                                                                  ::to/id 2}
+                                                                 {::to/turvalaite {::tu/turvalaitenro 2}
+                                                                  ::to/id 3}]})]
     (is (= [{::to/turvalaite {::tu/turvalaitenro 1}
              ::to/id 1}
             {::to/turvalaite {::tu/turvalaitenro 1}
@@ -252,40 +215,122 @@
         tulos (tiedot/turvalaitteet-kartalle laitteet tila)]
     (is (or
           (= [{::to/turvalaite {::tu/turvalaitenro 1}
-              ::to/id 1}
-             {::to/turvalaite {::tu/turvalaitenro 1}
-              ::to/id 2}]
-            (:toimenpiteet (first tulos)))
+               ::to/id 1}
+              {::to/turvalaite {::tu/turvalaitenro 1}
+               ::to/id 2}]
+             (:toimenpiteet (first tulos)))
           (= [{::to/turvalaite {::tu/turvalaitenro 1}
                ::to/id 1}
               {::to/turvalaite {::tu/turvalaitenro 1}
                ::to/id 2}]
              (:toimenpiteet (second tulos)))))))
 
-(deftest valitut-toimenpiteet
-  (is (= '({:id 1 :valittu? true}
-            {:id 3 :valittu? true}
-            {:id 4 :valittu? true})
-         (tiedot/valitut-toimenpiteet [{:id 1 :valittu? true}
-                                       {:id 2 :valittu? false}
-                                       {:id 3 :valittu? true}
-                                       {:id 4 :valittu? true}
-                                       {:id 5 :valittu? false}]))))
+(deftest rivin-valinta
+  (testing "Rivin asettaminen valituksi"
+    (let [vanha-tila testitila
+          vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 0)
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 0 :valinta true}
+                                                    (:toimenpiteet vanha-tila)) vanha-tila)
+          muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 0)]
+      (is (not (:valittu? vanha-kohde)))
+      (is (true? (:valittu? muokattu-kohde)))))
 
-(deftest poista-toimenpiteet
-  (is (= '({::to/id 1}
-            {::to/id 3}
-            {::to/id 4})
-         (tiedot/poista-toimenpiteet '({::to/id 1}
-                                        {::to/id 2}
-                                        {::to/id 3}
-                                        {::to/id 4}
-                                        {::to/id 5})
-                                     #{2 5}))))
+  (testing "Rivin asettaminen ei-valituksi"
+    (let [vanha-tila testitila
+          vanha-kohde (to/toimenpide-idlla (:toimenpiteet vanha-tila) 1)
+          uusi-tila (e! (tiedot/->ValitseToimenpide {:id 1 :valinta false}
+                                                    (:toimenpiteet vanha-tila)) vanha-tila)
+          muokattu-kohde (to/toimenpide-idlla (:toimenpiteet uusi-tila) 1)]
+      (is (true? (:valittu? vanha-kohde)))
+      (is (false? (:valittu? muokattu-kohde))))))
 
-(deftest toimenpiteiden-toiminto-str
-  (is (= "2 toimenpidettä heitetty." (tiedot/toimenpiteiden-toiminto-suoritettu 2 "heitetty")))
-  (is (= "1 toimenpide keitetty." (tiedot/toimenpiteiden-toiminto-suoritettu 1 "keitetty"))))
+(deftest rivien-valinta
+  (testing "Rivien valitseminen"
+    (is (= {:toimenpiteet [{:valittu? true ::to/id 1}
+                           {:valittu? false ::to/id 2}
+                           {:valittu? true ::to/id 3}
+                           {:valittu? false ::to/id 4}
+                           {:valittu? true ::to/id 5}]}
+           (e! (tiedot/->ValitseToimenpiteet
+                 true
+                 [{::to/id 1}
+                  {::to/id 3}
+                  {::to/id 5}])
+               {:toimenpiteet [{:valittu? false ::to/id 1}
+                               {:valittu? false ::to/id 2}
+                               {:valittu? false ::to/id 3}
+                               {:valittu? false ::to/id 4}
+                               {:valittu? false ::to/id 5}]}))))
+
+  (testing "Rivien valinnan poistaminen"
+    (is (= {:toimenpiteet [{:valittu? false ::to/id 1}
+                           {:valittu? true ::to/id 2}
+                           {:valittu? false ::to/id 3}
+                           {:valittu? true ::to/id 4}
+                           {:valittu? false ::to/id 5}]}
+           (e! (tiedot/->ValitseToimenpiteet
+                 false
+                 [{::to/id 1}
+                  {::to/id 3}
+                  {::to/id 5}])
+               {:toimenpiteet [{:valittu? false ::to/id 1}
+                               {:valittu? true ::to/id 2}
+                               {:valittu? true ::to/id 3}
+                               {:valittu? true ::to/id 4}
+                               {:valittu? false ::to/id 5}]})))))
+
+(deftest tyolajin-rivien-valinta
+  (testing "Valitaan viitat"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
+                                                  :valinta true}
+                                                 (:toimenpiteet vanha-tila))
+                        vanha-tila)
+          viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
+      (is (every? true? (map :valittu? viitat)))))
+
+  (testing "Asetetaan valinnat pois viitoilta"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseTyolaji {:tyolaji :viitat
+                                                  :valinta false}
+                                                 (:toimenpiteet vanha-tila))
+                        vanha-tila)
+          viitat (to/toimenpiteet-tyolajilla (:toimenpiteet uusi-tila) :viitat)]
+      (is (every? false? (map :valittu? viitat))))))
+
+(deftest vaylan-rivien-valinta
+  (testing "Valitaan Iisalmen väylä"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
+                                                :valinta true}
+                                               (:toimenpiteet vanha-tila))
+                        vanha-tila)
+          viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
+      (is (every? true? (map :valittu? viitat)))))
+
+  (testing "Asetetaan valinnat pois Iisalmen väylältä"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
+                                                :valinta false}
+                                               (:toimenpiteet vanha-tila))
+                        vanha-tila)
+          viitat (to/toimenpiteet-vaylalla (:toimenpiteet uusi-tila) 1)]
+      (is (every? false? (map :valittu? viitat))))))
+
+(deftest infolaatikon-tila
+  (testing "Asetetaan infolaatikko näkyviin"
+    (let [vanha-tila testitila
+          uusi-tila (e! (tiedot/->AsetaInfolaatikonTila :listaus-1 true []) vanha-tila)]
+      (is (nil? (:listaus-1 (:infolaatikko-nakyvissa vanha-tila))))
+      (is (true? (:listaus-1 (:infolaatikko-nakyvissa uusi-tila))))))
+
+  (testing "Lisäfunktiot ajetaan kun infolaatikon tila asetetaan"
+    (let [vanha-tila (assoc testitila :numero 0)
+          mun-inc (fn [app] (update app :numero inc))
+          uusi-tila (e! (tiedot/->AsetaInfolaatikonTila :listaus-1 true [mun-inc mun-inc]) vanha-tila)]
+      (is (nil? (:listaus-1 (:infolaatikko-nakyvissa vanha-tila))))
+      (is (= 2 (:numero uusi-tila)))
+      (is (true? (:listaus-1 (:infolaatikko-nakyvissa uusi-tila)))))))
 
 (deftest toimenpiteet-siirretty
   (is (= {:toimenpiteet [{::to/id 2}]
@@ -358,12 +403,6 @@
                       vanha-tila)]
     (is (false? (:liitteen-poisto-kaynnissa? uusi-tila)))))
 
-(deftest valittujen-siirto
-  (vaadi-async-kutsut
-    #{tiedot/->ToimenpiteetSiirretty tiedot/->ToimenpiteetEiSiirretty}
-    (is (= {:siirto-kaynnissa? true}
-           (tiedot/siirra-valitut! :foo {})))))
-
 (deftest turvalaitteet-kartalle-event
   (testing "Turvalaitteiden hakemisen aloitus"
     (vaadi-async-kutsut
@@ -433,23 +472,19 @@
                     :coordinates '(367529.053512741 7288034.99009309)}}]
            (:turvalaitteet-kartalla tulos)))))
 
-(deftest tilan-yhdistaminen
+(deftest valittujen-siirto
+  (vaadi-async-kutsut
+    #{tiedot/->ToimenpiteetSiirretty tiedot/->ToimenpiteetEiSiirretty}
+    (is (= {:siirto-kaynnissa? true}
+           (tiedot/siirra-valitut! :foo {})))))
 
-  (testing "Tilan yhdistäminen muuttaa vain valintoja"
-    (let [a (atom {:id 1 :foo :bar})
-         b (atom {:id 2 :baz :barbaz})]
-     (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin")
-     (is (= @a @(tiedot/yhdista-tilat! a b)) "Sisältö ei muuttunut kutsun aikana")))
-
-  (testing "Tilan yhdistäminen yhdistää :valinnat mäpin"
-    (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
-          b (atom {:id 2 :baz {:urakka 2 :organisaatio 2}})]
-      (is (= a (tiedot/yhdista-tilat! a b)) "Funktio palauttaa ensimmäisen atomin"))
-
-    (let [a (atom {:id 1 :valinnat {:sopimus 1 :urakka 1}})
-          b (atom {:id 2 :valinnat {:urakka 2 :organisaatio 2}})]
-      (is (= {:id 1 :valinnat {:sopimus 1 :urakka 2 :organisaatio 2}}
-            @(tiedot/yhdista-tilat! a b)) ":valinnat avain yhdistettiin"))))
+(deftest toimenpiteiden-vaylat
+  (testing "Valitaan toimenpiteiden väylät"
+    (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
+           [{::va/nimi "Kuopio, Iisalmen väylä"
+             ::va/id 1}
+            {::va/nimi "Varkaus, Kuopion väylä"
+             ::va/id 2}]))))
 
 
 
