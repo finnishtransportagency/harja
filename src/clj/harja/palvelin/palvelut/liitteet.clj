@@ -24,7 +24,7 @@
             uusi-liite (liitteet/luo-liite liitteet (:id (:kayttaja req)) urakka filename content-type size tempfile kuvaus "harja-ui")]
         (log/debug "Tallennettu liite " filename " (" size " tavua)")
         (transit-vastaus (-> uusi-liite
-                             (dissoc :liite_oid :pikkukuva :luoja))))
+                             (dissoc :liite_oid :pikkukuva :luoja :luotu))))
       {:status 400
        :body   "Ei liitettä"})))
 

@@ -372,12 +372,8 @@
     (komp/luo
       (komp/piirretty
         #(do (when (:nayta-localstorage-tarkastus? @muokattava-tarkastus)
-               (let [viimeisin-liite (->> (vals @uudet-liitteet) (apply concat) (filter :luotu) (sort-by :luotu pvm/jalkeen?) first)
-                     viimeisimman-liitteen-aika (:luotu viimeisin-liite)
-                     tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)
-                     lomakkeen-viimeisin-muokkaus-aika (if (pvm/jalkeen? viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)
-                                                         viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)]
-                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dataa ajalta " (pvm/pvm-aika-opt lomakkeen-viimeisin-muokkaus-aika))
+               (let [tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)]
+                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dataa ajalta " (pvm/pvm-aika-opt tarkastuksen-muokkaus-aika))
                                 :info
                                 viesti/viestin-nayttoaika-pitka)))
              (swap! muokattava-tarkastus assoc :nayta-localstorage-tarkastus? true)))
@@ -459,6 +455,7 @@
                                                                  (r/wrap nil
                                                                          (fn [uusi-arvo]
                                                                            (let [kohdenro (:kohdenro rivi)]
+                                                                             (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt))
                                                                              (reset! uudet-liitteet
                                                                                      (assoc @uudet-liitteet
                                                                                        kohdenro
