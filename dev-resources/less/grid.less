@@ -20,6 +20,11 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 @livi-taulukon-padding: 3px;
 @livi-taulukon-padding-muokatessa: 0;
 @infolaatikko-leveys: 300px;
+@hento-korostusvari: #dee7fb;
+
+.vihje-hento-korostus {
+  background-color: @hento-korostusvari;
+}
 
 .livi-taulukon-reunat {
   border: 1px solid @harmaa7;
@@ -204,6 +209,9 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
   tr.korostettu-rivi {
     background-color: @varoitus;
+  }
+  tr.hennosti-korostettu-rivi {
+    background-color: @hento-korostusvari;
   }
   tr.klikattava:hover:not(.gridin-collapsoitava-valiotsikko) {
     cursor: pointer;
