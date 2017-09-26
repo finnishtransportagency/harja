@@ -43,7 +43,8 @@
          :toimenpiteet nil
          :turvalaitteet-kartalla nil
          :karttataso-nakyvissa? false
-         :korostetut-turvalaitteet nil}))
+         :korostetut-turvalaitteet nil
+         :korostettu-kiintio false}))
 
 (defonce karttataso-kokonaishintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
 (defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))
@@ -81,6 +82,26 @@
 (defrecord LiitaToimenpiteetKiintioon [])
 (defrecord ToimenpiteetLiitettyKiintioon [vastaus])
 (defrecord ToimenpiteetEiLiitettyKiintioon [])
+;; Kartta
+(defrecord KorostaKiintioKartalla [kiintio])
+(defrecord PoistaKiintionKorostus [])
+
+(def valiaikainen-kiintio
+  {::kiintio/nimi "Reimarista haetut, valitse kiintiö."
+   ::kiintio/id -1})
+
+(defn kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin [toimenpiteet]
+  (for [to toimenpiteet]
+    (assoc to ::to/kiintio (or (::to/kiintio to)
+                               valiaikainen-kiintio))))
+
+(defn kiintio-korostettu? [kiintio {:keys [korostettu-kiintio]}]
+  (boolean
+    (when-not (false? korostettu-kiintio)
+      (= (::kiintio/id kiintio) korostettu-kiintio))))
+
+(defn poista-kiintion-korostus [app]
+  (assoc app :korostettu-kiintio false))
 
 (extend-protocol tuck/Event
 
@@ -119,7 +140,9 @@
   (process-event [{toimenpiteet :toimenpiteet} app]
     (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
       (go (turvalaitteet-kartalle toimenpiteet))
-      (assoc app :toimenpiteet (jaettu/toimenpiteet-aikajarjestyksessa toimenpiteet)
+      (assoc app :toimenpiteet (-> toimenpiteet
+                                   kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin
+                                   jaettu/toimenpiteet-aikajarjestyksessa)
                  :toimenpiteiden-haku-kaynnissa? false)))
 
   ToimenpiteetEiHaettu
@@ -177,4 +200,20 @@
   ToimenpiteetEiLiitettyKiintioon
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden liittäminen kiintiöön epäonnistui!" :danger)
-    (assoc app :kiintioon-liittaminen-kaynnissa? false)))
+    (assoc app :kiintioon-liittaminen-kaynnissa? false))
+
+  KorostaKiintioKartalla
+  (process-event [{kiintio :kiintio} {:keys [toimenpiteet] :as app}]
+    (let [korostettavat-turvalaitteet (->>
+                                        toimenpiteet
+                                        (filter #(= (get-in % [::to/kiintio ::kiintio/id]) (::kiintio/id kiintio)))
+                                        (map (comp ::tu/turvalaitenro ::to/turvalaite))
+                                        (into #{}))]
+      (-> (jaettu/korosta-kartalla korostettavat-turvalaitteet app)
+          (assoc :korostettu-kiintio (::kiintio/id kiintio)))))
+
+  PoistaKiintionKorostus
+  (process-event [_ app]
+    (->> app
+         (poista-kiintion-korostus)
+         (jaettu/korosta-kartalla nil))))
