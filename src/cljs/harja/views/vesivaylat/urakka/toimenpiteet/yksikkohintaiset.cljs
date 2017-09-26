@@ -293,11 +293,14 @@
                                                                  oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                  (:id @nav/valittu-urakka))))}]]
                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+
                   [jaettu/listaus e! app*
                    {:sarakkeet
-                    [jaettu/sarake-tyoluokka
+                    [jaettu/sarake-tyolaji
+                     jaettu/sarake-tyoluokka
                      jaettu/sarake-toimenpide
                      jaettu/sarake-pvm
+                     jaettu/sarake-vayla
                      jaettu/sarake-turvalaite
                      jaettu/sarake-turvalaitenumero
                      jaettu/sarake-vikakorjaus
@@ -308,13 +311,12 @@
                      {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
                       :komponentti (fn [rivi]
                                      [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
-                     (jaettu/sarake-checkbox e! app)]
+                     (jaettu/sarake-checkbox e! app*)]
                     :listaus-tunniste listaus-tunniste
                     :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
                     :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
                     :footer (when nayta-hintaryhman-yhteenveto?
                               [hintaryhman-hinnoittelu e! app* hintaryhma])
-                    :otsikko (h/hintaryhman-nimi hintaryhma)
                     :paneelin-checkbox-sijainti "95.5%"
                     :vaylan-checkbox-sijainti "95.5%"}])]))]]]))))
 

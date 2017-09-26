@@ -26,12 +26,11 @@
 
 (s/def ::yllapitokohde-maksuerineen
   (s/keys :req-un [::yllapitokohde/id
-                   ::yllapitokohde/kohdenumero
                    ::yllapitokohde/nimi
                    ::yllapitokohde/kokonaishinta
                    ::maksuerat
                    ::tr-numero]
-          :opt-un [::maksueratunnus]))
+          :opt-un [::yllapitokohde/kohdenumero ::maksueratunnus]))
 
 ;; Haut
 

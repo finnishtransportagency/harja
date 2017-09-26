@@ -26,6 +26,44 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
+(define-tables
+  ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
+  ["toimenpidehaun_vika" :harja.domain.vesivaylat.vika/toimenpidehaun-vika]
+  ["reimari_toimenpide_liite" ::toimenpide<->liite
+   harja.domain.muokkaustiedot/poistettu?-sarake
+   {::toimenpiteet (specql.rel/has-one
+                     ::toimenpide-id
+                     :harja.domain.toimenpide/toimenpide
+                     :harja.domain.toimenpide/id)
+    ::liitteet (specql.rel/has-one
+                 ::liite-id
+                 :harja.domain.liite/liite
+                 :harja.domain.liite/id)}]
+  ["reimari_toimenpide" ::reimari-toimenpide
+   {"muokattu" ::m/muokattu
+    "muokkaaja" ::m/muokkaaja-id
+    "luotu" ::m/luotu
+    "luoja" ::m/luoja-id
+    "poistettu" ::m/poistettu?
+    "poistaja" ::m/poistaja-id
+    "reimari-lisatyo" ::reimari-lisatyo?
+    ::hintatyyppi (specql.transform/transform (specql.transform/to-keyword))
+    ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
+    ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
+    ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
+    ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
+    ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
+    ::vayla (specql.rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+    ::kiintio (specql.rel/has-one ::kiintio-id ::kiintio/kiintio ::kiintio/id)
+    ::hinnoittelu-linkit (specql.rel/has-many
+                           ::id
+                           ::h/hinnoittelu<->toimenpide
+                           ::h/toimenpide-id)
+    ::liite-linkit (specql.rel/has-many
+                     ::id
+                     ::toimenpide<->liite
+                     ::toimenpide-id)}])
+
 (def
   ^{:doc "Reimarin työlajit."}
   reimari-tyolajit
@@ -38,27 +76,6 @@
    "1022541808" :muut-palvelut
    "1022541804" :vesiliikennemerkit
    "1022540501" :kiintea-turvalaite})
-
-(defn reimari-tyolaji-avain->koodi [avain]
-  (first (filter #(= (get reimari-tyolajit %) avain)
-                 (keys reimari-tyolajit))))
-
-(defn reimari-tyolaji-fmt [tyyppi]
-  (case tyyppi
-    :tukityot "Tukityöt"
-    :kiinteat-turvalaitteet "Kiinteät turvalaitteet"
-    :poijut "Poijut"
-    :viitat "Viitat"
-    :muut-vaylatyot "Muut väylätyöt"
-    :rakennus-ja-kuljetuspalvelut "Rakennus- ja kuljetuspalvelut"
-    :muut-palvelut "Muut palvelut"
-    :vesiliikennemerkit "Vesiliikennemerkit"
-    :kiintea-turvalaite "Kiinteä turvalaite"
-    ;; Formatoidaan sinne päin
-    (some-> tyyppi name str/capitalize)))
-
-(defn jarjesta-reimari-tyolajit [tyolajit]
-  (sort-by reimari-tyolaji-fmt tyolajit))
 
 (def
   ^{:doc "Reimarin työluokat. Huom: eri koodeilla voi olla sama selite."}
@@ -89,9 +106,19 @@
    "1022541907" :telematiikkalaitteet
    "1022541910" :telematiikkalaitteet})
 
-(defn reimari-tyoluokka-avain->koodi [avain]
-  (set (filter #(= (get reimari-tyoluokat %) avain)
-               (keys reimari-tyoluokat))))
+(defn reimari-tyolaji-fmt [tyyppi]
+  (case tyyppi
+    :tukityot "Tukityöt"
+    :kiinteat-turvalaitteet "Kiinteät turvalaitteet"
+    :poijut "Poijut"
+    :viitat "Viitat"
+    :muut-vaylatyot "Muut väylätyöt"
+    :rakennus-ja-kuljetuspalvelut "Rakennus- ja kuljetuspalvelut"
+    :muut-palvelut "Muut palvelut"
+    :vesiliikennemerkit "Vesiliikennemerkit"
+    :kiintea-turvalaite "Kiinteä turvalaite"
+    ;; Formatoidaan sinne päin
+    (some-> tyyppi name str/capitalize)))
 
 (defn reimari-tyoluokka-fmt [tyoluokka]
   (case tyoluokka
@@ -115,9 +142,6 @@
     :luotsitoiminnan-palvelut "Luotsitoiminnan palvelut"
     ;; Formatoidaan sinne päin
     (some-> tyoluokka name str/capitalize)))
-
-(defn jarjesta-reimari-tyoluokat [tyoluokat]
-  (sort-by reimari-tyoluokka-fmt tyoluokat))
 
 (def ^{:doc "Reimarin toimenpidetyypit."}
 reimari-toimenpidetyypit
@@ -184,18 +208,6 @@ reimari-toimenpidetyypit
    "1022542017" :kaukovalvontalaitetyot
    "1022542026" :kaukovalvontalaitetyot})
 
-(defn reimari-toimenpidetyyppi-avain->koodi [avain]
-  (set (filter #(= (get reimari-toimenpidetyypit %) avain)
-               (keys reimari-toimenpidetyypit))))
-
-(defn reimari-lisatyo-fmt [lisatyo?]
-  (when lisatyo? "Kyllä"))
-
-(defn hintatyyppi-fmt [hintatyyppi]
-  (if (keyword? hintatyyppi)
-      (name hintatyyppi)
-      ""))
-
 (defn reimari-toimenpidetyyppi-fmt [toimenpide]
   (case toimenpide
     :alukset-ja-veneet "Alukset ja veneet"
@@ -246,9 +258,6 @@ reimari-toimenpidetyypit
     ;; Formatoidaan sinne päin
     (some-> toimenpide name str/capitalize)))
 
-(defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
-  (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
-
 (def
   ^{:doc "Reimarin toimenpiteen tilat"}
   reimari-tilat
@@ -256,43 +265,34 @@ reimari-toimenpidetyypit
    "1022541201" :suunniteltu
    "1022541203" :peruttu})
 
-(define-tables
-  ["toimenpidehaun_komponentti" :harja.domain.vesivaylat.komponentti/toimenpidehaun-komponentti]
-  ["toimenpidehaun_vika" :harja.domain.vesivaylat.vika/toimenpidehaun-vika]
-  ["reimari_toimenpide_liite" ::toimenpide<->liite
-   harja.domain.muokkaustiedot/poistettu?-sarake
-   {::toimenpiteet (specql.rel/has-one
-                     ::toimenpide-id
-                     :harja.domain.toimenpide/toimenpide
-                     :harja.domain.toimenpide/id)
-    ::liitteet (specql.rel/has-one
-                 ::liite-id
-                 :harja.domain.liite/liite
-                 :harja.domain.liite/id)}]
-  ["reimari_toimenpide" ::reimari-toimenpide
-   {"muokattu" ::m/muokattu
-    "muokkaaja" ::m/muokkaaja-id
-    "luotu" ::m/luotu
-    "luoja" ::m/luoja-id
-    "poistettu" ::m/poistettu?
-    "poistaja" ::m/poistaja-id
-    "reimari-lisatyo" ::reimari-lisatyo?
-    ::hintatyyppi (specql.transform/transform (specql.transform/to-keyword))
-    ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
-    ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
-    ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
-    ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
-    ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
-    ::vayla (specql.rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
-    ::kiintio (specql.rel/has-one ::kiintio-id ::kiintio/kiintio ::kiintio/id)
-    ::hinnoittelu-linkit (specql.rel/has-many
-                           ::id
-                           ::h/hinnoittelu<->toimenpide
-                           ::h/toimenpide-id)
-    ::liite-linkit (specql.rel/has-many
-                     ::id
-                     ::toimenpide<->liite
-                     ::toimenpide-id)}])
+(defn reimari-tyolaji-avain->koodi [avain]
+  (first (filter #(= (get reimari-tyolajit %) avain)
+                 (keys reimari-tyolajit))))
+
+(defn jarjesta-reimari-tyolajit [tyolajit]
+  (sort-by reimari-tyolaji-fmt tyolajit))
+
+(defn reimari-tyoluokka-avain->koodi [avain]
+  (set (filter #(= (get reimari-tyoluokat %) avain)
+               (keys reimari-tyoluokat))))
+
+(defn jarjesta-reimari-tyoluokat [tyoluokat]
+  (sort-by reimari-tyoluokka-fmt tyoluokat))
+
+(defn reimari-toimenpidetyyppi-avain->koodi [avain]
+  (set (filter #(= (get reimari-toimenpidetyypit %) avain)
+               (keys reimari-toimenpidetyypit))))
+
+(defn reimari-lisatyo-fmt [lisatyo?]
+  (when lisatyo? "Kyllä"))
+
+(defn hintatyyppi-fmt [hintatyyppi]
+  (if (keyword? hintatyyppi)
+      (name hintatyyppi)
+      ""))
+
+(defn jarjesta-reimari-toimenpidetyypit [toimenpidetyypit]
+  (sort-by reimari-toimenpidetyyppi-fmt toimenpidetyypit))
 
 (s/def ::reimari-turvalaite (s/keys :req [::vv-turvalaite/r-nro ::vv-turvalaite/r-nimi ::vv-turvalaite/r-ryhma]))
 (s/def ::reimari-alus (s/keys :req [:harja.domain.vesivaylat.alus/r-tunnus :harja.domain.vesivaylat.alus/r-nimi]))
@@ -394,6 +394,9 @@ reimari-toimenpidetyypit
 
 (defn toimenpiteet-hintaryhmalla [toimenpiteet hintaryhma-id]
   (filter #(= (::hintaryhma-id %) hintaryhma-id) toimenpiteet))
+
+(defn toimenpiteet-kiintiolla [toimenpiteet kiintio-id]
+  (filter #(= (get-in % [::kiintio ::kiintio/id]) kiintio-id) toimenpiteet))
 
 (defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
   (filter #(= (get-in % [::vayla ::vv-vayla/id]) vayla-id) toimenpiteet))

@@ -9,7 +9,8 @@
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.atom :refer-macros [reaction<!]]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
@@ -30,7 +31,10 @@
   (k/post! :poista-siltatarkastus {:urakka-id (:id @nav/valittu-urakka)
                                    :silta-id silta
                                    :siltatarkastus-id tarkastus}))
-(defonce valittu-silta (atom nil))
+
+(defonce valittu-silta (local-storage/local-storage-atom :valittu-silta-siltatarkastuksessa
+                                                          nil
+                                                          nil))
 
 (defonce valitun-sillan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)

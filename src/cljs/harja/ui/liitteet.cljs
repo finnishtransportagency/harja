@@ -189,7 +189,7 @@
   [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil) ; Jos komponentilla lisätään vain yksi liite
-        tiedostot (atom []) ; Jos komponentilla lisätään useampi liite
+        tiedostot (atom (or (:palautetut-liitteet opts) [])) ; Jos komponentilla lisätään useampi liite
         edistyminen (atom nil) ; Edistyminen, kun lataus on menossa (nil jos ei lataus menossa)
         virheviesti (atom nil)]
     (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid? disabled? lisaa-usea-liite?
@@ -281,11 +281,13 @@
    salli-poistaa-lisatty-liite?        Jos true, sallii poistaa juuri lisätyt liitteet
                                        (jotka odottavat esim. lomakkeen tallennuksen yhteydessä tehtävää linkitystä).
                                        Oletus false.
-   poista-lisatty-liite-fn             Funktio, jota kutsutaan, kun juuri lisätty liite vahvistetaan poistettavaksi."
+   poista-lisatty-liite-fn             Funktio, jota kutsutaan, kun juuri lisätty liite vahvistetaan poistettavaksi.
+   palautetut-liitteet                 Kokoelma liitteitä, jotka on tallennettu local storageen ja tulisi sen takia
+                                       näkyä käyttäjälle."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
                                           poista-tallennettu-liite-fn salli-poistaa-lisatty-liite?
-                                          poista-lisatty-liite-fn]}]
+                                          poista-lisatty-liite-fn palautetut-liitteet]}]
   [:span
    ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -310,4 +312,5 @@
                                :nayta-lisatyt-liitteet? nayta-lisatyt-liitteet?
                                :salli-poistaa-lisatty-liite? salli-poistaa-lisatty-liite?
                                :poista-lisatty-liite-fn poista-lisatty-liite-fn
-                               :disabled? disabled?}]))])
+                               :disabled? disabled?
+                               :palautetut-liitteet palautetut-liitteet}]))])
