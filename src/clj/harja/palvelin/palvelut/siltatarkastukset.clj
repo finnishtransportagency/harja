@@ -6,7 +6,8 @@
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.pvm :as pvm]))
 
 ;; Parsii array_agg haulla haetut kohteet {kohde [tulos lisätieto] ...} mäpiksi
 (def kohteet-xf
@@ -150,7 +151,7 @@
                       (paivita-siltatarkastus! db user urakka-id siltatarkastus)
 
                       ;; Ei id:tä, kyseessä on uusi siltatarkastus, tallennetaan uusi tarkastus
-                      ;; ja sen kohteet
+                      ;; ja sen kohteet.
                       (luo-siltatarkastus db user siltatarkastus))]
       (log/debug "Kohteet tallennettu!")
       (tallenna-siltatarkastuksen-liitteet db tarkastus uudet-liitteet)

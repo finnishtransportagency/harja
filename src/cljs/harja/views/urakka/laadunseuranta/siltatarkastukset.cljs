@@ -25,13 +25,20 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
 
-(defonce muokattava-tarkastus (atom nil))
+(defonce muokattava-tarkastus (local-storage/local-storage-atom :muokattava-siltatarkastus
+                                                                nil
+                                                                nil))
+(defonce uudet-liitteet (local-storage/local-storage-atom :uuden-siltatarkastuksen-liitteet
+                                                          nil
+                                                          nil))
+
 (def +valitse-tulos+ "- Valitse tulos -")
 (def +ei-kirjattu+ "Ei kirjattu")
 
@@ -55,7 +62,8 @@
                         muut-tarkastukset))]
     (reset! muokattava-tarkastus
             (assoc (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
-              :kohteet kohteet))))
+              :kohteet kohteet
+              :nayta-localstorage-tarkastus? false))))
 
 (defn- muokkaa-tarkastusta! [tarkastus]
   (reset! muokattava-tarkastus tarkastus))
@@ -195,12 +203,12 @@
 (defn muut-tarkastukset-sarakkeet [muut-tarkastukset]
   (mapv (fn [tarkastus]
           {:otsikko (pvm/vuosi (:tarkastusaika tarkastus))
-           :nimi (pvm/pvm (:tarkastusaika tarkastus))
+           :nimi (pvm/pvm-aika-sek (:tarkastusaika tarkastus))
            :leveys 2.5
            :tasaa :keskita
            :tyyppi :komponentti
            :komponentti (fn [rivi]
-                          (let [sarake-arvo (get rivi (pvm/pvm (:tarkastusaika tarkastus)))
+                          (let [sarake-arvo (get rivi (pvm/pvm-aika-sek (:tarkastusaika tarkastus)))
                                 tulos (:tulos sarake-arvo)
                                 liitteet (:liitteet sarake-arvo)]
                             [tarkastustulos-ja-liitteet tulos liitteet]))})
@@ -231,6 +239,7 @@
           (let [olemassaolleet-tarkastukset @st/valitun-sillan-tarkastukset
                 kaikki-tarkastukset (reverse (sort-by :tarkastusaika (merge olemassaolleet-tarkastukset res)))]
             (reset! muokattava-tarkastus nil)
+            (reset! uudet-liitteet nil)
             (reset! st/valitun-sillan-tarkastukset kaikki-tarkastukset)
             (reset! st/valittu-tarkastus res)
             (paivita-valittu-silta)
@@ -253,7 +262,7 @@
               ;; Muut tarkastukset (avain on tarkastuspvm ja arvo mappi, jossa tulos ja liitteet)
               (into {}
                     (map (fn [tarkastus]
-                           [(pvm/pvm (:tarkastusaika tarkastus))
+                           [(pvm/pvm-aika-sek (:tarkastusaika tarkastus))
                             {:tulos (first (get (:kohteet tarkastus) kohdenro))
                              :liitteet (filterv #(= (:kohde %) kohdenro)
                                                 (:liitteet tarkastus))}])
@@ -357,130 +366,133 @@
   [muokattava-tarkastus]
   (let [tallennus-kaynnissa? (atom false)
         muut-tarkastukset @st/valitun-sillan-tarkastukset
-
-        olemassa-olevat-tarkastus-pvmt
-        (reaction (into #{}
-                        (map :tarkastusaika)
-                        @st/valitun-sillan-tarkastukset))
         otsikko (if-not (:id @muokattava-tarkastus)
                   "Luo uusi siltatarkastus"
-                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))
-        uudet-liitteet (atom nil)
-        alkuperainen-tarkastusaika (:tarkastusaika @muokattava-tarkastus)]
-    (fn [muokattava-tarkastus]
-      (let [tarkastus @muokattava-tarkastus
-            tarkastusrivit (dissoc
-                             (into {}
-                                   (map (juxt :kohdenro identity))
-                                   (siltatarkastusten-rivit tarkastus muut-tarkastukset))
-                             nil)
-            taulukon-rivit (r/wrap
-                             tarkastusrivit
-                             #(swap! muokattava-tarkastus
-                                     assoc :kohteet
-                                     (fmap (juxt :tulos :lisatieto) %)))
-            riveja (count (vals tarkastusrivit))
-            riveja-taytetty (count (filter #(not (nil? (:tulos %)))
-                                           (vals tarkastusrivit)))
-            ainakin-yksi-tulos? (> riveja-taytetty 0)
-            voi-tallentaa? (and (lomake/voi-tallentaa? tarkastus)
-                                ainakin-yksi-tulos?)]
-        [:div.uusi-siltatarkastus
-         [napit/takaisin "Palaa tallentamatta" #(reset! muokattava-tarkastus nil)]
+                  (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
+    (komp/luo
+      (komp/piirretty
+        #(do (when (:nayta-localstorage-tarkastus? @muokattava-tarkastus)
+               (let [tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)]
+                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dataa ajalta " (pvm/pvm-aika-opt tarkastuksen-muokkaus-aika))
+                                :info
+                                viesti/viestin-nayttoaika-pitka)))
+             (swap! muokattava-tarkastus assoc :nayta-localstorage-tarkastus? true)))
+      (fn [muokattava-tarkastus]
+        (let [tarkastus @muokattava-tarkastus
+              tarkastusrivit (dissoc
+                               (into {}
+                                     (map (juxt :kohdenro identity))
+                                     (siltatarkastusten-rivit tarkastus muut-tarkastukset))
+                               nil)
+              taulukon-rivit (r/wrap
+                               tarkastusrivit
+                               #(swap! muokattava-tarkastus
+                                       assoc :kohteet
+                                       (fmap (juxt :tulos :lisatieto) %)))
+              riveja (count (vals tarkastusrivit))
+              riveja-taytetty (count (filter #(not (nil? (:tulos %)))
+                                             (vals tarkastusrivit)))
+              ainakin-yksi-tulos? (> riveja-taytetty 0)
+              voi-tallentaa? (and (lomake/voi-tallentaa? tarkastus)
+                                  ainakin-yksi-tulos?)]
+          [:div.uusi-siltatarkastus
+           [napit/takaisin "Palaa tallentamatta" #(do (reset! muokattava-tarkastus nil)
+                                                      (reset! uudet-liitteet nil))]
 
-         [lomake {:otsikko otsikko
-                  :muokkaa! (fn [uusi]
-                              (reset! muokattava-tarkastus uusi))}
-          [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Sillan tunnus" :nimi :siltatunnus :hae (fn [_] (:siltatunnus @st/valittu-silta)) :muokattava? (constantly false)}
-           {:otsikko "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true
-            :tyyppi :pvm
-            :validoi [[:ei-tyhja "Anna tarkastuksen päivämäärä"]
-                      #(when (and (@olemassa-olevat-tarkastus-pvmt %1)
-                                  (not= %1 alkuperainen-tarkastusaika))
-                         "Tälle päivälle on jo kirjattu tarkastus.")]
-            :huomauta [[:urakan-aikana]]}
-           ;; maksimipituus tarkastajalle tietokannassa varchar(128)
-           {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
-            :tyyppi :string :pituus-max 128
-            :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
-          tarkastus]
+           [lomake {:otsikko  otsikko
+                    :muokkaa! (fn [uusi]
+                                (reset! muokattava-tarkastus uusi))}
+            [{:otsikko "Silta" :nimi :siltanimi :hae (fn [_] (:siltanimi @st/valittu-silta)) :muokattava? (constantly false)}
+             {:otsikko "Sillan tunnus" :nimi :siltatunnus :hae (fn [_] (:siltatunnus @st/valittu-silta)) :muokattava? (constantly false)}
+             {:otsikko  "Tarkastus pvm" :nimi :tarkastusaika :pakollinen? true
+              :tyyppi   :pvm
+              :validoi  [[:ei-tyhja "Anna tarkastuksen päivämäärä"]]
+              :huomauta [[:urakan-aikana]]}
+             ;; maksimipituus tarkastajalle tietokannassa varchar(128)
+             {:otsikko "Tarkastaja" :nimi :tarkastaja :pakollinen? true
+              :tyyppi  :string :pituus-max 128
+              :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]}]
+            tarkastus]
 
-         [grid/muokkaus-grid
-          {:otsikko otsikko
-           :tunniste :kohdenro
-           :piilota-toiminnot? true
-           :voi-lisata? false
-           :voi-poistaa? (constantly false)
-           :jarjesta :kohdenro
-           :valiotsikot siltatarkastuksen-valiotsikot}
+           [grid/muokkaus-grid
+            {:otsikko            otsikko
+             :tunniste           :kohdenro
+             :piilota-toiminnot? true
+             :voi-lisata?        false
+             :voi-poistaa?       (constantly false)
+             :jarjesta           :kohdenro
+             :valiotsikot        siltatarkastuksen-valiotsikot
+             :muutos (fn [_]
+                       (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt)))}
 
-          ;; sarakkeet
-          (into [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false)
-                  :leveys 2}
-                 {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false)
-                  :leveys 15}]
+            ;; sarakkeet
+            (into [{:otsikko "#" :nimi :kohdenro :tyyppi :string :muokattava? (constantly false)
+                    :leveys  2}
+                   {:otsikko "Kohde" :nimi :kohde :tyyppi :string :muokattava? (constantly false)
+                    :leveys  15}]
 
-                (concat
-                  (for [tulos ["A" "B" "C" "D" "-"]]
-                    {:otsikko (if (= tulos "-")
-                                (ikonit/ban-circle)
-                                tulos)
-                     :tasaa :keskita
-                     :nimi (str "tulos-" tulos) :leveys 2
-                     :tyyppi :radio
-                     :valinnat [tulos]
-                     :valinta-nayta (constantly "")
-                     :hae :tulos
-                     :aseta #(assoc %1 :tulos %2)})
-                  [{:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10
-                    :pituus-max 255}
-                   {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
-                    :komponentti
-                    (fn [rivi]
-                      [liitteet/liitteet-ja-lisays
-                       (:id @nav/valittu-urakka)
-                       nil ;; Lisätyt liitteet näytetään eri sarakkeessa
-                       {:uusi-liite-atom
-                        (r/wrap nil
-                                (fn [uusi-arvo]
-                                  (let [kohdenro (:kohdenro rivi)]
-                                    (reset! uudet-liitteet
-                                            (assoc @uudet-liitteet
-                                              kohdenro
-                                              (conj (get @uudet-liitteet kohdenro)
-                                                    uusi-arvo))))))
-                        :lisaa-usea-liite? true
-                        :salli-poistaa-lisatty-liite? true
-                        :poista-lisatty-liite-fn (fn [liite-id]
-                                                   (let [kohdenro (:kohdenro rivi)]
-                                                     (reset! uudet-liitteet
-                                                             (assoc @uudet-liitteet
-                                                               kohdenro
-                                                               (filter #(not= (:id %) liite-id)
-                                                                       (get @uudet-liitteet kohdenro))))))
-                        :grid? true}])}]
-                  (muut-tarkastukset-sarakkeet muut-tarkastukset)))
-          taulukon-rivit]
+                  (concat
+                    (for [tulos ["A" "B" "C" "D" "-"]]
+                      {:otsikko       (if (= tulos "-")
+                                        (ikonit/ban-circle)
+                                        tulos)
+                       :tasaa         :keskita
+                       :nimi          (str "tulos-" tulos) :leveys 2
+                       :tyyppi        :radio
+                       :valinnat      [tulos]
+                       :valinta-nayta (constantly "")
+                       :hae           :tulos
+                       :aseta         #(assoc %1 :tulos %2)})
+                    [{:otsikko    "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 10
+                      :pituus-max 255}
+                     {:otsikko "Liitteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
+                      :komponentti
+                               (fn [rivi]
+                                 [liitteet/liitteet-ja-lisays
+                                  (:id @nav/valittu-urakka)
+                                  nil                       ;; Lisätyt liitteet näytetään eri sarakkeessa
+                                  {:uusi-liite-atom
+                                                                 (r/wrap nil
+                                                                         (fn [uusi-arvo]
+                                                                           (let [kohdenro (:kohdenro rivi)]
+                                                                             (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt))
+                                                                             (reset! uudet-liitteet
+                                                                                     (assoc @uudet-liitteet
+                                                                                       kohdenro
+                                                                                       (conj (get @uudet-liitteet kohdenro)
+                                                                                             uusi-arvo))))))
+                                   :lisaa-usea-liite?            true
+                                   :palautetut-liitteet      (get @uudet-liitteet (:kohdenro rivi))
+                                   :salli-poistaa-lisatty-liite? true
+                                   :poista-lisatty-liite-fn      (fn [liite-id]
+                                                                   (let [kohdenro (:kohdenro rivi)]
+                                                                     (reset! uudet-liitteet
+                                                                             (assoc @uudet-liitteet
+                                                                               kohdenro
+                                                                               (filter #(not= (:id %) liite-id)
+                                                                                       (get @uudet-liitteet kohdenro))))))
+                                   :grid?                        true}])}]
+                    (muut-tarkastukset-sarakkeet muut-tarkastukset)))
+            taulukon-rivit]
 
-         [napit/tallenna
-          "Tallenna tarkastus"
-          #(do (reset! tallennus-kaynnissa? true)
-               (let [tallennettava-tarkastus (-> tarkastus
-                                                 (assoc :uudet-liitteet @uudet-liitteet)
-                                                 (assoc :urakka-id (:id @nav/valittu-urakka)))]
-                 (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?)))
-          {:disabled (not voi-tallentaa?)}]
+           [napit/tallenna
+            "Tallenna tarkastus"
+            #(do (reset! tallennus-kaynnissa? true)
+                 (let [tallennettava-tarkastus (-> tarkastus
+                                                   (assoc :uudet-liitteet @uudet-liitteet)
+                                                   (assoc :urakka-id (:id @nav/valittu-urakka)))]
+                   (tallenna-siltatarkastus! tallennettava-tarkastus tallennus-kaynnissa?)))
+            {:disabled (not voi-tallentaa?)}]
 
-         ;; Tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
-         (let [vinkki (if (= 24 riveja-taytetty)
-                        (str "Kaikki " riveja-taytetty "/" riveja " kohdetta arvioitu.")
-                        (if (and ainakin-yksi-tulos? (< riveja-taytetty 24))
-                          (str "Vasta " riveja-taytetty "/" riveja " kohdetta arvioitu. Voit tallentaa lomakkeen myös keskeneräisenä.")
-                          (when (= 0 riveja-taytetty)
-                            "Arvioi vähintään yksi kohde ennen tallentamista.")))]
-           [:span.napin-vinkki
-            vinkki])]))))
+           ;; Tarkista montako kohdetta jolla tulos. Jos alle 24, näytä herja
+           (let [vinkki (if (= 24 riveja-taytetty)
+                          (str "Kaikki " riveja-taytetty "/" riveja " kohdetta arvioitu.")
+                          (if (and ainakin-yksi-tulos? (< riveja-taytetty 24))
+                            (str "Vasta " riveja-taytetty "/" riveja " kohdetta arvioitu. Voit tallentaa lomakkeen myös keskeneräisenä.")
+                            (when (= 0 riveja-taytetty)
+                              "Arvioi vähintään yksi kohde ennen tallentamista.")))]
+             [:span.napin-vinkki
+              vinkki])])))))
 
 (defn siltatarkastukset []
 
