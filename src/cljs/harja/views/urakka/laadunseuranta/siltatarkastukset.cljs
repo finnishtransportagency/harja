@@ -232,7 +232,6 @@
   "Ottaa tallennettavan tarkastuksen, jossa tarkastustietojen lisäksi mahdollinen uusi-liite ja urakka-id"
   [tarkastus tallennus-kaynnissa-atom]
   (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))]
-        ()
         (if (k/virhe? res)
           (do
             (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
