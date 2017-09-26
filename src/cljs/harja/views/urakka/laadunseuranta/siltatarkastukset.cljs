@@ -63,7 +63,7 @@
     (reset! muokattava-tarkastus
             (assoc (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
               :kohteet kohteet
-              :tultu-sillan-tarkastuksista? true))))
+              :nayta-localstorage-tarkastus? false))))
 
 (defn- muokkaa-tarkastusta! [tarkastus]
   (reset! muokattava-tarkastus tarkastus))
@@ -372,7 +372,7 @@
                   (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
     (komp/luo
       (komp/piirretty
-        #(do (when (not (:tultu-sillan-tarkastuksista? @muokattava-tarkastus))
+        #(do (when (:nayta-localstorage-tarkastus? @muokattava-tarkastus)
                (let [viimeisin-liite (->> (vals @uudet-liitteet) (apply concat) (filter :luotu) (sort-by :luotu pvm/jalkeen?) first)
                      viimeisimman-liitteen-aika (:luotu viimeisin-liite)
                      tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)
@@ -381,7 +381,7 @@
                  (viesti/nayta! (str "Lomakkeella on tallentamatonta dataa ajalta " (pvm/pvm-aika-opt lomakkeen-viimeisin-muokkaus-aika))
                                 :info
                                 viesti/viestin-nayttoaika-pitka)))
-             (swap! muokattava-tarkastus assoc :tultu-sillan-tarkastuksista? false)))
+             (swap! muokattava-tarkastus assoc :nayta-localstorage-tarkastus? true)))
       (fn [muokattava-tarkastus]
         (let [tarkastus @muokattava-tarkastus
               tarkastusrivit (dissoc
@@ -466,7 +466,7 @@
                                                                                        (conj (get @uudet-liitteet kohdenro)
                                                                                              uusi-arvo))))))
                                    :lisaa-usea-liite?            true
-                                   :jo-tallennetut-liitteet      (get @uudet-liitteet (:kohdenro rivi))
+                                   :palautetut-liitteet      (get @uudet-liitteet (:kohdenro rivi))
                                    :salli-poistaa-lisatty-liite? true
                                    :poista-lisatty-liite-fn      (fn [liite-id]
                                                                    (let [kohdenro (:kohdenro rivi)]
