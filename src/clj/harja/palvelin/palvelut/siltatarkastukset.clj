@@ -146,8 +146,7 @@
   (log/debug "Tallennetaan siltatarkastus: " (pr-str siltatarkastus))
   (jdbc/with-db-transaction [db db]
     (vaadi-silta-kuuluu-urakkaan db urakka-id silta-id)
-    (let [olemassa-olevat-tarkastukset (q/hae-sillan-tarkastukset db silta-id)
-          tarkastus (if id
+    (let [tarkastus (if id
                       ;; Olemassaoleva tarkastus, päivitetään kohteet
                       (paivita-siltatarkastus! db user urakka-id siltatarkastus)
 
