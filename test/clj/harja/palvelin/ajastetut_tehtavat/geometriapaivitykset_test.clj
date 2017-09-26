@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [com.stuartsierra.component :as component]
             [clj-time.periodic :refer [periodic-seq]]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.alk :as alk]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.ava :as alk]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -10,9 +10,11 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
-            [clj-time.coerce :as time-coerce])
+            [clj-time.coerce :as time-coerce]
+            [clojure.java.io :as io])
   (:use org.httpkit.fake)
-  (:import (java.util Date)))
+  (:import (java.util Date)
+           (org.apache.commons.io IOUtils)))
 
 (defn aja-tieverkon-paivitys
   "REPL-testiajofunktio"
@@ -84,7 +86,7 @@
 
 (def kayttaja "jvh")
 
-(deftest testaa-tiedoston-muokkausajan-selvitys-alk-alustalla
+(deftest testaa-tiedoston-muokkausajan-selvitys-alustalla
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
         fake-tiedosto-url "http://www.example.com/file.zip"
@@ -98,13 +100,16 @@
                            testitietokanta integraatioloki "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
         (is (= muokkausaika (time-coerce/to-sql-time (Date. fake-muokkausaika))))))))
 
-(deftest testaa-tiedoston-lataus-alk-alustalla
+(deftest testaa-tiedoston-lataus-ava-alustalla
   (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
         integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        lahdetiedosto "test/resurssit/arkistot/test_zip.zip"
-        kohdetiedosto "test/resurssit/download_test.zip"]
+        fake-tiedosto-url "http://www.example.com/test_file.zip"
+        kohdetiedosto "test/resurssit/download_test.zip"
+        fake-vastaus {:status 200 :body (IOUtils/toByteArray (io/input-stream "test/resurssit/arkistot/test_zip.zip"))}]
     (component/start integraatioloki)
 
-    (alk/hae-tiedosto integraatioloki "tieverkko-haku" lahdetiedosto kohdetiedosto)
-    (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
-    (clojure.java.io/delete-file kohdetiedosto)))
+    (with-fake-http
+      [{:url fake-tiedosto-url :method :get} fake-vastaus]
+      (alk/hae-tiedosto integraatioloki testitietokanta "tieverkko-haku" fake-tiedosto-url kohdetiedosto)
+      (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
+      (clojure.java.io/delete-file kohdetiedosto))))
