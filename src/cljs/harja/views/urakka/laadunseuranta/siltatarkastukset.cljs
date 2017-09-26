@@ -63,7 +63,7 @@
     (reset! muokattava-tarkastus
             (assoc (st/uusi-tarkastus (:id @st/valittu-silta) (:id @nav/valittu-urakka))
               :kohteet kohteet
-              :tultu-sillan-tarkastuksista? true))))
+              :nayta-localstorage-tarkastus? false))))
 
 (defn- muokkaa-tarkastusta! [tarkastus]
   (reset! muokattava-tarkastus tarkastus))
@@ -232,7 +232,6 @@
   "Ottaa tallennettavan tarkastuksen, jossa tarkastustietojen lisäksi mahdollinen uusi-liite ja urakka-id"
   [tarkastus tallennus-kaynnissa-atom]
   (go (let [res (<! (st/tallenna-siltatarkastus! tarkastus))]
-        ()
         (if (k/virhe? res)
           (do
             (viesti/nayta! "Tallentaminen epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt)
@@ -372,16 +371,12 @@
                   (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
     (komp/luo
       (komp/piirretty
-        #(do (when (not (:tultu-sillan-tarkastuksista? @muokattava-tarkastus))
-               (let [viimeisin-liite (->> (vals @uudet-liitteet) (apply concat) (filter :luotu) (sort-by :luotu pvm/jalkeen?) first)
-                     viimeisimman-liitteen-aika (:luotu viimeisin-liite)
-                     tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)
-                     lomakkeen-viimeisin-muokkaus-aika (if (pvm/jalkeen? viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)
-                                                         viimeisimman-liitteen-aika tarkastuksen-muokkaus-aika)]
-                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dataa ajalta " (pvm/pvm-aika-opt lomakkeen-viimeisin-muokkaus-aika))
+        #(do (when (:nayta-localstorage-tarkastus? @muokattava-tarkastus)
+               (let [tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)]
+                 (viesti/nayta! (str "Lomakkeella on tallentamatonta dataa ajalta " (pvm/pvm-aika-opt tarkastuksen-muokkaus-aika))
                                 :info
                                 viesti/viestin-nayttoaika-pitka)))
-             (swap! muokattava-tarkastus assoc :tultu-sillan-tarkastuksista? false)))
+             (swap! muokattava-tarkastus assoc :nayta-localstorage-tarkastus? true)))
       (fn [muokattava-tarkastus]
         (let [tarkastus @muokattava-tarkastus
               tarkastusrivit (dissoc
@@ -460,13 +455,14 @@
                                                                  (r/wrap nil
                                                                          (fn [uusi-arvo]
                                                                            (let [kohdenro (:kohdenro rivi)]
+                                                                             (swap! muokattava-tarkastus assoc :viimeksi-muokattu (pvm/nyt))
                                                                              (reset! uudet-liitteet
                                                                                      (assoc @uudet-liitteet
                                                                                        kohdenro
                                                                                        (conj (get @uudet-liitteet kohdenro)
                                                                                              uusi-arvo))))))
                                    :lisaa-usea-liite?            true
-                                   :jo-tallennetut-liitteet      (get @uudet-liitteet (:kohdenro rivi))
+                                   :palautetut-liitteet      (get @uudet-liitteet (:kohdenro rivi))
                                    :salli-poistaa-lisatty-liite? true
                                    :poista-lisatty-liite-fn      (fn [liite-id]
                                                                    (let [kohdenro (:kohdenro rivi)]
