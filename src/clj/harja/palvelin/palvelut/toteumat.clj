@@ -8,6 +8,7 @@
             [taoensso.timbre :as log]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [clojure.java.jdbc :as jdbc]
+            [slingshot.slingshot :refer [throw+ try+]]
 
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.kyselyt.materiaalit :as materiaalit-q]
@@ -347,27 +348,33 @@
             %))))
 
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
-  (into []
-        erilliskustannus-xf
-        (toteumat-q/listaa-urakan-hoitokauden-erilliskustannukset db urakka-id (konv/sql-date alkupvm) (konv/sql-date loppupvm))))
+  (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+          (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
+    (into []
+          erilliskustannus-xf
+          (toteumat-q/listaa-urakan-hoitokauden-erilliskustannukset db urakka-id (konv/sql-date alkupvm) (konv/sql-date loppupvm)))
+
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 (defn tallenna-erilliskustannus [db user ek]
   (log/debug "tallenna erilliskustannus:" ek)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-erilliskustannukset user (:urakka-id ek))
-  (jdbc/with-db-transaction
-    [db db]
-    (let [parametrit [db (:tyyppi ek) (:urakka-id ek) (:sopimus ek) (:toimenpideinstanssi ek)
-                      (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
-      (if (not (:id ek))
-        (apply toteumat-q/luo-erilliskustannus<! parametrit)
-        (apply toteumat-q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false)
-                                                                        (:id ek)
-                                                                        (:urakka-id ek)])))
-      (toteumat-q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! db (:toimenpideinstanssi ek))
-      (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
-                                               :alkupvm (:alkupvm ek)
-                                               :loppupvm (:loppupvm ek)}))))
+  (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset (:urakka-id ek) user)
+          (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset (:urakka-id ek) user))
+    (jdbc/with-db-transaction
+      [db db]
+      (let [parametrit [db (:tyyppi ek) (:urakka-id ek) (:sopimus ek) (:toimenpideinstanssi ek)
+                        (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
+        (if (not (:id ek))
+          (apply toteumat-q/luo-erilliskustannus<! parametrit)
+          (apply toteumat-q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false)
+                                                                          (:id ek)
+                                                                          (:urakka-id ek)])))
+        (toteumat-q/merkitse-toimenpideinstanssin-kustannussuunnitelma-likaiseksi! db (:toimenpideinstanssi ek))
+        (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
+                                                 :alkupvm (:alkupvm ek)
+                                                 :loppupvm (:loppupvm ek)})))
+
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
 
 (def muut-tyot-rahasumma-xf

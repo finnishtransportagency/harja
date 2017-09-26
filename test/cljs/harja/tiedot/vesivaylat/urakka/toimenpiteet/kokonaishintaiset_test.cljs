@@ -83,6 +83,101 @@
                                 ::to/pvm (pvm/nyt)
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
+(deftest valiaikaisiin-kiintioihin
+  (is (= [{::to/id 1 ::to/kiintio tiedot/valiaikainen-kiintio}
+          {::to/id 2
+           ::to/kiintio {::kiintio/id 2}}
+          {::to/id 3 ::to/kiintio tiedot/valiaikainen-kiintio}
+          {::to/id 4
+           ::to/kiintio {::kiintio/id 1}}]
+         (tiedot/kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin
+           [{::to/id 1}
+            {::to/id 2
+             ::to/kiintio {::kiintio/id 2}}
+            {::to/id 3}
+            {::to/id 4
+             ::to/kiintio {::kiintio/id 1}}]))))
+
+(deftest onko-kiintio-korostettu
+  (is (true? (tiedot/kiintio-korostettu?
+               {::kiintio/id 1}
+               {:korostettu-kiintio 1})))
+
+  (is (false? (tiedot/kiintio-korostettu?
+               {::kiintio/id 2}
+               {:korostettu-kiintio 1})))
+
+  (is (false? (tiedot/kiintio-korostettu?
+                {::kiintio/id 2}
+                {:korostettu-kiintio nil})))
+
+  (is (false? (tiedot/kiintio-korostettu?
+                {::kiintio/id -1}
+                {:korostettu-kiintio false}))))
+
+(deftest korostuksen-poisto
+  (is (= {:korostettu-kiintio false}
+         (tiedot/poista-kiintion-korostus {})))
+
+  (is (= {:korostettu-kiintio false}
+         (tiedot/poista-kiintion-korostus {:korostettu-kiintio false})))
+
+  (is (= {:korostettu-kiintio false}
+         (tiedot/poista-kiintion-korostus {:korostettu-kiintio true}))))
+
+(deftest toimenpiteiden-vaylat
+  (testing "Valitaan toimenpiteiden väylät"
+    (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
+           [{::va/nimi "Kuopio, Iisalmen väylä"
+             ::va/id 1}
+            {::va/nimi "Varkaus, Kuopion väylä"
+             ::va/id 2}]))))
+
+(deftest hakuargumenttien-muodostus
+  (testing "Hakuargumenttien muodostus toimii"
+    (let [alku (t/now)
+          loppu (t/plus (t/now) (t/days 5))
+          hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit
+                           {:urakka-id 666
+                            :sopimus-id 777
+                            :aikavali [alku loppu]
+                            :vaylatyyppi :muu
+                            :vayla-id 1
+                            :tyolaji :poijut
+                            :tyoluokka :asennus-ja-huolto
+                            :toimenpide :autot-traktorit
+                            :vain-vikailmoitukset? true})]
+      (is (= (dissoc hakuargumentit :alku :loppu)
+             {::to/urakka-id 666
+              ::to/sopimus-id 777
+              ::va/vaylatyyppi :muu
+              ::to/vayla-id 1
+              ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
+              ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
+              ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
+              :vikailmoitukset? true}))
+      (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
+      (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
+
+  (testing "Kaikki-valinta toimii"
+    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
+                                                                               :sopimus-id 777
+                                                                               :tyolaji nil
+                                                                               :tyoluokka nil
+                                                                               :toimenpide nil})]
+      (is (= hakuargumentit
+             {::to/urakka-id 666
+              ::to/sopimus-id 777}))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
+
+  (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
+    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
+                                                                               :sopimus-id 777})]
+      (is (= hakuargumentit {::to/urakka-id 666
+                             ::to/sopimus-id 777}))
+      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
+
 (deftest nakymaan-tuleminen
   (is (= {:nakymassa? true
           :karttataso-nakyvissa? true}
@@ -143,81 +238,6 @@
         (is (nil? (:valinnat vanha-tila)))
         (is (= (:valinnat uusi-tila) {:vaylatyyppi :muu}))))))
 
-(deftest toimenpiteiden-vaylat
-  (testing "Valitaan toimenpiteiden väylät"
-    (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
-           [{::va/nimi "Kuopio, Iisalmen väylä"
-             ::va/id 1}
-            {::va/nimi "Varkaus, Kuopion väylä"
-             ::va/id 2}]))))
-
-(deftest hakuargumenttien-muodostus
-  (testing "Hakuargumenttien muodostus toimii"
-    (let [alku (t/now)
-          loppu (t/plus (t/now) (t/days 5))
-          hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit
-                           {:urakka-id 666
-                            :sopimus-id 777
-                            :aikavali [alku loppu]
-                            :vaylatyyppi :muu
-                            :vayla-id 1
-                            :tyolaji :poijut
-                            :tyoluokka :asennus-ja-huolto
-                            :toimenpide :autot-traktorit
-                            :vain-vikailmoitukset? true})]
-      (is (= (dissoc hakuargumentit :alku :loppu)
-             {::to/urakka-id 666
-              ::to/sopimus-id 777
-              ::va/vaylatyyppi :muu
-              ::to/vayla-id 1
-              ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
-              ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
-              ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
-              :vikailmoitukset? true}))
-      (is (pvm/sama-pvm? (:alku hakuargumentit) alku))
-      (is (pvm/sama-pvm? (:loppu hakuargumentit) loppu))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
-
-  (testing "Kaikki-valinta toimii"
-    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
-                                                                               :sopimus-id 777
-                                                                               :tyolaji nil
-                                                                               :tyoluokka nil
-                                                                               :toimenpide nil})]
-      (is (= hakuargumentit
-             {::to/urakka-id 666
-              ::to/sopimus-id 777}))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit))))
-
-  (testing "Hakuargumenttien muodostus toimii vajailla argumenteilla"
-    (let [hakuargumentit (jaetut-tiedot/toimenpiteiden-hakukyselyn-argumentit {:urakka-id 666
-                                                                               :sopimus-id 777})]
-      (is (= hakuargumentit {::to/urakka-id 666
-                             ::to/sopimus-id 777}))
-      (is (s/valid? ::to/hae-vesivaylien-toimenpiteet-kysely hakuargumentit)))))
-
-(deftest yksikkohintaisiin-siirto
-  (testing "Siirron aloittaminen"
-    (vaadi-async-kutsut
-      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
-      (let [vanha-tila testitila
-            uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
-                          vanha-tila)]
-        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
-
-(deftest yksikkohintaisiin-siirretty
-  (let [vanha-tila testitila
-        siirretyt #{1 2 3}
-        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
-        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
-                      vanha-tila)
-        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
-
-    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
-    (is (empty? (filter #(siirretyt (::to/id %))
-                        (:toimenpiteet uusi-tila)))
-        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
-
 (deftest toimenpiteiden-hakemisen-aloitus
   (testing "Haun aloittaminen"
     (vaadi-async-kutsut
@@ -237,9 +257,11 @@
   (vaadi-async-kutsut
     #{jaetut-tiedot/->HaeToimenpiteidenTurvalaitteetKartalle}
 
-    (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}]) {:toimenpiteet []})]
-     (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
-     (is (= [{:id 1}] (:toimenpiteet tulos))))))
+    (let [tulos (e! (tiedot/->ToimenpiteetHaettu [{:id 1}
+                                                  {:id 2 ::to/kiintio {:foo :bar}}]) {:toimenpiteet []})]
+      (is (false? (:toimenpiteiden-haku-kaynnissa? tulos)))
+      (is (= [{:id 1 ::to/kiintio tiedot/valiaikainen-kiintio}
+              {:id 2 ::to/kiintio {:foo :bar}}] (:toimenpiteet tulos))))))
 
 (deftest toimenpiteiden-hakemisen-epaonnistuminen
   (let [tulos (e! (tiedot/->ToimenpiteetEiHaettu nil))]
@@ -275,6 +297,28 @@
   (let [tulos (e! (tiedot/->ValitseKiintio 666))]
     (is (= (:valittu-kiintio-id tulos) 666))))
 
+(deftest yksikkohintaisiin-siirto
+  (testing "Siirron aloittaminen"
+    (vaadi-async-kutsut
+      #{jaetut-tiedot/->ToimenpiteetSiirretty jaetut-tiedot/->ToimenpiteetEiSiirretty}
+      (let [vanha-tila testitila
+            uusi-tila (e! (tiedot/->SiirraValitutYksikkohintaisiin)
+                          vanha-tila)]
+        (is (true? (:siirto-kaynnissa? uusi-tila)))))))
+
+(deftest yksikkohintaisiin-siirretty
+  (let [vanha-tila testitila
+        siirretyt #{1 2 3}
+        toimenpiteiden-lkm-ennen-testia (count (:toimenpiteet vanha-tila))
+        uusi-tila (e! (jaetut-tiedot/->ToimenpiteetSiirretty siirretyt)
+                      vanha-tila)
+        toimenpiteiden-lkm-testin-jalkeen (count (:toimenpiteet uusi-tila))]
+
+    (is (= toimenpiteiden-lkm-ennen-testia (+ toimenpiteiden-lkm-testin-jalkeen (count siirretyt))))
+    (is (empty? (filter #(siirretyt (::to/id %))
+                        (:toimenpiteet uusi-tila)))
+        "Uudessa tilassa ei ole enää siirrettyjä toimenpiteitä")))
+
 (deftest liita-toimenpiteet-kiintioon
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteetLiitettyKiintioon tiedot/->ToimenpiteetEiLiitettyKiintioon}
@@ -293,3 +337,21 @@
   (let [tulos (e! (tiedot/->ToimenpiteetEiLiitettyKiintioon)
                   {:valittu-kiintio-id 123})]
     (is (false? (:kiintioon-liittaminen-kaynnissa? tulos)))))
+
+(deftest kiintion-korostaminen
+  (testing "Hintaryhmän korostus"
+    (let [tulos (e! (tiedot/->KorostaKiintioKartalla {::kiintio/id 1})
+                    {:turvalaitteet [{::tu/turvalaitenro 1
+                                      ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
+                     :toimenpiteet [{::to/kiintio {::kiintio/id 1} ::to/turvalaite {::tu/turvalaitenro 1}}
+                                    {::to/kiintio {::kiintio/id 1} ::to/turvalaite {::tu/turvalaitenro 2}}
+                                    {::to/kiintio {::kiintio/id 2} ::to/turvalaite {::tu/turvalaitenro 1}}]})]
+      (is (= 1 (:korostettu-kiintio tulos)))
+      (is (= #{1 2} (:korostetut-turvalaitteet tulos)))
+      (is (not-empty (:turvalaitteet-kartalla tulos)))))
+
+  (testing "Hintaryhmän korostamisen poistaminen"
+    (let [tulos (e! (tiedot/->PoistaKiintionKorostus))]
+      ;; false, koska näkymässä on hintaryhmä jonka id on nil
+      (is (= false (:korostettu-kiintio tulos)))
+      (is (nil? (:korostetut-turvalaitteet tulos))))))
