@@ -12,10 +12,8 @@
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (defn kasittele-tiedoston-muutospaivamaaran-hakuvastaus [otsikko]
-  (let [muutospaivamaara (:last-modified otsikko)]
-    (if muutospaivamaara
-      (time-coerce/to-sql-time (java.util.Date. muutospaivamaara))
-      nil)))
+  (when-let [muutospaivamaara (:last-modified otsikko)]
+    (time-coerce/to-sql-time (java.util.Date. muutospaivamaara))))
 
 (defn hae-tiedoston-muutospaivamaara
   ([db integraatioloki integraatio url]
@@ -55,7 +53,7 @@
   (paivitys)
   (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus tiedoston-muutospvm))
 
-(defn onko-kohdetiedosto-ok? [kohdepolku]
+(defn kohdetiedosto-ok? [kohdepolku]
   (let [file (io/file kohdepolku)
         kansio (.getParent file)
         tiedosto (.getName file)]
@@ -67,7 +65,7 @@
 
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku paivitys kayttajatunnus salasana]
   (log/debug (format "Tarkistetaan onko geometria-aineisto: %s päivittynyt AVA:ssa." paivitystunnus))
-  (when (and (not-empty tiedostourl) (onko-kohdetiedosto-ok? kohdetiedoston-polku))
+  (when (and (not-empty tiedostourl) (kohdetiedosto-ok? kohdetiedoston-polku))
     (try+
       (let [integraatio (str paivitystunnus "-muutospaivamaaran-haku")
             tiedoston-muutospvm (hae-tiedoston-muutospaivamaara
