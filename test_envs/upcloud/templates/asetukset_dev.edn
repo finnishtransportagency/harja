@@ -62,23 +62,23 @@
  :geometriapaivitykset {:tuontivali                                60
 
                         :tieosoiteverkon-shapefile                 "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
-                        :tieosoiteverkon-alk-osoite                "http://185.26.50.104/PTK_tieosoiteverkko.shz"
-                        :tieosoiteverkon-alk-tuontikohde           "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-osoite                "http://185.26.50.104/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-tuontikohde           "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
                         :pohjavesialueen-shapefile                 "file://shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shp"
-                        :pohjavesialueen-alk-osoite                "http://185.26.50.104/PTV_TIIRA_KP_POHJAVESIALUE.shz"
-                        :pohjavesialueen-alk-tuontikohde           "./shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shz"
+                        :pohjavesialueen-osoite                "http://185.26.50.104/PTV_TIIRA_KP_POHJAVESIALUE.shz"
+                        :pohjavesialueen-tuontikohde           "./shp/Pohjavesialueet/PTV_TIIRA_KP_POHJAVESIALUE.shz"
 
                         :talvihoidon-hoitoluokkien-shapefile       "file://shp/Talvihoitoluokat/PTV_tl132.shp"
-                        :talvihoidon-hoitoluokkien-alk-osoite      "http://185.26.50.104/PTV_tl132.shz"
-                        :talvihoidon-hoitoluokkien-alk-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
+                        :talvihoidon-hoitoluokkien-osoite      "http://185.26.50.104/PTV_tl132.shz"
+                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
 
                         :soratien-hoitoluokkien-shapefile          "file://shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shp"
-                        :soratien-hoitoluokkien-alk-osoite         "http://185.26.50.104/PTV_TIIRA_KP_SORATIELUOKKA.shz"
-                        :soratien-hoitoluokkien-alk-tuontikohde    "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
+                        :soratien-hoitoluokkien-osoite         "http://185.26.50.104/PTV_TIIRA_KP_SORATIELUOKKA.shz"
+                        :soratien-hoitoluokkien-tuontikohde    "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
 
                         :siltojen-shapefile                        "file://shp/Sillat/PTV_silta.shp"
-                        :siltojen-alk-osoite                       "http://185.26.50.104/PTV_silta.shz"
-                        :siltojen-alk-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
+                        :siltojen-osoite                       "http://185.26.50.104/PTV_silta.shz"
+                        :siltojen-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
                         }
  }
