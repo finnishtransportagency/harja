@@ -152,8 +152,8 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                          paivystaja
                          "sisaan"
                          "sahkoposti"))]
-        (when aiheutti-toimenpiteita
-          (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db true ilmoitus))
+        (when (= kuittaustyyppi :lopetettu)
+          (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db aiheutti-toimenpiteita ilmoitus))
         (when (and (= kuittaustyyppi :aloitettu) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
           (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
             (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
