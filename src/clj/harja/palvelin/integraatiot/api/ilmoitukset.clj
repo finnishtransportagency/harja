@@ -31,9 +31,9 @@
 
 (defn luo-ilmoitustoimenpide
   [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi aiheutti-toimenpiteita vapaateksti suunta kanava]
-
-  (when aiheutti-toimenpiteita
-    (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db true id))
+  
+  (when (not (nil? aiheutti-toimenpiteita))
+    (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db aiheutti-toimenpiteita id))
 
   (:id (ilmoitukset/luo-ilmoitustoimenpide<!
          db
