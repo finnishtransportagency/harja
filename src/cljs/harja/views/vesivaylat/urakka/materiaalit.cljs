@@ -84,6 +84,8 @@
       {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :placeholder maara-placeholder
        :palstoja 1 :kokonaisluku? true
        :pakollinen? true ::lomake/col-luokka "col-lg-6"}
+      {:otsikko "Hälytysraja" :nimi ::m/halytysraja :tyyppi :numero :palstoja 1
+       ::lomake/col-luokka "col-lg-6" :pakollinen? false}
       {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm :palstoja 1 ::lomake/col-luokka "col-lg-6"
        :pakollinen? true}
       {:otsikko "Lisätieto" :nimi ::m/lisatieto :tyyppi :text :koko [30 3] :pituus-max 2000

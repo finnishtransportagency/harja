@@ -1,0 +1,1 @@
+ALTER TABLE vv_materiaali ADD COLUMN halytysraja INTEGER;
