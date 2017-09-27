@@ -86,7 +86,7 @@
                               (istunto/ominaisuus-kaytossa? :vesivayla))
     :laskutus-kanavat (and (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
                            (u-domain/kanavaurakka? urakka)
-                           (istunto/ominaisuus-kaytossa? :kanavat))
+                           (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))
 

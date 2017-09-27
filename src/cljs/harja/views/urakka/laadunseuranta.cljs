@@ -19,7 +19,7 @@
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
-    :hairiotilanteet (and (istunto/ominaisuus-kaytossa? :kanavat)
+    :hairiotilanteet (and (istunto/ominaisuus-kaytossa? :vesivayla)
                           (urakka/kanavaurakka? urakka)
                           (oikeudet/urakat-laadunseuranta-hairiotilanteet))
 
