@@ -1,6 +1,6 @@
 (ns harja.tiedot.kanavat.hallinta.kohteiden-luonti-test
   (:require [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as tiedot]
-            [clojure.test :refer :all]
+            [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
 (deftest nakymaan-tuleminen

@@ -1,6 +1,6 @@
 (ns harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
   (:require [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as tiedot]
-            [clojure.test :refer :all]
+            [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
 (deftest nakymaan-tuleminen
