@@ -282,6 +282,12 @@
       [:div.tarkastus
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
+       (when (and jarjestelmasta? ; TODO Näytä vain jos oikeus, oma oikeustarkistus tälle
+                  (not (:nayta-urakoitsijalle tarkastus)))
+         [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
+          [napit/yleinen-ensisijainen "Näytä tarkastus urakoitsijalle"
+          #(log "Painoit nappia...")]]) ; TODO
+
        [lomake/lomake
         {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
          :muokkaa! #(let [uusi-tarkastus
