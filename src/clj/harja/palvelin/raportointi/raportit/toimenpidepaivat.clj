@@ -46,16 +46,16 @@
                            (sort-by first))}))
 
 
-(defn suorita [db user {:keys [alkupvm loppupvm hoitoluokan-numero-set urakka-id
+(defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
                                hallintayksikko-id urakkatyyppi]}]
-  (let [hoitoluokan-numero-set (or hoitoluokan-numero-set
-                                   ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
-                                   (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
+  (let [hoitoluokat (or hoitoluokat
+                        ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
+                        (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
         parametrit {:urakka          urakka-id
                     :hallintayksikko hallintayksikko-id
                     :alku            alkupvm
                     :loppu           loppupvm
-                    :hoitoluokat     hoitoluokan-numero-set
+                    :hoitoluokat     hoitoluokat
                     :urakkatyyppi    (name urakkatyyppi)}
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
@@ -69,7 +69,7 @@
                                                    aluemaarat))
                                                toimenpiderivit)
         talvihoitoluokat (cond->>
-                           (hoitoluokat/haluttujen-hoitoluokkien-nimet-ja-numerot hoitoluokan-numero-set)
+                           (hoitoluokat/haluttujen-hoitoluokkien-nimet-ja-numerot hoitoluokat)
 
                            (not talvihoitoluokattomia-toimenpiteita?)
                            (remove (comp nil? :numero)))
