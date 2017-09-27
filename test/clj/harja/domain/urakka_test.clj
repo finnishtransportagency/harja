@@ -1,4 +1,4 @@
-(ns harja.domain.urakka
+(ns harja.domain.urakka-test
   (:require [clojure.test :refer :all]
             [harja.domain.urakka :as u]))
 
