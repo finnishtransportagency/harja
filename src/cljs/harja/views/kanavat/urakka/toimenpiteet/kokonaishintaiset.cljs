@@ -18,7 +18,8 @@
             [harja.domain.oikeudet :as oikeudet])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
-    [harja.makrot :refer [defc fnc for*]]))
+    [harja.makrot :refer [defc fnc]]
+    [harja.tyokalut.ui :refer [for*]]))
 
 (defn kokonaishintaiset* [e! app]
   (komp/luo
