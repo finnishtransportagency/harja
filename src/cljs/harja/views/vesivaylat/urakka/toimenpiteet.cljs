@@ -38,11 +38,13 @@
        "Kokonaishintaiset"
        :kanavien-kokonaishintaiset
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  (urakka-domain/kanavaurakka? ur)
                   (oikeudet/urakat-kanavat-kokonaishintaiset id))
          [kanava-kok-hint/kokonaishintaiset])
 
        "Muutos- ja lisätyöt"
        :kanavien-lisatyot
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  (urakka-domain/kanavaurakka? ur)
                   (oikeudet/urakat-kanavat-lisatyot id))
          [lisatyot/lisatyot])])))
