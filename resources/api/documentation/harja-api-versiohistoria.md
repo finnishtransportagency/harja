@@ -2,6 +2,8 @@
 <b>Julkaistu: 15.5.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.28 Julkaistu: 27.9.2017:
+    - Tarkastusten kirjaukseen lisätty uusi kenttä nayta-urakoitsijalle. Jos kenttää ei anneta, käytetään vakioarvoa true. Muutos on taaksepäinyhteensopiva.
 - Versionumero: 1.0.27 Julkaistu: 11.9.2017:
     - Mahdollisuus merkitä näytetäänkö tarkastuksia urakoitsijoille vai ei
 - Versionumero: 1.0.26 Julkaistu: 26.5.2017:
