@@ -4,6 +4,8 @@
             [harja.ui.bootstrap :as bs]
             [harja.views.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as yks-hint]
             [harja.views.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
+            [harja.views.kanavat.urakka.toimenpiteet.kokonaishintaiset :as kanava-kok-hint]
+            [harja.views.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as lisatyot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
@@ -27,4 +29,16 @@
 
        "Erilliskustannukset" :erilliskustannukset
        (when (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id)
-         [erilliskustannukset/erilliskustannusten-toteumat ur])])))
+         [erilliskustannukset/erilliskustannusten-toteumat ur])
+
+       "Kokonaishintaiset"
+       :kanavien-kokonaishintaiset
+       (when (and (istunto/ominaisuus-kaytossa? :kanavat)
+                  (oikeudet/urakat-kanavat-kokonaishintaiset id))
+         [kanava-kok-hint/kokonaishintaiset])
+
+       "Muutos- ja lisätyöt"
+       :kanavien-lisatyot
+       (when (and (istunto/ominaisuus-kaytossa? :kanavat)
+                  (oikeudet/urakat-kanavat-lisatyot id))
+         [lisatyot/lisatyot])])))

@@ -72,3 +72,9 @@
 
 (defn vesivaylaurakka? [urakka]
   (vesivaylaurakkatyyppi? (:tyyppi urakka)))
+
+(defn kanavaurakka? [urakka]
+  (and (vesivaylaurakka? urakka)
+       false
+       ;; TODO kaiva hallintayksikkö
+       ))

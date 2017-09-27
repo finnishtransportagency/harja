@@ -8,6 +8,7 @@
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
+            [harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
@@ -18,6 +19,10 @@
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti
+    :hairiotilanteet (and (istunto/ominaisuus-kaytossa? :kanavat)
+                          (urakka/kanavaurakka? urakka)
+                          (oikeudet/urakat-laadunseuranta-hairiotilanteet))
+
     :tarkastukset (or (and (oikeudet/urakat-laadunseuranta-tarkastukset id)
                            (not (urakka/vesivaylaurakka? urakka)))
                       (and
@@ -48,6 +53,11 @@
       [bs/tabs
        {:style :tabs :classes "tabs-taso2"
         :active (nav/valittu-valilehti-atom :laadunseuranta)}
+
+       "Häiriötilanteet"
+       :hairiotilanteet
+       (when (valilehti-mahdollinen? :hairiotilanteet ur)
+         [hairiotilanteet/hairiotilanteet])
 
        "Tarkastukset" :tarkastukset
        (when (valilehti-mahdollinen? :tarkastukset ur)
