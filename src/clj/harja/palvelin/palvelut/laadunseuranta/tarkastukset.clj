@@ -34,7 +34,6 @@
              :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
              tarkastus)))))
 
-
 (defn hae-urakan-tarkastukset
   "Palauttaa urakan tarkastukset annetulle aikavälille."
   ([db user parametrit]
@@ -79,6 +78,7 @@
        :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
+  ;; TODO Vaati tarkastus kuuluu urakkaan?
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
@@ -121,6 +121,13 @@
         (hae-tarkastus c user urakka-id id)))
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
+
+(defn nayta-tarkastus-urakoitsijalle [db user urakka-id tarkastus-id]
+  ;; TODO Vaati tarkastus kuuluu urakkaan
+  ;; TODO Oma oikeustarkistus
+  (jdbc/with-db-transaction [db db]
+    (tarkastukset/nayta-tarkastus-urakoitsijalle
+      db {:id tarkastus-id})))
 
 (defn- tarkastusreittien-parametrit
   [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
@@ -181,6 +188,7 @@
               :toleranssi toleranssi)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
+  ;; TODO Vaati tarkastus kuuluu urakkaan
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
@@ -233,6 +241,11 @@
       :tallenna-tarkastus
       (fn [user {:keys [urakka-id tarkastus]}]
         (tallenna-tarkastus db user urakka-id tarkastus))
+
+      :nayta-tarkastus-urakoitsijalle
+      (fn [user {:keys [urakka-id tarkastus-id]}]
+        ;; TODO TESTI
+        (nayta-tarkastus-urakoitsijalle db user urakka-id tarkastus-id))
 
       :hae-tarkastus
       (fn [user {:keys [urakka-id tarkastus-id]}]
