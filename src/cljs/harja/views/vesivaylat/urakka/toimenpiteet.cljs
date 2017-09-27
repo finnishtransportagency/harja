@@ -6,10 +6,11 @@
             [harja.views.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
             [harja.views.kanavat.urakka.toimenpiteet.kokonaishintaiset :as kanava-kok-hint]
             [harja.views.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as lisatyot]
+            [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset])
+            [harja.domain.urakka :as urakka-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn toimenpiteet []
@@ -19,16 +20,19 @@
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}
        "Kokonaishintaiset" :kokonaishintaiset-toimenpiteet
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  (not (urakka-domain/kanavaurakka? ur))
                   (oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset id))
          [kok-hint/kokonaishintaiset-toimenpiteet])
 
        "Yksikköhintaiset" :yksikkohintaiset-toimenpiteet
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                  (not (urakka-domain/kanavaurakka? ur))
                   (oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset id))
          [yks-hint/yksikkohintaiset-toimenpiteet])
 
        "Erilliskustannukset" :erilliskustannukset
-       (when (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id)
+       (when (and (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id)
+                  (not (urakka-domain/kanavaurakka? ur)))
          [erilliskustannukset/erilliskustannusten-toteumat ur])
 
        "Kokonaishintaiset"

@@ -83,6 +83,7 @@
                    (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
     :laskutus-vesivaylat (and (oikeudet/urakat-laskutus-vesivaylalaskutusyhteenveto id)
                               (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                              (not (u-domain/kanavaurakka? urakka))
                               (istunto/ominaisuus-kaytossa? :vesivayla))
     :laskutus-kanavat (and (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
                            (u-domain/kanavaurakka? urakka)
