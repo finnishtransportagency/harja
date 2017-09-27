@@ -27,7 +27,7 @@
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! app]
-      [:div "https://issues.solita.fi/browse/HAR-6196"])))
+      [:div "WIP"])))
 
 (defc kohteiden-luonti []
   [tuck tiedot/tila kohteiden-luonti*])
