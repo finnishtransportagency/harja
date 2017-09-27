@@ -6,7 +6,7 @@
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.hoitoluokat :as hoitoluokat]))
+            [harja.domain.hoitoluokat :as hoitoluokat-domain]))
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpideajat.sql")
 
@@ -50,7 +50,7 @@
                                hallintayksikko-id urakkatyyppi]}]
   (let [hoitoluokat (or hoitoluokat
                         ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
-                        (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
+                        (into #{} (map :numero) hoitoluokat-domain/talvihoitoluokat))
         parametrit {:urakka          urakka-id
                     :hallintayksikko hallintayksikko-id
                     :alku            alkupvm
@@ -69,7 +69,7 @@
                                                    aluemaarat))
                                                toimenpiderivit)
         talvihoitoluokat (cond->>
-                           (hoitoluokat/haluttujen-hoitoluokkien-nimet-ja-numerot hoitoluokat)
+                           (hoitoluokat-domain/haluttujen-hoitoluokkien-nimet-ja-numerot hoitoluokat)
 
                            (not talvihoitoluokattomia-toimenpiteita?)
                            (remove (comp nil? :numero)))
