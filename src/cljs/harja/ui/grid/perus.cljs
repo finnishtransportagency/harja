@@ -498,6 +498,7 @@
                                                       (when (or rivi-klikattu mahdollista-rivin-valinta?)
                                                         "klikattava ")
                                                       (when (:korosta rivi) "korostettu-rivi ")
+                                                      (when (:korosta-hennosti rivi) "hennosti-korostettu-rivi ")
                                                       (when (:lihavoi rivi) "bold ")
                                                       (when (:yhteenveto rivi) "yhteenveto ")
                                                       (when rivin-luokka
