@@ -290,9 +290,9 @@
            (fn []
              (go (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? true)
                  (let [vastaus (<! (tiedot/aseta-tarkastus-nakymaan-urakoitsijalle urakka-id (:id tarkastus)))]
+                   (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? false)
                    (if (k/virhe? vastaus)
-                     (do (viesti/nayta! "Tarkastuksen asettaminen näkyviin urakoitsijalle epäonnistui." :danger)
-                         (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? false))
+                     (viesti/nayta! "Tarkastuksen asettaminen näkyviin urakoitsijalle epäonnistui." :danger)
                      (reset! tarkastus-atom vastaus)))))
            {:tallennus-kaynnissa? @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?
             :disabled @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?}]])
