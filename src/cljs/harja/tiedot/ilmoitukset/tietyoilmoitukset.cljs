@@ -9,7 +9,7 @@
             [cljs.core.async :as async]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
             [tuck.core :as tuck]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.viesti :as viesti]
@@ -58,7 +58,7 @@
 (defn- muodosta-palautettu-tila [app]
   ;; kutsutaan, kun atomin sisältö ladataan LocalStoragesta
   (let [valittu-ilmoitus (:valittu-ilmoitus app)
-        ok-namespacessa? #(if (-> % first namespace #{"harja.domain.tietyoilmoitukset" "harja.domain.muokkaustiedot"})
+        ok-namespacessa? #(if (-> % first namespace #{"harja.domain.tietyoilmoitus" "harja.domain.muokkaustiedot"})
                             %)
         putsattu-ilmoitus (when valittu-ilmoitus
                             (into {} (keep ok-namespacessa? valittu-ilmoitus)))]

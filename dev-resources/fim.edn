@@ -1,4 +1,6 @@
-{"1242141-OULU2" [{:tunniste 1
+{
+ ;; Oulun alueurakka 2014-2019
+ "1242141-OULU2" [{:tunniste 1
                    :kayttajatunnus "LXPENTTIER"
                    :etunimi "Erno"
                    :sukunimi "Penttikoski"

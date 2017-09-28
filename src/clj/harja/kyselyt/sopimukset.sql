@@ -114,3 +114,8 @@ VALUES (:harja-sopimus-id, :reimari-diaarinro);
 UPDATE reimari_sopimuslinkki
 SET "reimari-diaarinro" = :reimari-diaarinro
 WHERE "harja-sopimus-id" = :harja-sopimus-id;
+
+-- name: hae-urakan-sopimus-idt
+SELECT id
+  FROM sopimus
+ WHERE urakka = :urakka_id;

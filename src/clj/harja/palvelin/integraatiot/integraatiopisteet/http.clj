@@ -3,20 +3,22 @@
             [org.httpkit.client :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [new-reliquary.core :as nr])
+            [new-reliquary.core :as nr]
+            [harja.fmt :as fmt])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net ConnectException)
            (org.httpkit.client TimeoutException)))
 
 (def timeout-aika-ms 60000)
 
-(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit kayttajatunnus salasana kutsudata timeout]}]
+(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit kayttajatunnus salasana kutsudata timeout palautusarvo-tyyppina]}]
   (let [kutsu {}]
     (-> kutsu
         (cond-> (not-empty otsikot) (assoc :headers otsikot)
                 (not-empty parametrit) (assoc :query-params parametrit)
                 (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
                 (or (= metodi :post) (= metodi :put)) (assoc :body kutsudata)
+                (not (nil? palautusarvo-tyyppina)) (assoc :as palautusarvo-tyyppina)
                 timeout (assoc :timeout timeout)))))
 
 (defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
@@ -78,7 +80,7 @@
      :parametrit parametrit}
     #(do
       (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s"
-                         metodi url metodi kutsudata otsikot parametrit))
+                         metodi url metodi (fmt/merkkijonon-alku kutsudata 800) otsikot parametrit))
 
       (let [sisaltotyyppi (get otsikot " Content-Type ")]
         (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))

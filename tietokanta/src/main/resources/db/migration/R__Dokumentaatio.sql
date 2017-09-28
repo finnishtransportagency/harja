@@ -11,6 +11,9 @@ Ylläpitokohteella voi olla ylläpitoluokka, jonka arvot ovat kokonaislukuja 1-1
 Ylläpitoluokista tarkempaa domain-tietoa löytyy harja.domain.yllapitokohde.\n
 Ylläpitokohte on sidottu urakkaan urakka-sarakkeen kautta. Tämä sarake kuvaa kohtee "ensisijaista" urakkkaa. Lisäksi on olemassa sarake suorittava_tiemerkintaurakka, joka kuva kohteen suorittavaa tiemerkintäurakkaa. Tiemerkinnässä kohde siis edelleen kuuluu ensisijaisesti päällystysurakkaan urakka-sarakkeen kautta, mutta linkittyy tiemerkintäurakkaan suorittava_tiemerkintaurakka -sarakkeen kautta.';
 
+COMMENT ON COLUMN yllapitokohde.kohdenumero IS 'Kohdenumero on käyttäjän itse syöttämä (yleensä YHA-kohdenumerosta muokattu, esim. laitettu kirjain perään).';
+COMMENT ON COLUMN yllapitokohde.vuodet IS 'Kuvaa, minä vuonna kohdetta pääasiallisesti työstetään. Yleensä kohde tehdään yhden vuoden aikana, mutta kaiken varalta kyseessä on taulukko, jolloin usean vuoden kohteet ovat tietomallissa tuettuja.';
+
 COMMENT ON TABLE yllapitokohdeosa IS
 E'Ylläpitokohdeosa (käytetään myös nimityksiä alikohde ja tierekisterikohde) kuvaa tienosaa ylläpitokohteen sisällä. Kohdeosien avulla voidaan tarkemmin määrittää, miten ylläpitokohde jakaantuu osiin ja mitä toimenpiteitä eri osilla suoritetaan.\n
 

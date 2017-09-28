@@ -12,9 +12,28 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.tuck :as tuck-tyokalut]
             [harja.ui.kartta.esitettavat-asiat :as kartta]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
+
+(defrecord ValitseToimenpide [tiedot toimenpiteet])
+(defrecord ValitseToimenpiteet [tila toimenpiteet])
+(defrecord ValitseTyolaji [tiedot toimenpiteet])
+(defrecord ValitseVayla [tiedot toimenpiteet])
+(defrecord AsetaInfolaatikonTila [tunniste uusi-tila lisa-funktiot])
+(defrecord ToimenpiteetSiirretty [toimenpiteet])
+(defrecord ToimenpiteetEiSiirretty [])
+(defrecord LisaaToimenpiteelleLiite [tiedot])
+(defrecord LiiteLisatty [vastaus tiedot])
+(defrecord LiiteEiLisatty [])
+(defrecord PoistaToimenpiteenLiite [tiedot])
+(defrecord LiitePoistettu [vastaus tiedot])
+(defrecord LiiteEiPoistettu [])
+(defrecord HaeToimenpiteidenTurvalaitteetKartalle [toimenpiteet])
+(defrecord TurvalaitteetKartalleHaettu [tulos haetut])
+(defrecord TurvalaitteetKartalleEiHaettu [virhe haetut])
+(defrecord KorostaToimenpideKartalla [toimenpide lisa-funktiot])
 
 (def valintojen-avaimet [:urakka-id :sopimus-id :aikavali
                          :vaylatyyppi :vayla-id :turvalaite-id
@@ -27,23 +46,26 @@
 (defn- toimenpiteet-tyolajilla [toimenpiteet tyolaji]
   (filterv #(= (::to/tyolaji %) tyolaji) toimenpiteet))
 
-(defn kaikki-valittu? [tyolajin-toimenpiteet]
-  (every? true? (map :valittu? tyolajin-toimenpiteet)))
+(defn kaikki-valittu? [toimenpiteet]
+  (every? true? (map :valittu? toimenpiteet)))
+
+(defn joku-valittu? [toimenpiteet]
+  (boolean (some :valittu? toimenpiteet)))
 
 (defn mitaan-ei-valittu? [tyolajin-toimenpiteet]
   (every? (comp not true?)
           (map :valittu? tyolajin-toimenpiteet)))
+
+(defn valinnan-tila [tyolajin-toimenpiteet]
+  (cond (kaikki-valittu? tyolajin-toimenpiteet) true
+        (mitaan-ei-valittu? tyolajin-toimenpiteet) false
+        :default :harja.ui.kentat/indeterminate))
 
 (defn valitut-toimenpiteet [toimenpiteet]
   (filter :valittu? toimenpiteet))
 
 (defn poista-toimenpiteet [toimenpiteet poistettavat-toimenpide-idt]
   (filter #(not (poistettavat-toimenpide-idt (::to/id %))) toimenpiteet))
-
-(defn valinnan-tila [tyolajin-toimenpiteet]
-  (cond (kaikki-valittu? tyolajin-toimenpiteet) true
-        (mitaan-ei-valittu? tyolajin-toimenpiteet) false
-        :default :harja.ui.kentat/indeterminate))
 
 (defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
   (str toimenpiteiden-lkm " "
@@ -67,15 +89,15 @@
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?}))
 
-(defn joku-valittu? [toimenpiteet]
-  (boolean (some :valittu? toimenpiteet)))
-
 (defn yhdista-tilat! [mun-tila sen-tila]
   (swap! mun-tila update :valinnat #(merge % (:valinnat @sen-tila)))
   mun-tila)
 
 (defn toimenpiteet-aikajarjestyksessa [toimenpiteet]
-  (sort-by ::to/pvm toimenpiteet))
+  (sort-by
+    ::to/pvm
+    pvm/jalkeen?
+    toimenpiteet))
 
 (defn korosta-turvalaite-kartalla? [app]
   ;; Tämä funktio oli alunperin kartalla-esitettavaan-muotoon funktion
@@ -113,23 +135,6 @@
   (-> (assoc app :korostetut-turvalaitteet turvalaitenumero-set)
       (paivita-kartta)))
 
-(defrecord ValitseToimenpide [tiedot toimenpiteet])
-(defrecord ValitseTyolaji [tiedot toimenpiteet])
-(defrecord ValitseVayla [tiedot toimenpiteet])
-(defrecord AsetaInfolaatikonTila [tunniste uusi-tila lisa-funktiot])
-(defrecord ToimenpiteetSiirretty [toimenpiteet])
-(defrecord ToimenpiteetEiSiirretty [])
-(defrecord LisaaToimenpiteelleLiite [tiedot])
-(defrecord LiiteLisatty [vastaus tiedot])
-(defrecord LiiteEiLisatty [])
-(defrecord PoistaToimenpiteenLiite [tiedot])
-(defrecord LiitePoistettu [vastaus tiedot])
-(defrecord LiiteEiPoistettu [])
-(defrecord HaeToimenpiteidenTurvalaitteetKartalle [toimenpiteet])
-(defrecord TurvalaitteetKartalleHaettu [tulos haetut])
-(defrecord TurvalaitteetKartalleEiHaettu [virhe haetut])
-(defrecord KorostaToimenpideKartalla [toimenpide lisa-funktiot])
-
 (defn siirra-valitut! [palvelu app]
   (tuck-tyokalut/palvelukutsu palvelu
                               {::to/urakka-id (get-in app [:valinnat :urakka-id])
@@ -145,9 +150,16 @@
           valinta (:valinta tiedot)
           paivitetty-toimenpide (-> (to/toimenpide-idlla listan-toimenpiteet toimenpide-id)
                                     (assoc :valittu? valinta))]
-      (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
-                                 (mapv #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
-                                       toimenpiteet)))))
+      (assoc app :toimenpiteet (map #(if (= (::to/id %) toimenpide-id) paivitetty-toimenpide %)
+                                     toimenpiteet))))
+
+  ValitseToimenpiteet
+  (process-event [{tila :tila valittavat :toimenpiteet} {:keys [toimenpiteet] :as app}]
+    (let [idt (into #{} (map ::to/id valittavat))]
+      (assoc app :toimenpiteet (map #(if (idt (::to/id %))
+                                       (assoc % :valittu? tila)
+                                       %)
+                                    toimenpiteet))))
 
   ValitseTyolaji
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
@@ -159,8 +171,7 @@
                                         listan-toimenpiteet)
           paivitetyt-idt (into #{} (map ::to/id paivitetyt-toimenpiteet))
           paivittamattomat (remove (comp paivitetyt-idt ::to/id) toimenpiteet)]
-      (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
-                                 (concat paivitetyt-toimenpiteet paivittamattomat)))))
+      (assoc app :toimenpiteet (concat paivitetyt-toimenpiteet paivittamattomat))))
 
   ValitseVayla
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
@@ -172,8 +183,7 @@
                                         listan-toimenpiteet)
           paivitetyt-idt (into #{} (map ::to/id paivitetyt-toimenpiteet))
           paivittamattomat (remove (comp paivitetyt-idt ::to/id) toimenpiteet)]
-      (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
-                                 (concat paivitetyt-toimenpiteet paivittamattomat)))))
+      (assoc app :toimenpiteet (concat paivitetyt-toimenpiteet paivittamattomat))))
 
   AsetaInfolaatikonTila
   (process-event [{tunniste :tunniste
@@ -191,8 +201,7 @@
   ToimenpiteetSiirretty
   (process-event [{toimenpiteet :toimenpiteet} app]
     (viesti/nayta! (toimenpiteiden-toiminto-suoritettu (count toimenpiteet) "siirretty") :success)
-    (assoc app :toimenpiteet (toimenpiteet-aikajarjestyksessa
-                               (poista-toimenpiteet (:toimenpiteet app) toimenpiteet))
+    (assoc app :toimenpiteet (poista-toimenpiteet (:toimenpiteet app) toimenpiteet)
                :siirto-kaynnissa? false))
 
   ToimenpiteetEiSiirretty

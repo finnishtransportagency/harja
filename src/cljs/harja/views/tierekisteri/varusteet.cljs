@@ -24,6 +24,7 @@
 (defn varustehaku-ehdot [e! {haku? :haku-kaynnissa?
                              tr-osoite :tierekisteriosoite
                              varusteentunniste :tunniste
+                             varusteiden-haun-tila :varusteiden-haun-tila
                              :as hakuehdot}]
   (let [tr-ok? (fn [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
                  (and numero alkuosa alkuetaisyys loppuosa loppuetaisyys))]
@@ -50,20 +51,31 @@
        :valinnat (vec varusteet/tietolaji->selitys)
        :valinta-nayta #(if (nil? %) "- valitse -" (second %))
        :valinta-arvo first}
-      (lomake/ryhma
-        ""
+      {:nimi :voimassaolopvm
+       :otsikko "Voimassaolopäivämäärä"
+       :tyyppi :pvm}
+      {:nimi :varusteiden-haun-tila
+       :otsikko "Hae"
+       :uusi-rivi? true
+       :tyyppi :radio-group
+       :vaihtoehdot [:sijainnilla :tunnisteella]
+       :vaihtoehto-nayta (fn [arvo]
+                           ({:sijainnilla "Sijainnilla"
+                             :tunnisteella "Tunnisteella"}
+                             arvo))}
+      (when (= :sijainnilla varusteiden-haun-tila)
         {:nimi :tierekisteriosoite
+         :uusi-rivi? true
          :otsikko "Tierekisteriosoite"
          :tyyppi :tierekisteriosoite
          :sijainti (atom nil) ;; sijainti ei kiinnosta, mutta johtuen komponentin toiminnasta, atom täytyy antaa
-         ;; FIXME: Jostain syystä tr-osoitteen pakollinen-merkki ei poistu, kun tunnisteen syöttää.
-         ;:pakollinen? (str/blank? varusteentunniste)
-         }
+         :pakollinen? (= :sijainnilla varusteiden-haun-tila)})
+      (when (= :tunnisteella varusteiden-haun-tila)
         {:nimi :tunniste
          :otsikko "Varusteen tunniste"
+         :uusi-rivi? true
          :tyyppi :string
-         ;:pakollinen? (not (tr-ok? tr-osoite))
-         })]
+         :pakollinen? (= :tunnisteella varusteiden-haun-tila)})]
      hakuehdot]))
 
 (defn poista-varuste [e! tietolaji tunniste]

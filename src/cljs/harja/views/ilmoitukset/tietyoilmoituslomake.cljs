@@ -5,7 +5,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.tierekisteri :as tr]
             [reagent.core :refer [atom] :as r]
             [harja.ui.grid :refer [muokkaus-grid] :as grid]

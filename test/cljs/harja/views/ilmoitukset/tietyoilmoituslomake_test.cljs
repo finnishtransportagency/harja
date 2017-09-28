@@ -9,7 +9,7 @@
             [harja.testutils.shared-testutils :as u]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset-tiedot]
             [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake-view]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             #_[harja.views.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset-view]
             )
   (:require-macros [harja.testutils.macros :refer [komponenttitesti]]
@@ -18,99 +18,99 @@
 (test/use-fixtures :each u/komponentti-fixture fake-palvelut-fixture jvh-fixture)
 
 (def mock-ilmoitus
-  {:harja.domain.tietyoilmoitukset/kaistajarjestelyt
-   {:harja.domain.tietyoilmoitukset/jarjestely "ajokaistaSuljettu"},
-   :harja.domain.tietyoilmoitukset/loppusijainnin-kuvaus
+  {:harja.domain.tietyoilmoitus/kaistajarjestelyt
+   {:harja.domain.tietyoilmoitus/jarjestely "ajokaistaSuljettu"},
+   :harja.domain.tietyoilmoitus/loppusijainnin-kuvaus
    "Jossain Kiimingissä",
-   :harja.domain.tietyoilmoitukset/viivastys-ruuhka-aikana 30,
-   :harja.domain.tietyoilmoitukset/kunnat "Oulu, Kiiminki",
-   :harja.domain.tietyoilmoitukset/tien-nimi "Kuusamontie",
-   :harja.domain.tietyoilmoitukset/ilmoittaja
-   {:harja.domain.tietyoilmoitukset/etunimi "Uuno",
-    :harja.domain.tietyoilmoitukset/sukunimi "Urakoitsija",
-    :harja.domain.tietyoilmoitukset/sahkoposti "yit_pk2@example.org",
-    :harja.domain.tietyoilmoitukset/matkapuhelin "43223123"},
-   :harja.domain.tietyoilmoitukset/tilaajayhteyshenkilo
-   {:harja.domain.tietyoilmoitukset/sukunimi "Toripolliisi",
-    :harja.domain.tietyoilmoitukset/matkapuhelin "0405127232",
-    :harja.domain.tietyoilmoitukset/sahkoposti
+   :harja.domain.tietyoilmoitus/viivastys-ruuhka-aikana 30,
+   :harja.domain.tietyoilmoitus/kunnat "Oulu, Kiiminki",
+   :harja.domain.tietyoilmoitus/tien-nimi "Kuusamontie",
+   :harja.domain.tietyoilmoitus/ilmoittaja
+   {:harja.domain.tietyoilmoitus/etunimi "Uuno",
+    :harja.domain.tietyoilmoitus/sukunimi "Urakoitsija",
+    :harja.domain.tietyoilmoitus/sahkoposti "yit_pk2@example.org",
+    :harja.domain.tietyoilmoitus/matkapuhelin "43223123"},
+   :harja.domain.tietyoilmoitus/tilaajayhteyshenkilo
+   {:harja.domain.tietyoilmoitus/sukunimi "Toripolliisi",
+    :harja.domain.tietyoilmoitus/matkapuhelin "0405127232",
+    :harja.domain.tietyoilmoitus/sahkoposti
     "tero.toripolliisi@example.com",
-    :harja.domain.tietyoilmoitukset/etunimi "Tero"},
-   :harja.domain.tietyoilmoitukset/pysaytysten-loppu
+    :harja.domain.tietyoilmoitus/etunimi "Tero"},
+   :harja.domain.tietyoilmoitus/pysaytysten-loppu
    (pvm/->pvm-aika  "07.07.2017 07:07"),
-   :harja.domain.tietyoilmoitukset/tilaajan-nimi "Pohjois-Pohjanmaa",
-   :harja.domain.tietyoilmoitukset/vaikutussuunta "molemmat",
-   :harja.domain.tietyoilmoitukset/huomautukset ["avotuli"],
-   :harja.domain.tietyoilmoitukset/ajoittaiset-pysaytykset true,
-   :harja.domain.tietyoilmoitukset/tyoajat
-   [{:harja.domain.tietyoilmoitukset/alkuaika
+   :harja.domain.tietyoilmoitus/tilaajan-nimi "Pohjois-Pohjanmaa",
+   :harja.domain.tietyoilmoitus/vaikutussuunta "molemmat",
+   :harja.domain.tietyoilmoitus/huomautukset ["avotuli"],
+   :harja.domain.tietyoilmoitus/ajoittaiset-pysaytykset true,
+   :harja.domain.tietyoilmoitus/tyoajat
+   [{:harja.domain.tietyoilmoitus/alkuaika
      {:tunnit 8 :minuutit 0}
-     :harja.domain.tietyoilmoitukset/loppuaika
+     :harja.domain.tietyoilmoitus/loppuaika
      {:tunnit 17 :minuutit 0}
-     :harja.domain.tietyoilmoitukset/paivat
+     :harja.domain.tietyoilmoitus/paivat
      ["maanantai" "tiistai" "keskiviikko"]}
-    {:harja.domain.tietyoilmoitukset/alkuaika
+    {:harja.domain.tietyoilmoitus/alkuaika
      {:tunnit 7 :minuutit 0}
-     :harja.domain.tietyoilmoitukset/loppuaika
+     :harja.domain.tietyoilmoitus/loppuaika
      {:tunnit 21 :minuutit 0}
-     :harja.domain.tietyoilmoitukset/paivat ["lauantai" "sunnuntai"]}],
-   :harja.domain.tietyoilmoitukset/nopeusrajoitukset
-   [{:harja.domain.tietyoilmoitukset/rajoitus "30",
-     :harja.domain.tietyoilmoitukset/matka 100}],
-   :harja.domain.tietyoilmoitukset/alku
+     :harja.domain.tietyoilmoitus/paivat ["lauantai" "sunnuntai"]}],
+   :harja.domain.tietyoilmoitus/nopeusrajoitukset
+   [{:harja.domain.tietyoilmoitus/rajoitus "30",
+     :harja.domain.tietyoilmoitus/matka 100}],
+   :harja.domain.tietyoilmoitus/alku
    (pvm/->pvm-aika  "01.01.2017 01:01"),
-   :harja.domain.tietyoilmoitukset/tienpinnat
-   [{:harja.domain.tietyoilmoitukset/materiaali "paallystetty",
-     :harja.domain.tietyoilmoitukset/matka 100}],
-   :harja.domain.tietyoilmoitukset/tilaajayhteyshenkilo-id 1,
-   :harja.domain.tietyoilmoitukset/lisatietoja "Tämä on testi-ilmoitus",
-   :harja.domain.tietyoilmoitukset/luotu
+   :harja.domain.tietyoilmoitus/tienpinnat
+   [{:harja.domain.tietyoilmoitus/materiaali "paallystetty",
+     :harja.domain.tietyoilmoitus/matka 100}],
+   :harja.domain.tietyoilmoitus/tilaajayhteyshenkilo-id 1,
+   :harja.domain.tietyoilmoitus/lisatietoja "Tämä on testi-ilmoitus",
+   :harja.domain.tietyoilmoitus/luotu
    (pvm/->pvm-aika  "01.01.2017 01:01"),
-   :harja.domain.tietyoilmoitukset/loppu
+   :harja.domain.tietyoilmoitus/loppu
    (pvm/->pvm-aika  "07.07.2017 07:07"),
-   :harja.domain.tietyoilmoitukset/liikenteenohjaaja "liikennevalot",
-   :harja.domain.tietyoilmoitukset/urakka-id 4,
-   :harja.domain.tietyoilmoitukset/ajoittain-suljettu-tie true,
-   :harja.domain.tietyoilmoitukset/alkusijainnin-kuvaus
+   :harja.domain.tietyoilmoitus/liikenteenohjaaja "liikennevalot",
+   :harja.domain.tietyoilmoitus/urakka-id 4,
+   :harja.domain.tietyoilmoitus/ajoittain-suljettu-tie true,
+   :harja.domain.tietyoilmoitus/alkusijainnin-kuvaus
    "Kuusamontien alussa",
-   :harja.domain.tietyoilmoitukset/urakoitsijayhteyshenkilo
-   {:harja.domain.tietyoilmoitukset/sahkoposti "yit_pk2@example.org",
-    :harja.domain.tietyoilmoitukset/sukunimi "Urakoitsija",
-    :harja.domain.tietyoilmoitukset/etunimi "Uuno",
-    :harja.domain.tietyoilmoitukset/matkapuhelin "43223123"},
-   :harja.domain.tietyoilmoitukset/tilaaja-id 9,
-   :harja.domain.tietyoilmoitukset/liikenteenohjaus
+   :harja.domain.tietyoilmoitus/urakoitsijayhteyshenkilo
+   {:harja.domain.tietyoilmoitus/sahkoposti "yit_pk2@example.org",
+    :harja.domain.tietyoilmoitus/sukunimi "Urakoitsija",
+    :harja.domain.tietyoilmoitus/etunimi "Uuno",
+    :harja.domain.tietyoilmoitus/matkapuhelin "43223123"},
+   :harja.domain.tietyoilmoitus/tilaaja-id 9,
+   :harja.domain.tietyoilmoitus/liikenteenohjaus
    "ohjataanVuorotellen",
-   :harja.domain.tietyoilmoitukset/kiertotien-mutkaisuus "loivatMutkat",
-   :harja.domain.tietyoilmoitukset/urakkatyyppi "hoito",
-   :harja.domain.tietyoilmoitukset/urakoitsijayhteyshenkilo-id 6,
-   :harja.domain.tietyoilmoitukset/viivastys-normaali-liikenteessa 15,
-   :harja.domain.tietyoilmoitukset/tyotyypit
-   [{:harja.domain.tietyoilmoitukset/tyyppi "Tienrakennus",
-     :harja.domain.tietyoilmoitukset/kuvaus "Rakennetaan tietä"}],
-   :harja.domain.tietyoilmoitukset/luoja 6,
-   :harja.domain.tietyoilmoitukset/urakoitsijan-nimi "YIT Rakennus Oy",
-   :harja.domain.tietyoilmoitukset/osoite
+   :harja.domain.tietyoilmoitus/kiertotien-mutkaisuus "loivatMutkat",
+   :harja.domain.tietyoilmoitus/urakkatyyppi "hoito",
+   :harja.domain.tietyoilmoitus/urakoitsijayhteyshenkilo-id 6,
+   :harja.domain.tietyoilmoitus/viivastys-normaali-liikenteessa 15,
+   :harja.domain.tietyoilmoitus/tyotyypit
+   [{:harja.domain.tietyoilmoitus/tyyppi "Tienrakennus",
+     :harja.domain.tietyoilmoitus/kuvaus "Rakennetaan tietä"}],
+   :harja.domain.tietyoilmoitus/luoja 6,
+   :harja.domain.tietyoilmoitus/urakoitsijan-nimi "YIT Rakennus Oy",
+   :harja.domain.tietyoilmoitus/osoite
    {:harja.domain.tierekisteri/aosa 1,
     :harja.domain.tierekisteri/geometria nil,
     :harja.domain.tierekisteri/losa 5,
     :harja.domain.tierekisteri/tie 20,
     :harja.domain.tierekisteri/let 1,
     :harja.domain.tierekisteri/aet 1},
-   :harja.domain.tietyoilmoitukset/kohteen-aikataulu {:kohteen-alku (pvm/->pvm-aika  "01.01.2017 01:01")
+   :harja.domain.tietyoilmoitus/kohteen-aikataulu {:kohteen-alku (pvm/->pvm-aika  "01.01.2017 01:01")
                                                       :paallystys-valmis (pvm/->pvm-aika  "07.01.2017 01:01")}
-   :harja.domain.tietyoilmoitukset/urakan-nimi "Oulun alueurakka 2014-2019",
-   :harja.domain.tietyoilmoitukset/ilmoittaja-id 6,
-   :harja.domain.tietyoilmoitukset/ajoneuvorajoitukset
-   {:harja.domain.tietyoilmoitukset/max-korkeus 4M,
-    :harja.domain.tietyoilmoitukset/max-paino 4000M,
-    :harja.domain.tietyoilmoitukset/max-pituus 10M,
-    :harja.domain.tietyoilmoitukset/max-leveys 3M},
-   :harja.domain.tietyoilmoitukset/id 1,
-   :harja.domain.tietyoilmoitukset/kiertotienpinnat
-   [{:harja.domain.tietyoilmoitukset/materiaali "murske",
-     :harja.domain.tietyoilmoitukset/matka 100}],
-   :harja.domain.tietyoilmoitukset/pysaytysten-alku
+   :harja.domain.tietyoilmoitus/urakan-nimi "Oulun alueurakka 2014-2019",
+   :harja.domain.tietyoilmoitus/ilmoittaja-id 6,
+   :harja.domain.tietyoilmoitus/ajoneuvorajoitukset
+   {:harja.domain.tietyoilmoitus/max-korkeus 4M,
+    :harja.domain.tietyoilmoitus/max-paino 4000M,
+    :harja.domain.tietyoilmoitus/max-pituus 10M,
+    :harja.domain.tietyoilmoitus/max-leveys 3M},
+   :harja.domain.tietyoilmoitus/id 1,
+   :harja.domain.tietyoilmoitus/kiertotienpinnat
+   [{:harja.domain.tietyoilmoitus/materiaali "murske",
+     :harja.domain.tietyoilmoitus/matka 100}],
+   :harja.domain.tietyoilmoitus/pysaytysten-alku
    (pvm/->pvm-aika  "01.01.2017 01:01")})
 
 (defn lomake-mock-komponentti [e! app]

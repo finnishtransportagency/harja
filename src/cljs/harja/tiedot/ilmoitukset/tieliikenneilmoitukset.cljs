@@ -50,6 +50,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa? false
+         :edellinen-valittu-ilmoitus-id nil
          :valittu-ilmoitus nil
          :uusi-kuittaus-auki? false
          :ensimmainen-haku-tehty? false
@@ -215,7 +216,9 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/IlmoituksenTiedot
   (process-event [{ilmoitus :ilmoitus} app]
-    (assoc app :valittu-ilmoitus ilmoitus :ilmoituksen-haku-kaynnissa? false))
+    (assoc app :valittu-ilmoitus ilmoitus
+               :edellinen-valittu-ilmoitus-id (:id ilmoitus)
+               :ilmoituksen-haku-kaynnissa? false))
 
   v/PoistaIlmoitusValinta
   (process-event [_ app]

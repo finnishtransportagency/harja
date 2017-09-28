@@ -3,7 +3,7 @@
             [harja.tyokalut.xml :as xml]
             [hiccup.core :refer [html]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.domain.tietyoilmoitukset :as tietyoilmoitus]
+            [harja.domain.tietyoilmoitus :as tietyoilmoitus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset]

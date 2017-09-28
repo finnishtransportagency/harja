@@ -2,7 +2,7 @@
   "Infopaneelin tuloksien spec määrittelyt"
   (:require [clojure.spec.alpha :as s]
             [harja.domain.tierekisteri :as tr]
-            [harja.domain.tietyoilmoitukset :as t]))
+            [harja.domain.tietyoilmoitus :as t]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 

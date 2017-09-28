@@ -475,15 +475,15 @@
                                   rivit)]
           (mapcat #(keep identity %)
                   (map-indexed
-                    (fn [i rivi]
-                      (if (otsikko? rivi)
-                        [^{:key (:teksti rivi)}
+                   (fn [i rivi]
+                     (if (otsikko? rivi)
+                       [^{:key (str i (:teksti rivi) "//" (tunniste rivi))}
                         [valiotsikko {:colspan colspan :teksti (:teksti rivi)
                                       :otsikko-record rivi
                                       :piilotetut-valiotsikot piilotetut-valiotsikot
                                       :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
-                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
+                       (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)]
                             [^{:key id}
                             [nayttorivi {:ohjaus ohjaus
@@ -498,6 +498,7 @@
                                                       (when (or rivi-klikattu mahdollista-rivin-valinta?)
                                                         "klikattava ")
                                                       (when (:korosta rivi) "korostettu-rivi ")
+                                                      (when (:korosta-hennosti rivi) "hennosti-korostettu-rivi ")
                                                       (when (:lihavoi rivi) "bold ")
                                                       (when (:yhteenveto rivi) "yhteenveto ")
                                                       (when rivin-luokka
