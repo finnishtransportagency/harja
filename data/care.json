@@ -1,4 +1,9 @@
 [
+  { 
+    "date": "2017-09-28"
+    "title": "Sillantarkastuslomakkeeseen lisätty offline-tuki"
+    "body": "Siltatarkastuslomakkeelle syötetty data tallentuu nyt selaimen muistiin. Jos siltatarkastuksen aikana joudut päivittämään sivun tai sammuttamaan selaimen, niin jo syöttämäsi data on valmiiksi lomakkeella, kun tulet lomakkeelle uudestaan. Huom. syötetty data tallentuu kone ja selain kohtaisesti. Eli jos käytät Safaria tabletilla ja palaat lomakkeelle käyttäen eri konetta tai eri selainta (vaikkapa Chromea), niin syöttämäsi data ei palaudu lomakkeelle."
+  },
   {
     "date": "2017-09-21",
     "title": "Maksuerä- ja kustannussuunnitelmalähetykset rikki Sampoon",
