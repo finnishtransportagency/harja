@@ -6,7 +6,7 @@
             [harja.tyokalut.functor :refer [fmap]]
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.domain.hoitoluokat :as hoitoluokat]))
+            [harja.domain.hoitoluokat :as hoitoluokat-domain]))
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpideajat.sql")
 
@@ -34,16 +34,16 @@
                  (assoc m tehtava v)
                  m)) {} toimenpideajat))
 
-(defn suorita [db user {:keys [alkupvm loppupvm hoitoluokan-numero-set urakka-id
+(defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
                                hallintayksikko-id urakoittain? urakkatyyppi] :as parametrit}]
-  (let [hoitoluokan-numero-set (or hoitoluokan-numero-set
-                                   ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
-                                   (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
+  (let [hoitoluokat (or hoitoluokat
+                        ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
+                        (into #{} (map :numero) hoitoluokat-domain/talvihoitoluokat))
         parametrit {:urakka          urakka-id
                     :hallintayksikko hallintayksikko-id
                     :alkupvm         alkupvm
                     :loppupvm        loppupvm
-                    :hoitoluokat     hoitoluokan-numero-set
+                    :hoitoluokat     hoitoluokat
                     :urakkatyyppi    (name urakkatyyppi)}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
         tehtava-leveys 12
@@ -66,7 +66,7 @@
                       (some (comp nil? :luokka) lkm-tiedot))
                     toimenpideajat)
                   talvihoitoluokat (cond->>
-                                     (hoitoluokat/haluttujen-hoitoluokkien-nimet-ja-numerot hoitoluokan-numero-set)
+                                     (hoitoluokat-domain/haluttujen-hoitoluokkien-nimet-ja-numerot hoitoluokat)
 
                                      (not talvihoitoluokattomia-toimenpiteita?)
                                      (remove (comp nil? :numero)))
