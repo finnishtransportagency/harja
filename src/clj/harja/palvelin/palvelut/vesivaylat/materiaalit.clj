@@ -9,7 +9,8 @@
             [harja.id :as id]
             [harja.kyselyt.vesivaylat.materiaalit :as m-q]
             [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]))
+            [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
   [db urakka-id materiaali-id]
@@ -31,9 +32,21 @@
 (defn- kirjaa-materiaali [db user materiaali fim email]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id materiaali))
-  (specql/insert! db ::m/materiaali
-                  (muok/lisaa-muokkaustiedot materiaali ::m/id user))
-  (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
+  (jdbc/with-db-transaction [db db]
+    (specql/insert! db ::m/materiaali
+                    (muok/lisaa-muokkaustiedot materiaali ::m/id user))
+    (let [materiaalilistaus (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id}))
+          muokattu-materiaali (some #(when (and (= (::m/urakka-id %) (::m/urakka-id materiaali))
+                                                (= (::m/nimi %) (::m/nimi materiaali)))
+                                       %)
+                                    materiaalilistaus)]
+      (log/debug "MUOKATTU MATERIAALI: " muokattu-materiaali)
+      (when (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali))
+        (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
+              urakan-tiedot (first (m-q/urakan-tiedot-sahkopostin-lahetysta-varten db parametrit))
+              urakan-ja-materiaalin-tiedot (merge urakan-tiedot (select-keys muokattu-materiaali [::m/halytysraja ::m/maara-nyt]))]
+          (viestinta/laheta-sposti-materiaalin-halyraja fim email urakan-ja-materiaalin-tiedot)))
+      materiaalilistaus)))
 
 (defn- poista-materiaalikirjaus [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
