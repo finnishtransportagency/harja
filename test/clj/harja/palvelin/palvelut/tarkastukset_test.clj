@@ -178,7 +178,7 @@
         (is (= (:havainnot tarkastus-jalkeen) (:havainnot tarkastus-ennen)))
         (is (true? (:nayta_urakoitsijalle tarkastus-jalkeen)))))))
 
-(deftest nayta-tarkastus-urakoitsijalle-ei-toimi-ilman-oikeuksia
+(deftest nayta-tarkastus-urakoitsijalle-ei-toimi-vaaraan-urakkaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         eri-urakan-tarkastus (first (q-map "SELECT id FROM tarkastus WHERE urakka != " urakka-id ";"))]
     (is (thrown? SecurityException
@@ -187,3 +187,13 @@
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
                                :tarkastus-id (:id eri-urakan-tarkastus)})))))
+
+(deftest nayta-tarkastus-urakoitsijalle-ei-toimi-ilman-oikeuksia
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastus (first (q-map "SELECT id FROM tarkastus WHERE urakka = " urakka-id ";"))]
+    (is (thrown? Exception
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :nayta-tarkastus-urakoitsijalle
+                                 +kayttaja-tero+
+                                 {:urakka-id urakka-id
+                                  :tarkastus-id (:id tarkastus)})))))
