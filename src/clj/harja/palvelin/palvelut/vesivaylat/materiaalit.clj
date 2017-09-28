@@ -8,7 +8,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :as id]
             [harja.kyselyt.vesivaylat.materiaalit :as m-q]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
   [db urakka-id materiaali-id]
@@ -27,7 +28,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id params))
   (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
 
-(defn- kirjaa-materiaali [db user materiaali]
+(defn- kirjaa-materiaali [db user materiaali fim email]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id materiaali))
   (specql/insert! db ::m/materiaali
@@ -65,8 +66,10 @@
 
 (defrecord Materiaalit []
   component/Lifecycle
-  (start [{db :db
-           http :http-palvelin :as this}]
+  (start [{db    :db
+           http  :http-palvelin
+           fim   :fim
+           email :sonja-sahkoposti :as this}]
     (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalilistaus
                                     (fn [user haku]
                                       (hae-materiaalilistaus db user haku))
@@ -74,7 +77,7 @@
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     (http-palvelin/julkaise-palvelu http :kirjaa-vesivayla-materiaali
                                     (fn [user materiaali]
-                                      (kirjaa-materiaali db user materiaali))
+                                      (kirjaa-materiaali db user materiaali fim email))
                                     {:kysely-spec ::m/materiaalikirjaus
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     (http-palvelin/julkaise-palvelu http :poista-materiaalikirjaus
