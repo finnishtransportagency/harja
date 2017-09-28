@@ -25,3 +25,7 @@
              m))
          elementti))
      mappi)))
+
+(defn poista-ei-namespacetetut-avaimet [mappi]
+  (let [poistettavat-avaimet (filter (comp not namespace) (keys mappi))]
+    (apply dissoc mappi poistettavat-avaimet)))

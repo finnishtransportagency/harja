@@ -12,7 +12,7 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [taoensso.timbre :as log]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch]]

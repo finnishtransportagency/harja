@@ -1,4 +1,4 @@
-(ns harja.domain.tietyoilmoitukset
+(ns harja.domain.tietyoilmoitus
   (:require [clojure.string :as str]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [clojure.spec.alpha :as s]
