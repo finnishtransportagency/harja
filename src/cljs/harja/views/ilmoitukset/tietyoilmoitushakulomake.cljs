@@ -14,7 +14,7 @@
                                       kuvaus-ja-avainarvopareja]]
             [harja.ui.valinnat :as valinnat]
             [reagent.core :as r]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.muokkaustiedot :as m]
             [clojure.string :as str]
             [harja.ui.napit :as napit]
@@ -227,11 +227,11 @@
                          (map (juxt ::t/id (fn [rivi] [tietyoilmoituksen-vetolaatikko e! app rivi])))
                          haetut-ilmoitukset)}
     (into (ilmoitustaulukon-kentat)
-          [{:otsikko "Vaiheita"
+          [{:otsikko "Vai\u00ADhei\u00ADta"
             :nimi :vaiheita
             :hae #(count (::t/tyovaiheet %))
             :leveys 1}
-           {:otsikko "Lähetys Tieliikennekeskukseen"
+           {:otsikko "Lähetys Tie\u00ADlii\u00ADken\u00ADne\u00ADkes\u00ADkuk\u00ADseen"
             :nimi :lahetys
             :tyyppi :komponentti
             :komponentti #(case (::t/tila %)

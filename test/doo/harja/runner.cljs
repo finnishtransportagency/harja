@@ -47,6 +47,13 @@
             [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test]
             [harja.views.vesivaylat.urakka.materiaalit-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu-test]
+            [harja.tiedot.kanavat.hallinta.kohteiden-luonti-test]
+            [harja.tiedot.kanavat.hallinta.kohteiden-liittaminen-test]
+            [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-test]
+            [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset-test]
+            [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test]
+            [harja.tiedot.kanavat.urakka.liikenne-test]
+            [harja.tiedot.kanavat.urakka.laskutus-test]
             ))
 
 (doo-tests 'harja.pvm-test
@@ -96,5 +103,12 @@
            'harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
            'harja.views.vesivaylat.urakka.materiaalit-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu-test
+           'harja.tiedot.kanavat.hallinta.kohteiden-luonti-test
+           'harja.tiedot.kanavat.hallinta.kohteiden-liittaminen-test
+           'harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-test
+           'harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset-test
+           'harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
+           'harja.tiedot.kanavat.urakka.liikenne-test
+           'harja.tiedot.kanavat.urakka.laskutus-test
            ;; uusi testi tähän
            )

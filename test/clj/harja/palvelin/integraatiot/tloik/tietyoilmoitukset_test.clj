@@ -17,7 +17,7 @@
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-            [harja.domain.tietyoilmoitukset :as tietyilmoitukset-d]
+            [harja.domain.tietyoilmoitus :as tietyilmoitukset-d]
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset-q]
             [clojure.string :as str]))
 

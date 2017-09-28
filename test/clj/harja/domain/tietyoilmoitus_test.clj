@@ -1,7 +1,7 @@
-(ns harja.domain.tietyoilmoitukset-test
+(ns harja.domain.tietyoilmoitus-test
   (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
-            [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]
+            [harja.domain.tietyoilmoitus :as tietyoilmoitukset]
             [harja.domain.muokkaustiedot :as muokkaustiedot]))
 
 (def urakoitsijakayttaja {:organisaatio {:tyyppi "urakoitsija" :id 1} :id 1})
