@@ -29,7 +29,7 @@
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
        "L%s = lopetettu\n"
-       "T%s = lopetettu toimenpiteittäin\n"
+       "T%s = lopetettu toimenpitein\n"
        "M%s = muutettu\n"
        "R%s = vastattu\n"
        "U%s = väärä urakka\n\n"
