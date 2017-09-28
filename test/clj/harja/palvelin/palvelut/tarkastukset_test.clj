@@ -97,7 +97,6 @@
             ;; muokatut kentät tallentuivat
             (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainnot])))
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
-; FIXME Siivoa tallennettu data
 
 (deftest hae-urakan-tarkastukset
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
