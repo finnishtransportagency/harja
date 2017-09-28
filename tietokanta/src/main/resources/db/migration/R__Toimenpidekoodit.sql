@@ -2808,6 +2808,19 @@ UPDATE toimenpidekoodi SET suoritettavatehtava = 'kuumennus' :: suoritettavateht
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'sekoitus tai stabilointi' :: suoritettavatehtava WHERE nimi = 'Sekoitus tai stabilointi';
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'turvalaite' :: suoritettavatehtava WHERE nimi = 'Turvalaite';
 
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'harjaus' :: suoritettavatehtava WHERE nimi = 'Harjaus ja roskien poisto';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'harjaus' :: suoritettavatehtava WHERE nimi = 'Puhtaanapito / Jätehuolto, harjaus ja roskien poisto';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'koneellinen niitto' :: suoritettavatehtava WHERE nimi ILIKE '%niitto%' AND suoritettavatehtava IS NULL;
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'koneellinen vesakonraivaus' :: suoritettavatehtava WHERE nimi ILIKE '%vesakon%' AND suoritettavatehtava IS NULL;
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'linjahiekoitus' :: suoritettavatehtava WHERE nimi = 'Hiekoitus';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'paallysteiden paikkaus' :: suoritettavatehtava WHERE nimi ILIKE '%päällysteiden paikkaus%' AND suoritettavatehtava IS NULL;
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'siltojen puhdistus' :: suoritettavatehtava WHERE nimi = 'Siltojen ja laitureiden puhdistus';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'sorastus' :: suoritettavatehtava WHERE nimi ILIKE '%sorastus%' AND suoritettavatehtava IS NULL;
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'sorateiden tasaus' :: suoritettavatehtava WHERE nimi = 'Sorateiden tasaus, paikkaus sekä kelirikon hoito (ilman mater. lisäystä) ja routaheittojen tasaus (ilman mater. lisäystä)';
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'tiemerkinta' :: suoritettavatehtava WHERE nimi ILIKE '%tiemerkint%' AND suoritettavatehtava IS NULL;
+UPDATE toimenpidekoodi SET suoritettavatehtava = 'turvalaite' :: suoritettavatehtava WHERE nimi = 'Turvalaite - Ei yksilöity';
+
+
 
 -- Luodaan 'Ei yksilöity' tehtävä kaikille 3. tason 'Laaja toimenpide' -toimenpiteiden alle HAR-2465
 -- params (p_nimi        VARCHAR(255),
