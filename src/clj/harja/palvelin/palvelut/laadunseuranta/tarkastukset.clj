@@ -136,8 +136,8 @@
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
 
 (defn nayta-tarkastus-urakoitsijalle [db user urakka-id tarkastus-id]
-  ;; TODO Vaati tarkastus kuuluu urakkaan
   ;; TODO Oma oikeustarkistus
+  (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
   (jdbc/with-db-transaction [db db]
     (tarkastukset/nayta-tarkastus-urakoitsijalle
       db {:id tarkastus-id}))
