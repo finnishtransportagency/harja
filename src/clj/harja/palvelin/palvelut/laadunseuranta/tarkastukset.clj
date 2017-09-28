@@ -140,7 +140,8 @@
   ;; TODO Oma oikeustarkistus
   (jdbc/with-db-transaction [db db]
     (tarkastukset/nayta-tarkastus-urakoitsijalle
-      db {:id tarkastus-id})))
+      db {:id tarkastus-id}))
+  (hae-tarkastus db user urakka-id tarkastus-id))
 
 (defn- tarkastusreittien-parametrit
   [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
