@@ -256,7 +256,6 @@
 
       :nayta-tarkastus-urakoitsijalle
       (fn [user {:keys [urakka-id tarkastus-id]}]
-        ;; TODO TESTI
         (nayta-tarkastus-urakoitsijalle db user urakka-id tarkastus-id))
 
       :hae-tarkastus
