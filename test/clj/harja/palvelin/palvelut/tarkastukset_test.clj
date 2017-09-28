@@ -39,7 +39,7 @@
    :havainnot "kuvaus tähän"
    :laadunalitus true})
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tallenna-ja-paivita-soratietarkastus
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
@@ -155,3 +155,24 @@
                                                            WHERE havainnot = 'Tämä tarkastus näkyy myös urakoitsijalle';"))})]
     (is (not (empty? vastaus)))
     (is (= (:havainnot vastaus) "Tämä tarkastus näkyy myös urakoitsijalle"))))
+
+(deftest nayta-tarkastus-urakoitsijalle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopivat-tarkastukset (q-map "SELECT id, havainnot FROM tarkastus
+                                     WHERE luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE)
+                                     AND nayta_urakoitsijalle IS FALSE
+                                     AND urakka = " urakka-id)]
+
+    (is (> (count sopivat-tarkastukset) 1))
+
+    (doseq [tarkastus sopivat-tarkastukset]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :nayta-tarkastus-urakoitsijalle
+                                    +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :tarkastus-id (:id tarkastus)})
+            uudet-tiedot-kannassa (first (q-map "SELECT nayta_urakoitsijalle, havainnot FROM tarkastus WHERE id = " (:id tarkastus) ";"))]
+
+
+        (is (= (:havainnot uudet-tiedot-kannassa) (:havainnot tarkastus)))
+        (is (true? (:nayta_urakoitsijalle uudet-tiedot-kannassa)))))))
