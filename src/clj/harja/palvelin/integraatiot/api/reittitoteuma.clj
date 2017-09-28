@@ -204,7 +204,7 @@ maksimi-linnuntien-etaisyys 200)
     (log/debug "Poistetaan reittitoteumat id:lla:" ulkoiset-idt "urakalta id:" urakka-id " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä")
     (tarkista-pyynto db urakka-id kirjaaja data)
-    (api-toteuma/poista-toteumat db kirjaaja ulkoiset-idt)))
+    (api-toteuma/poista-toteumat db kirjaaja ulkoiset-idt urakka-id)))
 
 (defrecord Reittitoteuma []
   component/Lifecycle

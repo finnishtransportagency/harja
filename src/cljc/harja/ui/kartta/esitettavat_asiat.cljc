@@ -10,7 +10,7 @@
             [harja.ui.kartta.asioiden-ulkoasu :as ulkoasu]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tr]
-            [harja.domain.tietyoilmoitukset :as tietyoilmoitukset]
+            [harja.domain.tietyoilmoitus :as tietyoilmoitukset]
             [harja.domain.vesivaylat.turvalaite :as tu]))
 
 

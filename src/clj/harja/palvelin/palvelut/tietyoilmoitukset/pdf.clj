@@ -4,7 +4,7 @@
   (:require [harja.tyokalut.xsl-fo :as xsl-fo]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.muokkaustiedot :as m]))
 
