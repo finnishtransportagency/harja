@@ -139,7 +139,7 @@
   ;; TODO Oma oikeustarkistus
   (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
   (jdbc/with-db-transaction [db db]
-    (tarkastukset/nayta-tarkastus-urakoitsijalle
+    (tarkastukset/nayta-tarkastus-urakoitsijalle<!
       db {:id tarkastus-id}))
   (hae-tarkastus db user urakka-id tarkastus-id))
 

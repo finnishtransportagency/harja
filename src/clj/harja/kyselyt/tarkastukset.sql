@@ -816,7 +816,7 @@ SELECT id, sijainti, havainnot
   FROM tarkastusreitti
  WHERE tarkastusajo = :tarkastusajoid;
 
---name: nayta-tarkastus-urakoitsijalle
+--name: nayta-tarkastus-urakoitsijalle<!
 UPDATE tarkastus SET nayta_urakoitsijalle = TRUE
 WHERE id = :id;
 
