@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tyotunnit": {
+      "id": "urn:harja/tyotunnit",
+      "type": "array",
+      "maxItems": 4096,
+      "required": true,
+      "items": {
+        "id": "urn:harja/tyotunnit/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "vuosikolmannes": {
+            "id": "urn:harja/tyotunnit/0/vuosikolmannes",
+            "type": "object",
+            "required": true,
+            "properties": {
+              "vuosi": {
+                "id": "urn:harja/tyotunnit/0/vuosikolmannes/vuosi",
+                "type": "number",
+                "required": true
+              },
+              "kolmannes": {
+                "id": "urn:harja/tyotunnit/0/vuosikolmannes/kolmannes",
+                "type": "number",
+                "minimum": 1,
+                "maximum": 3,
+                "required": true
+              },
+              "tunnit": {
+                "id": "urn:harja/tyotunnit/0/vuosikolmannes/tunnit",
+                "type": "number",
+                "required": true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
