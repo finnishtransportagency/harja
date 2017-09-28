@@ -90,8 +90,7 @@
         :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
-  (log/debug "TALLENTELE: " (pr-str tarkastus))
-  (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus)
+  (vaadi-tarkastus-kuuluu-urakkaan db urakka-id (:id tarkastus))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
@@ -128,7 +127,6 @@
             (:soratiemittaus tarkastus)))
 
         (when-let [uusi-liite (:uusi-liite tarkastus)]
-          (log/info "UUSI LIITE: " uusi-liite)
           (tarkastukset/luo-liite<! c id (:id uusi-liite)))
 
         (hae-tarkastus c user urakka-id id)))
@@ -136,7 +134,7 @@
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
 
 (defn nayta-tarkastus-urakoitsijalle [db user urakka-id tarkastus-id]
-  ;; TODO Oma oikeustarkistus
+  (oikeudet/vaadi-oikeus "aseta-näkyviin-urakoitsijalle" oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
   (jdbc/with-db-transaction [db db]
     (tarkastukset/nayta-tarkastus-urakoitsijalle<!
@@ -202,8 +200,8 @@
               :toleranssi toleranssi)))))
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
-  ;; TODO Vaati tarkastus kuuluu urakkaan
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
+  (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
     (jdbc/with-db-transaction [db db]
