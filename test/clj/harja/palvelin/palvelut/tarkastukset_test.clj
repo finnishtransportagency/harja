@@ -19,8 +19,8 @@
                                        (karttakuvat/luo-karttakuvat)
                                        [:http-palvelin :db])
                         :tarkastukset (component/using
-                                          (t/->Tarkastukset)
-                                          [:http-palvelin :db :karttakuvat])))))
+                                        (t/->Tarkastukset)
+                                        [:http-palvelin :db :karttakuvat])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -177,3 +177,13 @@
         (is (false? (:nayta_urakoitsijalle tarkastus-ennen)))
         (is (= (:havainnot tarkastus-jalkeen) (:havainnot tarkastus-ennen)))
         (is (true? (:nayta_urakoitsijalle tarkastus-jalkeen)))))))
+
+(deftest nayta-tarkastus-urakoitsijalle-ei-toimi-ilman-oikeuksia
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        eri-urakan-tarkastus (first (q-map "SELECT id FROM tarkastus WHERE urakka != " urakka-id ";"))]
+    (is (thrown? SecurityException
+              (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :nayta-tarkastus-urakoitsijalle
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :tarkastus-id (:id eri-urakan-tarkastus)})))))
