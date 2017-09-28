@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.tloik.tietyoilmoitukset
   (:require [taoensso.timbre :as log]
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset]
-            [harja.domain.tietyoilmoitukset :as tietyoilmoitus-d]
+            [harja.domain.tietyoilmoitus :as tietyoilmoitus-d]
             [harja.domain.tierekisteri :as tierekisteri-d]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [harja.palvelin.integraatiot.tloik.sanomat.tietyoilmoitussanoma :as tietyoilmoitussanoma]

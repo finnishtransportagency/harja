@@ -12,7 +12,7 @@
             [harja.geo :as geo]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.muokkaustiedot :as m]
             [specql.core :refer [fetch upsert!]]
             [clojure.spec.alpha :as s]

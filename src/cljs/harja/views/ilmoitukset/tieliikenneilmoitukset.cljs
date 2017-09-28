@@ -52,20 +52,21 @@
                                  selitteet))]
             (vec (sort itemit)))))))
 
-(defn pollauksen-merkki []
-  [yleiset/vihje "Ilmoituksia päivitetään automaattisesti" "inline-block"])
-
-(defn yhdeydenottopyynnot-lihavoitu []
-  [yleiset/vihje "Yhdeydenottopyynnöt lihavoitu" "inline-block bold"])
-
-(defn virkaapupyynnot-korostettu []
-  [:span.selite-virkaapu [ikonit/livicon-warning-sign] "Virka-apupyynnöt korostettu"])
+(defn vihjeet []
+  [yleiset/vihje-elementti
+   [:span
+    [:span "Ilmoituksia päivitetään automaattisesti. Yhteydenottopyynnöt "]
+    [:span.bold "lihavoidaan"]
+    [:span ", edellinen valinta korostetaan "]
+    [:span.vihje-hento-korostus "sinisellä"]
+    [:span ", virka-apupyynnöt "]
+    [:span.selite-virkaapu "punaisella"]
+    [:span " selitelaatikossa."]]])
 
 (defn ilmoituksen-tiedot [e! ilmoitus]
   [:div
    [:span
     [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta))]
-    (pollauksen-merkki)
     [it/ilmoitus e! ilmoitus]]])
 
 (defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus} napin-kuittaustyypi kuitattu? oikeus?]
@@ -214,9 +215,7 @@
                           :teksti "Äänimerkki uusista ilmoituksista"}
        tiedot/aanimerkki-uusista-ilmoituksista?]
 
-      [pollauksen-merkki]
-      [yhdeydenottopyynnot-lihavoitu]
-      [virkaapupyynnot-korostettu]
+      [vihjeet]
 
       (when-not kuittaa-monta-nyt
         [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
@@ -279,9 +278,11 @@
          :leveys 8}
 
         {:otsikko "Tila" :nimi :tila :leveys 5 :hae #(tilan-selite (:tila %))}]
-       (mapv #(if (:yhteydenottopyynto %)
-                (assoc % :lihavoi true)
-                %)
+       (mapv #(merge %
+                     (when (:yhteydenottopyynto %)
+                       {:lihavoi true})
+                     (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
+                       {:korosta-hennosti true}))
              haetut-ilmoitukset)]]]))
 
 (defn- ilmoitukset* [e! ilmoitukset]

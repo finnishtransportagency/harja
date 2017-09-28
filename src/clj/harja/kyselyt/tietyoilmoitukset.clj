@@ -1,6 +1,6 @@
 (ns harja.kyselyt.tietyoilmoitukset
   (:require [jeesql.core :refer [defqueries]]
-            [harja.domain.tietyoilmoitukset :as t]
+            [harja.domain.tietyoilmoitus :as t]
             [harja.domain.tierekisteri :as tr]
             [specql.core :refer [fetch]]
             [harja.kyselyt.specql-db :refer [define-tables]]

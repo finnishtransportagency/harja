@@ -25,10 +25,13 @@
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.turvalaitteet :as turvalaitteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
+            [harja.views.kanavat.urakka.liikenne :as liikenne]
+            [harja.views.kanavat.urakka.laskutus :as laskutus-kanavat]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.urakka :as u-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.urakka :as urakka])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -49,6 +52,8 @@
     :vv-materiaalit (and
                       (oikeudet/urakat-vesivayla-materiaalit id)
                       (u-domain/vesivaylaurakkatyyppi? tyyppi))
+    :liikenne (and (oikeudet/urakat-kanavat-liikenne id)
+                   (u-domain/kanavaurakka? urakka))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
@@ -69,7 +74,8 @@
                       (and (oikeudet/urakat-laadunseuranta id)
                            (u-domain/vesivaylaurakkatyyppi? tyyppi)
                            (istunto/ominaisuus-kaytossa? :vesivayla)))
-    :valitavoitteet (oikeudet/urakat-valitavoitteet id)
+    :valitavoitteet (and (oikeudet/urakat-valitavoitteet id)
+                         (not (urakka/kanavaurakka? urakka)))
     :turvallisuuspoikkeamat (oikeudet/urakat-turvallisuus id)
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
@@ -77,7 +83,11 @@
                    (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
     :laskutus-vesivaylat (and (oikeudet/urakat-laskutus-vesivaylalaskutusyhteenveto id)
                               (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                              (not (u-domain/kanavaurakka? urakka))
                               (istunto/ominaisuus-kaytossa? :vesivayla))
+    :laskutus-kanavat (and (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
+                           (u-domain/kanavaurakka? urakka)
+                           (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))
 
@@ -128,6 +138,12 @@
        (when (valilehti-mahdollinen? :toimenpiteet ur)
          ^{:key "toimenpiteet"}
          [toimenpiteet/toimenpiteet ur])
+
+       "Liikenne"
+       :liikenne
+       (when (valilehti-mahdollinen? :liikenne ur)
+         ^{:key "liikenne"}
+         [liikenne/liikenne])
 
        "Materiaalit"
        :vv-materiaalit
@@ -195,6 +211,12 @@
        (when (valilehti-mahdollinen? :laskutus-vesivaylat ur)
          ^{:key "laskutus"}
          [laskutus-vesivaylat/laskutus])
+
+       "Laskutus"
+       :laskutus-kanavat
+       (when (valilehti-mahdollinen? :laskutus-kanavat ur)
+         ^{:key "laskutus"}
+         [laskutus-kanavat/laskutus])
 
        "Kustannukset"
        :tiemerkinnan-kustannukset

@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.validointi.toteumat :as validointi]
-            [harja.domain.reittipiste :as rp])
+            [harja.domain.reittipiste :as rp]
+            [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-toteuman-kaikki-sopimus-idt [toteumatyyppi-yksikko toteumatyyppi-monikko data]
@@ -49,15 +50,22 @@
             :id (get-in toteuma [:tunniste :id])
             :urakka urakka-id}))))
 
-(defn poista-toteumat [db kirjaaja ulkoiset-idt]
-  (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt)
-  (let [kayttaja-id (:id kirjaaja)
-        poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt)]
-    (log/debug "Poistettujen maara:" poistettujen-maara)
-    (let [ilmoitukset (if (pos? poistettujen-maara)
-                        (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
-                        "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
-      (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset}))))
+(defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
+  (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (let [kayttaja-id (:id kirjaaja)
+          poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt)
+          sopimus-idt (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
+      (log/debug "Poistettujen määrä:" poistettujen-maara)
+      (when (and (> poistettujen-maara 0)
+                 (> (count sopimus-idt) 0))
+        (doseq [sopimus-id sopimus-idt]
+          (log/debug "paivita-koko-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id)
+          (materiaalit/paivita-koko-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id})))
+      (let [ilmoitukset (if (pos? poistettujen-maara)
+                          (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
+                          "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista toteumista.")]
+        (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
 
 (defn luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
   (log/debug "Luodaan uusi toteuma.")

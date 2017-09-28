@@ -8,7 +8,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
             [taoensso.timbre :as log]
-            [harja.domain.hoitoluokat :as hoitoluokat]))
+            [harja.domain.hoitoluokat :as hoitoluokat-domain]))
 
 (defqueries "harja/palvelin/raportointi/raportit/toimenpidekilometrit.sql")
 
@@ -48,8 +48,8 @@
                         :default :koko-maa)
         hoitoluokat (or hoitoluokat
                         ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
-                        (into #{} (map :numero) hoitoluokat/talvihoitoluokat))
-        talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat/talvihoitoluokat)
+                        (into #{} (map :numero) hoitoluokat-domain/talvihoitoluokat))
+        talvihoitoluokat (filter #(hoitoluokat (:numero %)) hoitoluokat-domain/talvihoitoluokat)
         naytettavat-alueet (yleinen/naytettavat-alueet db konteksti
                                                        {:urakka urakka-id
                                                         :hallintayksikko hallintayksikko-id
