@@ -484,8 +484,6 @@
                                         lisaoikeudet))]
     lisaoikeus-urakkaan?))
 
-
-
 (defn hae-urakat [db user tiedot]
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
                         oikeudet/tilannekuva-nykytilanne
