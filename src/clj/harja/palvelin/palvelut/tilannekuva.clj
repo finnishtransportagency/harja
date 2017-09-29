@@ -475,14 +475,34 @@
   samalla ELY-alueella sijaitsevan urakan lisäoikeudella."
   [db urakka-id lisaoikeudet]
   (let [hallintayksikko-id (:hallintayksikko-id (first (urakat-q/urakan-hallintayksikko
-                                                                db
-                                                                {:id urakka-id})))
+                                                         db
+                                                         {:id urakka-id})))
         lisaoikeus-urakkaan? (boolean (some
                                         (fn [lisaoikeus]
                                           (and (:oikeus-urakan-muihin-ely-urakoihin? lisaoikeus)
                                                (= (:hallintayksikko-id lisaoikeus) hallintayksikko-id)))
                                         lisaoikeudet))]
     lisaoikeus-urakkaan?))
+
+(defn- yhdista-kayttajan-urakat-alueittain
+  "Yhdistää käyttäjän urakat alueittain niin, että sama tyyppi ja alue sekä sen kaikki
+   urakat esiintyy vectorissa vain kerran."
+  [kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b]
+  (let [kayttajan-urakat-alueittain-a (map #(assoc % :urakat (set (:urakat %))) kayttajan-urakat-alueittain-a)
+        kayttajan-urakat-alueittain-b (map #(assoc % :urakat (set (:urakat %))) kayttajan-urakat-alueittain-b)
+        kayttajan-kaikki-urakat-alueittain (concat kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b)]
+    (vec (distinct
+           (map
+             (fn [alue-ja-urakat]
+               (let [vastinpari (first (filter
+                                         #(and (= (:hallintayksikko %)
+                                                  (:hallintayksikko alue-ja-urakat))
+                                               (= (:tyyppi %)
+                                                  (:tyyppi alue-ja-urakat))
+                                               (not= % alue-ja-urakat))
+                                         kayttajan-kaikki-urakat-alueittain))]
+                 (assoc alue-ja-urakat :urakat (apply conj (:urakat alue-ja-urakat) (:urakat vastinpari)))))
+             kayttajan-kaikki-urakat-alueittain)))))
 
 (defn hae-urakat [db user tiedot]
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
@@ -502,13 +522,15 @@
         lisaoikeudet (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
                        user oikeus-nakyma
                        kayttajan-urakat-alueittain)
-        lisaoikeuksien-urakat (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-                                db user (fn [urakka-id kayttaja]
-                                          (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
-                                nil (:urakoitsija tiedot) nil
-                                nil (:alku tiedot) (:loppu tiedot))
-        ;; TODO Yhdistä!
-        lopulliset-kayttajan-urakat-alueittain kayttajan-urakat-alueittain]
+        lisaoikeuksien-urakat-alueittain (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
+                                           db user (fn [urakka-id kayttaja]
+                                                     (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
+                                           nil (:urakoitsija tiedot) nil
+                                           nil (:alku tiedot) (:loppu tiedot))
+        lopulliset-kayttajan-urakat-alueittain (yhdista-kayttajan-urakat-alueittain
+                                                 kayttajan-urakat-alueittain
+                                                 lisaoikeuksien-urakat-alueittain)]
+    (log/debug "LOPULLINEN SETTI: " (pr-str lopulliset-kayttajan-urakat-alueittain))
     lopulliset-kayttajan-urakat-alueittain))
 
 (defn hae-tilannekuvaan
