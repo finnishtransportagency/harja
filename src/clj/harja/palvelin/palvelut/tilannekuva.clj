@@ -451,7 +451,10 @@
       (tulosta-virhe! (name osio) e)
       nil)))
 
-(defn maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin [user oikeus-nakyma omat-urakka-id]
+(defn maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
+  "Palauttaa mapin, joka kertoo, mihin käyttäjän omiin urakoihin käyttäjällä on erikoisoikeus
+   oman-urakan-ely"
+  [user oikeus-nakyma omat-urakka-id]
   (mapv (fn [urakka-id]
           (-> {:oma-urakka-id urakka-id
                :oikeus-urakan-muihin-ely-urakoihin?
@@ -465,6 +468,10 @@
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
                         oikeudet/tilannekuva-nykytilanne
                         oikeudet/tilannekuva-historia)
+        ;; Käyttäjällä voi olla omaan urakkaan erikoisoikeus oman-urakan-ely, mikä tarkoittaa,
+        ;; että käyttäjä saa nähdä oman urakan ELY-alueen kaikkien urakoiden asiat.
+        ;; Jos tällaisia erikoisoikeuksia omiin urakoihin löytyy, niin haetaan ko. urakoiden
+        ;; muut ELY-urakat ja liitetään mukaan käyttäjän näkemiin urakoihin.
         kayttajan-urakat-alueittain (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
                                       db user (fn [urakka-id kayttaja]
                                                 (oikeudet/voi-lukea? oikeus-nakyma
