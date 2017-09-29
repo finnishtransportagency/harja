@@ -512,7 +512,6 @@
         lopulliset-kayttajan-urakat-alueittain (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
                                                  kayttajan-urakat-alueittain
                                                  lisaoikeuksien-urakat-alueittain)]
-    (log/debug "LOPULLINEN SETTI: " (pr-str lopulliset-kayttajan-urakat-alueittain))
     lopulliset-kayttajan-urakat-alueittain))
 
 (defn hae-tilannekuvaan
@@ -524,7 +523,6 @@
                                                 oikeudet/tilannekuva-nykytilanne
                                                 oikeudet/tilannekuva-historia) % user)
                         (:urakat tiedot))]
-     ;(log/debug "Haetaan tilannekuvaan asioita urakoista " (pr-str urakat))
      (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
        (into {}
              (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
