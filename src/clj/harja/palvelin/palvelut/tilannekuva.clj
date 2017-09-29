@@ -490,10 +490,6 @@
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
                         oikeudet/tilannekuva-nykytilanne
                         oikeudet/tilannekuva-historia)
-        ;; Käyttäjällä voi olla omaan urakkaan erikoisoikeus oman-urakan-ely, mikä tarkoittaa,
-        ;; että käyttäjä saa nähdä oman urakan ELY-alueen kaikkien urakoiden asiat.
-        ;; Jos tällaisia erikoisoikeuksia omiin urakoihin löytyy, niin haetaan ko. urakoiden
-        ;; muut ELY-urakat ja liitetään mukaan käyttäjän näkemiin urakoihin.
         kayttajan-urakat-alueittain (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
                                       db user (fn [urakka-id kayttaja]
                                                 (oikeudet/voi-lukea? oikeus-nakyma
@@ -501,6 +497,10 @@
                                                                      kayttaja))
                                       nil (:urakoitsija tiedot) nil
                                       nil (:alku tiedot) (:loppu tiedot))
+        ;; Käyttäjällä voi olla omaan urakkaan erikoisoikeus oman-urakan-ely, mikä tarkoittaa,
+        ;; että käyttäjä saa nähdä oman urakan ELY-alueen kaikkien urakoiden asiat.
+        ;; Jos tällaisia erikoisoikeuksia omiin urakoihin löytyy, niin haetaan ko. urakoiden
+        ;; muut ELY-urakat ja liitetään mukaan käyttäjän näkemiin urakoihin.
         lisaoikeudet (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
                        user oikeus-nakyma
                        kayttajan-urakat-alueittain)
