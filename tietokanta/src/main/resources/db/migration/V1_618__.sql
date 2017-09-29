@@ -5,5 +5,5 @@ CREATE MATERIALIZED VIEW sillat_alueurakoittain AS
     s.id AS silta
   FROM urakka u
     JOIN silta s
-      ON ST_CONTAINS(u.alue, (select * from tierekisteriosoitteelle_piste(s.tr_numero, s.tr_alkuosa, s.tr_alkuetaisyys)))
+      ON ST_CONTAINS(u.alue, tierekisteriosoitteelle_piste(s.tr_numero, s.tr_alkuosa, s.tr_alkuetaisyys))
   WHERE u.tyyppi = 'hoito' :: URAKKATYYPPI;
