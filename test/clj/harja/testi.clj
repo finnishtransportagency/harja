@@ -674,7 +674,7 @@
                       :organisaation-urakat #{2 21}})
 
 ;; Sepolla ei ole oikeutta mihinkään. :(
-(def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmanne"
+(def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmalli"
                       :organisaatio nil
                       :roolit #{}
                       :urakkaroolit {}

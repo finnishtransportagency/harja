@@ -392,5 +392,4 @@
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ parametrit-laaja-historia)
         elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
 
-    (log/debug vastaus)
     (is (= (count elynumerot) 0))))
