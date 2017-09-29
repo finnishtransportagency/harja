@@ -44,7 +44,7 @@
       (when (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali))
         (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
               urakan-tiedot (first (m-q/urakan-tiedot-sahkopostin-lahetysta-varten db parametrit))
-              urakan-ja-materiaalin-tiedot (merge urakan-tiedot (select-keys muokattu-materiaali [::m/halytysraja ::m/maara-nyt]))]
+              urakan-ja-materiaalin-tiedot (merge urakan-tiedot (select-keys muokattu-materiaali [::m/halytysraja ::m/maara-nyt ::m/nimi]))]
           (viestinta/laheta-sposti-materiaalin-halyraja fim email urakan-ja-materiaalin-tiedot)))
       materiaalilistaus)))
 

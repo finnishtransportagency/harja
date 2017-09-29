@@ -7,16 +7,18 @@
   [fim email tiedot]
   (log/debug "Lähetetään sähköpostiviesti materiaalin hälyrajasta")
   (let [{vv-urakan-sampo-id :sampoid
-         nimi :nimi
+         urakan-nimi :nimi
+         materiaalin-nimi ::m/nimi
          halytysraja ::m/halytysraja
          maara-nyt ::m/maara-nyt} tiedot
-        viestin-otsikko nimi
-        viestin-vartalo (str "Hälytysraja: " halytysraja " määrä nyt: " maara-nyt)]
-    (log/debug "TIEDOT: " tiedot)
+        viestin-otsikko (format "Materiaali \"%s\" on vähissä!" materiaalin-nimi)
+        viestin-vartalo (format "Urakassa %s on tullut materiaalin hälytysraja (%s) vastaan. Määrä on nyt: %s"
+                                urakan-nimi halytysraja maara-nyt)
+        kayttajaroolit #{"tilaajan urakanvalvoja"}]
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim                fim
        :email              email
        :urakka-sampoid     vv-urakan-sampo-id
-       :fim-kayttajaroolit #{"ely urakanvalvoja"}
+       :fim-kayttajaroolit kayttajaroolit
        :viesti-otsikko     viestin-otsikko
        :viesti-body        viestin-vartalo})))
