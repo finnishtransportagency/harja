@@ -148,7 +148,7 @@
  ;; :fileyard
  ;; :varuste-api
  ;; :tietyoilmoitusten-lahetys
- :pois-kytketyt-ominaisuudet #{:fileyard :ais-data}
+ :pois-kytketyt-ominaisuudet #{:fileyard}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
