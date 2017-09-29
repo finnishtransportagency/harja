@@ -2,6 +2,7 @@
   "Komponentti hallintayksiköiden rajojen hakemiseksi, tiepuolella haetaa Elyt_infra.shp tiedostosta."
   (:import (org.geotools.data.shapefile ShapefileDataStore))
   (:require [clojure.java.io :as io]
+            [harja.domain.ely :as ely]
             [harja.shp :as shp])
   (:gen-class))
 
@@ -20,21 +21,13 @@
                     :alue   (:the_geom e)})
                  ely-propertyt))))
 
-(def lyhenteet {"Pohjois-Pohjanmaa" "POP"
-                "Etelä-Pohjanmaa"             "EPO"
-                "Lappi"                       "LAP"
-                "Keski-Suomi"                 "KES"
-                "Kaakkois-Suomi"              "KAS"
-                "Pirkanmaa"                   "PIR"
-                "Pohjois-Savo"                "POS"
-                "Varsinais-Suomi"             "VAR"
-                "Uusimaa"                     "UUD"})
-
 (defn elyt->sql
   "Muodostaa SHP:sta luetuista ELYista SQL INSERT lauseet hallintayksikkötauluun"
   [elyt]
-  (for [{:keys [nimi alue]} (sort-by :numero (vals elyt))]
-    (str "\nINSERT INTO hallintayksikko (liikennemuoto, nimi, lyhenne, alue) VALUES ('T', '" nimi "', '" (lyhenteet nimi) "', "
+  (for [{:keys [nimi numero alue]} (sort-by :numero (vals elyt))]
+    (str "\nINSERT INTO hallintayksikko (liikennemuoto, nimi, lyhenne, alue) VALUES ('T', '"
+         nimi "', '"
+         (ely/elynumero->lyhenne numero) "', "
          (shp/geom->pg alue) ");")))
 
 (defn -main [& args]
