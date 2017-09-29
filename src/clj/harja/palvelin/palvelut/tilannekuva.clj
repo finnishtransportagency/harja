@@ -494,6 +494,8 @@
     (vec (distinct
            (map
              (fn [alue-ja-urakat]
+               ;; Hae kaikkien kaikkien urakoiden joukosta mahdollinen vastinpari tälle mapille
+               ;; (mappi, jossa on sama tyyppi ja ELY), yhdistä urakat
                (let [vastinpari (first (filter
                                          #(and (= (:hallintayksikko %)
                                                   (:hallintayksikko alue-ja-urakat))

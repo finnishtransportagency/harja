@@ -377,3 +377,25 @@
     (is (= "Oulun kohdeosa" (get-in loytyy-vastaus [0 :nimi])))
 
     (is (paneeli/skeeman-luonti-onnistuu-kaikille? loytyy-vastaus))))
+
+(deftest yhdista-kayttajan-urakat-alueittain
+  (let [urakat-a [{:tyyppi :paallystys,
+                   :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+                   :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}
+                  {:tyyppi :hoito,
+                   :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+                   :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}
+                  {:tyyppi :paallystys,
+                   :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+                   :urakat [{:id 2, :nimi "Joku tienpäällystysjuttu", :alue nil}]}]
+        urakat-b nil]
+  (is (= (#'harja.palvelin.palvelut.tilannekuva/yhdista-kayttajan-urakat-alueittain
+           urakat-a
+           urakat-b))
+      [{:tyyppi :paallystys,
+        :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+        :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}
+                 {:id 2, :nimi "Joku tienpäällystysjuttu", :alue nil}]}
+       {:tyyppi :hoito,
+        :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+        :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}])))
