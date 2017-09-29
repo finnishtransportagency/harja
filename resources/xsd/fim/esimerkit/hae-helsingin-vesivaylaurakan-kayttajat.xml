@@ -1,0 +1,13 @@
+<Members>
+    <member>
+        <AccountName>A000001</AccountName>
+        <FirstName>Erkki</FirstName>
+        <LastName>Esimerkki</LastName>
+        <DisplayName>Esimerkki Erkki</DisplayName>
+        <Email>erkki.esimerkki@example.com</Email>
+        <MobilePhone></MobilePhone>
+        <Company>ELY</Company>
+        <Role>vv-HAR-124_Tilaajan_Urakanvalvoja</Role>
+        <Disabled>false</Disabled>
+    </member>
+</Members>

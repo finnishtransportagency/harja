@@ -41,7 +41,8 @@
                                        %)
                                     materiaalilistaus)]
       (log/debug "MUOKATTU MATERIAALI: " muokattu-materiaali)
-      (when (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali))
+      (when (and (::m/halytysraja muokattu-materiaali)
+                 (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali)))
         (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
               urakan-tiedot (first (m-q/urakan-tiedot-sahkopostin-lahetysta-varten db parametrit))
               urakan-ja-materiaalin-tiedot (merge urakan-tiedot (select-keys muokattu-materiaali [::m/halytysraja ::m/maara-nyt ::m/nimi]))]
