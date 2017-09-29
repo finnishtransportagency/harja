@@ -198,12 +198,12 @@
   Frontti käyttää tätä tietoa uuden karttatason luomiseen."
   [db user {nykytilanne? :nykytilanne? yllapito :yllapito} urakat]
   (when (and
-         (tk/valittu? yllapito tk/paallystys)
-         (or (not (empty? urakat))
-             (oikeudet/voi-lukea? (if nykytilanne?
-                                    oikeudet/tilannekuva-nykytilanne
-                                    oikeudet/tilannekuva-historia)
-                                  nil user)))
+          (tk/valittu? yllapito tk/paallystys)
+          (or (not (empty? urakat))
+              (oikeudet/voi-lukea? (if nykytilanne?
+                                     oikeudet/tilannekuva-nykytilanne
+                                     oikeudet/tilannekuva-historia)
+                                   nil user)))
     ;; Indikaattori on merkkijono, joka sisältää tiedon siitä onko nykytilanne (n)
     ;; vai historiakuva (h) sekä viimeisimmän kohteen muutosaikaleiman.
     [(str (if nykytilanne?
@@ -386,7 +386,7 @@
 (defn- hae-varustetoteumat
   [db user {:keys [alue alku loppu varustetoteumat] :as tiedot} urakat]
   (when (and (tk/valittu? varustetoteumat tk/varustetoteumat)
-         (not (empty? urakat)))
+             (not (empty? urakat)))
     (into []
           (toteumat/varustetoteuma-xf nil)
           (q/hae-varustetoteumat db {:urakat urakat
@@ -441,8 +441,8 @@
 
 (defmethod hae-osio :varustetoteumat [db user tiedot urakat _]
   (tulosta-tulos!
-   "varustetoteumaa"
-   (hae-varustetoteumat db user tiedot urakat)))
+    "varustetoteumaa"
+    (hae-varustetoteumat db user tiedot urakat)))
 
 (defn yrita-hakea-osio [db user tiedot urakat osio]
   (try
@@ -451,19 +451,32 @@
       (tulosta-virhe! (name osio) e)
       nil)))
 
+(defn maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin [user oikeus-nakyma omat-urakka-id]
+  (mapv (fn [urakka-id]
+          (-> {:oma-urakka-id urakka-id
+               :oikeus-urakan-muihin-ely-urakoihin?
+               (boolean (oikeudet/on-muu-oikeus? "oman-urakan-ely"
+                                                 oikeus-nakyma
+                                                 urakka-id
+                                                 user))}))
+        omat-urakka-id))
+
 (defn hae-urakat [db user tiedot]
-  (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-    db user (if (:nykytilanne? tiedot)
-              (fn [urakka-id kayttaja]
-                (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne
-                                     urakka-id
-                                     kayttaja))
-              (fn [urakka-id kayttaja]
-                (oikeudet/voi-lukea? oikeudet/tilannekuva-historia
-                                     urakka-id
-                                     kayttaja)))
-    nil (:urakoitsija tiedot) nil
-    nil (:alku tiedot) (:loppu tiedot)))
+  (let [oikeus-nakyma (if (:nykytilanne? tiedot)
+                        oikeudet/tilannekuva-nykytilanne
+                        oikeudet/tilannekuva-historia)
+        kayttajan-urakat-alueittain (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
+                                      db user (fn [urakka-id kayttaja]
+                                                (oikeudet/voi-lukea? oikeus-nakyma
+                                                                     urakka-id
+                                                                     kayttaja))
+                                      nil (:urakoitsija tiedot) nil
+                                      nil (:alku tiedot) (:loppu tiedot))
+        lisaoikeudet (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
+                       user oikeus-nakyma
+                       (map :id (mapcat :urakat kayttajan-urakat-alueittain)))]
+    (log/debug "LISÄOIKEUDET: " lisaoikeudet)
+    kayttajan-urakat-alueittain))
 
 (defn hae-tilannekuvaan
   ([db user tiedot]
@@ -610,7 +623,7 @@
               (map #(konv/string->keyword % :tyyppi)))
         (q/hae-tyokoneiden-asiat db
                                  (as-> parametrit p
-                                   (suodattimet-parametreista p)
+                                       (suodattimet-parametreista p)
                                        (assoc p
                                          :urakat (luettavat-urakat user p)
                                          :x x
@@ -624,13 +637,13 @@
   (hae-karttakuvan-tiedot db user parametrit
                           hae-paallystysten-reitit
                           (comp
-                           (map #(assoc % :tyyppi-kartalla :paallystys))
-                           (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                           (map #(update % :sijainti geo/pg->clj)))))
+                            (map #(assoc % :tyyppi-kartalla :paallystys))
+                            (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
+                            (map #(update % :sijainti geo/pg->clj)))))
 
 (def ^{:private true
        :doc "Päällystyskohdeosan tietojen muunto infopaneelia varten"}
-  paallystyskohdeosan-tiedot-xf
+paallystyskohdeosan-tiedot-xf
   (comp (map #(assoc % :tyyppi-kartalla :paallystys))
         (map #(konv/string->keyword % :yllapitokohde_yllapitokohdetyotyyppi))
         (map konv/alaviiva->rakenne)
@@ -660,8 +673,8 @@
             vastaus (mapv (fn [kohdeosa]
                             (update kohdeosa :yllapitokohde
                                     #(assoc %
-                                            :pituus
-                                            (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))))
+                                       :pituus
+                                       (tr/laske-tien-pituus (osien-pituudet-tielle (:tr-numero %)) %))))
                           vastaus)]
         vastaus))))
 
@@ -695,10 +708,10 @@
       (partial #'hae-tyokoneiden-tiedot-kartalle db)
       "tk")
     (karttakuvat/rekisteroi-karttakuvan-lahde!
-     karttakuvat :tilannekuva-paallystys
-     (partial #'hae-paallystysten-sijainnit-kartalle db)
-     (partial #'hae-paallystysten-tiedot-kartalle db)
-     "tk")
+      karttakuvat :tilannekuva-paallystys
+      (partial #'hae-paallystysten-sijainnit-kartalle db)
+      (partial #'hae-paallystysten-tiedot-kartalle db)
+      "tk")
     this)
 
   (stop [{karttakuvat :karttakuvat :as this}]
