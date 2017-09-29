@@ -89,21 +89,21 @@
                                        {:hoito {ely-lappi {urakka-kuusamo false}}}))
         "Tyhjillä vanhoilla arvoilla palautetaan vaan uudet arvot")
     (is (= {:hoito {666 {urakka-kuusamo false}}}
-           (tk/yhdista-aluesuodattimet {:hoito {:kainuu {urakka-kajaani false}}}
+           (tk/yhdista-aluesuodattimet {:hoito {123 {urakka-kajaani false}}}
                                        {:hoito {ely-lappi {urakka-kuusamo false}}}))
         "Jos vanhat arvot on jotain ihan muuta, ne ei vaikuta lopputulokseen")
     (is (= {:hoito {666 {urakka-kuusamo true}}}
-           (tk/yhdista-aluesuodattimet {:hoito {:lappi {urakka-kuusamo true}}}
+           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true}}}
                                        {:hoito {ely-lappi {urakka-kuusamo false}}}))
         "Jos vanhoista arvoista löytyy sama urakka, käytetään sen arvoa")
     (is (= {:hoito {666 {urakka-kuusamo true}}}
-           (tk/yhdista-aluesuodattimet {:hoito {:lappi {urakka-kuusamo true
+           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true
                                                         urakka-rovaniemi false}}}
                                        {:hoito {ely-lappi {urakka-kuusamo false}}}))
         "Vanhasta joukosta lopputulokseen vaikuttavat VAIN urakat, jotka ovat myös uudessa joukossa")
     (is (= {:hoito {666 {urakka-kuusamo true
                          urakka-sodankyla true}}}
-           (tk/yhdista-aluesuodattimet {:hoito {:lappi {urakka-kuusamo true
+           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true
                                                         urakka-rovaniemi false}}}
                                        {:hoito {ely-lappi {urakka-kuusamo false
                                                            urakka-sodankyla true}}}))
