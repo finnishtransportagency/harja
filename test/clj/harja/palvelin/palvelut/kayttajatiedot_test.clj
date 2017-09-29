@@ -32,62 +32,99 @@
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
 (deftest yhdista-kayttajan-urakat-alueittain
-  (let [ely-kaakkoissuomi {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3}]
+  (let [ely-kaakkoissuomi {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3}
+        ely-lappi {:id 1, :nimi "Lappi", :elynumero 678}
+        tienpaallystys-1 {:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}
+        hoito-1 {:id 1, :nimi "Joku hoidon urakka", :alue nil}
+        tienpaallystys-2 {:id 2, :nimi "Joku tienpäällystysjuttu", :alue nil}
+        hoito-2 {:id 24, :nimi "Joku hoitourakkajuttu", :alue nil}]
 
     (let [urakat-a [{:tyyppi :paallystys,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}
+                     :urakat [tienpaallystys-1]}
                     {:tyyppi :hoito,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}]
+                     :urakat [hoito-1]}]
           urakat-b [{:tyyppi :paallystys,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 2, :nimi "Joku tienpäällystysjuttu", :alue nil}]}]]
+                     :urakat [tienpaallystys-2]}]]
       (is (= (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
                urakat-a
                urakat-b))
           [{:tyyppi :paallystys,
             :hallintayksikko ely-kaakkoissuomi,
-            :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}
-                     {:id 2, :nimi "Joku tienpäällystysjuttu", :alue nil}]}
+            :urakat [tienpaallystys-1
+                     tienpaallystys-2]}
            {:tyyppi :hoito,
             :hallintayksikko ely-kaakkoissuomi,
-            :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}]))
+            :urakat [hoito-1]}]))
 
     (let [urakat-a [{:tyyppi :paallystys,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}
+                     :urakat [tienpaallystys-1]}
                     {:tyyppi :hoito,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}]
+                     :urakat [hoito-1]}]
           urakat-b [{:tyyppi :hoito,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 24, :nimi "Joku hoitourakkajuttu", :alue nil}]}]]
+                     :urakat [hoito-2]}]]
       (is (= (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
                urakat-a
                urakat-b))
           [{:tyyppi :paallystys,
             :hallintayksikko ely-kaakkoissuomi,
-            :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}
+            :urakat [tienpaallystys-1]}
            {:tyyppi :hoito,
             :hallintayksikko ely-kaakkoissuomi,
-            :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}
+            :urakat [hoito-1]}
            {:tyyppi :hoito,
             :hallintayksikko ely-kaakkoissuomi,
-            :urakat [{:id 24, :nimi "Joku hoitourakkajuttu", :alue nil}]}]))
+            :urakat [hoito-2]}]))
 
     (let [urakat-a [{:tyyppi :paallystys,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}]
+                     :urakat [tienpaallystys-1]}]
           urakat-b [{:tyyppi :paallystys,
                      :hallintayksikko ely-kaakkoissuomi,
-                     :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}]]
+                     :urakat [tienpaallystys-1]}]]
       (is (= (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
                urakat-a
                urakat-b))
           [{:tyyppi :paallystys,
             :hallintayksikko ely-kaakkoissuomi,
-            :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}]))
+            :urakat [tienpaallystys-1]}]))
+
+    (let [urakat-a [{:tyyppi :paallystys,
+                     :hallintayksikko ely-kaakkoissuomi,
+                     :urakat [tienpaallystys-1]}]
+          urakat-b [{:tyyppi :paallystys,
+                     :hallintayksikko ely-lappi,
+                     :urakat [tienpaallystys-1]}]]
+      (is (= (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
+               urakat-a
+               urakat-b))
+          [{:tyyppi :paallystys,
+            :hallintayksikko ely-kaakkoissuomi,
+            :urakat [tienpaallystys-1]}
+           {:tyyppi :paallystys,
+            :hallintayksikko ely-lappi,
+            :urakat [tienpaallystys-1]}]))
+
+    (let [urakat-a [{:tyyppi :paallystys,
+                     :hallintayksikko ely-kaakkoissuomi,
+                     :urakat [tienpaallystys-1]}]
+          urakat-b [{:tyyppi :paallystys,
+                     :hallintayksikko ely-lappi,
+                     :urakat [tienpaallystys-1]}]]
+      (is (= (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
+               urakat-a
+               urakat-b))
+          [{:tyyppi :paallystys,
+            :hallintayksikko ely-kaakkoissuomi,
+            :urakat [tienpaallystys-1]}
+           {:tyyppi :paallystys,
+            :hallintayksikko ely-lappi,
+            :urakat [tienpaallystys-1]}]))
 
     (let [urakat-a []
           urakat-b []]
