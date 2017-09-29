@@ -17,7 +17,8 @@
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.transit :as transit])
+            [harja.transit :as transit]
+            [harja.domain.ely :as ely])
   (:use org.httpkit.fake))
 
 
@@ -121,16 +122,19 @@
                             (ryhma parametrit)
                             (keys (ryhma parametrit)))))
 
+(defn hae-urakat-tilannekuvaan [kayttaja parametrit]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakat-tilannekuvaan kayttaja
+                  {:nykytilanne? (:nykytilanne? parametrit)
+                   :alku (:alku parametrit)
+                   :loppu (:loppu parametrit)
+                   :urakoitsija (:urakoitsija parametrit)
+                   :urakkatyyppi (:urakkatyyppi parametrit)}))
+
 (defn hae-tk
   ([parametrit] (hae-tk +kayttaja-jvh+ parametrit))
   ([kayttaja parametrit]
-   (let [urakat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakat-tilannekuvaan kayttaja
-                                {:nykytilanne? (:nykytilanne? parametrit)
-                                 :alku (:alku parametrit)
-                                 :loppu (:loppu parametrit)
-                                 :urakoitsija (:urakoitsija parametrit)
-                                 :urakkatyyppi (:urakkatyyppi parametrit)})
+   (let [urakat (hae-urakat-tilannekuvaan kayttaja parametrit)
          urakat (into #{} (mapcat
                             (fn [aluekokonaisuus]
                               (map :id (:urakat aluekokonaisuus)))
@@ -365,7 +369,7 @@
   (let [ei-loydy-koordinaatti [392327.9999989789 7212239.931808539]
         ei-loydy-vastaus (hae-klikkaus ei-loydy-koordinaatti :tilannekuva-paallystys
                                        parametrit-laaja-historia)
-        loytyy-koordinaatti   [445582.99999998405 7224316.998934508]
+        loytyy-koordinaatti [445582.99999998405 7224316.998934508]
         loytyy-vastaus (hae-klikkaus loytyy-koordinaatti :tilannekuva-paallystys
                                      parametrit-laaja-historia)]
 
@@ -377,3 +381,9 @@
     (is (= "Oulun kohdeosa" (get-in loytyy-vastaus [0 :nimi])))
 
     (is (paneeli/skeeman-luonti-onnistuu-kaikille? loytyy-vastaus))))
+
+(deftest hae-urakat-tilannekuvaan-toimii
+  (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+    (is (>= (count elynumerot) 6)
+        "JVH:n pitäisi nähdä aika monta ELYä")))
