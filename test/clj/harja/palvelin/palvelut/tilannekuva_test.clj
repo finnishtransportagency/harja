@@ -382,8 +382,15 @@
 
     (is (paneeli/skeeman-luonti-onnistuu-kaikille? loytyy-vastaus))))
 
-(deftest hae-urakat-tilannekuvaan-toimii
+(deftest hae-urakat-tilannekuvaan-jvh
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-jvh+ parametrit-laaja-historia)
         elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
     (is (>= (count elynumerot) 6)
         "JVH:n pitäisi nähdä aika monta ELYä")))
+
+(deftest hae-urakat-tilannekuvaan-ei-nay-mitaan
+  (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ parametrit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+
+    (log/debug vastaus)
+    (is (= (count elynumerot) 0))))
