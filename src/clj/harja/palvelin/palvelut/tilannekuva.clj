@@ -451,18 +451,26 @@
       (tulosta-virhe! (name osio) e)
       nil)))
 
-(defn maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
+(defn- maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
   "Palauttaa mapin, joka kertoo, mihin käyttäjän omiin urakoihin käyttäjällä on erikoisoikeus
-   oman-urakan-ely"
-  [user oikeus-nakyma omat-urakka-id]
-  (mapv (fn [urakka-id]
-          (-> {:oma-urakka-id urakka-id
-               :oikeus-urakan-muihin-ely-urakoihin?
-               (boolean (oikeudet/on-muu-oikeus? "oman-urakan-ely"
-                                                 oikeus-nakyma
-                                                 urakka-id
-                                                 user))}))
-        omat-urakka-id))
+   oman-urakan-ely.
+   Mapissa avaimet: :urakka-id, :hallintayksikko-id sekä tiedot oikeuksista"
+  [user oikeus-nakyma kayttajan-urakat-alueittain]
+  (vec (mapcat (fn [alue-ja-urakat]
+                 (let [hallintayksikko-id (get-in alue-ja-urakat [:hallintayksikko :id])]
+                   (map (fn [urakka]
+                          (-> {:urakka-id (:id urakka)
+                               :hallintayksikko-id hallintayksikko-id
+                               :oikeus-urakan-muihin-ely-urakoihin?
+                               (boolean (oikeudet/on-muu-oikeus? "oman-urakan-ely"
+                                                                 oikeus-nakyma
+                                                                 (:id urakka)
+                                                                 user))}))
+                        (:urakat alue-ja-urakat))))
+               kayttajan-urakat-alueittain)))
+
+(defn- lukuoikeus-urakkaan-lisaoikeudella? [urakka-id lisaoikeudet]
+  )
 
 (defn hae-urakat [db user tiedot]
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
@@ -481,9 +489,17 @@
                                       nil (:alku tiedot) (:loppu tiedot))
         lisaoikeudet (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
                        user oikeus-nakyma
-                       (map :id (mapcat :urakat kayttajan-urakat-alueittain)))]
+                       kayttajan-urakat-alueittain)
+        lisaoikeuksien-urakat (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
+                                db user (fn [urakka-id kayttaja]
+                                          (lukuoikeus-urakkaan-lisaoikeudella? urakka-id lisaoikeudet))
+                                nil (:urakoitsija tiedot) nil
+                                nil (:alku tiedot) (:loppu tiedot))
+        _ (log/debug "LISÄOIKEUKSIEN URAKAT HÖÖHÖÖ " lisaoikeuksien-urakat)
+        ;; TODO Yhdistä!
+        lopulliset-kayttajan-urakat-alueittain kayttajan-urakat-alueittain]
     (log/debug "LISÄOIKEUDET: " lisaoikeudet)
-    kayttajan-urakat-alueittain))
+    lopulliset-kayttajan-urakat-alueittain))
 
 (defn hae-tilannekuvaan
   ([db user tiedot]
