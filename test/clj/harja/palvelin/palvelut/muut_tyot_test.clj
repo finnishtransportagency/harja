@@ -30,7 +30,7 @@
 ;; käyttää testidata.sql:stä tietoa
 (deftest kaikki-muut-tyot-haettu-oikein
          (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
+                                                    :muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
                oulun-alueurakan-toiden-lkm (ffirst (q
                                                      (str "SELECT count(*)
                                                              FROM muutoshintainen_tyo
@@ -52,7 +52,7 @@
 
 (deftest tallenna-muutoshintaiset-tyot-testi
   (let [muutoshintaiset-tyot (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
+                                             :muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja) @oulun-alueurakan-2005-2010-id)
         muutoshintaisten-toiden-maara-ennen-paivitysta (ffirst (q
                                        (str "SELECT count(*)
                                                        FROM muutoshintainen_tyo
@@ -66,13 +66,13 @@
         muokattava-tyo-uudet-arvot (assoc muokattava-tyo :yksikkohinta uusi-yksikkohinta :yksikko uusi-yksikko)
 
         muutoshintaiset-tyot-paivitetty (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :tallenna-muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
+                                             :tallenna-muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja)
                                                       {:urakka-id @oulun-alueurakan-2005-2010-id
                                                        :tyot       [muokattava-tyo-uudet-arvot]})
         muokattu-tyo-paivitetty (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava) muutoshintaiset-tyot-paivitetty))
 
         alkuperaiset-arvot-palautettu (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                     :tallenna-muutoshintaiset-tyot (oulun-urakan-tilaajan-urakanvalvoja)
+                                                     :tallenna-muutoshintaiset-tyot (oulun-2005-urakan-tilaajan-urakanvalvoja)
                                                      {:urakka-id @oulun-alueurakan-2005-2010-id
                                                       :tyot       [muokattava-tyo]})
         muokattu-tyo-palautuksen-jalkeen   (first (filter #(= (:tehtava %) muokattavan-tyon-tehtava ) alkuperaiset-arvot-palautettu))]

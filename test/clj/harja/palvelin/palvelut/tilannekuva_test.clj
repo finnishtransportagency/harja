@@ -46,7 +46,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :once (compose-fixtures jarjestelma-fixture urakkatieto-fixture))
 
 (def alku (c/to-date (t/local-date 2000 1 1)))
 (def loppu (c/to-date (t/local-date 2030 1 1)))
@@ -393,3 +393,12 @@
         elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
 
     (is (= (count elynumerot) 0))))
+
+(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
+  ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
+  ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
+  ;; TODO Tsekkaa sisältö: vain samaa elyä kaikki
+  (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+
+    (log/debug vastaus)))
