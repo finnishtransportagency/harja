@@ -197,6 +197,10 @@ FROM organisaatio o
   JOIN urakka u ON o.id = u.urakoitsija
 WHERE u.id = :urakka;
 
+-- name: urakan-hallintayksikko
+SELECT hallintayksikko AS "hallintayksikko-id"
+FROM urakka WHERE id = :id;
+
 -- name: hae-urakoita
 -- Hakee urakoita tekstihaulla.
 SELECT

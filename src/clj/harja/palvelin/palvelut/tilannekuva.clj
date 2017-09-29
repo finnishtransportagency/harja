@@ -81,6 +81,7 @@
             [taoensso.timbre :as log]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pko]
@@ -453,7 +454,7 @@
 
 (defn- maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
   "Palauttaa mapin, joka kertoo, mihin käyttäjän omiin urakoihin käyttäjällä on erikoisoikeus
-   oman-urakan-ely.
+   oman-urakan-ely. Erikoisoikeus antaa näkyvyyden urakan ELY-alueen muihin urakoihin.
    Mapissa avaimet: :urakka-id, :hallintayksikko-id sekä tiedot oikeuksista"
   [user oikeus-nakyma kayttajan-urakat-alueittain]
   (vec (mapcat (fn [alue-ja-urakat]
@@ -469,8 +470,19 @@
                         (:urakat alue-ja-urakat))))
                kayttajan-urakat-alueittain)))
 
-(defn- lukuoikeus-urakkaan-lisaoikeudella? [urakka-id lisaoikeudet]
-  )
+(defn- lukuoikeus-urakkaan-lisaoikeudella?
+  "Tarkistaa, muodostuuko annettuun urakkaan oikeus jonkin
+  samalla ELY-alueella sijaitsevan urakan lisäoikeudella."
+  [db urakka-id lisaoikeudet]
+  (let [hallintayksikko-id (:hallintayksikko-id (first (urakat-q/urakan-hallintayksikko
+                                                                db
+                                                                {:id urakka-id})))
+        lisaoikeus-urakkaan? (boolean (some
+                                        (fn [lisaoikeus]
+                                          (and (:oikeus-urakan-muihin-ely-urakoihin? lisaoikeus)
+                                               (= (:hallintayksikko-id lisaoikeus) hallintayksikko-id)))
+                                        lisaoikeudet))]
+    lisaoikeus-urakkaan?))
 
 (defn hae-urakat [db user tiedot]
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
@@ -492,13 +504,11 @@
                        kayttajan-urakat-alueittain)
         lisaoikeuksien-urakat (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
                                 db user (fn [urakka-id kayttaja]
-                                          (lukuoikeus-urakkaan-lisaoikeudella? urakka-id lisaoikeudet))
+                                          (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
                                 nil (:urakoitsija tiedot) nil
                                 nil (:alku tiedot) (:loppu tiedot))
-        _ (log/debug "LISÄOIKEUKSIEN URAKAT HÖÖHÖÖ " lisaoikeuksien-urakat)
         ;; TODO Yhdistä!
         lopulliset-kayttajan-urakat-alueittain kayttajan-urakat-alueittain]
-    (log/debug "LISÄOIKEUDET: " lisaoikeudet)
     lopulliset-kayttajan-urakat-alueittain))
 
 (defn hae-tilannekuvaan
