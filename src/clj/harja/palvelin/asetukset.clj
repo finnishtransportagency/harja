@@ -153,6 +153,9 @@
                                              (s/optional-key :turvalaitekomponenttihakuvali)  s/Int
                                              (s/optional-key :vikahakuvali)  s/Int}
 
+   (s/optional-key :ais-data) {:url s/Str
+                               :sekunnin-valein s/Int}
+
    (s/optional-key :yllapitokohteet)   {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    })
 
