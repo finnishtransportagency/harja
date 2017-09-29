@@ -10,22 +10,24 @@
              (:require-macros
                [harja.kyselyt.specql-db :refer [define-tables]])]))
 
-(def elynumero->lyhenne {1 "Uusimaa"
-                         2 "Varsinais-Suomi"
-                         3 "Kaakkois-Suomi"
-                         4 "Pirkanmaa"
-                         8 "Pohjois-Savo"
-                         9 "Keski-Suomi"
-                         10 "Etelä-Pohjanmaa"
-                         12 "Pohjois-Pohjanmaa ja Kainuu"
-                         14 "Lappi"})
+(def elynumerot-jarjestyksessa [1 2 3 4 8 9 10 12 14])
 
-(def elynumero->nimi {1 "UUD"
-                      2 "VAR"
-                      3 "KAS"
-                      4 "PIR"
-                      8 "POR"
-                      9 "KES"
-                      10 "EPO"
-                      12 "POP"
-                      14 "LAP"})
+(def elynumero->lyhenne {1 "UUD"
+                         2 "VAR"
+                         3 "KAS"
+                         4 "PIR"
+                         8 "POR"
+                         9 "KES"
+                         10 "EPO"
+                         12 "POP"
+                         14 "LAP"})
+
+(def elynumero->nimi {1 "Uusimaa"
+                      2 "Varsinais-Suomi"
+                      3 "Kaakkois-Suomi"
+                      4 "Pirkanmaa"
+                      8 "Pohjois-Savo"
+                      9 "Keski-Suomi"
+                      10 "Etelä-Pohjanmaa"
+                      12 "Pohjois-Pohjanmaa ja Kainuu"
+                      14 "Lappi"})
