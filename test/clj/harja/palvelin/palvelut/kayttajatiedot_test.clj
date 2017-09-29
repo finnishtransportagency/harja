@@ -10,14 +10,14 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-    (fn [_]
-      (component/start
-        (component/system-map
-          :db (tietokanta/luo-tietokanta testitietokanta)
-          :http-palvelin (testi-http-palvelin)
-          :kayttajatiedot (component/using
-                            (kayttajatiedot/->Kayttajatiedot)
-                            [:http-palvelin :db])))))
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)
+                        :kayttajatiedot (component/using
+                                          (kayttajatiedot/->Kayttajatiedot)
+                                          [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -26,11 +26,31 @@
 
 (deftest yhteydenpito-vastaanottajat-toimii
   (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)]
+                              :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)]
 
     (is (= (count tulos) 7))
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
-
+(deftest yhdista-kayttajan-urakat-alueittain
+  (let [urakat-a [{:tyyppi :paallystys,
+                   :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+                   :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}]}
+                  {:tyyppi :hoito,
+                   :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+                   :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}
+                  {:tyyppi :paallystys,
+                   :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+                   :urakat [{:id 2, :nimi "Joku tienpäällystysjuttu", :alue nil}]}]
+        urakat-b nil]
+    (is (= (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
+             urakat-a
+             urakat-b))
+        [{:tyyppi :paallystys,
+          :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+          :urakat [{:id 18, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :alue nil}
+                   {:id 2, :nimi "Joku tienpäällystysjuttu", :alue nil}]}
+         {:tyyppi :hoito,
+          :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3},
+          :urakat [{:id 1, :nimi "Joku hoidon urakka", :alue nil}]}])))
 
 
