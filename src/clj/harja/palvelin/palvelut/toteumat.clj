@@ -44,27 +44,6 @@
             (assoc :maara
                    (or (some-> % :maara double) 0)))))
 
-(defn vaadi-toteuma-ei-jarjestelman-luoma [db toteuma-id]
-  (log/debug "Tarkistetaan, ettei toteuma " toteuma-id " ole järjestelmästä tullut")
-  (when toteuma-id
-    (let [jarjestelman-lisaama? (:jarjestelmanlisaama (first
-                                                        (toteumat-q/toteuma-jarjestelman-lisaama
-                                                          db {:toteuma toteuma-id})))]
-      (when jarjestelman-lisaama?
-        (throw (SecurityException. "Järjestelmän luomaa toteumaa ei voi muokata!"))))))
-
-(defn vaadi-toteuma-kuuluu-urakkaan [db toteuma-id vaitetty-urakka-id]
-  (log/debug "Tarkikistetaan, että toteuma " toteuma-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
-  (assert vaitetty-urakka-id "Urakka id puuttuu!")
-  (when toteuma-id
-    (let [toteuman-todellinen-urakka-id (:urakka (first
-                                                   (toteumat-q/toteuman-urakka
-                                                     db {:toteuma toteuma-id})))]
-      (when (and (some? toteuman-todellinen-urakka-id)
-                 (not= toteuman-todellinen-urakka-id vaitetty-urakka-id))
-        (throw (SecurityException. (str "Toteuma ei kuulu väitettyyn urakkaan " vaitetty-urakka-id
-                                        " vaan urakkaan " toteuman-todellinen-urakka-id)))))))
-
 (def tyhja-tr-osoite {:numero nil :alkuosa nil :alkuetaisyys nil :loppuosa nil :loppuetaisyys nil})
 
 (defn toteuman-parametrit [toteuma kayttaja]
@@ -87,16 +66,21 @@
   [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
    (get-in toteuma [:tehtava :paivanhinta])])
 
-
-(defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
-  (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
+(defn toteumatyypin-oikeustarkistus
+  "Tarkistaa toteumatyypin mukaisen lukuoikeuden.
+   Toteuman kuuluminen urakkaan täytyy tarkistaa erikseen."
+  [db user urakka-id toteuma-id]
   (let [toteuman-tyyppi (:tyyppi (first (toteumat-q/toteuman-tyyppi db toteuma-id)))
         _ (case toteuman-tyyppi
             "yksikkohintainen"
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
             "kokonaishintainen"
-            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id))
-        toteuma (konv/sarakkeet-vektoriin
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id))]))
+
+(defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
+  (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
+  (toteumatyypin-oikeustarkistus db user urakka-id toteuma-id)
+  (let [toteuma (konv/sarakkeet-vektoriin
                   (into []
                         (comp
                           toteuma-xf
@@ -127,28 +111,6 @@
            :tyyppi (name tyyppi)
            :toimenpide toimenpide-id
            :tehtava tehtava-id})))
-
-(defn hae-urakan-toteutuneet-tehtavat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi]}]
-  (log/debug "Haetaan urakan toteutuneet tehtävät: " urakka-id sopimus-id alkupvm loppupvm tyyppi)
-  (oikeudet/vaadi-lukuoikeus (case tyyppi
-                               :kokonaishintainen oikeudet/urakat-toteumat-kokonaishintaisettyot
-                               :yksikkohintainen oikeudet/urakat-toteumat-yksikkohintaisettyot
-                               (:akillinen-hoitotyo :lisatyo :muutostyo :vahinkojen-korjaukset) oikeudet/urakat-toteumat-muutos-ja-lisatyot
-                               :materiaali oikeudet/urakat-toteumat-materiaalit
-
-                               :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
-                             user urakka-id)
-  (let [toteutuneet-tehtavat (into []
-                                   muunna-desimaaliluvut-xf
-                                   (toteumat-q/hae-urakan-ja-sopimuksen-toteutuneet-tehtavat
-                                     db
-                                     urakka-id
-                                     sopimus-id
-                                     (konv/sql-timestamp alkupvm)
-                                     (konv/sql-timestamp loppupvm)
-                                     (name tyyppi)))]
-    (log/debug "Haetty urakan toteutuneet tehtävät: " toteutuneet-tehtavat)
-    toteutuneet-tehtavat))
 
 (defn hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät tyypillä ja toimenpidekoodilla: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi)
@@ -826,6 +788,8 @@
 (defn- siirry-toteuma
   "Palauttaa frontin tarvitsemat tiedot, joilla toteumaan voidaan siirtyä"
   [db user toteuma-id]
+  ;; TODO SELVITÄ URAKKA-ID JA LISÄÄ TESTI
+  #_(toteumatyypin-oikeustarkistus db user urakka-id toteuma-id)
   (first
     (konv/sarakkeet-vektoriin
       (into []
