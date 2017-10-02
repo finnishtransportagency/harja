@@ -6,6 +6,7 @@
             [harja.palvelin.palvelut.interpolointi :as interpolointi]
             [harja.testi :refer :all]
             [harja.paneeliapurit :as paneeli]
+            [harja.domain.oikeudet :as oikeudet]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.kyselyt.konversio :as konv]
@@ -404,3 +405,16 @@
     (is (= eka-ely 12))
     (is (every? #(= % eka-ely) elynumerot)
         "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
+
+(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
+  ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
+  (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+    (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-historia)]
+      (is (= vastaus
+             [{:tyyppi :hoito
+               :hallintayksikko {:id 12
+                                 :nimi "Pohjois-Pohjanmaa"
+                                 :elynumero 12}
+               :urakat #{{:id 4
+                          :nimi "Oulun alueurakka 2014-2019"
+                          :alue nil}}}])))))
