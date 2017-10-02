@@ -753,7 +753,6 @@
 (defn- siirry-toteuma
   "Palauttaa frontin tarvitsemat tiedot, joilla toteumaan voidaan siirtyä"
   [db user toteuma-id]
-  ;; TODO Testi
   (let [urakka-id (:urakka (first
                              (toteumat-q/toteuman-urakka
                                db {:toteuma toteuma-id})))]
