@@ -397,8 +397,10 @@
 (deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
   ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
   ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
-  ;; TODO Tsekkaa sisältö: vain samaa elyä kaikki
   (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
+        eka-ely (first elynumerot)]
 
-    (log/debug vastaus)))
+    (is (= eka-ely 12))
+    (is (every? #(= % eka-ely) elynumerot)
+        "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
