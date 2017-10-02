@@ -83,13 +83,6 @@
       "id": "urn:harja/sijainti/tie/karttapvm",
       "type": "string",
       "format": "date-time"
-    },
-    "sijoitus": {
-      "id": "urn:harja/sijainti/tie/sijoitus",
-      "enum": [
-        "oikea",
-        "vasen"
-      ]
     }
   }
 }

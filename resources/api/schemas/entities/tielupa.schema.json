@@ -34,7 +34,7 @@
         },
         "diaarinumero": {
           "id": "urn:harja/tielupa/perustiedot/diaarinumero",
-          "type": "integer",
+          "type": "string",
           "required": true
         },
         "alkuaika": {
@@ -159,7 +159,7 @@
         "tyyppi": {
           "id": "urn:harja/tielupa/hakija/tyyppi",
           "enum": [
-            ""
+            "kunta", "kotitalous", "elinkeinoelama", "valtio", "muu"
           ]
         },
         "maakoodi": {
@@ -324,27 +324,45 @@
                     "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/laite",
                     "required": true,
                     "enum": [
-                      ""
+                      "0,4 kV maakaapeli",
+                      "0,4 ja 1 kV maakaapeli",
+                      "0,4 ja 20 kV maakaapeli",
+                      "1 kV maakaapeli",
+                      "20 kV maakaapeli",
+                      "45 kV maakaapeli",
+                      "110 kV maakaapeli",
+                      "maakaapeli",
+                      "0,4 kV ilmajohto",
+                      "0,4 ja 1 kV ilmajohto",
+                      "0,4 ja 20 kV ilmajohto,1 kV ilmajohto",
+                      "20 kV ilmajohto",
+                      "45 kV ilmajohto",
+                      "110 kV ilmajohto",
+                      "ilmajohto",
+                      "Puistomuuntamo",
+                      "Pylväsmuuntamo",
+                      "Jakokaappi",
+                      "Telekaapeli",
+                      "Kaukolämpöjohto",
+                      "Maakaasuputki"
                     ]
                   },
-                  "tyyppi": {
-                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/tyyppi",
+                  "asennustyyppi": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/asennustyyppi",
                     "required": true,
                     "enum": [
-                      ""
+                      "Tien varressa",
+                      "Tien ylitys",
+                      "Tien alitus",
+                      "Silta",
+                      "Tiealueen ulkopuolella",
+                      "Suojaputki"
                     ]
                   },
                   "kommentit": {
                     "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/kommentit",
                     "type": "string"
-                  },
-                  "toiminnot": {
-                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/toiminnot",
-                    "required": true,
-                    "enum": [
-                      ""
-                    ]
-                  },
+                  }, 
                   "sijainti": {
                     "id": "urn:harja/tielupa/sijainnit/0/sijainti",
                     "type": "object",
@@ -366,55 +384,6 @@
                   "ilmakaapelia-metreissa": {
                     "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/ilmakaapelia-metreissa",
                     "type": "number"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "johtoasennukset": {
-          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset",
-          "type": "array",
-          "items": {
-            "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0",
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "johtoasennus": {
-                "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus",
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "laite": {
-                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/laite",
-                    "required": true,
-                    "enum": [
-                      ""
-                    ]
-                  },
-                  "tyyppi": {
-                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/tyyppi",
-                    "required": true,
-                    "enum": [
-                      ""
-                    ]
-                  },
-                  "kommentit": {
-                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/kommentit",
-                    "type": "string"
-                  },
-                  "toiminnot": {
-                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/toiminnot",
-                    "required": true,
-                    "enum": [
-                      ""
-                    ]
-                  },
-                  "sijainti": {
-                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
-                    "type": "object",
-                    "additionalProperties": false,
-                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
                   }
                 }
               }
@@ -508,9 +477,7 @@
           "properties": {
             "liittymakaari": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liittymakaari",
-              "enum": [
-                ""
-              ]
+              "type": "number"
             },
             "leveys-metreissa": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/leveys-metreissa",
@@ -520,8 +487,8 @@
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rumpu",
               "type": "boolean"
             },
-            "rummun-halkaisija": {
-              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-halkaisija",
+            "rummun-halkaisija-millimetreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-halkaisija-millimetreissa",
               "type": "number"
             },
             "rummun-etaisyys-metreissa": {
@@ -865,14 +832,6 @@
           "id": "urn:harja/tielupa/vesihuoltolupa/erikoisehdot",
           "type": "string"
         },
-        "maakaapelia-metreissa": {
-          "id": "urn:harja/tielupa/vesihuoltolupa/maakaapelia-metreissa",
-          "type": "number"
-        },
-        "ilmakaapelia-metreissa": {
-          "id": "urn:harja/tielupa/vesihuoltolupa/ilmajohtoa-metreissa",
-          "type": "number"
-        },
         "tienylityksia": {
           "id": "urn:harja/tielupa/vesihuoltolupa/tienylityksia",
           "type": "integer"
@@ -898,7 +857,13 @@
                     "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/laite",
                     "required": true,
                     "enum": [
-                      ""
+                      "Vesijohto",
+                      "Vesi- ja viemärijohto",
+                      "Jätevesiviemäri",
+                      "Hulevesiviemäri",
+                      "Pumppaamo",
+                      "Sulkuventtiilit",
+                      "Muu laite"
                     ]
                   },
                   "tyyppi": {
