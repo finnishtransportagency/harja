@@ -754,17 +754,20 @@
 (defn- siirry-toteuma
   "Palauttaa frontin tarvitsemat tiedot, joilla toteumaan voidaan siirtyä"
   [db user toteuma-id]
-  ;; TODO SELVITÄ URAKKA-ID JA LISÄÄ TESTI
-  #_(toteumatyypin-oikeustarkistus db user urakka-id toteuma-id)
-  (first
-    (konv/sarakkeet-vektoriin
-      (into []
-            (map konv/alaviiva->rakenne)
-            (toteumat-q/siirry-toteuma
-              db {:toteuma-id toteuma-id
-                  :tarkista-urakka? (= :urakoitsija (roolit/osapuoli user))
-                  :urakoitsija-id (get-in user [:organisaatio :id])}))
-      {:tehtava :tehtavat} :id (constantly true))))
+  ;; TODO Testi
+  (let [urakka-id (:urakka (first
+                             (toteumat-q/toteuman-urakka
+                               db {:toteuma toteuma-id})))]
+    (toteumatyypin-oikeustarkistus db user urakka-id toteuma-id)
+    (first
+      (konv/sarakkeet-vektoriin
+        (into []
+              (map konv/alaviiva->rakenne)
+              (toteumat-q/siirry-toteuma
+                db {:toteuma-id toteuma-id
+                    :tarkista-urakka? (= :urakoitsija (roolit/osapuoli user))
+                    :urakoitsija-id (get-in user [:organisaatio :id])}))
+        {:tehtava :tehtavat} :id (constantly true)))))
 
 (defrecord Toteumat []
   component/Lifecycle
