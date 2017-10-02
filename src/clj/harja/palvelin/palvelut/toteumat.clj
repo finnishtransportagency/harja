@@ -79,7 +79,6 @@
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
-  ;; TODO TESTI
   (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
   (toteumatyypin-oikeustarkistus db user urakka-id toteuma-id)
   (let [toteuma (konv/sarakkeet-vektoriin
