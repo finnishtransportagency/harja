@@ -29,7 +29,7 @@
   (when erilliskustannus-id
     (let [urakka-id-kannassa (:urakka (first
                                         (toteumat-q/erilliskustannuksen-urakka
-                                          db {:toteuma erilliskustannus-id})))]
+                                          db {:id erilliskustannus-id})))]
       (when (and (some? urakka-id-kannassa)
                  (not= urakka-id-kannassa vaitetty-urakka-id))
         (throw (SecurityException. (str "Erilliskustannus ei kuulu väitettyyn urakkaan " vaitetty-urakka-id

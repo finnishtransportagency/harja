@@ -98,12 +98,12 @@
     ;; Testaa virheellinen päivitys vaihtamalla urakka
 
     (let [ek-id (:id lisatty)
-          _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :tallenna-erilliskustannus +kayttaja-jvh+
-                            (assoc ek
-                              :id ek-id
-                              :indeksin_nimi "MAKSU 2015"
-                              :urakka-id @oulun-alueurakan-2014-2019-id))
+          _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :tallenna-erilliskustannus +kayttaja-jvh+
+                                                        (assoc ek
+                                                          :id ek-id
+                                                          :indeksin_nimi "MAKSU 2015"
+                                                          :urakka-id @oulun-alueurakan-2014-2019-id))))
           urakka (ffirst (q (str "SELECT urakka FROM erilliskustannus WHERE id = " ek-id ";")))
           indeksin-nimi (ffirst (q (str "SELECT indeksin_nimi FROM erilliskustannus WHERE id = " ek-id ";")))]
       (is (= urakka @oulun-alueurakan-2005-2010-id) "Virheellistä urakkaa ei päivitetty")
