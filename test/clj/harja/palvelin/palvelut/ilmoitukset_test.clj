@@ -122,7 +122,8 @@
                      :ulkoinen-ilmoitusid 123
                      :ilmoittaja-matkapuhelin "0400123123"
                      :vapaatesti "TESTI123"
-                     :tyyppi :lopetus}]
+                     :tyyppi :lopetus
+                     :aiheutti-toimenpiteita true}]
 
         ilmoitusten-maara-ennen (ffirst (q
                                           (str "SELECT count(*) FROM ilmoitus;")))
@@ -139,13 +140,17 @@
         kuittausten-maara-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM ilmoitustoimenpide;")))
         ilmoituksen-1-kuittaukset-maara-jalkeen
-        (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitus = 1;")))]
+        (ffirst (q (str "SELECT count(*) FROM ilmoitustoimenpide WHERE ilmoitus = 1;")))
+
+        aiheutti-toimenpiteita (ffirst (q (str "SELECT \"aiheutti-toimenpiteita\" FROM ilmoitus WHERE id = 1;")))]
 
     ;; Ilmoituksia sama määrä, kuittausten määrä kannassa nousi yhdellä
     (is (= ilmoitusten-maara-ennen ilmoitusten-maara-jalkeen))
     (is (= (+ kuittausten-maara-ennen 1) kuittausten-maara-jalkeen))
     (is (= (+ ilmoituksen-1-kuittaukset-maara-ennen 1) ilmoituksen-1-kuittaukset-maara-jalkeen))
 
+    (is aiheutti-toimenpiteita "Lopetuskuittaus toimenpiteiden kanssa merkittiin oikein")
+    
     (u "DELETE FROM ilmoitustoimenpide WHERE vapaateksti = 'TESTI123';")))
 
 (deftest tallenna-ilmoitustoimenpide-ilman-oikeuksia

@@ -75,6 +75,11 @@
     #(true? (:myohassa? %))
     ilmoitukset))
 
+(defn- suodata-toimenpiteita-aiheuttaneet [ilmoitukset]
+  (filter
+    #(true? (:aiheutti-toimenpiteita %))
+    ilmoitukset))
+
 (defn- sisaltaa-aloituskuittauksen?
   [ilmoitus]
   (let [{:keys [kuittaukset]} ilmoitus
@@ -111,11 +116,10 @@
 (defn hae-ilmoitukset
   ([db user suodattimet] (hae-ilmoitukset db user suodattimet nil))
   ([db user {:keys [hallintayksikko urakka urakoitsija urakkatyyppi tilat tyypit
-                    kuittaustyypit hakuehto selite vain-myohassa?
+                    kuittaustyypit hakuehto selite
                     aloituskuittauksen-ajankohta tr-numero tunniste
-                    ilmoittaja-nimi ilmoittaja-puhelin] :as hakuehdot}
+                    ilmoittaja-nimi ilmoittaja-puhelin vaikutukset] :as hakuehdot}
     max-maara]
-
    (let [aikavali (aikavaliehto hakuehdot)
          aikavali-alku (when (first aikavali)
                          (konv/sql-timestamp (first aikavali)))
@@ -136,6 +140,8 @@
          selite-annettu? (boolean (and selite (first selite)))
          selite (if selite-annettu? (name (first selite)) "")
          tilat (into #{} tilat)
+         vain-myohassa? (contains? vaikutukset :myohassa)
+         vain-toimenpiteita-aiheuttaneet? (contains? vaikutukset :aiheutti-toimenpiteita )
          debug-viesti (str "Haetaan ilmoituksia: "
                            (viesti urakat "urakoista" "ilman urakoita")
                            (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
@@ -144,6 +150,7 @@
                            (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
                            (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
                            (viesti vain-myohassa? "vain myöhässä olevat: " "myös myöhästyneet")
+                           (viesti vain-toimenpiteita-aiheuttaneet? "vain toimenpiteitä aiheuttaneet olevat: " "myös toimenpiteitä aiheuttamattomat")
                            (viesti selite "selitteellä:" "ilman selitettä")
                            (viesti tunniste "tunnisteella:" "ilman tunnistetta")
                            (viesti hakuehto "hakusanoilla:" "ilman tekstihakua")
@@ -194,11 +201,14 @@
          ilmoitukset (if vain-myohassa?
                        (suodata-myohastyneet ilmoitukset)
                        ilmoitukset)
+         ilmoitukset (if vain-toimenpiteita-aiheuttaneet?
+                       (suodata-toimenpiteita-aiheuttaneet ilmoitukset)
+                       ilmoitukset)
          ilmoitukset (case aloituskuittauksen-ajankohta
                        :alle-tunti (filter #(sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1)) ilmoitukset)
                        :myohemmin (filter #(and
-                                            (sisaltaa-aloituskuittauksen? %)
-                                            (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
+                                             (sisaltaa-aloituskuittauksen? %)
+                                             (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
                                           ilmoitukset)
                        ilmoitukset)]
      (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
@@ -253,6 +263,7 @@
                                            tyyppi
                                            vapaateksti
                                            vakiofraasi
+                                           aiheutti-toimenpiteita
                                            ilmoittaja-etunimi
                                            ilmoittaja-sukunimi
                                            ilmoittaja-matkapuhelin
@@ -337,6 +348,8 @@
                                   (tloik/laheta-ilmoitustoimenpide tloik (:id kuittaus)))
                                 kuittaus)]]
 
+    (when (= tyyppi :lopetus)
+      (q/ilmoitus-aiheutti-toimenpiteita! db (true? aiheutti-toimenpiteita) ilmoituksen-id))
     (vec (remove nil? ilmoitustoimenpiteet))))
 
 (defn hae-ilmoituksia-idlla [db user {:keys [id]}]
@@ -396,7 +409,7 @@
                       (fn [user ilmoitustoimenpiteet]
                         (tarkista-oikeudet db user ilmoitustoimenpiteet)
                         (async
-                         (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
+                          (tallenna-ilmoitustoimenpiteet db tloik user ilmoitustoimenpiteet))))
     (julkaise-palvelu http :hae-ilmoituksia-idlla
                       (fn [user tiedot]
                         (hae-ilmoituksia-idlla db user tiedot)))

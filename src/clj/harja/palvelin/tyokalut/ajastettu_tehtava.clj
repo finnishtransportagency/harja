@@ -29,3 +29,12 @@
                (t/minutes minuutit))
               tehtava
               virhekasittely)))
+
+(defn ajasta-sekunnin-valein [sekunnit tehtava]
+  (when sekunnit
+    (chime-at (periodic-seq
+                (.. (t/now)
+                    (withZone (DateTimeZone/forID "Europe/Helsinki")))
+                (t/seconds sekunnit))
+              tehtava
+              virhekasittely)))

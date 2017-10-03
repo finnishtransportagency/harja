@@ -19,6 +19,10 @@
    :aloitettu "Aloitettu"
    :lopetettu "Lopetettu"})
 
+(def vaikutuksen-selite
+  {:myohassa "Myöhästyneet ilmoitukset"
+   :aiheutti-toimenpiteita "Toimenpiteitä aiheuttaneet ilmoitukset"})
+
 (def kuittaustyypin-otsikko
   {:vastaanotto "Vastaanotto"
    :aloitus "Aloitus"

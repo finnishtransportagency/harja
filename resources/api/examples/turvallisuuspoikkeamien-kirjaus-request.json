@@ -37,16 +37,18 @@
         }
       },
       "vaylamuoto": "tie",
-      "luokittelu": ["tyotapaturma"],
+      "luokittelu": [
+        "tyotapaturma"
+      ],
       "ilmoittaja": {
-        "id":5468135,
+        "id": 5468135,
         "etunimi": "Veera",
         "sukunimi": "Veistelijä"
       },
       "toteuttaja": "Yritys Oy",
       "tilaaja": "Paula Projektipäällikkö",
       "turvallisuuskoordinaattori": {
-        "id":235648,
+        "id": 235648,
         "etunimi": "Mikko",
         "sukunimi": "Meikäläinen"
       },
@@ -60,13 +62,21 @@
       "henkilovahinko": {
         "tyontekijanammatti": "muu_tyontekija",
         "ammatinselite": "Auraaja",
-        "aiheutuneetVammat": ["luunmurtumat"],
-        "vahingoittuneetRuumiinosat": ["selka", "vartalo"],
+        "aiheutuneetVammat": [
+          "luunmurtumat"
+        ],
+        "vahingoittuneetRuumiinosat": [
+          "selka",
+          "vartalo"
+        ],
         "sairauspoissaoloJatkuu": true,
         "sairauspoissaolopaivat": 2,
         "sairaalahoitovuorokaudet": 0
       },
-      "vahinkoluokittelu": ["omaisuusvahinko", "henkilovahinko"],
+      "vahinkoluokittelu": [
+        "omaisuusvahinko",
+        "henkilovahinko"
+      ],
       "vakavuusaste": "vakava",
       "seuraukset": "Kaikki selvisivät hengissä",
       "korjaavatToimenpiteet": [
@@ -81,8 +91,10 @@
           }
         }
       ],
-      "kommentit":[
-        {"kommentti": "Kommentin sisältö"}
+      "kommentit": [
+        {
+          "kommentti": "Kommentin sisältö"
+        }
       ],
       "liitteet": [
         {
@@ -93,7 +105,19 @@
             "sisalto": "... sisältö base64 enkoodattuna ..."
           }
         }
-      ]
+      ],
+      "juurisyy1": {
+        "juurisyy": "puutteelliset_henkilonsuojaimet",
+        "selite": "Suojaimissa oli vikaa."
+      },
+      "juurisyy2": {
+        "juurisyy": "puutteelliset_tyovalineet_tai_koneet",
+        "selite": "Kone oli rikki."
+      },
+      "juurisyy3": {
+        "juurisyy": "muu",
+        "selite": "Syyllinen on Joku Muu."
+      }
     }
   ]
 }

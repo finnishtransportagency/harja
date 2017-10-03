@@ -45,7 +45,8 @@
           "Paikan kuvaus: " (:paikankuvaus ilmoitus)
           "Lisatieto:  " (when (:lisatieto ilmoitus)
                            [yleiset/pitka-teksti (:lisatieto ilmoitus)])
-          "Selitteet: " [selitelista ilmoitus]]
+          "Selitteet: " [selitelista ilmoitus]
+          "Aiheutti toimenpiteitä:" (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
          [:br]
          [yleiset/tietoja {}
           "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
