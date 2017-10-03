@@ -159,7 +159,7 @@
   (doseq [tehtava (:tehtavat toteuma)]
     (kasittele-toteumatehtava c user toteuma tehtava)))
 
-(defn- paivita-toteuman-reitti [db id reitti]
+(defn paivita-toteuman-reitti [db id reitti]
   (when reitti
     (toteumat-q/paivita-toteuman-reitti! db {:id id
                                              :reitti (geometriaksi reitti)})))
