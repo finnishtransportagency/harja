@@ -9,7 +9,7 @@
             [harja.domain.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallinta.indeksit :as indeksit]
-            [harja.tiedot.urakka.yhteystiedot :as yht]
+            [harja.tiedot.urakka.yleiset :as tiedot]
             [harja.tiedot.urakka.sopimustiedot :as sopimus]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka.yhatuonti :as yhatiedot]
@@ -36,7 +36,8 @@
             [harja.ui.lomake :as lomake]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
             [harja.views.urakka.yleiset.paivystajat :as paivystajat]
-            [harja.domain.urakka :as u-domain])
+            [harja.domain.urakka :as u-domain]
+            [harja.domain.urakka :as urakka-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -61,7 +62,7 @@
                                     (> (:id %) 0))
                            (:id %)))
                   uudet-yhteyshenkilot)
-            res (<! (yht/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
+            res (<! (tiedot/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
         (reset! yhteyshenkilot res)
         true)))
 
@@ -123,10 +124,6 @@
    (if (k/virhe? kayttajat)
      []
      kayttajat)])
-
-
-
-
 
 (defn urakan-tyotuntilista [tyotunnit tallenna!]
   [:div
@@ -313,7 +310,7 @@
                                     [napit/palvelinkutsu-nappi "Tallenna yhteyshenkilöt"
                                      #(let [{uusi-ensisijainen :ensisijainen
                                              uusi-varalla :varalla} @henkilot]
-                                        (yht/tallenna-urakan-vastuuhenkilot-roolille
+                                        (tiedot/tallenna-urakan-vastuuhenkilot-roolille
                                           urakka-id rooli
                                           (if (= :ei-muutosta uusi-ensisijainen)
                                             ensisijainen
@@ -432,13 +429,13 @@
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
-        yhteyshenkilotyypit (yht/urakkatyypin-mukaiset-yhteyshenkilotyypit (:tyyppi ur))
+        yhteyshenkilotyypit (tiedot/urakkatyypin-mukaiset-yhteyshenkilotyypit (:tyyppi ur))
         hae! (fn [ur]
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
                            (filter
                              #(not= "urakoitsijan paivystaja" (:rooli %))
-                             (<! (yht/hae-urakan-yhteyshenkilot (:id ur)))))))]
+                             (<! (tiedot/hae-urakan-yhteyshenkilot (:id ur)))))))]
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
@@ -479,6 +476,52 @@
           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
          @yhteyshenkilot]))))
 
+(defn kalustotiedot [ur]
+  (let [kalustorivit (atom nil)
+        hae! (fn [ur]
+               (reset! kalustorivit nil)
+               (go (reset! kalustorivit
+                           (<! (yht/hae-urakan-kalustotiedot (:id ur))))))]
+    (hae! ur)
+    (komp/luo
+      (komp/kun-muuttuu hae!)
+      (fn [ur]
+        [grid/grid
+         {:otsikko "Yhteyshenkilöt"
+          :tyhja "Ei yhteyshenkilöitä."
+          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
+                      #(tallenna-yhteyshenkilot ur kalustorivit %))}
+         [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
+           :hae #(do (when (:rooli %)
+                       (str/capitalize (:rooli %))))
+           :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
+
+           :valinnat (vec (concat [nil] yhteyshenkilotyypit))
+
+           :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
+          {:otsikko "Organisaatio"
+           :nimi :organisaatio
+           :fmt :nimi
+           :leveys 17
+           :tyyppi :valinta
+           :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
+           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+
+          {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+                                   nimi
+                                   (str (:etunimi %)
+                                        (when-let [suku (:sukunimi %)]
+                                          (str " " suku))))
+           :pituus-max 64
+           :aseta (fn [yht arvo]
+                    (assoc yht :nimi arvo))
+           :tyyppi :string :leveys 15
+           :validoi [[:ei-tyhja "Anna yhteyshenkilön nimi"]]}
+          {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
+          {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
+          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
+         @kalustorivit]))))
+
 (defn- nayta-yha-tuontidialogi-tarvittaessa
   "Näyttää YHA-tuontidialogin, jos tarvii."
   [urakka]
@@ -501,8 +544,8 @@
         hae! (fn [urakan-tiedot]
                (reset! kayttajat nil)
                (reset! vastuuhenkilot nil)
-               (go (reset! kayttajat (<! (yht/hae-urakan-kayttajat (:id urakan-tiedot)))))
-               (go (reset! vastuuhenkilot (<! (yht/hae-urakan-vastuuhenkilot (:id urakan-tiedot)))))
+               (go (reset! kayttajat (<! (tiedot/hae-urakan-kayttajat (:id urakan-tiedot)))))
+               (go (reset! vastuuhenkilot (<! (tiedot/hae-urakan-vastuuhenkilot (:id urakan-tiedot)))))
                (when (= :paallystys (:tyyppi ur))
                  (reset! urakka/paallystysurakan-indeksitiedot nil)
                  (go (reset! urakka/paallystysurakan-indeksitiedot
@@ -519,6 +562,8 @@
            [paallystys-indeksit/paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
+         (when (urakka-domain/vesivaylaurakka? ur)
+           [kalustotiedot ur])
          (when (urakka/paivystys-kaytossa? ur)
            [paivystajat/paivystajat ur])
          (when(istunto/ominaisuus-kaytossa? :urakan-tyotunnit)

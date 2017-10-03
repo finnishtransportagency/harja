@@ -1,5 +1,5 @@
-(ns harja.tiedot.urakka.yhteystiedot
-  "Tämä nimiavaruus hallinnoi urakan yhteystietoja ja päivystäjiä."
+(ns harja.tiedot.urakka.yleiset
+  "Tämä nimiavaruus hallinnoi urakan yleiset-sivun tietoja."
   (:require [reagent.core :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
