@@ -61,6 +61,9 @@ UPDATE organisaatio SET elynumero=14 WHERE lyhenne='LAP';
 -- Toteumat
 \i testidata/toteumat.sql
 
+-- Tieverkko
+\i testidata/tierekisteri.sql
+
 -- Sillat
 \i testidata/sillat.sql
 
@@ -127,9 +130,6 @@ SELECT paivita_pohjavesialueet();
 
 -- Suolabonustestausta varten
 \i testidata/vantaa_suolabonusta_varten.sql
-
--- Tieverkko
-\i testidata/tierekisteri.sql
 
 \i testidata/tietyomaat.sql
 
