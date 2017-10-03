@@ -66,6 +66,22 @@
        #(asiakaspalauteluokkien-jarjestys (str/lower-case (first %)))
        rivit)]))
 
+(defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id hallintayksikko-id alkupvm loppupvm]
+  (let [{:keys [toimenpiteita-aiheuttaneet
+                ei-toimenpiteita-aiheuttaneet
+                yhteensa]} (first (ilmoitukset/hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
+                                            db
+                                            urakka-id
+                                            hallintayksikko-id
+                                            alkupvm
+                                            loppupvm))
+        rivit [[toimenpiteita-aiheuttaneet ei-toimenpiteita-aiheuttaneet yhteensa]]]
+    [:taulukko {:otsikko "Ilmoitukset aiheutuneiden toimenpiteiden mukaan"}
+     [{:leveys 2 :otsikko "Aiheutti toimenpiteita"}
+      {:leveys 2 :otsikko "Ei aiheuttanut toimenpiteitä"}
+      {:leveys 2 :otsikko "Yhteensä"}]
+     rivit]))
+
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
@@ -169,6 +185,8 @@
                              [tpp-yht tur-yht urk-yht])])))))]
 
      (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
+
+     (ilmoitukset-toimenpiteiden-mukaan db urakka-id hallintayksikko-id alkupvm loppupvm)
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
