@@ -15,7 +15,9 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
 
-            [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.vesivaylat.alus :as alus]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.organisaatio :as organisaatio]
             [harja.domain.muokkaustiedot :as m]))
 
 (defn jarjestelma-fixture [testit]
@@ -37,25 +39,40 @@
                       urakkatieto-fixture))
 
 (deftest hae-kaikki-alukset
-  (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [args {}
+        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-kaikki-alukset +kayttaja-jvh+
-                              {})]
+                              args)]
+
+    (is (s/valid? ::alus/hae-kaikki-alukset-kysely args))
+    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus tulos))
+
     (is (some? tulos))
     ;; TODO
     ))
 
 (deftest hae-urakan-alukset
-  (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [args {::urakka/id (hae-helsingin-vesivaylaurakan-id)}
+        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-urakan-alukset +kayttaja-jvh+
-                              {})]
+                              args)]
+
+    (is (s/valid? ::alus/hae-urakan-alukset-kysely args))
+    (is (s/valid? ::alus/hae-urakan-alukset-vastaus tulos))
+
     (is (some? tulos))
     ;; TODO
     ))
 
 (deftest hae-urakoitsijan-alukset
-  (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [args {::organisaatio/id (hae-helsingin-vesivaylaurakan-urakoitsija)}
+        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-urakoitsijan-alukset +kayttaja-jvh+
                               {})]
+
+    (is (s/valid? ::alus/hae-urakoitsijan-alukset-kysely args))
+    (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus tulos))
+
     (is (some? tulos))
     ;; TODO
     ))

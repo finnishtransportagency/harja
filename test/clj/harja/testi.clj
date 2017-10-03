@@ -317,6 +317,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-helsingin-vesivaylaurakan-urakoitsija []
+  (ffirst (q (str "SELECT urakoitsija
+                   FROM   urakka
+                   WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'"))))
+
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
                    WHERE
