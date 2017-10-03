@@ -34,11 +34,11 @@
 
 (defn hae-kaikki-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
-  (specql/fetch
-    db
-    ::alus/alus
-    alus/perustiedot
-    {}))
+  (sort-by ::alus/mmsi (specql/fetch
+                         db
+                         ::alus/alus
+                         alus/perustiedot
+                         {})))
 
 (defrecord Alukset []
   component/Lifecycle

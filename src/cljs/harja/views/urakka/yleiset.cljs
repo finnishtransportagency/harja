@@ -503,11 +503,14 @@
              :nimi :alus
              :tyyppi :valinta
              :valinta-arvo #(::alus/mmsi %)
+             :valinnat @alukset
+             :leveys 1
              :valinta-nayta #(if % (str (::alus/mmsi %) " - " (::alus/nimi %)) "- Valitse alus -")
              :validoi [[:ei-tyhja "Valitse alus"]]}
             {:otsikko "Lisätiedot"
              :nimi :lisatiedot
              :tyyppi :string
+             :leveys 4
              :pituus-max 512}] ;; TODO myös kantaan tämä rajoite, TEXT -> VARCHAR
            @linkitykset])))))
 
