@@ -14,6 +14,7 @@ CREATE TABLE vv_alus (
 CREATE TABLE vv_alus_urakka (
   alus INTEGER REFERENCES vv_alus(mmsi),
   urakka INTEGER REFERENCES urakka(id),
+  lisatiedot TEXT,
 
   luotu TIMESTAMP DEFAULT NOW(),
   luoja INTEGER REFERENCES kayttaja(id) NOT NULL,
