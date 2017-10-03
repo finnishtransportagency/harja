@@ -11,8 +11,7 @@
             [harja.transit :as transit]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
-            [harja.domain.vesivaylat.turvalaite :as tu]
-            [harja.kyselyt.vesivaylat.turvalaitteet :as tu-q]))
+            [harja.domain.vesivaylat.alus :as alus]))
 
 (defn hae-urakan-alukset [db user tiedot]
   ;; TODO Toteuta
@@ -41,22 +40,23 @@
       :hae-urakan-alukset
       (fn [user tiedot]
         (hae-urakan-alukset db user tiedot))
-      ;; TODO spec
+      {:kysely-spec ::alus/hae-urakan-alukset-kysely
+       :vastaus-spec ::alus/hae-urakan-alukset-vastaus}
       )
     (julkaise-palvelu
       http
       :hae-urakoitsijan-alukset
       (fn [user tiedot]
         (hae-urakoitsijan-alukset db user tiedot))
-      ;; TODO spec
-      )
+      {:kysely-spec ::alus/hae-urakoitsijan-alukset-kysely
+       :vastaus-spec ::alus/hae-urakoitsijan-alukset-vastaus})
     (julkaise-palvelu
       http
       :hae-kaikki-alukset
       (fn [user tiedot]
         (hae-kaikki-alukset db user tiedot))
-      ;; TODO spec
-      )
+      {:kysely-spec ::alus/hae-kaikki-alukset-kysely
+       :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     this)
 
   (stop [this]
