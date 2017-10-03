@@ -30,6 +30,7 @@
             [reagent.core :as r]
             [harja.ui.viesti :as viesti]
             [harja.domain.roolit :as roolit]
+            [harja.domain.vesivaylat.alus :as alus]
             [harja.ui.napit :as napit]
             [harja.tiedot.urakat :as urakat]
             [harja.tiedot.urakka.urakan-tyotunnit :as urakan-tyotunnit]
@@ -368,10 +369,10 @@
          [vastuuhenkilo-tooltip varalla]])
       (when voi-muokata?
         [:span.klikattava {:on-click #(modal/nayta!
-                                       {:otsikko (str "Urakan ensisijainen "
-                                                      (case rooli
-                                                        ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
-                                                        "vastuuhenkilo" "vastuuhenkilö"))}
+                                        {:otsikko (str "Urakan ensisijainen "
+                                                       (case rooli
+                                                         ("ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja") "urakanvalvoja"
+                                                         "vastuuhenkilo" "vastuuhenkilö"))}
                                         [aseta-vastuuhenkilo
                                          paivita-vastuuhenkilot!
                                          urakka-id kayttaja kayttajat
@@ -476,51 +477,39 @@
           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
          @yhteyshenkilot]))))
 
-(defn kalustotiedot [ur]
-  (let [kalustorivit (atom nil)
-        hae! (fn [ur]
-               (reset! kalustorivit nil)
-               (go (reset! kalustorivit
-                           (<! (yht/hae-urakan-kalustotiedot (:id ur))))))]
-    (hae! ur)
+(defn alukset [ur]
+  (let [alukset (atom nil)
+        linkitykset (atom nil)
+        hae-alukset (fn [ur]
+                      (reset! alukset nil)
+                      (go (reset! alukset
+                                  (<! (tiedot/hae-urakan-alukset (:id ur))))))
+        hae-linkitykset (fn [ur]
+                          (reset! linkitykset nil)
+                          ;; TODO Hae
+                          (go (reset! linkitykset [])))]
     (komp/luo
-      (komp/kun-muuttuu hae!)
-      (fn [ur]
-        [grid/grid
-         {:otsikko "Yhteyshenkilöt"
-          :tyhja "Ei yhteyshenkilöitä."
-          :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-                      #(tallenna-yhteyshenkilot ur kalustorivit %))}
-         [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
-           :hae #(do (when (:rooli %)
-                       (str/capitalize (:rooli %))))
-           :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
-
-           :valinnat (vec (concat [nil] yhteyshenkilotyypit))
-
-           :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
-          {:otsikko "Organisaatio"
-           :nimi :organisaatio
-           :fmt :nimi
-           :leveys 17
-           :tyyppi :valinta
-           :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
-
-          {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                                   nimi
-                                   (str (:etunimi %)
-                                        (when-let [suku (:sukunimi %)]
-                                          (str " " suku))))
-           :pituus-max 64
-           :aseta (fn [yht arvo]
-                    (assoc yht :nimi arvo))
-           :tyyppi :string :leveys 15
-           :validoi [[:ei-tyhja "Anna yhteyshenkilön nimi"]]}
-          {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
-          {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
-          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
-         @kalustorivit]))))
+      (komp/sisaan #(do
+                      (hae-linkitykset)
+                      (hae-alukset ur)))
+      (if (or (empty? @linkitykset)
+              (empty? @alukset))
+        (fn [ur]
+          [grid/grid
+           {:otsikko "Alukset"
+            :tyhja "Ei aluksia"
+            :tallenna #(log "LOGITUS")}
+           [{:otsikko "Alus"
+             :nimi :alus
+             :tyyppi :valinta
+             :valinta-arvo #(::alus/mmsi %)
+             :valinta-nayta #(if % (str (::alus/mmsi %) " - " (::alus/nimi %)) "- Valitse alus -")
+             :validoi [[:ei-tyhja "Valitse alus"]]}
+            {:otsikko "Lisätiedot"
+             :nimi :lisatiedot
+             :tyyppi :string
+             :pituus-max 512}] ;; TODO myös kantaan tämä rajoite, TEXT -> VARCHAR
+           @linkitykset])))))
 
 (defn- nayta-yha-tuontidialogi-tarvittaessa
   "Näyttää YHA-tuontidialogin, jos tarvii."
@@ -563,8 +552,8 @@
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
          (when (urakka-domain/vesivaylaurakka? ur)
-           [kalustotiedot ur])
+           [alukset ur])
          (when (urakka/paivystys-kaytossa? ur)
            [paivystajat/paivystajat ur])
-         (when(istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+         (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
            [urakan-tyotunnit ur])]))))

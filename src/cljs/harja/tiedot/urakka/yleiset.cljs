@@ -3,7 +3,7 @@
   (:require [reagent.core :as r]
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
-            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.urakka :as urakka]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
@@ -46,7 +46,7 @@
 
 (defn urakkatyypin-mukaiset-yhteyshenkilotyypit [urakkatyyppi]
   (cond
-    (urakka-domain/vesivaylaurakkatyyppi? urakkatyyppi) yhteyshenkilotyypit-vesivaylat
+    (urakka/vesivaylaurakkatyyppi? urakkatyyppi) yhteyshenkilotyypit-vesivaylat
     (= :paallystys urakkatyyppi) yhteyshenkilotyypit-paallystys
     (= :tiemerkinta urakkatyyppi) yhteyshenkilotyypit-tiemerkinta
     :default yhteyshenkilotyypit-oletus))
@@ -72,6 +72,9 @@
 
 (defn hae-urakan-yhteyshenkilot [urakka-id]
   (k/post! :hae-urakan-yhteyshenkilot urakka-id))
+
+(defn hae-urakan-alukset [urakka-id]
+  (k/post! :hae-urakan-alukset {::urakka/id urakka-id}))
 
 (defn tallenna-urakan-paivystajat
   "Tallentaa urakan päivystäjät. Palauttaa kanavan, josta vastauksen voi lukea."
