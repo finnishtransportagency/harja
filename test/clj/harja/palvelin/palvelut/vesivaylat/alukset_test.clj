@@ -39,16 +39,20 @@
                       urakkatieto-fixture))
 
 (deftest hae-kaikki-alukset
-  (let [args {}
+  (let [kaikkien-alusten-lkm-kannassa (ffirst (q "SELECT COUNT(*) FROM vv_alus"))
+        args {}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-kaikki-alukset +kayttaja-jvh+
                               args)]
 
     (is (s/valid? ::alus/hae-kaikki-alukset-kysely args))
-    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus tulos))))
+    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus tulos))
+
+    (is (= (count tulos) kaikkien-alusten-lkm-kannassa))))
 
 (deftest hae-urakan-alukset
-  (let [args {::urakka/id (hae-helsingin-vesivaylaurakan-id)}
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        args {::urakka/id urakka-id}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-urakan-alukset +kayttaja-jvh+
                               args)]
