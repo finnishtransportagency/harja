@@ -52,13 +52,16 @@
 
 (deftest hae-urakan-alukset
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakan-alusten-lkm-kannassa (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka WHERE urakka = " urakka-id ";"))
         args {::urakka/id urakka-id}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-urakan-alukset +kayttaja-jvh+
                               args)]
 
     (is (s/valid? ::alus/hae-urakan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-urakan-alukset-vastaus tulos))))
+    (is (s/valid? ::alus/hae-urakan-alukset-vastaus tulos))
+
+    (is (= (count tulos) urakan-alusten-lkm-kannassa))))
 
 (deftest hae-urakoitsijan-alukset
   (let [args {::organisaatio/id (hae-helsingin-vesivaylaurakan-urakoitsija)}
