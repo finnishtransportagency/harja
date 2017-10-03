@@ -8,22 +8,63 @@
             [taoensso.timbre :as log]
             [clojure.core.async :refer [go <! >! go-loop timeout close! chan]]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [specql.core :as specql]
+            [clj-time.coerce :refer [from-long to-sql-date]]
+            [clojure.string :as str]
+            [harja.geo :as geo]
+            [jeesql.core :refer [defqueries]]
 
-(defn- kasittele-vastaus! [{:keys [db integraatioloki] :as deps} viesti]
-  (log/debug (str "Saatiin vastauksena " (count (:features viesti)) " laivan sijainnit.")))
+            [harja.domain.vesivaylat.alus :as alus]
+            [harja.domain.muokkaustiedot :as m]
+            [clojure.java.jdbc :as jdbc]))
 
-(defn- tee-haku! [deps url konteksti]
+(defqueries "harja/kyselyt/vesivaylat/ais-data.sql")
+
+(defn- kasittele-vastaus! [{:keys [db konteksti]} halutut viesti]
+  (let [tulos (filter (comp halutut :mmsi) (:features viesti))]
+    (jdbc/with-db-transaction [db db]
+      (doseq [laiva tulos]
+        (lisaa-alukselle-reittipiste<! db
+                                       {:mmsi (:mmsi laiva)
+                                        :aika (-> laiva
+                                                  (get-in [:properties :timestampExternal])
+                                                  from-long
+                                                  to-sql-date)
+                                        :sijainti (-> laiva
+                                                      :geometry
+                                                      (update :type (comp keyword str/lower-case))
+                                                      geo/clj->pg
+                                                      geo/geometry)})))
+    (let [loki (str "Tallennettiin " (count tulos) "/" (count halutut) " laivan sijainnit.")]
+      (when konteksti (integraatiotapahtuma/lisaa-tietoja konteksti loki))
+      (log/debug loki))))
+
+(defn- tee-haku! [deps url alukset konteksti]
   (let [{body :body} (integraatiotapahtuma/laheta
                        konteksti
                        :http
                        {:metodi :GET
                         :url url})]
-    (kasittele-vastaus! deps (cheshire/parse-string body true))))
+    (kasittele-vastaus! (assoc deps :konteksti konteksti) alukset (cheshire/parse-string body true))))
+
+(defn- kasiteltavat-alukset* [alukset]
+  (->> alukset
+       (map ::alus/mmsi)
+       (into #{})))
+
+(defn kasiteltavat-alukset [db]
+  (kasiteltavat-alukset*
+    (specql/fetch db
+                  ::alus/alus
+                  #{::alus/mmsi}
+                  {::m/poistettu? false})))
 
 (defn paivita-alusten-ais-data! [{:keys [db integraatioloki] :as deps} url]
   (let [palvelun-nimi "digitraffic"
-        haun-nimi "ais-data-paivitys"]
+        haun-nimi "ais-data-paivitys"
+        alukset (kasiteltavat-alukset db)]
+    (log/debug (str "Haetaan " (count alukset) " laivan sijainti"))
     (lukko/yrita-ajaa-lukon-kanssa
       db
       haun-nimi
@@ -34,7 +75,7 @@
           palvelun-nimi
           haun-nimi
           (fn [konteksti]
-            (tee-haku! deps url konteksti)))))))
+            (tee-haku! deps url alukset konteksti)))))))
 
 (defrecord Ais-haku [url sekunnit]
   component/Lifecycle
