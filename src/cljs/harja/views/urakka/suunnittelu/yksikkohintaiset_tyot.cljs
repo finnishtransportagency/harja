@@ -127,8 +127,11 @@
 
 (defn- suodattimet [urakka]
   [valinnat/urakkavalinnat {:urakka urakka}
-   ^{:key "valinnat"}
-   [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut urakka]])
+   (with-meta
+     (if (urakka-domain/vesivaylaurakka? urakka)
+       [u-valinnat/urakan-sopimus-ja-hoitokausi urakka]
+       [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut urakka])
+     {:key "valinnat"})])
 
 (defn yksikkohintaiset-tyot-view [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-yks-hint-tyot u/urakan-yks-hint-tyot

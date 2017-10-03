@@ -33,6 +33,10 @@
             "vastaus"
           ]
         },
+        "aiheutti-toimenpiteita": {
+          "id": "urn:harja/ilmoitustoimenpide/aiheutti-toimenpiteita",
+          "type": "boolean"
+        },
         "ilmoittaja": {
           "id": "urn:harja/ilmoitustoimenpide/ilmoittaja",
           "type": "object",
