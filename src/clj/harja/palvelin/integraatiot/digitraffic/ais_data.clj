@@ -1,23 +1,20 @@
 (ns harja.palvelin.integraatiot.digitraffic.ais-data
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :as kutsu]
-            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
-            [org.httpkit.client :as http]
             [taoensso.timbre :as log]
-            [clojure.core.async :refer [go <! >! go-loop timeout close! chan]]
-            [harja.palvelin.tyokalut.lukot :as lukko]
             [cheshire.core :as cheshire]
             [specql.core :as specql]
-            [clj-time.coerce :refer [from-long to-sql-date]]
-            [clojure.string :as str]
-            [harja.geo :as geo]
             [jeesql.core :refer [defqueries]]
+            [clojure.java.jdbc :as jdbc]
+            [clojure.core.async :refer [go <! >! go-loop timeout close! chan]]
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.geo :as geo]
 
             [harja.domain.vesivaylat.alus :as alus]
-            [harja.domain.muokkaustiedot :as m]
-            [clojure.java.jdbc :as jdbc]))
+            [harja.domain.muokkaustiedot :as m]))
 
 (defqueries "harja/kyselyt/vesivaylat/ais-data.sql")
 
