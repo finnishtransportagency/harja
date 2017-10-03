@@ -562,13 +562,6 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "kuvaus": {
-                    "id": "urn:harja/tielupa/mainoslupa/mainokset/0/kuvaus",
-                    "required": true,
-                    "enum": [
-                      ""
-                    ]
-                  },
                   "sijainti": {
                     "id": "urn:harja/tielupa/sijainnit/0/sijainti",
                     "type": "object",
@@ -673,7 +666,10 @@
                     "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/kuvaus",
                     "required": true,
                     "enum": [
-                      ""
+                      "Opastustaulu",
+                      "Osoiteviitta",
+                      "Ennakkomerkki",
+                      "Erkanemisviitta"
                     ]
                   },
                   "sijainti": {
