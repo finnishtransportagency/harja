@@ -19,6 +19,8 @@
   ["vv_alus_sijainti" ::aluksen-sijainti
    {"alus" ::alus-mmsi}])
 
+(def perustiedot #{::mmsi ::nimi ::lisatiedot})
+
 (s/def ::hae-urakan-alukset-kysely
   (s/keys :req [::urakka/id]))
 

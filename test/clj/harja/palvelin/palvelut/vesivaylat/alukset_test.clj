@@ -47,9 +47,7 @@
     (is (s/valid? ::alus/hae-kaikki-alukset-kysely args))
     (is (s/valid? ::alus/hae-kaikki-alukset-vastaus tulos))
 
-    (is (some? tulos))
-    ;; TODO
-    ))
+    (is (some? tulos))))
 
 (deftest hae-urakan-alukset
   (let [args {::urakka/id (hae-helsingin-vesivaylaurakan-id)}
@@ -60,9 +58,7 @@
     (is (s/valid? ::alus/hae-urakan-alukset-kysely args))
     (is (s/valid? ::alus/hae-urakan-alukset-vastaus tulos))
 
-    (is (some? tulos))
-    ;; TODO
-    ))
+    (is (some? tulos))))
 
 (deftest hae-urakoitsijan-alukset
   (let [args {::organisaatio/id (hae-helsingin-vesivaylaurakan-urakoitsija)}
@@ -71,8 +67,4 @@
                               {})]
 
     (is (s/valid? ::alus/hae-urakoitsijan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus tulos))
-
-    (is (some? tulos))
-    ;; TODO
-    ))
+    (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus tulos))))
