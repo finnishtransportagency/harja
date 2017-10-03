@@ -67,6 +67,11 @@
                                       "- Valitse kuittaustyyppi -")
                     :vihje (when (= :vaara-urakka (:tyyppi kuittaus))
                              "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
+                   (when (:tyyppi kuittaus)
+                     {:nimi :aiheutti-toimenpiteita
+                      :otsikko "Aiheutti toimenpiteita"
+                      :tyyppi :checkbox
+                      :vihje "Ilmoituksen myötä jouduttiin tekemään toimenpiteitä."})
                    {:nimi :vakiofraasi
                     :otsikko "Vakiofraasi"
                     :tyyppi :haku
@@ -180,8 +185,11 @@
           :nimi :tyyppi
           :vihje (when (= :vaara-urakka (:tyyppi data))
                    "Oikean urakan tiedot pyydetään välitettäväksi vapaatekstikentässä.")}
+         (when (= tyyppi :lopetus)
+           {:otsikko "Aiheutti toimenpiteitä"
+            :tyyppi :checkbox
+            :nimi :aiheutti-toimenpiteita})
          vakiofraasi-kentta
-
          {:otsikko "Vapaateksti"
           :tyyppi :text
           :koko [80 :auto]
@@ -214,7 +222,13 @@
                                   [napit/tallenna "Kuittaa"
                                    #(e! (v/->TallennaPikakuittaus))
                                    {:disabled tallennus-kaynnissa?}])}
-      [{:tyyppi :string
+      [(when (= tyyppi :lopetus)
+         {:nimi :aiheutti-toimenpiteita
+          :otsikko "Aiheutti toimenpiteita"
+          :tyyppi :checkbox
+          :palstoja 2
+          ::lomake/col-luokka ""})
+       {:tyyppi :string
         :nimi :vapaateksti
         :otsikko "Vapaateksti" :palstoja 2
         ::lomake/col-luokka ""}
