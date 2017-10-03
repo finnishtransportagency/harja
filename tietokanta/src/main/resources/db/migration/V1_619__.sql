@@ -24,6 +24,8 @@ CREATE TABLE vv_alus_urakka (
   poistaja INTEGER REFERENCES kayttaja(id)
 );
 
+CREATE UNIQUE INDEX uniikki_urakan_alus on vv_alus_urakka (alus, urakka) WHERE poistettu = false;
+
 CREATE TABLE vv_alus_sijainti (
   alus INTEGER REFERENCES vv_alus (mmsi),
   sijainti POINT NOT NULL,
