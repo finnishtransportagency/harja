@@ -4,6 +4,7 @@
             [cheshire.core :as cheshire]
             [specql.core :as specql]
             [jeesql.core :refer [defqueries]]
+            [clj-time.coerce :refer [from-long to-sql-date]]
             [clojure.java.jdbc :as jdbc]
             [clojure.core.async :refer [go <! >! go-loop timeout close! chan]]
             [clojure.string :as str]
