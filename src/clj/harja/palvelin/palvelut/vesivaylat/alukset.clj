@@ -11,21 +11,20 @@
             [harja.transit :as transit]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.vesivaylat.alukset :as alukset-q]
             [harja.domain.vesivaylat.alus :as alus]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.organisaatio :as organisaatio]
             [specql.core :as specql]
             [specql.op :as op]))
 
 (defn hae-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
-  ;; TODO Toteuta
-  ;; TODO Testi
-  (log/debug "TODO"))
+  (alukset-q/hae-urakan-alukset db {:urakka (::urakka/id tiedot)}))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Toteuta
-  ;; TODO Testi
-  ;; TODO Oikeustarkistus
-  (log/debug "TODO"))
+  ;; TODO Oikeustarkistus + testi sille
+  (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)}))
 
 (defn hae-kaikki-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
