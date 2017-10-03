@@ -48,6 +48,7 @@
     (is (s/valid? ::alus/hae-kaikki-alukset-kysely args))
     (is (s/valid? ::alus/hae-kaikki-alukset-vastaus tulos))
 
+    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
     (is (= (count tulos) kaikkien-alusten-lkm-kannassa))))
 
 (deftest hae-urakan-alukset
@@ -61,13 +62,16 @@
     (is (s/valid? ::alus/hae-urakan-alukset-kysely args))
     (is (s/valid? ::alus/hae-urakan-alukset-vastaus tulos))
 
+    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
     (is (= (count tulos) urakan-alusten-lkm-kannassa))))
 
 (deftest hae-urakoitsijan-alukset
-  (let [args {::organisaatio/id (hae-helsingin-vesivaylaurakan-urakoitsija)}
+  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        args {::organisaatio/id urakoitsija-id}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-urakoitsijan-alukset +kayttaja-jvh+
-                              {})]
+                              args)]
 
+    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
     (is (s/valid? ::alus/hae-urakoitsijan-alukset-kysely args))
     (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus tulos))))

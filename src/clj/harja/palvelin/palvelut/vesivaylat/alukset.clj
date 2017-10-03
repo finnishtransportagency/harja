@@ -15,16 +15,22 @@
             [harja.domain.vesivaylat.alus :as alus]
             [harja.domain.urakka :as urakka]
             [harja.domain.organisaatio :as organisaatio]
+            [namespacefy.core :refer [namespacefy]]
             [specql.core :as specql]
-            [specql.op :as op]))
+            [specql.op :as op]
+            [namespacefy.core :as namespacefy]))
 
 (defn hae-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
-  (alukset-q/hae-urakan-alukset db {:urakka (::urakka/id tiedot)}))
+  (namespacefy
+    (alukset-q/hae-urakan-alukset db {:urakka (::urakka/id tiedot)})
+    {:ns :harja.domain.vesivaylat.alus}))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
-  (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)}))
+  (namespacefy/namespacefy
+    (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)})
+    {:ns :harja.domain.vesivaylat.alus}))
 
 (defn hae-kaikki-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
