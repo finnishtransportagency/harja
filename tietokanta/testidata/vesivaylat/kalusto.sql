@@ -1,3 +1,4 @@
+-- Lisätään hienoja aluksia
 INSERT INTO vv_alus (mmsi, nimi, lisatiedot, luoja) VALUES
   (230990040, 'Rohmu', 'Hieno laiva', (SELECT id
                                        FROM kayttaja
@@ -206,3 +207,12 @@ INSERT INTO vv_alus (mmsi, nimi, lisatiedot, luoja) VALUES
   (230028000, '', '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));
+
+-- Liitetään muutama alus urakkaan
+
+INSERT INTO vv_alus_urakka (alus, urakka)
+VALUES (230990040, (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
+INSERT INTO vv_alus_urakka (alus, urakka)
+VALUES (230111580, (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
+INSERT INTO vv_alus_urakka (alus, urakka)
+VALUES (230941190, (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'));
