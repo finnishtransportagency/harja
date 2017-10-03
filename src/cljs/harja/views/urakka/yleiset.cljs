@@ -496,7 +496,7 @@
               (empty? @alukset))
         (fn [ur]
           [grid/grid
-           {:otsikko "Alukset"
+           {:otsikko "Urakassa käytössä olevat alukset"
             :tyhja "Ei aluksia"
             :tallenna #(log "LOGITUS")}
            [{:otsikko "Alus"
