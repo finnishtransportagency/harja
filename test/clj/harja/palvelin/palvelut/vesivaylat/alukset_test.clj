@@ -67,11 +67,16 @@
 
 (deftest hae-urakoitsijan-alukset
   (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        urakoitsijan-urakat (hae-urakoitsijan-urakka-idt urakoitsija-id)
+        urakoitsijan-alusten-lkm-kannassa (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka
+                                                      WHERE urakka IN (" (str/join "," urakoitsijan-urakat) ");"))
         args {::organisaatio/id urakoitsija-id}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-urakoitsijan-alukset +kayttaja-jvh+
                               args)]
 
-    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
     (is (s/valid? ::alus/hae-urakoitsijan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus tulos))))
+    (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus tulos))
+
+    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
+    (is (= (count tulos) urakoitsijan-alusten-lkm-kannassa))))
