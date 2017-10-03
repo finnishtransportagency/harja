@@ -40,6 +40,10 @@
                          alus/perustiedot
                          {})))
 
+(defn hae-alusten-reitit [db _ tiedot]
+  (oikeudet/ei-oikeustarkistusta!)
+  (alukset-q/alusten-reitit db tiedot))
+
 (defrecord Alukset []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -66,6 +70,13 @@
         (hae-kaikki-alukset db user tiedot))
       {:kysely-spec ::alus/hae-kaikki-alukset-kysely
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
+    (julkaise-palvelu
+      http
+      :hae-alusten-reitit
+      (fn [user tiedot]
+        (hae-alusten-reitit db user tiedot))
+      {:kysely-spec ::alus/hae-alusten-reitit-kysely
+       :vastaus-spec ::alus/hae-alusten-reitit-vastaus})
     this)
 
   (stop [this]

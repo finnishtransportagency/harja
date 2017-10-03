@@ -20,6 +20,7 @@
    {"alus" ::alus-mmsi}])
 
 (def perustiedot #{::mmsi ::nimi ::lisatiedot})
+(def sijaintitiedot #{::alus-mmsi ::sijainti ::aika})
 
 (s/def ::hae-urakan-alukset-kysely
   (s/keys :req [::urakka/id]))
@@ -38,3 +39,9 @@
 
 (s/def ::hae-kaikki-alukset-vastaus
   (s/coll-of ::alus))
+
+(s/def ::hae-alusten-reitit-kysely
+  (s/keys :opt-un [::alku ::loppu ::laivat]))
+
+(s/def ::hae-alusten-reitit-vastaus
+  (s/coll-of ::aluksen-sijainti))
