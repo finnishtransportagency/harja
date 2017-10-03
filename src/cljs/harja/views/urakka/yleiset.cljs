@@ -478,22 +478,23 @@
          @yhteyshenkilot]))))
 
 (defn alukset [ur]
-  (let [alukset (atom nil)
-        linkitykset (atom nil)
-        hae-alukset (fn [ur]
-                      (reset! alukset nil)
-                      (go (reset! alukset
-                                  (<! (tiedot/hae-urakan-alukset (:id ur))))))
-        hae-linkitykset (fn [ur]
-                          (reset! linkitykset nil)
-                          ;; TODO Hae
-                          (go (reset! linkitykset [])))]
+  (let [urakoitsijan-alukset (atom nil)
+        urakan-alukset (atom nil)
+        hae-urakoitsijan-alukset (fn [ur]
+                                   (reset! urakoitsijan-alukset nil)
+                                   (go (reset! urakoitsijan-alukset
+                                               ;; TODO Urakoitsija id tänne
+                                               (<! (tiedot/hae-urakoitsijan-alukset 28)))))
+        hae-urakan-alukset (fn [ur]
+                             (reset! urakan-alukset nil)
+                             (go (reset! urakan-alukset
+                                         (<! (tiedot/hae-urakan-alukset (:id ur))))))]
     (komp/luo
       (komp/sisaan #(do
-                      (hae-linkitykset)
-                      (hae-alukset ur)))
-      (if (or (empty? @linkitykset)
-              (empty? @alukset))
+                      (hae-urakan-alukset)
+                      (hae-urakoitsijan-alukset ur)))
+      (if (or (empty? @urakan-alukset)
+              (empty? @urakoitsijan-alukset))
         (fn [ur]
           [grid/grid
            {:otsikko "Urakassa käytössä olevat alukset"
@@ -503,7 +504,7 @@
              :nimi :alus
              :tyyppi :valinta
              :valinta-arvo #(::alus/mmsi %)
-             :valinnat @alukset
+             :valinnat @urakoitsijan-alukset
              :leveys 1
              :valinta-nayta #(if % (str (::alus/mmsi %) " - " (::alus/nimi %)) "- Valitse alus -")
              :validoi [[:ei-tyhja "Valitse alus"]]}
@@ -512,7 +513,7 @@
              :tyyppi :string
              :leveys 4
              :pituus-max 512}] ;; TODO myös kantaan tämä rajoite, TEXT -> VARCHAR
-           @linkitykset])))))
+           @urakan-alukset])))))
 
 (defn- nayta-yha-tuontidialogi-tarvittaessa
   "Näyttää YHA-tuontidialogin, jos tarvii."

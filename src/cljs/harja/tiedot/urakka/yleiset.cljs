@@ -76,6 +76,9 @@
 (defn hae-urakan-alukset [urakka-id]
   (k/post! :hae-urakan-alukset {::urakka/id urakka-id}))
 
+(defn hae-urakoitsijan-alukset [urakoitsija-id]
+  (k/post! :hae-urakoitsijan-alukset {::organisaatio/id urakoitsija-id}))
+
 (defn tallenna-urakan-paivystajat
   "Tallentaa urakan päivystäjät. Palauttaa kanavan, josta vastauksen voi lukea."
   [urakka-id paivystajat poistettavat]
