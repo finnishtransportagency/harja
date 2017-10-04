@@ -170,3 +170,31 @@
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
     (is (rivit "TR-osoite: Ei tierekisteriosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
+
+
+
+(deftest tekstiviestin-parsinta
+  (is (= (tekstiviestit/parsi-tekstiviesti "V3")
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti ""})
+      "Perustapaus osataan parsia oikein")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "V3Jotain")
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain"})
+      "Vapaateksti osataan parsia oikein")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "V3 Jotain jännää")
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain jännää"})
+      "Vapaateksti osataan parsia oikein välilyönteineen")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "V666 Jotain jännää")
+         {:toimenpide "vastaanotto" :viestinumero 666 :vapaateksti "Jotain jännää"})
+      "Moninumeroinen viestinumero osataan parsia oikein")
+
+  (is (thrown? Exception (tekstiviestit/parsi-tekstiviesti "666"))
+      "Poikkeus heitetään, kun kuittaustyyppi uupuu")
+
+  (is (thrown? Exception (tekstiviestit/parsi-tekstiviesti "V"))
+      "Poikkeus heitetään, kun viestinumero uupuu")
+
+  (is (thrown? Exception (tekstiviestit/parsi-tekstiviesti "1V"))
+      "Poikkeus heitetään, kun kuittaustyyppiä & viestinumeroa ei saada parsittua"))

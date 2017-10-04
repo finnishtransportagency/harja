@@ -61,15 +61,16 @@
              :virheet [{:koodi :tuntematon-viestinumero
                         :viesti (format "Tuntematon viestinumero: %s" numero)}]})))
 
-(defn parsi-vapaateksti [viesti]
-  (when (< 2 (count viesti)) (string/trim (.substring viesti 2 (count viesti)))))
-
 (defn parsi-tekstiviesti [viesti]
   (when (> 2 (count viesti))
     (throw+ {:type :viestinumero-tai-toimenpide-puuttuu}))
-  (let [toimenpide (parsi-toimenpide (str (nth viesti 0)))
-        viestinumero (parsi-viestinumero (str (nth viesti 1)))
-        vapaateksti (parsi-vapaateksti viesti)]
+  (let [;; osat ovat: 1. toimenpide joka on 1 merkki (.{1})
+        ;;            2. viestinumero ([0-9]+)
+        ;;            3. vapaateksti (.+)
+        osat (re-find #"^(.{1})([0-9]+)(.*)" viesti)
+        toimenpide (parsi-toimenpide (nth osat 1))
+        viestinumero (parsi-viestinumero (nth osat 2))
+        vapaateksti (.trim (nth osat 3))]
     {:toimenpide toimenpide
      :viestinumero viestinumero
      :vapaateksti vapaateksti}))
@@ -84,7 +85,7 @@
   (try+
     (let [{:keys [toimenpide vapaateksti viestinumero]} (parsi-tekstiviesti viesti)
           {:keys [ilmoitus ilmoitusid yhteyshenkilo]} (hae-paivystajatekstiviesti db viestinumero puhelinnumero)
-          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db yhteyshenkilo ))
+          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db yhteyshenkilo))
           tallenna (fn [toimenpide vapaateksti]
                      (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
                        db
