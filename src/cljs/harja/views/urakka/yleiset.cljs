@@ -483,8 +483,8 @@
         hae-urakoitsijan-alukset (fn [ur]
                                    (reset! urakoitsijan-alukset nil)
                                    (go (reset! urakoitsijan-alukset
-                                               ;; TODO Urakoitsija id tänne
-                                               (<! (tiedot/hae-urakoitsijan-alukset 28)))))
+                                               (<! (tiedot/hae-urakoitsijan-alukset
+                                                     (get-in ur [:urakoitsija :id]))))))
         hae-urakan-alukset (fn [ur]
                              (reset! urakan-alukset nil)
                              (go (reset! urakan-alukset
@@ -493,8 +493,8 @@
       (komp/sisaan #(do
                       (hae-urakan-alukset)
                       (hae-urakoitsijan-alukset ur)))
-      (if (or (empty? @urakan-alukset)
-              (empty? @urakoitsijan-alukset))
+      (if (or (nil? @urakan-alukset)
+              (nil? @urakoitsijan-alukset))
         (fn [ur]
           [grid/grid
            {:otsikko "Urakassa käytössä olevat alukset"
