@@ -435,7 +435,7 @@
     (is (> (count (:laatupoikkeamat vastaus-lisaoikeudella))
            (count (:laatupoikkeamat vastaus-ilman-lisaoikeutta))))))
 
-(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-ylimaaraiset-urakat
+(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-liikaa-urakoita
   ;; Pyydetään hakemaan asiat tilannekuvaan kaikista urakoista, mutta saamme saman vastauksen kuin
   ;; haettaessa vain niistä urakoista, joihin käyttäjällä on hakuoikeus.
   ;; Tällä osoitetaan, että palvelu rajaa haettavat urakat vain niihin, joilla käyttäjällä on oikeus.
