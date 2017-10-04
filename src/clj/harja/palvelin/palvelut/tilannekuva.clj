@@ -609,6 +609,7 @@
           (q/hae-toteumien-asiat db
                                  (as-> parametrit p
                                        (suodattimet-parametreista p)
+                                       ;; FIXME luettavat-urakat ei huomioi erikoisoikeutta
                                        (assoc p :urakat (luettavat-urakat user p))
                                        (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
                                        (merge p (select-keys parametrit [:x :y])))))
@@ -641,6 +642,7 @@
                                   (as-> parametrit p
                                         (suodattimet-parametreista p)
                                         (assoc p
+                                          ;; FIXME luettavat-urakat ei huomioi erikoisoikeutta
                                           :urakat (luettavat-urakat user p)
                                           :tyypit (map name (haettavat (:tarkastukset p)))
                                           :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
@@ -666,6 +668,7 @@
                                  (as-> parametrit p
                                        (suodattimet-parametreista p)
                                        (assoc p
+                                         ;; FIXME luettavat-urakat ei huomioi erikoisoikeutta
                                          :urakat (luettavat-urakat user p)
                                          :x x
                                          :y y
@@ -694,6 +697,7 @@ paallystyskohdeosan-tiedot-xf
 (defn hae-paallystysten-tiedot-kartalle
   "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
   [db user {:keys [x y toleranssi nykytilanne? alku loppu] :as parametrit}]
+  ;; FIXME luettavat-urakat ei huomioi erikoisoikeutta
   (let [urakat (luettavat-urakat user parametrit)]
     (when (or (not (empty? urakat))
               (oikeudet/voi-lukea? (if nykytilanne?
@@ -726,6 +730,7 @@ paallystyskohdeosan-tiedot-xf
            fim :fim
            http :http-palvelin
            :as this}]
+    ;; Tämä palvelu palauttaa tilannekuvaan asiat, jotka piirretään frontilla
     (julkaise-palvelu http :hae-tilannekuvaan
                       (fn [user tiedot]
                         (hae-tilannekuvaan db user tiedot)))
@@ -733,6 +738,8 @@ paallystyskohdeosan-tiedot-xf
                       (fn [user tiedot]
                         (hae-kayttajan-urakat-alueittain db user tiedot)))
 
+    ;; Karttakuvat palauttaa tilannekuvaan asiat, jotka piirretään palvelimella valmiiksi
+    ;; ja palautetaan frontille karttakuvina
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
       (partial hae-toteumien-sijainnit-kartalle db)
