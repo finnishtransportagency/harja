@@ -500,6 +500,7 @@
           [grid/grid
            {:otsikko "Urakassa käytössä olevat alukset"
             :tyhja "Ei aluksia"
+            :tunniste ::alus/mmsi
             :tallenna #(log "LOGITUS")}
            [{:otsikko "Alus"
              :nimi :alus
