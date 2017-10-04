@@ -491,11 +491,12 @@
                                          (<! (tiedot/hae-urakan-alukset (:id ur))))))]
     (komp/luo
       (komp/sisaan #(do
-                      (hae-urakan-alukset)
+                      (hae-urakan-alukset ur)
                       (hae-urakoitsijan-alukset ur)))
-      (if (or (nil? @urakan-alukset)
-              (nil? @urakoitsijan-alukset))
-        (fn [ur]
+      (fn [ur]
+        (if (or (nil? @urakan-alukset)
+                (nil? @urakoitsijan-alukset))
+          [yleiset/ajax-loader]
           [grid/grid
            {:otsikko "Urakassa käytössä olevat alukset"
             :tyhja "Ei aluksia"
