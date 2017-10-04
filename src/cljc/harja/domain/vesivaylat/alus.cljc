@@ -4,6 +4,7 @@
     [harja.domain.urakka :as urakka]
     [harja.domain.organisaatio :as organisaatio]
     [harja.domain.muokkaustiedot :as m]
+    [harja.geo :as geo]
     #?@(:clj [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]))
@@ -22,6 +23,10 @@
 (def perustiedot #{::mmsi ::nimi ::lisatiedot})
 (def sijaintitiedot #{::alus-mmsi ::sijainti ::aika})
 
+
+
+(s/def ::sijainti ::geo/geometria)
+
 (s/def ::hae-urakan-alukset-kysely
   (s/keys :req [::urakka/id]))
 
@@ -39,6 +44,16 @@
 
 (s/def ::hae-kaikki-alukset-vastaus
   (s/coll-of ::alus))
+
+(s/def ::hae-alusten-reitit-pisteineen-kysely
+  (s/keys :opt-un [::alku ::loppu ::laivat]))
+
+(s/def ::pistetieto (s/keys :req [::aika ::sijainti]))
+
+(s/def ::pisteet (s/coll-of ::pistetieto))
+
+(s/def ::hae-alusten-reitit-pisteineen-vastaus
+  (s/coll-of (s/keys :req [::pisteet ::sijainti ::alus])))
 
 (s/def ::hae-alusten-reitit-kysely
   (s/keys :opt-un [::alku ::loppu ::laivat]))
