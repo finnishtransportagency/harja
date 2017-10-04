@@ -210,15 +210,15 @@ INSERT INTO vv_alus (mmsi, nimi, lisatiedot, luoja) VALUES
 
 -- Liitetään muutama alus urakkaan
 
-INSERT INTO vv_alus_urakka (alus, urakka, luoja)
-VALUES (230990040, (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id
+INSERT INTO vv_alus_urakka (alus, urakka, lisatiedot, luoja)
+VALUES (230990040, 'Käytettiin kerran',  (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));
-INSERT INTO vv_alus_urakka (alus, urakka, luoja)
-VALUES (230111580, (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id
+INSERT INTO vv_alus_urakka (alus, urakka, lisatiedot, luoja)
+VALUES (230111580, 'Tarvitaan tässä urakassa',  (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));
-INSERT INTO vv_alus_urakka (alus, urakka, luoja)
-VALUES (230941190, (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id
+INSERT INTO vv_alus_urakka (alus, urakka, lisatiedot, luoja)
+VALUES (230941190, 'Käytetään urakassa välillä', (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));

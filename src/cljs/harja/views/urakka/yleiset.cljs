@@ -511,7 +511,7 @@
              :valinta-nayta #(if % (str (::alus/mmsi %) " - " (::alus/nimi %)) "- Valitse alus -")
              :validoi [[:ei-tyhja "Valitse alus"]]}
             {:otsikko "Lisätiedot"
-             :nimi :lisatiedot
+             :nimi ::alus/lisatiedot
              :tyyppi :string
              :leveys 4
              :pituus-max 512}] ;; TODO myös kantaan tämä rajoite, TEXT -> VARCHAR
