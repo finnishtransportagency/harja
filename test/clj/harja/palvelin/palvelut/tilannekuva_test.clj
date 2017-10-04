@@ -418,3 +418,18 @@
                :urakat #{{:id 4
                           :nimi "Oulun alueurakka 2014-2019"
                           :alue nil}}}])))))
+
+(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
+  (let [vastaus-ilman-lisaoikeutta
+        ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
+        (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+          (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-historia))
+        vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
+        (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-historia)]
+
+    ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska tulevat useammasta urakasta
+    (is (> (count (:turvallisuuspoikkeamat vastaus-lisaoikeudella))
+           (count (:turvallisuuspoikkeamat vastaus-ilman-lisaoikeutta))))
+
+    (is (> (count (:laatupoikkeamat vastaus-lisaoikeudella))
+           (count (:laatupoikkeamat vastaus-ilman-lisaoikeutta))))))
