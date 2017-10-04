@@ -40,9 +40,13 @@
                          alus/perustiedot
                          {})))
 
-(defn hae-alusten-reitit [db _ tiedot]
-  (oikeudet/ei-oikeustarkistusta!)
-  (alukset-q/alusten-reitit db tiedot))
+(defn hae-alusten-reitit
+  ([db user tiedot] (hae-alusten-reitit db user tiedot false))
+  ([db _ tiedot pisteet?]
+   (oikeudet/ei-oikeustarkistusta!)
+   (if pisteet?
+     (alukset-q/alusten-reitit-pisteineen db tiedot)
+     (alukset-q/alusten-reitit db tiedot))))
 
 (defrecord Alukset []
   component/Lifecycle
@@ -70,6 +74,13 @@
         (hae-kaikki-alukset db user tiedot))
       {:kysely-spec ::alus/hae-kaikki-alukset-kysely
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
+    (julkaise-palvelu
+      http
+      :hae-alusten-reitit-pisteineen
+      (fn [user tiedot]
+        (hae-alusten-reitit db user tiedot))
+      {:kysely-spec ::alus/hae-alusten-reitit-pisteineen-kysely
+       :vastaus-spec ::alus/hae-alusten-reitit-pisteineen-vastaus})
     (julkaise-palvelu
       http
       :hae-alusten-reitit
