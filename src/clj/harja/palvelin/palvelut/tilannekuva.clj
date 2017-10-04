@@ -523,13 +523,15 @@
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
    (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-   (let [urakat (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
-                                                oikeudet/tilannekuva-nykytilanne
-                                                oikeudet/tilannekuva-historia) % user)
-                        (:urakat tiedot))]
+   (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user tiedot)
+                                   (mapcat :urakat)
+                                   (map :id)
+                                   (set))
+         ;; Haku kohdistuu käyttäjän pyytämiin urakoihin, joihin käyttäjällä on hakuoikeus.
+         haettavat-urakat (filter kayttajan-urakka-idt (:urakat tiedot))]
      (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
        (into {}
-             (map (juxt identity (partial yrita-hakea-osio db user tiedot urakat)))
+             (map (juxt identity (partial yrita-hakea-osio db user tiedot haettavat-urakat)))
              osiot)))))
 
 (defn- aikavalinta
