@@ -499,6 +499,12 @@
         ;; että käyttäjä saa nähdä oman urakan ELY-alueen kaikkien urakoiden asiat.
         ;; Jos tällaisia erikoisoikeuksia omiin urakoihin löytyy, niin haetaan ko. urakoiden
         ;; muut ELY-urakat ja liitetään mukaan käyttäjän näkemiin urakoihin.
+
+        ;; HUOM! Jotta ELY:n muista urakoista voisi hakea asioita, täytyy käyttäjän valita sellainen
+        ;; aikaväli, jolle oma urakka osuu, koska ennen ELY:n muiden urakoiden etsintää täytyy olla
+        ;; löydettynä käyttäjän oma urakka. Tämä ajateltiin aluksi bugina, mutta sittemmin sitä pidettiinkin
+        ;; ihan hyvänä rajoitteena. Käytännössä tämä rajaa haettavan aikavälin vain sellaiselle välille, jolla
+        ;; käyttäjän oma urakka on voimassa.
         lisaoikeudet (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
                        user oikeus-nakyma
                        kayttajan-urakat-alueittain)
