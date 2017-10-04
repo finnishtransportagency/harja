@@ -18,9 +18,9 @@
     :sonja (feikki-sonja)
     :sonja-sahkoposti (component/using
                         (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                   {:sahkoposti-sisaan-jono         "email-to-harja"
-                                                    :sahkoposti-ulos-jono           "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono   "harja-to-email-ack"})
+                                                   {:sahkoposti-sisaan-jono "email-to-harja"
+                                                    :sahkoposti-ulos-jono "harja-to-email"
+                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
                         [:sonja :db :integraatioloki])
     :labyrintti (feikki-labyrintti)
     :tloik (component/using
@@ -72,4 +72,21 @@
 
       ;; Odotetaan, että kuittaus on tallentunut
       (odota #(= 1 (ffirst (q (str "SELECT COUNT(*) FROM ilmoitustoimenpide WHERE vapaateksti LIKE '%" viesti "%'"))))
-             "Kuittaus on tallentunut" 2000))))
+             "Kuittaus on tallentunut" 2000)
+
+      ;; Testataan lopetuskuittauksen tekeminen
+      (let [viesti (str (UUID/randomUUID))]
+
+        ;; Lähetä lopetettu toimenpitein kuittaus
+        (sonja/laheta (:sonja jarjestelma) "email-to-harja"
+                      (sahkoposti-viesti "111222333" vastaanottaja "harja-ilmoitukset@liikennevirasto.fi"
+                                         (:otsikko saapunut)
+                                         (str "[Lopetettu toimenpitein] " viesti)))
+        
+        ;; Odotetaan, että kuittaus on tallentunut
+        (odota #(= 1 (ffirst (q (str "SELECT COUNT(*) FROM ilmoitustoimenpide WHERE vapaateksti LIKE '%" viesti "%'"))))
+               "Kuittaus on tallentunut" 2000)
+
+        ;; Tarkista, että ilmoitukselle on kirjautunut merkintä toimenpiteistä
+        (is (true? (ffirst (q (str "SELECT \"aiheutti-toimenpiteita\" FROM ilmoitus WHERE ilmoitusid = 123456789"))))
+            "Sähköpostikuittauksella voi merkitä aiheutuneet toimenpiteet")))))

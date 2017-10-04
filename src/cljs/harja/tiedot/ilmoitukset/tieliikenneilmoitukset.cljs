@@ -43,6 +43,9 @@
 (def ^{:const true}
 tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
+(def ^{:const true} vaikutukset-filtterit
+  [:myohassa :aiheutti-toimenpiteita])
+
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 
 (defonce ilmoitukset
@@ -306,7 +309,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
       (go
         (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset!
                      [(:ilmoitus pikakuittaus)]
-                     (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi})))))
+                     (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi :aiheutti-toimenpiteita})))))
       (assoc-in app [:pikakuittaus :tallennus-kaynnissa?] true)))
 
   v/PeruutaPikakuittaus
