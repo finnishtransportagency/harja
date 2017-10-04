@@ -645,7 +645,6 @@
                                  (as-> parametrit p
                                        (suodattimet-parametreista p)
                                        (assoc p
-                                         ;; FIXME luettavat-urakat ei huomioi erikoisoikeutta
                                          :urakat (luettavat-urakat user p)
                                          :x x
                                          :y y
