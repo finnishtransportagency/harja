@@ -26,6 +26,7 @@
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
+    [harja.palvelin.integraatiot.digitraffic.ais-data :as ais-data]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -485,6 +486,11 @@
                                       turvalaitekomponenttihakuvali
                                       vikahakuvali))
                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
+
+      :ais-data (component/using
+                  (let [{:keys [url sekunnin-valein]} (:ais-data asetukset)]
+                    (ais-data/->Ais-haku url sekunnin-valein))
+                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
