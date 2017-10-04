@@ -21,12 +21,13 @@ otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 kuittaustyypit [["Vastaanotettu" :vastaanotettu]
                 ["Aloitettu" :aloitettu]
                 ["Lopetettu" :lopetettu]
+                ["Lopetettu toimenpitein" :lopetettu]
                 ["Muutettu" :muutettu]
                 ["Vastattu" :vastattu]
                 ["Väärä urakka" :vaara-urakka]])
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
-kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu|Muutettu|Vastattu|Väärä urakka)\]")
+kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu|Lopetettu toimenpitein|Muutettu|Vastattu|Väärä urakka)\]")
 
 (def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
 +virheellinen-toimenpide-viesti+
@@ -111,13 +112,15 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   [otsikko sisalto]
   (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
         kuittaustyyppi (viestin-kuittaustyyppi sisalto)
-        kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))]
+        kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))
+        aiheutti-toimenpiteita (.contains sisalto "Lopetettu toimenpitein")]
     (if (and urakka-id ilmoitus-id kuittaustyyppi)
       {:urakka-id (Long/parseLong urakka-id)
        :ilmoitus-id (Long/parseLong ilmoitus-id)
        :kuittaustyyppi kuittaustyyppi
        :kommentti (when-not (str/blank? kommentti)
-                    kommentti)}
+                    kommentti)
+       :aiheutti-toimenpiteita aiheutti-toimenpiteita}
       {:virhe "Viestistä ei löytynyt kuittauksen tietoja"})))
 
 (def ^{:doc "Vastaanotetun kuittauksen mäppäys kuittaustyyppi tietokantaenumiksi" :private true}
@@ -128,21 +131,29 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                       :vastattu "vastaus"
                       :vaara-urakka "vaara-urakka"})
 
-(defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id ilmoitus-id kuittaustyyppi kommentti]}]
+(defn- tallenna-ilmoitustoimenpide [jms-lahettaja db lahettaja {:keys [urakka-id
+                                                                       ilmoitus-id
+                                                                       kuittaustyyppi
+                                                                       kommentti
+                                                                       aiheutti-toimenpiteita]}]
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
-        ilmoitus (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
+        {ilmoitus :id
+         urakka :urakka
+         ilmoitustyyppi :ilmoitustyyppi} (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
     (if-not paivystaja
       +ilmoitustoimenpiteen-tallennus-epaonnistui+
       (let [tallenna (fn [kuittaustyyppi vapaateksti]
                        (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
                          db
-                         (:id ilmoitus)
+                         ilmoitus
                          ilmoitus-id
                          vapaateksti
                          kuittaustyyppi
                          paivystaja
                          "sisaan"
                          "sahkoposti"))]
+        (when (= kuittaustyyppi :lopetettu)
+          (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db aiheutti-toimenpiteita ilmoitus))
         (when (and (= kuittaustyyppi :aloitettu) (not (ilmoitukset/ilmoitukselle-olemassa-vastaanottokuittaus? db ilmoitus-id)))
           (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
             (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
@@ -151,9 +162,9 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
 
         (assoc +onnistunut-viesti+
-          :otsikko (otsikko {:ilmoitus-id (:ilmoitusid ilmoitus)
-                             :urakka-id (:urakka ilmoitus)
-                             :ilmoitustyyppi (:ilmoitustyyppi ilmoitus)}))))))
+          :otsikko (otsikko {:ilmoitus-id ilmoitus-id
+                             :urakka-id urakka
+                             :ilmoitustyyppi ilmoitustyyppi}))))))
 
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään

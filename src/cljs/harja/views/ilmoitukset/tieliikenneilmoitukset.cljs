@@ -10,7 +10,7 @@
               +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
               kuittaustyypin-selite kuittaustyypin-lyhenne kuittaustyypin-otsikko
-              tilan-selite] :as domain]
+              tilan-selite vaikutuksen-selite] :as domain]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
@@ -170,10 +170,11 @@
        :tyyppi :checkbox-group
        :vaihtoehdot [:toimenpidepyynto :tiedoitus :kysely]
        :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
-      {:nimi :vain-myohassa?
-       :otsikko "Kuittaukset"
-       :tyyppi :checkbox
-       :teksti "Näytä ainoastaan myöhästyneet"
+      {:nimi :vaikutukset
+       :otsikko "Vaikutukset"
+       :tyyppi :checkbox-group
+       :vaihtoehdot tiedot/vaikutukset-filtterit
+       :vaihtoehto-nayta vaikutuksen-selite
        :vihje kuittausvaatimukset-str}
       {:nimi :aloituskuittauksen-ajankohta
        :otsikko "Aloituskuittaus annettu"
@@ -277,12 +278,17 @@
          :komponentti (partial kuittauslista e! pikakuittaus)
          :leveys 8}
 
-        {:otsikko "Tila" :nimi :tila :leveys 5 :hae #(tilan-selite (:tila %))}]
+        {:otsikko "Tila" :nimi :tila :leveys 5 
+           :hae #(let [selite (tilan-selite (:tila %))]
+                 (if (:aiheutti-toimenpiteita %)
+                   (str selite " (Toimenpitein)")
+                   selite))}]
        (mapv #(merge %
                      (when (:yhteydenottopyynto %)
                        {:lihavoi true})
                      (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
                        {:korosta-hennosti true}))
+             
              haetut-ilmoitukset)]]]))
 
 (defn- ilmoitukset* [e! ilmoitukset]

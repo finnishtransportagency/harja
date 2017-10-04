@@ -71,6 +71,8 @@
    :ilmatieteenlaitos                     {:lampotilat-url s/Str}
 
    (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali)                                s/Int
+                                           (s/optional-key :kayttajatunnus)                        s/Str
+                                           (s/optional-key :salasana)                              s/Str
                                            (s/optional-key :tieosoiteverkon-shapefile)                 s/Str
                                            (s/optional-key :tieosoiteverkon-osoite)                s/Str
                                            (s/optional-key :tieosoiteverkon-tuontikohde)           s/Str
@@ -152,6 +154,9 @@
                                              (s/optional-key :komponenttityyppihakuvali)  s/Int
                                              (s/optional-key :turvalaitekomponenttihakuvali)  s/Int
                                              (s/optional-key :vikahakuvali)  s/Int}
+
+   (s/optional-key :ais-data) {:url s/Str
+                               :sekunnin-valein s/Int}
 
    (s/optional-key :yllapitokohteet)   {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    })
