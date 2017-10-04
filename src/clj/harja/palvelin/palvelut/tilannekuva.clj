@@ -484,7 +484,7 @@
                                         lisaoikeudet))]
     lisaoikeus-urakkaan?))
 
-(defn hae-urakat [db user tiedot]
+(defn hae-kayttajan-urakat-alueittain [db user tiedot]
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
                         oikeudet/tilannekuva-nykytilanne
                         oikeudet/tilannekuva-historia)
@@ -729,7 +729,7 @@ paallystyskohdeosan-tiedot-xf
                         (hae-tilannekuvaan db user tiedot)))
     (julkaise-palvelu http :hae-urakat-tilannekuvaan
                       (fn [user tiedot]
-                        (hae-urakat db user tiedot)))
+                        (hae-kayttajan-urakat-alueittain db user tiedot)))
 
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat

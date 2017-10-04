@@ -427,7 +427,7 @@
         vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
         (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-historia)]
 
-    ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska tulevat useammasta urakasta
+    ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
     (is (> (count (:turvallisuuspoikkeamat vastaus-lisaoikeudella))
            (count (:turvallisuuspoikkeamat vastaus-ilman-lisaoikeutta))))
 
