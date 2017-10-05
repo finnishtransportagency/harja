@@ -19,7 +19,7 @@
 (s/def ::materiaalilistauksen-vastaus (s/coll-of ::materiaalilistaus))
 
 (s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::maara ::pvm]
-                                   :opt [::lisatieto]))
+                                   :opt [::lisatieto ::halytysraja]))
 
 (s/def ::poista-materiaalikirjaus (s/keys :req [::id ::urakka-id]))
 (s/def ::muuta-materiaalien-alkuperainen-maara (s/keys :req [::urakka-id]
