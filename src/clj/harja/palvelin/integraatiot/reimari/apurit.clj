@@ -36,9 +36,8 @@
                                  ::integraatiotapahtuma/onnistunut true })))))
 
 
-(defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana muutosaika] :as hakuparametrit} konteksti]
+(defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana alkuaika loppuaika muutosaika] :as hakuparametrit} konteksti]
   ;; {:pre [(assert (and db pohja-url kayttajatunnus salasana muutosaika) [db pohja-url kayttajatunnus salasana muutosaika])]}
-  (println "kkkk" (and db pohja-url kayttajatunnus salasana muutosaika))
   (let [otsikot {"Content-Type" "text/xml"
                  "SOAPAction" (:soap-action hakuparametrit)}
         http-asetukset {:metodi :POST
@@ -47,8 +46,9 @@
                         :kayttajatunnus kayttajatunnus
                         :salasana salasana
                         :muutosaika muutosaika}
-        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) muutosaika))]
-    (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " alken: " muutosaika))
+        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) (or muutosaika [alkuaika loppuaika])))]
+    (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " ajalta: " (or muutosaika [alkuaika loppuaika])))
+
     ((:vastaus-fn hakuparametrit) db body)))
 
 (defn kutsu-reimari-integraatiota
@@ -80,3 +80,22 @@
     (log/debug "tunnus" kt "url" pu)
     (with-redefs [edellisen-integraatiotapahtuman-alkuaika (constantly alkuaika)]
       (fn db il pu kt ss))))
+
+
+(defn kysely-sanoma [tyyppi attribuutit]
+
+  (let [;; esim tyyppi = HaeKomponenttiTyypit -> :HaeKomponenttiTyypit ja :HaeKomponenttiTyypitRequest
+        tyyppi-kw (keyword tyyppi)
+        tyyppi-request-kw (keyword (str tyyppi "Request"))]
+    (xml/tee-xml-sanoma
+     [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
+      [:soap:Body
+       [tyyppi-kw {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
+        [tyyppi-request-kw attribuutit]]]])))
+
+(defn kysely-sanoma-aikavali [tyyppi [alkuaika loppuaika]]
+  (kysely-sanoma tyyppi {:alkuaika (formatoi-aika alkuaika)
+                         :loppuaika (formatoi-aika loppuaika)}))
+
+(defn kysely-sanoma-muutosaika [tyyppi muutosaika]
+  (kysely-sanoma tyyppi {:muutosaika (formatoi-aika muutosaika)}))

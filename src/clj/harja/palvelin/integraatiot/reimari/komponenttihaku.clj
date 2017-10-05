@@ -26,25 +26,9 @@
                        (specql/upsert! db ::turvalaitekomponentti/turvalaitekomponentti tlk-tiedot))]
     (vec kanta-tiedot)))
 
-(defn komponenttityypit-kysely-sanoma [muutosaika]
-  (xml/tee-xml-sanoma
-   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
-    [:soap:Body
-     [:HaeKomponenttiTyypit {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeKomponenttiTyypitRequest {:muutosaika (r-apurit/formatoi-aika muutosaika)}]]
-     ]]))
-
-(defn turvalaitekomponentit-kysely-sanoma [muutosaika]
-  (xml/tee-xml-sanoma
-   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
-    [:soap:Body
-     [:HaeTurvalaiteKomponentit {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeTurvalaiteKomponentitRequest {:muutosaika (r-apurit/formatoi-aika muutosaika)}]]
-     ]]))
-
 (defn hae-komponenttityypit [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeKomponenttiTyypit"
-                        :sanoma-fn komponenttityypit-kysely-sanoma
+                        :sanoma-fn (partial r-apurit/kysely-sanoma-muutosaika "HaeKomponenttiTyypit")
                         :vastaus-fn kasittele-komponenttityypit-vastaus
                         :haun-nimi "hae-komponenttityypit"
                         :db db
@@ -56,7 +40,7 @@
 
 (defn hae-turvalaitekomponentit [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeTurvalaiteKomponentit"
-                        :sanoma-fn turvalaitekomponentit-kysely-sanoma
+                        :sanoma-fn (partial r-apurit/kysely-sanom-muutosaika "HaeTurvalaiteKomponentit")
                         :vastaus-fn kasittele-turvalaitekomponentit-vastaus
                         :haun-nimi "hae-turvalaitekomponentit"
                         :db db
