@@ -361,7 +361,8 @@
           (q/hae-tietyomaat db {:x1 (:xmin alue)
                                 :y1 (:ymin alue)
                                 :x2 (:xmax alue)
-                                :y2 (:ymax alue)}))))
+                                :y2 (:ymax alue)
+                                :urakat urakat}))))
 
 (defn- hae-toteumien-selitteet
   [db user {:keys [alue alku loppu] :as tiedot} urakat]

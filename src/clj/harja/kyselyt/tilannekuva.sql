@@ -599,6 +599,8 @@ SELECT
 FROM tietyomaa st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
+      AND st.yllapitokohde IN (SELECT id FROM yllapitokohde WHERE urakka IN (:urakat)
+                                                            OR suorittava_tiemerkintaurakka IN (:urakat))
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
 
 -- name: hae-varustetoteumat
