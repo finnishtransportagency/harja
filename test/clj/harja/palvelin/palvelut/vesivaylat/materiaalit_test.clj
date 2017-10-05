@@ -13,7 +13,15 @@
             [harja.domain.vesivaylat.materiaali :as m]
             [clj-time.core :as time]
             [harja.pvm :as pvm]
-            [harja.tyokalut.functor :refer [fmap]]))
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.jms-test :refer [feikki-sonja]]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [clojure.java.io :as io]
+            [harja.palvelin.komponentit.sonja :as sonja])
+  (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -23,9 +31,22 @@
                         :db (tietokanta/luo-tietokanta testi/testitietokanta)
                         :http-palvelin (testi/testi-http-palvelin)
                         :pois-kytketyt-ominaisuudet testi/testi-pois-kytketyt-ominaisuudet
+                        :fim (component/using
+                               (fim/->FIM +testi-fim+)
+                               [:db :integraatioloki])
+                        :integraatioloki (component/using
+                                           (integraatioloki/->Integraatioloki nil)
+                                           [:db])
+                        :sonja (feikki-sonja)
+                        :sonja-sahkoposti (component/using
+                                            (sahkoposti/luo-sahkoposti "foo@example.com"
+                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
+                                                                        :sahkoposti-ulos-jono "harja-to-email"
+                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
+                                            [:sonja :db :integraatioloki])
                         :vv-materiaalit (component/using
                                           (vv-materiaalit/->Materiaalit)
-                                          [:db :http-palvelin])))))
+                                          [:db :http-palvelin :fim :sonja-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -168,3 +189,24 @@
                                                    {::m/urakka-id urakka-id
                                                     :uudet-alkuperaiset-maarat [{::m/nimi "Hiekkasäkki"
                                                                                  ::m/alkuperainen-maara 666}]})))))
+
+(deftest materiaalin-halytysrajan-alitus
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+        materiaali-halytysrajalla (first (q-map "SELECT nimi, maara, halytysraja FROM vv_materiaali WHERE \"urakka-id\"=" urakka-id " AND halytysraja IS NOT NULL"))
+        {nimi :nimi
+         aloitus-maara :maara
+         halytysraja :halytysraja} materiaali-halytysrajalla
+        sahkoposti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-helsingin-vesivaylaurakan-kayttajat.xml"))
+
+        materiaalin-vahennys {::m/urakka-id urakka-id
+                              ::m/nimi      nimi
+                              ::m/maara     (- (- (+ aloitus-maara 1) halytysraja))
+                              ::m/pvm       (pvm/nyt)}]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))
+
+    (testi/odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))

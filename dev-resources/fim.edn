@@ -1,76 +1,87 @@
 {
  ;; Oulun alueurakka 2014-2019
- "1242141-OULU2" [{:tunniste 1
+ "1242141-OULU2" [{:tunniste       1
                    :kayttajatunnus "LXPENTTIER"
-                   :etunimi "Erno"
-                   :sukunimi "Penttikoski"
-                   :sahkoposti "erno.penttikoski@example.com"
-                   :puhelin "0123456789"
-                   :roolit "1242141-OULU2_ELY_Urakanvalvoja"
-                   :organisaatio "foo"
-                   :poistettu false}
-                  {:tunniste 2
+                   :etunimi        "Erno"
+                   :sukunimi       "Penttikoski"
+                   :sahkoposti     "erno.penttikoski@example.com"
+                   :puhelin        "0123456789"
+                   :roolit         "1242141-OULU2_ELY_Urakanvalvoja"
+                   :organisaatio   "foo"
+                   :poistettu      false}
+                  {:tunniste       2
                    :kayttajatunnus "LXSYOTMAX"
-                   :etunimi "Max"
-                   :sukunimi "Syöttöpaine"
-                   :sahkoposti "max@syöttöpaine.org"
-                   :puhelin "9876543210"
-                   :roolit "1242141-OULU2_ELY_Urakanvalvoja"
-                   :organisaatio "bar"
-                   :poistettu false}
-                  {:tunniste 3
+                   :etunimi        "Max"
+                   :sukunimi       "Syöttöpaine"
+                   :sahkoposti     "max@syöttöpaine.org"
+                   :puhelin        "9876543210"
+                   :roolit         "1242141-OULU2_ELY_Urakanvalvoja"
+                   :organisaatio   "bar"
+                   :poistettu      false}
+                  {:tunniste       3
                    :kayttajatunnus "LXVALVA"
-                   :etunimi "Valtteri"
-                   :sukunimi "Varamies"
-                   :sahkoposti "valtteri.varamies@example.com"
-                   :puhelin "555666777"
-                   :roolit "1242141-OULU2_ELY_Urakanvalvoja"
-                   :organisaatio "baz"
-                   :poistettu false}
-                  {:tunniste 4
+                   :etunimi        "Valtteri"
+                   :sukunimi       "Varamies"
+                   :sahkoposti     "valtteri.varamies@example.com"
+                   :puhelin        "555666777"
+                   :roolit         "1242141-OULU2_ELY_Urakanvalvoja"
+                   :organisaatio   "baz"
+                   :poistettu      false}
+                  {:tunniste       4
                    :kayttajatunnus "LXUUU"
-                   :etunimi "Uuno"
-                   :sukunimi "Urakoitsija"
-                   :sahkoposti "uuno.urakoitsija@esimerkki.fi"
-                   :puhelin "1122334455"
-                   :roolit "1242141-OULU2_vastuuhenkilo"
-                   :organisaatio "urakoitsija"
-                   :poistettu false}]
+                   :etunimi        "Uuno"
+                   :sukunimi       "Urakoitsija"
+                   :sahkoposti     "uuno.urakoitsija@esimerkki.fi"
+                   :puhelin        "1122334455"
+                   :roolit         "1242141-OULU2_vastuuhenkilo"
+                   :organisaatio   "urakoitsija"
+                   :poistettu      false}]
  ;; Muhoksen päällystysurakka (testiurakka)
- "4242523-TES2" [{:tunniste 133
-                  :kayttajatunnus "LXV"
-                  :etunimi "Jarno"
-                  :sukunimi "Ely"
-                  :sahkoposti "sinunmailisi@solita.fi"
-                  :puhelin "0123456789"
-                  :roolit "4242523-TES2_ELY_Urakanvalvoja"
-                  :organisaatio "foo"
-                  :poistettu false}
-                 {:tunniste 233
-                  :kayttajatunnus "LXVV"
-                  :etunimi "Jarno"
-                  :sukunimi "Urakoitsija"
-                  :sahkoposti "sinunmailisi@solita.fi"
-                  :puhelin "012345666"
-                  :roolit "4242523-TES2_vastuuhenkilo"
-                  :organisaatio "foo"
-                  :poistettu false}]
+ "4242523-TES2"  [{:tunniste       133
+                   :kayttajatunnus "LXV"
+                   :etunimi        "Jarno"
+                   :sukunimi       "Ely"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "0123456789"
+                   :roolit         "4242523-TES2_ELY_Urakanvalvoja"
+                   :organisaatio   "foo"
+                   :poistettu      false}
+                  {:tunniste       233
+                   :kayttajatunnus "LXVV"
+                   :etunimi        "Jarno"
+                   :sukunimi       "Urakoitsija"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "012345666"
+                   :roolit         "4242523-TES2_vastuuhenkilo"
+                   :organisaatio   "foo"
+                   :poistettu      false}]
  ;; Oulun tiemerkinnän palvelusopimus (testiurakka)
- "4242523-TES4" [{:tunniste 133
-                  :kayttajatunnus "LXV"
-                  :etunimi "Jarno"
-                  :sukunimi "Ely TM"
-                  :sahkoposti "sinunmailisi@solita.fi"
-                  :puhelin "0123456789"
-                  :roolit "4242523-TES4_ELY_Urakanvalvoja"
-                  :organisaatio "foo"
-                  :poistettu false}
-                 {:tunniste 233
-                  :kayttajatunnus "LXVV"
-                  :etunimi "Jarno"
-                  :sukunimi "Urakoitsija TM"
-                  :sahkoposti "sinunmailisi@solita.fi"
-                  :puhelin "012345666"
-                  :roolit "4242523-TES4_vastuuhenkilo"
-                  :organisaatio "foo"
-                  :poistettu false}]}
+ "4242523-TES4"  [{:tunniste       133
+                   :kayttajatunnus "LXV"
+                   :etunimi        "Jarno"
+                   :sukunimi       "Ely TM"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "0123456789"
+                   :roolit         "4242523-TES4_ELY_Urakanvalvoja"
+                   :organisaatio   "foo"
+                   :poistettu      false}
+                  {:tunniste       233
+                   :kayttajatunnus "LXVV"
+                   :etunimi        "Jarno"
+                   :sukunimi       "Urakoitsija TM"
+                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :puhelin        "012345666"
+                   :roolit         "4242523-TES4_vastuuhenkilo"
+                   :organisaatio   "foo"
+                   :poistettu      false}]
+ ;; Helsingin väyläyksikön väylänhoito
+ "vv-HAR-124" [{:tunniste       133
+                :kayttajatunnus "LXV"
+                :etunimi        "Jarno"
+                :sukunimi       "Ely TM"
+                :sahkoposti     "sinunmailisi@solita.fi"
+                :puhelin        "0123456789"
+                :roolit         "vv-HAR-124_Tilaajan_Urakanvalvoja"
+                :organisaatio   "foo"
+                :poistettu      false}]
+ }
