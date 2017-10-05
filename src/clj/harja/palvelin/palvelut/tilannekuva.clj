@@ -110,7 +110,7 @@
                                   (map :id)
                                   (set))
         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
-        oikeudelliset-urakat (filter kayttajan-urakka-idt (:urakat hakuargumentit))]
+        oikeudelliset-urakat (set (filter kayttajan-urakka-idt (:urakat hakuargumentit)))]
     oikeudelliset-urakat))
 
 (def ilmoitus-xf
@@ -553,7 +553,8 @@
                          (map konv/alaviiva->rakenne)
                          xf
                          kartalle-xf))
-        urakat (rajaa-urakat-hakuoikeudella db user (:parametrit tiedot))]
+        urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
+    (log/debug "[DEBUG] RAJASIN URAKAT " urakat)
     (async/thread
       (jdbc/with-db-transaction [db db
                                  {:read-only? true}]
