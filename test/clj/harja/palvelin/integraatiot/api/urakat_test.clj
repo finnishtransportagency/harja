@@ -5,7 +5,10 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.tyokalut.json-validointi :as json]
+            [harja.kyselyt.konversio :as konversio]))
 
 (def kayttaja "yit-rakennus")
 
@@ -34,3 +37,29 @@
     (is (= "Oulun alueurakka 2014-2019" (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :nimi])))))
 
 
+
+(deftest varmista-urakkatyyppien-yhteensopivuus
+  (let [json "{
+              \"urakat\": [
+                  {
+                    \"urakka\": {
+                      \"tiedot\": {
+                          \"id\": 123456789,
+                          \"nimi\": \"Oulun alueurakka\",
+                          \"urakoitsija\": {
+                          \"ytunnus\": \"123456-8\",
+                          \"nimi\": \"Asfaltia\"
+                        },
+                        \"vaylamuoto\": \"tie\",
+                        \"tyyppi\": \"[URAKKATYYPPI]\",
+                        \"alkupvm\": \"2016-01-30T12:00:00+02:00\",
+                        \"loppupvm\": \"2016-01-30T12:00:00+02:00\"
+                      }
+                    }
+                  }
+                ]
+              }"
+        urakkatyypit (konversio/pgarray->vector (ffirst (q "SELECT enum_range(NULL :: URAKKATYYPPI);")))]
+    (doseq [urakkatyyppi urakkatyypit]
+      (is (nil? (json-skeemat/urakoiden-haku-vastaus (.replace json "[URAKKATYYPPI]" urakkatyyppi)))
+          (format "JSON-skeema ei salli urakkatyyppiä: %s" urakkatyyppi)))))
