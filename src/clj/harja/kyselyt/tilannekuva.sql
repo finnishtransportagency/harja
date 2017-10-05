@@ -339,6 +339,7 @@ SELECT ypko.id,
        JOIN organisaatio o ON u.urakoitsija = o.id
  WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
+   AND (ypk.urakka IN (:urakat)
    AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
                           (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR

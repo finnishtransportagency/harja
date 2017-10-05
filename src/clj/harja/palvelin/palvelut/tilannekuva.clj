@@ -545,6 +545,7 @@
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf]
+  (log/debug "[DEBUG] HAE KARTTAKUVAN TIEDOT PARAMS " parametrit)
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
         ch (async/chan 32
@@ -669,16 +670,13 @@ paallystyskohdeosan-tiedot-xf
   "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
   [db user {:keys [x y toleranssi nykytilanne? alku loppu] :as parametrit}]
   (let [urakat (rajaa-urakat-hakuoikeudella db user parametrit)]
-    (when (or (not (empty? urakat))
-              (oikeudet/voi-lukea? (if nykytilanne?
-                                     oikeudet/tilannekuva-nykytilanne
-                                     oikeudet/tilannekuva-historia)
-                                   nil user))
+    (when-not (empty? urakat)
       (let [vastaus (into []
                           paallystyskohdeosan-tiedot-xf
                           (q/hae-paallystysten-tiedot db {:x x :y y
                                                           :toleranssi toleranssi
                                                           :nykytilanne nykytilanne?
+                                                          :urakat urakat
                                                           :historiakuva (not nykytilanne?)
                                                           :alku alku
                                                           :loppu loppu}))
