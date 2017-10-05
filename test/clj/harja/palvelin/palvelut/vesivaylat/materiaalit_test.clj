@@ -208,5 +208,5 @@
       [+testi-fim+ fim-vastaus]
       (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))
 
-    (testi/odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
+    (testi/odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
     (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
