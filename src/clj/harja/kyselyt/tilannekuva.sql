@@ -292,6 +292,7 @@ SELECT ypk.id,
  WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
+   AND (ypk.urakka IN (:urakat)
    AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
                            (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR

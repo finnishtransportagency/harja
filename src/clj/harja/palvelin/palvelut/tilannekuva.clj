@@ -104,6 +104,7 @@
 (declare hae-kayttajan-urakat-alueittain)
 
 (defn- rajaa-urakat-hakuoikeudella [db user tiedot]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user tiedot)
                                   (mapcat :urakat)
                                   (map :id)
@@ -300,7 +301,6 @@
 
 (defn- hae-toteumien-reitit
   [db ch user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
-  ;; TODO Tarkista mistä urakat tulee tänne o_O
   (when-not (empty? urakat)
     (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
       (q/hae-toteumat db ch
@@ -343,10 +343,11 @@
        :organisaatio (get-in user [:organisaatio :id])})))
 
 (defn- hae-paallystysten-reitit
-  [db ch user {:keys [toleranssi alue alku loppu nykytilanne?] :as tiedot} _]
+  [db ch user {:keys [toleranssi alue alku loppu nykytilanne?] :as tiedot} urakat]
   (q/hae-paallystysten-reitit db ch
                               (merge alue
                                      {:toleranssi toleranssi
+                                      :urakat urakat
                                       :nykytilanne nykytilanne?
                                       :historiakuva (not nykytilanne?)
                                       :alku alku
@@ -551,7 +552,7 @@
                          (map konv/alaviiva->rakenne)
                          xf
                          kartalle-xf))
-        urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
+        urakat (rajaa-urakat-hakuoikeudella db user (:parametrit tiedot))]
     (async/thread
       (jdbc/with-db-transaction [db db
                                  {:read-only? true}]
@@ -627,8 +628,6 @@
                                 (map #(konv/array->set % :tehtavat))
                                 (map #(assoc %
                                         :tyyppi-kartalla :tyokone)))))
-
-
 
 (defn- hae-tyokoneiden-tiedot-kartalle
   "Hakee työkoneiden tiedot pisteessä infopaneelia varten."
