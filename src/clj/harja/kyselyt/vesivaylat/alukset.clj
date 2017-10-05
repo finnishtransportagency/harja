@@ -46,7 +46,7 @@
                                        aika-piste
                                        :sijainti
                                        (fn [s]
-                                         (let [[alku loppu] (-> s
+                                         (let [[alku loppu] (-> s ;; "(123.0,456.5)"
                                                                 rest
                                                                 butlast
                                                                 ((partial apply str))
@@ -60,26 +60,34 @@
                                                          :sijainti :string)))
                                  pisteet))))))
 
+(defn- alusten-reitit* [alukset]
+  (->
+    (into []
+          alus-xf
+          alukset)
+    (namespacefy {:ns :harja.domain.vesivaylat.alus})))
+
 (defn alusten-reitit [db {:keys [alukset alku loppu]}]
   (let [loppu (or loppu (oletus-loppu-reitin-hakemiselle))
         alku (or alku (oletus-alku-reitin-hakemiselle))]
-    (->
-      (into []
+    (alusten-reitit*
+      (hae-alusten-reitit db {:alukset (vec alukset)
+                             :alku (coerce/to-sql-time alku)
+                             :loppu (coerce/to-sql-time loppu)}))))
+
+(defn- alusten-reitit-pisteineen* [alukset]
+  (->
+    (into []
+          (comp
             alus-xf
-            (hae-alusten-reitit db {:alukset (vec alukset)
-                                    :alku (coerce/to-sql-time alku)
-                                    :loppu (coerce/to-sql-time loppu)}))
-      (namespacefy {:ns :harja.domain.vesivaylat.alus}))))
+            pisteet-xf)
+          alukset)
+    (namespacefy {:ns :harja.domain.vesivaylat.alus})))
 
 (defn alusten-reitit-pisteineen [db {:keys [alukset alku loppu]}]
   (let [loppu (or loppu (oletus-loppu-reitin-hakemiselle))
         alku (or alku (oletus-alku-reitin-hakemiselle))]
-    (->
-      (into []
-            (comp
-              alus-xf
-              pisteet-xf)
-            (hae-alusten-reitit-pisteineen db {:alukset (vec alukset)
-                                               :alku (coerce/to-sql-time alku)
-                                               :loppu (coerce/to-sql-time loppu)}))
-      (namespacefy {:ns :harja.domain.vesivaylat.alus}))))
+    (alusten-reitit-pisteineen*
+      (hae-alusten-reitit-pisteineen db {:alukset (vec alukset)
+                                        :alku (coerce/to-sql-time alku)
+                                        :loppu (coerce/to-sql-time loppu)}))))
