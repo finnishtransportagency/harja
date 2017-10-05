@@ -105,6 +105,17 @@
         (map (comp :nimi tk/suodattimet-idlla))
         s))
 
+(declare hae-kayttajan-urakat-alueittain)
+
+(defn- rajaa-urakat-niihin-joihin-on-hakuoikeus [db user tiedot]
+  (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user tiedot)
+                                  (mapcat :urakat)
+                                  (map :id)
+                                  (set))
+        ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
+        oikeudelliset-urakat (filter kayttajan-urakka-idt (:urakat tiedot))]
+    oikeudelliset-urakat))
+
 (def ilmoitus-xf
   (comp
     (geo/muunna-pg-tulokset :sijainti)
@@ -149,6 +160,9 @@
 
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
+  ;; Huomaa: hakee vain sellaiset ylläpitokohteet, jotka piirretään frontilla (paikkauskohteet).
+  ;; Mahdollisesti olisi syytä piirtää kaikki ylläpitokohteet palvelimella ja palauttaa karttakuvina, kuten
+  ;; nyt tehdään päällystyksen kanssa. Paikkauksia on kuitenkin verrattain vähän, joten toistaiseksi tämä toimii.
   (when (tk/valittu? yllapito (case tyyppi
                                 "paallystys" tk/paallystys
                                 "paikkaus" tk/paikkaus))
@@ -499,12 +513,7 @@
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
    (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-   (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user tiedot)
-                                   (mapcat :urakat)
-                                   (map :id)
-                                   (set))
-         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
-         haettavat-urakat (filter kayttajan-urakka-idt (:urakat tiedot))]
+   (let [haettavat-urakat (rajaa-urakat-niihin-joihin-on-hakuoikeus db user tiedot)]
      (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
        (into {}
              (map (juxt identity (partial yrita-hakea-osio db user tiedot haettavat-urakat)))
@@ -714,7 +723,7 @@ paallystyskohdeosan-tiedot-xf
                         (hae-kayttajan-urakat-alueittain db user tiedot)))
 
     ;; Karttakuvat palauttaa tilannekuvaan asiat, jotka piirretään palvelimella valmiiksi
-    ;; ja palautetaan frontille karttakuvina
+    ;; ja palautetaan frontille karttakuvina.
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tilannekuva-toteumat
       (partial hae-toteumien-sijainnit-kartalle db)
