@@ -70,7 +70,8 @@
         ;;            2. viestinumero ([0-9]+)
         ;;            3. vapaateksti (.+)
         osat (re-find #"^(.{1})([0-9]+)(.*)" viesti)
-        toimenpide (parsi-toimenpide (nth osat 1))
+        toimenpidelyhenne(nth osat 1)
+        toimenpide (parsi-toimenpide toimenpidelyhenne)
         viestinumero (parsi-viestinumero (nth osat 2))
         vapaateksti (.trim (nth osat 3))]
     {:toimenpide toimenpide
