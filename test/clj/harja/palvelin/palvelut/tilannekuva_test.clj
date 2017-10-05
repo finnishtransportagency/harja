@@ -429,8 +429,12 @@
         (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
 
     ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
+
     (is (> (count (:turvallisuuspoikkeamat vastaus-lisaoikeudella))
            (count (:turvallisuuspoikkeamat vastaus-ilman-lisaoikeutta))))
+
+    (is (> (count (:toteumat vastaus-lisaoikeudella))
+           (count (:toteumat vastaus-ilman-lisaoikeutta))))
 
     (is (> (count (:laatupoikkeamat vastaus-lisaoikeudella))
            (count (:laatupoikkeamat vastaus-ilman-lisaoikeutta))))))
