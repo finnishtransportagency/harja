@@ -103,14 +103,14 @@
 
 (declare hae-kayttajan-urakat-alueittain)
 
-(defn- rajaa-urakat-hakuoikeudella [db user tiedot]
+(defn- rajaa-urakat-hakuoikeudella [db user hakuargumentit]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user tiedot)
+  (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user hakuargumentit)
                                   (mapcat :urakat)
                                   (map :id)
                                   (set))
         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
-        oikeudelliset-urakat (filter kayttajan-urakka-idt (:urakat tiedot))]
+        oikeudelliset-urakat (filter kayttajan-urakka-idt (:urakat hakuargumentit))]
     oikeudelliset-urakat))
 
 (def ilmoitus-xf
