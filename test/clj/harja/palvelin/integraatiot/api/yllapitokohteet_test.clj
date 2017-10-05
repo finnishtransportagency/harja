@@ -675,6 +675,25 @@
       (is (.contains (:body vastaus) "Tarkastukset poistettu onnistuneesti. Poistettiin: 1 tarkastusta."))
       (is poistettu? "Tarkastus on merkitty poistetuksi onnistuneesti."))))
 
+(deftest useamman-tarkastuksen-kirjaamisessa-transaktio-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        hae-tarkastukset #(q-map "SELECT * FROM tarkastus WHERE yllapitokohde =" kohde-id)
+        tarkastukset-ennen-kirjausta (hae-tarkastukset)
+        polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
+        kutsudata (slurp "test/resurssit/api/usean-yllapitokohteen-tarkastuksen-kirjaus-request.json")
+        vastaus (with-redefs [mapv (fn [annettu-fn args]
+                                     (vec (map-indexed
+                                            #(if (and (= (-> %2 :tarkastus :tunniste :id) 1337)
+                                                      (= (-> %2 :tarkastus :tarkastaja :etunimi) "Taneli"))
+                                               (throw (org.postgresql.util.PSQLException. "Foo" (org.postgresql.util.PSQLState/DATA_ERROR)))
+                                               (annettu-fn %2))
+                                            args)))]
+                  (api-tyokalut/post-kutsu polku kayttaja-paallystys portti kutsudata))
+        tarkastukset-kirjauksen-jalkeen (hae-tarkastukset)]
+    (is (= 500 (:status vastaus)))
+    (is (= (count tarkastukset-ennen-kirjausta) (count tarkastukset-kirjauksen-jalkeen)))))
+
 (deftest tiemerkintatoteuman-kirjaaminen-kohteelle-toimii
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
