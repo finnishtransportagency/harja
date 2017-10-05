@@ -1,4 +1,9 @@
 (ns harja.palvelin.integraatiot.digitraffic.ais-data
+  "https://meri.digitraffic.fi/api/v1/metadata/documentation/swagger-ui.html#!/vessel45location45controller/vesselLocationsByTimestampUsingGET
+
+  Haetaan ajastetusti digitrafficin rajapinnasta alusten nykyiset sijainnit, ja tallennetaan kantaan.
+  Kannasta saamme reittihistorian, jota digitraffic ei tarjoa."
+
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [cheshire.core :as cheshire]
@@ -26,12 +31,17 @@
         (lisaa-alukselle-reittipiste<! db
                                        {:mmsi (:mmsi laiva)
                                         :aika (-> laiva
+                                                  ;; Location record timestamp in milliseconds from Unix epoch.
                                                   (get-in [:properties :timestampExternal])
                                                   from-long
                                                   to-sql-date)
                                         :sijainti (-> laiva
                                                       :geometry
                                                       (update :type (comp keyword str/lower-case))
+                                                      ;; Geometrian koordinaatit ovat wgs84 muodossa, [lon lat] vektorissa
+                                                      (update :coordinates (fn [[lon lat]]
+                                                                             (let [{:keys [x y]} (geo/wgs84->euref {:x lon :y lat})]
+                                                                               [x y])))
                                                       geo/clj->pg
                                                       geo/geometry)})))
     (let [loki (str "Tallennettiin " (count tulos) "/" (count halutut) " laivan sijainnit.")]
