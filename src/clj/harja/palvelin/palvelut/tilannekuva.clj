@@ -84,11 +84,11 @@
             [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
             [harja.palvelin.palvelut.toteumat :as toteumat]))
 
-(defn tulosta-virhe! [asiat e]
+(defn- tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
                   ", mutta virhe tapahtui: " (.getMessage e))))
 
-(defn tulosta-tulos!
+(defn- tulosta-tulos!
   ([asiaa tulos] (tulosta-tulos! asiaa tulos identity))
   ([asiaa tulos fn]
    (if (vector? (fn tulos))
@@ -96,14 +96,14 @@
      (log/debug (str "  - " (count (keys (fn tulos))) " " asiaa)))
    tulos))
 
-(defn haettavat [s]
+(defn- haettavat [s]
   (into #{}
         (map (comp :nimi tk/suodattimet-idlla))
         s))
 
 (declare hae-kayttajan-urakat-alueittain)
 
-(defn- rajaa-urakat-niihin-joihin-on-hakuoikeus [db user tiedot]
+(defn- rajaa-urakat-hakuoikeudella [db user tiedot]
   (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user tiedot)
                                   (mapcat :urakat)
                                   (map :id)
@@ -157,8 +157,9 @@
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
   ;; Huomaa: hakee vain sellaiset ylläpitokohteet, jotka piirretään frontilla (paikkauskohteet).
-  ;; Mahdollisesti olisi syytä piirtää kaikki ylläpitokohteet palvelimella ja palauttaa karttakuvina, kuten
-  ;; nyt tehdään päällystyksen kanssa. Paikkauksia on kuitenkin verrattain vähän, joten toistaiseksi tämä toimii.
+  ;; Yhtenäisyyden ja suorituskyvyn vyoksi olisi Mahdollisesti syytä piirtää kaikki ylläpitokohteet palvelimella
+  ;; ja palauttaa karttakuvina, kuten nyt tehdään päällystyksen kanssa.
+  ;; Paikkauksia on kuitenkin verrattain vähän, joten toistaiseksi tämä toimii.
   (when (tk/valittu? yllapito (case tyyppi
                                 "paallystys" tk/paallystys
                                 "paikkaus" tk/paikkaus))
@@ -189,6 +190,10 @@
                         vastaus)]
       vastaus)))
 
+(defn- hae-paikkaustyot
+  [db user suodattimet urakat]
+  (hae-yllapitokohteet db user (assoc suodattimet :tyyppi "paikkaus") urakat))
+
 (defn- hae-paallystystyot
   "Hakee indikaattoritiedon siitä milloin päällystystyöt ovat muuttuneet viimeksi.
   Frontti käyttää tätä tietoa uuden karttatason luomiseen."
@@ -202,10 +207,6 @@
                       q/hae-paallystysten-viimeisin-muokkaus
                       .getTime)
               0))]))
-
-(defn- hae-paikkaustyot
-  [db user suodattimet urakat]
-  (hae-yllapitokohteet db user (assoc suodattimet :tyyppi "paikkaus") urakat))
 
 (defn- hae-laatupoikkeamat
   [db user {:keys [toleranssi alku loppu laatupoikkeamat nykytilanne?]} urakat]
@@ -509,7 +510,7 @@
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
    (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-   (let [haettavat-urakat (rajaa-urakat-niihin-joihin-on-hakuoikeus db user tiedot)]
+   (let [haettavat-urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
      (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
        (into {}
              (map (juxt identity (partial yrita-hakea-osio db user tiedot haettavat-urakat)))
@@ -542,14 +543,6 @@
                          :xmax x2 :ymax y2}})
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
-(defn- luettavat-urakat [user tiedot]
-  ;; TODO Huomioi erikoisoikeus täällä
-  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (filter #(oikeudet/voi-lukea? (if (:nykytilanne? tiedot)
-                                  oikeudet/tilannekuva-nykytilanne
-                                  oikeudet/tilannekuva-historia) % user)
-          (:urakat tiedot)))
-
 (defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf]
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
@@ -558,7 +551,7 @@
                          (map konv/alaviiva->rakenne)
                          xf
                          kartalle-xf))
-        urakat (luettavat-urakat user tiedot)]
+        urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
     (async/thread
       (jdbc/with-db-transaction [db db
                                  {:read-only? true}]
@@ -591,8 +584,7 @@
           (q/hae-toteumien-asiat db
                                  (as-> parametrit p
                                        (suodattimet-parametreista p)
-                                       ;; FIXME luettavat-urakat ei huomioi erikoisoikeutta
-                                       (assoc p :urakat (luettavat-urakat user p))
+                                       (assoc p :urakat (rajaa-urakat-hakuoikeudella db user p))
                                        (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
                                        (merge p (select-keys parametrit [:x :y])))))
     {:tehtava :tehtavat
@@ -624,8 +616,7 @@
                                   (as-> parametrit p
                                         (suodattimet-parametreista p)
                                         (assoc p
-                                          ;; FIXME luettavat-urakat ei huomioi erikoisoikeutta
-                                          :urakat (luettavat-urakat user p)
+                                          :urakat (rajaa-urakat-hakuoikeudella db user p)
                                           :tyypit (map name (haettavat (:tarkastukset p)))
                                           :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
                                           :x x :y y)))))
@@ -650,7 +641,7 @@
                                  (as-> parametrit p
                                        (suodattimet-parametreista p)
                                        (assoc p
-                                         :urakat (luettavat-urakat user p)
+                                         :urakat (rajaa-urakat-hakuoikeudella db user p)
                                          :x x
                                          :y y
                                          :nayta-kaikki (roolit/tilaajan-kayttaja? user)
@@ -678,7 +669,7 @@ paallystyskohdeosan-tiedot-xf
 (defn hae-paallystysten-tiedot-kartalle
   "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
   [db user {:keys [x y toleranssi nykytilanne? alku loppu] :as parametrit}]
-  (let [urakat (luettavat-urakat user parametrit)]
+  (let [urakat (rajaa-urakat-hakuoikeudella db user parametrit)]
     (when (or (not (empty? urakat))
               (oikeudet/voi-lukea? (if nykytilanne?
                                      oikeudet/tilannekuva-nykytilanne
