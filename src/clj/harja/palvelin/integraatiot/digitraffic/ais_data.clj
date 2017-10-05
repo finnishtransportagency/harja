@@ -48,7 +48,7 @@
 
 (defn- kasiteltavat-alukset* [alukset]
   (->> alukset
-       (map ::alus/mmsi)
+       (keep ::alus/mmsi)
        (into #{})))
 
 (defn kasiteltavat-alukset [db]
