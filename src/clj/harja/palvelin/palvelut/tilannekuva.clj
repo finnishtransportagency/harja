@@ -555,7 +555,6 @@
                          xf
                          kartalle-xf))
         urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
-    (log/debug "[DEBUG] RAJASIN URAKAT " urakat)
     (async/thread
       (jdbc/with-db-transaction [db db
                                  {:read-only? true}]
