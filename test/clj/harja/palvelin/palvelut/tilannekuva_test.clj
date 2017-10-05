@@ -368,12 +368,15 @@
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama tyokone))))))
 
 (deftest klikatun-paallystyksen-infopaneeli
-  (let [ei-loydy-koordinaatti [392327.9999989789 7212239.931808539]
+  (let [urakat (set (map :id (q-map "SELECT id FROM urakka")))
+        ei-loydy-koordinaatti [392327.9999989789 7212239.931808539]
         ei-loydy-vastaus (hae-klikkaus ei-loydy-koordinaatti :tilannekuva-paallystys
-                                       hakuargumentit-laaja-historia)
+                                       (assoc hakuargumentit-laaja-historia
+                                         :urakat urakat))
         loytyy-koordinaatti [445582.99999998405 7224316.998934508]
         loytyy-vastaus (hae-klikkaus loytyy-koordinaatti :tilannekuva-paallystys
-                                     hakuargumentit-laaja-historia)]
+                                     (assoc hakuargumentit-laaja-historia
+                                       :urakat urakat))]
 
     (is (= [] ei-loydy-vastaus) "Ahvenanmaan keskeltä ei löydy päällystyskohteita")
 
