@@ -164,7 +164,7 @@
                                  (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus)))))))])]
     (hae! id)
     (komp/luo
-      (komp/kun-muuttuu (comp hae! :id :vuosi))
+      (komp/kun-muuttuu (comp hae! :id))
       tallenna!)))
 
 (defn takuuaika [ur]
