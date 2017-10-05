@@ -320,7 +320,7 @@
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :vv-materiaalit (component/using
                         (vv-materiaalit/->Materiaalit)
-                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :vv-turvalaitteet (component/using
                           (vv-turvalaitteet/->Turvalaitteet)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
