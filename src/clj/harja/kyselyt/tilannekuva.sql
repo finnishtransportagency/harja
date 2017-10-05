@@ -393,6 +393,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
+      AND ypk.urakka IN :urakat
       AND (pai.tila :: TEXT != 'valmis' OR
            (now() - pai.valmispvm_kohde) < INTERVAL '7 days');
 
@@ -443,6 +444,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
+      AND ypk.urakka IN :urakat
       AND (pai.aloituspvm < :loppu AND (pai.valmispvm_kohde IS NULL OR pai.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat

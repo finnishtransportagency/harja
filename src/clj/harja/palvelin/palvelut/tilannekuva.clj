@@ -174,10 +174,11 @@
                           (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi])))
                         (if nykytilanne?
                           (case tyyppi
-                            "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db))
+                            "paikkaus" (q/hae-paikkaukset-nykytilanteeseen db {:urakat urakat}))
                           (case tyyppi
                             "paikkaus" (q/hae-paikkaukset-historiakuvaan db
-                                                                         {:loppu (konv/sql-date loppu)
+                                                                         {:urakat urakat
+                                                                          :loppu (konv/sql-date loppu)
                                                                           :alku (konv/sql-date alku)}))))
           vastaus (yllapitokohteet-q/liita-kohdeosat-kohteisiin db vastaus :id
                                                                 {:alue alue
