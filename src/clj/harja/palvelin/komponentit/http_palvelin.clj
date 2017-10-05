@@ -72,7 +72,7 @@
         res)
       (finally
         (when (and vaadi-oikeustarkistus? (not @oikeudet/*oikeustarkistus-tehty*))
-          (log/error "virhe: oikeustarkistusta ei tehty - uri:" (:uri req)))))))
+          (log/warn "virhe: oikeustarkistusta ei tehty - uri:" (:uri req)))))))
 
 (defn- transit-palvelun-polku [nimi]
   (str "/_/" (name nimi)))
