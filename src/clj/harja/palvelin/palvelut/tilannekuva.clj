@@ -546,7 +546,6 @@
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
 (defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf]
-  (log/debug "[DEBUG] HAE KARTTAKUVAN TIEDOT PARAMS " parametrit)
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
         ch (async/chan 32
