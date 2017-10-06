@@ -109,9 +109,9 @@
                                        (pvm/pvm-aika-sek aika))
                                :type :reittipisteet
                                :alue (assoc (:sijainti piste)
-                                            :fill (and (= tyyppi :tarkastusajo)
-                                                       (integer? (first (:havainnot piste))))
-                                            :color "red")}))))
+                                            :fill "red"
+                                            :radius 10
+                                            :stroke {:color "black" :width 1})}))))
 
 (defn- piirra-reitti
   [reitti]
