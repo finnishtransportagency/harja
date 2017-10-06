@@ -13,3 +13,9 @@ SELECT id
 FROM vv_materiaali
 WHERE nimi = :nimi
 LIMIT 1;
+
+-- name: urakan-tiedot-sahkopostin-lahetysta-varten
+SELECT sampoid,
+       nimi
+FROM urakka
+WHERE id = :id;

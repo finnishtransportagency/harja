@@ -164,7 +164,7 @@
                                  (reset! tyotunnit (urakan-tyotunnit/tyotunnit-naytettavana vuodet vastaus)))))))])]
     (hae! id)
     (komp/luo
-      (komp/kun-muuttuu (comp hae! :id :vuosi))
+      (komp/kun-muuttuu (comp hae! :id))
       tallenna!)))
 
 (defn takuuaika [ur]
@@ -392,6 +392,7 @@
      [yleiset/tietoja {}
       "Urakan nimi:" (:nimi ur)
       "Urakan tunnus:" (:sampoid ur)
+      "Urakkanumero:" (:urakkanro ur)
 
       "YHA:n urakkatunnus:"
       (when (and paallystys-tai-paikkausurakka? paallystys-tai-paikkausurakka-sidottu?)

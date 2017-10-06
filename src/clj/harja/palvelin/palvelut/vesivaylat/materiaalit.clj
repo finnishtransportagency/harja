@@ -8,7 +8,10 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :as id]
             [harja.kyselyt.vesivaylat.materiaalit :as m-q]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]
+            [clojure.java.jdbc :as jdbc]
+            [harja.testi :as testi]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
   [db urakka-id materiaali-id]
@@ -27,12 +30,27 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id params))
   (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
 
-(defn- kirjaa-materiaali [db user materiaali]
+(defn- kirjaa-materiaali [db user materiaali fim email]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id materiaali))
-  (specql/insert! db ::m/materiaali
-                  (muok/lisaa-muokkaustiedot materiaali ::m/id user))
-  (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id})))
+  (jdbc/with-db-transaction [db db]
+    (specql/insert! db ::m/materiaali
+                    (muok/lisaa-muokkaustiedot materiaali ::m/id user))
+    (let [materiaalilistaus (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id}))
+          muokattu-materiaali (some #(when (and (= (::m/urakka-id %) (::m/urakka-id materiaali))
+                                                (= (::m/nimi %) (::m/nimi materiaali)))
+                                       %)
+                                    materiaalilistaus)]
+      (println "vv_materiaalilistaus TAULUKKO: " (testi/q "SELECT * FROM vv_materiaalilistaus"))
+      (println "MATERIAALILISTAUS: " materiaalilistaus)
+      (println "MUOKATTU MATERIAALI: " muokattu-materiaali)
+      (when (and (::m/halytysraja muokattu-materiaali)
+                 (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali)))
+        (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
+              urakan-tiedot (first (m-q/urakan-tiedot-sahkopostin-lahetysta-varten db parametrit))
+              urakan-ja-materiaalin-tiedot (merge urakan-tiedot (select-keys muokattu-materiaali [::m/halytysraja ::m/maara-nyt ::m/nimi]))]
+          (viestinta/laheta-sposti-materiaalin-halyraja fim email urakan-ja-materiaalin-tiedot)))
+      materiaalilistaus)))
 
 (defn- poista-materiaalikirjaus [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
@@ -65,8 +83,10 @@
 
 (defrecord Materiaalit []
   component/Lifecycle
-  (start [{db :db
-           http :http-palvelin :as this}]
+  (start [{db    :db
+           http  :http-palvelin
+           fim   :fim
+           email :sonja-sahkoposti :as this}]
     (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalilistaus
                                     (fn [user haku]
                                       (hae-materiaalilistaus db user haku))
@@ -74,7 +94,7 @@
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     (http-palvelin/julkaise-palvelu http :kirjaa-vesivayla-materiaali
                                     (fn [user materiaali]
-                                      (kirjaa-materiaali db user materiaali))
+                                      (kirjaa-materiaali db user materiaali fim email))
                                     {:kysely-spec ::m/materiaalikirjaus
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     (http-palvelin/julkaise-palvelu http :poista-materiaalikirjaus
