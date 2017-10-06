@@ -305,6 +305,106 @@
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}])
 
+(def tarkastus-jossa-ajallinen-aukko
+  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))}
+   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))}
+   ;; GPS-signaali katkeaa tässä joksikin aikaa
+   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
+   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}])
+
+(def tarkastus-jossa-ajallinen-aukko-ja-sitten-tyhja-tie
+  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))}
+   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))}
+   ;; GPS-signaali katkeaa tässä joksikin aikaa
+   {:id 2 :sijainti nil
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
+   {:id 3 :sijainti nil
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
+   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}
+   ;; Tie vaihtuu
+   {:id 5 :sijainti [455519.19997024536 7227720.400009155]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 291)))}
+   {:id 6 :sijainti [455555.19997024536 7227594.400009155]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 292)))}
+   ;; Tie vaihtuu taas
+   {:id 7 :sijainti [454881.19997024536 7227586.400009155]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 293)))}
+   {:id 8 :sijainti [455041.19997024536 7227634.400009155]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 294)))}])
+
+(def tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-tielle
+  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))}
+   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))}
+   {:id 2 :sijainti nil
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 4)))}
+   ;; GPS-signaali katkeaa tässä joksikin aikaa
+   {:id 3 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
+   {:id 4 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
+   {:id 5 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}
+   ;; Tie vaihtuu
+   {:id 6 :sijainti [455519.19997024536 7227720.400009155]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 292)))}])
+
+(def tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-ja-sitten-tyhja-tie-ja-sitten-tie
+  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/now))}
+   {:id 1 :sijainti [465641.5999816895 7230780.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 5)))}
+   {:id 2 :sijainti nil
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
+   ;; GPS-signaali katkeaa tässä joksikin aikaa
+   {:id 3 :sijainti nil
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
+   {:id 4 :sijainti [466089.5999816895 7230916.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
+   {:id 5 :sijainti [466409.5999816895 7230996.000024414]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}
+   ;; Tie vaihtuu
+   {:id 6 :sijainti [455519.19997024536 7227720.400009155]
+    :jatkuvat-havainnot []
+    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 295)))}])
+
 (def tarkastus-jossa-tie-vaihtuu
   [{:id 0 :sijainti [455421.19997024536 7227742.400009155]
     :jatkuvat-havainnot []}
