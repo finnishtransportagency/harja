@@ -40,7 +40,7 @@
                                                 (= (::m/nimi %) (::m/nimi materiaali)))
                                        %)
                                     materiaalilistaus)]
-      (log/debug "MUOKATTU MATERIAALI: " muokattu-materiaali)
+      (println "MUOKATTU MATERIAALI: " muokattu-materiaali)
       (when (and (::m/halytysraja muokattu-materiaali)
                  (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali)))
         (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
