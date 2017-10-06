@@ -142,7 +142,7 @@
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
                          testidata/tarkastus-jossa-sijainti-puuttuu-alusta))]
     ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 (deftest tarkastus-jossa-ajallinen-aukko
