@@ -111,7 +111,7 @@
                                :alue (assoc (:sijainti piste)
                                             :fill "red"
                                             :radius 10
-                                            :color "red")}))))
+                                            :stroke {:color "black" :width 1})}))))
 
 (defn- piirra-reitti
   [reitti]
