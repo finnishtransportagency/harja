@@ -153,6 +153,30 @@
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
+(deftest tarkastus-jossa-ajallinen-aukko-ja-sitten-tyhja-tie
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-ajallinen-aukko-ja-sitten-tyhja-tie))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 4))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-tielle
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-tielle))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-ja-sitten-tyhja-tie-ja-sitten-tie
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-ja-sitten-tyhja-tie-ja-sitten-tie))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
 (deftest tarkastus-jossa-merkintojen-aikaleimoissa-outouksia
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
