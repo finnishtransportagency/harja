@@ -70,7 +70,8 @@ E'reittimerkinta-tauluun tallennetaan Harjan laadunseurannan mobiilityökalulla 
 Tauluun tallennettua tietoa käytetään luomaan yhteenveto tehdystä ajosta eli datasta muodostetaan tarkastus tarkastus-tauluun.\n
 
 Sarakkeiden selitykset:\n
-- sijainti_tarkkuus       HTML5-API:n palauttama GPS-pisteen tarkkuus (säde, metreinä)';
+- sijainti_tarkkuus       HTML5-API:n palauttama GPS-pisteen tarkkuus (säde, metreinä)
+- tr_osoite               Käyttäjän kirjaama TR-osoite ko. pisteelle (oletettavaa on, että suurimmalla osalla pisteitä ei ole tr-osoitetta merkitty, vaan se selvitetään vasta myöhemmin kun tarkastusreitit muunnetaan tarkastuksiksi';
 
 COMMENT ON TABLE vakiohavainto IS
 E'Vakiohavaintotaulussa esitellään erilaisia usein tehtäviä havaintoja, joita voidaan tehdä Harjan laadunseurannan mobiilityökalulla. Tärkeät sarakkeet:\n
