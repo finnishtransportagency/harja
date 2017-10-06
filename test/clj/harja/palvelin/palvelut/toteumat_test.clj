@@ -362,11 +362,11 @@
 
     (is (some? toteuma-id))
 
-    ;; Tilaajan käyttäjä voi hakea siirtymätiedot
+    ;; JVH voi hakea siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-jvh+))
 
     ;; Eri urakoitsijalla palautuu tyhjät tiedot
-    (is (= ei-ok-tulos (hae +kayttaja-yit_uuvh+)))
+    (is (thrown? Exception (hae +kayttaja-yit_uuvh+)))
 
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))
