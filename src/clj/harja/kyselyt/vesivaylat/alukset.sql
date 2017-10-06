@@ -22,7 +22,7 @@ ORDER BY mmsi;
 
 -- name: hae-alusten-reitit
 SELECT
-  alus,
+  alus AS "alus-mmsi",
   -- yhdistetään pisteet reittiviivaksi. Nimetään sijainniksi, koska
   -- sitä nimeä on käytetty ympäri harjan..
   ST_Simplify (ST_MakeLine(array_agg(sijainti :: GEOMETRY)), 200, true) AS sijainti
@@ -33,7 +33,7 @@ GROUP BY alus;
 
 -- name: hae-alusten-reitit-pisteineen
 SELECT
-  alus,
+  alus AS "alus-mmsi",
   -- yhdistetään pisteet reittiviivaksi. Nimetään sijainniksi, koska
   -- sitä nimeä on käytetty ympäri harjan..
   ST_Simplify (ST_MakeLine(array_agg(sijainti :: GEOMETRY)), 200, true) AS sijainti,

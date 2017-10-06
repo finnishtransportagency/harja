@@ -78,7 +78,7 @@
       http
       :hae-alusten-reitit-pisteineen
       (fn [user tiedot]
-        (hae-alusten-reitit db user tiedot))
+        (hae-alusten-reitit db user tiedot true))
       {:kysely-spec ::alus/hae-alusten-reitit-pisteineen-kysely
        :vastaus-spec ::alus/hae-alusten-reitit-pisteineen-vastaus})
     (julkaise-palvelu

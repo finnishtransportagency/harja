@@ -84,65 +84,79 @@
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :hae-alusten-reitit +kayttaja-jvh+)]
+                              :hae-alusten-reitit +kayttaja-jvh+
+                              args)]
 
-    (is (s/valid? ::alus/:hae-alusten-reitit-kysely args))
-    (is (s/valid? ::alus/:hae-alusten-reitit-vastaus tulos))
+    (is (s/valid? ::alus/hae-alusten-reitit-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-vastaus tulos))
 
     (is (every?
           (fn [t]
-            (and (every? not-empty (vals t))
+            (and (every? some? (vals t))
                  (= #{::alus/sijainti ::alus/alus-mmsi} (into #{} (keys t)))))
           tulos)))
 
   (let [args {:alukset #{230111580} :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :hae-alusten-reitit +kayttaja-jvh+)]
+                              :hae-alusten-reitit +kayttaja-jvh+
+                              args)]
 
-    (is (s/valid? ::alus/:hae-alusten-reitit-kysely args))
-    (is (s/valid? ::alus/:hae-alusten-reitit-vastaus tulos))
+    (is (s/valid? ::alus/hae-alusten-reitit-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-vastaus tulos))
 
     (is (= 1 (count tulos)))
     (is (every?
           (fn [t]
-            (and (every? not-empty (vals t))
+            (and (every? some? (vals t))
                  (= #{::alus/sijainti ::alus/alus-mmsi} (into #{} (keys t)))))
           tulos))))
 
 (deftest hae-alusten-reitit-pisteineen
   (let [args {:alukset nil :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :hae-alusten-reitit-pisteineen +kayttaja-jvh+)]
+                              :hae-alusten-reitit-pisteineen +kayttaja-jvh+
+                              args)]
 
-    (is (s/valid? ::alus/:hae-alusten-reitit-pisteineen-kysely args))
-    (is (s/valid? ::alus/:hae-alusten-reitit-pisteineen-vastaus tulos))
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-vastaus tulos))
 
     (is (every?
           (fn [t]
-            (and (every? not-empty (vals t))
+            (and (every? some? (vals t))
                  (= #{::alus/sijainti ::alus/alus-mmsi ::alus/pisteet} (into #{} (keys t)))))
           tulos))
     (is (every?
-          (fn [p]
-            (and (every? not-empty (vals p))
-                 (= #{::alus/aika ::alus/sijainti} (into #{} (keys p)))))
+          (fn [pisteet]
+            (and
+              (not-empty pisteet)
+              (every?
+               (fn [piste]
+                 (and (every? some? (vals piste))
+                      (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
+               pisteet)))
           (map ::alus/pisteet tulos))))
 
   (let [args {:alukset #{230111580} :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :hae-alusten-reitit-pisteineen +kayttaja-jvh+)]
+                              :hae-alusten-reitit-pisteineen +kayttaja-jvh+
+                              args)]
 
-    (is (s/valid? ::alus/:hae-alusten-reitit-pisteineen-kysely args))
-    (is (s/valid? ::alus/:hae-alusten-reitit-pisteineen-vastaus tulos))
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-vastaus tulos))
 
     (is (= 1 (count tulos)))
     (is (every?
           (fn [t]
-            (and (every? not-empty (vals t))
+            (and (every? some? (vals t))
                  (= #{::alus/sijainti ::alus/alus-mmsi ::alus/pisteet} (into #{} (keys t)))))
           tulos))
     (is (every?
-          (fn [p]
-            (and (every? not-empty (vals p))
-                 (= #{::alus/aika ::alus/sijainti} (into #{} (keys p)))))
+          (fn [pisteet]
+            (and
+              (not-empty pisteet)
+              (every?
+                (fn [piste]
+                  (and (every? some? (vals piste))
+                       (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
+                pisteet)))
           (map ::alus/pisteet tulos)))))

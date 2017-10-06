@@ -53,7 +53,7 @@
 (s/def ::pisteet (s/coll-of ::pistetieto))
 
 (s/def ::hae-alusten-reitit-pisteineen-vastaus
-  (s/coll-of (s/keys :req [::pisteet ::sijainti ::alus])))
+  (s/coll-of (s/keys :req [::pisteet ::sijainti ::alus-mmsi])))
 
 (s/def ::hae-alusten-reitit-kysely
   (s/keys :opt-un [::alku ::loppu ::laivat]))
