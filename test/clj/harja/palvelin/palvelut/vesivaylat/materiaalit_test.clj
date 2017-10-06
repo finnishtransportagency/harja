@@ -190,6 +190,7 @@
                                                     :uudet-alkuperaiset-maarat [{::m/nimi "Hiekkasäkki"
                                                                                  ::m/alkuperainen-maara 666}]})))))
 
+;; Tämä testi toimii lokaalisti ja Circlessä, mutta Jenkinsi:ssä ei mene läpi.
 (deftest materiaalin-halytysrajan-alitus
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
         materiaali-halytysrajalla (first (q-map "SELECT nimi, maara, halytysraja FROM vv_materiaali WHERE \"urakka-id\"=" urakka-id " AND halytysraja IS NOT NULL"))
