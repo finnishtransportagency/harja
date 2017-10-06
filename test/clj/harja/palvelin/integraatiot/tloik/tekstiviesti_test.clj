@@ -183,20 +183,24 @@
 
 (deftest tekstiviestin-parsinta
   (is (= (tekstiviestit/parsi-tekstiviesti "V3")
-         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti ""})
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "" :aiheutti-toimenpiteita false})
       "Perustapaus osataan parsia oikein")
 
   (is (= (tekstiviestit/parsi-tekstiviesti "V3Jotain")
-         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain"})
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain" :aiheutti-toimenpiteita false})
       "Vapaateksti osataan parsia oikein")
 
   (is (= (tekstiviestit/parsi-tekstiviesti "V3 Jotain jännää")
-         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain jännää"})
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain jännää" :aiheutti-toimenpiteita false})
       "Vapaateksti osataan parsia oikein välilyönteineen")
 
   (is (= (tekstiviestit/parsi-tekstiviesti "V666 Jotain jännää")
-         {:toimenpide "vastaanotto" :viestinumero 666 :vapaateksti "Jotain jännää"})
+         {:toimenpide "vastaanotto" :viestinumero 666 :vapaateksti "Jotain jännää" :aiheutti-toimenpiteita false})
       "Moninumeroinen viestinumero osataan parsia oikein")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "T666 Jotain jännää")
+         {:toimenpide "vastaanotto" :viestinumero 666 :vapaateksti "Jotain jännää" :aiheutti-toimenpiteita true})
+      "Toimenpiteitä aiheuttanut lopetuskuittaus osataan tulkita oikein")
 
   (is (thrown? Exception (tekstiviestit/parsi-tekstiviesti "666"))
       "Poikkeus heitetään, kun kuittaustyyppi uupuu")
