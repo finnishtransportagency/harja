@@ -1,43 +1,30 @@
-CREATE TABLE vv_alus (
-  mmsi INTEGER PRIMARY KEY,
-  nimi TEXT,
-  lisatiedot TEXT,
+ALTER TABLE vv_materiaali ADD COLUMN halytysraja INTEGER;
 
-  luotu TIMESTAMP DEFAULT NOW(),
-  luoja INTEGER REFERENCES kayttaja(id) NOT NULL,
-  muokattu TIMESTAMP,
-  muokkaaja INTEGER REFERENCES kayttaja(id),
-  poistettu BOOLEAN DEFAULT FALSE,
-  poistaja INTEGER REFERENCES kayttaja(id)
-);
-
-CREATE TABLE vv_alus_urakka (
-  alus INTEGER REFERENCES vv_alus(mmsi),
-  urakka INTEGER REFERENCES urakka(id),
-  lisatiedot TEXT,
-
-  luotu TIMESTAMP DEFAULT NOW(),
-  luoja INTEGER REFERENCES kayttaja(id) NOT NULL,
-  muokattu TIMESTAMP,
-  muokkaaja INTEGER REFERENCES kayttaja(id),
-  poistettu BOOLEAN DEFAULT FALSE,
-  poistaja INTEGER REFERENCES kayttaja(id)
-);
-
-CREATE UNIQUE INDEX uniikki_urakan_alus on vv_alus_urakka (alus, urakka) WHERE poistettu = false;
-
-CREATE TABLE vv_alus_sijainti (
-  alus INTEGER REFERENCES vv_alus (mmsi),
-  sijainti POINT NOT NULL,
-  aika TIMESTAMP NOT NULL
-);
-
--- BRIN stands for Block Range Index.
--- BRIN is designed for handling very large tables in which certain columns have some natural
--- correlation with their physical location within the table.
--- A block range is a group of pages that are physically adjacent in the table;
--- for each block range, some summary info is stored by the index.
--- For example, a table storing a store's sale orders might have
--- a date column on which each order was placed, and most of the time the entries
--- for earlier orders will appear earlier in the table as well
-CREATE INDEX pvm_ja_alus ON vv_alus_sijainti USING BRIN (aika, alus);
+CREATE OR REPLACE VIEW vv_materiaalilistaus AS
+  SELECT DISTINCT ON (m1."urakka-id", m1.nimi)
+    m1."urakka-id",
+    m1.nimi,
+    -- Haetaan alkuperäinen määrä (ajallisesti ensimmäinen kirjaus)
+    (SELECT maara
+     FROM vv_materiaali m2
+     WHERE m2."urakka-id" = m1."urakka-id"
+           AND m2.nimi = m1.nimi
+           AND m2.poistettu IS NOT TRUE
+     ORDER BY pvm ASC
+     LIMIT 1)                            AS "alkuperainen-maara",
+    -- Haetaan "nykyinen" määrä: kaikkien kirjausten summa
+    (SELECT SUM(maara)
+     FROM vv_materiaali m3
+     WHERE m3."urakka-id" = m1."urakka-id"
+           AND m3.nimi = m1.nimi
+           AND m3.poistettu IS NOT TRUE) AS "maara-nyt",
+    -- Kerätään kaikki muutokset omaan taulukkoon
+    (SELECT array_agg(ROW (l.pvm, l.maara, l.lisatieto, l.id) :: VV_MATERIAALI_MUUTOS)
+     FROM vv_materiaali l
+     WHERE l."urakka-id" = m1."urakka-id"
+           AND l.poistettu IS NOT TRUE
+           AND m1.nimi = l.nimi)         AS muutokset,
+    m1.halytysraja
+  FROM vv_materiaali m1
+  WHERE m1.poistettu IS NOT TRUE
+  ORDER BY nimi ASC;
