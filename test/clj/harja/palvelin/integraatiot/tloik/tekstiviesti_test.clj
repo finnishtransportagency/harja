@@ -68,7 +68,7 @@
 
     (paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db puhelinnumero ilmoitus-id yhteyshenkilo-id)
 
-    (is (= "Viestiäsi ei voitu käsitellä. Antamasi viestinumero ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla."
+    (is (= "Viestiäsi ei voitu käsitellä. Antamasi kuittaus ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla."
            (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db "0834" "TESTI"))
         "Tuntematon käyttäjä käsitellään oikein")
     (is (= "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu."
@@ -178,3 +178,35 @@
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
     (is (rivit "TR-osoite: Ei tierekisteriosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
+
+
+
+(deftest tekstiviestin-parsinta
+  (is (= (tekstiviestit/parsi-tekstiviesti "V3")
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "" :aiheutti-toimenpiteita false})
+      "Perustapaus osataan parsia oikein")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "V3Jotain")
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain" :aiheutti-toimenpiteita false})
+      "Vapaateksti osataan parsia oikein")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "V3 Jotain jännää")
+         {:toimenpide "vastaanotto" :viestinumero 3 :vapaateksti "Jotain jännää" :aiheutti-toimenpiteita false})
+      "Vapaateksti osataan parsia oikein välilyönteineen")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "V666 Jotain jännää")
+         {:toimenpide "vastaanotto" :viestinumero 666 :vapaateksti "Jotain jännää" :aiheutti-toimenpiteita false})
+      "Moninumeroinen viestinumero osataan parsia oikein")
+
+  (is (= (tekstiviestit/parsi-tekstiviesti "T666 Jotain jännää")
+         {:toimenpide "lopetus" :viestinumero 666 :vapaateksti "Jotain jännää" :aiheutti-toimenpiteita true})
+      "Toimenpiteitä aiheuttanut lopetuskuittaus osataan tulkita oikein")
+
+  (is (thrown? Exception (tekstiviestit/parsi-tekstiviesti "666"))
+      "Poikkeus heitetään, kun kuittaustyyppi uupuu")
+
+  (is (thrown? Exception (tekstiviestit/parsi-tekstiviesti "V"))
+      "Poikkeus heitetään, kun viestinumero uupuu")
+
+  (is (thrown? Exception (tekstiviestit/parsi-tekstiviesti "1V"))
+      "Poikkeus heitetään, kun kuittaustyyppiä & viestinumeroa ei saada parsittua"))

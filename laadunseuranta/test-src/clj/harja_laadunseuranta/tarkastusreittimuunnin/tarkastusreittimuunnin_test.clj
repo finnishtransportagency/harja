@@ -625,8 +625,8 @@
   (log/debug "Debugataan tarkastusajo: " (pr-str tarkastusajo-id))
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tie->str (fn [tie]
-                   (str (or (:tie tie)
-                            (:tr_numero tie))
+                   (str "Tie " (or (:tie tie)
+                                   (:tr_numero tie))
                         "/" (or (:aosa tie)
                                 (:tr_alkuosa tie))
                         "/" (or (:aet tie)
