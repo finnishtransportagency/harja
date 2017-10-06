@@ -642,6 +642,7 @@
 
 (defn muunna-tarkastusajo-kantaan [db tarkastusajo-id urakka-id]
   ;; HUOMAA: Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!
+  (log/debug "Muunnetaan tarkastusajo " (pr-str tarkastusajo-id) " kantaan urakkaan " urakka-id)
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
     (jdbc/with-db-transaction [tx db]
