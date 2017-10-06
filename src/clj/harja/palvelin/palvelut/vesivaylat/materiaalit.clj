@@ -10,7 +10,9 @@
             [harja.kyselyt.vesivaylat.materiaalit :as m-q]
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [harja.testi :as testi]
+            [clojure.spec.alpha :as s]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
   [db urakka-id materiaali-id]
@@ -27,6 +29,8 @@
 
 (defn- hae-materiaalilistaus [db user params]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id params))
+  (println "SPECQL COLUMNS: " (pr-str (specql/columns ::m/materiaalilistaus)))
+  (println "SPEC DESCRIPTION: " (s/describe ::m/materiaalilistaus))
   (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
 
 (defn- kirjaa-materiaali [db user materiaali fim email]
@@ -40,7 +44,9 @@
                                                 (= (::m/nimi %) (::m/nimi materiaali)))
                                        %)
                                     materiaalilistaus)]
-      (log/debug "MUOKATTU MATERIAALI: " muokattu-materiaali)
+      (println "vv_materiaalilistaus TAULUKKO: " (testi/q "SELECT * FROM vv_materiaalilistaus"))
+      (println "MATERIAALILISTAUS: " materiaalilistaus)
+      (println "MUOKATTU MATERIAALI: " muokattu-materiaali)
       (when (and (::m/halytysraja muokattu-materiaali)
                  (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali)))
         (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
