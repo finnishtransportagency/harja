@@ -31,6 +31,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id params))
   (println "SPECQL COLUMNS: " (pr-str (specql/columns ::m/materiaalilistaus)))
   (println "SPEC DESCRIPTION: " (s/describe ::m/materiaalilistaus))
+  (println "PARAMS: " (pr-str params))
   (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
 
 (defn- kirjaa-materiaali [db user materiaali fim email]
@@ -40,6 +41,7 @@
     (specql/insert! db ::m/materiaali
                     (muok/lisaa-muokkaustiedot materiaali ::m/id user))
     (let [materiaalilistaus (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id}))
+          _ (println "MATERIAALILISTAUKSEN META: " (meta materiaalilistaus))
           muokattu-materiaali (some #(when (and (= (::m/urakka-id %) (::m/urakka-id materiaali))
                                                 (= (::m/nimi %) (::m/nimi materiaali)))
                                        %)
