@@ -281,8 +281,10 @@
 (def tarkastus-jossa-sijainti-puuttuu-alusta
   [{:id 0 :sijainti nil
     :jatkuvat-havainnot [17]}
+   ;; Tullaan pimennosta tielle --> reitti katkeaa
    {:id 1 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot [17]}
+   ;; Pimentoon --> reitin on tarkoitus jatkua kunnes tie oikeasti vaihtuu
    {:id 2 :sijainti nil
     :jatkuvat-havainnot [17]
     :kitkamittaus 0.3}])
@@ -337,6 +339,7 @@
    {:id 3 :sijainti nil
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
+   ;; Tullaan pimennosta tielle --> reitin tulee katketa ja alkaa tästä uusi
    {:id 4 :sijainti [466409.5999816895 7230996.000024414]
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}
@@ -394,6 +397,7 @@
    {:id 3 :sijainti nil
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
+   ;; Tullaan pimennosta tielle --> reitin tulee katketa ja alkaa tästä uusi
    {:id 4 :sijainti [466089.5999816895 7230916.000024414]
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
