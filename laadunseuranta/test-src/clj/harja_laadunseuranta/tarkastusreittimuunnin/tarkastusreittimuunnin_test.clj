@@ -637,7 +637,7 @@
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 
 ;; Älä poista näitä
-;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
+;; Kutsu tässä NS:ssä esim. (debuggaa-tarkastusajon-muunto (:db harja.palvelin.main/harja-jarjestelma) 425)
 ;; Muista evaluoida REPLiin ensin (käännös ei sisällä näitä koska näitä ei käytetä)
 
 (defn muunna-tarkastusajo-kantaan [db tarkastusajo-id urakka-id]
