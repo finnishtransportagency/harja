@@ -682,6 +682,9 @@
         tarkastukset-ennen-kirjausta (hae-tarkastukset)
         polku ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/tarkastus"]
         kutsudata (slurp "test/resurssit/api/usean-yllapitokohteen-tarkastuksen-kirjaus-request.json")
+        ;; Transaktion toiminnan testaaminen overridaamalla mapv funktion on vähän huono,
+        ;; koska tämä nyt riippuu siitä, että harja.palvelin.integraatiot.api.kasittely.tarkastukset/luo-tai-paivita-tarkastukset
+        ;; transaction sisällä käytetään mapv funktiota usean tarkastuksen tallentamiseen eikä mitään muuta looppia.
         vastaus (with-redefs [mapv (fn [annettu-fn args]
                                      (vec (map-indexed
                                             #(if (and (= (-> %2 :tarkastus :tunniste :id) 1337)
