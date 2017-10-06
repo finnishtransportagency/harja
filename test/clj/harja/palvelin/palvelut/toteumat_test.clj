@@ -365,7 +365,7 @@
     ;; JVH voi hakea siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-jvh+))
 
-    ;; Eri urakoitsijalla palautuu tyhjät tiedot
+    ;; Eri urakoitsijalla palautuu poikkeus oikeustarkistuksessa
     (is (thrown? Exception (hae +kayttaja-yit_uuvh+)))
 
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
