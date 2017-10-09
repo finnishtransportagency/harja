@@ -188,8 +188,8 @@
     (dotimes [n 5]
       (try
         (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
-        (Thread/sleep 500)
         (catch PSQLException e
+          (Thread/sleep 500)
           (log/warn e "- yritetään uudelleen, yritys" n))))
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
   (luo-kannat-uudelleen))
