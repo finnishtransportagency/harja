@@ -323,6 +323,13 @@
                      (take 5
                            (str/split (str/replace osoite #"\(|\)" "") #","))))))
 
+(defn pgarray->vector
+  "Muuntaa annetun pg array vectoriksi"
+  [array]
+  (when (and (not (nil? array))
+             (= org.postgresql.jdbc.PgArray (type array)))
+    (vec(.getArray array))))
+
 (defn lue-tr-piste
   [osoite]
   (select-keys (lue-tr-osoite osoite)
