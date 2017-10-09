@@ -10,7 +10,8 @@
             [harja.kyselyt.vesivaylat.materiaalit :as m-q]
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.spec.alpha :as s]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
   [db urakka-id materiaali-id]
@@ -40,7 +41,6 @@
                                                 (= (::m/nimi %) (::m/nimi materiaali)))
                                        %)
                                     materiaalilistaus)]
-      (println "MUOKATTU MATERIAALI: " muokattu-materiaali)
       (when (and (::m/halytysraja muokattu-materiaali)
                  (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali)))
         (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
