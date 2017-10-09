@@ -20,12 +20,15 @@
 
 
 (def skeeman-tehtavat
-  #{"auraus ja sohjonpoisto",
+  #{"asfaltointi",
+    "auraus ja sohjonpoisto",
     "aurausviitoitus ja kinostimet",
     "harjaus",
+    "jyrays",
     "kelintarkastus",
     "koneellinen niitto",
     "koneellinen vesakonraivaus",
+    "kuumennus",
     "l- ja p-alueiden puhdistus",
     "liikennemerkkien puhdistus",
     "liik. opast. ja ohjausl. hoito seka reunapaalujen kun.pito",
@@ -41,6 +44,7 @@
     "pinnan tasaus",
     "pistehiekoitus",
     "paallystetyn tien sorapientareen taytto",
+    "sekoitus tai stabilointi",
     "siltojen puhdistus",
     "sorastus",
     "sorapientareen taytto",
@@ -49,7 +53,10 @@
     "sorateiden tasaus",
     "sulamisveden haittojen torjunta",
     "suolaus",
-    "tiestotarkastus"})
+    "tiemerkinta",
+    "tiestotarkastus",
+    "tilaajan laadunvalvonta",
+    "turvalaite"})
 
 (deftest tallenna-tyokoneen-seurantakirjaus-uusi
   (let [kutsu (api-tyokalut/post-kutsu
