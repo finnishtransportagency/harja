@@ -12,7 +12,8 @@
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [clojure.set :as set]))
 
 (defn oletusurakkatyyppi
   [db user]
@@ -123,23 +124,20 @@
   "Yhdistää käyttäjän urakat alueittain niin, että sama tyyppi ja alue sekä sen kaikki
    urakat esiintyy vectorissa vain kerran."
   [kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b]
-  (let [kayttajan-urakat-alueittain-a (map #(assoc % :urakat (set (:urakat %))) kayttajan-urakat-alueittain-a)
-        kayttajan-urakat-alueittain-b (map #(assoc % :urakat (set (:urakat %))) kayttajan-urakat-alueittain-b)
+  (let [kayttajan-urakat-alueittain-a (map #(update % :urakat set) kayttajan-urakat-alueittain-a)
+        kayttajan-urakat-alueittain-b (map #(update % :urakat set) kayttajan-urakat-alueittain-b)
         kayttajan-kaikki-urakat-alueittain (concat kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b)]
-    (vec (distinct
-           (map
-             (fn [alue-ja-urakat]
-               ;; Hae kaikkien kaikkien urakoiden joukosta mahdollinen vastinpari tälle mapille
-               ;; (mappi, jossa on sama tyyppi ja ELY), yhdistä urakat
-               (let [vastinpari (first (filter
-                                         #(and (= (:hallintayksikko %)
-                                                  (:hallintayksikko alue-ja-urakat))
-                                               (= (:tyyppi %)
-                                                  (:tyyppi alue-ja-urakat))
-                                               (not= % alue-ja-urakat))
-                                         kayttajan-kaikki-urakat-alueittain))]
-                 (assoc alue-ja-urakat :urakat (apply conj (:urakat alue-ja-urakat) (:urakat vastinpari)))))
-             kayttajan-kaikki-urakat-alueittain)))))
+    (as-> kayttajan-kaikki-urakat-alueittain $
+          (group-by (juxt :hallintayksikko :tyyppi) $)
+          (reduce-kv
+            (fn [vektori _ urakat-alueessa]
+              (conj vektori
+                    (assoc
+                      (first urakat-alueessa)
+                      :urakat
+                      (->> urakat-alueessa (mapcat :urakat) set vec))))
+            []
+            $))))
 
 (defn- hae-yhteydenpidon-vastaanottajat [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-yhteydenpito user)
