@@ -11,7 +11,6 @@
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]
             [clojure.java.jdbc :as jdbc]
-            [harja.testi :as testi]
             [clojure.spec.alpha :as s]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
