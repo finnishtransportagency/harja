@@ -85,6 +85,11 @@ SELECT t.urakka
 FROM toteuma t
 WHERE t.id = :toteuma;
 
+-- name: erilliskustannuksen-urakka
+SELECT t.urakka
+FROM erilliskustannus t
+WHERE t.id = :id;
+
 -- name: toteuman-tyyppi
 SELECT t.tyyppi
 FROM toteuma t

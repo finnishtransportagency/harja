@@ -391,7 +391,8 @@
                                                          yllapitokohde-tie)
                                                        (tr-domain/tierekisteriosoite-tekstina
                                                          (:tr %))))}
-              (when (:yllapitokohde laatupoikkeama)
+              (when (and (get-in laatupoikkeama [:yllapitokohde :numero])
+                         (get-in laatupoikkeama [:yllapitokohde :nimi]))
                 {:otsikko "Kohde" :hae (hakufunktio
                                          #{[:yllapitokohde :numero] [:yllapitokohde :nimi]}
                                          #(let [yllapitokohde (:yllapitokohde %)]

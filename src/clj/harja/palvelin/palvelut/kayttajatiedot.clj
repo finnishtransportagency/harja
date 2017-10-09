@@ -12,7 +12,8 @@
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [clojure.set :as set]))
 
 (defn oletusurakkatyyppi
   [db user]
@@ -42,7 +43,7 @@
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
-  Mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  Vastaus on vector, sen mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
   joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   ([db user oikeustarkistus-fn]
@@ -118,6 +119,25 @@
                                (assoc urakka :alue (get urakat-alueineen (:id urakka))))
                              (:urakat au))))
        aluekokonaisuudet))))
+
+(defn yhdista-kayttajan-urakat-alueittain
+  "Yhdistää käyttäjän urakat alueittain niin, että sama tyyppi ja alue sekä sen kaikki
+   urakat esiintyy vectorissa vain kerran."
+  [kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b]
+  (let [kayttajan-urakat-alueittain-a (map #(update % :urakat set) kayttajan-urakat-alueittain-a)
+        kayttajan-urakat-alueittain-b (map #(update % :urakat set) kayttajan-urakat-alueittain-b)
+        kayttajan-kaikki-urakat-alueittain (concat kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b)]
+    (as-> kayttajan-kaikki-urakat-alueittain $
+          (group-by (juxt :hallintayksikko :tyyppi) $)
+          (reduce-kv
+            (fn [vektori _ urakat-alueessa]
+              (conj vektori
+                    (assoc
+                      (first urakat-alueessa)
+                      :urakat
+                      (->> urakat-alueessa (mapcat :urakat) set))))
+            []
+            $))))
 
 (defn- hae-yhteydenpidon-vastaanottajat [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-yhteydenpito user)

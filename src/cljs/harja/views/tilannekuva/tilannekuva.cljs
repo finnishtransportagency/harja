@@ -22,6 +22,7 @@
             [harja.ui.bootstrap :as bs]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [harja.domain.ely :as ely]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -86,7 +87,7 @@
   ([otsikko suodattimet-atom ryhma-polku]
    (checkbox-suodatinryhma otsikko suodattimet-atom ryhma-polku nil))
   ([otsikko suodattimet-atom ryhma-polku {:keys [auki-atomi?] :as optiot}]
-   (let [oma-auki-tila (or auki-atomi? (atom false))
+   (let [auki-tila (or auki-atomi? (atom false))
          ryhmanjohtaja-tila-atom (reaction-writable
                                    (if (every? true? (vals (get-in @suodattimet-atom ryhma-polku)))
                                      :valittu
@@ -97,7 +98,7 @@
                                                        nayta-lkm? kokoelma-atom] :as optiot}]
        (let [ryhman-elementtien-avaimet (or (get-in tk/tehtavien-jarjestys ryhma-polku)
                                             (sort-by :otsikko (keys (get-in @suodattimet-atom ryhma-polku))))
-             auki? (fn [] (or @oma-auki-tila
+             auki? (fn [] (or @auki-tila
                               (and kokoelma-atom
                                    (= otsikko @kokoelma-atom))))
              valittujen-lkm (count (filter true? (vals (get-in @suodattimet-atom ryhma-polku))))
@@ -113,7 +114,7 @@
                               (reset! kokoelma-atom nil)
                               (reset! kokoelma-atom otsikko))
                             ;; Ylläpitää itse omaa auki/kiinni-tilaansa
-                            (swap! oma-auki-tila not))
+                            (swap! auki-tila not))
                           (aseta-hallintapaneelin-max-korkeus (dom/elementti-idlla "tk-suodattimet")))}
              [:span {:class (str
                               "tk-chevron-ryhma-tila chevron-rotate "
@@ -165,15 +166,7 @@
          (when @auki?
            sisalto)]))))
 
-(def tilannekuvan-alueet ["Uusimaa"
-                          "Varsinais-Suomi"
-                          "Kaakkois-Suomi"
-                          "Pirkanmaa"
-                          "Pohjois-Savo"
-                          "Keski-Suomi"
-                          "Etelä-Pohjanmaa"
-                          "Pohjois-Pohjanmaa"
-                          "Lappi"])
+(def tilannekuvan-alueet ely/elynumerot-jarjestyksessa)
 
 (def urakkatyypin-otsikot {:hoito "Hoito"
                            :paallystys "Päällystys"
@@ -194,15 +187,15 @@
         :otsikon-luokka "fontti-taso2"}
        [:div.tk-suodatinryhmat
         (doall
-          (for [alue tilannekuvan-alueet]
-            ^{:key (str tyyppi "-aluesuodatin-alueelle-" alue)}
-            [checkbox-suodatinryhma alue tiedot/suodattimet
-             [:alueet tyyppi alue]
+          (for [elynumero tilannekuvan-alueet]
+            ^{:key (str tyyppi "-aluesuodatin-alueelle-" elynumero)}
+            [checkbox-suodatinryhma (ely/elynumero->nimi elynumero) tiedot/suodattimet
+             [:alueet tyyppi elynumero]
              {:luokka "taustavari-taso3 ylaraja"
               :sisallon-luokka "taustavari-taso4"
               :otsikon-luokka "fontti-taso3"
               :nayta-lkm? true
-              :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi alue]) false)}]))]])))
+              :auki-atomi? (paneelin-tila-atomi! (str [:alueet tyyppi elynumero]) false)}]))]])))
 
 (defn- aluesuodattimet []
   (komp/luo

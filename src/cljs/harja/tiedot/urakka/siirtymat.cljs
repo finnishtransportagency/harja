@@ -66,8 +66,6 @@
           [alku loppu] (pvm/paivan-aikavali alkanut)
           {:keys [toimenpidekoodi toimenpideinstanssi]} (first tehtavat)]
 
-      (log "SIIRTYMÄ: " (pr-str siirtyma))
-
       (nav/esta-url-paivitys!)
 
       ;; Valitse oikea toimenpideinstanssi
