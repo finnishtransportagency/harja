@@ -135,7 +135,7 @@
                     (assoc
                       (first urakat-alueessa)
                       :urakat
-                      (->> urakat-alueessa (mapcat :urakat) set vec))))
+                      (->> urakat-alueessa (mapcat :urakat) set))))
             []
             $))))
 
