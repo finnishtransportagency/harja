@@ -8,7 +8,9 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.tyokalut.lukot :as lukko]))
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.kyselyt.reimari-meta :as metatiedot-q]))
+
 
 (defn aikaleima [text]
   (when-not (str/blank? text)
@@ -24,20 +26,11 @@
       aika-ilman-vyohyketta
       (str aika-ilman-vyohyketta "Z"))))
 
-(defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  (::integraatiotapahtuma/alkanut
-   (last (sort-by ::integraatiotapahtuma/alkanut
-                  (specql/fetch db ::integraatiotapahtuma/tapahtuma
-                                #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
-                                  [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
-                                                                        :harja.palvelin.integraatiot/jarjestelma}] }
-                                {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                     :harja.palvelin.integraatiot/nimi nimi}
-                                 ::integraatiotapahtuma/onnistunut true })))))
 
+(defn hakuvali [db integraation-nimi]
+  (first (harja.kyselyt.reimari-meta/hae-hakuvali db {:integraatio integraation-nimi})))
 
 (defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana alkuaika loppuaika muutosaika] :as hakuparametrit} konteksti]
-  ;; {:pre [(assert (and db pohja-url kayttajatunnus salasana muutosaika) [db pohja-url kayttajatunnus salasana muutosaika])]}
   (let [otsikot {"Content-Type" "text/xml"
                  "SOAPAction" (:soap-action hakuparametrit)}
         http-asetukset {:metodi :POST
@@ -53,8 +46,8 @@
 
 (defn kutsu-reimari-integraatiota
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" haun-nimi)]
-    (if-not muutosaika
+  (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
+    (if-not (and alku loppu)
       (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
@@ -62,7 +55,7 @@
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" haun-nimi
           (fn [konteksti]
-            (kutsu-reimari-integraatiota* (assoc hakuparametrit :muutosaika muutosaika) konteksti))))))))
+            (kutsu-reimari-integraatiota* (assoc hakuparametrit :alkuaika alku :loppuaika loppu) konteksti))))))))
 
 
 
