@@ -1,4 +1,4 @@
-CREATE TABLE geometriaiaineisto (
+CREATE TABLE geometriaaineisto (
   id                    SERIAL PRIMARY KEY,
   nimi                  VARCHAR(128) NOT NULL,
   osoite                TEXT         NOT NULL,
