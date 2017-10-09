@@ -164,8 +164,9 @@
                ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
                valittu-urakkatyyppi @valittu-urakkatyyppi
                ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
-               oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
+               oletus-urakkatyyppi (urakkatyyppi-arvolle kayttajan-oletus-tyyppi)
                valittu-hy-id @valittu-hallintayksikko-id]
+
     (go
       (or urakan-urakkatyyppi
           valittu-urakkatyyppi
