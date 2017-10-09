@@ -29,6 +29,7 @@
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
        "L%s = lopetettu\n"
+       "T%s = lopetettu toimenpitein\n"
        "M%s = muutettu\n"
        "R%s = vastattu\n"
        "U%s = väärä urakka\n\n"
@@ -47,6 +48,7 @@
     "V" "vastaanotto"
     "A" "aloitus"
     "L" "lopetus"
+    "T" "lopetus"
     "M" "muutos"
     "R" "vastaus"
     "U" "vaara-urakka"
@@ -61,18 +63,21 @@
              :virheet [{:koodi :tuntematon-viestinumero
                         :viesti (format "Tuntematon viestinumero: %s" numero)}]})))
 
-(defn parsi-vapaateksti [viesti]
-  (when (< 2 (count viesti)) (string/trim (.substring viesti 2 (count viesti)))))
-
 (defn parsi-tekstiviesti [viesti]
   (when (> 2 (count viesti))
     (throw+ {:type :viestinumero-tai-toimenpide-puuttuu}))
-  (let [toimenpide (parsi-toimenpide (str (nth viesti 0)))
-        viestinumero (parsi-viestinumero (str (nth viesti 1)))
-        vapaateksti (parsi-vapaateksti viesti)]
+  (let [;; osat ovat: 1. toimenpide joka on 1 merkki (.{1})
+        ;;            2. viestinumero ([0-9]+)
+        ;;            3. vapaateksti (.+)
+        osat (re-find #"^(.{1})([0-9]+)(.*)" viesti)
+        toimenpidelyhenne(nth osat 1)
+        toimenpide (parsi-toimenpide toimenpidelyhenne)
+        viestinumero (parsi-viestinumero (nth osat 2))
+        vapaateksti (.trim (nth osat 3))]
     {:toimenpide toimenpide
      :viestinumero viestinumero
-     :vapaateksti vapaateksti}))
+     :vapaateksti vapaateksti
+     :aiheutti-toimenpiteita (= toimenpidelyhenne "T")}))
 
 (defn hae-paivystajatekstiviesti [db viestinumero puhelinnumero]
   (if-let [paivystajatekstiviesti (first (paivystajatekstiviestit/hae-puhelin-ja-viestinumerolla db puhelinnumero viestinumero))]
@@ -82,9 +87,9 @@
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
-    (let [{:keys [toimenpide vapaateksti viestinumero]} (parsi-tekstiviesti viesti)
+    (let [{:keys [toimenpide vapaateksti viestinumero aiheutti-toimenpiteita]} (parsi-tekstiviesti viesti)
           {:keys [ilmoitus ilmoitusid yhteyshenkilo]} (hae-paivystajatekstiviesti db viestinumero puhelinnumero)
-          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db yhteyshenkilo ))
+          paivystaja (first (yhteyshenkilot/hae-yhteyshenkilo db yhteyshenkilo))
           tallenna (fn [toimenpide vapaateksti]
                      (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
                        db
@@ -102,6 +107,9 @@
 
       (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
         (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
+
+      (when aiheutti-toimenpiteita
+        (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db true ilmoitus))
 
       +onnistunut-viesti+)
 
@@ -155,6 +163,7 @@
               tr-osoite
               selitteet
               lisatietoja
+              viestinumero
               viestinumero
               viestinumero
               viestinumero

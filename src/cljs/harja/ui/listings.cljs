@@ -1,5 +1,6 @@
 (ns harja.ui.listings
   (:require [reagent.core :as reagent :refer [atom]]
+            [clojure.string :as s]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.yleiset :refer [nuolivalinta]]))
 
@@ -37,8 +38,10 @@
 
       (let [term (or (:term opts) termi-atom)
             termi @term
-            itemit (filter #(not= (.indexOf (.toLowerCase (haku %)) (.toLowerCase termi)) -1) lista)
-            
+            itemit (filter #(s/includes? (s/lower-case (or (haku %) ""))
+                                         (s/lower-case (or termi "")))
+                           lista)
+
             korostus @korostus-idx
             tunniste (if (:tunniste opts)
                        (:tunniste opts)
@@ -89,7 +92,7 @@
           (when-not (empty? lista)
 
              (let [selected @valittu
-                   
+
                    itemilista (fn [itemit alkuidx]
                                 [:ul.haku-lista
                                 (map-indexed

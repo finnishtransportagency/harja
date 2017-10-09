@@ -292,6 +292,7 @@ SELECT ypk.id,
  WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
+   AND ypk.urakka IN (:urakat)
    AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
                            (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR
@@ -338,6 +339,7 @@ SELECT ypko.id,
        JOIN organisaatio o ON u.urakoitsija = o.id
  WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
+   AND ypk.urakka IN (:urakat)
    AND ((:nykytilanne AND (ypka.kohde_valmis IS NULL OR
                           (now() - ypka.kohde_valmis) < INTERVAL '7 days'))
         OR
@@ -391,6 +393,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
+      AND ypk.urakka IN (:urakat)
       AND (pai.tila :: TEXT != 'valmis' OR
            (now() - pai.valmispvm_kohde) < INTERVAL '7 days');
 
@@ -441,6 +444,7 @@ FROM yllapitokohde ypk
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
+      AND ypk.urakka IN (:urakat)
       AND (pai.aloituspvm < :loppu AND (pai.valmispvm_kohde IS NULL OR pai.valmispvm_kohde > :alku));
 
 -- name: hae-toteumat
@@ -595,6 +599,8 @@ SELECT
 FROM tietyomaa st
   LEFT JOIN yllapitokohde ypk ON ypk.id = st.yllapitokohde
 WHERE st.poistettu IS NULL
+      AND st.yllapitokohde IN (SELECT id FROM yllapitokohde WHERE urakka IN (:urakat)
+                                                            OR suorittava_tiemerkintaurakka IN (:urakat))
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
 
 -- name: hae-varustetoteumat

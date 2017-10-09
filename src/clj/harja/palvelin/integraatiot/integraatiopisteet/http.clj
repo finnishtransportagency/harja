@@ -88,7 +88,6 @@
         (let [{:keys [status body error headers]}
               (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata)
               lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
-          (log/debug (format "Palvelu palautti: tila: %s , otsikot: %s , data: %s" status headers body))
 
           (if (or error
                   (not (= 200 status)))
