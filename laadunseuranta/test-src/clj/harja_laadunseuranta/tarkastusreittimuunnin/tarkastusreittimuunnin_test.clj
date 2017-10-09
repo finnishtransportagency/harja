@@ -142,7 +142,7 @@
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
                          testidata/tarkastus-jossa-sijainti-puuttuu-alusta))]
     ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 (deftest tarkastus-jossa-ajallinen-aukko
@@ -151,6 +151,30 @@
                          testidata/tarkastus-jossa-ajallinen-aukko))]
     ;; Muunnettu määrällisesti oikein
     (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-ajallinen-aukko-ja-sitten-tyhja-tie
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-ajallinen-aukko-ja-sitten-tyhja-tie))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 5))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-tielle
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-tielle))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
+(deftest tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-ja-sitten-tyhja-tie-ja-sitten-tie
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-tyhja-tie-ja-sitten-ajallinen-aukko-ja-sitten-tyhja-tie-ja-sitten-tie))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 4))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 (deftest tarkastus-jossa-merkintojen-aikaleimoissa-outouksia
@@ -571,7 +595,7 @@
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
     (is (= (count reitilliset) odotettu-reitillisten-maara))))
 
-(deftest oikean-tarkastusajon-313-muunto-toimii
+(deftest oikean-tarkastusajon-213-muunto-toimii
   "Ajo lähtee tieverkon ulkopuolelta ja päätyy tieverkolle"
   (let [db (:db jarjestelma)
         tarkastusajo-id 213
@@ -581,19 +605,20 @@
         reitilliset (:reitilliset-tarkastukset tarkastukset)
         pistemaiset (:pistemaiset-tarkastukset tarkastukset)
         odotettu-pistemaisten-maara 0
-        odotettu-reitillisten-maara 3
+        odotettu-reitillisten-maara 4
         osa1 (nth reitilliset 0)
         osa2 (nth reitilliset 1)
-        osa3 (nth reitilliset 2)]
+        osa3 (nth reitilliset 2)
+        osa4 (nth reitilliset 3)]
 
-    ;; Tässä pitäisi muodostua kolme tarkastusta:
+    ;; Tässä pitäisi muodostua 4 tarkastusta:
     ;; 1. Ajo lähtee tieverkon ulkopuolelta ja katkeaa kun laitetaan jatkuva havainto päälle.
     ;;    Tarkastus on kokonaisuudessaan tieverkon ulkopuolella, joten
     ;;    tälle tarkastukselle ei saada muodostettua tieosoitetta. Tämä on OK.
     ;; 2. Ajo, jossa on jatkuva havainto päällä. Jossain vaiheessa tullaan tieverkolle.
-    ;;    Ajon tieosoitte alkaa ensimmäisestä pisteestä, joka osuu tieverkolle, ja päättyy
-    ;;    viimeiseen pisteeseen, jossa havainto oli päällä.
-    ;; 3. Jatkuva havainto laitettu pois päältä. Ajetaan tieverkolla ilman havaintoja.
+    ;;    Reitti katkaistaan tästä ja uusi tarkastus alkaa pisteestä, jossa tie on messissä.
+    ;; 3. Jatkuva havainto päällä, ajetaan tieverkolla.
+    ;; 4. Jatkuva havainto laitettu pois päältä. Ajetaan tieverkolla ilman havaintoja.
 
     ;; Muunnettu määrällisesti oikein
     (is (= (count pistemaiset) odotettu-pistemaisten-maara))
@@ -602,19 +627,22 @@
     ;; Muunnosten sisältö vastaa yllä kuvattua olettamusta
     (is (= (:lopullinen-tr-osoite osa1) {:tie nil, :aosa nil, :aet nil, :losa nil, :let nil}))
     (is (empty? (:vakiohavainnot osa1)))
-    (is (= (:lopullinen-tr-osoite osa2) {:tie 18637, :aosa 1, :aet 1237, :losa 1, :let 1190}))
+    (is (= (:lopullinen-tr-osoite osa2) {:tie nil, :aosa nil, :aet nil, :losa nil, :let nil}))
     (is (not (empty? (:vakiohavainnot osa2))))
-    (is (= (:lopullinen-tr-osoite osa3) {:tie 18637, :aosa 1, :aet 1190, :losa 1, :let 1139}))
-    (is (empty? (:vakiohavainnot osa3)))))
+    (is (= (:lopullinen-tr-osoite osa3) {:tie 18637, :aosa 1, :aet 1237, :losa 1, :let 1190}))
+    (is (not (empty? (:vakiohavainnot osa2))))
+    (is (= (:lopullinen-tr-osoite osa4) {:tie 18637, :aosa 1, :aet 1190, :losa 1, :let 1139}))
+    (is (empty? (:vakiohavainnot osa4)))))
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 
 ;; Älä poista näitä
-;; Kutsu tässä NS:ssä esim. (harja.palvelin.main/with-db db (debuggaa-tarkastusajon-muunto db 1))
+;; Kutsu tässä NS:ssä esim. (debuggaa-tarkastusajon-muunto (:db harja.palvelin.main/harja-jarjestelma) 425)
 ;; Muista evaluoida REPLiin ensin (käännös ei sisällä näitä koska näitä ei käytetä)
 
 (defn muunna-tarkastusajo-kantaan [db tarkastusajo-id urakka-id]
   ;; HUOMAA: Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!
+  (log/debug "Muunnetaan tarkastusajo " (pr-str tarkastusajo-id) " kantaan urakkaan " urakka-id)
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
     (jdbc/with-db-transaction [tx db]
