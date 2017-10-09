@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<S:Envelope xmlns:S="hettp://schemas.xmlsoap.org/soap/envelope/"><S:Body>
+    <HaeTurvalaitteet xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
+
+        <HaeTurvalaitteetResponse>
+
+            <!-- Turvalaitteen tiedot -->
+            <turvalaite tlnumero = "9595"
+                        nimi = "Kerttu ylempi"
+                        tyyppi = "Loisto"
+                        alatyyppi = "Kelluva"
+                        rakennetieto = "Fasadivalo"
+                        valaistu = "true"
+                        navigointilaji = "Oikea"
+                        toimintatila = "Jatkuva"
+                        tila = "Aihio"
+                        vahvistuspaivamaara = "2011-05-01+03:00"
+                        omistaja = "Liikennevirasto"
+                        yllapitaja = "Danisco Sugar Oy, Turun yksikkö"
+                        piiri = "Lounais-Suomi"
+                        sijainti = "Etelä-Kerttun saarella"
+                        kooordinaatit = "6715705.83497 106254.257664"
+                        koordinaattijarjestelma = "EUREF-FIN"
+                        vanha_tlnumero = "1234">
+
+                <!-- Turvalaiteryhmät joihin turvalaite kuuluu -->
+                <turvalaiteryhmat>
+                    <turvalaiteryhma tunnus="123" nimi="Ahvenanmaan poijut" kuvaus="Ahvenanmaan poiju-urakka 2013-2018"></turvalaiteryhma>
+                    <turvalaiteryhma tunnus="624" nimi="Ahvenanmaan maalaus" kuvaus="Ahvenanmaan poijumaalausurakka 2012-2017"></turvalaiteryhma>
+                </turvalaiteryhmat>
+
+            </turvalaite>
+
+        </HaeTurvalaitteetResponse>
+    </HaeTurvalaitteet>
+</S:Body></S:Envelope>
+
+<!--
+Koordinaattijärjestelmä ETRS-TM35FIN
+Koordinaatit: Leveys + välilyönti + Pituus
+Omistaja: Nimi + pilkku + välilyönti + Tarkennus
+Ylläpitäjä: Nimi + pilkku + välilyönti + Tarkennus
+
+HOX. Kun suoritat validointia tälle esimerkkitiedostolle, poista Soap Envelopeen liittyvät tägit.
+-->
+
+

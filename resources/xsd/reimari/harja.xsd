@@ -36,7 +36,7 @@
       <xs:element name="sopimus" type="SopimusType"/>
       <xs:element name="alus" type="AlusType" minOccurs="0"/>
       <xs:element name="vayla" type="VaylaType"/>
-      <xs:element name="turvalaite" type="TurvalaiteType"/>
+      <xs:element name="turvalaite" type="ToimenpiteenTurvalaiteType"/>
       <xs:element name="komponentit" type="KomponentitType" minOccurs="0"/>
       <xs:element name="viat" type="ToimenpiteenViatType" minOccurs="0"/>
     </xs:all>
@@ -78,7 +78,8 @@
     <xs:attribute type="xs:string" name="nimi" use="optional"/>
   </xs:complexType>
 
-  <xs:complexType name="TurvalaiteType">
+  <!-- ToimenpiteenTurvalaiteType on supistettu version turvalaitteen ominaisuuksista. Varsinainen turvalaiteskeema on tyyppiä TurvalaiteType -->
+  <xs:complexType name="ToimenpiteenTurvalaiteType">
     <xs:attribute type="xs:token" name="nro" use="required"/>
     <xs:attribute type="xs:string" name="nimi" use="optional"/>
     <xs:attribute type="xs:integer" name="ryhma" use="required"/>
@@ -249,4 +250,67 @@
       <xs:attribute type="xs:string" name="muokkaaja" use="required"/> <!-- UUI -->
   </xs:complexType>
 
-</xs:schema>
+
+
+  <!-- HaeTurvalaitteet -->
+
+  <xs:element name="HaeTurvalaitteet" type="HaeTurvalaitteetPayload"/>
+
+  <xs:complexType name="HaeTurvalaitteetPayload">
+    <xs:choice>
+      <xs:element name="HaeTurvalaitteetRequest" type="HaeTurvalaitteetRequestType"/>
+      <xs:element name="HaeTurvalaitteetResponse" type="HaeTurvalaitteetResponseType"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="HaeTurvalaitteetRequestType">
+    <xs:attribute type="xs:string" name="alkuaika" use="required"/>
+    <xs:attribute type="xs:string" name="loppuaika"/> <!-- Kyssäri: Voiko jättää vapaaehtoiseksi. Tämä hetki jos ei annettu. -->
+  </xs:complexType>
+
+  <xs:complexType name="HaeTurvalaitteetResponseType">
+    <xs:sequence>
+      <xs:element name="turvalaite" type="TurvalaiteType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Turvalaite
+       Hox. Toimenpiteellä on oma suppeampi määritelmä turvalaitteesta ToimenpiteenTurvalaiteType -->
+  <xs:complexType name="TurvalaiteType">
+    <xs:all>
+      <xs:element name="turvalaiteryhmat" type="TurvalaiteRyhmatType" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute type="xs:string" name="tlnumero"/> <!-- TURVALAITE.TLNUMERO -->
+    <xs:attribute type="xs:string" name="nimi"/> <!-- TURVALAITE.NIMIS -->
+    <xs:attribute type="xs:string" name="tyyppi"/> <!-- TYYPPI.NIMIS Linkki: TURVALAITE.TY_JNR -->
+    <xs:attribute type="xs:string" name="alatyyppi"/> <!-- TURVALAITE.SUBTYPE -->
+    <xs:attribute type="xs:string" name="rakennetieto"/> <!-- RAKENNETIETO.SELOSTES Linkki: TURVALAITE.RAKT_TYYPPI -->
+    <xs:attribute type="xs:string" name="valaistu"/> <!-- TURVALAITE.VALAISTU -->
+    <xs:attribute type="xs:string" name="navigointilaji"/> <!-- NAIGOINTILAJI.SELOSTES Linkki: TURVALAITE.NAVL_TYYPPI -->
+    <xs:attribute type="xs:string" name="toimintatila"/> <!-- TOIMINTATILA.SELOSTES Linkki: TURVALAITE.TOTI_TYYPPI -->
+    <xs:attribute type="xs:string" name="tila"/> <!-- TURVALAITE.TILA -->
+    <xs:attribute type="xs:string" name="vahvistuspaivamaara"/> <!-- TURVALAITE.VAHVISTUSPVM -->
+    <xs:attribute type="xs:string" name="omistaja"/> <!-- OMISTAJA.SUKUNIMI, OMISTAJA.ETUNIMI (nimi pilkku välilyönti tarkennus) Linkki: TURVALAITE.OM_HENUMERO -->
+    <xs:attribute type="xs:string" name="yllapitaja"/> <!-- OMISTAJA.SUKUNIMI, OMISTAJA.ETUNIMI (nimi pilkku välilyönti tarkennus) Linkki: TURVALAITE.HE_HENUMERO_YLLAPITAJA -->
+    <xs:attribute type="xs:string" name="piiri"/> <!-- PIIRI.NIMIS Linkki: TURVALAITE.PITUNNISTE -->
+    <xs:attribute type="xs:string" name="sijainti"/> <!-- TURVALAITE.SIJAINTIS -->
+    <xs:attribute type="xs:string" name="kooordinaatit"/> <!-- TURVALAITE.X TURVALAITE.Y Vai jotku muut sarakkeet Reimarin kannassa? (leveys välilyönti pituus) -->
+    <xs:attribute type="xs:string" name="koordinaattijarjestelma"/> <!-- Kertoo missä koordinaattijärjestelmässä koordinaatit-attribuutissa tulevat tiedot ovat. ETRS-TM35FIN olis kiva. -->
+    <xs:attribute type="xs:string" name="vanha_tlnumero"/> <!-- TURVALAITE.TLNR_V (Tieto liittyy siihen kun aihoista tulee varsinainen turvalaite aiemman turvalaitteen paikalle.) -->
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaiteRyhmaType">
+    <xs:attribute type="xs:string" name="tunnus"/> <!-- T_SD_GROUP.SDGROUP_ID Linkki: TURVALAITE.TLNUMERO Linkkitaulu: T_SDGROUP_SD -->
+    <xs:attribute type="xs:string" name="nimi"/> <!-- T_SD_GROUP.SDGROUP_NME Linkki: TURVALAITE.TLNUMERO Linkkitaulu: T_SDGROUP_SD -->
+    <xs:attribute type="xs:string" name="kuvaus"/> <!-- T_SD_GROUP.SDGROUP_MEM Linkki: TURVALAITE.TLNUMERO Linkkitaulu: T_SDGROUP_SD -->
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaiteRyhmatType">
+    <xs:sequence>
+      <xs:element name="turvalaiteryhma" type="TurvalaiteRyhmaType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  </xs:schema>
+
+
