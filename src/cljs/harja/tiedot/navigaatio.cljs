@@ -4,28 +4,28 @@
   ei viittaa itse näkymiin, vaan näkymät voivat hakea täältä tarvitsemansa navigointitiedot."
 
   (:require
-   ;; Reititykset
-   [goog.events :as events]
-   [goog.Uri :as Uri]
-   [goog.history.EventType :as EventType]
-   [reagent.core :refer [atom wrap]]
-   [cljs.core.async :refer [<! >! chan close!]]
+    ;; Reititykset
+    [goog.events :as events]
+    [goog.Uri :as Uri]
+    [goog.history.EventType :as EventType]
+    [reagent.core :refer [atom wrap]]
+    [cljs.core.async :refer [<! >! chan close!]]
 
-   [harja.loki :refer [log tarkkaile!]]
-   [harja.asiakas.tapahtumat :as t]
-   [harja.tiedot.urakoitsijat :as urk]
-   [harja.tiedot.hallintayksikot :as hy]
-   [harja.tiedot.istunto :as istunto]
-   [harja.tiedot.urakat :as ur]
-   [harja.tiedot.raportit :as raportit]
-   [harja.tiedot.navigaatio.reitit :as reitit]
-   [harja.atom :refer-macros [reaction<! reaction-writable]]
-   [harja.pvm :as pvm]
-   [clojure.string :as str]
-   [harja.geo :as geo]
-   [harja.domain.oikeudet :as oikeudet]
-   [harja.domain.urakka :as urakka-domain]
-   [taoensso.timbre :as log])
+    [harja.loki :refer [log tarkkaile!]]
+    [harja.asiakas.tapahtumat :as t]
+    [harja.tiedot.urakoitsijat :as urk]
+    [harja.tiedot.hallintayksikot :as hy]
+    [harja.tiedot.istunto :as istunto]
+    [harja.tiedot.urakat :as ur]
+    [harja.tiedot.raportit :as raportit]
+    [harja.tiedot.navigaatio.reitit :as reitit]
+    [harja.atom :refer-macros [reaction<! reaction-writable]]
+    [harja.pvm :as pvm]
+    [clojure.string :as str]
+    [harja.geo :as geo]
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.domain.urakka :as urakka-domain]
+    [taoensso.timbre :as log])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
@@ -104,18 +104,26 @@
         +urakkatyypit+))
 
 (defn urakkatyyppi-arvolle [tyyppi]
-  (first (filter #(= tyyppi (:arvo %))
-                 +urakkatyypit+)))
+  (when tyyppi
+    (let [tyyppi (if (str/starts-with? (name tyyppi) "vesivayla")
+                   :vesivayla
+                   tyyppi)]
+      (first (filter #(= tyyppi (:arvo %))
+                     +urakkatyypit+)))))
 
 (defn nayta-urakkatyyppi [tyyppi]
-  (:nimi (first
-           (filter #(= tyyppi (:arvo %))
-                   +urakkatyypit+))))
+  (when tyyppi
+    (let [tyyppi (if (str/starts-with? (name tyyppi) "vesivayla")
+                   :vesivayla
+                   tyyppi)]
+      (:nimi (first
+               (filter #(= tyyppi (:arvo %))
+                       +urakkatyypit+))))))
 
 (defn urakkatyyppi-urakalle [ur]
   (urakkatyyppi-arvolle (if (urakka-domain/vesivaylaurakka? ur)
-                           :vesivayla
-                           (:tyyppi ur))))
+                          :vesivayla
+                          (:tyyppi ur))))
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden
@@ -164,29 +172,29 @@
                ;; Jos urakkatyyppi valitaan murupolusta, asetetaan se tyypiksi
                valittu-urakkatyyppi @valittu-urakkatyyppi
                ;; Lopuksi tarkastetaan, onko käyttäjällä oletustyyppiä
-               oletus-urakkatyyppi (urakkatyyppi-arvolle kayttajan-oletus-tyyppi)
+               oletus-urakkatyyppi (urakkatyyppi-arvolle (:urakkatyyppi @istunto/kayttaja))
                valittu-hy-id @valittu-hallintayksikko-id]
 
-    (go
-      (or urakan-urakkatyyppi
-          valittu-urakkatyyppi
-          ;; Jos hallintayksikkö on valittuna, asetetaan urakkatyypiksi hallintayksikölle
-          ;; sopiva urakkatyyppi. Jos hallintayksikön väylämuoto on :tie, tarkastetaan,
-          ;; onko käyttäjällä oletustyyppiä. Jos ei ole, palautetaan oletuksena :hoito
-          ;; Koska hallintayksiköistä ei ole välttämättä vielä haettu, täytyy tässä
-          ;; ottaa huomioon asynkronisuus.
-          (when valittu-hy-id
-            (urakkatyyppi-arvolle
-              (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
-                :tie
-                (if-not (= :vesivayla kayttajan-oletus-tyyppi)
-                  kayttajan-oletus-tyyppi
-                  :hoito)
+              (go
+                (or urakan-urakkatyyppi
+                    valittu-urakkatyyppi
+                    ;; Jos hallintayksikkö on valittuna, asetetaan urakkatyypiksi hallintayksikölle
+                    ;; sopiva urakkatyyppi. Jos hallintayksikön väylämuoto on :tie, tarkastetaan,
+                    ;; onko käyttäjällä oletustyyppiä. Jos ei ole, palautetaan oletuksena :hoito
+                    ;; Koska hallintayksiköistä ei ole välttämättä vielä haettu, täytyy tässä
+                    ;; ottaa huomioon asynkronisuus.
+                    (when valittu-hy-id
+                      (urakkatyyppi-arvolle
+                        (case (<! (hy/hallintayksikon-vaylamuoto valittu-hy-id))
+                          :tie
+                          (if-not (= :vesivayla kayttajan-oletus-tyyppi)
+                            kayttajan-oletus-tyyppi
+                            :hoito)
 
-                :vesi
-                :vesivayla
-                nil)))
-          oletus-urakkatyyppi))))
+                          :vesi
+                          :vesivayla
+                          nil)))
+                    oletus-urakkatyyppi))))
 
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
@@ -329,7 +337,7 @@
 
 (defonce ^{:doc "Tämä lippu voi estää URL tokenin päivittämisen, käytetään siirtymissä, joissa
  halutaan tehdä useita muutoksia ilman että välissä pävitetään URLia keskeneräisenä."}
-  esta-url-paivitys? (cljs.core/atom false))
+         esta-url-paivitys? (cljs.core/atom false))
 
 
 ;; asettaa oikean sisällön urliin ohjelman tilan perusteella
@@ -402,21 +410,21 @@
     (let [uri (Uri/parse url)
           polku (.getPath uri)
           parametrit (.getQueryData uri)]
-     (log "POLKU: " polku)
-     (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
-     (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
-     (when @valittu-hallintayksikko-id
-       (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
+      (log "POLKU: " polku)
+      (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
+      (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
+      (when @valittu-hallintayksikko-id
+        (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
-     (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
-     ;; urakkatyyppi on reaktio, jonka arvo johdetaan mm. hallintayksiköstä, urakasta, tai
-     ;; käyttäjän tekemästä valinnasta. Käyttäjän tekemä valinta tallennetaan valittu-urakkatyyppi
-     ;; atomiin. URLia käsiteltäessä urakkatyyppi-reaktio saa automaattisesti päätellyn arvon,
-     ;; joka asetaan myös valitun-urakkatyypin arvoksi. Näin urakkatyyppivalinta "säilyy",
-     ;; kun murupolkua pitkin navigoidaan Koko maa-näkymään
-     (reset! valittu-urakkatyyppi @urakkatyyppi)
-     (swap! reitit/url-navigaatio
-            reitit/tulkitse-polku polku))
+      (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
+      ;; urakkatyyppi on reaktio, jonka arvo johdetaan mm. hallintayksiköstä, urakasta, tai
+      ;; käyttäjän tekemästä valinnasta. Käyttäjän tekemä valinta tallennetaan valittu-urakkatyyppi
+      ;; atomiin. URLia käsiteltäessä urakkatyyppi-reaktio saa automaattisesti päätellyn arvon,
+      ;; joka asetaan myös valitun-urakkatyypin arvoksi. Näin urakkatyyppivalinta "säilyy",
+      ;; kun murupolkua pitkin navigoidaan Koko maa-näkymään
+      (reset! valittu-urakkatyyppi @urakkatyyppi)
+      (swap! reitit/url-navigaatio
+             reitit/tulkitse-polku polku))
     (reset! render-lupa-url-kasitelty? true)
     (log "Render lupa annettu!")
     (t/julkaise! {:aihe :url-muuttui :url url})
@@ -426,10 +434,10 @@
 
 (defonce paivita-url-navigaatiotilan-muuttuessa
   (add-watch reitit/url-navigaatio
-             ::url-muutos
-             (fn [_ _ vanha uusi]
-               (when (and (not @urlia-kasitellaan?) (not= vanha uusi))
-                 (paivita-url)))))
+    ::url-muutos
+    (fn [_ _ vanha uusi]
+      (when (and (not @urlia-kasitellaan?) (not= vanha uusi))
+        (paivita-url)))))
 
 (defn paivita-urakan-tiedot! [urakka-id funktio & args]
   (swap! hallintayksikon-urakkalista
