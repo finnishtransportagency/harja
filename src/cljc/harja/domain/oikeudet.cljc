@@ -151,8 +151,7 @@
      ([oikeus urakka-id]
       (voi-lukea? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
-   (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
-       (on-oikeus? :luku oikeus urakka-id kayttaja))))
+   (on-oikeus? :luku oikeus urakka-id kayttaja)))
 
 (defn voi-kirjoittaa?
   #?(:cljs
@@ -162,8 +161,7 @@
      ([oikeus urakka-id]
       (voi-kirjoittaa? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
-   (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
-       (on-oikeus? :kirjoitus oikeus urakka-id kayttaja))))
+   (on-oikeus? :kirjoitus oikeus urakka-id kayttaja)))
 
 #?(:clj
    (defn vaadi-lukuoikeus
