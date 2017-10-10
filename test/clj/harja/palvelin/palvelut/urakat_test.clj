@@ -36,7 +36,7 @@
                       urakkatieto-fixture))
 
 (deftest tallenna-urakan-sopimustyyppi-testi
-  (let [urakanvalvoja (oulun-urakan-tilaajan-urakanvalvoja)
+  (let [urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
         uusi-sopimustyyppi
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-urakan-sopimustyyppi urakanvalvoja
@@ -47,7 +47,7 @@
 
 
 (deftest hae-urakka-testi
-  (let [urakanvalvoja (oulun-urakan-tilaajan-urakanvalvoja)
+  (let [urakanvalvoja (oulun-2005-urakan-tilaajan-urakanvalvoja)
         haettu-urakka
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakka urakanvalvoja @oulun-alueurakan-2005-2010-id)
