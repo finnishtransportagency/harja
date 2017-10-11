@@ -509,7 +509,8 @@
              :valinnat @urakoitsijan-alukset
              :leveys 1
              :valinta-arvo ::alus/mmsi
-             :fmt alus/fmt-alus
+             :fmt #(let [alus (alus/alus-mmsilla % @urakoitsijan-alukset)]
+                     (alus/fmt-alus alus))
              :valinta-nayta #(if %
                                (alus/fmt-alus %)
                                "- Valitse alus -")
