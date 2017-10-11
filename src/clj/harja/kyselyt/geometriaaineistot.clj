@@ -8,7 +8,6 @@
     [harja.pvm :as pvm]
     [harja.kyselyt.konversio :as konv]))
 
-
 (defn tallenna-urakan-tyotunnit [db geometria-aineistot]
   (upsert! db
            ::ga/geometria-aineistot

@@ -76,4 +76,11 @@
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakat"}
-     [vu/vesivayla-hallinta])])
+     [vu/vesivayla-hallinta])
+
+   "Järjestelmäasetukset"
+   :vesivayla-hallinta
+   (when (oikeudet/hallinta-api-jarjestelmatunnukset)
+     ^{:key "jarjestelma-asetukset"}
+     [vu/vesivayla-hallinta])
+   ])

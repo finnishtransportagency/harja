@@ -18,12 +18,12 @@
 (def kaikki-kentat
   #{::id
     ::nimi
-    ::osoite
+    ::tiedostonimi
     ::voimassaolo-alkaa
     ::voimassaolo-paattyy})
 
 (s/def ::geometria-aineistot (s/coll-of ::geometria-aineistot))
 
-(s/def ::geometria-aineistojen-tallennus (s/keys :req [::nimi ::osoite]))
+(s/def ::geometria-aineistojen-tallennus (s/keys :req [::nimi ::tiedostonimi ::osoite]))
 
 
