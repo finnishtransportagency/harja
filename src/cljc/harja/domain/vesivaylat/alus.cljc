@@ -38,3 +38,9 @@
 
 (s/def ::hae-kaikki-alukset-vastaus
   (s/coll-of ::alus))
+
+(defn alus-mmsilla [mmsi alukset]
+  (first (filter #(= (::mmsi %) mmsi) alukset)))
+
+(defn fmt-alus [alus]
+  (str (::mmsi alus) " - " (::nimi alus)))

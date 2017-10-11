@@ -504,12 +504,16 @@
             :tunniste ::alus/mmsi
             :tallenna #(log "LOGITUS")}
            [{:otsikko "Alus"
-             :nimi :alus
+             :nimi ::alus/mmsi
              :tyyppi :valinta
-             :valinta-arvo #(::alus/mmsi %)
              :valinnat @urakoitsijan-alukset
              :leveys 1
-             :valinta-nayta #(if % (str (::alus/mmsi %) " - " (::alus/nimi %)) "- Valitse alus -")
+             :fmt #(when-let [alus (alus/alus-mmsilla % @urakoitsijan-alukset)]
+                     (alus/fmt-alus alus))
+             :valinta-nayta #(do
+                               (if-let [alus (alus/alus-mmsilla % @urakoitsijan-alukset)]
+                                 (alus/fmt-alus alus)
+                                 "- Valitse alus -"))
              :validoi [[:ei-tyhja "Valitse alus"]]}
             {:otsikko "Lisätiedot"
              :nimi ::alus/lisatiedot
