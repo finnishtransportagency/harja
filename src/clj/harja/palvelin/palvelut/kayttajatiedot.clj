@@ -3,6 +3,7 @@
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.kayttajat :as q]
+            [harja.tyokalut.html :as html]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.urakat :as urakat]
@@ -164,14 +165,15 @@
   [sahkoposti db user {:keys [otsikko sisalto]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit user)
   (let [vastaanottajat (hae-yhteydenpidon-vastaanottajat db user)
-        sisalto (str "<html><body>" (.replace sisalto "\n" "<br>") "</body>")]
+        sisalto-sanitoitu (html/sanitoi sisalto)
+        sisalto-html (str "<html><body>" (.replace sisalto-sanitoitu "\n" "<br>") "</body>")]
     (doseq [{sahkopostiosoite :sahkoposti} vastaanottajat]
       (sahkoposti/laheta-viesti!
-        sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto)))
+        sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto-html)))
   true)
 
 (defrecord Kayttajatiedot []
-  component/Lifecycle                                                   
+  component/Lifecycle
   (start [{http :http-palvelin
            db :db
            sahkoposti :solita-sahkoposti

@@ -1,0 +1,63 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 666
+    },
+    "lahetysaika": "2017-01-01T12:00:00+02:00"
+  },
+  "tarkastukset": [
+    {
+      "tarkastus": {
+        "tunniste": {
+          "id": 666
+        },
+        "aika": "2017-01-01T12:00:00+02:00",
+        "alkusijainti": {
+          "x": 443673.469,
+          "y": 7223631.876
+        },
+        "loppusijainti": {
+          "x": 442195.469,
+          "y": 7223162.876
+        },
+        "tarkastaja": {
+          "id": 123,
+          "etunimi": "Taneli",
+          "sukunimi": "Tarkastaja"
+        },
+        "havainnot": "Vanha päällyste on uusittava"
+      },
+      "tarkastustyyppi": "katselmus"
+    },
+    {
+      "tarkastus": {
+        "tunniste": {
+          "id": 1337
+        },
+        "aika": "2017-01-02T12:00:00+02:00",
+        "alkusijainti": {
+          "x": 443673.469,
+          "y": 7223631.876
+        },
+        "loppusijainti": {
+          "x": 442195.469,
+          "y": 7223162.876
+        },
+        "tarkastaja": {
+          "id": 123,
+          "etunimi": "Taneli",
+          "sukunimi": "Tarkastaja"
+        },
+        "havainnot": "Vanha päällyste on uusittava, edelleen"
+      },
+      "tarkastustyyppi": "katselmus"
+    }
+  ]
+}
