@@ -12,7 +12,10 @@
 (defn tallenna-urakan-tyotunnit [db geometria-aineistot]
   (upsert! db
            ::ga/geometria-aineistot
-           #{::ga/nimi ::ga/osoite ::ga/voimassaolo-alkaa ::ga/voimassaolo-paattyy}
+           #{::ga/nimi
+             ::ga/tiedostonimi
+             ::ga/voimassaolo-alkaa
+             ::ga/voimassaolo-paattyy}
            geometria-aineistot))
 
 (defn hae-geometria-aineistot [db]
@@ -20,7 +23,7 @@
 
 (defn tallenna-geometria-aineistot [db geometria-ainestot]
     (upsert! db ::ga/geometria-aineistot #{::nimi
-                                           ::osoite
+                                           :tiedostonimi
                                            ::voimassaolo-alkaa
                                            ::voimassaolo-paattyy}
              geometria-ainestot))
