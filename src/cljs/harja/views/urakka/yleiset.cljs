@@ -508,12 +508,11 @@
              :tyyppi :valinta
              :valinnat @urakoitsijan-alukset
              :leveys 1
-             :fmt #(when-let [alus (alus/alus-mmsilla % @urakoitsijan-alukset)]
-                     (alus/fmt-alus alus))
-             :valinta-nayta #(do
-                               (if-let [alus (alus/alus-mmsilla % @urakoitsijan-alukset)]
-                                 (alus/fmt-alus alus)
-                                 "- Valitse alus -"))
+             :valinta-arvo ::alus/mmsi
+             :fmt alus/fmt-alus
+             :valinta-nayta #(if %
+                               (alus/fmt-alus %)
+                               "- Valitse alus -")
              :validoi [[:ei-tyhja "Valitse alus"]]}
             {:otsikko "Lisätiedot"
              :nimi ::alus/lisatiedot
