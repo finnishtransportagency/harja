@@ -636,20 +636,43 @@
 
 ;; -------- Apufunktioita REPL-tunkkaukseen --------
 
-;; Älä poista näitä
+;; HUOM! Älä poista näitä. Näitä käytetään tarkastusajojen debuggaamiseen
+;; ja ongelmien selvittämiseen.
+;;
 ;; Kutsu tässä NS:ssä esim. (debuggaa-tarkastusajon-muunto (:db harja.palvelin.main/harja-jarjestelma) 425)
 ;; Muista evaluoida REPLiin ensin (käännös ei sisällä näitä koska näitä ei käytetä)
 
-(defn muunna-tarkastusajo-kantaan [db tarkastusajo-id urakka-id]
-  ;; HUOMAA: Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!
+;; Toinen kätevä debuggausapuri on "salainen" TR-osio, jossa on mahdollista
+;; piirtää tarkastusajon kaikki raakamerkinnät kartalle:
+;; http://localhost:3000/#tr
+
+(defn muunna-tarkastusajo-kantaan
+  "Muuntaa annetun tarkastusajon kantaan.
+
+  Jos tarkoituksena on korjata tuotannossa virheellisesti muunnettu tarkastusajo,
+  niin kätevimmin se tapahtuu seuraavasti:
+  1) Kopioi tarkastusajo ja sen kaikki yksittäiset merkinnät omaan kantaan.
+  2) Tee muunnos tällä funktiolla.
+  3) Poista tuotannosta virheelliset tarkastukset ja kopioi tilalle uudet,
+     korjatut tarkastukset.
+
+  HOX! Tämä EI poista mahdollisesti jo kerran tehtyä muunnosta!"
+  [db tarkastusajo-id urakka-id]
   (log/debug "Muunnetaan tarkastusajo " (pr-str tarkastusajo-id) " kantaan urakkaan " urakka-id)
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tarkastukset (ls-core/lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
     (jdbc/with-db-transaction [tx db]
       (ls-core/tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset 1 urakka-id))))
 
-(defn debuggaa-tarkastusajon-muunto [db tarkastusajo-id]
-  ;; Muista ajaa tieverkko kantaan, jotta geometrisointi toimii!
+(defn debuggaa-tarkastusajon-muunto
+  "Ottaa tarkastusajon id:n ja tulostaa kattavan login siitä, miten
+   se muunnetaan Harjaan yksittäisiksi tarkastuksiksi.
+
+   Tätä voidaan käyttää apuna selvittämään syytä sille, miksi jokin
+   tarkastusajo on mahdollisesti muunnettu väärin.
+
+   Muista ajaa tieverkko kantaan, jotta geometrisointi toimii!"
+  [db tarkastusajo-id]
   (log/debug "Debugataan tarkastusajo: " (pr-str tarkastusajo-id))
   (let [tarkastukset (ls-core/muunna-tarkastusajon-reittipisteet-tarkastuksiksi db tarkastusajo-id)
         tie->str (fn [tie]
@@ -697,7 +720,8 @@
                             {:kayttajanimi "jvh"})]
         (log/debug (tie->str tallennettava))))))
 
-(defn debuggaa-tarkastusajojen-muunto [db tarkastusajo-idt]
+(defn debuggaa-tarkastusajojen-muunto
+  [db tarkastusajo-idt]
   (log/debug "Debugataan tarkastusajot: " (pr-str tarkastusajo-idt))
   (doseq [tarkastusajo-id tarkastusajo-idt]
     (debuggaa-tarkastusajon-muunto db tarkastusajo-id)))
