@@ -55,4 +55,4 @@
        {:virhe "Käyttäjällä ei ole oikeutta luoda tarkastuksia yhteenkään urakkaan."})]
 
     [:div.screenlock-muistutus
-     [yleiset/vihje "Muista asettaa näytön automaattilukitus pois päältä."]]]])
+     [yleiset/vihje "Pidä sovellus koko ajan näkyvissä. Aseta näytön automaattilukitus pois päältä."]]]])
