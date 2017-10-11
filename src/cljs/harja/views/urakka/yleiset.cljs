@@ -515,7 +515,7 @@
                                (alus/fmt-alus %)
                                "- Valitse alus -")
              :validoi [[:ei-tyhja "Valitse alus"]]}
-            {:otsikko "Lisätiedot"
+            {:otsikko "Lisätiedot käyttötarpeesta"
              :nimi ::alus/lisatiedot
              :tyyppi :string
              :leveys 4
