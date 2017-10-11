@@ -23,6 +23,9 @@
   (let [tulos (filter (comp halutut :mmsi) (:features viesti))]
     (jdbc/with-db-transaction [db db]
       (doseq [laiva tulos]
+        (assert (:mmsi laiva) (str "Laivalta puuttuu :mmsi tieto! " (pr-str laiva)))
+        (assert (get-in laiva [:properties :timestampExternal]) (str "Laivalta puuttuu :timestampExternal! " (pr-str laiva)))
+        (assert (:geometry laiva) (str "Laivalta puuttuu :geometry! " (pr-str laiva)))
         (lisaa-alukselle-reittipiste<! db
                                        {:mmsi (:mmsi laiva)
                                         :aika (-> laiva
@@ -43,7 +46,14 @@
                        konteksti
                        :http
                        {:metodi :GET
-                        :url url})]
+                        :url url
+                        ;; Ei haluta tallentaa koko payloadia, koska se on niin iso
+                        ;; teoriassa voitaisiin tallentaa vain saatujen alusten sijainnit,
+                        ;; mutta sekin voi olla aika paljon dataa, koska haku tehdään niin usein
+                        :response->loki #(str "Saatiin " (count (filter (comp alukset :mmsi) (-> % (cheshire/parse-string true) :features)))
+                                             "/"
+                                             (count alukset)
+                                             " laivan sijainnit")})]
     (kasittele-vastaus! (assoc deps :konteksti konteksti) alukset (cheshire/parse-string body true))))
 
 (defn- kasiteltavat-alukset* [alukset]
