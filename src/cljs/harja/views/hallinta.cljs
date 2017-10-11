@@ -16,6 +16,7 @@
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.views.vesivaylat.hallinta :as vu]
+            [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
             [harja.ui.grid :as g]
             [harja.tiedot.istunto :as istunto]))
 
@@ -79,8 +80,8 @@
      [vu/vesivayla-hallinta])
 
    "Järjestelmäasetukset"
-   :vesivayla-hallinta
-   (when (oikeudet/hallinta-api-jarjestelmatunnukset)
+   :jarjestelma-asetukset
+   (when true
+     ;; todo: tee (oikeudet/hallinta-api-jarjestelmatunnukset)
      ^{:key "jarjestelma-asetukset"}
-     [vu/vesivayla-hallinta])
-   ])
+     [jarjestelma-asetukset/jarjestelma-asetukset])])
