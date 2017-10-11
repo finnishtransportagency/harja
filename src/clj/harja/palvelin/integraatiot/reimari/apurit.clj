@@ -60,10 +60,10 @@
 
 
 ;; käyttö:
-;; (kutsu-interaktiivisesti hae-viat harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00")
+;; (kutsu-interaktiivisesti hae-viat harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00" #inst "2017-09-01T00:00:00")
 ;; tai
-;; (kutsu-interaktiivisesti hae-viat (assoc-in harja.palvelin.main/harja-jarjestelma  [:reimari :salasana] "asdf") #inst "2017-08-01T00:00:00")
-(defn kutsu-interaktiivisesti [fn j alkuaika]
+;; (kutsu-interaktiivisesti hae-viat (assoc-in harja.palvelin.main/harja-jarjestelma  [:reimari :salasana] "asdf") #inst "2017-08-01T00:00:00" #inst "2017-09-01T00:00:00")
+(defn kutsu-interaktiivisesti [fn j alkuaika loppuaika]
   (let [[db il rk] (as-> j x
                      (select-keys x [:db :integraatioloki :reimari])
                      (map second x))
@@ -71,7 +71,7 @@
                      (select-keys x [:kayttajatunnus :salasana :pohja-url])
                      (map second x))]
     (log/debug "tunnus" kt "url" pu)
-    (with-redefs [edellisen-integraatiotapahtuman-alkuaika (constantly alkuaika)]
+    (with-redefs [hakuvali (constantly [alkuaika loppuaika])]
       (fn db il pu kt ss))))
 
 
