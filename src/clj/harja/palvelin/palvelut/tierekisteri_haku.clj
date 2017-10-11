@@ -13,12 +13,12 @@
 
 (defn muunna-geometria [tros]
   (try
-    (assoc tros :geometria (geo/pg->clj (:geometria tros))))
-  (catch PSQLException e
-    (if (= (.getMessage e) "ERROR: pisteillä ei yhteistä tietä")
-      nil
-      ;; else
-      (throw e))))
+    (assoc tros :geometria (geo/pg->clj (:geometria tros)))
+    (catch PSQLException e
+      (if (= (.getMessage e) "ERROR: pisteillä ei yhteistä tietä")
+        nil
+        ;; else
+        (throw e)))))
 
 (defn hae-tr-pisteilla
   "params on mappi {:x1 .. :y1 .. :x2 .. :y2 ..}"
