@@ -2,7 +2,7 @@
 SELECT
   mmsi,
   nimi,
-  a.lisatiedot
+  au.lisatiedot
 FROM vv_alus a
 LEFT JOIN vv_alus_urakka au ON au.alus = a.mmsi
 WHERE urakka = :urakka

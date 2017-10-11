@@ -50,8 +50,7 @@
       (fn [user tiedot]
         (hae-urakan-alukset db user tiedot))
       {:kysely-spec ::alus/hae-urakan-alukset-kysely
-       :vastaus-spec ::alus/hae-urakan-alukset-vastaus}
-      )
+       :vastaus-spec ::alus/hae-urakan-alukset-vastaus})
     (julkaise-palvelu
       http
       :hae-urakoitsijan-alukset
