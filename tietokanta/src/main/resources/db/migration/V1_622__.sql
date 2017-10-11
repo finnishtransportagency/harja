@@ -26,7 +26,7 @@ INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
 
 INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
     VALUES (
-      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-komponentit'),
+      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-turvalaitekomponentit'),
        '6 months',
        '2017-10-01T12:12:12Z');
 
