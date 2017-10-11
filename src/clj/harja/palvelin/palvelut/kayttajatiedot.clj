@@ -19,6 +19,10 @@
 (defn oletusurakkatyyppi
   [db user]
   (let [kayttajan-urakat (oikeudet/kayttajan-urakat user)]
+    (log/debug "KÄYTTÄJÄN URAKAT: " kayttajan-urakat)
+    (log/debug "YLEISIN URAKKATYYPPI" (if (empty? kayttajan-urakat)
+                                        :hoito
+                                        (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat))))
     (if (empty? kayttajan-urakat)
       :hoito
       (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat)))))
