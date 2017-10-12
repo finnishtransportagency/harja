@@ -74,8 +74,8 @@
   </xs:complexType>
 
   <xs:complexType name="VaylaType">
-    <xs:attribute type="xs:token" name="nro" use="optional"/>
-    <xs:attribute type="xs:string" name="nimi" use="optional"/>
+    <xs:attribute type="xs:token" name="nro" use="optional"/> <!-- VAYLA.JNRO -->
+    <xs:attribute type="xs:string" name="nimi" use="optional"/> <!-- VAYLA.VAY_NIMISU -->
   </xs:complexType>
 
   <!-- ToimenpiteenTurvalaiteType on supistettu version turvalaitteen ominaisuuksista. Varsinainen turvalaiteskeema on tyyppiä TurvalaiteType -->
@@ -278,6 +278,7 @@
        Hox. Toimenpiteellä on oma suppeampi määritelmä turvalaitteesta ToimenpiteenTurvalaiteType -->
   <xs:complexType name="TurvalaiteType">
     <xs:all>
+      <xs:element name="paavaylat" type="PaavaylatType" minOccurs="0"/>
       <xs:element name="turvalaiteryhmat" type="TurvalaiteRyhmatType" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="tlnumero"/> <!-- TURVALAITE.TLNUMERO -->
@@ -296,6 +297,17 @@
     <xs:attribute type="xs:string" name="sijainti"/> <!-- TURVALAITE.SIJAINTIS -->
     <xs:attribute type="xs:string" name="kooordinaatit"/> <!-- TURVALAITE.X TURVALAITE.Y Vai jotku muut sarakkeet Reimarin kannassa? (leveys välilyönti pituus) -->
     <xs:attribute type="xs:string" name="vanha_tlnumero"/> <!-- TURVALAITE.TLNR_V (Tieto liittyy siihen kun aihoista tulee varsinainen turvalaite aiemman turvalaitteen paikalle.) -->
+  </xs:complexType>
+
+  <xs:complexType name="PaaVaylaType">
+    <xs:attribute type="xs:string" name="tunnus"/> <!-- VAYLA.JNRO  Linkki: TURVALAITE.TLNUMERO Linkkitaulu: T_SDGROUP_SD -->
+    <xs:attribute type="xs:string" name="nimi"/> <!-- VAYLA.VAY_NIMISU Linkki: TURVALAITE.TLNUMERO Linkkitaulu: VAYLA_TLYHTEYS -->
+  </xs:complexType>
+
+  <xs:complexType name="PaavaylatType">
+    <xs:sequence>
+      <xs:element name="paavayla" type="PaaVaylaType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="TurvalaiteRyhmaType">

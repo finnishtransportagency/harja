@@ -22,6 +22,12 @@
                         kooordinaatit = "6715705.83497 106254.257664"
                         vanha_tlnumero = "1234">
 
+                <!-- Pääväylät joihin turvalaite liittyy -->
+                <paavaylat>
+                    <paavayla tunnus="1234" nimi="Tankar-Repskär" />
+                    <paavayla tunnus="6244" nimi="Isoväylä II" />
+                </paavaylat>
+
                 <!-- Turvalaiteryhmät joihin turvalaite kuuluu -->
                 <turvalaiteryhmat>
                     <turvalaiteryhma tunnus="123" nimi="Ahvenanmaan poijut" kuvaus="Ahvenanmaan poiju-urakka 2013-2018"></turvalaiteryhma>
