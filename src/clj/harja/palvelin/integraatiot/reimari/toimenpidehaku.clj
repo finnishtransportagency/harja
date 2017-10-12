@@ -60,4 +60,4 @@
     (r-apurit/kutsu-reimari-integraatiota hakuparametrit)))
 
 ;; repl-testaus: (vaihda päivämäärä lähimenneisyyteen)
-;; (r-apurit/kutsu-interaktiivisesti hae-toimenpiteet harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00" #inst "2017-09-01T00:00:00")
+;; (harja.palvelin.integraatiot.reimari.apurit/kutsu-interaktiivisesti harja.palvelin.integraatiot.reimari.toimenpidehaku/hae-toimenpiteet harja.palvelin.main/harja-jarjestelma #inst "2016-08-01T00:00:00" #inst "2016-09-01T00:00:00")

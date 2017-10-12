@@ -28,7 +28,7 @@
 
 
 (defn hakuvali [db integraation-nimi]
-  (first (harja.kyselyt.reimari-meta/hae-hakuvali db {:integraatio integraation-nimi})))
+  (first (metatiedot-q/hae-hakuvali db {:integraatio integraation-nimi})))
 
 (defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana alkuaika loppuaika muutosaika] :as hakuparametrit} konteksti]
   (let [otsikot {"Content-Type" "text/xml"
@@ -43,7 +43,9 @@
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) (or muutosaika [alkuaika loppuaika])))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " ajalta: " (or muutosaika [alkuaika loppuaika])))
 
-    ((:vastaus-fn hakuparametrit) db body)))
+    ((:vastaus-fn hakuparametrit) db body)
+    (metatiedot-q/paivita-aikakursori! db {:integraatio (:haun-nimi hakuparametrit)
+                                           :aika loppuaika})))
 
 (defn kutsu-reimari-integraatiota
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
@@ -52,10 +54,10 @@
       (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa, hakua ei tehdä.")
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
-       (fn []
+       (fn yrita-ajaa-lukon-kanssa-callback []
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" haun-nimi
-          (fn [konteksti]
+          (fn suorita-intergraatio-callback [konteksti]
             (kutsu-reimari-integraatiota* (assoc hakuparametrit :alkuaika alku :loppuaika loppu) konteksti))))))))
 
 
