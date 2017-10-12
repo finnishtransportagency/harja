@@ -3,6 +3,7 @@
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.kayttajat :as q]
+            [harja.tyokalut.html :as html]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.urakat :as urakat]
@@ -12,11 +13,16 @@
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]))
+            [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
+            [clojure.set :as set]))
 
 (defn oletusurakkatyyppi
   [db user]
   (let [kayttajan-urakat (oikeudet/kayttajan-urakat user)]
+    (log/debug "KÄYTTÄJÄN URAKAT: " kayttajan-urakat)
+    (log/debug "YLEISIN URAKKATYYPPI" (if (empty? kayttajan-urakat)
+                                        :hoito
+                                        (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat))))
     (if (empty? kayttajan-urakat)
       :hoito
       (keyword (q/hae-kayttajan-yleisin-urakkatyyppi db kayttajan-urakat)))))
@@ -42,7 +48,7 @@
 
 (defn kayttajan-urakat-aikavalilta
   "Palauttaa vektorin mäppejä.
-  Mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
+  Vastaus on vector, sen mäpit ovat muotoa {:tyyppi x :hallintayksikko {:id .. :nimi ..} :urakat [{:nimi .. :id ..}]}
   Oikeustarkistus on 2-arity funktio (urakka-id ja käyttäjä),
   joka tarkistaa, että käyttäjä voi lukea urakkaa annetulla oikeudella."
   ([db user oikeustarkistus-fn]
@@ -119,6 +125,25 @@
                              (:urakat au))))
        aluekokonaisuudet))))
 
+(defn yhdista-kayttajan-urakat-alueittain
+  "Yhdistää käyttäjän urakat alueittain niin, että sama tyyppi ja alue sekä sen kaikki
+   urakat esiintyy vectorissa vain kerran."
+  [kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b]
+  (let [kayttajan-urakat-alueittain-a (map #(update % :urakat set) kayttajan-urakat-alueittain-a)
+        kayttajan-urakat-alueittain-b (map #(update % :urakat set) kayttajan-urakat-alueittain-b)
+        kayttajan-kaikki-urakat-alueittain (concat kayttajan-urakat-alueittain-a kayttajan-urakat-alueittain-b)]
+    (as-> kayttajan-kaikki-urakat-alueittain $
+          (group-by (juxt :hallintayksikko :tyyppi) $)
+          (reduce-kv
+            (fn [vektori _ urakat-alueessa]
+              (conj vektori
+                    (assoc
+                      (first urakat-alueessa)
+                      :urakat
+                      (->> urakat-alueessa (mapcat :urakat) set))))
+            []
+            $))))
+
 (defn- hae-yhteydenpidon-vastaanottajat [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-yhteydenpito user)
   (log/debug "Haetaan yhteydenpidon vastaanottajat")
@@ -144,14 +169,15 @@
   [sahkoposti db user {:keys [otsikko sisalto]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-indeksit user)
   (let [vastaanottajat (hae-yhteydenpidon-vastaanottajat db user)
-        sisalto (str "<html><body>" (.replace sisalto "\n" "<br>") "</body>")]
+        sisalto-sanitoitu (html/sanitoi sisalto)
+        sisalto-html (str "<html><body>" (.replace sisalto-sanitoitu "\n" "<br>") "</body>")]
     (doseq [{sahkopostiosoite :sahkoposti} vastaanottajat]
       (sahkoposti/laheta-viesti!
-        sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto)))
+        sahkoposti "harja-ala-vastaa@liikennevirasto.fi" sahkopostiosoite otsikko sisalto-html)))
   true)
 
 (defrecord Kayttajatiedot []
-  component/Lifecycle                                                   
+  component/Lifecycle
   (start [{http :http-palvelin
            db :db
            sahkoposti :solita-sahkoposti
