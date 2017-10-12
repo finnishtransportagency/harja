@@ -304,11 +304,11 @@ hakutiheys-historiakuva 1200000)
             {tyyppi
              (into {}
                    (map (fn [[hallintayksikko urakat]]
-                          {(:nimi hallintayksikko)
+                          {(:elynumero hallintayksikko)
                            (into {}
                                  (map
                                    (fn [[suodatin valittu?]]
-                                     (let [vanha-arvo (get-in vanhat [tyyppi (:nimi hallintayksikko) suodatin])
+                                     (let [vanha-arvo (get-in vanhat [tyyppi (:elynumero hallintayksikko) suodatin])
                                            arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?)]
                                        [suodatin arvo]))
                                    urakat))})
