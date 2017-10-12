@@ -295,7 +295,6 @@
     <xs:attribute type="xs:string" name="piiri"/> <!-- PIIRI.NIMIS Linkki: TURVALAITE.PITUNNISTE -->
     <xs:attribute type="xs:string" name="sijainti"/> <!-- TURVALAITE.SIJAINTIS -->
     <xs:attribute type="xs:string" name="kooordinaatit"/> <!-- TURVALAITE.X TURVALAITE.Y Vai jotku muut sarakkeet Reimarin kannassa? (leveys välilyönti pituus) -->
-    <xs:attribute type="xs:string" name="koordinaattijarjestelma"/> <!-- Kertoo missä koordinaattijärjestelmässä koordinaatit-attribuutissa tulevat tiedot ovat. ETRS-TM35FIN olis kiva. -->
     <xs:attribute type="xs:string" name="vanha_tlnumero"/> <!-- TURVALAITE.TLNR_V (Tieto liittyy siihen kun aihoista tulee varsinainen turvalaite aiemman turvalaitteen paikalle.) -->
   </xs:complexType>
 

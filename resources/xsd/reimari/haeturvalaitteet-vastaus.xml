@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<S:Envelope xmlns:S="hettp://schemas.xmlsoap.org/soap/envelope/"><S:Body>
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>
     <HaeTurvalaitteet xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
 
         <HaeTurvalaitteetResponse>
@@ -20,7 +20,6 @@
                         piiri = "Lounais-Suomi"
                         sijainti = "Etelä-Kerttun saarella"
                         kooordinaatit = "6715705.83497 106254.257664"
-                        koordinaattijarjestelma = "EUREF-FIN"
                         vanha_tlnumero = "1234">
 
                 <!-- Turvalaiteryhmät joihin turvalaite kuuluu -->
@@ -36,7 +35,7 @@
 </S:Body></S:Envelope>
 
 <!--
-Koordinaattijärjestelmä WGS84
+Koordinaattijärjestelmä on aina WGS84
 Koordinaatit: Leveys + välilyönti + Pituus
 Omistaja: Nimi + pilkku + välilyönti + Tarkennus
 Ylläpitäjä: Nimi + pilkku + välilyönti + Tarkennus
