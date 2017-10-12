@@ -23,8 +23,6 @@
 
 (defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
   (try
-
-
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
                                      :parametrit parametrit
@@ -62,7 +60,9 @@
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
-                            (format "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe.  Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]})))
+                            (format "Kommunikoinnissa ulkoisen järjestelmän (url: %s) kanssa tapahtui odottamaton virhe.
+                                     Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s."
+                                    url status error)}]})))
 
 (defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers]
   (log/debug (format "Kutsu palveluun: %s onnistui." url))
