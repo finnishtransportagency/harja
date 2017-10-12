@@ -1,9 +1,6 @@
 (ns harja.tiedot.hallinta.jarjestelma-asetukset
   (:require [tuck.core :as tuck]
             [reagent.core :refer [atom] :as r]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti]
-            [cljs.core.async :as async]
             [harja.domain.geometriaaineistot :as geometria-ainestot]
             [harja.pvm :as pvm]
             [reagent.core :refer [atom] :as r])
@@ -28,14 +25,9 @@
     ;; todo: tee palvelinkutsu ja hae geometria-aineistot
     (assoc app
       :haku-kaynnissa? false
-      :geometria-aineistot (r/wrap
-                             [{::geometria-ainestot/id 666
-                               ::geometria-ainestot/nimi "hitutinteri"
-                               ::geometria-ainestot/tiedostonimi "hitutinteri.shp"
-                               ::geometria-ainestot/voimassaolo-alkaa (pvm/nyt)
-                               ::geometria-ainestot/voimassaolo-paattyy (pvm/nyt)}]
-                             (fn[_][{::geometria-ainestot/id 666
-                                     ::geometria-ainestot/nimi "hitutinteri"
-                                     ::geometria-ainestot/tiedostonimi "hitutinteri.shp"
-                                     ::geometria-ainestot/voimassaolo-alkaa (pvm/nyt)
-                                     ::geometria-ainestot/voimassaolo-paattyy (pvm/nyt)}])))))
+      :geometria-aineistot
+      (atom {1 {::geometria-ainestot/id 666
+                ::geometria-ainestot/nimi "hitutinteri"
+                ::geometria-ainestot/tiedostonimi "hitutinteri.shp"
+                ::geometria-ainestot/voimassaolo-alkaa (pvm/nyt)
+                ::geometria-ainestot/voimassaolo-paattyy (pvm/nyt)}}))))

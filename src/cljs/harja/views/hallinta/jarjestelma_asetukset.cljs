@@ -30,7 +30,7 @@
         [{:otsikko "Nimi" :nimi ::geometria-aineistot/nimi :tyyppi :string}
          {:otsikko "Tiedostonimi" :nimi ::geometria-aineistot/tiedostonimi :tyyppi :string}
          {:otsikko "Voimassaolo alkaa" :nimi ::geometria-aineistot/voimassaolo-alkaa :tyyppi :pvm :fmt pvm/pvm-opt}
-         {:otsikko "Voimassaolo päättyy" :nimi ::geometria-aineistot/voimassaolo-päättyy :tyyppi :pvm :fmt pvm/pvm-opt}]
+         {:otsikko "Voimassaolo päättyy" :nimi ::geometria-aineistot/voimassaolo-paattyy :tyyppi :pvm :fmt pvm/pvm-opt}]
         geometria-aineistot]])))
 
 (defn jarjestelma-asetukset* [e! app]
