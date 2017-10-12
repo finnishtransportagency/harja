@@ -71,6 +71,7 @@
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
+    [harja.palvelin.palvelut.geometria-aineistot :as geometria-aineistot]
     [harja.palvelin.palvelut.status :as status]
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
     [harja.palvelin.palvelut.tienakyma :as tienakyma]
@@ -500,6 +501,10 @@
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
                                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+
+      :geometria-aineistot (component/using
+                             (geometria-aineistot/->Geometria-aineistot)
+                             [:http-palvelin :db])
 
       :organisaatiot (component/using
                        (organisaatiot/->Organisaatiot)
