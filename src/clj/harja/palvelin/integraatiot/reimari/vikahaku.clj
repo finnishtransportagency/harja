@@ -37,7 +37,7 @@
 
 (defn hae-viat [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeViat"
-                        :sanoma-fn (partial r-apurit/kysely-sanoma-muutosaika "HaeViat")
+                        :sanoma-fn (partial r-apurit/kysely-sanoma-aikavali "HaeViat")
                         :vastaus-fn kasittele-viat-vastaus
                         :haun-nimi "hae-viat"
                         :db db

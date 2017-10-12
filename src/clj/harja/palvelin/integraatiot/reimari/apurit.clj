@@ -39,6 +39,7 @@
                         :kayttajatunnus kayttajatunnus
                         :salasana salasana
                         :muutosaika muutosaika}
+        _ (log/debug "aikaparametrit: " (or muutosaika [alkuaika loppuaika]))
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) (or muutosaika [alkuaika loppuaika])))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " ajalta: " (or muutosaika [alkuaika loppuaika])))
 
@@ -48,7 +49,7 @@
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
   (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
     (if-not (and alku loppu)
-      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
+      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa, hakua ei tehdä.")
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
        (fn []
@@ -71,7 +72,7 @@
                      (select-keys x [:kayttajatunnus :salasana :pohja-url])
                      (map second x))]
     (log/debug "tunnus" kt "url" pu)
-    (with-redefs [hakuvali (constantly [alkuaika loppuaika])]
+    (with-redefs [hakuvali (constantly {:alku alkuaika :loppu loppuaika})]
       (fn db il pu kt ss))))
 
 
@@ -79,16 +80,18 @@
 
   (let [;; esim tyyppi = HaeKomponenttiTyypit -> :HaeKomponenttiTyypit ja :HaeKomponenttiTyypitRequest
         tyyppi-kw (keyword tyyppi)
-        tyyppi-request-kw (keyword (str tyyppi "Request"))]
-    (xml/tee-xml-sanoma
-     [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
-      [:soap:Body
-       [tyyppi-kw {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-        [tyyppi-request-kw attribuutit]]]])))
+        tyyppi-request-kw (keyword (str tyyppi "Request"))
+        sanoma (xml/tee-xml-sanoma
+                [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
+                 [:soap:Body
+                  [tyyppi-kw {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
+                   [tyyppi-request-kw attribuutit]]]])]
+    (log/debug "kyselysanoma:" (pr-str sanoma))
+    sanoma))
 
 (defn kysely-sanoma-aikavali [tyyppi [alkuaika loppuaika]]
   (kysely-sanoma tyyppi {:alkuaika (formatoi-aika alkuaika)
                          :loppuaika (formatoi-aika loppuaika)}))
 
-(defn kysely-sanoma-muutosaika [tyyppi muutosaika]
-  (kysely-sanoma tyyppi {:muutosaika (formatoi-aika muutosaika)}))
+(defn kysely-sanoma-muutosaika [tyyppi [alkuaika loppuaika]]
+  (kysely-sanoma tyyppi {:muutosaika (formatoi-aika alkuaika)}))
