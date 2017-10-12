@@ -8,7 +8,9 @@
             [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.tyokalut.xml :as xml]
-            [harja.palvelin.tyokalut.lukot :as lukko]))
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.kyselyt.reimari-meta :as metatiedot-q]))
+
 
 (defn aikaleima [text]
   (when-not (str/blank? text)
@@ -24,21 +26,11 @@
       aika-ilman-vyohyketta
       (str aika-ilman-vyohyketta "Z"))))
 
-(defn edellisen-integraatiotapahtuman-alkuaika [db jarjestelma nimi]
-  (::integraatiotapahtuma/alkanut
-   (last (sort-by ::integraatiotapahtuma/alkanut
-                  (specql/fetch db ::integraatiotapahtuma/tapahtuma
-                                #{::integraatiotapahtuma/id ::integraatiotapahtuma/alkanut
-                                  [::integraatiotapahtuma/integraatio #{:harja.palvelin.integraatiot/nimi
-                                                                        :harja.palvelin.integraatiot/jarjestelma}] }
-                                {::integraatiotapahtuma/integraatio {:harja.palvelin.integraatiot/jarjestelma jarjestelma
-                                                                     :harja.palvelin.integraatiot/nimi nimi}
-                                 ::integraatiotapahtuma/onnistunut true })))))
 
+(defn hakuvali [db integraation-nimi]
+  (first (harja.kyselyt.reimari-meta/hae-hakuvali db {:integraatio integraation-nimi})))
 
-(defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana muutosaika] :as hakuparametrit} konteksti]
-  ;; {:pre [(assert (and db pohja-url kayttajatunnus salasana muutosaika) [db pohja-url kayttajatunnus salasana muutosaika])]}
-  (println "kkkk" (and db pohja-url kayttajatunnus salasana muutosaika))
+(defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana alkuaika loppuaika muutosaika] :as hakuparametrit} konteksti]
   (let [otsikot {"Content-Type" "text/xml"
                  "SOAPAction" (:soap-action hakuparametrit)}
         http-asetukset {:metodi :POST
@@ -47,14 +39,15 @@
                         :kayttajatunnus kayttajatunnus
                         :salasana salasana
                         :muutosaika muutosaika}
-        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) muutosaika))]
-    (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " alken: " muutosaika))
+        {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) (or muutosaika [alkuaika loppuaika])))]
+    (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " ajalta: " (or muutosaika [alkuaika loppuaika])))
+
     ((:vastaus-fn hakuparametrit) db body)))
 
 (defn kutsu-reimari-integraatiota
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
-  (let [muutosaika (edellisen-integraatiotapahtuman-alkuaika db "reimari" haun-nimi)]
-    (if-not muutosaika
+  (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
+    (if-not (and alku loppu)
       (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
@@ -62,15 +55,15 @@
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" haun-nimi
           (fn [konteksti]
-            (kutsu-reimari-integraatiota* (assoc hakuparametrit :muutosaika muutosaika) konteksti))))))))
+            (kutsu-reimari-integraatiota* (assoc hakuparametrit :alkuaika alku :loppuaika loppu) konteksti))))))))
 
 
 
 ;; käyttö:
-;; (kutsu-interaktiivisesti hae-viat harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00")
+;; (kutsu-interaktiivisesti hae-viat harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00" #inst "2017-09-01T00:00:00")
 ;; tai
-;; (kutsu-interaktiivisesti hae-viat (assoc-in harja.palvelin.main/harja-jarjestelma  [:reimari :salasana] "asdf") #inst "2017-08-01T00:00:00")
-(defn kutsu-interaktiivisesti [fn j alkuaika]
+;; (kutsu-interaktiivisesti hae-viat (assoc-in harja.palvelin.main/harja-jarjestelma  [:reimari :salasana] "asdf") #inst "2017-08-01T00:00:00" #inst "2017-09-01T00:00:00")
+(defn kutsu-interaktiivisesti [fn j alkuaika loppuaika]
   (let [[db il rk] (as-> j x
                      (select-keys x [:db :integraatioloki :reimari])
                      (map second x))
@@ -78,5 +71,24 @@
                      (select-keys x [:kayttajatunnus :salasana :pohja-url])
                      (map second x))]
     (log/debug "tunnus" kt "url" pu)
-    (with-redefs [edellisen-integraatiotapahtuman-alkuaika (constantly alkuaika)]
+    (with-redefs [hakuvali (constantly [alkuaika loppuaika])]
       (fn db il pu kt ss))))
+
+
+(defn kysely-sanoma [tyyppi attribuutit]
+
+  (let [;; esim tyyppi = HaeKomponenttiTyypit -> :HaeKomponenttiTyypit ja :HaeKomponenttiTyypitRequest
+        tyyppi-kw (keyword tyyppi)
+        tyyppi-request-kw (keyword (str tyyppi "Request"))]
+    (xml/tee-xml-sanoma
+     [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
+      [:soap:Body
+       [tyyppi-kw {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
+        [tyyppi-request-kw attribuutit]]]])))
+
+(defn kysely-sanoma-aikavali [tyyppi [alkuaika loppuaika]]
+  (kysely-sanoma tyyppi {:alkuaika (formatoi-aika alkuaika)
+                         :loppuaika (formatoi-aika loppuaika)}))
+
+(defn kysely-sanoma-muutosaika [tyyppi muutosaika]
+  (kysely-sanoma tyyppi {:muutosaika (formatoi-aika muutosaika)}))

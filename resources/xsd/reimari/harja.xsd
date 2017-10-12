@@ -14,10 +14,12 @@
     </xs:choice>
   </xs:complexType>
 
-  <!-- HaeToimenpiteetRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
-       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <!-- HaeToimenpiteetRequest sisältää vain alku- ja
+       loppuaika-attribuutit, jotka kertoo aikaleimaat joiden välissä
+       luodut tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeToimenpiteetRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut toimenpiteet
@@ -124,7 +126,8 @@
   <!-- HaeKomponenttiTyypitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
        jonka jälkeen luodut tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeKomponenttiTyypitRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut komponenttityypit
@@ -162,10 +165,9 @@
       </xs:choice>
   </xs:complexType>
 
-  <!-- HaeTurvalaiteKomponentitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
-       jonka jälkeen luodut tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeTurvalaiteKomponentitRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="HaeTurvalaiteKomponentitResponseType">
@@ -200,10 +202,9 @@
     </xs:choice>
   </xs:complexType>
 
-  <!-- Muutosaika kuten muissakin pyynnöissä. Muutosajan jälkeen luodut
-       tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeViatRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="HaeViatResponseType">

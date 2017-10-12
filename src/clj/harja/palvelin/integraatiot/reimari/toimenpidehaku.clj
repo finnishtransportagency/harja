@@ -47,16 +47,9 @@
 
     (vec kanta-tiedot)))
 
-(defn toimenpiteet-kysely-sanoma [muutosaika]
-  (xml/tee-xml-sanoma
-   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
-    [:soap:Body
-     [:HaeToimenpiteet {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeToimenpiteetRequest {:muutosaika (r-apurit/formatoi-aika muutosaika)}]]]]))
-
 (defn hae-toimenpiteet [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeToimenpiteet"
-                        :sanoma-fn toimenpiteet-kysely-sanoma
+                        :sanoma-fn (partial r-apurit/kysely-sanoma-aikavali "HaeToimenpiteet")
                         :vastaus-fn kasittele-toimenpiteet-vastaus
                         :haun-nimi "hae-toimenpiteet"
                         :db db

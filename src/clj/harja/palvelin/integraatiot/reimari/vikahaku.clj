@@ -10,14 +10,6 @@
             [harja.palvelin.tyokalut.lukot :as lukko]
             [clojure.set :refer [rename-keys]]))
 
-(defn viat-kysely-sanoma [muutosaika]
-  (xml/tee-xml-sanoma
-   [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
-    [:soap:Body
-     [:HaeViat {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-      [:HaeViatRequest {:muutosaika (r-apurit/formatoi-aika muutosaika)}]]
-     ]]))
-
 (def avainmuunnokset {::vv-vikailmoitus/id ::vv-vikailmoitus/reimari-id
                       ::vv-vikailmoitus/turvalaitenro ::vv-vikailmoitus/reimari-turvalaitenro
                       ::vv-vikailmoitus/epakunnossa ::vv-vikailmoitus/reimari-epakunnossa?
@@ -46,7 +38,7 @@
 
 (defn hae-viat [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeViat"
-                        :sanoma-fn viat-kysely-sanoma
+                        :sanoma-fn (partial r-apurit/kysely-sanoma-muutosaika "HaeViat")
                         :vastaus-fn kasittele-viat-vastaus
                         :haun-nimi "hae-viat"
                         :db db
