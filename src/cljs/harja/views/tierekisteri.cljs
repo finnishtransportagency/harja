@@ -100,6 +100,9 @@
     (doseq [piste pisteet]
       (tasot/poista-geometria! (:id piste)))))
 
+(def reittipisteen-radius 300) ;; 50 Jos tarpeen nähdä suurella tarkkuudella
+(def reittipisteen-stroke-vari "red") ;; "black" jos tarpeen nähdä yksittäiset pallot
+
 (defn- piirra-reittipisteet
   [pisteet]
   (let [tyyppi (:tyyppi @tarkasteltava-asia)]
@@ -110,8 +113,9 @@
                                :type :reittipisteet
                                :alue (assoc (:sijainti piste)
                                             :fill "red"
-                                            :radius 10
-                                            :stroke {:color "black" :width 1})}))))
+                                            :radius reittipisteen-radius
+                                            :stroke {:color reittipisteen-stroke-vari
+                                                     :width 1})}))))
 
 (defn- piirra-reitti
   [reitti]
