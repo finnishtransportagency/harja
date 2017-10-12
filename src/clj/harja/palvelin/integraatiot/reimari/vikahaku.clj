@@ -33,7 +33,6 @@
         kanta-tiedot (for [viat-tiedot sanoman-tiedot]
                        (specql/upsert! db ::vv-vikailmoitus/vikailmoitus
                                        (rename-keys viat-tiedot avainmuunnokset)))]
-    (clojure.pprint/pprint (rename-keys (first sanoman-tiedot) avainmuunnokset))
     (vec kanta-tiedot)))
 
 (defn hae-viat [db integraatioloki pohja-url kayttajatunnus salasana]
