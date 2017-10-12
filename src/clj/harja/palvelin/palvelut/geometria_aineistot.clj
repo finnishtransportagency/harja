@@ -10,8 +10,7 @@
 
 (defn hae-geometriapaivitykset [db user]
   ;; todo: lisää oikeustarkastus
-  (geometria-aineistot/hae-geometria-aineistot db)
-  )
+  (geometria-aineistot/hae-geometria-aineistot db))
 
 (defrecord Geometria-aineistot []
   component/Lifecycle

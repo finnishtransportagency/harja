@@ -3,7 +3,10 @@
             [reagent.core :refer [atom] :as r]
             [harja.domain.geometriaaineistot :as geometria-ainestot]
             [harja.pvm :as pvm]
-            [reagent.core :refer [atom] :as r])
+            [reagent.core :refer [atom] :as r]
+            [harja.asiakas.kommunikaatio :as k]
+            [cljs.core.async :as async]
+            [harja.ui.viesti :as viesti])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -14,6 +17,8 @@
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeGeometria-aineistot [])
+(defrecord Geometria-aineistotHaettu [geometria-aineistot])
+(defrecord Geometria-ainestojenHakuEpaonnistui [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -22,12 +27,25 @@
 
   HaeGeometria-aineistot
   (process-event [_ app]
-    ;; todo: tee palvelinkutsu ja hae geometria-aineistot
-    (assoc app
-      :haku-kaynnissa? false
-      :geometria-aineistot
-      (atom {1 {::geometria-ainestot/id 666
-                ::geometria-ainestot/nimi "hitutinteri"
-                ::geometria-ainestot/tiedostonimi "hitutinteri.shp"
-                ::geometria-ainestot/voimassaolo-alkaa (pvm/nyt)
-                ::geometria-ainestot/voimassaolo-paattyy (pvm/nyt)}}))))
+    (let [tulos! (tuck/send-async! ->Geometria-aineistotHaettu)
+          fail! (tuck/send-async! ->Geometria-ainestojenHakuEpaonnistui)]
+      (go
+        (try
+          (let [vastaus (async/<! (k/post! :hae-geometria-aineistot {}))]
+            (if (k/virhe? vastaus)
+              (fail! vastaus)
+              (tulos! vastaus)))
+          (catch :default e
+            (fail! nil)
+            (throw e)))))
+    (assoc app :haku-kaynnissa? true))
+
+  Geometria-aineistotHaettu
+  (process-event [{geometria-aineistot :geometria-aineistot} app]
+    (assoc app :geometria-aineistot geometria-aineistot
+               :haku-kaynnissa? false))
+
+  Geometria-ainestojenHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! [:span "Virhe geometria-aineistojen haussa!"] :danger)
+    (assoc app :haku-kaynnissa? false)))
