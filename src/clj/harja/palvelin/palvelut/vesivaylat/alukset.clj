@@ -75,7 +75,7 @@
       http
       :tallenna-urakan-alukset
       (fn [user tiedot]
-        (hae-kaikki-alukset db user tiedot))
+        (tallenna-urakan-alukset db user tiedot))
       {:kysely-spec ::alus/tallenna-urakan-alukset
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     this)
