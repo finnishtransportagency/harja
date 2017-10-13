@@ -42,7 +42,8 @@
 
 (defn tallenna-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
-  (log/debug "TALLENTELEPA ALUKSET!"))
+  (log/debug "TALLENTELEPA ALUKSET!")
+  (hae-urakan-alukset db user tiedot))
 
 (defrecord Alukset []
   component/Lifecycle

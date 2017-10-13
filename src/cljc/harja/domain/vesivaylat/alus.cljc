@@ -41,8 +41,15 @@
 (s/def ::hae-kaikki-alukset-vastaus
   (s/coll-of ::alus))
 
+(s/def ::urakan-tallennettava-alus
+  (s/keys :req [::alus/mmsi
+                ::urakan-aluksen-kayton-lisatiedot]))
+
+(s/def ::urakan-tallennettavat-alukset
+  (s/coll-of ::urakan-tallennettava-alus))
+
 (s/def ::tallenna-urakan-alukset
-  (s/coll-of (s/keys :req [::alus/mmsi ::urakan-aluksen-kayton-lisatiedot])))
+  (s/keys :req [::urakka/id ::urakan-tallennettavat-alukset]))
 
 (defn alus-mmsilla [mmsi alukset]
   (first (filter #(= (::mmsi %) mmsi) alukset)))

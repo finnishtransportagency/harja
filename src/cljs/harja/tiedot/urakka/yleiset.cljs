@@ -78,6 +78,10 @@
   (when urakka-id
     (k/post! :hae-urakan-alukset {::urakka/id urakka-id})))
 
+(defn tallenna-urakan-alukset [urakka-id alukset]
+  (k/post! :hae-urakan-alukset {::urakka/id urakka-id
+                                ::alus/urakan-tallennettavat-alukset alukset}))
+
 (defn hae-urakoitsijan-alukset [urakoitsija-id]
   (when urakoitsija-id
     (k/post! :hae-urakoitsijan-alukset {::organisaatio/id urakoitsija-id})))
