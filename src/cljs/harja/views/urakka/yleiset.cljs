@@ -516,7 +516,7 @@
                                "- Valitse alus -")
              :validoi [[:ei-tyhja "Valitse alus"]]}
             {:otsikko "Lisätiedot käyttötarpeesta"
-             :nimi ::alus/lisatiedot
+             :nimi ::alus/urakan-aluksen-kayton-lisatiedot
              :tyyppi :string
              :leveys 4
              :pituus-max 512}] ;; TODO myös kantaan tämä rajoite, TEXT -> VARCHAR

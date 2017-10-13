@@ -81,7 +81,8 @@
 
 (defn tallenna-urakan-alukset [urakka-id alukset]
   (k/post! :tallenna-urakan-alukset {::urakka/id urakka-id
-                                     ::alus/urakan-tallennettavat-alukset alukset}))
+                                     ::alus/urakan-tallennettavat-alukset
+                                     alukset}))
 
 (defn hae-urakoitsijan-alukset [urakoitsija-id]
   (when urakoitsija-id

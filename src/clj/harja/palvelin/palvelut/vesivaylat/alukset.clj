@@ -24,7 +24,8 @@
   ;; TODO Oikeustarkistus + testi sille
   (namespacefy
     (alukset-q/hae-urakan-alukset db {:urakka (::urakka/id tiedot)})
-    {:ns :harja.domain.vesivaylat.alus}))
+    {:ns :harja.domain.vesivaylat.alus
+     :custom {:lisatiedot ::alus/urakan-aluksen-kayton-lisatiedot}}))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
