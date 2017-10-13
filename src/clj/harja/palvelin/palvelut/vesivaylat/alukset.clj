@@ -43,8 +43,16 @@
 
 (defn tallenna-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
-  (log/debug "TALLENTELEPA ALUKSET!")
-  (hae-urakan-alukset db user tiedot))
+  (let [urakka-id (::urakka/id tiedot)
+        alukset (::alus/urakan-tallennettavat-alukset tiedot)]
+    (log/debug "TALLENTELEPA ALUKSET: " tiedot)
+    (jdbc/with-db-transaction [db db]
+      (specql/upsert! db
+                      ::alus/urakan-aluksen-kaytto
+                      #{::alus/mmsi
+                        ::alus/urakan-aluksen-kayton-lisatiedot}
+                      alukset)
+      (hae-urakan-alukset db user tiedot))))
 
 (defrecord Alukset []
   component/Lifecycle
