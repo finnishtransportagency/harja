@@ -47,11 +47,18 @@
         alukset (::alus/urakan-tallennettavat-alukset tiedot)]
     (log/debug "TALLENTELEPA ALUKSET: " tiedot)
     (jdbc/with-db-transaction [db db]
-      (specql/upsert! db
-                      ::alus/urakan-aluksen-kaytto
-                      #{::alus/mmsi
-                        ::alus/urakan-aluksen-kayton-lisatiedot}
-                      alukset)
+      (doseq [alus alukset]
+        (if (::alus/mmsi)
+          (specql/update!
+            db
+            ::alus/urakan-aluksen-kaytto
+            {::alus/mmsi (::alus/mmsi alus)
+             ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)}
+            {::alus/mmsi (::alus/mmsi alus)})
+          (specql/insert!
+            db
+            ::alus/urakan-aluksen-kaytto
+            alus)))
       (hae-urakan-alukset db user tiedot))))
 
 (defrecord Alukset []
