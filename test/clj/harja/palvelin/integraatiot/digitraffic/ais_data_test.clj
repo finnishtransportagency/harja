@@ -4,7 +4,7 @@
 
             [harja.domain.vesivaylat.alus :as alus]))
 
-(deftest
+(deftest kasiteltavien-alusten-kaivaminen
   (is (= #{1 2 3 4}
          (#'ais/kasiteltavat-alukset*
            [{::alus/mmsi 1

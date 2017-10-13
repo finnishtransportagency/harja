@@ -26,12 +26,12 @@
 (def ^{:const true} oletus-toleranssi 50)
 
 (defn urakoiden-alueet
-  [db user oikeus urakka-idt toleranssi]
+  [db user oikeus-fn urakka-idt toleranssi]
   (when-not (empty? urakka-idt)
     (into []
           (comp
             (filter (fn [{:keys [urakka_id]}]
-                      (oikeudet/voi-lukea? oikeus urakka_id user)))
+                      (oikeus-fn urakka_id user)))
             (harja.geo/muunna-pg-tulokset :urakka_alue)
             (harja.geo/muunna-pg-tulokset :alueurakka_alue)
             (map konv/alaviiva->rakenne))
