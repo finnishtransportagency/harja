@@ -6,6 +6,7 @@
             [harja.palvelin.palvelut.interpolointi :as interpolointi]
             [harja.testi :refer :all]
             [harja.paneeliapurit :as paneeli]
+            [harja.domain.oikeudet :as oikeudet]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.kyselyt.konversio :as konv]
@@ -17,7 +18,8 @@
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.fim :as fim]
-            [harja.transit :as transit])
+            [harja.transit :as transit]
+            [harja.domain.ely :as ely])
   (:use org.httpkit.fake))
 
 
@@ -45,14 +47,14 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :once (compose-fixtures jarjestelma-fixture urakkatieto-fixture))
 
 (def alku (c/to-date (t/local-date 2000 1 1)))
 (def loppu (c/to-date (t/local-date 2030 1 1)))
 (def urakoitsija nil)
 (def urakkatyyppi :hoito)
 
-(def parametrit-laaja-historia
+(def hakuargumentit-laaja-historia
   {:urakoitsija urakoitsija
    :urakkatyyppi urakkatyyppi
    :nykytilanne? false
@@ -112,7 +114,7 @@
           tk/l-ja-p-alueiden-puhdistus true
           tk/muu true}})
 
-(def parametrit-laaja-nykytilanne (assoc parametrit-laaja-historia :nykytilanne? true))
+(def parametrit-laaja-nykytilanne (assoc hakuargumentit-laaja-historia :nykytilanne? true))
 
 (defn aseta-filtterit-falseksi [parametrit ryhma]
   (assoc parametrit ryhma (reduce
@@ -121,24 +123,28 @@
                             (ryhma parametrit)
                             (keys (ryhma parametrit)))))
 
+(defn hae-urakat-tilannekuvaan [kayttaja parametrit]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakat-tilannekuvaan kayttaja
+                  {:nykytilanne? (:nykytilanne? parametrit)
+                   :alku (:alku parametrit)
+                   :loppu (:loppu parametrit)
+                   :urakoitsija (:urakoitsija parametrit)
+                   :urakkatyyppi (:urakkatyyppi parametrit)}))
+
 (defn hae-tk
-  ([parametrit] (hae-tk +kayttaja-jvh+ parametrit))
-  ([kayttaja parametrit]
-   (let [urakat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakat-tilannekuvaan kayttaja
-                                {:nykytilanne? (:nykytilanne? parametrit)
-                                 :alku (:alku parametrit)
-                                 :loppu (:loppu parametrit)
-                                 :urakoitsija (:urakoitsija parametrit)
-                                 :urakkatyyppi (:urakkatyyppi parametrit)})
-         urakat (into #{} (mapcat
-                            (fn [aluekokonaisuus]
-                              (map :id (:urakat aluekokonaisuus)))
-                            urakat))]
+  ([hakuargumentit] (hae-tk +kayttaja-jvh+ hakuargumentit nil))
+  ([kayttaja hakuargumentit] (hae-tk kayttaja hakuargumentit nil))
+  ([kayttaja hakuargumentit urakka-idt]
+   (let [haun-urakka-idt (or urakka-idt
+                             (mapcat
+                               (fn [aluekokonaisuus]
+                                 (map :id (:urakat aluekokonaisuus)))
+                               (hae-urakat-tilannekuvaan kayttaja hakuargumentit)))]
      (kutsu-palvelua (:http-palvelin jarjestelma)
                      :hae-tilannekuvaan kayttaja
-                     (tk/valitut-suodattimet (assoc parametrit
-                                               :urakat urakat))))))
+                     (tk/valitut-suodattimet (assoc hakuargumentit
+                                               :urakat (set haun-urakka-idt)))))))
 
 (defn hae-klikkaus
   ([koordinaatti taso suodattimet] (hae-klikkaus +kayttaja-jvh+ koordinaatti taso suodattimet))
@@ -154,7 +160,7 @@
                                             (java.net.URLEncoder/encode))}}))))
 
 (deftest hae-asioita-tilannekuvaan
-  (let [vastaus (hae-tk parametrit-laaja-historia)]
+  (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
     (is (>= (count (:toteumat vastaus)) 1))
     ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
     (is (> (count (distinct (map :toimenpidekoodi (:toteumat vastaus)))) 1))
@@ -168,12 +174,12 @@
     (is (>= (count (:tietyoilmoitukset vastaus)) 1))))
 
 (deftest ala-hae-laatupoikkeamia
-  (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :laatupoikkeamat)
+  (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :laatupoikkeamat)
         vastaus (hae-tk parametrit)]
     (is (= (count (:laatupoikkeamat vastaus)) 0))))
 
 (deftest ala-hae-toteumia
-  (let [parametrit (-> parametrit-laaja-historia
+  (let [parametrit (-> hakuargumentit-laaja-historia
                        (aseta-filtterit-falseksi :kesa)
                        (aseta-filtterit-falseksi :talvi))
         vastaus (hae-tk parametrit)]
@@ -181,40 +187,40 @@
 
 ;; Urakkatyyppi ei vaikuta enää hakutuloksiin
 (deftest urakkatyyppi-filter-toimii
-  (let [parametrit (assoc parametrit-laaja-historia :urakkatyyppi :paallystys)
+  (let [parametrit (assoc hakuargumentit-laaja-historia :urakkatyyppi :paallystys)
         vastaus (hae-tk parametrit)]
     (is (= (count (:toteumat vastaus)) 3))))
 
 (deftest ala-hae-tarkastuksia
-  (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :tarkastukset)
+  (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :tarkastukset)
         vastaus (hae-tk parametrit)]
     (is (= (count (:tarkastukset vastaus)) 0))))
 
 (deftest ala-hae-turvallisuuspoikkeamia
-  (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :turvallisuus)
+  (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :turvallisuus)
         vastaus (hae-tk parametrit)]
     (is (= (count (:turvallisuus vastaus)) 0))))
 
 (deftest ala-hae-tietyoilmoituksia
-  (let [parametrit (aseta-filtterit-falseksi parametrit-laaja-historia :tietyoilmoitukset)
+  (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :tietyoilmoitukset)
         vastaus (hae-tk parametrit)]
     (is (= (count (:tietyoilmoitukset vastaus)) 0))))
 
 (deftest ala-hae-ilmoituksia
-  (let [parametrit (assoc parametrit-laaja-historia :ilmoitukset {:tyypit {:toimenpidepyynto false
-                                                                           :kysely false
-                                                                           :tiedoitus false}
-                                                                  :tilat #{:avoimet :suljetut}})
+  (let [parametrit (assoc hakuargumentit-laaja-historia :ilmoitukset {:tyypit {:toimenpidepyynto false
+                                                                               :kysely false
+                                                                               :tiedoitus false}
+                                                                      :tilat #{:avoimet :suljetut}})
         vastaus (hae-tk parametrit)]
     (is (= (count (:ilmoitukset vastaus)) 0))))
 
 (deftest ala-hae-tyokoneita-historianakymaan
-  (let [vastaus (hae-tk parametrit-laaja-historia)]
+  (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
     (is (= (count (:tyokoneet vastaus)) 0))))
 
 (deftest loyda-vahemman-asioita-tiukalla-aikavalilla
-  (let [vastaus-pitka-aikavali (hae-tk parametrit-laaja-historia)
-        parametrit (-> parametrit-laaja-historia
+  (let [vastaus-pitka-aikavali (hae-tk hakuargumentit-laaja-historia)
+        parametrit (-> hakuargumentit-laaja-historia
                        (assoc :alku (c/to-date (t/local-date 2005 1 1)))
                        (assoc :loppu (c/to-date (t/local-date 2010 1 1))))
         vastaus-lyhyt-aikavali (hae-tk parametrit)]
@@ -222,21 +228,21 @@
            (count (:toteumat vastaus-pitka-aikavali))))))
 
 (deftest hae-tyokoneet-nykytilaan
-  (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
+  (let [parametrit (assoc hakuargumentit-laaja-historia :nykytilanne? true)
         vastaus (hae-tk parametrit)]
     ;; Työkonetehtäviä löytyi
     (is (not (empty? (:tehtavat (:tyokoneet vastaus)))))))
 
 (deftest ala-hae-toteumia-liian-lahelle-zoomatussa-historianakymassa
-  (let [parametrit (assoc parametrit-laaja-historia :alue {:xmin 0,
-                                                           :ymin 0,
-                                                           :xmax 1,
-                                                           :ymax 1})
+  (let [parametrit (assoc hakuargumentit-laaja-historia :alue {:xmin 0,
+                                                               :ymin 0,
+                                                               :xmax 1,
+                                                               :ymax 1})
         vastaus (hae-tk parametrit)]
     (is (= (count (:toteumat vastaus)) 0))))
 
 (deftest ala-hae-tyokoneita-liian-lahelle-zoomatussa-nykytilannenakymassa
-  (let [parametrit (-> parametrit-laaja-historia
+  (let [parametrit (-> hakuargumentit-laaja-historia
                        (assoc :alue {:xmin 0,
                                      :ymin 0,
                                      :xmax 1,
@@ -258,7 +264,7 @@
 
 
 (deftest vain-tilaaja-ja-urakoitsija-itse-nakee-urakattomat-tyokoneet
-  (let [parametrit (assoc parametrit-laaja-historia :nykytilanne? true)
+  (let [parametrit (assoc hakuargumentit-laaja-historia :nykytilanne? true)
         urakoitsija (hae-oulun-alueurakan-2005-2012-urakoitsija)
         hae #(let [vastaus (hae-tk % parametrit)
                    tehtavat (:tehtavat (:tyokoneet vastaus))]
@@ -316,7 +322,7 @@
 
 (deftest infopaneelin-skeemojen-luonti
   (testing "Frontilla piirrettäville jutuille saadaan tehtyä skeemat."
-    (let [vastaus (hae-tk parametrit-laaja-historia)]
+    (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyomaa (:tietyomaat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
                                                        #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
@@ -362,12 +368,15 @@
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama tyokone))))))
 
 (deftest klikatun-paallystyksen-infopaneeli
-  (let [ei-loydy-koordinaatti [392327.9999989789 7212239.931808539]
+  (let [urakat (set (map :id (q-map "SELECT id FROM urakka")))
+        ei-loydy-koordinaatti [392327.9999989789 7212239.931808539]
         ei-loydy-vastaus (hae-klikkaus ei-loydy-koordinaatti :tilannekuva-paallystys
-                                       parametrit-laaja-historia)
-        loytyy-koordinaatti   [445582.99999998405 7224316.998934508]
+                                       (assoc hakuargumentit-laaja-historia
+                                         :urakat urakat))
+        loytyy-koordinaatti [445582.99999998405 7224316.998934508]
         loytyy-vastaus (hae-klikkaus loytyy-koordinaatti :tilannekuva-paallystys
-                                     parametrit-laaja-historia)]
+                                     (assoc hakuargumentit-laaja-historia
+                                       :urakat urakat))]
 
     (is (= [] ei-loydy-vastaus) "Ahvenanmaan keskeltä ei löydy päällystyskohteita")
 
@@ -377,3 +386,75 @@
     (is (= "Oulun kohdeosa" (get-in loytyy-vastaus [0 :nimi])))
 
     (is (paneeli/skeeman-luonti-onnistuu-kaikille? loytyy-vastaus))))
+
+(deftest hae-urakat-tilannekuvaan-jvh
+  (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+    (is (>= (count elynumerot) 6)
+        "JVH:n pitäisi nähdä aika monta ELYä")))
+
+(deftest hae-urakat-tilannekuvaan-ei-nay-mitaan
+  (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ hakuargumentit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+
+    (is (= (count elynumerot) 0))))
+
+(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
+  ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
+  ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
+  (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
+        eka-ely (first elynumerot)]
+
+    (is (= eka-ely 12))
+    (is (every? #(= % eka-ely) elynumerot)
+        "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
+
+(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
+  ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
+  (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+    (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+      (is (every?
+            (fn [hy]
+              (every?
+                (fn [u] (some? (:alue u)))
+                (:urakat hy)))
+            vastaus))
+      (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
+             [{:tyyppi :hoito
+               :hallintayksikko {:id 12
+                                 :nimi "Pohjois-Pohjanmaa"
+                                 :elynumero 12}
+               :urakat #{{:id 4
+                          :nimi "Oulun alueurakka 2014-2019"
+                          :alue nil}}}])))))
+
+(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
+  (let [vastaus-ilman-lisaoikeutta
+        ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
+        (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+          (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))
+        vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
+        (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+
+    ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
+
+    (is (> (count (:turvallisuuspoikkeamat vastaus-lisaoikeudella))
+           (count (:turvallisuuspoikkeamat vastaus-ilman-lisaoikeutta))))
+
+    (is (> (count (:toteumat vastaus-lisaoikeudella))
+           (count (:toteumat vastaus-ilman-lisaoikeutta))))
+
+    (is (> (count (:laatupoikkeamat vastaus-lisaoikeudella))
+           (count (:laatupoikkeamat vastaus-ilman-lisaoikeutta))))))
+
+(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-liikaa-urakoita
+  ;; Pyydetään hakemaan asiat tilannekuvaan kaikista urakoista, mutta saamme saman vastauksen kuin
+  ;; haettaessa vain niistä urakoista, joihin käyttäjällä on hakuoikeus.
+  ;; Tällä osoitetaan, että palvelu rajaa haettavat urakat vain niihin, joilla käyttäjällä on oikeus.
+  (let [hyokkaus-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava)
+                                 hakuargumentit-laaja-historia
+                                 (map :id (q-map "SELECT id FROM urakka")))
+        normaali-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+
+    (is (= normaali-vastaus hyokkaus-vastaus))))

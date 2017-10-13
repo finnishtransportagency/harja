@@ -669,6 +669,28 @@
                      :organisaation-urakat #{}
                      :urakkaroolit {}})
 
+(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
+                          :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
+                          :roolit #{}
+                          :urakkaroolit {}
+                          :organisaatioroolit {14 #{"Kayttaja"}}
+                          :organisaation-urakat #{1 4 20 22}})
+
+(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
+                      :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
+                      :roolit #{}
+                      :urakkaroolit {}
+                      :organisaatioroolit {16 #{"Kayttaja"}}
+                      :organisaation-urakat #{2 21}})
+
+;; Sepolla ei ole oikeutta mihinkään. :(
+(def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmalli"
+                      :organisaatio nil
+                      :roolit #{}
+                      :urakkaroolit {}
+                      :organisaatioroolit {}
+                      :organisaation-urakat #{}})
+
 (def +kayttaja-urakan-vastuuhenkilo+
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]
     {:organisaation-urakat #{urakka-id}
@@ -684,20 +706,6 @@
                     :nimi "YIT Rakennus Oy"
                     :tyyppi "urakoitsija"}
      :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
-
-(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
-                          :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
-                          :roolit #{}
-                          :urakkaroolit {}
-                          :organisaatioroolit {14 #{"Kayttaja"}}
-                          :organisaation-urakat #{1 4 20 22}})
-
-(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
-                      :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
-                      :roolit #{}
-                      :urakkaroolit {}
-                      :organisaatioroolit {16 #{"Kayttaja"}}
-                      :organisaation-urakat #{2 21}})
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -729,19 +737,26 @@
 
 (use-fixtures :once urakkatieto-fixture)
 
-(defn oulun-urakan-tilaajan-urakanvalvoja []
+(defn oulun-2005-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id, #{"ELY_Urakanvalvoja"}}})
 
-(defn oulun-urakan-urakoitsijan-urakkavastaava []
+(defn oulun-2005-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
    :roolit #{}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id #{"vastuuhenkilo"}}})
+
+(defn oulun-2014-urakan-urakoitsijan-urakkavastaava []
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{}, :id 17, :etunimi "Yitin",
+   :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"vastuuhenkilo"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

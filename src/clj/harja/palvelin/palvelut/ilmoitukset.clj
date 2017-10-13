@@ -131,8 +131,10 @@
                                                  urakka-id
                                                  kayttaja))
                   urakka urakoitsija
-                  (if (= :kaikki urakkatyyppi)
-                    nil
+                  (case urakkatyyppi
+                    :kaikki nil
+                    ; Ao. vesivayla-käsittely estää kantapoikkeuksen. Jos väylävalitsin tulee, tämä voidaan ehkä poistaa
+                    :vesivayla :vesivayla-hoito
                     urakkatyyppi)
                   hallintayksikko
                   (first aikavali) (second aikavali))

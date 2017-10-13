@@ -473,3 +473,10 @@
 
 (defn ensimmainen-hoitokausi? [urakka hoitokausi]
   (= hoitokausi (first (hoito-tai-sopimuskaudet urakka))))
+
+(defn yllapidon-palvelusopimus? [ur]
+  (or
+    (and (= (:tyyppi ur) :paallystys)
+         (= (:sopimustyyppi ur) :palvelusopimus))
+    (and (= (:tyyppi ur) :tiemerkinta)
+         (= (:sopimustyyppi ur) :palvelusopimus))))
