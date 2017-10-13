@@ -19,7 +19,8 @@
   ["vv_alus_sijainti" ::aluksen-sijainti
    {"alus" ::alus-mmsi}]
   ["vv_alus_urakka" ::urakan-aluksen-kaytto
-   {"lisatiedot" ::urakan-aluksen-kayton-lisatiedot}])
+   {"alus" ::urakan-alus-mmsi
+    "lisatiedot" ::urakan-aluksen-kayton-lisatiedot}])
 
 (def perustiedot #{::mmsi ::nimi ::lisatiedot})
 
@@ -42,7 +43,7 @@
   (s/coll-of ::alus))
 
 (s/def ::urakan-tallennettava-alus
-  (s/keys :req [::alus/mmsi
+  (s/keys :req [::mmsi
                 ::urakan-aluksen-kayton-lisatiedot]))
 
 (s/def ::urakan-tallennettavat-alukset
