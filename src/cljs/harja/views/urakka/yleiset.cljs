@@ -503,7 +503,7 @@
             :tyhja "Ei aluksia"
             :tunniste ::alus/mmsi
             :tallenna #(log "LOGITUS")}
-           [{:otsikko "Alus"
+           [{:otsikko "Alus" ;; TODO Mahdollista saman valinta vain kerran (filter tai validointi)
              :nimi ::alus/mmsi
              :tyyppi :valinta
              :valinnat @urakoitsijan-alukset

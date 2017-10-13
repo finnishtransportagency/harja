@@ -17,7 +17,9 @@
   ["vv_alus" ::alus
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot]
   ["vv_alus_sijainti" ::aluksen-sijainti
-   {"alus" ::alus-mmsi}])
+   {"alus" ::alus-mmsi}]
+  ["vv_alus_urakka" ::urakan-aluksen-kaytto
+   {"lisatiedot" ::urakan-aluksen-kayton-lisatiedot}])
 
 (def perustiedot #{::mmsi ::nimi ::lisatiedot})
 
@@ -38,6 +40,9 @@
 
 (s/def ::hae-kaikki-alukset-vastaus
   (s/coll-of ::alus))
+
+(s/def ::tallenna-urakan-alukset
+  (s/coll-of (s/keys :req [::alus/mmsi ::urakan-aluksen-kayton-lisatiedot])))
 
 (defn alus-mmsilla [mmsi alukset]
   (first (filter #(= (::mmsi %) mmsi) alukset)))

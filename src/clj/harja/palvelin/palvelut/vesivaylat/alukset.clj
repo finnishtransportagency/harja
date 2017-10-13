@@ -40,6 +40,10 @@
                          alus/perustiedot
                          {})))
 
+(defn tallenna-urakan-alukset [db user tiedot]
+  ;; TODO Oikeustarkistus + testi sille
+  (log/debug "TALLENTELEPA ALUKSET!"))
+
 (defrecord Alukset []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -64,6 +68,13 @@
       (fn [user tiedot]
         (hae-kaikki-alukset db user tiedot))
       {:kysely-spec ::alus/hae-kaikki-alukset-kysely
+       :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
+    (julkaise-palvelu
+      http
+      :tallenna-urakan-alukset
+      (fn [user tiedot]
+        (hae-kaikki-alukset db user tiedot))
+      {:kysely-spec ::alus/tallenna-urakan-alukset
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     this)
 
