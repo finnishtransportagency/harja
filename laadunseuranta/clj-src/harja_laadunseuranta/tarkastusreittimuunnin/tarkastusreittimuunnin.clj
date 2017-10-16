@@ -453,6 +453,8 @@
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
+  (when-not (:id kayttaja)
+    (log/error "LS-työkalun tallenna-tarkastus! ei sisältänyt käyttäjätietoa! tarkastus: " tarkastus ", kayttaja: " kayttaja))
   (let [tarkastus (luo-kantaan-tallennettava-tarkastus db tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus
