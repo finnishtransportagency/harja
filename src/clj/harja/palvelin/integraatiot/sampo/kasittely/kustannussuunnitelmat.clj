@@ -13,7 +13,7 @@
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.konversio :as konversio])
-  (:use [slingshot.slingshot :only [throw+]])
+  (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (java.util UUID Calendar TimeZone)))
 
 (defn hae-kustannussuunnitelman-maksuera [db lahetys-id]
@@ -79,7 +79,7 @@
     ; Hoitotuotteet 110 - 150, 536
     (if (nil? tuotenumero)
       (let [viesti (format "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui (numero %s)." numero)]
-        (log/warn viesti)
+        #_(log/warn viesti)
         (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
                  :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
                             :viesti viesti}]}))
@@ -114,7 +114,7 @@
 (defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
   (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
   (if (kustannussuunnitelmat/onko-olemassa? db numero)
-    (try
+    (try+
       (if (lukitse-kustannussuunnitelma db numero)
         (let [jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
               muodosta-sanoma #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))]
@@ -123,8 +123,9 @@
             (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
             (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))))
         (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
-      (catch Exception e
-        (log/warn e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+      (catch Object e
+        (when-not (every? #(= :lpk-tilinnumeroa-ei-voi-paatella (:koodi %)) (:virheet e))
+          (log/warn e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e)))
         (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)

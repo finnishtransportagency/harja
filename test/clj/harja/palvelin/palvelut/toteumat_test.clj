@@ -98,12 +98,12 @@
     ;; Testaa virheellinen päivitys vaihtamalla urakka
 
     (let [ek-id (:id lisatty)
-          _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-erilliskustannus +kayttaja-jvh+
-                                  (assoc ek
-                                    :id ek-id
-                                    :indeksin_nimi "MAKSU 2015"
-                                    :urakka-id @oulun-alueurakan-2014-2019-id))
+          _ (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                           :tallenna-erilliskustannus +kayttaja-jvh+
+                                                           (assoc ek
+                                                             :id ek-id
+                                                             :indeksin_nimi "MAKSU 2015"
+                                                             :urakka-id @oulun-alueurakan-2014-2019-id))))
           urakka (ffirst (q (str "SELECT urakka FROM erilliskustannus WHERE id = " ek-id ";")))
           indeksin-nimi (ffirst (q (str "SELECT indeksin_nimi FROM erilliskustannus WHERE id = " ek-id ";")))]
       (is (= urakka @oulun-alueurakan-2005-2010-id) "Virheellistä urakkaa ei päivitetty")
@@ -166,11 +166,11 @@
 
     (try
       (let [toteuma-id (get-in lisatty [:toteuma :id])
-           _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                                   :tallenna-muiden-toiden-toteuma +kayttaja-jvh+
-                                   (assoc tyo
-                                     :toteuma {:id toteuma-id}
-                                     :urakka-id @oulun-alueurakan-2014-2019-id))])
+            _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-muiden-toiden-toteuma +kayttaja-jvh+
+                              (assoc tyo
+                                :toteuma {:id toteuma-id}
+                                :urakka-id @oulun-alueurakan-2014-2019-id))])
       (is false "Päivitys sallittiin virheellisesti")
       (catch Exception e
         (is true "Päivitystä ei sallittu")))
@@ -247,8 +247,8 @@
                                        :tehtava-id (get-in toteuma
                                                            [:tehtavat 0 :tehtava-id])}])
             muokattu (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
-                                    +kayttaja-jvh+ muokattu-tyo)
+                                     :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+                                     +kayttaja-jvh+ muokattu-tyo)
             summat-muokkauksen-jalkeen (hae-summat)]
 
         (is (= (get-in muokattu [:toteuma :tehtavat 0 :toimenpidekoodi]) 1369))
@@ -276,6 +276,15 @@
         (u
           (str "DELETE FROM toteuma
                     WHERE id = " toteuma-id))))))
+
+(deftest hae-urakan-toteuma-kun-toteuma-ei-kuulu-urakkaan
+  (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka != " @oulun-alueurakan-2014-2019-id
+                              " AND tyyppi = 'yksikkohintainen' LIMIT 1;"))]
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :urakan-toteuma
+                                                   +kayttaja-jvh+
+                                                   {:urakka-id @oulun-alueurakan-2014-2019-id
+                                                    :toteuma-id toteuma-id})))))
 
 (deftest tallenna-toteuma-ja-toteumamateriaalit-test
   (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka=" @oulun-alueurakan-2005-2010-id)))
@@ -353,11 +362,11 @@
 
     (is (some? toteuma-id))
 
-    ;; Tilaajan käyttäjä voi hakea siirtymätiedot
+    ;; JVH voi hakea siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-jvh+))
 
-    ;; Eri urakoitsijalla palautuu tyhjät tiedot
-    (is (= ei-ok-tulos (hae +kayttaja-yit_uuvh+)))
+    ;; Eri urakoitsijalla palautuu poikkeus oikeustarkistuksessa
+    (is (thrown? Exception (hae +kayttaja-yit_uuvh+)))
 
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))

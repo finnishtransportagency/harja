@@ -73,35 +73,38 @@
   (is (= false (tk/uusi-tai-vanha-suodattimen-arvo false nil))) "Jos vanha arvo löytyy, käytä sitä")
 
 (deftest yhdista-aluesuodattimet
-  (is (empty? (tk/yhdista-aluesuodattimet {} {})))
-  ;; Yhdistämisen pitäisi toimia niin, että aina kunnioitetaan uutta rakennetta,
-  ;; mutta jos urakalle löytyy boolean arvo vanhasta rakenteesta, valitaan se
-  ;; Erikoishuomio on, että uudessa arvossa hallintayksikkö on {:nimi :foo}, mutta vanhassa ja tuloksessa
-  ;; vain :foo
-  (is (= {:hoito {:lappi {{:nimi :kuusamo :id 1} false}}}
-         (tk/yhdista-aluesuodattimet nil
-                                     {:hoito {{:nimi :lappi :id 1} {{:nimi :kuusamo :id 1} false}}}))
-      "Tyhjillä vanhoilla arvoilla palautetaan vaan uudet arvot")
-  (is (= {:hoito {:lappi {{:nimi :kuusamo :id 1} false}}}
-         (tk/yhdista-aluesuodattimet {:hoito {:kainuu {{:nimi :kajaani :id 1} false}}}
-                                     {:hoito {{:nimi :lappi :id 1} {{:nimi :kuusamo :id 1} false}}}))
-      "Jos vanhat arvot on jotain ihan muuta, ne ei vaikuta lopputulokseen")
-  (is (= {:hoito {:lappi {{:nimi :kuusamo :id 1} true}}}
-         (tk/yhdista-aluesuodattimet {:hoito {:lappi {{:nimi :kuusamo :id 1} true}}}
-                                     {:hoito {{:nimi :lappi :id 1} {{:nimi :kuusamo :id 1} false}}}))
-      "Jos vanhoista arvoista löytyy sama urakka, käytetään sen arvoa")
-  (is (= {:hoito {:lappi {{:nimi :kuusamo :id 1} true}}}
-         (tk/yhdista-aluesuodattimet {:hoito {:lappi {{:nimi :kuusamo :id 1} true
-                                                      {:nimi :rovaniemi :id 2} false}}}
-                                     {:hoito {{:nimi :lappi :id 1} {{:nimi :kuusamo :id 1} false}}}))
-      "Vanhasta joukosta lopputulokseen vaikuttavat VAIN urakat, jotka ovat myös uudessa joukossa")
-  (is (= {:hoito {:lappi {{:nimi :kuusamo :id 1} true
-                          {:nimi :sodankyla :id 3} true}}}
-         (tk/yhdista-aluesuodattimet {:hoito {:lappi {{:nimi :kuusamo :id 1} true
-                                                      {:nimi :rovaniemi :id 2} false}}}
-                                     {:hoito {{:nimi :lappi :id 1} {{:nimi :kuusamo :id 1} false
-                                                                    {:nimi :sodankyla :id 3} true}}}))
-      "Uudesta joukosta täytyy palautua myös urakat, joita ei ole vanhassa joukossa"))
+  (let [ely-lappi {:nimi :lappi :id 1 :elynumero 666}
+        urakka-kuusamo {:nimi :kuusamo :id 1}
+        urakka-kajaani {:nimi :kajaani :id 1}
+        urakka-rovaniemi {:nimi :rovaniemi :id 2}
+        urakka-sodankyla {:nimi :sodankyla :id 3}]
 
-
-
+    (is (empty? (tk/yhdista-aluesuodattimet {} {})))
+    ;; Yhdistämisen pitäisi toimia niin, että aina kunnioitetaan uutta rakennetta,
+    ;; mutta jos urakalle löytyy boolean arvo vanhasta rakenteesta, valitaan se
+    ;; Erikoishuomio on, että uudessa arvossa hallintayksikkö on {:nimi :foo}, mutta vanhassa ja tuloksessa
+    ;; vain :foo
+    (is (= {:hoito {666 {urakka-kuusamo false}}}
+           (tk/yhdista-aluesuodattimet nil
+                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+        "Tyhjillä vanhoilla arvoilla palautetaan vaan uudet arvot")
+    (is (= {:hoito {666 {urakka-kuusamo false}}}
+           (tk/yhdista-aluesuodattimet {:hoito {123 {urakka-kajaani false}}}
+                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+        "Jos vanhat arvot on jotain ihan muuta, ne ei vaikuta lopputulokseen")
+    (is (= {:hoito {666 {urakka-kuusamo true}}}
+           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true}}}
+                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+        "Jos vanhoista arvoista löytyy sama urakka, käytetään sen arvoa")
+    (is (= {:hoito {666 {urakka-kuusamo true}}}
+           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true
+                                                        urakka-rovaniemi false}}}
+                                       {:hoito {ely-lappi {urakka-kuusamo false}}}))
+        "Vanhasta joukosta lopputulokseen vaikuttavat VAIN urakat, jotka ovat myös uudessa joukossa")
+    (is (= {:hoito {666 {urakka-kuusamo true
+                         urakka-sodankyla true}}}
+           (tk/yhdista-aluesuodattimet {:hoito {666 {urakka-kuusamo true
+                                                        urakka-rovaniemi false}}}
+                                       {:hoito {ely-lappi {urakka-kuusamo false
+                                                           urakka-sodankyla true}}}))
+        "Uudesta joukosta täytyy palautua myös urakat, joita ei ole vanhassa joukossa")))
