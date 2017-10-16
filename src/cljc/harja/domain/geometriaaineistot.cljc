@@ -13,7 +13,7 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["geometriaaineisto" ::geometria-aineistot  {}])
+  ["geometriaaineisto" ::geometria-aineistot {}])
 
 (def kaikki-kentat
   #{::id

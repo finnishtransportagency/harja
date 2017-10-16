@@ -8,19 +8,29 @@
             [harja.id :refer [id-olemassa?]]
             [clojure.java.jdbc :as jdbc]))
 
-(defn hae-geometriapaivitykset [db user]
+(defn hae-geometria-aineistot [db user]
   ;; todo: lisää oikeustarkastus
   (geometria-aineistot/hae-geometria-aineistot db))
+
+(defn tallenna-geometria-aineistot [db user geometria-aineistot]
+  ;;todo: lisää oikeustarkastus
+  (println "--->>> " geometria-aineistot)
+  (doseq [aineisto geometria-aineistot]
+    (geometria-aineistot/tallenna-geometria-aineisto db aineisto)))
 
 (defrecord Geometria-aineistot []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
     (julkaise-palvelu http :hae-geometria-aineistot
                       (fn [user _]
-                        (hae-geometriapaivitykset db user)))
+                        (hae-geometria-aineistot db user)))
+    (julkaise-palvelu http :tallenna-geometria-aineistot
+                      (fn [user geometria-aineistot]
+                        (tallenna-geometria-aineistot db user geometria-aineistot)))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
-                     :hae-geometria-aineistot)
+                     :hae-geometria-aineistot
+                     :tallenna-geometria-aineistot)
     this))

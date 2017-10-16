@@ -6,19 +6,25 @@
             [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :as async]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.loki :refer [log]]
+            [harja.tyokalut.tuck :as tuck-apurit])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tila
          (atom {:nakymassa? false
                 :geometria-aineistot nil
-                :haku-kaynnissa? false}))
+                :haku-kaynnissa? false
+                :tallennus-kaynnissa? false}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeGeometria-aineistot [])
 (defrecord Geometria-aineistotHaettu [geometria-aineistot])
 (defrecord Geometria-ainestojenHakuEpaonnistui [])
+(defrecord TallennaGeometria-ainestot [geometria-aineistot paluukanava])
+(defrecord Geometria-aineistotTallennettu [])
+(defrecord Geometria-ainestojenTallennusEpaonnistui [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -27,16 +33,16 @@
 
   HaeGeometria-aineistot
   (process-event [_ app]
-    (let [tulos! (tuck/send-async! ->Geometria-aineistotHaettu)
-          fail! (tuck/send-async! ->Geometria-ainestojenHakuEpaonnistui)]
+    (let [onnistui! (tuck/send-async! ->Geometria-aineistotHaettu)
+          virhe! (tuck/send-async! ->Geometria-ainestojenHakuEpaonnistui)]
       (go
         (try
           (let [vastaus (async/<! (k/post! :hae-geometria-aineistot {}))]
             (if (k/virhe? vastaus)
-              (fail! vastaus)
-              (tulos! vastaus)))
+              (virhe! vastaus)
+              (onnistui! vastaus)))
           (catch :default e
-            (fail! nil)
+            (virhe! nil)
             (throw e)))))
     (assoc app :haku-kaynnissa? true))
 
@@ -48,4 +54,28 @@
   Geometria-ainestojenHakuEpaonnistui
   (process-event [_ app]
     (viesti/nayta! [:span "Virhe geometria-aineistojen haussa!"] :danger)
-    (assoc app :haku-kaynnissa? false)))
+    (assoc app :haku-kaynnissa? false))
+
+  TallennaGeometria-ainestot
+  (process-event [{geometria-aineistot :geometria-aineistot ch :paluukanava} app]
+    (if-not (:tallennus-kaynnissa? app)
+      (let [geometria-aineistot (map #(dissoc % ::geometria-ainestot/id) geometria-aineistot)]
+        (-> app
+           (tuck-apurit/palvelukutsu :tallenna-geometria-aineistot
+                                     geometria-aineistot
+                                     {:onnistui ->Geometria-aineistotTallennettu
+                                      :onnistui-parametrit [ch]
+                                      :epaonnistui ->Geometria-ainestojenTallennusEpaonnistui
+                                      :epaonnistui-parametrit [ch]})
+           (assoc :tallennus-kaynnissa? true)))
+      app))
+  
+  Geometria-aineistotTallennettu
+  (process-event [_ app]
+    ;; todo: näytä ilmoitus
+    app)
+
+  Geometria-ainestojenTallennusEpaonnistui
+  (process-event [_ app]
+    ;; todo: näytä ilmoitus
+    app))
