@@ -261,15 +261,15 @@
 
 (defn- tyokoneiden-toimenpiteet
   "Palauttaa haettavat tehtävä työkonekyselyille"
-  [talvi kesa yllapito]
+  [talvi kesa yllapito tilaajan-laadunvalvonta]
   (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
-        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
+        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito tilaajan-laadunvalvonta))]
     (konv/seq->array haettavat-toimenpiteet)))
 
 (defn- hae-tyokoneiden-selitteet
   [db user
    {:keys [alue alku loppu talvi kesa urakka-id hallintayksikko nykytilanne?
-           yllapito toleranssi] :as optiot}
+           yllapito tilaajan-laadunvalvonta toleranssi] :as optiot}
    urakat]
   (when nykytilanne?
     (let [rivit (q/hae-tyokoneselitteet
@@ -279,7 +279,9 @@
                     {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
                      :organisaatio (:id (:organisaatio user))
                      :urakat urakat
-                     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
+                     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito
+                                                             (when (roolit/tilaajan-kayttaja? user)
+                                                               tilaajan-laadunvalvonta))
                      :alku alku
                      :loppu loppu}))
           tehtavat (into #{}
@@ -702,6 +704,7 @@ paallystyskohdeosan-tiedot-xf
     ;; Tämä palvelu palauttaa tilannekuvaan asiat, jotka piirretään frontilla
     (julkaise-palvelu http :hae-tilannekuvaan
                       (fn [user tiedot]
+                        (log/debug "TIEDOT: " (pr-str tiedot))
                         (hae-tilannekuvaan db user tiedot)))
     (julkaise-palvelu http :hae-urakat-tilannekuvaan
                       (fn [user tiedot]

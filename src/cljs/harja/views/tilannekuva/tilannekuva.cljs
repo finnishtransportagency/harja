@@ -276,7 +276,7 @@ suodatinryhmat
       (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
         [:div.tk-yksittaiset-suodattimet.fontti-taso3
          [yksittainen-suodatincheckbox "Laadunvalvonta"
-          tiedot/suodattimet [:tilaajan-laadunvalvonta tk/varustetoteumat]]])]]))
+          tiedot/suodattimet [:tilaajan-laadunvalvonta tk/tilaajan-laadunvalvonta]]])]]))
 
 (defn nykytilanne-valinnat []
   [:span.tilannekuva-nykytilanne-valinnat
