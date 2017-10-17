@@ -58,7 +58,9 @@
           (specql/insert!
             db
             ::alus/urakan-aluksen-kaytto
-            alus)))
+            {::alus/urakan-alus-mmsi (::alus/mmsi alus)
+             ::urakka/id urakka-id
+             ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
       (hae-urakan-alukset db user tiedot))))
 
 (defrecord Alukset []
