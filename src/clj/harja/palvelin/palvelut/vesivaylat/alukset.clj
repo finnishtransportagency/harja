@@ -92,7 +92,7 @@
       http
       :hae-kaikki-alukset
       (fn [user tiedot]
-        (hae-kaikki-alukset db user tiedot))
+        (hae-kaikki-alukset db user))
       {:kysely-spec ::alus/hae-kaikki-alukset-kysely
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     (julkaise-palvelu
