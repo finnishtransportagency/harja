@@ -502,7 +502,7 @@
            {:otsikko "Urakassa käytössä olevat alukset"
             :tyhja "Ei aluksia"
             :tunniste ::alus/mmsi
-            :tallenna #(tiedot/tallenna-urakan-alukset (:id ur) @urakan-alukset)}
+            :tallenna #(tiedot/tallenna-urakan-alukset (:id ur) urakan-alukset)}
            [{:otsikko "Alus" ;; TODO Mahdollista saman valinta vain kerran (filter tai validointi)
              :nimi ::alus/mmsi
              :tyyppi :valinta

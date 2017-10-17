@@ -9,7 +9,8 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce aikajana
@@ -79,10 +80,14 @@
   (when urakka-id
     (k/post! :hae-urakan-alukset {::urakka/id urakka-id})))
 
-(defn tallenna-urakan-alukset [urakka-id alukset]
-  (k/post! :tallenna-urakan-alukset {::urakka/id urakka-id
-                                     ::alus/urakan-tallennettavat-alukset
-                                     alukset}))
+(defn tallenna-urakan-alukset [urakka-id alukset-atom]
+  (go (let [vastaus (<! (k/post! :tallenna-urakan-alukset {::urakka/id urakka-id
+                                          ::alus/urakan-tallennettavat-alukset
+                                          @alukset-atom}))]
+        (log "[DEBUG] TALLENNETTU: " (pr-str vastaus))
+        (if (k/virhe? vastaus)
+          (viesti/nayta! "Virhe tallennettaessa aluksia" :danger)
+          (reset! alukset-atom vastaus)))))
 
 (defn hae-urakoitsijan-alukset [urakoitsija-id]
   (when urakoitsija-id

@@ -45,7 +45,6 @@
   ;; TODO Oikeustarkistus + testi sille
   (let [urakka-id (::urakka/id tiedot)
         alukset (::alus/urakan-tallennettavat-alukset tiedot)]
-    (log/debug "TALLENTELEPA ALUKSET: " tiedot)
     (jdbc/with-db-transaction [db db]
       (doseq [alus alukset]
         (if (::alus/mmsi alus)
