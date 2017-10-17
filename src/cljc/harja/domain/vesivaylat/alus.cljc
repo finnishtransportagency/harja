@@ -50,7 +50,7 @@
 (s/def ::urakan-tallennettavat-alukset
   (s/coll-of ::urakan-tallennettava-alus))
 
-(s/def ::tallenna-urakan-alukset
+(s/def ::tallenna-urakan-alukset-kysely
   (s/keys :req [::urakka/id ::urakan-tallennettavat-alukset]))
 
 (defn alus-mmsilla [mmsi alukset]

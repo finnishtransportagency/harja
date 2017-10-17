@@ -97,3 +97,15 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-urakoitsijan-alukset +kayttaja-ulle+
                                            {::organisaatio/id urakoitsija-id})))))
+
+(deftest tallenna-urakan-alukset
+  (let [alukset []
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        args {::urakka/id urakka-id
+              ::alus/urakan-tallennettavat-alukset alukset}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakan-alukset +kayttaja-ulle+
+                                args)]
+
+    (is (s/valid? ::alus/tallenna-urakan-alukset-kysely args))
+    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus vastaus))))

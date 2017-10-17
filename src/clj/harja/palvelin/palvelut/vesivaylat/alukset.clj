@@ -94,7 +94,7 @@
       :tallenna-urakan-alukset
       (fn [user tiedot]
         (tallenna-urakan-alukset db user tiedot))
-      {:kysely-spec ::alus/tallenna-urakan-alukset
+      {:kysely-spec ::alus/tallenna-urakan-alukset-kysely
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     this)
 
