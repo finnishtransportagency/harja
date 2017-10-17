@@ -36,7 +36,7 @@
     (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)})
     {:ns :harja.domain.vesivaylat.alus}))
 
-(defn hae-kaikki-alukset [db user tiedot]
+(defn hae-kaikki-alukset [db user]
   ;; TODO Oikeustarkistus
   (sort-by ::alus/mmsi (specql/fetch
                          db
