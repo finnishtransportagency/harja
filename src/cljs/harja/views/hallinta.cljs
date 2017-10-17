@@ -82,6 +82,5 @@
    "Järjestelmäasetukset"
    :jarjestelma-asetukset
    (when true
-     ;; todo: tee (oikeudet/hallinta-api-jarjestelmatunnukset)
      ^{:key "jarjestelma-asetukset"}
      [jarjestelma-asetukset/jarjestelma-asetukset])])

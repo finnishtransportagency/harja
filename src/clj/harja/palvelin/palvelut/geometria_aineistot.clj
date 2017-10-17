@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.geometria-aineistot
-  (:require [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
+  (:require [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
             [harja.domain.geometriaaineistot :as ga]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -11,11 +10,11 @@
             [clojure.java.jdbc :as jdbc]))
 
 (defn hae-geometria-aineistot [db user]
-  ;; todo: lisää oikeustarkastus
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset user)
   (geometria-aineistot/hae-geometria-aineistot db))
 
 (defn tallenna-geometria-aineistot [db user geometria-aineistot]
-  ;;todo: lisää oikeustarkastus
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-jarjestelmaasetukset user)
   (jdbc/with-db-transaction [db db]
     (doseq [aineisto geometria-aineistot]
       (if (:poistettu aineisto)
