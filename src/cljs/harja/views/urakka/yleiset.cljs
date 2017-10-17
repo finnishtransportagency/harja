@@ -521,7 +521,7 @@
              :nimi ::alus/urakan-aluksen-kayton-lisatiedot
              :tyyppi :string
              :leveys 4
-             :pituus-max 512}] ;; TODO myös kantaan tämä rajoite, TEXT -> VARCHAR
+             :pituus-max 512}]
            @urakan-alukset])))))
 
 (defn- nayta-yha-tuontidialogi-tarvittaessa
