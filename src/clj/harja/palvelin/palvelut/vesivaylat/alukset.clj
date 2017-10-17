@@ -20,7 +20,8 @@
             [specql.core :as specql]
             [specql.op :as op]
             [namespacefy.core :as namespacefy]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (defn hae-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus
@@ -56,15 +57,16 @@
             ::alus/urakan-aluksen-kaytto
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
+             ::m/muokattu (c/to-sql-time (t/now))
              ::m/poistettu? (or (:poistettu alus) false)}
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
           (specql/insert!
             db
             ::alus/urakan-aluksen-kaytto
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-             ::urakka-id urakka-id
+             ::alus/urakka-id urakka-id
              ::m/luoja-id (:id user)
-             ::m/luotu (t/now)
+             ::m/luotu (c/to-sql-time (t/now))
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
       (hae-urakan-alukset db user tiedot))))
 
