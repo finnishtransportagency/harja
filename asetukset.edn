@@ -103,9 +103,9 @@
                         :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV_silta.shz"
                         :siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
 
-                        :urakoiden-shapefile "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
-                        :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/PTV_Hoitourakat10_2016.shz"
-                        :urakoiden-tuontikohde "./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
+                        :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
+                        :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/[AINEISTO].shz"
+                        :urakoiden-tuontikohde "./shp/Hoitourakat/[AINEISTO].shz"
 
                         :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
                         :ely-alueiden-osoite "https://ava.liikennevirasto.fi/harja/ULKOISET_Elyt_infra.shz"
@@ -162,7 +162,7 @@
            }
 
  :ais-data {:url "https://meri.digitraffic.fi/api/v1/locations/latest"
-            :sekunnin-valein 60}
+            :sekunnin-valein 6000}
 
  :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
                  :paivittainen-tarkistusaika [12 22 00]

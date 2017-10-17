@@ -26,4 +26,3 @@
 
 (s/def ::geometria-aineistojen-tallennus (s/keys :req [::nimi ::tiedostonimi ::osoite]))
 
-

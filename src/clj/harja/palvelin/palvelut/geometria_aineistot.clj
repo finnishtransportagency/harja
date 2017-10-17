@@ -22,6 +22,12 @@
         (geometria-aineistot/tallenna-geometria-aineisto db aineisto))))
   (hae-geometria-aineistot db user))
 
+
+(defn rakenna-url [db aineiston-nimi url]
+  (let [aineisto (geometria-aineistot/hae-geometria-aineisto db aineiston-nimi)])
+  )
+
+
 (defrecord Geometria-aineistot []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]

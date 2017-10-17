@@ -16,6 +16,9 @@
 (defn hae-geometria-aineistot [db]
   (fetch db ::ga/geometria-aineistot ga/kaikki-kentat {}))
 
+(defn hae-geometria-aineisto [db nimi]
+  (first (fetch db ::ga/geometria-aineistot ga/kaikki-kentat {::ga/nimi nimi})))
+
 (defn tallenna-geometria-aineisto [db geometria-ainesto]
   (upsert! db ::ga/geometria-aineistot geometria-ainesto))
 

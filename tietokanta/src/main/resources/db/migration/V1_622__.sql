@@ -4,4 +4,6 @@ CREATE TABLE geometriaaineisto (
   tiedostonimi          TEXT         NOT NULL,
   "voimassaolo-alkaa"   TIMESTAMP,
   "voimassaolo-paattyy" TIMESTAMP
-)
+);
+
+CREATE UNIQUE INDEX uniikki_geometriaaineisto_nimi on geometriaaineisto(nimi);
