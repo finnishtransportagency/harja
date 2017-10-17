@@ -52,9 +52,9 @@
           (specql/update!
             db
             ::alus/urakan-aluksen-kaytto
-            {::alus/mmsi (::alus/mmsi alus)
+            {::alus/urakan-alus-mmsi (::alus/mmsi alus)
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)}
-            {::alus/mmsi (::alus/mmsi alus)})
+            {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
           (specql/insert!
             db
             ::alus/urakan-aluksen-kaytto
