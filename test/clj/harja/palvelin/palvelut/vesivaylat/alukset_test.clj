@@ -99,12 +99,14 @@
                                            {::organisaatio/id urakoitsija-id})))))
 
 (deftest tallenna-urakan-alukset
-  (let [alus-mmsit (map :mmsi (q-map "SELECT mmsi FROM vv_alus"))
-        uudet-alukset [{::alus/mmsi (first alus-mmsit)
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
+        alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = "urakka-id ";")))
+        vapaat-alukset (filter (comp not alukset-kaytossa) alus-mmsit)
+        uudet-alukset [{::alus/mmsi (first vapaat-alukset)
                         ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
-                       {::alus/mmsi (second alus-mmsit)
+                       {::alus/mmsi (second vapaat-alukset)
                         ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
         urakan-alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))
         args {::urakka/id urakka-id
               ::alus/urakan-tallennettavat-alukset uudet-alukset}
