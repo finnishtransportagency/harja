@@ -48,7 +48,7 @@
     (log/debug "TALLENTELEPA ALUKSET: " tiedot)
     (jdbc/with-db-transaction [db db]
       (doseq [alus alukset]
-        (if (::alus/mmsi)
+        (if (::alus/mmsi alus)
           (specql/update!
             db
             ::alus/urakan-aluksen-kaytto
