@@ -23,8 +23,8 @@
 (defrecord Geometria-aineistotHaettu [geometria-aineistot])
 (defrecord Geometria-ainestojenHakuEpaonnistui [])
 (defrecord TallennaGeometria-ainestot [geometria-aineistot paluukanava])
-(defrecord Geometria-aineistotTallennettu [])
-(defrecord Geometria-ainestojenTallennusEpaonnistui [])
+(defrecord Geometria-aineistotTallennettu [geometria-aineistot paluukanava])
+(defrecord Geometria-ainestojenTallennusEpaonnistui [geometria-aineistot paluukanava])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -70,10 +70,10 @@
       app))
   
   Geometria-aineistotTallennettu
-  (process-event [{geometria-aineistot :tulos ch :paluukanava} app]
+  (process-event [{geometria-aineistot :geometria-aineistot ch :paluukanava} app]
     (viesti/nayta! [:span "Geometria-aineistot tallennettu"] :success)
     (go (>! ch geometria-aineistot))
-    (assoc app :kiintiot geometria-aineistot
+    (assoc app :geometria-aineistot geometria-aineistot
                :tallennus-kaynnissa? false))
 
   Geometria-ainestojenTallennusEpaonnistui

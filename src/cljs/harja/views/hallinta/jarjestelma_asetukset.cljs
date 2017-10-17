@@ -30,7 +30,10 @@
          :jarjesta ::geometria-aineistot/nimi
          :tunniste ::geometria-aineistot/id
          :tallenna (fn [aineistot]
-                     (let [ch (chan)]
+                     (let [ch (chan)
+                           aineistot (map #(if (= -1 (::geometria-aineistot/id %))
+                                             (dissoc % ::geometria-aineistot/id)
+                                             %) aineistot)]
                        (e! (tiedot/->TallennaGeometria-ainestot aineistot ch))
                        (go (<! ch))))}
         [{:otsikko "Nimi" :nimi ::geometria-aineistot/nimi :tyyppi :string :validoi [[:ei-tyhja "Anna aineiston nimi"]]}
