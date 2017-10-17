@@ -22,20 +22,20 @@
             [namespacefy.core :as namespacefy]))
 
 (defn hae-urakan-alukset [db user tiedot]
-  ;; TODO Oikeustarkistus + testi sille
+  ;; TODO Oikeustarkistus
   (namespacefy
     (alukset-q/hae-urakan-alukset db {:urakka (::urakka/id tiedot)})
     {:ns :harja.domain.vesivaylat.alus
      :custom {:lisatiedot ::alus/urakan-aluksen-kayton-lisatiedot}}))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Oikeustarkistus + testi sille
+  ;; TODO Oikeustarkistus
   (namespacefy/namespacefy
     (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)})
     {:ns :harja.domain.vesivaylat.alus}))
 
 (defn hae-kaikki-alukset [db user tiedot]
-  ;; TODO Oikeustarkistus + testi sille
+  ;; TODO Oikeustarkistus
   (sort-by ::alus/mmsi (specql/fetch
                          db
                          ::alus/alus
