@@ -99,13 +99,22 @@
                                            {::organisaatio/id urakoitsija-id})))))
 
 (deftest tallenna-urakan-alukset
-  (let [alukset []
+  (let [alus-mmsit (map :mmsi (q-map "SELECT mmsi FROM vv_alus"))
+        uudet-alukset [{::alus/mmsi (first alus-mmsit)
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
+                       {::alus/mmsi (second alus-mmsit)
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
         urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakan-alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))
         args {::urakka/id urakka-id
-              ::alus/urakan-tallennettavat-alukset alukset}
+              ::alus/urakan-tallennettavat-alukset uudet-alukset}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-urakan-alukset +kayttaja-ulle+
-                                args)]
+                                args)
+        urakan-alukset-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))]
 
     (is (s/valid? ::alus/tallenna-urakan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus vastaus))))
+    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus vastaus))
+
+    (is (= (+ urakan-alukset-ennen (count uudet-alukset))
+           urakan-alukset-jalkeen))))

@@ -54,7 +54,7 @@
             ::alus/urakan-aluksen-kaytto
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
-             ::m/poistettu? (:poistettu alus)}
+             ::m/poistettu? (or (:poistettu alus) false)}
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
           (specql/insert!
             db
