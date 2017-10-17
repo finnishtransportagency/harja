@@ -14,6 +14,7 @@
             [harja.kyselyt.vesivaylat.alukset :as alukset-q]
             [harja.domain.vesivaylat.alus :as alus]
             [harja.domain.urakka :as urakka]
+            [harja.domain.muokkaustiedot :as m]
             [harja.domain.organisaatio :as organisaatio]
             [namespacefy.core :refer [namespacefy]]
             [specql.core :as specql]
@@ -52,7 +53,8 @@
             db
             ::alus/urakan-aluksen-kaytto
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-             ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)}
+             ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
+             ::m/poistettu? (:poistettu alus)}
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
           (specql/insert!
             db
