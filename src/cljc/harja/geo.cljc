@@ -248,7 +248,7 @@
      [coord]
      (let [c (org.geotools.geometry.jts.JTS/transform (com.vividsolutions.jts.geom.Coordinate. (:x coord) (:y coord))
                                                       nil wgs84->euref-transform)]
-       {:x (.y c) :y (.x c)})))
+       {:x (.x c) :y (.y c)})))
 
 (def +etrs-tm35fin+ "EPSG:3067")
 (def +wgs84+ "EPSG:4326")
