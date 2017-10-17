@@ -38,7 +38,8 @@
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
             [harja.views.urakka.yleiset.paivystajat :as paivystajat]
             [harja.domain.urakka :as u-domain]
-            [harja.domain.urakka :as urakka-domain])
+            [harja.domain.urakka :as urakka-domain]
+            [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; hallintayksikkö myös
@@ -502,7 +503,8 @@
            {:otsikko "Urakassa käytössä olevat alukset"
             :tyhja "Ei aluksia"
             :tunniste ::alus/mmsi
-            :tallenna #(tiedot/tallenna-urakan-alukset (:id ur) urakan-alukset)}
+            :tallenna (fn [alukset]
+                        (tiedot/tallenna-urakan-alukset (:id ur) alukset urakan-alukset))}
            [{:otsikko "Alus" ;; TODO Mahdollista saman valinta vain kerran (filter tai validointi)
              :nimi ::alus/mmsi
              :tyyppi :valinta
