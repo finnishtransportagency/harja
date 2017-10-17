@@ -505,7 +505,7 @@
             :tunniste ::alus/mmsi
             :tallenna (fn [alukset]
                         (tiedot/tallenna-urakan-alukset (:id ur) alukset urakan-alukset))}
-           [{:otsikko "Alus" ;; TODO Mahdollista saman valinta vain kerran (filter tai validointi)
+           [{:otsikko "Alus"
              :nimi ::alus/mmsi
              :tyyppi :valinta
              :valinnat @urakoitsijan-alukset
@@ -516,7 +516,8 @@
              :valinta-nayta #(if %
                                (alus/fmt-alus %)
                                "- Valitse alus -")
-             :validoi [[:ei-tyhja "Valitse alus"]]}
+             :validoi [[:ei-tyhja "Valitse alus"]
+                       [:uniikki "Alus on jo käytössä urakassa"]]}
             {:otsikko "Lisätiedot käyttötarpeesta"
              :nimi ::alus/urakan-aluksen-kayton-lisatiedot
              :tyyppi :string
