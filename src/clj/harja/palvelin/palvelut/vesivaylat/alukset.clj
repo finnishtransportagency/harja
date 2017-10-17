@@ -48,7 +48,8 @@
         alukset (::alus/urakan-tallennettavat-alukset tiedot)]
     (jdbc/with-db-transaction [db db]
       (doseq [alus alukset]
-        (if (::alus/mmsi alus)
+        (if (first (alukset-q/hae-urakan-alus-mmsilla db {:mmsi (::alus/mmsi alus)
+                                                          :urakka urakka-id}))
           (specql/update!
             db
             ::alus/urakan-aluksen-kaytto
