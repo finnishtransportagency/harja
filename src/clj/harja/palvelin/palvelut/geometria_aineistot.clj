@@ -7,7 +7,8 @@
             [taoensso.timbre :as log]
             [harja.id :refer [id-olemassa?]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [harja.pvm :as pvm]))
 
 (defn hae-geometria-aineistot [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset user)
@@ -21,12 +22,6 @@
         (geometria-aineistot/poista-geometria-aineisto db (::ga/id aineisto))
         (geometria-aineistot/tallenna-geometria-aineisto db aineisto))))
   (hae-geometria-aineistot db user))
-
-
-(defn rakenna-url [db aineiston-nimi url]
-  (let [aineisto (geometria-aineistot/hae-geometria-aineisto db aineiston-nimi)])
-  )
-
 
 (defrecord Geometria-aineistot []
   component/Lifecycle

@@ -5,5 +5,3 @@ CREATE TABLE geometriaaineisto (
   "voimassaolo-alkaa"   TIMESTAMP,
   "voimassaolo-paattyy" TIMESTAMP
 );
-
-CREATE UNIQUE INDEX uniikki_geometriaaineisto_nimi on geometriaaineisto(nimi);

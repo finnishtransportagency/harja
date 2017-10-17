@@ -63,15 +63,11 @@
         true)
       false)))
 
-(defn rakenna-url [paivitystunnus tiedostourl]
-  )
-
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku paivitys kayttajatunnus salasana]
   (log/debug (format "Tarkistetaan onko geometria-aineisto: %s päivittynyt AVA:ssa." paivitystunnus))
   (when (and (not-empty tiedostourl) (kohdetiedosto-ok? kohdetiedoston-polku))
     (try+
-      (let [tiedostourl (rakenna-url paivitystunnus tiedostourl)
-            integraatio (str paivitystunnus "-muutospaivamaaran-haku")
+      (let [integraatio (str paivitystunnus "-muutospaivamaaran-haku")
             tiedoston-muutospvm (hae-tiedoston-muutospaivamaara
                                   db
                                   integraatioloki
