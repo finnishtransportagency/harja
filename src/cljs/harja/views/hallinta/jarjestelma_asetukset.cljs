@@ -33,8 +33,8 @@
                      (let [ch (chan)]
                        (e! (tiedot/->TallennaGeometria-ainestot aineistot ch))
                        (go (<! ch))))}
-        [{:otsikko "Nimi" :nimi ::geometria-aineistot/nimi :tyyppi :string :pakollinen? true}
-         {:otsikko "Tiedostonimi" :nimi ::geometria-aineistot/tiedostonimi :tyyppi :string :pakollinen? true}
+        [{:otsikko "Nimi" :nimi ::geometria-aineistot/nimi :tyyppi :string :validoi [[:ei-tyhja "Anna aineiston nimi"]]}
+         {:otsikko "Tiedostonimi" :nimi ::geometria-aineistot/tiedostonimi :tyyppi :string :validoi [[:ei-tyhja "Anna aineiston tiedostonimi"]]}
          {:otsikko "Voimassaolo alkaa" :nimi ::geometria-aineistot/voimassaolo-alkaa :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Voimassaolo päättyy" :nimi ::geometria-aineistot/voimassaolo-paattyy :tyyppi :pvm :fmt pvm/pvm-opt}]
         geometria-aineistot]])))
