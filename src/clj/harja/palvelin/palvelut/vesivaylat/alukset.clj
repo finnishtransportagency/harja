@@ -19,7 +19,8 @@
             [namespacefy.core :refer [namespacefy]]
             [specql.core :as specql]
             [specql.op :as op]
-            [namespacefy.core :as namespacefy]))
+            [namespacefy.core :as namespacefy]
+            [clj-time.core :as t]))
 
 (defn hae-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus
@@ -61,7 +62,9 @@
             db
             ::alus/urakan-aluksen-kaytto
             {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-             ::urakka/id urakka-id
+             ::urakka-id urakka-id
+             ::m/luoja-id (:id user)
+             ::m/luotu (t/now)
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
       (hae-urakan-alukset db user tiedot))))
 

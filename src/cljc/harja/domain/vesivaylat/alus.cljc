@@ -19,7 +19,8 @@
   ["vv_alus_sijainti" ::aluksen-sijainti
    {"alus" ::alus-mmsi}]
   ["vv_alus_urakka" ::urakan-aluksen-kaytto
-   {"alus" ::urakan-alus-mmsi
+   {"urakka" ::urakka-id
+    "alus" ::urakan-alus-mmsi
     "lisatiedot" ::urakan-aluksen-kayton-lisatiedot}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot])
 

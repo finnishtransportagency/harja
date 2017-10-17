@@ -1,216 +1,216 @@
 -- Lisätään hienoja aluksia
-INSERT INTO vv_alus (mmsi, nimi, lisatiedot, luoja) VALUES
-  (230990040, 'Rohmu', 'Hieno laiva', (SELECT id
+INSERT INTO vv_alus (mmsi, nimi, urakoitsija, lisatiedot, luoja) VALUES
+  (230990040, 'Rohmu', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), 'Hieno laiva', (SELECT id
                                        FROM kayttaja
                                        WHERE kayttajanimi = 'tero')),
-  (230111580, 'Ronsu', '', (SELECT id
+  (230111580, 'Ronsu', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                             FROM kayttaja
                             WHERE kayttajanimi = 'tero')),
-  (230941190, 'Cuba Libre', '', (SELECT id
+  (230941190, 'Cuba Libre', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                  FROM kayttaja
                                  WHERE kayttajanimi = 'tero')),
-  (230011240, 'Ampiainen', '', (SELECT id
+  (230011240, 'Ampiainen', NULL, '', (SELECT id
                                 FROM kayttaja
                                 WHERE kayttajanimi = 'tero')),
-  (230983750, 'Humalaja', '', (SELECT id
+  (230983750, 'Humalaja', NULL, '', (SELECT id
                                FROM kayttaja
                                WHERE kayttajanimi = 'tero')),
-  (230110850, 'Sierra Nevada', '', (SELECT id
+  (230110850, 'Sierra Nevada', NULL, '', (SELECT id
                                     FROM kayttaja
                                     WHERE kayttajanimi = 'tero')),
-  (230030440, 'Karhu', '', (SELECT id
+  (230030440, 'Karhu', NULL, '', (SELECT id
                             FROM kayttaja
                             WHERE kayttajanimi = 'tero')),
-  (230939680, 'Savannin taluttaja', 'Erikoiskalustoa kyydissä', (SELECT id
+  (230939680, 'Savannin taluttaja', NULL, 'Erikoiskalustoa kyydissä', (SELECT id
                                                                  FROM kayttaja
                                                                  WHERE kayttajanimi = 'tero')),
-  (230118650, 'Meripoika', '', (SELECT id
+  (230118650, 'Meripoika', NULL, '', (SELECT id
                                 FROM kayttaja
                                 WHERE kayttajanimi = 'tero')),
-  (230085750, 'Aimo', '', (SELECT id
+  (230085750, 'Aimo', NULL, '', (SELECT id
                            FROM kayttaja
                            WHERE kayttajanimi = 'tero')),
-  (230078710, 'Pahvilaatikko', '', (SELECT id
+  (230078710, 'Pahvilaatikko', NULL, '', (SELECT id
                                     FROM kayttaja
                                     WHERE kayttajanimi = 'tero')),
-  (230099160, 'Vanha poika', '', (SELECT id
+  (230099160, 'Vanha poika', NULL, '', (SELECT id
                                   FROM kayttaja
                                   WHERE kayttajanimi = 'tero')),
-  (230113670, 'Leski', '', (SELECT id
+  (230113670, 'Leski', NULL, '', (SELECT id
                             FROM kayttaja
                             WHERE kayttajanimi = 'tero')),
-  (230942290, 'Sienimetsä', '', (SELECT id
+  (230942290, 'Sienimetsä', NULL, '', (SELECT id
                                  FROM kayttaja
                                  WHERE kayttajanimi = 'tero')),
-  (230980890, '', '', (SELECT id
+  (230980890, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230085710, '', '', (SELECT id
+  (230085710, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997510, '', '', (SELECT id
+  (230997510, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230368000, '', '', (SELECT id
+  (230368000, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230031001, '', '', (SELECT id
+  (230031001, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230087740, '', '', (SELECT id
+  (230087740, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230942790, '', '', (SELECT id
+  (230942790, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997360, '', '', (SELECT id
+  (230997360, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230353000, '', '', (SELECT id
+  (230353000, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230942970, '', '', (SELECT id
+  (230942970, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230028680, '', '', (SELECT id
+  (230028680, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997470, '', '', (SELECT id
+  (230997470, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997550, '', '', (SELECT id
+  (230997550, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230940250, '', '', (SELECT id
+  (230940250, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230940290, '', '', (SELECT id
+  (230940290, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230111560, '', '', (SELECT id
+  (230111560, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230024450, '', '', (SELECT id
+  (230024450, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997310, '', '', (SELECT id
+  (230997310, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230669000, '', '', (SELECT id
+  (230669000, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230093090, '', '', (SELECT id
+  (230093090, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230941700, '', '', (SELECT id
+  (230941700, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230094240, '', '', (SELECT id
+  (230094240, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230094210, '', '', (SELECT id
+  (230094210, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938340, '', '', (SELECT id
+  (230938340, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230982380, '', '', (SELECT id
+  (230982380, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230939410, '', '', (SELECT id
+  (230939410, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230046150, '', '', (SELECT id
+  (230046150, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230108280, '', '', (SELECT id
+  (230108280, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230668000, '', '', (SELECT id
+  (230668000, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230093590, '', '', (SELECT id
+  (230093590, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230983550, '', '', (SELECT id
+  (230983550, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230942250, '', '', (SELECT id
+  (230942250, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230094190, '', '', (SELECT id
+  (230094190, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230115770, '', '', (SELECT id
+  (230115770, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230111670, '', '', (SELECT id
+  (230111670, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230112880, '', '', (SELECT id
+  (230112880, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230010760, '', '', (SELECT id
+  (230010760, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997540, '', '', (SELECT id
+  (230997540, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230111270, '', '', (SELECT id
+  (230111270, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230050100, '', '', (SELECT id
+  (230050100, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938900, '', '', (SELECT id
+  (230938900, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230941350, '', '', (SELECT id
+  (230941350, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938740, '', '', (SELECT id
+  (230938740, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230117980, '', '', (SELECT id
+  (230117980, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938050, '', '', (SELECT id
+  (230938050, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230056260, '', '', (SELECT id
+  (230056260, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230939690, '', '', (SELECT id
+  (230939690, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938890, '', '', (SELECT id
+  (230938890, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230977590, '', '', (SELECT id
+  (230977590, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230021990, '', '', (SELECT id
+  (230021990, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230994590, '', '', (SELECT id
+  (230994590, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230030000, '', '', (SELECT id
+  (230030000, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230118060, '', '', (SELECT id
+  (230118060, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230943610, '', '', (SELECT id
+  (230943610, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230028000, '', '', (SELECT id
+  (230028000, '', NULL, '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));
 
 -- Liitetään muutama alus urakkaan
 
-INSERT INTO vv_alus_urakka (alus, lisatiedot, urakka, luoja)
+INSERT INTO vv_alus_urakka (alus, lisatiedot,  urakka, luoja)
 VALUES (230990040, 'Käytettiin kerran',  (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));
