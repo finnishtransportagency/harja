@@ -18,7 +18,6 @@
     (komp/sisaan #(e! (tiedot/->HaeGeometria-aineistot)))
     (fn [e! {:keys [geometria-aineistot haku-kaynnissa?] :as app}]
       [:div
-       ;; todo: lisää toimintopainikkeet
        [grid/grid
         {:otsikko "Geometria-aineistot"
          :voi-lisata? (constantly true)
@@ -38,8 +37,12 @@
                        (go (<! ch))))}
         [{:otsikko "Nimi" :nimi ::geometria-aineistot/nimi :tyyppi :string :validoi [[:ei-tyhja "Anna aineiston nimi"]]}
          {:otsikko "Tiedostonimi" :nimi ::geometria-aineistot/tiedostonimi :tyyppi :string :validoi [[:ei-tyhja "Anna aineiston tiedostonimi"]]}
-         {:otsikko "Voimassaolo alkaa" :nimi ::geometria-aineistot/voimassaolo-alkaa :tyyppi :pvm :fmt pvm/pvm-opt}
-         {:otsikko "Voimassaolo päättyy" :nimi ::geometria-aineistot/voimassaolo-paattyy :tyyppi :pvm :fmt pvm/pvm-opt}]
+         {:otsikko "Voimassaolo alkaa" :nimi ::geometria-aineistot/voimassaolo-alkaa :tyyppi :pvm :fmt pvm/pvm-opt
+          ;; todo: rakenna validointi että alkuaika on ennen päättymistä ja että samalla nimellä ei ole overlappaavaa aineistoa
+          }
+         {:otsikko "Voimassaolo päättyy" :nimi ::geometria-aineistot/voimassaolo-paattyy :tyyppi :pvm :fmt pvm/pvm-opt
+          ;; todo: rakenna validointi että alkuaika on ennen päättymistä ja että samalla nimellä ei ole overlappaavaa aineistoa
+          }]
         geometria-aineistot]])))
 
 (defn jarjestelma-asetukset* [e! app]
