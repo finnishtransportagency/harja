@@ -113,6 +113,7 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
+     :tilaajan-laadunvalvonta {tk/tilaajan-laadunvalvonta false}
      :alueet oletusalueet
      :varustetoteumat {tk/varustetoteumat false}}))
 

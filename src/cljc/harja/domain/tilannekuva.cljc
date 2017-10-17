@@ -87,7 +87,9 @@
   [lumensiirto "lumensiirto" "Lumensiirto"]
   [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
 
-  [varustetoteumat "varustetoteumat" "Varustetoteumat"])
+  [varustetoteumat "varustetoteumat" "Varustetoteumat"]
+
+  [tilaajan-laadunvalvonta "tilaajan laadunvalvonta" "Tilaajan laadunvalvonta"])
 
 (def tehtavien-jarjestys
   {:ilmoitukset {:tyypit [tpp tur urk]}
