@@ -59,23 +59,24 @@
   TallennaGeometria-ainestot
   (process-event [{geometria-aineistot :geometria-aineistot ch :paluukanava} app]
     (if-not (:tallennus-kaynnissa? app)
-      (let [geometria-aineistot (map #(dissoc % ::geometria-ainestot/id) geometria-aineistot)]
-        (-> app
-           (tuck-apurit/palvelukutsu :tallenna-geometria-aineistot
-                                     geometria-aineistot
-                                     {:onnistui ->Geometria-aineistotTallennettu
-                                      :onnistui-parametrit [ch]
-                                      :epaonnistui ->Geometria-ainestojenTallennusEpaonnistui
-                                      :epaonnistui-parametrit [ch]})
-           (assoc :tallennus-kaynnissa? true)))
+      (-> app
+          (tuck-apurit/palvelukutsu :tallenna-geometria-aineistot
+                                    geometria-aineistot
+                                    {:onnistui ->Geometria-aineistotTallennettu
+                                     :onnistui-parametrit [ch]
+                                     :epaonnistui ->Geometria-ainestojenTallennusEpaonnistui
+                                     :epaonnistui-parametrit [ch]})
+          (assoc :tallennus-kaynnissa? true))
       app))
   
   Geometria-aineistotTallennettu
-  (process-event [_ app]
-    ;; todo: näytä ilmoitus
-    app)
+  (process-event [{geometria-aineistot :tulos ch :paluukanava} app]
+    (viesti/nayta! [:span "Geometria-aineistot tallennettu"] :success)
+    (go (>! ch geometria-aineistot))
+    (assoc app :kiintiot geometria-aineistot
+               :tallennus-kaynnissa? false))
 
   Geometria-ainestojenTallennusEpaonnistui
   (process-event [_ app]
-    ;; todo: näytä ilmoitus
-    app))
+    (viesti/nayta! [:span "Virhe geometria-aineistojen tallentamisessa!"] :danger)
+    (assoc app :tallennus-kaynnissa? false)))
