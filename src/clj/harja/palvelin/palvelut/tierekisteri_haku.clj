@@ -114,8 +114,7 @@
 
 (defn hae-tr-osoite-gps-koordinaateilla [db wgs84-koordinaatit]
   (try
-    (let [euref-koordinaatit (geo/wgs84->euref wgs84-koordinaatit)
-          euref-koordinaatit {:x (:y euref-koordinaatit) :y (:x euref-koordinaatit)}]
+    (let [euref-koordinaatit (geo/wgs84->euref wgs84-koordinaatit)]
       (hae-tr-pisteella db euref-koordinaatit))
     (catch Exception e
       (let[virhe (format "Poikkeus hakiessa tierekisteristeriosoitetta WGS84-koordinaateille %s" wgs84-koordinaatit)]
