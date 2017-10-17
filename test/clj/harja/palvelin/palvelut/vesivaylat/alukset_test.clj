@@ -101,7 +101,7 @@
 (deftest tallenna-urakan-alukset
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
-        alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = "urakka-id ";")))
+        alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
         vapaat-alukset (filter (comp not alukset-kaytossa) alus-mmsit)
         uudet-alukset [{::alus/mmsi (first vapaat-alukset)
                         ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
@@ -115,8 +115,13 @@
                                 args)
         urakan-alukset-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))]
 
+
     (is (s/valid? ::alus/tallenna-urakan-alukset-kysely args))
     (is (s/valid? ::alus/hae-kaikki-alukset-vastaus vastaus))
 
     (is (= (+ urakan-alukset-ennen (count uudet-alukset))
-           urakan-alukset-jalkeen))))
+           urakan-alukset-jalkeen)
+        "Aluslinkkejä tuli lisää oikea määrä")
+
+    (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Hieno alus tässä urakassa") vastaus))
+    (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
