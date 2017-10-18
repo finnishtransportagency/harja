@@ -33,11 +33,14 @@
          [{:otsikko "MMSI"
            :nimi ::alus/mmsi
            :tyyppi :numero
-           :leveys 1}
+           :leveys 1
+           :validoi [[:ei-tyhja "Anna MMSI"]
+                     [:uniikki "MMSI on jo olemassa"]]}
           {:otsikko "Nimi"
            :nimi ::alus/nimi
            :tyyppi :numero
-           :leveys 3}
+           :leveys 3
+           :validoi [[:ei-tyhja "Anna nimi"]]}
           {:otsikko "Lisätiedot"
            :nimi ::alus/lisatiedot
            :tyyppi :numero
@@ -45,6 +48,7 @@
           {:otsikko "Urakoitsija"
            :nimi ::alus/urakoitsija-id
            :tyyppi :numero
+           :validoi [[:ei-tyhja "Anna urakoitsija"]]
            :leveys 2}]
          alukset]))))
 
