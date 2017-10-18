@@ -16,11 +16,15 @@
         viimeisin-paivitys (:viimeisin_paivitys paivityksen-tiedot)]
     (log/debug (format "Geometriapäivitys: %s on päivitetty viimeksi: %s. Tiedosto on muuttunut viimeksi: %s " paivitystunnus viimeisin-paivitys tiedoston-muutospvm))
     (or (nil? viimeisin-paivitys)
-        (not (pvm/valissa?
-               (time-coerce/from-sql-time viimeisin-paivitys)
-               (time-coerce/from-sql-time (::ga/voimassaolo-alkaa aineisto))
-               (time-coerce/from-sql-time (::ga/voimassaolo-paattyy aineisto))
-               false))
+        (and
+          aineisto
+          (::ga/voimassaolo-alkaa aineisto)
+          (::ga/voimassaolo-paattyy aineisto)
+          (not (pvm/valissa?
+                (time-coerce/from-sql-time viimeisin-paivitys)
+                (time-coerce/from-sql-time (::ga/voimassaolo-alkaa aineisto))
+                (time-coerce/from-sql-time (::ga/voimassaolo-paattyy aineisto))
+                false)))
         (pvm/jalkeen?
           (time-coerce/from-sql-time tiedoston-muutospvm)
           (time-coerce/from-sql-time viimeisin-paivitys)))))
