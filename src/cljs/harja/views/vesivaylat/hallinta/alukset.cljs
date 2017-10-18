@@ -42,10 +42,6 @@
            :tyyppi :numero
            :leveys 3
            :validoi [[:ei-tyhja "Anna nimi"]]}
-          {:otsikko "Lisätiedot"
-           :nimi ::alus/lisatiedot
-           :tyyppi :numero
-           :leveys 5}
           {:otsikko "Urakoitsija"
            :nimi ::alus/urakoitsija-id
            :tyyppi :valinta
@@ -56,7 +52,11 @@
                    (::o/nimi urakoitsija))
            :valinta-nayta #(if % (::o/nimi %) "- Valitse urakoitsija -")
            :validoi [[:ei-tyhja "Anna urakoitsija"]]
-           :leveys 2}]
+           :leveys 2}
+          {:otsikko "Lisätiedot"
+           :nimi ::alus/lisatiedot
+           :tyyppi :numero
+           :leveys 5}]
          alukset]))))
 
 (defn alukset []
