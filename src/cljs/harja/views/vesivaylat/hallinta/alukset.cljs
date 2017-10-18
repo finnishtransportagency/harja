@@ -17,7 +17,7 @@
 
 (defn alukset* [e! app]
   (komp/luo
-    (komp/sisaan (constantly true)) ;; TODO Hae alukset
+    (komp/sisaan #(e! (tiedot/->HaeAlukset)))
     (fn [e! {:keys [alukset] :as app}]
       (if (nil? (:alukset app))
         [yleiset/ajax-loader]
@@ -29,16 +29,20 @@
                       (log "TALLENNA"))} ;; TODO
          [{:otsikko "MMSI"
            :nimi ::alus/mmsi
-           :tyyppi :numero}
+           :tyyppi :numero
+           :leveys 1}
           {:otsikko "Nimi"
            :nimi ::alus/nimi
-           :tyyppi :numero}
+           :tyyppi :numero
+           :leveys 3}
           {:otsikko "Lisätiedot"
            :nimi ::alus/lisatiedot
-           :tyyppi :numero}
+           :tyyppi :numero
+           :leveys 5}
           {:otsikko "Urakoitsija"
            :nimi ::alus/urakoitsija-id
-           :tyyppi :numero}]
+           :tyyppi :numero
+           :leveys 2}]
          alukset]))))
 
 (defn alukset []
