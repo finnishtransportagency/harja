@@ -9,202 +9,202 @@ INSERT INTO vv_alus (mmsi, nimi, urakoitsija, lisatiedot, luoja) VALUES
   (230941190, 'Cuba Libre', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                  FROM kayttaja
                                  WHERE kayttajanimi = 'tero')),
-  (230011240, 'Ampiainen', NULL, '', (SELECT id
+  (230011240, 'Ampiainen', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                 FROM kayttaja
                                 WHERE kayttajanimi = 'tero')),
-  (230983750, 'Humalaja', NULL, '', (SELECT id
+  (230983750, 'Humalaja', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                FROM kayttaja
                                WHERE kayttajanimi = 'tero')),
-  (230110850, 'Sierra Nevada', NULL, '', (SELECT id
+  (230110850, 'Sierra Nevada', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                     FROM kayttaja
                                     WHERE kayttajanimi = 'tero')),
-  (230030440, 'Karhu', NULL, '', (SELECT id
+  (230030440, 'Karhu', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                             FROM kayttaja
                             WHERE kayttajanimi = 'tero')),
-  (230939680, 'Savannin taluttaja', NULL, 'Erikoiskalustoa kyydissä', (SELECT id
+  (230939680, 'Savannin taluttaja', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), 'Erikoiskalustoa kyydissä', (SELECT id
                                                                  FROM kayttaja
                                                                  WHERE kayttajanimi = 'tero')),
-  (230118650, 'Meripoika', NULL, '', (SELECT id
+  (230118650, 'Meripoika', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                 FROM kayttaja
                                 WHERE kayttajanimi = 'tero')),
-  (230085750, 'Aimo', NULL, '', (SELECT id
+  (230085750, 'Aimo', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                            FROM kayttaja
                            WHERE kayttajanimi = 'tero')),
-  (230078710, 'Pahvilaatikko', NULL, '', (SELECT id
+  (230078710, 'Pahvilaatikko', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                     FROM kayttaja
                                     WHERE kayttajanimi = 'tero')),
-  (230099160, 'Vanha poika', NULL, '', (SELECT id
+  (230099160, 'Vanha poika', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                   FROM kayttaja
                                   WHERE kayttajanimi = 'tero')),
-  (230113670, 'Leski', NULL, '', (SELECT id
+  (230113670, 'Leski', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                             FROM kayttaja
                             WHERE kayttajanimi = 'tero')),
-  (230942290, 'Sienimetsä', NULL, '', (SELECT id
+  (230942290, 'Sienimetsä', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                                  FROM kayttaja
                                  WHERE kayttajanimi = 'tero')),
-  (230980890, '', NULL, '', (SELECT id
+  (230980890, 'A', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230085710, '', NULL, '', (SELECT id
+  (230085710, 'B', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997510, '', NULL, '', (SELECT id
+  (230997510, 'C', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230368000, '', NULL, '', (SELECT id
+  (230368000, 'D', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230031001, '', NULL, '', (SELECT id
+  (230031001, 'E', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230087740, '', NULL, '', (SELECT id
+  (230087740, 'F', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230942790, '', NULL, '', (SELECT id
+  (230942790, 'G', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997360, '', NULL, '', (SELECT id
+  (230997360, 'H', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230353000, '', NULL, '', (SELECT id
+  (230353000, 'I', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230942970, '', NULL, '', (SELECT id
+  (230942970, 'J', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230028680, '', NULL, '', (SELECT id
+  (230028680, 'K', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997470, '', NULL, '', (SELECT id
+  (230997470, 'L', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997550, '', NULL, '', (SELECT id
+  (230997550, 'M', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230940250, '', NULL, '', (SELECT id
+  (230940250, 'N', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230940290, '', NULL, '', (SELECT id
+  (230940290, 'O', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230111560, '', NULL, '', (SELECT id
+  (230111560, 'P', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230024450, '', NULL, '', (SELECT id
+  (230024450, 'Q', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997310, '', NULL, '', (SELECT id
+  (230997310, 'R', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230669000, '', NULL, '', (SELECT id
+  (230669000, 'S', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230093090, '', NULL, '', (SELECT id
+  (230093090, 'T', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230941700, '', NULL, '', (SELECT id
+  (230941700, 'U', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230094240, '', NULL, '', (SELECT id
+  (230094240, 'V', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230094210, '', NULL, '', (SELECT id
+  (230094210, 'W', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938340, '', NULL, '', (SELECT id
+  (230938340, 'X', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230982380, '', NULL, '', (SELECT id
+  (230982380, 'Y', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230939410, '', NULL, '', (SELECT id
+  (230939410, 'Å', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230046150, '', NULL, '', (SELECT id
+  (230046150, 'Ä', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230108280, '', NULL, '', (SELECT id
+  (230108280, 'Ö', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230668000, '', NULL, '', (SELECT id
+  (230668000, '1', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230093590, '', NULL, '', (SELECT id
+  (230093590, '2', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230983550, '', NULL, '', (SELECT id
+  (230983550, '3', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230942250, '', NULL, '', (SELECT id
+  (230942250, '4', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230094190, '', NULL, '', (SELECT id
+  (230094190, '5', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230115770, '', NULL, '', (SELECT id
+  (230115770, '6', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230111670, '', NULL, '', (SELECT id
+  (230111670, '7', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230112880, '', NULL, '', (SELECT id
+  (230112880, '8', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230010760, '', NULL, '', (SELECT id
+  (230010760, '9', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230997540, '', NULL, '', (SELECT id
+  (230997540, '10', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230111270, '', NULL, '', (SELECT id
+  (230111270, '11', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230050100, '', NULL, '', (SELECT id
+  (230050100, '12', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938900, '', NULL, '', (SELECT id
+  (230938900, '13', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230941350, '', NULL, '', (SELECT id
+  (230941350, '14', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938740, '', NULL, '', (SELECT id
+  (230938740, '15', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230117980, '', NULL, '', (SELECT id
+  (230117980, '16', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938050, '', NULL, '', (SELECT id
+  (230938050, '17', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230056260, '', NULL, '', (SELECT id
+  (230056260, '18', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230939690, '', NULL, '', (SELECT id
+  (230939690, '19', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230938890, '', NULL, '', (SELECT id
+  (230938890, '20', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230977590, '', NULL, '', (SELECT id
+  (230977590, '21', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230021990, '', NULL, '', (SELECT id
+  (230021990, '22', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230994590, '', NULL, '', (SELECT id
+  (230994590, '23', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230030000, '', NULL, '', (SELECT id
+  (230030000, '24', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230118060, '', NULL, '', (SELECT id
+  (230118060, '25', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230943610, '', NULL, '', (SELECT id
+  (230943610, '26', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero')),
-  (230028000, '', NULL, '', (SELECT id
+  (230028000, '27', (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'), '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));
 

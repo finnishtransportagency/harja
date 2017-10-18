@@ -7,4 +7,4 @@ ALTER TABLE vv_alus_urakka ALTER COLUMN lisatiedot TYPE VARCHAR(512);
 ALTER TABLE vv_alus_urakka ALTER COLUMN poistettu SET NOT NULL;
 
 -- Alukselle tieto urakoitsijasta
-ALTER TABLE vv_alus ADD COLUMN urakoitsija INTEGER REFERENCES organisaatio (id);
+ALTER TABLE vv_alus ADD COLUMN urakoitsija INTEGER REFERENCES organisaatio (id) NOT NULL;
