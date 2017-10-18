@@ -17,9 +17,12 @@
 
 (defn alukset* [e! app]
   (komp/luo
-    (komp/sisaan #(e! (tiedot/->HaeAlukset)))
-    (fn [e! {:keys [alukset] :as app}]
-      (if (nil? (:alukset app))
+    (komp/sisaan (fn []
+                   (e! (tiedot/->HaeAlukset))
+                   (e! (tiedot/->HaeUrakoitsijat))))
+    (fn [e! {:keys [alukset urakoitsijat] :as app}]
+      (if (or (nil? (:alukset app))
+              (nil? (:urakoitsijat app)))
         [yleiset/ajax-loader]
         [grid/grid
          {:otsikko "Alukset"

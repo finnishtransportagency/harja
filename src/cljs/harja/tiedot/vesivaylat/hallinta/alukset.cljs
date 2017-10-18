@@ -14,12 +14,16 @@
 
 (def tila (atom {:nakymassa? false
                  :alusten-haku-kaynnissa? false
-                 :alukset nil}))
+                 :alukset nil
+                 :urakoitsijoiden-haku-kaynnissa? false}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeAlukset [])
 (defrecord AluksetHaettu [tulos])
 (defrecord AluksetEiHaettu [])
+(defrecord HaeUrakoitsijat [])
+(defrecord UrakoitsijatHaettu [tulos])
+(defrecord UrakoitsijatEiHaettu [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -47,4 +51,27 @@
   (process-event [_ app]
     (viesti/nayta! "Alusten haku epäonnistui!" :danger)
     (assoc app :alusten-haku-kaynnissa? false
-               :alukset [])))
+               :alukset []))
+
+  HaeUrakoitsijat
+  (process-event [{valinnat :valinnat} app]
+    (if (not (:urakoitsijoiden-haku-kaynnissa? app))
+      (-> app
+          (tuck-apurit/palvelukutsu :vesivaylaurakoitsijat
+                                    {}
+                                    {:onnistui ->UrakoitsijatHaettu
+                                     :epaonnistui ->UrakoitsijatEiHaettu})
+          (assoc :urakoitsijoiden-haku-kaynnissa? true))
+
+      app))
+
+  UrakoitsijatHaettu
+  (process-event [{tulos :tulos} app]
+    (assoc app :urakoitsijoiden-haku-kaynnissa? false
+               :urakoitsijat tulos))
+
+  UrakoitsijatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Urakoitsijoiden haku epäonnistui!" :danger)
+    (assoc app :urakoitsijoiden-haku-kaynnissa? false
+               :urakoitsijat [])))
