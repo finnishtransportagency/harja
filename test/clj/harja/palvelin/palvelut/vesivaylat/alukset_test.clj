@@ -117,7 +117,7 @@
 
 
     (is (s/valid? ::alus/tallenna-urakan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus vastaus))
+    (is (s/valid? ::alus/hae-urakan-alukset-vastaus vastaus))
 
     (is (= (+ urakan-alukset-ennen (count uudet-alukset))
            urakan-alukset-jalkeen)

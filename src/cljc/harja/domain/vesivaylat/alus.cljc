@@ -56,6 +56,16 @@
 (s/def ::tallenna-urakan-alukset-kysely
   (s/keys :req [::urakka/id ::urakan-tallennettavat-alukset]))
 
+(s/def ::tallennettava-alus
+  (s/keys :req [::mmsi ::nimi ::urakoitsija-id]
+          :opt [::lisatiedot]))
+
+(s/def ::tallennettavat-alukset
+  (s/coll-of ::tallennettava-alus))
+
+(s/def ::tallenna-alukset-kysely
+  (s/keys :req [::urakka/id ::tallennettavat-alukset]))
+
 (defn alus-mmsilla [mmsi alukset]
   (first (filter #(= (::mmsi %) mmsi) alukset)))
 

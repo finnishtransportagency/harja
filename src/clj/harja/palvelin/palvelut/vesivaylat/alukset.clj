@@ -71,6 +71,11 @@
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
       (hae-urakan-alukset db user tiedot))))
 
+(defn tallenna-alukset [db user tiedot]
+  ;; TODO Toteutus
+  ;; TODO Oikeustarkistus + testi sille
+  )
+
 (defrecord Alukset []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -101,6 +106,13 @@
       :tallenna-urakan-alukset
       (fn [user tiedot]
         (tallenna-urakan-alukset db user tiedot))
+      {:kysely-spec ::alus/tallenna-urakan-alukset-kysely
+       :vastaus-spec ::alus/hae-urakan-alukset-vastaus})
+    (julkaise-palvelu
+      http
+      :tallenna-alukset
+      (fn [user tiedot]
+        (tallenna-alukset db user tiedot))
       {:kysely-spec ::alus/tallenna-urakan-alukset-kysely
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     this)
