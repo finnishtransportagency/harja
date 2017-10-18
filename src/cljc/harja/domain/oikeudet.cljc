@@ -100,8 +100,8 @@
   "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
                                    urakkaroolit organisaatioroolit] :as kayttaja}]
-  (when-not (or (nil? urakka-id) (number? urakka-id)) (log/error "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Urakka-id:n täytyy olla joko nil tai numero " (pr-str urakka-id)))
-  (when-not (instance? KayttoOikeus oikeus) (log/error "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Annettu oikeus ei ole KayttoOikeus " (pr-str oikeus)))
+  (assert (or (nil? urakka-id) (number? urakka-id)) (str "Bugi oikeustarkistuksessa: Urakka-id:n täytyy olla joko nil tai numero " (pr-str urakka-id)))
+  (assert (instance? KayttoOikeus oikeus) (str "Bugi oikeustarkistuksessa: Annettu oikeus ei ole KayttoOikeus " (pr-str oikeus)))
   (when-not (every? #(contains? kayttaja %) [:organisaation-urakat :roolit :organisaatio
                                            :urakkaroolit :organisaatioroolit])
     (#?(:clj log/error
