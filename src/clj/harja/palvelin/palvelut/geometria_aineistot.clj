@@ -28,18 +28,10 @@
   (start [{http :http-palvelin db :db :as this}]
     (julkaise-palvelu http :hae-geometria-aineistot
                       (fn [user _]
-                        (hae-geometria-aineistot db user))
-                      ;; todo: lisää speksi
-                      ;;{:kysely-spec ::kiintio/irrota-toimenpiteet-kiintiosta-kysely
-                      ;; :vastaus-spec ::kiintio/irrota-toimenpiteet-kiintiosta-vastaus}
-                      )
+                        (hae-geometria-aineistot db user)))
     (julkaise-palvelu http :tallenna-geometria-aineistot
                       (fn [user geometria-aineistot]
-                        (tallenna-geometria-aineistot db user geometria-aineistot))
-                      ;; todo: lisää speksi
-                      ;;{:kysely-spec ::kiintio/irrota-toimenpiteet-kiintiosta-kysely
-                      ;; :vastaus-spec ::kiintio/irrota-toimenpiteet-kiintiosta-vastaus}
-                      )
+                        (tallenna-geometria-aineistot db user geometria-aineistot)))
     this)
 
   (stop [{http :http-palvelin :as this}]
