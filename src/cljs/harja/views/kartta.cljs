@@ -774,7 +774,7 @@
                                :id :enc-merikartta
                                :nimi "ENC merikartta"
                                :icon  (ikonit/ankkuri-24 16 16)
-                               :url "http://kartta.liikennevirasto.fi/meriliikenne/dgds/wms_ip/merikartta"
+                               :url "https://julkinen.liikennevirasto.fi/s57/wms?request=GetCapabilities&service=WMS"
                                :layer "cells"
                                :style "style-id-202"
                                :default false}]}]))))

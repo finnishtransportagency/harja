@@ -818,3 +818,26 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 (defn vuodet-valissa [alku loppu]
   (range (vuosi alku) (inc (vuosi loppu))))
+
+(defn aikavalit-leikkaavat? [ensimmainen-alku ensimmainen-loppu toinen-alku toinen-loppu]
+  (boolean (or
+             (and
+               (not (nil? toinen-alku))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (valissa? toinen-alku ensimmainen-alku ensimmainen-loppu false))
+             (and
+               (not (nil? toinen-loppu))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (valissa? toinen-loppu ensimmainen-alku ensimmainen-loppu false))
+             (and
+               (not (nil? ensimmainen-alku))
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (valissa? ensimmainen-alku toinen-alku toinen-loppu false))
+             (and
+               (not (nil? ensimmainen-loppu))
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (valissa? ensimmainen-loppu toinen-alku toinen-loppu false))) ))

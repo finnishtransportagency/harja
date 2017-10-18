@@ -230,7 +230,7 @@
   [nimi data rivi taulukko saannot]
   (keep (fn [saanto]
           (if (fn? saanto)
-            (saanto data rivi)
+            (saanto data rivi taulukko)
             (let [[saanto & optiot] saanto]
               (apply validoi-saanto saanto nimi data rivi taulukko optiot))))
         saannot))
