@@ -41,11 +41,4 @@
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-kanavat))
      ^{:key "kohteiden-luonti"}
-     [kohteiden-luonti/kohteiden-luonti])
-
-   "Kohteiden liittäminen"
-   :kanavaurakoiden-kohteiden-luonti
-   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-              (oikeudet/hallinta-kanavat))
-     ^{:key "kohteiden-liittaminen"}
-     [kohteiden-liittaminen/kohteiden-liittaminen])])
+     [kohteiden-luonti/kohteiden-luonti])])
