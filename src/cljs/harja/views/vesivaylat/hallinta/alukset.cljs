@@ -30,7 +30,7 @@
           :tyhja "Ei aluksia"
           :tunniste ::alus/mmsi
           :tallenna (fn [alukset]
-                      (log "TALLENNA"))} ;; TODO
+                      (e! (tiedot/->TallennaAlukset alukset)))}
          [{:otsikko "MMSI"
            :nimi ::alus/mmsi
            :tyyppi :numero

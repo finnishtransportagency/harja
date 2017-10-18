@@ -64,7 +64,7 @@
   (s/coll-of ::tallennettava-alus))
 
 (s/def ::tallenna-alukset-kysely
-  (s/keys :req [::urakka/id ::tallennettavat-alukset]))
+  (s/keys :req [::tallennettavat-alukset]))
 
 (defn alus-mmsilla [mmsi alukset]
   (first (filter #(= (::mmsi %) mmsi) alukset)))

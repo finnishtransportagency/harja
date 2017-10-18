@@ -15,7 +15,8 @@
 (def tila (atom {:nakymassa? false
                  :alusten-haku-kaynnissa? false
                  :alukset nil
-                 :urakoitsijoiden-haku-kaynnissa? false}))
+                 :urakoitsijoiden-haku-kaynnissa? false
+                 :alusten-tallennus-kaynnissa? false}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeAlukset [])
@@ -24,6 +25,9 @@
 (defrecord HaeUrakoitsijat [])
 (defrecord UrakoitsijatHaettu [tulos])
 (defrecord UrakoitsijatEiHaettu [])
+(defrecord TallennaAlukset [alukset])
+(defrecord AluksetTallennettu [tulos])
+(defrecord AluksetEiTallennettu [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -31,7 +35,7 @@
     (assoc app :nakymassa? nak))
 
   HaeAlukset
-  (process-event [{valinnat :valinnat} app]
+  (process-event [_ app]
     (if (not (:alusten-haku-kaynnissa? app))
       (-> app
           (tuck-apurit/palvelukutsu :hae-kaikki-alukset
@@ -54,7 +58,7 @@
                :alukset []))
 
   HaeUrakoitsijat
-  (process-event [{valinnat :valinnat} app]
+  (process-event [_ app]
     (if (not (:urakoitsijoiden-haku-kaynnissa? app))
       (-> app
           (tuck-apurit/palvelukutsu :vesivaylaurakoitsijat
@@ -74,4 +78,27 @@
   (process-event [_ app]
     (viesti/nayta! "Urakoitsijoiden haku epäonnistui!" :danger)
     (assoc app :urakoitsijoiden-haku-kaynnissa? false
-               :urakoitsijat [])))
+               :urakoitsijat []))
+
+  TallennaAlukset
+  (process-event [{alukset :alukset} app]
+    (if (not (:alusten-tallennus-kaynnissa? app))
+      (-> app
+          (tuck-apurit/palvelukutsu :tallenna-alukset
+                                    {::alus/tallennettavat-alukset alukset}
+                                    {:onnistui ->AluksetTallennettu
+                                     :epaonnistui ->AluksetEiTallennettu})
+          (assoc :alusten-tallennus-kaynnissa? true))
+
+      app))
+
+  AluksetTallennettu
+  (process-event [{tulos :tulos} app]
+    (assoc app :alusten-tallennus-kaynnissa? false
+               :alukset tulos))
+
+  AluksetEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Alusten tallennus epäonnistui!" :danger)
+    (assoc app :alusten-tallennus-kaynnissa? false
+               :alukset [])))
