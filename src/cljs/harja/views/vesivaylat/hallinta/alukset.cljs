@@ -10,6 +10,7 @@
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.ui.debug :as debug]
             [harja.domain.vesivaylat.alus :as alus]
+            [harja.domain.organisaatio :as o]
             [harja.loki :refer [log]]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :as yleiset]
@@ -47,7 +48,13 @@
            :leveys 5}
           {:otsikko "Urakoitsija"
            :nimi ::alus/urakoitsija-id
-           :tyyppi :numero
+           :tyyppi :valinta
+           :valinnat urakoitsijat
+           :valinta-arvo ::o/id
+           :fmt #(let [urakoitsija (o/organisaatio-idlla % urakoitsijat)]
+                   (log "FMT ARG " (pr-str %) " JA UR: " (pr-str urakoitsija))
+                   (::o/nimi urakoitsija))
+           :valinta-nayta #(if % (::o/nimi %) "- Valitse urakoitsija -")
            :validoi [[:ei-tyhja "Anna urakoitsija"]]
            :leveys 2}]
          alukset]))))

@@ -21,7 +21,8 @@
             [specql.op :as op]
             [namespacefy.core :as namespacefy]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [clojure.set :as set]))
 
 (defn hae-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus
@@ -41,7 +42,7 @@
   (sort-by ::alus/mmsi (specql/fetch
                          db
                          ::alus/alus
-                         alus/perustiedot
+                         (set/union alus/perustiedot alus/viittaukset)
                          {})))
 
 (defn tallenna-urakan-alukset [db user tiedot]

@@ -15,7 +15,8 @@
    {"tunnus" ::r-tunnus
     "nimi" ::r-nimi}]
   ["vv_alus" ::alus
-   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot]
+   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
+   {"urakoitsija" ::urakoitsija-id}]
   ["vv_alus_sijainti" ::aluksen-sijainti
    {"alus" ::alus-mmsi}]
   ["vv_alus_urakka" ::urakan-aluksen-kaytto
@@ -25,6 +26,7 @@
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot])
 
 (def perustiedot #{::mmsi ::nimi ::lisatiedot})
+(def viittaukset #{::urakoitsija-id})
 
 (s/def ::hae-urakan-alukset-kysely
   (s/keys :req [::urakka/id]))
