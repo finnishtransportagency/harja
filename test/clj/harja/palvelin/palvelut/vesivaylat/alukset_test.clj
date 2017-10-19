@@ -152,11 +152,11 @@
                        {::alus/mmsi 12235366
                         ::alus/nimi "Turpo"
                         ::alus/urakoitsija-id urakoitsija-id
-                        ::alus/urakan-aluksen-kayton-lisatiedot "Turpo on karhu"}
+                        ::alus/lisatiedot "Turpo on karhu"}
                        {::alus/mmsi 12235367
                         ::alus/nimi ""
                         ::alus/urakoitsija-id urakoitsija-id
-                        ::alus/urakan-aluksen-kayton-lisatiedot "Tää on varsinaista karhun elämää!"}]
+                        ::alus/lisatiedot "Tää on varsinaista karhun elämää!"}]
         alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus;"))
         args {::alus/tallennettavat-alukset uudet-alukset}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -173,7 +173,10 @@
         "Alusksia tuli lisää oikea määrä")
 
     (is (some #(= (::alus/nimi %) "Urpo") vastaus))
-    (is (some #(= (::alus/nimi %) "Turpo") vastaus))))
+    (is (some #(= (::alus/lisatiedot %) "Urpo on karhu") vastaus))
+
+    (is (some #(= (::alus/nimi %) "Turpo") vastaus))
+    (is (some #(= (::alus/lisatiedot %) "Turpo on karhu") vastaus))))
 
 (deftest hae-urakoitsijan-alukset-ilman-oikeutta
   (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
