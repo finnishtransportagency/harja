@@ -126,6 +126,29 @@
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Hieno alus tässä urakassa") vastaus))
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
 
+(deftest tallenna-urakan-alukset-ilman-oikeutta
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
+        alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
+        vapaat-alukset (filter (comp not alukset-kaytossa) alus-mmsit)
+        uudet-alukset [{::alus/mmsi (first vapaat-alukset)
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
+                       {::alus/mmsi (second vapaat-alukset)
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
+        args {::urakka/id urakka-id
+              ::alus/urakan-tallennettavat-alukset uudet-alukset}]
+
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-urakan-alukset +kayttaja-ulle+
+                                           args)))))
+
+(deftest hae-urakoitsijan-alukset-ilman-oikeutta
+  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-urakoitsijan-alukset +kayttaja-ulle+
+                                           {::organisaatio/id urakoitsija-id})))))
+
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
