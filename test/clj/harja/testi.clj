@@ -317,6 +317,16 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-helsingin-vesivaylaurakan-urakoitsija []
+  (ffirst (q (str "SELECT urakoitsija
+                   FROM   urakka
+                   WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'"))))
+
+(defn hae-urakoitsijan-urakka-idt [urakoitsija-id]
+  (map :id (q-map (str "SELECT id
+                   FROM   urakka
+                   WHERE  urakoitsija = " urakoitsija-id ";"))))
+
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
                    WHERE
@@ -331,9 +341,9 @@
                     WHERE
                     \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
-                    (when limit
-                      (str " LIMIT " limit))
-                    ";")))))
+                   (when limit
+                     (str " LIMIT " limit))
+                   ";")))))
 
 (defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla
   ([]
@@ -347,9 +357,9 @@
                                INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
                                WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
                                AND ht.\"toimenpide-id\" NOT IN (" (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla) ")"
-                               (when (some? hintaryhma?)
-                                (str " AND hintaryhma = " hintaryhma?))
-                               ") LIMIT 1;")))))
+                   (when (some? hintaryhma?)
+                     (str " AND hintaryhma = " hintaryhma?))
+                   ") LIMIT 1;")))))
 
 (defn hae-kiintio-id-nimella [nimi]
   (ffirst (q (str "SELECT id
@@ -364,9 +374,9 @@
                     LEFT JOIN vv_hinta ON vv_hinta.\"hinnoittelu-id\" = vv_hinnoittelu.id
                     WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND vv_hinta.\"hinnoittelu-id\" IS NULL"
-                    (when (some? hintaryhma?)
-                      (str " AND hintaryhma = " hintaryhma?))
-                    " LIMIT 1")))))
+                   (when (some? hintaryhma?)
+                     (str " AND hintaryhma = " hintaryhma?))
+                   " LIMIT 1")))))
 
 (defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita []
   (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
@@ -659,6 +669,28 @@
                      :organisaation-urakat #{}
                      :urakkaroolit {}})
 
+(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
+                          :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
+                          :roolit #{}
+                          :urakkaroolit {}
+                          :organisaatioroolit {14 #{"Kayttaja"}}
+                          :organisaation-urakat #{1 4 20 22}})
+
+(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
+                      :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
+                      :roolit #{}
+                      :urakkaroolit {}
+                      :organisaatioroolit {16 #{"Kayttaja"}}
+                      :organisaation-urakat #{2 21}})
+
+;; Sepolla ei ole oikeutta mihinkään. :(
+(def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmalli"
+                      :organisaatio nil
+                      :roolit #{}
+                      :urakkaroolit {}
+                      :organisaatioroolit {}
+                      :organisaation-urakat #{}})
+
 (def +kayttaja-urakan-vastuuhenkilo+
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]
     {:organisaation-urakat #{urakka-id}
@@ -674,20 +706,6 @@
                     :nimi "YIT Rakennus Oy"
                     :tyyppi "urakoitsija"}
      :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}))
-
-(def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
-                          :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
-                          :roolit #{}
-                          :urakkaroolit {}
-                          :organisaatioroolit {14 #{"Kayttaja"}}
-                          :organisaation-urakat #{1 4 20 22}})
-
-(def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
-                      :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
-                      :roolit #{}
-                      :urakkaroolit {}
-                      :organisaatioroolit {16 #{"Kayttaja"}}
-                      :organisaation-urakat #{2 21}})
 
 (defn tietokanta-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -719,19 +737,26 @@
 
 (use-fixtures :once urakkatieto-fixture)
 
-(defn oulun-urakan-tilaajan-urakanvalvoja []
+(defn oulun-2005-urakan-tilaajan-urakanvalvoja []
   {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
    :roolit #{"ELY_Urakanvalvoja"}, :id 417,
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id, #{"ELY_Urakanvalvoja"}}})
 
-(defn oulun-urakan-urakoitsijan-urakkavastaava []
+(defn oulun-2005-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
    :roolit #{}, :id 17, :etunimi "Yitin",
    :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id #{"vastuuhenkilo"}}})
+
+(defn oulun-2014-urakan-urakoitsijan-urakkavastaava []
+  {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{}, :id 17, :etunimi "Yitin",
+   :organisaatio {:id 10, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"vastuuhenkilo"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

@@ -42,11 +42,26 @@
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
   (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
                                               (:jatkuvat-havainnot seuraava-reittimerkinta))
-        seuraava-piste-samalla-tiella? (boolean (or
-                                                  (nil? (:tr-osoite nykyinen-reittimerkinta))
-                                                  (nil? (:tr-osoite seuraava-reittimerkinta))
-                                                  (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
-                                                     (get-in seuraava-reittimerkinta [:tr-osoite :tie]))))
+        sama-tie-jatkuu? (boolean (or
+                                    ;; Molemmat pisteet samalla tiellä
+                                    (= (get-in nykyinen-reittimerkinta [:tr-osoite :tie])
+                                       (get-in seuraava-reittimerkinta [:tr-osoite :tie]))
+
+                                    ;; Tullaan pisteelle, jossa ei ole tieosoitetta, oletetaan reitin jatkuvan
+                                    ;; niin kauan kunnes toisin todistetaan.
+                                    (and (some? (:tr-osoite nykyinen-reittimerkinta))
+                                         (nil? (:tr-osoite seuraava-reittimerkinta)))
+
+                                    ;; Ei tiedossa missä ollaan, oletetaan että samalla tiellä niin kauan
+                                    ;; kunnes toisin todistetaan, muuten tulee jatkuvia katkaisuja.
+                                    (and (nil? (:tr-osoite nykyinen-reittimerkinta))
+                                         (nil? (:tr-osoite seuraava-reittimerkinta)))
+
+                                    ;; Viimeisenä voi olla tilanne, jossa nykyisessä sijainnissa ei ole tieosoitetta,
+                                    ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
+                                    ;; siitä pisteestä, jossa tieosoite on.
+                                    ))
+
         ei-ajallista-gappia? (let [aikaleima-nykyinen-merkinta (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
                                    aikaleima-seuraava-merkinta (c/from-sql-time (:aikaleima seuraava-reittimerkinta))]
                                (if (or
@@ -66,7 +81,7 @@
         seuraavassa-pisteessa-ei-kaannyta-ympari? (not (:ymparikaantyminen? seuraava-reittimerkinta))]
 
     (when-not jatkuvat-havainnot-pysyvat-samana? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat havainnot muuttuu " (:jatkuvat-havainnot nykyinen-reittimerkinta) " -> " (:jatkuvat-havainnot seuraava-reittimerkinta) ", katkaistaan reitti"))
-    (when-not seuraava-piste-samalla-tiella? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste eri tiellä " (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) " -> " (get-in seuraava-reittimerkinta [:tr-osoite :tie]) ", katkaistaan reitti"))
+    (when-not sama-tie-jatkuu? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste eri tiellä " (get-in nykyinen-reittimerkinta [:tr-osoite :tie]) " -> " (get-in seuraava-reittimerkinta [:tr-osoite :tie]) ", katkaistaan reitti"))
     (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä, " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
     (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
     (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
@@ -77,7 +92,7 @@
         jatkuvat-havainnot-pysyvat-samana?
         ;; Seuraava piste on osa samaa tietä. Jos seuraavalle pistelle ei ole pystytty määrittelemään tietä,
         ;; niin oletetaan kuitenkin, että se on osa samaa tarkastusta niin kauan kuin osoite oikeasti vaihtuu
-        seuraava-piste-samalla-tiella?
+        sama-tie-jatkuu?
         ;; Edellisen pisteen kirjauksesta ei ole kulunut ajallisesti liian kauan
         ;; Jos on kulunut, emme tiedä, mitä näiden pisteiden välillä on tapahtunut, joten on turvallista
         ;; päättää edellinen tarkastus ja aloittaa uusi.
@@ -438,6 +453,8 @@
 
 (defn- tallenna-tarkastus! [db tarkastus kayttaja]
   (log/debug "Aloitetaan tarkastuksen tallennus")
+  (when-not (:id kayttaja)
+    (log/error "LS-työkalun tallenna-tarkastus! ei sisältänyt käyttäjätietoa! tarkastus: " tarkastus ", kayttaja: " kayttaja))
   (let [tarkastus (luo-kantaan-tallennettava-tarkastus db tarkastus kayttaja)
         _ (q/luo-uusi-tarkastus<! db
                                   (merge tarkastus

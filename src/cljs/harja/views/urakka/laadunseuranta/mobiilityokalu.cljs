@@ -17,7 +17,7 @@
     [:li "Internet-yhteys (ainoastaan tarkastusajon aloittamista ja päättämistä varten)"]
     [:li "Selain: Chrome (53 tai uudempi), Firefox (49 tai uudempi), iPad Safari (9.3 tai uudempi)"]]
 
-   [:p "Parhaan käyttökokemuksen takaamiseksi on suositeltavaa asettaa laitteen automaattilukitus pois päältä tai viive mahdollisimman suureksi tarkastusajon ajaksi:"
+   [:p "Kaikkien merkintöjen tallentumiseksi sovellus tulee pitää koko ajan näkyvissä. On myös suositeltavaa asettaa laitteen automaattilukitus pois päältä tai viive mahdollisimman suureksi tarkastusajon ajaksi:"
     [:br] "- iPadissa Asetukset -> Yleiset -> Automaattilukitus -> Pois"
     [:br] "- Androidissa Asetukset -> Näyttö -> Näytön aikakatkaisu -> Pois"]
 

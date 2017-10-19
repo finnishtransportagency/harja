@@ -340,8 +340,8 @@
                   :validoi [[:ei-tyhja "Anna rahamäärä"]]
                   :palstoja 1})
                (when (= (:hinnoittelu @muokattu) :yksikkohinta)
-                 {:otsikko "Sopimushinta" :nimi :yksikkohinta
-                  :tyyppi :positiivinen-numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
+                 {:otsikko "Sopimus\u00ADhinta" :nimi :yksikkohinta
+                  :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
                   :muokattava? #(not (:yksikkohinta-suunniteltu? %))
                   :yksikko (str "€ / " (:yksikko @muokattu))
                   :palstoja 1})
