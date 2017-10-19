@@ -1,4 +1,9 @@
 [
+    { 
+    "date": "2017-10-19",
+    "title": "Tieliikenneilmoituksen lopetuskuittauksen yhteydessä voi kirjata aiheuttiko ilmoitus toimenpiteitä",
+    "body": "Harjan käyttöliittymässä kirjaus tehdään lopetuskuittauksen yhteydessä valintalaatikon ruksilla. Sähköpostikuittauksessa voi valita Lopetettu tai Lopetettu toimenpitein. Tekstiviestikuittauksessa L tarkoittaa lopetuskuittausta ilman toimenpiteitä ja T toimenpiteitä aiheuttaneen ilmoituksen lopetuskuittausta."
+  },
   { 
     "date": "2017-09-28",
     "title": "Sillantarkastuslomakkeeseen lisätty offline-tuki",
