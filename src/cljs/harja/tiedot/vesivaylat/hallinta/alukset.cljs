@@ -55,8 +55,7 @@
   AluksetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Alusten haku epäonnistui!" :danger)
-    (assoc app :alusten-haku-kaynnissa? false
-               :alukset []))
+    (assoc app :alusten-haku-kaynnissa? false))
 
   HaeUrakoitsijat
   (process-event [_ app]
@@ -105,5 +104,4 @@
   (process-event [{ch :paluukanava} app]
     (viesti/nayta! "Alusten tallennus epäonnistui!" :danger)
     (go (>! ch (:alukset app)))
-    (assoc app :alusten-tallennus-kaynnissa? false
-               :alukset [])))
+    (assoc app :alusten-tallennus-kaynnissa? false)))

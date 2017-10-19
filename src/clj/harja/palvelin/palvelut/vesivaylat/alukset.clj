@@ -86,10 +86,10 @@
              ::alus/lisatiedot (::alus/lisatiedot alus)
              ::m/muokattu (c/to-sql-time (t/now))
              ::m/poistettu? (or (:poistettu alus) false)}
-            {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
+            {::alus/mmsi (::alus/mmsi alus)})
           (specql/insert!
             db
-            ::alus/urakan-aluksen-kaytto
+            ::alus/alus
             {::alus/mmsi (::alus/mmsi alus)
              ::alus/nimi (::alus/nimi alus)
              ::alus/urakoitsija-id (::alus/urakoitsija-id alus)
