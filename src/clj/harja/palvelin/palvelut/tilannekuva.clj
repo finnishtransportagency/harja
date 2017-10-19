@@ -261,9 +261,9 @@
 
 (defn- tyokoneiden-toimenpiteet
   "Palauttaa haettavat tehtävä työkonekyselyille"
-  [talvi kesa yllapito tilaajan-laadunvalvonta]
+  [talvi kesa yllapito]
   (let [yllapito (filter tk/yllapidon-reaaliaikaseurattava? yllapito)
-        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito tilaajan-laadunvalvonta))]
+        haettavat-toimenpiteet (haettavat (union talvi kesa yllapito))]
     (konv/seq->array haettavat-toimenpiteet)))
 
 (defn- hae-tyokoneiden-selitteet
@@ -279,9 +279,7 @@
                     {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
                      :organisaatio (:id (:organisaatio user))
                      :urakat urakat
-                     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito
-                                                             (when (roolit/tilaajan-kayttaja? user)
-                                                               tilaajan-laadunvalvonta))
+                     :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito)
                      :alku alku
                      :loppu loppu}))
           tehtavat (into #{}
