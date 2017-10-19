@@ -39,7 +39,7 @@
                      [:uniikki "MMSI on jo olemassa"]]}
           {:otsikko "Nimi"
            :nimi ::alus/nimi
-           :tyyppi :numero
+           :tyyppi :string
            :leveys 3
            :validoi [[:ei-tyhja "Anna nimi"]]}
           {:otsikko "Urakoitsija"
@@ -54,7 +54,7 @@
            :leveys 2}
           {:otsikko "Lisätiedot"
            :nimi ::alus/lisatiedot
-           :tyyppi :numero
+           :tyyppi :string
            :leveys 5}]
          alukset]))))
 
