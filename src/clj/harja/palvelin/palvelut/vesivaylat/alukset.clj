@@ -122,7 +122,7 @@
       :tallenna-alukset
       (fn [user tiedot]
         (tallenna-alukset db user tiedot))
-      {:kysely-spec ::alus/tallenna-urakan-alukset-kysely
+      {:kysely-spec ::alus/tallenna-alukset-kysely
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     (julkaise-palvelu
       http
