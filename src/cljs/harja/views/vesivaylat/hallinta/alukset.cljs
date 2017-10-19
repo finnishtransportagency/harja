@@ -32,9 +32,6 @@
           :tyhja "Ei aluksia"
           :tunniste ::alus/mmsi
           :tallenna (fn [alukset]
-                      #_(let [ch (chan)]
-                        (e! (tiedot/->TallennaAlukset alukset ch))
-                        (go (<! ch)))
                       (tuck-apurit/e-paluukanavalla e! tiedot/->TallennaAlukset alukset))}
          [{:otsikko "MMSI"
            :nimi ::alus/mmsi
