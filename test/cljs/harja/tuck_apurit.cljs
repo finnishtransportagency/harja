@@ -2,7 +2,7 @@
   "Tuckin omat testityökalut"
   (:require [cljs.test :as t :refer-macros [is]]
             [tuck.core :as tuck]
-            [cljs.core.async :as async :refer [<!]]
+            [cljs.core.async :as async :refer [<! chan]]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.testutils.tuck-apurit :refer [vaadi-async-kutsut]]))
@@ -16,19 +16,3 @@
   ([event tila]
    (tuck/process-event event tila)))
 
-(defn palvelukutsu
-  ([palvelu argumentit optiot]
-   (palvelukutsu nil palvelu argumentit optiot))
-  ([app palvelu argumentit {:keys [onnistui epaonnistui]}]
-   (let [onnistui! (when onnistui (tuck/send-async! onnistui))
-         epaonnistui! (when epaonnistui (tuck/send-async! epaonnistui))]
-     (try
-       (go
-         (let [vastaus (<! (k/post! palvelu argumentit))]
-           (if (k/virhe? vastaus)
-             (when epaonnistui! (epaonnistui! vastaus))
-             (when onnistui! (onnistui! vastaus)))))
-       (catch :default e
-         (when epaonnistui! (epaonnistui! nil))
-         (throw e)))
-     app)))
