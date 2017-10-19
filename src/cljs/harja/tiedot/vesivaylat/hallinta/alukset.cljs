@@ -26,9 +26,9 @@
 (defrecord HaeUrakoitsijat [])
 (defrecord UrakoitsijatHaettu [tulos])
 (defrecord UrakoitsijatEiHaettu [])
-(defrecord TallennaAlukset [alukset])
-(defrecord AluksetTallennettu [tulos])
-(defrecord AluksetEiTallennettu [])
+(defrecord TallennaAlukset [alukset paluukanava])
+(defrecord AluksetTallennettu [tulos paluukanava])
+(defrecord AluksetEiTallennettu [paluukanava])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -82,24 +82,29 @@
                :urakoitsijat []))
 
   TallennaAlukset
-  (process-event [{alukset :alukset} app]
+  (process-event [{alukset :alukset ch :paluukanava} app]
     (if (not (:alusten-tallennus-kaynnissa? app))
       (-> app
           (tuck-apurit/palvelukutsu :tallenna-alukset
                                     {::alus/tallennettavat-alukset alukset}
                                     {:onnistui ->AluksetTallennettu
-                                     :epaonnistui ->AluksetEiTallennettu})
+                                     :onnistui-parametrit [ch]
+                                     :epaonnistui ->AluksetEiTallennettu
+                                     :epaonnistui-parametrit [ch]})
           (assoc :alusten-tallennus-kaynnissa? true))
 
       app))
 
   AluksetTallennettu
-  (process-event [{tulos :tulos} app]
+  (process-event [{tulos :tulos ch :paluukanava} app]
+    (log "ALUKSET TALLENNETTU")
+    (go (>! ch tulos))
     (assoc app :alusten-tallennus-kaynnissa? false
                :alukset tulos))
 
   AluksetEiTallennettu
-  (process-event [_ app]
+  (process-event [{ch :paluukanava} app]
     (viesti/nayta! "Alusten tallennus epäonnistui!" :danger)
+    (go (>! ch (:alukset app)))
     (assoc app :alusten-tallennus-kaynnissa? false
                :alukset [])))

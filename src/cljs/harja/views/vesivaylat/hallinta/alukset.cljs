@@ -12,9 +12,11 @@
             [harja.domain.vesivaylat.alus :as alus]
             [harja.domain.organisaatio :as o]
             [harja.loki :refer [log]]
+            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.grid :as grid]))
+            [harja.ui.grid :as grid])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn alukset* [e! app]
   (komp/luo
@@ -30,7 +32,10 @@
           :tyhja "Ei aluksia"
           :tunniste ::alus/mmsi
           :tallenna (fn [alukset]
-                      (e! (tiedot/->TallennaAlukset alukset)))}
+                      #_(let [ch (chan)]
+                        (e! (tiedot/->TallennaAlukset alukset ch))
+                        (go (<! ch)))
+                      (tuck-apurit/e-paluukanavalla e! tiedot/->TallennaAlukset alukset))}
          [{:otsikko "MMSI"
            :nimi ::alus/mmsi
            :tyyppi :numero

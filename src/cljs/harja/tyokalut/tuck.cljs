@@ -2,7 +2,7 @@
   "Tuck-apureita"
   (:require [cljs.test :as t :refer-macros [is]]
             [tuck.core :as tuck]
-            [cljs.core.async :as async :refer [<!]]
+            [cljs.core.async :as async :refer [<! chan]]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -22,3 +22,12 @@
          (when epaonnistui! (epaonnistui! nil))
          (throw e)))
      app)))
+
+(defn e-paluukanavalla
+  "Antaa paluukanavan tuck-eventille. Palauttaa kanavan, josta vastauksen voi lukea.
+   Tällä voi integroida esim. Gridin tallennuksen helposti Tuck-eventtiin, kunhan myös itse eventti
+   tukee paluukanavan käsittelyä."
+  [e! tapahtuma & tapahtuma-args]
+  (let [ch (chan)]
+    (e! (apply tapahtuma (conj (vec tapahtuma-args) ch)))
+    (go (<! ch))))
