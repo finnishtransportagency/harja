@@ -72,6 +72,7 @@
       (hae-urakan-alukset db user tiedot))))
 
 (defn tallenna-alukset [db user tiedot]
+  (log/debug "TODO")
   ;; TODO Toteutus
   ;; TODO Oikeustarkistus + testi sille
   )
