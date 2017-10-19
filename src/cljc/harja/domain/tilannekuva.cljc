@@ -25,6 +25,7 @@
   [tarkastus-soratie :soratie "Soratie"]
   [tarkastus-laatu :laatu "Laatu"]
   [turvallisuuspoikkeamat :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"]
+  [tilaajan-laadunvalvonta :tilaajan-laadunvalvonta "Tilaajan laadunvalvonta"]
 
   [tpp :toimenpidepyynto "TPP"]
   [tur :tiedoitus "TUR"]
@@ -87,9 +88,7 @@
   [lumensiirto "lumensiirto" "Lumensiirto"]
   [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
 
-  [varustetoteumat "varustetoteumat" "Varustetoteumat"]
-
-  [tilaajan-laadunvalvonta "tilaajan laadunvalvonta" "Tilaajan laadunvalvonta"])
+  [varustetoteumat "varustetoteumat" "Varustetoteumat"])
 
 (def tehtavien-jarjestys
   {:ilmoitukset {:tyypit [tpp tur urk]}

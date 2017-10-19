@@ -69,7 +69,8 @@ hakutiheys-historiakuva 1200000)
      :tarkastukset {tk/tarkastus-tiesto false
                     tk/tarkastus-talvihoito false
                     tk/tarkastus-soratie false
-                    tk/tarkastus-laatu false}
+                    tk/tarkastus-laatu false
+                    tk/tilaajan-laadunvalvonta false}
      ;; Näiden pitää osua työkoneen enumeihin
      ;; Kelintarkastus ja tiestotarkastus liittyvät tarkastusten tekoon,
      ;; eivät ole "toteumia". Säilytetty kommenteissa, jotta JOS tarkasten
@@ -113,7 +114,6 @@ hakutiheys-historiakuva 1200000)
             tk/siltojen-puhdistus false
             tk/l-ja-p-alueiden-puhdistus false
             tk/muu false}
-     :tilaajan-laadunvalvonta {tk/tilaajan-laadunvalvonta false}
      :alueet oletusalueet
      :varustetoteumat {tk/varustetoteumat false}}))
 

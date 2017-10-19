@@ -2808,8 +2808,6 @@ UPDATE toimenpidekoodi SET suoritettavatehtava = 'kuumennus' :: suoritettavateht
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'sekoitus tai stabilointi' :: suoritettavatehtava WHERE nimi = 'Sekoitus tai stabilointi';
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'turvalaite' :: suoritettavatehtava WHERE nimi = 'Turvalaite';
 
-UPDATE toimenpidekoodi SET suoritettavatehtava = 'tilaajan laadunvalvonta' :: suoritettavatehtava WHERE nimi ILIKE('%laadun%');
-
 
 -- Luodaan 'Ei yksilöity' tehtävä kaikille 3. tason 'Laaja toimenpide' -toimenpiteiden alle HAR-2465
 -- params (p_nimi        VARCHAR(255),

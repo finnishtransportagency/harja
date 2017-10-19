@@ -704,7 +704,6 @@ paallystyskohdeosan-tiedot-xf
     ;; Tämä palvelu palauttaa tilannekuvaan asiat, jotka piirretään frontilla
     (julkaise-palvelu http :hae-tilannekuvaan
                       (fn [user tiedot]
-                        (log/debug "TIEDOT: " (pr-str tiedot))
                         (hae-tilannekuvaan db user tiedot)))
     (julkaise-palvelu http :hae-urakat-tilannekuvaan
                       (fn [user tiedot]

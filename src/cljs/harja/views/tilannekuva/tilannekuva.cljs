@@ -272,11 +272,7 @@ suodatinryhmat
                  {:auki-atomi? (paneelin-tila-atomi! (str polku) false)})])]
       [:div.tk-yksittaiset-suodattimet.fontti-taso3
        [yksittainen-suodatincheckbox "Varustetoteumat"
-        tiedot/suodattimet [:varustetoteumat tk/varustetoteumat]]]
-      (when (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-        [:div.tk-yksittaiset-suodattimet.fontti-taso3
-         [yksittainen-suodatincheckbox "Laadunvalvonta"
-          tiedot/suodattimet [:tilaajan-laadunvalvonta tk/tilaajan-laadunvalvonta]]])]]))
+        tiedot/suodattimet [:varustetoteumat tk/varustetoteumat]]]]]))
 
 (defn nykytilanne-valinnat []
   [:span.tilannekuva-nykytilanne-valinnat
@@ -297,6 +293,11 @@ suodatinryhmat
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
     (komp/luo
+      (komp/sisaan (fn [this]
+                     (when-not (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                       (let [tilaajan-laadunvalvonta-avain (some #(when (= :tilaajan-laadunvalvonta (:nimi %)) %)
+                                                                 (keys (:tarkastukset @tiedot/suodattimet)))]
+                         (swap! tiedot/suodattimet update :tarkastukset dissoc tilaajan-laadunvalvonta-avain)))))
       (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)
