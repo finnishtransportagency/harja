@@ -97,7 +97,6 @@
 
   AluksetTallennettu
   (process-event [{tulos :tulos ch :paluukanava} app]
-    (log "ALUKSET TALLENNETTU")
     (go (>! ch tulos))
     (assoc app :alusten-tallennus-kaynnissa? false
                :alukset tulos))
