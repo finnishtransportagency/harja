@@ -192,10 +192,11 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
           (harja.ui.ikonit/livicon-info-sign))]])))
 
 (defn kentan-vihje [{:keys [vihje vihje-leijuke] :as skeema}]
-  (when vihje
-    [kentan-vihje-inline vihje])
-  (when vihje-leijuke
-    [kentan-vihje-leijuke vihje-leijuke]))
+  [:span
+   (when vihje
+     [kentan-vihje-inline vihje])
+   (when vihje-leijuke
+     [kentan-vihje-leijuke vihje-leijuke])])
 
 (defn yleinen-huomautus
   "Yleinen huomautus, joka voidaan näyttää esim. lomakkeen tallennuksen yhteydessä"
