@@ -125,6 +125,7 @@
       {:kysely-spec ::alus/tallenna-urakan-alukset-kysely
        :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     (julkaise-palvelu
+      http
       :hae-alusten-reitit-pisteineen
       (fn [user tiedot]
         (hae-alusten-reitit db user tiedot true))
@@ -136,7 +137,8 @@
       (fn [user tiedot]
         (hae-alusten-reitit db user tiedot))
       {:kysely-spec ::alus/hae-alusten-reitit-kysely
-       :vastaus-spec ::alus/hae-alusten-reitit-vastaus}))
+       :vastaus-spec ::alus/hae-alusten-reitit-vastaus})
+    this)
 
   (stop [this]
     (poista-palvelut
