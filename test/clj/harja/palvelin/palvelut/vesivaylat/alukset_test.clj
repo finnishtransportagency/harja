@@ -143,6 +143,38 @@
                                            :tallenna-urakan-alukset +kayttaja-ulle+
                                            args)))))
 
+(deftest tallenna-alukset
+  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        uudet-alukset [{::alus/mmsi 12235365
+                        ::alus/nimi "Urpo"
+                        ::alus/urakoitsija-id urakoitsija-id
+                        ::alus/lisatiedot "Urpo on karhu"}
+                       {::alus/mmsi 12235366
+                        ::alus/nimi "Turpo"
+                        ::alus/urakoitsija-id urakoitsija-id
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Turpo on karhu"}
+                       {::alus/mmsi 12235367
+                        ::alus/nimi ""
+                        ::alus/urakoitsija-id urakoitsija-id
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Tää on varsinaista karhun elämää!"}]
+        alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus;"))
+        args {::alus/tallennettavat-alukset uudet-alukset}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-alukset +kayttaja-jvh+
+                                args)
+        alukset-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_alus;"))]
+
+
+    (is (s/valid? ::alus/tallenna-alukset-kysely args))
+    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus vastaus))
+
+    (is (= (+ alukset-ennen (count uudet-alukset))
+           alukset-jalkeen)
+        "Alusksia tuli lisää oikea määrä")
+
+    (is (some #(= (::alus/nimi %) "Urpo") vastaus))
+    (is (some #(= (::alus/nimi %) "Turpo") vastaus))))
+
 (deftest hae-urakoitsijan-alukset-ilman-oikeutta
   (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -198,10 +230,10 @@
             (and
               (not-empty pisteet)
               (every?
-               (fn [piste]
-                 (and (every? some? (vals piste))
-                      (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
-               pisteet)))
+                (fn [piste]
+                  (and (every? some? (vals piste))
+                       (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
+                pisteet)))
           (map ::alus/pisteet tulos))))
 
   (let [args {:alukset #{230111580} :alku nil :loppu nil}
