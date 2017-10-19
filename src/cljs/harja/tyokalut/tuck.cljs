@@ -30,4 +30,4 @@
   [e! tapahtuma & tapahtuma-args]
   (let [ch (chan)]
     (e! (apply tapahtuma (conj (vec tapahtuma-args) ch)))
-    (go (<! ch))))
+    ch))
