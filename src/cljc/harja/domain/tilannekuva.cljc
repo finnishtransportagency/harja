@@ -25,7 +25,7 @@
   [tarkastus-soratie :soratie "Soratie"]
   [tarkastus-laatu :laatu "Laatu"]
   [turvallisuuspoikkeamat :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"]
-  [tilaajan-laadunvalvonta :tilaajan-laadunvalvonta "Tilaajan laadunvalvonta"]
+  [tilaajan-laadunvalvonta "tilaajan laadunvalvonta" "Tilaajan laadunvalvonta"]
 
   [tpp :toimenpidepyynto "TPP"]
   [tur :tiedoitus "TUR"]
@@ -242,3 +242,6 @@
 
 (defn yllapidon-reaaliaikaseurattava? [id]
   (yllapidon-reaaliaikaseurattavat id))
+
+(defn tarkastuksen-reaaliaikaseurattava? [id]
+  (= id (:id tilaajan-laadunvalvonta)))
