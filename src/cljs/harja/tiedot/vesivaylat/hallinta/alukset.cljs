@@ -5,6 +5,7 @@
             [tuck.core :as tuck]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.vesivaylat.alus :as alus]
             [tuck.core :as t]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit])
