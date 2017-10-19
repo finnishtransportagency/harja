@@ -43,7 +43,7 @@
                          db
                          ::alus/alus
                          (set/union alus/perustiedot alus/viittaukset)
-                         {})))
+                         {::m/poistettu? false})))
 
 (defn tallenna-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
