@@ -51,11 +51,6 @@
     (is (some #(= (::alus/nimi %) "Rohmu") tulos))
     (is (= (count tulos) kaikkien-alusten-lkm-kannassa))))
 
-(deftest hae-kaikki-alukset-ilman-oikeutta
-  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :hae-kaikki-alukset +kayttaja-ulle+
-                                         {}))))
-
 (deftest hae-urakan-alukset
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         urakan-alusten-lkm-kannassa (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka WHERE urakka = " urakka-id ";"))
@@ -69,12 +64,6 @@
 
     (is (some #(= (::alus/nimi %) "Rohmu") tulos))
     (is (= (count tulos) urakan-alusten-lkm-kannassa))))
-
-(deftest hae-urakan-alukset-ilman-oikeutta
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)]
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-urakan-alukset +kayttaja-ulle+
-                                           {::urakka/id urakka-id})))))
 
 (deftest hae-urakoitsijan-alukset
   (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
@@ -92,36 +81,82 @@
     (is (some #(= (::alus/nimi %) "Rohmu") tulos))
     (is (= (count tulos) urakoitsijan-alusten-lkm-kannassa))))
 
-(deftest hae-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-urakoitsijan-alukset +kayttaja-ulle+
-                                           {::organisaatio/id urakoitsija-id})))))
+(deftest hae-alusten-reitit
+  (let [args {:alukset nil :alku nil :loppu nil}
+        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-alusten-reitit +kayttaja-jvh+
+                              args)]
 
-(deftest tallenna-urakan-alukset
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
-        alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
-        alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
-        vapaat-alukset (filter (comp not alukset-kaytossa) alus-mmsit)
-        uudet-alukset [{::alus/mmsi (first vapaat-alukset)
-                        ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
-                       {::alus/mmsi (second vapaat-alukset)
-                        ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
-        urakan-alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))
-        args {::urakka/id urakka-id
-              ::alus/urakan-tallennettavat-alukset uudet-alukset}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-alukset +kayttaja-ulle+
-                                args)
-        urakan-alukset-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))]
+    (is (s/valid? ::alus/hae-alusten-reitit-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-vastaus tulos))
 
+    (is (every?
+          (fn [t]
+            (and (every? some? (vals t))
+                 (= #{::alus/sijainti ::alus/alus-mmsi} (into #{} (keys t)))))
+          tulos)))
 
-    (is (s/valid? ::alus/tallenna-urakan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-urakan-alukset-vastaus vastaus))
+  (let [args {:alukset #{230111580} :alku nil :loppu nil}
+        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-alusten-reitit +kayttaja-jvh+
+                              args)]
 
-    (is (= (+ urakan-alukset-ennen (count uudet-alukset))
-           urakan-alukset-jalkeen)
-        "Aluslinkkejä tuli lisää oikea määrä")
+    (is (s/valid? ::alus/hae-alusten-reitit-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-vastaus tulos))
 
-    (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Hieno alus tässä urakassa") vastaus))
-    (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
+    (is (= 1 (count tulos)))
+    (is (every?
+          (fn [t]
+            (and (every? some? (vals t))
+                 (= #{::alus/sijainti ::alus/alus-mmsi} (into #{} (keys t)))))
+          tulos))))
+
+(deftest hae-alusten-reitit-pisteineen
+  (let [args {:alukset nil :alku nil :loppu nil}
+        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-alusten-reitit-pisteineen +kayttaja-jvh+
+                              args)]
+
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-vastaus tulos))
+
+    (is (every?
+          (fn [t]
+            (and (every? some? (vals t))
+                 (= #{::alus/sijainti ::alus/alus-mmsi ::alus/pisteet} (into #{} (keys t)))))
+          tulos))
+    (is (every?
+          (fn [pisteet]
+            (and
+              (not-empty pisteet)
+              (every?
+               (fn [piste]
+                 (and (every? some? (vals piste))
+                      (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
+               pisteet)))
+          (map ::alus/pisteet tulos))))
+
+  (let [args {:alukset #{230111580} :alku nil :loppu nil}
+        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-alusten-reitit-pisteineen +kayttaja-jvh+
+                              args)]
+
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-kysely args))
+    (is (s/valid? ::alus/hae-alusten-reitit-pisteineen-vastaus tulos))
+
+    (is (= 1 (count tulos)))
+    (is (every?
+          (fn [t]
+            (and (every? some? (vals t))
+                 (= #{::alus/sijainti ::alus/alus-mmsi ::alus/pisteet} (into #{} (keys t)))))
+          tulos))
+    (is (every?
+          (fn [pisteet]
+            (and
+              (not-empty pisteet)
+              (every?
+                (fn [piste]
+                  (and (every? some? (vals piste))
+                       (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
+                pisteet)))
+          (map ::alus/pisteet tulos)))))
