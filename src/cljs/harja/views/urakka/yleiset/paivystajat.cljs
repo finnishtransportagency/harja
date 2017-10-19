@@ -10,7 +10,7 @@
             [clojure.string :as str]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.urakka.yhteystiedot :as yht]
+            [harja.tiedot.urakka.yleiset :as tiedot]
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
@@ -39,7 +39,7 @@
                                     (> (:id %) 0))
                            (:id %)))
                   uudet-paivystajat)
-            vastaus (<! (yht/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
+            vastaus (<! (tiedot/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
         (if (k/virhe? vastaus)
           (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
           (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
@@ -126,22 +126,22 @@
    [kentat/tee-kentta {:tyyppi :toggle
                        :paalle-teksti "Näytä aikajana"
                        :pois-teksti "Piilota aikajana"
-                       :toggle! yht/toggle-nayta-aikajana!} yht/nayta-aikajana?]
+                       :toggle! tiedot/toggle-nayta-aikajana!} tiedot/nayta-aikajana?]
 
-   (when @yht/nayta-aikajana?
+   (when @tiedot/nayta-aikajana?
      [on-off/on-off "Kaikki" "Vain urakoitsijan henkilöt"
-      @yht/aikajana-vain-urakoitsijat? yht/toggle-aikajana-vain-urakoitsijat!])])
+      @tiedot/aikajana-vain-urakoitsijat? tiedot/toggle-aikajana-vain-urakoitsijat!])])
 
 (defn- aikajana [paivystajat]
   [:div.paivystys-aikajana
    [aikajana-valinnat]
 
-   (when @yht/nayta-aikajana?
+   (when @tiedot/nayta-aikajana?
      [:div.paivystajat-aikajana
       [aikajana/aikajana
        {::aikajana/alku (pvm/paivaa-sitten 14)
         ::aikajana/loppu (pvm/paivaa-sitten -60)}
-       (aikajanariveiksi paivystajat @yht/aikajana-vain-urakoitsijat?)]])])
+       (aikajanariveiksi paivystajat @tiedot/aikajana-vain-urakoitsijat?)]])])
 
 (defn paivystajat [ur]
   (let [paivystajat (r/atom nil)
@@ -150,7 +150,7 @@
                (reset! paivystajat nil)
                (go (reset! paivystajat
                            (reverse (sort-by :loppu
-                                             (<! (yht/hae-urakan-paivystajat urakka-id)))))))]
+                                             (<! (tiedot/hae-urakan-paivystajat urakka-id)))))))]
     (hae! (:id ur))
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id))

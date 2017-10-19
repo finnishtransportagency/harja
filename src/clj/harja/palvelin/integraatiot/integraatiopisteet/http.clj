@@ -64,13 +64,13 @@
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
                             (format "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe.  Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]})))
 
-(defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers]
+(defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers response->loki]
   (log/debug (format "Kutsu palveluun: %s onnistui." url))
-  (lokittaja :onnistunut lokiviesti nil tapahtuma-id)
+  (lokittaja :onnistunut (update lokiviesti :sisalto (or response->loki identity)) nil tapahtuma-id)
   {:body body :headers headers})
 
 (defn laheta-kutsu
-  [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
+  [lokittaja tapahtuma-id url metodi otsikot parametrit {:keys [kayttajatunnus salasana response->loki]} kutsudata]
   (nr/with-newrelic-transaction
     "HTTP integraatiopiste"
     (str ":http-integraatiopiste-" (lokittaja :avain))
@@ -92,7 +92,7 @@
           (if (or error
                   (not (= 200 status)))
             (kasittele-virhe lokittaja lokiviesti tapahtuma-id url error status)
-            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers)))))))
+            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers response->loki)))))))
 
 (defprotocol HttpIntegraatiopiste
   (GET
@@ -109,22 +109,22 @@
   HttpIntegraatiopiste
 
   (GET [_ url]
-    (laheta-kutsu lokittaja tapahtuma-id url :get nil nil (:kayttajatunnus asetukset) (:salasana asetukset) nil))
+    (laheta-kutsu lokittaja tapahtuma-id url :get nil nil asetukset nil))
 
   (GET [_ url otsikot parametrit]
-    (laheta-kutsu lokittaja tapahtuma-id url :get otsikot parametrit (:kayttajatunnus asetukset) (:salasana asetukset) nil))
+    (laheta-kutsu lokittaja tapahtuma-id url :get otsikot parametrit asetukset nil))
 
   (POST [_ url kutsudata]
-    (laheta-kutsu lokittaja tapahtuma-id url :post nil nil (:kayttajatunnus asetukset) (:salasana asetukset) kutsudata))
+    (laheta-kutsu lokittaja tapahtuma-id url :post nil nil asetukset kutsudata))
 
   (POST [_ url otsikot parametrit kutsudata]
-    (laheta-kutsu lokittaja tapahtuma-id url :post otsikot parametrit (:kayttajatunnus asetukset) (:salasana asetukset) kutsudata))
+    (laheta-kutsu lokittaja tapahtuma-id url :post otsikot parametrit asetukset kutsudata))
 
   (HEAD [_ url]
-    (laheta-kutsu lokittaja tapahtuma-id url :head nil nil (:kayttajatunnus asetukset) (:salasana asetukset) nil))
+    (laheta-kutsu lokittaja tapahtuma-id url :head nil nil asetukset nil))
 
   (HEAD [_ url otsikot parametrit]
-    (laheta-kutsu lokittaja tapahtuma-id url :head otsikot parametrit (:kayttajatunnus asetukset) (:salasana asetukset) nil)))
+    (laheta-kutsu lokittaja tapahtuma-id url :head otsikot parametrit asetukset nil)))
 
 (defn luo-integraatiopiste
   ([lokittaja tapahtuma-id]
