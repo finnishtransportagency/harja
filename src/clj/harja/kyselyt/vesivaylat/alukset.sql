@@ -20,6 +20,15 @@ WHERE a.urakoitsija = :urakoitsija
 AND a.poistettu IS NOT TRUE
 ORDER BY mmsi;
 
+-- name: hae-alus-mmsilla
+SELECT
+  mmsi,
+  nimi,
+  a.lisatiedot
+FROM vv_alus a
+WHERE a.poistettu IS NOT TRUE
+      AND mmsi = :mmsi;
+
 -- name: hae-urakan-alus-mmsilla
 SELECT
   mmsi,

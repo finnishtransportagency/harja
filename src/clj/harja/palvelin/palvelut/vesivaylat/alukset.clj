@@ -72,10 +72,31 @@
       (hae-urakan-alukset db user tiedot))))
 
 (defn tallenna-alukset [db user tiedot]
-  (log/debug "TODO Toteuta")
-  ;; TODO Toteutus
   ;; TODO Oikeustarkistus + testi sille
-  (hae-kaikki-alukset db user))
+  (let [alukset (::alus/tallennettavat-alukset tiedot)]
+    (jdbc/with-db-transaction [db db]
+      (doseq [alus alukset]
+        (if (first (alukset-q/hae-alus-mmsilla db {:mmsi (::alus/mmsi alus)}))
+          (specql/update!
+            db
+            ::alus/alus
+            {::alus/mmsi (::alus/mmsi alus)
+             ::alus/nimi (::alus/nimi alus)
+             ::alus/urakoitsija-id (::alus/urakoitsija-id alus)
+             ::alus/lisatiedot (::alus/lisatiedot alus)
+             ::m/muokattu (c/to-sql-time (t/now))
+             ::m/poistettu? (or (:poistettu alus) false)}
+            {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
+          (specql/insert!
+            db
+            ::alus/urakan-aluksen-kaytto
+            {::alus/mmsi (::alus/mmsi alus)
+             ::alus/nimi (::alus/nimi alus)
+             ::alus/urakoitsija-id (::alus/urakoitsija-id alus)
+             ::alus/lisatiedot (::alus/lisatiedot alus)
+             ::m/luoja-id (:id user)
+             ::m/luotu (c/to-sql-time (t/now))})))
+      (hae-kaikki-alukset db user))))
 
 (defn hae-alusten-reitit
   ([db user tiedot] (hae-alusten-reitit db user tiedot false))
