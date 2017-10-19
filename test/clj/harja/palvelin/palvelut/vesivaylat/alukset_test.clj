@@ -143,6 +143,12 @@
                                            :tallenna-urakan-alukset +kayttaja-ulle+
                                            args)))))
 
+(deftest hae-urakoitsijan-alukset-ilman-oikeutta
+  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-urakoitsijan-alukset +kayttaja-ulle+
+                                           {::organisaatio/id urakoitsija-id})))))
+
 (deftest tallenna-alukset
   (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         uudet-alukset [{::alus/mmsi 12235365
@@ -178,11 +184,19 @@
     (is (some #(= (::alus/nimi %) "Turpo") vastaus))
     (is (some #(= (::alus/lisatiedot %) "Turpo on karhu") vastaus))))
 
-(deftest hae-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-urakoitsijan-alukset +kayttaja-ulle+
-                                           {::organisaatio/id urakoitsija-id})))))
+(deftest tallenna-alukset-ilman-oikeutta
+  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        uudet-alukset [{::alus/mmsi 12235365
+                        ::alus/nimi "Yrmykyrmy"
+                        ::alus/urakoitsija-id urakoitsija-id
+                        ::alus/lisatiedot "Hakkeroitu alus"}]
+        alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus;"))
+        args {::alus/tallennettavat-alukset uudet-alukset}]
+
+    (is (thrown? Exception
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-alukset +kayttaja-ulle+
+                                 args)))))
 
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
