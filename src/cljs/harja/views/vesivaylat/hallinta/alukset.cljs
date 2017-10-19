@@ -32,7 +32,7 @@
           :tyhja "Ei aluksia"
           :tunniste ::alus/mmsi
           :tallenna (fn [alukset]
-                      (tuck-apurit/e-paluukanavalla e! tiedot/->TallennaAlukset alukset))}
+                      (tuck-apurit/e-paluukanavalla! e! tiedot/->TallennaAlukset alukset))}
          [{:otsikko "MMSI"
            :nimi ::alus/mmsi
            :tyyppi :numero

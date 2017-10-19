@@ -96,7 +96,7 @@
                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                (:id @nav/valittu-urakka))
                      (fn [sisalto]
-                       (tuck-apurit/e-paluukanavalla e! tiedot/->TallennaKiintiot sisalto)))
+                       (tuck-apurit/e-paluukanavalla! e! tiedot/->TallennaKiintiot sisalto)))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
          :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
