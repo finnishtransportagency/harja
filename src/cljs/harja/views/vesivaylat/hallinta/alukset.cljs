@@ -48,7 +48,6 @@
            :valinnat urakoitsijat
            :valinta-arvo ::o/id
            :fmt #(let [urakoitsija (o/organisaatio-idlla % urakoitsijat)]
-                   (log "FMT ARG " (pr-str %) " JA UR: " (pr-str urakoitsija))
                    (::o/nimi urakoitsija))
            :valinta-nayta #(if % (::o/nimi %) "- Valitse urakoitsija -")
            :validoi [[:ei-tyhja "Anna urakoitsija"]]
