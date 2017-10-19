@@ -266,8 +266,9 @@
       huom-teksti)))
 
 (defn tarkastuslomake [tarkastus-atom optiot]
-  (let [urakka-id (:id @nav/valittu-urakka)
-        urakkatyyppi (:tyyppi @nav/valittu-urakka)
+  (let [valittu-urakka @nav/valittu-urakka
+        urakka-id (:id valittu-urakka)
+        urakkatyyppi (:tyyppi valittu-urakka)
         tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
@@ -277,6 +278,7 @@
         kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
         yllapitokohteet (:yllapitokohteet optiot)
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
+        yllapidon-palvelusopimus? (tiedot-urakka/yllapidon-palvelusopimus? valittu-urakka)
         vesivaylaurakka? (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)]
     (if (and yllapitokohdeurakka? (nil? yllapitokohteet))
       [yleiset/ajax-loader "Ladataan..."]
@@ -314,7 +316,7 @@
                          "Tallenna tarkastus"
                          (fn []
                            (tiedot/tallenna-tarkastus
-                             (:id @nav/valittu-urakka)
+                             (:id valittu-urakka)
                              (lomake/ilman-lomaketietoja tarkastus)
                              (:nakyma optiot)))
                          {:disabled (not (lomake/voi-tallentaa? tarkastus))
@@ -337,7 +339,7 @@
          (when yllapitokohdeurakka?
            {:otsikko "Ylläpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
             :palstoja 1
-            :pakollinen? true
+            :pakollinen? (not yllapidon-palvelusopimus?)
             :valinnat yllapitokohteet
             :jos-tyhja "Ei valittavia kohteita"
             :valinta-arvo :id
@@ -352,7 +354,8 @@
                                (if muokattava?
                                  "- Valitse kohde -"
                                  "")))
-            :validoi [[:ei-tyhja "Anna laatupoikkeaman kohde"]]})
+            :validoi (when-not yllapidon-palvelusopimus?
+                       [[:ei-tyhja "Anna tarkastuksen kohde"]])})
 
          (if vesivaylaurakka?
            {:otsikko "Tar\u00ADkastus" :nimi :tyyppi :tyyppi :string
