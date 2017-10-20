@@ -16,6 +16,7 @@
 
 (defonce tienumero (atom nil)) ;; tienumero, tai kaikki
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
+(defonce tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? (atom false))
 
 (def +naytettevat-tarkastukset-valinnat+
   [[nil "Kaikki"]
@@ -41,21 +42,29 @@
 (defn tallenna-tarkastus
   "Tallentaa tarkastuksen urakalle."
   [urakka-id tarkastus nakyma]
-  (k/post! :tallenna-tarkastus {:urakka-id urakka-id
-                                :tarkastus (let
-                                             [yllapitourakka? (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])]
-                                             (cond-> tarkastus
-                                                     ;; jos ei ole ylläpidon urakka, poistetaan ylläpitokohteen viitatus
-                                                     (not yllapitourakka?)
-                                                     (dissoc :yllapitokohde)
+  (k/post! :tallenna-tarkastus
+           {:urakka-id urakka-id
+            :tarkastus
+            (let
+              [yllapitourakka? (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])]
+              (cond-> tarkastus
+                      ;; jos ei ole ylläpidon urakka, poistetaan ylläpitokohteen viitatus
+                      (not yllapitourakka?)
+                      (dissoc :yllapitokohde)
 
-                                                     ;; jos kyseessä on ylläpidon urakka, lisätään ylläpitokohde ja
-                                                     ;; katselmuksille aina oikeus urakoitsijalle nähdä ne
-                                                     yllapitourakka?
-                                                     (assoc :yllapitokohde (or (:yllapitokohde tarkastus)
-                                                                               (get-in tarkastus [:yllapitokohde :id]))
-                                                            :nayta-urakoitsijalle (or (= (:tyyppi tarkastus) :katselmus)
-                                                                                      (:nayta-urakoitsijalle tarkastus)))))}))
+                      ;; jos kyseessä on ylläpidon urakka, lisätään ylläpitokohde ja
+                      ;; katselmuksille aina oikeus urakoitsijalle nähdä ne
+                      yllapitourakka?
+                      (assoc :yllapitokohde (or (:yllapitokohde tarkastus)
+                                                (get-in tarkastus [:yllapitokohde :id]))
+                             :nayta-urakoitsijalle (or (= (:tyyppi tarkastus) :katselmus)
+                                                       (:nayta-urakoitsijalle tarkastus)))))}))
+
+(defn aseta-tarkastus-nakymaan-urakoitsijalle
+  "Tallentaa tarkastuksen urakalle."
+  [urakka-id tarkastus-id]
+  (k/post! :nayta-tarkastus-urakoitsijalle {:urakka-id urakka-id
+                                            :tarkastus-id tarkastus-id}))
 
 (defn hae-urakan-tarkastukset
   "Hakee annetun urakan tarkastukset urakka id:n ja ajan perusteella."
