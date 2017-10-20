@@ -37,6 +37,12 @@
         "V" "v"
         "t"))))
 
+;; tänne kaukon listasta tuki vv-urakoille
+;; viesti sonjasta -> luetaan alueurakkanro -> otetaan viivaan asti kaikki merkit  -> päätellään väylämuoto, urakkatyyppi, urakka.alityyppi (esim typ teiden ylläpidon päällystysurakka) - nyt vyk tms (vv-yllapito-kanavat).
+
+;; stagingin integraatioloista pitäisi löytyä, jos etsii tuolla vyk tms koodilla. sampo-sisäänluku integraatio. VHK on tyyppi.
+
+
 (defn rakenna-sampon-tyyppi [urakkatyyppi]
   (case urakkatyyppi "valaistus" "TYV"
                      "paallystys" "TYP"
@@ -50,8 +56,3 @@
                      "vesivayla-kanavien-hoito" "VHK"
                      "vesivayla-kanavien-korjaus" "VYK"
                      (throw (new RuntimeException (str "Tuntematon urakkatyyppi: " urakkatyyppi)))))
-
-
-
-
-

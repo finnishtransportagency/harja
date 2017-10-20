@@ -22,6 +22,8 @@
   (is (= "tiemerkinta" (urakkatyyppi/paattele-urakkatyyppi "THT")) "Tiemerkintä urakkatyyppi päätellään oikein.")
   (is (= "tekniset-laitteet" (urakkatyyppi/paattele-urakkatyyppi "THL")) "Tekniset laittet urakkatyyppi päätellään oikein.")
   (is (= "tekniset-laitteet" (urakkatyyppi/paattele-urakkatyyppi "TYL")) "Tekniset laittet urakkatyyppi päätellään oikein.")
+  (is (= "vesivayla-kanavien-hoito" (urakkatyyppi/paattele-urakkatyyppi "VHK")) "Hoito urakkatyyppi päätellään oikein.")
+  (is (= "vesivayla-kanavien-yllapito" (urakkatyyppi/paattele-urakkatyyppi "VYK")) "Hoito urakkatyyppi päätellään oikein.")
   (is (= "hoito" (urakkatyyppi/paattele-urakkatyyppi "TH")) "Hoito urakkatyyppi päätellään oikein.")
   (is (= "paallystys" (urakkatyyppi/paattele-urakkatyyppi "typ")) "Päättely toimii pienillä kirjaimilla.")
   (is (= "hoito" (urakkatyyppi/paattele-urakkatyyppi "TH123")) "Hoito urakkatyyppi päätellään oikein.")
@@ -39,5 +41,7 @@
   (is (= "TYV" (urakkatyyppi/rakenna-sampon-tyyppi "valaistus")))
   (is (= "TYS" (urakkatyyppi/rakenna-sampon-tyyppi "siltakorjaus")))
   (is (= "TYL" (urakkatyyppi/rakenna-sampon-tyyppi "tekniset-laitteet")))
+  (is (= "VYK" (urakkatyyppi/rakenna-sampon-tyyppi "vesivayla-kanavien-korjaus")))
+  (is (= "VHK" (urakkatyyppi/rakenna-sampon-tyyppi "vesivayla-kanavien-hoito")))
   (is (thrown-with-msg? RuntimeException #"Tuntematon urakkatyyppi: tuntematon"
                         (urakkatyyppi/rakenna-sampon-tyyppi "tuntematon"))))
