@@ -44,7 +44,7 @@
      [kohteiden-luonti/kohteiden-luonti])
 
    "Kohteiden liittäminen"
-   :kanavaurakoiden-kohteiden-luonti
+   :kanavaurakoiden-kohteiden-liittaminen
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-kanavat))
      ^{:key "kohteiden-liittaminen"}
