@@ -39,11 +39,17 @@
 
 (defn hae-kaikki-alukset [db user]
   ;; TODO Oikeustarkistus
-  (sort-by ::alus/mmsi (specql/fetch
-                         db
-                         ::alus/alus
-                         (set/union alus/perustiedot alus/viittaukset)
-                         {::m/poistettu? false})))
+  (let [organisaatio (:organisaatio user)
+        organisaatio-id (:id organisaatio)
+        urakoitsija? (= (:tyyppi organisaatio) :urakoitsija)]
+    (sort-by ::alus/mmsi (specql/fetch
+                           db
+                           ::alus/alus
+                           (set/union alus/perustiedot alus/viittaukset)
+                           (merge
+                             {::m/poistettu? false}
+                             (when urakoitsija?
+                               {:urakoitsija-id organisaatio-id}))))))
 
 (defn tallenna-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
