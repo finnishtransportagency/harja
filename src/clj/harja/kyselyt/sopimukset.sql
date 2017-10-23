@@ -18,6 +18,7 @@ SET nimi              = :nimi,
   paasopimus = (SELECT id
        FROM sopimus
        WHERE urakka_sampoid = :urakka_sampoid
+             AND id != :id
              AND paasopimus IS NULL)
 WHERE id = :id;
 
