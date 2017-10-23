@@ -111,7 +111,7 @@
           [:script {:type "text/javascript"}
            "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
             proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body :data-anti-csrf-token random-avain
+         [:body {:data-anti-csrf-token random-avain}
           [:div {:style "display: none;"}
            inline-svg-18 inline-svg-24 inline-svg-36]
           [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
@@ -136,7 +136,7 @@
           [:script {:type "text/javascript"}
            "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
             proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body :data-anti-csrf-token random-avain
+         [:body {:data-anti-csrf-token random-avain}
           [:div {:style "display: none;"}
            inline-svg-18 inline-svg-24 inline-svg-36]
           [:video {:preload "true" :id "keep-alive-hack" :loop "true"}

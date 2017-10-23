@@ -5,6 +5,22 @@
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
+(defn get-csrf-token
+  "Hakee CSRF-tokenin DOMista."
+  []
+  (-> (.getElementsByTagName js/document "body")
+      (aget 0)
+      (.getAttribute "data-anti-csrf-token")))
+
+(defn csrf-token
+  "Yrittää löytää CSRF-tokenin DOMista niin kauan, että se löytyy."
+  []
+  (go-loop [token (get-csrf-token)]
+    (if token
+      token
+      (do (<! (timeout 100))
+          (recur (get-csrf-token))))))
+
 (defn- hanskaa-virhe [response c]
   (let [{:keys [failure status status-text]} response]
     #_(when-not (or (= :abort failure)
@@ -17,6 +33,7 @@
   (let [c (chan)]
     (POST url {:params        data
                :error-handler #(hanskaa-virhe % c)
+               :headers {"X-CSRF-Token" (<! (csrf-token))}
                :handler       #(do
                                 (if (and (map? %) (contains? % :error))
                                   (do
