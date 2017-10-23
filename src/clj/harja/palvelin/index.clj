@@ -10,7 +10,7 @@
 
 (def anti-forgery-fallback-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
 
-(defn anti-forgery-key
+(defn- anti-forgery-seed
   "Palauttaa joko argumenttina annetun avaimen (joka on luettu asetuksista)
    tai fallback avaimen error-logituksen kera."
   [avain]
@@ -20,11 +20,11 @@
       (log/error "Käytetään fallback-avainta anti-CSRF-tokenin generoimiseksi, mikä ei ole turvallista!")
       anti-forgery-fallback-key)))
 
-(defn muodosta-csrf-token
+(defn- muodosta-csrf-token
   "Käyttää random avainta ja anti-csrf-token-secret-keytä satunnaiselta näyttävän
    merkkijonon generoimiseen."
   [random-string anti-csrf-token-secret-key]
-  (let [secret-key (SecretKeySpec. (.getBytes (anti-forgery-key anti-csrf-token-secret-key)
+  (let [secret-key (SecretKeySpec. (.getBytes (anti-forgery-seed anti-csrf-token-secret-key)
                                               "UTF-8")
                                    "HmacSHA256")
         mac (Mac/getInstance "HmacSHA256")]
@@ -34,7 +34,7 @@
 (defn tee-random-avain []
   (apply str (.generateSeed (SecureRandom.) 128)))
 
-(defn tee-paasivu [token devmode]
+(defn tee-paasivu [random-avain devmode]
   (html
     "<!DOCTYPE html>\n"
     (if devmode
@@ -49,7 +49,7 @@
         [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
         [:script {:type "text/javascript" :src "js/less-2.7.1-9.js"}]]
-       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
+       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}
         [:div#app]
         [:script {:src "js/out/goog/base.js" :type "text/javascript"}]
         [:script {:src "js/harja.js" :type "text/javascript"}]
@@ -68,10 +68,10 @@
         [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
         [:script {:type "text/javascript" :src "js/harja.js"}]]
-       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
+       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}
         [:div#app]]])))
 
-(defn tee-ls-paasivu [devmode]
+(defn tee-ls-paasivu [random-avain devmode]
   (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/"
                                     "public/laadunseuranta/img/")
         livicons-18 (if devmode
@@ -111,7 +111,7 @@
           [:script {:type "text/javascript"}
            "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
             proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body
+         [:body :data-anti-csrf-token random-avain
           [:div {:style "display: none;"}
            inline-svg-18 inline-svg-24 inline-svg-36]
           [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
@@ -136,7 +136,7 @@
           [:script {:type "text/javascript"}
            "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
             proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body
+         [:body :data-anti-csrf-token random-avain
           [:div {:style "display: none;"}
            inline-svg-18 inline-svg-24 inline-svg-36]
           [:video {:preload "true" :id "keep-alive-hack" :loop "true"}

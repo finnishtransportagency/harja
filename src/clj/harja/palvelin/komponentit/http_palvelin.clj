@@ -211,10 +211,8 @@
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defn index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
-  (let [uri (:uri req)
-        random-avain (index/tee-random-avain)
-        csrf-token (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key)]
+(defn index-kasittelija [kehitysmoodi random-avain anti-csrf-token req]
+  (let [uri (:uri req)]
     (when (or (= uri "/")
               (= uri "/index.html"))
       (oikeudet/ei-oikeustarkistusta!)
@@ -223,12 +221,12 @@
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}
-       :cookies {"anti-csrf-token" {:value csrf-token
+       :cookies {"anti-csrf-token" {:value anti-csrf-token
                                     :http-only true
                                     :max-age 36000000}}
        :body (index/tee-paasivu random-avain kehitysmoodi)})))
 
-(defn ls-index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
+(defn ls-index-kasittelija [kehitysmoodi random-avain anti-csrf-token req]
   (let [uri (:uri req)
         ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
         oikea-kohde "/harja/laadunseuranta/"]
@@ -250,19 +248,25 @@
                      "Cache-Control" "no-cache, no-store, must-revalidate"
                      "Pragma" "no-cache"
                      "Expires" "0"}
-           :body (index/tee-ls-paasivu kehitysmoodi)})
+           :cookies {"anti-csrf-token" {:value anti-csrf-token
+                                        :http-only true
+                                        :max-age 36000000}}
+           :body (index/tee-ls-paasivu random-avain kehitysmoodi)})
       :default
       nil)))
 
 (defn wrap-anti-forgery
   "Käyttäjälle välitetyllä sivulla on DOMiin tallennettuna generoitu random avain.
    Keksiin puolestaan on asetettu random-avaimesta muodostettu CSRF-token.
-   CSRF-token muodostetaan järjestelmän sisäistä salaista avainta hyödyntäen,
+   CSRF-token muodostetaan Harja-järjestelmän sisäistä salaista avainta hyödyntäen,
    joten ulkopuolisten ei ole mahdollista laskea CSRF-tokenia random-avaimesta.
 
    Kun käyttäjä lähettää pyynnön palvelimelle, niin tällä funktiolla
    tarkistetaan, että kekseissä tullut token on sama kuin headereiden random-avaimesta
-   muodostettu CSRF-token.
+   muodostettu CSRF-token. Tämä estää sen, ettei käyttäjän selainta voi huijata
+   lähettämään pyyntöjä Harjaan ulkopuolisesta lähteestä,sillä pyynnöissä
+   tulee aina olla mukana DOMista luettu random avain. Tällä siis
+   todennetaan, että pyyntö tulee oikeasti Harjasta.
 
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
   [f anti-csrf-token-secret-key]
@@ -302,7 +306,9 @@
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              ui-kasittelija (->> (apply compojure/routes ui-kasittelijat)
-                                                 (wrap-anti-forgery anti-csrf-token-secret-key))]
+                                                 (wrap-anti-forgery anti-csrf-token-secret-key))
+                             random-avain (index/tee-random-avain)
+                             csrf-token (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key)]
 
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
                                                 dev-resurssit resurssit) false)
@@ -310,10 +316,12 @@
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija
                                                          kehitysmoodi
-                                                         anti-csrf-token-secret-key))
+                                                         random-avain
+                                                         csrf-token))
                                           (conj (partial ls-index-kasittelija
                                                          kehitysmoodi
-                                                         anti-csrf-token-secret-key))
+                                                         random-avain
+                                                         csrf-token))
                                           (conj ui-kasittelija))
                                       true)))
                        (catch [:virhe :todennusvirhe] _
