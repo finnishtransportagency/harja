@@ -1,6 +1,6 @@
 (ns harja-laadunseuranta.tiedot.comms
   (:require [ajax.core :refer [POST GET raw-response-format]]
-            [cljs.core.async :as async :refer [put! <! chan close!]]
+            [cljs.core.async :as async :refer [put! chan close!]]
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [harja-laadunseuranta.tiedot.asetukset.asetukset :as asetukset])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
@@ -12,38 +12,29 @@
       (aget 0)
       (.getAttribute "data-anti-csrf-token")))
 
-(defn csrf-token
-  "Yrittää löytää CSRF-tokenin DOMista niin kauan, että se löytyy."
-  []
-  (go-loop [token (get-csrf-token)]
-    (if token
-      token
-      (do (<! (timeout 100))
-          (recur (get-csrf-token))))))
-
 (defn- hanskaa-virhe [response c]
   (let [{:keys [failure status status-text]} response]
     #_(when-not (or (= :abort failure)
-                  (= :failure failure))
-      (set! (.-location js/window) (str (.-location js/window) "?relogin=true")))
+                    (= :failure failure))
+        (set! (.-location js/window) (str (.-location js/window) "?relogin=true")))
     (js/console.log (str "Virhe: " failure status status-text response))
     (close! c)))
 
 (defn post! [url data]
   (let [c (chan)]
-    (POST url {:params        data
+    (POST url {:params data
                :error-handler #(hanskaa-virhe % c)
-               :headers {"X-CSRF-Token" (<! (csrf-token))}
-               :handler       #(do
-                                (if (and (map? %) (contains? % :error))
-                                  (do
-                                    (reset! s/palvelinvirhe (pr-str %))
-                                    (.warn js/console (str "Virhe: " (pr-str %))))
-                                  (do
-                                    (reset! s/palvelinvirhe nil)
-                                    (put! c %)))
-                                (close! c))
-               :format        :transit})
+               :headers {"X-CSRF-Token" (get-csrf-token)}
+               :handler #(do
+                           (if (and (map? %) (contains? % :error))
+                             (do
+                               (reset! s/palvelinvirhe (pr-str %))
+                               (.warn js/console (str "Virhe: " (pr-str %))))
+                             (do
+                               (reset! s/palvelinvirhe nil)
+                               (put! c %)))
+                           (close! c))
+               :format :transit})
     c))
 
 (defn send-file! [url file-data mime-type]
@@ -116,7 +107,7 @@
 
 (defn hae-tr-tiedot [sijainti]
   (post! asetukset/+tr-tietojen-haku-url+ (assoc (select-keys sijainti [:lat :lon])
-                                                 :treshold asetukset/+tros-haun-treshold+)))
+                                            :treshold asetukset/+tros-haun-treshold+)))
 
 (defn hae-tiedosto [url]
   (let [c (chan)]
