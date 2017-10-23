@@ -34,6 +34,17 @@
              :tiesto (dissoc tarkastus :soratiemittaus :talvihoitomittaus)
              tarkastus)))))
 
+(defn vaadi-tarkastus-kuuluu-urakkaan [db urakka-id tarkastus-id]
+  (log/debug "Tarkikistetaan, että tarkastus " tarkastus-id " kuuluu väitettyyn urakkaan " urakka-id)
+  (assert urakka-id "Urakka id puuttuu!")
+  (when tarkastus-id
+    (let [todellinen-urakka-id (:urakka (first
+                                          (tarkastukset/tarkastuksen-urakka
+                                            db {:id tarkastus-id})))]
+      (when (and (some? todellinen-urakka-id)
+                 (not= todellinen-urakka-id urakka-id))
+        (throw (SecurityException. (str "Tarkastus ei kuulu väitettyyn urakkaan " urakka-id
+                                        " vaan urakkaan " todellinen-urakka-id)))))))
 
 (defn hae-urakan-tarkastukset
   "Palauttaa urakan tarkastukset annetulle aikavälille."
@@ -46,17 +57,17 @@
    (let [urakoitsija? (roolit/urakoitsija? user)
          tarkastukset-raakana (tarkastukset/hae-urakan-tarkastukset
                                 db
-                                {:urakka                  urakka-id
+                                {:urakka urakka-id
                                  :kayttaja_on_urakoitsija urakoitsija?
-                                 :alku                    (konv/sql-timestamp alkupvm)
-                                 :loppu                   (konv/sql-timestamp loppupvm)
-                                 :rajaa_tienumerolla      (boolean tienumero)
-                                 :tienumero               tienumero
-                                 :rajaa_tyypilla          (boolean tyyppi)
-                                 :tyyppi                  (and tyyppi (name tyyppi))
-                                 :havaintoja_sisaltavat   havaintoja-sisaltavat?
-                                 :vain_laadunalitukset    vain-laadunalitukset?
-                                 :maxrivimaara            max-rivimaara})
+                                 :alku (konv/sql-timestamp alkupvm)
+                                 :loppu (konv/sql-timestamp loppupvm)
+                                 :rajaa_tienumerolla (boolean tienumero)
+                                 :tienumero tienumero
+                                 :rajaa_tyypilla (boolean tyyppi)
+                                 :tyyppi (and tyyppi (name tyyppi))
+                                 :havaintoja_sisaltavat havaintoja-sisaltavat?
+                                 :vain_laadunalitukset vain-laadunalitukset?
+                                 :maxrivimaara max-rivimaara})
          tarkastukset (into []
                             (comp tarkastus-xf
                                   (if palauta-reitti?
@@ -76,9 +87,10 @@
                                                  urakoitsija?)))]
     (when tarkastus
       (assoc tarkastus
-       :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
+        :liitteet (into [] (tarkastukset/hae-tarkastuksen-liitteet db tarkastus-id))))))
 
 (defn tallenna-tarkastus [db user urakka-id tarkastus]
+  (vaadi-tarkastus-kuuluu-urakkaan db urakka-id (:id tarkastus))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (try
     (jdbc/with-db-transaction [c db]
@@ -87,7 +99,7 @@
             talvihoitomittaus? (some #(get-in (:talvihoitomittaus tarkastus) %)
                                      laadunseuranta/talvihoitomittauksen-kentat)
             soratiemittaus? (some #(get-in (:soratiemittaus tarkastus) %)
-                                     laadunseuranta/soratiemittauksen-kentat)
+                                  laadunseuranta/soratiemittauksen-kentat)
             tarkastus (assoc tarkastus :lahde "harja-ui")
             id (tarkastukset/luo-tai-paivita-tarkastus c user urakka-id tarkastus)]
 
@@ -96,14 +108,14 @@
                      (= :laatu tarkastustyyppi))
                    talvihoitomittaus?)
           (tarkastukset/luo-tai-paivita-talvihoitomittaus
-           c id (or uusi-tarkastus? (not (:tarkastus (:talvihoitomittaus tarkastus))))
-           (-> (:talvihoitomittaus tarkastus)
-               (assoc :lampotila-tie
-                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
-               (assoc :lampotila-ilma
-                      (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))
-               (assoc :tr
-                      (:tr tarkastus)))))
+            c id (or uusi-tarkastus? (not (:tarkastus (:talvihoitomittaus tarkastus))))
+            (-> (:talvihoitomittaus tarkastus)
+                (assoc :lampotila-tie
+                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :tie]))
+                (assoc :lampotila-ilma
+                       (get-in (:talvihoitomittaus tarkastus) [:lampotila :ilma]))
+                (assoc :tr
+                       (:tr tarkastus)))))
 
         (when (and (or
                      (= :soratie tarkastustyyppi)
@@ -115,12 +127,19 @@
             (:soratiemittaus tarkastus)))
 
         (when-let [uusi-liite (:uusi-liite tarkastus)]
-          (log/info "UUSI LIITE: " uusi-liite)
           (tarkastukset/luo-liite<! c id (:id uusi-liite)))
 
         (hae-tarkastus c user urakka-id id)))
     (catch Exception e
       (log/info e "Tarkastuksen tallennuksessa poikkeus!"))))
+
+(defn nayta-tarkastus-urakoitsijalle [db user urakka-id tarkastus-id]
+  (oikeudet/vaadi-oikeus "aseta-näkyviin-urakoitsijalle" oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
+  (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
+  (jdbc/with-db-transaction [db db]
+    (tarkastukset/nayta-tarkastus-urakoitsijalle<!
+      db {:id tarkastus-id}))
+  (hae-tarkastus db user urakka-id tarkastus-id))
 
 (defn- tarkastusreittien-parametrit
   [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
@@ -155,9 +174,9 @@
         (jdbc/with-db-transaction [db db
                                    {:read-only? true}]
           (tarkastukset/hae-urakan-tarkastukset-kartalle
-           db ch
-           (merge alue
-                  parametrit)))
+            db ch
+            (merge alue
+                   parametrit)))
         (catch Throwable t
           (log/warn t "Virhe haettaessa tarkastuksia kartalle"))))
 
@@ -182,6 +201,7 @@
 
 (defn lisaa-tarkastukselle-laatupoikkeama [db user urakka-id tarkastus-id]
   (log/debug (format "Luodaan laatupoikkeama tarkastukselle (id: %s)" tarkastus-id))
+  (vaadi-tarkastus-kuuluu-urakkaan db urakka-id tarkastus-id)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
   (when-let [tarkastus (hae-tarkastus db user urakka-id tarkastus-id)]
     (jdbc/with-db-transaction [db db]
@@ -219,10 +239,10 @@
   (start [{:keys [http-palvelin db karttakuvat] :as this}]
 
     (karttakuvat/rekisteroi-karttakuvan-lahde!
-     karttakuvat :tarkastusreitit
-     (partial #'hae-tarkastusreitit-kartalle db)
-     (partial #'hae-tarkastusreittien-asiat-kartalle db)
-     "tr")
+      karttakuvat :tarkastusreitit
+      (partial #'hae-tarkastusreitit-kartalle db)
+      (partial #'hae-tarkastusreittien-asiat-kartalle db)
+      "tr")
 
     (julkaise-palvelut
       http-palvelin
@@ -233,6 +253,10 @@
       :tallenna-tarkastus
       (fn [user {:keys [urakka-id tarkastus]}]
         (tallenna-tarkastus db user urakka-id tarkastus))
+
+      :nayta-tarkastus-urakoitsijalle
+      (fn [user {:keys [urakka-id tarkastus-id]}]
+        (nayta-tarkastus-urakoitsijalle db user urakka-id tarkastus-id))
 
       :hae-tarkastus
       (fn [user {:keys [urakka-id tarkastus-id]}]

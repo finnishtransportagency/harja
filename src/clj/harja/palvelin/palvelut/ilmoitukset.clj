@@ -131,11 +131,14 @@
                                                  urakka-id
                                                  kayttaja))
                   urakka urakoitsija
-                  (if (= :kaikki urakkatyyppi)
-                    nil
+                  (case urakkatyyppi
+                    :kaikki nil
+                    ; Ao. vesivayla-käsittely estää kantapoikkeuksen. Jos väylävalitsin tulee, tämä voidaan ehkä poistaa
+                    :vesivayla :vesivayla-hoito
                     urakkatyyppi)
                   hallintayksikko
                   (first aikavali) (second aikavali))
+         _ (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
          tyypit (mapv name tyypit)
          selite-annettu? (boolean (and selite (first selite)))
          selite (if selite-annettu? (name (first selite)) "")
