@@ -214,7 +214,7 @@
 (defn index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
         random-avain (index/tee-random-avain)
-        csrf-token (index/laske-mac random-avain anti-csrf-token-secret-key)]
+        csrf-token (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key)]
     (when (or (= uri "/")
               (= uri "/index.html"))
       (oikeudet/ei-oikeustarkistusta!)
@@ -255,12 +255,20 @@
       nil)))
 
 (defn wrap-anti-forgery
-  "Tarkistaa, että keskeissä tullut token vastaa headereissa tulevaa tokenia mac-laskennalla.
-   Jos vastaa, kutsutaan funktiota f, muuten palautuu 403."
+  "Käyttäjälle välitetyllä sivulla on DOMiin tallennettuna generoitu random avain.
+   Keksiin puolestaan on asetettu random-avaimesta muodostettu CSRF-token.
+   CSRF-token muodostetaan järjestelmän sisäistä salaista avainta hyödyntäen,
+   joten ulkopuolisten ei ole mahdollista laskea CSRF-tokenia random-avaimesta.
+
+   Kun käyttäjä lähettää pyynnön palvelimelle, niin tällä funktiolla
+   tarkistetaan, että kekseissä tullut token on sama kuin headereiden random-avaimesta
+   muodostettu CSRF-token.
+
+   Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
   [f anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
     (if (or (and (some? (headers "x-csrf-token"))
-                 (= (index/laske-mac (headers "x-csrf-token") anti-csrf-token-secret-key)
+                 (= (index/muodosta-csrf-token (headers "x-csrf-token") anti-csrf-token-secret-key)
                     (:value (cookies "anti-csrf-token")))))
       (f req)
       {:status 403
