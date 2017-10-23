@@ -231,11 +231,9 @@
 
 (defn ls-index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
-        random-avain (index/tee-random-avain)
-        csrf-token (index/muodosta-csrf-token random-avain
-                                              anti-csrf-token-secret-key)
         ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
         oikea-kohde "/harja/laadunseuranta/"]
+
     (cond
       (= uri "/laadunseuranta")
       (do (oikeudet/ei-oikeustarkistusta!)
@@ -248,16 +246,19 @@
            :headers {"Location" oikea-kohde}})
 
       (= uri "/laadunseuranta/")
-      (do (oikeudet/ei-oikeustarkistusta!)
-          {:status 200
-           :headers {"Content-Type" "text/html"
-                     "Cache-Control" "no-cache, no-store, must-revalidate"
-                     "Pragma" "no-cache"
-                     "Expires" "0"}
-           :cookies {"anti-csrf-token" {:value csrf-token
-                                        :http-only true
-                                        :max-age 36000000}}
-           :body (index/tee-ls-paasivu random-avain kehitysmoodi)})
+      (let [random-avain (index/tee-random-avain)
+            csrf-token (index/muodosta-csrf-token random-avain
+                                                  anti-csrf-token-secret-key)]
+        (do (oikeudet/ei-oikeustarkistusta!)
+           {:status 200
+            :headers {"Content-Type" "text/html"
+                      "Cache-Control" "no-cache, no-store, must-revalidate"
+                      "Pragma" "no-cache"
+                      "Expires" "0"}
+            :cookies {"anti-csrf-token" {:value csrf-token
+                                         :http-only true
+                                         :max-age 36000000}}
+            :body (index/tee-ls-paasivu random-avain kehitysmoodi)}))
       :default
       nil)))
 
