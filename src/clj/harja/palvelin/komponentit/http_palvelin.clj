@@ -299,6 +299,7 @@
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka :as this}]
+    (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (when metriikka
       (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
