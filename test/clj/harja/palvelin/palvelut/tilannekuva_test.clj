@@ -410,9 +410,11 @@
     (is (every? #(= % eka-ely) elynumerot)
         "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
 
+(def testioikeus-ilman-lisaoikeutta (oikeudet/->KayttoOikeus "testi-oikeus-ilman-lisaoikeutta" {"vastuuhenkilo" #{"R"}}))
+
 (deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
   ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
-  (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+  (with-redefs [oikeudet/tilannekuva-historia testioikeus-ilman-lisaoikeutta]
     (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
       (is (every?
             (fn [hy]
@@ -432,7 +434,7 @@
 (deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
   (let [vastaus-ilman-lisaoikeutta
         ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
-        (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+        (with-redefs [oikeudet/tilannekuva-historia testioikeus-ilman-lisaoikeutta]
           (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))
         vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
         (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
