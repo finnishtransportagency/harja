@@ -538,7 +538,8 @@
 (defn- geometriat-muuttuneet
   "Käsittelee geometrioiden muutoksen. Parametrina vanhat ja uudet geometriat."
   [vanha uusi]
-  (piilota-infopaneeli-jos-muuttunut vanha uusi)
+  ;; HAR-4461: kokeillaan tuleeko tämän poistamisesta haittavaikutuksia.
+  #_(piilota-infopaneeli-jos-muuttunut vanha uusi)
   (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
 
 (defn klikkauksesta-seuraavat-tapahtumat
