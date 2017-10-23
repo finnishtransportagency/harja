@@ -31,7 +31,7 @@
     (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes random-string "UTF-8"))))))
 
 (defn tee-random-string []
-  ;; TODO Javan
+  ;; TODO Käytä Javan kryptograafisesti salaista kirjastoa
   (apply str (map (fn [_] (rand-nth "0123456789abcdefghijklmnopqrstuvwyz"))
                   (range 128))))
 
