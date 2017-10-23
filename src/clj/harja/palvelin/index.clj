@@ -17,7 +17,7 @@
   (if avain
     avain
     (do
-      (log/error "Käytetään fallback-avainta anti CSRF-tokenin generoimiseksi, mikä ei ole turvallista!")
+      (log/error "Käytetään fallback-avainta anti-CSRF-tokenin generoimiseksi, mikä ei ole turvallista!")
       anti-forgery-fallback-key)))
 
 (defn muodosta-csrf-token
