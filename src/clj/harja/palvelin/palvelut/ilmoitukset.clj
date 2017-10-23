@@ -138,6 +138,7 @@
                     urakkatyyppi)
                   hallintayksikko
                   (first aikavali) (second aikavali))
+         _ (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
          tyypit (mapv name tyypit)
          selite-annettu? (boolean (and selite (first selite)))
          selite (if selite-annettu? (name (first selite)) "")
