@@ -213,8 +213,8 @@
 
 (defn index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
-        random-string (index/tee-random-string)
-        csrf-token (index/laske-mac random-string anti-csrf-token-secret-key)]
+        random-avain (index/tee-random-avain)
+        csrf-token (index/laske-mac random-avain anti-csrf-token-secret-key)]
     (when (or (= uri "/")
               (= uri "/index.html"))
       (oikeudet/ei-oikeustarkistusta!)
@@ -226,7 +226,7 @@
        :cookies {"anti-csrf-token" {:value csrf-token
                                     :http-only true
                                     :max-age 36000000}}
-       :body (index/tee-paasivu random-string kehitysmoodi)})))
+       :body (index/tee-paasivu random-avain kehitysmoodi)})))
 
 (defn ls-index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
