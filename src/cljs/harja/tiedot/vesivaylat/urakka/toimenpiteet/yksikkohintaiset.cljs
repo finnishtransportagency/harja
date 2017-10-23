@@ -374,9 +374,9 @@
   (process-event [_ app]
     (let [urakka-id (get-in app [:valinnat :urakka-id])]
       (if (and (not (:suunniteltujen-toiden-haku-kaynnissa? app)) (some? urakka-id))
-        (do (tuck-tyokalut/palvelukutsu :yksikkohintaiset-tyot
-                                        {:urakka urakka-id}
-                                        {:onnistui ->SuunnitellutTyotHaettu
+        (do (tuck-tyokalut/post! :yksikkohintaiset-tyot
+                                 {:urakka urakka-id}
+                                 {:onnistui ->SuunnitellutTyotHaettu
                                          :epaonnistui ->SuunnitellutTyotEiHaettu})
             (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
         app)))
@@ -395,9 +395,9 @@
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
              (some? (:urakka-id valinnat)))
-      (do (tuck-tyokalut/palvelukutsu :hae-yksikkohintaiset-toimenpiteet
-                                      (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
-                                      {:onnistui ->ToimenpiteetHaettu
+      (do (tuck-tyokalut/post! :hae-yksikkohintaiset-toimenpiteet
+                               (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
+                               {:onnistui ->ToimenpiteetHaettu
                                        :epaonnistui ->ToimenpiteetEiHaettu})
           (assoc app :toimenpiteiden-haku-kaynnissa? true))
       app))
@@ -427,10 +427,10 @@
   LuoHintaryhma
   (process-event [{nimi :nimi} app]
     (if-not (:hintaryhman-tallennus-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :luo-hinnoittelu
-                                      {::h/nimi nimi
+      (do (tuck-tyokalut/post! :luo-hinnoittelu
+                               {::h/nimi nimi
                                        ::urakka/id (get-in app [:valinnat :urakka-id])}
-                                      {:onnistui ->HintaryhmaLuotu
+                               {:onnistui ->HintaryhmaLuotu
                                        :epaonnistui ->HintaryhmaEiLuotu})
           (assoc app :hintaryhman-tallennus-kaynnissa? true))
       app))
@@ -453,9 +453,9 @@
   HaeHintaryhmat
   (process-event [_ app]
     (if-not (:hintaryhmien-haku-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :hae-hintaryhmat
-                                      {::urakka/id (get-in app [:valinnat :urakka-id])}
-                                      {:onnistui ->HintaryhmatHaettu
+      (do (tuck-tyokalut/post! :hae-hintaryhmat
+                               {::urakka/id (get-in app [:valinnat :urakka-id])}
+                               {:onnistui ->HintaryhmatHaettu
                                        :epaonnistui ->HintaryhmatEiHaettu})
           (assoc app :hintaryhmien-haku-kaynnissa? true))
       app))
@@ -477,11 +477,11 @@
   LiitaValitutHintaryhmaan
   (process-event [{hintaryhma :hintaryhma valitut :valitut} app]
     (if-not (:hintaryhmien-liittaminen-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-hinnoitteluun
-                                      {::to/idt (map ::to/id valitut)
+      (do (tuck-tyokalut/post! :liita-toimenpiteet-hinnoitteluun
+                               {::to/idt (map ::to/id valitut)
                                        ::h/id (::h/id hintaryhma)
                                        ::urakka/id (get-in app [:valinnat :urakka-id])}
-                                      {:onnistui ->ValitutLiitettyHintaryhmaan
+                               {:onnistui ->ValitutLiitettyHintaryhmaan
                                        :epaonnistui ->ValitutEiLiitettyHintaryhmaan})
           (assoc app :hintaryhmien-liittaminen-kaynnissa? true))
       app))
@@ -502,10 +502,10 @@
   PoistaHintaryhmat
   (process-event [{hintaryhma-idt :hintaryhma-idt} app]
     (if-not (:hintaryhmien-poisto-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :poista-tyhjat-hinnoittelut
-                                      {::h/urakka-id (get-in app [:valinnat :urakka-id])
+      (do (tuck-tyokalut/post! :poista-tyhjat-hinnoittelut
+                               {::h/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::h/idt hintaryhma-idt}
-                                      {:onnistui ->HintaryhmatPoistettu
+                               {:onnistui ->HintaryhmatPoistettu
                                        :epaonnistui ->HintaryhmatEiPoistettu})
           (assoc app :hintaryhmien-poisto-kaynnissa? true))
       app))
@@ -582,7 +582,7 @@
   TallennaToimenpiteenHinnoittelu
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu
+      (do (tuck-tyokalut/post!
             :tallenna-toimenpiteelle-hinta
             {::to/urakka-id (get-in app [:valinnat :urakka-id])
              ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
@@ -636,8 +636,8 @@
   TallennaHintaryhmanHinnoittelu
   (process-event [{tiedot :tiedot} app]
     (if-not (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app)
-      (do (tuck-tyokalut/palvelukutsu :tallenna-hintaryhmalle-hinta
-                                      {::ur/id (get-in app [:valinnat :urakka-id])
+      (do (tuck-tyokalut/post! :tallenna-hintaryhmalle-hinta
+                               {::ur/id (get-in app [:valinnat :urakka-id])
                                        ::h/id (get-in app [:hinnoittele-hintaryhma ::h/id])
                                        ::h/tallennettavat-hinnat (mapv
                                                                    (fn [hinta]
@@ -649,7 +649,7 @@
                                                                         ::hinta/ryhma :muu
                                                                         ::hinta/yleiskustannuslisa (::hinta/yleiskustannuslisa hinta)}))
                                                                    (get-in app [:hinnoittele-hintaryhma ::h/hinnat]))}
-                                      {:onnistui ->HintaryhmanHinnoitteluTallennettu
+                               {:onnistui ->HintaryhmanHinnoitteluTallennettu
                                        :epaonnistui ->HintaryhmanHinnoitteluEiTallennettu})
           (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? true))
       app))

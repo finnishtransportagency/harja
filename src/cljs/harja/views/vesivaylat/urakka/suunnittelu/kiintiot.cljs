@@ -97,7 +97,10 @@
                      (fn [sisalto]
                        (let [ch (chan)]
                          (e! (tiedot/->TallennaKiintiot sisalto ch))
-                         (go (<! ch)))))
+                         (go (<! ch))))
+
+                     (fn [sisalto]
+                       (apurit/e-kanavalla! tiedot/->TallennaKiintiot sisalto)))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
          :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
