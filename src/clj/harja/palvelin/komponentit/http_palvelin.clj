@@ -278,7 +278,8 @@
   [f anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
     (if (or (and (some? (headers "x-csrf-token"))
-                 (= (index/muodosta-csrf-token (headers "x-csrf-token") anti-csrf-token-secret-key)
+                 (= (index/muodosta-csrf-token (headers "x-csrf-token")
+                                               anti-csrf-token-secret-key)
                     (:value (cookies "anti-csrf-token")))))
       (f req)
       {:status 403
