@@ -20,7 +20,7 @@
       (log/error "Käytetään fallback-avainta anti-CSRF-tokenin generoimiseksi, mikä ei ole turvallista!")
       anti-forgery-fallback-key)))
 
-(defn- muodosta-csrf-token
+(defn muodosta-csrf-token
   "Käyttää random avainta ja anti-csrf-token-secret-keytä satunnaiselta näyttävän
    merkkijonon generoimiseen."
   [random-string anti-csrf-token-secret-key]
