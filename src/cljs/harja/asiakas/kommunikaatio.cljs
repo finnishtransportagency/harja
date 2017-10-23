@@ -2,7 +2,7 @@
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
             [ajax.core :refer [ajax-request transit-request-format transit-response-format] :as ajax]
-            [cljs.core.async :refer [put! close! <! chan timeout]]
+            [cljs.core.async :refer [put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
             [cognitect.transit :as t]
