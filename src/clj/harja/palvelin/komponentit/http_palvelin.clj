@@ -255,6 +255,8 @@
       nil)))
 
 (defn wrap-anti-forgery
+  "Tarkistaa, että keskeissä tullut token vastaa headereissa tulevaa tokenia mac-laskennalla.
+   Jos vastaa, kutsutaan funktiota f, muuten palautuu 403."
   [f anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
     (if (or (and (some? (headers "x-csrf-token"))
