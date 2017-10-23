@@ -255,7 +255,9 @@
       nil)))
 
 (defn wrap-anti-forgery
-  "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan"
+  "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan.
+   Cookiesissa olevan arvon tulee olla sama kuin headerissa olevasta laskettu mac,
+   muuten palautuu 403."
   [f]
   (fn [{:keys [cookies headers uri] :as req}]
     (if (or (and (some? (headers "x-csrf-token"))
