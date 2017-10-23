@@ -226,6 +226,7 @@
                  "Expires" "0"}
        :cookies {"anti-csrf-token" {:value csrf-token
                                     :http-only true
+                                    :path "/"
                                     :max-age 36000000}}
        :body (index/tee-paasivu random-avain kehitysmoodi)})))
 
@@ -257,6 +258,7 @@
                       "Expires" "0"}
             :cookies {"anti-csrf-token" {:value csrf-token
                                          :http-only true
+                                         :path "/"
                                          :max-age 36000000}}
             :body (index/tee-ls-paasivu random-avain kehitysmoodi)}))
       :default
