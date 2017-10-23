@@ -300,10 +300,10 @@
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija
                                                          kehitysmoodi
-                                                         anti-csrf-token-secret-key))
+                                                         (:anti-csrf-token asetukset)))
                                           (conj (partial ls-index-kasittelija
                                                          kehitysmoodi
-                                                         anti-csrf-token-secret-key))
+                                                         (:anti-csrf-token asetukset)))
                                           (conj ui-kasittelija))
                                       true)))
                        (catch [:virhe :todennusvirhe] _
