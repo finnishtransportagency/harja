@@ -211,10 +211,10 @@
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defn index-kasittelija [kehitysmoodi req]
+(defn index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
-        token (index/tee-random-avain)
-        salattu (index/laske-mac token)]
+        random-string (index/tee-random-string)
+        csrf-token (index/laske-mac random-string anti-csrf-token-secret-key)]
     (when (or (= uri "/")
               (= uri "/index.html"))
       (oikeudet/ei-oikeustarkistusta!)
@@ -223,12 +223,12 @@
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}
-       :cookies {"anti-csrf-token" {:value salattu
+       :cookies {"anti-csrf-token" {:value csrf-token
                                     :http-only true
                                     :max-age 36000000}}
-       :body (index/tee-paasivu token kehitysmoodi)})))
+       :body (index/tee-paasivu random-string kehitysmoodi)})))
 
-(defn ls-index-kasittelija [kehitysmoodi req]
+(defn ls-index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
         ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
         oikea-kohde "/harja/laadunseuranta/"]
@@ -255,9 +255,6 @@
       nil)))
 
 (defn wrap-anti-forgery
-  "Vertaa headerissa lähetettyä tokenia http-only cookiessa tulevaan.
-   Cookiesissa olevan arvon tulee olla sama kuin headerissa olevasta laskettu mac,
-   muuten palautuu 403."
   [f]
   (fn [{:keys [cookies headers uri] :as req}]
     (if (or (and (some? (headers "x-csrf-token"))
@@ -273,11 +270,12 @@
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
 
-(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat lopetus-fn kehitysmoodi
+(defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
+                         lopetus-fn kehitysmoodi
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka :as this}]
-    (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
+    (log/debug "ASETUKSET ONPI: " asetukset)
     (when metriikka
       (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
@@ -300,8 +298,12 @@
                                                 dev-resurssit resurssit) false)
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija kehitysmoodi))
-                                          (conj (partial ls-index-kasittelija kehitysmoodi))
+                                          (conj (partial index-kasittelija
+                                                         kehitysmoodi
+                                                         anti-csrf-token-secret-key))
+                                          (conj (partial ls-index-kasittelija
+                                                         kehitysmoodi
+                                                         anti-csrf-token-secret-key))
                                           (conj ui-kasittelija))
                                       true)))
                        (catch [:virhe :todennusvirhe] _

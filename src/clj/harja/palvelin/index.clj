@@ -1,21 +1,39 @@
 (ns harja.palvelin.index
   (:require [hiccup.core :refer [html]]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [taoensso.timbre :as log])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]
            (hiccup.compiler HtmlRenderer)))
 
-(def anti-forgery-secret-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
+(def anti-forgery-fallback-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
 
-(defn laske-mac [data]
-  (let [secret-key (SecretKeySpec. (.getBytes anti-forgery-secret-key "UTF-8") "HmacSHA256")
+(defn anti-forgery-key
+  "Palauttaa joko argumenttina annetun avaimen (joka on luettu asetuksista)
+   tai fallback avaimen error-logituksen kera."
+  [avain]
+  (if avain
+    avain
+    (do
+      (log/error "Käytetään fallback-avainta anti CSRF-tokenin generoimiseksi, mikä ei ole turvallista!")
+      anti-forgery-fallback-key)))
+
+(defn laske-mac
+  "Käyttää random avainta ja anti-csrf-token-secret-keytä satunnaiselta näyttävän
+   merkkijonon generoimiseen."
+  [random-string anti-csrf-token-secret-key]
+  (let [secret-key (SecretKeySpec. (.getBytes (anti-forgery-key anti-csrf-token-secret-key)
+                                              "UTF-8")
+                                   "HmacSHA256")
         mac (Mac/getInstance "HmacSHA256")]
     (.init mac secret-key)
-    (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes data "UTF-8"))))))
+    (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes random-string "UTF-8"))))))
 
-(defn tee-random-avain []
-  (apply str (map (fn [_] (rand-nth "0123456789abcdefghijklmnopqrstuvwyz")) (range 128))))
+(defn tee-random-string []
+  ;; TODO Javan
+  (apply str (map (fn [_] (rand-nth "0123456789abcdefghijklmnopqrstuvwyz"))
+                  (range 128))))
 
 (defn tee-paasivu [token devmode]
   (html
