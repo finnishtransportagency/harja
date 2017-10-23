@@ -305,10 +305,11 @@
                        (metriikka/inc! mittarit :aktiiviset_pyynnot)
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
-                             ui-kasittelija (->> (apply compojure/routes ui-kasittelijat)
-                                                 (wrap-anti-forgery anti-csrf-token-secret-key))
+                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                                (wrap-anti-forgery anti-csrf-token-secret-key))
                              random-avain (index/tee-random-avain)
-                             csrf-token (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key)]
+                             csrf-token (index/muodosta-csrf-token random-avain
+                                                                   anti-csrf-token-secret-key)]
 
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
                                                 dev-resurssit resurssit) false)
