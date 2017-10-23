@@ -47,7 +47,7 @@
                                                (s/optional-key :sahkoposti-ulos-jono) s/Str
                                                (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str}}
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
-                                        :palvelins/Str s/Str}
+                                        :palvelin/Str s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
                             :kuittausjono-sisaan s/Str
                             :lahetysjono-ulos s/Str
