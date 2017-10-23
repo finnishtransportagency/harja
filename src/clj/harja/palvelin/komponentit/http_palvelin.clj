@@ -255,10 +255,10 @@
       nil)))
 
 (defn wrap-anti-forgery
-  [f]
+  [f anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
     (if (or (and (some? (headers "x-csrf-token"))
-                 (= (index/laske-mac (headers "x-csrf-token"))
+                 (= (index/laske-mac (headers "x-csrf-token") anti-csrf-token-secret-key)
                     (:value (cookies "anti-csrf-token")))))
       (f req)
       {:status 403
@@ -275,10 +275,10 @@
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka :as this}]
-    (log/debug "ASETUKSET ONPI: " asetukset)
     (when metriikka
       (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
+          anti-csrf-token-secret-key (:anti-csrf-token asetukset)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
                           (route/files "" {:root "dev-resources"}))]
@@ -291,8 +291,8 @@
                        (metriikka/inc! mittarit :aktiiviset_pyynnot)
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
-                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                (wrap-anti-forgery))]
+                             ui-kasittelija (->> (apply compojure/routes ui-kasittelijat)
+                                                 (wrap-anti-forgery anti-csrf-token-secret-key))]
 
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
                                                 dev-resurssit resurssit) false)
@@ -300,10 +300,10 @@
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija
                                                          kehitysmoodi
-                                                         (:anti-csrf-token asetukset)))
+                                                         anti-csrf-token-secret-key))
                                           (conj (partial ls-index-kasittelija
                                                          kehitysmoodi
-                                                         (:anti-csrf-token asetukset)))
+                                                         anti-csrf-token-secret-key))
                                           (conj ui-kasittelija))
                                       true)))
                        (catch [:virhe :todennusvirhe] _
