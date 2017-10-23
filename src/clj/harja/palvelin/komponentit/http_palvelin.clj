@@ -273,7 +273,7 @@
    Kun käyttäjä lähettää pyynnön palvelimelle, niin tällä funktiolla
    tarkistetaan, että kekseissä tullut token on sama kuin headereiden random-avaimesta
    muodostettu CSRF-token. Tämä estää sen, ettei käyttäjän selainta voi huijata
-   lähettämään pyyntöjä Harjaan ulkopuolisesta lähteestä,sillä pyynnöissä
+   lähettämään pyyntöjä Harjaan ulkopuolisesta lähteestä, sillä pyynnöissä
    tulee aina olla mukana DOMista luettu random avain. Tällä siis
    todennetaan, että pyyntö tulee oikeasti Harjasta.
 
