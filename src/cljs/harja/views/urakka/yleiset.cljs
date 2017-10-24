@@ -517,9 +517,11 @@
                                                         (get-in ur [:urakoitsija :id])
                                                         alukset
                                                         urakoitsijan-alukset))}
+           ;; TODO Disabloi rivin poisto jos alus käytössä urakassa (palauta kannasta tieto onko linkitetty myös muihin urakoihin kuin tähän)
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
              :tyyppi :string
+             ;; TODO Disabloi muokkaus jos rivi kannassa. Aluksen mmsi:n muokkaus ei ole tuettu operaatio.
              :leveys 7}
             {:otsikko "Nimi"
              :nimi ::alus/nimi
