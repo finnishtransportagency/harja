@@ -54,7 +54,7 @@
        ::alus/lisatiedot (::alus/lisatiedot alus)
        ::alus/urakoitsija-id urakoitsija-id
        ::m/luotu (c/to-sql-time (t/now))
-       ::m/luoja (:id user)})))
+       ::m/luoja-id (:id user)})))
 
 (defn- tallenna-aluksen-kaytto-urakassa
   "Linkittää aluksen urakkaan tai merkitsee linkityksen poistetuksi."
@@ -78,7 +78,7 @@
        ::alus/urakka-id urakka-id
        ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
        ::m/luotu (c/to-sql-time (t/now))
-       ::m/luoja (:id user)})))
+       ::m/luoja-id (:id user)})))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
