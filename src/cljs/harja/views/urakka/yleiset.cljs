@@ -500,30 +500,40 @@
                 (nil? @urakoitsijan-alukset))
           [yleiset/ajax-loader]
           [grid/grid
-           {:otsikko "Urakassa käytössä olevat alukset"
+           {:otsikko "Urakoitsijan alukset"
             :tyhja "Ei aluksia"
-            :tunniste ::alus/mmsi
+            :tunniste :grid-id
             :tallenna (fn [alukset]
                         (tiedot/tallenna-urakan-alukset (:id ur) alukset urakan-alukset))}
-           [{:otsikko "Alus"
+           [{:otsikko "MMSI"
              :nimi ::alus/mmsi
-             :tyyppi :valinta
-             :valinnat @urakoitsijan-alukset
+             :tyyppi :string
+             :leveys 1}
+            {:otsikko "Nimi"
+             :nimi ::alus/nimi
+             :tyyppi :string
              :leveys 1
-             :valinta-arvo ::alus/mmsi
-             :fmt #(let [alus (alus/alus-mmsilla % @urakoitsijan-alukset)]
-                     (alus/fmt-alus alus))
-             :valinta-nayta #(if %
-                               (alus/fmt-alus %)
-                               "- Valitse alus -")
-             :validoi [[:ei-tyhja "Valitse alus"]
-                       [:uniikki "Alus on jo käytössä urakassa"]]}
-            {:otsikko "Lisätiedot käyttötarpeesta"
+             :pituus-max 512}
+            {:otsikko "Lisätiedot"
+             :nimi ::alus/lisatiedot
+             :tyyppi :string
+             :leveys 1
+             :pituus-max 512}
+            {:otsikko "Käytössä tässä urakassa"
+             :nimi ::alus/kaytossa-urakassa?
+             :tyyppi :checkbox
+             :tasaa :keskita
+             :fmt fmt/totuus
+             :leveys 1}
+            {:otsikko "Käyttötarve urakassa"
              :nimi ::alus/urakan-aluksen-kayton-lisatiedot
              :tyyppi :string
-             :leveys 4
+             :leveys 1
              :pituus-max 512}]
-           @urakan-alukset])))))
+           ;; Generoidaan gridin riveille id mmsi:n perusteella, joka on uniikki.
+           ;; Ei käytetä mmsi:tä suoraan gridissä tunnisteena, sillä
+           ;; muuten gridi generoi uuden mmsi:n automaattisesti itse
+           (map #(assoc % :grid-id (::alus/mmsi %)) @urakan-alukset)])))))
 
 (defn- nayta-yha-tuontidialogi-tarvittaessa
   "Näyttää YHA-tuontidialogin, jos tarvii."

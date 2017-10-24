@@ -31,6 +31,7 @@
 (def sijaintitiedot #{::alus-mmsi ::sijainti ::aika})
 
 (s/def ::sijainti ::geo/geometria)
+(s/def ::kaytossa-urakassa? boolean?)
 
 (s/def ::hae-urakan-alukset-kysely
   (s/keys :req [::urakka/id]))
@@ -44,12 +45,6 @@
 (s/def ::hae-urakoitsijan-alukset-vastaus
   (s/coll-of ::alus))
 
-(s/def ::hae-kaikki-alukset-kysely
-  (s/keys :req []))
-
-(s/def ::hae-kaikki-alukset-vastaus
-  (s/coll-of ::alus))
-
 (s/def ::urakan-tallennettava-alus
   (s/keys :req [::mmsi
                 ::urakan-aluksen-kayton-lisatiedot]))
@@ -59,16 +54,6 @@
 
 (s/def ::tallenna-urakan-alukset-kysely
   (s/keys :req [::urakka/id ::urakan-tallennettavat-alukset]))
-
-(s/def ::tallennettava-alus
-  (s/keys :req [::mmsi ::nimi ::urakoitsija-id]
-          :opt [::lisatiedot]))
-
-(s/def ::tallennettavat-alukset
-  (s/coll-of ::tallennettava-alus))
-
-(s/def ::tallenna-alukset-kysely
-  (s/keys :req [::tallennettavat-alukset]))
 
 (s/def ::hae-alusten-reitit-pisteineen-kysely
   (s/keys :opt-un [::alku ::loppu ::laivat]))

@@ -37,20 +37,6 @@
     (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)})
     {:ns :harja.domain.vesivaylat.alus}))
 
-(defn hae-kaikki-alukset [db user]
-  ;; TODO Oikeustarkistus
-  (let [organisaatio (:organisaatio user)
-        organisaatio-id (:id organisaatio)
-        urakoitsija? (= (:tyyppi organisaatio) :urakoitsija)]
-    (sort-by ::alus/mmsi (specql/fetch
-                           db
-                           ::alus/alus
-                           (set/union alus/perustiedot alus/viittaukset)
-                           (merge
-                             {::m/poistettu? false}
-                             (when urakoitsija?
-                               {:urakoitsija-id organisaatio-id}))))))
-
 (defn tallenna-urakan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
   (let [urakka-id (::urakka/id tiedot)
@@ -76,33 +62,6 @@
              ::m/luotu (c/to-sql-time (t/now))
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
       (hae-urakan-alukset db user tiedot))))
-
-(defn tallenna-alukset [db user tiedot]
-  ;; TODO Oikeustarkistus + testi sille
-  (let [alukset (::alus/tallennettavat-alukset tiedot)]
-    (jdbc/with-db-transaction [db db]
-      (doseq [alus alukset]
-        (if (first (alukset-q/hae-alus-mmsilla db {:mmsi (::alus/mmsi alus)}))
-          (specql/update!
-            db
-            ::alus/alus
-            {::alus/mmsi (::alus/mmsi alus)
-             ::alus/nimi (::alus/nimi alus)
-             ::alus/urakoitsija-id (::alus/urakoitsija-id alus)
-             ::alus/lisatiedot (::alus/lisatiedot alus)
-             ::m/muokattu (c/to-sql-time (t/now))
-             ::m/poistettu? (or (:poistettu alus) false)}
-            {::alus/mmsi (::alus/mmsi alus)})
-          (specql/insert!
-            db
-            ::alus/alus
-            {::alus/mmsi (::alus/mmsi alus)
-             ::alus/nimi (::alus/nimi alus)
-             ::alus/urakoitsija-id (::alus/urakoitsija-id alus)
-             ::alus/lisatiedot (::alus/lisatiedot alus)
-             ::m/luoja-id (:id user)
-             ::m/luotu (c/to-sql-time (t/now))})))
-      (hae-kaikki-alukset db user))))
 
 (defn hae-alusten-reitit
   ([db user tiedot] (hae-alusten-reitit db user tiedot false))
@@ -132,25 +91,11 @@
        :vastaus-spec ::alus/hae-urakoitsijan-alukset-vastaus})
     (julkaise-palvelu
       http
-      :hae-kaikki-alukset
-      (fn [user tiedot]
-        (hae-kaikki-alukset db user))
-      {:kysely-spec ::alus/hae-kaikki-alukset-kysely
-       :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
-    (julkaise-palvelu
-      http
       :tallenna-urakan-alukset
       (fn [user tiedot]
         (tallenna-urakan-alukset db user tiedot))
       {:kysely-spec ::alus/tallenna-urakan-alukset-kysely
        :vastaus-spec ::alus/hae-urakan-alukset-vastaus})
-    (julkaise-palvelu
-      http
-      :tallenna-alukset
-      (fn [user tiedot]
-        (tallenna-alukset db user tiedot))
-      {:kysely-spec ::alus/tallenna-alukset-kysely
-       :vastaus-spec ::alus/hae-kaikki-alukset-vastaus})
     (julkaise-palvelu
       http
       :hae-alusten-reitit-pisteineen

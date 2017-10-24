@@ -149,55 +149,6 @@
                                            :hae-urakoitsijan-alukset +kayttaja-ulle+
                                            {::organisaatio/id urakoitsija-id})))))
 
-(deftest tallenna-alukset
-  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
-        uudet-alukset [{::alus/mmsi 12235365
-                        ::alus/nimi "Urpo"
-                        ::alus/urakoitsija-id urakoitsija-id
-                        ::alus/lisatiedot "Urpo on karhu"}
-                       {::alus/mmsi 12235366
-                        ::alus/nimi "Turpo"
-                        ::alus/urakoitsija-id urakoitsija-id
-                        ::alus/lisatiedot "Turpo on karhu"}
-                       {::alus/mmsi 12235367
-                        ::alus/nimi ""
-                        ::alus/urakoitsija-id urakoitsija-id
-                        ::alus/lisatiedot "Tää on varsinaista karhun elämää!"}]
-        alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus;"))
-        args {::alus/tallennettavat-alukset uudet-alukset}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-alukset +kayttaja-jvh+
-                                args)
-        alukset-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_alus;"))]
-
-
-    (is (s/valid? ::alus/tallenna-alukset-kysely args))
-    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus vastaus))
-
-    (is (= (+ alukset-ennen (count uudet-alukset))
-           alukset-jalkeen)
-        "Alusksia tuli lisää oikea määrä")
-
-    (is (some #(= (::alus/nimi %) "Urpo") vastaus))
-    (is (some #(= (::alus/lisatiedot %) "Urpo on karhu") vastaus))
-
-    (is (some #(= (::alus/nimi %) "Turpo") vastaus))
-    (is (some #(= (::alus/lisatiedot %) "Turpo on karhu") vastaus))))
-
-(deftest tallenna-alukset-ilman-oikeutta
-  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
-        uudet-alukset [{::alus/mmsi 12235365
-                        ::alus/nimi "Yrmykyrmy"
-                        ::alus/urakoitsija-id urakoitsija-id
-                        ::alus/lisatiedot "Hakkeroitu alus"}]
-        alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus;"))
-        args {::alus/tallennettavat-alukset uudet-alukset}]
-
-    (is (thrown? Exception
-                 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :tallenna-alukset +kayttaja-ulle+
-                                 args)))))
-
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)

@@ -7,7 +7,6 @@
             [harja.views.vesivaylat.hallinta.sopimuksien-luonti :as vsu]
             [harja.views.kanavat.hallinta.kohteiden-luonti :as kohteiden-luonti]
             [harja.views.kanavat.hallinta.kohteiden-liittaminen :as kohteiden-liittaminen]
-            [harja.views.vesivaylat.hallinta.alukset :as alukset]
 
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]))
