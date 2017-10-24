@@ -34,8 +34,8 @@
 (defn- tallenna-urakoitsijan-alus
   "Luo uuden tai päivittää olemassa olevan aluksen MMSI:n perusteella."
   [db user urakoitsija-id alus]
-  (if (first (alukset-q/urakoitsijan db {:mmsi (::alus/mmsi alus)
-                                         :urakoitsija-id urakoitsija-id}))
+  (if (first (alukset-q/hae-urakoitsijan-alus-mmsilla db {:mmsi (::alus/mmsi alus)
+                                                          :urakoitsija-id urakoitsija-id}))
     (specql/update!
       db
       ::alus/alus
