@@ -3,7 +3,11 @@ SELECT
   mmsi,
   a.nimi,
   a.lisatiedot,
-  (SELECT EXISTS(SELECT * FROM vv_alus_urakka au WHERE au.alus = a.mmsi AND au.urakka = :urakka)) AS "kaytossa-urakassa?",
+  (SELECT EXISTS(SELECT * FROM vv_alus_urakka au WHERE
+                                                  au.alus = a.mmsi
+                                                  AND au.urakka = :urakka
+                                                  AND poistettu IS NOT TRUE))
+                 AS "kaytossa-urakassa?",
   au.lisatiedot AS "urakan-aluksen-kayton-lisatiedot"
 FROM vv_alus a
   LEFT JOIN vv_alus_urakka au ON au.alus = a.mmsi
