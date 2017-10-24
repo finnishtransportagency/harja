@@ -523,29 +523,29 @@
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
              :tyyppi :string
-             :leveys 1}
+             :leveys 7}
             {:otsikko "Nimi"
              :nimi ::alus/nimi
              :tyyppi :string
-             :leveys 1
+             :leveys 7
              :pituus-max 512}
             {:otsikko "Lisätiedot"
              :nimi ::alus/lisatiedot
              :tyyppi :string
-             :leveys 1
+             :leveys 10
              :pituus-max 512}
             {:otsikko "Käytössä tässä urakassa"
              :nimi ::alus/kaytossa-urakassa?
              :tyyppi :checkbox
              :tasaa :keskita
              :fmt fmt/totuus
-             :leveys 1}
+             :leveys 5}
             {:otsikko "Käyttötarve urakassa"
              :nimi ::alus/urakan-aluksen-kayton-lisatiedot
              :muokattava? (fn [rivi]
                             (::alus/kaytossa-urakassa? rivi))
              :tyyppi :string
-             :leveys 1
+             :leveys 10
              :pituus-max 512}]
            ;; Generoidaan gridin riveille id mmsi:n perusteella, joka on uniikki.
            ;; Ei käytetä mmsi:tä suoraan gridissä tunnisteena, sillä
