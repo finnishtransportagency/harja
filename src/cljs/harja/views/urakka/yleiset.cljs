@@ -527,6 +527,8 @@
              :leveys 1}
             {:otsikko "Käyttötarve urakassa"
              :nimi ::alus/urakan-aluksen-kayton-lisatiedot
+             :muokattava? (fn [rivi]
+                            (::alus/kaytossa-urakassa? rivi))
              :tyyppi :string
              :leveys 1
              :pituus-max 512}]
