@@ -42,9 +42,12 @@
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
 
-(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
   [:span.arvo-ja-yksikko
-   [:span.arvo (if fmt (fmt arvo) arvo)]
+   [:span.arvo (cond
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 fmt (fmt arvo)
+                 :else arvo)]
    [:span.yksikko (str yksikko)]])
 
 (defmethod muodosta-html :varillinen-teksti
