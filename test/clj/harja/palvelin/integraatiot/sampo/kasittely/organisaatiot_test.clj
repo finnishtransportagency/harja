@@ -1,7 +1,21 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.organisaatiot-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]))
+            [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+
+(defn jarjestelma-fixture [testit]
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)
+                        :http-palvelin (testi-http-palvelin)))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+(use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest tarkista-organisaation-tallentuminen
   (tuo-organisaatio)
