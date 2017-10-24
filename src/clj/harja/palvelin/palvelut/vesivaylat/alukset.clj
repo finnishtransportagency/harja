@@ -24,20 +24,15 @@
             [clj-time.coerce :as c]
             [clojure.set :as set]))
 
-(defn hae-urakan-alukset [db user tiedot]
-  ;; TODO Oikeustarkistus
-  (namespacefy
-    (alukset-q/hae-urakan-alukset db {:urakka (::urakka/id tiedot)})
-    {:ns :harja.domain.vesivaylat.alus
-     :custom {:lisatiedot ::alus/urakan-aluksen-kayton-lisatiedot}}))
-
 (defn hae-urakoitsijan-alukset [db user tiedot]
+  ;; TODO Uusi toteutus tälle
   ;; TODO Oikeustarkistus
   (namespacefy/namespacefy
     (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)})
     {:ns :harja.domain.vesivaylat.alus}))
 
-(defn tallenna-urakan-alukset [db user tiedot]
+(defn tallenna-urakoitsijan-alukset [db user tiedot]
+  ;; TODO Uusi toteutus tälle
   ;; TODO Oikeustarkistus + testi sille
   (let [urakka-id (::urakka/id tiedot)
         alukset (::alus/urakan-tallennettavat-alukset tiedot)]
@@ -61,7 +56,7 @@
              ::m/luoja-id (:id user)
              ::m/luotu (c/to-sql-time (t/now))
              ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
-      (hae-urakan-alukset db user tiedot))))
+      (hae-urakoitsijan-alukset db user tiedot))))
 
 (defn hae-alusten-reitit
   ([db user tiedot] (hae-alusten-reitit db user tiedot false))
@@ -77,13 +72,6 @@
            db :db :as this}]
     (julkaise-palvelu
       http
-      :hae-urakan-alukset
-      (fn [user tiedot]
-        (hae-urakan-alukset db user tiedot))
-      {:kysely-spec ::alus/hae-urakan-alukset-kysely
-       :vastaus-spec ::alus/hae-urakan-alukset-vastaus})
-    (julkaise-palvelu
-      http
       :hae-urakoitsijan-alukset
       (fn [user tiedot]
         (hae-urakoitsijan-alukset db user tiedot))
@@ -91,10 +79,10 @@
        :vastaus-spec ::alus/hae-urakoitsijan-alukset-vastaus})
     (julkaise-palvelu
       http
-      :tallenna-urakan-alukset
+      :tallenna-urakoitsijan-alukset
       (fn [user tiedot]
-        (tallenna-urakan-alukset db user tiedot))
-      {:kysely-spec ::alus/tallenna-urakan-alukset-kysely
+        (tallenna-urakoitsijan-alukset db user tiedot))
+      {:kysely-spec ::alus/tallenna-urakoitsijan-alukset-kysely
        :vastaus-spec ::alus/hae-urakan-alukset-vastaus})
     (julkaise-palvelu
       http

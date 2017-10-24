@@ -33,27 +33,20 @@
 (s/def ::sijainti ::geo/geometria)
 (s/def ::kaytossa-urakassa? boolean?)
 
-(s/def ::hae-urakan-alukset-kysely
-  (s/keys :req [::urakka/id]))
-
-(s/def ::hae-urakan-alukset-vastaus
-  (s/coll-of ::alus))
-
-(s/def ::hae-urakoitsijan-alukset-kysely
-  (s/keys :req [::organisaatio/id]))
+(s/def ::tallennettava-alus
+  (s/keys :req [::mmsi ::nimi ::lisatiedot ::kaytossa-urakassa? ::urakan-aluksen-kayton-lisatiedot]))
 
 (s/def ::hae-urakoitsijan-alukset-vastaus
-  (s/coll-of ::alus))
+  (s/coll-of ::tallennettava-alus))
 
-(s/def ::urakan-tallennettava-alus
-  (s/keys :req [::mmsi
-                ::urakan-aluksen-kayton-lisatiedot]))
+(s/def ::hae-urakoitsijan-alukset-kysely
+  (s/keys :req [::urakoitsija-id ::urakka/id]))
 
-(s/def ::urakan-tallennettavat-alukset
-  (s/coll-of ::urakan-tallennettava-alus))
+(s/def ::tallennettavat-alukset
+  (s/coll-of ::tallennettava-alus))
 
-(s/def ::tallenna-urakan-alukset-kysely
-  (s/keys :req [::urakka/id ::urakan-tallennettavat-alukset]))
+(s/def ::tallenna-urakoitsijan-alukset-kysely
+  (s/keys :req [::urakoitsija-id ::urakka/id ::tallennettavat-alukset]))
 
 (s/def ::hae-alusten-reitit-pisteineen-kysely
   (s/keys :opt-un [::alku ::loppu ::laivat]))
