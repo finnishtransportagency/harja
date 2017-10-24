@@ -24,7 +24,8 @@
             [harja.views.kartta.infopaneeli :as infopaneeli]
             [harja.views.tilannekuva.tilannekuva-jaettu :as jaettu]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.views.kartta.tasot :as tasot]))
+            [harja.views.kartta.tasot :as tasot]
+            [harja.views.kartta :as kartta]))
 
 (def tr-osoite-taytetty? (every-pred :numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys))
 
@@ -109,8 +110,14 @@
 
 (defn- tienakyma* [e! app]
   (komp/luo
-   (komp/sisaan-ulos #(e! (tiedot/->Nakymassa true))
-                     #(e! (tiedot/->Nakymassa false)))
+   (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa true))
+                          ;; Tilannekuvan "emonäkymään" tultaessa näytetään kartalla
+                          ;; päivitysspinneri, koska nykytilanteessa ja historiakuvassa
+                          ;; tehdään automaattisesti hakuja näkymään tultaessa. Tienäkymän
+                          ;; karttaa ei lähdetä päivittämään automaattisesti, eikä päivitysspinneria
+                          ;; käytetä tienäkymässä muuten, joten poistetaan spinneri.
+                          (kartta/aseta-paivitetaan-karttaa-tila! false))
+                     #(do (e! (tiedot/->Nakymassa false))))
    (komp/ulos (kartta-tiedot/aseta-klik-kasittelija!
                (fn [{t :geometria}]
                  (when-let [idx (:idx t)]

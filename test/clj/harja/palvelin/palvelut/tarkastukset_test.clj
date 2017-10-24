@@ -19,8 +19,8 @@
                                        (karttakuvat/luo-karttakuvat)
                                        [:http-palvelin :db])
                         :tarkastukset (component/using
-                                          (t/->Tarkastukset)
-                                          [:http-palvelin :db :karttakuvat])))))
+                                        (t/->Tarkastukset)
+                                        [:http-palvelin :db :karttakuvat])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -39,7 +39,7 @@
    :havainnot "kuvaus tähän"
    :laadunalitus true})
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each (compose-fixtures jarjestelma-fixture tietokanta-fixture))
 
 (deftest tallenna-ja-paivita-soratietarkastus
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
@@ -97,7 +97,6 @@
             ;; muokatut kentät tallentuivat
             (is (= "MUOKATTU KUVAUS" (get-in muokattu-tarkastus [:havainnot])))
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
-; FIXME Siivoa tallennettu data
 
 (deftest hae-urakan-tarkastukset
   (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
@@ -112,8 +111,11 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 1))
     (let [tarkastus (first vastaus)]
-      (is (= #{:ok? :jarjestelma :havainnot :laadunalitus :vakiohavainnot :aika :soratiemittaus
-               :tr :tekija :id :tyyppi :tarkastaja :yllapitokohde :nayta-urakoitsijalle :liitteet}
+      (is (= #{:ok? :jarjestelma :havainnot :laadunalitus
+               :vakiohavainnot :aika :soratiemittaus
+               :tr :tekija :id :tyyppi :tarkastaja
+               :talvihoitomittaus :yllapitokohde
+               :nayta-urakoitsijalle :liitteet}
              (into #{} (keys tarkastus)))))))
 
 (deftest hae-urakan-tarkastukset-urakoitsijalle
@@ -155,3 +157,45 @@
                                                            WHERE havainnot = 'Tämä tarkastus näkyy myös urakoitsijalle';"))})]
     (is (not (empty? vastaus)))
     (is (= (:havainnot vastaus) "Tämä tarkastus näkyy myös urakoitsijalle"))))
+
+(deftest nayta-tarkastus-urakoitsijalle
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopivat-tarkastukset (q-map "SELECT id, havainnot, nayta_urakoitsijalle FROM tarkastus
+                                     WHERE luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE)
+                                     AND nayta_urakoitsijalle IS FALSE
+                                     AND urakka = " urakka-id)]
+
+    (is (> (count sopivat-tarkastukset) 1))
+
+    (doseq [tarkastus-ennen sopivat-tarkastukset]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :nayta-tarkastus-urakoitsijalle
+                                    +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :tarkastus-id (:id tarkastus-ennen)})
+            tarkastus-jalkeen (first (q-map "SELECT nayta_urakoitsijalle, havainnot FROM tarkastus WHERE id = " (:id tarkastus-ennen) ";"))]
+
+
+        (is (false? (:nayta_urakoitsijalle tarkastus-ennen)))
+        (is (= (:havainnot tarkastus-jalkeen) (:havainnot tarkastus-ennen)))
+        (is (true? (:nayta_urakoitsijalle tarkastus-jalkeen)))))))
+
+(deftest nayta-tarkastus-urakoitsijalle-ei-toimi-vaaraan-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        eri-urakan-tarkastus (first (q-map "SELECT id FROM tarkastus WHERE urakka != " urakka-id ";"))]
+    (is (thrown? SecurityException
+              (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :nayta-tarkastus-urakoitsijalle
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :tarkastus-id (:id eri-urakan-tarkastus)})))))
+
+(deftest nayta-tarkastus-urakoitsijalle-ei-toimi-ilman-oikeuksia
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkastus (first (q-map "SELECT id FROM tarkastus WHERE urakka = " urakka-id ";"))]
+    (is (thrown? Exception
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :nayta-tarkastus-urakoitsijalle
+                                 +kayttaja-tero+
+                                 {:urakka-id urakka-id
+                                  :tarkastus-id (:id tarkastus)})))))
