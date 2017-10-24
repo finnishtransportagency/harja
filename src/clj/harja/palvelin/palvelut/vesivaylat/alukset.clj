@@ -117,7 +117,7 @@
       (fn [user tiedot]
         (tallenna-urakoitsijan-alukset db user tiedot))
       {:kysely-spec ::alus/tallenna-urakoitsijan-alukset-kysely
-       :vastaus-spec ::alus/hae-urakan-alukset-vastaus})
+       :vastaus-spec ::alus/hae-urakoitsijan-alukset-vastaus})
     (julkaise-palvelu
       http
       :hae-alusten-reitit-pisteineen
