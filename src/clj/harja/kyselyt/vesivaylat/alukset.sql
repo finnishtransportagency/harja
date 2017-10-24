@@ -1,23 +1,15 @@
--- name: hae-urakan-alukset
-SELECT
-  mmsi,
-  nimi,
-  au.lisatiedot
-FROM vv_alus a
-  LEFT JOIN vv_alus_urakka au ON au.alus = a.mmsi
-                              AND au.poistettu IS NOT TRUE
-WHERE urakka = :urakka
-      AND a.poistettu IS NOT TRUE
-ORDER BY mmsi;
-
 -- name: hae-urakoitsijan-alukset
 SELECT
   mmsi,
   a.nimi,
-  a.lisatiedot
+  a.lisatiedot,
+  (SELECT EXISTS(SELECT * FROM vv_alus_urakka au WHERE au.alus = a.mmsi AND au.urakka = :urakka)) AS "kaytossa-urakassa?",
+  au.lisatiedot AS "urakan-aluksen-kayton-lisatiedot"
 FROM vv_alus a
+  LEFT JOIN vv_alus_urakka au ON au.alus = a.mmsi
+                                 AND au.poistettu IS NOT TRUE
 WHERE a.urakoitsija = :urakoitsija
-AND a.poistettu IS NOT TRUE
+      AND a.poistettu IS NOT TRUE
 ORDER BY mmsi;
 
 -- name: hae-alus-mmsilla

@@ -88,9 +88,10 @@
           (viesti/nayta! "Virhe tallennettaessa aluksia" :danger)
           (reset! tulos-atom vastaus)))))
 
-(defn hae-urakoitsijan-alukset [urakoitsija-id]
-  (when urakoitsija-id
-    (k/post! :hae-urakoitsijan-alukset {::organisaatio/id urakoitsija-id})))
+(defn hae-urakoitsijan-alukset [urakka-id urakoitsija-id]
+  (when (and urakka-id urakoitsija-id)
+    (k/post! :hae-urakoitsijan-alukset {::urakka/id urakka-id
+                                        ::alus/urakoitsija-id urakoitsija-id})))
 
 (defn tallenna-urakan-paivystajat
   "Tallentaa urakan päivystäjät. Palauttaa kanavan, josta vastauksen voi lukea."

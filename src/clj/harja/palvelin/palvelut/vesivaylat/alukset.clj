@@ -25,10 +25,10 @@
             [clojure.set :as set]))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Uusi toteutus tälle
   ;; TODO Oikeustarkistus
   (namespacefy/namespacefy
-    (alukset-q/hae-urakoitsijan-alukset db {:urakoitsija (::organisaatio/id tiedot)})
+    (alukset-q/hae-urakoitsijan-alukset db {:urakka (::urakka/id tiedot)
+                                            :urakoitsija (::alus/urakoitsija-id tiedot)})
     {:ns :harja.domain.vesivaylat.alus}))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]

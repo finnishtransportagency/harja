@@ -481,23 +481,16 @@
 
 (defn alukset [ur]
   (let [urakoitsijan-alukset (atom nil)
-        urakan-alukset (atom nil)
         hae-urakoitsijan-alukset (fn [ur]
                                    (reset! urakoitsijan-alukset nil)
                                    (go (reset! urakoitsijan-alukset
                                                (<! (tiedot/hae-urakoitsijan-alukset
-                                                     (get-in ur [:urakoitsija :id]))))))
-        hae-urakan-alukset (fn [ur]
-                             (reset! urakan-alukset nil)
-                             (go (reset! urakan-alukset
-                                         (<! (tiedot/hae-urakan-alukset (:id ur))))))]
+                                                     (:id ur)
+                                                     (get-in ur [:urakoitsija :id]))))))]
     (komp/luo
-      (komp/sisaan #(do
-                      (hae-urakan-alukset ur)
-                      (hae-urakoitsijan-alukset ur)))
+      (komp/sisaan #(hae-urakoitsijan-alukset ur))
       (fn [ur]
-        (if (or (nil? @urakan-alukset)
-                (nil? @urakoitsijan-alukset))
+        (if (nil? @urakoitsijan-alukset)
           [yleiset/ajax-loader]
           ;; TODO Oikeustarkistus: kaikki joilla R-oikeus näkymään saa nähdä. Muokkausoikeus vain "urakan vastuuhenkilö" käyttäjälle (special-oikeus näkymään Exceliin tälle roolille?)
           [grid/grid
@@ -520,7 +513,7 @@
                                        rivi))
                                    rivit))))))
             :tallenna (fn [alukset]
-                        (tiedot/tallenna-urakan-alukset (:id ur) alukset urakan-alukset))}
+                        (tiedot/tallenna-urakan-alukset (:id ur) alukset urakoitsijan-alukset))}
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
              :tyyppi :string
@@ -551,7 +544,7 @@
            ;; Generoidaan gridin riveille id mmsi:n perusteella, joka on uniikki.
            ;; Ei käytetä mmsi:tä suoraan gridissä tunnisteena, sillä
            ;; muuten gridi generoi uuden mmsi:n automaattisesti itse
-           (map #(assoc % :grid-id (::alus/mmsi %)) @urakan-alukset)])))))
+           (map #(assoc % :grid-id (::alus/mmsi %)) @urakoitsijan-alukset)])))))
 
 (defn- nayta-yha-tuontidialogi-tarvittaessa
   "Näyttää YHA-tuontidialogin, jos tarvii."
