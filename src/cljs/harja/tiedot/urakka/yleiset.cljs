@@ -76,14 +76,10 @@
 (defn hae-urakan-yhteyshenkilot [urakka-id]
   (k/post! :hae-urakan-yhteyshenkilot urakka-id))
 
-(defn hae-urakan-alukset [urakka-id]
-  (when urakka-id
-    (k/post! :hae-urakan-alukset {::urakka/id urakka-id})))
-
 (defn tallenna-urakan-alukset [urakka-id alukset tulos-atom]
   (go (let [vastaus (<! (k/post! :tallenna-urakan-alukset {::urakka/id urakka-id
-                                          ::alus/urakan-tallennettavat-alukset
-                                          alukset}))]
+                                                           ::alus/urakoitsija-id
+                                                           ::alus/tallennettavat-alukset alukset}))]
         (if (k/virhe? vastaus)
           (viesti/nayta! "Virhe tallennettaessa aluksia" :danger)
           (reset! tulos-atom vastaus)))))

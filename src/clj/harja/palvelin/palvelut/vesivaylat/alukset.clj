@@ -32,7 +32,6 @@
     {:ns :harja.domain.vesivaylat.alus}))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Uusi toteutus tälle
   ;; TODO Oikeustarkistus + testi sille
   (let [urakka-id (::urakka/id tiedot)
         alukset (::alus/urakan-tallennettavat-alukset tiedot)]
