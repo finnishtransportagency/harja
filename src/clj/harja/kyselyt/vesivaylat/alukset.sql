@@ -21,6 +21,15 @@ FROM vv_alus a
 WHERE a.poistettu IS NOT TRUE
       AND mmsi = :mmsi;
 
+-- name: hae-alus-mmsilla
+SELECT
+  mmsi,
+  nimi,
+  lisatiedot,
+FROM vv_alus a
+WHERE urakoitsija = :urakoitsija
+      AND mmsi = :mmsi;
+
 -- name: hae-urakan-alus-mmsilla
 SELECT
   mmsi,

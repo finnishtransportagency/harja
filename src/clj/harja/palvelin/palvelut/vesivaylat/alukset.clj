@@ -31,37 +31,64 @@
                                             :urakoitsija (::alus/urakoitsija-id tiedot)})
     {:ns :harja.domain.vesivaylat.alus}))
 
-(defn- tallenna-alus [db user urakka-id alus]
-  (if (first (alukset-q/hae-urakan-alus-mmsilla db {:mmsi (::alus/mmsi alus)
-                                                    :urakka urakka-id}))
-    ;; Päivitä olemassa oleva alus MMSI:n perusteella
+(defn- tallenna-urakoitsijan-alus
+  "Luo uuden tai päivittää olemassa olevan aluksen MMSI:n perusteella."
+  [db user urakoitsija-id alus]
+  (if (first (alukset-q/urakoitsijan db {:mmsi (::alus/mmsi alus)
+                                         :urakoitsija-id urakoitsija-id}))
     (specql/update!
       db
       ::alus/alus
       {::alus/nimi (::alus/nimi alus)
        ::alus/lisatiedot (::alus/lisatiedot alus)
        ::m/muokattu (c/to-sql-time (t/now))
-       ::m/luoja-id (:id user)
-       ::m/luotu (c/to-sql-time (t/now))}
+       ::m/muokkaaja-id (:id user)
+       ::m/poistettu (or (:poistettu alus) false)
+       ::m/poistaja (when (:poistettu alus) (:id user))}
       {::alus/mmsi (::alus/mmsi alus)})
-    ; Luo uusi alus
     (specql/insert!
       db
       ::alus/alus
       {::alus/mmsi (::alus/mmsi alus)
        ::alus/nimi (::alus/nimi alus)
        ::alus/lisatiedot (::alus/lisatiedot alus)
+       ::alus/urakoitsija-id urakoitsija-id
+       ::m/luotu (c/to-sql-time (t/now))
+       ::m/luoja (:id user)})))
+
+(defn- tallenna-aluksen-kaytto-urakassa
+  "Linkittää aluksen urakkaan tai merkitsee linkityksen poistetuksi."
+  [db user urakka-id alus]
+  (if (first (alukset-q/hae-urakan-alus-mmsilla db {:mmsi (::alus/mmsi alus)
+                                                    :urakka urakka-id}))
+    (specql/update!
+      db
+      ::alus/urakan-aluksen-kaytto
+      {::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
        ::m/muokattu (c/to-sql-time (t/now))
-       ::m/poistettu? (or (:poistettu alus) false)})))
+       ::m/muokkaaja-id (:id user)
+       ::m/poistettu (or (:poistettu alus) false)
+       ::m/poistaja (when (:poistettu alus) (:id user))}
+      {::alus/urakan-alus-mmsi (::alus/mmsi alus)
+       ::alus/urakka-id urakka-id})
+    (specql/insert!
+      db
+      ::alus/urakan-aluksen-kaytto
+      {::alus/urakan-alus-mmsi (::alus/mmsi alus)
+       ::alus/urakka-id urakka-id
+       ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
+       ::m/luotu (c/to-sql-time (t/now))
+       ::m/luoja (:id user)})))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
+  ;; TODO Kuuluu urakkaan/urakoitsijalle tjsp tarkistus
   (let [urakka-id (::urakka/id tiedot)
         urakoitsija-id (::alus/urakoitsija-id tiedot)
         alukset (::alus/tallennettavat-alukset tiedot)]
     (jdbc/with-db-transaction [db db]
       (doseq [alus alukset]
-        (tallenna-alus db user urakka-id alus)
+        (tallenna-urakoitsijan-alus db user urakoitsija-id alus)
         (tallenna-aluksen-kaytto-urakassa db user urakka-id alus))
       (hae-urakoitsijan-alukset db user tiedot))))
 
