@@ -31,25 +31,28 @@
                                             :urakoitsija (::alus/urakoitsija-id tiedot)})
     {:ns :harja.domain.vesivaylat.alus}))
 
-(defn- tallenna-alus []
+(defn- tallenna-alus [db user urakka-id alus]
   (if (first (alukset-q/hae-urakan-alus-mmsilla db {:mmsi (::alus/mmsi alus)
                                                     :urakka urakka-id}))
+    ;; Päivitä olemassa oleva alus MMSI:n perusteella
     (specql/update!
       db
-      ::alus/urakan-aluksen-kaytto
-      {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-       ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
+      ::alus/alus
+      {::alus/nimi (::alus/nimi alus)
+       ::alus/lisatiedot (::alus/lisatiedot alus)
        ::m/muokattu (c/to-sql-time (t/now))
-       ::m/poistettu? (or (:poistettu alus) false)}
-      {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
+       ::m/luoja-id (:id user)
+       ::m/luotu (c/to-sql-time (t/now))}
+      {::alus/mmsi (::alus/mmsi alus)})
+    ; Luo uusi alus
     (specql/insert!
       db
-      ::alus/urakan-aluksen-kaytto
-      {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-       ::alus/urakka-id urakka-id
-       ::m/luoja-id (:id user)
-       ::m/luotu (c/to-sql-time (t/now))
-       ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
+      ::alus/alus
+      {::alus/mmsi (::alus/mmsi alus)
+       ::alus/nimi (::alus/nimi alus)
+       ::alus/lisatiedot (::alus/lisatiedot alus)
+       ::m/muokattu (c/to-sql-time (t/now))
+       ::m/poistettu? (or (:poistettu alus) false)})))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
@@ -58,26 +61,8 @@
         alukset (::alus/tallennettavat-alukset tiedot)]
     (jdbc/with-db-transaction [db db]
       (doseq [alus alukset]
-        (if (first (alukset-q/hae-urakan-alus-mmsilla db {:mmsi (::alus/mmsi alus)
-                                                          :urakka urakka-id}))
-          ;;
-          (specql/update!
-            db
-            ::alus/urakan-aluksen-kaytto
-            {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-             ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
-             ::m/muokattu (c/to-sql-time (t/now))
-             ::m/poistettu? (or (:poistettu alus) false)}
-            {::alus/urakan-alus-mmsi (::alus/mmsi alus)})
-          ;; Luo uusi alus & aluksen käyttö
-          (specql/insert!
-            db
-            ::alus/urakan-aluksen-kaytto
-            {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-             ::alus/urakka-id urakka-id
-             ::m/luoja-id (:id user)
-             ::m/luotu (c/to-sql-time (t/now))
-             ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)})))
+        (tallenna-alus db user urakka-id alus)
+        (tallenna-aluksen-kaytto-urakassa db user urakka-id alus))
       (hae-urakoitsijan-alukset db user tiedot))))
 
 (defn hae-alusten-reitit
