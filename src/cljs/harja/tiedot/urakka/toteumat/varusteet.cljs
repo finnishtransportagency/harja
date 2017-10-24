@@ -202,6 +202,16 @@
             (virhe!)
             (haku-valmis! vastaus))))))
 
+(defn hae-liitteet
+  [urakka-id toteuma-id haku-valmis! virhe!]
+  (when toteuma-id
+    (go (let [vastaus (<! (k/post! :hae-toteuman-liitteet {:urakka-id urakka-id
+                                                           :toteuma-id toteuma-id
+                                                           :oikeus (symbol "urakat-toteumat-varusteet")}))]
+          (if (k/virhe? vastaus)
+            (virhe!)
+            (haku-valmis! vastaus))))))
+
 (defn haetut-toteumat [app toteumat]
   (assoc app
     :toteumat toteumat
@@ -292,6 +302,8 @@
           tiedot (if tietolaji-muuttui?
                    (assoc tiedot :tietolajin-kuvaus nil)
                    tiedot)
+          urakka-id (:urakkaid tiedot)
+          toteuma-id (get-in tiedot [:toteuma :id])
           koordinaattiarvot (or (get-in tiedot [:sijainti :coordinates])
                                 (first (:points (first (:lines tiedot)))))
           koordinaatit (when koordinaattiarvot {:x (Math/round (first koordinaattiarvot))
@@ -304,6 +316,9 @@
                     (t/send-async! v/->TieosanAjoradatHaettu)
                     (t/send-async! (partial v/->VirheTapahtui "Ajoratojen haku epäonnistui")))
 
+      (hae-liitteet urakka-id toteuma-id
+                    (t/send-async! v/->LiitteetHaettu)
+                    (t/send-async! (partial v/->VirheTapahtui "Liitteiden haku epäonnistui")))
       ;; Jos tietolajin kuvaus muuttui ja se ei ole tyhjä, haetaan uudet tiedot
       (when (and tietolaji-muuttui? (:tietolaji tiedot))
         (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Tietolajin hakemisessa tapahtui virhe"))
@@ -341,6 +356,11 @@
       (-> app
           (assoc-in [:varustetoteuma :ajoradat] ajoradat)
           (assoc-in [:varustetoteuma :ajorata] ajorata))))
+
+  v/LiitteetHaettu
+  (process-event [{liitteet :liitteet} app]
+    (-> app
+        (assoc-in [:varustetoteuma :liitteet] liitteet)))
 
   v/VirheTapahtui
   (process-event [{virhe :virhe} app]

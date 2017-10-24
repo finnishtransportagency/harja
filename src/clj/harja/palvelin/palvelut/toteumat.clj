@@ -570,10 +570,7 @@
                     :toteumatehtava :toteumatehtavat}
                    :id)]
     (log/debug "Palautetaan " (count toteumat) " varustetoteuma(a)")
-    (map
-      #(let [liitteet (toteumat-q/hae-toteuman-liitteet db (:toteumaid %))]
-         (assoc % :liitteet liitteet))
-      toteumat)))
+    toteumat))
 
 (defn hae-kokonaishintaisen-toteuman-tiedot
   ([db user urakka-id pvm toimenpidekoodi]

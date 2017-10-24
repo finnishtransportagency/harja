@@ -378,7 +378,7 @@
 
       :liitteet (component/using
                   (liitteet/->Liitteet)
-                  [:http-palvelin :liitteiden-hallinta :pois-kytketyt-ominaisuudet])
+                  [:http-palvelin :db :liitteiden-hallinta :pois-kytketyt-ominaisuudet])
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
