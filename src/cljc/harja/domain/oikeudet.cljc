@@ -100,12 +100,18 @@
   "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
                                    urakkaroolit organisaatioroolit] :as kayttaja}]
-  (when-not (or (nil? urakka-id) (number? urakka-id)) (log/error "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Urakka-id:n täytyy olla joko nil tai numero " (pr-str urakka-id)))
-  (when-not (instance? KayttoOikeus oikeus) (log/error "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Annettu oikeus ei ole KayttoOikeus " (pr-str oikeus)))
+  (when-not (or (nil? urakka-id) (number? urakka-id))
+    (#?(:clj log/error
+        :cljs log/debug)
+      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Urakka-id:n täytyy olla joko nil tai numero " (pr-str urakka-id)))
+  (when-not (instance? KayttoOikeus oikeus)
+    (#?(:clj log/error
+        :cljs log/debug)
+      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Annettu oikeus ei ole KayttoOikeus " (pr-str oikeus)))
   (when-not (every? #(contains? kayttaja %) [:organisaation-urakat :roolit :organisaatio
                                            :urakkaroolit :organisaatioroolit])
     (#?(:clj log/error
-        :cljs log/warn)
+        :cljs log/debug)
       "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Käyttäjältä puuttuu jokin avaimista "
                (pr-str [:organisaation-urakat :roolit :organisaatio :urakkaroolit :organisaatioroolit])
                " "
