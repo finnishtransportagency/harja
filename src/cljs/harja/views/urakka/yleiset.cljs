@@ -499,6 +499,7 @@
         (if (or (nil? @urakan-alukset)
                 (nil? @urakoitsijan-alukset))
           [yleiset/ajax-loader]
+          ;; TODO Oikeustarkistus: kaikki joilla R-oikeus näkymään saa nähdä. Muokkausoikeus vain "urakan vastuuhenkilö" käyttäjälle (special-oikeus näkymään Exceliin tälle roolille?)
           [grid/grid
            {:otsikko "Urakoitsijan alukset"
             :tyhja "Ei aluksia"
