@@ -2,40 +2,69 @@
   (:require [clojure.string :as str]
             [taoensso.timbre :as log]))
 
-(defn paattele-alityyppi [tyypit default-fn]
-  (if (< 2 (count tyypit))
-    (let [tunniste (str/upper-case (subs tyypit 2 3))]
-      (case tunniste
-        "V" "valaistus"
-        "P" "paallystys"
-        "T" "tiemerkinta"
-        "S" "siltakorjaus"
-        "L" "tekniset-laitteet"
-        (default-fn)))
-    (default-fn)))
-
-(defn paattele-urakkatyyppi [tyypit]
-  ;; Ensimmäinen kirjain kertoo yläkategorian (tie, rata, vesi)
-  ;; Toinen kirjain määrittää kuuluuko urakka hoitoon vai ylläpitoon
-  ;; Kolmas kirjain määrittää lopulta palautettavan urakkatyypin (hoito, päällystys, tiemerkintä...)
-  (if (< 1 (count tyypit))
-    (let [tunniste (str/upper-case (subs tyypit 1 2))
-          virhe (format "Samposta luettiin sisään ylläpidon urakka tuntemattomalla alityypillä. Tyypit: %s." tyypit)]
-      (case tunniste
-        "H" (paattele-alityyppi tyypit #(str "hoito"))
-        "Y" (paattele-alityyppi tyypit #(do (log/error virhe) "paallystys"))
-        "hoito"))
-    "hoito"))
-
-(defn paattele-liikennemuoto [tyypit]
+(defn vaylamuoto [tyypit]
   (if (empty? tyypit)
     "t"
-    (let [tunniste (str/upper-case (subs tyypit 0 1))]
-      (case tunniste
+    (let [vaylamuoto (str/upper-case (subs tyypit 0 1))]
+      (case vaylamuoto
         "T" "t"
         "R" "r"
         "V" "v"
         "t"))))
+
+(defn- urakan-alityyppi [tyypit vaihtoehdot oletus-fn]
+  (if (< 2 (count tyypit))
+    (let [alityyppiavain (keyword (str/upper-case (subs tyypit 2 3)))
+          alityyppi (alityyppiavain vaihtoehdot)]
+      (if alityyppi
+        alityyppi
+        (oletus-fn)))
+    (oletus-fn)))
+
+(defn- tievaylaurakan-alityyppi [tyypit oletus-fn]
+  (let [vaihtoehdot {:V "valaistus"
+                     :P "paallystys"
+                     :T "tiemerkinta"
+                     :S "siltakorjaus"
+                     :L "tekniset-laitteet"}]
+    (urakan-alityyppi tyypit vaihtoehdot oletus-fn)))
+
+(defn- tievaylaurakan-tyyppi [tyypit urakkatyyppi]
+  (let [virhe (format "Samposta luettiin sisään ylläpitourakka tuntemattomalla alityypillä. Tyypit: %s." tyypit)]
+    (case urakkatyyppi
+      "H" (tievaylaurakan-alityyppi tyypit #(str "hoito"))
+      "Y" (tievaylaurakan-alityyppi tyypit #(do (log/error virhe) "paallystys"))
+      "hoito")))
+
+(defn vesivaylahoitourakan-alityyppi [tyypit oletus-fn]
+  (let [vaihtoehdot {:H "vesivayla-hoito"
+                     :K "vesivayla-kanavien-hoito"}]
+    (urakan-alityyppi tyypit vaihtoehdot oletus-fn)))
+
+(defn vesivaylayllapitourakan-alityyppi [tyypit oletus-fn]
+  (let [vaihtoehdot {:R "vesivayla-ruoppaus"
+                     :T "vesivayla-turvalaitteiden-korjaus"
+                     :K "vesivayla-kanavien-korjaus"}]
+    (urakan-alityyppi tyypit vaihtoehdot oletus-fn)))
+
+(defn- vesivaylaurakkan-tyyppi [tyypit tunniste]
+  (let [virhe (format "Samposta luettiin sisään vesiväyläurakka tuntemattomalla alityypillä. Tyypit: %s." tyypit)]
+    (case tunniste
+      "H" (vesivaylahoitourakan-alityyppi tyypit #(do (log/error virhe) "vesivayla-hoito"))
+      "Y" (vesivaylayllapitourakan-alityyppi tyypit #(do (log/error virhe) "vesivayla-kanavien-korjaus"))
+      "vesivaylahoito")))
+
+(defn urakkatyyppi [tyypit]
+  ;; Ensimmäinen kirjain kertoo yläkategorian (tie, rata, vesi)
+  ;; Toinen kirjain määrittää kuuluuko urakka hoitoon vai ylläpitoon
+  ;; Kolmas kirjain määrittää lopulta palautettavan urakkatyypin (hoito, päällystys, tiemerkintä...)
+  (if (< 1 (count tyypit))
+    (let [vaylamuoto (vaylamuoto tyypit)
+          urakkatyyppi (str/upper-case (subs tyypit 1 2))]
+      (case vaylamuoto
+        "t" (tievaylaurakan-tyyppi tyypit urakkatyyppi)
+        "v" (vesivaylaurakkan-tyyppi tyypit urakkatyyppi)))
+    "hoito"))
 
 (defn rakenna-sampon-tyyppi [urakkatyyppi]
   (case urakkatyyppi "valaistus" "TYV"
