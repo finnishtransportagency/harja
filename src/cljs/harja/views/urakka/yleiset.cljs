@@ -513,7 +513,10 @@
                                        rivi))
                                    rivit))))))
             :tallenna (fn [alukset]
-                        (tiedot/tallenna-urakan-alukset (:id ur) alukset urakoitsijan-alukset))}
+                        (tiedot/tallenna-urakan-alukset (:id ur)
+                                                        (get-in ur [:urakoitsija :id])
+                                                        alukset
+                                                        urakoitsijan-alukset))}
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
              :tyyppi :string
