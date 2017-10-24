@@ -83,12 +83,14 @@
                                (let [hoitoluokka-kannasta
                                      (into #{}
                                            (map :hoitoluokka
-                                                (hoitoluokat-q/hae-hoitoluokka-tr-pisteelle db {:tie               (:numero tr)
-                                                                                                :aosa              (:alkuosa tr)
-                                                                                                :aet               (:alkuetaisyys tr)
-                                                                                                :losa              (:loppuosa tr)
-                                                                                                :let               (:loppuetaisyys tr)
-                                                                                                :tietolajitunniste "talvihoito"})))]
+                                                (hoitoluokat-q/hae-hoitoluokka-tr-pisteelle
+                                                  db
+                                                  {:tie (:numero tr)
+                                                   :aosa (:alkuosa tr)
+                                                   :aet (:alkuetaisyys tr)
+                                                   :losa (:loppuosa tr)
+                                                   :let (:loppuetaisyys tr)
+                                                   :tietolajitunniste "talvihoito"})))]
                                  (if (= 1 (count hoitoluokka-kannasta))
                                    (first hoitoluokka-kannasta)
                                    nil))))
@@ -105,8 +107,8 @@
 
 (defn luo-tai-paivita-soratiemittaus [db tarkastus uusi?
                                       {:keys [hoitoluokka tasaisuus kiinteys polyavyys sivukaltevuus] :as mittaukset}]
-  (let [params {:hoitoluokka   hoitoluokka
-                :tasaisuus     tasaisuus :kiinteys kiinteys :polyavyys polyavyys
+  (let [params {:hoitoluokka hoitoluokka
+                :tasaisuus tasaisuus :kiinteys kiinteys :polyavyys polyavyys
                 :sivukaltevuus sivukaltevuus :tarkastus tarkastus}
         poista-rivi? (not-any? #(get-in (dissoc mittaukset :tarkastus) %)
                                laadunseuranta/soratiemittauksen-kentat)]
