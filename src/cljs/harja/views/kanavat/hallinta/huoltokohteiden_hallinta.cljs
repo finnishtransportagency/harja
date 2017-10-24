@@ -1,7 +1,8 @@
 (ns harja.views.kanavat.hallinta.huoltokohteiden-hallinta
   (:require [tuck.core :refer [tuck]]
 
-            [harja.tiedot.kanavat.hallinta.huoltokohteiden-hallinta :as tiedot]))
+            [harja.tiedot.kanavat.hallinta.huoltokohteiden-hallinta :as tiedot]
+            [harja.ui.komponentti :as komp]))
 
 (defn kohteiden-liittaminen* [e! app]
   (komp/luo
