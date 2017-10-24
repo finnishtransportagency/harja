@@ -503,6 +503,21 @@
            {:otsikko "Urakoitsijan alukset"
             :tyhja "Ei aluksia"
             :tunniste :grid-id
+            :muutos (fn [g]
+                      (let [vaatii-kayton-lisatietojen-tyhjennyksen?
+                            (some
+                              #(and (not (::alus/kaytossa-urakassa? %))
+                                    (some? (::alus/urakan-aluksen-kayton-lisatiedot %)))
+                              (vals (grid/hae-muokkaustila g)))]
+                        (when vaatii-kayton-lisatietojen-tyhjennyksen?
+                          (grid/muokkaa-rivit!
+                            g
+                            (fn [rivit]
+                              (map (fn [rivi]
+                                     (if-not (::alus/kaytossa-urakassa? rivi)
+                                       (assoc rivi ::alus/urakan-aluksen-kayton-lisatiedot nil)
+                                       rivi))
+                                   rivit))))))
             :tallenna (fn [alukset]
                         (tiedot/tallenna-urakan-alukset (:id ur) alukset urakan-alukset))}
            [{:otsikko "MMSI"
