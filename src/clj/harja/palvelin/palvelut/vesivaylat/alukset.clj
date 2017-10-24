@@ -71,14 +71,15 @@
        ::m/poistaja-id (when (:poistettu alus) (:id user))}
       {::alus/urakan-alus-mmsi (::alus/mmsi alus)
        ::alus/urakka-id urakka-id})
-    (specql/insert!
-      db
-      ::alus/urakan-aluksen-kaytto
-      {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-       ::alus/urakka-id urakka-id
-       ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
-       ::m/luotu (c/to-sql-time (t/now))
-       ::m/luoja-id (:id user)})))
+    (when (::alus/kaytossa-urakassa? alus)
+      (specql/insert!
+        db
+        ::alus/urakan-aluksen-kaytto
+        {::alus/urakan-alus-mmsi (::alus/mmsi alus)
+         ::alus/urakka-id urakka-id
+         ::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
+         ::m/luotu (c/to-sql-time (t/now))
+         ::m/luoja-id (:id user)}))))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
