@@ -44,7 +44,7 @@
        ::m/muokattu (c/to-sql-time (t/now))
        ::m/muokkaaja-id (:id user)
        ::m/poistettu? (or (:poistettu alus) false)
-       ::m/poistaja (when (:poistettu alus) (:id user))}
+       ::m/poistaja-id (when (:poistettu alus) (:id user))}
       {::alus/mmsi (::alus/mmsi alus)})
     (specql/insert!
       db
@@ -68,7 +68,7 @@
        ::m/muokattu (c/to-sql-time (t/now))
        ::m/muokkaaja-id (:id user)
        ::m/poistettu? (or (:poistettu alus) false)
-       ::m/poistaja (when (:poistettu alus) (:id user))}
+       ::m/poistaja-id (when (:poistettu alus) (:id user))}
       {::alus/urakan-alus-mmsi (::alus/mmsi alus)
        ::alus/urakka-id urakka-id})
     (specql/insert!
