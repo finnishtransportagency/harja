@@ -25,7 +25,8 @@
             [clojure.set :as set]))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Oikeustarkistus
+  ;; TODO Testi tälle uudelle palvelulle
+  ;; TODO Oikeustarkistus + testi sille
   (namespacefy/namespacefy
     (alukset-q/hae-urakoitsijan-alukset db {:urakka (::urakka/id tiedot)
                                             :urakoitsija (::alus/urakoitsija-id tiedot)})
@@ -90,6 +91,7 @@
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
   ;; TODO Oikeustarkistus + testi sille
+  ;; TODO Testi tälle uudelle palvelulle
   ;; TODO Kuuluu urakkaan/urakoitsijalle tjsp tarkistus
   (let [urakka-id (::urakka/id tiedot)
         urakoitsija-id (::alus/urakoitsija-id tiedot)

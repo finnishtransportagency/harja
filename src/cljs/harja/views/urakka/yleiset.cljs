@@ -521,7 +521,7 @@
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
              :tyyppi :string
-             ;; TODO Disabloi muokkaus jos rivi kannassa. Aluksen mmsi:n muokkaus ei ole tuettu operaatio.
+             ;; TODO Disabloi muokkaus jos rivi kannassa. Aluksen mmsi:n muokkaus ei ole tuettu operaatio
              :leveys 7
              :validoi [[:ei-tyhja "Anna MMSI"]
                        [:uniikki "MMSI on jo käytössä"]]}
