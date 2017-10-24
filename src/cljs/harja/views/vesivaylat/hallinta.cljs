@@ -49,11 +49,4 @@
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-kanavat))
      ^{:key "kohteiden-liittaminen"}
-     [kohteiden-liittaminen/kohteiden-liittaminen])
-
-   "Alukset"
-   :alukset
-   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-              (oikeudet/hallinta-vesivaylat))
-     ^{:key "alukset"}
-     [alukset/alukset])])
+     [kohteiden-liittaminen/kohteiden-liittaminen])])
