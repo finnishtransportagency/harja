@@ -61,16 +61,19 @@
   [db user urakka-id alus]
   (if (first (alukset-q/hae-urakan-alus-mmsilla db {:mmsi (::alus/mmsi alus)
                                                     :urakka urakka-id}))
-    (specql/update!
-      db
-      ::alus/urakan-aluksen-kaytto
-      {::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
-       ::m/muokattu (c/to-sql-time (t/now))
-       ::m/muokkaaja-id (:id user)
-       ::m/poistettu? (or (:poistettu alus) false)
-       ::m/poistaja-id (when (:poistettu alus) (:id user))}
-      {::alus/urakan-alus-mmsi (::alus/mmsi alus)
-       ::alus/urakka-id urakka-id})
+    (let [kuuluu-urakkaan? (::alus/kaytossa-urakassa? alus)]
+      (specql/update!
+        db
+        ::alus/urakan-aluksen-kaytto
+        {::alus/urakan-aluksen-kayton-lisatiedot (::alus/urakan-aluksen-kayton-lisatiedot alus)
+         ::m/muokattu (c/to-sql-time (t/now))
+         ::m/muokkaaja-id (:id user)
+         ;; Poista linkitys jos ei enää kuulu urakkaan
+         ::m/poistettu? (not kuuluu-urakkaan?)
+         ::m/poistaja-id (when-not kuuluu-urakkaan? (:id user))}
+        {::alus/urakan-alus-mmsi (::alus/mmsi alus)
+         ::alus/urakka-id urakka-id}))
+    ;; Alukselle ei ole linkitystä urakkaan kannassa, lisää jos ilmoitettu kuuluvaksi urakkaan
     (when (::alus/kaytossa-urakassa? alus)
       (specql/insert!
         db
