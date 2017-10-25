@@ -56,12 +56,13 @@
   (map #(select-keys % #{::kanava/id ::kanava/nimi}) tulos))
 
 (defn kohteet-voi-tallentaa? [kohteet]
-  (and (:kanava kohteet)
-       (not-empty (:kohteet kohteet))
-       (every?
-         (fn [kohde]
-           (and (::kohde/tyyppi kohde)))
-         (:kohteet kohteet))))
+  (boolean
+    (and (:kanava kohteet)
+        (not-empty (:kohteet kohteet))
+        (every?
+          (fn [kohde]
+            (and (::kohde/tyyppi kohde)))
+          (:kohteet kohteet)))))
 
 (defn muokattavat-kohteet [app]
   (get-in app [:lomakkeen-tiedot :kohteet]))
@@ -137,7 +138,7 @@
 
   TallennaKohteet
   (process-event [_ {tiedot :lomakkeen-tiedot :as app}]
-    (if-not (:kohteiden-haku-kaynnissa? app)
+    (if-not (:kohteiden-tallennus-kaynnissa? app)
       (-> app
           (tt/post! :lisaa-kanavalle-kohteita
                     (tallennusparametrit tiedot)
