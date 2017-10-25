@@ -481,6 +481,11 @@
 
 (defn alukset [ur]
   (let [urakoitsijan-alukset (atom nil)
+        muokkausoikeus? (oikeudet/on-muu-oikeus?
+                          "alusten-muokkaus"
+                          oikeudet/urakat-yleiset
+                          (:id @nav/valittu-urakka)
+                          @istunto/kayttaja)
         hae-urakoitsijan-alukset (fn [ur]
                                    (reset! urakoitsijan-alukset nil)
                                    (go (reset! urakoitsijan-alukset
@@ -492,7 +497,6 @@
       (fn [ur]
         (if (nil? @urakoitsijan-alukset)
           [yleiset/ajax-loader]
-          ;; TODO Oikeustarkistus: kaikki joilla R-oikeus näkymään saa nähdä. Muokkausoikeus vain "urakan vastuuhenkilö" käyttäjälle (special-oikeus näkymään Exceliin tälle roolille?)
           [grid/grid
            {:otsikko "Urakoitsijan alukset"
             :tyhja "Ei aluksia"
@@ -512,11 +516,12 @@
                                        (assoc rivi ::alus/urakan-aluksen-kayton-lisatiedot nil)
                                        rivi))
                                    rivit))))))
-            :tallenna (fn [alukset]
-                        (tiedot/tallenna-urakan-alukset (:id ur)
-                                                        (get-in ur [:urakoitsija :id])
-                                                        alukset
-                                                        urakoitsijan-alukset))}
+            :tallenna (when muokkausoikeus?
+                        (fn [alukset]
+                          (tiedot/tallenna-urakan-alukset (:id ur)
+                                                          (get-in ur [:urakoitsija :id])
+                                                          alukset
+                                                          urakoitsijan-alukset)))}
            ;; TODO Disabloi rivin poisto jos alus käytössä urakassa (palauta kannasta tieto onko linkitetty myös muihin urakoihin kuin tähän)
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
