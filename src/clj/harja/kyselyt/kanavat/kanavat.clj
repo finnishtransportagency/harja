@@ -20,13 +20,8 @@
 
 ;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
 
-(defn- hae-kohteiden-urakkatiedot [db kohteet]
-  (let [kohde-ja-urakat (->> (specql/fetch db
-                                           ::kohde/kohde<->urakka
-                                           (set/union
-                                             kohde/kohteen-urakkatiedot
-                                             #{::kohde/kohde-id})
-                                           {::kohde/kohde-id (op/in (into #{} (map ::kohde/id kohteet)))})
+(defn- hae-kohteiden-urakkatiedot* [kohteet linkit]
+  (let [kohde-ja-urakat (->> linkit
                              (group-by ::kohde/kohde-id)
                              (map (fn [[kohde-id urakat]] [kohde-id (map ::kohde/linkin-urakka urakat)]))
                              (into {}))]
@@ -35,14 +30,53 @@
         (assoc kohde ::kohde/urakat (kohde-ja-urakat (::kohde/id kohde))))
       kohteet)))
 
-(defn hae-kanavat-ja-kohteet [db]
+(defn- hae-kohteiden-urakkatiedot [db kohteet]
+  (hae-kohteiden-urakkatiedot* kohteet
+                               (specql/fetch db
+                                             ::kohde/kohde<->urakka
+                                             (set/union
+                                               kohde/kohteen-urakkatiedot
+                                               #{::kohde/kohde-id})
+                                             {::kohde/kohde-id (op/in (into #{} (map ::kohde/id kohteet)))})))
+
+(defn- hae-kanavat-ja-kohteet* [kanavat kohteen-haku]
   (into []
         (comp
-          (map #(update % ::kanava/kohteet (partial hae-kohteiden-urakkatiedot db))))
-        (specql/fetch db
-                      ::kanava/kanava
-                      (set/union
-                        kanava/perustiedot
-                        kanava/kohteet)
-                      {::kanava/kohteet (op/or {::m/poistettu? op/null?}
-                                               {::m/poistettu? false})})))
+          (map #(update % ::kanava/kohteet kohteen-haku)))
+        kanavat))
+
+(defn hae-kanavat-ja-kohteet [db]
+  (hae-kanavat-ja-kohteet*
+    (specql/fetch db
+                 ::kanava/kanava
+                 (set/union
+                   kanava/perustiedot
+                   kanava/kohteet)
+                 {::kanava/kohteet (op/or {::m/poistettu? op/null?}
+                                          {::m/poistettu? false})})
+    (partial hae-kohteiden-urakkatiedot db)))
+
+(defn lisaa-kanavalle-kohteet! [db user kohteet]
+  (jdbc/with-db-transaction [db db]
+    (doall
+      (for [kohde kohteet]
+        (if (id-olemassa? (::kohde/id kohde))
+          (specql/update!
+            db
+            ::kohde/kohde
+            (merge
+              (if (::m/poistettu? kohde)
+                {::m/poistaja-id (:id user)
+                 ::m/muokattu (pvm/nyt)}
+
+                {::m/muokkaaja-id (:id user)
+                 ::m/muokattu (pvm/nyt)})
+              kohde)
+            {::kohde/id (::kohde/id kohde)})
+
+          (specql/insert!
+            db
+            ::kohde/kohde
+            (merge
+              {::m/luoja-id (:id user)}
+              (dissoc kohde ::kohde/id))))))))

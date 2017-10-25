@@ -41,3 +41,9 @@
 
 (s/def ::hae-kanavat-ja-kohteet-vastaus
   (s/coll-of (s/keys :req [])))
+
+(s/def ::lisaa-kanavalle-kohteita-kysely
+  (s/coll-of (s/keys :req [::kohde/kanava-id ::kohde/id ::kohde/tyyppi]
+                     :opt [::kohde/nimi ::m/poistettu?])))
+
+(s/def ::lisaa-kanavalle-kohteita-vastaus ::hae-kanavat-ja-kohteet-vastaus)

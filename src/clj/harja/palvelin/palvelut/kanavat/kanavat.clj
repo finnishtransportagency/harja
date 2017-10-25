@@ -11,7 +11,13 @@
 
 
 (defn hae-kanavat-ja-kohteet [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
   (q/hae-kanavat-ja-kohteet db))
+
+(defn lisaa-kanavalle-kohteita [db user kohteet]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (q/lisaa-kanavalle-kohteet! db user kohteet)
+  (hae-kanavat-ja-kohteet db user))
 
 (defrecord Kanavat []
   component/Lifecycle
@@ -22,8 +28,14 @@
       :hae-kanavat-ja-kohteet
       (fn [user]
         (hae-kanavat-ja-kohteet db user))
-      {:kysely-spec ::kan/hae-kanavat-ja-kohteet-kysely
-       :vastaus-spec ::kan/hae-kanavat-ja-kohteet-vastaus})
+      {:vastaus-spec ::kan/hae-kanavat-ja-kohteet-vastaus})
+    (julkaise-palvelu
+      http
+      :lisaa-kanavalle-kohteita
+      (fn [user kohteet]
+        (lisaa-kanavalle-kohteita db user kohteet))
+      {:kysely-spec ::kan/lisaa-kanavalle-kohteita-kysely
+       :vastaus-spec ::kan/lisaa-kanavalle-kohteita-vastaus})
     this)
 
   (stop [this]
