@@ -235,7 +235,7 @@
    #{"SEKOITUS TAI STABILOINTI"} [(viiva-mustalla-rajalla puhtaat/vihrea) "vihrea"]
    #{"TURVALAITE"} [(viiva-mustalla-rajalla puhtaat/oranssi) "oranssi"]
    #{"JYRAYS"} [(viiva-mustalla-rajalla puhtaat/magenta) "magenta"]
-   #{"TILAAJAN LAADUNVALVONTA"} [(viiva-mustalla-rajalla (:ok-tarkastus-tilaaja tiepuolen-viivojen-varit)) (:ok-tarkastus-tilaaja tiepuolen-ikonien-varit)]})
+   #{"TILAAJAN LAADUNVALVONTA"} [(viiva-mustalla-rajalla puhtaat/pinkki) "pinkki"]})
 
 ;;;;;;;;;;
 ;;; Värimäärittelyt loppuu
