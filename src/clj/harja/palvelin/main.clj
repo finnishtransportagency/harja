@@ -634,6 +634,22 @@
                                           (component/stop s)
                                           nil))))
 
+(defn alusta-lokipriorisointi! [db]
+  ;; tällä voidaan nostaa/laskea log leveliä tietyiltä lokiviesteiltä muuttamatta lokitusta kutusvaa koodia.
+  (let [muutokset [["Virhe muodostaessa JMS viestin sisältöä: clojure.lang.ExceptionInfo: throw+: {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa, :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella" :info]
+                   ]
+        lokipriorisointi-middleware (fn [{:keys [hostname message args level] :as ap-args}]
+                                      (let [alkup-level level
+                                            viesti (or message (str (first args)) "")
+                                            uusi-level (first (filter
+                                                              some? (for [[alkuosa uusi-taso] muutokset ]
+                                                                      (when (clojure.string/starts-with?
+                                                                             viesti alkuosa) uusi-taso) )))]
+                                        (assoc ap-args :level (or uusi-level alkup-level))))]
+    (log/set-config! [:middleware]
+                     [lokipriorisointi-middleware])))
+
+
 (defn -main [& argumentit]
   (alusta-lokipriorisointi!)
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
@@ -694,21 +710,6 @@
 (defn log-level-info! []
   (log/merge-config!
     {:appenders {:println {:min-level :info}}}))
-
-(defn alusta-lokipriorisointi! [db]
-  ;; tällä voidaan nostaa/laskea log leveliä tietyiltä lokiviesteiltä muuttamatta lokitusta kutusvaa koodia.
-  (let [muutokset [["Virhe muodostaessa JMS viestin sisältöä: clojure.lang.ExceptionInfo: throw+: {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa, :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella" :info]
-                   ]
-        lokipriorisointi-middleware (fn [{:keys [hostname message args level] :as ap-args}]
-                                      (let [alkup-level level
-                                            viesti (or message (str (first args)) "")
-                                            uusi-level (first (filter
-                                                              some? (for [[alkuosa uusi-taso] muutokset ]
-                                                                      (when (clojure.string/starts-with?
-                                                                             viesti alkuosa) uusi-taso) )))]
-                                        (assoc ap-args :level (or uusi-level alkup-level))))]
-    (log/set-config! [:middleware]
-                     [lokipriorisointi-middleware])))
 
 (def figwheel-repl-options
   ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten
