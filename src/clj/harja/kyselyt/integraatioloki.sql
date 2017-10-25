@@ -51,7 +51,7 @@ WITH
       WHERE alkanut < :paivamaara AND integraatio IN
                                       (SELECT id
                                        FROM integraatio
-                                       WHERE :jarjestelma IS NULL OR jarjestelma = :jarjestelma)),
+                                       WHERE :jarjestelma :: VARCHAR IS NULL OR jarjestelma = :jarjestelma)),
     viestien_poisto AS (
     DELETE FROM integraatioviesti
     WHERE integraatiotapahtuma IN (
