@@ -182,7 +182,9 @@
 
                             ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                             [(yhteensa-kentta (vals kk-arvot) false)
-                             (when suunniteltu (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu))
+                             (when suunniteltu [:arvo-ja-yksikko {:arvo (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu)
+                                                                  :yksikko "%"
+                                                                  :desimaalien-maara 2}])
                              (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
                                                                   :yksikko (:yksikko materiaali)
                                                                   :desimaalien-maara 3}])]))}]
