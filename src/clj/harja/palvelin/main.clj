@@ -635,6 +635,7 @@
                                           nil))))
 
 (defn -main [& argumentit]
+  (alusta-lokipriorisointi!)
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
