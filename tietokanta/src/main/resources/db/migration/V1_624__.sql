@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 -- Pudota funktio, joka käyttää vanhoja tehtäviä
 DROP FUNCTION tallenna_tai_paivita_tyokonehavainto(
 jarjestelma_ character varying,
@@ -126,6 +125,3 @@ LANGUAGE plpgsql;
 
 -- Hävitä vanha tyyppi
 DROP TYPE _st;
-=======
-CREATE UNIQUE INDEX uniikki_urakan_sampoid_paasopimuksella on sopimus (urakka_sampoid) WHERE paasopimus IS NULL;
->>>>>>> develop
