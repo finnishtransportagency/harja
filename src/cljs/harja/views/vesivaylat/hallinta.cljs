@@ -7,6 +7,7 @@
             [harja.views.vesivaylat.hallinta.sopimuksien-luonti :as vsu]
             [harja.views.kanavat.hallinta.kohteiden-luonti :as kohteiden-luonti]
             [harja.views.kanavat.hallinta.kohteiden-liittaminen :as kohteiden-liittaminen]
+            [harja.views.kanavat.hallinta.huoltokohteiden-hallinta :as huoltokohteiden-hallinta]
 
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]))
@@ -48,4 +49,10 @@
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-kanavat))
      ^{:key "kohteiden-liittaminen"}
-     [kohteiden-liittaminen/kohteiden-liittaminen])])
+     [kohteiden-liittaminen/kohteiden-liittaminen])
+   "Huoltokohteiden hallinta"
+   :kanavien-huoltokohteet
+   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+              (oikeudet/hallinta-kanavat))
+     ^{:key "huoltokohteiden-hallinta"}
+     [huoltokohteiden-hallinta/hallinta])])
