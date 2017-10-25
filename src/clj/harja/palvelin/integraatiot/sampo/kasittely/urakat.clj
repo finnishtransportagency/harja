@@ -107,7 +107,7 @@
             tyyppi-ja-alueurakkanro (pura-alueurakkanro sampo-id alueurakkanro)
             tyypit (:tyypit tyyppi-ja-alueurakkanro)
             alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
-            urakkatyyppi (urakkatyyppi/paattele-urakkatyyppi tyypit)
+            urakkatyyppi (urakkatyyppi/urakkatyyppi tyypit)
             sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
             ely-id (:id (first (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
             urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
