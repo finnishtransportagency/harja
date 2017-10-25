@@ -34,7 +34,8 @@
 (s/def ::kaytossa-urakassa? boolean?)
 
 (s/def ::tallennettava-alus
-  (s/keys :req [::mmsi ::nimi ::lisatiedot ::kaytossa-urakassa? ::urakan-aluksen-kayton-lisatiedot]))
+  (s/keys :req [::mmsi ::kaytossa-urakassa?]
+          :opt [::nimi ::lisatiedot ::urakan-aluksen-kayton-lisatiedot]))
 
 (s/def ::hae-urakoitsijan-alukset-vastaus
   (s/coll-of ::tallennettava-alus))

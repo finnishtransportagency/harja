@@ -525,9 +525,11 @@
            ;; TODO Disabloi rivin poisto jos alus käytössä urakassa (palauta kannasta tieto onko linkitetty myös muihin urakoihin kuin tähän)
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
-             :tyyppi :string
-             ;; TODO Disabloi muokkaus jos rivi kannassa. Aluksen mmsi:n muokkaus ei ole tuettu operaatio
+             :tyyppi :positiivinen-numero
              :leveys 7
+             ;; MMSI:n muokkaus ei ole tuettua, jos alus on jo tallennettu, sillä se
+             ;; triggeröisi uuden aluksen tallennuksen.
+             :muokattava? (fn [rivi] (neg? (:grid-id rivi)))
              :validoi [[:ei-tyhja "Anna MMSI"]
                        [:uniikki "MMSI on jo käytössä"]]}
             {:otsikko "Nimi"
