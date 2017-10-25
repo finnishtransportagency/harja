@@ -32,7 +32,7 @@
             (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-api "api")
 
             (log/debug "Poistetaan muut integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-muut)
-            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-muut)))))
+            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-muut nil)))))
     (fn [] ())))
 
 (defn tee-jms-lokiviesti [suunta sisalto otsikko jono]
