@@ -1,10 +1,15 @@
 [
-    { 
+  {
+    "date": "2017-10-25",
+    "title": "Integraatiotuelle oma sähköpostiosoite",
+    "body": "Jatkossa Harjan integraatiotukipyynnöt voi lähettää osoitteeseen harja-integraatiotuki@solita.fi. Kyseistä osoitetta lukee koko Harjan kehitystiimi ja se on paras kanava saada vastauksia integraatioihin liittyviin asioihin."
+  },
+  {
     "date": "2017-10-19",
     "title": "Tieliikenneilmoituksen lopetuskuittauksen yhteydessä voi kirjata aiheuttiko ilmoitus toimenpiteitä",
     "body": "Harjan käyttöliittymässä kirjaus tehdään lopetuskuittauksen yhteydessä valintalaatikon ruksilla. Sähköpostikuittauksessa voi valita Lopetettu tai Lopetettu toimenpitein. Tekstiviestikuittauksessa L tarkoittaa lopetuskuittausta ilman toimenpiteitä ja T toimenpiteitä aiheuttaneen ilmoituksen lopetuskuittausta."
   },
-  { 
+  {
     "date": "2017-09-28",
     "title": "Sillantarkastuslomakkeeseen lisätty offline-tuki",
     "body": "Siltatarkastuslomakkeelle syötetty data tallentuu nyt selaimen muistiin. Jos siltatarkastuksen aikana joudut päivittämään sivun tai sammuttamaan selaimen, niin jo syöttämäsi data on valmiiksi lomakkeella, kun tulet lomakkeelle uudestaan. Huom. syötetty data tallentuu kone ja selain kohtaisesti. Eli jos käytät Safaria tabletilla ja palaat lomakkeelle käyttäen eri konetta tai eri selainta (vaikkapa Chromea), niin syöttämäsi data ei palaudu lomakkeelle."
