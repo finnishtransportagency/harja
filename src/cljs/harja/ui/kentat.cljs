@@ -569,7 +569,14 @@
 ;; Käytännössä regex sallii vuosiluvut 0-2999
 (def +pvm-regex+ #"\d{0,2}((\.\d{0,2})(\.[1-2]{0,1}\d{0,3})?)?")
 (def +aika-regex+ #"\d{1,2}(:\d{0,2})?")
-(def +validi-aika-regex+ #"\d{1,2}:\d{2}")
+;; Kellonajan tuntiosa on joko:
+;; numero 0-9 väliltä
+;; numero 0-9 väliltä, edessä 0 (00, 01, .., 09)
+;; numero 0-9 väliltä, edessä 1 (12,13..)
+;; numero 0-3 väliltä, edessä 2 (20,21, .. ,23)
+;; minuutit ovat numero 00-59 väliltä.
+;; HUOM: 0:0 ei siis ole validi kellonaika. Esim 0:00 on.
+(def +validi-aika-regex+ #"^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")
 
 ;; pvm-tyhjana ottaa vastaan pvm:n siitä kuukaudesta ja vuodesta, jonka sivu
 ;; halutaan näyttää ensin
@@ -727,9 +734,8 @@
                              aika @aika-teksti
                              p (pvm/->pvm-aika (str pvm " " aika))]
                          (when (or force? (not (some false? @pvm-aika-koskettu)))
-                           (if p
-                             (reset! data p)
-                             (reset! data nil)))))
+                           (when p
+                             (reset! data p)))))
 
               muuta-pvm! #(resetoi-jos-tyhja-tai-matchaa % +pvm-regex+ pvm-teksti)
               muuta-aika! #(aseta-aika! % (partial reset! aika-teksti))
