@@ -8,22 +8,22 @@
             [harja.domain.muokkaustiedot :as m]))
 
 (deftest kohderivit
-  (is (= '({::kanava/id 1
-            ::kanava/nimi "Foobar"
-            :rivin-teksti "Foobar, sulku"
-            ::kohde/id 1
-            ::kohde/tyyppi :sulku}
-            {::kanava/id 1
-             ::kanava/nimi "Foobar"
-             :rivin-teksti "Foobar, komea silta, sulku"
-             ::kohde/tyyppi :silta
-             ::kohde/nimi "komea silta"
-             ::kohde/id 2}
-            {::kanava/id 2
-             ::kanava/nimi "Bazbar"
-             :rivin-teksti "Bazbar, sulku"
-             ::kohde/id 3
-             ::kohde/tyyppi :sulku})
+  (is (= [{::kohde/id 1
+           ::kohde/tyyppi :sulku
+           ::kanava/id 1
+           ::kanava/nimi "Foobar"
+           :rivin-teksti "Foobar, sulku"}
+          {::kohde/id 2
+           ::kohde/tyyppi :silta
+           ::kohde/nimi "komea silta"
+           ::kanava/id 1
+           ::kanava/nimi "Foobar"
+           :rivin-teksti "Foobar, komea silta, silta"}
+          {::kohde/id 3
+           ::kohde/tyyppi :sulku
+           ::kanava/id 2
+           ::kanava/nimi "Bazbar"
+           :rivin-teksti "Bazbar, sulku"}]
          (tiedot/kohderivit
            [{::kanava/id 1
              ::kanava/nimi "Foobar"
@@ -127,22 +127,22 @@
                      ::kanava/nimi "Foobar"}
                     {::kanava/id 2
                      ::kanava/nimi "Bazbar"}]
-          :kohderivit '({::kanava/id 1
-                         ::kanava/nimi "Foobar"
-                         :rivin-teksti "Foobar, sulku"
-                         ::kohde/id 1
-                         ::kohde/tyyppi :sulku}
-                         {::kanava/id 1
-                          ::kanava/nimi "Foobar"
-                          :rivin-teksti "Foobar, komea silta, sulku"
-                          ::kohde/tyyppi :silta
-                          ::kohde/nimi "komea silta"
-                          ::kohde/id 2}
-                         {::kanava/id 2
-                          ::kanava/nimi "Bazbar"
-                          :rivin-teksti "Bazbar, sulku"
-                          ::kohde/id 3
-                          ::kohde/tyyppi :sulku})}
+          :kohderivit [{::kohde/id 1
+                        ::kohde/tyyppi :sulku
+                        ::kanava/id 1
+                        ::kanava/nimi "Foobar"
+                        :rivin-teksti "Foobar, sulku"}
+                       {::kohde/id 2
+                        ::kohde/tyyppi :silta
+                        ::kohde/nimi "komea silta"
+                        ::kanava/id 1
+                        ::kanava/nimi "Foobar"
+                        :rivin-teksti "Foobar, komea silta, silta"}
+                       {::kohde/id 3
+                        ::kohde/tyyppi :sulku
+                        ::kanava/id 2
+                        ::kanava/nimi "Bazbar"
+                        :rivin-teksti "Bazbar, sulku"}]}
          (e! (tiedot/->KohteetHaettu [{::kanava/id 1
                                        ::kanava/nimi "Foobar"
                                        ::kanava/kohteet [{::kohde/id 1
@@ -170,14 +170,14 @@
 
 (deftest valitse-kanava
   (is (= {:lomakkeen-tiedot {:kanava {::kanava/id 1}
-                             :kohteet '({::kanava/id 1 :id 1}
-                                         {::kanava/id 1 :id 3})}
+                             :kohteet [{::kanava/id 1 :id 1}
+                                       {::kanava/id 1 :id 3}]}
           :kohderivit [{::kanava/id 1 :id 1}
                        {::kanava/id 2 :id 2}
                        {::kanava/id 1 :id 3}
                        {::kanava/id 3 :id 4}
                        {::kanava/id 2 :id 5}]}
-         (e! (tiedot/->ValitseKanava 1)
+         (e! (tiedot/->ValitseKanava {::kanava/id 1})
              {:kohderivit [{::kanava/id 1 :id 1}
                            {::kanava/id 2 :id 2}
                            {::kanava/id 1 :id 3}
@@ -202,22 +202,22 @@
            (e! (tiedot/->TallennaKohteet) {:kohteiden-tallennus-kaynnissa? true})))))
 
 (deftest kohteet-tallennettu
-  (is (= {:kohderivit '({::kanava/id 1
-                         ::kanava/nimi "Foobar"
-                         :rivin-teksti "Foobar, sulku"
-                         ::kohde/id 1
-                         ::kohde/tyyppi :sulku}
-                         {::kanava/id 1
-                          ::kanava/nimi "Foobar"
-                          :rivin-teksti "Foobar, komea silta, sulku"
-                          ::kohde/tyyppi :silta
-                          ::kohde/nimi "komea silta"
-                          ::kohde/id 2}
-                         {::kanava/id 2
-                          ::kanava/nimi "Bazbar"
-                          :rivin-teksti "Bazbar, sulku"
-                          ::kohde/id 3
-                          ::kohde/tyyppi :sulku})
+  (is (= {:kohderivit [{::kohde/id 1
+                        ::kohde/tyyppi :sulku
+                        ::kanava/id 1
+                        ::kanava/nimi "Foobar"
+                        :rivin-teksti "Foobar, sulku"}
+                       {::kohde/id 2
+                        ::kohde/tyyppi :silta
+                        ::kohde/nimi "komea silta"
+                        ::kanava/id 1
+                        ::kanava/nimi "Foobar"
+                        :rivin-teksti "Foobar, komea silta, silta"}
+                       {::kohde/id 3
+                        ::kohde/tyyppi :sulku
+                        ::kanava/id 2
+                        ::kanava/nimi "Bazbar"
+                        :rivin-teksti "Bazbar, sulku"}]
           :kanavat [{::kanava/id 1
                      ::kanava/nimi "Foobar"}
                     {::kanava/id 2
