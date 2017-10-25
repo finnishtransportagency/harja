@@ -4,7 +4,8 @@
                   {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
                   {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
 
- :http-palvelin {:threads 16}
+ :http-palvelin {:threads 16
+                 :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")}
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
@@ -64,13 +65,14 @@
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true
-                    :palvelin "solita-service-1.solita.fi"
+                    ;; :palvelin "solita-service-1.solita.fi"
                     :jonot {:sahkoposti-sisaan-jono "Harja.Incoming.Email.InQ"
                             :sahkoposti-ulos-jono "Harja.Send.Email.InQ"
                             :sahkoposti-ulos-kuittausjono "Harja.Send.Email.Status"}}
 
  :solita-sahkoposti {:vastausosoite "harja-ala-vastaa@liikennevirasto.fi"
-                    :palvelin "solita-service-1.solita.fi"}
+                    ;; :palvelin "solita-service-1.solita.fi"
+                     }
 
  :tierekisteri {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
                 :uudelleenlahetys-aikavali-minuutteina 60}

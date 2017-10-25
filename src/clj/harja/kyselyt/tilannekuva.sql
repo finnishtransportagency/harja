@@ -276,7 +276,7 @@ FROM turvallisuuspoikkeama t
                                     AND k.poistettu IS NOT TRUE
 WHERE
   (t.urakka IS NULL OR t.urakka IN (:urakat)) AND
-  (t.tapahtunut :: DATE BETWEEN :alku AND :loppu OR
+  (t.tapahtunut BETWEEN :alku AND :loppu OR
    t.kasitelty BETWEEN :alku AND :loppu);
 
 -- name: hae-paallystysten-reitit
