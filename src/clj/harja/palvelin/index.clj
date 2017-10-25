@@ -5,8 +5,7 @@
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]
-           (hiccup.compiler HtmlRenderer)
-           (java.security SecureRandom)))
+           (hiccup.compiler HtmlRenderer)))
 
 (def anti-forgery-fallback-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
 
@@ -32,7 +31,11 @@
     (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes random-string "UTF-8"))))))
 
 (defn tee-random-avain []
-  (apply str (.generateSeed (SecureRandom.) 128)))
+  (with-open [in (io/input-stream (io/file "/dev/urandom"))]
+    (let [buf (byte-array 16)
+          n (.read in buf)]
+      (assert (= n 16))
+      (String. (.encode (Base64/getEncoder) buf)))))
 
 (defn tee-paasivu [random-avain devmode]
   (html
