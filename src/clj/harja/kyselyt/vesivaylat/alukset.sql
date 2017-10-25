@@ -8,7 +8,10 @@ SELECT
                                                   AND au.urakka = :urakka
                                                   AND poistettu IS NOT TRUE))
                  AS "kaytossa-urakassa?",
-  au.lisatiedot AS "urakan-aluksen-kayton-lisatiedot"
+  au.lisatiedot AS "urakan-aluksen-kayton-lisatiedot",
+    (SELECT ARRAY(SELECT urakka FROM vv_alus_urakka auv WHERE auv.alus = a.mmsi
+                                                        AND auv.poistettu IS NOT TRUE)
+  AS "kaytossa-urakoissa")
 FROM vv_alus a
   LEFT JOIN vv_alus_urakka au ON au.alus = a.mmsi
                                  AND au.poistettu IS NOT TRUE

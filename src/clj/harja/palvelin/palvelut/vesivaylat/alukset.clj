@@ -28,8 +28,10 @@
   ;; TODO Testi tälle uudelle palvelulle
   ;; TODO Oikeustarkistus + testi sille
   (namespacefy/namespacefy
-    (alukset-q/hae-urakoitsijan-alukset db {:urakka (::urakka/id tiedot)
-                                            :urakoitsija (::alus/urakoitsija-id tiedot)})
+    (into []
+          (map #(konv/array->set % :kaytossa-urakoissa))
+          (alukset-q/hae-urakoitsijan-alukset db {:urakka (::urakka/id tiedot)
+                                                  :urakoitsija (::alus/urakoitsija-id tiedot)}))
     {:ns :harja.domain.vesivaylat.alus}))
 
 (defn- tallenna-urakoitsijan-alus
