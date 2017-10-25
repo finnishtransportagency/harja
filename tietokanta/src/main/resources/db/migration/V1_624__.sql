@@ -1,66 +1,70 @@
-CREATE TABLE kan_kanava (
-  id       SERIAL PRIMARY KEY,
-  nimi     TEXT NOT NULL,
-  sijainti GEOMETRY
+CREATE TABLE kanavahuoltokohde (
+  id SERIAL PRIMARY KEY,
+  nimi TEXT NOT NULL
 );
 
-INSERT INTO kan_kanava (nimi) VALUES
-  ('Ahkiolahden kanava'),
-  ('Juankosken kanava'),
-  ('Joensuun kanava'),
-  ('Kaltimon kanava'),
-  ('Karjalankosken kanava'),
-  ('Karvion kanava'),
-  ('Kerman kanava'),
-  ('Konnuksen kanava'),
-  ('Kuurnan kanava'),
-  ('Lastukosken kanava'),
-  ('Nerkoon kanava'),
-  ('Pilpan kanava'),
-  ('Taipaleen kanava'),
-  ('Taivallahden kanava'),
-  ('Varistaipaleen kanava'),
-  ('Vihovuonteen kanava'),
-  ('Saimaan kanava'),
-  ('Kalkkisten kanava'),
-  ('Keiteleen kanava: Vaajakosken kanava'),
-  ('Keiteleen kanava: Kuhankosken kanava'),
-  ('Keiteleen kanava: Kuusan kanava'),
-  ('Keiteleen kanava: Kapeenkosken kanava'),
-  ('Keiteleen kanava: Paatelan kanava'),
-  ('Kerkonkosken kanava'),
-  ('Kiesimän kanava'),
-  ('Kolun kanava'),
-  ('Neiturin kanava'),
-  ('Vääksyn kanava'),
-  ('Herraskosken kanava'),
-  ('Lempäälän kanava'),
-  ('Muroleen kanava'),
-  ('Valkeakosken kanava');
-
-CREATE TYPE KOHTEEN_TYYPPI AS ENUM ('silta', 'sulku', 'sulku-ja-silta');
-
-CREATE TABLE kan_kohde (
-  id          SERIAL PRIMARY KEY,
-  "kanava-id" INTEGER REFERENCES kan_kanava (id) NOT NULL,
-  nimi        TEXT,
-  tyyppi      KOHTEEN_TYYPPI                     NOT NULL,
-  sijainti    GEOMETRY,
-
-  luotu       TIMESTAMP DEFAULT NOW(),
-  luoja       INTEGER REFERENCES kayttaja (id)   NOT NULL,
-  muokattu    TIMESTAMP,
-  muokkaaja   INTEGER REFERENCES kayttaja (id),
-  poistettu   BOOLEAN   DEFAULT FALSE,
-  poistaja    INTEGER REFERENCES kayttaja (id)
-);
-
-CREATE TABLE kan_kohde_urakka (
-  "kohde-id"  INTEGER REFERENCES kan_kohde (id) NOT NULL,
-  "urakka-id" INTEGER REFERENCES urakka (id)    NOT NULL,
-
-  luotu       TIMESTAMP DEFAULT NOW(),
-  luoja       INTEGER REFERENCES kayttaja (id)  NOT NULL,
-  poistettu   BOOLEAN   DEFAULT FALSE,
-  poistaja    INTEGER REFERENCES kayttaja (id)
-);
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('ALAKANAVA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('ALAKANAVA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('ALAPORTTI');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('ALASATAMA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('ASENNONMITTAUSLAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('ATK-VERKKO');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('HYDRAULIIKKA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('JALKA- JA KAULALAAKERIT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('KUULUTUSLAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('LAITURI');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('LAPPO');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('LIIKKUVAT POLLARIT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('LOGIIKKAJÄRJESTELMÄT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('LUUKKUKONEISTOT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('LÄMMITYKSET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('MUSEOKANAVA KUIVATAIPALE');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('MUSEOKANAVA SAARIKOSKI');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('MUUNTOASEMAT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('MUUT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('NIPUN SIIRTOLAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('OHJAUSLAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('OHJAUSPÄÄTE');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('OHJAUSTIETOKONE');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('PAINEILMALAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('PINNANMITTAUSLAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('PORTTIKONEISTOT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('PUHELINVERKKO');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('PUMPPAAMO');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('PUMPPAAMO MARTTILA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('PUMPPAAMO PELKOLA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('RAKENNUKSET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('REUNAVALOT JA LOISTOT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SILTAKELLARI');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SILTAKONEISTO');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SILTALAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SILTARAKENTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SULKU- JA LAITURIRAKENTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SULKULAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SULKURAKENTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SUOJAPARRUT JA -LANKUT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SÄHKÖLAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SÄHKÖNJAKELU');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SÄÄNNÖSTELYPATO JYRKILÄ');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SÄÄNNÖSTELYPATO SUIKKI');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('KONETARKASTUSLISTAN MUKAISET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('SÄHKÖTARKASTUSLISTAN MUKAISET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TELELAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TIEDONSIIRTOLAITTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TIELAITOS');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TIELIIKENNEOPASTEET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TIELIIKENNEPUOMIT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TIET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TULVAPUOMI/VÄLPPÄ');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TURVA-AIDAT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TURVAPATO LAURITSALA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TURVAPATO NUIJAMAA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TURVAPATO TORPANKAPEA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('TURVAVAIJERIT JA -KISKOT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('VALVONTAKAMERAT');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('VARAVOIMAKONE');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('VESILIIKENNEOPASTIMET');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('VHF');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('YLÄKANAVA');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('YLÄPORTTI');
+INSERT INTO kanavahuoltokohde (nimi) VALUES ('YMPÄRISTÖNHOITO');
