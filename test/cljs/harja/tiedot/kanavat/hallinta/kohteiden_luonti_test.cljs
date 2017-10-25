@@ -11,15 +11,19 @@
   (is (= [{::kanava/id 1
            ::kanava/nimi "Foobar"
            :rivin-teksti "Foobar, sulku"
-           ::kohde/id 1}
+           ::kohde/id 1
+           ::kohde/tyyppi :sulku}
           {::kanava/id 1
            ::kanava/nimi "Foobar"
            :rivin-teksti "Foobar, komea silta, sulku"
+           ::kohde/tyyppi :silta
+           ::kohde/nimi "komea silta"
            ::kohde/id 2}
           {::kanava/id 2
            ::kanava/nimi "Bazbar"
            :rivin-teksti "Bazbar, sulku"
-           ::kohde/id 3}]
+           ::kohde/id 3
+           ::kohde/tyyppi :sulku}]
          (tiedot/kohderivit
            [{::kanava/id 1
              ::kanava/nimi "Foobar"
@@ -27,7 +31,7 @@
                                 ::kohde/tyyppi :sulku}
                                {::kohde/id 2
                                 ::kohde/tyyppi :silta
-                                ::kohde/niim "komea silta"}]}
+                                ::kohde/nimi "komea silta"}]}
             {::kanava/id 2
              ::kanava/nimi "Bazbar"
              ::kanava/kohteet [{::kohde/id 3
@@ -126,15 +130,19 @@
           :kohderivit [{::kanava/id 1
                         ::kanava/nimi "Foobar"
                         :rivin-teksti "Foobar, sulku"
-                        ::kohde/id 1}
+                        ::kohde/id 1
+                        ::kohde/tyyppi :sulku}
                        {::kanava/id 1
                         ::kanava/nimi "Foobar"
                         :rivin-teksti "Foobar, komea silta, sulku"
+                        ::kohde/tyyppi :silta
+                        ::kohde/nimi "komea silta"
                         ::kohde/id 2}
                        {::kanava/id 2
                         ::kanava/nimi "Bazbar"
                         :rivin-teksti "Bazbar, sulku"
-                        ::kohde/id 3}]}
+                        ::kohde/id 3
+                        ::kohde/tyyppi :sulku}]}
          (e! (tiedot/->KohteetHaettu [{::kanava/id 1
                                        ::kanava/nimi "Foobar"
                                        ::kanava/kohteet [{::kohde/id 1
@@ -156,13 +164,19 @@
          (e! (tiedot/->AvaaKohdeLomake)))))
 
 (deftest sulje-lomake
-  (is (= {:kohdelomake-auki? false}
+  (is (= {:kohdelomake-auki? false
+          :lomakkeen-tiedot nil}
          (e! (tiedot/->SuljeKohdeLomake)))))
 
 (deftest valitse-kanava
   (is (= {:lomakkeen-tiedot {:kanava {::kanava/id 1}
                              :kohteet [{::kanava/id 1 :id 1}
-                                       {::kanava/id 1 :id 3}]}}
+                                       {::kanava/id 1 :id 3}]}
+          :kohderivit [{::kanava/id 1 :id 1}
+                          {::kanava/id 2 :id 2}
+                          {::kanava/id 1 :id 3}
+                          {::kanava/id 3 :id 4}
+                          {::kanava/id 2 :id 5}]}
          (e! (tiedot/->ValitseKanava 1)
              {:kohderivit [{::kanava/id 1 :id 1}
                            {::kanava/id 2 :id 2}
@@ -191,15 +205,19 @@
   (is (= {:kohderivit [{::kanava/id 1
                         ::kanava/nimi "Foobar"
                         :rivin-teksti "Foobar, sulku"
-                        ::kohde/id 1}
+                        ::kohde/id 1
+                        ::kohde/tyyppi :sulku}
                        {::kanava/id 1
                         ::kanava/nimi "Foobar"
                         :rivin-teksti "Foobar, komea silta, sulku"
+                        ::kohde/tyyppi :silta
+                        ::kohde/nimi "komea silta"
                         ::kohde/id 2}
                        {::kanava/id 2
                         ::kanava/nimi "Bazbar"
                         :rivin-teksti "Bazbar, sulku"
-                        ::kohde/id 3}]
+                        ::kohde/id 3
+                        ::kohde/tyyppi :sulku}]
           :kanavat [{::kanava/id 1
                      ::kanava/nimi "Foobar"}
                     {::kanava/id 2
