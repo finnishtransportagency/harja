@@ -14,7 +14,12 @@ SET nimi              = :nimi,
   alkupvm             = :alkupvm,
   loppupvm            = :loppupvm,
   urakka_sampoid      = :urakka_sampoid,
-  urakoitsija_sampoid = :urakoitsija_sampoid
+  urakoitsija_sampoid = :urakoitsija_sampoid,
+  paasopimus = (SELECT id
+       FROM sopimus
+       WHERE urakka_sampoid = :urakka_sampoid
+             AND id != :id
+             AND paasopimus IS NULL)
 WHERE id = :id;
 
 -- name: hae-id-sampoidlla
