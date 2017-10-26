@@ -73,7 +73,6 @@
         [kt ss pu] (as-> rk x
                      (select-keys x [:kayttajatunnus :salasana :pohja-url])
                      (map second x))]
-    (log/debug "tunnus" kt "url" pu)
     (with-redefs [hakuvali (constantly {:alku alkuaika :loppu loppuaika})]
       (fn db il pu kt ss))))
 
@@ -88,7 +87,6 @@
                  [:soap:Body
                   [tyyppi-kw {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
                    [tyyppi-request-kw attribuutit]]]])]
-    (log/debug "kyselysanoma:" (pr-str sanoma))
     sanoma))
 
 (defn kysely-sanoma-aikavali [tyyppi [alkuaika loppuaika]]
