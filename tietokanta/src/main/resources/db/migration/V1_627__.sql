@@ -22,22 +22,22 @@ INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
    VALUES (
       (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-toimenpiteet'),
        '6 months',
-       '2017-10-01T12:12:12Z');
+       '2017-08-25T12:12:12Z');
 
 INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
     VALUES (
       (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-turvalaitekomponentit'),
        '6 months',
-       '2017-10-01T12:12:12Z');
+       '2017-08-25T12:12:12Z');
 
 INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
     VALUES (
       (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-komponenttityypit'),
        '6 months',
-       '2017-10-01T12:12:12Z');
+       '2017-08-25T12:12:12Z');
 
 INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
     VALUES (
       (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-viat'),
        '6 months',
-       '2017-10-01T12:12:12Z');
+       '2017-08-25T12:12:12Z');
