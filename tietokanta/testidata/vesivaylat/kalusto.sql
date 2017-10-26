@@ -1,3 +1,4 @@
+-- Lisätään hienoja aluksia
 INSERT INTO vv_alus (mmsi, nimi, lisatiedot, luoja) VALUES
   (230990040, 'Rohmu', 'Hieno laiva', (SELECT id
                                        FROM kayttaja
@@ -206,3 +207,48 @@ INSERT INTO vv_alus (mmsi, nimi, lisatiedot, luoja) VALUES
   (230028000, '', '', (SELECT id
                        FROM kayttaja
                        WHERE kayttajanimi = 'tero'));
+
+-- Liitetään muutama alus urakkaan
+
+INSERT INTO vv_alus_urakka (alus, urakka, luoja)
+VALUES (230990040, (SELECT id
+                    FROM urakka
+                    WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+        (SELECT id
+         FROM kayttaja
+         WHERE kayttajanimi = 'tero'));
+INSERT INTO vv_alus_urakka (alus, urakka, luoja)
+VALUES (230111580, (SELECT id
+                    FROM urakka
+                    WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+        (SELECT id
+         FROM kayttaja
+         WHERE kayttajanimi = 'tero'));
+INSERT INTO vv_alus_urakka (alus, urakka, luoja)
+VALUES (230941190, (SELECT id
+                    FROM urakka
+                    WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'),
+        (SELECT id
+         FROM kayttaja
+         WHERE kayttajanimi = 'tero'));
+
+-- Lisää Rohmulle reittipisteitä
+
+INSERT INTO vv_alus_sijainti (alus, sijainti, aika)
+VALUES
+  (230111580, point(3141767.3069556984, 3976597.579811954), NOW() - INTERVAL '1 minutes' ),
+  (230111580, point(2806903.170666764, 4195938.182243582), NOW() - INTERVAL '2 minutes' ),
+  (230111580, point(2791246.5561552388, 4197196.334044084), NOW() - INTERVAL '3 minutes' ),
+  (230111580, point(2871884.0769665544, 4095642.2710512094), NOW() - INTERVAL '4 minutes' ),
+  (230111580, point(2792868.2722486374, 4159962.387951176), NOW() - INTERVAL '5 minutes' ),
+  (230111580, point(3277735.832690282, 4496480.798635741), NOW() - INTERVAL '6 minutes' ),
+  (230111580, point(2960550.943000939, 3997933.7090460034), NOW() - INTERVAL '7 minutes' ),
+  (230111580, point(3303221.8787546675, 4505835.4894918855), NOW() - INTERVAL '8 minutes' ),
+  (230111580, point(2725951.8932428183, 4031744.664115552), NOW() - INTERVAL '9 minutes' ),
+  (230111580, point(2664107.4795862716, 4014885.453144356), NOW() - INTERVAL '10 minutes' ),
+  (230111580, point(3166032.2490339926, 3899989.9020077223), NOW() - INTERVAL '11 minutes' ),
+  (230111580, point(3355202.687406264, 4617327.461599002), NOW() - INTERVAL '12 minutes' ),
+  (230111580, point(3405849.726350086, 3936104.2655446827), NOW() - INTERVAL '13 minutes' ),
+  (230111580, point(2609242.6314362907, 3964535.5614276105), NOW() - INTERVAL '14 minutes' ),
+  (230111580, point(3213293.666755903, 3974449.4596298235), NOW() - INTERVAL '15 minutes' ),
+  (230111580, point(3238442.3553591766, 3970663.361861761), NOW() - INTERVAL '16 minutes' );

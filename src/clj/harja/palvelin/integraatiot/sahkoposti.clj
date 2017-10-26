@@ -2,6 +2,7 @@
   "Määrittelee sähköpostin lähetyksen yleisen rajapinnan"
   (:require [postal.core :as postal]
             [taoensso.timbre :as log]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]))
 
 (defprotocol Sahkoposti
@@ -16,6 +17,13 @@
    "Palauttaa oletus vastausosoitteen, jota voi käyttää lähettäjänä ja johon lähetetyt viestit
     tulevat takaisin tälle kuuntelijalle"))
 
+(defn sanitoi-otsikko [otsikko]
+  ;; Javan regexpien \p -luokat vastaavat Unicoden tai ASCII:n merkkikategorioita,
+  ;; ks http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
+  ;; L on sanakirjaimet, Punct on ASCII:n välimerkit. Space ja 0-9 sallitaan myös,
+  ;; muut korvataan alaviiva-merkillä.
+  (s/replace otsikko #"[^\p{L} \d\p{Punct}]" "_"))
+
 (defrecord VainLahetys [palvelin vastausosoite]
   Sahkoposti
   (rekisteroi-kuuntelija! [_ _]
@@ -24,7 +32,7 @@
     (postal/send-message {:host palvelin}
                          {:from lahettaja
                           :to vastaanottaja
-                          :subject otsikko
+                          :subject (sanitoi-otsikko otsikko)
                           :body [{:type "text/html; charset=UTF-8"
                                   :content sisalto}]}))
   (vastausosoite [_] vastausosoite)

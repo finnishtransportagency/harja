@@ -40,12 +40,16 @@
 (defn polku []
   (str +polku+ "_/"))
 
-(defn get-csrf-token []
+(defn get-csrf-token
+  "Hakee CSRF-tokenin DOMista."
+  []
   (-> (.getElementsByTagName js/document "body")
       (aget 0)
       (.getAttribute "data-anti-csrf-token")))
 
-(defn csrf-token []
+(defn csrf-token
+  "Yrittää löytää CSRF-tokenin DOMista niin kauan, että se löytyy."
+  []
   (go-loop [token (get-csrf-token)]
     (if token
       token

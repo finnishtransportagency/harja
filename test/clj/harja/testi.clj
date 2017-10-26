@@ -188,8 +188,8 @@
     (dotimes [n 5]
       (try
         (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
-        (Thread/sleep 500)
         (catch PSQLException e
+          (Thread/sleep 500)
           (log/warn e "- yritetään uudelleen, yritys" n))))
     (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
   (luo-kannat-uudelleen))
@@ -317,6 +317,16 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-helsingin-vesivaylaurakan-urakoitsija []
+  (ffirst (q (str "SELECT urakoitsija
+                   FROM   urakka
+                   WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'"))))
+
+(defn hae-urakoitsijan-urakka-idt [urakoitsija-id]
+  (map :id (q-map (str "SELECT id
+                   FROM   urakka
+                   WHERE  urakoitsija = " urakoitsija-id ";"))))
+
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
                    WHERE
@@ -331,9 +341,9 @@
                     WHERE
                     \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND id IN (SELECT \"toimenpide-id\" FROM vv_hinnoittelu_toimenpide WHERE poistettu=false GROUP BY \"toimenpide-id\" HAVING COUNT(\"hinnoittelu-id\")=2)"
-                    (when limit
-                      (str " LIMIT " limit))
-                    ";")))))
+                   (when limit
+                     (str " LIMIT " limit))
+                   ";")))))
 
 (defn hae-helsingin-reimari-toimenpide-yhdella-hinnoittelulla
   ([]
@@ -347,9 +357,9 @@
                                INNER JOIN vv_hinnoittelu AS h ON h.id=ht.\"hinnoittelu-id\"
                                WHERE h.poistettu = FALSE AND ht.poistettu = FALSE
                                AND ht.\"toimenpide-id\" NOT IN (" (hae-helsingin-reimari-toimenpiteet-molemmilla-hinnoitteluilla) ")"
-                               (when (some? hintaryhma?)
-                                (str " AND hintaryhma = " hintaryhma?))
-                               ") LIMIT 1;")))))
+                   (when (some? hintaryhma?)
+                     (str " AND hintaryhma = " hintaryhma?))
+                   ") LIMIT 1;")))))
 
 (defn hae-kiintio-id-nimella [nimi]
   (ffirst (q (str "SELECT id
@@ -364,9 +374,9 @@
                     LEFT JOIN vv_hinta ON vv_hinta.\"hinnoittelu-id\" = vv_hinnoittelu.id
                     WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                     AND vv_hinta.\"hinnoittelu-id\" IS NULL"
-                    (when (some? hintaryhma?)
-                      (str " AND hintaryhma = " hintaryhma?))
-                    " LIMIT 1")))))
+                   (when (some? hintaryhma?)
+                     (str " AND hintaryhma = " hintaryhma?))
+                   " LIMIT 1")))))
 
 (defn hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita []
   (set (map :id (q-map "SELECT id FROM vv_hinnoittelu
