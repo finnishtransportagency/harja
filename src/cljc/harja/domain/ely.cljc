@@ -16,7 +16,7 @@
                          2 "VAR"
                          3 "KAS"
                          4 "PIR"
-                         8 "POR"
+                         8 "POS"
                          9 "KES"
                          10 "EPO"
                          12 "POP"
