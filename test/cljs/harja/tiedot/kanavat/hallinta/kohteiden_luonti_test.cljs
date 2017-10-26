@@ -50,7 +50,7 @@
                                 ::kohde/tyyppi :sulku}
                                {::kohde/id 2
                                 ::kohde/tyyppi :silta
-                                ::kohde/niim "komea silta"}]}
+                                ::kohde/nimi "komea silta"}]}
             {::kanava/id 2
              ::kanava/nimi "Bazbar"
              :huahuhue "joo"
@@ -149,7 +149,7 @@
                                                           ::kohde/tyyppi :sulku}
                                                          {::kohde/id 2
                                                           ::kohde/tyyppi :silta
-                                                          ::kohde/niim "komea silta"}]}
+                                                          ::kohde/nimi "komea silta"}]}
                                       {::kanava/id 2
                                        ::kanava/nimi "Bazbar"
                                        ::kanava/kohteet [{::kohde/id 3
@@ -231,7 +231,7 @@
                                                                ::kohde/tyyppi :sulku}
                                                               {::kohde/id 2
                                                                ::kohde/tyyppi :silta
-                                                               ::kohde/niim "komea silta"}]}
+                                                               ::kohde/nimi "komea silta"}]}
                                            {::kanava/id 2
                                             ::kanava/nimi "Bazbar"
                                             ::kanava/kohteet [{::kohde/id 3
