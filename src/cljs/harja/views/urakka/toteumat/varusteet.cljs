@@ -52,25 +52,6 @@
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
-(defn varustetoteuman-tehtavat [toteumat toteuma]
-  (let [toteumatehtavat (:toteumatehtavat toteuma)]
-    [grid/grid
-     {:otsikko "Tehtävät"
-      :tyhja (if (nil? toteumat)
-               [ajax-loader "Haetaan tehtäviä..."]
-               "Tehtäviä  ei löytynyt")
-      :tunniste :id}
-     [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 1}
-      {:otsikko "Tyyppi" :nimi :toteumatyyppi :tyyppi :string :leveys 1 :hae (fn [_] (name (:toteumatyyppi toteuma)))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 1}
-      (when (= (:toteumatyyppi toteuma) :yksikkohintainen)
-        {:otsikko "Toteuma" :nimi :linkki-toteumaan :tyyppi :komponentti :leveys 1
-         :komponentti (fn []
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(yksikkohintaiset-tyot/nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid toteuma))}
-                         (ikonit/eye-open) " Toteuma"])})]
-     toteumatehtavat]))
-
 (defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
   (when (and tietolaji tunniste)
     (let [url (kommunikaatio/varustekortti-url alkupvm tietolaji tunniste)]
@@ -89,14 +70,7 @@
     {:otsikko "Varustetoteumat"
      :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
      :tunniste :id
-     :rivi-klikattu #(e! (v/->ValitseToteuma %))
-     :vetolaatikot (zipmap
-                     (range)
-                     (map
-                       (fn [toteuma]
-                         (when (:toteumatehtavat toteuma)
-                           [varustetoteuman-tehtavat toteumat toteuma]))
-                       toteumat))}
+     :rivi-klikattu #(e! (v/->ValitseToteuma %))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}
      {:otsikko "Tehty" :tyyppi :pvm :fmt pvm/pvm-aika :nimi :luotu :leveys 10}
      {:otsikko "Tekijä" :tyyppi :string :nimi :tekija :hae #(str (:luojan-etunimi %) " " (:luojan-sukunimi %)) :leveys 10}
