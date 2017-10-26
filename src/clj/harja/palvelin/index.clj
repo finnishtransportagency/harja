@@ -1,43 +1,23 @@
 (ns harja.palvelin.index
   (:require [hiccup.core :refer [html]]
-            [clojure.java.io :as io]
-            [taoensso.timbre :as log])
+            [clojure.java.io :as io])
   (:import [javax.crypto Mac]
            [javax.crypto.spec SecretKeySpec]
            [java.util Base64]
            (hiccup.compiler HtmlRenderer)))
 
-(def anti-forgery-fallback-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
+(def anti-forgery-secret-key "d387gcsb8137hd9h192hdijsha9hd91hdiubisab98f7g7812g8dfheiqufhsaiud8713")
 
-(defn- anti-forgery-seed
-  "Palauttaa joko argumenttina annetun avaimen (joka on luettu asetuksista)
-   tai fallback avaimen error-logituksen kera."
-  [avain]
-  (if avain
-    avain
-    (do
-      (log/error "Käytetään ei-turvallista fallback-avainta anti-CSRF-tokenin generoimiseen!")
-      anti-forgery-fallback-key)))
-
-(defn muodosta-csrf-token
-  "Käyttää random avainta ja anti-csrf-token-secret-keytä anti-CSRF-tokenin generoimiseen."
-  [random-string anti-csrf-token-secret-key]
-  (let [secret-key (SecretKeySpec. (.getBytes
-                                     (anti-forgery-seed anti-csrf-token-secret-key)
-                                     "UTF-8")
-                                   "HmacSHA256")
+(defn laske-mac [data]
+  (let [secret-key (SecretKeySpec. (.getBytes anti-forgery-secret-key "UTF-8") "HmacSHA256")
         mac (Mac/getInstance "HmacSHA256")]
     (.init mac secret-key)
-    (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes random-string "UTF-8"))))))
+    (String. (.encode (Base64/getEncoder) (.doFinal mac (.getBytes data "UTF-8"))))))
 
 (defn tee-random-avain []
-  (with-open [in (io/input-stream (io/file "/dev/urandom"))]
-    (let [buf (byte-array 16)
-          n (.read in buf)]
-      (assert (= n 16))
-      (String. (.encode (Base64/getEncoder) buf)))))
+  (apply str (map (fn [_] (rand-nth "0123456789abcdefghijklmnopqrstuvwyz")) (range 128))))
 
-(defn tee-paasivu [random-avain devmode]
+(defn tee-paasivu [token devmode]
   (html
     "<!DOCTYPE html>\n"
     (if devmode
@@ -52,7 +32,7 @@
         [:link {:rel "stylesheet/less" :type "text/css" :href "less/application/application.less"}]
         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
         [:script {:type "text/javascript" :src "js/less-2.7.1-9.js"}]]
-       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}
+       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
         [:div#app]
         [:script {:src "js/out/goog/base.js" :type "text/javascript"}]
         [:script {:src "js/harja.js" :type "text/javascript"}]
@@ -71,10 +51,10 @@
         [:link {:href "css/application.css" :rel "stylesheet" :type "text/css"}]
         [:link {:rel "icon" :type "image/png" :href "images/harja_favicon.png"}]
         [:script {:type "text/javascript" :src "js/harja.js"}]]
-       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token random-avain}
+       [:body {:onload "harja.asiakas.main.harja()" :data-anti-csrf-token token}
         [:div#app]]])))
 
-(defn tee-ls-paasivu [random-avain devmode]
+(defn tee-ls-paasivu [devmode]
   (let [livicons-osoite (if devmode "resources/public/laadunseuranta/img/"
                                     "public/laadunseuranta/img/")
         livicons-18 (if devmode
@@ -114,7 +94,7 @@
           [:script {:type "text/javascript"}
            "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
             proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body {:data-anti-csrf-token random-avain}
+         [:body
           [:div {:style "display: none;"}
            inline-svg-18 inline-svg-24 inline-svg-36]
           [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
@@ -139,7 +119,7 @@
           [:script {:type "text/javascript"}
            "proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\", \"+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs\");\n
             proj4.defs(\"EPSG:3067\", proj4.defs(\"urn:x-ogc:def:crs:EPSG:3067\"));"]]
-         [:body {:data-anti-csrf-token random-avain}
+         [:body
           [:div {:style "display: none;"}
            inline-svg-18 inline-svg-24 inline-svg-36]
           [:video {:preload "true" :id "keep-alive-hack" :loop "true"}
