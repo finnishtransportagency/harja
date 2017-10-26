@@ -11,7 +11,8 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
-    [harja.domain.kanavat.kanavan-kohde :as kohde])
+    [harja.domain.kanavat.kanavan-kohde :as kohde]
+    [harja.domain.urakka :as ur])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -39,8 +40,17 @@
 
 (s/def ::hakuteksti string?)
 
+(s/def ::kohde/urakat
+  (s/nilable (s/coll-of (s/keys :req [::ur/nimi ::ur/id]))))
+
+(s/def ::kohteet
+  (s/coll-of (s/keys :req [::kohde/id
+                           ::kohde/tyyppi
+                           ::kohde/urakat]
+                     :opt [::kohde/nimi])))
+
 (s/def ::hae-kanavat-ja-kohteet-vastaus
-  (s/coll-of (s/keys :req [])))
+  (s/coll-of (s/keys :req [::id ::nimi ::kohteet])))
 
 (s/def ::lisaa-kanavalle-kohteita-kysely
   (s/coll-of (s/keys :req [::kohde/kanava-id ::kohde/id ::kohde/tyyppi]
