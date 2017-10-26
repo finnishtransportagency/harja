@@ -1,6 +1,6 @@
 -- name: hae-hakuvali
 
-SELECT aikakursori as alku, LEAST(aikakursori + enimmaishakuvali, now()) as loppu
+SELECT (aikakursori - '4 days'::interval) as alku, LEAST(aikakursori + enimmaishakuvali, now()) as loppu
   FROM reimari_meta m, integraatio i
   WHERE m.integraatio = i.id AND i.jarjestelma = 'reimari' AND i.nimi = :integraatio
   LIMIT 1;
