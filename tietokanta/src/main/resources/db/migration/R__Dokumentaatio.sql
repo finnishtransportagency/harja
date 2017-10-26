@@ -176,3 +176,13 @@ E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle my�
 
 COMMENT ON TABLE toimenpideinstanssi_vesivaylat IS
 E'Taulun tarkoitus on liittää toimenpideinstanssiin vesiväylä -spesifistä tietoa.';
+
+COMMENT ON TABLE kan_kanava IS
+E'Kanava on.. kanava. Kanavalla on nimi ja sijainti, ja se sisältää 0-n kohdetta';
+
+COMMENT ON TABLE kan_kohde IS
+E'Kohteet ovat kanavalla sijaitsevia siltoja ja sulkuja, joihin kanavaurkoiden työt kohdistuvat.';
+
+COMMENT ON TABLE kanavahuoltokohde IS
+E'Huoltokohteet ovat asioita, joita kanavasta korjataan. Huoltokohteita ei pidä sekoittaa kohteeseen! Huoltokohde voi olla esim "Hydrauliikka", kun taas' ||
+E'kohde on fyysinen sijainti kanavan varrella, esim. silta.'
