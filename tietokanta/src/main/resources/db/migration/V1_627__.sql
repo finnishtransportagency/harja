@@ -1,66 +1,43 @@
-CREATE TABLE kan_kanava (
-  id       SERIAL PRIMARY KEY,
-  nimi     TEXT NOT NULL,
-  sijainti GEOMETRY
-);
+CREATE TABLE reimari_meta (
+  integraatio       INTEGER
+                    NOT NULL
+                    REFERENCES integraatio(id),
+  enimmaishakuvali  INTERVAL
+                    NOT NULL,
+  aikakursori       TIMESTAMP
+                    NOT NULL);
 
-INSERT INTO kan_kanava (nimi) VALUES
-  ('Ahkiolahden kanava'),
-  ('Juankosken kanava'),
-  ('Joensuun kanava'),
-  ('Kaltimon kanava'),
-  ('Karjalankosken kanava'),
-  ('Karvion kanava'),
-  ('Kerman kanava'),
-  ('Konnuksen kanava'),
-  ('Kuurnan kanava'),
-  ('Lastukosken kanava'),
-  ('Nerkoon kanava'),
-  ('Pilpan kanava'),
-  ('Taipaleen kanava'),
-  ('Taivallahden kanava'),
-  ('Varistaipaleen kanava'),
-  ('Vihovuonteen kanava'),
-  ('Saimaan kanava'),
-  ('Kalkkisten kanava'),
-  ('Keiteleen kanava: Vaajakosken kanava'),
-  ('Keiteleen kanava: Kuhankosken kanava'),
-  ('Keiteleen kanava: Kuusan kanava'),
-  ('Keiteleen kanava: Kapeenkosken kanava'),
-  ('Keiteleen kanava: Paatelan kanava'),
-  ('Kerkonkosken kanava'),
-  ('Kiesimän kanava'),
-  ('Kolun kanava'),
-  ('Neiturin kanava'),
-  ('Vääksyn kanava'),
-  ('Herraskosken kanava'),
-  ('Lempäälän kanava'),
-  ('Muroleen kanava'),
-  ('Valkeakosken kanava');
+COMMENT ON TABLE reimari_meta IS E'Kirjanpito, per Reimarin rajapinta, milloin viimeksi on haettu tietoja ja paljonko niitä saa hakea kerralla.';
 
-CREATE TYPE KOHTEEN_TYYPPI AS ENUM ('silta', 'sulku', 'sulku-ja-silta');
+COMMENT ON COLUMN reimari_meta.enimmaishakuvali IS E'Halutaan rajoittaa
+Reimarille aiheutuvaa kuormaa, myöskin liian hitaat kyselyt
+aikakatkaistaan Reimarin päässä. Tämä kertoo, kuinka pitkältä
+aikaväliltä voidaan hakea tapahtumia yhdessä pyynnössä. Jos tähän
+rajaan törmätään, haetaan vanhimmasta päästä tapahtumia jotta
+tapahtumat päätyvät Harjaan aikajärjestyksessä.';
 
-CREATE TABLE kan_kohde (
-  id          SERIAL PRIMARY KEY,
-  "kanava-id" INTEGER REFERENCES kan_kanava (id) NOT NULL,
-  nimi        TEXT,
-  tyyppi      KOHTEEN_TYYPPI                     NOT NULL,
-  sijainti    GEOMETRY,
+COMMENT ON COLUMN reimari_meta.aikakursori IS E'Päivämäärä, jota myöhempiä tietoja ei ole vielä haettu Harjaan.';
 
-  luotu       TIMESTAMP DEFAULT NOW(),
-  luoja       INTEGER REFERENCES kayttaja (id)   NOT NULL,
-  muokattu    TIMESTAMP,
-  muokkaaja   INTEGER REFERENCES kayttaja (id),
-  poistettu   BOOLEAN   DEFAULT FALSE,
-  poistaja    INTEGER REFERENCES kayttaja (id)
-);
+INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
+   VALUES (
+      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-toimenpiteet'),
+       '6 months',
+       '2017-08-25T12:12:12Z');
 
-CREATE TABLE kan_kohde_urakka (
-  "kohde-id"  INTEGER REFERENCES kan_kohde (id) NOT NULL,
-  "urakka-id" INTEGER REFERENCES urakka (id)    NOT NULL,
+INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
+    VALUES (
+      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-turvalaitekomponentit'),
+       '6 months',
+       '2017-08-25T12:12:12Z');
 
-  luotu       TIMESTAMP DEFAULT NOW(),
-  luoja       INTEGER REFERENCES kayttaja (id)  NOT NULL,
-  poistettu   BOOLEAN   DEFAULT FALSE,
-  poistaja    INTEGER REFERENCES kayttaja (id)
-);
+INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
+    VALUES (
+      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-komponenttityypit'),
+       '6 months',
+       '2017-08-25T12:12:12Z');
+
+INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
+    VALUES (
+      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-viat'),
+       '6 months',
+       '2017-08-25T12:12:12Z');
