@@ -23,6 +23,10 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
   (q/liita-kohde-urakkaan! db user kohde-id urakka-id poistettu?))
 
+(defn poista-kohde! [db user {:keys [kohde-id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (q/merkitse-kohde-poistetuksi! db user kohde-id))
+
 (defrecord Kanavat []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -47,6 +51,13 @@
       (fn [user tiedot]
         (liita-kohde-urakkaan! db user tiedot))
       {:kysely-spec ::kan/liita-kohde-urakkaan-kysely})
+
+    (julkaise-palvelu
+      http
+      :poista-kohde
+      (fn [user tiedot]
+        (poista-kohde! db user tiedot))
+      {:kysely-spec ::kan/poista-kohde-kysely})
     this)
 
   (stop [this]

@@ -115,3 +115,11 @@
                           {::m/luoja-id (:id user)}
                           {::kohde/kohde-id kohde-id
                            ::kohde/urakka-id urakka-id}))))))
+
+(defn merkitse-kohde-poistetuksi! [db user kohde-id]
+  (specql/update! db
+                  ::kohde/kohde
+                  {::m/poistettu? true
+                   ::m/poistaja-id (:id user)
+                   ::m/muokattu (pvm/nyt)}
+                  {::kohde/id kohde-id}))
