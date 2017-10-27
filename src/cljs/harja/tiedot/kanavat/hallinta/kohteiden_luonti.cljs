@@ -25,7 +25,8 @@
                  :kohderivit nil
                  :kanavat nil
                  :lomakkeen-tiedot nil
-                 :valittu-urakka nil}))
+                 :valittu-urakka nil
+                 :poistettava-kohde nil}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeKohteet [])
@@ -45,6 +46,10 @@
 (defrecord LiitaKohdeUrakkaan [kohde liita? urakka])
 (defrecord KohdeLiitetty [tulos])
 (defrecord KohdeEiLiitetty [virhe])
+(defrecord AsetaPoistettavaKohde [kohde])
+(defrecord PoistaKohde [kohde])
+(defrecord KohdePoistettu [tulos])
+(defrecord KohdeEiPoistettu [virhe])
 
 (defn hae-kanava-urakat! [tulos! fail!]
   (go
@@ -119,6 +124,9 @@
 (defn kohde-kuuluu-urakkaan? [kohde urakka]
   (boolean
     ((into #{} (::kohde/urakat kohde)) urakka)))
+
+(defn poista-kohde [kohteet kohde]
+  (into [] (disj (into #{} kohteet) kohde)))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -214,8 +222,8 @@
     (-> app
         (assoc :urakoiden-haku-kaynnissa? false)
         (assoc :urakat (as-> ur $
-                           (map #(select-keys % [:id :nimi]) $)
-                           (namespacefy $ {:ns :harja.domain.urakka})))))
+                             (map #(select-keys % [:id :nimi]) $)
+                             (namespacefy $ {:ns :harja.domain.urakka})))))
 
   UrakatEiHaettu
   (process-event [_ app]
@@ -263,4 +271,35 @@
   KohdeEiLiitetty
   (process-event [_ app]
     (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
-    app))
+    app)
+
+  AsetaPoistettavaKohde
+  (process-event [{kohde :kohde} app]
+    (assoc app :poistettava-kohde kohde))
+
+  PoistaKohde
+  (process-event [{kohde :kohde} {:keys [poistettava-kohde] :as app}]
+    (if (= poistettava-kohde kohde)
+      (do
+        (tt/post! :poista-kohde
+                  {:kohde-id (::kohde/id kohde)}
+                  {:onnistui ->KohdePoistettu
+                   :epaonnistui ->KohdeEiPoistettu})
+
+        (-> app
+            (update :kohderivit poista-kohde kohde)
+            (assoc :poistaminen-kaynnissa? true)
+            (assoc :poistettava-kohde nil)))
+
+      app))
+
+  KohdePoistettu
+  (process-event [_ app]
+    (-> app
+        (assoc :poistaminen-kaynnissa? false)))
+
+  KohdeEiPoistettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
+    (-> app
+        (assoc :poistaminen-kaynnissa? false))))

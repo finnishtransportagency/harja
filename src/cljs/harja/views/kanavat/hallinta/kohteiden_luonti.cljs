@@ -21,7 +21,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
 
-            [harja.domain.urakka :as ur])
+            [harja.domain.urakka :as ur]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -89,16 +90,40 @@
                         (tiedot/muokattavat-kohteet app)])})]
     uudet-tiedot]])
 
+(defn varmistusnappi
+  ([e! kohde] [varmistusnappi e! kohde {}])
+  ([e! kohde opts]
+   [napit/nappi
+    ""
+    #(e! (tiedot/->AsetaPoistettavaKohde kohde))
+    (merge
+      {:ikoninappi? true
+      :luokka "nappi-toissijainen"
+      :ikoni (ikonit/livicon-trash)}
+      opts)]))
+
+(defn poista-tai-takaisin [e! kohde]
+  [:div
+   [napit/takaisin
+    ""
+    #(e! (tiedot/->AsetaPoistettavaKohde nil))
+    {:ikoninappi? true}]
+   [napit/poista
+    ""
+    #(e! (tiedot/->PoistaKohde kohde))
+    {:ikoninappi? true}]])
+
 (defn kohteiden-luonti* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->HaeKohteet))
                            (e! (tiedot/->AloitaUrakoidenHaku)))
                       #(do (e! (tiedot/->Nakymassa? false))
-                           (e! (tiedot/ValitseUrakka nil))
-                           (e! (tiedot/SuljeKohdeLomake))))
+                           (e! (tiedot/->ValitseUrakka nil))
+                           (e! (tiedot/->SuljeKohdeLomake))))
 
-    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki? valittu-urakka urakat] :as app}]
+    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki?
+                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde] :as app}]
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
@@ -118,11 +143,16 @@
            {:otsikko "Poista"
             :tyyppi :komponentti
             :tasaa :keskita
-            :komponentti (fn [rivi]
-                           [napit/poista
-                            ""
-                            #(println "poista")
-                            {:ikoninappi? true}])}
+            :komponentti (fn [kohde]
+                           (cond
+                             (nil? poistettava-kohde)
+                             [varmistusnappi e! kohde]
+
+                             (= poistettava-kohde kohde)
+                             [poista-tai-takaisin e! kohde]
+
+                             (some? poistettava-kohde)
+                             [varmistusnappi e! kohde {:disabled true}]))}
            (if-not valittu-urakka
              {:otsikko "Urakat"
              :tyyppi :string
