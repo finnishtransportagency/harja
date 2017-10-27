@@ -9,5 +9,11 @@ CREATE TABLE kan_toimenpide (
   toimenpide  INTEGER REFERENCES toimenpidekoodi (id),
   lisatieto   TEXT,
   suorittaja  INTEGER REFERENCES kayttaja (id)           NOT NULL,
-  kuittaaja   INTEGER REFERENCES kayttaja (id)           NOT NULL
+  kuittaaja   INTEGER REFERENCES kayttaja (id)           NOT NULL,
+  luotu       TIMESTAMP DEFAULT NOW(),
+  luoja       INTEGER REFERENCES kayttaja (id)           NOT NULL,
+  muokattu    TIMESTAMP,
+  muokkaaja   INTEGER REFERENCES kayttaja (id),
+  poistettu   BOOLEAN   DEFAULT FALSE,
+  poistaja    INTEGER REFERENCES kayttaja (id)
 );
