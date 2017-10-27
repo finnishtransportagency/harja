@@ -634,7 +634,7 @@
                                           (component/stop s)
                                           nil))))
 
-(defn alusta-lokipriorisointi! [db]
+(defn alusta-lokipriorisointi! []
   ;; tällä voidaan nostaa/laskea log leveliä tietyiltä lokiviesteiltä muuttamatta lokitusta kutusvaa koodia.
   (let [muutokset [["Virhe muodostaessa JMS viestin sisältöä: clojure.lang.ExceptionInfo: throw+: {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa, :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella" :info]
                    ]
