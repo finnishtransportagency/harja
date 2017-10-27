@@ -98,20 +98,26 @@
     #(e! (tiedot/->AsetaPoistettavaKohde kohde))
     (merge
       {:ikoninappi? true
-      :luokka "nappi-toissijainen"
-      :ikoni (ikonit/livicon-trash)}
+       :luokka "nappi-toissijainen"
+       :ikoni (ikonit/livicon-trash)}
       opts)]))
 
-(defn poista-tai-takaisin [e! kohde]
-  [:div
-   [napit/takaisin
-    ""
-    #(e! (tiedot/->AsetaPoistettavaKohde nil))
-    {:ikoninappi? true}]
-   [napit/poista
-    ""
-    #(e! (tiedot/->PoistaKohde kohde))
-    {:ikoninappi? true}]])
+(defn poista-tai-takaisin
+  ([e! kohde] [poista-tai-takaisin e! kohde {}])
+  ([e! kohde opts]
+   [:div
+    [napit/takaisin
+     ""
+     #(e! (tiedot/->AsetaPoistettavaKohde nil))
+     (merge
+       {:ikoninappi? true}
+       opts)]
+    [napit/poista
+     ""
+     #(e! (tiedot/->PoistaKohde kohde))
+     (merge
+       {:ikoninappi? true}
+       opts)]]))
 
 (defn kohteiden-luonti* [e! app]
   (komp/luo
@@ -123,7 +129,8 @@
                            (e! (tiedot/->SuljeKohdeLomake))))
 
     (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki?
-                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde] :as app}]
+                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde
+                    liittaminen-kaynnissa] :as app}]
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
@@ -149,15 +156,15 @@
                              [varmistusnappi e! kohde]
 
                              (= poistettava-kohde kohde)
-                             [poista-tai-takaisin e! kohde]
+                             [poista-tai-takaisin e! kohde {:disabled poistaminen-kaynnissa?}]
 
                              (some? poistettava-kohde)
                              [varmistusnappi e! kohde {:disabled true}]))}
            (if-not valittu-urakka
              {:otsikko "Urakat"
-             :tyyppi :string
-             :nimi :kohteen-urakat
-             :hae tiedot/kohteen-urakat}
+              :tyyppi :string
+              :nimi :kohteen-urakat
+              :hae tiedot/kohteen-urakat}
 
              {:otsikko "Kuuluu urakkaan?"
               :tyyppi :komponentti
@@ -167,14 +174,18 @@
                                                                          (not (:valittu? rivi))
                                                                          valittu-urakka)))
               :komponentti (fn [rivi]
-                             [kentat/tee-kentta
-                              {:tyyppi :checkbox}
-                              (r/wrap
-                                (tiedot/kohde-kuuluu-urakkaan? rivi valittu-urakka)
-                                (fn [uusi]
-                                  (e! (tiedot/->LiitaKohdeUrakkaan rivi
-                                                                   uusi
-                                                                   valittu-urakka))))])})]
+                             (if (get-in liittaminen-kaynnissa [(::kohde/id rivi)
+                                                                (::ur/id valittu-urakka)])
+                               [ajax-loader-pieni]
+
+                               [kentat/tee-kentta
+                                {:tyyppi :checkbox}
+                                (r/wrap
+                                  (tiedot/kohde-kuuluu-urakkaan? rivi valittu-urakka)
+                                  (fn [uusi]
+                                    (e! (tiedot/->LiitaKohdeUrakkaan rivi
+                                                                     uusi
+                                                                     valittu-urakka))))]))})]
           (sort-by :rivin-teksti kohderivit)]
          [napit/uusi
           "Lisää uusi kohde"
