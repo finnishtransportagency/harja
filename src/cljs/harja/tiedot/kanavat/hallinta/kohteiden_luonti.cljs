@@ -120,7 +120,7 @@
     params))
 
 (defn kohteen-urakat [kohde]
-  (str/join ", " (sort-by ::ur/nimi (map ::ur/nimi (::kohde/urakat kohde)))))
+  (str/join ", " (sort (map ::ur/nimi (::kohde/urakat kohde)))))
 
 (defn kohde-kuuluu-urakkaan? [kohde urakka]
   (boolean
@@ -130,9 +130,10 @@
   (into [] (disj (into #{} kohteet) kohde)))
 
 (defn liittaminen-kaynnissa? [app kohde]
-  (get-in (:liittaminen-kaynnissa app)
-          [(::kohde/id kohde)
-           (::ur/id (:valittu-urakka app))]))
+  (boolean
+    (get-in (:liittaminen-kaynnissa app)
+           [(::kohde/id kohde)
+            (::ur/id (:valittu-urakka app))])))
 
 (defn lisaa-kohteelle-urakka [app muokattava-kohde urakka liita?]
   (update app :kohderivit
@@ -155,10 +156,11 @@
 (defn liittaminen-kayntiin [app kohde-id urakka-id]
   (update app :liittaminen-kaynnissa
           (fn [kohde-ja-urakat]
-            (if (kohde-ja-urakat kohde-id)
-              (update kohde-ja-urakat kohde-id conj urakka-id)
+            (let [kohde-ja-urakat (or kohde-ja-urakat {})]
+              (if (kohde-ja-urakat kohde-id)
+               (update kohde-ja-urakat kohde-id conj urakka-id)
 
-              (assoc kohde-ja-urakat kohde-id #{urakka-id})))))
+               (assoc kohde-ja-urakat kohde-id #{urakka-id}))))))
 
 (defn lopeta-liittaminen [app kohde-id urakka-id]
   (update app :liittaminen-kaynnissa
