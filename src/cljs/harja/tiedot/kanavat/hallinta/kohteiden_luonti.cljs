@@ -120,7 +120,7 @@
     params))
 
 (defn kohteen-urakat [kohde]
-  (str/join ", " (map ::ur/nimi (::kohde/urakat kohde))))
+  (str/join ", " (sort-by ::ur/nimi (map ::ur/nimi (::kohde/urakat kohde)))))
 
 (defn kohde-kuuluu-urakkaan? [kohde urakka]
   (boolean
@@ -128,6 +128,43 @@
 
 (defn poista-kohde [kohteet kohde]
   (into [] (disj (into #{} kohteet) kohde)))
+
+(defn liittaminen-kaynnissa? [app kohde]
+  (get-in (:liittaminen-kaynnissa app)
+          [(::kohde/id kohde)
+           (::ur/id (:valittu-urakka app))]))
+
+(defn lisaa-kohteelle-urakka [app muokattava-kohde urakka liita?]
+  (update app :kohderivit
+          (fn [kohteet]
+            (map
+              (fn [kohde]
+                (if (= (::kohde/id kohde) (::kohde/id muokattava-kohde))
+                  (if liita?
+                    (update kohde ::kohde/urakat conj urakka)
+
+                    (update kohde ::kohde/urakat
+                            (fn [urakat]
+                              (into
+                                []
+                                (disj (into #{} urakat) urakka)))))
+
+                  kohde))
+              kohteet))))
+
+(defn liittaminen-kayntiin [app kohde-id urakka-id]
+  (update app :liittaminen-kaynnissa
+          (fn [kohde-ja-urakat]
+            (if (kohde-ja-urakat kohde-id)
+              (update kohde-ja-urakat kohde-id conj urakka-id)
+
+              (assoc kohde-ja-urakat kohde-id #{urakka-id})))))
+
+(defn lopeta-liittaminen [app kohde-id urakka-id]
+  (update app :liittaminen-kaynnissa
+          (fn [kohde-ja-urakat]
+            (when (kohde-ja-urakat kohde-id)
+              (update kohde-ja-urakat kohde-id disj urakka-id)))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -236,12 +273,12 @@
     (assoc app :valittu-urakka ur))
 
   LiitaKohdeUrakkaan
-  (process-event [{uusi :kohde
+  (process-event [{kohde :kohde
                    liita? :liita?
                    urakka :urakka}
                   app]
 
-    (let [kohde-id (::kohde/id uusi)
+    (let [kohde-id (::kohde/id kohde)
           urakka-id (::ur/id urakka)]
       (tt/post! :liita-kohde-urakkaan
                 {:kohde-id kohde-id
@@ -253,36 +290,13 @@
                  :epaonnistui-parametrit [kohde-id urakka-id]})
 
       (-> app
-          (update :kohderivit
-                  (fn [kohteet]
-                    (map
-                      (fn [kohde]
-                        (if (= (::kohde/id kohde) (::kohde/id uusi))
-                          (if liita?
-                            (update uusi ::kohde/urakat conj urakka)
-
-                            (update uusi ::kohde/urakat
-                                    (fn [urakat]
-                                      (into
-                                        []
-                                        (disj (into #{} urakat) urakka)))))
-
-                          kohde))
-                      kohteet)))
-          (update :liittaminen-kaynnissa
-                  (fn [kohde-ja-urakat]
-                    (if (kohde-ja-urakat kohde-id)
-                      (update kohde-ja-urakat kohde-id conj urakka-id)
-
-                      (assoc kohde-ja-urakat kohde-id #{urakka-id})))))))
+          (lisaa-kohteelle-urakka kohde urakka liita?)
+          (liittaminen-kayntiin kohde-id urakka-id))))
 
   KohdeLiitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
     (-> app
-        (update :liittaminen-kaynnissa
-                (fn [kohde-ja-urakat]
-                  (when (kohde-ja-urakat kohde-id)
-                    (update kohde-ja-urakat kohde-id disj urakka-id))))))
+        (lopeta-liittaminen kohde-id urakka-id)))
 
   KohdeEiLiitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
