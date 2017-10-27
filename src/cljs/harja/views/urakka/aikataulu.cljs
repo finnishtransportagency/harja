@@ -191,6 +191,7 @@
      [upotettu-raportti/raportin-vientimuodot
       (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
 
+
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -219,14 +220,21 @@
             yllapito-pvm-fmt (fn [arvo]
                                (pvm/pvm-opt arvo {:nayta-vuosi-fn #(not= (pvm/vuosi %) vuosi)}))]
         [:div.aikataulu
-
+ s
          [valinnat ur]
+
 
          (when aikajana?
            [aikajana/aikajana
-            {:muuta! #(tallenna-aikataulu
-                        urakka-id sopimus-id vuosi
-                        (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
+            {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
+                        (tallenna-aikataulu
+                          urakka-id sopimus-id vuosi
+                          (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %)
+                          )
+                        )
+             ;; MAARIT: Tänne kaivataan käsittely, ettei tulis virhettä konsoliin. Lisäksi ois kiva viestiä käyttäjälle jotaki
+             ;; Miksi tallenna-aikataulu on näkymässä ja raahauksessa päivitetyt aikataulurivit tiedoissa
+                        }
             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
                  aikataulurivit)])
 
@@ -283,7 +291,7 @@
             :nimi :yllapitoluokka :leveys 4 :tyyppi :string
             :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? (constantly false)}
-           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+           (when (= (:nakyma optiot) :paallystys)           ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
               :tyyppi :pvm :fmt yllapito-pvm-fmt
               :muokattava? voi-muokata-paallystys?})
