@@ -44,14 +44,12 @@
         (lisaa-kanavalle-kohteita db user kohteet))
       {:kysely-spec ::kan/lisaa-kanavalle-kohteita-kysely
        :vastaus-spec ::kan/lisaa-kanavalle-kohteita-vastaus})
-
     (julkaise-palvelu
       http
       :liita-kohde-urakkaan
       (fn [user tiedot]
         (liita-kohde-urakkaan! db user tiedot))
       {:kysely-spec ::kan/liita-kohde-urakkaan-kysely})
-
     (julkaise-palvelu
       http
       :poista-kohde
