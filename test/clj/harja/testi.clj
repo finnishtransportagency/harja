@@ -211,6 +211,13 @@
   (is false (str "Palvelua " nimi " ei löydy!"))
   {:error "Palvelua ei löydy"})
 
+(defn- arg-count [f]
+  {:pre [(instance? clojure.lang.AFunction f)]}
+  (-> f class .getDeclaredMethods first .getParameterTypes alength))
+
+(defn- post-kutsu? [f]
+  (= 2 (arg-count f)))
+
 (defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
   (as-> palvelu-fn f
         (if kysely-spec
@@ -222,12 +229,20 @@
           f)
 
         (if vastaus-spec
-          (fn [user payload]
-            (let [v (f user payload)]
-              (testing (str "Palvelun " nimi " vastaus on validi")
-                (is (s/valid? vastaus-spec v)
-                    (s/explain-str vastaus-spec v)))
-              v))
+          (if (post-kutsu? f)
+            (fn [user payload]
+             (let [v (f user payload)]
+               (testing (str "Palvelun " nimi " vastaus on validi")
+                 (is (s/valid? vastaus-spec v)
+                     (s/explain-str vastaus-spec v)))
+               v))
+
+            (fn [user]
+              (let [v (f user)]
+                (testing (str "Palvelun " nimi " vastaus on validi")
+                  (is (s/valid? vastaus-spec v)
+                      (s/explain-str vastaus-spec v)))
+                v)))
           f)))
 
 (defn testi-http-palvelin
@@ -239,6 +254,7 @@
       (julkaise-palvelu [_ nimi palvelu-fn]
         (swap! palvelut assoc nimi palvelu-fn))
       (julkaise-palvelu [_ nimi palvelu-fn optiot]
+
         (swap! palvelut assoc nimi
                (wrap-validointi nimi palvelu-fn optiot)))
       (poista-palvelu [_ nimi]
