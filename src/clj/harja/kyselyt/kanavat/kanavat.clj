@@ -58,25 +58,24 @@
 
 (defn lisaa-kanavalle-kohteet! [db user kohteet]
   (jdbc/with-db-transaction [db db]
-    (doall
-      (for [kohde kohteet]
-        (if (id-olemassa? (::kohde/id kohde))
-          (specql/update!
-            db
-            ::kohde/kohde
-            (merge
-              (if (::m/poistettu? kohde)
-                {::m/poistaja-id (:id user)
-                 ::m/muokattu (pvm/nyt)}
+    (doseq [kohde kohteet]
+      (if (id-olemassa? (::kohde/id kohde))
+        (specql/update!
+          db
+          ::kohde/kohde
+          (merge
+            (if (::m/poistettu? kohde)
+              {::m/poistaja-id (:id user)
+               ::m/muokattu (pvm/nyt)}
 
-                {::m/muokkaaja-id (:id user)
-                 ::m/muokattu (pvm/nyt)})
-              kohde)
-            {::kohde/id (::kohde/id kohde)})
+              {::m/muokkaaja-id (:id user)
+               ::m/muokattu (pvm/nyt)})
+            kohde)
+          {::kohde/id (::kohde/id kohde)})
 
-          (specql/insert!
-            db
-            ::kohde/kohde
-            (merge
-              {::m/luoja-id (:id user)}
-              (dissoc kohde ::kohde/id))))))))
+        (specql/insert!
+          db
+          ::kohde/kohde
+          (merge
+            {::m/luoja-id (:id user)}
+            (dissoc kohde ::kohde/id)))))))
