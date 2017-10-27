@@ -29,7 +29,8 @@
             [harja.kyselyt.livitunnisteet :as livitunnisteet]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
             [harja.domain.roolit :as roolit]
-            [harja.palvelin.palvelut.interpolointi :as interpolointi]))
+            [harja.palvelin.palvelut.interpolointi :as interpolointi]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
 (defn geometriaksi [reitti]
   (when reitti (geo/geometry (geo/clj->pg reitti))))
@@ -543,12 +544,16 @@
      (map #(konv/string->keyword % :toimenpide))
      (map #(konv/string->keyword % :toteumatyyppi))
      (harja.geo/muunna-pg-tulokset :reittipiste_sijainti)
+
      (if (nil? tierekisteri)
        (map identity)
-       (map #(assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
-                               tierekisteri
-                               (:arvot %)
-                               (:tietolaji %)))))
+       (map #(try+
+               (assoc % :arvot (tietolajit/validoi-ja-muunna-merkkijono-arvoiksi
+                                 tierekisteri
+                                 (:arvot %)
+                                 (:tietolaji %)))
+               (catch [:type virheet/+virhe-tietolajin-arvojen-kasittelyssa+] {:keys [virheet]}
+                 (assoc % :arvot {:virhe virheet})))))
      (map konv/alaviiva->rakenne))))
 
 (defn hae-urakan-varustetoteumat [tierekisteri db user {:keys [urakka-id sopimus-id alkupvm loppupvm tienumero] :as hakuehdot}]

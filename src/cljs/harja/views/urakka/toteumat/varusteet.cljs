@@ -224,13 +224,22 @@
        :tyyppi :string
        :muokattava? (constantly muokattava?)})))
 
-(defn varusteen-ominaisuudet [muokattava? ominaisuudet]
+(defn varusteen-ominaisuudet [muokattava? ominaisuudet arvot]
   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
     (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
           ominaisuudet (if muokattava?
                          (poista-tunniste-fn ominaisuudet)
-                         ominaisuudet)]
-      (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))))
+                         ominaisuudet)
+          virheet (:virhe arvot)]
+      (if (empty? virheet)
+        (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet))
+        (lomake/ryhma
+          "Varusteen ominaisuudet"
+          {:otsikko "Varusteen ominaisuuksia ei voida lukea." :nimi :virhe
+           :hae (constantly (str (:viesti (first virheet))))
+           :muokattava? (constantly false)
+           :tyyppi :string
+           :palstoja 2})))))
 
 
 (defn varusteen-liitteet [e! muokattava? varustetoteuma]
@@ -244,6 +253,8 @@
                                                #(e! (v/->LisaaLiitetiedosto %))))
                     :uusi-liite-teksti "Lisää liite varustetoteumaan"}])})
 
+(def tietolajien-sisaltojen-kuvaukset-url "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
+
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
         ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
@@ -252,7 +263,7 @@
       #(e! (v/->TyhjennaValittuToteuma))]
 
      [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-      [:a {:href "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c"
+      [:a {:href tietolajien-sisaltojen-kuvaukset-url
            :target "_blank"}
        "Tietolajien sisältöjen kuvaukset"]]
      [lomake/lomake
@@ -277,7 +288,7 @@
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteen-ominaisuudet muokattava? ominaisuudet)
+       (varusteen-ominaisuudet muokattava? ominaisuudet (:arvot varustetoteuma))
        (varusteen-liitteet e! muokattava? varustetoteuma)]
       varustetoteuma]]))
 
