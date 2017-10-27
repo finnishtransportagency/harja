@@ -37,7 +37,8 @@
                                              (set/union
                                                kohde/kohteen-urakkatiedot
                                                #{::kohde/kohde-id})
-                                             {::kohde/kohde-id (op/in (into #{} (map ::kohde/id kohteet)))})))
+                                             {::kohde/kohde-id (op/in (into #{} (map ::kohde/id kohteet)))
+                                              ::m/poistettu? false})))
 
 (defn- hae-kanavat-ja-kohteet* [kanavat kohteen-haku]
   (into []
@@ -48,12 +49,12 @@
 (defn hae-kanavat-ja-kohteet [db]
   (hae-kanavat-ja-kohteet*
     (specql/fetch db
-                 ::kanava/kanava
-                 (set/union
-                   kanava/perustiedot
-                   kanava/kohteet)
-                 {::kanava/kohteet (op/or {::m/poistettu? op/null?}
-                                          {::m/poistettu? false})})
+                  ::kanava/kanava
+                  (set/union
+                    kanava/perustiedot
+                    kanava/kohteet)
+                  {::kanava/kohteet (op/or {::m/poistettu? op/null?}
+                                           {::m/poistettu? false})})
     (partial hae-kohteiden-urakkatiedot db)))
 
 (defn lisaa-kanavalle-kohteet! [db user kohteet]
@@ -79,3 +80,38 @@
           (merge
             {::m/luoja-id (:id user)}
             (dissoc kohde ::kohde/id)))))))
+
+(defn liita-kohde-urakkaan! [db user kohde-id urakka-id poistettu?]
+  (jdbc/with-db-transaction [db db]
+    (let [olemassa? (-> (specql/fetch
+                          db
+                          ::kohde/kohde<->urakka
+                          #{::kohde/kohde-id}
+                          {::kohde/kohde-id kohde-id
+                           ::kohde/urakka-id urakka-id})
+                        first
+                        ::kohde/kohde-id
+                        some?
+                        boolean)]
+      (if olemassa?
+        (specql/update! db
+                        ::kohde/kohde<->urakka
+                        (merge
+                          (if poistettu?
+                            {::m/poistaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)
+                             }
+
+                            {::m/muokkaaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)
+                             })
+                          {::m/poistettu? poistettu?})
+                        {::kohde/kohde-id kohde-id
+                         ::kohde/urakka-id urakka-id})
+
+        (specql/insert! db
+                        ::kohde/kohde<->urakka
+                        (merge
+                          {::m/luoja-id (:id user)}
+                          {::kohde/kohde-id kohde-id
+                           ::kohde/urakka-id urakka-id}))))))
