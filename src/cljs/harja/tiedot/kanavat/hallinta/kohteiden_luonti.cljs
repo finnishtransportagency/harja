@@ -302,10 +302,7 @@
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
     (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
     (-> app
-        (update :liittaminen-kaynnissa
-                (fn [kohde-ja-urakat]
-                  (when (kohde-ja-urakat kohde-id)
-                    (update kohde-ja-urakat kohde-id disj urakka-id))))))
+        (lopeta-liittaminen kohde-id urakka-id)))
 
   AsetaPoistettavaKohde
   (process-event [{kohde :kohde} app]
