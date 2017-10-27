@@ -471,7 +471,8 @@
                                                                                kohdenro
                                                                                (filter #(not= (:id %) liite-id)
                                                                                        (get @uudet-liitteet kohdenro))))))
-                                   :grid?                        true}])}]
+                                   :grid?                        true
+                                   :disabled? @k/yhteys-katkennut?}])}]
                     (muut-tarkastukset-sarakkeet muut-tarkastukset)))
             taulukon-rivit]
 

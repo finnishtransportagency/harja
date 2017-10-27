@@ -98,6 +98,27 @@
            (first (organisaatiot-q/hae-id-y-tunnuksella db ytunnus))
            (organisaatiot-q/luo-organisaatio<! db nil nimi ytunnus nil nil "urakoitsija")))))
 
+(defn hae-hallintayksikko [db ely-hash urakkatyyppi]
+  (:id
+    (first
+      (cond
+        ;; Kanavaurakat
+        (or (= urakkatyyppi "vesivayla-kanavien-hoito")
+            (= urakkatyyppi "vesivayla-kanavien-korjaus"))
+        (organisaatiot-q/hae-id-lyhenteella db "KAN")
+
+        ;; Meri- tai sisävesiväyläurakat
+        ;; Huom! Samposta ei tällä hetkellä saada tietoa onko kyseessä meri vais sisävesiväylä urakka
+        ;; Nämä urakat perustetaan pääasiallisesti Harjassa.
+        ;; Oletuksena kuitenkin palautetaan meriväylät, jos urakoita jostain syystä tulee Samposta.
+        (or (= urakkatyyppi "vesivayla-turvalaitteiden-korjaus")
+            (= urakkatyyppi "vesivayla-hoito")
+            (= urakkatyyppi "vesivayla-ruoppaus"))
+        (organisaatiot-q/hae-id-lyhenteella db "MV")
+
+        ;; Teiden hoidon ja ylläpidon urakat
+        :else (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))))
+
 (defn kasittele-urakka [db {:keys [viesti-id sampo-id nimi alkupvm loppupvm hanke-sampo-id yhteyshenkilo-sampo-id
                                    ely-hash alueurakkanro urakoitsijan-nimi urakoitsijan-ytunnus]}]
   (log/debug "Käsitellään urakka Sampo id:llä: " sampo-id)
@@ -109,7 +130,7 @@
             alueurakkanro (pudota-etunollat (:alueurakkanro tyyppi-ja-alueurakkanro))
             urakkatyyppi (urakkatyyppi/urakkatyyppi tyypit)
             sopimustyyppi (paattele-sopimustyyppi urakkatyyppi)
-            ely-id (:id (first (organisaatiot-q/hae-ely-id-sampo-hashilla db (merkkijono/leikkaa 5 ely-hash))))
+            ely-id (hae-hallintayksikko db ely-hash urakkatyyppi)
             urakka-id (tallenna-urakka db sampo-id nimi alkupvm loppupvm hanke-sampo-id alueurakkanro urakkatyyppi
                                        sopimustyyppi ely-id urakoitsija-id)]
         (log/debug (format "Käsiteltävän urakan id on: %s, tyyppi: %s, alueurakkanro: %s"
