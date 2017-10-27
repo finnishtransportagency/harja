@@ -254,8 +254,7 @@
       (julkaise-palvelu [_ nimi palvelu-fn]
         (swap! palvelut assoc nimi palvelu-fn))
       (julkaise-palvelu [_ nimi palvelu-fn optiot]
-        
-        (println (str "Julkaistaan palvelu " (pr-str nimi) " " (pr-str palvelu-fn) " " (pr-str optiot)))
+
         (swap! palvelut assoc nimi
                (wrap-validointi nimi palvelu-fn optiot)))
       (poista-palvelu [_ nimi]
@@ -264,9 +263,7 @@
       FeikkiHttpPalveluKutsu
       (kutsu-palvelua [_ nimi kayttaja]
         (if-let [palvelu (get @palvelut nimi)]
-          (do
-            (println "kutsutaan palvelua ")
-            (palvelu kayttaja))
+          (palvelu kayttaja)
           (palvelua-ei-loydy nimi)))
       (kutsu-palvelua [_ nimi kayttaja payload]
         (if-let [palvelu (get @palvelut nimi)]
