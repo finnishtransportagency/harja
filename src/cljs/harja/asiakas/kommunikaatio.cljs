@@ -187,10 +187,18 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
                                 :viesti (if (= txt "Virus havaittu")
                                           txt
                                           "tiedostotyyppi ei ole sallittu")}))
+                0 (kasittele-yhteyskatkos :tallenna-liite (.-responseText request))
                 (do
                   (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
                   (put! ch {:error :liitteen-lahetys-epaonnistui})))
               (close! ch))))
+
+    (set! (.-onerror xhr)
+          (fn [event]
+            (let [request (.-target event)]
+              (let [txt (.-responseText request)]
+                (log "Liitelähetys epäonnistui: " txt)
+                (put! ch {:error :liitteen-lahetys-epaonnistui})))))
 
     (set! (.-onprogress siirto)
           (fn [e]
