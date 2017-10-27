@@ -220,7 +220,7 @@
             yllapito-pvm-fmt (fn [arvo]
                                (pvm/pvm-opt arvo {:nayta-vuosi-fn #(not= (pvm/vuosi %) vuosi)}))]
         [:div.aikataulu
- s
+
          [valinnat ur]
 
 
@@ -230,10 +230,7 @@
                         (tallenna-aikataulu
                           urakka-id sopimus-id vuosi
                           (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %)
-                          )
-                        )
-             ;; MAARIT: Tänne kaivataan käsittely, ettei tulis virhettä konsoliin. Lisäksi ois kiva viestiä käyttäjälle jotaki
-             ;; Miksi tallenna-aikataulu on näkymässä ja raahauksessa päivitetyt aikataulurivit tiedoissa
+                          ))
                         }
             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
                  aikataulurivit)])

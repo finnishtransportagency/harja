@@ -76,20 +76,22 @@
             loppu-avain loppu))))
     aikataulurivit))
 
-;; Mietipä tämä homma käytä raahauksessa päivitettyjä aikataulurivejä
+
+
 (defn aikataulun-alku-ja-loppu-validi?
-  "Tarkistaa että aikajanan toimenpiteen (esim. päällystys tai tiemerkintä) uusi päivämäärävalinta on validi.
-  Toimenpide ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen."
+  "Tarkistaa että aikajanan päällystystoimenpiteen uusi päivämäärävalinta on validi.
+  Toimenpide ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen.
+  Ei tarkista tiemerkintään liittyviä rajoituksia."
   [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
   (first(keep
           (fn [{id :id :as aikataulurivi}]
-            (when (= id (first drag))
-              (println "HIPHIPHIPHIPHIPHIPHIHIP" aikataulurivit)
-              (println "HIPHIPHIPHIPHIPHIPHIHIP" aikataulurivit %)
-              (let [kohde-alku (get aikataulurivi :aikataulu-kohde-alku)
+            (println "111 " (first drag))
+            (if (and (= id (first drag)) (= :paallystys (second drag)))
+               (let [kohde-alku (get aikataulurivi :aikataulu-kohde-alku)
                     kohde-loppu (get aikataulurivi :aikataulu-kohde-valmis)]
+                (println "Kohdealku" kohde-alku)
                 (and (pvm/sama-tai-jalkeen? alku kohde-alku)
                      (pvm/sama-tai-ennen? loppu kohde-loppu))
                 )
-              )
-            ) aikataulurivit )))
+              true )
+              ) aikataulurivit )))
