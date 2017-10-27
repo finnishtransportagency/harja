@@ -129,8 +129,7 @@
                            (e! (tiedot/->SuljeKohdeLomake))))
 
     (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki?
-                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde
-                    liittaminen-kaynnissa] :as app}]
+                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde] :as app}]
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
@@ -146,8 +145,10 @@
            :tyhja (if kohteiden-haku-kaynnissa?
                     [ajax-loader "Haetaan kohteita"]
                     "Ei perustettuja kohteita")}
-          [{:otsikko "Kanava, kohde, ja kohteen tyyppi" :nimi :rivin-teksti}
+          [{:otsikko "Kanava, kohde, ja kohteen tyyppi" :nimi :rivin-teksti
+            :leveys 4}
            {:otsikko "Poista"
+            :leveys 1
             :tyyppi :komponentti
             :tasaa :keskita
             :komponentti (fn [kohde]
@@ -164,9 +165,11 @@
              {:otsikko "Urakat"
               :tyyppi :string
               :nimi :kohteen-urakat
+              :leveys 6
               :hae tiedot/kohteen-urakat}
 
              {:otsikko "Kuuluu urakkaan?"
+              :leveys 6
               :tyyppi :komponentti
               :tasaa :keskita
               :nimi :valinta
@@ -174,8 +177,7 @@
                                                                          (not (:valittu? rivi))
                                                                          valittu-urakka)))
               :komponentti (fn [rivi]
-                             (if (get-in liittaminen-kaynnissa [(::kohde/id rivi)
-                                                                (::ur/id valittu-urakka)])
+                             (if (tiedot/liittaminen-kaynnissa? app rivi)
                                [ajax-loader-pieni]
 
                                [kentat/tee-kentta
