@@ -5,7 +5,8 @@
 
             [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.muokkaustiedot :as m]))
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.urakka :as ur]))
 
 (deftest kohderivit
   (is (= [{::kohde/id 1
@@ -106,6 +107,142 @@
                        :id 2
                        ::kohde/kanava-id 1
                        ::kohde/tyyppi :sulku}]}))))
+
+(deftest kohteen-urakat
+  (is (= "A, B, C"
+         (tiedot/kohteen-urakat
+           {::kohde/urakat [{::ur/nimi "B"}
+                            {::ur/nimi "C"}
+                            {::ur/nimi "A"}]}))))
+
+(deftest kohteen-kuuluminen-urakkaan
+  (is (true?
+        (tiedot/kohde-kuuluu-urakkaan?
+          {::kohde/urakat [{:foo :bar}
+                           {:id 1}]}
+          {:foo :bar})))
+
+  (is (false?
+        (tiedot/kohde-kuuluu-urakkaan?
+          {::kohde/urakat [{:foo :bar}
+                           {:id 1}]}
+          {:foo :baz})))
+
+  (is (false?
+        (tiedot/kohde-kuuluu-urakkaan?
+          {::kohde/urakat []}
+          {:foo :bar}))))
+
+(deftest poista-kohde-kohteista
+  (is (= [{:id 1}
+          {:id 3}]
+         (tiedot/poista-kohde
+           [{:id 1}
+            {:id 2}
+            {:id 3}]
+           {:id 2}))))
+
+(deftest liittaminen-kaynnissa?
+  (is (true?
+        (tiedot/liittaminen-kaynnissa?
+          {:liittaminen-kaynnissa {1 #{1 2 3}}
+           :valittu-urakka 3}
+          1)))
+
+  (is (false?
+        (tiedot/liittaminen-kaynnissa?
+          {:liittaminen-kaynnissa {1 #{1 2 3}}
+           :valittu-urakka 4}
+          1)))
+
+  (is (false?
+        (tiedot/liittaminen-kaynnissa?
+          {:liittaminen-kaynnissa {1 #{1 2 3}}
+           :valittu-urakka 3}
+          2)))
+
+  (is (false?
+        (tiedot/liittaminen-kaynnissa?
+          {:liittaminen-kaynnissa {}
+           :valittu-urakka 3}
+          2))))
+
+(deftest urakan-lisaaminen-kohteeseen
+  (is (= {:kohderivit [{::kohde/id 1
+                        ::kohde/urakat [{:id 1}]}]}
+         (tiedot/lisaa-kohteelle-urakka
+           {:kohderivit [{::kohde/id 1
+                          ::kohde/urakat []}]}
+           {::kohde/id 1}
+           {:id 1}
+           true)))
+
+  (is (= {:kohderivit [{::kohde/id 1
+                        ::kohde/urakat [{:id 1}
+                                        {:id 2}]}]}
+         (tiedot/lisaa-kohteelle-urakka
+           {:kohderivit [{::kohde/id 1
+                          ::kohde/urakat [{:id 1}]}]}
+           {::kohde/id 1}
+           {:id 2}
+           true)))
+
+  (is (= {:kohderivit [{::kohde/id 1
+                        ::kohde/urakat []}]}
+         (tiedot/lisaa-kohteelle-urakka
+           {:kohderivit [{::kohde/id 1
+                          ::kohde/urakat [{:id 1}]}]}
+           {::kohde/id 1}
+           {:id 1}
+           false)))
+
+  (is (= {:kohderivit [{::kohde/id 1
+                        ::kohde/urakat [{:id 1}]}]}
+         (tiedot/lisaa-kohteelle-urakka
+           {:kohderivit [{::kohde/id 1
+                          ::kohde/urakat [{:id 1}]}]}
+           {::kohde/id 2}
+           {:id 1}
+           false))))
+
+(deftest kaynnista-liittaminen
+  (is (= {:liittaminen-kaynnissa {1 #{1 2}}}
+         (tiedot/liittaminen-kayntiin
+           {:liittaminen-kaynnissa {1 #{1}}}
+           1
+           2)))
+
+  (is (= {:liittaminen-kaynnissa {1 #{1}
+                                  2 #{2}}}
+         (tiedot/liittaminen-kayntiin
+           {:liittaminen-kaynnissa {1 #{1}}}
+           2
+           2)))
+
+  (is (= {:liittaminen-kaynnissa {1 #{1 2}}}
+         (tiedot/liittaminen-kayntiin
+           {:liittaminen-kaynnissa {1 #{1 2}}}
+           1
+           2)))
+
+  (is (= {:liittaminen-kaynnissa {1 #{2}}}
+         (tiedot/liittaminen-kayntiin
+           {:liittaminen-kaynnissa {}}
+           1
+           2))))
+
+(deftest lopeta-liittaminen
+  (is (= {{:liittaminen-kaynnissa {1 #{1}}}}
+         (tiedot/lopeta-liittaminen
+           {:liittaminen-kaynnissa {1 #{1 2}}}
+           1
+           2)))
+
+  (is (= {{:liittaminen-kaynnissa {1 #{1}}}}
+         (tiedot/lopeta-liittaminen
+           {:liittaminen-kaynnissa {1 #{1}}}
+           1
+           2))))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
@@ -240,3 +377,83 @@
 (deftest kohteet-ei-tallennettu
   (is (= {:kohteiden-tallennus-kaynnissa? false}
          (e! (tiedot/->KohteetEiTallennettu {})))))
+
+(deftest aloita-haku
+  (vaadi-async-kutsut
+    #{tiedot/->UrakatHaettu tiedot/->UrakatEiHaettu}
+
+    (is (= {:urakoiden-haku-kaynnissa? true}
+           (e! (tiedot/->AloitaUrakoidenHaku))))))
+
+(deftest urakat-haettu
+  (is (= {:urakoiden-haku-kaynnissa? false
+          :urakat [{::ur/nimi "Foo" ::ur/id 1}
+                   {::ur/nimi "Bar" ::ur/id 2}]}
+         (e! (tiedot/->UrakatHaettu
+               [{:id 1 :nimi "Foo"}
+                {:id 2 :nimi "Bar"}])))))
+
+(deftest urakat-ei-haettu
+  (is (= {:urakoiden-haku-kaynnissa? false}
+         (e! (tiedot/->UrakatEiHaettu :virhe)))))
+
+(deftest urakan-valinta
+  (is (= {:valittu-urakka {:foo :bar}}
+         (e! (tiedot/->ValitseUrakka {:foo :bar})))))
+
+(deftest kohteen-liittaminen-urakkaan
+  (vaadi-async-kutsut
+    #{tiedot/->KohdeLiitetty tiedot/->KohdeEiLiitetty}
+    (is (= {:liittaminen-kaynnissa {1 #{1}}
+            :kohderivit [{::kohde/id 1
+                          ::kohde/urakat [{::ur/id 1}]}]}
+           (e! (tiedot/->LiitaKohdeUrakkaan
+                 {::kohde/id 1}
+                 true
+                 {::ur/id 1}))))))
+
+(deftest kohde-liitetty
+  (is (= {:liittaminen-kaynnissa {}
+          :kohderivit [{::kohde/id 1
+                        ::kohde/urakat [{::ur/id 1}]}]}
+         (e! (tiedot/->KohdeLiitetty
+               :turha-tulos
+               1
+               1)
+             {:liittaminen-kaynnissa {1 #{1}}
+              :kohderivit [{::kohde/id 1
+                            ::kohde/urakat [{::ur/id 1}]}]}))))
+
+(deftest kohde-ei-liitetty
+  (is (= {:liittaminen-kaynnissa {}
+          :kohderivit [{::kohde/id 1
+                        ::kohde/urakat [{::ur/id 1}]}]}
+         (e! (tiedot/->KohdeEiLiitetty
+               :turha-tulos
+               1
+               1)
+             {:liittaminen-kaynnissa {1 #{1}}
+              :kohderivit [{::kohde/id 1
+                            ::kohde/urakat [{::ur/id 1}]}]}))))
+
+(deftest aloita-poistaminen
+  (is (= {:poistettava-kohde 1}
+         (e! (tiedot/->AsetaPoistettavaKohde 1)))))
+
+(deftest poista-kohde
+  (vaadi-async-kutsut
+    #{tiedot/->KohdePoistettu tiedot/->KohdeEiPoistettu}
+    (is (= {:kohderivit [{::kohde/id 2}]
+            :poistaminen-kaynnissa? true}
+           (e! (tiedot/->PoistaKohde {::kohde/id 1})
+               {:kohderivit [{::kohde/id 1}
+                             {::kohde/id 2}]})))))
+
+(deftest poistettu
+  (is (= {:poistaminen-kaynnissa? false
+          :poistettava-kohde nil}
+         (e! (tiedot/->KohdePoistettu {})))))
+
+(deftest ei-poistettu
+  (is (= {:poistaminen-kaynnissa? false}
+         (e! (tiedot/->KohdeEiPoistettu {})))))
