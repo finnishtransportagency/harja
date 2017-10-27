@@ -129,9 +129,9 @@
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
              (some? (:urakka-id valinnat)))
       (-> app
-          (tuck-tyokalut/palvelukutsu :hae-kokonaishintaiset-toimenpiteet
-                                      (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
-                                      {:onnistui ->ToimenpiteetHaettu
+          (tuck-tyokalut/post! :hae-kokonaishintaiset-toimenpiteet
+                               (jaettu/toimenpiteiden-hakukyselyn-argumentit valinnat)
+                               {:onnistui ->ToimenpiteetHaettu
                                        :epaonnistui ->ToimenpiteetEiHaettu})
           (assoc :toimenpiteiden-haku-kaynnissa? true))
       app))
@@ -154,10 +154,10 @@
   (process-event [_ app]
     (if-not (:kiintioiden-haku-kaynnissa? app)
       (-> app
-          (tuck-tyokalut/palvelukutsu :hae-kiintiot
-                                      {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
+          (tuck-tyokalut/post! :hae-kiintiot
+                               {::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::kiintio/sopimus-id (get-in app [:valinnat :sopimus-id])}
-                                      {:onnistui ->KiintiotHaettu
+                               {:onnistui ->KiintiotHaettu
                                        :epaonnistui ->KiintiotEiHaettu})
           (assoc :kiintioiden-haku-kaynnissa? true))
       app))
@@ -180,11 +180,11 @@
   (process-event [_ app]
     (if-not (:kiintioon-liittaminen-kaynnissa? app)
       (-> app
-          (tuck-tyokalut/palvelukutsu :liita-toimenpiteet-kiintioon
-                                      {::kiintio/id (:valittu-kiintio-id app)
+          (tuck-tyokalut/post! :liita-toimenpiteet-kiintioon
+                               {::kiintio/id (:valittu-kiintio-id app)
                                        ::kiintio/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::to/idt (map ::to/id (jaettu/valitut-toimenpiteet (:toimenpiteet app)))}
-                                      {:onnistui ->ToimenpiteetLiitettyKiintioon
+                               {:onnistui ->ToimenpiteetLiitettyKiintioon
                                        :epaonnistui ->ToimenpiteetEiLiitettyKiintioon})
           (assoc :kiintioon-liittaminen-kaynnissa? true))
       app))

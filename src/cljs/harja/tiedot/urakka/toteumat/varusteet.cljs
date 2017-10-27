@@ -230,13 +230,13 @@
   (process-event [_ {valinnat :valinnat :as app}]
     (let [{:keys [urakka-id sopimus-id aikavali tienumero]} valinnat]
       (-> app
-          (tuck-tyokalut/palvelukutsu :urakan-varustetoteumat
-                                      {:urakka-id urakka-id
+          (tuck-tyokalut/post! :urakan-varustetoteumat
+                               {:urakka-id urakka-id
                                        :sopimus-id sopimus-id
                                        :alkupvm (first aikavali)
                                        :loppupvm (second aikavali)
                                        :tienumero tienumero}
-                                      {:onnistui v/->VarusteToteumatHaettu
+                               {:onnistui v/->VarusteToteumatHaettu
                                        :epaonnistui (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe")})
           (assoc :toteumahaku-id nil))))
 

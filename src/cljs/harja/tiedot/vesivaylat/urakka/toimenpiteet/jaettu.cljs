@@ -136,10 +136,10 @@
       (paivita-kartta)))
 
 (defn siirra-valitut! [palvelu app]
-  (tuck-tyokalut/palvelukutsu palvelu
-                              {::to/urakka-id (get-in app [:valinnat :urakka-id])
+  (tuck-tyokalut/post! palvelu
+                       {::to/urakka-id (get-in app [:valinnat :urakka-id])
                                ::to/idt (set (map ::to/id (valitut-toimenpiteet (:toimenpiteet app))))}
-                              {:onnistui ->ToimenpiteetSiirretty
+                       {:onnistui ->ToimenpiteetSiirretty
                                :epaonnistui ->ToimenpiteetEiSiirretty})
   (assoc app :siirto-kaynnissa? true))
 
@@ -212,11 +212,11 @@
   LisaaToimenpiteelleLiite
   (process-event [{tiedot :tiedot} app]
     (if (not (:liitteen-lisays-kaynnissa? app))
-      (do (tuck-tyokalut/palvelukutsu :lisaa-toimenpiteelle-liite
-                                      {::to/urakka-id (get-in app [:valinnat :urakka-id])
+      (do (tuck-tyokalut/post! :lisaa-toimenpiteelle-liite
+                               {::to/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::to/liite-id (get-in tiedot [:liite :id])
                                        ::to/id (::to/id tiedot)}
-                                      {:onnistui ->LiiteLisatty
+                               {:onnistui ->LiiteLisatty
                                        :onnistui-parametrit [tiedot]
                                        :epaonnistui ->LiiteEiLisatty})
           (assoc app :liitteen-lisays-kaynnissa? true))
@@ -242,11 +242,11 @@
   PoistaToimenpiteenLiite
   (process-event [{tiedot :tiedot} app]
     (if (not (:liitteen-poisto-kaynnissa? app))
-      (do (tuck-tyokalut/palvelukutsu :poista-toimenpiteen-liite
-                                      {::to/urakka-id (get-in app [:valinnat :urakka-id])
+      (do (tuck-tyokalut/post! :poista-toimenpiteen-liite
+                               {::to/urakka-id (get-in app [:valinnat :urakka-id])
                                        ::to/liite-id (::to/liite-id tiedot)
                                        ::to/id (::to/id tiedot)}
-                                      {:onnistui ->LiitePoistettu
+                               {:onnistui ->LiitePoistettu
                                        :onnistui-parametrit [tiedot]
                                        :epaonnistui ->LiiteEiPoistettu})
           (assoc app :liitteen-poisto-kaynnissa? true))
@@ -273,9 +273,9 @@
   (process-event [{to :toimenpiteet} app]
     (if (not-empty to)
       (let [haettavat (into #{} (map (comp ::tu/turvalaitenro ::to/turvalaite) to))]
-       (tuck-tyokalut/palvelukutsu :hae-turvalaitteet-kartalle
-                                   {:turvalaitenumerot haettavat}
-                                   {:onnistui ->TurvalaitteetKartalleHaettu
+       (tuck-tyokalut/post! :hae-turvalaitteet-kartalle
+                            {:turvalaitenumerot haettavat}
+                            {:onnistui ->TurvalaitteetKartalleHaettu
                                     :onnistui-parametrit [haettavat]
                                     :epaonnistui ->TurvalaitteetKartalleEiHaettu
                                     :epaonnistui-parametrit [haettavat]})
