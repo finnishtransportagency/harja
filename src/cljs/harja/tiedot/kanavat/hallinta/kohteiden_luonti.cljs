@@ -1,7 +1,7 @@
 (ns harja.tiedot.kanavat.hallinta.kohteiden-luonti
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
-            [cljs.core.async :as async]
+            [cljs.core.async :as async :refer [<!]]
             [clojure.set :as set]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
@@ -9,18 +9,23 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tt]
+            [namespacefy.core :refer [namespacefy]]
 
             [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.muokkaustiedot :as m])
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.urakka :as ur]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tila (atom {:nakymassa? false
                  :kohteiden-haku-kaynnissa? false
+                 :urakoiden-haku-kaynnissa? false
                  :kohdelomake-auki? false
                  :kohderivit nil
                  :kanavat nil
-                 :lomakkeen-tiedot nil}))
+                 :lomakkeen-tiedot nil
+                 :valittu-urakka nil}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeKohteet [])
@@ -33,6 +38,32 @@
 (defrecord TallennaKohteet [])
 (defrecord KohteetTallennettu [tulos])
 (defrecord KohteetEiTallennettu [virhe])
+(defrecord AloitaUrakoidenHaku [])
+(defrecord UrakatHaettu [urakat])
+(defrecord UrakatEiHaettu [virhe])
+(defrecord ValitseUrakka [urakka])
+(defrecord LiitaKohdeUrakkaan [kohde liita? urakka])
+(defrecord KohdeLiitetty [tulos])
+(defrecord KohdeEiLiitetty [virhe])
+
+(defn hae-kanava-urakat! [tulos! fail!]
+  (go
+    (let [vastaus (<! (k/post! :hallintayksikot
+                               {:liikennemuoto :vesi}))
+          hy-id (:id (some
+                       (fn [hy] (when (= (:nimi hy)
+                                         "Kanavat ja avattavat sillat")
+                                  hy))
+                       vastaus))]
+      (if (or (k/virhe? vastaus) (not hy-id))
+        (fail! vastaus)
+
+        (let [vastaus (<! (k/post! :hallintayksikon-urakat
+                                   hy-id))]
+          (if (k/virhe? vastaus)
+            (fail! vastaus)
+
+            (tulos! vastaus)))))))
 
 (defn kohderivit [tulos]
   (mapcat
@@ -58,11 +89,11 @@
 (defn kohteet-voi-tallentaa? [kohteet]
   (boolean
     (and (:kanava kohteet)
-        (not-empty (:kohteet kohteet))
-        (every?
-          (fn [kohde]
-            (and (::kohde/tyyppi kohde)))
-          (:kohteet kohteet)))))
+         (not-empty (:kohteet kohteet))
+         (every?
+           (fn [kohde]
+             (and (::kohde/tyyppi kohde)))
+           (:kohteet kohteet)))))
 
 (defn muokattavat-kohteet [app]
   (get-in app [:lomakkeen-tiedot :kohteet]))
@@ -81,6 +112,13 @@
                              ::kohde/tyyppi
                              ::m/poistettu?])))]
     params))
+
+(defn kohteen-urakat [kohde]
+  (str/join ", " (map ::ur/nimi (::kohde/urakat kohde))))
+
+(defn kohde-kuuluu-urakkaan? [kohde urakka]
+  (boolean
+    ((into #{} (::kohde/urakat kohde)) urakka)))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -151,7 +189,6 @@
 
   KohteetTallennettu
   (process-event [{tulos :tulos} app]
-    (log "Saatiin tulos" (pr-str tulos))
     (-> app
         (assoc :kohderivit (kohderivit tulos))
         (assoc :kanavat (kanavat tulos))
@@ -163,4 +200,67 @@
   (process-event [_ app]
     (viesti/nayta! "Kohteiden tallennus epäonnistui!" :danger)
     (-> app
-        (assoc :kohteiden-tallennus-kaynnissa? false))))
+        (assoc :kohteiden-tallennus-kaynnissa? false)))
+
+  AloitaUrakoidenHaku
+  (process-event [_ app]
+    (hae-kanava-urakat! (tuck/send-async! ->UrakatHaettu)
+                        (tuck/send-async! ->UrakatEiHaettu))
+    (assoc app :urakoiden-haku-kaynnissa? true))
+
+
+  UrakatHaettu
+  (process-event [{ur :urakat} app]
+    (-> app
+        (assoc :urakoiden-haku-kaynnissa? false)
+        (assoc :urakat (as-> ur $
+                           (map #(select-keys % [:id :nimi]) $)
+                           (namespacefy $ {:ns :harja.domain.urakka})))))
+
+  UrakatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe urakoiden haussa!" :danger)
+    (assoc app :urakoiden-haku-kaynnissa? false))
+
+  ValitseUrakka
+  (process-event [{ur :urakka} app]
+    (assoc app :valittu-urakka ur))
+
+  LiitaKohdeUrakkaan
+  (process-event [{uusi :kohde
+                   liita? :liita?
+                   urakka :urakka}
+                  app]
+
+    (tt/post! :liita-kohde-urakkaan
+              {:kohde-id (::kohde/id uusi)
+               :urakka-id (::ur/id urakka)
+               :poistettu? (not liita?)}
+              {:onnistui ->KohdeLiitetty
+               :epaonnistui ->KohdeEiLiitetty})
+
+    (update app :kohderivit
+            (fn [kohteet]
+              (map
+                (fn [kohde]
+                  (if (= (::kohde/id kohde) (::kohde/id uusi))
+                    (if liita?
+                      (update uusi ::kohde/urakat conj urakka)
+
+                      (update uusi ::kohde/urakat
+                              (fn [urakat]
+                                (into
+                                  []
+                                  (disj (into #{} urakat) urakka)))))
+
+                    kohde))
+                kohteet))))
+
+  KohdeLiitetty
+  (process-event [_ app]
+    app)
+
+  KohdeEiLiitetty
+  (process-event [_ app]
+    (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
+    app))
