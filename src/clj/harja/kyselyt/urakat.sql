@@ -67,7 +67,8 @@ SELECT
   u.tyyppi AS tyyppi,
   o.id     AS hallintayksikko_id,
   o.nimi   AS hallintayksikko_nimi,
-  o.elynumero AS hallintayksikko_elynumero
+  o.elynumero AS hallintayksikko_elynumero,
+  u.urakkanro AS urakka_urakkanro
 FROM urakka u
   JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE ((u.loppupvm >= :alku AND u.alkupvm <= :loppu) OR (u.loppupvm IS NULL AND u.alkupvm <= :loppu)) AND
@@ -328,7 +329,8 @@ SELECT
   u.tyyppi AS tyyppi,
   hy.id    AS hallintayksikko_id,
   hy.nimi  AS hallintayksikko_nimi,
-  hy.elynumero AS hallintayksikko_elynumero
+  hy.elynumero AS hallintayksikko_elynumero,
+  u.urakkanro AS urakka_urakkanro
 FROM urakka u
   JOIN organisaatio hy ON u.hallintayksikko = hy.id
 WHERE u.id IN (:id);

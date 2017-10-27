@@ -1,0 +1,2 @@
+ALTER TABLE vv_hinnoittelu
+  ALTER COLUMN luoja DROP NOT NULL;
