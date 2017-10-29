@@ -1,3 +1,5 @@
+ALTER TABLE yksikkohintainen_tyo ADD COLUMN arvioitu_kustannus NUMERIC;
+
 INSERT INTO toimenpidekoodi (nimi, taso, luotu, yksikko, suoritettavatehtava, hinnoittelu, emo)
 VALUES ('Raskaat poijutyöt (ei sis. mat): Jääpoiju – poijun vaihto', 4, now(), NULL, NULL,
         '{kokonaishintainen,yksikkohintainen,muutoshintainen}', (SELECT id

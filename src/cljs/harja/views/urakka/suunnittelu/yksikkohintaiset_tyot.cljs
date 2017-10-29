@@ -82,7 +82,7 @@
    {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
     :fmt fmt/euro-opt :leveys 1}
    {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 1}
-   {:otsikko "Arvioitu kustan\u00ADnus/v" :nimi :arvioitu-kustannus :tasaa :oikea :tyyppi :numero
+   {:otsikko "Arvioitu kustan\u00ADnus/v" :nimi :arvioitu_kustannus :tasaa :oikea :tyyppi :numero
     :fmt fmt/euro-opt :leveys 1}])
 
 ;; Ylläpidon sarakkeet
