@@ -77,6 +77,14 @@
    {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
     :fmt fmt/euro-opt :leveys 1}])
 
+(defmethod urakkatyypin-sarakkeet :vesivayla-kanavien-hoito [_]
+  [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys 4}
+   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
+    :fmt fmt/euro-opt :leveys 1}
+   {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 1}
+   {:otsikko "Arvioitu kustan\u00ADnus/v" :nimi :arvioitu-kustannus :tasaa :oikea :tyyppi :numero
+    :fmt fmt/euro-opt :leveys 1}])
+
 ;; Ylläpidon sarakkeet
 (defmethod urakkatyypin-sarakkeet :default [_]
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
