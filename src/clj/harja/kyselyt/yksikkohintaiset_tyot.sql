@@ -10,6 +10,7 @@ SELECT
   yt.tehtava,
   yt.urakka,
   yt.sopimus,
+  yt.arvioitu_kustannus,
   tk.id   AS tehtavan_id,
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
