@@ -128,8 +128,8 @@
 (defn- suodattimet [urakka]
   [valinnat/urakkavalinnat {:urakka urakka}
    (with-meta
-     (if (urakka-domain/vesivaylaurakka? urakka)
-       [u-valinnat/urakan-sopimus-ja-hoitokausi urakka]
+     (case (urakka-domain/urakkatyyppi urakka)
+       :vv [u-valinnat/urakan-sopimus-ja-hoitokausi urakka]
        [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut urakka])
      {:key "valinnat"})])
 
