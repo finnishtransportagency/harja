@@ -52,25 +52,6 @@
 (defn oikeus-varusteiden-muokkaamiseen? []
   (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-varusteet (:id @nav/valittu-urakka)))
 
-(defn varustetoteuman-tehtavat [toteumat toteuma]
-  (let [toteumatehtavat (:toteumatehtavat toteuma)]
-    [grid/grid
-     {:otsikko "Tehtävät"
-      :tyhja (if (nil? toteumat)
-               [ajax-loader "Haetaan tehtäviä..."]
-               "Tehtäviä  ei löytynyt")
-      :tunniste :id}
-     [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :leveys 1}
-      {:otsikko "Tyyppi" :nimi :toteumatyyppi :tyyppi :string :leveys 1 :hae (fn [_] (name (:toteumatyyppi toteuma)))}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :string :leveys 1}
-      (when (= (:toteumatyyppi toteuma) :yksikkohintainen)
-        {:otsikko "Toteuma" :nimi :linkki-toteumaan :tyyppi :komponentti :leveys 1
-         :komponentti (fn []
-                        [:button.nappi-toissijainen.nappi-grid
-                         {:on-click #(yksikkohintaiset-tyot/nayta-toteuma-lomakkeessa @nav/valittu-urakka-id (:toteumaid toteuma))}
-                         (ikonit/eye-open) " Toteuma"])})]
-     toteumatehtavat]))
-
 (defn varustekortti-linkki [{:keys [alkupvm tietolaji tunniste]}]
   (when (and tietolaji tunniste)
     (let [url (kommunikaatio/varustekortti-url alkupvm tietolaji tunniste)]
@@ -89,14 +70,7 @@
     {:otsikko "Varustetoteumat"
      :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
      :tunniste :id
-     :rivi-klikattu #(e! (v/->ValitseToteuma %))
-     :vetolaatikot (zipmap
-                     (range)
-                     (map
-                       (fn [toteuma]
-                         (when (:toteumatehtavat toteuma)
-                           [varustetoteuman-tehtavat toteumat toteuma]))
-                       toteumat))}
+     :rivi-klikattu #(e! (v/->ValitseToteuma %))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}
      {:otsikko "Tehty" :tyyppi :pvm :fmt pvm/pvm-aika :nimi :luotu :leveys 10}
      {:otsikko "Tekijä" :tyyppi :string :nimi :tekija :hae #(str (:luojan-etunimi %) " " (:luojan-sukunimi %)) :leveys 10}
@@ -250,13 +224,22 @@
        :tyyppi :string
        :muokattava? (constantly muokattava?)})))
 
-(defn varusteen-ominaisuudet [muokattava? ominaisuudet]
+(defn varusteen-ominaisuudet [muokattava? ominaisuudet arvot]
   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
     (let [poista-tunniste-fn (fn [o] (filter #(not (= "tunniste" (get-in % [:ominaisuus :kenttatunniste]))) o))
           ominaisuudet (if muokattava?
                          (poista-tunniste-fn ominaisuudet)
-                         ominaisuudet)]
-      (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet)))))
+                         ominaisuudet)
+          virheet (:virhe arvot)]
+      (if (empty? virheet)
+        (apply lomake/ryhma "Varusteen ominaisuudet" (map #(varusteominaisuus->skeema % muokattava?) ominaisuudet))
+        (lomake/ryhma
+          "Varusteen ominaisuudet"
+          {:otsikko "Varusteen ominaisuuksia ei voida lukea." :nimi :virhe
+           :hae (constantly (str (:viesti (first virheet))))
+           :muokattava? (constantly false)
+           :tyyppi :string
+           :palstoja 2})))))
 
 
 (defn varusteen-liitteet [e! muokattava? varustetoteuma]
@@ -270,6 +253,8 @@
                                                #(e! (v/->LisaaLiitetiedosto %))))
                     :uusi-liite-teksti "Lisää liite varustetoteumaan"}])})
 
+(def tietolajien-sisaltojen-kuvaukset-url "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
+
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
   (let [muokattava? (:muokattava? varustetoteuma)
         ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
@@ -278,7 +263,7 @@
       #(e! (v/->TyhjennaValittuToteuma))]
 
      [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-      [:a {:href "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c"
+      [:a {:href tietolajien-sisaltojen-kuvaukset-url
            :target "_blank"}
        "Tietolajien sisältöjen kuvaukset"]]
      [lomake/lomake
@@ -303,7 +288,7 @@
                          :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
       [(varustetoteuman-tiedot muokattava? varustetoteuma)
        (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteen-ominaisuudet muokattava? ominaisuudet)
+       (varusteen-ominaisuudet muokattava? ominaisuudet (:arvot varustetoteuma))
        (varusteen-liitteet e! muokattava? varustetoteuma)]
       varustetoteuma]]))
 
@@ -339,36 +324,32 @@
                     (e! (v/->YhdistaValinnat uusi))))
     (komp/kuuntelija :varustetoteuma-klikattu
                      (fn [_ i] (e! (v/->ValitseToteuma i))))
-    (komp/sisaan-ulos #(do
-                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (kartta-tiedot/kasittele-infopaneelin-linkit!
-                           {:varustetoteuma {:toiminto (fn [klikattu-varustetoteuma]
-                                                         (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
-                                             :teksti "Valitse varustetoteuma"}
-                            :varuste [{:teksti "Tarkasta"
-                                       :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
-                                                   (if (tierekisteri-varusteet/tarkastaminen-sallittu? tietolajin-tunniste)
-                                                     (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji))
-                                                     (viesti/nayta! "Tarkastaminen ei ole sallittu kyseiselle varustetyypille"
-                                                                    :warning
-                                                                    viesti/viestin-nayttoaika-keskipitka)))}
-                                      {:teksti "Muokkaa"
-                                       :toiminto (fn [{:keys [tunniste tietolajin-tunniste]}]
-                                                   (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
-                                                     (e! (tv/->AloitaVarusteenMuokkaus tunniste))
-                                                     (viesti/nayta! "Muokkaaminen ei ole sallittu kyseiselle varustetyypille"
-                                                                    :warning
-                                                                    viesti/viestin-nayttoaika-keskipitka)))}
-                                      {:teksti "Poista"
-                                       :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
-                                                   (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
-                                                     (view/poista-varuste e! tietolaji tunniste)
-                                                     (viesti/nayta! "Poistaminen ei ole sallittu kyseiselle varustetyypille"
-                                                                    :warning
-                                                                    viesti/viestin-nayttoaika-keskipitka)))}]})
-                         (nav/vaihda-kartan-koko! :M))
-                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
+    (komp/sisaan-ulos #(kartta-tiedot/kasittele-infopaneelin-linkit!
+                         {:varustetoteuma {:toiminto (fn [klikattu-varustetoteuma]
+                                                       (e! (v/->ValitseToteuma klikattu-varustetoteuma)))
+                                           :teksti "Valitse varustetoteuma"}
+                          :varuste [{:teksti "Tarkasta"
+                                     :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
+                                                 (if (tierekisteri-varusteet/tarkastaminen-sallittu? tietolajin-tunniste)
+                                                   (e! (tv/->AloitaVarusteenTarkastus tunniste tietolaji))
+                                                   (viesti/nayta! "Tarkastaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                  :warning
+                                                                  viesti/viestin-nayttoaika-keskipitka)))}
+                                    {:teksti "Muokkaa"
+                                     :toiminto (fn [{:keys [tunniste tietolajin-tunniste]}]
+                                                 (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
+                                                   (e! (tv/->AloitaVarusteenMuokkaus tunniste))
+                                                   (viesti/nayta! "Muokkaaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                  :warning
+                                                                  viesti/viestin-nayttoaika-keskipitka)))}
+                                    {:teksti "Poista"
+                                     :toiminto (fn [{:keys [tunniste tietolaji tietolajin-tunniste]}]
+                                                 (if (tierekisteri-varusteet/muokkaaminen-sallittu? tietolajin-tunniste)
+                                                   (view/poista-varuste e! tietolaji tunniste)
+                                                   (viesti/nayta! "Poistaminen ei ole sallittu kyseiselle varustetyypille"
+                                                                  :warning
+                                                                  viesti/viestin-nayttoaika-keskipitka)))}]})
+                      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (fn [e! {nykyiset-valinnat :valinnat
              naytettavat-toteumat :naytettavat-toteumat
              varustetoteuma :varustetoteuma
