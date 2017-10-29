@@ -416,6 +416,12 @@
                    WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vantaan urakan testihinnoittelu')
                    LIMIT 1;"))))
 
+(defn hae-annetun-urakan-paasopimuksen-id [urakka]
+  (ffirst (q (str "SELECT id
+                   FROM sopimus
+                   WHERE urakka=" urakka " AND
+                         paasopimus IS NULL"))))
+
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
