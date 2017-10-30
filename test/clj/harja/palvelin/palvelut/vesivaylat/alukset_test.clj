@@ -41,7 +41,6 @@
 (deftest hae-urakoitsijan-alukset
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
-        urakoitsijan-urakat (hae-urakoitsijan-urakka-idt urakoitsija-id)
         args {::alus/urakoitsija-id urakoitsija-id
               ::urakka/id urakka-id}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -54,10 +53,12 @@
     (is (some #(= (::alus/nimi %) "Rohmu") tulos))))
 
 (deftest hae-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-urakoitsijan-alukset +kayttaja-ulle+
-                                           {::organisaatio/id urakoitsija-id})))))
+                                           {::alus/urakoitsija-id urakoitsija-id
+                                            ::urakka/id urakka-id})))))
 
 (deftest tallenna-urakan-alukset
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
@@ -103,12 +104,6 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-urakan-alukset +kayttaja-ulle+
                                            args)))))
-
-(deftest hae-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
-    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-urakoitsijan-alukset +kayttaja-ulle+
-                                           {::organisaatio/id urakoitsija-id})))))
 
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
