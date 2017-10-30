@@ -103,7 +103,6 @@
          ::m/luoja-id (:id user)}))))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Testi tälle uudelle palvelulle (myös oikeustarkistukselle)
   (let [urakka-id (::urakka/id tiedot)
         urakoitsija-id (::alus/urakoitsija-id tiedot)
         alukset (::alus/tallennettavat-alukset tiedot)]

@@ -105,6 +105,17 @@
                                            :tallenna-urakoitsijan-alukset +kayttaja-ulle+
                                            args)))))
 
+(deftest tallenna-urakoitsijan-alukset-vaaraan-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        uudet-alukset []
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-urakoitsijan-alukset +kayttaja-jvh+
+                                           args)))))
+
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
