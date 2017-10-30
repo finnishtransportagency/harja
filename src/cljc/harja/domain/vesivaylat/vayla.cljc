@@ -9,7 +9,8 @@
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]]))
+        :cljs [[specql.impl.registry]])
+    [harja.domain.muokkaustiedot :as m])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -19,7 +20,8 @@
     "nimi" ::r-nimi
     "ryhma" ::r-tyhma}]
   ["vv_vaylatyyppi" ::vaylatyyppi (specql.transform/transform (specql.transform/to-keyword))]
-  ["vv_vayla" ::vayla 
+  ["vv_vayla" ::vayla
+   m/poistettu?-sarake
      #_{::turvalaitteet (specql.rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)}])
 
 (def tyypit (s/describe ::tyyppi))
