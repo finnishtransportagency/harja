@@ -57,3 +57,7 @@
                      :opt [::kohde/nimi ::m/poistettu?])))
 
 (s/def ::lisaa-kanavalle-kohteita-vastaus ::hae-kanavat-ja-kohteet-vastaus)
+
+(s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id ::kohde-id ::poistettu?]))
+
+(s/def ::poista-kohde-kysely (s/keys :req-un [::kohde-id]))
