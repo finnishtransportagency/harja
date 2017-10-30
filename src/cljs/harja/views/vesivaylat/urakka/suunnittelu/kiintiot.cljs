@@ -20,7 +20,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
@@ -94,11 +95,6 @@
          :tallenna (when
                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                (:id @nav/valittu-urakka))
-                     (fn [sisalto]
-                       (let [ch (chan)]
-                         (e! (tiedot/->TallennaKiintiot sisalto ch))
-                         (go (<! ch))))
-
                      (fn [sisalto]
                        (apurit/e-kanavalla! tiedot/->TallennaKiintiot sisalto)))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")

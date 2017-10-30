@@ -34,3 +34,12 @@
    (post! nil palvelu argumentit optiot))
   ([app palvelu argumentit optiot]
    (palvelukutsu* app palvelu argumentit optiot)))
+
+(defn e-paluukanavalla!
+  "Antaa paluukanavan tuck-eventille. Palauttaa kanavan, josta vastauksen voi lukea.
+   Tällä voi integroida esim. Gridin tallennuksen helposti Tuck-eventtiin, kunhan myös itse eventti
+   tukee paluukanavan käsittelyä."
+  [e! tapahtuma & tapahtuma-args]
+  (let [ch (chan)]
+    (e! (apply tapahtuma (conj (vec tapahtuma-args) ch)))
+    ch))
