@@ -4,7 +4,6 @@
 
             [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as tiedot]
             [harja.loki :refer [tarkkaile! log]]
-            [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
 
             [harja.ui.komponentti :as komp]
@@ -13,13 +12,17 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.modal :as modal]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.kanavat.kanava :as kanava]
             [harja.ui.napit :as napit]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.kentat :as kentat]
+
+            [harja.domain.urakka :as ur]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -87,35 +90,105 @@
                         (tiedot/muokattavat-kohteet app)])})]
     uudet-tiedot]])
 
+(defn varmistusnappi
+  ([e! kohde] [varmistusnappi e! kohde {}])
+  ([e! kohde opts]
+   [napit/nappi
+    ""
+    #(e! (tiedot/->AsetaPoistettavaKohde kohde))
+    (merge
+      {:ikoninappi? true
+       :luokka "nappi-toissijainen"
+       :ikoni (ikonit/livicon-trash)}
+      opts)]))
+
+(defn poista-tai-takaisin
+  ([e! kohde] [poista-tai-takaisin e! kohde {}])
+  ([e! kohde opts]
+   [:div
+    [napit/takaisin
+     ""
+     #(e! (tiedot/->AsetaPoistettavaKohde nil))
+     (merge
+       {:ikoninappi? true}
+       opts)]
+    [napit/poista
+     ""
+     #(e! (tiedot/->PoistaKohde kohde))
+     (merge
+       {:ikoninappi? true}
+       opts)]]))
+
 (defn kohteiden-luonti* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeKohteet)))
-                      #(e! (tiedot/->Nakymassa? false)))
+                           (e! (tiedot/->HaeKohteet))
+                           (e! (tiedot/->AloitaUrakoidenHaku)))
+                      #(do (e! (tiedot/->Nakymassa? false))
+                           (e! (tiedot/->ValitseUrakka nil))
+                           (e! (tiedot/->SuljeKohdeLomake))))
 
-    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki?] :as app}]
+    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki?
+                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde] :as app}]
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
-         [:div
-          {:style {:width "50%"
-                   :display "inline-block"
-                   :padding-right "30px"}}
-          [grid/grid
-           {:tunniste ::kohde/id
-            :tyhja (if kohteiden-haku-kaynnissa?
-                     [ajax-loader "Haetaan kohteita"]
-                     "Ei perustettuja kohteita")}
-           [{:otsikko "Kanava, kohde, ja kohteen tyyppi" :nimi :rivin-teksti}]
-           (sort-by :rivin-teksti kohderivit)]]
-         [:div
-          {:style {:width "50%"
-                   :display "inline-block"
-                   :vertical-align "top"}}
-          [grid/grid
-           {:tyhja "Placeholder"}
-           [{:otsikko "Tämä grid on vain placeholder" :nimi :rivin-teksti}]
-           []]]
+         [:div.label-ja-alasveto
+          [:span.alasvedon-otsikko "Urakka"]
+          [yleiset/livi-pudotusvalikko
+           {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
+            :valinta valittu-urakka
+            :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
+           (into [nil] urakat)]]
+         [grid/grid
+          {:tunniste ::kohde/id
+           :tyhja (if kohteiden-haku-kaynnissa?
+                    [ajax-loader "Haetaan kohteita"]
+                    "Ei perustettuja kohteita")}
+          [{:otsikko "Kanava, kohde, ja kohteen tyyppi" :nimi :rivin-teksti
+            :leveys 4}
+           {:otsikko "Poista"
+            :leveys 1
+            :tyyppi :komponentti
+            :tasaa :keskita
+            :komponentti (fn [kohde]
+                           (cond
+                             (nil? poistettava-kohde)
+                             [varmistusnappi e! kohde]
+
+                             (= poistettava-kohde kohde)
+                             [poista-tai-takaisin e! kohde {:disabled poistaminen-kaynnissa?}]
+
+                             (some? poistettava-kohde)
+                             [varmistusnappi e! kohde {:disabled true}]))}
+           (if-not valittu-urakka
+             {:otsikko "Urakat"
+              :tyyppi :string
+              :nimi :kohteen-urakat
+              :leveys 6
+              :hae tiedot/kohteen-urakat}
+
+             {:otsikko "Kuuluu urakkaan?"
+              :leveys 6
+              :tyyppi :komponentti
+              :tasaa :keskita
+              :nimi :valinta
+              :solu-klikattu (fn [rivi] (e! (tiedot/->LiitaKohdeUrakkaan rivi
+                                                                         (not (:valittu? rivi))
+                                                                         valittu-urakka)))
+              :komponentti (fn [rivi]
+                             (if (tiedot/liittaminen-kaynnissa? app rivi)
+                               [ajax-loader-pieni]
+
+                               [kentat/tee-kentta
+                                {:tyyppi :checkbox}
+                                (r/wrap
+                                  (tiedot/kohde-kuuluu-urakkaan? rivi valittu-urakka)
+                                  (fn [uusi]
+                                    (e! (tiedot/->LiitaKohdeUrakkaan rivi
+                                                                     uusi
+                                                                     valittu-urakka))))]))})]
+          (sort-by :rivin-teksti kohderivit)]
          [napit/uusi
           "Lisää uusi kohde"
           #(e! (tiedot/->AvaaKohdeLomake))

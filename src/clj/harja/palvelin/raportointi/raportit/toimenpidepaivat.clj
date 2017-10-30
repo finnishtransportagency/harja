@@ -93,7 +93,7 @@
                          ;; Jokaiselle alueelle..
                          (count alueet)
                          ;; Tehdään sarakkeet hoitoluokille
-                         #(mapv (fn [{nimi :nimi}] {:otsikko nimi :tasaa :oikea :fmt :numero})
+                         #(mapv (fn [{nimi :nimi}] {:otsikko nimi :tasaa :oikea :fmt :kokonaisluku})
                                 talvihoitoluokat))))))
       (map (fn [[toimenpide aluemaarat]]
              (into [toimenpide]
