@@ -183,5 +183,5 @@ E'Kanava on.. kanava. Kanavalla on nimi ja sijainti, ja se sisältää 0-n kohde
 COMMENT ON TABLE kan_kohde IS
 E'Kohteet ovat kanavalla sijaitsevia siltoja ja sulkuja, joihin kanavaurkoiden työt kohdistuvat.';
 
-COMMENT ON TABLE kanavahuoltokohde IS
+COMMENT ON TABLE kan_huoltokohde IS
 E'Huoltokohteet ovat asioita, joita kanavasta korjataan. Huoltokohteita ei pidä sekoittaa kohteeseen! Huoltokohde voi olla esim "Hydrauliikka", kun taas kohde on fyysinen sijainti kanavan varrella, esim. silta.';
