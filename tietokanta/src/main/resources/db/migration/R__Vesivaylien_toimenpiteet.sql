@@ -4,9 +4,7 @@
 -- palvelusta tuoduille väylille, joudutaan match tekemään nimellä.
 -- Muodostetaan reimari toimenpiteen väylä id triggerillä.
 
-CREATE INDEX vv_vayla_nimi_idx ON vv_vayla (nimi);
-
-CREATE FUNCTION vv_aseta_toimenpiteen_vayla() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION vv_aseta_toimenpiteen_vayla() RETURNS trigger AS $$
 DECLARE
   v reimari_vayla;
   id_ INTEGER;
