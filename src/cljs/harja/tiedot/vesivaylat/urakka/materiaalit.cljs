@@ -7,7 +7,7 @@
             [cljs.core.async :refer [<! >!]]
             [harja.pvm :as pvm]
             [harja.ui.lomake :as lomake]
-            [harja.tyokalut.tuck :refer [palvelukutsu]]
+            [harja.tyokalut.tuck :refer [post!]]
             [harja.ui.viesti :as viesti]
             [tuck.core :as tuck])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -47,11 +47,11 @@
   PaivitaUrakka
   (process-event [{urakka :urakka} app]
     (let [u (:id urakka)]
-      (palvelukutsu (assoc app
+      (post! (assoc app
                       :urakka-id u
                       :materiaalilistaus nil)
-                    :hae-vesivayla-materiaalilistaus {::m/urakka-id u}
-                    {:onnistui ->ListausHaettu
+             :hae-vesivayla-materiaalilistaus {::m/urakka-id u}
+             {:onnistui ->ListausHaettu
                      :epaonnistui ->Virhe})))
 
   ListausHaettu
@@ -75,8 +75,8 @@
   (process-event [_ {:keys [urakka-id lisaa-materiaali] :as app}]
     (-> app
         (assoc :tallennus-kaynnissa? true)
-        (palvelukutsu :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja lisaa-materiaali)
-                      {:onnistui ->ListausHaettu
+        (post! :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja lisaa-materiaali)
+               {:onnistui ->ListausHaettu
                        :epaonnistui ->Virhe})))
 
   PeruMateriaalinLisays
@@ -115,9 +115,9 @@
 
   PoistaMateriaalinKirjaus
   (process-event [{tiedot :tiedot} app]
-    (palvelukutsu app :poista-materiaalikirjaus {::m/urakka-id (:urakka-id tiedot)
+    (post! app :poista-materiaalikirjaus {::m/urakka-id (:urakka-id tiedot)
                                                  ::m/id (:materiaali-id tiedot)}
-                  {:onnistui ->ListausHaettu
+           {:onnistui ->ListausHaettu
                    :epaonnistui ->Virhe}))
 
   PeruMateriaalinKirjaus
@@ -128,15 +128,15 @@
   (process-event [_ {kirjaa-materiaali :kirjaa-materiaali :as app}]
     (-> app
         (assoc :tallennus-kaynnissa? true)
-        (palvelukutsu :kirjaa-vesivayla-materiaali
-                      (as-> kirjaa-materiaali m
+        (post! :kirjaa-vesivayla-materiaali
+               (as-> kirjaa-materiaali m
                             (lomake/ilman-lomaketietoja m)
                             ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
                             (if (= :- (:tyyppi m))
                               (update m ::m/maara -)
                               m)
                             (dissoc m :tyyppi))
-                      {:onnistui ->ListausHaettu
+               {:onnistui ->ListausHaettu
                        :epaonnistui ->Virhe})))
 
   Virhe

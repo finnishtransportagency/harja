@@ -2,7 +2,7 @@
   "Tuckin omat testityökalut"
   (:require [cljs.test :as t :refer-macros [is]]
             [tuck.core :as tuck]
-            [cljs.core.async :as async :refer [<! chan]]
+            [cljs.core.async :as async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.testutils.tuck-apurit :refer [vaadi-async-kutsut]]))

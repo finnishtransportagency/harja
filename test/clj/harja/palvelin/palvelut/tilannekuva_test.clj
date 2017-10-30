@@ -427,6 +427,7 @@
                                  :elynumero 12}
                :urakat #{{:id 4
                           :nimi "Oulun alueurakka 2014-2019"
+                          :urakkanro "1238"
                           :alue nil}}}])))))
 
 (deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
