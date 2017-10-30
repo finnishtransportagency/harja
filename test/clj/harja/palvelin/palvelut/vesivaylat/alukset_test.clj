@@ -69,10 +69,10 @@
         uudet-alukset [{::alus/mmsi (first vapaat-alukset)
                         ::alus/kaytossa-urakassa? false
                         ::alus/lisatiedot "Hassu alus"
-                        ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Tämä teksti ei tallennu, koska liitetä urakkaan"}
                        {::alus/mmsi (second vapaat-alukset)
                         ::alus/kaytossa-urakassa? true
-                        ::alus/lisatiedot "Hieno alus"
+                        ::alus/lisatiedot "Hieno alus tämäkin"
                         ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
         urakan-alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))
         args {::alus/urakoitsija-id urakoitsija-id
@@ -87,11 +87,13 @@
     (is (s/valid? ::alus/tallenna-urakoitsijan-alukset-kysely args))
     (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus vastaus))
 
-    (is (= (+ urakan-alukset-ennen (count uudet-alukset))
+    (is (= (+ urakan-alukset-ennen 1)
            urakan-alukset-jalkeen)
-        "Aluslinkkejä tuli lisää oikea määrä")
+        "Aluslinkkejä tuli yksi lisää (vain yksi alus oli merkattu kuuluvaksi urakkaan)")
 
-    (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Hieno alus tässä urakassa") vastaus))
+    (println "VASTAUS " vastaus)
+
+    (is (not-any? #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Tämä teksti ei tallennu, koska liitetä urakkaan") vastaus))
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
 
 (deftest tallenna-urakoitsijan-alukset-ilman-oikeutta
