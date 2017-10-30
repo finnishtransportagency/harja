@@ -33,6 +33,8 @@
 ;; Tieosan ajoradat haettu
 (defrecord TieosanAjoradatHaettu [ajoradat])
 
+(defrecord LiitteetHaettu [liitteet])
+
 (defrecord VirheTapahtui [virhe])
 
 (defrecord VirheKasitelty [])
