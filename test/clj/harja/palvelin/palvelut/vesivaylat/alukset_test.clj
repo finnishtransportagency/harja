@@ -91,8 +91,6 @@
            urakan-alukset-jalkeen)
         "Aluslinkkejä tuli yksi lisää (vain yksi alus oli merkattu kuuluvaksi urakkaan)")
 
-    (println "VASTAUS " vastaus)
-
     (is (not-any? #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Tämä teksti ei tallennu, koska liitetä urakkaan") vastaus))
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
 

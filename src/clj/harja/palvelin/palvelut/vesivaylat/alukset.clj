@@ -36,7 +36,6 @@
                                       " vaan urakoitisjalle " (:urakoitsija-id alus-kannassa)))))))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Testi tälle uudelle palvelulle (myös oikeustarkistukselle)
   (let [urakka-id (::urakka/id tiedot)]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
     (namespacefy/namespacefy
