@@ -24,7 +24,7 @@ SELECT
   mmsi,
   nimi,
   lisatiedot,
-  urakoitsija AS "urakoitsija-id",
+  urakoitsija AS "urakoitsija-id"
 FROM vv_alus a
 WHERE urakoitsija = :urakoitsija
       AND mmsi = :mmsi;
