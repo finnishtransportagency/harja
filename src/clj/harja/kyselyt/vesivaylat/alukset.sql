@@ -23,7 +23,8 @@ ORDER BY mmsi;
 SELECT
   mmsi,
   nimi,
-  lisatiedot
+  lisatiedot,
+  urakoitsija AS "urakoitsija-id",
 FROM vv_alus a
 WHERE urakoitsija = :urakoitsija
       AND mmsi = :mmsi;

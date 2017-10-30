@@ -24,16 +24,26 @@
             [clj-time.coerce :as c]
             [clojure.set :as set]))
 
+(defn vaadi-alus-kuuluu-urakoitsijalle [db alus-mmsi vaitetty-urakoitsija-id]
+  (log/debug "Tarkikistetaan, että alus " alus-mmsi " kuuluu väitetylle urakoitsijalle " vaitetty-urakoitsija-id)
+  (assert vaitetty-urakoitsija-id "Urakoitsija-id puuttuu!")
+  (let [alus-kannassa (first (alukset-q/hae-urakoitsijan-alus-mmsilla db {:mmsi (::alus/mmsi alus-mmsi)
+                                                                          :urakoitsija vaitetty-urakoitsija-id}))]
+    (when (and (some? alus-kannassa)
+               (not= (:urakoitsija-id alus-kannassa) vaitetty-urakoitsija-id))
+      (throw (SecurityException. (str "Alus ei kuulu urakoitsijalle" vaitetty-urakoitsija-id
+                                      " vaan urakoitisjalle " (:urakoitsija-id alus-kannassa)))))))
+
 (defn hae-urakoitsijan-alukset [db user tiedot]
   ;; TODO Testi tälle uudelle palvelulle (myös oikeustarkistukselle)
   (let [urakka-id (::urakka/id tiedot)]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
     (namespacefy/namespacefy
-     (into []
-           (map #(konv/array->set % :kaytossa-urakoissa))
-           (alukset-q/hae-urakoitsijan-alukset db {:urakka urakka-id
-                                                   :urakoitsija (::alus/urakoitsija-id tiedot)}))
-     {:ns :harja.domain.vesivaylat.alus})))
+      (into []
+            (map #(konv/array->set % :kaytossa-urakoissa))
+            (alukset-q/hae-urakoitsijan-alukset db {:urakka urakka-id
+                                                    :urakoitsija (::alus/urakoitsija-id tiedot)}))
+      {:ns :harja.domain.vesivaylat.alus})))
 
 (defn- tallenna-urakoitsijan-alus
   "Luo uuden tai päivittää olemassa olevan aluksen MMSI:n perusteella."
@@ -94,11 +104,13 @@
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
   ;; TODO Testi tälle uudelle palvelulle (myös oikeustarkistukselle)
-  ;; TODO Kuuluu urakkaan/urakoitsijalle tjsp tarkistus
   (let [urakka-id (::urakka/id tiedot)
         urakoitsija-id (::alus/urakoitsija-id tiedot)
         alukset (::alus/tallennettavat-alukset tiedot)]
     (oikeudet/vaadi-oikeus "alusten-muokkaus" oikeudet/urakat-yleiset user urakka-id)
+    (doseq [alus alukset]
+      (vaadi-alus-kuuluu-urakoitsijalle db (::alus/mmsi alus) urakoitsija-id))
+
     (jdbc/with-db-transaction [db db]
       (doseq [alus alukset]
         (tallenna-urakoitsijan-alus db user urakoitsija-id alus)
