@@ -324,7 +324,7 @@
                              gridin-sarakkeet {:keys [paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti
                                                       rivi-klikattu infolaatikon-tila-muuttui]}]
-  [:div
+  [:div.vv-toimenpideryhma-sisalto
    [grid/grid
     {:tunniste ::to/id
      :infolaatikon-tila-muuttui (fn [nakyvissa?]
