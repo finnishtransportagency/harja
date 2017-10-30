@@ -5,12 +5,12 @@
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [clojure.set]
+    [harja.domain.muokkaustiedot :as m]
     [specql.rel :as rel]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]])
-    [harja.domain.muokkaustiedot :as m])
+        :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
