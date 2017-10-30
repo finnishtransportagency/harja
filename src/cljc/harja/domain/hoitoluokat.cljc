@@ -4,7 +4,8 @@
 (def ^{:doc "Mahdolliset talvihoitoluokat. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on tierekisterin koodi luokalle."}
   talvihoitoluokat
-  [{:nimi "Is"  :numero 1 :numero-str "1"}
+  [{:nimi "IsE"  :numero 0 :numero-str "0"}
+   {:nimi "Is"  :numero 1 :numero-str "1"}
    {:nimi "I"   :numero 2 :numero-str "2"}
    {:nimi "Ib"  :numero 3 :numero-str "3"}
    {:nimi "TIb" :numero 4 :numero-str "4"}
