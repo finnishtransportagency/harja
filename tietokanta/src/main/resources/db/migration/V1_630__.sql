@@ -1,6 +1,8 @@
 ALTER TABLE kanavahuoltokohde
   RENAME TO kan_huoltokohde;
 
+CREATE TYPE KAN_TOIMENPIDETYYPPI AS ENUM ('yksikkohintainen', 'kokonaishintainen', 'muutos-lisatyo');
+
 CREATE TABLE kan_toimenpide (
   id          SERIAL PRIMARY KEY,
   pvm         DATE                                       NOT NULL,
@@ -15,5 +17,7 @@ CREATE TABLE kan_toimenpide (
   muokattu    TIMESTAMP,
   muokkaaja   INTEGER REFERENCES kayttaja (id),
   poistettu   BOOLEAN   DEFAULT FALSE,
-  poistaja    INTEGER REFERENCES kayttaja (id)
+  poistaja    INTEGER REFERENCES kayttaja (id),
+  tyyppi      KAN_TOIMENPIDETYYPPI                       NOT NULL
+
 );
