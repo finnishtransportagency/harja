@@ -56,7 +56,7 @@
     (is (::va-d/nimi (first vastaus) "Hietasaaren läntinen väylä"))))
 
 (deftest poistettuja-vaylia-ei-palauteta
-  (q "UPDATE vv_vayla SET poistettu = TRUE")
+  (u "UPDATE vv_vayla SET poistettu = TRUE")
 
   (let [params {:hakuteksti "hie"}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
