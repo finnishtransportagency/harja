@@ -32,6 +32,7 @@
 
 (s/def ::sijainti ::geo/geometria)
 (s/def ::kaytossa-urakassa? boolean?)
+(s/def ::kaytossa-urakoissa? (s/coll-of integer?))
 
 (s/def ::tallennettava-alus
   (s/keys :req [::mmsi]

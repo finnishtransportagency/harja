@@ -500,6 +500,15 @@
           [grid/grid
            {:otsikko "Urakoitsijan alukset"
             :tyhja "Ei aluksia"
+            :esta-poistaminen?
+            (fn [rivi]
+              (let [alus-kaytossa-urakoissa (::alus/kaytossa-urakoissa rivi)
+                    kaytossa-muissa-urakoissa (set (remove #(= % (:id ur))
+                                                           alus-kaytossa-urakoissa))]
+
+                (or (::alus/kaytossa-urakassa? rivi)
+                    (> (count kaytossa-muissa-urakoissa) 0))))
+            :esta-poistaminen-tooltip (fn [_] "Alus on käytössä urakoissa.")
             :tunniste :grid-id
             :muutos (fn [g]
                       (let [vaatii-kayton-lisatietojen-tyhjennyksen?
@@ -522,7 +531,6 @@
                                                           (get-in ur [:urakoitsija :id])
                                                           alukset
                                                           urakoitsijan-alukset)))}
-           ;; TODO Disabloi rivin poisto jos alus käytössä urakassa (palauta kannasta tieto onko linkitetty myös muihin urakoihin kuin tähän)
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
              :tyyppi :positiivinen-numero
