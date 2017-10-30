@@ -57,7 +57,7 @@
                            (e! (tiedot/->PaivitaValinnat
                                  {:urakka-id (:id @nav/valittu-urakka)
                                   :sopimus-id (first @u/valittu-sopimusnumero)}))
-                           (e! (tiedot/->HaeKiintiot)))
+                           (e! (tiedot/->HaeKiintiot (:valinnat app))))
                       #(do (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [kiintiot
                     kiintioiden-haku-kaynnissa?
