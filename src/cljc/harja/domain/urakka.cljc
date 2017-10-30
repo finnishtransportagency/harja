@@ -84,6 +84,6 @@
 (defn urakkatyyppi [urakka]
   (let [tyyppi (:tyyppi urakka)]
     (cond
-      (kanavaurakka? tyyppi) :kanava
-      (vesivaylaurakka? tyyppi) :vv
-      :else :tie)))
+      (kanavaurakkatyyppi? tyyppi) :kanava
+      (vesivaylaurakkatyyppi? tyyppi) :vv
+      :else :hoito)))
