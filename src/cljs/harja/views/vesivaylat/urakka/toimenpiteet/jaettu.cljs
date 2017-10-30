@@ -38,10 +38,10 @@
      [:p varmistusteksti-header]
      [:ul
       (for* [toimenpide naytettavat-toimenpiteet]
-        [:li (str (pvm/pvm-opt (::to/pvm toimenpide)) " "
-                  (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)) ". "
-                  (when toimenpide-lisateksti-fn
-                    (toimenpide-lisateksti-fn toimenpide)))])
+            [:li (str (pvm/pvm-opt (::to/pvm toimenpide)) " "
+                      (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide)) ". "
+                      (when toimenpide-lisateksti-fn
+                        (toimenpide-lisateksti-fn toimenpide)))])
       (when (> (count varmistettavat-toimenpiteet) nayta-max)
         [:li (str "...sekä " (- (count varmistettavat-toimenpiteet) nayta-max) " muuta toimenpidettä.")])]
      [:p varmistusteksti-footer]]))
@@ -82,9 +82,9 @@
          [:th {:style {:width "25%"}} "Tila"]]]
        [:tbody
         (for* [turvalaitekomponentti (::to/komponentit toimenpide)]
-          [:tr
-           [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi])]
-           [:td (komp-tila/komponentin-tilakoodi->str (::komp-tila/tilakoodi turvalaitekomponentti))]])]])]])
+              [:tr
+               [:td (get-in turvalaitekomponentti [::tkomp/komponenttityyppi ::ktyyppi/nimi])]
+               [:td (komp-tila/komponentin-tilakoodi->str (::komp-tila/tilakoodi turvalaitekomponentti))]])]])]])
 
 (defn- suodattimet-ja-toiminnot [e! PaivitaValinnatKonstruktori app urakka vaylahaku turvalaitehaku lisasuodattimet urakkatoiminto-napit]
   [valinnat/urakkavalinnat {}
@@ -324,22 +324,25 @@
                              gridin-sarakkeet {:keys [paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti
                                                       rivi-klikattu infolaatikon-tila-muuttui]}]
-  [grid/grid
-   {:tunniste ::to/id
-    :infolaatikon-tila-muuttui (fn [nakyvissa?]
-                                 (e! (tiedot/->AsetaInfolaatikonTila
-                                       listaus-tunniste
-                                       nakyvissa?
-                                       infolaatikon-tila-muuttui)))
-    :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
-    :rivin-infolaatikko (fn [rivi data]
-                          [toimenpide-infolaatikossa rivi])
-    :salli-valiotsikoiden-piilotus? true
-    :ei-footer-muokkauspaneelia? true
-    :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
-    :valiotsikoiden-alkutila :kaikki-kiinni}
-   gridin-sarakkeet
-   (tiedot/toimenpiteet-aikajarjestyksessa toimenpiteet)])
+  [:div
+   [grid/grid
+    {:tunniste ::to/id
+     :infolaatikon-tila-muuttui (fn [nakyvissa?]
+                                  (e! (tiedot/->AsetaInfolaatikonTila
+                                        listaus-tunniste
+                                        nakyvissa?
+                                        infolaatikon-tila-muuttui)))
+     :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
+     :rivin-infolaatikko (fn [rivi data]
+                           [toimenpide-infolaatikossa rivi])
+     :salli-valiotsikoiden-piilotus? true
+     :ei-footer-muokkauspaneelia? true
+     :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
+     :valiotsikoiden-alkutila :kaikki-kiinni}
+    gridin-sarakkeet
+    (tiedot/toimenpiteet-aikajarjestyksessa toimenpiteet)]
+   (when footer
+     [:div.toimenpiteet-listaus-footer footer])])
 
 (defn tulokset [e! {:keys [toimenpiteet toimenpiteiden-haku-kaynnissa?] :as app} sisalto]
   (cond (and toimenpiteiden-haku-kaynnissa? (empty? toimenpiteet)) [ajax-loader "Toimenpiteitä haetaan..."]
