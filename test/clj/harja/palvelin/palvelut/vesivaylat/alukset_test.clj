@@ -60,26 +60,32 @@
                                            {::alus/urakoitsija-id urakoitsija-id
                                             ::urakka/id urakka-id})))))
 
-(deftest tallenna-urakan-alukset
+(deftest tallenna-urakoitsijan-alukset
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
         alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
         vapaat-alukset (filter (comp not alukset-kaytossa) alus-mmsit)
         uudet-alukset [{::alus/mmsi (first vapaat-alukset)
+                        ::alus/kaytossa-urakassa? false
+                        ::alus/lisatiedot "Hassu alus"
                         ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
                        {::alus/mmsi (second vapaat-alukset)
+                        ::alus/kaytossa-urakassa? true
+                        ::alus/lisatiedot "Hieno alus"
                         ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
         urakan-alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))
-        args {::urakka/id urakka-id
-              ::alus/urakan-tallennettavat-alukset uudet-alukset}
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-urakan-alukset +kayttaja-ulle+
+                                :tallenna-urakoitsijan-alukset +kayttaja-jvh+
                                 args)
         urakan-alukset-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))]
 
 
-    (is (s/valid? ::alus/tallenna-urakan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-urakan-alukset-vastaus vastaus))
+    (is (s/valid? ::alus/tallenna-urakoitsijan-alukset-kysely args))
+    (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus vastaus))
 
     (is (= (+ urakan-alukset-ennen (count uudet-alukset))
            urakan-alukset-jalkeen)
@@ -88,21 +94,15 @@
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Hieno alus tässä urakassa") vastaus))
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
 
-(deftest tallenna-urakan-alukset-ilman-oikeutta
+(deftest tallenna-urakoitsijan-alukset-ilman-oikeutta
   (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
-        alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
-        alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
-        vapaat-alukset (filter (comp not alukset-kaytossa) alus-mmsit)
-        uudet-alukset [{::alus/mmsi (first vapaat-alukset)
-                        ::alus/urakan-aluksen-kayton-lisatiedot "Hieno alus tässä urakassa"}
-                       {::alus/mmsi (second vapaat-alukset)
-                        ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
-        args {::urakka/id urakka-id
-              ::alus/urakan-tallennettavat-alukset uudet-alukset}]
-
-
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        uudet-alukset []
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :tallenna-urakan-alukset +kayttaja-ulle+
+                                           :tallenna-urakoitsijan-alukset +kayttaja-ulle+
                                            args)))))
 
 (deftest hae-alusten-reitit
