@@ -13,7 +13,7 @@
   "Palauttaa joko argumenttina annetun avaimen (joka on luettu asetuksista)
    tai fallback avaimen error-logituksen kera."
   [avain]
-  (if avain
+  (if (string? avain)
     avain
     (do
       (log/error "Käytetään ei-turvallista fallback-avainta anti-CSRF-tokenin generoimiseen!")
