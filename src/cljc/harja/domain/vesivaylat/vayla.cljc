@@ -5,7 +5,6 @@
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [clojure.set]
-    [harja.domain.muokkaustiedot :as m]
     [specql.rel :as rel]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -21,7 +20,7 @@
     "ryhma" ::r-tyhma}]
   ["vv_vaylatyyppi" ::vaylatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["vv_vayla" ::vayla
-   m/poistettu?-sarake
+   harja.domain.muokkaustiedot/poistettu?-sarake
      #_{::turvalaitteet (specql.rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)}])
 
 (def tyypit (s/describe ::tyyppi))
