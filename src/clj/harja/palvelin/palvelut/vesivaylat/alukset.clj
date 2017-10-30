@@ -28,11 +28,10 @@
 (defn vaadi-alus-kuuluu-urakoitsijalle [db alus-mmsi vaitetty-urakoitsija-id]
   (log/debug "Tarkikistetaan, että alus " alus-mmsi " kuuluu väitetylle urakoitsijalle " vaitetty-urakoitsija-id)
   (assert vaitetty-urakoitsija-id "Urakoitsija-id puuttuu!")
-  (let [alus-kannassa (first (alukset-q/hae-urakoitsijan-alus-mmsilla db {:mmsi (::alus/mmsi alus-mmsi)
-                                                                          :urakoitsija vaitetty-urakoitsija-id}))]
+  (let [alus-kannassa (first (alukset-q/hae-alus-mmsilla db {:mmsi alus-mmsi}))]
     (when (and (some? alus-kannassa)
                (not= (:urakoitsija-id alus-kannassa) vaitetty-urakoitsija-id))
-      (throw (SecurityException. (str "Alus ei kuulu urakoitsijalle" vaitetty-urakoitsija-id
+      (throw (SecurityException. (str "Alus ei kuulu urakoitsijalle " vaitetty-urakoitsija-id
                                       " vaan urakoitisjalle " (:urakoitsija-id alus-kannassa)))))))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]

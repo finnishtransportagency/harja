@@ -29,6 +29,16 @@ FROM vv_alus a
 WHERE urakoitsija = :urakoitsija
       AND mmsi = :mmsi;
 
+-- name: hae-alus-mmsilla
+SELECT
+  mmsi,
+  nimi,
+  lisatiedot,
+  urakoitsija AS "urakoitsija-id"
+FROM vv_alus a
+WHERE mmsi = :mmsi;
+
+
 -- name: hae-urakan-alus-mmsilla
 SELECT
   mmsi,

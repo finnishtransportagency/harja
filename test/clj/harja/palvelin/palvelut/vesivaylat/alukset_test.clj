@@ -116,6 +116,22 @@
                                            :tallenna-urakoitsijan-alukset +kayttaja-jvh+
                                            args)))))
 
+(deftest tallenna-eri-urakoitsijan-alukset
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+        urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
+        alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus WHERE urakoitsija != " urakoitsija-id ";")))
+        uudet-alukset [{::alus/mmsi (first alus-mmsit)
+                        ::alus/kaytossa-urakassa? true
+                        ::alus/lisatiedot "HAXOROITU ALUS"
+                        ::alus/urakan-aluksen-kayton-lisatiedot "hupsis"}]
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-urakoitsijan-alukset +kayttaja-jvh+
+                                             args)))))
+
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
