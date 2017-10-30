@@ -45,7 +45,7 @@
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 10 1))
-                                              :hoitoluokat  #{1 2 3 4 5 6 8 7}
+                                              :hoitoluokat  #{0 1 2 3 4 5 6 8 7}
                                               :urakkatyyppi "hoito"}})
         taulukko (apurit/taulukko-otsikolla vastaus "Oulun alueurakka 2014-2019, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
@@ -53,6 +53,9 @@
     (apurit/tarkista-taulukko-sarakkeet
       taulukko
       {:otsikko "Hoi­to­luok­ka"}
+      {:fmt     :numero
+       :otsikko "IsE"
+       :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "Is"
        :tasaa   :keskita}
@@ -102,7 +105,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 10 1))
-                                                      :hoitoluokat  #{1 2 3 4 5 6 8 7}
+                                                      :hoitoluokat  #{0 1 2 3 4 5 6 8 7}
                                                       :urakkatyyppi "hoito"}})
         taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
@@ -126,6 +129,9 @@
       taulukko
       {:otsikko "Hoi­to­luok­ka"}
       {:fmt     :numero
+       :otsikko "IsE"
+       :tasaa   :keskita}
+      {:fmt     :numero
        :otsikko "Is"
        :tasaa   :keskita}
       {:fmt     :numero
@@ -148,6 +154,8 @@
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "K2"
+       :tasaa   :keskita}
+      {:otsikko "IsE"
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "Is"
@@ -182,7 +190,7 @@
                                  :konteksti  "koko maa"
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2014 1 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 12 31))
-                                              :hoitoluokat  #{1 2 3 4 5 6 8 7}
+                                              :hoitoluokat  #{0 1 2 3 4 5 6 8 7}
                                               :urakkatyyppi "hoito"}})
         taulukko (apurit/taulukko-otsikolla vastaus "KOKO MAA, Toimenpidekilometrit ajalta 01.01.2014 - 31.12.2015")]
     (is (vector? vastaus))
@@ -206,28 +214,7 @@
       taulukko
       {:otsikko "Hoi­to­luok­ka"}
       {:fmt     :numero
-       :otsikko "Is"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "I"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "Ib"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "TIb"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "II"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "III"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K1"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K2"
+       :otsikko "IsE"
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "Is"
@@ -254,28 +241,7 @@
        :otsikko "K2"
        :tasaa   :keskita}
       {:fmt     :numero
-       :otsikko "Is"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "I"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "Ib"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "TIb"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "II"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "III"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K1"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K2"
+       :otsikko "IsE"
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "Is"
@@ -302,28 +268,7 @@
        :otsikko "K2"
        :tasaa   :keskita}
       {:fmt     :numero
-       :otsikko "Is"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "I"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "Ib"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "TIb"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "II"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "III"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K1"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K2"
+       :otsikko "IsE"
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "Is"
@@ -350,28 +295,7 @@
        :otsikko "K2"
        :tasaa   :keskita}
       {:fmt     :numero
-       :otsikko "Is"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "I"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "Ib"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "TIb"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "II"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "III"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K1"
-       :tasaa   :keskita}
-      {:fmt     :numero
-       :otsikko "K2"
+       :otsikko "IsE"
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "Is"
@@ -396,6 +320,117 @@
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "K2"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "IsE"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Is"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "TIb"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K2"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "IsE"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Is"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "TIb"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K2"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "IsE"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Is"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "TIb"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K2"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "IsE"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Is"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "TIb"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "K2"
+       :tasaa   :keskita}
+      {:fmt     :numero
+       :otsikko "IsE"
        :tasaa   :keskita}
       {:fmt     :numero
        :otsikko "Is"
