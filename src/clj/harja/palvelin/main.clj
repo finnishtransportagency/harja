@@ -136,7 +136,12 @@
     [harja.palvelin.palvelut.vesivaylat.hinnoittelut :as vv-hinnoittelut]
     [harja.palvelin.palvelut.vesivaylat.kiintiot :as vv-kiintiot]
     [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
-    [harja.palvelin.palvelut.vesivaylat.turvalaitteet :as vv-turvalaitteet])
+    [harja.palvelin.palvelut.vesivaylat.turvalaitteet :as vv-turvalaitteet]
+    [harja.palvelin.palvelut.vesivaylat.alukset :as vv-alukset]
+
+    ;; Kanavat
+    [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+    )
 
   (:gen-class))
 
@@ -324,6 +329,12 @@
       :vv-turvalaitteet (component/using
                           (vv-turvalaitteet/->Turvalaitteet)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :vv-alukset (component/using
+                    (vv-alukset/->Alukset)
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-kanavat (component/using
+                     (kan-kanavat/->Kanavat)
+                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -374,7 +385,7 @@
 
       :liitteet (component/using
                   (liitteet/->Liitteet)
-                  [:http-palvelin :liitteiden-hallinta :pois-kytketyt-ominaisuudet])
+                  [:http-palvelin :db :liitteiden-hallinta :pois-kytketyt-ominaisuudet])
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)

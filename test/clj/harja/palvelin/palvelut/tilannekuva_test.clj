@@ -414,13 +414,20 @@
   ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
   (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
     (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
-      (is (= vastaus
+      (is (every?
+            (fn [hy]
+              (every?
+                (fn [u] (some? (:alue u)))
+                (:urakat hy)))
+            vastaus))
+      (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
              [{:tyyppi :hoito
                :hallintayksikko {:id 12
                                  :nimi "Pohjois-Pohjanmaa"
                                  :elynumero 12}
                :urakat #{{:id 4
                           :nimi "Oulun alueurakka 2014-2019"
+                          :urakkanro "1238"
                           :alue nil}}}])))))
 
 (deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman

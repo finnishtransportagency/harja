@@ -5,7 +5,8 @@
    [harja.domain.roolit :as roolit]
    #?(:clj [slingshot.slingshot :refer [throw+]])
    #?(:cljs [harja.tiedot.istunto :as istunto])
-   [clojure.set :as s])
+   [clojure.set :as s]
+   [taoensso.timbre :as log])
   #?(:cljs
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
@@ -99,6 +100,22 @@
   "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
                                    urakkaroolit organisaatioroolit] :as kayttaja}]
+  (when-not (or (nil? urakka-id) (number? urakka-id))
+    (#?(:clj log/error
+        :cljs log/debug)
+      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Urakka-id:n täytyy olla joko nil tai numero " (pr-str urakka-id)))
+  (when-not (instance? KayttoOikeus oikeus)
+    (#?(:clj log/error
+        :cljs log/debug)
+      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Annettu oikeus ei ole KayttoOikeus " (pr-str oikeus)))
+  (when-not (every? #(contains? kayttaja %) [:organisaation-urakat :roolit :organisaatio
+                                           :urakkaroolit :organisaatioroolit])
+    (#?(:clj log/error
+        :cljs log/debug)
+      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Käyttäjältä puuttuu jokin avaimista "
+               (pr-str [:organisaation-urakat :roolit :organisaatio :urakkaroolit :organisaatioroolit])
+               " "
+               (pr-str kayttaja)))
   (let [oikeus-pred (partial (case tyyppi
                                :luku on-lukuoikeus?
                                :kirjoitus on-kirjoitusoikeus?
@@ -151,8 +168,7 @@
      ([oikeus urakka-id]
       (voi-lukea? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
-   (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
-       (on-oikeus? :luku oikeus urakka-id kayttaja))))
+   (on-oikeus? :luku oikeus urakka-id kayttaja)))
 
 (defn voi-kirjoittaa?
   #?(:cljs
@@ -162,8 +178,7 @@
      ([oikeus urakka-id]
       (voi-kirjoittaa? oikeus urakka-id @istunto/kayttaja)))
   ([oikeus urakka-id kayttaja]
-   (or (roolit/roolissa? kayttaja roolit/jarjestelmavastaava)
-       (on-oikeus? :kirjoitus oikeus urakka-id kayttaja))))
+   (on-oikeus? :kirjoitus oikeus urakka-id kayttaja)))
 
 #?(:clj
    (defn vaadi-lukuoikeus

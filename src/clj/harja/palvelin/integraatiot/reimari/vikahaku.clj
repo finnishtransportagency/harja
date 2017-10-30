@@ -33,12 +33,11 @@
         kanta-tiedot (for [viat-tiedot sanoman-tiedot]
                        (specql/upsert! db ::vv-vikailmoitus/vikailmoitus
                                        (rename-keys viat-tiedot avainmuunnokset)))]
-    (clojure.pprint/pprint (rename-keys (first sanoman-tiedot) avainmuunnokset))
     (vec kanta-tiedot)))
 
 (defn hae-viat [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeViat"
-                        :sanoma-fn (partial r-apurit/kysely-sanoma-muutosaika "HaeViat")
+                        :sanoma-fn (partial r-apurit/kysely-sanoma-aikavali "HaeViat")
                         :vastaus-fn kasittele-viat-vastaus
                         :haun-nimi "hae-viat"
                         :db db

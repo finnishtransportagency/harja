@@ -1,43 +1,43 @@
-CREATE TABLE reimari_meta (
-  integraatio       INTEGER
-                    NOT NULL
-                    REFERENCES integraatio(id),
-  enimmaishakuvali  INTERVAL
-                    NOT NULL,
-  aikakursori       TIMESTAMP
-                    NOT NULL);
+CREATE TABLE vv_alus (
+  mmsi INTEGER PRIMARY KEY,
+  nimi TEXT,
+  lisatiedot TEXT,
 
-COMMENT ON TABLE reimari_meta IS E'Kirjanpito, per Reimarin rajapinta, milloin viimeksi on haettu tietoja ja paljonko niitä saa hakea kerralla.';
+  luotu TIMESTAMP DEFAULT NOW(),
+  luoja INTEGER REFERENCES kayttaja(id) NOT NULL,
+  muokattu TIMESTAMP,
+  muokkaaja INTEGER REFERENCES kayttaja(id),
+  poistettu BOOLEAN DEFAULT FALSE,
+  poistaja INTEGER REFERENCES kayttaja(id)
+);
 
-COMMENT ON COLUMN reimari_meta.enimmaishakuvali IS E'Halutaan rajoittaa
-Reimarille aiheutuvaa kuormaa, myöskin liian hitaat kyselyt
-aikakatkaistaan Reimarin päässä. Tämä kertoo, kuinka pitkältä
-aikaväliltä voidaan hakea tapahtumia yhdessä pyynnössä. Jos tähän
-rajaan törmätään, haetaan vanhimmasta päästä tapahtumia jotta
-tapahtumat päätyvät Harjaan aikajärjestyksessä.';
+CREATE TABLE vv_alus_urakka (
+  alus INTEGER REFERENCES vv_alus(mmsi),
+  urakka INTEGER REFERENCES urakka(id),
+  lisatiedot TEXT,
 
-COMMENT ON COLUMN reimari_meta.aikakursori IS E'Päivämäärä, jota myöhempiä tietoja ei ole vielä haettu Harjaan.';
+  luotu TIMESTAMP DEFAULT NOW(),
+  luoja INTEGER REFERENCES kayttaja(id) NOT NULL,
+  muokattu TIMESTAMP,
+  muokkaaja INTEGER REFERENCES kayttaja(id),
+  poistettu BOOLEAN DEFAULT FALSE,
+  poistaja INTEGER REFERENCES kayttaja(id)
+);
 
-INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
-   VALUES (
-      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-toimenpiteet'),
-       '6 months',
-       '2017-10-01T12:12:12Z');
+CREATE UNIQUE INDEX uniikki_urakan_alus on vv_alus_urakka (alus, urakka) WHERE poistettu = false;
 
-INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
-    VALUES (
-      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-turvalaitekomponentit'),
-       '6 months',
-       '2017-10-01T12:12:12Z');
+CREATE TABLE vv_alus_sijainti (
+  alus INTEGER REFERENCES vv_alus (mmsi),
+  sijainti POINT NOT NULL,
+  aika TIMESTAMP NOT NULL
+);
 
-INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
-    VALUES (
-      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-komponenttityypit'),
-       '6 months',
-       '2017-10-01T12:12:12Z');
-
-INSERT INTO reimari_meta (integraatio, enimmaishakuvali, aikakursori)
-    VALUES (
-      (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-viat'),
-       '6 months',
-       '2017-10-01T12:12:12Z');
+-- BRIN stands for Block Range Index.
+-- BRIN is designed for handling very large tables in which certain columns have some natural
+-- correlation with their physical location within the table.
+-- A block range is a group of pages that are physically adjacent in the table;
+-- for each block range, some summary info is stored by the index.
+-- For example, a table storing a store's sale orders might have
+-- a date column on which each order was placed, and most of the time the entries
+-- for earlier orders will appear earlier in the table as well
+CREATE INDEX pvm_ja_alus ON vv_alus_sijainti USING BRIN (aika, alus);

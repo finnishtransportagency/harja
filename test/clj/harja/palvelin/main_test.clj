@@ -61,7 +61,9 @@
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
-    :ais-data})
+    :ais-data
+    :vv-alukset
+    :kan-kanavat})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

@@ -28,7 +28,7 @@
 
 
 (defn hakuvali [db integraation-nimi]
-  (first (harja.kyselyt.reimari-meta/hae-hakuvali db {:integraatio integraation-nimi})))
+  (first (metatiedot-q/hae-hakuvali db {:integraatio integraation-nimi})))
 
 (defn kutsu-reimari-integraatiota* [{:keys [db pohja-url kayttajatunnus salasana alkuaika loppuaika muutosaika] :as hakuparametrit} konteksti]
   (let [otsikot {"Content-Type" "text/xml"
@@ -39,22 +39,25 @@
                         :kayttajatunnus kayttajatunnus
                         :salasana salasana
                         :muutosaika muutosaika}
+        _ (log/debug "aikaparametrit: " (or muutosaika [alkuaika loppuaika]))
         {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset ((:sanoma-fn hakuparametrit) (or muutosaika [alkuaika loppuaika])))]
     (integraatiotapahtuma/lisaa-tietoja konteksti (str "Haku: " (:haun-nimi hakuparametrit) " ajalta: " (or muutosaika [alkuaika loppuaika])))
 
-    ((:vastaus-fn hakuparametrit) db body)))
+    ((:vastaus-fn hakuparametrit) db body)
+    (metatiedot-q/paivita-aikakursori! db {:integraatio (:haun-nimi hakuparametrit)
+                                           :aika loppuaika})))
 
 (defn kutsu-reimari-integraatiota
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
   (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
     (if-not (and alku loppu)
-      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa")
+      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa, hakua ei tehdä.")
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
-       (fn []
+       (fn yrita-ajaa-lukon-kanssa-callback []
          (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "reimari" haun-nimi
-          (fn [konteksti]
+          (fn suorita-intergraatio-callback [konteksti]
             (kutsu-reimari-integraatiota* (assoc hakuparametrit :alkuaika alku :loppuaika loppu) konteksti))))))))
 
 
@@ -70,8 +73,7 @@
         [kt ss pu] (as-> rk x
                      (select-keys x [:kayttajatunnus :salasana :pohja-url])
                      (map second x))]
-    (log/debug "tunnus" kt "url" pu)
-    (with-redefs [hakuvali (constantly [alkuaika loppuaika])]
+    (with-redefs [hakuvali (constantly {:alku alkuaika :loppu loppuaika})]
       (fn db il pu kt ss))))
 
 
@@ -79,16 +81,17 @@
 
   (let [;; esim tyyppi = HaeKomponenttiTyypit -> :HaeKomponenttiTyypit ja :HaeKomponenttiTyypitRequest
         tyyppi-kw (keyword tyyppi)
-        tyyppi-request-kw (keyword (str tyyppi "Request"))]
-    (xml/tee-xml-sanoma
-     [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
-      [:soap:Body
-       [tyyppi-kw {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
-        [tyyppi-request-kw attribuutit]]]])))
+        tyyppi-request-kw (keyword (str tyyppi "Request"))
+        sanoma (xml/tee-xml-sanoma
+                [:soap:Envelope {:xmlns:soap "http://schemas.xmlsoap.org/soap/envelope/"}
+                 [:soap:Body
+                  [tyyppi-kw {:xmlns "http://www.liikennevirasto.fi/xsd/harja/reimari"}
+                   [tyyppi-request-kw attribuutit]]]])]
+    sanoma))
 
 (defn kysely-sanoma-aikavali [tyyppi [alkuaika loppuaika]]
   (kysely-sanoma tyyppi {:alkuaika (formatoi-aika alkuaika)
                          :loppuaika (formatoi-aika loppuaika)}))
 
-(defn kysely-sanoma-muutosaika [tyyppi muutosaika]
-  (kysely-sanoma tyyppi {:muutosaika (formatoi-aika muutosaika)}))
+(defn kysely-sanoma-muutosaika [tyyppi [alkuaika loppuaika]]
+  (kysely-sanoma tyyppi {:muutosaika (formatoi-aika alkuaika)}))

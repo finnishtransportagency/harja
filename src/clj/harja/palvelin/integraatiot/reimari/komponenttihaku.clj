@@ -28,7 +28,7 @@
 
 (defn hae-komponenttityypit [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeKomponenttiTyypit"
-                        :sanoma-fn (partial r-apurit/kysely-sanoma-muutosaika "HaeKomponenttiTyypit")
+                        :sanoma-fn (partial r-apurit/kysely-sanoma-aikavali "HaeKomponenttiTyypit")
                         :vastaus-fn kasittele-komponenttityypit-vastaus
                         :haun-nimi "hae-komponenttityypit"
                         :db db
@@ -40,7 +40,7 @@
 
 (defn hae-turvalaitekomponentit [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeTurvalaiteKomponentit"
-                        :sanoma-fn (partial r-apurit/kysely-sanoma-muutosaika "HaeTurvalaiteKomponentit")
+                        :sanoma-fn (partial r-apurit/kysely-sanoma-aikavali "HaeTurvalaiteKomponentit")
                         :vastaus-fn kasittele-turvalaitekomponentit-vastaus
                         :haun-nimi "hae-turvalaitekomponentit"
                         :db db
