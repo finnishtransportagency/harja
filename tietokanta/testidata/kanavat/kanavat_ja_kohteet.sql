@@ -10,3 +10,50 @@ INSERT INTO kan_kohde_urakka ("kohde-id", "urakka-id", luoja)
       ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
        (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava'),
        (SELECT id FROM kayttaja WHERE kayttajanimi='tero'));
+
+INSERT INTO kan_toimenpide
+(tyyppi,
+ pvm,
+ kohde,
+ huoltokohde,
+ toimenpidekoodi,
+ lisatieto,
+ suorittaja,
+ kuittaaja,
+ luotu,
+ luoja,
+ muokattu,
+ muokkaaja,
+ poistettu,
+ poistaja)
+VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
+  now(),
+  (SELECT id
+   FROM kan_kohde
+   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
+  (SELECT id
+   FROM kan_huoltokohde
+   WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
+  (SELECT id
+   FROM toimenpidekoodi
+   WHERE emo = (SELECT id
+                FROM toimenpidekoodi
+                WHERE koodi = '24104') AND
+         nimi = 'Ei yksilöity'),
+  'Testitoimenpide',
+  (SELECT id
+   FROM kayttaja
+   WHERE kayttajanimi = 'jvh'),
+  (SELECT id
+   FROM kayttaja
+   WHERE kayttajanimi = 'jvh'),
+  now(),
+  (SELECT id
+   FROM kayttaja
+   WHERE kayttajanimi = 'jvh'),
+  now(),
+        (SELECT id
+         FROM kayttaja
+         WHERE kayttajanimi = 'jvh'),
+        NULL,
+        NULL)
