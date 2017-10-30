@@ -129,8 +129,8 @@
     </xs:choice>
   </xs:complexType>
 
-  <!-- HaeKomponenttiTyypitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
-       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <!-- HaeKomponenttiTyypitRequest sisältää vain alku/loppuaika-attribuutit, jotka kertovat aikaleimat
+       joiden välissä luodut tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeKomponenttiTyypitRequestType">
       <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
       <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
