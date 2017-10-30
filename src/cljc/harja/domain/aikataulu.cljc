@@ -85,11 +85,9 @@
   [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
   (first(keep
           (fn [{id :id :as aikataulurivi}]
-            (println "111 " (first drag))
             (if (and (= id (first drag)) (= :paallystys (second drag)))
                (let [kohde-alku (get aikataulurivi :aikataulu-kohde-alku)
                     kohde-loppu (get aikataulurivi :aikataulu-kohde-valmis)]
-                (println "Kohdealku" kohde-alku)
                 (and (pvm/sama-tai-jalkeen? alku kohde-alku)
                      (pvm/sama-tai-ennen? loppu kohde-loppu))
                 )
