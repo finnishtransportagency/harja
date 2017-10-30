@@ -25,14 +25,15 @@
             [clojure.set :as set]))
 
 (defn hae-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Testi tälle uudelle palvelulle
-  ;; TODO Oikeustarkistus + testi sille
-  (namespacefy/namespacefy
-    (into []
-          (map #(konv/array->set % :kaytossa-urakoissa))
-          (alukset-q/hae-urakoitsijan-alukset db {:urakka (::urakka/id tiedot)
-                                                  :urakoitsija (::alus/urakoitsija-id tiedot)}))
-    {:ns :harja.domain.vesivaylat.alus}))
+  ;; TODO Testi tälle uudelle palvelulle (myös oikeustarkistukselle)
+  (let [urakka-id (::urakka/id tiedot)]
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
+    (namespacefy/namespacefy
+     (into []
+           (map #(konv/array->set % :kaytossa-urakoissa))
+           (alukset-q/hae-urakoitsijan-alukset db {:urakka urakka-id
+                                                   :urakoitsija (::alus/urakoitsija-id tiedot)}))
+     {:ns :harja.domain.vesivaylat.alus})))
 
 (defn- tallenna-urakoitsijan-alus
   "Luo uuden tai päivittää olemassa olevan aluksen MMSI:n perusteella."
@@ -92,12 +93,12 @@
          ::m/luoja-id (:id user)}))))
 
 (defn tallenna-urakoitsijan-alukset [db user tiedot]
-  ;; TODO Oikeustarkistus + testi sille
-  ;; TODO Testi tälle uudelle palvelulle
+  ;; TODO Testi tälle uudelle palvelulle (myös oikeustarkistukselle)
   ;; TODO Kuuluu urakkaan/urakoitsijalle tjsp tarkistus
   (let [urakka-id (::urakka/id tiedot)
         urakoitsija-id (::alus/urakoitsija-id tiedot)
         alukset (::alus/tallennettavat-alukset tiedot)]
+    (oikeudet/vaadi-oikeus "alusten-muokkaus" oikeudet/urakat-yleiset user urakka-id)
     (jdbc/with-db-transaction [db db]
       (doseq [alus alukset]
         (tallenna-urakoitsijan-alus db user urakoitsija-id alus)
