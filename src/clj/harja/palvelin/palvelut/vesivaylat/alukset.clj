@@ -22,7 +22,8 @@
             [namespacefy.core :as namespacefy]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.palvelin.palvelut.urakoitsijat :as urakoitsijat]))
 
 (defn vaadi-alus-kuuluu-urakoitsijalle [db alus-mmsi vaitetty-urakoitsija-id]
   (log/debug "Tarkikistetaan, että alus " alus-mmsi " kuuluu väitetylle urakoitsijalle " vaitetty-urakoitsija-id)
@@ -108,6 +109,7 @@
         urakoitsija-id (::alus/urakoitsija-id tiedot)
         alukset (::alus/tallennettavat-alukset tiedot)]
     (oikeudet/vaadi-oikeus "alusten-muokkaus" oikeudet/urakat-yleiset user urakka-id)
+    (urakoitsijat/vaadi-urakoitsija-kuuluu-urakkaan db urakoitsija-id urakka-id)
     (doseq [alus alukset]
       (vaadi-alus-kuuluu-urakoitsijalle db (::alus/mmsi alus) urakoitsija-id))
 

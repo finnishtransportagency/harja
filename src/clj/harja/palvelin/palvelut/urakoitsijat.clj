@@ -126,3 +126,13 @@
          ::o/katuosoite (:katuosoite tallennettu-urakoitsija)
          ::o/postitoimipaikka (:postitoimipaikka tallennettu-urakoitsija)
          ::o/ytunnus (:ytunnus tallennettu-urakoitsija)}))))
+
+(defn vaadi-urakoitsija-kuuluu-urakkaan [db urakoitsija-id vaitetty-urakka-id]
+  (log/debug "Tarkikistetaan, että urakoitsija " urakoitsija-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
+  (assert vaitetty-urakka-id "Urakka id puuttuu!")
+  (when urakoitsija-id
+    (let [urakan-todellinen-urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija db urakka-id)))]
+      (when (and (some? urakan-todellinen-urakoitsija)
+                 (not= urakan-todellinen-urakoitsija vaitetty-urakka-id))
+        (throw (SecurityException. (str "Urakan urakoitsija ei ole " vaitetty-urakka-id
+                                        " vaan " urakan-todellinen-urakoitsija)))))))
