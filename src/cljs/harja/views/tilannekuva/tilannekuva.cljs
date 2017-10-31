@@ -295,7 +295,7 @@ suodatinryhmat
     (komp/luo
       (komp/sisaan (fn [this]
                      (when-not (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                       (let [tilaajan-laadunvalvonta-avain (some #(when (= :tilaajan-laadunvalvonta (:nimi %)) %)
+                       (let [tilaajan-laadunvalvonta-avain (some #(when (= "tilaajan laadunvalvonta" (:nimi %)) %)
                                                                  (keys (:tarkastukset @tiedot/suodattimet)))]
                          (swap! tiedot/suodattimet update :tarkastukset dissoc tilaajan-laadunvalvonta-avain)))))
       (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
