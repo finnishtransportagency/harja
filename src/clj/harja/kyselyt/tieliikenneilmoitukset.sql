@@ -541,3 +541,9 @@ SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
 UPDATE ilmoitus
 SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita
 WHERE id = :id;
+
+-- name: onko-ilmoitus-valitetty-paivystajille?
+SELECT exists(SELECT
+              FROM ilmoitustoimenpide
+              WHERE kuittaustyyppi = 'valitys'
+                    AND ilmoitusid = :ilmoitusid)

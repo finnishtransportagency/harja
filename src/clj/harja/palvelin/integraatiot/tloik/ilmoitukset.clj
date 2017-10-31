@@ -72,6 +72,9 @@
     (doseq [paivystaja paivystajat]
       (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
 
+(defn ilmoitus-lahetetty-paivitystajille? [db ilmoitus-id]
+  (ilmoitukset-q/ilmoitus-valitetty-paivystajille? db ilmoitus-id))
+
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
@@ -90,9 +93,10 @@
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
       (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-      (laheta-ilmoitus-paivystajille db
-                                     (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
-                                     paivystajat urakka-id ilmoitusasetukset))
+      (when (not (ilmoitus-lahetetty-paivitystajille? db ilmoitus-id))
+        (laheta-ilmoitus-paivystajille db
+                                      (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
+                                      paivystajat urakka-id ilmoitusasetukset)))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 
