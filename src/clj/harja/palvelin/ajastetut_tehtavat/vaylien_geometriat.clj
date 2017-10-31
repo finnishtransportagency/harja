@@ -19,15 +19,18 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
+(defn paattele-vaylalaji [teksti]
+  (if (and teksti
+           (re-matches #"^VL[12].*" teksti))
+    "kauppamerenkulku"
+    ;; else
+    "muu"))
+
 (defn tallenna-vayla [db {:keys [id geometry properties]}]
   ;; Tietosisällön kuvaus löytyy http://docplayer.fi/20620576-Vesivaylaaineistojen-tietosisallon-kuvaus.html
+
   (let [nimi (:VAY_NIMISU properties)
-        tyyppi (case (:VAYLALAJI properties)
-                 ;; Meriväylä
-                 1 "kauppamerenkulku"
-                 ;; Sisävesiväylä
-                 2 "muu"
-                 "muu")
+        tyyppi (paattele-vaylalaji (:VAYLA_LK properties))
         vaylanro (:JNRO properties)
         arvot (cheshire/encode properties)
         sql-parametrit {:sijainti (cheshire/encode geometry)
@@ -36,7 +39,9 @@
                         :vaylanro vaylanro
                         :tyyppi tyyppi
                         :arvot arvot}]
-    (q-vaylat/luo-vayla<! db sql-parametrit)))
+
+    (when nimi
+      (q-vaylat/luo-vayla<! db sql-parametrit))))
 
 (defn kasittele-vaylat [db vastaus]
   (let [data (cheshire/decode vastaus keyword)
@@ -85,3 +90,8 @@
     (when-let [lopeta-fn (:vaylien-geometriahaku this)]
       (lopeta-fn))
     this))
+
+
+(defn kutsu-interaktiivisesti [geometria-url]
+  (let [j (deref (ns-resolve 'harja.palvelin.main 'harja-jarjestelma))]
+    (paivita-vaylat (:integraatioloki j) (:db j) geometria-url)))
