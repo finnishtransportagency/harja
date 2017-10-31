@@ -100,57 +100,59 @@
   "Tarkistaa :luku, :kirjoitus tai muun tyyppisen oikeuden"
   [tyyppi oikeus urakka-id {:keys [organisaation-urakat roolit organisaatio
                                    urakkaroolit organisaatioroolit] :as kayttaja}]
-  (when-not (or (nil? urakka-id) (number? urakka-id))
-    (#?(:clj log/error
-        :cljs log/debug)
-      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Urakka-id:n täytyy olla joko nil tai numero " (pr-str urakka-id)))
-  (when-not (instance? KayttoOikeus oikeus)
-    (#?(:clj log/error
-        :cljs log/debug)
-      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Annettu oikeus ei ole KayttoOikeus " (pr-str oikeus)))
-  (when-not (every? #(contains? kayttaja %) [:organisaation-urakat :roolit :organisaatio
-                                           :urakkaroolit :organisaatioroolit])
-    (#?(:clj log/error
-        :cljs log/debug)
-      "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Käyttäjältä puuttuu jokin avaimista "
-               (pr-str [:organisaation-urakat :roolit :organisaatio :urakkaroolit :organisaatioroolit])
-               " "
-               (pr-str kayttaja)))
-  (let [oikeus-pred (partial (case tyyppi
-                               :luku on-lukuoikeus?
-                               :kirjoitus on-kirjoitusoikeus?
-                               (partial on-nimetty-oikeus? tyyppi))
-                             oikeus)
-        kaikki-urakkaroolit (apply concat (vals urakkaroolit))
-        kaikki-organisaatioroolit (apply concat (vals organisaatioroolit))
-        kaikki-roolit (concat roolit
-                              kaikki-urakkaroolit
-                              kaikki-organisaatioroolit)]
+  (let [urakka-id (or (:urakka urakka-id) urakka-id) ;; HAR-6409 hotfix
+        ]
+    (when-not (or (nil? urakka-id) (number? urakka-id))
+     (#?(:clj  log/error
+         :cljs log/debug)
+       "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Urakka-id:n täytyy olla joko nil tai numero " (pr-str urakka-id)))
+    (when-not (instance? KayttoOikeus oikeus)
+      (#?(:clj  log/error
+          :cljs log/debug)
+        "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Annettu oikeus ei ole KayttoOikeus " (pr-str oikeus)))
+    (when-not (every? #(contains? kayttaja %) [:organisaation-urakat :roolit :organisaatio
+                                               :urakkaroolit :organisaatioroolit])
+      (#?(:clj  log/error
+          :cljs log/debug)
+        "KRIITTINEN BUGI OIKEUSTARKASTUKSESSA: Käyttäjältä puuttuu jokin avaimista "
+        (pr-str [:organisaation-urakat :roolit :organisaatio :urakkaroolit :organisaatioroolit])
+        " "
+        (pr-str kayttaja)))
+    (let [oikeus-pred (partial (case tyyppi
+                                 :luku on-lukuoikeus?
+                                 :kirjoitus on-kirjoitusoikeus?
+                                 (partial on-nimetty-oikeus? tyyppi))
+                               oikeus)
+          kaikki-urakkaroolit (apply concat (vals urakkaroolit))
+          kaikki-organisaatioroolit (apply concat (vals organisaatioroolit))
+          kaikki-roolit (concat roolit
+                                kaikki-urakkaroolit
+                                kaikki-organisaatioroolit)]
 
-    (or (if-not urakka-id
-          ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
-          (some oikeus-pred kaikki-roolit)
+      (or (if-not urakka-id
+            ;; Jos urakkaa ei annettu, tarkista että rooli on jossain
+            (some oikeus-pred kaikki-roolit)
 
 
-          ;; Jos urakka on annettu, tarkista että on oikeus tässä urakassa
-          ;; tai oikeus, joka implikoi urakan (+ = org. urakka, * = mikä tahansa urakka)
-          (some #(on-oikeus-urakkaan? oikeus-pred urakka-id (:id organisaatio)
-                                      (organisaation-urakat urakka-id) %)
-                (concat
-                  ;; Yleiset roolit (ei urakkaan sidottu)
-                  (map (fn [r]
-                         {:rooli r :urakka-id nil}) roolit)
-                  ;; Urakkakohtaiset roolit urakan id:llä
-                  (mapcat (fn [[urakka-id roolit]]
-                            (for [r roolit]
-                              {:rooli r :urakka-id urakka-id}))
-                          urakkaroolit)
-                  ;; Organisaatiokohtaiset roolit organisation id:llä
-                  (mapcat (fn [[org-id roolit]]
-                            (for [r roolit]
-                              {:rooli r :organisaatio-id org-id}))
-                          organisaatioroolit))))
-        false)))
+            ;; Jos urakka on annettu, tarkista että on oikeus tässä urakassa
+            ;; tai oikeus, joka implikoi urakan (+ = org. urakka, * = mikä tahansa urakka)
+            (some #(on-oikeus-urakkaan? oikeus-pred urakka-id (:id organisaatio)
+                                        (organisaation-urakat urakka-id) %)
+                  (concat
+                    ;; Yleiset roolit (ei urakkaan sidottu)
+                    (map (fn [r]
+                           {:rooli r :urakka-id nil}) roolit)
+                    ;; Urakkakohtaiset roolit urakan id:llä
+                    (mapcat (fn [[urakka-id roolit]]
+                              (for [r roolit]
+                                {:rooli r :urakka-id urakka-id}))
+                            urakkaroolit)
+                    ;; Organisaatiokohtaiset roolit organisation id:llä
+                    (mapcat (fn [[org-id roolit]]
+                              (for [r roolit]
+                                {:rooli r :organisaatio-id org-id}))
+                            organisaatioroolit))))
+          false))))
 
 (defn on-muu-oikeus?
   "Tarkistaa määritellyn muun (kuin :luku tai :kirjoitus) oikeustyypin"

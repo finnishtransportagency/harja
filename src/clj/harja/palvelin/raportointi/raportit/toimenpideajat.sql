@@ -5,10 +5,7 @@ SELECT
   u.nimi as urakka,
   tpk.nimi,
   (EXTRACT(HOUR FROM t.alkanut))::integer as tunti,
-  CASE
-    WHEN rp.talvihoitoluokka=0 THEN NULL
-    ELSE rp.talvihoitoluokka
-  END AS luokka
+  rp.talvihoitoluokka AS luokka
   FROM toteuma t
        JOIN urakka u ON t.urakka = u.id
        JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
@@ -17,7 +14,7 @@ SELECT
        JOIN toimenpidekoodi tpk ON tt.toimenpidekoodi = tpk.id
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
-   AND (rp.talvihoitoluokka IN (:hoitoluokat) OR rp.talvihoitoluokka=0 OR rp.talvihoitoluokka IS NULL)
+   AND (rp.talvihoitoluokka IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
    AND u.tyyppi = :urakkatyyppi::urakkatyyppi
    AND (:urakka::integer IS NULL OR u.id = :urakka)
    AND u.urakkanro IS NOT NULL
@@ -29,10 +26,7 @@ SELECT
   u.id as urakka,
   o.id as hallintayksikko,
   toimkood.id AS tpk,
-  CASE
-    WHEN rp.talvihoitoluokka=0 THEN NULL
-    ELSE rp.talvihoitoluokka
-  END AS luokka,
+  rp.talvihoitoluokka AS luokka,
   COUNT(DISTINCT t.alkanut::date) as lkm
 FROM toteuma t
   JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
@@ -41,7 +35,7 @@ FROM toteuma t
   JOIN organisaatio o ON u.hallintayksikko = o.id
   JOIN toteuma_tehtava tt ON t.id = tt.toteuma
   JOIN toimenpidekoodi toimkood ON tt.toimenpidekoodi = toimkood.id
-WHERE (rp.talvihoitoluokka IN (:hoitoluokat) OR rp.talvihoitoluokka=0 OR rp.talvihoitoluokka IS NULL)
+WHERE (rp.talvihoitoluokka IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
       AND (t.alkanut BETWEEN :alku AND :loppu)
       AND t.poistettu IS NOT TRUE
       AND u.tyyppi = :urakkatyyppi::urakkatyyppi
