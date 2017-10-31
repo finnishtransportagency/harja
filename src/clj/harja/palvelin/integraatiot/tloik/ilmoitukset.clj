@@ -91,7 +91,7 @@
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
       (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-      (if (not uudelleen-lahetys?)
+      (when (not uudelleen-lahetys?)
         (laheta-ilmoitus-paivystajille db
                                       (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
                                       paivystajat urakka-id ilmoitusasetukset)))
