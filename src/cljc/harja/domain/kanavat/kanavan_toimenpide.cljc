@@ -1,10 +1,9 @@
 (ns harja.domain.kanavat.kanavan-toimenpide
   (:require
-    [clojure.string :as str]
-    [clojure.spec.alpha :as s]
-    [specql.transform :as xf]
-    [clojure.set :as set]
-    [specql.rel :as rel]
+    [harja.domain.kanavat.kanavan-kohde :as kohde]
+    [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
+    [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+    [harja.domain.kayttaja :as kayttaja]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -15,7 +14,7 @@
 
 (define-tables
   ["kan_toimenpidetyyppi" ::kanava-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
-  ["kan_toimenpide" ::kanava-toimenpiteet
+  ["kan_toimenpide" ::kanava-toimenpide
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
@@ -34,3 +33,34 @@
     ::kuittaaja (specql.rel/has-one ::kuittaaja
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
+
+(def kaikki-kentat
+  #{::id
+    ::tyyppi
+    ::pvm
+    ::lisatieto
+    [::kohde
+     #{::kohde/id
+       ::kohde/nimi
+       ::kohde/tyyppi
+       ::kohde/sijainti}]
+    [::huoltokohde
+     #{::huoltokohde/id
+       ::huoltokohde/nimi}]
+    [::toimenpidekoodi
+     #{::toimenpidekoodi/id
+       ::toimenpidekoodi/nimi}]
+    [::suorittaja
+     #{::kayttaja/id
+       ::kayttaja/etunimi
+       ::kayttaja/sukunimi
+       ::kayttaja/kayttajanimi
+       ::kayttaja/sahkoposti
+       ::kayttaja/puhelin}]
+    [::kuittaaja
+     #{::kayttaja/id
+       ::kayttaja/etunimi
+       ::kayttaja/sukunimi
+       ::kayttaja/kayttajanimi
+       ::kayttaja/sahkoposti
+       ::kayttaja/puhelin}]})
