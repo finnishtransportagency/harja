@@ -14,10 +14,12 @@
     </xs:choice>
   </xs:complexType>
 
-  <!-- HaeToimenpiteetRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
-       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <!-- HaeToimenpiteetRequest sisältää vain alku- ja
+       loppuaika-attribuutit, jotka kertoo aikaleimaat joiden välissä
+       luodut tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeToimenpiteetRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut toimenpiteet
@@ -74,14 +76,21 @@
   </xs:complexType>
 
   <xs:complexType name="VaylaType">
-    <xs:attribute type="xs:token" name="nro" use="optional"/>
-    <xs:attribute type="xs:string" name="nimi" use="optional"/>
+    <xs:attribute type="xs:token" name="nro" use="optional"/> <!-- VAYLA.JNRO -->
+    <xs:attribute type="xs:string" name="nimi" use="optional"/> <!-- VAYLA.VAY_NIMISU -->
   </xs:complexType>
 
   <xs:complexType name="TurvalaiteType">
     <xs:attribute type="xs:token" name="nro" use="required"/>
     <xs:attribute type="xs:string" name="nimi" use="optional"/>
     <xs:attribute type="xs:integer" name="ryhma" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaitteetType">
+    <xs:sequence>
+      <xs:element name="turvalaite" type="TurvalaiteType" maxOccurs="unbounded">
+      </xs:element>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="KomponenttiType">
@@ -120,10 +129,11 @@
     </xs:choice>
   </xs:complexType>
 
-  <!-- HaeKomponenttiTyypitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
-       jonka jälkeen luodut tai muokatut tulee palauttaa -->
+  <!-- HaeKomponenttiTyypitRequest sisältää vain alku/loppuaika-attribuutit, jotka kertovat aikaleimat
+       joiden välissä luodut tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeKomponenttiTyypitRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <!-- HaeToimenpiteetResponse sisältää haun muutoaika aikaleiman jälkeen muokatut tai luodut komponenttityypit
@@ -161,10 +171,9 @@
       </xs:choice>
   </xs:complexType>
 
-  <!-- HaeTurvalaiteKomponentitRequest sisältää vain muutosaika attribuutin, joka kertoo aikaleiman
-       jonka jälkeen luodut tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeTurvalaiteKomponentitRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="HaeTurvalaiteKomponentitResponseType">
@@ -199,10 +208,9 @@
     </xs:choice>
   </xs:complexType>
 
-  <!-- Muutosaika kuten muissakin pyynnöissä. Muutosajan jälkeen luodut
-       tai muokatut tulee palauttaa -->
   <xs:complexType name="HaeViatRequestType">
-    <xs:attribute name="muutosaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="alkuaika" type="xs:dateTime" use="required"/>
+      <xs:attribute name="loppuaika" type="xs:dateTime" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="HaeViatResponseType">
@@ -249,4 +257,46 @@
       <xs:attribute type="xs:string" name="muokkaaja" use="required"/> <!-- UUI -->
   </xs:complexType>
 
-</xs:schema>
+
+
+  <!-- HaeTurvalaitetyhmät eli urakka-alueiden muodostuksen perustana käytetyt turvalaitekokoelmat -->
+
+  <xs:element name="HaeTurvalaiteryhmat" type="HaeTurvalaiteryhmatPayload"/>
+
+  <xs:complexType name="HaeTurvalaiteryhmatPayload">
+    <xs:choice>
+      <xs:element name="HaeTurvalaiteryhmatRequest" type="HaeTurvalaiteryhmatRequestType"/>
+      <xs:element name="HaeTurvalaiteryhmatResponse" type="HaeTurvalaiteryhmatResponseType"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="HaeTurvalaiteryhmatRequestType">
+    <xs:attribute type="xs:string" name="alkuaika" use="required"/>
+    <xs:attribute type="xs:string" name="loppuaika"/> <!-- Kyselysanoman muodostamishetki jos ei annettu. -->
+  </xs:complexType>
+
+  <xs:complexType name="HaeTurvalaiteryhmatResponseType">
+    <xs:sequence>
+      <xs:element name="turvalaiteryhma" type="TurvalaiteRyhmaType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaiteRyhmatType">
+    <xs:sequence>
+      <xs:element name="turvalaiteryhma" type="TurvalaiteRyhmaType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="TurvalaiteRyhmaType">
+    <xs:all>
+      <xs:element name="turvalaitteet" type="TurvalaitteetType" /> <!-- Linkkitaulu: T_SDGROUP_SD -->
+    </xs:all>
+    <xs:attribute type="xs:string" name="tunnus"/> <!-- T_SD_GROUP.SDGROUP_ID -->
+    <xs:attribute type="xs:string" name="nimi"/> <!-- T_SD_GROUP.SDGROUP_NME -->
+    <xs:attribute type="xs:string" name="kuvaus"/> <!-- T_SD_GROUP.SDGROUP_MEM -->
+  </xs:complexType>
+
+
+  </xs:schema>
+
+

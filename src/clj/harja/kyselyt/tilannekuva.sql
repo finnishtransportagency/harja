@@ -106,7 +106,9 @@ SELECT
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
-WHERE (lp.urakka IN (:urakat) OR lp.urakka IS NULL)
+  LEFT JOIN urakka u ON lp.urakka = u.id
+WHERE ((lp.urakka IN (:urakat) AND u.urakkanro IS NOT NULL)
+       OR lp.urakka IS NULL)
       AND (lp.aika BETWEEN :alku AND :loppu OR
            lp.kasittelyaika BETWEEN :alku AND :loppu) AND
       lp.tekija :: TEXT IN (:tekijat)
@@ -158,8 +160,9 @@ FROM tarkastus t
   -- Talvi- ja soratiemittaukset
   LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
+  LEFT JOIN urakka u ON t.urakka = u.id
 WHERE sijainti IS NOT NULL AND
-      (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      ((t.urakka IN (:urakat) AND u.urakkanro IS NOT NULL) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)) AND
 t.tyyppi :: TEXT IN (:tyypit) AND
@@ -207,8 +210,9 @@ FROM tarkastus t
   LEFT JOIN talvihoitomittaus thm ON t.id = thm.tarkastus
   LEFT JOIN soratiemittaus stm ON t.id = stm.tarkastus
   LEFT JOIN yllapitokohde ypk ON t.yllapitokohde = ypk.id
+  LEFT JOIN urakka u ON t.urakka = u.id
 WHERE sijainti IS NOT NULL AND
-      (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
+      ((t.urakka IN (:urakat) AND u.urakkanro IS NOT NULL) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
       ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
 t.tyyppi :: TEXT IN (:tyypit) AND
