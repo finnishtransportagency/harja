@@ -62,9 +62,12 @@
    [:fo:inline " "]
    [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
 
-(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt]}]]
+(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
   [:fo:inline
-   [:fo:inline (if fmt (fmt arvo) arvo)]
+   [:fo:inline (cond
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 fmt (fmt arvo)
+                 :else arvo)]
    [:fo:inline (str yksikko)]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
