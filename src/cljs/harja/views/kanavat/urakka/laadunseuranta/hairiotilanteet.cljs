@@ -28,6 +28,7 @@
 (defn- suodattimet-ja-toiminnot [valittu-urakka]
   [valinnat/urakkavalinnat {:urakka valittu-urakka}
    ^{:key "urakkavalinnat"}
+   ;; TODO Lisää filttereitä
    [urakka-valinnat/urakan-hoitokausi valittu-urakka]
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:urakka valittu-urakka}
