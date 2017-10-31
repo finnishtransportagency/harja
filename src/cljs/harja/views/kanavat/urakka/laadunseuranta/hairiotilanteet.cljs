@@ -15,6 +15,7 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.modal :as modal]
 
+            [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -46,8 +47,21 @@
          #(log "TODO Lisää häiriötilanne")
          {:disabled (not oikeus?)}]))]])
 
-(defn- hairiolista []
-  [:div "TODO Häiriölista"])
+(defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
+  [grid/grid
+   {:otsikko (if (and (some? hairiotilanteet) hairiotilanteiden-haku-kaynnissa?)
+               [ajax-loader-pieni "Päivitetään listaa"]
+               "Häiriötilanteet")
+    :tunniste ::hairiotilanne/id
+    :tyhja (if (nil? hairiotilanteet)
+             [ajax-loader "Haetaan häiriötilanteita"]
+             "Häiriötilanteita ei löytynyt")}
+   [{:otsikko "Nimi" :nimi ::h/nimi}
+    {:otsikko "Alku" :nimi ::h/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
+    {:otsikko "Loppu" :nimi ::h/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
+    {:otsikko "Liitetty urakkaan" :nimi :liitetty-urakkaan :tyyppi :string
+     :hae #(get-in % [::h/urakka ::u/nimi])}]
+   haetut-hankkeet])
 
 (defn hairiotilanteet* [e! app]
   (komp/luo
@@ -59,7 +73,7 @@
     (fn [e! app]
       [:div
        [suodattimet-ja-toiminnot (get-in app [:valinnat :urakka-id])]
-       [hairiolista]])))
+       [hairiolista e! app]])))
 
 (defc hairiotilanteet []
   [tuck tiedot/tila hairiotilanteet*])

@@ -13,6 +13,8 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def tila (atom {:nakymassa? false
+                 :hairiotilanteet nil
+                 :hairiotilanteiden-haku-kaynnissa? false
                  :valinnat nil}))
 
 (defrecord Nakymassa? [nakymassa?])
