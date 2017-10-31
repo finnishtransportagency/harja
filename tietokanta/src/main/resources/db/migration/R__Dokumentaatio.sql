@@ -189,7 +189,7 @@ COMMENT ON TABLE kanavahuoltokohde IS
 E'Huoltokohteet ovat asioita, joita kanavasta korjataan. Huoltokohteita ei pidä sekoittaa kohteeseen! Huoltokohde voi olla esim "Hydrauliikka", kun taas kohde on fyysinen sijainti kanavan varrella, esim. silta.';
 
 COMMENT ON TABLE kan_hairio IS
-E'Kuvaa häiriötilannetta';
+E'Kuvaa häiriötilannetta. Urakoitsija vastaa hoitourakoissa tapahtuvien häiriötilanteiden tietojen kirjaamisesta.';
 COMMENT ON COLUMN kan_hairio.odotusaika IS 'Aika, jonka liikennöivät alukset joutuvat odottamaan häiriön takia'
 COMMENT ON COLUMN kan_hairio.ammattiliikenne_lkm IS 'Ammattiliikennealusten määrä, jotka joutuvat odottamaan häiriön takia'
 COMMENT ON COLUMN kan_hairio.huviliikenne_lkm IS 'Huviliikennealusten määrä, jotka joutuvat odottamaan häiriön takia'
