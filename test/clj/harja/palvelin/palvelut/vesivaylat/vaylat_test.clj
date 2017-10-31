@@ -30,7 +30,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -54,6 +54,16 @@
 
     (is (= (count vastaus) 1))
     (is (::va-d/nimi (first vastaus) "Hietasaaren läntinen väylä"))))
+
+(deftest poistettuja-vaylia-ei-palauteta
+  (u "UPDATE vv_vayla SET poistettu = TRUE")
+
+  (let [params {:hakuteksti "hie"}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-vaylat +kayttaja-jvh+
+                                params)]
+
+    (is (= (count vastaus) 0))))
 
 (deftest vaylien-haku-toimii-vaylatyypilla
   (let [params {:vaylatyyppi :kauppamerenkulku}
