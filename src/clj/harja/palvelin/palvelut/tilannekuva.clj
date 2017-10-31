@@ -334,9 +334,6 @@
 
 (defn- hae-tyokoneiden-reitit
   [db ch user {:keys [toleranssi alue alku loppu toimenpiteet talvi kesa yllapito tarkastukset] :as tiedot} urakat]
-  (log/debug "URAKAT: " (pr-str urakat))
-  (log/debug "TOIMENPITEET: " (pr-str (tyokoneiden-toimenpiteet talvi kesa yllapito tarkastukset user)))
-  (log/debug "ORGANISAATIO: " (pr-str (get-in user [:organisaatio :id])))
   (q/hae-tyokonereitit-kartalle
     db ch
     (merge
