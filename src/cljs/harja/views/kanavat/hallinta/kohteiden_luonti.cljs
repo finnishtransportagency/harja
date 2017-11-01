@@ -168,7 +168,7 @@
               :leveys 6
               :hae tiedot/kohteen-urakat}
 
-             {:otsikko "Kuuluu urakkaan?"
+             {:otsikko (str "Kuuluu urakkaan " (:harja.domain.urakka/nimi valittu-urakka) "?")
               :leveys 6
               :tyyppi :komponentti
               :tasaa :keskita
