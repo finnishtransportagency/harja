@@ -220,21 +220,16 @@
             yllapito-pvm-fmt (fn [arvo]
                                (pvm/pvm-opt arvo {:nayta-vuosi-fn #(not= (pvm/vuosi %) vuosi)}))]
         [:div.aikataulu
-
          [valinnat ur]
-
-
          (when aikajana?
            [aikajana/aikajana
             {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
                         (tallenna-aikataulu
                           urakka-id sopimus-id vuosi
-                          (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %)
-                          ))
-                        }
+                          (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
+                        (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger))}
             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
                  aikataulurivit)])
-
          [grid/grid
           {:otsikko [:span
                      "Kohteiden aikataulu"

@@ -58,8 +58,6 @@
                                                         aikataulu-tiemerkinta-alku
                                                         aikataulu-tiemerkinta-loppu)}))])}))
 
-
-
 (defn raahauksessa-paivitetyt-aikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
   [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
@@ -76,8 +74,6 @@
             loppu-avain loppu))))
     aikataulurivit))
 
-
-
 (defn aikataulun-alku-ja-loppu-validi?
   "Tarkistaa että aikajanan päällystystoimenpiteen uusi päivämäärävalinta on validi.
   Toimenpide ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen.
@@ -89,7 +85,6 @@
                (let [kohde-alku (get aikataulurivi :aikataulu-kohde-alku)
                     kohde-loppu (get aikataulurivi :aikataulu-kohde-valmis)]
                 (and (pvm/sama-tai-jalkeen? alku kohde-alku)
-                     (pvm/sama-tai-ennen? loppu kohde-loppu))
-                )
+                     (pvm/sama-tai-ennen? loppu kohde-loppu)))
               true )
               ) aikataulurivit )))
