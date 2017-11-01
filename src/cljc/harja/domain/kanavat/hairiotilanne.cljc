@@ -21,7 +21,9 @@
 (define-tables
   ["kan_hairio_korjauksen_tila" ::hairiotilanne-korjauksen-tila (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_hairio" ::hairiotilanne
-   {"ammattiliikenne_lkm" ::ammattiliikenne-lkm
+   {"urakka" ::urakka-id
+    "sopimus" ::sopimus-id
+    "ammattiliikenne_lkm" ::ammattiliikenne-lkm
     "huviliikenne_lkm" ::huviliikenne-lkm
     "paikallinen_kaytto" ::paikallinen-kaytto
     "korjausaika_h" ::korjausaika-h
@@ -37,7 +39,7 @@
     ::korjaustoimenpide
     ::paikallinen-kaytto
     ::pvm
-    ::urakka
+    ::urakka-id
     ::m/muokkaaja-id
     ::korjausaika-h
     ::m/luotu
@@ -47,9 +49,10 @@
     ::kohde
     ::id
     ::korjauksen-tila
-    ::sopimus
+    ::sopimus-id
     ::ammattiliikenne-lkm})
 
 ;; Palvelut
 
-;; TODO specit palveluille
+(s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id ::sopimus-id]))
+(s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))

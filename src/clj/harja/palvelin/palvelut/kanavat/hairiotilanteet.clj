@@ -10,9 +10,16 @@
             [specql.core :as specql]
             [harja.domain.kanavat.kanava :as kan]))
 
-(defn hae-hairiotilanteet [db uset tiedot]
-
-  )
+(defn hae-hairiotilanteet [db user tiedot]
+  ;; TODO Oikeustarkistus + testi
+  ;; TODO Testi haulle
+  (let [urakka-id (::hairio/urakka-id tiedot)
+        sopimus-id (::hairio/sopimus-id tiedot)]
+    (specql/fetch db
+                  ::hairio/hairiotilanne
+                  hairio/kaikki-sarakkeet
+                  {::hairio/urakka-id urakka-id
+                   ::hairio/sopimus-id sopimus-id})))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
