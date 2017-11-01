@@ -57,19 +57,19 @@
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")}
-   [{:otsikko "Päivämäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm}
+   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string}
-    {:otsikko "Vikaluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
+    {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string}
-    {:otsikko "Odotusaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero}
-    {:otsikko "Ammattiliikenne lkm" :nimi ::hairiotilanne/ammattiliikenne :tyyppi :numero}
-    {:otsikko "Huviliikenne lkm" :nimi ::hairiotilanne/huviliikenne :tyyppi :numero}
-    {:otsikko "Korjaustoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string}
-    {:otsikko "Korjausaika" :nimi ::hairiotilanne/korjausaika :tyyppi :numero}
-    {:otsikko "Korjauksen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string}
-    {:otsikko "Paikallinen käyttö" :nimi ::hairiotilanne/paikallinen-kaytto
+    {:otsikko "Odotus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero}
+    {:otsikko "Ammatti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne :tyyppi :numero}
+    {:otsikko "Huvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne :tyyppi :numero}
+    {:otsikko "Korjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string}
+    {:otsikko "Korjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika :tyyppi :numero}
+    {:otsikko "Korjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string}
+    {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto
      :tyyppi :string :fmt fmt/totuus}]
-   hairiotilanteet])
+   []])
 
 (defn hairiotilanteet* [e! app]
   (komp/luo
