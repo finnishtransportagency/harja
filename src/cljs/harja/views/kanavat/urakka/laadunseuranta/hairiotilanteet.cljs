@@ -21,7 +21,9 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -57,7 +59,7 @@
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")}
-   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm}
+   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string}
@@ -75,7 +77,10 @@
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
+    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
+                           (e! (tiedot/->PaivitaValinnat
+                                 {:urakka-id (:id @nav/valittu-urakka)
+                                  :sopimus-id (first @u/valittu-sopimusnumero)})))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! app]

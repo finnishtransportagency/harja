@@ -41,20 +41,19 @@
   PaivitaValinnat
   (process-event [{val :valinnat} app]
     (let [uudet-valinnat (merge (:valinnat app) val)
-          ;haku (tuck/send-async! ->HaeKiintiot)
-          ]
-    #_(go (haku uudet-valinnat))
+          haku (tuck/send-async! ->HaeHairioTilanteet)]
+      (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
   HaeHairioTilanteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:hairiotilanteiden-haku-kaynnissa? app))
              (some? (:urakka-id valinnat)))
-      (let [parametrit {::hairio/urakka-id (:urakka-id valinnat)
+      (let [argumentit {::hairio/urakka-id (:urakka-id valinnat)
                         ::hairio/sopimus-id (:sopimus-id valinnat)}]
         (-> app
             (tuck-apurit/post! :hae-hairiotilanteet
-                               parametrit
+                               argumentit
                                {:onnistui ->HairioTilanteetHaettu
                                 :epaonnistui ->HairioTilanteetEiHaettu})
             (assoc :hairiotilanteiden-haku-kaynnissa? true)))
