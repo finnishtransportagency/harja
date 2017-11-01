@@ -191,7 +191,7 @@ E'Huoltokohteet ovat asioita, joita kanavasta korjataan. Huoltokohteita ei pidä
 COMMENT ON TABLE kan_hairio IS
 E'Kuvaa häiriötilannetta. Urakoitsija vastaa hoitourakoissa tapahtuvien häiriötilanteiden tietojen kirjaamisesta.';
 COMMENT ON COLUMN kan_hairio.odotusaika_h IS 'Aika, jonka liikennöivät alukset joutuvat odottamaan häiriön takia';
-COMMENT ON COLUMN kan_hairio.ammatiliikenne_lkm IS 'Ammattiliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.ammattiliikenne_lkm IS 'Ammattiliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
 COMMENT ON COLUMN kan_hairio.huviliikenne_lkm IS 'Huviliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
 COMMENT ON COLUMN kan_hairio.korjaustoimenpide IS 'Vapaamuotoinen toimenpiteen kuvaus, esim. "Kamera resetoitu"';
 COMMENT ON COLUMN kan_hairio.paikallinen_kaytto IS 'Valitaan, onko siirrytty paikallliskäyttöön';
