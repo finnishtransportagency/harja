@@ -19,7 +19,7 @@
       :hae-kanavatoimenpioteet
       (fn [user hakuehdot]
         (hae-kanavatoimenpiteet db user hakuehdot))
-      #_{:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
+      {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
        :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
     this)
 
