@@ -53,8 +53,9 @@
     ::sopimus-id
     ::ammattiliikenne-lkm})
 
-(def kohde #{[::kohde (set/union kkohde/perustiedot
-                                 kkohde/kohteen-kanava)]})
+(def kohde (set/union #{[::kohde kkohde/perustiedot]}
+                      ;kkohde/kohteen-kanava
+                      ))
 
 ;; Palvelut
 
