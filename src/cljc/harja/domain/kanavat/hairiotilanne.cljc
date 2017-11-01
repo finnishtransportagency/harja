@@ -55,11 +55,10 @@
 
 (def kohde #{[::kohde (set/union kkohde/perustiedot
                                  kkohde/kohteen-kanava)]})
+(def kanava #{[::kohde (set/union kkohde/perustiedot
+                                 kkohde/kohteen-kanava)]})
 
 ;; Palvelut
 
 (s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id ::sopimus-id]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
-
-;; Domain-funktiot
-

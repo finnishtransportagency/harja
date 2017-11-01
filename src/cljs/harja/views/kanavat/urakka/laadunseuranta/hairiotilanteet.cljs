@@ -62,7 +62,7 @@
              "Häiriötilanteita ei löytynyt")}
    [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt #(::kkohde/nimi %)}
+     :fmt #(kkohde/fmt-kohde-ja-kanava (::hairiotilanne/kohde %))}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string}
     {:otsikko "Odotus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero}

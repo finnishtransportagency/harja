@@ -33,7 +33,7 @@ VALUES (
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
-         'Taipaleen sulku'),
+         'Tikkalansaaren avattava ratasilta'),
   'sahkotekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Edellinen korjaus tehtiin huonosti, korjattu nyt uudestaan.', 60, 1, 2,
   'Vika korjattiin', 20, 'valmis' :: KAN_HAIRIO_KORJAUKSEN_TILA,
   TRUE,
