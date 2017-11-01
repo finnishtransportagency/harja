@@ -8,7 +8,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kanavat.kanavat :as q]
             [specql.core :as specql]
-            [harja.domain.kanavat.kanava :as kan]))
+            [harja.domain.kanavat.kanava :as kan]
+            [clojure.set :as set]))
 
 (defn hae-hairiotilanteet [db user tiedot]
   ;; TODO Oikeustarkistus + testi
@@ -17,7 +18,9 @@
         sopimus-id (::hairio/sopimus-id tiedot)]
     (specql/fetch db
                   ::hairio/hairiotilanne
-                  hairio/kaikki-sarakkeet
+                  (set/union
+                    hairio/perustiedot+muokkaustiedot
+                    hairio/viittaukset)
                   {::hairio/urakka-id urakka-id
                    ::hairio/sopimus-id sopimus-id})))
 
