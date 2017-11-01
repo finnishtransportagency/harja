@@ -43,7 +43,7 @@
     (let [uudet-valinnat (merge (:valinnat app) val)
           ;haku (tuck/send-async! ->HaeKiintiot)
           ]
-      #_(go (haku uudet-valinnat))
+    #_(go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
   HaeHairioTilanteet

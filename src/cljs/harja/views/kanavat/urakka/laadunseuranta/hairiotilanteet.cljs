@@ -62,8 +62,8 @@
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string}
     {:otsikko "Odotus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero}
-    {:otsikko "Ammatti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne :tyyppi :numero}
-    {:otsikko "Huvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne :tyyppi :numero}
+    {:otsikko "Ammatti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero}
+    {:otsikko "Huvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero}
     {:otsikko "Korjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string}
     {:otsikko "Korjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika :tyyppi :numero}
     {:otsikko "Korjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string}
