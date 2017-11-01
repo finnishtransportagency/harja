@@ -1,3 +1,5 @@
+-- Kanavien ja kohteiden testidata
+
 INSERT INTO kan_kohde (nimi, tyyppi, "kanava-id", luoja)
     VALUES
       (NULL, 'sulku' :: kohteen_tyyppi, (SELECT id FROM kan_kanava WHERE NIMI = 'Keiteleen kanava: Kapeenkosken kanava'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero')),

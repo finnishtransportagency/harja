@@ -5,10 +5,12 @@
             [harja.asiakas.tapahtumat :as t]
             [harja.domain.urakka :as urakka]
             [harja.domain.organisaatio :as organisaatio]
+            [harja.domain.vesivaylat.alus :as alus]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce aikajana
@@ -74,11 +76,18 @@
 (defn hae-urakan-yhteyshenkilot [urakka-id]
   (k/post! :hae-urakan-yhteyshenkilot urakka-id))
 
-(defn hae-urakan-alukset [urakka-id]
-  (k/post! :hae-urakan-alukset {::urakka/id urakka-id}))
+(defn tallenna-urakan-alukset [urakka-id urakoitsija-id alukset tulos-atom]
+  (go (let [vastaus (<! (k/post! :tallenna-urakoitsijan-alukset {::urakka/id urakka-id
+                                                                 ::alus/urakoitsija-id urakoitsija-id
+                                                                 ::alus/tallennettavat-alukset alukset}))]
+        (if (k/virhe? vastaus)
+          (viesti/nayta! "Virhe tallennettaessa aluksia" :danger)
+          (reset! tulos-atom vastaus)))))
 
-(defn hae-urakoitsijan-alukset [urakoitsija-id]
-  (k/post! :hae-urakoitsijan-alukset {::organisaatio/id urakoitsija-id}))
+(defn hae-urakoitsijan-alukset [urakka-id urakoitsija-id]
+  (when (and urakka-id urakoitsija-id)
+    (k/post! :hae-urakoitsijan-alukset {::urakka/id urakka-id
+                                        ::alus/urakoitsija-id urakoitsija-id})))
 
 (defn tallenna-urakan-paivystajat
   "Tallentaa urakan päivystäjät. Palauttaa kanavan, josta vastauksen voi lukea."
