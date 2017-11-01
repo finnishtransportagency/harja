@@ -653,12 +653,13 @@
                                                               some? (for [[alkuosa uusi-taso] lokitasoylikirjoitukset]
                                                                       (when (clojure.string/starts-with?
                                                                              viesti alkuosa) uusi-taso) )))]
+                                        (println "middleware kutsuttu")
                                         (assoc ap-args :level (or uusi-level alkup-level))))]
-    (log/set-config! [:middleware] [lokipriorisointi-middleware])))
+    (log/merge-config! {:middleware [lokipriorisointi-middleware]})))
 
 
 (defn -main [& argumentit]
-  (alusta-lokipriorisointi!)
+  ;;(alusta-lokipriorisointi!)
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
