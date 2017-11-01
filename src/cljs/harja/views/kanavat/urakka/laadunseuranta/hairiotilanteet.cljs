@@ -56,12 +56,8 @@
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")}
-   [{:otsikko "Nimi" :nimi ::h/nimi}
-    {:otsikko "Alku" :nimi ::h/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
-    {:otsikko "Loppu" :nimi ::h/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
-    {:otsikko "Liitetty urakkaan" :nimi :liitetty-urakkaan :tyyppi :string
-     :hae #(get-in % [::h/urakka ::u/nimi])}]
-   haetut-hankkeet])
+   [{:otsikko "Päivämäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm}]
+   hairiotilanteet])
 
 (defn hairiotilanteet* [e! app]
   (komp/luo
