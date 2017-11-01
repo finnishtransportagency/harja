@@ -12,7 +12,7 @@ CREATE TABLE kan_hairio (
   vikaluokka kan_hairio_vikaluokka,
   syy VARCHAR(512) NOT NULL,
   odotusaika_h INTEGER,
-  ammatiliikenne_lkm INTEGER,
+  ammattiliikenne_lkm INTEGER,
   huviliikenne_lkm INTEGER,
   korjaustoimenpide VARCHAR(512),
   korjausaika_h INTEGER,
