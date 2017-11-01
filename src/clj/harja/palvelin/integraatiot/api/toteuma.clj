@@ -90,7 +90,6 @@
            "harja-api"))))
 
 (defn paivita-tai-luo-uusi-toteuma [db urakka-id kirjaaja toteuma]
-  (println "--->>>" toteuma)
   (if (q-toteumat/onko-olemassa-ulkoisella-idlla? db (get-in toteuma [:tunniste :id]) (:id kirjaaja))
     (paivita-toteuma db urakka-id kirjaaja toteuma)
     (luo-uusi-toteuma db urakka-id kirjaaja toteuma)))
