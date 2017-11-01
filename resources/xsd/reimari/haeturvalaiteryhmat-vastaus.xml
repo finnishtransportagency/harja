@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>
+    <HaeTurvalaiteryhmat xmlns="http://www.liikennevirasto.fi/xsd/harja/reimari">
+        <HaeTurvalaiteryhmatResponse>
+            <turvalaiteryhma tunnus="511" nimi="Ahvenanmaa(511)" kuvaus="511: Ahvenanmaa">
+                <turvalaitteet>
+                    <turvalaite nro="69099" nimi="Michelsöharun" ryhma="511" />
+                    <turvalaite nro="69100" nimi="Huldviksgrund" ryhma="511" />
+                    <turvalaite nro="29013" nimi="Klobben ylempi" ryhma="511" />
+                    <turvalaite nro="28943" nimi="Svartholm ylempi" ryhma="511" />
+                </turvalaitteet>
+            </turvalaiteryhma>
+        </HaeTurvalaiteryhmatResponse>
+    </HaeTurvalaiteryhmat>
+</S:Body></S:Envelope>
+
+
+
