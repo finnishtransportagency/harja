@@ -1,3 +1,5 @@
+-- Linkkaa toimenpiteet sopimukseen sopimuksen diaarinumeron tai reimarin sopimus-id:n perusteella
+
 CREATE OR REPLACE FUNCTION toimenpiteen_linkit_trigger_proc()
   RETURNS TRIGGER AS
 $$
@@ -17,7 +19,7 @@ BEGIN
 
   NEW."sopimus-id" = id_temp;
                 -- id:ksi tulee NULL jos ei löydy, joka on ok
-  RAISE NOTICE 'reimari_toimenpide linkit trigger: sopimus-id arvoksi %', NEW."sopimus-id";
+  -- RAISE NOTICE 'reimari_toimenpide linkit trigger: sopimus-id arvoksi %', NEW."sopimus-id";
 
   id_temp := (SELECT id FROM vv_turvalaite
                WHERE turvalaitenro::text = (NEW."reimari-turvalaite").nro);
@@ -30,6 +32,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- Linkkaa urakka toimenpiteeseen sopimuksen perusteella
 CREATE OR REPLACE FUNCTION toimenpiteen_urakka_id_trigger_proc()
   RETURNS TRIGGER AS
 $$
