@@ -69,7 +69,7 @@
     {:otsikko "Korjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string}
     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto
      :tyyppi :string :fmt fmt/totuus}]
-   []])
+   hairiotilanteet])
 
 (defn hairiotilanteet* [e! app]
   (komp/luo
