@@ -652,7 +652,7 @@
                                             uusi-level (first (filter
                                                               some? (for [[alkuosa uusi-taso] lokitasoylikirjoitukset]
                                                                       (when (clojure.string/starts-with?
-                                                                             viesti alkuosa) uusi-taso) )))]
+                                                                             (str viesti) (str alkuosa)) uusi-taso) )))]
                                         (assoc ap-args :level (or uusi-level alkup-level))))]
     (log/merge-config! {:middleware [lokipriorisointi-middleware]})))
 
