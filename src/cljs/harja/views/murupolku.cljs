@@ -17,7 +17,8 @@
             [harja.ui.dom :as dom]
             [harja.pvm :as pvm]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.domain.urakka :as u]))
 
 (defn koko-maa []
   [:li
@@ -155,6 +156,9 @@
                (when-not urakoitsija?
                  [urakoitsija])
                [urakkatyyppi]]]
-             [:ol.murupolku
+             [:ol.murupolku {:style {:background-color (if (u/vesivaylaurakka? ur)
+                                                        "#abd2f5" ;;Sininen
+                                                        "#57af57" ;;Vihiriä
+                                                        )}}
               [:div.col-sm-12.murupolku-vasen
                [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))
