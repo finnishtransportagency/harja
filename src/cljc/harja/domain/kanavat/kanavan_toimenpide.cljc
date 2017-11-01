@@ -4,11 +4,13 @@
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.sopimus :as sopimus]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]]))
+        :cljs [[specql.impl.registry]])
+    [schema.core :as s])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -64,3 +66,13 @@
        ::kayttaja/kayttajanimi
        ::kayttaja/sahkoposti
        ::kayttaja/puhelin}]})
+
+(s/def ::hae-kanavatoimenpiteet-kysely
+  (s/keys :req [::sopimus/id
+                ::toimenpidekoodi/id]
+          :req-un [::alkupvm
+                   ::loppupvm]
+          :opt [::kanava-toimenpidetyyppi]))
+
+(s/def ::hae-kanavatoimenpiteet-vastaus
+  (s/def (s/coll-of ::kanava-toimenpide)))
