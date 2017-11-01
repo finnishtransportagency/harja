@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
@@ -49,8 +50,8 @@
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:hairiotilanteiden-haku-kaynnissa? app))
              (some? (:urakka-id valinnat)))
-      (let [parametrit {::hairiotilanne/urakka-id (:urakka-id valinnat)
-                        ::hairiotilanne/sopimus-id (:sopimus-id valinnat)}]
+      (let [parametrit {::hairio/urakka-id (:urakka-id valinnat)
+                        ::hairio/sopimus-id (:sopimus-id valinnat)}]
         (-> app
             (tuck-apurit/post! :hae-hairiotilanteet
                                parametrit
