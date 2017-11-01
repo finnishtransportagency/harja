@@ -642,7 +642,7 @@
                                           nil))))
 
 (def lokitasoylikirjoitukset
-  ["Virhe muodostaessa JMS viestin sisältöä: clojure.lang.ExceptionInfo: throw+: {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa, :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella" :warn])
+  [["Virhe muodostaessa JMS viestin sisältöä: clojure.lang.ExceptionInfo: throw+: {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa, :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella" :warn]])
 
 (defn alusta-lokipriorisointi! []
   ;; tällä voidaan nostaa/laskea log leveliä tietyiltä lokiviesteiltä muuttamatta lokitusta kutusvaa koodia.
@@ -653,13 +653,12 @@
                                                               some? (for [[alkuosa uusi-taso] lokitasoylikirjoitukset]
                                                                       (when (clojure.string/starts-with?
                                                                              viesti alkuosa) uusi-taso) )))]
-                                        (println "middleware kutsuttu")
                                         (assoc ap-args :level (or uusi-level alkup-level))))]
     (log/merge-config! {:middleware [lokipriorisointi-middleware]})))
 
 
 (defn -main [& argumentit]
-  ;;(alusta-lokipriorisointi!)
+  (alusta-lokipriorisointi!)
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
