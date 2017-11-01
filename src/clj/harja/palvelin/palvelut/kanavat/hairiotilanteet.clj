@@ -7,6 +7,7 @@
             [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kanavat.kanavat :as q]
+            [specql.core :as specql]
             [harja.domain.kanavat.kanava :as kan]))
 
 (defn hae-hairiotilanteet [db uset tiedot]

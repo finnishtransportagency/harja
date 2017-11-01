@@ -18,6 +18,13 @@
 
 ;; TODO define-tables
 
+(define-tables
+  ["kan_hairio" ::hairiotilanne
+   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot])
+
+(def kaikki-sarakkeet
+  #{})
+
 ;; Palvelut
 
 ;; TODO specit palveluille
