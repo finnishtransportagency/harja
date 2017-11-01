@@ -641,7 +641,24 @@
                                           (component/stop s)
                                           nil))))
 
+(def lokitasoylikirjoitukset
+  ["Virhe muodostaessa JMS viestin sisältöä: clojure.lang.ExceptionInfo: throw+: {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa, :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella" :warn])
+
+(defn alusta-lokipriorisointi! []
+  ;; tällä voidaan nostaa/laskea log leveliä tietyiltä lokiviesteiltä muuttamatta lokitusta kutusvaa koodia.
+  (let [lokipriorisointi-middleware (fn [{:keys [hostname message args level] :as ap-args}]
+                                      (let [alkup-level level
+                                            viesti (or message (str (first args)) "")
+                                            uusi-level (first (filter
+                                                              some? (for [[alkuosa uusi-taso] lokitasoylikirjoitukset]
+                                                                      (when (clojure.string/starts-with?
+                                                                             viesti alkuosa) uusi-taso) )))]
+                                        (assoc ap-args :level (or uusi-level alkup-level))))]
+    (log/set-config! [:middleware] [lokipriorisointi-middleware])))
+
+
 (defn -main [& argumentit]
+  (alusta-lokipriorisointi!)
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 
@@ -700,7 +717,6 @@
 (defn log-level-info! []
   (log/merge-config!
     {:appenders {:println {:min-level :info}}}))
-
 
 (def figwheel-repl-options
   ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten

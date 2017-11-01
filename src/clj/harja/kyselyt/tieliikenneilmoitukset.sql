@@ -305,7 +305,8 @@ INSERT INTO ilmoitus
  ilmoitustyyppi,
  selitteet,
  urakkatyyppi,
- tunniste)
+ tunniste,
+ viestiid)
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -315,10 +316,11 @@ VALUES
     :otsikko,
     :paikankuvaus,
     :lisatieto,
-    :ilmoitustyyppi :: ilmoitustyyppi,
+    :ilmoitustyyppi :: ILMOITUSTYYPPI,
     :selitteet :: TEXT [],
-    :urakkatyyppi :: urakkatyyppi,
-    :tunniste);
+    :urakkatyyppi :: URAKKATYYPPI,
+   :tunniste,
+   :viestiid);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -332,10 +334,11 @@ SET
   otsikko            = :otsikko,
   paikankuvaus       = :paikankuvaus,
   lisatieto          = :lisatieto,
-  ilmoitustyyppi     = :ilmoitustyyppi :: ilmoitustyyppi,
+  ilmoitustyyppi     = :ilmoitustyyppi :: ILMOITUSTYYPPI,
   selitteet          = :selitteet :: TEXT [],
   tunniste           = :tunniste,
-  muokattu           = NOW()
+  muokattu           = NOW(),
+  viestiid           = :viestiid
 WHERE id = :id;
 
 -- name: paivita-ilmoittaja-ilmoitukselle!
@@ -541,3 +544,9 @@ SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
 UPDATE ilmoitus
 SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita
 WHERE id = :id;
+
+-- name: ilmoitus-loytyy-viesti-idlla
+SELECT exists(SELECT
+              FROM ilmoitus
+              WHERE ilmoitusid = :ilmoitusid AND
+                    viestiid = :viestiid);
