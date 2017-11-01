@@ -20,7 +20,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.fmt :as fmt])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -56,7 +57,18 @@
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")}
-   [{:otsikko "Päivämäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm}]
+   [{:otsikko "Päivämäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm}
+    {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string}
+    {:otsikko "Vikaluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
+    {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string}
+    {:otsikko "Odotusaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero}
+    {:otsikko "Ammattiliikenne lkm" :nimi ::hairiotilanne/ammattiliikenne :tyyppi :numero}
+    {:otsikko "Huviliikenne lkm" :nimi ::hairiotilanne/huviliikenne :tyyppi :numero}
+    {:otsikko "Korjaustoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string}
+    {:otsikko "Korjausaika" :nimi ::hairiotilanne/korjausaika :tyyppi :numero}
+    {:otsikko "Korjauksen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string}
+    {:otsikko "Paikallinen käyttö" :nimi ::hairiotilanne/paikallinen-kaytto
+     :tyyppi :string :fmt fmt/totuus}]
    hairiotilanteet])
 
 (defn hairiotilanteet* [e! app]
