@@ -16,7 +16,8 @@
 
 (defn- heita-validointipoikkeus [tietolaji virhe]
   (let [viesti (str "Virhe tietolajin " tietolaji " arvojen käsittelyssä: " virhe)]
-    (throw (Exception. viesti))))
+    (throw+ {:type virheet/+virhe-tietolajin-arvojen-kasittelyssa+
+             :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+ :viesti viesti}]})))
 
 (defn- validoi-tyyppi
   "Validoi, että annettu arvo on annettua tyyppiä. Jos ei ole, heittää poikkeuksen. Jos on, palauttaa nil."

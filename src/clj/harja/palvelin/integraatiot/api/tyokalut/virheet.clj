@@ -41,6 +41,7 @@
 (def +sopimusta-ei-loydy+ "sopimusta ei löydy")
 (def +paallystysilmoitus-lukittu+ "paallystysilmoitus-lukittu")
 (def +ominaisuus-ei-kaytossa+ "ominaisuus-ei-kaytossa")
+(def +virhe-tietolajin-arvojen-kasittelyssa+ "virhe-tietolajin-arvojen-kasittelyssa")
 
 (defn heita-poikkeus [tyyppi virheet]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)

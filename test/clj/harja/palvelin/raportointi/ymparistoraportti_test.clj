@@ -52,14 +52,18 @@
          (every? solu? hoitokaudet)
          (solu? yhteensa)
          (solu? suunniteltu)
-         (or (nil? prosentti) (and (number? prosentti) (or (= 0 prosentti) (pos? prosentti))))
+         (or (nil? prosentti)
+             (and (number? prosentti) (or (= 0 prosentti) (pos? prosentti)))
+             (and (vector? prosentti) (= "%" (:yksikko (second prosentti))))) ;; Tämä on näitä keissejä varten [:arvo-ja-yksikko {:arvo 277.625, :yksikko "%", :desimaalien-maara 2}]
          (or (and (every? nil? hoitokaudet) (nil? yhteensa))
              (= (reduce (fnil + 0 0) (map apurit/raporttisolun-arvo hoitokaudet))
                 (apurit/raporttisolun-arvo yhteensa)))
          (or
            (nil? prosentti) (nil? yhteensa) (nil? suunniteltu)
            (= (/ (* 100.0 (apurit/raporttisolun-arvo yhteensa)) (apurit/raporttisolun-arvo suunniteltu))
-              prosentti)))))
+              (if (number? prosentti)
+                prosentti
+                (apurit/raporttisolun-arvo prosentti)))))))
 
 
 (deftest raportin-suoritus-urakalle-toimii

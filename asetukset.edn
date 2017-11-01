@@ -4,7 +4,8 @@
                   {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
                   {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
 
- :http-palvelin {:threads 16}
+ :http-palvelin {:threads 16
+                 :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")}
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
@@ -149,7 +150,7 @@
  ;; :fileyard
  ;; :varuste-api
  ;; :tietyoilmoitusten-lahetys
- :pois-kytketyt-ominaisuudet #{:fileyard}
+ :pois-kytketyt-ominaisuudet #{:fileyard :tietyoilmoitusten-lahetys :ais-data}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 

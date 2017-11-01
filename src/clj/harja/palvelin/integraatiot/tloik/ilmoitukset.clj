@@ -82,17 +82,19 @@
         paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
                                            paivystajat nil)
-        ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-        (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa? db urakka-id ilmoitus)
+        ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
+                                                          db urakka-id ilmoitus)
+        uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
         ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
         ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
         tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
     (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
       (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-      (laheta-ilmoitus-paivystajille db
-                                     (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
-                                     paivystajat urakka-id ilmoitusasetukset))
+      (when (not uudelleen-lahetys?)
+        (laheta-ilmoitus-paivystajille db
+                                      (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
+                                      paivystajat urakka-id ilmoitusasetukset)))
 
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
 

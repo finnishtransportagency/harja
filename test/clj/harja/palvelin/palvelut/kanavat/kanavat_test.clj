@@ -157,3 +157,85 @@
 
         (is (= kohteiden-lkm
                (count (q "SELECT * FROM kan_kohde WHERE poistettu IS NOT TRUE;"))))))))
+
+(deftest kohteen-liittaminen-urakkaan
+  (testing "Uuden linkin lisääminen"
+    (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+          [urakka-id] (first (q "SELECT id FROM urakka WHERE nimi = 'Saimaan kanava';"))
+          linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
+                                " AND \"urakka-id\" =" urakka-id ";")))
+          _ (is (and (some? kohde-id) (some? urakka-id)))
+          _ (is (empty? linkki))
+          params {:urakka-id urakka-id
+                  :kohde-id kohde-id
+                  :poistettu? false}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :liita-kohde-urakkaan
+                                  +kayttaja-jvh+
+                                  params)]
+      (is (s/valid? ::kanava/liita-kohde-urakkaan-kysely params))
+
+      (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
+                                 " AND \"urakka-id\" =" urakka-id ";")))]
+        (is (= ur urakka-id))
+        (is (= koh kohde-id))
+        (is (= poistettu? false)))))
+
+  (testing "Linkin poistaminen"
+    (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+          [urakka-id] (first (q "SELECT id FROM urakka WHERE nimi = 'Saimaan kanava';"))
+          linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
+                                " AND \"urakka-id\" =" urakka-id ";")))
+          _ (is (and (some? kohde-id) (some? urakka-id)))
+          _ (is (some? linkki))
+          params {:urakka-id urakka-id
+                  :kohde-id kohde-id
+                  :poistettu? true}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :liita-kohde-urakkaan
+                                  +kayttaja-jvh+
+                                  params)]
+      (is (s/valid? ::kanava/liita-kohde-urakkaan-kysely params))
+
+      (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
+                                               " AND \"urakka-id\" =" urakka-id ";")))]
+        (is (= ur urakka-id))
+        (is (= koh kohde-id))
+        (is (= poistettu? true)))))
+
+  (testing "Linkin palauttaminen"
+    (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+          [urakka-id] (first (q "SELECT id FROM urakka WHERE nimi = 'Saimaan kanava';"))
+          linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
+                                " AND \"urakka-id\" =" urakka-id ";")))
+          _ (is (and (some? kohde-id) (some? urakka-id)))
+          _ (is (some? linkki))
+          params {:urakka-id urakka-id
+                  :kohde-id kohde-id
+                  :poistettu? false}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :liita-kohde-urakkaan
+                                  +kayttaja-jvh+
+                                  params)]
+      (is (s/valid? ::kanava/liita-kohde-urakkaan-kysely params))
+
+      (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
+                                               " AND \"urakka-id\" =" urakka-id ";")))]
+        (is (= ur urakka-id))
+        (is (= koh kohde-id))
+        (is (= poistettu? false))))))
+
+(deftest kohteen-poistaminen
+  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+        _ (is (some? kohde-id))
+        _ (is (false? poistettu?))
+        params {:kohde-id kohde-id}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :poista-kohde
+                                +kayttaja-jvh+
+                                params)]
+    (is (s/valid? ::kanava/poista-kohde-kysely params))
+
+    (let [[id poistettu?] (first (q (str "SELECT id, poistettu FROM kan_kohde WHERE id = " kohde-id ";")))]
+      (is (= id kohde-id))
+      (is (= poistettu? true)))))
