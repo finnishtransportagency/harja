@@ -4,32 +4,97 @@
 
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.loki :refer [tarkkaile! log]]
-            [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
 
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
-            [harja.ui.lomake :as lomake]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.modal :as modal]
 
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+            [harja.domain.kayttaja :as kayttaja]
+
+            [harja.pvm :as pvm])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
+
+(defn henkilon-nimi [henkilo]
+  (str (::kayttaja/etunimi henkilo) " " (::kayttaja/sukunimi)))
 
 (defn kokonaishintaiset* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
 
-    (fn [e! app]
-      [:div "WIP"])))
+    (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+
+      (let [toimenpiteet [{::kanavan-toimenpide/kohde {::kanavan-kohde/id 3,
+                                                       ::kanavan-kohde/nimi "Tikkalansaaren avattava ratasilta",
+                                                       ::kanavan-kohde/tyyppi :silta},
+                           ::kanavan-toimenpide/kuittaaja {:harja.domain.kayttaja/kayttajanimi "jvh",
+                                                           :harja.domain.kayttaja/etunimi "Mikko",
+                                                           :harja.domain.kayttaja/sukunimi "Rönkkömäki",
+                                                           :harja.domain.kayttaja/puhelin "041-5442083",
+                                                           :harja.domain.kayttaja/sahkoposti "mikko.ronkkomaki@solita.fi",
+                                                           :harja.domain.kayttaja/id 2},
+                           ::kanavan-toimenpide/suorittaja {:harja.domain.kayttaja/etunimi "Mikko",
+                                                            :harja.domain.kayttaja/id 2,
+                                                            :harja.domain.kayttaja/kayttajanimi "jvh",
+                                                            :harja.domain.kayttaja/sahkoposti "mikko.ronkkomaki@solita.fi",
+                                                            :harja.domain.kayttaja/sukunimi "Rönkkömäki",
+                                                            :harja.domain.kayttaja/puhelin "041-5442083"},
+                           ::kanavan-toimenpide/lisatieto "Testitoimenpide",
+                           ::kanavan-toimenpide/toimenpidekoodi {:harja.domain.toimenpidekoodi/id 2997,
+                                                                 :harja.domain.toimenpidekoodi/nimi "Ei yksilöity"},
+                           ::kanavan-toimenpide/tyyppi :kokonaishintainen,
+                           ::kanavan-toimenpide/huoltokohde {::kanavan-huoltokohde/nimi "ASENNONMITTAUSLAITTEET",
+                                                             ::kanavan-huoltokohde/id 5},
+                           ::kanavan-toimenpide/pvm (pvm/nyt)
+                           ::kanavan-toimenpide/id 1}]]
+        [:div
+         [grid/grid
+          {:otsikko "Urakan toimenpiteet"
+           :voi-lisata? false
+           :voi-muokata? false
+           :voi-poistaa? false
+           :voi-kumota? false
+           :piilota-toiminnot? true
+           :tyhja "Ei kokonaishitaisia toimenpiteita"
+           :jarjesta ::kanavan-toimenpide/pvm
+           :tunniste ::kanavan-toimenpide/id}
+          [{:otsikko "Päivämäärä"
+            :nimi ::kanavan-toimenpide/pvm
+            :tyyppi :pvm
+            :fmt pvm/pvm-opt}
+           {:otsikko "Kohde"
+            :nimi :kohde
+            :tyyppi :string
+            :hae #(get-in % [::kanavan-toimenpide/kohde ::kanavan-kohde/nimi])}
+           {:otsikko "Huoltokohde"
+            :nimi :huoltokohde
+            :tyyppi :string
+            :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])}
+           {:otsikko "Toimenpide"
+            :nimi :huoltokohde
+            :tyyppi :string
+            :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])}
+           {:otsikko "Suorittaja"
+            :nimi :huoltokohde
+            :tyyppi :string
+            :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}
+           {:otsikko "Kuittaaja"
+            :nimi :huoltokohde
+            :tyyppi :string
+            :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}]
+          toimenpiteet]]))))
 
 (defc kokonaishintaiset []
-  [tuck tiedot/tila kokonaishintaiset*])
+      [tuck tiedot/tila kokonaishintaiset*])
 
 
