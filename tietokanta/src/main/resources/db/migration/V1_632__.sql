@@ -6,6 +6,7 @@ CREATE TYPE kan_hairio_vikaluokka AS ENUM ('sahkotekninen_vika', 'konetekninen_v
 CREATE TABLE kan_hairio (
   id serial PRIMARY KEY,
   urakka INTEGER REFERENCES urakka (id) NOT NULL,
+  sopimus INTEGER REFERENCES sopimus (id) NOT NULL,
   pvm DATE NOT NULL,
   kohde INTEGER REFERENCES kan_kohde (id) NOT NULL,
   vikaluokka kan_hairio_vikaluokka,
