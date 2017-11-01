@@ -54,3 +54,38 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Aseta vayla-id reimarin väylänimen perusteella
+
+-- Koska Reimarin antama väyläid on tällä hetkellä ERI kuin inspire
+-- palvelusta tuoduille väylille, joudutaan match tekemään nimellä.
+-- Muodostetaan reimari toimenpiteen väylä id triggerillä.
+
+CREATE OR REPLACE FUNCTION vv_aseta_toimenpiteen_vayla() RETURNS trigger AS $$
+DECLARE
+  v reimari_vayla;
+  id_ INTEGER;
+BEGIN
+  v := NEW."reimari-vayla";
+  SELECT INTO id_ id FROM vv_vayla WHERE nimi = v.nimi LIMIT 1;
+  NEW."vayla-id" := id_;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Aseta hintatyyppi lisätyö-kentän perusteella
+
+CREATE OR REPLACE FUNCTION toimenpiteen_hintatyyppi_trigger_proc()
+  RETURNS TRIGGER AS
+$$
+BEGIN
+  IF NEW."hintatyyppi" IS NULL THEN
+        NEW."hintatyyppi" = CASE WHEN NEW."reimari-lisatyo" IS FALSE THEN 'kokonaishintainen'
+                                 WHEN NEW."reimari-lisatyo" IS TRUE THEN 'yksikkohintainen'
+                                 ELSE 'kokonaishintainen'
+                            END;
+     RAISE NOTICE 'reimari_toimenpide hintatyyppi trigger: hintatyypiksi %', NEW."hintatyyppi";
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
