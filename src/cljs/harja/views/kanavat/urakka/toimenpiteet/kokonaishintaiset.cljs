@@ -18,21 +18,25 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
 
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot :as tiedot])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
 (defn henkilon-nimi [henkilo]
-  (str (::kayttaja/etunimi henkilo) " " (::kayttaja/sukunimi)))
+  (str (::kayttaja/etunimi henkilo) " " (::kayttaja/sukunimi henkilo)))
 
 (defn kokonaishintaiset* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
-                      #(e! (tiedot/->Nakymassa? false)))
+    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                    (log "hilipait"))
+                  (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
+                                    #(e! (tiedot/->Nakymassa? false)))
 
-    (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+                  (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
 
       (let [toimenpiteet [{::kanavan-toimenpide/kohde {::kanavan-kohde/id 3,
                                                        ::kanavan-kohde/nimi "Tikkalansaaren avattava ratasilta",
@@ -58,6 +62,8 @@
                            ::kanavan-toimenpide/pvm (pvm/nyt)
                            ::kanavan-toimenpide/id 1}]]
         [:div
+         [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+          urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
          [grid/grid
           {:otsikko "Urakan toimenpiteet"
            :voi-lisata? false
