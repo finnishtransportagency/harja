@@ -20,7 +20,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
@@ -56,7 +57,7 @@
                            (e! (tiedot/->PaivitaValinnat
                                  {:urakka-id (:id @nav/valittu-urakka)
                                   :sopimus-id (first @u/valittu-sopimusnumero)}))
-                           (e! (tiedot/->HaeKiintiot)))
+                           (e! (tiedot/->HaeKiintiot (:valinnat app))))
                       #(do (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [kiintiot
                     kiintioiden-haku-kaynnissa?
@@ -95,9 +96,7 @@
                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                (:id @nav/valittu-urakka))
                      (fn [sisalto]
-                       (let [ch (chan)]
-                         (e! (tiedot/->TallennaKiintiot sisalto ch))
-                         (go (<! ch)))))
+                       (tuck-apurit/e-kanavalla! tiedot/->TallennaKiintiot sisalto)))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
          :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id

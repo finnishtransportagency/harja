@@ -73,9 +73,9 @@
       (let [parametrit {::kiintio/urakka-id (:urakka-id valinnat)
                         ::kiintio/sopimus-id (:sopimus-id valinnat)}]
         (-> app
-            (tuck-apurit/palvelukutsu :hae-kiintiot-ja-toimenpiteet
-                                      parametrit
-                                      {:onnistui ->KiintiotHaettu
+            (tuck-apurit/post! :hae-kiintiot-ja-toimenpiteet
+                               parametrit
+                               {:onnistui ->KiintiotHaettu
                                        :epaonnistui ->KiintiotEiHaettu})
             (assoc :kiintioiden-haku-kaynnissa? true)))
 
@@ -104,9 +104,9 @@
                             (set/rename-keys k {:poistettu ::m/poistettu?}))
                           kiintiot)}]
         (-> app
-            (tuck-apurit/palvelukutsu :tallenna-kiintiot
-                                      parametrit
-                                      {:onnistui ->KiintiotTallennettu
+            (tuck-apurit/post! :tallenna-kiintiot
+                               parametrit
+                               {:onnistui ->KiintiotTallennettu
                                        :onnistui-parametrit [ch]
                                        :epaonnistui ->KiintiotEiTallennettu
                                        :epaonnistui-parametrit [ch]})
@@ -139,9 +139,9 @@
       (let [parametrit {::to/urakka-id (get-in app [:valinnat :urakka-id])
                         ::to/idt toimenpide-idt}]
         (-> app
-            (tuck-apurit/palvelukutsu :irrota-toimenpiteet-kiintiosta
-                                      parametrit
-                                      {:onnistui ->IrrotettuKiintiosta
+            (tuck-apurit/post! :irrota-toimenpiteet-kiintiosta
+                               parametrit
+                               {:onnistui ->IrrotettuKiintiosta
                                        :epaonnistui ->EiIrrotettuKiintiosta})
             (assoc :kiintiosta-irrotus-kaynnissa? true)))
       app))

@@ -15,7 +15,6 @@
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"
   {:positional? true})
 
-
 (defn- hae-raportin-tiedot
   [db parametrit]
   (into []
@@ -154,14 +153,16 @@
                kk-rivit (group-by :kk (filter (comp not :luokka) materiaalirivit))
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
                                      (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + (keep :maara rivit))
-                                                                           :yksikko (:yksikko materiaali)}]))
+                                                                           :yksikko (:yksikko materiaali)
+                                                                           :desimaalien-maara 3}]))
                                    {} kk-rivit)
                yhteensa-arvo #(reduce + (remove nil? (map (comp :arvo second) %)))
                yhteensa-kentta (fn [arvot nayta-aina?]
                                  (let [yht (yhteensa-arvo arvot)]
                                    (when (or (> yht 0) nayta-aina?)
                                      [:arvo-ja-yksikko {:arvo yht
-                                                        :yksikko (:yksikko materiaali)}])))]
+                                                        :yksikko (:yksikko materiaali)
+                                                        :desimaalien-maara 3}])))]
            ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
             ;; Normaali materiaalikohtainen rivi
@@ -181,15 +182,19 @@
 
                             ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                             [(yhteensa-kentta (vals kk-arvot) false)
-                             (when suunniteltu (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu))
+                             (when suunniteltu [:arvo-ja-yksikko {:arvo (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu)
+                                                                  :yksikko "%"
+                                                                  :desimaalien-maara 2}])
                              (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
-                                                                  :yksikko (:yksikko materiaali)}])]))}]
+                                                                  :yksikko (:yksikko materiaali)
+                                                                  :desimaalien-maara 3}])]))}]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
                    (let [kk-arvot (into {}
                                         (map (juxt :kk #(do [:arvo-ja-yksikko {:arvo (:maara %)
-                                                                               :yksikko (:yksikko materiaali)}])))
+                                                                               :yksikko (:yksikko materiaali)
+                                                                               :desimaalien-maara 3}])))
                                         rivit)]
                      (into []
                            (concat

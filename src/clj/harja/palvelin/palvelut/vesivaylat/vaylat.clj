@@ -4,6 +4,7 @@
             [taoensso.timbre :as log]
             [specql.core :refer [fetch]]
             [specql.op :as op]
+            [harja.domain.muokkaustiedot :as m]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
@@ -16,7 +17,8 @@
                 (when hakuteksti
                   {::vay/nimi (op/ilike (str hakuteksti "%"))})
                 (when vaylatyyppi
-                  {::vay/tyyppi vaylatyyppi})))))
+                  {::vay/tyyppi vaylatyyppi})
+                {::m/poistettu? false}))))
 
 (defrecord Vaylat []
   component/Lifecycle

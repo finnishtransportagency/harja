@@ -328,7 +328,7 @@ SET alkanut           = :alkanut,
   tyyppi              = :tyyppi :: toteumatyyppi,
   sopimus             = :sopimus,
   poistettu           = FALSE
-WHERE ulkoinen_id = :id AND urakka = :urakka;
+WHERE ulkoinen_id = :id AND urakka = :urakka AND luoja = :luoja;
 
 -- name: luo-toteuma<!
 -- Luo uuden toteuman.
@@ -809,6 +809,7 @@ SELECT
   tr_puoli            AS puoli,
   tr_ajorata          AS ajorata,
   t.id                AS toteumaid,
+  t.urakka            AS urakkaid,
   t.alkanut,
   t.paattynyt,
   t.tyyppi            AS toteumatyyppi,
