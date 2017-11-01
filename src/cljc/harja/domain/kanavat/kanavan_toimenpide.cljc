@@ -5,12 +5,12 @@
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.sopimus :as sopimus]
+    [clojure.spec.alpha :as s]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]])
-    [schema.core :as s])
+        :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -75,4 +75,4 @@
           :opt [::kanava-toimenpidetyyppi]))
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
-  (s/def (s/coll-of ::kanava-toimenpide)))
+  (s/coll-of ::kanava-toimenpide)) 

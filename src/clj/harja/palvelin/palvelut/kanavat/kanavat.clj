@@ -1,29 +1,41 @@
-(ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet
+(ns harja.palvelin.palvelut.kanavat.kanavat
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kanavat.kanavat :as q]
-            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]))
+
+            [harja.domain.kanavat.kanava :as kan]))
 
 
-(defn hae-kanavatoimenpiteet [db user {:keys [sopimus alkupvm loppupvm toimenpidekoodi tyyppi] :as hakuehdot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)   
-  (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta db sopimus alkupvm loppupvm toimenpidekoodi tyyppi))
+(defn hae-kanavat-ja-kohteet [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+  (q/hae-kanavat-ja-kohteet db))
 
-(defrecord Kanavatoimenpiteet []
+(defn lisaa-kanavalle-kohteita [db user kohteet]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (q/lisaa-kanavalle-kohteet! db user kohteet)
+  (hae-kanavat-ja-kohteet db user))
+
+(defrecord Kanavat []
   component/Lifecycle
   (start [{http :http-palvelin
            db :db :as this}]
     (julkaise-palvelu
       http
-      :hae-kanavatoimenpioteet
-      (fn [user hakuehdot]
-        (hae-kanavatoimenpiteet db user hakuehdot))
-      {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
-       :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
+      :hae-kanavat-ja-kohteet
+      (fn [user]
+        (hae-kanavat-ja-kohteet db user))
+      {:vastaus-spec ::kan/hae-kanavat-ja-kohteet-vastaus})
+    (julkaise-palvelu
+      http
+      :lisaa-kanavalle-kohteita
+      (fn [user kohteet]
+        (lisaa-kanavalle-kohteita db user kohteet))
+      {:kysely-spec ::kan/lisaa-kanavalle-kohteita-kysely
+       :vastaus-spec ::kan/lisaa-kanavalle-kohteita-vastaus})
     this)
 
   (stop [this]
