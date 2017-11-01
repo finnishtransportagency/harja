@@ -16,14 +16,28 @@
 
 (defonce valinnat
          (reaction
+           (log "--->> reaktiossa")
            (when (:nakymassa? @tila)
              {:urakka-id (:id @nav/valittu-urakka)
-              :sopimus-id (first @u/valittu-sopimusnumero)})))
+              :sopimus-id (first @u/valittu-sopimusnumero)
+              :aikavali @u/valittu-aikavali
+              :toimenpide @u/valittu-toimenpideinstanssi
+              :urakkavuosi @u/valittu-urakan-vuosi})))
+
+(defn hae-toimenpiteet [valinnat]
+  (log "--->>> " valinnat))
 
 (defrecord Nakymassa? [nakymassa?])
+(defrecord PaivitaValinnat [valinnat])
 
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
-    (assoc app :nakymassa? nakymassa?)))
+    (assoc app :nakymassa? nakymassa?))
+
+  PaivitaValinnat
+  (process-event [{:keys [valinnat] :as e} tila]
+    (log "--->>> valinnat" valinnat)
+    (hae-toimenpiteet valinnat)
+    (update-in tila [:valinnat] merge valinnat)))
 

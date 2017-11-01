@@ -1,11 +1,11 @@
 (ns harja.domain.kanavat.kanavan-toimenpide
   (:require
+    [clojure.spec.alpha :as s]
     [harja.domain.kanavat.kanavan-kohde :as kohde]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.sopimus :as sopimus]
-    [clojure.spec.alpha :as s]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]

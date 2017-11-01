@@ -1,5 +1,6 @@
 (ns harja.domain.kanavat.kanavan-huoltokohde
   (:require
+    [clojure.spec.alpha :as s]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]

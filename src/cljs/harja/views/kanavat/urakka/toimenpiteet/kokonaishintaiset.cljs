@@ -23,8 +23,7 @@
             [harja.ui.valinnat :as valinnat])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
-    [harja.makrot :refer [defc fnc]]
-    [harja.tyokalut.ui :refer [for*]]))
+    [harja.makrot :refer [defc fnc]]))
 
 (defn henkilon-nimi [henkilo]
   (str (::kayttaja/etunimi henkilo) " " (::kayttaja/sukunimi henkilo)))
@@ -32,12 +31,12 @@
 (defn kokonaishintaiset* [e! app]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (log "hilipait")))
+                                    (log "--->>> uusi" uusi)
+                                    (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
-
       (let [toimenpiteet [{::kanavan-toimenpide/kohde {::kanavan-kohde/id 3,
                                                        ::kanavan-kohde/nimi "Tikkalansaaren avattava ratasilta",
                                                        ::kanavan-kohde/tyyppi :silta},
