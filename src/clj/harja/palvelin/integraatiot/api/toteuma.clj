@@ -48,7 +48,8 @@
             :tyyppi (:toteumatyyppi toteuma)
             :sopimus sopimus-id
             :id (get-in toteuma [:tunniste :id])
-            :urakka urakka-id}))))
+            :urakka urakka-id
+            :luoja (:id kirjaaja)}))))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
   (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
