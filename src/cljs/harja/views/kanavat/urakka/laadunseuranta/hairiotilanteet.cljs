@@ -16,6 +16,7 @@
             [harja.ui.modal :as modal]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
+            [harja.domain.kanavat.kanavan-kohde :as kkohde]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -60,7 +61,8 @@
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")}
    [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt}
-    {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string}
+    {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
+     :fmt #(::kkohde/nimi %)}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string}
     {:otsikko "Odotus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero}
