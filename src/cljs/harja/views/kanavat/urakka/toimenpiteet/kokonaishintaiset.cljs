@@ -20,7 +20,7 @@
 
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot :as tiedot])
+            [harja.ui.valinnat :as valinnat])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -32,11 +32,11 @@
 (defn kokonaishintaiset* [e! app]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (log "hilipait"))
-                  (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
-                                    #(e! (tiedot/->Nakymassa? false)))
+                                    (log "hilipait")))
+    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
+                      #(e! (tiedot/->Nakymassa? false)))
 
-                  (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+    (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
 
       (let [toimenpiteet [{::kanavan-toimenpide/kohde {::kanavan-kohde/id 3,
                                                        ::kanavan-kohde/nimi "Tikkalansaaren avattava ratasilta",
@@ -62,8 +62,13 @@
                            ::kanavan-toimenpide/pvm (pvm/nyt)
                            ::kanavan-toimenpide/id 1}]]
         [:div
-         [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
-          urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
+         [valinnat/urakkavalinnat {:urakka urakka}
+          ^{:key "valinnat"}
+          [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
+         [harja.ui.napit/uusi
+          "Uusi toimenpide"
+          (fn [_] ;;todo
+            )]
          [grid/grid
           {:otsikko "Urakan toimenpiteet"
            :voi-lisata? false
