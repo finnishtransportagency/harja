@@ -140,6 +140,10 @@
             :valinta valittu-urakka
             :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
            (into [nil] urakat)]]
+         [napit/uusi
+          "Lisää uusi kohde"
+          #(e! (tiedot/->AvaaKohdeLomake))
+          {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat))}]
          [grid/grid
           {:tunniste ::kohde/id
            :tyhja (if kohteiden-haku-kaynnissa?
@@ -188,11 +192,7 @@
                                     (e! (tiedot/->LiitaKohdeUrakkaan rivi
                                                                      uusi
                                                                      valittu-urakka))))]))})]
-          (sort-by :rivin-teksti kohderivit)]
-         [napit/uusi
-          "Lisää uusi kohde"
-          #(e! (tiedot/->AvaaKohdeLomake))
-          {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat))}]]
+          (sort-by :rivin-teksti kohderivit)]]
 
         [luontilomake e! app]))))
 
