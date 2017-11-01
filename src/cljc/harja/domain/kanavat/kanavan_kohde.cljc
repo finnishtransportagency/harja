@@ -40,6 +40,10 @@
     ::nimi
     ::tyyppi})
 
+(def kohteen-kanava
+  #{[::kohteen-kanava #{::harja.domain.kanavat.kanava/id
+                        ::harja.domain.kanavat.kanava/nimi}]})
+
 (defn tyyppi->str [kohde]
   ({:silta "silta"
     :sulku "sulku"
@@ -51,3 +55,4 @@
 (def perustiedot-ja-sijainti (conj perustiedot ::sijainti))
 
 (def kohteen-urakkatiedot #{[::linkin-urakka #{:harja.domain.urakka/id :harja.domain.urakka/nimi}]})
+

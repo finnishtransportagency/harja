@@ -20,7 +20,7 @@
                   ::hairio/hairiotilanne
                   (set/union
                     hairio/perustiedot+muokkaustiedot
-                    hairio/viittaukset)
+                    hairio/kohde)
                   {::hairio/urakka-id urakka-id
                    ::hairio/sopimus-id sopimus-id})))
 

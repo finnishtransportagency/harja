@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
-    [clojure.set]
+    [clojure.set :as set]
     [specql.rel :as rel]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -15,9 +15,6 @@
     [harja.domain.urakka :as ur])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
-
-
-;; TODO define-tables
 
 (define-tables
   ["kan_hairio_korjauksen_tila" ::hairiotilanne-korjauksen-tila (specql.transform/transform (specql.transform/to-keyword))]
@@ -56,9 +53,13 @@
     ::sopimus-id
     ::ammattiliikenne-lkm})
 
-(def viittaukset #{[::kohde kkohde/perustiedot]})
+(def kohde #{[::kohde (set/union kkohde/perustiedot
+                                 kkohde/kohteen-kanava)]})
 
 ;; Palvelut
 
 (s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id ::sopimus-id]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
+
+;; Domain-funktiot
+
