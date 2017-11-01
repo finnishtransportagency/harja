@@ -37,6 +37,7 @@
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+      @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       (let [toimenpiteet [{::kanavan-toimenpide/kohde {::kanavan-kohde/id 3,
                                                        ::kanavan-kohde/nimi "Tikkalansaaren avattava ratasilta",
                                                        ::kanavan-kohde/tyyppi :silta},
