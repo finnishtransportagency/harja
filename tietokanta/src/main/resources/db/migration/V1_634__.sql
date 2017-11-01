@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ALTER TABLE kanavahuoltokohde
   RENAME TO kan_huoltokohde;
 
@@ -20,8 +19,3 @@ CREATE TABLE kan_toimenpide (
   muokkaaja       INTEGER REFERENCES kayttaja (id),
   poistettu       BOOLEAN   DEFAULT FALSE,
   poistaja        INTEGER REFERENCES kayttaja (id));
-=======
-ALTER TABLE kan_kohde_urakka
-  ADD COLUMN muokattu TIMESTAMP,
-  ADD COLUMN muokkaaja INTEGER REFERENCES kayttaja (id);
->>>>>>> develop
