@@ -29,7 +29,7 @@
     "odotusaika_h" ::odotusaika-h
     "korjauksen_tila" ::korjauksen-tila}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
-   {::kohde (specql.rel/has-one ::id
+   {::kohde (specql.rel/has-one ::kohde-id
                                 ::kkohde/kohde
                                 ::kkohde/id)}])
 
@@ -53,9 +53,7 @@
     ::sopimus-id
     ::ammattiliikenne-lkm})
 
-(def kohde (set/union #{[::kohde kkohde/perustiedot]}
-                      ;kkohde/kohteen-kanava
-                      ))
+(def kohde kkohde/perustiedot+kanava)
 
 ;; Palvelut
 

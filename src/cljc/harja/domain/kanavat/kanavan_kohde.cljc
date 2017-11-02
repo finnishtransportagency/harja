@@ -40,9 +40,10 @@
     ::nimi
     ::tyyppi})
 
-(def kohteen-kanava
-  #{[::kohteen-kanava #{::harja.domain.kanavat.kanava/id
-                        ::harja.domain.kanavat.kanava/nimi}]})
+(def perustiedot+kanava
+  #{[:harja.domain.kanava.hairiotilanne/kohde perustiedot
+     [::kohteen-kanava #{:harja.domain.kanavat.kanava/id
+                         :harja.domain.kanavat.kanava/nimi}]]})
 
 (defn tyyppi->str [kohde]
   ({:silta "silta"
@@ -62,7 +63,7 @@
   "Ottaa mapin, jossa on kohteen tiedot ja ::kohteen-kanava avaimen takana kanavan tiedot."
   [kohde-ja-kanava]
   (str
-    (when-let [kanava-nimi (get-in kohde-ja-kanava [::kohteen-kanava ::harja.domain.kanavat.kanava/nimi])]
+    (when-let [kanava-nimi (get-in kohde-ja-kanava [::kohteen-kanava :harja.domain.kanavat.kanava/nimi])]
       (str kanava-nimi ", "))
     (when-let [kohde-nimi (::nimi kohde-ja-kanava)]
       (str kohde-nimi ", "))
