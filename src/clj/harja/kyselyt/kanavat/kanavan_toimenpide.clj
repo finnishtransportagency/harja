@@ -17,5 +17,6 @@
                :loppupvm loppupvm
                :toimenpidekoodi toimenpidekoodi
                :tyyppi tyyppi})]
-    (when (not (empty? idt))
-      (hae-kanavatoimenpiteet db {::toimenpide/id (op/in (into #{} (map :id idt)))}))))
+    (if (not (empty? idt))
+      (hae-kanavatoimenpiteet db {::toimenpide/id (op/in (into #{} (map :id idt)))})
+      [])))

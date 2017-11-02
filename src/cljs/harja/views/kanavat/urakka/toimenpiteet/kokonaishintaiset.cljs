@@ -96,5 +96,3 @@
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])
-
-

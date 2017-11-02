@@ -23,12 +23,12 @@
 
 (defonce valinnat
          (reaction
-           (when (:nakymassa? @tila)
-             {:urakka-id (:id @nav/valittu-urakka)
-              :sopimus-id (first @u/valittu-sopimusnumero)
-              :aikavali @u/valittu-aikavali
-              :toimenpide @u/valittu-toimenpideinstanssi
-              :urakkavuosi @u/valittu-urakan-vuosi})))
+           
+           {:urakka-id (:id @nav/valittu-urakka)
+            :sopimus-id (first @u/valittu-sopimusnumero)
+            :aikavali @u/valittu-aikavali
+            :toimenpide @u/valittu-toimenpideinstanssi
+            :urakkavuosi @u/valittu-urakan-vuosi}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
@@ -55,7 +55,6 @@
                         ::kanavatoimenpide/alkupvm (first (:aikavali valinnat))
                         ::kanavatoimenpide/loppupvm (second (:aikavali valinnat))
                         ::kanavatoimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
-        (log "--->>> parametrit" (pr-str parametrit))
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                parametrit
@@ -66,7 +65,6 @@
 
   KokonaishintaisetToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (log "--->>> toimenpiteet" (pr-str toimenpiteet))
     (assoc app :haku-kaynnissa? false
                :toimenpiteet toimenpiteet))
 
