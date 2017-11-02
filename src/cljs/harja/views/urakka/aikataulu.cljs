@@ -191,7 +191,6 @@
      [upotettu-raportti/raportin-vientimuodot
       (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
 
-
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -227,7 +226,12 @@
                         (tallenna-aikataulu
                           urakka-id sopimus-id vuosi
                           (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
-                        (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger))}
+                        ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla
+                        ;; , joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
+                        ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
+                        ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu saamaan sivuvaikutus (virheviestin näyttäminen)
+                        ;; eikä niinkään paluuarvosta.
+                        (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
                  aikataulurivit)])
          [grid/grid

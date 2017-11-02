@@ -139,7 +139,3 @@
       (if (k/virhe? vastaus)
         (epaonnistui-fn)
         (reset! aikataulurivit vastaus)))))
-
-
-
-
