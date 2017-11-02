@@ -67,7 +67,7 @@
        ::kayttaja/sahkoposti
        ::kayttaja/puhelin}]})
 
-(s/def ::hae-kanavatoimenpiteet-kysely
+(s/def ::hae-kanavatoimenpiteet-kutsu
   (s/keys :req [::sopimus/id
                 ::toimenpidekoodi/id
                 ::alkupvm
@@ -75,4 +75,4 @@
           :opt [::kanava-toimenpidetyyppi]))
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
-  (s/coll-of ::kanava-toimenpide)) 
+  (s/coll-of ::kanava-toimenpide))
