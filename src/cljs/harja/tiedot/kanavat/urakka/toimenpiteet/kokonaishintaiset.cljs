@@ -22,13 +22,20 @@
                  :toimenpiteet nil}))
 
 (defonce valinnat
-         (reaction
-           
-           {:urakka-id (:id @nav/valittu-urakka)
-            :sopimus-id (first @u/valittu-sopimusnumero)
-            :aikavali @u/valittu-aikavali
-            :toimenpide @u/valittu-toimenpideinstanssi
-            :urakkavuosi @u/valittu-urakan-vuosi}))
+         (when (:nakymassa? @tila)
+           (reaction
+             {:urakka-id (:id @nav/valittu-urakka)
+              :sopimus-id (first @u/valittu-sopimusnumero)
+              :aikavali @u/valittu-aikavali
+              :toimenpide @u/valittu-toimenpideinstanssi
+              :urakkavuosi @u/valittu-urakan-vuosi})))
+
+(defn muodosta-hakuparametrit [valinnat]
+  {::sopimus/id (:sopimus-id valinnat)
+   ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
+   ::kanavatoimenpide/alkupvm (first (:aikavali valinnat))
+   ::kanavatoimenpide/loppupvm (second (:aikavali valinnat))
+   ::kanavatoimenpide/kanava-toimenpidetyyppi :kokonaishintainen})
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
@@ -50,11 +57,7 @@
   HaeKokonaishintaisetToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:haku-kaynnissa? app)))
-      (let [parametrit {::sopimus/id (:sopimus-id valinnat)
-                        ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
-                        ::kanavatoimenpide/alkupvm (first (:aikavali valinnat))
-                        ::kanavatoimenpide/loppupvm (second (:aikavali valinnat))
-                        ::kanavatoimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+      (let [parametrit (muodosta-hakuparametrit valinnat)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                parametrit
