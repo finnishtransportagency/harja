@@ -32,7 +32,6 @@
   (let [urakka (get-in app [:valinnat :urakka-id])]
     (komp/luo
       (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                      (log "--->>> uusi" uusi)
                                       (e! (tiedot/->PaivitaValinnat uusi))))
       (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                         #(e! (tiedot/->Nakymassa? false)))

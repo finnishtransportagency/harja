@@ -69,9 +69,9 @@
 
 (s/def ::hae-kanavatoimenpiteet-kysely
   (s/keys :req [::sopimus/id
-                ::toimenpidekoodi/id]
-          :req-un [::alkupvm
-                   ::loppupvm]
+                ::toimenpidekoodi/id
+                ::alkupvm
+                ::loppupvm]
           :opt [::kanava-toimenpidetyyppi]))
 
 (s/def ::hae-kanavatoimenpiteet-vastaus

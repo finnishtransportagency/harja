@@ -10,20 +10,21 @@
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]))
 
 (defn hae-kanavatoimenpiteet [db user {sopimus ::sopimus/id
-                                       alkupvm :alkupvm
-                                       loppupvm :loppupvm
+                                       alkupvm ::kanavan-toimenpide/alkupvm
+                                       loppupvm ::kanavan-toimenpide/loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
                                        tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                        :as hakuehdot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-  (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta db sopimus alkupvm loppupvm toimenpidekoodi tyyppi))
+  (let [tyyppi (when tyyppi (name tyyppi))]
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta db sopimus alkupvm loppupvm toimenpidekoodi tyyppi)))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
     (julkaise-palvelu
       http
-      :hae-kanavatoimenpioteet
+      :hae-kanavatoimenpiteet
       (fn [user hakuehdot]
         (hae-kanavatoimenpiteet db user hakuehdot))
       {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
