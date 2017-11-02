@@ -51,7 +51,7 @@
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
   (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
     (if-not (and alku loppu)
-      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa, hakua ei tehdä.")
+      (log/warn "Reimari-integraatio: ei löytynyt hakuvälitietoja" haun-nimi "-tapahtumalle, hakua ei tehdä.")
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
        (fn yrita-ajaa-lukon-kanssa-callback []
