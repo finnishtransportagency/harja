@@ -43,11 +43,9 @@
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
-    (let [uudet-valinnat (merge (:valinnat app) valinnat)
-          haku (tuck/send-async! ->HaeKokonaishintaisetToimenpiteet)]
-      (go (haku uudet-valinnat))
-      (assoc app :valinnat uudet-valinnat)))
-
+    (let [haku (tuck/send-async! ->HaeKokonaishintaisetToimenpiteet)]
+      (go (haku valinnat))
+      (assoc app :valinnat valinnat)))
 
   HaeKokonaishintaisetToimenpiteet
   (process-event [{valinnat :valinnat} app]
@@ -68,7 +66,7 @@
 
   KokonaishintaisetToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (log "--->>> toimenpiteet" toimenpiteet)
+    (log "--->>> toimenpiteet" (pr-str toimenpiteet))
     (assoc app :haku-kaynnissa? false
                :toimenpiteet toimenpiteet))
 
