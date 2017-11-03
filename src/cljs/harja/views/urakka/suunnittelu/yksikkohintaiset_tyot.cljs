@@ -77,6 +77,14 @@
    {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
     :fmt fmt/euro-opt :leveys 1}])
 
+(defmethod urakkatyypin-sarakkeet :vesivayla-kanavien-hoito [_]
+  [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys 4}
+   {:otsikko (str "Yksikkö\u00ADhinta") :nimi :yksikkohinta :tasaa :oikea :tyyppi :numero
+    :fmt fmt/euro-opt :leveys 1}
+   {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys 1}
+   {:otsikko "Arvioitu kustan\u00ADnus/v" :nimi :arvioitu_kustannus :tasaa :oikea :tyyppi :numero
+    :fmt fmt/euro-opt :leveys 1}])
+
 ;; Ylläpidon sarakkeet
 (defmethod urakkatyypin-sarakkeet :default [_]
   [{:otsikko "Tehtävä" :nimi :tehtavan_nimi :tyyppi :string :muokattava? (constantly false) :leveys "40%"}
@@ -123,13 +131,15 @@
                        tehtavat)))))
 
 (defn- nayta-kustannukset? [ur]
-  (not= (:tyyppi ur) :vesivayla-hoito))
+  (and (not= (:tyyppi ur) :vesivayla-hoito)
+       (not= (:tyyppi ur) :vesivayla-kanavien-hoito)))
 
 (defn- suodattimet [urakka]
   [valinnat/urakkavalinnat {:urakka urakka}
    (with-meta
-     (if (urakka-domain/vesivaylaurakka? urakka)
-       [u-valinnat/urakan-sopimus-ja-hoitokausi urakka]
+     (case (urakka-domain/urakkatyyppi urakka)
+       :kanava [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]
+       :vv [u-valinnat/urakan-sopimus-ja-hoitokausi urakka]
        [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+muut urakka])
      {:key "valinnat"})])
 
