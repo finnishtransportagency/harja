@@ -683,7 +683,8 @@
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi "liikennevirasto" :lyhenne nil :ytunnus nil}
                      :organisaation-urakat #{}
-                     :urakkaroolit {}})
+                     :urakkaroolit {}
+                     :organisaatioroolit {}})
 
 (def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
                           :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
