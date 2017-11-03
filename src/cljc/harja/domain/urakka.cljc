@@ -80,3 +80,10 @@
 
 (defn kanavaurakka? [urakka]
   (kanavaurakkatyyppi? (:tyyppi urakka)))
+
+(defn urakkatyyppi [urakka]
+  (let [tyyppi (:tyyppi urakka)]
+    (cond
+      (kanavaurakkatyyppi? tyyppi) :kanava
+      (vesivaylaurakkatyyppi? tyyppi) :vv
+      :else :hoito)))

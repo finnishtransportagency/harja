@@ -19,6 +19,12 @@ VALUES ('Saimaan huollon pääsopimus',
         NULL,
         '2016-08-01', '2018-07-30', true, NOW());
 
+INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Saimaan huollon lisäsopimus',
+        (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava'),
+        (SELECT id FROM sopimus WHERE nimi ='Saimaan huollon pääsopimus'),
+        '2016-08-01', '2018-07-30', true, NOW());
+
 INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Joensuun huolto- ja kunnossapito', '2016-07-07', '2021-05-05', true, NOW());
 
@@ -38,4 +44,10 @@ INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu
 VALUES ('Joensuun huollon pääsopimus',
         (SELECT id FROM urakka WHERE nimi = 'Joensuun kanava'),
         NULL,
+        '2016-08-01', '2018-07-30', true, NOW());
+
+INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Joensuun huollon lisäsopimus',
+        (SELECT id FROM urakka WHERE nimi = 'Joensuun kanava'),
+        (SELECT id FROM sopimus WHERE nimi ='Joensuun huollon pääsopimus'),
         '2016-08-01', '2018-07-30', true, NOW());
