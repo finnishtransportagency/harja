@@ -25,7 +25,8 @@
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.domain.kanavat.hairiotilanne :as hairio])
+            [harja.domain.kanavat.hairiotilanne :as hairio]
+            [harja.ui.debug :as debug])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -85,13 +86,13 @@
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->PaivitaValinnat
-                                 {:urakka-id (:id @nav/valittu-urakka)
+                                 {:urakka @nav/valittu-urakka
                                   :sopimus-id (first @u/valittu-sopimusnumero)})))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! app]
       [:div
-       [suodattimet-ja-toiminnot (get-in app [:valinnat :urakka-id])]
+       [suodattimet-ja-toiminnot (get-in app [:valinnat :urakka])]
        [hairiolista e! app]])))
 
 (defc hairiotilanteet []

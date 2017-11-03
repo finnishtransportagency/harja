@@ -27,10 +27,10 @@
 (defrecord HairioTilanteetHaettu [tulos])
 (defrecord HairioTilanteetEiHaettu [])
 
-(defonce valinnat
+(def valinnat
   (reaction
     (when (:nakymassa? @tila)
-      {:urakka-id (:id @nav/valittu-urakka)
+      {:urakka @nav/valittu-urakka
        :sopimus-id (first @u/valittu-sopimusnumero)})))
 
 (extend-protocol tuck/Event
@@ -48,8 +48,8 @@
   HaeHairioTilanteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:hairiotilanteiden-haku-kaynnissa? app))
-             (some? (:urakka-id valinnat)))
-      (let [argumentit {::hairio/urakka-id (:urakka-id valinnat)
+             (some? (get-in valinnat [:urakka :id])))
+      (let [argumentit {::hairio/urakka-id (get-in valinnat [:urakka :id])
                         ::hairio/sopimus-id (:sopimus-id valinnat)}]
         (-> app
             (tuck-apurit/post! :hae-hairiotilanteet
