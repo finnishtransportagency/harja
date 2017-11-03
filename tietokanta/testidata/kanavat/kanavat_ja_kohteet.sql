@@ -44,6 +44,17 @@ VALUES
     FROM kayttaja
     WHERE kayttajanimi = 'tero'));
 
+INSERT INTO toimenpideinstanssi (urakka,
+                                 toimenpide,
+                                 nimi,
+                                 alkupvm,
+                                 loppupvm)
+VALUES (31,
+        597,
+        'Testitoimenpideinstanssi',
+        '2017-01-01',
+        '2090-01-01');
+
 INSERT INTO kan_toimenpide
 (tyyppi,
  pvm,
@@ -60,7 +71,7 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
-  now(),
+  '2017-10-10',
   (SELECT id
    FROM kan_kohde
    WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
@@ -80,24 +91,13 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  now(),
+  '2017-10-10',
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  now(),
+  '2017-10-10',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
         NULL,
         NULL);
-
-INSERT INTO toimenpideinstanssi (urakka,
-                                 toimenpide,
-                                 nimi,
-                                 alkupvm,
-                                 loppupvm)
-VALUES (31,
-        597,
-        'Testitoimenpideinstanssi',
-        '2017-01-01',
-        '2090-01-01');

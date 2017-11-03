@@ -32,7 +32,7 @@
                   :harja.domain.kanavat.kanavan-toimenpide/huoltokohde
                   {:harja.domain.kanavat.kanavan-huoltokohde/nimi "ASENNONMITTAUSLAITTEET"
                    :harja.domain.kanavat.kanavan-huoltokohde/id 5}
-                  :harja.domain.kanavat.kanavan-toimenpide/pvm #inst "2017-10-31T22:00:00.000-00:00"
+                  :harja.domain.kanavat.kanavan-toimenpide/pvm #inst "2017-10-09T21:00:00.000-00:00"
                   :harja.domain.kanavat.kanavan-toimenpide/id 1}]
     (is (= (first (kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
                     db
