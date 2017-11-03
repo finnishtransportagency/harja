@@ -20,19 +20,24 @@
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
-   {::kohde (specql.rel/has-one ::kohde
+   {"kohde" ::kohde-id
+    ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
                                 :harja.domain.kanavat.kanavan-kohde/id)
-    ::huoltokohde (specql.rel/has-one ::huoltokohde
+    "huoltokohde" ::huoltokohde-id
+    ::huoltokohde (specql.rel/has-one ::huoltokohde-id
                                       :harja.domain.kanavat.kanavan-huoltokohde/huoltokohde
                                       :harja.domain.kanavat.kanavan-huoltokohde/id)
-    ::toimenpidekoodi (specql.rel/has-one ::toimenpidekoodi
+    "toimenpidekoodi" ::toimenpidekoodi-id
+    ::toimenpidekoodi (specql.rel/has-one ::toimenpidekoodi-id
                                           :harja.domain.toimenpidekoodi/toimenpidekoodi
                                           :harja.domain.toimenpidekoodi/id)
-    ::suorittaja (specql.rel/has-one ::suorittaja
+    "suorittaja" ::suorittaja-id
+    ::suorittaja (specql.rel/has-one ::suorittaja-id
                                      :harja.domain.kayttaja/kayttaja
                                      :harja.domain.kayttaja/id)
-    ::kuittaaja (specql.rel/has-one ::kuittaaja
+    "kuittaaja" ::kuittaaja-id
+    ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
 

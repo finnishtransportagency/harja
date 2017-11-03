@@ -27,7 +27,8 @@
       :hae-kanavatoimenpiteet
       (fn [user hakuehdot]
         (hae-kanavatoimenpiteet db user hakuehdot))
-      {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kutsu})
+      {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kutsu
+       :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
     this)
 
   (stop [this]

@@ -73,4 +73,5 @@
                   :harja.domain.kanavat.kanavan-toimenpide/pvm #inst "2017-10-09T21:00:00.000-00:00"
                   :harja.domain.kanavat.kanavan-toimenpide/id 1}]
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kutsu parametrit) "Kutsu on validi")
+    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus on validi")
     (is (= odotettu (first vastaus)) "Vastauksena saadaan oletettu data")))
