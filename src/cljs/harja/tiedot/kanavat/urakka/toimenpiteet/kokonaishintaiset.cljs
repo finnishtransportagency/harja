@@ -22,8 +22,8 @@
                  :toimenpiteet nil}))
 
 (defonce valinnat
-         (when (:nakymassa? @tila)
-           (reaction
+         (reaction
+           (when (:nakymassa? @tila)
              {:urakka-id (:id @nav/valittu-urakka)
               :sopimus-id (first @u/valittu-sopimusnumero)
               :aikavali @u/valittu-aikavali

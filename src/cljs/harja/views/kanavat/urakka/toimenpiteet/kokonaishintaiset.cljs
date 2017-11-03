@@ -89,7 +89,8 @@
                                   :aikavali @u/valittu-aikavali
                                   :toimenpide @u/valittu-toimenpideinstanssi
                                   :urakkavuosi @u/valittu-urakan-vuosi})))
-                        #(e! (tiedot/->Nakymassa? false)))
+                        #(do
+                           (e! (tiedot/->Nakymassa? false))))
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         (kokonaishintaiset-taulukko urakka toimenpiteet )))))
