@@ -60,19 +60,19 @@
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")}
-   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt}
+   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt #(kkohde/fmt-kohde-ja-kanava (::hairiotilanne/kohde %))}
-    {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string}
-    {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string}
-    {:otsikko "Odotus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero}
-    {:otsikko "Ammatti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero}
-    {:otsikko "Huvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero}
-    {:otsikko "Korjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string}
-    {:otsikko "Korjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika :tyyppi :numero}
-    {:otsikko "Korjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string}
+     :fmt kkohde/fmt-kohde-ja-kanava :leveys 10}
+    {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6}
+    {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
+    {:otsikko "Odo\u00ADtus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika :tyyppi :numero :leveys 2}
+    {:otsikko "Am\u00ADmat\u00ADti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 2}
+    {:otsikko "Hu\u00ADvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 2}
+    {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
+    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika :tyyppi :numero :leveys 2}
+    {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 3}
     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto
-     :tyyppi :string :fmt fmt/totuus}]
+     :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
 (defn hairiotilanteet* [e! app]
