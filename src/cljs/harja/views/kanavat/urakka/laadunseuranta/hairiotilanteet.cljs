@@ -35,7 +35,8 @@
   [valinnat/urakkavalinnat {:urakka valittu-urakka}
    ^{:key "urakkavalinnat"}
    ;; TODO Lisää filttereitä
-   [urakka-valinnat/urakan-hoitokausi valittu-urakka]
+   [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+    valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:urakka valittu-urakka}
     (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys
