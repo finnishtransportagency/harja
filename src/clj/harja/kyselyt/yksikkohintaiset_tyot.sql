@@ -10,6 +10,7 @@ SELECT
   yt.tehtava,
   yt.urakka,
   yt.sopimus,
+  yt.arvioitu_kustannus,
   tk.id   AS tehtavan_id,
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
@@ -34,7 +35,8 @@ WHERE
 -- name: paivita-urakan-yksikkohintainen-tyo!
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot
 UPDATE yksikkohintainen_tyo
-SET maara = :maara, yksikko = :yksikko, yksikkohinta = :yksikkohinta
+SET maara = :maara, yksikko = :yksikko, yksikkohinta = :yksikkohinta,
+    arvioitu_kustannus = :arvioitu_kustannus
 WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
       AND alkupvm = :alkupvm AND loppupvm = :loppupvm;
 
@@ -42,10 +44,10 @@ WHERE urakka = :urakka AND sopimus = :sopimus AND tehtava = :tehtava
 INSERT INTO yksikkohintainen_tyo
 (maara, yksikko, yksikkohinta,
  urakka, sopimus, tehtava,
- alkupvm, loppupvm, luoja)
+ alkupvm, loppupvm, luoja, arvioitu_kustannus)
 VALUES (:maara, :yksikko, :yksikkohinta,
         :urakka, :sopimus, :tehtava,
-        :alkupvm, :loppupvm, :luoja);
+        :alkupvm, :loppupvm, :luoja, :arvioitu_kustannus);
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee yksikköhintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
