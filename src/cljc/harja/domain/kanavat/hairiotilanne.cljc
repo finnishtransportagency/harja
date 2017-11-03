@@ -73,3 +73,7 @@
   {:sahkotekninen_vika "Sähkötekninen vika"
    :konetekninen_vika "Konetekninen vika"
    :liikennevaurio "Liikennevaurio"})
+
+(def fmt-korjauksen-tila
+  {:kesken "Kesken"
+   :valmis "Valmis"})
