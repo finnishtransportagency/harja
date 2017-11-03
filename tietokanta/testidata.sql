@@ -12,6 +12,7 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 
 -- Luodaan hoidon alueurakoita ja ylläpitourakoita
 \i testidata/urakat.sql
+\i testidata/kanavat/kanavien_urakat.sql
 
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
@@ -145,6 +146,4 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 \i testidata/vesivaylat/vesivaylien_materiaalit.sql
 \i testidata/vesivaylat/kalusto.sql
 
-\i testidata/kanavat/kanavien_urakat.sql
 \i testidata/kanavat/kanavat_ja_kohteet.sql
-\i testidata/kanavat/hairiotilanteet.sql
