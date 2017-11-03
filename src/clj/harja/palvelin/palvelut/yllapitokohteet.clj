@@ -51,8 +51,10 @@
       yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
-  (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan urakan ylläpitokohteet laatupoikkeamalomakkeelle")
+  ;; Tätä kutsutaan toistaiseksi vain laadunseurannasta. ELY_Laadunvalvojan siis mm. saatava kohteet tätä kautta,
+  ;; mutta heille emme halua antaa täyttä pääsyä kohdeluetteloon
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [vastaus (q/hae-urakan-yllapitokohteet-lomakkeelle db {:urakka urakka-id
                                                                 :sopimus sopimus-id})]
