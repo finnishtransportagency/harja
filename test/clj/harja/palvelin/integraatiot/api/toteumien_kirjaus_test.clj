@@ -36,9 +36,11 @@
 
 (deftest tallenna-pistetoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                 (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                     slurp
+                                                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
                                                     (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
@@ -53,6 +55,7 @@
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                       (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                           slurp
+                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                           (.replace "__ID__" (str ulkoinen-id))
                                                           (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
                                                           (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
@@ -68,6 +71,7 @@
     (let [vastaus-poisto (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                   (-> "test/resurssit/api/toteuman-poisto.json"
                                                       slurp
+                                                      (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                       (.replace "__ID__" (str ulkoinen-id))
                                                       (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
                                                       (.replace "__PVM__" (json-tyokalut/json-pvm (Date.)))))
@@ -77,9 +81,11 @@
 
 (deftest tallenna-ja-poista-reittitoteuma
   (let [ulkoinen-id (hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                     slurp
+                                                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                     (.replace "__ID__" (str ulkoinen-id))
                                                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (log/info "vastaus-lisays: " vastaus-lisays)
@@ -91,6 +97,7 @@
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                       (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                                                           slurp
+                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                           (.replace "__ID__" (str ulkoinen-id))
                                                           (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
         (is (= 200 (:status vastaus-paivitys)))
