@@ -198,3 +198,33 @@
                       (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 400 (:status vastaus)) "Statuksena viallinen kutsu")
     (is (.contains (:body vastaus ) "Urakkaa id:llä 666 ei löydy"))))
+
+(deftest eri-urakalle-samalla-kayttajalla-ja-ulkoisella-idlla-tallentaminen
+  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        oulun-alueurakka-id (hae-oulun-alueurakan-2014-2019-id)
+        kajaanin-alueurakka-id (hae-kajaanin-alueurakan-2014-2019-id)
+        oulun-sopimus-id (hae-annetun-urakan-paasopimuksen-id oulun-alueurakka-id)
+        kajaanin-sopimus-id (hae-annetun-urakan-paasopimuksen-id kajaanin-alueurakka-id)
+        kayttaja (ffirst (q (str "SELECT kayttajanimi
+                                  FROM kayttaja
+                                  WHERE organisaatio=(SELECT hallintayksikko FROM urakka WHERE id=" oulun-alueurakka-id ") AND "
+                                 "organisaatio=(SELECT hallintayksikko FROM urakka WHERE id=" kajaanin-alueurakka-id ")")))
+        ;; Annetaan käyttäjälle lisäoikeudet ja tehdään siitä järjestelmä, jotta api-kutsut menee läpi.
+        _ (u "INSERT INTO kayttajan_lisaoikeudet_urakkaan (urakka, kayttaja) VALUES
+        (" oulun-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) "),
+        (" kajaanin-alueurakka-id ", " (ffirst (q (str "SELECT id FROM kayttaja WHERE kayttajanimi = '" kayttaja "'"))) ")")
+        _ (u "UPDATE kayttaja SET jarjestelma = TRUE WHERE kayttajanimi= '" kayttaja "'")
+
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" oulun-alueurakka-id "/toteumat/reitti"] kayttaja portti
+                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                    slurp
+                                                    (.replace "__SOPIMUS_ID__" (str oulun-sopimus-id))
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))
+        _ (is (= 200 (:status vastaus-lisays)))
+        toinen-vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" kajaanin-alueurakka-id "/toteumat/reitti"] kayttaja portti
+                                                       (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                           slurp
+                                                           (.replace "__SOPIMUS_ID__" (str kajaanin-sopimus-id))
+                                                           (.replace "__ID__" (str ulkoinen-id))
+                                                           (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))]))
