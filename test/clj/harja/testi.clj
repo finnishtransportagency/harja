@@ -416,6 +416,12 @@
                    WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vantaan urakan testihinnoittelu')
                    LIMIT 1;"))))
 
+(defn hae-annetun-urakan-paasopimuksen-id [urakka]
+  (ffirst (q (str "SELECT id
+                   FROM sopimus
+                   WHERE urakka=" urakka " AND
+                         paasopimus IS NULL"))))
+
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
@@ -760,6 +766,13 @@
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id, #{"ELY_Urakanvalvoja"}}})
+
+(defn oulun-2014-urakan-tilaajan-urakanvalvoja []
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 417,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :urakkaroolit {@oulun-alueurakan-2014-2019-id, #{"ELY_Urakanvalvoja"}}})
 
 (defn oulun-2005-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

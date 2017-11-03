@@ -1,3 +1,1 @@
-ALTER TABLE ilmoitus
-  ADD COLUMN
-  viestiid VARCHAR(64);
+-- Lisätään tyhjä migraatio, koska tämä 632 numero jäi välistä
