@@ -227,4 +227,6 @@
                                                            slurp
                                                            (.replace "__SOPIMUS_ID__" (str kajaanin-sopimus-id))
                                                            (.replace "__ID__" (str ulkoinen-id))
-                                                           (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))]))
+                                                           (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))]
+
+    (is (= 200 (:status toinen-vastaus-lisays)))))
