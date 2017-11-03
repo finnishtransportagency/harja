@@ -18,9 +18,7 @@
         sopimus-id (::hairio/sopimus-id tiedot)]
     (specql/fetch db
                   ::hairio/hairiotilanne
-                  (set/union
-                    hairio/perustiedot+muokkaustiedot
-                    hairio/kohde)
+                  hairio/perustiedot+kanava+kohde
                   {::hairio/urakka-id urakka-id
                    ::hairio/sopimus-id sopimus-id})))
 
