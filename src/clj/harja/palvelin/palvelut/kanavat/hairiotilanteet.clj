@@ -16,11 +16,12 @@
   ;; TODO Testi haulle
   (let [urakka-id (::hairio/urakka-id tiedot)
         sopimus-id (::hairio/sopimus-id tiedot)]
-    (specql/fetch db
-                  ::hairio/hairiotilanne
-                  hairio/perustiedot+kanava+kohde
-                  {::hairio/urakka-id urakka-id
-                   ::hairio/sopimus-id sopimus-id})))
+    (reverse (sort-by ::hairio/pvm
+                      (specql/fetch db
+                                    ::hairio/hairiotilanne
+                                    hairio/perustiedot+kanava+kohde
+                                    {::hairio/urakka-id urakka-id
+                                     ::hairio/sopimus-id sopimus-id})))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
