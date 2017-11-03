@@ -1,7 +1,11 @@
-<b>Nykyinen versio: 1.0.27</b>  
-<b>Julkaistu: 15.5.2017</b>
+<b>Nykyinen versio: 1.0.29</b>  
+<b>Julkaistu: 3.11.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.29 Julkaistu: 3.11.2017:
+    - Tilaajan laadunvalvontakonsulteille lisätty oma tehtävä API:n työkoneseurantaan: tilaajan laadunvalvonta. Nämä havainnot näytetään vain tilaajan käyttäjille. 
+- Versionumero: 1.0.28 Julkaistu: 21.9.2017:
+    - Ilmoituskuittausten kautta voidaan ilmoittaa lopetuksen yhteydessä aiheuttiko ilmoitus toimenpiteitä vai ei.
 - Versionumero: 1.0.27 Julkaistu: 11.9.2017:
     - Mahdollisuus merkitä näytetäänkö tarkastuksia urakoitsijoille vai ei
 - Versionumero: 1.0.26 Julkaistu: 26.5.2017:
