@@ -219,17 +219,21 @@
             yllapito-pvm-fmt (fn [arvo]
                                (pvm/pvm-opt arvo {:nayta-vuosi-fn #(not= (pvm/vuosi %) vuosi)}))]
         [:div.aikataulu
-
          [valinnat ur]
-
          (when aikajana?
            [aikajana/aikajana
-            {:muuta! #(tallenna-aikataulu
-                        urakka-id sopimus-id vuosi
-                        (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))}
+            {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
+                        (tallenna-aikataulu
+                          urakka-id sopimus-id vuosi
+                          (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
+                        ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla
+                        ;; , joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
+                        ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
+                        ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu saamaan sivuvaikutus (virheviestin näyttäminen)
+                        ;; eikä niinkään paluuarvosta.
+                        (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
                  aikataulurivit)])
-
          [grid/grid
           {:otsikko [:span
                      "Kohteiden aikataulu"
@@ -283,7 +287,7 @@
             :nimi :yllapitoluokka :leveys 4 :tyyppi :string
             :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? (constantly false)}
-           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+           (when (= (:nakyma optiot) :paallystys)           ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
               :tyyppi :pvm :fmt yllapito-pvm-fmt
               :muokattava? voi-muokata-paallystys?})
