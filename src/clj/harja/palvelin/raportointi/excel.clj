@@ -19,13 +19,7 @@
   POI sisältää sisäänrakennenttuja tyylejä, joita solulle voi asettaa.
   Jos tarvitaan uusia custom tyylejä luoda Exceliä varten:
   http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
-  Yllä olevasta linkistä voi katsoa mallia, missä muodossa format-str voi antaa.
-
-  Alla esimerkki miten luodaan custom Excel-formaatti, tulevia varten:
-  (defn luo-data-formaatti
-    \"Luo custom Excel tyyli. Format-str on esim '$#,##0_;[Red]($#,##0)'\"
-    [workbook format-str]
-    (.. (.getCreationHelper workbook) createDataFormat (getFormat format-str))"
+  Yllä olevasta linkistä voi katsoa mallia, missä muodossa format-str voi antaa."
 
   (:require [taoensso.timbre :as log]
             [dk.ative.docjure.spreadsheet :as excel]
@@ -83,8 +77,11 @@
 (defmethod muodosta-solu :arvo-ja-osuus [[_ {:keys [arvo osuus]}] solun-tyyli]
   [arvo solun-tyyli])
 
-(defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko]}] solun-tyyli]
-  [arvo solun-tyyli])
+(defmethod muodosta-solu :arvo-ja-yksikko [[_ {:keys [arvo yksikko desimaalien-maara]}] solun-tyyli]
+  [arvo solun-tyyli (when desimaalien-maara
+                      (if (= yksikko "%")
+                        nil
+                        [:kustomi desimaalien-maara]))])
 
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt]}] solun-tyyli]
   [arvo
@@ -100,6 +97,17 @@
           (excel/set-cell-style! cell sarake-tyyli)))
       sarakkeet)))
 
+(defn luo-data-formaatti
+  "Luo custom Excel tyyli. Format-str on esim '$#,##0_;[Red]($#,##0)'"
+  [workbook format-str]
+  (let [creation-helper (.getCreationHelper workbook)
+        data-format (.createDataFormat creation-helper)]
+    (.getFormat data-format format-str)))
+
+(defn tyyli-kustom-format-mukaan [desimaalien-maara workbook tyyli]
+  (let [pattern (apply str "0." (repeat desimaalien-maara 0))
+        data-format (luo-data-formaatti workbook pattern)]
+    (.setDataFormat tyyli data-format)))
 
 (defn tyyli-format-mukaan [fmt tyyli]
   ;; Jos halutaan tukea erityyppisiä sarakkeita,
@@ -183,11 +191,14 @@
                        (if (raportti-domain/raporttielementti? arvo-datassa)
                          (muodosta-solu arvo-datassa oletustyyli)
                          [arvo-datassa oletustyyli])
-
+                       kustomi-formaatti? (and (vector? formaatti) (= (first formaatti) :kustomi))
                        ;; Jos solun muodostus on antanut formaatin, käytä sitä.
                        ;; Jos sarakkeelle on annettu formaatti, käytä sitä.
                        ;; Muuten käytetään oletusformaattia arvon mukaan.
                        formaatti-fn (cond
+                                      kustomi-formaatti?
+                                      (partial tyyli-kustom-format-mukaan (second formaatti) workbook)
+
                                       formaatti
                                       (partial tyyli-format-mukaan formaatti)
 

@@ -46,17 +46,26 @@
     hintaryhmat]])
 
 (defn- siirra-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
-                                              hintaryhmien-liittaminen-kaynnissa?] :as app}]
+                                              hintaryhmien-liittaminen-kaynnissa?
+                                              toimenpiteiden-haku-kaynnissa?
+                                              hintaryhmien-haku-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
-   (if hintaryhmien-liittaminen-kaynnissa?
+   (cond
+     hintaryhmien-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
-     "Siirrä")
+
+     (or toimenpiteiden-haku-kaynnissa? hintaryhmien-haku-kaynnissa?)
+     [yleiset/ajax-loader-pieni "Päivitetään.."]
+
+     :default "Siirrä")
    #(e! (tiedot/->LiitaValitutHintaryhmaan
           valittu-hintaryhma
           (jaettu-tiedot/valitut-toimenpiteet toimenpiteet)))
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   (not valittu-hintaryhma)
                   hintaryhmien-liittaminen-kaynnissa?
+                  toimenpiteiden-haku-kaynnissa?
+                  hintaryhmien-haku-kaynnissa?
                   (not (oikeudet/on-muu-oikeus? "siirrä-tilaukseen"
                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                 (:id @nav/valittu-urakka))))}])
