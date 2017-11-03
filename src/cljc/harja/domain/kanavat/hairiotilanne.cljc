@@ -18,6 +18,7 @@
 
 (define-tables
   ["kan_hairio_korjauksen_tila" ::hairiotilanne-korjauksen-tila (specql.transform/transform (specql.transform/to-keyword))]
+  ["kan_hairio_vikaluokka" ::hairiotilanne-vikaluokka (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_hairio" ::hairiotilanne
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
@@ -65,3 +66,10 @@
 
 (s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id ::sopimus-id]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
+
+;; Apurit
+
+(def fmt-vikaluokka
+  {:sahkotekninen_vika "Sähkötekninen vika"
+   :konetekninen_vika "Konetekninen vika"
+   :liikennevaurio "Liikennevaurio"})
