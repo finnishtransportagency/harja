@@ -14,7 +14,7 @@ CREATE TABLE kan_liikennetapahtuma (
   "vesipinta-ylaraja" INTEGER,
   "vesipinta-alaraja" INTEGER,
 
-  kuittaaja           INTEGER REFERENCES kayttaja (id),
+  "kuittaaja-id"           INTEGER REFERENCES kayttaja (id),
 
   luotu               TIMESTAMP DEFAULT NOW(),
   luoja               INTEGER REFERENCES kayttaja (id)   NOT NULL,

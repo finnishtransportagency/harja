@@ -1,4 +1,4 @@
-INSERT INTO kan_liikennetapahtuma ("kohde-id", aika, toimenpide, palvelumuoto, "palvelumuoto-lkm", lisatieto, "vesipinta-ylaraja", "vesipinta-alaraja", kuittaaja, luoja, poistettu)
+INSERT INTO kan_liikennetapahtuma ("kohde-id", aika, toimenpide, palvelumuoto, "palvelumuoto-lkm", lisatieto, "vesipinta-ylaraja", "vesipinta-alaraja", "kuittaaja-id", luoja, poistettu)
 VALUES
   ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),NOW(), 'sulutus', 'kauko', 1, 'Testidata 1', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), false),
   ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta'),NOW(), 'sillan-avaus', NULL, NULL,  'Testidata 2', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), false),
