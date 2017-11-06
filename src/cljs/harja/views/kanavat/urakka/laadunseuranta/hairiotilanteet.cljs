@@ -57,7 +57,17 @@
                (fn [uusi]
                  (e! (tiedot/->PaivitaValinnat {:paikallinen-kaytto? uusi}))))
        [nil true false]
-       #(if (some? %) (fmt/totuus %) "Kaikki")]]
+       #(if (some? %) (fmt/totuus %) "Kaikki")]
+      [valinnat/numerovali
+       (r/wrap (get-in app [:valinnat :odotusaika])
+               (fn [uusi]
+                 (e! (tiedot/->PaivitaValinnat {:odotusaika uusi}))))
+       {:otsikko "Odotusaika (h)"}]
+      [valinnat/numerovali
+       (r/wrap (get-in app [:valinnat :korjausaika])
+               (fn [uusi]
+                 (e! (tiedot/->PaivitaValinnat {:korjausaika uusi}))))
+       {:otsikko "Korjausaika"}]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
       (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys

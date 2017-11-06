@@ -123,6 +123,29 @@
                     (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
                 (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
+(defn numerovali
+  ([valittu-numerovali-atom] (numerovali valittu-numerovali-atom nil))
+  ([valittu-numerovali-atom {:keys [nayta-otsikko? lomake? otsikko]}]
+   [:span {:class (if lomake?
+                    "label-ja-aikavali-lomake"
+                    "label-ja-aikavali")}
+    (when (and (not lomake?)
+               (or (nil? nayta-otsikko?)
+                   (true? nayta-otsikko?)))
+      [:span.alasvedon-otsikko (or otsikko "Väli")])
+    [:div.aikavali-valinnat
+     [tee-kentta {:tyyppi :numero}
+      (r/wrap (first @valittu-numerovali-atom)
+              (fn [uusi-arvo]
+                (swap! valittu-numerovali-atom [uusi-arvo (second %)])
+                (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]
+     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
+     [tee-kentta {:tyyppi :numero}
+      (r/wrap (second @valittu-numerovali-atom)
+              (fn [uusi-arvo]
+                (swap! valittu-numerovali-atom [(first %) uusi-arvo])
+                (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]]]))
+
 (defn- toimenpideinstanssi-fmt
   [tpi]
   (if-let [tpi-nimi (:tpi_nimi tpi)]
