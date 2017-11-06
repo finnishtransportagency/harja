@@ -30,7 +30,7 @@
         (assoc kohde ::kohde/urakat (kohde-ja-urakat (::kohde/id kohde))))
       kohteet)))
 
-(defn- hae-kohteiden-urakkatiedot [db kohteet]
+(defn hae-kohteiden-urakkatiedot [db kohteet]
   (hae-kohteiden-urakkatiedot* kohteet
                                (specql/fetch db
                                              ::kohde/kohde<->urakka
