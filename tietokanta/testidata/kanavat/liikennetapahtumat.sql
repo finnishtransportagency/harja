@@ -2,7 +2,7 @@ INSERT INTO kan_liikennetapahtuma ("kohde-id", aika, toimenpide, palvelumuoto, "
 VALUES
   ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),NOW(), 'sulutus', 'kauko', 1, 'Testidata 1', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), false),
   ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta'),NOW(), 'sillan-avaus', NULL, NULL,  'Testidata 2', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), false),
-  ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),NOW(), 'sulutus', 'paikallis', 1, 'Testidata 3', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), false),
+  ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),NOW(), 'tyhjennys', 'paikallis', 1, 'Testidata 3', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), false),
   ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),NOW(), 'tyhjennys', 'kauko', 1, 'Testidata 4', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), TRUE),
   ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),NOW(), 'sulutus', 'itse', 15, 'Testidata 5', 7000, 8000, (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'), false);
 
