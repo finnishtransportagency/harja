@@ -21,7 +21,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
-            [harja.tyokalut.tuck :as tuck-apurit])
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
@@ -96,9 +97,8 @@
                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                (:id @nav/valittu-urakka))
                      (fn [sisalto]
-                       (tuck-apurit/e-kanavalla! tiedot/->TallennaKiintiot sisalto)))
+                       (tuck-apurit/e-kanavalla! e! tiedot/->TallennaKiintiot sisalto)))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
-         :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
          :uusi-rivi (fn [rivi] rivi)
          :vetolaatikot (into {}
@@ -126,7 +126,7 @@
           :kokonaisosan-maara 7
           :leveys 3
           :validoi [[:ei-tyhja "Anna koko"]]}]
-        kiintiot]])))
+        (sort-by (comp str/upper-case ::kiintio/nimi) kiintiot)]])))
 
 (defn kiintiot []
   [tuck/tuck tiedot/tila kiintiot*])
