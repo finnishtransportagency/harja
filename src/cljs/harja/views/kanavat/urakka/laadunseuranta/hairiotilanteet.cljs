@@ -67,7 +67,7 @@
        (r/wrap (get-in app [:valinnat :korjausaika-h])
                (fn [uusi]
                  (e! (tiedot/->PaivitaValinnat {:korjausaika-h uusi}))))
-       {:otsikko "Korjausaika"
+       {:otsikko "Korjausaika (h)"
         :vain-positiivinen? true}]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
