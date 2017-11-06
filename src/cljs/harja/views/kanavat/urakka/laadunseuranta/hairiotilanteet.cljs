@@ -124,6 +124,8 @@
 
     (fn [e! app]
       [:div
+       @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
+       [debug/debug app]
        [suodattimet-ja-toiminnot e! app]
        [hairiolista e! app]])))
 

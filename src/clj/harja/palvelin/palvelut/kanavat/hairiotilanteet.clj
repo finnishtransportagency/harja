@@ -43,8 +43,7 @@
                      {::hairio/odotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
                    (when (and korjausaika-alku korjausaika-loppu)
                      {::hairio/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
-                   ;; TODO ei toimi oikein!?
-                   #_(when (and aikavali-alku aikavali-loppu)
+                   (when (and aikavali-alku aikavali-loppu)
                        {::hairio/pvm (op/between aikavali-alku aikavali-loppu)})))))))
 
 (defrecord Hairiotilanteet []
