@@ -64,12 +64,17 @@
 
 ;; Palvelut
 
-(s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id ::sopimus-id
-                                                  ::vikaluokka ::korjauksen-tila
-                                                  ::paikallinen-kaytto?
-                                                  ::odotusaika-h
-                                                  ::korjausaika-h]
-                                            :req-un [::aikavali]))
+(s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id]
+                                            ;; Nämä eivät suoraan mappaudu domainin kanta-arvoihin, koska
+                                            ;; voi olla myös kaikki-valinta (nil), lisäksi
+                                            ;; numerovälit esitetään vectoreina
+                                            :req-un [::haku-aikavali
+                                                     ::haku-korjausaika-h
+                                                     ::haku-odotusaika-h
+                                                     ::haku-vikaluokka
+                                                     ::haku-sopimus-id
+                                                     ::haku-korjauksen-tila
+                                                     ::haku-paikallinen-kaytto?]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
 
 ;; Apurit

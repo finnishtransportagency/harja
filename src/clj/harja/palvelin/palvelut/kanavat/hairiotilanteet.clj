@@ -15,13 +15,15 @@
   ;; TODO Oikeustarkistus + testi
   ;; TODO Testi haulle
   (let [urakka-id (::hairio/urakka-id tiedot)
-        sopimus-id (::hairio/sopimus-id tiedot)]
+        sopimus-id (:haku-sopimus-id tiedot)]
     (reverse (sort-by ::hairio/pvm
                       (specql/fetch db
                                     ::hairio/hairiotilanne
                                     hairio/perustiedot+kanava+kohde
-                                    {::hairio/urakka-id urakka-id
-                                     ::hairio/sopimus-id sopimus-id})))))
+                                    (merge
+                                      {::hairio/urakka-id urakka-id}
+                                      (when sopimus-id
+                                        {::hairio/sopimus-id sopimus-id})))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
