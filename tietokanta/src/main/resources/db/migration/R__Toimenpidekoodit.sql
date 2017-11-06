@@ -2802,6 +2802,7 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Tiemerkintä', NULL, 4, 'NULL', NULL, (SELECT nimi FROM toimenpidekoodi WHERE koodi='20123'), (SELECT koodi FROM toimenpidekoodi WHERE koodi='20123'), (SELECT taso FROM toimenpidekoodi WHERE koodi='20123'));
 
+
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'asfaltointi' :: suoritettavatehtava WHERE nimi = 'Asfaltointi';
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'tiemerkinta' :: suoritettavatehtava WHERE nimi = 'Tiemerkintä';
 UPDATE toimenpidekoodi SET suoritettavatehtava = 'kuumennus' :: suoritettavatehtava WHERE nimi = 'Kuumennus';

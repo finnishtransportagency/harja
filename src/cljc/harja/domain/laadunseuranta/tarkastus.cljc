@@ -4,13 +4,13 @@
 
 (def +tarkastustyyppi->nimi+
   {:tiesto "Tiestötarkastus"
-    :talvihoito "Kelitarkastus"
-    :soratie "Soratien tarkastus"
-    :laatu "Laaduntarkastus"
-    :pistokoe "Pistokoe"
-    :katselmus "Katselmus"
-    :vastaanotto "Vastaanottotarkastus"
-    :takuu "Takuutarkastus"})
+   :talvihoito "Kelitarkastus"
+   :soratie "Soratien tarkastus"
+   :laatu "Laaduntarkastus"
+   :pistokoe "Pistokoe"
+   :katselmus "Katselmus"
+   :vastaanotto "Vastaanottotarkastus"
+   :takuu "Takuutarkastus"})
 
 (defn formatoi-talvihoitomittaukset
   [thm]
@@ -84,13 +84,13 @@
   (boolean
     (and
       (not-empty (:vakiohavainnot data))
-      ((:vakiohavainnot data) "Liukasta"))))
+      (some #(= "Liukasta" %) (:vakiohavainnot data)))))
 
 (defn luminen-vakiohavainto? [data]
   (boolean
     (and
       (not-empty (:vakiohavainnot data))
-      ((:vakiohavainnot data) "Lumista"))))
+      (some #(= "Lumista" %) (:vakiohavainnot data)))))
 
 (defn luminen-tai-liukas-vakiohavainto? [data]
   (boolean

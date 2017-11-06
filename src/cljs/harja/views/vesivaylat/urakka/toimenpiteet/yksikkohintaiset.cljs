@@ -46,17 +46,26 @@
     hintaryhmat]])
 
 (defn- siirra-hinnoitteluun-nappi [e! {:keys [toimenpiteet valittu-hintaryhma
-                                              hintaryhmien-liittaminen-kaynnissa?] :as app}]
+                                              hintaryhmien-liittaminen-kaynnissa?
+                                              toimenpiteiden-haku-kaynnissa?
+                                              hintaryhmien-haku-kaynnissa?] :as app}]
   [napit/yleinen-ensisijainen
-   (if hintaryhmien-liittaminen-kaynnissa?
+   (cond
+     hintaryhmien-liittaminen-kaynnissa?
      [yleiset/ajax-loader-pieni "Liitetään.."]
-     "Siirrä")
+
+     (or toimenpiteiden-haku-kaynnissa? hintaryhmien-haku-kaynnissa?)
+     [yleiset/ajax-loader-pieni "Päivitetään.."]
+
+     :default "Siirrä")
    #(e! (tiedot/->LiitaValitutHintaryhmaan
           valittu-hintaryhma
           (jaettu-tiedot/valitut-toimenpiteet toimenpiteet)))
    {:disabled (or (not (jaettu-tiedot/joku-valittu? toimenpiteet))
                   (not valittu-hintaryhma)
                   hintaryhmien-liittaminen-kaynnissa?
+                  toimenpiteiden-haku-kaynnissa?
+                  hintaryhmien-haku-kaynnissa?
                   (not (oikeudet/on-muu-oikeus? "siirrä-tilaukseen"
                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                 (:id @nav/valittu-urakka))))}])
@@ -263,62 +272,62 @@
                         nayta-hintaryhman-yhteenveto? (boolean (and hintaryhma-id
                                                                     (not (empty? hintaryhman-toimenpiteet))))]]
 
-             (when nayta-hintaryhma?
-               ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
-               [:div.vv-toimenpideryhma
-                ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
-                [:span [napit/nappi
-                        (ikonit/map-marker)
-                        #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
-                           (e! (tiedot/->PoistaHintaryhmanKorostus))
+                 (when nayta-hintaryhma?
+                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
+                   [:div.vv-toimenpideryhma
+                    ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
+                    [:span [napit/nappi
+                            (ikonit/map-marker)
+                            #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                               (e! (tiedot/->PoistaHintaryhmanKorostus))
 
-                           (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
-                        {:ikoninappi? true
-                         :disabled hintaryhma-tyhja?
-                         :luokka (str "vv-hintaryhma-korostus-nappi "
-                                      (if (tiedot/hintaryhma-korostettu? hintaryhma app)
-                                        "nappi-ensisijainen"
-                                        "nappi-toissijainen"))}]
-                 [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
+                               (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
+                            {:ikoninappi? true
+                             :disabled hintaryhma-tyhja?
+                             :luokka (str "vv-hintaryhma-korostus-nappi "
+                                          (if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                                            "nappi-ensisijainen"
+                                            "nappi-toissijainen"))}]
+                     [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
 
-                (if hintaryhma-tyhja?
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
-                  [:div
-                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
-                   [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
-                   ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
-                   [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
-                    {:disabled (or (:hintaryhmien-poisto-kaynnissa? app)
-                                   (not (oikeudet/on-muu-oikeus? "tilausten-muokkaus"
-                                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                                 (:id @nav/valittu-urakka))))}]]
-                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
+                    (if hintaryhma-tyhja?
+                      ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
+                      [:div
+                       ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-ohje")}
+                       [:p "Ei toimenpiteitä - Lisää tilaukseen toimenpiteitä valitsemalla haluamasi toimenpiteet ja valitsemalla yltä toiminto \"Siirrä valitut tilaukseen\"."]
+                       ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-poistonappi")}
+                       [napit/poista "Poista tyhjä tilaus" #(e! (tiedot/->PoistaHintaryhmat #{hintaryhma-id}))
+                        {:disabled (or (:hintaryhmien-poisto-kaynnissa? app)
+                                       (not (oikeudet/on-muu-oikeus? "tilausten-muokkaus"
+                                                                     oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                     (:id @nav/valittu-urakka))))}]]
+                      ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id)}
 
-                  [jaettu/listaus e! app*
-                   {:sarakkeet
-                    [jaettu/sarake-tyolaji
-                     jaettu/sarake-tyoluokka
-                     jaettu/sarake-toimenpide
-                     jaettu/sarake-pvm
-                     jaettu/sarake-vayla
-                     jaettu/sarake-turvalaite
-                     jaettu/sarake-turvalaitenumero
-                     jaettu/sarake-vikakorjaus
-                     (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
-                                                       "lisää-liite"
-                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                       (:id @nav/valittu-urakka)))
-                     {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
-                      :komponentti (fn [rivi]
-                                     [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
-                     (jaettu/sarake-checkbox e! app*)]
-                    :listaus-tunniste listaus-tunniste
-                    :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
-                    :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
-                    :footer (when nayta-hintaryhman-yhteenveto?
-                              [hintaryhman-hinnoittelu e! app* hintaryhma])
-                    :paneelin-checkbox-sijainti "95.5%"
-                    :vaylan-checkbox-sijainti "95.5%"}])]))]]]))))
+                      [jaettu/listaus e! app*
+                       {:sarakkeet
+                        [jaettu/sarake-tyolaji
+                         jaettu/sarake-tyoluokka
+                         jaettu/sarake-toimenpide
+                         jaettu/sarake-pvm
+                         jaettu/sarake-vayla
+                         jaettu/sarake-turvalaite
+                         jaettu/sarake-turvalaitenumero
+                         jaettu/sarake-vikakorjaus
+                         (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
+                                                           "lisää-liite"
+                                                           oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                           (:id @nav/valittu-urakka)))
+                         {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                          :komponentti (fn [rivi]
+                                         [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
+                         (jaettu/sarake-checkbox e! app*)]
+                        :listaus-tunniste listaus-tunniste
+                        :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
+                        :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
+                        :footer (when nayta-hintaryhman-yhteenveto?
+                                  [hintaryhman-hinnoittelu e! app* hintaryhma])
+                        :paneelin-checkbox-sijainti "95.5%"
+                        :vaylan-checkbox-sijainti "95.5%"}])]))]]]))))
 
 (defn- yksikkohintaiset-toimenpiteet* [e! app]
   [yksikkohintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

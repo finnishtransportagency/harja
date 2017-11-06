@@ -43,7 +43,10 @@
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
   [:div.label-ja-alasveto.hoitokausi
-   [:span.alasvedon-otsikko (if (= :hoito (:tyyppi ur)) "Hoitokausi" "Urakkavuosi")]
+   [:span.alasvedon-otsikko (cond
+                              (= (:tyyppi ur) :hoito) "Hoitokausi"
+                              (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
+                              :default "Sopimuskausi")]
    [livi-pudotusvalikko {:valinta @valittu-hoitokausi-atom
                          :format-fn #(if % (fmt/pvm-vali-opt %) "Valitse")
                          :valitse-fn valitse-fn}

@@ -412,11 +412,10 @@
       [:div.hoitoluokat
        [yleiset/otsikolla "Hoitoluokat"
         (let [arvo-nyt @arvo
-              valitut (:hoitoluokat arvo-nyt)
-              [vasen oikea] (partition 4 hoitoluokat/talvihoitoluokat)]
+              valitut (:hoitoluokat arvo-nyt)]
           (vec (concat
                  [yleiset/rivi {:koko "col-sm-2"}]
-                 (for [sarake (partition 4 hoitoluokat/talvihoitoluokat)]
+                 (for [sarake (partition 3 hoitoluokat/talvihoitoluokat)]
                    ^{:key (:numero (first sarake))}
                    [:div.inline
                     (for [{:keys [nimi numero]} sarake
