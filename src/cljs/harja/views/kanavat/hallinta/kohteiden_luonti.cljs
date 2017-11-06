@@ -124,7 +124,7 @@
           opts
           {:disabled poistonappi-pois-kaytosta?})]]
       (when kohteella-urakoita?
-        [:div.virheviesti-sailio (str "Kohdetta ei voi poistaa, koska kohteella on urakoita!")])])))
+        [:div.virheviesti-sailio {:style {:word-break "normal"}} (str "Kohdetta ei voi poistaa, koska kohteella on urakoita!")])])))
 
 (defn kohteiden-luonti* [e! app]
   (komp/luo
