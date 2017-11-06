@@ -123,7 +123,6 @@
 
     (fn [e! app]
       [:div
-       [debug tiedot/tila]
        [suodattimet-ja-toiminnot e! app]
        [hairiolista e! app]])))
 

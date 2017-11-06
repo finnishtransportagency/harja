@@ -15,7 +15,13 @@
   ;; TODO Oikeustarkistus + testi
   ;; TODO Testi haulle
   (let [urakka-id (::hairio/urakka-id tiedot)
-        sopimus-id (:haku-sopimus-id tiedot)]
+        sopimus-id (:haku-sopimus-id tiedot)
+        vikaluokka (:haku-vikaluokka tiedot)
+        korjauksen-tila (:haku-korjauksen-tila tiedot)
+        odotusaika (:haku-odotusaika-h tiedot)
+        korjausaika-h (:haku-korjausaika-h tiedot)
+        paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
+        aikavali (:haku-aikavali tiedot)]
     (reverse (sort-by ::hairio/pvm
                       (specql/fetch db
                                     ::hairio/hairiotilanne
@@ -23,7 +29,9 @@
                                     (merge
                                       {::hairio/urakka-id urakka-id}
                                       (when sopimus-id
-                                        {::hairio/sopimus-id sopimus-id})))))))
+                                        {::hairio/sopimus-id sopimus-id})
+                                      (when vikaluokka
+                                        {::hairio/vikaluokka vikaluokka})))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
