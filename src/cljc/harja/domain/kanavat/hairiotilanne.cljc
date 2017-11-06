@@ -69,6 +69,9 @@
 
 ;; Apurit
 
+;; Vector, koska valintajärjestyksellä väliä
+(def vikaluokat [:sahkotekninen_vika :konetekninen_vika :liikennevaurio])
+
 (def fmt-vikaluokka
   {:sahkotekninen_vika "Sähkötekninen vika"
    :konetekninen_vika "Konetekninen vika"

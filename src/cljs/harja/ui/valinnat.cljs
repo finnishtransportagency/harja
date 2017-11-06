@@ -294,6 +294,15 @@
                          :valitse-fn #(reset! valittu-toimenpide-atom %)}
     toimenpiteet]])
 
+(defn vikaluokka
+  [valittu-vikaluokka-atom vikaluokat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Vikaluokka"]
+   [livi-pudotusvalikko {:valinta @valittu-vikaluokka-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-vikaluokka-atom %)}
+    vikaluokat]])
+
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})

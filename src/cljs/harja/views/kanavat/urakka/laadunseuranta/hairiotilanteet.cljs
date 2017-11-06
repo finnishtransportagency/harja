@@ -32,27 +32,35 @@
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
-(defn- suodattimet-ja-toiminnot [valittu-urakka]
-  [valinnat/urakkavalinnat {:urakka valittu-urakka}
-   ^{:key "urakkavalinnat"}
-   ;; TODO Lisää filttereitä
-   [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
-    valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
-   ^{:key "urakkatoiminnot"}
-   [valinnat/urakkatoiminnot {:urakka valittu-urakka}
-    (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys
-          #_(oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                            (:id valittu-urakka))]
-      (yleiset/wrap-if
-        (not oikeus?)
-        [yleiset/tooltip {} :%
-         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                         ;; TODO Oikea oikeustarkistus
-                                         oikeudet/urakat-laadunseuranta-sanktiot)]
-        ^{:key "Lisää sanktio"}
-        [napit/uusi "Lisää häiriötilanne"
-         #(log "TODO Lisää häiriötilanne")
-         {:disabled (not oikeus?)}]))]])
+(defn- suodattimet-ja-toiminnot [e! app]
+  (let [valittu-urakka (get-in app [:valinnat :urakka])]
+    [valinnat/urakkavalinnat {:urakka valittu-urakka}
+     ^{:key "urakkavalinnat"}
+     ;; TODO Lisää filttereitä
+     [:div
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
+       valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
+      [valinnat/vikaluokka
+       (r/wrap (get-in app [:valinnat :vikaluokka])
+               (fn [uusi]
+                 (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
+       hairio/vikaluokat
+       #(if % (hairio/fmt-vikaluokka %) "Kaikki")]]
+     ^{:key "urakkatoiminnot"}
+     [valinnat/urakkatoiminnot {:urakka valittu-urakka}
+      (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys
+            #_(oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                        (:id valittu-urakka))]
+        (yleiset/wrap-if
+          (not oikeus?)
+          [yleiset/tooltip {} :%
+           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                           ;; TODO Oikea oikeustarkistus
+                                           oikeudet/urakat-laadunseuranta-sanktiot)]
+          ^{:key "Lisää sanktio"}
+          [napit/uusi "Lisää häiriötilanne"
+           #(log "TODO Lisää häiriötilanne")
+           {:disabled (not oikeus?)}]))]]))
 
 (defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
   [grid/grid
@@ -92,9 +100,9 @@
 
     (fn [e! app]
       [:div
-       [suodattimet-ja-toiminnot (get-in app [:valinnat :urakka])]
+       [suodattimet-ja-toiminnot e! app]
        [hairiolista e! app]])))
 
 (defc hairiotilanteet []
-  [tuck tiedot/tila hairiotilanteet*])
+      [tuck tiedot/tila hairiotilanteet*])
 
