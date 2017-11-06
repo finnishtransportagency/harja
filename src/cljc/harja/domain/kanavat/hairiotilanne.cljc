@@ -69,7 +69,7 @@
                                                   ::paikallinen-kaytto?
                                                   ::odotusaika-h
                                                   ::korjausaika-h]
-                                            :req-un [:aikavali]))
+                                            :req-un [::aikavali]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
 
 ;; Apurit
