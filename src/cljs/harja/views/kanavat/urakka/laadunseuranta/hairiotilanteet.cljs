@@ -58,15 +58,15 @@
        [nil true false]
        #(if (some? %) (fmt/totuus %) "Kaikki")]
       [valinnat/numerovali
-       (r/wrap (get-in app [:valinnat :odotusaika])
+       (r/wrap (get-in app [:valinnat :odotusaika-h])
                (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:odotusaika uusi}))))
+                 (e! (tiedot/->PaivitaValinnat {:odotusaika-h uusi}))))
        {:otsikko "Odotusaika (h)"
         :vain-positiivinen? true}]
       [valinnat/numerovali
-       (r/wrap (get-in app [:valinnat :korjausaika])
+       (r/wrap (get-in app [:valinnat :korjausaika-h])
                (fn [uusi]
-                 (e! (tiedot/->PaivitaValinnat {:korjausaika uusi}))))
+                 (e! (tiedot/->PaivitaValinnat {:korjausaika-h uusi}))))
        {:otsikko "Korjausaika"
         :vain-positiivinen? true}]]
      ^{:key "urakkatoiminnot"}
@@ -107,7 +107,7 @@
     {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 2}
     {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 3
      :fmt hairio/fmt-korjauksen-tila}
-    {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto
+    {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
@@ -123,6 +123,7 @@
 
     (fn [e! app]
       [:div
+       [debug tiedot/tila]
        [suodattimet-ja-toiminnot e! app]
        [hairiolista e! app]])))
 

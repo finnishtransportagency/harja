@@ -25,7 +25,7 @@
     "kohde" ::kohde-id
     "ammattiliikenne_lkm" ::ammattiliikenne-lkm
     "huviliikenne_lkm" ::huviliikenne-lkm
-    "paikallinen_kaytto" ::paikallinen-kaytto
+    "paikallinen_kaytto" ::paikallinen-kaytto?
     "korjausaika_h" ::korjausaika-h
     "odotusaika_h" ::odotusaika-h
     "korjauksen_tila" ::korjauksen-tila}
@@ -40,7 +40,7 @@
     ::m/poistettu?
     ::huviliikenne-lkm
     ::korjaustoimenpide
-    ::paikallinen-kaytto
+    ::paikallinen-kaytto?
     ::pvm
     ::urakka-id
     ::m/muokkaaja-id
@@ -64,7 +64,12 @@
 
 ;; Palvelut
 
-(s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id ::sopimus-id]))
+(s/def ::hae-hairiotilanteet-kysely (s/keys :req [::urakka-id ::sopimus-id
+                                                  ::vikaluokka ::korjauksen-tila
+                                                  ::paikallinen-kaytto?
+                                                  ::odotusaika-h
+                                                  ::korjausaika-h]
+                                            :req-un [:aikavali]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
 
 ;; Apurit

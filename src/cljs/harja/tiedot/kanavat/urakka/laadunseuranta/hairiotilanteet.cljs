@@ -50,7 +50,13 @@
     (if (and (not (:hairiotilanteiden-haku-kaynnissa? app))
              (some? (get-in valinnat [:urakka :id])))
       (let [argumentit {::hairio/urakka-id (get-in valinnat [:urakka :id])
-                        ::hairio/sopimus-id (:sopimus-id valinnat)}]
+                        ::hairio/sopimus-id (:sopimus-id valinnat)
+                        ::hairio/vikaluokka (:vikaluokka valinnat)
+                        ::hairio/korjauksen-tila (:korjauksen-tila valinnat)
+                        ::hairio/odotusaika-h (:odotusaika-h valinnat)
+                        ::hairio/korjausaika-h (:korjauksen-tila valinnat)
+                        ::hairio/paikallinen-kaytto? (:paikallinen-kaytto? valinnat)
+                        :aikavali (:aikavali valinnat)}]
         (-> app
             (tuck-apurit/post! :hae-hairiotilanteet
                                argumentit
