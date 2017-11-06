@@ -105,19 +105,26 @@
 (defn poista-tai-takaisin
   ([e! kohde] [poista-tai-takaisin e! kohde {}])
   ([e! kohde opts]
-   [:div
-    [napit/takaisin
-     ""
-     #(e! (tiedot/->AsetaPoistettavaKohde nil))
-     (merge
-       {:ikoninappi? true}
-       opts)]
-    [napit/poista
-     ""
-     #(e! (tiedot/->PoistaKohde kohde))
-     (merge
-       {:ikoninappi? true}
-       opts)]]))
+   (let [kohteella-urakoita? (not (nil? (::kohde/urakat kohde)))
+         poistonappi-pois-kaytosta? (or (:disabled opts)
+                                        kohteella-urakoita?)]
+     [:span
+      [:div
+       [napit/takaisin
+        ""
+        #(e! (tiedot/->AsetaPoistettavaKohde nil))
+        (merge
+          {:ikoninappi? true}
+          opts)]
+       [napit/poista
+        ""
+        #(e! (tiedot/->PoistaKohde kohde))
+        (merge
+          {:ikoninappi? true}
+          opts
+          {:disabled poistonappi-pois-kaytosta?})]]
+      (when kohteella-urakoita?
+        [:div.virheviesti-sailio (str "Kohdetta ei voi poistaa, koska kohteella on urakoita!")])])))
 
 (defn kohteiden-luonti* [e! app]
   (komp/luo
