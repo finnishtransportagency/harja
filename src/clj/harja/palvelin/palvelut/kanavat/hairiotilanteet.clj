@@ -21,6 +21,7 @@
         [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h tiedot)
         paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
         [aikavali-alku aikavali-loppu] (:haku-aikavali tiedot)]
+    ;; TODO OIKEUSTARKISTUS
     (reverse (sort-by
                ::hairio/pvm
                (specql/fetch
