@@ -71,6 +71,7 @@
 
 ;; Vector, koska valintajärjestyksellä väliä
 (def vikaluokat [:sahkotekninen_vika :konetekninen_vika :liikennevaurio])
+(def vikaluokat+kaikki (vec (concat [nil] vikaluokat)))
 
 (def fmt-vikaluokka
   {:sahkotekninen_vika "Sähkötekninen vika"

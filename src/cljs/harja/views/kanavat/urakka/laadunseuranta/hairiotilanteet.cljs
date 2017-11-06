@@ -44,7 +44,7 @@
        (r/wrap (get-in app [:valinnat :vikaluokka])
                (fn [uusi]
                  (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
-       hairio/vikaluokat
+       hairio/vikaluokat+kaikki
        #(if % (hairio/fmt-vikaluokka %) "Kaikki")]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
