@@ -333,6 +333,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-saimaan-kanavaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Saimaan kanava';"))))
+
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
@@ -406,12 +411,12 @@
                                           WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
                               AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
 
-(defn hae-vanhtaan-vesivaylaurakan-hinnoittelu []
+(defn hae-vantaan-vesivaylaurakan-hinnoittelu []
   (ffirst (q (str "SELECT id FROM vv_hinnoittelu
                    WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                    LIMIT 1;"))))
 
-(defn hae-vanhtaan-vesivaylaurakan-hinta []
+(defn hae-vantaan-vesivaylaurakan-hinta []
   (ffirst (q (str "SELECT id FROM vv_hinta
                    WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vantaan urakan testihinnoittelu')
                    LIMIT 1;"))))

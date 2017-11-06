@@ -161,7 +161,7 @@
 (deftest kohteen-liittaminen-urakkaan
   (testing "Uuden linkin lisääminen"
     (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
-          [urakka-id] (first (q "SELECT id FROM urakka WHERE nimi = 'Saimaan kanava';"))
+          urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
@@ -176,14 +176,14 @@
       (is (s/valid? ::kanava/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
-                                 " AND \"urakka-id\" =" urakka-id ";")))]
+                                               " AND \"urakka-id\" =" urakka-id ";")))]
         (is (= ur urakka-id))
         (is (= koh kohde-id))
         (is (= poistettu? false)))))
 
   (testing "Linkin poistaminen"
     (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
-          [urakka-id] (first (q "SELECT id FROM urakka WHERE nimi = 'Saimaan kanava';"))
+          urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
@@ -205,7 +205,7 @@
 
   (testing "Linkin palauttaminen"
     (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
-          [urakka-id] (first (q "SELECT id FROM urakka WHERE nimi = 'Saimaan kanava';"))
+          urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
