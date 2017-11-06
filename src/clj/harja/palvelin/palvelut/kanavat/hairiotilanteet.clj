@@ -18,7 +18,7 @@
         sopimus-id (:haku-sopimus-id tiedot)
         vikaluokka (:haku-vikaluokka tiedot)
         korjauksen-tila (:haku-korjauksen-tila tiedot)
-        odotusaika (:haku-odotusaika-h tiedot)
+        odotusaika-h (:haku-odotusaika-h tiedot)
         korjausaika-h (:haku-korjausaika-h tiedot)
         paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
         aikavali (:haku-aikavali tiedot)]
@@ -33,7 +33,9 @@
                                       (when vikaluokka
                                         {::hairio/vikaluokka vikaluokka})
                                       (when korjauksen-tila
-                                        {::hairio/korjauksen-tila korjauksen-tila})))))))
+                                        {::hairio/korjauksen-tila korjauksen-tila})
+                                      (when (some? paikallinen-kaytto?)
+                                        {::hairio/paikallinen-kaytto? paikallinen-kaytto?})))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
