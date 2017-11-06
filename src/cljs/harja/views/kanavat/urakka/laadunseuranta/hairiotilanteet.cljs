@@ -36,7 +36,6 @@
   (let [valittu-urakka (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka valittu-urakka}
      ^{:key "urakkavalinnat"}
-     ;; TODO Lisää filttereitä
      [:div
       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali
        valittu-urakka {:sopimus {:optiot {:kaikki-valinta? true}}}]
