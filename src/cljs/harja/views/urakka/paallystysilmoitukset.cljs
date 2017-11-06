@@ -509,7 +509,6 @@
   [grid/grid
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-    :tunniste hash
     :tallenna (fn [rivit]
                 (go (let [paallystysilmoitukset (mapv #(do
                                                          {::pot/id (:id %)
@@ -535,7 +534,8 @@
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
     {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
-     :fmt pvm/pvm-opt}
+     :fmt pvm/pvm-opt :tayta-alas? #(not (nil? %))
+     :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]
