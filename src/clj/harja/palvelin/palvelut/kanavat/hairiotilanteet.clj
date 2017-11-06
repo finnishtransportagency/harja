@@ -39,11 +39,9 @@
                      {::hairio/korjauksen-tila korjauksen-tila})
                    (when (some? paikallinen-kaytto?)
                      {::hairio/paikallinen-kaytto? paikallinen-kaytto?})
-                   ;; TODO op/between ei toimi?
-                   #_(when (and odotusaika-alku odotusaika-loppu)
+                   (when (and odotusaika-alku odotusaika-loppu)
                      {::hairio/odotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
-                   ;; TODO op/between ei toimi?
-                   #_(when (and korjausaika-alku korjausaika-loppu)
+                   (when (and korjausaika-alku korjausaika-loppu)
                      {::hairio/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
                    ;; TODO ei toimi oikein!?
                    #_(when (and aikavali-alku aikavali-loppu)
