@@ -73,15 +73,10 @@
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
       (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-kokonaishintaiset
                                               (:id valittu-urakka))]
-        (yleiset/wrap-if
-          (not oikeus?)
-          [yleiset/tooltip {} :%
-           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                           oikeudet/urakat-kanavat-kokonaishintaiset)]
-          ^{:key "Lisää sanktio"}
-          [napit/uusi "Lisää häiriötilanne"
-           #(log "TODO Lisää häiriötilanne")
-           {:disabled (not oikeus?)}]))]]))
+        ^{:key "lisaysnappi"}
+        [napit/uusi "Lisää häiriötilanne"
+         #(log "TODO Lisää häiriötilanne")
+         {:disabled (not oikeus?)}])]]))
 
 (defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
   [grid/grid
