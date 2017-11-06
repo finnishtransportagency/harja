@@ -47,11 +47,21 @@
     (metatiedot-q/paivita-aikakursori! db {:integraatio (:haun-nimi hakuparametrit)
                                            :aika loppuaika})))
 
+(defn ajat-5min-sisalla? [a b]
+  (let [ero-millisekunteina (Math/abs (- (pvm/millisekunteina a) (pvm/millisekunteina b)))]
+    (>= (* 5 60 1000) ero-millisekunteina)))
+
 (defn kutsu-reimari-integraatiota
   [{:keys [db integraatioloki haun-nimi] :as hakuparametrit}]
-  (let [{:keys [alku loppu]} (hakuvali db haun-nimi)]
-    (if-not (and alku loppu)
-      (log/info "Reimari-integraatio: ei löytynyt edellistä onnistunutta" haun-nimi "-tapahtumaa, hakua ei tehdä.")
+  (let [{:keys [alku loppu]} (hakuvali db haun-nimi)
+        vali-ok? (and alku loppu)
+        vasta-haettu? (and vali-ok? (ajat-5min-sisalla? alku (pvm/nyt)))]
+    (log/debug "vasta-haettu?" vasta-haettu? "vali-ok?" vali-ok?)
+    (log/debug "ajat oli" alku (pvm/nyt))
+    (if (or (not vali-ok?) vasta-haettu?)
+      (if (not vali-ok?)
+        (log/warn "Reimari-integraatio: ei löytynyt hakuvälitietoja" haun-nimi "-tapahtumalle, hakua ei tehdä.")
+        (log/warn "Reimari-integraatio: ajettu alle 5 min sitten " haun-nimi "-tapahtumalle, hakua ei tehdä."))
       (lukko/yrita-ajaa-lukon-kanssa
        db (str haun-nimi)
        (fn yrita-ajaa-lukon-kanssa-callback []
