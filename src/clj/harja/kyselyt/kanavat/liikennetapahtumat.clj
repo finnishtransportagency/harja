@@ -56,6 +56,7 @@
                   ::lt/liikennetapahtuma
                   (set/union
                     lt/perustiedot
+                    lt/kuittaajan-tiedot
                     lt/alusten-tiedot
                     lt/nippujen-tiedot
                     lt/kohteen-tiedot)

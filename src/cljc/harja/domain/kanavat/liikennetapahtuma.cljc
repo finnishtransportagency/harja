@@ -12,6 +12,7 @@
 
     [harja.domain.muokkaustiedot :as m]
     [harja.domain.urakka :as ur]
+    [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kanavan-kohde :as kohde]
     [harja.domain.kanavat.lt-alus :as lt-alus]
     [harja.domain.kanavat.lt-nippu :as lt-nippu])
@@ -35,7 +36,10 @@
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuma-id)
     ::niput (specql.rel/has-many ::id
                                  :harja.domain.kanavat.lt-nippu/liikennetapahtuman-nippu
-                                 :harja.domain.kanavat.lt-nippu/liikennetapahtuma-id)}])
+                                 :harja.domain.kanavat.lt-nippu/liikennetapahtuma-id)
+    ::kuittaaja (specql.rel/has-one ::kuittaaja-id
+                                   :harja.domain.kayttaja/kayttaja
+                                   :harja.domain.kayttaja/id)}])
 
 (def perustiedot
   #{::id
@@ -45,8 +49,10 @@
     ::palvelumuoto-lkm
     ::lisatieto
     ::vesipinta-ylaraja
-    ::vesipinta-alaraja
-    ::kuittaaja})
+    ::vesipinta-alaraja})
+
+(def kuittaajan-tiedot
+  #{[::kuittaaja kayttaja/perustiedot]})
 
 (def kohteen-tiedot
   #{[::kohde kohde/perustiedot-ja-kanava]})
