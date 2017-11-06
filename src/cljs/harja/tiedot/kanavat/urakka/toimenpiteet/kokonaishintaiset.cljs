@@ -17,7 +17,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def tila (atom {:nakymassa? false
-                 :valinnat nil
+                 :valinnat {:urakka @nav/valittu-urakka}
                  :haku-kaynnissa? false
                  :toimenpiteet nil}))
 
@@ -27,8 +27,7 @@
              {:urakka-id (:id @nav/valittu-urakka)
               :sopimus-id (first @u/valittu-sopimusnumero)
               :aikavali @u/valittu-aikavali
-              :toimenpide @u/valittu-toimenpideinstanssi
-              :urakkavuosi @u/valittu-urakan-vuosi})))
+              :toimenpide @u/valittu-toimenpideinstanssi})))
 
 (defn muodosta-hakuparametrit [valinnat]
   {::sopimus/id (:sopimus-id valinnat)
