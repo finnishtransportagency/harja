@@ -30,8 +30,8 @@
                         :http-palvelin (testi-http-palvelin)
                         :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :kan-hairio (component/using
-                                       (kan-hairio/->Hairiotilanteet)
-                                       [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
+                                      (kan-hairio/->Hairiotilanteet)
+                                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -41,16 +41,22 @@
 
 (deftest hairiotilanteiden-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
-        saimaan-hairiot (ffirst (q "SELECT COUNT(*) FROM kan_hairio WHERE urakka = " urakka-id ";"))
-        params {::hairio/urakka-id urakka-id}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-hairiotilanteet
-                                +kayttaja-jvh+
-                                params)]
+        saimaan-hairiot (ffirst (q "SELECT COUNT(*) FROM kan_hairio WHERE urakka = " urakka-id ";"))]
 
-    (is (s/valid? ::hairio/hae-hairiotilanteet-kysely params))
-    (is (s/valid? ::hairio/hae-hairiotilanteet-vastaus vastaus))
-    (is (>= (count vastaus) 2))))
+    (testing "Haku urakkalla"
+      (let [params {::hairio/urakka-id urakka-id}
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-hairiotilanteet
+                                    +kayttaja-jvh+
+                                    params)]
+
+        (is (s/valid? ::hairio/hae-hairiotilanteet-kysely params))
+        (is (s/valid? ::hairio/hae-hairiotilanteet-vastaus vastaus))
+        (is (>= (count vastaus) saimaan-hairiot))))
+
+    (testing "Haku tyhjällä urakkalla ei toimi"
+      (is (not (s/valid? ::hairio/hae-hairiotilanteet-kysely
+                         {::hairio/urakka-id nil}))))))
 
 (deftest hairiotilanteiden-haku-ilman-oikeuksia
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
