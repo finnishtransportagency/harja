@@ -19,8 +19,8 @@
 (define-tables
   ["kan_kanava" ::kanava
    {::kohteet (specql.rel/has-many ::id
-                                   ::harja.domain.kanavat.kanavan-kohde/kohde
-                                   ::harja.domain.kanavat.kanavan-kohde/kanava-id)}])
+                                   :harja.domain.kanavat.kanavan-kohde/kohde
+                                   :harja.domain.kanavat.kanavan-kohde/kanava-id)}])
 
 (def perustiedot
   #{::id
