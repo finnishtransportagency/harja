@@ -21,7 +21,7 @@
         [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h tiedot)
         paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
         [aikavali-alku aikavali-loppu] (:haku-aikavali tiedot)]
-    ;; TODO OIKEUSTARKISTUS
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
     (reverse (sort-by
                ::hairio/pvm
                (specql/fetch
@@ -43,7 +43,7 @@
                    (when (and korjausaika-alku korjausaika-loppu)
                      {::hairio/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
                    (when (and aikavali-alku aikavali-loppu)
-                       {::hairio/pvm (op/between aikavali-alku aikavali-loppu)})))))))
+                     {::hairio/pvm (op/between aikavali-alku aikavali-loppu)})))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle

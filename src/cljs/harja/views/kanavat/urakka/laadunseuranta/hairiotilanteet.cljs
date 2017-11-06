@@ -71,15 +71,13 @@
         :vain-positiivinen? true}]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
-      (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys
-            #_(oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                        (:id valittu-urakka))]
+      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-kokonaishintaiset
+                                              (:id valittu-urakka))]
         (yleiset/wrap-if
           (not oikeus?)
           [yleiset/tooltip {} :%
            (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                           ;; TODO Oikea oikeustarkistus
-                                           oikeudet/urakat-laadunseuranta-sanktiot)]
+                                           oikeudet/urakat-kanavat-kokonaishintaiset)]
           ^{:key "Lisää sanktio"}
           [napit/uusi "Lisää häiriötilanne"
            #(log "TODO Lisää häiriötilanne")
