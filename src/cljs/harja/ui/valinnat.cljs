@@ -306,7 +306,7 @@
 (defn korjauksen-tila
   [valittu-korjauksen-tila-atom tilat format-fn]
   [:div.label-ja-alasveto
-   [:span.alasvedon-otsikko "Korjauksen-tila"]
+   [:span.alasvedon-otsikko "Korjauksen tila"]
    [livi-pudotusvalikko {:valinta @valittu-korjauksen-tila-atom
                          :format-fn format-fn
                          :valitse-fn #(reset! valittu-korjauksen-tila-atom %)}
