@@ -141,6 +141,7 @@
 
     ;; Kanavat
     [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+    [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
     )
 
   (:gen-class))
@@ -335,6 +336,9 @@
       :kan-kanavat (component/using
                      (kan-kanavat/->Kanavat)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-liikennetapahtumat (component/using
+                                (kan-liikennetapahtumat/->Liikennetapahtumat)
+                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
