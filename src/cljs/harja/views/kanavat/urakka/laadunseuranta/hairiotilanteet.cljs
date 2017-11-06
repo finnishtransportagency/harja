@@ -51,7 +51,13 @@
                (fn [uusi]
                  (e! (tiedot/->PaivitaValinnat {:korjauksen-tila uusi}))))
        hairio/korjauksen-tlat+kaikki
-       #(if % (hairio/fmt-korjauksen-tila %) "Kaikki")]]
+       #(if % (hairio/fmt-korjauksen-tila %) "Kaikki")]
+      [valinnat/paikallinen-kaytto
+       (r/wrap (get-in app [:valinnat :paikallinen-kaytto?])
+               (fn [uusi]
+                 (e! (tiedot/->PaivitaValinnat {:paikallinen-kaytto? uusi}))))
+       [nil true false]
+       #(if (some? %) (fmt/totuus %) "Kaikki")]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
       (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys

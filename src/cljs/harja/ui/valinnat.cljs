@@ -312,6 +312,15 @@
                          :valitse-fn #(reset! valittu-korjauksen-tila-atom %)}
     tilat]])
 
+(defn paikallinen-kaytto
+  [valittu-paikallinen-kaytto-atom valinnat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Paikallinen käyttö?"]
+   [livi-pudotusvalikko {:valinta @valittu-paikallinen-kaytto-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-paikallinen-kaytto-atom %)}
+    valinnat]])
+
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
