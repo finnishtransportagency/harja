@@ -45,7 +45,13 @@
                (fn [uusi]
                  (e! (tiedot/->PaivitaValinnat {:vikaluokka uusi}))))
        hairio/vikaluokat+kaikki
-       #(if % (hairio/fmt-vikaluokka %) "Kaikki")]]
+       #(if % (hairio/fmt-vikaluokka %) "Kaikki")]
+      [valinnat/korjauksen-tila
+       (r/wrap (get-in app [:valinnat :korjauksen-tila])
+               (fn [uusi]
+                 (e! (tiedot/->PaivitaValinnat {:korjauksen-tila uusi}))))
+       hairio/korjauksen-tlat+kaikki
+       #(if % (hairio/fmt-korjauksen-tila %) "Kaikki")]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
       (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys

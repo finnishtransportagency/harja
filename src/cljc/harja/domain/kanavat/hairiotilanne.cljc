@@ -69,9 +69,11 @@
 
 ;; Apurit
 
-;; Vector, koska valintajärjestyksellä väliä
+;; Nämä on vectoreita, koska valintajärjestyksellä väliä
 (def vikaluokat [:sahkotekninen_vika :konetekninen_vika :liikennevaurio])
 (def vikaluokat+kaikki (vec (concat [nil] vikaluokat)))
+(def korjauksen-tlat [:kesken :valmis])
+(def korjauksen-tlat+kaikki (vec (concat [nil] korjauksen-tlat)))
 
 (def fmt-vikaluokka
   {:sahkotekninen_vika "Sähkötekninen vika"
