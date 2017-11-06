@@ -505,9 +505,16 @@
                             3)))
       paallystysilmoitukset)))
 
+(defn- tayta-takuupvm [lahtorivi tama-rivi]
+  ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
+  (if (:id tama-rivi)
+    (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
+    tama-rivi))
+
 (defn- paallystysilmoitukset-taulukko [urakka-id paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
+    :tunniste :paallystyskohde-id
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
     :tallenna (fn [rivit]
                 (go (let [paallystysilmoitukset (mapv #(do
@@ -534,7 +541,7 @@
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
     {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
-     :fmt pvm/pvm-opt :tayta-alas? #(not (nil? %))
+     :fmt pvm/pvm-opt :tayta-alas? #(not (nil? %)) :tayta-fn tayta-takuupvm
      :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
