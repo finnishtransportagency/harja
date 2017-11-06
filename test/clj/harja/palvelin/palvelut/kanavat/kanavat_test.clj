@@ -160,7 +160,7 @@
 
 (deftest kohteen-liittaminen-urakkaan
   (testing "Uuden linkin lisääminen"
-    (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -182,7 +182,7 @@
         (is (= poistettu? false)))))
 
   (testing "Linkin poistaminen"
-    (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -204,7 +204,7 @@
         (is (= poistettu? true)))))
 
   (testing "Linkin palauttaminen"
-    (let [[kohde-id] (first (q "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))

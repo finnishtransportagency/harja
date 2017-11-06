@@ -338,6 +338,9 @@
                    FROM   urakka
                    WHERE  nimi = 'Saimaan kanava';"))))
 
+(defn hae-kanavakohde-taipaleen-sulku []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))))
+
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
