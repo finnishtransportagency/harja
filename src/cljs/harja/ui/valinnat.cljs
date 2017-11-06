@@ -300,7 +300,7 @@
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
    (for* [item sisalto]
-         item)])
+     item)])
 
 (defn urakkatoiminnot [{:keys [sticky? urakka] :as optiot} & sisalto]
   (let [naulattu? (atom false)
@@ -329,7 +329,7 @@
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                                              "urakkatoiminnot-tyyliton "))}
          (for* [item sisalto]
-               item)]))))
+           item)]))))
 
 (defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
   [:div.row
