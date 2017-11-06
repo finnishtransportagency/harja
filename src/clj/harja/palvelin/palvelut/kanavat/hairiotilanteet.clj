@@ -19,29 +19,35 @@
         sopimus-id (:haku-sopimus-id tiedot)
         vikaluokka (:haku-vikaluokka tiedot)
         korjauksen-tila (:haku-korjauksen-tila tiedot)
-        odotusaika-h (:haku-odotusaika-h tiedot)
-        korjausaika-h (:haku-korjausaika-h tiedot)
+        [odotusaika-alku odotusaika-loppu] (:haku-odotusaika-h tiedot)
+        [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h tiedot)
         paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
-        [alku loppu] (:haku-aikavali tiedot)]
-    ;; TODO Aikaväli-filter
-    ;; TODO Odotusaika-filter
-    ;; TODO Korjausaika-filter
-    (reverse (sort-by ::hairio/pvm
-                      (specql/fetch db
-                                    ::hairio/hairiotilanne
-                                    hairio/perustiedot+kanava+kohde
-                                    (merge
-                                      {::hairio/urakka-id urakka-id}
-                                      (when sopimus-id
-                                        {::hairio/sopimus-id sopimus-id})
-                                      (when vikaluokka
-                                        {::hairio/vikaluokka vikaluokka})
-                                      (when korjauksen-tila
-                                        {::hairio/korjauksen-tila korjauksen-tila})
-                                      (when (some? paikallinen-kaytto?)
-                                        {::hairio/paikallinen-kaytto? paikallinen-kaytto?})
-                                      (when (and alku loppu)
-                                        {::hairio/pvm (op/between alku loppu)})))))))
+        [aikavali-alku aikavali-loppu] (:haku-aikavali tiedot)]
+    (reverse (sort-by
+               ::hairio/pvm
+               (specql/fetch
+                 db
+                 ::hairio/hairiotilanne
+                 hairio/perustiedot+kanava+kohde
+                 (merge
+                   {::hairio/urakka-id urakka-id}
+                   (when sopimus-id
+                     {::hairio/sopimus-id sopimus-id})
+                   (when vikaluokka
+                     {::hairio/vikaluokka vikaluokka})
+                   (when korjauksen-tila
+                     {::hairio/korjauksen-tila korjauksen-tila})
+                   (when (some? paikallinen-kaytto?)
+                     {::hairio/paikallinen-kaytto? paikallinen-kaytto?})
+                   ;; TODO op/between ei toimi?
+                   #_(when (and odotusaika-alku odotusaika-loppu)
+                     {::hairio/odotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
+                   ;; TODO op/between ei toimi?
+                   #_(when (and korjausaika-alku korjausaika-loppu)
+                     {::hairio/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
+                   ;; TODO ei toimi oikein!?
+                   #_(when (and aikavali-alku aikavali-loppu)
+                       {::hairio/pvm (op/between aikavali-alku aikavali-loppu)})))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle

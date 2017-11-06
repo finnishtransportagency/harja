@@ -55,7 +55,7 @@
                         :haku-vikaluokka (:vikaluokka valinnat)
                         :haku-korjauksen-tila (:korjauksen-tila valinnat)
                         :haku-odotusaika-h (:odotusaika-h valinnat)
-                        :haku-korjausaika-h (:korjauksen-tila valinnat)
+                        :haku-korjausaika-h (:korjausaika-h valinnat)
                         :haku-paikallinen-kaytto? (:paikallinen-kaytto? valinnat)
                         :haku-aikavali (:aikavali valinnat)}]
         (-> app
