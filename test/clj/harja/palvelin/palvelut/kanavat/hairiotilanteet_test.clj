@@ -51,3 +51,12 @@
     (is (s/valid? ::hairio/hae-hairiotilanteet-kysely params))
     (is (s/valid? ::hairio/hae-hairiotilanteet-vastaus vastaus))
     (is (>= (count vastaus) 2))))
+
+(deftest hairiotilanteiden-haku-ilman-oikeuksia
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        params {::hairio/urakka-id urakka-id}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-hairiotilanteet
+                                           +kayttaja-ulle+
+                                           params)))))
