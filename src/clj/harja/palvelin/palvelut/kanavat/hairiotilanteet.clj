@@ -13,8 +13,6 @@
             [clojure.set :as set]))
 
 (defn hae-hairiotilanteet [db user tiedot]
-  ;; TODO Oikeustarkistus + testi
-  ;; TODO Testi haulle
   (let [urakka-id (::hairio/urakka-id tiedot)
         sopimus-id (:haku-sopimus-id tiedot)
         vikaluokka (:haku-vikaluokka tiedot)

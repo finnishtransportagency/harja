@@ -62,6 +62,7 @@
 
     ;; Testataan filtterit: jokaisen käyttö pitäisi palauttaa pienempi setti kuin
     ;; kaikki urakan häiriöt
+
     (is (< (count (kutsu-palvelua (:http-palvelin jarjestelma)
                             :hae-hairiotilanteet
                             +kayttaja-jvh+
