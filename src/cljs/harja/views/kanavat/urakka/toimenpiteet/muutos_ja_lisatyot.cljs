@@ -21,7 +21,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.ui.valinnat :as valinnat]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.ui.napit :as napit])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -33,11 +34,12 @@
      [valinnat/urakkavalinnat {:urakka urakka}
       ^{:key "valinnat"}
       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
-     [harja.ui.napit/uusi
-      "Uusi toimenpide"
-      (fn [_]
-        ;;todo
-        )]]))
+     [valinnat/urakkatoiminnot {:urakka urakka}
+      [napit/uusi
+       "Uusi toimenpide"
+       (fn [_]
+         ;;todo
+         )]]]))
 
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   [grid/grid
