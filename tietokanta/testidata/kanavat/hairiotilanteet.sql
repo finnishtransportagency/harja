@@ -29,12 +29,12 @@ VALUES (
    WHERE nimi = 'Saimaan kanava'),
   (SELECT id
    FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-07-15',
+   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-01-15',
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
          'Tikkalansaaren avattava ratasilta'),
-  'sahkotekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Edellinen korjaus tehtiin huonosti, korjattu nyt uudestaan.', 60, 1, 2,
+  'sahkotekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Edellinen korjaus tehtiin huonosti, korjattu nyt uudestaan.', 70, 5, 6,
   'Vika korjattiin', 20, 'valmis' :: KAN_HAIRIO_KORJAUKSEN_TILA,
   TRUE,
   (SELECT id
