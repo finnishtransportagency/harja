@@ -31,7 +31,9 @@
                                       (when sopimus-id
                                         {::hairio/sopimus-id sopimus-id})
                                       (when vikaluokka
-                                        {::hairio/vikaluokka vikaluokka})))))))
+                                        {::hairio/vikaluokka vikaluokka})
+                                      (when korjauksen-tila
+                                        {::hairio/korjauksen-tila korjauksen-tila})))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
