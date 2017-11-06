@@ -68,7 +68,7 @@
                                             ;; Nämä eivät suoraan mappaudu domainin kanta-arvoihin, koska
                                             ;; voi olla myös kaikki-valinta (nil), lisäksi
                                             ;; numerovälit esitetään vectoreina
-                                            :req-un [::haku-aikavali
+                                            :opt-un [::haku-aikavali
                                                      ::haku-korjausaika-h
                                                      ::haku-odotusaika-h
                                                      ::haku-vikaluokka
