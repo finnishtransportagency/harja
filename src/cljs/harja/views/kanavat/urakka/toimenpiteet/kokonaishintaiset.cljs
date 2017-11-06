@@ -35,12 +35,15 @@
   [:div
    [valinnat/urakkavalinnat {:urakka urakka}
     ^{:key "valinnat"}
-    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
-   [napit/uusi
-    "Uusi toimenpide"
-    (fn [_]
-      ;;todo
-      )]
+    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+    ^{:key "toiminnot"}
+    [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
+     ^{:key "uusi-nappi"}
+     [napit/uusi
+      "Uusi toimenpide"
+      (fn [_]
+        ;;todo
+        )]]]
    [grid/grid
     {:otsikko "Urakan toimenpiteet"
      :voi-lisata? false
@@ -78,7 +81,7 @@
     toimenpiteet]])
 
 (defn kokonaishintaiset* [e! app]
-  (let [urakka (get-in app [:valinnat :urakka-id])]
+  (let [urakka (get-in app [:valinnat :urakka])]
     (komp/luo
       (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                       (e! (tiedot/->PaivitaValinnat uusi))))
