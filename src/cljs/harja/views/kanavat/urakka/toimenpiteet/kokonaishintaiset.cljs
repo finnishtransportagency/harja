@@ -8,6 +8,7 @@
 
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
+            [harja.ui.napit :as napit]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
@@ -35,7 +36,7 @@
    [valinnat/urakkavalinnat {:urakka urakka}
     ^{:key "valinnat"}
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
-   [harja.ui.napit/uusi
+   [napit/uusi
     "Uusi toimenpide"
     (fn [_]
       ;;todo
@@ -93,7 +94,7 @@
                            (e! (tiedot/->Nakymassa? false))))
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
-        (kokonaishintaiset-taulukko urakka toimenpiteet )))))
+        (kokonaishintaiset-taulukko urakka toimenpiteet)))))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])
