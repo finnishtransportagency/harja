@@ -62,12 +62,14 @@
        (r/wrap (get-in app [:valinnat :odotusaika])
                (fn [uusi]
                  (e! (tiedot/->PaivitaValinnat {:odotusaika uusi}))))
-       {:otsikko "Odotusaika (h)"}]
+       {:otsikko "Odotusaika (h)"
+        :vain-positiivinen? true}]
       [valinnat/numerovali
        (r/wrap (get-in app [:valinnat :korjausaika])
                (fn [uusi]
                  (e! (tiedot/->PaivitaValinnat {:korjausaika uusi}))))
-       {:otsikko "Korjausaika"}]]
+       {:otsikko "Korjausaika"
+        :vain-positiivinen? true}]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
       (let [oikeus? true ;; TODO Oikeustarkistus, roolit-excelin päivitys

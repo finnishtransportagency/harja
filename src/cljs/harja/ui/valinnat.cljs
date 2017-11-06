@@ -125,7 +125,8 @@
 
 (defn numerovali
   ([valittu-numerovali-atom] (numerovali valittu-numerovali-atom nil))
-  ([valittu-numerovali-atom {:keys [nayta-otsikko? lomake? otsikko]}]
+  ([valittu-numerovali-atom {:keys [nayta-otsikko? lomake? otsikko
+                                    vain-positiivinen?]}]
    [:span {:class (if lomake?
                     "label-ja-numerovali-lomake"
                     "label-ja-numerovali")}
@@ -135,17 +136,17 @@
       [:span.alasvedon-otsikko (or otsikko "Väli")])
     [:div.numerovali-valinnat
      [:span.numerovali-kentta
-      [tee-kentta {:tyyppi :numero}
+      [tee-kentta {:tyyppi (if vain-positiivinen? :positiivinen-numero :numero)}
        (r/wrap (first @valittu-numerovali-atom)
                (fn [uusi-arvo]
-                 (swap! valittu-numerovali-atom [uusi-arvo (second @valittu-numerovali-atom)])
+                 (reset! valittu-numerovali-atom [uusi-arvo (second @valittu-numerovali-atom)])
                  (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]]
      [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
      [:span.numerovali-kentta
-      [tee-kentta {:tyyppi :numero}
+      [tee-kentta {:tyyppi (if vain-positiivinen? :positiivinen-numero :numero)}
        (r/wrap (second @valittu-numerovali-atom)
                (fn [uusi-arvo]
-                 (swap! valittu-numerovali-atom [(first @valittu-numerovali-atom) uusi-arvo])
+                 (reset! valittu-numerovali-atom [(first @valittu-numerovali-atom) uusi-arvo])
                  (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]]]]))
 
 (defn- toimenpideinstanssi-fmt
