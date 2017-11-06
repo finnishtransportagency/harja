@@ -118,7 +118,8 @@
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            (e! (tiedot/->PaivitaValinnat
                                  {:urakka @nav/valittu-urakka
-                                  :sopimus-id (first @u/valittu-sopimusnumero)})))
+                                  :sopimus-id (first @u/valittu-sopimusnumero)
+                                  :aikavali @u/valittu-aikavali})))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! app]

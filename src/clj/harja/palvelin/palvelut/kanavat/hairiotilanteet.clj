@@ -8,6 +8,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kanavat.kanavat :as q]
             [specql.core :as specql]
+            [specql.op :as op]
             [harja.domain.kanavat.kanava :as kan]
             [clojure.set :as set]))
 
@@ -21,7 +22,10 @@
         odotusaika-h (:haku-odotusaika-h tiedot)
         korjausaika-h (:haku-korjausaika-h tiedot)
         paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
-        aikavali (:haku-aikavali tiedot)]
+        [alku loppu] (:haku-aikavali tiedot)]
+    ;; TODO Aikaväli-filter
+    ;; TODO Odotusaika-filter
+    ;; TODO Korjausaika-filter
     (reverse (sort-by ::hairio/pvm
                       (specql/fetch db
                                     ::hairio/hairiotilanne
@@ -35,7 +39,9 @@
                                       (when korjauksen-tila
                                         {::hairio/korjauksen-tila korjauksen-tila})
                                       (when (some? paikallinen-kaytto?)
-                                        {::hairio/paikallinen-kaytto? paikallinen-kaytto?})))))))
+                                        {::hairio/paikallinen-kaytto? paikallinen-kaytto?})
+                                      (when (and alku loppu)
+                                        {::hairio/pvm (op/between alku loppu)})))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle

@@ -31,7 +31,8 @@
   (reaction
     (when (:nakymassa? @tila)
       {:urakka @nav/valittu-urakka
-       :sopimus-id (first @u/valittu-sopimusnumero)})))
+       :sopimus-id (first @u/valittu-sopimusnumero)
+       :aikavali @u/valittu-aikavali})))
 
 (extend-protocol tuck/Event
   Nakymassa?
