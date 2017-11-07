@@ -63,7 +63,12 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION vv_aseta_toimenpiteen_vayla() RETURNS trigger AS $$
 BEGIN
-  NEW."vaylanro" = (NEW."reimari-vayla").nro;
+  BEGIN
+      NEW."vaylanro" = (NEW."reimari-vayla").nro::integer;
+  EXCEPTION WHEN OTHERS THEN
+      RAISE NOTICE 'valyanro arvoa % ei voitu muuntaa kokonaisluvuksi', (NEW."reimari-vayla").nro;
+      NEW."vaylanro" = NULL;
+  END;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
