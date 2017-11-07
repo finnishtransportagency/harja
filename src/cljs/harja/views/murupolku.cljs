@@ -18,7 +18,8 @@
             [harja.pvm :as pvm]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
-            [harja.domain.urakka :as u]))
+            [harja.domain.urakka :as u]
+            [harja.ui.debug :as debug]))
 
 (defn koko-maa []
   [:li
@@ -148,6 +149,13 @@
                            (if @nav/murupolku-nakyvissa?
                              ""
                              "hide"))}
+           (when true
+             [:div
+              [debug/debug @nav/valittu-hallintayksikko]
+              [debug/debug @nav/valittu-urakka]
+              [debug/debug @nav/urakkatyyppi]
+              [debug/debug @nav/valittu-urakkatyyppi]
+              [debug/debug @valinta-auki]])
            (if ei-urakkaa?
              [:ol.murupolku
               [:div.col-sm-6.murupolku-vasen
@@ -156,9 +164,6 @@
                (when-not urakoitsija?
                  [urakoitsija])
                [urakkatyyppi]]]
-             [:ol.murupolku {:style {:background-color (if (u/vesivaylaurakka? ur)
-                                                        "#abd2f5" ;;Sininen
-                                                        "#57af57" ;;Vihiriä
-                                                        )}}
+             [:ol.murupolku
               [:div.col-sm-12.murupolku-vasen
                [koko-maa] [hallintayksikko valinta-auki] [urakka valinta-auki]]])])))))
