@@ -27,13 +27,13 @@
   (start [this]
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
     (assoc this
-           :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tphakuvali
+           :tp-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tphakuvali 55
                                     (fn [& args] (hae-toimenpiteet this)))
-           :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein kthakuvali
+           :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein kthakuvali 16
                                     (fn [& args] (hae-komponenttityypit this)))
-           :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tlkhakuvali
+           :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tlkhakuvali 21
                                      (fn [& args] (hae-turvalaitekomponentit this)))
-           :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein vikahakuvali
+           :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein vikahakuvali 25
                                       (fn [& args] (hae-viat this)))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
