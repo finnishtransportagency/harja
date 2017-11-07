@@ -26,7 +26,7 @@
     ;; else
     "muu"))
 
-(defn tallenna-vayla [db {:keys [id geometry properties]}]
+(defn tallenna-vayla! [db {:keys [id geometry properties]}]
   ;; Tietosisällön kuvaus löytyy http://docplayer.fi/20620576-Vesivaylaaineistojen-tietosisallon-kuvaus.html
 
   (let [nimi (:VAY_NIMISU properties)
@@ -41,15 +41,14 @@
                         :arvot arvot}]
 
     (when nimi
-      (q-vaylat/luo-vayla<! db sql-parametrit))))
+      (q-vaylat/luo-tai-paivita-vayla<! db sql-parametrit))))
 
 (defn kasittele-vaylat [db vastaus]
   (let [data (cheshire/decode vastaus keyword)
         vaylat (get data :features)]
     (jdbc/with-db-transaction [db db]
-      (q-vaylat/poista-vaylat! db)
       (doseq [vayla vaylat]
-        (tallenna-vayla db vayla))
+        (tallenna-vayla! db vayla))
       (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (pvm/nyt)))))
 
 (defn paivita-vaylat [integraatioloki db url]
