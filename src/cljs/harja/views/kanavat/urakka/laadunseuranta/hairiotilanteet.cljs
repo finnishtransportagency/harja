@@ -116,12 +116,12 @@
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! app]
+      @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
       [:div
-       @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
        [debug/debug app]
        [suodattimet-ja-toiminnot e! app]
        [hairiolista e! app]])))
 
-(defc hairiotilanteet []
-      [tuck tiedot/tila hairiotilanteet*])
+(defn hairiotilanteet []
+  [tuck tiedot/tila hairiotilanteet*])
 

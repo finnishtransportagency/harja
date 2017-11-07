@@ -64,7 +64,6 @@
                                {:onnistui ->HairioTilanteetHaettu
                                 :epaonnistui ->HairioTilanteetEiHaettu})
             (assoc :hairiotilanteiden-haku-kaynnissa? true)))
-
       app))
 
   HairioTilanteetHaettu
