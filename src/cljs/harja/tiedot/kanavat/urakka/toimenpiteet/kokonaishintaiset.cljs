@@ -17,14 +17,14 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def tila (atom {:nakymassa? false
-                 :valinnat {:urakka @nav/valittu-urakka}
+                 :valinnat nil
                  :haku-kaynnissa? false
                  :toimenpiteet nil}))
 
 (defonce valinnat
          (reaction
            (when (:nakymassa? @tila)
-             {:urakka-id (:id @nav/valittu-urakka)
+             {:urakka @nav/valittu-urakka
               :sopimus-id (first @u/valittu-sopimusnumero)
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
