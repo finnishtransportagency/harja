@@ -59,20 +59,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Aseta vayla-id reimarin väylänimen perusteella
-
--- Koska Reimarin antama väyläid on tällä hetkellä ERI kuin inspire
--- palvelusta tuoduille väylille, joudutaan match tekemään nimellä.
--- Muodostetaan reimari toimenpiteen väylä id triggerillä.
+-- Aseta vaylanro Reimarin väylätietojen perusteella
 
 CREATE OR REPLACE FUNCTION vv_aseta_toimenpiteen_vayla() RETURNS trigger AS $$
-DECLARE
-  v reimari_vayla;
-  id_ INTEGER;
 BEGIN
-  v := NEW."reimari-vayla";
-  SELECT INTO id_ id FROM vv_vayla WHERE nimi = v.nimi LIMIT 1;
-  NEW."vayla-id" := id_;
+  NEW."vaylanro" := (NEW."reimari-vayla".nro);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
