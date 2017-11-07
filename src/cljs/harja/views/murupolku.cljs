@@ -17,9 +17,7 @@
             [harja.ui.dom :as dom]
             [harja.pvm :as pvm]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
-            [harja.domain.urakka :as u]
-            [harja.ui.debug :as debug]))
+            [harja.domain.roolit :as roolit]))
 
 (defn koko-maa []
   [:li
