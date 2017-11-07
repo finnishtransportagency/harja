@@ -77,3 +77,11 @@ GROUP BY Extract(YEAR FROM yht.alkupvm);
 SELECT exists(SELECT maksuera
               FROM kustannussuunnitelma
               WHERE maksuera = :numero :: BIGINT);
+
+--name: tuotenumero-loytyy
+SELECT exists(SELECT numero
+              FROM maksuera m
+                JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+                JOIN toimenpidekoodi tpk4 ON tpi.toimenpide = tpk4.id
+                JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+              WHERE m.numero = :numero AND tpk3.tuotenumero IS NOT NULL)

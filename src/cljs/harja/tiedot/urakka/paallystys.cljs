@@ -141,6 +141,8 @@
    :valinnat pot/+tyomenetelmat-ja-nil+})
 
 (defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id paallystysilmoitukset]
-  (k/post! :tallenna-paallystysilmoitusten-takuupvmt
-           {::urakka-domain/id urakka-id
-            ::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))
+  (let [ilmoitukset-joilla-jo-pot (keep #(when (:harja.domain.paallystysilmoitus/id %) %)
+                                        paallystysilmoitukset)]
+    (k/post! :tallenna-paallystysilmoitusten-takuupvmt
+             {::urakka-domain/id urakka-id
+              ::pot/tallennettavat-paallystysilmoitusten-takuupvmt ilmoitukset-joilla-jo-pot})))

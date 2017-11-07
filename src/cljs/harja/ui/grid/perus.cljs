@@ -15,7 +15,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid.protokollat :refer
              [Grid vetolaatikko-auki? sulje-vetolaatikko!
-              muokkauksessa-olevat-gridit
+              muokkauksessa-olevat-gridit seuraava-grid-id
               avaa-vetolaatikko! muokkaa-rivit! otsikko?
               lisaa-rivi! vetolaatikko-rivi vetolaatikon-tila
               aseta-grid +rivimaara-jonka-jalkeen-napit-alaskin+]]
@@ -602,7 +602,7 @@
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara rivin-infolaatikko
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
-  (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
+  (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä

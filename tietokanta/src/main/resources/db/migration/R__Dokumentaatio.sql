@@ -182,6 +182,8 @@ E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle my�
 COMMENT ON TABLE toimenpideinstanssi_vesivaylat IS
 E'Taulun tarkoitus on liittää toimenpideinstanssiin vesiväylä -spesifistä tietoa.';
 
+-- Kanavat
+
 COMMENT ON TABLE kan_kanava IS
 E'Kanava on.. kanava. Kanavalla on nimi ja sijainti, ja se sisältää 0-n kohdetta';
 
@@ -190,3 +192,11 @@ E'Kohteet ovat kanavalla sijaitsevia siltoja ja sulkuja, joihin kanavaurkoiden t
 
 COMMENT ON TABLE kanavahuoltokohde IS
 E'Huoltokohteet ovat asioita, joita kanavasta korjataan. Huoltokohteita ei pidä sekoittaa kohteeseen! Huoltokohde voi olla esim "Hydrauliikka", kun taas kohde on fyysinen sijainti kanavan varrella, esim. silta.';
+
+COMMENT ON TABLE kan_hairio IS
+E'Kuvaa häiriötilannetta. Urakoitsija vastaa hoitourakoissa tapahtuvien häiriötilanteiden tietojen kirjaamisesta.';
+COMMENT ON COLUMN kan_hairio.odotusaika_h IS 'Aika, jonka liikennöivät alukset joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.ammattiliikenne_lkm IS 'Ammattiliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.huviliikenne_lkm IS 'Huviliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.korjaustoimenpide IS 'Vapaamuotoinen toimenpiteen kuvaus, esim. "Kamera resetoitu"';
+COMMENT ON COLUMN kan_hairio.paikallinen_kaytto IS 'Valitaan, onko siirrytty paikallliskäyttöön';
