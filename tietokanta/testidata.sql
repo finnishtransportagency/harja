@@ -147,3 +147,4 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 \i testidata/vesivaylat/kalusto.sql
 
 \i testidata/kanavat/kanavat_ja_kohteet.sql
+\i testidata/kanavat/hairiotilanteet.sql

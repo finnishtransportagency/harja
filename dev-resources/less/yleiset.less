@@ -148,18 +148,31 @@ button > .ajax-loader {
   }
 }
 
-.label-ja-aikavali-tpl (@leveys: @valintakontrollin-leveys, @margin: 5px) {
+.label-ja-vali-tpl (@leveys: @valintakontrollin-leveys, @margin: 5px) {
   display: inline-block;
   vertical-align: top;
   margin: @margin;
   max-width: 100%;
   width: @leveys;
+
   .aikavali-valinnat {
     text-align: center;
   }
+
   .pvm-kentta {
     width: 46%;
   }
+
+  .numerovali-kentta {
+    display: inline-block;
+    width: 33%;
+
+    input {
+      height: @valintakontrollin-korkeus;
+      width: 100%;
+    }
+  }
+
   .pvm-valiviiva-wrap {
     display: inline-block;
     height: @input-korkeus;
@@ -167,6 +180,7 @@ button > .ajax-loader {
     width: 7%;
 
   }
+
   .pvm {
     height: @valintakontrollin-korkeus;
     max-width: 100%;
@@ -176,14 +190,14 @@ button > .ajax-loader {
 }
 
 .label-ja-aikavali {
-  .label-ja-aikavali-tpl(@valintakontrollin-leveys);
+  .label-ja-vali-tpl(@valintakontrollin-leveys);
 }
 .label-ja-aikavali-lyhyt {
-  .label-ja-aikavali-tpl(85px);
+  .label-ja-vali-tpl(85px);
 }
 
 .label-ja-aikavali-lomake {
-  .label-ja-aikavali-tpl(100%, 0px);
+  .label-ja-vali-tpl(100%, 0px);
   .pvm { width: 100%; }
 }
 
@@ -192,6 +206,10 @@ button > .ajax-loader {
   width: @valintakontrollin-leveys / 2;
   min-width: initial;
   max-width: initial;
+}
+
+.label-ja-numerovali {
+  .label-ja-vali-tpl(@valintakontrollin-leveys);
 }
 
 .testikaytto-alasveto {
