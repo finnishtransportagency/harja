@@ -75,7 +75,7 @@
                                               (:id valittu-urakka))]
         ^{:key "lisaysnappi"}
         [napit/uusi "Lisää häiriötilanne"
-         #(log "TODO Lisää häiriötilanne")
+         #(e! (tiedot/->KytkeLomake))
          {:disabled (not oikeus?)}])]]))
 
 (defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
