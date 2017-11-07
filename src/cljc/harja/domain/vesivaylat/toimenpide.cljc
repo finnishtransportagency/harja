@@ -53,7 +53,7 @@
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
     ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/id)
     ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
-    ::vayla (specql.rel/has-one ::vayla-id ::vv-vayla/vayla ::vv-vayla/id)
+    ::vayla (specql.rel/has-one ::vaylanro ::vv-vayla/vayla ::vv-vayla/vaylanro)
     ::kiintio (specql.rel/has-one ::kiintio-id ::kiintio/kiintio ::kiintio/id)
     ::hinnoittelu-linkit (specql.rel/has-many
                            ::id
@@ -310,7 +310,7 @@ reimari-toimenpidetyypit
 
 (s/def ::komponentit (s/every ::tkomp/turvalaitekomponentti))
 (s/def ::vayla (s/keys :opt [::vv-vayla/tyyppi
-                             ::vv-vayla/id
+                             ::vv-vayla/vaylanro
                              ::vv-vayla/nimi]))
 (s/def ::pvm inst?)
 (s/def ::turvalaite (s/nilable (s/keys :opt [::vv-turvalaite/nimi
@@ -346,7 +346,7 @@ reimari-toimenpidetyypit
     ::sopimus-id
     ::urakka-id
     ::turvalaite-id
-    ::vayla-id
+    ::vaylanro
     ::m/muokkaaja-id
     ::m/luoja-id
     ::m/poistaja-id
@@ -398,8 +398,8 @@ reimari-toimenpidetyypit
 (defn toimenpiteet-kiintiolla [toimenpiteet kiintio-id]
   (filter #(= (get-in % [::kiintio ::kiintio/id]) kiintio-id) toimenpiteet))
 
-(defn toimenpiteet-vaylalla [toimenpiteet vayla-id]
-  (filter #(= (get-in % [::vayla ::vv-vayla/id]) vayla-id) toimenpiteet))
+(defn toimenpiteet-vaylalla [toimenpiteet vaylanro]
+  (filter #(= (get-in % [::vayla ::vv-vayla/vaylanro]) vaylanro) toimenpiteet))
 
 (defn toimenpiteiden-vaylat [toimenpiteet]
   (distinct (map #(::vayla %) toimenpiteet)))
@@ -426,7 +426,7 @@ reimari-toimenpidetyypit
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::urakka-id]
-    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vayla-id ::turvalaite-id
+    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vaylanro ::turvalaite-id
           ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu

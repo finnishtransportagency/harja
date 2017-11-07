@@ -38,9 +38,9 @@
     ;; Formatoidaan sinne päin
     (str/capitalize (name tyyppi))))
 
-(defn vaylan-nimi-idlla [vaylat vayla-id]
+(defn vaylan-nimi-idlla [vaylat vaylanro]
   (::nimi (first (filter
-                   #(= (::id %) vayla-id)
+                   #(= (::id %) vaylanro)
                    vaylat))))
 
 (def perustiedot
