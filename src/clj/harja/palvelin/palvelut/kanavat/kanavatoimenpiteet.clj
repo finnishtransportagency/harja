@@ -18,7 +18,7 @@
                                        tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                        :as hakuehdot}]
   (let [tyyppi (when tyyppi (name tyyppi))]
-    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
     (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
       db
       {:urakka urakka
