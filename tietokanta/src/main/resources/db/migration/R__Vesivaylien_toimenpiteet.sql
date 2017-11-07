@@ -63,7 +63,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION vv_aseta_toimenpiteen_vayla() RETURNS trigger AS $$
 BEGIN
-  NEW."vaylanro" := (NEW."reimari-vayla".nro);
+  NEW."vaylanro" = (NEW."reimari-vayla").nro;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
