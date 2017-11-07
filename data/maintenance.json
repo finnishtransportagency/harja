@@ -1,5 +1,10 @@
 [
   {
+    "date": "2017-11-07",
+    "title": "Päällystyskohteen takuupäivämäärän voi nyt asettaa usealle kohteelle kerralla",
+    "body": "Harja mahdollistaa nyt päällystyskohteen takuupvm:n asettamisen useammalle kohteelle kerralla. Katso <a href=\"https://youtu.be/f2xyQpvJd5k\"> koulutusvideo</a>."
+  },
+  {
     "date": "2017-11-03",
     "title": "Korjaus 'Muisti ei riitä' tyyppisiin ongelmiin",
     "body": "Harjaan on toteutettu korjaus, minkä ansiosta kohdeluettelossa satunnaisesti tapahtunut selaimen ilmoitus muistin riittämättömyydestä ei pitäisi enää toistua. Korjaus tulee voimaan ensi viikon alussa."
