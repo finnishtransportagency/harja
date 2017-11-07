@@ -239,7 +239,7 @@
     (grid/otsikkorivin-tiedot
       (::va/nimi vayla)
       (count vaylan-toimenpiteet))
-    {:id (::va/id vayla)
+    {:id (::va/vaylanro vayla)
      :otsikkokomponentit
      [{:sijainti vaylan-checkbox-sijainti
        :sisalto
