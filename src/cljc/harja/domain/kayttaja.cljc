@@ -12,4 +12,4 @@
   ["kayttaja" ::kayttaja])
 
 (defn kokonimi [kayttaja]
-  (str (::etunimi henkilo) " " (::sukunimi henkilo)))
+  (str (::etunimi kayttaja) " " (::sukunimi kayttaja)))
