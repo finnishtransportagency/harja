@@ -44,7 +44,7 @@
                    vaylat))))
 
 (def perustiedot
-  #{::id
+  #{::vaylanro
     ::nimi
     ::tyyppi})
 
