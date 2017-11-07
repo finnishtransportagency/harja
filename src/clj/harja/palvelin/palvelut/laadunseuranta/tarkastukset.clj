@@ -51,7 +51,7 @@
   ([db user parametrit]
    (hae-urakan-tarkastukset db user parametrit false 501))
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi
-                    havaintoja-sisaltavat? vain-laadunalitukset?]}
+                    havaintoja-sisaltavat? vain-laadunalitukset? tekija]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
    (let [urakoitsija? (roolit/urakoitsija? user)
@@ -67,6 +67,7 @@
                                  :tyyppi (and tyyppi (name tyyppi))
                                  :havaintoja_sisaltavat havaintoja-sisaltavat?
                                  :vain_laadunalitukset vain-laadunalitukset?
+                                 :tekija tekija
                                  :maxrivimaara max-rivimaara})
          tarkastukset (into []
                             (comp tarkastus-xf

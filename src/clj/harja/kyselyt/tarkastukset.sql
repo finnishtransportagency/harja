@@ -72,6 +72,9 @@ WHERE t.urakka = :urakka
                          FROM soratiemittaus
                          WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
+      AND (:tekija IS NULL OR
+           :tekija = 'tilaaja' AND o.tyyppi != 'urakoitsija'::organisaatiotyyppi OR
+           :tekija = 'urakoitsija' AND o.tyyppi = 'urakoitsija'::organisaatiotyyppi)
       AND t.poistettu IS NOT TRUE
       -- Ei kuulu poistettuun ylläpitokohteeseen
       AND (t.yllapitokohde IS NULL
