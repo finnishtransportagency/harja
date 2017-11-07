@@ -28,9 +28,6 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn henkilon-nimi [henkilo]
-  (str (::kayttaja/etunimi henkilo) " " (::kayttaja/sukunimi henkilo)))
-
 (defn valinnat [urakka]
   [valinnat/urakkavalinnat {:urakka urakka}
    ^{:key "valinnat"}
@@ -74,11 +71,11 @@
     {:otsikko "Suorittaja"
      :nimi :huoltokohde
      :tyyppi :string
-     :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}
+     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}
     {:otsikko "Kuittaaja"
      :nimi :huoltokohde
      :tyyppi :string
-     :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}]
+     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}]
    toimenpiteet])
 
 (defn kokonaishintaiset-nakyma [urakka toimenpiteet]
