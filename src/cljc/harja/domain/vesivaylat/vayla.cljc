@@ -60,4 +60,4 @@
   (s/keys :op-un [::hakuteksti ::vaylatyyppi]))
 
 (s/def ::hae-vaylat-vastaus
-  (s/coll-of (s/keys :req [::id ::nimi ::tyyppi])))
+  (s/coll-of (s/keys :req [::vaylanro ::nimi ::tyyppi])))
