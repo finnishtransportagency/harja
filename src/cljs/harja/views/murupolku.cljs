@@ -149,13 +149,6 @@
                            (if @nav/murupolku-nakyvissa?
                              ""
                              "hide"))}
-           (when true
-             [:div
-              [debug/debug @nav/valittu-hallintayksikko]
-              [debug/debug @nav/valittu-urakka]
-              [debug/debug @nav/urakkatyyppi]
-              [debug/debug @nav/valittu-urakkatyyppi]
-              [debug/debug @valinta-auki]])
            (if ei-urakkaa?
              [:ol.murupolku
               [:div.col-sm-6.murupolku-vasen
