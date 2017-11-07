@@ -6,6 +6,7 @@
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.sopimus :as sopimus]
+    [harja.domain.urakka :as urakka]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -20,7 +21,10 @@
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
-   {"kohde" ::kohde-id
+   {"urakka" ::urakka-id
+    "sopimus" ::sopimus-id
+    
+    "kohde" ::kohde-id
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
                                 :harja.domain.kanavat.kanavan-kohde/id)
@@ -73,7 +77,8 @@
        ::kayttaja/puhelin}]})
 
 (s/def ::hae-kanavatoimenpiteet-kutsu
-  (s/keys :req [::sopimus/id
+  (s/keys :req [::urakka/id
+                ::sopimus/id
                 ::toimenpidekoodi/id
                 ::alkupvm
                 ::loppupvm]

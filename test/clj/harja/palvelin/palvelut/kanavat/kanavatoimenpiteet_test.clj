@@ -35,7 +35,8 @@
                       urakkatieto-fixture))
 
 (deftest toimenpiteiden-haku
-  (let [parametrit {:harja.domain.sopimus/id 40
+  (let [parametrit {:harja.domain.urakka/id 27
+                    :harja.domain.sopimus/id 1
                     :harja.domain.toimenpidekoodi/id 597
                     :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
                     :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)

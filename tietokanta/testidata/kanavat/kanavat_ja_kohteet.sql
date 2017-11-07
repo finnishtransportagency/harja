@@ -57,6 +57,8 @@ VALUES (31,
 
 INSERT INTO kan_toimenpide
 (tyyppi,
+ urakka,
+ sopimus,
  pvm,
  kohde,
  huoltokohde,
@@ -71,7 +73,13 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
-  '2017-10-10',
+  (SELECT id
+   FROM urakka
+   WHERE nimi = 'Saimaan kanava'),
+  (SELECT id
+   FROM sopimus
+   WHERE nimi = 'Saimaan huollon pääsopimus'),
+   '2017-10-10',
   (SELECT id
    FROM kan_kohde
    WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
@@ -95,7 +103,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  '2017-10-10',
+        '2017-10-10',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),

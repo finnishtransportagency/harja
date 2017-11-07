@@ -7,12 +7,14 @@
 (deftest hakuparametrien-muodostaminen
   (let [aikavali [(pvm/luo-pvm 2017 1 1)
                   (pvm/luo-pvm 2018 1 1)]]
-    (is (= {:harja.domain.sopimus/id 666
+    (is (= {:harja.domain.urakka/id 666
+            :harja.domain.sopimus/id 666
             :harja.domain.toimenpidekoodi/id 666
             :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
             :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
             :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
-           (tiedot/muodosta-hakuparametrit {:sopimus-id 666
+           (tiedot/muodosta-hakuparametrit {:urakka-id 666
+                                            :sopimus-id 666
                                             :toimenpide {:id 666}
                                             :aikavali aikavali})))))
 
