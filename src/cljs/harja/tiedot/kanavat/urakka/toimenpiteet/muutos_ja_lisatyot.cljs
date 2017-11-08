@@ -8,7 +8,9 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -22,8 +24,13 @@
        :sopimus-id (first @u/valittu-sopimusnumero)
        :aikavali @u/valittu-aikavali})))
 
+;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
+;; Haut
+(defrecord HaeToimenpiteet [valinnat])
+(defrecord ToimenpiteetHaettu [tulos])
+(defrecord ToimenpiteetEiHaettu [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -32,8 +39,32 @@
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
-    (let [;haku (tuck/send-async! ->HaeKokonaishintaisetToimenpiteet)
-    ]
-      #_(go (haku valinnat))
-      (assoc app :valinnat valinnat))))
+    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
+      (go (haku valinnat))
+      (assoc app :valinnat valinnat)))
 
+
+  HaeToimenpiteet
+  (process-event [{valinnat :valinnat} app]
+    (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
+             (some? (get-in valinnat [:urakka :id])))
+      ;; TODO Filtterit messiin, vain muutos- ja lisätyöt
+      (let [argumentit {::toimenpide/urakka-id (get-in valinnat [:urakka :id])}]
+        (-> app
+            (tuck-apurit/post! :hae-kanavatoimenpiteet
+                               argumentit
+                               {:onnistui ->ToimenpiteetHaettu
+                                :epaonnistui ->ToimenpiteetEiHaettu})
+            (assoc :toimenpiteiden-haku-kaynnissa? true)))
+      app))
+
+  ToimenpiteetHaettu
+  (process-event [{tulos :tulos} app]
+    (assoc app :toimenpiteiden-haku-kaynnissa? false
+               :toimenpiteet tulos))
+
+  ToimenpiteetEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
+    (assoc app :toimenpiteiden-haku-kaynnissa? false
+               :toimenpiteet [])))

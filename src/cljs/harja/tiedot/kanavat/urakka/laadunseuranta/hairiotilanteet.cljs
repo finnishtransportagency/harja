@@ -24,8 +24,8 @@
 (defrecord PaivitaValinnat [valinnat])
 ;; Haut
 (defrecord HaeHairioTilanteet [valinnat])
-(defrecord HairioTilanteetHaettu [tulos])
-(defrecord HairioTilanteetEiHaettu [])
+(defrecord HairiotilanteetHaettu [tulos])
+(defrecord HairiotilanteetEiHaettu [])
 
 (def valinnat
   (reaction
@@ -66,12 +66,12 @@
             (assoc :hairiotilanteiden-haku-kaynnissa? true)))
       app))
 
-  HairioTilanteetHaettu
+  HairiotilanteetHaettu
   (process-event [{tulos :tulos} app]
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
                :hairiotilanteet tulos))
 
-  HairioTilanteetEiHaettu
+  HairiotilanteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Häiriötilanteiden haku epäonnistui!" :danger)
     (assoc app :hairiotilanteiden-haku-kaynnissa? false

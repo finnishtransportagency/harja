@@ -18,6 +18,7 @@
                                        tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                        :as hakuehdot}]
   (let [tyyppi (when tyyppi (name tyyppi))]
+    ;; TODO Oikeustarkistus riippumaan annettavasta tyypistä
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka)
     (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
       db
