@@ -31,8 +31,6 @@
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
 
-
-
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
 (defrecord HaeKokonaishintaisetToimenpiteet [valinnat])

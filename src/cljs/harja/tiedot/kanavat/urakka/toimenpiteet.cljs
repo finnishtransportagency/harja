@@ -18,11 +18,9 @@
                    [reagent.ratom :refer [reaction]]))
 
 (defn muodosta-hakuargumentit [valinnat tyyppi]
-  (merge
-    {::urakka/id (:id (:urakka valinnat))
-     ::sopimus/id (:sopimus-id valinnat)
-     ::kanavatoimenpide/kanava-toimenpidetyyppi tyyppi
-     :alkupvm (first (:aikavali valinnat))
-     :loppupvm (second (:aikavali valinnat))}
-    (when-let [toimenpidekoodi (get-in valinnat [:toimenpide :id])]
-      {::toimenpidekoodi/id toimenpidekoodi})))
+  {::urakka/id (:id (:urakka valinnat))
+   ::sopimus/id (:sopimus-id valinnat)
+   ::toimenpidekoodi/id toimenpidekoodi
+   ::kanavatoimenpide/kanava-toimenpidetyyppi tyyppi
+   :alkupvm (first (:aikavali valinnat))
+   :loppupvm (second (:aikavali valinnat))})

@@ -80,10 +80,10 @@
   ;; TODO Urakka, sopimus ja tpk voisi ehkä käyttää toimenpiteen ns:ää, koska koskevat nimenomaan toimenpiteen kenttiä.
   (s/keys :req [::urakka/id
                 ::sopimus/id
-                ::kanava-toimenpidetyyppi]
+                ::kanava-toimenpidetyyppi
+                ::toimenpidekoodi/id]
           :req-un [::alkupvm
-                   ::loppupvm]
-          :opt [::toimenpidekoodi/id]))
+                   ::loppupvm]))
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))

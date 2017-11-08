@@ -34,7 +34,7 @@
     [:div
      [valinnat/urakkavalinnat {:urakka urakka}
       ^{:key "valinnat"}
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]]
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
      [valinnat/urakkatoiminnot {:urakka urakka}
       [napit/uusi
        "Uusi toimenpide"
@@ -62,7 +62,8 @@
                            (e! (tiedot/->PaivitaValinnat
                                  {:urakka @nav/valittu-urakka
                                   :sopimus-id (first @u/valittu-sopimusnumero)
-                                  :aikavali @u/valittu-aikavali})))
+                                  :aikavali @u/valittu-aikavali
+                                  :toimenpide @u/valittu-toimenpideinstanssi})))
                         #(do
                            (e! (tiedot/->Nakymassa? false))))
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]

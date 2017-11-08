@@ -26,7 +26,8 @@
     (when (:nakymassa? @tila)
       {:urakka @nav/valittu-urakka
        :sopimus-id (first @u/valittu-sopimusnumero)
-       :aikavali @u/valittu-aikavali})))
+       :aikavali @u/valittu-aikavali
+       :toimenpide @u/valittu-toimenpideinstanssi})))
 
 ;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
