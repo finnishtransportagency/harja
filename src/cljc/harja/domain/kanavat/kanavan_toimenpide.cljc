@@ -23,7 +23,7 @@
    harja.domain.muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
-    
+    "muu_toimenpide" ::muu-toimenpide
     "kohde" ::kohde-id
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
@@ -49,6 +49,7 @@
   #{::id
     ::tyyppi
     ::pvm
+    ::muu-toimenpide
     ::lisatieto
     [::kohde
      #{::kohde/id

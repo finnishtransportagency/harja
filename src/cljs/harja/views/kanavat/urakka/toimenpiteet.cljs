@@ -42,9 +42,15 @@
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])}
    {:otsikko "Toimenpide"
-    :nimi :huoltokohde
+    :nimi :toimenpide
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])}
+   {:otsikko "Lisätieto"
+    :nimi ::kanavan-toimenpide/lisatieto
+    :tyyppi :string}
+   {:otsikko "Muu toimenpide"
+    :nimi ::kanavan-toimenpide/muu-toimenpide
+    :tyyppi :string}
    {:otsikko "Suorittaja"
     :nimi :huoltokohde
     :tyyppi :string
