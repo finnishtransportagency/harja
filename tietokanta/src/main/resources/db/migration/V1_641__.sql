@@ -1,5 +1,9 @@
--- Paranna kan_toimenpide taulua
-ALTER TABLE kan_toimenpide ADD COLUMN muu_toimenpide TEXT;
+-- Carement ja Roadmaster ovat tilaajan laadunvalvontaorganisaatioita, eivät urakoitsijoita
+UPDATE organisaatio
+SET tyyppi = 'tilaajan-konsultti'::organisaatiotyyppi
+WHERE nimi IN ('Carement Oy', 'West Coast Road Masters Oy');
 
-UPDATE kan_toimenpide SET poistettu = FALSE WHERE poistettu IS NULL;
-ALTER TABLE kan_toimenpide ALTER COLUMN poistettu SET NOT NULL;
+-- Oletuksena tilaajan tekemät tarkastukset eivät näy urakoitsijoille
+UPDATE tarkastus
+SET nayta_urakoitsijalle = FALSE
+WHERE luoja IN (select id from kayttaja where kayttajanimi IN ('carement-harja', 'roadmasters-harja'));
