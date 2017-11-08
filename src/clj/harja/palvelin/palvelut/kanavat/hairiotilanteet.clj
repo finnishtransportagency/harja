@@ -22,7 +22,7 @@
         paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
         [aikavali-alku aikavali-loppu] (:haku-aikavali tiedot)]
     (assert urakka-id "Urakka-id puuttuu!")
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet user urakka-id)
     (reverse (sort-by
                ::hairio/pvm
                (specql/fetch
