@@ -34,13 +34,13 @@
     [:div
      [valinnat/urakkavalinnat {:urakka urakka}
       ^{:key "valinnat"}
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
-     [valinnat/urakkatoiminnot {:urakka urakka}
-      [napit/uusi
-       "Uusi toimenpide"
-       (fn [_]
-         ;;todo
-         )]]]))
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+      [valinnat/urakkatoiminnot {:urakka urakka}
+       [napit/uusi
+        "Uusi toimenpide"
+        (fn [_]
+          ;;todo
+          )]]]]))
 
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   [grid/grid
