@@ -91,7 +91,8 @@
                                   (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                                         :muutos-lisatyo)))))))
 
-(deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
+
+#_(deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
   (let [hakuargumentit {::kanavan-toimenpide/urakka-id nil
                         ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
                         ::toimenpidekoodi/id 597
