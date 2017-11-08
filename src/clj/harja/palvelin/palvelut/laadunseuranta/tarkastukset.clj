@@ -144,7 +144,7 @@
 
 (defn- tarkastusreittien-parametrit
   [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
-                alkupvm loppupvm tyyppi urakka-id valittu] :as parametrit}]
+                alkupvm loppupvm tyyppi urakka-id valittu tekija] :as parametrit}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
                              user urakka-id)
   {:urakka urakka-id
@@ -154,7 +154,8 @@
    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
    :havaintoja_sisaltavat havaintoja-sisaltavat?
    :vain_laadunalitukset vain-laadunalitukset?
-   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})
+   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
+   :tekija tekija})
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
   (let [parametrit (tarkastusreittien-parametrit user parametrit)
