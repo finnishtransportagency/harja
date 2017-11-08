@@ -3,7 +3,7 @@
             [tuck.core :refer [tuck]]
 
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as tiedot]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpide-view]
             [harja.loki :refer [tarkkaile! log]]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
@@ -49,7 +49,7 @@
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
     :tunniste ::kanavan-toimenpide/id}
-   toimenpiteet/toimenpidesarakkeet
+   toimenpide-view/toimenpidesarakkeet
    toimenpiteet])
 
 (defn lisatyot* [e! app]

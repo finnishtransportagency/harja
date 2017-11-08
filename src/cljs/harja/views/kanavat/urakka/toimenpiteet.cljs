@@ -15,6 +15,7 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
 
@@ -47,8 +48,8 @@
    {:otsikko "Suorittaja"
     :nimi :huoltokohde
     :tyyppi :string
-    :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}
+    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}
    {:otsikko "Kuittaaja"
     :nimi :huoltokohde
     :tyyppi :string
-    :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}])
+    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}])
