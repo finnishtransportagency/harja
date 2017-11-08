@@ -13,6 +13,7 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.urakka :as ur]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.muokkaustiedot :as m]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
@@ -36,17 +37,17 @@
                       urakkatieto-fixture))
 
 (deftest toimenpiteiden-haku
-  (let [parametrit {:harja.domain.urakka/id (hae-saimaan-kanavaurakan-id)
-                    :harja.domain.sopimus/id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-                    :harja.domain.toimenpidekoodi/id 597
-                    :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
+  (let [hakuargumentit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+                        ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                        ::toimenpidekoodi/id 597
+                        :alkupvm (pvm/luo-pvm 2017 1 1)
+                        :loppupvm (pvm/luo-pvm 2018 1 1)
+                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kanavatoimenpiteet
                                 +kayttaja-jvh+
-                                parametrit)]
-    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kutsu parametrit) "Kutsu on validi")
+                                hakuargumentit)]
+    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuargumentit) "Kutsu on validi")
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus on validi")
 
     (is (>= (count vastaus) 1))
@@ -56,29 +57,29 @@
     (is (every? ::kanavan-toimenpide/huoltokohde vastaus))))
 
 (deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
-  (let [parametrit {:harja.domain.urakka/id nil
-                    :harja.domain.sopimus/id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-                    :harja.domain.toimenpidekoodi/id 597
-                    :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+  (let [hakuargumentit {::kanavan-toimenpide/urakka-id nil
+                        ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                        ::toimenpidekoodi/id 597
+                        :alkupvm (pvm/luo-pvm 2017 1 1)
+                        :loppupvm (pvm/luo-pvm 2018 1 1)
+                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
 
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
-                       parametrit)))
+                       hakuargumentit)))
 
     ;; TODO miksi ei toimi!? Häiriötilanteissa on ihan vastaava ja toimii.
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-kanavatoimenpiteet
                                                 +kayttaja-jvh+
-                                                parametrit)))))
+                                                hakuargumentit)))))
 
 (deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
-  (let [parametrit {:harja.domain.urakka/id (hae-saimaan-kanavaurakan-id)
-                    :harja.domain.sopimus/id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-                    :harja.domain.toimenpidekoodi/id 597
-                    :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+                    ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                    ::toimenpidekoodi/id 597
+                    :alkupvm (pvm/luo-pvm 2017 1 1)
+                    :loppupvm (pvm/luo-pvm 2018 1 1)
+                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-kanavatoimenpiteet
