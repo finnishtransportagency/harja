@@ -8,4 +8,4 @@ WHERE kt.urakka = :urakka AND
       kt.id = :sopimus AND
       (kt.pvm BETWEEN :alkupvm AND :loppupvm) AND
       (:toimenpidekoodi :: INTEGER IS NULL OR tpk3.id = :toimenpidekoodi) AND
-      (:tyyppi :: KAN_TOIMENPIDETYYPPI IS NULL OR kt.tyyppi = :tyyppi :: KAN_TOIMENPIDETYYPPI);
+      (kt.tyyppi = :tyyppi :: KAN_TOIMENPIDETYYPPI);
