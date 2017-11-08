@@ -460,8 +460,10 @@
 
   (jdbc/with-db-transaction [db db]
     (doseq [takuupvm takuupvmt]
-      (q/paivita-paallystysilmoituksen-takuupvm! db {:id (::pot-domain/id takuupvm)
-                                                     :takuupvm (konv/sql-date (::pot-domain/takuupvm takuupvm))}))
+      ; Tallennetaan takuupvm vain sellaiselle kohteelle, jolla jo on POT (eli id)
+      (when (::pot-domain/id takuupvm)
+        (q/paivita-paallystysilmoituksen-takuupvm! db {:id (::pot-domain/id takuupvm)
+                                                      :takuupvm (konv/sql-date (::pot-domain/takuupvm takuupvm))})))
     []))
 
 (defrecord Paallystys []

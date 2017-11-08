@@ -333,6 +333,24 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-saimaan-kanavaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Saimaan kanava';"))))
+
+(defn hae-saimaan-kanavaurakan-paasopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Saimaan huollon pääsopimus';"))))
+
+(defn hae-saimaan-kanavaurakan-lisasopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Saimaan huollon lisäsopimus';"))))
+
+(defn hae-kanavakohde-taipaleen-sulku []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))))
+
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
@@ -406,12 +424,12 @@
                                           WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
                               AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
 
-(defn hae-vanhtaan-vesivaylaurakan-hinnoittelu []
+(defn hae-vantaan-vesivaylaurakan-hinnoittelu []
   (ffirst (q (str "SELECT id FROM vv_hinnoittelu
                    WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                    LIMIT 1;"))))
 
-(defn hae-vanhtaan-vesivaylaurakan-hinta []
+(defn hae-vantaan-vesivaylaurakan-hinta []
   (ffirst (q (str "SELECT id FROM vv_hinta
                    WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vantaan urakan testihinnoittelu')
                    LIMIT 1;"))))
@@ -689,7 +707,8 @@
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi "liikennevirasto" :lyhenne nil :ytunnus nil}
                      :organisaation-urakat #{}
-                     :urakkaroolit {}})
+                     :urakkaroolit {}
+                     :organisaatioroolit {}})
 
 (def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
                           :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}

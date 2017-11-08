@@ -141,6 +141,8 @@
 
     ;; Kanavat
     [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+    [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
+    [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
     )
 
   (:gen-class))
@@ -335,6 +337,12 @@
       :kan-kanavat (component/using
                      (kan-kanavat/->Kanavat)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-hairio (component/using
+                    (kan-hairio/->Hairiotilanteet)
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-toimenpiteet (component/using
+                          (kan-toimenpiteet/->Kanavatoimenpiteet)
+                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
