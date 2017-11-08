@@ -36,8 +36,8 @@
                   :harja.domain.kanavat.kanavan-toimenpide/id 1}]
     (is (= (first (kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
                     db
-                    {:urakka 27
-                     :sopimus 1
+                    {:urakka (hae-saimaan-kanavaurakan-id)
+                     :sopimus (hae-saimaan-kanavaurakan-paasopimuksen-id)
                      :alkupvm (harja.pvm/luo-pvm 2016 1 1)
                      :loppupvm (harja.pvm/luo-pvm 2018 1 1)
                      :toimenpidekoodi 597
