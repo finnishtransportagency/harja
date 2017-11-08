@@ -242,7 +242,7 @@
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
-                       ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
+                       ::h/tallennettavat-hinnat [{::hinta/id (hae-vantaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
                                                    ::hinta/ryhma :muu
@@ -336,7 +336,7 @@
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen) "Hinnoittelujen määrä ei muuttunut edelleenkään"))))))
 
 (deftest tallenna-ryhmalle-hinta-kun-ryhma-ei-kuulu-urakkaan
-  (let [hinnoittelu-id (hae-vanhtaan-vesivaylaurakan-hinnoittelu)
+  (let [hinnoittelu-id (hae-vantaan-vesivaylaurakan-hinnoittelu)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
@@ -359,7 +359,7 @@
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
-                       ::h/tallennettavat-hinnat [{::hinta/id (hae-vanhtaan-vesivaylaurakan-hinta)
+                       ::h/tallennettavat-hinnat [{::hinta/id (hae-vantaan-vesivaylaurakan-hinta)
                                                    ::hinta/otsikko "Testihinta 1"
                                                    ::hinta/yleiskustannuslisa 0
                                                    ::hinta/ryhma :muu
