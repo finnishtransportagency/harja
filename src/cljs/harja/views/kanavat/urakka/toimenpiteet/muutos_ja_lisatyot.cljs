@@ -34,6 +34,7 @@
     [:div
      [valinnat/urakkavalinnat {:urakka urakka}
       ^{:key "valinnat"}
+      ;; TODO TPK-filtteri ei toimi?
       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
       [valinnat/urakkatoiminnot {:urakka urakka}
        [napit/uusi
