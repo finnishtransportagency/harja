@@ -37,7 +37,8 @@
                       urakkatieto-fixture))
 
 (deftest toimenpiteiden-haku
-  (let [hakuargumentit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        hakuargumentit {::kanavan-toimenpide/urakka-id urakka-id
                         ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
                         ::toimenpidekoodi/id 597
                         :alkupvm (pvm/luo-pvm 2017 1 1)
@@ -54,7 +55,41 @@
     (is (every? ::kanavan-toimenpide/id vastaus))
     (is (every? ::kanavan-toimenpide/kohde vastaus))
     (is (every? ::kanavan-toimenpide/toimenpidekoodi vastaus))
-    (is (every? ::kanavan-toimenpide/huoltokohde vastaus))))
+    (is (every? ::kanavan-toimenpide/huoltokohde vastaus))
+
+    (testing "Aikavälisuodatus toimii"
+      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-kanavatoimenpiteet
+                                        +kayttaja-jvh+
+                                        (assoc hakuargumentit :alkupvm (pvm/luo-pvm 2030 1 1)
+                                                              :loppupvm (pvm/luo-pvm 2040 1 1)))))))
+
+    (testing "Toimenpidekoodisuodatus toimii"
+      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-kanavatoimenpiteet
+                                        +kayttaja-jvh+
+                                        (assoc hakuargumentit ::toimenpidekoodi/id -1))))))
+
+    (testing "Sopimussuodatus toimii"
+      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-kanavatoimenpiteet
+                                        +kayttaja-jvh+
+                                        (assoc hakuargumentit ::kanavan-toimenpide/sopimus-id -1))))))
+
+    (testing "Tyyppisuodatus toimii"
+      (is (every? #(= (::kanavan-toimenpide/tyyppi %) :kokonaishintainen)
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-kanavatoimenpiteet
+                                 +kayttaja-jvh+
+                                 (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
+                                                       :kokonaishintainen))))
+
+      (is (every? #(= (::kanavan-toimenpide/tyyppi %) :muutos-lisatyo)
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kanavatoimenpiteet
+                                  +kayttaja-jvh+
+                                  (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
+                                                        :muutos-lisatyo)))))))
 
 (deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
   (let [hakuargumentit {::kanavan-toimenpide/urakka-id nil
