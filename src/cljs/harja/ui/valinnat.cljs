@@ -15,7 +15,8 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [harja.domain.urakka :as u-domain])
+            [harja.domain.urakka :as u-domain]
+            [harja.loki :as log])
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -196,6 +197,8 @@
      @urakan-yksikkohintainen-tehtavat-atom]]])
 
 (defn urakan-valinnat [urakka {:keys [sopimus hoitokausi kuukausi toimenpide aikavali-optiot] :as optiot}]
+  (when-not urakka
+    (log/warn "Urakka-valintoihin ei passattu urakkaa, virhetilanne?"))
   [:span
    (when-let [{:keys [valittu-sopimusnumero-atom valitse-sopimus-fn optiot]} sopimus]
      [urakan-sopimus urakka valittu-sopimusnumero-atom valitse-sopimus-fn optiot])

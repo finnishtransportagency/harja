@@ -22,7 +22,8 @@
             [harja.tiedot.urakka :as u]
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.debug :as debug])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -33,7 +34,7 @@
     [:div
      [valinnat/urakkavalinnat {:urakka urakka}
       ^{:key "valinnat"}
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali urakka]]
      [valinnat/urakkatoiminnot {:urakka urakka}
       [napit/uusi
        "Uusi toimenpide"
@@ -67,8 +68,9 @@
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:div
-         [suodattimet]
-         [taulukko]]))))
+         [debug/debug app]
+         [suodattimet e! app]
+         [taulukko e! app]]))))
 
 (defc lisatyot []
       [tuck tiedot/tila lisatyot*])

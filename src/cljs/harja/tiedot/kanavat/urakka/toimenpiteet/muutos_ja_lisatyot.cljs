@@ -18,7 +18,7 @@
 (defonce valinnat
   (reaction
     (when (:nakymassa? @tila)
-      {:urakka-id (:id @nav/valittu-urakka)
+      {:urakka @nav/valittu-urakka
        :sopimus-id (first @u/valittu-sopimusnumero)
        :aikavali @u/valittu-aikavali})))
 
