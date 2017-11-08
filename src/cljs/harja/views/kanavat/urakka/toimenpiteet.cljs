@@ -23,7 +23,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [clojure.string :as str])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -40,7 +41,8 @@
    {:otsikko "Huoltokohde"
     :nimi :huoltokohde
     :tyyppi :string
-    :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])}
+    :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])
+    :fmt str/lower-case}
    {:otsikko "Toimenpide"
     :nimi :toimenpide
     :tyyppi :string
