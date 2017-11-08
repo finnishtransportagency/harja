@@ -44,7 +44,7 @@
 
 (defn kokonaishintaiset-toimenpiteet-taulukko [toimenpiteet]
   [grid/grid
-   {:otsikko "Urakan toimenpiteet"
+   {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
     :voi-muokata? false
     :voi-poistaa? false
