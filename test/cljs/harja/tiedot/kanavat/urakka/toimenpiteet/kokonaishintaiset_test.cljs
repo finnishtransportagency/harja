@@ -1,5 +1,6 @@
 (ns harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset-test
   (:require [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
+            [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
@@ -13,11 +14,11 @@
             :alkupvm (pvm/luo-pvm 2017 1 1)
             :loppupvm (pvm/luo-pvm 2018 1 1)
             :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
-           (tiedot/muodosta-hakuargumentit {:urakka {:id 666}
-                                            :sopimus-id 666
-                                            :toimenpide {:id 666}
-                                            :aikavali aikavali}
-                                           :kokonaishintainen)))))
+           (toimenpiteet/muodosta-hakuargumentit {:urakka {:id 666}
+                                                  :sopimus-id 666
+                                                  :toimenpide {:id 666}
+                                                  :aikavali aikavali}
+                                                 :kokonaishintainen)))))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
