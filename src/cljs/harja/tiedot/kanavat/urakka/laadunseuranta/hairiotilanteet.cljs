@@ -17,11 +17,13 @@
 (def tila (atom {:nakymassa? false
                  :hairiotilanteet nil
                  :hairiotilanteiden-haku-kaynnissa? false
-                 :valinnat nil}))
+                 :valinnat nil
+                 :kirjauslomake-auki? false}))
 
 ;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
+(defrecord KytkeLomake [])
 ;; Haut
 (defrecord HaeHairioTilanteet [valinnat])
 (defrecord HairioTilanteetHaettu [tulos])
@@ -45,6 +47,10 @@
           haku (tuck/send-async! ->HaeHairioTilanteet)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
+
+  KytkeLomake
+  (process-event [_ app]
+    (update app :kirjauslomake-auki? not))
 
   HaeHairioTilanteet
   (process-event [{valinnat :valinnat} app]
