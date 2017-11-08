@@ -64,8 +64,8 @@
     :ais-data
     :vv-alukset
     :kan-kanavat
-    :kan-toimenpiteet
-    :kan-hairio})
+    :kan-hairio
+    :kan-toimenpiteet})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
@@ -76,4 +76,4 @@
       (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
 
 #_(deftest restart-toimii
-    (is (= :ok (sut/dev-restart))))
+  (is (= :ok (sut/dev-restart))))

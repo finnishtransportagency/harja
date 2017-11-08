@@ -10,3 +10,6 @@
 
 (define-tables
   ["kayttaja" ::kayttaja])
+
+(defn kokonimi [kayttaja]
+  (str (::etunimi kayttaja) " " (::sukunimi kayttaja)))

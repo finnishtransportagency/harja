@@ -10,27 +10,29 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+            [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sopimus]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
 (def tila (atom {:nakymassa? false
-                 :valinnat {:urakka @nav/valittu-urakka}
+                 :valinnat nil
                  :haku-kaynnissa? false
                  :toimenpiteet nil}))
 
 (defonce valinnat
          (reaction
            (when (:nakymassa? @tila)
-             {:urakka-id (:id @nav/valittu-urakka)
+             {:urakka @nav/valittu-urakka
               :sopimus-id (first @u/valittu-sopimusnumero)
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
 
 (defn muodosta-hakuparametrit [valinnat]
-  {::sopimus/id (:sopimus-id valinnat)
+  {::urakka/id (:id (:urakka valinnat))
+   ::sopimus/id (:sopimus-id valinnat)
    ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
    ::kanavatoimenpide/alkupvm (first (:aikavali valinnat))
    ::kanavatoimenpide/loppupvm (second (:aikavali valinnat))

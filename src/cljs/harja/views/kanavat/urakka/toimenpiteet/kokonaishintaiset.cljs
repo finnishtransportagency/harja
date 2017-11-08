@@ -28,11 +28,7 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn henkilon-nimi [henkilo]
-  (str (::kayttaja/etunimi henkilo) " " (::kayttaja/sukunimi henkilo)))
-
 (defn valinnat [urakka]
-  (log "--->>>> urakka toimenpiteeetnäkymässäs" (pr-str urakka))
   [valinnat/urakkavalinnat {:urakka urakka}
    ^{:key "valinnat"}
    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
@@ -75,36 +71,38 @@
     {:otsikko "Suorittaja"
      :nimi :huoltokohde
      :tyyppi :string
-     :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}
+     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}
     {:otsikko "Kuittaaja"
      :nimi :huoltokohde
      :tyyppi :string
-     :hae #(henkilon-nimi (::kanavan-toimenpide/suorittaja %))}]
+     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}]
    toimenpiteet])
 
 (defn kokonaishintaiset-nakyma [urakka toimenpiteet]
   [:div
-   (valinnat urakka)
-   (kokonaishintaiset-toimenpiteet-taulukko toimenpiteet)])
+   [valinnat urakka]
+   [kokonaishintaiset-toimenpiteet-taulukko toimenpiteet]])
 
 (defn kokonaishintaiset* [e! app]
-  (let [urakka (get-in app [:valinnat :urakka])]
-    (komp/luo
-      (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                      (e! (tiedot/->PaivitaValinnat uusi))))
-      (komp/sisaan-ulos #(do
-                           (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->PaivitaValinnat
-                                 {:urakka-id (:id @nav/valittu-urakka)
-                                  :sopimus-id (first @u/valittu-sopimusnumero)
-                                  :aikavali @u/valittu-aikavali
-                                  :toimenpide @u/valittu-toimenpideinstanssi
-                                  :urakkavuosi @u/valittu-urakan-vuosi})))
-                        #(do
-                           (e! (tiedot/->Nakymassa? false))))
-      (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+  (komp/luo
+    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                    (e! (tiedot/->PaivitaValinnat uusi))))
+    (komp/sisaan-ulos #(do
+                         (e! (tiedot/->Nakymassa? true))
+                         (e! (tiedot/->PaivitaValinnat
+                               {:urakka @nav/valittu-urakka
+                                :sopimus-id (first @u/valittu-sopimusnumero)
+                                :aikavali @u/valittu-aikavali
+                                :toimenpide @u/valittu-toimenpideinstanssi
+                                :urakkavuosi @u/valittu-urakan-vuosi})))
+                      #(do
+                         (e! (tiedot/->Nakymassa? false))))
+    (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+
+      (let [urakka (get-in app [:valinnat :urakka])]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
-        (kokonaishintaiset-nakyma urakka toimenpiteet)))))
+        [:span
+         [kokonaishintaiset-nakyma urakka toimenpiteet]]))))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

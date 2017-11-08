@@ -9,14 +9,8 @@
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
-(defn hae-sopimuksen-toimenpiteet-aikavalilta [db sopimus alkupvm loppupvm toimenpidekoodi tyyppi]
-  (let [idt (harja.kyselyt.kanavat.kanavan-toimenpide/hae-sopimuksen-kanavatoimenpiteet-aikavalilta
-              db
-              {:sopimus sopimus
-               :alkupvm alkupvm
-               :loppupvm loppupvm
-               :toimenpidekoodi toimenpidekoodi
-               :tyyppi tyyppi})]
+(defn hae-sopimuksen-toimenpiteet-aikavalilta [db hakuehdot]
+  (let [idt (harja.kyselyt.kanavat.kanavan-toimenpide/hae-sopimuksen-kanavatoimenpiteet-aikavalilta db hakuehdot)]
     (if (not (empty? idt))
       (hae-kanavatoimenpiteet db {::toimenpide/id (op/in (into #{} (map :id idt)))})
       [])))
