@@ -20,7 +20,7 @@
 (defn muodosta-hakuargumentit [valinnat tyyppi]
   {::urakka/id (:id (:urakka valinnat))
    ::sopimus/id (:sopimus-id valinnat)
-   ::toimenpidekoodi/id toimenpidekoodi
+   ::toimenpidekoodi/id (:toimenpidekoodi valinnat)
    ::kanavatoimenpide/kanava-toimenpidetyyppi tyyppi
    :alkupvm (first (:aikavali valinnat))
    :loppupvm (second (:aikavali valinnat))})
