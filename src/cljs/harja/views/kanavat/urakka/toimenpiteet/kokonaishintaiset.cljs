@@ -102,8 +102,7 @@
       (let [urakka (get-in app [:valinnat :urakka])]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:span
-         [kokonaishintaiset-nakyma urakka toimenpiteet]
-         [debug app]]))))
+         [kokonaishintaiset-nakyma urakka toimenpiteet]]))))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])
