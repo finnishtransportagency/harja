@@ -35,7 +35,8 @@
   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
-  [harja.domain.urakka :as urakka-domain]))
+  [harja.domain.urakka :as urakka-domain]
+  [clojure.set :as set]))
 
 (def raportit
   [{:nimi :sanktioraportti-yllapito
@@ -134,7 +135,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Laatupoikkeamaraportti"
     :suorita #'harja.palvelin.raportointi.raportit.laatupoikkeama/suorita
-    :urakkatyyppi #{:hoito :paallystys :paikkaus :tiemerkinta}}
+    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit-raporttinakyma)}
 
    {:nimi :yks-hint-tehtavien-summat
     :parametrit [{:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
