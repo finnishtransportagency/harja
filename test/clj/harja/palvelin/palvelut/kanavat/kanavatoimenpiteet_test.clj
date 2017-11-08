@@ -66,6 +66,7 @@
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
                        parametrit)))
 
+    ;; TODO miksi ei toimi!? Häiriötilanteissa on ihan vastaava ja toimii.
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                          :hae-kanavatoimenpiteet
                          +kayttaja-jvh+
