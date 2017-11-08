@@ -1,1 +1,0 @@
-ALTER TYPE organisaatiotyyppi ADD VALUE 'tilaajan-konsultti';
