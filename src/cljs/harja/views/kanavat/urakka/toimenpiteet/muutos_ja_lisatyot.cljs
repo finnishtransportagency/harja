@@ -70,7 +70,6 @@
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:div
-         [debug/debug app]
          [suodattimet e! app]
          [taulukko e! app]]))))
 
