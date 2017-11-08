@@ -51,7 +51,7 @@
   HaeKokonaishintaisetToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and
-          (get-in app [:valinnat :urakka])
+          (get-in valinnat [:urakka :id])
           (not (:haku-kaynnissa? app)))
       (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
