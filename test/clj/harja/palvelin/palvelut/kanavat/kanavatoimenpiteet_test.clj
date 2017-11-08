@@ -14,7 +14,8 @@
             [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [taoensso.timbre :as log]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -73,6 +74,35 @@
                    :harja.domain.kanavat.kanavan-huoltokohde/id 5}
                   :harja.domain.kanavat.kanavan-toimenpide/pvm #inst "2017-10-09T21:00:00.000-00:00"
                   :harja.domain.kanavat.kanavan-toimenpide/id 1}]
-    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kutsu parametrit) "Kutsu on validi")
+    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely parametrit) "Kutsu on validi")
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus on validi")
     (is (= odotettu (first vastaus)) "Vastauksena saadaan oletettu data")))
+
+(deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
+  (let [parametrit {:harja.domain.urakka/id nil
+                    :harja.domain.sopimus/id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                    :harja.domain.toimenpidekoodi/id 597
+                    :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
+                    :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
+                    :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+
+    (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
+                       parametrit)))
+
+    (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :hae-kanavatoimenpiteet
+                         +kayttaja-jvh+
+                         parametrit)))))
+
+(deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
+  (let [parametrit {:harja.domain.urakka/id (hae-saimaan-kanavaurakan-id)
+                    :harja.domain.sopimus/id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                    :harja.domain.toimenpidekoodi/id 597
+                    :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
+                    :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
+                    :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-kanavatoimenpiteet
+                                           +kayttaja-ulle+
+                                           parametrit)))))

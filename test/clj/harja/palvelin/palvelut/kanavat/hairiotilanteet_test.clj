@@ -58,14 +58,19 @@
 
     (testing "Haku tyhjällä urakkalla ei toimi"
       (is (not (s/valid? ::hairio/hae-hairiotilanteet-kysely
-                         {::hairio/urakka-id nil}))))
+                         {::hairio/urakka-id nil})))
+
+      (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                  :hae-hairiotilanteet
+                                                  +kayttaja-jvh+
+                                                  {::hairio/urakka-id nil}))))
 
     ;; Testataan filtterit: jokaisen käyttö pitäisi palauttaa pienempi setti kuin
     ;; kaikki urakan häiriöt
 
     (is (< (count (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :hae-hairiotilanteet
-                            +kayttaja-jvh+
+                                  :hae-hairiotilanteet
+                                  +kayttaja-jvh+
                                   {::hairio/urakka-id urakka-id
                                    :haku-sopimus-id lisasopimus-id}))
            saimaan-kaikki-hairiot))

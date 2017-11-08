@@ -76,7 +76,7 @@
        ::kayttaja/sahkoposti
        ::kayttaja/puhelin}]})
 
-(s/def ::hae-kanavatoimenpiteet-kutsu
+(s/def ::hae-kanavatoimenpiteet-kysely
   ;; TODO Nämä kolme filtteriä voisi ehkä käyttää toimenpiteen ns:ää, koska koskevat nimenomaan toimenpiteen kenttiä.
   (s/keys :req [::urakka/id
                 ::sopimus/id
