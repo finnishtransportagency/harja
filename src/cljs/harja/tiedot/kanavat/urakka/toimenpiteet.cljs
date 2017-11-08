@@ -21,7 +21,7 @@
   (log "VALINNAT: " (pr-str valinnat))
   {::urakka/id (:id (:urakka valinnat))
    ::sopimus/id (:sopimus-id valinnat)
-   ::toimenpidekoodi/id (get-in valinnat :toimenpide :id)
+   ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
    ::kanavatoimenpide/kanava-toimenpidetyyppi tyyppi
    :alkupvm (first (:aikavali valinnat))
    :loppupvm (second (:aikavali valinnat))})
