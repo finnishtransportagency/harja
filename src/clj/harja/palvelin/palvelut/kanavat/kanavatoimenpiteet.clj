@@ -12,8 +12,8 @@
 
 (defn hae-kanavatoimenpiteet [db user {urakka ::urakka/id
                                        sopimus ::sopimus/id
-                                       alkupvm ::kanavan-toimenpide/alkupvm
-                                       loppupvm ::kanavan-toimenpide/loppupvm
+                                       alkupvm :alkupvm
+                                       loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
                                        tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                        :as hakuehdot}]

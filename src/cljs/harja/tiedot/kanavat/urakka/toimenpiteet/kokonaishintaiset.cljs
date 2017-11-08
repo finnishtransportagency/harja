@@ -30,12 +30,12 @@
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
 
-(defn muodosta-hakuparametrit [valinnat]
+(defn muodosta-hakuargumentit [valinnat]
   {::urakka/id (:id (:urakka valinnat))
    ::sopimus/id (:sopimus-id valinnat)
    ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
-   ::kanavatoimenpide/alkupvm (first (:aikavali valinnat))
-   ::kanavatoimenpide/loppupvm (second (:aikavali valinnat))
+   :alkupvm (first (:aikavali valinnat))
+   :loppupvm (second (:aikavali valinnat))
    ::kanavatoimenpide/kanava-toimenpidetyyppi :kokonaishintainen})
 
 (defrecord Nakymassa? [nakymassa?])
@@ -58,10 +58,10 @@
   HaeKokonaishintaisetToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:haku-kaynnissa? app)))
-      (let [parametrit (muodosta-hakuparametrit valinnat)]
+      (let [argumentit (muodosta-hakuargumentit valinnat)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
-                               parametrit
+                               argumentit
                                {:onnistui ->KokonaishintaisetToimenpiteetHaettu
                                 :epaonnistui ->KokonaishintaisetToimenpiteetEiHaettu})
             (assoc :haku-kaynnissa? true)))

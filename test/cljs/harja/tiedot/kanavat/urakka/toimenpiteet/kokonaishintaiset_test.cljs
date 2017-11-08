@@ -13,7 +13,7 @@
             :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
             :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
             :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
-           (tiedot/muodosta-hakuparametrit {:urakka {:id 666}
+           (tiedot/muodosta-hakuargumentit {:urakka {:id 666}
                                             :sopimus-id 666
                                             :toimenpide {:id 666}
                                             :aikavali aikavali})))))

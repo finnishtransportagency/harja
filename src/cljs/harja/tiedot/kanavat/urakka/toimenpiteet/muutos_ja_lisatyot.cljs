@@ -8,6 +8,9 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as u]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.sopimus :as sopimus]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit])
@@ -49,7 +52,11 @@
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
              (some? (get-in valinnat [:urakka :id])))
       ;; TODO Filtterit messiin, vain muutos- ja lisätyöt
-      (let [argumentit {::toimenpide/urakka-id (get-in valinnat [:urakka :id])}]
+      (let [argumentit {::urakka/id (get-in valinnat [:urakka :id])
+                        ::sopimus/id nil
+                        ::toimenpidekoodi/id nil
+                        :alkupvm nil
+                        :loppupvm nil}]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
