@@ -71,8 +71,7 @@
                                {:urakka @nav/valittu-urakka
                                 :sopimus-id (first @u/valittu-sopimusnumero)
                                 :aikavali @u/valittu-aikavali
-                                :toimenpide @u/valittu-toimenpideinstanssi
-                                :urakkavuosi @u/valittu-urakan-vuosi})))
+                                :toimenpide @u/valittu-toimenpideinstanssi})))
                       #(do
                          (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]

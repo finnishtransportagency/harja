@@ -13,7 +13,8 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tyokalut.tuck :as tuck-apurit])
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -51,12 +52,7 @@
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
              (some? (get-in valinnat [:urakka :id])))
-      ;; TODO Filtterit messiin, vain muutos- ja lisätyöt
-      (let [argumentit {::urakka/id (get-in valinnat [:urakka :id])
-                        ::sopimus/id nil
-                        ::toimenpidekoodi/id nil
-                        :alkupvm nil
-                        :loppupvm nil}]
+      (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :muutos-lisatyo)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit

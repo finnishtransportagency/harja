@@ -77,13 +77,13 @@
        ::kayttaja/puhelin}]})
 
 (s/def ::hae-kanavatoimenpiteet-kysely
-  ;; TODO Nämä kolme filtteriä voisi ehkä käyttää toimenpiteen ns:ää, koska koskevat nimenomaan toimenpiteen kenttiä.
+  ;; TODO Urakka, sopimus ja tpk voisi ehkä käyttää toimenpiteen ns:ää, koska koskevat nimenomaan toimenpiteen kenttiä.
   (s/keys :req [::urakka/id
                 ::sopimus/id
-                ::toimenpidekoodi/id
                 ::kanava-toimenpidetyyppi]
           :req-un [::alkupvm
-                   ::loppupvm]))
+                   ::loppupvm]
+          :opt [::toimenpidekoodi/id]))
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))
