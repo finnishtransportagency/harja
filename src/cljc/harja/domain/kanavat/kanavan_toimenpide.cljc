@@ -78,9 +78,8 @@
        ::kayttaja/puhelin}]})
 
 (s/def ::hae-kanavatoimenpiteet-kysely
-  ;; TODO Urakka, sopimus ja tpk voisi ehkä käyttää toimenpiteen ns:ää, koska koskevat nimenomaan toimenpiteen kenttiä.
-  (s/keys :req [::urakka/id
-                ::sopimus/id
+  (s/keys :req [::urakka-id
+                ::sopimus-id
                 ::kanava-toimenpidetyyppi
                 ::toimenpidekoodi/id]
           :req-un [::alkupvm

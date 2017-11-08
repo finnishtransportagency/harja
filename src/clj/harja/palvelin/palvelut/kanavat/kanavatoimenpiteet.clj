@@ -10,8 +10,8 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]))
 
-(defn hae-kanavatoimenpiteet [db user {urakka ::urakka/id
-                                       sopimus ::sopimus/id
+(defn hae-kanavatoimenpiteet [db user {urakka ::kanavan-toimenpide/urakka-id
+                                       sopimus ::kanavan-toimenpide/sopimus-id
                                        alkupvm :alkupvm
                                        loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
@@ -20,7 +20,7 @@
   (let [tyyppi (when tyyppi (name tyyppi))]
     (case tyyppi
       :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka)
-      :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyo user urakka))
+      :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka))
     (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
       db
       {:urakka urakka

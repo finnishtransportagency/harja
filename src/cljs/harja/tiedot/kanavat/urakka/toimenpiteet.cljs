@@ -18,8 +18,8 @@
                    [reagent.ratom :refer [reaction]]))
 
 (defn muodosta-hakuargumentit [valinnat tyyppi]
-  {::urakka/id (:id (:urakka valinnat))
-   ::sopimus/id (:sopimus-id valinnat)
+  {::kanavatoimenpide/urakka-id (:id (:urakka valinnat))
+   ::kanavatoimenpide/sopimus-id (:sopimus-id valinnat)
    ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
    ::kanavatoimenpide/kanava-toimenpidetyyppi tyyppi
    :alkupvm (first (:aikavali valinnat))
