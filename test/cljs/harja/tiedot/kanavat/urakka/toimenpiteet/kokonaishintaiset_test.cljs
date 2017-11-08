@@ -4,7 +4,7 @@
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.pvm :as pvm]))
 
-(deftest hakuparametrien-muodostaminen
+(deftest hakuargumenttien-muodostaminen
   (let [aikavali [(pvm/luo-pvm 2017 1 1)
                   (pvm/luo-pvm 2018 1 1)]]
     (is (= {:harja.domain.urakka/id 666
@@ -16,7 +16,8 @@
            (tiedot/muodosta-hakuargumentit {:urakka {:id 666}
                                             :sopimus-id 666
                                             :toimenpide {:id 666}
-                                            :aikavali aikavali})))))
+                                            :aikavali aikavali}
+                                           :kokonaishintainen)))))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
