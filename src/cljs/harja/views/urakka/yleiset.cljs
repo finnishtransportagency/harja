@@ -489,7 +489,6 @@
         hae-urakoitsijan-alukset (fn [ur]
                                    (reset! urakoitsijan-alukset nil)
                                    (go
-                                     (log "URRE ON " (pr-str ur))
                                      (reset! urakoitsijan-alukset
                                                (<! (tiedot/hae-urakoitsijan-alukset
                                                      (:id ur)
