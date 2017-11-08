@@ -68,9 +68,9 @@
 
     ;; TODO miksi ei toimi!? Häiriötilanteissa on ihan vastaava ja toimii.
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
-                         :hae-kanavatoimenpiteet
-                         +kayttaja-jvh+
-                         parametrit)))))
+                                                :hae-kanavatoimenpiteet
+                                                +kayttaja-jvh+
+                                                parametrit)))))
 
 (deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
   (let [parametrit {:harja.domain.urakka/id (hae-saimaan-kanavaurakan-id)
