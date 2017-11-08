@@ -64,6 +64,7 @@
     :ais-data
     :vv-alukset
     :kan-kanavat
+    :kan-toimenpiteet
     :kan-hairio})
 
 (deftest main-komponentit-loytyy
@@ -75,4 +76,4 @@
       (is (halutut-komponentit k) (str "Ylimääräinen komponentti avaimella " k ", lisää testiin uudet komponentit!")))))
 
 #_(deftest restart-toimii
-  (is (= :ok (sut/dev-restart))))
+    (is (= :ok (sut/dev-restart))))
