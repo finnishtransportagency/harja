@@ -1,11 +1,11 @@
 CREATE TABLE reimari_turvalaiteryhma (
-  id            SERIAL PRIMARY KEY,
-  ryhmanumero   INTEGER,
+  tunnus   INTEGER PRIMARY KEY,
   nimi          TEXT,
+  kuvaus          TEXT,
   turvalaitteet INTEGER []
 );
 
-CREATE UNIQUE INDEX reimari_turvalaiteryhma_ryhmanumero
-  ON reimari_turvalaiteryhma (ryhmanumero);
+CREATE UNIQUE INDEX reimari_turvalaiteryhma_tunnus
+  ON reimari_turvalaiteryhma (tunnus);
 
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'turvalaiteryhmien-haku');

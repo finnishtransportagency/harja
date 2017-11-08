@@ -10,6 +10,14 @@
                     <turvalaite nro="5671" nimi="Svartholm ylempi" ryhma="1234" />
                 </turvalaitteet>
             </turvalaiteryhma>
+           <turvalaiteryhma tunnus="1235" nimi="Järvireimari" kuvaus="1235: Järvireimari">
+                <turvalaitteet>
+                    <turvalaite nro="4678" nimi="Saimaa eteläinen" ryhma="1235" />
+                    <turvalaite nro="4679" nimi="Keski-Saimaa" ryhma="1235" />
+                    <turvalaite nro="4670" nimi="Saimaa ylempi" ryhma="1235" />
+                    <turvalaite nro="4671" nimi="Joroisenranta" ryhma="1235" />
+                </turvalaitteet>
+            </turvalaiteryhma>
         </HaeTurvalaiteryhmatResponse>
     </HaeTurvalaiteryhmat>
 </S:Body></S:Envelope>

@@ -281,12 +281,6 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="TurvalaiteRyhmatType">
-    <xs:sequence>
-      <xs:element name="turvalaiteryhma" type="TurvalaiteRyhmaType" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-  </xs:complexType>
-
   <xs:complexType name="TurvalaiteRyhmaType">
     <xs:all>
       <xs:element name="turvalaitteet" type="TurvalaitteetType" /> <!-- Linkkitaulu: T_SDGROUP_SD -->

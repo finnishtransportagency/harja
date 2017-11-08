@@ -2,31 +2,24 @@
   (:require
     [clojure.set]
     [clojure.spec.alpha :as s]
-    [harja.domain.vesivaylat.turvalaite :as vv_turvalaite]
-    #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
+    [harja.domain.vesivaylat.turvalaite :as turvalaite]
+    #?@(:clj [
+    [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["reimari_turvalaiteryhma" ::turvalaiteryhma])
+  ["reimari_turvalaiteryhma" ::reimari-turvalaiteryhma])
 
 
-(def turvalaite #{[::turvalaite  vv_turvalaite/perustiedot]})
+(def turvalaite #{[::turvalaite harja.domain.vesivaylat.turvalaite/perustiedot]})
 
-;; refac
-(def viittaukset
-  (clojure.set/union
-    turvalaite))
-
-(def perustiedot
-  #{::ryhmanro
+ (def perustiedot
+ #{::tunnus
     ::nimi
     ::kuvaus
-    ::turvalaitteet})
-
-(defn turvalaiteryhmien-turvalaitteet [turvalaitteet]
-  (distinct (map #(::turvalaite %) turvalaitteet)))
+     ::turvalaitteet})
 
 (s/def ::hae-turvalaiteryhmat-kysely
   (s/keys :req []))

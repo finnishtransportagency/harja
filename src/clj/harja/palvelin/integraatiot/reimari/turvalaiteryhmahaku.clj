@@ -10,24 +10,18 @@
             [harja.palvelin.tyokalut.lukot :as lukko]
             [clojure.set :refer [rename-keys]]))
 
-(def avainmuunnokset {::turvalaiteryhma/tunnus ::turvalaiteryhma/ryhmanro
-                      ::turvalaiteryhma/nimi ::turvalaiteryhma/nimi
-                      ::turvalaiteryhma/kuvaus ::turvalaiteryhma/kuvaus
-                      ::turvalaiteryhma/turvalaitteet ::turvalaiteryhma/turvalaitteet})
 
-
-(defn kasittele-turvalaiteryhmat-vastaus [db vastaus-xml]
+(defn kasittele-turvalaiteryhma-vastaus [db vastaus-xml]
   (let [sanoman-tiedot (turvalaiteryhmat-sanoma/lue-hae-turvalaiteryhmat-vastaus vastaus-xml)
         kanta-tiedot (for [turvalaiteryhma-tiedot-raaka sanoman-tiedot
-                           :let [turvalaiteryhma-tiedot (rename-keys turvalaiteryhma-tiedot-raaka avainmuunnokset)]]
-                       (specql/upsert! db ::turvalaiteryhma/reimari-turvalaiteryhma #{::turvalaiteryhma/ryhmanro} turvalaiteryhma-tiedot))]
-
+                           :let [turvalaiteryhma-tiedot turvalaiteryhma-tiedot-raaka]]
+                       (specql/upsert! db ::turvalaiteryhma/reimari-turvalaiteryhma #{::turvalaiteryhma/tunnus} turvalaiteryhma-tiedot))]
     (vec kanta-tiedot)))
 
 (defn hae-turvalaiteryhmat [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeTurvalaiteryhmat"
                         :sanoma-fn (partial r-apurit/kysely-sanoma-aikavali "HaeTurvalaiteryhmat")
-                        :vastaus-fn kasittele-turvalaiteryhmat-vastaus
+                        :vastaus-fn kasittele-turvalaiteryhma-vastaus
                         :haun-nimi "hae-turvalaitteet"
                         :db db
                         :pohja-url pohja-url

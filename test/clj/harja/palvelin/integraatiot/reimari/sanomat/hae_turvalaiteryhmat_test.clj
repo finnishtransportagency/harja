@@ -11,22 +11,18 @@
             [clojure.spec.alpha :as s]))
 
 (def turvalaiteryhma-tietue
-  {:turvalaiteryma/tunnus "1234",
-   :turvalaiteryhma/nimi "Merireimari"
-   :turvalaiteryhma/kuvaus "1234: Merireimari"
-   :turvalaiteryhma/turvalaitteet
-   [{:harja.domain.vesivaylat.turvalaite/nro "5678",
-     :harja.domain.vesivaylat.turvalaite/nimi "Michelsöharun",
-     :harja.domain.vesivaylat.turvalaite/ryhma 1234}
-    {:harja.domain.vesivaylat.turvalaite/nro "5679",
-     :harja.domain.vesivaylat.turvalaite/nimi "Huldviksgrund",
-     :harja.domain.vesivaylat.turvalaite/ryhma 1234}
-    {:harja.domain.vesivaylat.turvalaite/nro "5670",
-     :harja.domain.vesivaylat.turvalaite/nimi "Klobben ylempi",
-     :harja.domain.vesivaylat.turvalaite/ryhma 1234}
-    {:harja.domain.vesivaylat.turvalaite/nro "5671",
-     :harja.domain.vesivaylat.turvalaite/nimi "Svartholm ylempi",
-     :harja.domain.vesivaylat.turvalaite/ryhma 1234}]})
+  {:harja.domain.vesivaylat.turvalaiteryhma/tunnus 1234,
+   :harja.domain.vesivaylat.turvalaiteryhma/nimi "Merireimari"
+   :harja.domain.vesivaylat.turvalaiteryhma/kuvaus "1234: Merireimari"
+   :harja.domain.vesivaylat.turvalaiteryhma/turvalaitteet
+   [5678 5679 5670 5671]})
+
+(def toinen-turvalaiteryhma-tietue
+  {:harja.domain.vesivaylat.turvalaiteryhma/tunnus 1235,
+   :harja.domain.vesivaylat.turvalaiteryhma/nimi "Järvireimari"
+   :harja.domain.vesivaylat.turvalaiteryhma/kuvaus "1235: Järvireimari"
+   :harja.domain.vesivaylat.turvalaiteryhma/turvalaitteet
+   [4678 4679 4670 4671]})
 
 (deftest esimerkki-xml-parsinta
   (let [luettu-turvalaiteryhma
@@ -34,6 +30,14 @@
             slurp
             hae-turvalaiteryhmat/lue-hae-turvalaiteryhmat-vastaus
             first)]
-    (clojure.pprint/pprint luettu-turvalaiteryhma)
     (is (some? luettu-turvalaiteryhma))
     (testi/tarkista-map-arvot turvalaiteryhma-tietue luettu-turvalaiteryhma)))
+
+(deftest  esimerkki-xml-parsinta-toinen-tietue
+  (let [luettu-turvalaiteryhma
+        (-> "resources/xsd/reimari/haeturvalaiteryhmat-vastaus.xml"
+            slurp
+            hae-turvalaiteryhmat/lue-hae-turvalaiteryhmat-vastaus
+            second)]
+    (is (some? luettu-turvalaiteryhma))
+    (testi/tarkista-map-arvot toinen-turvalaiteryhma-tietue luettu-turvalaiteryhma)))
