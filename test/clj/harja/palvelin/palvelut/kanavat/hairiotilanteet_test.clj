@@ -56,6 +56,15 @@
         (is (s/valid? ::hairio/hae-hairiotilanteet-vastaus vastaus))
         (is (>= (count vastaus) saimaan-kaikki-hairiot))))
 
+    (testing "Haku tyhjällä urakkalla ei toimi"
+      (is (not (s/valid? ::hairio/hae-hairiotilanteet-kysely
+                         {::hairio/urakka-id nil})))
+
+      (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                  :hae-hairiotilanteet
+                                                  +kayttaja-jvh+
+                                                  {::hairio/urakka-id nil}))))
+
     ;; Testataan filtterit: jokaisen käyttö pitäisi palauttaa pienempi setti kuin
     ;; kaikki urakan häiriöt
 

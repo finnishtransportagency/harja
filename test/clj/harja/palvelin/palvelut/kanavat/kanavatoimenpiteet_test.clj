@@ -91,6 +91,23 @@
                                   (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                                         :muutos-lisatyo)))))))
 
+
+(deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
+  (let [hakuargumentit {::kanavan-toimenpide/urakka-id nil
+                        ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                        ::toimenpidekoodi/id 597
+                        :alkupvm (pvm/luo-pvm 2017 1 1)
+                        :loppupvm (pvm/luo-pvm 2018 1 1)
+                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+
+    (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
+                       hakuargumentit)))
+
+    (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :hae-kanavatoimenpiteet
+                                                +kayttaja-jvh+
+                                                hakuargumentit)))))
+
 (deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
   (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
                     ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
