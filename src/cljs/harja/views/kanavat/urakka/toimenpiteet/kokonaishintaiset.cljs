@@ -75,7 +75,6 @@
                       #(do
                          (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
-
       (let [urakka (get-in app [:valinnat :urakka])]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:span

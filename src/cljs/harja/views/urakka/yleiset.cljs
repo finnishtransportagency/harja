@@ -488,7 +488,9 @@
                           @istunto/kayttaja)
         hae-urakoitsijan-alukset (fn [ur]
                                    (reset! urakoitsijan-alukset nil)
-                                   (go (reset! urakoitsijan-alukset
+                                   (go
+                                     (log "URRE ON " (pr-str ur))
+                                     (reset! urakoitsijan-alukset
                                                (<! (tiedot/hae-urakoitsijan-alukset
                                                      (:id ur)
                                                      (get-in ur [:urakoitsija :id]))))))]
