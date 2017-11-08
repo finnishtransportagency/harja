@@ -32,7 +32,8 @@
   (vaadi-async-kutsut
     #{tiedot/->KokonaishintaisetToimenpiteetHaettu tiedot/->KokonaishintaisetToimenpiteetEiHaettu}
     (is (= {:haku-kaynnissa? true}
-           (e! (tiedot/->HaeKokonaishintaisetToimenpiteet {:sopimus-id 666
+           (e! (tiedot/->HaeKokonaishintaisetToimenpiteet {:urakka {:id 1}
+                                                           :sopimus-id 666
                                                            :toimenpide {:id 666}}))))))
 
 (deftest KokonaishintaisetToimenpiteetHaettu

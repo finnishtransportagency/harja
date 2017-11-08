@@ -17,7 +17,8 @@
   (vaadi-async-kutsut
     #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteetEiHaettu}
     (is (= {:toimenpiteiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeToimenpiteet {:sopimus-id 666
+           (e! (tiedot/->HaeToimenpiteet {:urakka {:id 1}
+                                          :sopimus-id 666
                                           :toimenpide {:id 666}}))))))
 
 (deftest ToimenpiteetHaettu

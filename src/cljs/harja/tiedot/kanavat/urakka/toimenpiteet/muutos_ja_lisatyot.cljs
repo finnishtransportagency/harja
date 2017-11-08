@@ -52,7 +52,7 @@
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
-             (some? (get-in valinnat [:urakka :id])))
+             (get-in valinnat [:urakka :id]))
       (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :muutos-lisatyo)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet

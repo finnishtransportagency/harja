@@ -50,7 +50,9 @@
 
   HaeKokonaishintaisetToimenpiteet
   (process-event [{valinnat :valinnat} app]
-    (if (and (not (:haku-kaynnissa? app)))
+    (if (and
+          (get-in app [:valinnat :urakka])
+          (not (:haku-kaynnissa? app)))
       (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
