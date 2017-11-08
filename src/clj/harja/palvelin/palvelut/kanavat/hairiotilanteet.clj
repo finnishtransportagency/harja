@@ -21,7 +21,7 @@
         [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h tiedot)
         paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
         [aikavali-alku aikavali-loppu] (:haku-aikavali tiedot)]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
     (reverse (sort-by
                ::hairio/pvm
                (specql/fetch
