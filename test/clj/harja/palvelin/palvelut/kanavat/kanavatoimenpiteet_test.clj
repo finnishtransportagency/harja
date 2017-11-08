@@ -103,7 +103,7 @@
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
                        hakuargumentit)))
 
-    ;; TODO miksi ei toimi!? Häiriötilanteissa on ihan vastaava ja toimii.
+    ;; FIXME miksi ei toimi!? Häiriötilanteissa on ihan vastaava ja toimii.
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-kanavatoimenpiteet
                                                 +kayttaja-jvh+
