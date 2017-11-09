@@ -29,7 +29,7 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(def toimenpidesarakkeet
+(defn toimenpidesarakkeet [e! app {:keys [rivi-valittu?-fn rivi-valittu-fn kaikki-valittu?-fn otsikko-valittu-fn]}]
   [{:otsikko "Päivämäärä"
     :nimi ::kanavan-toimenpide/pvm
     :tyyppi :pvm
@@ -60,4 +60,11 @@
    {:otsikko "Kuittaaja"
     :nimi :huoltokohde
     :tyyppi :string
-    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}])
+    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}
+   (grid/rivinvalintasarake
+     {:otsikkovalinta? true
+      :kaikki-valittu?-fn kaikki-valittu?-fn
+      :otsikko-valittu-fn otsikko-valittu-fn
+      :rivi-valittu?-fn rivi-valittu-fn
+      :rivi-valittu-fn rivi-valittu?-fn
+      :leveys 3})])

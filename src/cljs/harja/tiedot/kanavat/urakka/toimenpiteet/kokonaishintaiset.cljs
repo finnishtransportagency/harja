@@ -21,6 +21,7 @@
 (def tila (atom {:nakymassa? false
                  :valinnat nil
                  :haku-kaynnissa? false
+                 :valitut-toimenpide-idt #{}
                  :toimenpiteet nil}))
 
 (defonce valinnat

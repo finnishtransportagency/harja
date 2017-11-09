@@ -49,7 +49,8 @@
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
     :tunniste ::kanavan-toimenpide/id}
-   toimenpide-view/toimenpidesarakkeet
+   ;; TODO
+   (toimenpide-view/toimenpidesarakkeet e! app {})
    toimenpiteet])
 
 (defn lisatyot* [e! app]

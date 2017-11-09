@@ -42,7 +42,7 @@
        ;;todo
        )]]])
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [toimenpiteet]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! app]
   [grid/grid
    {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
@@ -53,13 +53,24 @@
     :tyhja "Ei kokonaishitaisia toimenpiteita"
     :jarjesta ::kanavan-toimenpide/pvm
     :tunniste ::kanavan-toimenpide/id}
-   toimenpiteet-view/toimenpidesarakkeet
-   toimenpiteet])
+   ;; TODO
+   ;(toimenpiteet-view/toimenpidesarakkeet
+   ;  e! app
+   ;  {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
+   ;                           (count (:valitut-toimenpide-idt app)))
+   ;   :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
+   ;   :rivi-valittu?-fn (fn [rivi]
+   ;                       (:valittu? rivi))
+   ;   :rivi-valittu-fn (fn [rivi uusi-arvo]
+   ;                      (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+   ;                                                       :valinta uusi-arvo}
+   ;                                                      toimenpiteet)))})
+   (:toimenpiteet app)])
 
-(defn kokonaishintaiset-nakyma [urakka toimenpiteet]
+(defn kokonaishintaiset-nakyma [e! app]
   [:div
-   [valinnat urakka]
-   [kokonaishintaiset-toimenpiteet-taulukko toimenpiteet]])
+   [valinnat (get-in app [:valinnat :urakka])]
+   [kokonaishintaiset-toimenpiteet-taulukko e! app]])
 
 (defn kokonaishintaiset* [e! app]
   (komp/luo
@@ -75,10 +86,9 @@
                       #(do
                          (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
-      (let [urakka (get-in app [:valinnat :urakka])]
-        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
-        [:span
-         [kokonaishintaiset-nakyma urakka toimenpiteet]]))))
+      @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+      [:span
+       [kokonaishintaiset-nakyma e! app]])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])
