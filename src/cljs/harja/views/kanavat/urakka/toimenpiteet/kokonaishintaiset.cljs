@@ -63,8 +63,9 @@
                             (boolean ((:valitut-toimenpide-idt app)
                                        (::kanavan-toimenpide/id rivi)))))
       :rivi-valittu-fn (fn [rivi uusi-arvo]
-                         (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                          :valittu? uusi-arvo})))})
+                         (e! (tiedot/->ValitseToimenpide
+                               {:id (::kanavan-toimenpide/id rivi)
+                                :valittu? uusi-arvo})))})
    (:toimenpiteet app)])
 
 (defn kokonaishintaiset-nakyma [e! app]
