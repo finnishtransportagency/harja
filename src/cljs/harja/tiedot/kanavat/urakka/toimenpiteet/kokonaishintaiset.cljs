@@ -6,6 +6,7 @@
             [harja.id :refer [id-olemassa?]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
@@ -21,16 +22,17 @@
 (def tila (atom {:nakymassa? false
                  :valinnat nil
                  :haku-kaynnissa? false
+                 :toimenpiteiden-siirto-kaynnissa? false
                  :valitut-toimenpide-idt #{}
                  :toimenpiteet nil}))
 
 (defonce valinnat
-         (reaction
-           (when (:nakymassa? @tila)
-             {:urakka @nav/valittu-urakka
-              :sopimus-id (first @u/valittu-sopimusnumero)
-              :aikavali @u/valittu-aikavali
-              :toimenpide @u/valittu-toimenpideinstanssi})))
+  (reaction
+    (when (:nakymassa? @tila)
+      {:urakka @nav/valittu-urakka
+       :sopimus-id (first @u/valittu-sopimusnumero)
+       :aikavali @u/valittu-aikavali
+       :toimenpide @u/valittu-toimenpideinstanssi})))
 
 ;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
@@ -42,6 +44,9 @@
 ;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
+(defrecord SiirraValitut [])
+(defrecord ValitutSiirretty [])
+(defrecord ValitutEiSiirretty [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -93,5 +98,34 @@
       (if kaikki-valittu?
         (assoc app :valitut-toimenpide-idt
                    (set (map ::kanavan-toimenpide/id (:toimenpiteet app))))
-        (assoc app :valitut-toimenpide-idt #{})))))
+        (assoc app :valitut-toimenpide-idt #{}))))
+
+
+  SiirraValitut
+  (process-event [_ app]
+    (when-not (:toimenpiteioden-siirto-kaynnissa? app)
+      (-> app
+          (tuck-apurit/post! :siirra-toimenpiteet
+                             {:toimenpiode-idt (:valitut-toimenpide-idt app)
+                              :uusi-tyyppi :muutos-lisatyo}
+                             {:onnistui ->ValitutSiirretty
+                              :epaonnistui ->ValitutEiSiirretty})
+          (assoc :toimenpiteioden-siirto-kaynnissa? true))))
+
+  ValitutSiirretty
+  (process-event [_ app]
+    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+                     (count (:valitut-toimenpide-idt app)) "siirretty") :success)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false
+               :valitut-toimenpide-idt #{}
+               :toimenpiteet (filter
+                               (fn [toimenpide]
+                                 (not ((:valitut-toimenpide-idt app)
+                                        (::kanavan-toimenpide/id toimenpide))))
+                               (:toimenpiteet app))))
+
+  ValitutEiSiirretty
+  (process-event [_ app]
+    (viesti/nayta! "Siiro epäonnistui" :danger)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false)))
 

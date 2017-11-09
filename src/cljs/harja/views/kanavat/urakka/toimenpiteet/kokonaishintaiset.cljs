@@ -29,23 +29,24 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn valinnat [urakka]
-  [valinnat/urakkavalinnat {:urakka urakka}
-   ^{:key "valinnat"}
-   [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
-   ^{:key "toiminnot"}
-   [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
-    ^{:key "uusi-nappi"}
-    [napit/yleinen-ensisijainen
-     "Siirrä valitut muutos- ja lisätöihin"
-     (fn [_]
-       ;;todo
-       )]
-    [napit/uusi
-     "Uusi toimenpide"
-     (fn [_]
-       ;;todo
-       )]]])
+(defn valinnat [e! app]
+  (let [urakka (get-in app [:valinnat :urakka])]
+    [valinnat/urakkavalinnat {:urakka urakka}
+     ^{:key "valinnat"}
+     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+     ^{:key "toiminnot"}
+     [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
+      ^{:key "uusi-nappi"}
+      [napit/yleinen-ensisijainen
+       "Siirrä valitut muutos- ja lisätöihin"
+       (fn [_]
+         (e! (tiedot/->SiirraValitut)))
+       {:disabled (zero? (:valitut-toimenpide-idt app))}]
+      [napit/uusi
+       "Uusi toimenpide"
+       (fn [_]
+         ;; todo
+         )]]]))
 
 (defn kokonaishintaiset-toimenpiteet-taulukko [e! app]
   [grid/grid
@@ -76,7 +77,7 @@
 
 (defn kokonaishintaiset-nakyma [e! app]
   [:div
-   [valinnat (get-in app [:valinnat :urakka])]
+   [valinnat e! app]
    [kokonaishintaiset-toimenpiteet-taulukko e! app]])
 
 (defn kokonaishintaiset* [e! app]

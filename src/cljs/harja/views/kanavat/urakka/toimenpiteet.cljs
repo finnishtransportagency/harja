@@ -1,33 +1,8 @@
 (ns harja.views.kanavat.urakka.toimenpiteet
-  (:require [reagent.core :refer [atom] :as r]
-            [tuck.core :refer [tuck]]
-
-            [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
-            [harja.loki :refer [tarkkaile! log]]
-            [harja.id :refer [id-olemassa?]]
-
-            [harja.ui.komponentti :as komp]
-            [harja.ui.grid :as grid]
-            [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
-            [harja.ui.debug :refer [debug]]
-
-            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
-            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
-            [harja.domain.kayttaja :as kayttaja]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.kayttaja :as kayttaja]
-
+  (:require [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
-            [clojure.string :as str])
-  (:require-macros
-    [cljs.core.async.macros :refer [go]]
-    [harja.makrot :refer [defc fnc]]))
+            [clojure.string :as str]
+            [harja.domain.kayttaja :as kayttaja]))
 
 (defn toimenpidesarakkeet [e! app {:keys [rivi-valittu?-fn rivi-valittu-fn kaikki-valittu?-fn otsikko-valittu-fn]}]
   [{:otsikko "Päivä\u00ADmäärä"
@@ -76,3 +51,8 @@
       :rivi-valittu?-fn rivi-valittu?-fn
       :rivi-valittu-fn rivi-valittu-fn
       :leveys 5})])
+
+(defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
+  (str toimenpiteiden-lkm " "
+       (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
+       " " toiminto "."))
