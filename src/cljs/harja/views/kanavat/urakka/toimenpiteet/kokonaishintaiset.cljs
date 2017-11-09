@@ -24,12 +24,14 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja-laadunseuranta.ui.yleiset.lomake :as lomake]
+            [harja.ui.debug :as debug])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn valinnat [urakka]
+(defn hakuehdot [e! urakka]
   [valinnat/urakkavalinnat {:urakka urakka}
    ^{:key "valinnat"}
    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
@@ -39,8 +41,7 @@
     [napit/uusi
      "Uusi toimenpide"
      (fn [_]
-       ;;todo
-       )]]])
+       (e! (tiedot/->UusiToimenpide)))]]])
 
 (defn kokonaishintaiset-toimenpiteet-taulukko [toimenpiteet]
   [grid/grid
@@ -56,10 +57,25 @@
    toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
 
-(defn kokonaishintaiset-nakyma [urakka toimenpiteet]
+(defn kokonaishintainen-toimenpidelomake [e! toimenpide]
+  [napit/takaisin "Takaisin varusteluetteloon"
+   #(e! (tiedot/->TyhjennaValittuToimenpide))]
+
+  #_(lomake/lomake
+    {:otsikko "Uusi toimenpide"}
+    [{:nimi :hilipati
+      :otsikko "Hilipati"
+      :tyyppi :string}]
+    toimenpide))
+
+(defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide]
   [:div
-   [valinnat urakka]
-   [kokonaishintaiset-toimenpiteet-taulukko toimenpiteet]])
+   (if valittu-toimenpide
+     [kokonaishintainen-toimenpidelomake e! valittu-toimenpide]
+     [:div
+      [hakuehdot e! urakka]
+      [kokonaishintaiset-toimenpiteet-taulukko toimenpiteet]])
+   [debug/debug app]])
 
 (defn kokonaishintaiset* [e! app]
   (komp/luo
@@ -74,11 +90,11 @@
                                 :toimenpide @u/valittu-toimenpideinstanssi})))
                       #(do
                          (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+    (fn [e! {:keys [toimenpiteet valittu-toimenpide haku-kaynnissa?] :as app}]
       (let [urakka (get-in app [:valinnat :urakka])]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:span
-         [kokonaishintaiset-nakyma urakka toimenpiteet]]))))
+         [kokonaishintaiset-nakyma e! app urakka toimenpiteet valittu-toimenpide]]))))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

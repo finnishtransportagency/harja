@@ -36,6 +36,8 @@
 (defrecord HaeKokonaishintaisetToimenpiteet [valinnat])
 (defrecord KokonaishintaisetToimenpiteetHaettu [toimenpiteet])
 (defrecord KokonaishintaisetToimenpiteetEiHaettu [])
+(defrecord UusiToimenpide [])
+(defrecord TyhjennaValittuToimenpide [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -71,5 +73,14 @@
   (process-event [_ app]
     (viesti/nayta! "Kokonaishintaisten toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :haku-kaynnissa? false
-               :toimenpiteet [])))
+               :toimenpiteet []))
+
+
+  UusiToimenpide
+  (process-event [_ app]
+    (assoc app :valittu-toimenpide {:hilipati "pippaa"}))
+
+  TyhjennaValittuToimenpide
+  (process-event [_ app]
+    (dissoc app :valittu-toimenpide)))
 
