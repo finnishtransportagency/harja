@@ -15,6 +15,8 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
+  ["liikennetapahtuma_aluslaji" ::lt-aluslaji (specql.transform/transform (specql.transform/to-keyword))]
+  ["liikennetapahtuma_suunta" ::lt-suunta (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma_alus" ::liikennetapahtuman-alus
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
@@ -31,4 +33,17 @@
     ::matkustajalkm
     ::suunta})
 
+(def aluslajit*
+  {:HINT "HINT"
+   :HUV "HUV"
+   :LAU "LAU"
+   :MAT "MAT"
+   :PRO "PRO"
+   :RAH "RAH"
+   :SEK "SEK"
+   :ÖLJ "ÖLJ"})
 
+(def aluslajit (keys aluslajit*))
+
+(defn aluslaji->str [laji]
+  (aluslajit* laji))
