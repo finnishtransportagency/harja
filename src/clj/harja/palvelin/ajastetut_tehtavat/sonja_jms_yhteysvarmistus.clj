@@ -54,7 +54,7 @@
     (log/debug (format "Varmistetaan Sonjan JMS jonoihin yhteys %s minuutin välein." minuutit))
     (sonja/kuuntele sonja jono #(tapahtumat/julkaise! klusterin-tapahtumat sonja-kanava (.getText %)))
     (ajastettu-tehtava/ajasta-minuutin-valein
-      minuutit
+      minuutit 34 ;; ajastus alkaa pyöriä 34 sekunnin kuluttua käynnistyksestä
       (fn [_] (tarkista-jms-yhteys db klusterin-tapahtumat integraatioloki sonja jono)))))
 
 (defrecord SonjaJmsYhteysvarmistus [ajovali-minuutteina jono]

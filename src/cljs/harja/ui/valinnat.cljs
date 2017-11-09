@@ -123,6 +123,32 @@
                     (swap! valittu-aikavali-atom #(pvm/varmista-aikavali-opt [(first %) uusi-arvo] aikavalin-rajoitus :loppu))))
                 (log "Uusi aikaväli: " (pr-str @valittu-aikavali-atom))))]]]))
 
+(defn numerovali
+  ([valittu-numerovali-atom] (numerovali valittu-numerovali-atom nil))
+  ([valittu-numerovali-atom {:keys [nayta-otsikko? lomake? otsikko
+                                    vain-positiivinen?]}]
+   [:span {:class (if lomake?
+                    "label-ja-numerovali-lomake"
+                    "label-ja-numerovali")}
+    (when (and (not lomake?)
+               (or (nil? nayta-otsikko?)
+                   (true? nayta-otsikko?)))
+      [:span.alasvedon-otsikko (or otsikko "Väli")])
+    [:div.numerovali-valinnat
+     [:span.numerovali-kentta
+      [tee-kentta {:tyyppi (if vain-positiivinen? :positiivinen-numero :numero)}
+       (r/wrap (first @valittu-numerovali-atom)
+               (fn [uusi-arvo]
+                 (reset! valittu-numerovali-atom [uusi-arvo (second @valittu-numerovali-atom)])
+                 (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]]
+     [:div.pvm-valiviiva-wrap [:span.pvm-valiviiva " \u2014 "]]
+     [:span.numerovali-kentta
+      [tee-kentta {:tyyppi (if vain-positiivinen? :positiivinen-numero :numero)}
+       (r/wrap (second @valittu-numerovali-atom)
+               (fn [uusi-arvo]
+                 (reset! valittu-numerovali-atom [(first @valittu-numerovali-atom) uusi-arvo])
+                 (log "Uusi numeroväli: " (pr-str @valittu-numerovali-atom))))]]]]))
+
 (defn- toimenpideinstanssi-fmt
   [tpi]
   (if-let [tpi-nimi (:tpi_nimi tpi)]
@@ -293,6 +319,33 @@
                          :format-fn format-fn
                          :valitse-fn #(reset! valittu-toimenpide-atom %)}
     toimenpiteet]])
+
+(defn vikaluokka
+  [valittu-vikaluokka-atom vikaluokat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Vikaluokka"]
+   [livi-pudotusvalikko {:valinta @valittu-vikaluokka-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-vikaluokka-atom %)}
+    vikaluokat]])
+
+(defn korjauksen-tila
+  [valittu-korjauksen-tila-atom tilat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Korjauksen tila"]
+   [livi-pudotusvalikko {:valinta @valittu-korjauksen-tila-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-korjauksen-tila-atom %)}
+    tilat]])
+
+(defn paikallinen-kaytto
+  [valittu-paikallinen-kaytto-atom valinnat format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Paikallinen käyttö?"]
+   [livi-pudotusvalikko {:valinta @valittu-paikallinen-kaytto-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-paikallinen-kaytto-atom %)}
+    valinnat]])
 
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))

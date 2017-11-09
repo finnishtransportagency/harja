@@ -17,7 +17,7 @@
     (assoc this
       ::poista-ajastus
       (ajastettu-tehtava/ajasta-minuutin-valein
-        15
+        15 34 ;; alkaa pyöriä 34s käynnistyksestä
         (fn [_] (poista-vanhat-tyokonesijainnit (:db this))))))
   (stop [this]
     ((::poista-ajastus this))

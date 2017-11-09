@@ -4,13 +4,13 @@
 
 (def +tarkastustyyppi->nimi+
   {:tiesto "Tiestötarkastus"
-    :talvihoito "Kelitarkastus"
-    :soratie "Soratien tarkastus"
-    :laatu "Laaduntarkastus"
-    :pistokoe "Pistokoe"
-    :katselmus "Katselmus"
-    :vastaanotto "Vastaanottotarkastus"
-    :takuu "Takuutarkastus"})
+   :talvihoito "Kelitarkastus"
+   :soratie "Soratien tarkastus"
+   :laatu "Laaduntarkastus"
+   :pistokoe "Pistokoe"
+   :katselmus "Katselmus"
+   :vastaanotto "Vastaanottotarkastus"
+   :takuu "Takuutarkastus"})
 
 (defn formatoi-talvihoitomittaukset
   [thm]
@@ -65,7 +65,14 @@
   (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
 
 (defn- tyhja-mittaus?* [mittaus]
-  (every? #(if (map? %) (tyhja-mittaus?* %) (empty? %)) (vals mittaus)))
+  (if (and (string? mittaus) (> (count mittaus) 0))
+    false
+    (if (number? mittaus)
+      false
+      (every? #(if (map? %)
+                 (not-every? some? (vals %))
+                 (empty? %))
+              (vals mittaus)))))
 
 (defn tyhja-soratiemittaus? [data]
   (tyhja-mittaus?* (:soratiemittaus data)))
@@ -84,13 +91,13 @@
   (boolean
     (and
       (not-empty (:vakiohavainnot data))
-      ((:vakiohavainnot data) "Liukasta"))))
+      (some #(= "Liukasta" %) (:vakiohavainnot data)))))
 
 (defn luminen-vakiohavainto? [data]
   (boolean
     (and
       (not-empty (:vakiohavainnot data))
-      ((:vakiohavainnot data) "Lumista"))))
+      (some #(= "Lumista" %) (:vakiohavainnot data)))))
 
 (defn luminen-tai-liukas-vakiohavainto? [data]
   (boolean

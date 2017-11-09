@@ -333,6 +333,24 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-saimaan-kanavaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Saimaan kanava';"))))
+
+(defn hae-saimaan-kanavaurakan-paasopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Saimaan huollon pääsopimus';"))))
+
+(defn hae-saimaan-kanavaurakan-lisasopimuksen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   sopimus
+                   WHERE  nimi = 'Saimaan huollon lisäsopimus';"))))
+
+(defn hae-kanavakohde-taipaleen-sulku []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))))
+
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
@@ -406,15 +424,21 @@
                                           WHERE \"hinnoittelu-id\" = vv_hinnoittelu.id)
                               AND \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');"))))
 
-(defn hae-vanhtaan-vesivaylaurakan-hinnoittelu []
+(defn hae-vantaan-vesivaylaurakan-hinnoittelu []
   (ffirst (q (str "SELECT id FROM vv_hinnoittelu
                    WHERE \"urakka-id\" = (SELECT id FROM urakka WHERE nimi = 'Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL')
                    LIMIT 1;"))))
 
-(defn hae-vanhtaan-vesivaylaurakan-hinta []
+(defn hae-vantaan-vesivaylaurakan-hinta []
   (ffirst (q (str "SELECT id FROM vv_hinta
                    WHERE \"hinnoittelu-id\" IN (SELECT id FROM vv_hinnoittelu WHERE nimi = 'Vantaan urakan testihinnoittelu')
                    LIMIT 1;"))))
+
+(defn hae-annetun-urakan-paasopimuksen-id [urakka]
+  (ffirst (q (str "SELECT id
+                   FROM sopimus
+                   WHERE urakka=" urakka " AND
+                         paasopimus IS NULL"))))
 
 (defn hae-helsingin-vesivaylaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
@@ -683,7 +707,8 @@
                      :organisaatio {:id 1 :nimi "Liikennevirasto",
                                     :tyyppi "liikennevirasto" :lyhenne nil :ytunnus nil}
                      :organisaation-urakat #{}
-                     :urakkaroolit {}})
+                     :urakkaroolit {}
+                     :organisaatioroolit {}})
 
 (def +kayttaja-yit_uuvh+ {:id 7 :etunimi "Yitin" :sukunimi "Urakkavastaava" :kayttajanimi "yit_uuvh"
                           :organisaatio {:id 14 :nimi "YIT" :tyyppi "urakoitsija"}
@@ -759,6 +784,13 @@
    :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
    :organisaation-urakat #{@oulun-alueurakan-2005-2010-id}
    :urakkaroolit {@oulun-alueurakan-2005-2010-id, #{"ELY_Urakanvalvoja"}}})
+
+(defn oulun-2014-urakan-tilaajan-urakanvalvoja []
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-oulun-urakanvalvoja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 417,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
+   :urakkaroolit {@oulun-alueurakan-2014-2019-id, #{"ELY_Urakanvalvoja"}}})
 
 (defn oulun-2005-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",

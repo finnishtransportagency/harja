@@ -86,7 +86,6 @@
   (let [m (xml/lue-attribuutit v #(keyword "harja.domain.vesivaylat.vika" (name %))
                                {:vika-id #(Integer/parseInt %)
                                 :tila identity})]
-    (println "rename-keys" m {:vika-id :id})
     (rename-keys m {:harja.domain.vesivaylat.vika/vika-id :harja.domain.vesivaylat.vika/id})))
 
 (def vayla-avainmuunnos
