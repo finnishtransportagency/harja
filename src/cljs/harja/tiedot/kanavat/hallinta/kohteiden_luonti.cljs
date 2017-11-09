@@ -80,12 +80,12 @@
               (assoc ::kanava/id (::kanava/id kanava-ja-kohteet))
               (assoc ::kanava/nimi (::kanava/nimi kanava-ja-kohteet))
               (assoc :rivin-teksti (str
-                                     (when-let [nimi (::kanava/nimi kanava-ja-kohteet)]
-                                       (str nimi ", "))
-                                     (when-let [nimi (::kohde/nimi kohde)]
-                                       (str nimi ", "))
-                                     (when-let [tyyppi (kohde/tyyppi->str (::kohde/tyyppi kohde))]
-                                       (str tyyppi))))))
+                                     (when-let [kanava-nimi (::kanava/nimi kanava-ja-kohteet)]
+                                       (str kanava-nimi ", "))
+                                     (when-let [kohde-nimi (::kohde/nimi kohde)]
+                                       (str kohde-nimi ", "))
+                                     (when-let [kohde-tyyppi (kohde/tyyppi->str (::kohde/tyyppi kohde))]
+                                       (str kohde-tyyppi))))))
         (::kanava/kohteet kanava-ja-kohteet)))
     tulos))
 

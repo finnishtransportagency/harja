@@ -88,7 +88,7 @@
     (do
       (log/debug (format "Ajastetaan lähettämättömien T-LOIK kuittausten lähetys ajettavaksi: %s minuutin välein." aikavali))
       (ajastettu-tehtava/ajasta-minuutin-valein
-        aikavali
+        aikavali 12 ;; 12 sekunnin käynnistysviive, jonka jälkeen "aikavali" minuutin välein
         (fn [_]
           (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet toimenpide-jms-lahettaja (:db this))
           (when (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)

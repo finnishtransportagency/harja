@@ -41,11 +41,14 @@
                                                   irrotettavat-toimenpide-idt)))
         kiintiot))
 
+;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
+;; Haut
 (defrecord HaeKiintiot [valinnat])
 (defrecord KiintiotHaettu [tulos])
 (defrecord KiintiotEiHaettu [])
+;; Toiminnot
 (defrecord TallennaKiintiot [grid paluukanava])
 (defrecord IrrotaKiintiosta [toimenpide-idt])
 (defrecord KiintiotTallennettu [tulos paluukanava])
