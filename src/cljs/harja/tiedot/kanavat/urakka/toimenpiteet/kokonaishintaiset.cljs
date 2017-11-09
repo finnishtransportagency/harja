@@ -41,6 +41,7 @@
 (defrecord KokonaishintaisetToimenpiteetEiHaettu [])
 ;; UI
 (defrecord ValitseToimenpide [tiedot])
+(defrecord ValitseToimenpiteet [tiedot])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -84,5 +85,13 @@
           valittu? (:valittu? tiedot)
           aseta-valinta (if valittu? conj disj)]
       (assoc app :valitut-toimenpide-idt
-                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id)))))
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
+
+  ValitseToimenpiteet
+  (process-event [{tiedot :tiedot} app]
+    (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
+      (if kaikki-valittu?
+        (assoc app :valitut-toimenpide-idt
+                   (set (map ::kanavatoimenpide/id (:toimenpiteet app))))
+        (assoc app :valitut-toimenpide-idt #{})))))
 
