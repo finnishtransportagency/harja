@@ -36,6 +36,11 @@
       ^{:key "valinnat"}
       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
       [valinnat/urakkatoiminnot {:urakka urakka}
+       [napit/yleinen-ensisijainen
+        "Siirrä valitut kokonaishintaisiin"
+        (fn [_]
+          ;;todo
+          )]
        [napit/uusi
         "Uusi toimenpide"
         (fn [_]

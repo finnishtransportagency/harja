@@ -36,6 +36,11 @@
    ^{:key "toiminnot"}
    [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
     ^{:key "uusi-nappi"}
+    [napit/yleinen-ensisijainen
+     "Siirrä valitut muutos- ja lisätöihin"
+     (fn [_]
+       ;;todo
+       )]
     [napit/uusi
      "Uusi toimenpide"
      (fn [_]
