@@ -2,23 +2,28 @@
   (:require [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
             [clojure.test :refer-macros [deftest is testing]]
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [cljs.spec.alpha :as s]))
 
 (deftest hakuargumenttien-muodostaminen
   (let [aikavali [(pvm/luo-pvm 2017 1 1)
-                  (pvm/luo-pvm 2018 1 1)]]
-    (is (= {:harja.domain.urakka/id 666
-            :harja.domain.sopimus/id 666
-            :harja.domain.toimenpidekoodi/id 666
-            :alkupvm (pvm/luo-pvm 2017 1 1)
-            :loppupvm (pvm/luo-pvm 2018 1 1)
-            :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
-           (toimenpiteet/muodosta-hakuargumentit {:urakka {:id 666}
+                  (pvm/luo-pvm 2018 1 1)]
+        odotettu {::kanavan-toimenpide/urakka-id 666
+                  ::kanavan-toimenpide/sopimus-id 666
+                  ::toimenpidekoodi/id 666
+                  ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
+                  :alkupvm (pvm/luo-pvm 2017 1 1)
+                  :loppupvm (pvm/luo-pvm 2018 1 1)}]
+    (is (= (toimenpiteet/muodosta-hakuargumentit {:urakka {:id 666}
                                                   :sopimus-id 666
                                                   :toimenpide {:id 666}
                                                   :aikavali aikavali}
-                                                 :kokonaishintainen)))))
+                                                 :kokonaishintainen)
+           odotettu))
+    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely odotettu))))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
