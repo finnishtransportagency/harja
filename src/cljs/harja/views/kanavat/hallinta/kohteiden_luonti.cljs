@@ -31,7 +31,8 @@
 (defn kohteet-grid [e! kanavan-kohteet]
   [grid/muokkaus-grid
    {:tyhja "Lisää kohteita oikeasta yläkulmasta"
-    :tunniste ::kohde/id}
+    :tunniste ::kohde/id
+    :voi-poistaa? (constantly false)}
    [{:otsikko "Kohteen nimi"
      :tyyppi :string
      :nimi ::kohde/nimi}
