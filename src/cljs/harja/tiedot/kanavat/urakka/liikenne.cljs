@@ -15,22 +15,48 @@
             [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-nippu :as lt-nippu])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.domain.kanavat.lt-nippu :as lt-nippu]
+            [harja.tiedot.urakka :as u])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
 (def tila (atom {:nakymassa? false
                  :liikennetapahtumien-haku-kaynnissa? false
+                 :kohteiden-haku-kaynnissa? false
                  :valittu-liikennetapahtuma nil
-                 :haetut-liikennetapahtumat nil
-                 :tapahtumarivit nil}))
+                 :tapahtumarivit nil
+                 :urakan-kohteet nil
+                 :valinnat {::ur/id nil
+                            :aikavali nil
+                            :kohde nil
+                            :suunta nil
+                            :toimenpidetyyppi nil
+                            :aluslaji nil
+                            :niput? false}}))
 
 (def uusi-tapahtuma {})
+
+(def valinnat
+  (reaction
+    (when (:nakymassa? @tila)
+      {::ur/id (:id @nav/valittu-urakka)
+       :aikavali @u/valittu-aikavali})))
+
+(def valintojen-avaimet
+  [:kohde ::ur/id :aikavali :suunta :toimenpidetyyppi :aluslaji :niput?])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeLiikennetapahtumat [])
 (defrecord LiikennetapahtumatHaettu [tulos])
 (defrecord LiikennetapahtumatEiHaettu [virhe])
 (defrecord ValitseTapahtuma [tapahtuma])
+(defrecord PaivitaValinnat [uudet])
+(defrecord HaeKohteet [])
+(defrecord KohteetHaettu [tulos])
+(defrecord KohteetEiHaettu [virhe])
+
+(defn hakuparametrit [app]
+  (:valinnat app))
 
 (defn tapahtumarivit [tapahtuma]
   (let [yleistiedot
@@ -58,7 +84,11 @@
             (merge yleistiedot nippu {:suunta (::lt-nippu/suunta nippu)}))
           (::lt/niput tapahtuma))]
 
-    (concat alustiedot nipputiedot)))
+    (if (and (empty? alustiedot) (empty? nipputiedot))
+      ;; Alustiedot ja nipputiedot ovat tyhjiä,
+      ;; jos rivi on vain itsepalveluiden kirjaamista.
+      [yleistiedot]
+      (concat alustiedot nipputiedot))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -67,17 +97,15 @@
 
   HaeLiikennetapahtumat
   (process-event [_ app]
-    (tt/post! :hae-liikennetapahtumat
-              {::ur/id (:id @nav/valittu-urakka)}
-              {:onnistui ->LiikennetapahtumatHaettu
-               :epaonnistui ->LiikennetapahtumatEiHaettu})
-
-    (log "HaeLiikennetapahtumat")
+    (let [params (hakuparametrit app)]
+      (tt/post! :hae-liikennetapahtumat
+                params
+                {:onnistui ->LiikennetapahtumatHaettu
+                 :epaonnistui ->LiikennetapahtumatEiHaettu}))
     (assoc app :liikennetapahtumien-haku-kaynnissa? true))
 
   LiikennetapahtumatHaettu
   (process-event [{tulos :tulos} app]
-    (log (pr-str tulos))
     (-> app
         (assoc :liikennetapahtumien-haku-kaynnissa? false)
         (assoc :tapahtumarivit (mapcat tapahtumarivit tulos))))
@@ -89,4 +117,36 @@
 
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
-    (assoc app :valittu-liikennetapahtuma t)))
+    (assoc app :valittu-liikennetapahtuma t))
+
+  PaivitaValinnat
+  (process-event [{u :uudet} app]
+    (let [uudet-valinnat (merge (:valinnat app)
+                                (select-keys u valintojen-avaimet))
+          haku (tuck/send-async! ->HaeLiikennetapahtumat)]
+      (go (haku uudet-valinnat))
+      (assoc app :valinnat uudet-valinnat)))
+
+  HaeKohteet
+  (process-event [_ app]
+    (if-not (:kohteiden-haku-kaynnissa? app)
+      (-> app
+         (tt/post! :hae-urakan-kohteet
+                   {::ur/id (:id @nav/valittu-urakka)}
+                   {:onnistui ->KohteetHaettu
+                    :epaonnistui ->KohteetEiHaettu})
+         (assoc :kohteiden-haku-kaynnissa? true))
+
+      app))
+
+  KohteetHaettu
+  (process-event [{tulos :tulos} app]
+    (-> app
+        (assoc :kohteiden-haku-kaynnissa? false)
+        (assoc :urakan-kohteet tulos)))
+
+  KohteetEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe kohteiden haussa!" :danger)
+    (-> app
+        (assoc :kohteiden-haku-kaynnissa? false))))

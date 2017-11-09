@@ -16,14 +16,18 @@
             [harja.ui.modal :as modal]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.ui.napit :as napit]
+            [harja.ui.kentat :as kentat]
 
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.urakka :as ur]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-nippu :as lt-nippu])
+            [harja.domain.kanavat.lt-nippu :as lt-nippu]
+            [harja.domain.kanavat.kanavan-kohde :as kohde])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -34,24 +38,52 @@
    [napit/takaisin "Takaisin" #(e! (tiedot/->ValitseTapahtuma nil))]
    [:div "WIP"]])
 
+(defn valinnat [e! {:keys [urakan-kohteet
+                           liikennetapahtumien-haku-kaynnissa?] :as app}]
+  (let [atomi (fn [polku]
+                (r/wrap (get-in app [:valinnat polku])
+                        (fn [u]
+                          (e! (tiedot/->PaivitaValinnat {polku u})))))]
+    [valinnat/urakkavalinnat
+     {}
+     ^{:key "valinnat"}
+     [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+     [valinnat/kanava-kohde (atomi :kohde) (into [nil] urakan-kohteet) #(let [nimi (kohde/fmt-kohde-ja-kanava-mapissa-nimi %)]
+                                                                          (if-not (empty? nimi)
+                                                                            nimi
+                                                                            "Kaikki"))]
+     [kentat/tee-otsikollinen-kentta {:otsikko "Suunta"
+                                      :kentta-params {:tyyppi :valinta
+                                                      :valinnat [nil :ylos :alas]
+                                                      :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
+                                      :arvo-atom (atomi :suunta)}]
+     [kentat/tee-otsikollinen-kentta {:otsikko "Toimenpidetyyppi"
+                                      :kentta-params {:tyyppi :valinta
+                                                      :valinta-nayta #(or (lt/toimenpide->str %) "Kaikki")
+                                                      :valinnat [nil :sulutus :tyhjennys :sillan-avaus]}
+                                      :arvo-atom (atomi :toimenpidetyyppi)}]
+     [valinnat/kanava-aluslaji (atomi :aluslaji) (into [nil] lt-alus/aluslajit) #(or (lt-alus/aluslaji->str %) "Kaikki")]
+     [kentat/tee-otsikollinen-kentta {:otsikko "Uittoniput?"
+                                      :kentta-params {:tyyppi :checkbox}
+                                      :arvo-atom (atomi :niput?)}]]))
+
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit
                                             liikennetapahtumien-haku-kaynnissa?] :as app}]
   [:div
    [debug app]
-   [valinnat/urakkavalinnat
-    {}
-    ^{:key "valinnat"}
-    [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]]
+   [valinnat e! app]
    [napit/uusi
     "Lisää tapahtuma"
     #(e! (tiedot/->ValitseTapahtuma tiedot/uusi-tapahtuma))]
    [grid/grid
-    {:otsikko "Liikennetapahtumat"
+    {:otsikko (if liikennetapahtumien-haku-kaynnissa?
+                [ajax-loader-pieni "Päivitetään listaa.."]
+                "Liikennetapahtumat")
      :tunniste (juxt ::lt/id ::lt-alus/id ::lt-nippu/id)
      :tyhja (if liikennetapahtumien-haku-kaynnissa?
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
-    [{:otsikko "Päivämäärä"
+    [{:otsikko "Aika"
       :nimi ::lt/aika
       :fmt pvm/pvm-aika-opt}
      {:otsikko "Kohde"
@@ -60,17 +92,24 @@
       :nimi ::lt/toimenpide
       :fmt lt/toimenpide->str}
      {:otsikko "Suunta"
-      :nimi :suunta}
+      :nimi :suunta
+      :fmt lt/suunta->str}
      {:otsikko "Alus"
       :nimi ::lt-alus/nimi}
      {:otsikko "Aluslaji"
-      :nimi ::lt-alus/laji}
+      :nimi ::lt-alus/laji
+      :fmt lt-alus/aluslaji->str}
      {:otsikko "Matkustajia"
       :nimi ::lt-alus/matkustajalkm}
      {:otsikko "Aluksia"
       :nimi ::lt-alus/lkm}
-     {:otsikko "IP kpl"
-      :nimi ::lt/palvelumuoto-lkm}
+     {:otsikko "Palvelumuoto"
+      :nimi :palvelumuoto-ja-lkm
+      :hae (fn [rivi]
+             (let [pm (::lt/palvelumuoto rivi)]
+               (if (= :itse pm)
+                 (str (lt/palvelumuoto->str pm) " (" (::lt/palvelumuoto-lkm rivi) ")")
+                 (lt/palvelumuoto->str pm))))}
      {:otsikko "Nippuja"
       :nimi ::lt-nippu/lkm}
      {:otsikko "Ylävesi"
@@ -80,19 +119,39 @@
      {:otsikko "Kuittaaja"
       :nimi :kuittaaja
       :hae (comp ::kayttaja/kayttajanimi ::lt/kuittaaja)}]
-    tapahtumarivit]])
+    (sort-by
+      ;; Tarvitaan aika monta vaihtoehtoista sorttausavainta, koska
+      ;; yhdelle kohteelle voi tulla yhdellä kirjauksella aika monta riviä
+      (juxt ::lt/aika
+            :kohteen-nimi
+            ::lt/toimenpide
+            ::lt-alus/laji
+            ::lt-alus/nimi
+            ::lt-alus/lkm)
+      tapahtumarivit)]])
 
-(defn liikenne* [e! app]
+(defn liikenne* [e! app valinnat]
   (komp/luo
+    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                    (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->HaeLiikennetapahtumat)))
+                           ;; Valintojen päivittäminen laukaisee myös liikennetapahtumien haun
+                           (e! (tiedot/->PaivitaValinnat {::ur/id (:urakka valinnat)
+                                                          :foo valinnat
+                                                          :aikavali (:aikavali valinnat)}))
+                           (e! (tiedot/->HaeKohteet)))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {:keys [valittu-liikennetapahtuma] :as app}]
+      @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       (if-not valittu-liikennetapahtuma
         [liikennetapahtumataulukko e! app]
         [liikennetapahtumalomake e! app]))))
 
+(defn liikennetapahtumat [e! app]
+  [liikenne* e! app {:urakka (:id @nav/valittu-urakka)
+                     :aikavali @u/valittu-aikavali}])
+
 (defc liikenne []
-  [tuck tiedot/tila liikenne*])
+  [tuck tiedot/tila liikennetapahtumat])
 
