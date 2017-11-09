@@ -50,21 +50,44 @@
     (map (partial urakat-idlla urakka-id))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))
 
-(defn hae-liikennetapahtumat [db urakka-id]
-  (hae-liikennetapahtumat*
-    (specql/fetch db
-                  ::lt/liikennetapahtuma
-                  (set/union
-                    lt/perustiedot
-                    lt/kuittaajan-tiedot
-                    lt/alusten-tiedot
-                    lt/nippujen-tiedot
-                    lt/kohteen-tiedot)
-                  {::m/poistettu? false
-                   ::lt/kohde {::m/poistettu? false}
-                   ::lt/niput (op/or {::m/poistettu? op/null?}
-                                     {::m/poistettu? false})
-                   ::lt/alukset (op/or {::m/poistettu? op/null?}
-                                       {::m/poistettu? false})})
-    (partial kanavat-q/hae-kohteiden-urakkatiedot db)
-    urakka-id))
+(defn hae-liikennetapahtumat [db {:keys [kohde suunta toimenpidetyyppi
+                                         aluslaji niput?] :as tiedot}]
+  (let [urakka-id (::ur/id tiedot)
+        kohde-id (::kohde/id kohde)
+        [alku loppu] (:aikavali tiedot)]
+    (hae-liikennetapahtumat*
+     (specql/fetch db
+                   ::lt/liikennetapahtuma
+                   (set/union
+                     lt/perustiedot
+                     lt/kuittaajan-tiedot
+                     lt/alusten-tiedot
+                     (when niput?
+                       lt/nippujen-tiedot)
+                     lt/kohteen-tiedot)
+                   (op/and
+                     (when (and alku loppu)
+                       {::lt/aika (op/between alku loppu)})
+                     (when kohde-id
+                       {::kohde/id kohde-id})
+                     (when toimenpidetyyppi
+                       {::lt/toimenpide toimenpidetyyppi})
+
+                     {::m/poistettu? false
+                      ::lt/kohde {::m/poistettu? false}
+                      ::lt/alukset (op/and
+                                     (op/or {::m/poistettu? op/null?}
+                                            {::m/poistettu? false})
+                                     (when suunta
+                                       {::lt-alus/suunta suunta})
+                                     (when aluslaji
+                                       {::lt-alus/laji aluslaji}))}
+
+                     (when niput?
+                       {::lt/niput (op/and
+                                     (op/or {::m/poistettu? op/null?}
+                                            {::m/poistettu? false})
+                                     (when suunta
+                                       {::lt-nippu/suunta suunta}))})))
+     (partial kanavat-q/hae-kohteiden-urakkatiedot db)
+     urakka-id)))
