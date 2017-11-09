@@ -22,8 +22,6 @@
 (define-tables
   ["liikennetapahtuma_toimenpidetyyppi" ::lt-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["liikennetapahtuma_palvelumuoto" ::lt-palvelumuoto (specql.transform/transform (specql.transform/to-keyword))]
-  ["liikennetapahtuma_suunta" ::lt-suunta (specql.transform/transform (specql.transform/to-keyword))]
-  ["liikennetapahtuma_aluslaji" ::lt-aluslaji (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma" ::liikennetapahtuma
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
@@ -38,8 +36,8 @@
                                  :harja.domain.kanavat.lt-nippu/liikennetapahtuman-nippu
                                  :harja.domain.kanavat.lt-nippu/liikennetapahtuma-id)
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
-                                   :harja.domain.kayttaja/kayttaja
-                                   :harja.domain.kayttaja/id)}])
+                                    :harja.domain.kayttaja/kayttaja
+                                    :harja.domain.kayttaja/id)}])
 
 (def perustiedot
   #{::id
@@ -69,6 +67,13 @@
     :sillan-avaus "Sillan avaus"}
     toimenpide))
 
+(defn palvelumuoto->str [palvelumuoto]
+  ({:kauko "Kauko"
+    :itse "Itsepalvelu"
+    :paikallis "Paikallis"
+    :muu "Muu"}
+    palvelumuoto))
+
 (defn suunta->str [suunta]
   ({:ylos "Ylös"
     :alas "Alas"}
@@ -79,4 +84,6 @@
                                           (s/keys :req
                                                   [::id ::aika ::toimenpide ::lisatieto ::vesipinta-alaraja
                                                    ::vesipinta-ylaraja ::kuittaaja
-                                                   ::kohde ::alukset ::niput])))
+                                                   ::kohde]
+                                                  :opt
+                                                  [::niput ::alukset])))
