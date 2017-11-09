@@ -32,11 +32,15 @@
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
 
+;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
+;; Haut
 (defrecord HaeKokonaishintaisetToimenpiteet [valinnat])
 (defrecord KokonaishintaisetToimenpiteetHaettu [toimenpiteet])
 (defrecord KokonaishintaisetToimenpiteetEiHaettu [])
+;; UI
+(defrecord ValitseToimenpide [tiedot])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -72,5 +76,13 @@
   (process-event [_ app]
     (viesti/nayta! "Kokonaishintaisten toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :haku-kaynnissa? false
-               :toimenpiteet [])))
+               :toimenpiteet []))
+
+  ValitseToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (let [toimenpide-id (:id tiedot)
+          valittu? (:valittu? tiedot)
+          aseta-valinta (if valittu? conj disj)]
+      (assoc app :valitut-toimenpide-idt
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id)))))
 

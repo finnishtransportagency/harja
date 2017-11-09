@@ -53,18 +53,18 @@
     :tyhja "Ei kokonaishitaisia toimenpiteita"
     :jarjesta ::kanavan-toimenpide/pvm
     :tunniste ::kanavan-toimenpide/id}
-   ;; TODO
-   ;(toimenpiteet-view/toimenpidesarakkeet
-   ;  e! app
-   ;  {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
-   ;                           (count (:valitut-toimenpide-idt app)))
-   ;   :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
-   ;   :rivi-valittu?-fn (fn [rivi]
-   ;                       (:valittu? rivi))
-   ;   :rivi-valittu-fn (fn [rivi uusi-arvo]
-   ;                      (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-   ;                                                       :valinta uusi-arvo}
-   ;                                                      toimenpiteet)))})
+   (toimenpiteet-view/toimenpidesarakkeet
+     e! app
+     {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
+                              (count (:valitut-toimenpide-idt app)))
+      :otsikko-valittu-fn (fn [uusi-arvo] (log "TODO VALITSE KAIKKI")) ;; TODO
+      :rivi-valittu?-fn (fn [rivi]
+                          (fn [rivi]
+                            (boolean ((:valitut-toimenpide-idt app)
+                                       (::kanavan-toimenpide/id rivi)))))
+      :rivi-valittu-fn (fn [rivi uusi-arvo]
+                         (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                          :valittu? uusi-arvo})))})
    (:toimenpiteet app)])
 
 (defn kokonaishintaiset-nakyma [e! app]
