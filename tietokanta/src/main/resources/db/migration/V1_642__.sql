@@ -1,5 +1,5 @@
--- Paranna kan_toimenpide taulua
-ALTER TABLE kan_toimenpide ADD COLUMN muu_toimenpide TEXT;
+ALTER TABLE toteuma
+DROP CONSTRAINT uniikki_ulkoinen_id_luoja;
 
-UPDATE kan_toimenpide SET poistettu = FALSE WHERE poistettu IS NULL;
-ALTER TABLE kan_toimenpide ALTER COLUMN poistettu SET NOT NULL;
+ALTER TABLE toteuma
+ADD CONSTRAINT uniikki_ulkoinen_id_luoja_urakka UNIQUE (ulkoinen_id, luoja, urakka);
