@@ -57,13 +57,41 @@
   (set/union perustiedot kohteen-kanavatiedot))
 ;; Domain-funktiot
 
-(defn fmt-kohde-ja-kanava
+(defn- kohteen-nimi* [kanava-nimi kohteen-nimi kohteen-tyyppi]
+  (str
+    (when kanava-nimi
+      (str kanava-nimi ", "))
+    (when kohteen-nimi
+      (str kohteen-nimi ", "))
+    (when kohteen-tyyppi
+      (str kohteen-tyyppi))))
+
+;; Kohteen nimen formatointi on hieman monimutkaista, koska täyteen nimeen kuuluu
+;; kanavan nimi, kohteen nimi (joka usein tyhjä?), ja kohteen tyyppi.
+;; Koska nämä tiedot nousevat kannasta hieman eri muodossa, riippuen kyselyistä,
+;; formatointifunktioitakin on kehittynyt useammanlaisia.
+;; Tästä ei varsinaisesti ole muuta haittaa kuin nimeämisen vaikeus
+
+(defn fmt-kohteen-kanava-nimi
   "Ottaa mapin, jossa on kohteen tiedot ja ::kohteen-kanava avaimen takana kanavan tiedot."
   [kohde-ja-kanava]
-  (str
-    (when-let [kanava-nimi (get-in kohde-ja-kanava [::kohteen-kanava :harja.domain.kanavat.kanava/nimi])]
-      (str kanava-nimi ", "))
-    (when-let [kohde-nimi (::nimi kohde-ja-kanava)]
-      (str kohde-nimi ", "))
-    (when-let [kohde-tyyppi (tyyppi->str (::tyyppi kohde-ja-kanava))]
-      (str kohde-tyyppi))))
+  (kohteen-nimi* (get-in kohde-ja-kanava [::kohteen-kanava :harja.domain.kanavat.kanava/nimi])
+                 (::nimi kohde-ja-kanava)
+                 (tyyppi->str (::tyyppi kohde-ja-kanava))))
+
+(defn fmt-kohde-ja-kanava-nimi
+  "Ottaa kanavan mäpissä, jossa on ::kanava/nimi, ja kohteen mäpissä, jossa on ::kohde/nimi ja ::kohde/tyyppi.
+  Palauttaa kohteen täyden nimen."
+  [kanava kohde]
+  (kohteen-nimi* (:harja.domain.kanavat.kanava/nimi kanava)
+                 (::nimi kohde)
+                 (tyyppi->str (::tyyppi kohde))))
+
+(defn fmt-kohde-ja-kanava-mapissa-nimi
+  "Ottaa mäpin, jossa ::kanava/nimi, ::kohde/nimi, ja ::kohde/tyyppi. Palauttaa kohteen täyden nimen"
+  [k]
+  (kohteen-nimi* (:harja.domain.kanavat.kanava/nimi k)
+                 (::nimi k)
+                 (tyyppi->str (::tyyppi k))))
+
+
