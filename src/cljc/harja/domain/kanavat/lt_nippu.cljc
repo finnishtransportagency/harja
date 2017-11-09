@@ -17,6 +17,7 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
+  ["liikennetapahtuma_suunta" ::lt-suunta (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma_nippu" ::liikennetapahtuman-nippu
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
