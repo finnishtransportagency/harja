@@ -40,7 +40,7 @@
        :rivi-valittu-fn (fn [rivi uusi-arvo]
                           (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
                                                            :valittu? uusi-arvo})))
-       :leveys 3})]
+       :leveys 5})]
    (::kiintio/toimenpiteet kiintio)])
 
 (defn kiintiot* [e! app]
