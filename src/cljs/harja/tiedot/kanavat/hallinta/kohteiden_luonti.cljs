@@ -79,13 +79,7 @@
           (-> kohde
               (assoc ::kanava/id (::kanava/id kanava-ja-kohteet))
               (assoc ::kanava/nimi (::kanava/nimi kanava-ja-kohteet))
-              (assoc :rivin-teksti (str
-                                     (when-let [kanava-nimi (::kanava/nimi kanava-ja-kohteet)]
-                                       (str kanava-nimi ", "))
-                                     (when-let [kohde-nimi (::kohde/nimi kohde)]
-                                       (str kohde-nimi ", "))
-                                     (when-let [kohde-tyyppi (kohde/tyyppi->str (::kohde/tyyppi kohde))]
-                                       (str kohde-tyyppi))))))
+              (assoc :rivin-teksti (kohde/fmt-kohde-ja-kanava-nimi kanava-ja-kohteet kohde))))
         (::kanava/kohteet kanava-ja-kohteet)))
     tulos))
 
