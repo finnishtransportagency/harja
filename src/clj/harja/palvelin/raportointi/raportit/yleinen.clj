@@ -7,7 +7,8 @@
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.domain.urakka :as urakka]))
 
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
@@ -175,8 +176,11 @@
    joten tämän kyselyn avulla voidaan listata kaikki alueet, joita haku koskee."
   [db konteksti parametrit]
   (if (= konteksti :koko-maa)
-    (into []
-          (hae-kontekstin-hallintayksikot db))
+    (let [liikennemuoto (if (and (vector? (:urakkatyyppi parametrit))
+                                 (urakka/vesivaylaurakkatyyppi? (-> parametrit :urakkatyyppi first keyword)))
+                              "V" "T")]
+     (into []
+           (hae-kontekstin-hallintayksikot db {:liikennemuoto liikennemuoto})))
     (into []
           (hae-kontekstin-urakat db parametrit))))
 
