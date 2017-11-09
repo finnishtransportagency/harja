@@ -101,12 +101,7 @@
                         ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
 
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
-                       hakuargumentit)))
-
-    (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-kanavatoimenpiteet
-                                                +kayttaja-jvh+
-                                                hakuargumentit)))))
+                       hakuargumentit)))))
 
 (deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
   (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)

@@ -46,24 +46,19 @@
         saimaan-kaikki-hairiot (ffirst (q "SELECT COUNT(*) FROM kan_hairio WHERE urakka = " urakka-id ";"))]
 
     (testing "Haku urakkalla"
-      (let [params {::hairio/urakka-id urakka-id}
+      (let [args {::hairio/urakka-id urakka-id}
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :hae-hairiotilanteet
                                     +kayttaja-jvh+
-                                    params)]
+                                    args)]
 
-        (is (s/valid? ::hairio/hae-hairiotilanteet-kysely params))
+        (is (s/valid? ::hairio/hae-hairiotilanteet-kysely args))
         (is (s/valid? ::hairio/hae-hairiotilanteet-vastaus vastaus))
         (is (>= (count vastaus) saimaan-kaikki-hairiot))))
 
-    (testing "Haku tyhjällä urakkalla ei toimi"
+    (testing "Haku tyhjällä urakkalla ei ole validi"
       (is (not (s/valid? ::hairio/hae-hairiotilanteet-kysely
-                         {::hairio/urakka-id nil})))
-
-      (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                  :hae-hairiotilanteet
-                                                  +kayttaja-jvh+
-                                                  {::hairio/urakka-id nil}))))
+                         {::hairio/urakka-id nil}))))
 
     ;; Testataan filtterit: jokaisen käyttö pitäisi palauttaa pienempi setti kuin
     ;; kaikki urakan häiriöt
@@ -127,9 +122,9 @@
 
 (deftest hairiotilanteiden-haku-ilman-oikeuksia
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
-        params {::hairio/urakka-id urakka-id}]
+        args {::hairio/urakka-id urakka-id}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-hairiotilanteet
                                            +kayttaja-ulle+
-                                           params)))))
+                                           args)))))
