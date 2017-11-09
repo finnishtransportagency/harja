@@ -1,4 +1,5 @@
 (ns harja.kyselyt.kanavat.kanavan-toimenpide
+  "Kyselyt kanavatoimenpiteille"
   (:require [specql.core :refer [fetch]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [jeesql.core :refer [defqueries]]
@@ -12,5 +13,7 @@
 (defn hae-sopimuksen-toimenpiteet-aikavalilta [db hakuehdot]
   (let [idt (harja.kyselyt.kanavat.kanavan-toimenpide/hae-sopimuksen-kanavatoimenpiteet-aikavalilta db hakuehdot)]
     (if (not (empty? idt))
-      (reverse (sort-by ::toimenpide/alkupvm (hae-kanavatoimenpiteet db {::toimenpide/id (op/in (into #{} (map :id idt)))})))
+      (sort-by ::toimenpide/alkupvm
+               (hae-kanavatoimenpiteet db
+                                       {::toimenpide/id (op/in (into #{} (map :id idt)))}))
       [])))
