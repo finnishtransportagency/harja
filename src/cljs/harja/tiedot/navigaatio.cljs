@@ -414,6 +414,14 @@
       (log "POLKU: " polku)
       (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
       (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
+      ;; Kun ollaan aloitusikkunassa, katsotaan mikä on käyttäjän perusurakkatyyppi, jotta voidaan näyttää oikean
+      ;; väylämuodon hallintayksiköt
+      (when (= polku "urakat/yleiset")
+        (let [vesivaylaurakka? (urakka-domain/vesivaylaurakkatyyppi? (:urakkatyyppi @istunto/kayttaja))
+              arvo (if vesivaylaurakka?
+                     {:arvo :vesivayla}
+                     {:arvo :hoito})]
+          (vaihda-vaylamuoto! arvo)))
       (when @valittu-hallintayksikko-id
         (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
