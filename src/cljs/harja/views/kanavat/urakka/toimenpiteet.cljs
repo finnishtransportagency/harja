@@ -73,6 +73,6 @@
      {:otsikkovalinta? true
       :kaikki-valittu?-fn kaikki-valittu?-fn
       :otsikko-valittu-fn otsikko-valittu-fn
-      :rivi-valittu?-fn rivi-valittu-fn
-      :rivi-valittu-fn rivi-valittu?-fn
+      :rivi-valittu?-fn rivi-valittu?-fn
+      :rivi-valittu-fn rivi-valittu-fn
       :leveys 5})])
