@@ -65,7 +65,14 @@
   (boolean (#{"ok" "OK" "Ok" "oK"} (:havainnot data))))
 
 (defn- tyhja-mittaus?* [mittaus]
-  (every? #(if (map? %) (tyhja-mittaus?* %) (empty? %)) (vals mittaus)))
+  (if (and (string? mittaus) (> (count mittaus) 0))
+    false
+    (if (number? mittaus)
+      false
+      (every? #(if (map? %)
+                 (not-every? some? (vals %))
+                 (empty? %))
+              (vals mittaus)))))
 
 (defn tyhja-soratiemittaus? [data]
   (tyhja-mittaus?* (:soratiemittaus data)))
