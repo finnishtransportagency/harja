@@ -36,9 +36,11 @@
     :piilota-toiminnot? true}
    [{:otsikko "Kohteen nimi"
      :tyyppi :string
-     :nimi ::kohde/nimi}
+     :nimi ::kohde/nimi
+     :leveys 1}
     {:otsikko "Kohteen tyyppi"
      :tyyppi :valinta
+     :leveys 1
      :nimi ::kohde/tyyppi
      :valinnat #{:silta :sulku :sulku-ja-silta}
      :valinta-nayta kohde/tyyppi->str
@@ -85,7 +87,7 @@
        {:otsikko "Kohteet"
         :nimi :kohteet
         :tyyppi :komponentti
-        :palstoja 2
+        :palstoja 3
         :komponentti (fn [_]
                        [kohteet-grid
                         e!
