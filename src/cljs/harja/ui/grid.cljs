@@ -26,3 +26,4 @@
 (def grid perus/grid)
 (def muokkaus-grid muokkaus/muokkaus-grid)
 (def arvo-ja-nappi perus/arvo-ja-nappi)
+(def rivinvalintasarake perus/rivinvalintasarake)
