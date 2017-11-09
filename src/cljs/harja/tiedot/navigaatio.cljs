@@ -121,9 +121,10 @@
                        +urakkatyypit+))))))
 
 (defn urakkatyyppi-urakalle [ur]
-  (urakkatyyppi-arvolle (if (urakka-domain/vesivaylaurakka? ur)
-                          :vesivayla
-                          (:tyyppi ur))))
+  (when ur
+    (urakkatyyppi-arvolle (if (urakka-domain/vesivaylaurakka? ur)
+                            :vesivayla
+                            (:tyyppi ur)))))
 
 (def valittu-urakoitsija "Suodatusta varten valittu urakoitsija
                          tätä valintaa voi käyttää esim. alueurakoitden
@@ -425,12 +426,6 @@
         (reset! valittu-vaylamuoto (<! (hy/hallintayksikon-vaylamuoto @valittu-hallintayksikko-id))))
 
       (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
-      ;; urakkatyyppi on reaktio, jonka arvo johdetaan mm. hallintayksiköstä, urakasta, tai
-      ;; käyttäjän tekemästä valinnasta. Käyttäjän tekemä valinta tallennetaan valittu-urakkatyyppi
-      ;; atomiin. URLia käsiteltäessä urakkatyyppi-reaktio saa automaattisesti päätellyn arvon,
-      ;; joka asetaan myös valitun-urakkatyypin arvoksi. Näin urakkatyyppivalinta "säilyy",
-      ;; kun murupolkua pitkin navigoidaan Koko maa-näkymään
-      (reset! valittu-urakkatyyppi @urakkatyyppi)
       (swap! reitit/url-navigaatio
              reitit/tulkitse-polku polku))
     (reset! render-lupa-url-kasitelty? true)
