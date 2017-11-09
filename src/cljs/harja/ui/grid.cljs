@@ -19,7 +19,7 @@
 (def muokkaa-rivit! protokollat/muokkaa-rivit!)
 
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)
-(def otsikkorivin-tiedot perus/otsikkorivin-tiedot)
+(def otsikko-ja-maara perus/otsikko-ja-maara)
 
 ;; UI
 

@@ -207,6 +207,7 @@
                     :nayta-lisatyt-liitteet? false ; Tässä näkymässä liitteet eivät odota erillistä linkitystä,
                     ; vaan ne linkitetään toimenpiteeseen heti
                     :grid? true}])})
+
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   {:otsikko [napit/nappi
              nil
@@ -236,7 +237,7 @@
 
 (defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
-    (grid/otsikkorivin-tiedot
+    (grid/otsikko-ja-maara
       (::va/nimi vayla)
       (count vaylan-toimenpiteet))
     {:id (::va/id vayla)
@@ -298,8 +299,8 @@
            (fn [tyolaji]
              [tyolaji
               [:span
-               (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
-                                         (count (tiedot/toimenpiteet-tyolajilla
+               (grid/otsikko-ja-maara (to/reimari-tyolaji-fmt tyolaji)
+                                      (count (tiedot/toimenpiteet-tyolajilla
                                                   toimenpiteet
                                                   tyolaji)))
                (when toimenpiteiden-haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
