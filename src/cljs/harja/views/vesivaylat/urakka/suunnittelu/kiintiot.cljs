@@ -34,20 +34,13 @@
     {:otsikko "Hintatyyppi" :nimi ::to/hintatyyppi :fmt to/hintatyyppi-fmt :leveys 10}
     {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
     {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
-    {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
-     :solu-klikattu (fn [rivi]
-                      (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
-                        (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                         :valittu? (not valittu?)}))))
-     :komponentti (fn [rivi]
-                    (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
-                      [kentat/tee-kentta
-                       {:tyyppi :checkbox}
-                       (r/wrap valittu?
-                               (fn [uusi]
-                                 (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                                  :valittu? uusi}))))]))
-     :leveys 5}]
+    (grid/rivinvalintasarake
+      {:rivi-valittu?-fn (fn [rivi]
+                           (boolean ((:valitut-toimenpide-idt app) (::to/id rivi))))
+       :rivi-valittu-fn (fn [rivi uusi-arvo]
+                          (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                           :valittu? uusi-arvo})))
+       :leveys 3})]
    (::kiintio/toimenpiteet kiintio)])
 
 (defn kiintiot* [e! app]

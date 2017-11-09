@@ -1053,31 +1053,41 @@
    Sarakkeen otsikko on nappi, jolla voi valita kaikki rivit tai poistaa valinta kaikilta riveiltä.
 
    Pakolliset optiot:
-   kaikki-valittu?-fn       Funktio, joka palautaa true tai false. Kertoo, onko kaikki rivit valittu.
-   otsikko-valittu-fn       Funktio, jota kutsutaan, kun otsikossa olevaa checkbox-nappia klikataan
-                            Parametrina boolean, joka kertoo kaikkien rivien uuden valinta-arvon.
    rivi-valittu?-fn         Funktio, joka ottaa rivin, ja kertoo, onko se valittu.
    rivi-valittu-fn          Funtkio, jota kutsutaan, kun rivi valitaan checkboksista.
                             Parametrina rivi ja sen uusi valinta-arvo.
 
    Vapaat optiot:
-   leveys                   Sarakkeen leveys (oletus: 1)"
-  [{:keys [kaikki-valittu?-fn otsikko-valittu-fn
-           rivi-valittu?-fn rivi-valittu-fn leveys] :as optiot}]
-  (assert kaikki-valittu?-fn)
-  (assert otsikko-valittu-fn)
+   leveys                   Sarakkeen leveys (oletus: 1)
+   otsikkovalinta?          Jos true, otsikkoriviltä on mahdollista valita kaikki rivit tai poistaa
+                            kaikkien valinta. Jos ei anneta, piirretään tekstiksi annettu otsikko
+                            tai 'Valitse'.
+   otsikko                  Otsikkoteksti, mikäli otsikkovalinta ei ole käytössä.
+   kaikki-valittu?-fn       Funktio, joka palautaa true tai false. Kertoo, onko kaikki rivit valittu.
+                            Pakollinen käytettäessä otsikkovalintaa.
+   otsikko-valittu-fn       Funktio, jota kutsutaan, kun otsikossa olevaa checkbox-nappia klikataan.
+                            Parametrina boolean, joka kertoo kaikkien rivien uuden valinta-arvon.
+                            Pakollinen käytettäessä otsikkovalintaa."
+  [{:keys [rivi-valittu?-fn rivi-valittu-fn
+           leveys otsikkovalinta? otsikko kaikki-valittu?-fn otsikko-valittu-fn] :as optiot}]
   (assert rivi-valittu?-fn)
   (assert rivi-valittu-fn)
 
-  {:otsikko [napit/nappi
-             nil
-             #(if (kaikki-valittu?-fn)
-                (otsikko-valittu-fn false)
-                (otsikko-valittu-fn true))
-             {:ikoni (if (kaikki-valittu?-fn)
-                       (ikonit/livicon-square)
-                       (ikonit/livicon-check))
-              :ikoninappi? true}]
+  (when otsikkovalinta?
+    (assert kaikki-valittu?-fn)
+    (assert otsikko-valittu-fn))
+
+  {:otsikko (if otsikkovalinta?
+              [napit/nappi
+               nil
+               #(if (kaikki-valittu?-fn)
+                  (otsikko-valittu-fn false)
+                  (otsikko-valittu-fn true))
+               {:ikoni (if (kaikki-valittu?-fn)
+                         (ikonit/livicon-square)
+                         (ikonit/livicon-check))
+                :ikoninappi? true}]
+              (or otsikko "Valitse"))
    :nimi :valinta
    :tyyppi :komponentti
    :tasaa :keskita
