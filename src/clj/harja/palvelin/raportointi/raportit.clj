@@ -262,7 +262,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Välitavoiteraportti"
     :suorita #'harja.palvelin.raportointi.raportit.valitavoiteraportti/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi (set/union #{:hoito} urakka-domain/vesivayla-urakkatyypit-raporttinakyma)}
 
    {:nimi :yks-hint-tyot
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
