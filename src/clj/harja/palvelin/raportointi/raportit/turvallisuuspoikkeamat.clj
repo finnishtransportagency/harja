@@ -38,6 +38,7 @@
             [taoensso.timbre :as log]
             [harja.domain.turvallisuuspoikkeamat :as turpodomain]
             [harja.domain.raportointi :refer [info-solu]]
+            [harja.domain.urakka :as urakka]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk
                                                                  vuosi-ja-kk-fmt kuukaudet
                                                                  pylvaat-kuukausittain
@@ -231,13 +232,17 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
+        urakkatyyppi (when urakkatyyppi
+                       (if (= urakkatyyppi :vesivayla)
+                         (into [] urakka/vesivayla-urakkatyypit)
+                         [urakkatyyppi]))
         ;; Näytettävät alueet (hallintayksiköt) koko maan raporttia varten
         naytettavat-alueet (naytettavat-alueet
                              db
                              konteksti
                              {:urakka urakka-id
                               :hallintayksikko hallintayksikko-id
-                              :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                              :urakkatyyppi (when urakkatyyppi (mapv name urakkatyyppi))
                               :alku alkupvm
                               :loppu loppupvm})
         _ (log/debug "HAE TURPOT: ")
@@ -245,7 +250,7 @@
                               :urakka urakka-id
                               :hallintayksikko_annettu (some? hallintayksikko-id)
                               :hallintayksikko hallintayksikko-id
-                              :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                              :urakkatyyppi (when urakkatyyppi (mapv name urakkatyyppi))
                               :alku alkupvm
                               :loppu loppupvm}))
         turpot (into []
@@ -259,7 +264,7 @@
                                                   :urakka urakka-id
                                                   :hallintayksikko_annettu (some? hallintayksikko-id)
                                                   :hallintayksikko hallintayksikko-id
-                                                  :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                  :urakkatyyppi (when urakkatyyppi (mapv name urakkatyyppi))
                                                   :alku alkupvm
                                                   :loppu loppupvm}))
         raportin-nimi "Turvallisuusraportti"

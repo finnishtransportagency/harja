@@ -109,7 +109,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Turvallisuusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat/suorita
-    :urakkatyyppi #{:hoito :paallystys :paikkaus :tiemerkinta}}
+    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit-raporttinakyma)}
 
    {:nimi :yks-hint-kuukausiraportti
     :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
