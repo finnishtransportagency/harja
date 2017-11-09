@@ -1,4 +1,5 @@
 (ns harja.kyselyt.kanavat.kanavan-toimenpide
+  "Kyselyt kanavatoimenpiteille"
   (:require [specql.core :refer [fetch]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [jeesql.core :refer [defqueries]]
