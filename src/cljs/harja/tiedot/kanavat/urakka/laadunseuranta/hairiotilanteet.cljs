@@ -23,9 +23,9 @@
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
 ;; Haut
-(defrecord HaeHairioTilanteet [valinnat])
-(defrecord HairioTilanteetHaettu [tulos])
-(defrecord HairioTilanteetEiHaettu [])
+(defrecord HaeHairiotilanteet [valinnat])
+(defrecord HairiotilanteetHaettu [tulos])
+(defrecord HairiotilanteetEiHaettu [])
 
 (def valinnat
   (reaction
@@ -42,11 +42,11 @@
   PaivitaValinnat
   (process-event [{val :valinnat} app]
     (let [uudet-valinnat (merge (:valinnat app) val)
-          haku (tuck/send-async! ->HaeHairioTilanteet)]
+          haku (tuck/send-async! ->HaeHairiotilanteet)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
-  HaeHairioTilanteet
+  HaeHairiotilanteet
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:hairiotilanteiden-haku-kaynnissa? app))
              (some? (get-in valinnat [:urakka :id])))
@@ -61,17 +61,17 @@
         (-> app
             (tuck-apurit/post! :hae-hairiotilanteet
                                argumentit
-                               {:onnistui ->HairioTilanteetHaettu
-                                :epaonnistui ->HairioTilanteetEiHaettu})
+                               {:onnistui ->HairiotilanteetHaettu
+                                :epaonnistui ->HairiotilanteetEiHaettu})
             (assoc :hairiotilanteiden-haku-kaynnissa? true)))
       app))
 
-  HairioTilanteetHaettu
+  HairiotilanteetHaettu
   (process-event [{tulos :tulos} app]
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
                :hairiotilanteet tulos))
 
-  HairioTilanteetEiHaettu
+  HairiotilanteetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Häiriötilanteiden haku epäonnistui!" :danger)
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
