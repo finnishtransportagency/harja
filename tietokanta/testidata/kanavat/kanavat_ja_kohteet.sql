@@ -10,10 +10,10 @@ INSERT INTO kan_kohde (nimi, tyyppi, "kanava-id", luoja)
       (NULL, 'sulku-ja-silta' :: kohteen_tyyppi, (SELECT id FROM kan_kanava WHERE NIMI = 'Nerkoon kanava'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero'));
 
 INSERT INTO kan_kohde_urakka ("kohde-id", "urakka-id", luoja)
-    VALUES
-      ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
-       (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava'),
-       (SELECT id FROM kayttaja WHERE kayttajanimi='tero')),
-      ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),
-       (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava'),
-       (SELECT id FROM kayttaja WHERE kayttajanimi='tero'));
+VALUES
+  ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
+   (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava'),
+   (SELECT id FROM kayttaja WHERE kayttajanimi='tero')),
+  ((SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren sulku'),
+   (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava'),
+   (SELECT id FROM kayttaja WHERE kayttajanimi='tero'));

@@ -33,3 +33,6 @@
 
 (def kayttajan-organisaatio
   #{[::organisaatio o/urakoitsijan-perustiedot]})
+
+(defn kokonimi [kayttaja]
+  (str (::etunimi kayttaja) " " (::sukunimi kayttaja)))

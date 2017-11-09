@@ -156,7 +156,7 @@
   component/Lifecycle
   (start [{db :db :as this}]
     (ajastettu-tehtava/ajasta-minuutin-valein
-     5
+     5 11 ;; 5 min välein alkaen 11s käynnistyksestä
      (fn [_]
        (siirra-liitteet-fileyard db fileyard-url)))
     this)

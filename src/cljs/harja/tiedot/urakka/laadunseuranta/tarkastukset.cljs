@@ -18,10 +18,18 @@
 (defonce tarkastustyyppi (atom nil)) ;; nil = kaikki, :tiesto, :talvihoito, :soratie
 (defonce tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? (atom false))
 
+(def +tarkastuksen-tekija-valinnat+
+  [[nil "Kaikki"]
+   [:tilaaja "Tilaaja/konsultti"]
+   [:urakoitsija "Urakoitsija"]])
+
+
 (def +naytettevat-tarkastukset-valinnat+
   [[nil "Kaikki"]
    [:havaintoja-sisaltavat "Havaintoja sisältävät"]
    [:laadunalitukset "Vain laadunalitukset"]])
+
+(defonce tarkastuksen-tekija (atom (first +tarkastuksen-tekija-valinnat+)))
 
 (defonce naytettavat-tarkastukset (atom (first +naytettevat-tarkastukset-valinnat+)))
 
@@ -77,15 +85,18 @@
     (or kuukausi aikavali)))
 
 (defn kasaa-haun-parametrit [urakka-kaynnissa? urakka-id kuukausi aikavali tienumero tyyppi
-                             havaintoja-sisaltavat? vain-laadunalitukset?]
-  (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)]
+                             havaintoja-sisaltavat? vain-laadunalitukset? tekija]
+  (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)
+        tekija (first tekija)]
     {:urakka-id urakka-id
      :alkupvm alkupvm
      :loppupvm loppupvm
      :tienumero tienumero
      :tyyppi tyyppi
      :havaintoja-sisaltavat? havaintoja-sisaltavat?
-     :vain-laadunalitukset? vain-laadunalitukset?}))
+     :vain-laadunalitukset? vain-laadunalitukset?
+     :tekija (when tekija
+               (name tekija))}))
 
 (defonce valittu-aikavali (atom nil))
 
@@ -99,13 +110,15 @@
                tienumero @tienumero
                tyyppi @tarkastustyyppi
                havaintoja-sisaltavat? @havaintoja-sisaltavat?
-               vain-laadunalitukset? @vain-laadunalitukset?]
+               vain-laadunalitukset? @vain-laadunalitukset?
+               tekija @tarkastuksen-tekija]
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
               (let [parametrit (kasaa-haun-parametrit urakka-kaynnissa? urakka-id
                                                       kuukausi aikavali tienumero tyyppi
                                                       havaintoja-sisaltavat?
-                                                      vain-laadunalitukset?)]
+                                                      vain-laadunalitukset?
+                                                      tekija)]
                 (when (and laadunseurannassa? (= :tarkastukset valilehti)
                            (:urakka-id parametrit) (:alkupvm parametrit) (:loppupvm parametrit))
                   (go (into [] (<! (hae-urakan-tarkastukset parametrit))))))))

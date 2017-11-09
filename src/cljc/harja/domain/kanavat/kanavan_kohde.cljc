@@ -55,3 +55,15 @@
 
 (def perustiedot-ja-kanava
   (set/union perustiedot kohteen-kanavatiedot))
+;; Domain-funktiot
+
+(defn fmt-kohde-ja-kanava
+  "Ottaa mapin, jossa on kohteen tiedot ja ::kohteen-kanava avaimen takana kanavan tiedot."
+  [kohde-ja-kanava]
+  (str
+    (when-let [kanava-nimi (get-in kohde-ja-kanava [::kohteen-kanava :harja.domain.kanavat.kanava/nimi])]
+      (str kanava-nimi ", "))
+    (when-let [kohde-nimi (::nimi kohde-ja-kanava)]
+      (str kohde-nimi ", "))
+    (when-let [kohde-tyyppi (tyyppi->str (::tyyppi kohde-ja-kanava))]
+      (str kohde-tyyppi))))
