@@ -59,9 +59,8 @@
                               (count (:valitut-toimenpide-idt app)))
       :otsikko-valittu-fn (fn [uusi-arvo] (log "TODO VALITSE KAIKKI")) ;; TODO
       :rivi-valittu?-fn (fn [rivi]
-                          (fn [rivi]
-                            (boolean ((:valitut-toimenpide-idt app)
-                                       (::kanavan-toimenpide/id rivi)))))
+                          (boolean ((:valitut-toimenpide-idt app)
+                                     (::kanavan-toimenpide/id rivi))))
       :rivi-valittu-fn (fn [rivi uusi-arvo]
                          (e! (tiedot/->ValitseToimenpide
                                {:id (::kanavan-toimenpide/id rivi)
