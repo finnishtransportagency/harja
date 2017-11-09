@@ -91,3 +91,4 @@ CREATE TABLE kan_liikennetapahtuma_nippu (
   muokkaaja              INTEGER REFERENCES kayttaja (id),
   poistettu              BOOLEAN   DEFAULT FALSE,
   poistaja               INTEGER REFERENCES kayttaja (id)
+);

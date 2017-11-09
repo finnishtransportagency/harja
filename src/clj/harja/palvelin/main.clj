@@ -141,12 +141,10 @@
 
     ;; Kanavat
     [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
-<<<<<<< HEAD
+
     [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
-=======
     [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
     [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
->>>>>>> develop
     )
 
   (:gen-class))
