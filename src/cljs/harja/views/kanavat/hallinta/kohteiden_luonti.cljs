@@ -31,7 +31,9 @@
 (defn kohteet-grid [e! kanavan-kohteet]
   [grid/muokkaus-grid
    {:tyhja "Lisää kohteita oikeasta yläkulmasta"
-    :tunniste ::kohde/id}
+    :tunniste ::kohde/id
+    :voi-poistaa? (constantly false)
+    :piilota-toiminnot? true}
    [{:otsikko "Kohteen nimi"
      :tyyppi :string
      :nimi ::kohde/nimi}
@@ -140,24 +142,22 @@
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Urakka"]
-          [yleiset/livi-pudotusvalikko
-           {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
-            :valinta valittu-urakka
-            :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
-           (into [nil] urakat)]]
-         [napit/uusi
-          "Lisää uusi kohde"
-          #(e! (tiedot/->AvaaKohdeLomake))
-          {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat))}]
+         [:div.otsikko-ja-valinta-rivi
+          [:div.otsikko "Kaikki kohteet:"]
+          [:div.valinta.label-ja-alasveto
+           [:span.alasvedon-otsikko "Kuuluu urakkaan:"]
+           [yleiset/livi-pudotusvalikko
+            {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
+             :valinta valittu-urakka
+             :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
+            (into [nil] urakat)]]]
          [grid/grid
           {:tunniste ::kohde/id
            :tyhja (if kohteiden-haku-kaynnissa?
                     [ajax-loader "Haetaan kohteita"]
                     "Ei perustettuja kohteita")}
           [{:otsikko "Kanava, kohde, ja kohteen tyyppi" :nimi :rivin-teksti
-            :leveys 4}
+            :leveys 5}
            {:otsikko "Poista"
             :leveys 1
             :tyyppi :komponentti
@@ -199,7 +199,11 @@
                                     (e! (tiedot/->LiitaKohdeUrakkaan rivi
                                                                      uusi
                                                                      valittu-urakka))))]))})]
-          (sort-by :rivin-teksti kohderivit)]]
+          (sort-by :rivin-teksti kohderivit)]
+         [napit/yleinen-ensisijainen
+          "Muokkaa kohteita"
+          #(e! (tiedot/->AvaaKohdeLomake))
+          {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat))}]]
 
         [luontilomake e! app]))))
 
