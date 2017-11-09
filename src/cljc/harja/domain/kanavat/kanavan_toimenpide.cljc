@@ -23,7 +23,7 @@
    harja.domain.muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
-    
+    "muu_toimenpide" ::muu-toimenpide
     "kohde" ::kohde-id
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
@@ -49,6 +49,7 @@
   #{::id
     ::tyyppi
     ::pvm
+    ::muu-toimenpide
     ::lisatieto
     [::kohde
      #{::kohde/id
@@ -76,13 +77,13 @@
        ::kayttaja/sahkoposti
        ::kayttaja/puhelin}]})
 
-(s/def ::hae-kanavatoimenpiteet-kutsu
-  (s/keys :req [::urakka/id
-                ::sopimus/id
-                ::toimenpidekoodi/id
-                ::alkupvm
-                ::loppupvm]
-          :opt [::kanava-toimenpidetyyppi]))
+(s/def ::hae-kanavatoimenpiteet-kysely
+  (s/keys :req [::urakka-id
+                ::sopimus-id
+                ::kanava-toimenpidetyyppi
+                ::toimenpidekoodi/id]
+          :req-un [::alkupvm
+                   ::loppupvm]))
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))

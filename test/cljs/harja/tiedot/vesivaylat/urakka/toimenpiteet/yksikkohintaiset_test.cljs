@@ -205,10 +205,13 @@
                (e! (tiedot/->HaeSuunnitellutTyot) tila)))))))
 
 (deftest suunniteltujen-toiden-hakemisen-valmistuminen
-  (is (= (e! (tiedot/->SuunnitellutTyotHaettu [{:id 1}])
+  (is (= (e! (tiedot/->SuunnitellutTyotHaettu [{:id 1 :yksikkohinta 1}
+                                               {:id 2}
+                                               {:id 3 :yksikkohinta 10}])
              {:suunniteltujen-toiden-haku-kaynnissa? true})
          {:suunniteltujen-toiden-haku-kaynnissa? false
-          :suunnitellut-tyot [{:id 1}]})))
+          :suunnitellut-tyot [{:id 1 :yksikkohinta 1}
+                              {:id 3 :yksikkohinta 10}]})))
 
 (deftest suunniteltujen-toiden-hakemisen-epaonnistuminen
   (is (= (e! (tiedot/->SuunnitellutTyotEiHaettu)
