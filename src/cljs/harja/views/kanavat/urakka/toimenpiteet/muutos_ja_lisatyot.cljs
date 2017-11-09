@@ -49,8 +49,20 @@
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
     :tunniste ::kanavan-toimenpide/id}
-   ;; TODO
-   (toimenpide-view/toimenpidesarakkeet e! app {})
+   (toimenpide-view/toimenpidesarakkeet
+     e! app
+     {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
+                              (count (:valitut-toimenpide-idt app)))
+      :otsikko-valittu-fn (fn [uusi-arvo]
+                            (e! (tiedot/->ValitseToimenpiteet
+                                  {:kaikki-valittu? uusi-arvo})))
+      :rivi-valittu?-fn (fn [rivi]
+                          (boolean ((:valitut-toimenpide-idt app)
+                                     (::kanavan-toimenpide/id rivi))))
+      :rivi-valittu-fn (fn [rivi uusi-arvo]
+                         (e! (tiedot/->ValitseToimenpide
+                               {:id (::kanavan-toimenpide/id rivi)
+                                :valittu? uusi-arvo})))})
    toimenpiteet])
 
 (defn lisatyot* [e! app]

@@ -14,7 +14,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide])
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -39,7 +39,7 @@
 (defrecord HaeKokonaishintaisetToimenpiteet [valinnat])
 (defrecord KokonaishintaisetToimenpiteetHaettu [toimenpiteet])
 (defrecord KokonaishintaisetToimenpiteetEiHaettu [])
-;; UI
+;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
 
@@ -92,6 +92,6 @@
     (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
       (if kaikki-valittu?
         (assoc app :valitut-toimenpide-idt
-                   (set (map ::kanavatoimenpide/id (:toimenpiteet app))))
+                   (set (map ::kanavan-toimenpide/id (:toimenpiteet app))))
         (assoc app :valitut-toimenpide-idt #{})))))
 

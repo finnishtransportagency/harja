@@ -11,7 +11,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet])
@@ -19,6 +19,8 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def tila (atom {:nakymassa? false
+                 :valitut-toimenpide-idt #{}
+                 :toimenpiteet nil
                  :toimenpiteiden-haku-kaynnissa? false}))
 
 (defonce valinnat
@@ -36,6 +38,9 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [tulos])
 (defrecord ToimenpiteetEiHaettu [])
+;; UI-toiminnot
+(defrecord ValitseToimenpide [tiedot])
+(defrecord ValitseToimenpiteet [tiedot])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -71,4 +76,20 @@
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :toimenpiteiden-haku-kaynnissa? false
-               :toimenpiteet [])))
+               :toimenpiteet []))
+
+  ValitseToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (let [toimenpide-id (:id tiedot)
+          valittu? (:valittu? tiedot)
+          aseta-valinta (if valittu? conj disj)]
+      (assoc app :valitut-toimenpide-idt
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
+
+  ValitseToimenpiteet
+  (process-event [{tiedot :tiedot} app]
+    (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
+      (if kaikki-valittu?
+        (assoc app :valitut-toimenpide-idt
+                   (set (map ::kanavan-toimenpide/id (:toimenpiteet app))))
+        (assoc app :valitut-toimenpide-idt #{})))))
