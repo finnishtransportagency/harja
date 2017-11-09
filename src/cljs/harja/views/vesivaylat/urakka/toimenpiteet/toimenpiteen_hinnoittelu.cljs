@@ -187,7 +187,7 @@
              ^{:key index}
              [:tr
               [:td
-               (let [tyovalinnat (:suunnitellut-tyot app*)]
+               (let [tyovalinnat (sort-by :tehtavan_nimi (:suunnitellut-tyot app*))]
                  [yleiset/livi-pudotusvalikko
                   {:valitse-fn #(do
                                   (e! (tiedot/->AsetaTyorivilleTiedot

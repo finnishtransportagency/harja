@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
@@ -30,14 +31,6 @@
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
 
-(defn muodosta-hakuparametrit [valinnat]
-  {::urakka/id (:id (:urakka valinnat))
-   ::sopimus/id (:sopimus-id valinnat)
-   ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
-   ::kanavatoimenpide/alkupvm (first (:aikavali valinnat))
-   ::kanavatoimenpide/loppupvm (second (:aikavali valinnat))
-   ::kanavatoimenpide/kanava-toimenpidetyyppi :kokonaishintainen})
-
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
 (defrecord HaeKokonaishintaisetToimenpiteet [valinnat])
@@ -57,11 +50,13 @@
 
   HaeKokonaishintaisetToimenpiteet
   (process-event [{valinnat :valinnat} app]
-    (if (and (not (:haku-kaynnissa? app)))
-      (let [parametrit (muodosta-hakuparametrit valinnat)]
+    (if (and
+          (get-in valinnat [:urakka :id])
+          (not (:haku-kaynnissa? app)))
+      (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
-                               parametrit
+                               argumentit
                                {:onnistui ->KokonaishintaisetToimenpiteetHaettu
                                 :epaonnistui ->KokonaishintaisetToimenpiteetEiHaettu})
             (assoc :haku-kaynnissa? true)))
