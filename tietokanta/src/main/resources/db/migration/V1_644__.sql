@@ -58,7 +58,7 @@ BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma
 FOR EACH ROW
 EXECUTE PROCEDURE toimenpide_kohteen_mukaan_proc();
 
-CREATE TYPE LIIKENNETAPAHTUMA_SUUNTA AS ENUM ('ylös', 'alas');
+CREATE TYPE LIIKENNETAPAHTUMA_SUUNTA AS ENUM ('ylos', 'alas');
 CREATE TYPE LIIKENNETAPAHTUMA_ALUSLAJI AS ENUM ('RAH', 'MAT', 'ÖLJ', 'HINT', 'HUV', 'PRO', 'SEK', 'LAU');
 
 CREATE TABLE kan_liikennetapahtuma_alus (
