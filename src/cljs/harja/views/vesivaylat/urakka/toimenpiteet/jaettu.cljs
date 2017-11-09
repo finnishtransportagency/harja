@@ -210,7 +210,8 @@
 
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   (grid/rivinvalintasarake
-    {:kaikki-valittu?-fn #(tiedot/kaikki-valittu? (:toimenpiteet app))
+    {:otsikkovalinta? true
+     :kaikki-valittu?-fn #(tiedot/kaikki-valittu? (:toimenpiteet app))
      :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
      :rivi-valittu?-fn (fn [rivi]
                          (:valittu? rivi))
