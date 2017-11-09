@@ -59,13 +59,13 @@
            :bonukset_laskutetaan                              1000.0M
            :yht_laskutettu_ind_korotettuna                    2009.57854406130265900000M
            :suolasakot_laskutetaan                            -29760.00000M
-           :kaikki_laskutetaan_ind_korotus                    -5.30M
+           :kaikki_laskutetaan_ind_korotus                    -3.787M
            :sakot_laskutetaan_ind_korotettuna                 0.0M
            :kaikki_paitsi_kht_laskutettu_ind_korotus          14.84674329501915670000M
            :muutostyot_laskutettu                             1000.0M
            :kht_laskutettu                                    35000.0M
            :akilliset_hoitotyot_laskutettu_ind_korotettuna    0.0M
-           :kaikki_laskutetaan                                -23265.30M
+           :kaikki_laskutetaan                                -23263.79M
            :kht_laskutetaan_ind_korotettuna                   3560.3448275862068000M
            :akilliset_hoitotyot_laskutettu_ind_korotus        0.0M
            :vahinkojen_korjaukset_laskutettu_ind_korotettuna  0.0M
@@ -92,19 +92,19 @@
            :yht_laskutetaan_ind_korotettuna                   0.0M
            :nimi                                              "Talvihoito"
            :yht_laskutettu                                    2000.0M
-           :bonukset_laskutetaan_ind_korotettuna              1004.39M
+           :bonukset_laskutetaan_ind_korotettuna              1005.9M
            :muutostyot_laskutettu_ind_korotettuna             1014.36781609195400000M
            :erilliskustannukset_laskutettu_ind_korotettuna    990.42145593869736360000M
            :muutostyot_laskutetaan_ind_korotettuna            1017.24137931034480000M
            :erilliskustannukset_laskutetaan_ind_korotettuna   1017.2413793103448000M
            :sakot_laskutetaan_ind_korotus                     0.0M
-           :kaikki_paitsi_kht_laskutetaan                     -26765.30M
+           :kaikki_paitsi_kht_laskutetaan                     -26763.787M
            :akilliset_hoitotyot_laskutetaan_ind_korotus       0.0M
            :lampotila_puuttuu                                 false
            :perusluku                                         104.4M
            :suolasakot_laskutettu                             0.0M
-           :kaikki_paitsi_kht_laskutetaan_ind_korotus         -65.64M
-           :bonukset_laskutetaan_ind_korotus                  4.39M
+           :kaikki_paitsi_kht_laskutetaan_ind_korotus         -64.13M
+           :bonukset_laskutetaan_ind_korotus                  5.907M
            :akilliset_hoitotyot_laskutettu                    0.0M
            :akilliset_hoitotyot_laskutetaan_ind_korotettuna   0.0M
            :suolasakot_laskutetaan_ind_korotettuna            -29864.5210727969348753088000000M
