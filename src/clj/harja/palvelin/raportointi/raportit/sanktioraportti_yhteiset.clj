@@ -188,14 +188,14 @@
                                            :naytettavat-alueet naytettavat-alueet
                                            :sanktiot-kannassa sanktiot-kannassa
                                            :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
-                                           :yhteensa-sarake? yhteensa-sarake?})]
-
-    [:raportti {:nimi raportin-nimi
-                :orientaatio :landscape}
-     [:taulukko {:otsikko otsikko
-                 :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
-                 :sheet-nimi raportin-nimi}
-      raportin-otsikot
-      raportin-rivit]
-     (when info-teksti
-       [:teksti info-teksti])]))
+                                           :yhteensa-sarake? yhteensa-sarake?})
+        runko [:raportti {:nimi raportin-nimi
+                          :orientaatio :landscape}
+               [:taulukko {:otsikko otsikko
+                           :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
+                           :sheet-nimi raportin-nimi}
+                raportin-otsikot
+                raportin-rivit]]]
+    (if info-teksti
+      (conj runko [:teksti info-teksti])
+      runko)))
