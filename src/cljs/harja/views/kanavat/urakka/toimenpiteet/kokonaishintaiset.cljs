@@ -41,7 +41,7 @@
        "Siirrä valitut muutos- ja lisätöihin"
        (fn [_]
          (e! (tiedot/->SiirraValitut)))
-       {:disabled (zero? (:valitut-toimenpide-idt app))}]
+       {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
       [napit/uusi
        "Uusi toimenpide"
        (fn [_]
