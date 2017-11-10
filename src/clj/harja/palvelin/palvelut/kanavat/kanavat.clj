@@ -9,6 +9,7 @@
 
             [harja.domain.kanavat.kanava :as kan]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.urakka :as ur]))
 
 
@@ -41,6 +42,10 @@
                               (if kohteella-urakoita?
                                 {:virhe :kohteella-on-urakoita}
                                 (q/merkitse-kohde-poistetuksi! db user kohde-id)))))
+
+(defn hae-huoltokohteet [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+  (q/hae-huoltokohteet db))
 
 (defrecord Kanavat []
   component/Lifecycle
@@ -78,6 +83,13 @@
       (fn [user tiedot]
         (poista-kohde! db user tiedot))
       {:kysely-spec ::kan/poista-kohde-kysely})
+    (julkaise-palvelu
+      http
+      :hae-huoltokohteet
+      (fn [user]
+        (hae-huoltokohteet db user))
+      {:vastaus-spec ::huoltokohde/hae-huoltokohteet-kysely})
+
     this)
 
   (stop [this]

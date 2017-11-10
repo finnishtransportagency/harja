@@ -14,3 +14,5 @@
 (def perustiedot
   #{::id
     ::nimi})
+
+(s/def ::hae-huoltokohteet-kysely ::huoltokohde)
