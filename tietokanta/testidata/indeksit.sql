@@ -48,7 +48,12 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 3, 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 4, 135.0);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 5, 135.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 6, 135.5);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 7, 135.0);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 8, 135.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 9, 135.5);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 10, 135.8);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 11, 135.0);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005', 2016, 12, 135.2);
 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2013, 1, 101.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2013, 2, 106.2);
