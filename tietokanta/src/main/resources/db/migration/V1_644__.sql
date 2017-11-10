@@ -4,6 +4,8 @@ CREATE TYPE LIIKENNETAPAHTUMA_PALVELUMUOTO AS ENUM ('kauko', 'itse', 'paikallis'
 CREATE TABLE kan_liikennetapahtuma (
   id                  SERIAL PRIMARY KEY,
   "kohde-id"          INTEGER REFERENCES kan_kohde (id),
+  "urakka-id"         INTEGER REFERENCES urakka (id),
+  "sopimus-id"        INTEGER REFERENCES sopimus (id),
   aika                TIMESTAMP                          NOT NULL,
   toimenpide          LIIKENNETAPAHTUMA_TOIMENPIDETYYPPI NOT NULL,
   palvelumuoto        LIIKENNETAPAHTUMA_PALVELUMUOTO,
@@ -14,7 +16,7 @@ CREATE TABLE kan_liikennetapahtuma (
   "vesipinta-ylaraja" INTEGER,
   "vesipinta-alaraja" INTEGER,
 
-  "kuittaaja-id"           INTEGER REFERENCES kayttaja (id),
+  "kuittaaja-id"      INTEGER REFERENCES kayttaja (id),
 
   luotu               TIMESTAMP DEFAULT NOW(),
   luoja               INTEGER REFERENCES kayttaja (id)   NOT NULL,
