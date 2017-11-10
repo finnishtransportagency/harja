@@ -60,7 +60,7 @@
    toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
 
-(defn kokonaishintainen-toimenpidelomake [e! toimenpide]
+(defn kokonaishintainen-toimenpidelomake [e! toimenpide sopimukset]
   [:div
    [napit/takaisin "Takaisin varusteluetteloon"
     #(e! (tiedot/->TyhjennaValittuToimenpide))]
@@ -82,7 +82,7 @@
       :tyyppi :valinta
       :valinta-arvo first
       :valinta-nayta second
-      :valinnat (:sopimukset @navigaatio/valittu-urakka)}
+      :valinnat sopimukset}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
       :tyyppi :pvm
@@ -143,10 +143,10 @@
       :muokattava? (constantly false)}]
     toimenpide]])
 
-(defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide]
+(defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide sopimukset]
   [:div
    (if valittu-toimenpide
-     [kokonaishintainen-toimenpidelomake e! valittu-toimenpide]
+     [kokonaishintainen-toimenpidelomake e! valittu-toimenpide sopimukset]
      [:div
       [hakuehdot e! urakka]
       [kokonaishintaiset-toimenpiteet-taulukko toimenpiteet]])
@@ -165,11 +165,12 @@
                                 :toimenpide @u/valittu-toimenpideinstanssi})))
                       #(do
                          (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [toimenpiteet valittu-toimenpide haku-kaynnissa?] :as app}]
-      (let [urakka (get-in app [:valinnat :urakka])]
+    (fn [e! {:keys [toimenpiteet valittu-toimenpide sopimukset] :as app}]
+      (let [urakka (get-in app [:valinnat :urakka])
+            sopimukset (:sopimukset urakka)]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:span
-         [kokonaishintaiset-nakyma e! app urakka toimenpiteet valittu-toimenpide]]))))
+         [kokonaishintaiset-nakyma e! app urakka toimenpiteet valittu-toimenpide sopimukset]]))))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])
