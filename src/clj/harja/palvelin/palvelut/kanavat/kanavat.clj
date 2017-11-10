@@ -13,7 +13,7 @@
 
 
 (defn hae-kanavat-ja-kohteet [db user]
- #_ (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
   (q/hae-kanavat-ja-kohteet db))
 
 (defn hae-urakan-kohteet [db user tiedot]
@@ -21,7 +21,7 @@
     (assert urakka-id "Ei voida hakea urakan kohteita, urakka-id puuttuu")
     ;; TODO Tämä on vähän hassu oikeustarkastus, koska pitää vaan varmistaa, että käyttäjällä
     ;; on oikeus nähdä, mitkä kohteet kuuluvat kyseiseen urakkaan. Tälle ei vaan ole suoraa omaa oikeutta
-    #_(oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
 
     (let [kanavat (q/hae-kanavat-ja-kohteet db)]
       (mapcat
