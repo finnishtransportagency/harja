@@ -87,7 +87,7 @@
     :muu "Muu"}
     palvelumuoto))
 
-(defn suunta*
+(def suunta*
   ^{:private true}
   {:ylos "Ylös"
    :alas "Alas"})
