@@ -13,7 +13,7 @@
 
 (defn hae-liikennetapahtumat [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-liikenne user (::ur/id tiedot))
-  (q/hae-liikennetapahtumat db (::ur/id tiedot)))
+  (q/hae-liikennetapahtumat db tiedot))
 
 (defrecord Liikennetapahtumat []
   component/Lifecycle
