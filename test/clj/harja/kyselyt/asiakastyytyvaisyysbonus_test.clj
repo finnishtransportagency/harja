@@ -58,14 +58,15 @@
         bonarit (first (q (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus(" ur ",'2015-11-15'::DATE, '"
                                ind_nimi "', '"
                                summa "');")))
+        _ (println "bonarit " bonarit " ind nimi " ind_nimi " summa " summa)
         bonarit-jos-indekseja-ei-ole-syotetty (first (q (str "select * from laske_hoitokauden_asiakastyytyvaisyysbonus(" ur ",'2025-11-15'::DATE, '"
                                                              ind_nimi "', '"
                                                              summa "');")))]
     (testing "Testidatan Oulun alueurakka 2014 - 2019 lasketaan oikein"
       (is {:summa 1000M, :korotettuna 1050.1666666666667000M, :korotus 50.1666666666667000M} kyselyn-kautta)
       (is (= 1000M (first bonarit)) "bonari ilman korotusta")
-      (is (=marginaalissa? 1005.907M (second bonarit)) "bonari korotuksen kera")
-      (is (=marginaalissa? 5.907M (nth bonarit 2)) "bonarin korotus")
+      (is (=marginaalissa? 1297.97M (second bonarit)) "bonari korotuksen kera")
+      (is (=marginaalissa? 297.97M (nth bonarit 2)) "bonarin korotus")
       (is (= [1000M nil nil] bonarit-jos-indekseja-ei-ole-syotetty)))))
 
 
@@ -111,8 +112,8 @@
                                hk-alkuvuosi (if (or (= 10 (pvm/kuukausi maksupvm))
                                                     (= 11 (pvm/kuukausi maksupvm))
                                                     (= 12 (pvm/kuukausi maksupvm)))
-                                              (- (pvm/vuosi maksupvm) 1)
-                                              (- (pvm/vuosi maksupvm) 2))
+                                              (- (pvm/vuosi maksupvm) 0)
+                                              (- (pvm/vuosi maksupvm) 1))
                                indeksit-alkuvuonna (vec (vals
                                                           (select-keys
                                                             (get indeksit [indeksinimi hk-alkuvuosi])

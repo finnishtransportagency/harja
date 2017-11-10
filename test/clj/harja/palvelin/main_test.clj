@@ -64,7 +64,8 @@
     :ais-data
     :vv-alukset
     :kan-kanavat
-    :kan-hairio})
+    :kan-hairio
+    :kan-toimenpiteet})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

@@ -15,7 +15,10 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
-            [harja.domain.urakka :as u-domain]))
+            [harja.domain.urakka :as u-domain]
+            [harja.loki :as log])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]
+                   [cljs.core.async.macros :refer [go]]))
 
 (defn urakan-sopimus
   ([ur valittu-sopimusnumero-atom valitse-fn] (urakan-sopimus ur valittu-sopimusnumero-atom valitse-fn {}))
@@ -350,7 +353,8 @@
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})
-   sisalto])
+   (for* [item sisalto]
+     item)])
 
 (defn urakkatoiminnot [{:keys [sticky? urakka] :as optiot} & sisalto]
   (let [naulattu? (atom false)
@@ -378,7 +382,8 @@
         [:div.urakkatoiminnot {:class (str (when @naulattu? "urakkatoiminnot-naulattu ")
                                            (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                                              "urakkatoiminnot-tyyliton "))}
-         sisalto]))))
+         (for* [item sisalto]
+           item)]))))
 
 (defn valintaryhmat-3 [& [ryhma1 ryhma2 ryhma3]]
   [:div.row

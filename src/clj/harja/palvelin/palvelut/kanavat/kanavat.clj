@@ -25,7 +25,11 @@
 
 (defn poista-kohde! [db user {:keys [kohde-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-  (q/merkitse-kohde-poistetuksi! db user kohde-id))
+  (jdbc/with-db-transaction [db db]
+                            (let [kohteella-urakoita? (not (empty? (q/hae-kohteen-urakat db kohde-id)))]
+                              (if kohteella-urakoita?
+                                {:virhe :kohteella-on-urakoita}
+                                (q/merkitse-kohde-poistetuksi! db user kohde-id)))))
 
 (defrecord Kanavat []
   component/Lifecycle
