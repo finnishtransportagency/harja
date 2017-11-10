@@ -82,11 +82,13 @@
       :tyyppi :valinta
       :valinta-arvo first
       :valinta-nayta second
-      :valinnat sopimukset}
+      :valinnat sopimukset
+      :pakollinen? true}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
       :tyyppi :pvm
-      :fmt pvm/pvm-opt}
+      :fmt pvm/pvm-opt
+      :pakollinen? true}
      {:otsikko "Kohde"
       :nimi ::kanavan-toimenpide/kohde-id
       :tyyppi :valinta
@@ -106,15 +108,17 @@
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde-id
       :tyyppi :valinta
-      :valinta-arvo ::kanavan-kohde/id
-      :valinta-nayta ::kanavan-huoltokohde/nimi
-      :valinnat huoltokohteet}
+      :valinta-arvo ::kanavan-huoltokohde/id
+      :valinta-nayta #(or (::kanavan-huoltokohde/nimi %) "- valitse -")
+      :valinnat huoltokohteet
+      :pakollinen? true}
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpidekoodi-id
       :tyyppi :valinta
       :valinta-arvo ::toimenpidekoodi/id
-      :valinta-nayta ::toimenpidekoodi/nimi
-      :valinnat toimenpidekoodit}
+      :valinta-nayta #(or (::toimenpidekoodi/nimi %) "- valitse -")
+      :valinnat toimenpidekoodit
+      :pakollinen? true}
      {:otsikko "Lisätieto"
       :nimi ::kanavan-toimenpide/lisatieto
       :tyyppi :string}
@@ -123,7 +127,8 @@
       :tyyppi :string}
      {:otsikko "Suorittaja"
       :nimi ::kanavan-toimenpide/suorittaja-id
-      :tyyppi :string}
+      :tyyppi :string
+      :pakollinen? true}
      {:otsikko "Kuittaaja"
       :nimi ::kanavan-toimenpide/kuittaaja
       :tyyppi :string
