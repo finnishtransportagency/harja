@@ -62,7 +62,7 @@
    [debug/debug app]
    [napit/takaisin #(e! (tiedot/->SuljeKohdeLomake))]
    [lomake/lomake
-    {:otsikko "Lisää kanavalle kohteita"
+    {:otsikko "Lisää tai muokkaa kanavan kohteita"
      ;; muokkaa! on nykyään pakollinen lomakkeelle, mutta tässä lomakeessa
      ;; tietojen päivittämienn tehdään suoraan riville asetetuilla funktioilla
      :muokkaa! (constantly true)
