@@ -46,6 +46,13 @@
           (map #(update % ::kanava/kohteet kohteen-haku)))
         kanavat))
 
+(defn hae-kohteen-urakat [db kohde]
+  (specql/fetch db
+                ::kohde/kohde<->urakka
+                #{::kohde/urakka-id}
+                {::kohde/kohde-id kohde
+                 ::m/poistettu? false}))
+
 (defn hae-kanavat-ja-kohteet [db]
   (hae-kanavat-ja-kohteet*
     (specql/fetch db
