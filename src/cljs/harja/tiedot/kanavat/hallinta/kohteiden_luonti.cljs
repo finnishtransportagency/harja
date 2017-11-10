@@ -49,7 +49,7 @@
 (defrecord KohdeEiLiitetty [virhe kohde urakka])
 (defrecord AsetaPoistettavaKohde [kohde])
 (defrecord PoistaKohde [kohde])
-(defrecord KohdePoistettu [tulos])
+(defrecord KohdePoistettu [tulos kohde])
 (defrecord KohdeEiPoistettu [virhe])
 
 (defn hae-kanava-urakat! [tulos! fail!]
@@ -311,17 +311,18 @@
         (tt/post! :poista-kohde
                   {:kohde-id (::kohde/id kohde)}
                   {:onnistui ->KohdePoistettu
+                   :onnistui-parametrit [kohde]
                    :epaonnistui ->KohdeEiPoistettu})
 
         (-> app
-            (update :kohderivit poista-kohde kohde)
             (assoc :poistaminen-kaynnissa? true)))
 
       app))
 
   KohdePoistettu
-  (process-event [_ app]
+  (process-event [{kohde :kohde} app]
     (-> app
+        (update :kohderivit poista-kohde kohde)
         (assoc :poistaminen-kaynnissa? false)
         (assoc :poistettava-kohde nil)))
 
