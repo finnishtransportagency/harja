@@ -22,7 +22,7 @@
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeTurvalaiteryhmat"
                         :sanoma-fn (partial r-apurit/kysely-sanoma-aikavali "HaeTurvalaiteryhmat")
                         :vastaus-fn kasittele-turvalaiteryhma-vastaus
-                        :haun-nimi "hae-turvalaitteet"
+                        :haun-nimi "hae-turvalaiteryhmat"
                         :db db
                         :pohja-url pohja-url
                         :integraatioloki integraatioloki
