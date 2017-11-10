@@ -22,7 +22,6 @@
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :as debug]
-            [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as navigaatio]
