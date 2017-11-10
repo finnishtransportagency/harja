@@ -51,10 +51,8 @@
                                       ::kanavan-huoltokohde/id 123}
                                      {::kanavan-huoltokohde/nimi "Hilavitkutin"
                                       ::kanavan-huoltokohde/id 666}]
-                     :toimenpidekoodit [{::toimenpidekoodi/id 666
-                                         ::toimenpidekoodi/nimi "Hilipatus"}
-                                        {::toimenpidekoodi/id 777
-                                         ::toimenpidekoodi/nimi "Hapatus"}]}]
+                     :tehtavat (map #(nth % 3) @urakka/urakan-toimenpiteet-ja-tehtavat)
+                     :toimenpideinstanssit @urakka/urakan-toimenpideinstanssit}]
         (if (k/virhe? vastaus)
           (virhe!)
           (haku-valmis! vastaus)))))
@@ -125,6 +123,7 @@
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
+    (log "---->>> valinnat " (pr-str valinnat))
     (merge app valinnat))
 
   VirheTapahtui
