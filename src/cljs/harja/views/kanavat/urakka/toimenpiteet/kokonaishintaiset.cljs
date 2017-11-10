@@ -60,7 +60,7 @@
    toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
 
-(defn kokonaishintainen-toimenpidelomake [e! toimenpide sopimukset]
+(defn kokonaishintainen-toimenpidelomake [e! toimenpide sopimukset kohteet toimenpidekoodit huoltokohteet]
   [:div
    [napit/takaisin "Takaisin varusteluetteloon"
     #(e! (tiedot/->TyhjennaValittuToimenpide))]
@@ -90,13 +90,9 @@
      {:otsikko "Kohde"
       :nimi ::kanavan-toimenpide/kohde-id
       :tyyppi :valinta
-      :valinta-arvo :id
-      :valinta-nayta :nimi
-      ;; todo: hae oikeat arvot
-      :valinnat [{:nimi "hilipati"
-                  :id 1}
-                 {:nimi "pippaa"
-                  :id 2}]}
+      :valinta-arvo ::kanavan-kohde/id
+      :valinta-nayta ::kanavan-kohde/nimi
+      :valinnat kohteet}
      {:nimi :sijainti
       :otsikko "GPS-sijainti"
       :tyyppi :sijaintivalitsin
@@ -110,23 +106,15 @@
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde-id
       :tyyppi :valinta
-      :valinta-arvo :id
-      :valinta-nayta :nimi
-      ;; todo: hae oikeat arvot
-      :valinnat [{:nimi "hilipati"
-                  :id 1}
-                 {:nimi "pippaa"
-                  :id 2}]}
+      :valinta-arvo ::kanavan-kohde/id
+      :valinta-nayta ::kanavan-huoltokohde/nimi
+      :valinnat huoltokohteet}
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpidekoodi-id
       :tyyppi :valinta
-      :valinta-arvo :id
-      :valinta-nayta :nimi
-      ;; todo: hae oikeat arvot
-      :valinnat [{:nimi "hilipati"
-                  :id 1}
-                 {:nimi "pippaa"
-                  :id 2}]}
+      :valinta-arvo ::toimenpidekoodi/id
+      :valinta-nayta ::toimenpidekoodi/nimi
+      :valinnat toimenpidekoodit}
      {:otsikko "Lisätieto"
       :nimi ::kanavan-toimenpide/lisatieto
       :tyyppi :string}
@@ -143,10 +131,10 @@
       :muokattava? (constantly false)}]
     toimenpide]])
 
-(defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide sopimukset]
+(defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide sopimukset kohteet toimenpidekoodit huoltokohteet]
   [:div
    (if valittu-toimenpide
-     [kokonaishintainen-toimenpidelomake e! valittu-toimenpide sopimukset]
+     [kokonaishintainen-toimenpidelomake e! valittu-toimenpide sopimukset kohteet toimenpidekoodit huoltokohteet]
      [:div
       [hakuehdot e! urakka]
       [kokonaishintaiset-toimenpiteet-taulukko toimenpiteet]])
@@ -165,12 +153,12 @@
                                 :toimenpide @u/valittu-toimenpideinstanssi})))
                       #(do
                          (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [toimenpiteet valittu-toimenpide sopimukset] :as app}]
+    (fn [e! {:keys [toimenpiteet valittu-toimenpide kohteet toimenpidekoodit huoltokohteet] :as app}]
       (let [urakka (get-in app [:valinnat :urakka])
             sopimukset (:sopimukset urakka)]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:span
-         [kokonaishintaiset-nakyma e! app urakka toimenpiteet valittu-toimenpide sopimukset]]))))
+         [kokonaishintaiset-nakyma e! app urakka toimenpiteet valittu-toimenpide sopimukset kohteet toimenpidekoodit huoltokohteet]]))))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

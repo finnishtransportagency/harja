@@ -12,9 +12,13 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.navigaatio :as navigaatio])
+            [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.urakka.toteumat.varusteet.viestit :as v]
+            [tuck.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -31,7 +35,7 @@
               :aikavali @urakka/valittu-aikavali
               :toimenpide @urakka/valittu-toimenpideinstanssi})))
 
-(defn esitaytetty-toimenpide[]
+(defn esitaytetty-toimenpide []
   (let [kayttaja @istunto/kayttaja]
     {::kanavan-toimenpide/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
      ::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
@@ -48,6 +52,26 @@
 (defrecord AsetaToimenpiteenTiedot [toimenpide])
 (defrecord TallennaToimenpide [toimenpide])
 (defrecord ToimenpideTallennettu [toimenpide])
+(defrecord ValinnatHaettuToimenpiteelle [valinnat])
+(defrecord VirheTapahtui [virhe])
+
+(defn hae-valinnat-toimenpiteelle [valinnat haku-valmis! virhe!]
+  ;; todo: tee oikea palvelinkutsu (<! (vkm/tieosan-ajoradat (:numero uusi-tr) (:alkuosa uusi-tr)))
+  (go (let [vastaus {:kohteet [{::kanavan-kohde/id 123
+                                ::kanavan-kohde/nimi "Hilipati pippaa"}
+                               {::kanavan-kohde/id 666
+                                ::kanavan-kohde/nimi "Trolololo"}]
+                     :toimenpidekoodit [{::toimenpidekoodi/id 666
+                                         ::toimenpidekoodi/nimi "Hilipatus"}
+                                        {::toimenpidekoodi/id 777
+                                         ::toimenpidekoodi/nimi "Hapatus"}]
+                     :huoltokohteet [{::kanavan-huoltokohde/nimi "Kampe"
+                                      ::kanavan-huoltokohde/id 123}
+                                     {::kanavan-huoltokohde/nimi "Hilavitkutin"
+                                      ::kanavan-huoltokohde/id 666}]}]
+        (if (k/virhe? vastaus)
+          (virhe!)
+          (haku-valmis! vastaus)))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -87,7 +111,10 @@
 
 
   UusiToimenpide
-  (process-event [_ app]
+  (process-event [_ {valinnat :valinnat :as app}]
+    (hae-valinnat-toimenpiteelle valinnat
+                                 (t/send-async! ->ValinnatHaettuToimenpiteelle)
+                                 (t/send-async! (partial ->VirheTapahtui "Valintojen hakeminen toimenpiteelle epäonnistui")))
     (assoc app :valittu-toimenpide (esitaytetty-toimenpide)))
 
   TyhjennaValittuToimenpide
@@ -96,5 +123,14 @@
 
   AsetaToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (assoc app :valittu-toimenpide toimenpide)))
+    (assoc app :valittu-toimenpide toimenpide))
+
+  ValinnatHaettuToimenpiteelle
+  (process-event [{valinnat :valinnat} app]
+    (merge app valinnat))
+
+  v/VirheTapahtui
+  (process-event [{virhe :virhe} app]
+    (viesti/nayta! virhe :danger)
+    app))
 
