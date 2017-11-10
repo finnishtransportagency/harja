@@ -12,6 +12,7 @@
 
     [harja.domain.muokkaustiedot :as m]
     [harja.domain.urakka :as ur]
+    [harja.domain.sopimus :as sop]
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kanavan-kohde :as kohde]
     [harja.domain.kanavat.lt-alus :as lt-alus]
@@ -26,7 +27,13 @@
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
-   {::kohde (specql.rel/has-one ::kohde-id
+   {::urakka (specql.rel/has-one ::urakka-id
+                                 :harja.domain.urakka/urakka
+                                 :harja.domain.urakka/id)
+    ::sopimus (specql.rel/has-one ::sopimus-id
+                                  :harja.domain.sopimus/sopimus
+                                  :harja.domain.sopimus/id)
+    ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
                                 :harja.domain.kanavat.kanavan-kohde/id)
     ::alukset (specql.rel/has-many ::id
@@ -79,7 +86,12 @@
     :alas "Alas"}
     suunta))
 
-(s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id]))
+(s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
+                                               :opt [::toimenpide
+                                                     ::kohde
+                                                     ::lt-alus/laji
+                                                     ::lt-alus/suunta]
+                                               :opt-un [::aikavali ::niput?]))
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req
                                                   [::id ::aika ::toimenpide ::lisatieto ::vesipinta-alaraja
