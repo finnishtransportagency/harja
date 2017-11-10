@@ -71,7 +71,7 @@
 (defn palvelumuoto->str [rivi]
   (let [pm (::lt/palvelumuoto rivi)]
     (if (= :itse pm)
-      (str (lt/palvelumuoto->str pm) " (" (::lt/palvelumuoto-lkm rivi) ")")
+      (str (lt/palvelumuoto->str pm) " (" (::lt/palvelumuoto-lkm rivi) " kpl)")
       (lt/palvelumuoto->str pm))))
 
 (defn tapahtumarivit [tapahtuma]
@@ -113,12 +113,16 @@
 
   HaeLiikennetapahtumat
   (process-event [_ app]
-    (let [params (hakuparametrit app)]
-      (tt/post! :hae-liikennetapahtumat
-                params
-                {:onnistui ->LiikennetapahtumatHaettu
-                 :epaonnistui ->LiikennetapahtumatEiHaettu}))
-    (assoc app :liikennetapahtumien-haku-kaynnissa? true))
+    (if-not (:liikennetapahtumien-haku-kaynnissa? app)
+      (let [params (hakuparametrit app)]
+        (-> app
+            (tt/post! :hae-liikennetapahtumat
+                      params
+                      {:onnistui ->LiikennetapahtumatHaettu
+                       :epaonnistui ->LiikennetapahtumatEiHaettu})
+            (assoc :liikennetapahtumien-haku-kaynnissa? true)))
+
+      app))
 
   LiikennetapahtumatHaettu
   (process-event [{tulos :tulos} app]
