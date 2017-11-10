@@ -1,5 +1,5 @@
 CREATE TABLE kan_hinta (
-    id integer NOT NULL,
+    id SERIAL PRIMARY KEY,
     otsikko character varying(1024),
     summa numeric,
     yleiskustannuslisa numeric DEFAULT 0 NOT NULL,
