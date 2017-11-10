@@ -1,6 +1,5 @@
 (ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet
-  (:require [clojure.java.jdbc :as jdbc]
-            [com.stuartsierra.component :as component]
+  (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
