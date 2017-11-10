@@ -42,31 +42,21 @@
 
 (s/def ::hakuteksti string?)
 
-(s/def ::kohde/urakat
-  (s/nilable (s/coll-of (s/keys :req [::ur/nimi ::ur/id]))))
-
-(s/def ::kohteet
-  (s/coll-of (s/keys :req [::kohde/id
-                           ::kohde/tyyppi
-                           ::kohde/urakat]
-                     :opt [::kohde/nimi])))
-
 (s/def ::hae-kanavat-ja-kohteet-vastaus
   (s/coll-of (s/keys :req [::id ::nimi ::kohteet])))
 
 (s/def ::lisaa-kanavalle-kohteita-kysely
-  (s/coll-of (s/keys :req [::kohde/kanava-id ::kohde/id ::kohde/tyyppi]
-                     :opt [::kohde/nimi ::m/poistettu?])))
+  (s/coll-of (s/keys :req [:harja.domain.kanavat.kanavan-kohde/kanava-id :harja.domain.kanavat.kanavan-kohde/id :harja.domain.kanavat.kanavan-kohde/tyyppi]
+                     :opt [:harja.domain.kanavat.kanavan-kohde/nimi ::m/poistettu?])))
 
 (s/def ::lisaa-kanavalle-kohteita-vastaus ::hae-kanavat-ja-kohteet-vastaus)
 
-(s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id ::kohde-id ::poistettu?]))
+(s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id :harja.domain.kanavat.kanavan-kohde/id ::poistettu?]))
 
-(s/def ::poista-kohde-kysely (s/keys :req-un [::kohde-id]))
+(s/def ::poista-kohde-kysely (s/keys :req-un [:harja.domain.kanavat.kanavan-kohde/id]))
 
 (s/def ::hae-urakan-kohteet-kysely (s/keys :req [::ur/id]))
-(s/def ::hae-urakan-kohteet-vastaus (s/coll-of (s/keys :req [::kohde/id
-                                                             ::kohde/tyyppi
-                                                             ::id
-                                                             ::nimi]
-                                                       :opt [::kohde/nimi])))
+(s/def ::hae-urakan-kohteet-vastaus (s/coll-of (s/keys :req [:harja.domain.kanavat.kanavan-kohde/id
+                                                             :harja.domain.kanavat.kanavan-kohde/tyyppi
+                                                             :harja.domain.kanavat.kanavan-kohde/kohteen-kanava]
+                                                       :opt [:harja.domain.kanavat.kanavan-kohde/nimi])))
