@@ -23,13 +23,13 @@
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :as debug]
             [clojure.string :as str]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -76,18 +76,13 @@
                      :ikoni (ikonit/tallenna)
                      :kun-onnistuu #(e! (tiedot/->ToimenpideTallennettu %))
                      :kun-virhe #(viesti/nayta! "Toimenpiteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                     :disabled (not (lomake/voi-tallentaa? toimenpide))}]])
-     }
+                     :disabled (not (lomake/voi-tallentaa? toimenpide))}]])}
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
-      :valinta-arvo :id
-      :valinta-nayta :nimi
-      ;; todo: hae oikeat arvot
-      :valinnat [{:nimi "hilipati"
-                  :id 1}
-                 {:nimi "pippaa"
-                  :id 2}]}
+      :valinta-arvo first
+      :valinta-nayta second
+      :valinnat (:sopimukset @navigaatio/valittu-urakka)}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
       :tyyppi :pvm
@@ -144,9 +139,7 @@
      {:otsikko "Kuittaaja"
       :nimi ::kanavan-toimenpide/kuittaaja
       :tyyppi :string
-      :hae #(do
-              (log "--->>> " (pr-str %))
-              (kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %)))
+      :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}]
     toimenpide]])
 
@@ -166,7 +159,7 @@
     (komp/sisaan-ulos #(do
                          (e! (tiedot/->Nakymassa? true))
                          (e! (tiedot/->PaivitaValinnat
-                               {:urakka @nav/valittu-urakka
+                               {:urakka @navigaatio/valittu-urakka
                                 :sopimus-id (first @u/valittu-sopimusnumero)
                                 :aikavali @u/valittu-aikavali
                                 :toimenpide @u/valittu-toimenpideinstanssi})))

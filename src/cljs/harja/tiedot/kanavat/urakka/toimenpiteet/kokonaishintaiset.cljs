@@ -2,21 +2,19 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [cljs.core.async :as async]
-            [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -28,14 +26,15 @@
 (defonce valinnat
          (reaction
            (when (:nakymassa? @tila)
-             {:urakka @nav/valittu-urakka
-              :sopimus-id (first @u/valittu-sopimusnumero)
-              :aikavali @u/valittu-aikavali
-              :toimenpide @u/valittu-toimenpideinstanssi})))
+             {:urakka @navigaatio/valittu-urakka
+              :sopimus-id (first @urakka/valittu-sopimusnumero)
+              :aikavali @urakka/valittu-aikavali
+              :toimenpide @urakka/valittu-toimenpideinstanssi})))
 
 (defn esitaytetty-toimenpide[]
   (let [kayttaja @istunto/kayttaja]
-    {::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
+    {::kanavan-toimenpide/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+     ::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
                                      ::kayttaja/etunimi (:etunimi kayttaja)
                                      ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
