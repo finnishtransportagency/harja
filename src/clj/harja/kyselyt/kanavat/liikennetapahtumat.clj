@@ -16,6 +16,7 @@
             [harja.kyselyt.kanavat.kanavat :as kanavat-q]
 
             [harja.domain.urakka :as ur]
+            [harja.domain.sopimus :as sop]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
@@ -50,11 +51,14 @@
     (map (partial urakat-idlla urakka-id))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))
 
-(defn hae-liikennetapahtumat [db {:keys [kohde suunta toimenpidetyyppi
-                                         aluslaji niput?] :as tiedot}]
+(defn hae-liikennetapahtumat [db {:keys [niput? aikavali] :as tiedot}]
   (let [urakka-id (::ur/id tiedot)
-        kohde-id (::kohde/id kohde)
-        [alku loppu] (:aikavali tiedot)]
+        sopimus-id (::sop/id tiedot)
+        kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
+        toimenpide (::lt/toimenpide tiedot)
+        aluslaji (::lt-alus/laji tiedot)
+        suunta (::lt-alus/suunta tiedot)
+        [alku loppu] aikavali]
     (hae-liikennetapahtumat*
      (specql/fetch db
                    ::lt/liikennetapahtuma
@@ -70,10 +74,12 @@
                        {::lt/aika (op/between alku loppu)})
                      (when kohde-id
                        {::kohde/id kohde-id})
-                     (when toimenpidetyyppi
-                       {::lt/toimenpide toimenpidetyyppi})
+                     (when toimenpide
+                       {::lt/toimenpide toimenpide})
 
                      {::m/poistettu? false
+                      ::lt/urakka-id urakka-id
+                      ::lt/sopimus-id sopimus-id
                       ::lt/kohde {::m/poistettu? false}
                       ::lt/alukset (op/and
                                      (op/or {::m/poistettu? op/null?}
