@@ -111,6 +111,14 @@
                              :valinta-nayta second}
              :arvo-atom tiedot/naytettavat-tarkastukset}]
 
+           ^{:key "tekija"}
+           [tee-otsikollinen-kentta
+            {:otsikko "Tekijä"
+             :kentta-params {:tyyppi :valinta
+                             :valinnat tiedot/+tarkastuksen-tekija-valinnat+
+                             :valinta-nayta second}
+             :arvo-atom tiedot/tarkastuksen-tekija}]
+
            (when-not vesivaylaurakka?
              ^{:key "tienumero"}
              [valinnat/tienumero tiedot/tienumero])

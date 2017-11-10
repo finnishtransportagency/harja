@@ -7,20 +7,18 @@ CREATE OR REPLACE FUNCTION laske_hoitokauden_asiakastyytyvaisyysbonus(
 DECLARE
   kerroin            NUMERIC;
   perusluku          NUMERIC;
-  vertailuluku       NUMERIC;
   alkuv              INTEGER;
   loppuv             INTEGER;
-  indeksilukujen_lkm INTEGER;
   tulosrivi          RECORD;
 BEGIN
-  -- asiakastyytyväisyysbonus myönnetään hoitokauden jälkeen.
-  -- Etsitään edellisen hoitokauden alkuvuosi
+  -- asiakastyytyväisyysbonus kirjataan samalle hoitokaudelle kuin miltä se myön-
+  -- netään, yleensä syyskuulle.
   CASE
     WHEN (SELECT EXTRACT(MONTH FROM bonuksen_maksupvm) :: INTEGER) BETWEEN 10 AND 12
     THEN
-      alkuv := (SELECT EXTRACT(YEAR FROM bonuksen_maksupvm) :: INTEGER) - 1;
+      alkuv := (SELECT EXTRACT(YEAR FROM bonuksen_maksupvm) :: INTEGER);
   ELSE
-    alkuv := (SELECT EXTRACT(YEAR FROM bonuksen_maksupvm) :: INTEGER) - 2;
+    alkuv := (SELECT EXTRACT(YEAR FROM bonuksen_maksupvm) :: INTEGER) - 1;
   END CASE;
   loppuv := alkuv + 1;
 

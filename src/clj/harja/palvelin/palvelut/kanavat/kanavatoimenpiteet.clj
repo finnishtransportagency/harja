@@ -10,19 +10,24 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]))
 
-(defn hae-kanavatoimenpiteet [db user {urakka ::urakka/id
-                                       sopimus ::sopimus/id
-                                       alkupvm ::kanavan-toimenpide/alkupvm
-                                       loppupvm ::kanavan-toimenpide/loppupvm
+(defn hae-kanavatoimenpiteet [db user {urakka-id ::kanavan-toimenpide/urakka-id
+                                       sopimus-id ::kanavan-toimenpide/sopimus-id
+                                       alkupvm :alkupvm
+                                       loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
                                        tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                        :as hakuehdot}]
+
+  (assert urakka-id "Urakka-id puuttuu!")
+  (case tyyppi
+    :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
+    :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id))
+
   (let [tyyppi (when tyyppi (name tyyppi))]
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka)
     (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
       db
-      {:urakka urakka
-       :sopimus sopimus
+      {:urakka urakka-id
+       :sopimus sopimus-id
        :alkupvm alkupvm
        :loppupvm loppupvm
        :toimenpidekoodi toimenpidekoodi
@@ -36,7 +41,7 @@
       :hae-kanavatoimenpiteet
       (fn [user hakuehdot]
         (hae-kanavatoimenpiteet db user hakuehdot))
-      {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kutsu
+      {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
        :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
     this)
 

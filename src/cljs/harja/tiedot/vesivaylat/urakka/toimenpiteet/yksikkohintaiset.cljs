@@ -383,7 +383,7 @@
 
   SuunnitellutTyotHaettu
   (process-event [{vastaus :vastaus} app]
-    (assoc app :suunnitellut-tyot vastaus
+    (assoc app :suunnitellut-tyot (remove (comp nil? :yksikkohinta) vastaus)
                :suunniteltujen-toiden-haku-kaynnissa? false))
 
   SuunnitellutTyotEiHaettu
