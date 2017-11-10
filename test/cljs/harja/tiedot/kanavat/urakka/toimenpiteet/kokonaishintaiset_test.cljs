@@ -31,24 +31,24 @@
 
 (deftest PaivitaValinnat
   (vaadi-async-kutsut
-    #{tiedot/->HaeKokonaishintaisetToimenpiteet}
+    #{tiedot/->HaeToimenpiteet}
     (is (= {:valinnat {:foo :bar}}
            (e! (tiedot/->PaivitaValinnat {:foo :bar}))))))
 
 (deftest HaeKokonaishintaisetToimenpiteet
   (vaadi-async-kutsut
-    #{tiedot/->KokonaishintaisetToimenpiteetHaettu tiedot/->KokonaishintaisetToimenpiteetEiHaettu}
+    #{tiedot/->ToimenpiteetHaettu tiedot/->ToimenpiteidenHakuEpaonnistui}
     (is (= {:haku-kaynnissa? true}
-           (e! (tiedot/->HaeKokonaishintaisetToimenpiteet {:urakka {:id 1}
+           (e! (tiedot/->HaeToimenpiteet {:urakka {:id 1}
                                                            :sopimus-id 666
                                                            :toimenpide {:id 666}}))))))
 
-(deftest KokonaishintaisetToimenpiteetHaettu
+(deftest ToimenpiteetHaettu
   (is (= {:haku-kaynnissa? false
           :toimenpiteet [{:id 1}]}
-         (e! (tiedot/->KokonaishintaisetToimenpiteetHaettu [{:id 1}])))))
+         (e! (tiedot/->ToimenpiteetHaettu [{:id 1}])))))
 
-(deftest KokonaishintaisetToimenpiteetEiHaettu
+(deftest ToimenpiteetEiHaettu
   (is (= {:haku-kaynnissa? false
           :toimenpiteet []}
-         (e! (tiedot/->KokonaishintaisetToimenpiteetEiHaettu)))))
+         (e! (tiedot/->ToimenpiteidenHakuEpaonnistui)))))

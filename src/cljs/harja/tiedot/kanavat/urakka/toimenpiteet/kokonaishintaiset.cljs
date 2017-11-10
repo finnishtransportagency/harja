@@ -31,13 +31,18 @@
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
 
+(def esitaytetty-toimenpide {})
+
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
-(defrecord HaeKokonaishintaisetToimenpiteet [valinnat])
-(defrecord KokonaishintaisetToimenpiteetHaettu [toimenpiteet])
-(defrecord KokonaishintaisetToimenpiteetEiHaettu [])
+(defrecord HaeToimenpiteet [valinnat])
+(defrecord ToimenpiteetHaettu [toimenpiteet])
+(defrecord ToimenpiteidenHakuEpaonnistui [])
 (defrecord UusiToimenpide [])
 (defrecord TyhjennaValittuToimenpide [])
+(defrecord AsetaToimenpiteenTiedot [toimenpide])
+(defrecord TallennaToimenpide [toimenpide])
+(defrecord ToimenpideTallennettu [toimenpide])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -46,11 +51,11 @@
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
-    (let [haku (tuck/send-async! ->HaeKokonaishintaisetToimenpiteet)]
+    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
       (go (haku valinnat))
       (assoc app :valinnat valinnat)))
 
-  HaeKokonaishintaisetToimenpiteet
+  HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and
           (get-in valinnat [:urakka :id])
@@ -59,17 +64,17 @@
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
-                               {:onnistui ->KokonaishintaisetToimenpiteetHaettu
-                                :epaonnistui ->KokonaishintaisetToimenpiteetEiHaettu})
+                               {:onnistui ->ToimenpiteetHaettu
+                                :epaonnistui ->ToimenpiteidenHakuEpaonnistui})
             (assoc :haku-kaynnissa? true)))
       app))
 
-  KokonaishintaisetToimenpiteetHaettu
+  ToimenpiteetHaettu
   (process-event [{toimenpiteet :toimenpiteet} app]
     (assoc app :haku-kaynnissa? false
                :toimenpiteet toimenpiteet))
 
-  KokonaishintaisetToimenpiteetEiHaettu
+  ToimenpiteidenHakuEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Kokonaishintaisten toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :haku-kaynnissa? false
@@ -78,9 +83,13 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :valittu-toimenpide {:hilipati "pippaa"}))
+    (assoc app :valittu-toimenpide esitaytetty-toimenpide))
 
   TyhjennaValittuToimenpide
   (process-event [_ app]
-    (dissoc app :valittu-toimenpide)))
+    (dissoc app :valittu-toimenpide))
+
+  AsetaToimenpiteenTiedot
+  (process-event [{toimenpide :toimenpide} app]
+    (assoc app :valittu-toimenpide toimenpide)))
 

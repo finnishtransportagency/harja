@@ -25,8 +25,11 @@
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja-laadunseuranta.ui.yleiset.lomake :as lomake]
-            [harja.ui.debug :as debug])
+            [harja.ui.lomake :as lomake]
+            [harja.ui.debug :as debug]
+            [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.viesti :as viesti])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -58,15 +61,98 @@
    toimenpiteet])
 
 (defn kokonaishintainen-toimenpidelomake [e! toimenpide]
-  [napit/takaisin "Takaisin varusteluetteloon"
-   #(e! (tiedot/->TyhjennaValittuToimenpide))]
-
-  #_(lomake/lomake
-    {:otsikko "Uusi toimenpide"}
-    [{:nimi :hilipati
-      :otsikko "Hilipati"
-      :tyyppi :string}]
-    toimenpide))
+  [:div
+   [napit/takaisin "Takaisin varusteluetteloon"
+    #(e! (tiedot/->TyhjennaValittuToimenpide))]
+   [lomake/lomake
+    {:otsikko "Uusi toimenpide"
+     :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
+     :footer-fn (fn [toimenpide]
+                  [:div
+                   [napit/palvelinkutsu-nappi
+                    "Tallenna"
+                    #(e! (tiedot/->ToimenpideTallennettu %))
+                    {:luokka "nappi-ensisijainen"
+                     :ikoni (ikonit/tallenna)
+                     :kun-onnistuu #(e! (tiedot/->ToimenpideTallennettu %))
+                     :kun-virhe #(viesti/nayta! "Toimenpiteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                     :disabled (not (lomake/voi-tallentaa? toimenpide))}]])
+     }
+    [{:otsikko "Sopimus"
+      :nimi ::kanavan-toimenpide/sopimus-id
+      :tyyppi :string
+      :fmt pvm/pvm-opt}
+     {:otsikko "Päivämäärä"
+      :nimi ::kanavan-toimenpide/pvm
+      :tyyppi :pvm
+      :fmt pvm/pvm-opt}
+     {:otsikko "Kohde"
+      :nimi ::kanavan-toimenpide/kohde-id
+      :tyyppi :valinta
+      :valinta-arvo :id
+      :valinta-nayta :nimi
+      ;; todo: hae oikeat arvot
+      :valinnat [{:nimi "hilipati"
+                  :id 1}
+                 {:nimi "pippaa"
+                  :id 2}]}
+     {:nimi :sijainti
+      :otsikko "GPS-sijainti"
+      :tyyppi :sijaintivalitsin
+      :karttavalinta? false
+      :paikannus-onnistui-fn #(
+                                ;;todo: laukaise eventti
+                                )
+      :paikannus-epaonnistui-fn #(
+                                   ;;todo: laukaise eventti
+                                   )}
+     {:otsikko "Huoltokohde"
+      :nimi ::kanavan-toimenpide/huoltokohde-id
+      :tyyppi :valinta
+      :valinta-arvo :id
+      :valinta-nayta :nimi
+      ;; todo: hae oikeat arvot
+      :valinnat [{:nimi "hilipati"
+                  :id 1}
+                 {:nimi "pippaa"
+                  :id 2}]}
+     {:otsikko "Toimenpide"
+      :nimi ::kanavan-toimenpide/toimenpidekoodi-id
+      :tyyppi :valinta
+      :valinta-arvo :id
+      :valinta-nayta :nimi
+      ;; todo: hae oikeat arvot
+      :valinnat [{:nimi "hilipati"
+                  :id 1}
+                 {:nimi "pippaa"
+                  :id 2}]}
+     {:otsikko "Lisätieto"
+      :nimi ::kanavan-toimenpide/lisatieto
+      :tyyppi :string}
+     {:otsikko "Muu toimenpide"
+      :nimi ::kanavan-toimenpide/muu-toimenpide
+      :tyyppi :string}
+     {:otsikko "Suorittaja"
+      :nimi ::kanavan-toimenpide/suorittaja-id
+      :tyyppi :valinta
+      :valinta-arvo :id
+      :valinta-nayta :nimi
+      ;; todo: hae oikeat arvot
+      :valinnat [{:nimi "hilipati"
+                  :id 1}
+                 {:nimi "pippaa"
+                  :id 2}]}
+     {:otsikko "Kuittaaja"
+      :nimi ::kanavan-toimenpide/kuittaaja-id
+      :tyyppi :valinta
+      :valinta-arvo :id
+      :valinta-nayta :nimi
+      ;; todo: hae oikeat arvot
+      :valinnat [{:nimi "hilipati"
+                  :id 1}
+                 {:nimi "pippaa"
+                  :id 2}]}]
+    toimenpide]])
 
 (defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide]
   [:div
