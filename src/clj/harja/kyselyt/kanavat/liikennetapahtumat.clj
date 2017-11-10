@@ -73,7 +73,7 @@
                      (when (and alku loppu)
                        {::lt/aika (op/between alku loppu)})
                      (when kohde-id
-                       {::kohde/id kohde-id})
+                       {::lt/kohde-id kohde-id})
                      (when toimenpide
                        {::lt/toimenpide toimenpide})
 
