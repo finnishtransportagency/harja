@@ -16,7 +16,7 @@
 
 (define-tables
   ["liikennetapahtuma_aluslaji" ::lt-aluslaji (specql.transform/transform (specql.transform/to-keyword))]
-  ["liikennetapahtuma_suunta" ::lt-suunta (specql.transform/transform (specql.transform/to-keyword))]
+  ["liikennetapahtuma_suunta" ::aluksen-suunta (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma_alus" ::liikennetapahtuman-alus
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
