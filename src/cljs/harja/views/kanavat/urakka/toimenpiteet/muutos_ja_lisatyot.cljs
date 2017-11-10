@@ -49,7 +49,11 @@
              [ajax-loader "Haetaan toimenpiteitä"]
              "Ei toimenpiteitä")
     :tunniste ::kanavan-toimenpide/id}
-   toimenpide-view/toimenpidesarakkeet
+   (concat toimenpide-view/toimenpidesarakkeet
+           {:otsikko "Hinta"
+            :nimi :hinta
+            :tyyppi :komponentti
+            :komponentti (fn [rivi] [hinnoittelu-ui/hinnoittele-toimenpide e! app rivi])})
    toimenpiteet])
 
 (defn lisatyot* [e! app]
@@ -74,6 +78,3 @@
 
 (defc lisatyot []
       [tuck tiedot/tila lisatyot*])
-
-
-

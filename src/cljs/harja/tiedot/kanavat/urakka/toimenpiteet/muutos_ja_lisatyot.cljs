@@ -37,6 +37,22 @@
 (defrecord ToimenpiteetHaettu [tulos])
 (defrecord ToimenpiteetEiHaettu [])
 
+;; Hinnoittelu
+(defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
+(defrecord PeruToimenpiteenHinnoittelu [])
+(defrecord AsetaHintakentalleTiedot [tiedot])
+(defrecord AsetaTyorivilleTiedot [tiedot])
+(defrecord LisaaHinnoiteltavaTyorivi [])
+(defrecord LisaaHinnoiteltavaKomponenttirivi [])
+(defrecord LisaaMuuKulurivi [])
+(defrecord LisaaMuuTyorivi [])
+(defrecord PoistaHinnoiteltavaTyorivi [tyo])
+(defrecord PoistaHinnoiteltavaHintarivi [hinta])
+(defrecord TallennaToimenpiteenHinnoittelu [tiedot])
+(defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
+(defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
+
+
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
