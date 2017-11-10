@@ -11,7 +11,8 @@
     [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]])
 
-    [harja.domain.muokkaustiedot :as m])
+    [harja.domain.muokkaustiedot :as m]
+    [harja.domain.kanavat.kanava :as kanava])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -51,7 +52,7 @@
 
 (def kohteen-urakkatiedot #{[::linkin-urakka #{:harja.domain.urakka/id :harja.domain.urakka/nimi}]})
 
-(def kohteen-kanavatiedot #{[::kohteen-kanava #{:harja.domain.kanavat.kanava/id :harja.domain.kanavat.kanava/nimi}]})
+(def kohteen-kanavatiedot #{[::kohteen-kanava kanava/perustiedot]})
 
 (def perustiedot-ja-kanava
   (set/union perustiedot kohteen-kanavatiedot))
@@ -75,23 +76,14 @@
 (defn fmt-kohteen-kanava-nimi
   "Ottaa mapin, jossa on kohteen tiedot ja ::kohteen-kanava avaimen takana kanavan tiedot."
   [kohde-ja-kanava]
-  (kohteen-nimi* (get-in kohde-ja-kanava [::kohteen-kanava :harja.domain.kanavat.kanava/nimi])
+  (kohteen-nimi* (get-in kohde-ja-kanava [::kohteen-kanava ::kanava/nimi])
                  (::nimi kohde-ja-kanava)
                  (tyyppi->str (::tyyppi kohde-ja-kanava))))
 
-(defn fmt-kohde-ja-kanava-nimi
+(defn fmt-kanava-ja-kohde-nimi
   "Ottaa kanavan mäpissä, jossa on ::kanava/nimi, ja kohteen mäpissä, jossa on ::kohde/nimi ja ::kohde/tyyppi.
   Palauttaa kohteen täyden nimen."
   [kanava kohde]
-  (kohteen-nimi* (:harja.domain.kanavat.kanava/nimi kanava)
+  (kohteen-nimi* (::kanava/nimi kanava)
                  (::nimi kohde)
                  (tyyppi->str (::tyyppi kohde))))
-
-(defn fmt-kohde-ja-kanava-mapissa-nimi
-  "Ottaa mäpin, jossa ::kanava/nimi, ::kohde/nimi, ja ::kohde/tyyppi. Palauttaa kohteen täyden nimen"
-  [k]
-  (kohteen-nimi* (:harja.domain.kanavat.kanava/nimi k)
-                 (::nimi k)
-                 (tyyppi->str (::tyyppi k))))
-
-

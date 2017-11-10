@@ -23,21 +23,7 @@
     ;; on oikeus nähdä, mitkä kohteet kuuluvat kyseiseen urakkaan. Tälle ei vaan ole suoraa omaa oikeutta
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
 
-    (let [kanavat (q/hae-kanavat-ja-kohteet db)]
-      (mapcat
-        (fn [kanava]
-          (keep
-            (fn [kohde]
-              (let [kohde (update kohde ::kohde/urakat
-                                  (fn [urakat]
-                                    (filter #(= (::ur/id %) urakka-id) urakat)))]
-                (when-not (empty? (::kohde/urakat kohde))
-                  (-> kohde
-                      (assoc ::kan/id (::kan/id kanava))
-                      (dissoc ::kohde/urakat)
-                      (assoc ::kan/nimi (::kan/nimi kanava))))))
-            (::kan/kohteet kanava)))
-        kanavat))))
+    (q/hae-urakan-kohteet db urakka-id)))
 
 (defn lisaa-kanavalle-kohteita [db user kohteet]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)

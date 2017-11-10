@@ -48,7 +48,7 @@
      {}
      ^{:key "valinnat"}
      [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
-     [valinnat/kanava-kohde (atomi :kohde) (into [nil] urakan-kohteet) #(let [nimi (kohde/fmt-kohde-ja-kanava-mapissa-nimi %)]
+     [valinnat/kanava-kohde (atomi :kohde) (into [nil] urakan-kohteet) #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
                                                                           (if-not (empty? nimi)
                                                                             nimi
                                                                             "Kaikki"))]

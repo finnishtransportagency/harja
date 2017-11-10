@@ -79,7 +79,7 @@
           (-> kohde
               (assoc ::kanava/id (::kanava/id kanava-ja-kohteet))
               (assoc ::kanava/nimi (::kanava/nimi kanava-ja-kohteet))
-              (assoc :rivin-teksti (kohde/fmt-kohde-ja-kanava-nimi kanava-ja-kohteet kohde))))
+              (assoc :rivin-teksti (kohde/fmt-kanava-ja-kohde-nimi kanava-ja-kohteet kohde))))
         (::kanava/kohteet kanava-ja-kohteet)))
     tulos))
 

@@ -11,7 +11,6 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
-    [harja.domain.kanavat.kanavan-kohde :as kohde]
     [harja.domain.urakka :as ur])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
@@ -29,12 +28,15 @@
 (def perustiedot-ja-sijainti (conj perustiedot ::sijainti))
 
 (def kohteet
-  #{[::kohteet (clojure.set/union
-                 harja.domain.kanavat.kanavan-kohde/perustiedot
-                 harja.domain.kanavat.kanavan-kohde/metatiedot)]})
+  #{[::kohteet #{:harja.domain.kanavat.kanavan-kohde/id
+                 :harja.domain.kanavat.kanavan-kohde/nimi
+                 :harja.domain.kanavat.kanavan-kohde/tyyppi}]})
 
 (def kohteet-sijainteineen
-  #{[::kohteet harja.domain.kanavat.kanavan-kohde/perustiedot-ja-sijainti]})
+  #{[::kohteet #{:harja.domain.kanavat.kanavan-kohde/id
+                 :harja.domain.kanavat.kanavan-kohde/nimi
+                 :harja.domain.kanavat.kanavan-kohde/tyyppi
+                 :harja.domain.kanavat.kanavan-kohde/sijainti}]})
 
 ;; Palvelut
 
