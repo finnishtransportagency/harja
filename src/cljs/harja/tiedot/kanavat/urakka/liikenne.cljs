@@ -11,6 +11,7 @@
             [harja.tiedot.navigaatio :as nav]
 
             [harja.domain.urakka :as ur]
+            [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
@@ -27,11 +28,12 @@
                  :tapahtumarivit nil
                  :urakan-kohteet nil
                  :valinnat {::ur/id nil
+                            ::sop/id nil
                             :aikavali nil
-                            :kohde nil
-                            :suunta nil
-                            :toimenpidetyyppi nil
-                            :aluslaji nil
+                            ::lt/kohde nil
+                            ::lt-alus/suunta nil
+                            ::lt/toimenpide nil
+                            ::lt-alus/laji nil
                             :niput? false}}))
 
 (def uusi-tapahtuma {})
@@ -40,10 +42,11 @@
   (reaction
     (when (:nakymassa? @tila)
       {::ur/id (:id @nav/valittu-urakka)
-       :aikavali @u/valittu-aikavali})))
+       :aikavali @u/valittu-aikavali
+       ::sop/id (first @u/valittu-sopimusnumero)})))
 
 (def valintojen-avaimet
-  [:kohde ::ur/id :aikavali :suunta :toimenpidetyyppi :aluslaji :niput?])
+  [::ur/id ::sop/id :aikavali ::lt/kohde ::lt-alus/suunta ::lt/toimenpide ::lt-alus/laji :niput?])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeLiikennetapahtumat [])
@@ -56,7 +59,8 @@
 (defrecord KohteetEiHaettu [virhe])
 
 (defn hakuparametrit [app]
-  (:valinnat app))
+  ;; Ei nil arvoja
+  (into {} (filter val (:valinnat app))))
 
 (defn tapahtumarivit [tapahtuma]
   (let [yleistiedot

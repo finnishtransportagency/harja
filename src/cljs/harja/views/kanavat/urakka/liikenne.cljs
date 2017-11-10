@@ -24,6 +24,7 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakka :as ur]
+            [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-nippu :as lt-nippu]
@@ -48,7 +49,7 @@
      {}
      ^{:key "valinnat"}
      [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
-     [valinnat/kanava-kohde (atomi :kohde) (into [nil] urakan-kohteet) #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
+     [valinnat/kanava-kohde (atomi ::lt/kohde) (into [nil] urakan-kohteet) #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
                                                                           (if-not (empty? nimi)
                                                                             nimi
                                                                             "Kaikki"))]
@@ -56,13 +57,13 @@
                                       :kentta-params {:tyyppi :valinta
                                                       :valinnat [nil :ylos :alas]
                                                       :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
-                                      :arvo-atom (atomi :suunta)}]
+                                      :arvo-atom (atomi ::lt-alus/suunta)}]
      [kentat/tee-otsikollinen-kentta {:otsikko "Toimenpidetyyppi"
                                       :kentta-params {:tyyppi :valinta
                                                       :valinta-nayta #(or (lt/toimenpide->str %) "Kaikki")
                                                       :valinnat [nil :sulutus :tyhjennys :sillan-avaus]}
-                                      :arvo-atom (atomi :toimenpidetyyppi)}]
-     [valinnat/kanava-aluslaji (atomi :aluslaji) (into [nil] lt-alus/aluslajit) #(or (lt-alus/aluslaji->str %) "Kaikki")]
+                                      :arvo-atom (atomi ::lt/toimenpide)}]
+     [valinnat/kanava-aluslaji (atomi ::lt-alus/laji) (into [nil] lt-alus/aluslajit) #(or (lt-alus/aluslaji->str %) "Kaikki")]
      [kentat/tee-otsikollinen-kentta {:otsikko "Uittoniput?"
                                       :kentta-params {:tyyppi :checkbox}
                                       :arvo-atom (atomi :niput?)}]]))
@@ -137,7 +138,7 @@
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
                            ;; Valintojen päivittäminen laukaisee myös liikennetapahtumien haun
                            (e! (tiedot/->PaivitaValinnat {::ur/id (:urakka valinnat)
-                                                          :foo valinnat
+                                                          ::sop/id (:sopimus valinnat)
                                                           :aikavali (:aikavali valinnat)}))
                            (e! (tiedot/->HaeKohteet)))
                       #(e! (tiedot/->Nakymassa? false)))
@@ -150,7 +151,8 @@
 
 (defn liikennetapahtumat [e! app]
   [liikenne* e! app {:urakka (:id @nav/valittu-urakka)
-                     :aikavali @u/valittu-aikavali}])
+                     :aikavali @u/valittu-aikavali
+                     :sopimus (first @u/valittu-sopimusnumero)}])
 
 (defc liikenne []
   [tuck tiedot/tila liikennetapahtumat])
