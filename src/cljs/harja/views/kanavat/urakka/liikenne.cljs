@@ -39,34 +39,39 @@
    [napit/takaisin "Takaisin" #(e! (tiedot/->ValitseTapahtuma nil))]
    [:div "WIP"]])
 
-(defn valinnat [e! {:keys [urakan-kohteet
-                           liikennetapahtumien-haku-kaynnissa?] :as app}]
-  (let [atomi (fn [polku]
-                (r/wrap (get-in app [:valinnat polku])
-                        (fn [u]
-                          (e! (tiedot/->PaivitaValinnat {polku u})))))]
+(defn valinnat [e! {:keys [urakan-kohteet] :as app}]
+  (let [atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
      [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
-     [valinnat/kanava-kohde (atomi ::lt/kohde) (into [nil] urakan-kohteet) #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
-                                                                          (if-not (empty? nimi)
-                                                                            nimi
-                                                                            "Kaikki"))]
-     [kentat/tee-otsikollinen-kentta {:otsikko "Suunta"
-                                      :kentta-params {:tyyppi :valinta
-                                                      :valinnat [nil :ylos :alas]
-                                                      :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
-                                      :arvo-atom (atomi ::lt-alus/suunta)}]
-     [kentat/tee-otsikollinen-kentta {:otsikko "Toimenpidetyyppi"
-                                      :kentta-params {:tyyppi :valinta
-                                                      :valinta-nayta #(or (lt/toimenpide->str %) "Kaikki")
-                                                      :valinnat [nil :sulutus :tyhjennys :sillan-avaus]}
-                                      :arvo-atom (atomi ::lt/toimenpide)}]
-     [valinnat/kanava-aluslaji (atomi ::lt-alus/laji) (into [nil] lt-alus/aluslajit) #(or (lt-alus/aluslaji->str %) "Kaikki")]
-     [kentat/tee-otsikollinen-kentta {:otsikko "Uittoniput?"
-                                      :kentta-params {:tyyppi :checkbox}
-                                      :arvo-atom (atomi :niput?)}]]))
+     [valinnat/kanava-kohde
+      (atomi ::lt/kohde)
+      (into [nil] urakan-kohteet)
+      #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
+         (if-not (empty? nimi)
+           nimi
+           "Kaikki"))]
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Suunta"
+       :kentta-params {:tyyppi :valinta
+                       :valinnat (into [nil] lt/suunta-vaihtoehdot)
+                       :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
+       :arvo-atom (atomi ::lt-alus/suunta)}]
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Toimenpidetyyppi"
+       :kentta-params {:tyyppi :valinta
+                       :valinta-nayta #(or (lt/toimenpide->str %) "Kaikki")
+                       :valinnat (into [nil] lt/toimenpide-vaihtoehdot)}
+       :arvo-atom (atomi ::lt/toimenpide)}]
+     [valinnat/kanava-aluslaji
+      (atomi ::lt-alus/laji)
+      (into [nil] lt-alus/aluslajit)
+      #(or (lt-alus/aluslaji->str %) "Kaikki")]
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Uittoniput?"
+       :kentta-params {:tyyppi :checkbox}
+       :arvo-atom (atomi :niput?)}]]))
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit
                                             liikennetapahtumien-haku-kaynnissa?] :as app}]
@@ -106,11 +111,7 @@
       :nimi ::lt-alus/lkm}
      {:otsikko "Palvelumuoto"
       :nimi :palvelumuoto-ja-lkm
-      :hae (fn [rivi]
-             (let [pm (::lt/palvelumuoto rivi)]
-               (if (= :itse pm)
-                 (str (lt/palvelumuoto->str pm) " (" (::lt/palvelumuoto-lkm rivi) ")")
-                 (lt/palvelumuoto->str pm))))}
+      :hae tiedot/palvelumuoto->str}
      {:otsikko "Nippuja"
       :nimi ::lt-nippu/lkm}
      {:otsikko "Ylävesi"

@@ -17,7 +17,8 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-nippu :as lt-nippu]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -58,9 +59,20 @@
 (defrecord KohteetHaettu [tulos])
 (defrecord KohteetEiHaettu [virhe])
 
+(defn valinta-wrap [e! app polku]
+  (r/wrap (get-in app [:valinnat polku])
+          (fn [u]
+            (e! (->PaivitaValinnat {polku u})))))
+
 (defn hakuparametrit [app]
   ;; Ei nil arvoja
   (into {} (filter val (:valinnat app))))
+
+(defn palvelumuoto->str [rivi]
+  (let [pm (::lt/palvelumuoto rivi)]
+    (if (= :itse pm)
+      (str (lt/palvelumuoto->str pm) " (" (::lt/palvelumuoto-lkm rivi) ")")
+      (lt/palvelumuoto->str pm))))
 
 (defn tapahtumarivit [tapahtuma]
   (let [yleistiedot
@@ -135,11 +147,11 @@
   (process-event [_ app]
     (if-not (:kohteiden-haku-kaynnissa? app)
       (-> app
-         (tt/post! :hae-urakan-kohteet
-                   {::ur/id (:id @nav/valittu-urakka)}
-                   {:onnistui ->KohteetHaettu
-                    :epaonnistui ->KohteetEiHaettu})
-         (assoc :kohteiden-haku-kaynnissa? true))
+          (tt/post! :hae-urakan-kohteet
+                    {::ur/id (:id @nav/valittu-urakka)}
+                    {:onnistui ->KohteetHaettu
+                     :epaonnistui ->KohteetEiHaettu})
+          (assoc :kohteiden-haku-kaynnissa? true))
 
       app))
 

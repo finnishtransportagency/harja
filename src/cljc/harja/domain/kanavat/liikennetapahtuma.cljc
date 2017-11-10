@@ -68,11 +68,17 @@
 (def nippujen-tiedot
   #{[::niput lt-nippu/perustiedot]})
 
+(def toimenpiteet*
+  ^{:private true}
+  {:sulutus "Sulutus"
+   :tyhjennys "Tyhjennys"
+   :sillan-avaus "Sillan avaus"})
+
 (defn toimenpide->str [toimenpide]
-  ({:sulutus "Sulutus"
-    :tyhjennys "Tyhjennys"
-    :sillan-avaus "Sillan avaus"}
+  (toimenpiteet*
     toimenpide))
+
+(def toimenpide-vaihtoehdot (keys toimenpiteet*))
 
 (defn palvelumuoto->str [palvelumuoto]
   ({:kauko "Kauko"
@@ -81,10 +87,16 @@
     :muu "Muu"}
     palvelumuoto))
 
+(defn suunta*
+  ^{:private true}
+  {:ylos "Ylös"
+   :alas "Alas"})
+
 (defn suunta->str [suunta]
-  ({:ylos "Ylös"
-    :alas "Alas"}
+  (suunta*
     suunta))
+
+(def suunta-vaihtoehdot (keys suunta*))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::toimenpide
