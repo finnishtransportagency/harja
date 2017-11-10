@@ -87,6 +87,7 @@
    Jos molemmat on valittu, palauttaa nil"
   []
   (komp/luo
+    (komp/sisaan #(nav/paivita-url))
     {:component-did-mount (fn [& _] (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))}
     (fn []
       (let [v-hal @nav/valittu-hallintayksikko

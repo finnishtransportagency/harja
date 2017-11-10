@@ -20,6 +20,7 @@
             [harja.domain.kayttaja :as kayttaja]
 
             [harja.pvm :as pvm]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
@@ -43,7 +44,7 @@
 
 (defn kokonaishintaiset-toimenpiteet-taulukko [toimenpiteet]
   [grid/grid
-   {:otsikko "Urakan toimenpiteet"
+   {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
     :voi-muokata? false
     :voi-poistaa? false
@@ -52,30 +53,7 @@
     :tyhja "Ei kokonaishitaisia toimenpiteita"
     :jarjesta ::kanavan-toimenpide/pvm
     :tunniste ::kanavan-toimenpide/id}
-   [{:otsikko "Päivämäärä"
-     :nimi ::kanavan-toimenpide/pvm
-     :tyyppi :pvm
-     :fmt pvm/pvm-opt}
-    {:otsikko "Kohde"
-     :nimi :kohde
-     :tyyppi :string
-     :hae #(get-in % [::kanavan-toimenpide/kohde ::kanavan-kohde/nimi])}
-    {:otsikko "Huoltokohde"
-     :nimi :huoltokohde
-     :tyyppi :string
-     :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])}
-    {:otsikko "Toimenpide"
-     :nimi :huoltokohde
-     :tyyppi :string
-     :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])}
-    {:otsikko "Suorittaja"
-     :nimi :huoltokohde
-     :tyyppi :string
-     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}
-    {:otsikko "Kuittaaja"
-     :nimi :huoltokohde
-     :tyyppi :string
-     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}]
+   toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
 
 (defn kokonaishintaiset-nakyma [urakka toimenpiteet]
@@ -93,12 +71,10 @@
                                {:urakka @nav/valittu-urakka
                                 :sopimus-id (first @u/valittu-sopimusnumero)
                                 :aikavali @u/valittu-aikavali
-                                :toimenpide @u/valittu-toimenpideinstanssi
-                                :urakkavuosi @u/valittu-urakan-vuosi})))
+                                :toimenpide @u/valittu-toimenpideinstanssi})))
                       #(do
                          (e! (tiedot/->Nakymassa? false))))
     (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
-
       (let [urakka (get-in app [:valinnat :urakka])]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:span

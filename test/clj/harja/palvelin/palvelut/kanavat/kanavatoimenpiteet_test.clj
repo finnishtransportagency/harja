@@ -13,8 +13,10 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.urakka :as ur]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.muokkaustiedot :as m]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [taoensso.timbre :as log]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -35,44 +37,81 @@
                       urakkatieto-fixture))
 
 (deftest toimenpiteiden-haku
-  (let [parametrit {:harja.domain.urakka/id (hae-saimaan-kanavaurakan-id)
-                    :harja.domain.sopimus/id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-                    :harja.domain.toimenpidekoodi/id 597
-                    :harja.domain.kanavat.kanavan-toimenpide/alkupvm (pvm/luo-pvm 2017 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/loppupvm (pvm/luo-pvm 2018 1 1)
-                    :harja.domain.kanavat.kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        hakuargumentit {::kanavan-toimenpide/urakka-id urakka-id
+                        ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                        ::toimenpidekoodi/id 597
+                        :alkupvm (pvm/luo-pvm 2017 1 1)
+                        :loppupvm (pvm/luo-pvm 2018 1 1)
+                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kanavatoimenpiteet
                                 +kayttaja-jvh+
-                                parametrit)
-        odotettu {:harja.domain.kanavat.kanavan-toimenpide/kohde
-                  {:harja.domain.kanavat.kanavan-kohde/id 3
-                   :harja.domain.kanavat.kanavan-kohde/nimi "Tikkalansaaren avattava ratasilta"
-                   :harja.domain.kanavat.kanavan-kohde/tyyppi :silta}
-                  :harja.domain.kanavat.kanavan-toimenpide/kuittaaja
-                  {:harja.domain.kayttaja/kayttajanimi "jvh"
-                   :harja.domain.kayttaja/etunimi "Jalmari"
-                   :harja.domain.kayttaja/sukunimi "Järjestelmävastuuhenkilö"
-                   :harja.domain.kayttaja/puhelin "040123456789"
-                   :harja.domain.kayttaja/sahkoposti "jalmari@example.com"
-                   :harja.domain.kayttaja/id 2}
-                  :harja.domain.kanavat.kanavan-toimenpide/suorittaja
-                  {:harja.domain.kayttaja/etunimi "Jalmari"
-                   :harja.domain.kayttaja/id 2
-                   :harja.domain.kayttaja/kayttajanimi "jvh"
-                   :harja.domain.kayttaja/sahkoposti "jalmari@example.com"
-                   :harja.domain.kayttaja/sukunimi "Järjestelmävastuuhenkilö"
-                   :harja.domain.kayttaja/puhelin "040123456789"}
-                  :harja.domain.kanavat.kanavan-toimenpide/lisatieto "Testitoimenpide"
-                  :harja.domain.kanavat.kanavan-toimenpide/toimenpidekoodi
-                  {:harja.domain.toimenpidekoodi/id 2997
-                   :harja.domain.toimenpidekoodi/nimi "Ei yksilöity"}
-                  :harja.domain.kanavat.kanavan-toimenpide/tyyppi :kokonaishintainen
-                  :harja.domain.kanavat.kanavan-toimenpide/huoltokohde
-                  {:harja.domain.kanavat.kanavan-huoltokohde/nimi "ASENNONMITTAUSLAITTEET"
-                   :harja.domain.kanavat.kanavan-huoltokohde/id 5}
-                  :harja.domain.kanavat.kanavan-toimenpide/pvm #inst "2017-10-09T21:00:00.000-00:00"
-                  :harja.domain.kanavat.kanavan-toimenpide/id 1}]
-    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kutsu parametrit) "Kutsu on validi")
+                                hakuargumentit)]
+    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuargumentit) "Kutsu on validi")
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus on validi")
-    (is (= odotettu (first vastaus)) "Vastauksena saadaan oletettu data")))
+
+    (is (>= (count vastaus) 1))
+    (is (every? ::kanavan-toimenpide/id vastaus))
+    (is (every? ::kanavan-toimenpide/kohde vastaus))
+    (is (every? ::kanavan-toimenpide/toimenpidekoodi vastaus))
+    (is (every? ::kanavan-toimenpide/huoltokohde vastaus))
+
+    (testing "Aikavälisuodatus toimii"
+      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-kanavatoimenpiteet
+                                        +kayttaja-jvh+
+                                        (assoc hakuargumentit :alkupvm (pvm/luo-pvm 2030 1 1)
+                                                              :loppupvm (pvm/luo-pvm 2040 1 1)))))))
+
+    (testing "Toimenpidekoodisuodatus toimii"
+      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-kanavatoimenpiteet
+                                        +kayttaja-jvh+
+                                        (assoc hakuargumentit ::toimenpidekoodi/id -1))))))
+
+    (testing "Sopimussuodatus toimii"
+      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :hae-kanavatoimenpiteet
+                                        +kayttaja-jvh+
+                                        (assoc hakuargumentit ::kanavan-toimenpide/sopimus-id -1))))))
+
+    (testing "Tyyppisuodatus toimii"
+      (is (every? #(= (::kanavan-toimenpide/tyyppi %) :kokonaishintainen)
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-kanavatoimenpiteet
+                                 +kayttaja-jvh+
+                                 (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
+                                                       :kokonaishintainen))))
+
+      (is (every? #(= (::kanavan-toimenpide/tyyppi %) :muutos-lisatyo)
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kanavatoimenpiteet
+                                  +kayttaja-jvh+
+                                  (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
+                                                        :muutos-lisatyo)))))))
+
+
+(deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
+  (let [hakuargumentit {::kanavan-toimenpide/urakka-id nil
+                        ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                        ::toimenpidekoodi/id 597
+                        :alkupvm (pvm/luo-pvm 2017 1 1)
+                        :loppupvm (pvm/luo-pvm 2018 1 1)
+                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+
+    (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
+                       hakuargumentit)))))
+
+(deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
+  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+                    ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                    ::toimenpidekoodi/id 597
+                    :alkupvm (pvm/luo-pvm 2017 1 1)
+                    :loppupvm (pvm/luo-pvm 2018 1 1)
+                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-kanavatoimenpiteet
+                                           +kayttaja-ulle+
+                                           parametrit)))))
