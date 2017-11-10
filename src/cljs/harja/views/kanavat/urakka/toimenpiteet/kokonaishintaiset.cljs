@@ -92,13 +92,12 @@
       :valinta-arvo ::kanavan-kohde/id
       :valinta-nayta ::kanavan-kohde/nimi
       :valinnat kohteet}
-     {:nimi :sijainti
-      :otsikko "Sijainti"
-      :tyyppi :sijaintivalitsin
-      :paikannus? false
-      :disabled (constantly true)
-      :karttavalinta-tehty-fn #(;; todo: toteuta
-                                 )}
+     #_{:nimi :sijainti
+        :otsikko "Sijainti"
+        :tyyppi :sijaintivalitsin
+        :paikannus? false
+        :muokattava? (constantly true)
+        :karttavalinta-tehty-fn #()}
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde-id
       :tyyppi :valinta
@@ -129,7 +128,7 @@
       :valinnat tehtavat
       :valinta-arvo :id
       :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
-      :hae (comp :tpk-id :tehtava)                                                    
+      :hae (comp :tpk-id :tehtava)
       :aseta (fn [rivi arvo]
                (-> rivi
                    (assoc-in [:tehtava :tpk-id] arvo)
