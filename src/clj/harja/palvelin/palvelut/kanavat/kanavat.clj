@@ -85,7 +85,7 @@
       {:kysely-spec ::kan/poista-kohde-kysely})
     (julkaise-palvelu
       http
-      :hae-huoltokohteet
+      :hae-kanavien-huoltokohteet
       (fn [user]
         (hae-huoltokohteet db user))
       {:vastaus-spec ::huoltokohde/hae-huoltokohteet-kysely})
@@ -99,5 +99,6 @@
       :hae-urakan-kohteet
       :lisaa-kanavalle-kohteita
       :liita-kohde-urakkaan
-      :poista-kohde)
+      :poista-kohde
+      :hae-kanavien-huoltokohteet)
     this))

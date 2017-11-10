@@ -123,7 +123,6 @@
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
-    (log "---->>> valinnat " (pr-str valinnat))
     (merge app valinnat))
 
   VirheTapahtui
