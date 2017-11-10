@@ -5,5 +5,4 @@ CREATE TABLE kan_toimenpide_hinta (
   hinta      INTEGER
              NOT NULL
              REFERENCES kan_hinta(id),
-  CONSTRAINT uniikki_kan_toimenpiteen_hinta UNIQUE (toimenpide,  hinta)) ;
-q
+  CONSTRAINT uniikki_kan_toimenpiteen_hinta UNIQUE (toimenpide,  hinta));
