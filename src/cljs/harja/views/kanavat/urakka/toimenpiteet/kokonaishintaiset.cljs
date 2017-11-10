@@ -93,15 +93,12 @@
       :valinta-nayta ::kanavan-kohde/nimi
       :valinnat kohteet}
      {:nimi :sijainti
-      :otsikko "GPS-sijainti"
+      :otsikko "Sijainti"
       :tyyppi :sijaintivalitsin
-      :karttavalinta? false
-      :paikannus-onnistui-fn #(
-                                ;;todo: laukaise eventti
-                                )
-      :paikannus-epaonnistui-fn #(
-                                   ;;todo: laukaise eventti
-                                   )}
+      :paikannus? false
+      :disabled (constantly true)
+      :karttavalinta-tehty-fn #(;; todo: toteuta
+                                 )}
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde-id
       :tyyppi :valinta
