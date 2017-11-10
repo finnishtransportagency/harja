@@ -51,9 +51,9 @@
 
 (s/def ::lisaa-kanavalle-kohteita-vastaus ::hae-kanavat-ja-kohteet-vastaus)
 
-(s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id :harja.domain.kanavat.kanavan-kohde/id ::poistettu?]))
+(s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id ::kohde-id ::poistettu?]))
 
-(s/def ::poista-kohde-kysely (s/keys :req-un [:harja.domain.kanavat.kanavan-kohde/id]))
+(s/def ::poista-kohde-kysely (s/keys :req-un [::kohde-id]))
 
 (s/def ::hae-urakan-kohteet-kysely (s/keys :req [::ur/id]))
 (s/def ::hae-urakan-kohteet-vastaus (s/coll-of (s/keys :req [:harja.domain.kanavat.kanavan-kohde/id
