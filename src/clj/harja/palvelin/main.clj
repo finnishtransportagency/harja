@@ -141,6 +141,8 @@
 
     ;; Kanavat
     [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+
+    [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
     [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
     [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
     )
@@ -337,6 +339,9 @@
       :kan-kanavat (component/using
                      (kan-kanavat/->Kanavat)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-liikennetapahtumat (component/using
+                                (kan-liikennetapahtumat/->Liikennetapahtumat)
+                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :kan-hairio (component/using
                     (kan-hairio/->Hairiotilanteet)
                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])

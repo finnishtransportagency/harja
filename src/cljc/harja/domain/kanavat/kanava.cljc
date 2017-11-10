@@ -11,7 +11,6 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
-    [harja.domain.kanavat.kanavan-kohde :as kohde]
     [harja.domain.urakka :as ur])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
@@ -19,8 +18,8 @@
 (define-tables
   ["kan_kanava" ::kanava
    {::kohteet (specql.rel/has-many ::id
-                                   ::harja.domain.kanavat.kanavan-kohde/kohde
-                                   ::harja.domain.kanavat.kanavan-kohde/kanava-id)}])
+                                   :harja.domain.kanavat.kanavan-kohde/kohde
+                                   :harja.domain.kanavat.kanavan-kohde/kanava-id)}])
 
 (def perustiedot
   #{::id
@@ -29,35 +28,35 @@
 (def perustiedot-ja-sijainti (conj perustiedot ::sijainti))
 
 (def kohteet
-  #{[::kohteet (clojure.set/union
-                 harja.domain.kanavat.kanavan-kohde/perustiedot
-                 harja.domain.kanavat.kanavan-kohde/metatiedot)]})
+  #{[::kohteet #{:harja.domain.kanavat.kanavan-kohde/id
+                 :harja.domain.kanavat.kanavan-kohde/nimi
+                 :harja.domain.kanavat.kanavan-kohde/tyyppi}]})
 
 (def kohteet-sijainteineen
-  #{[::kohteet harja.domain.kanavat.kanavan-kohde/perustiedot-ja-sijainti]})
+  #{[::kohteet #{:harja.domain.kanavat.kanavan-kohde/id
+                 :harja.domain.kanavat.kanavan-kohde/nimi
+                 :harja.domain.kanavat.kanavan-kohde/tyyppi
+                 :harja.domain.kanavat.kanavan-kohde/sijainti}]})
 
 ;; Palvelut
 
 (s/def ::hakuteksti string?)
 
-(s/def ::kohde/urakat
-  (s/nilable (s/coll-of (s/keys :req [::ur/nimi ::ur/id]))))
-
-(s/def ::kohteet
-  (s/coll-of (s/keys :req [::kohde/id
-                           ::kohde/tyyppi
-                           ::kohde/urakat]
-                     :opt [::kohde/nimi])))
-
 (s/def ::hae-kanavat-ja-kohteet-vastaus
   (s/coll-of (s/keys :req [::id ::nimi ::kohteet])))
 
 (s/def ::lisaa-kanavalle-kohteita-kysely
-  (s/coll-of (s/keys :req [::kohde/kanava-id ::kohde/id ::kohde/tyyppi]
-                     :opt [::kohde/nimi ::m/poistettu?])))
+  (s/coll-of (s/keys :req [:harja.domain.kanavat.kanavan-kohde/kanava-id :harja.domain.kanavat.kanavan-kohde/id :harja.domain.kanavat.kanavan-kohde/tyyppi]
+                     :opt [:harja.domain.kanavat.kanavan-kohde/nimi ::m/poistettu?])))
 
 (s/def ::lisaa-kanavalle-kohteita-vastaus ::hae-kanavat-ja-kohteet-vastaus)
 
-(s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id ::kohde-id ::poistettu?]))
+(s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id :harja.domain.kanavat.kanavan-kohde/id ::poistettu?]))
 
-(s/def ::poista-kohde-kysely (s/keys :req-un [::kohde-id]))
+(s/def ::poista-kohde-kysely (s/keys :req-un [:harja.domain.kanavat.kanavan-kohde/id]))
+
+(s/def ::hae-urakan-kohteet-kysely (s/keys :req [::ur/id]))
+(s/def ::hae-urakan-kohteet-vastaus (s/coll-of (s/keys :req [:harja.domain.kanavat.kanavan-kohde/id
+                                                             :harja.domain.kanavat.kanavan-kohde/tyyppi
+                                                             :harja.domain.kanavat.kanavan-kohde/kohteen-kanava]
+                                                       :opt [:harja.domain.kanavat.kanavan-kohde/nimi])))
