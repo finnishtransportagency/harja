@@ -20,6 +20,8 @@
 
 (defqueries "harja/kyselyt/vesivaylat/turvalaitteet.sql")
 
+;;maaritlaine mitä nää &&op jutut on? miten tää toimii?
+
 (defrecord &&op [values]
   op/Op
   (to-sql [_ v {transform ::xf/transform type :type enum? :enum? :as column-info}]

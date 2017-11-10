@@ -123,7 +123,15 @@
 
                         :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
 
-                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"}
+                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
+
+                        ;;maaritlaine - mikä merkitys näillä eri filuilla on
+                        ;;pitäiskö nää laittaa omaa osioonsa, kun on tarkoitus, että :tuontivali on kerran vrk?
+                        ;;hox muuta tiedostojen nimet
+                        :vv-turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/TODO.shp"
+                        :vv-turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/TODO.shz"
+                        :vv-turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/TODO.shz"}
+
 
  :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
        :kayttajatunnus "restusr"
