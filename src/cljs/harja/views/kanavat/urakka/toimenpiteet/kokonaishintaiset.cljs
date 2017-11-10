@@ -80,8 +80,14 @@
      }
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
-      :tyyppi :string
-      :fmt pvm/pvm-opt}
+      :tyyppi :valinta
+      :valinta-arvo :id
+      :valinta-nayta :nimi
+      ;; todo: hae oikeat arvot
+      :valinnat [{:nimi "hilipati"
+                  :id 1}
+                 {:nimi "pippaa"
+                  :id 2}]}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
       :tyyppi :pvm
@@ -134,24 +140,14 @@
       :tyyppi :string}
      {:otsikko "Suorittaja"
       :nimi ::kanavan-toimenpide/suorittaja-id
-      :tyyppi :valinta
-      :valinta-arvo :id
-      :valinta-nayta :nimi
-      ;; todo: hae oikeat arvot
-      :valinnat [{:nimi "hilipati"
-                  :id 1}
-                 {:nimi "pippaa"
-                  :id 2}]}
+      :tyyppi :string}
      {:otsikko "Kuittaaja"
-      :nimi ::kanavan-toimenpide/kuittaaja-id
-      :tyyppi :valinta
-      :valinta-arvo :id
-      :valinta-nayta :nimi
-      ;; todo: hae oikeat arvot
-      :valinnat [{:nimi "hilipati"
-                  :id 1}
-                 {:nimi "pippaa"
-                  :id 2}]}]
+      :nimi ::kanavan-toimenpide/kuittaaja
+      :tyyppi :string
+      :hae #(do
+              (log "--->>> " (pr-str %))
+              (kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %)))
+      :muokattava? (constantly false)}]
     toimenpide]])
 
 (defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide]

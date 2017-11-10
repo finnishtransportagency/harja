@@ -14,7 +14,9 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide])
+            [harja.domain.kayttaja :as kayttaja]
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -31,7 +33,11 @@
               :aikavali @u/valittu-aikavali
               :toimenpide @u/valittu-toimenpideinstanssi})))
 
-(def esitaytetty-toimenpide {})
+(defn esitaytetty-toimenpide[]
+  (let [kayttaja @istunto/kayttaja]
+    {::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
+                                     ::kayttaja/etunimi (:etunimi kayttaja)
+                                     ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
@@ -83,7 +89,7 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :valittu-toimenpide esitaytetty-toimenpide))
+    (assoc app :valittu-toimenpide (esitaytetty-toimenpide)))
 
   TyhjennaValittuToimenpide
   (process-event [_ app]
