@@ -88,7 +88,7 @@
       :nimi ::kanavan-toimenpide/kohde-id
       :tyyppi :valinta
       :valinta-arvo ::kanavan-kohde/id
-      :valinta-nayta ::kanavan-kohde/nimi
+      :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
       :valinnat kohteet}
      #_{:nimi :sijainti
         :otsikko "Sijainti"
@@ -100,7 +100,7 @@
       :nimi ::kanavan-toimenpide/huoltokohde-id
       :tyyppi :valinta
       :valinta-arvo ::kanavan-huoltokohde/id
-      :valinta-nayta #(or (::kanavan-huoltokohde/nimi %) "- valitse -")
+      :valinta-nayta #(or (::kanavan-huoltokohde/nimi %) "- Valitse huoltokohde-")
       :valinnat huoltokohteet
       :pakollinen? true}
      {:otsikko "Toimenpide"

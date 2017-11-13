@@ -14,7 +14,8 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
-            [harja.tiedot.urakka :as urakka]
+            [harja.domain.urakka :as urakka]
+            [harja.tiedot.urakka :as urakkatiedot]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as navigaatio]
             [tuck.core :as t])
@@ -30,9 +31,9 @@
          (reaction
            (when (:nakymassa? @tila)
              {:urakka @navigaatio/valittu-urakka
-              :sopimus-id (first @urakka/valittu-sopimusnumero)
-              :aikavali @urakka/valittu-aikavali
-              :toimenpide @urakka/valittu-toimenpideinstanssi})))
+              :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
+              :aikavali @urakkatiedot/valittu-aikavali
+              :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})))
 
 (defn esitaytetty-toimenpide []
   (let [kayttaja @istunto/kayttaja]
@@ -53,6 +54,8 @@
 (defrecord ToimenpideTallennettu [toimenpide])
 (defrecord ValinnatHaettuToimenpiteelle [valinnat])
 (defrecord VirheTapahtui [virhe])
+(defrecord KohteetHaettu [kohteet])
+(defrecord KohteidenHakuEpaonnistui [])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
 
@@ -93,23 +96,24 @@
                :toimenpiteet []))
 
   UusiToimenpide
-  (process-event [_ app]
-    (if (not (:huoltokohteiden-haku-kaynnissa? app))
+  (process-event [_ {valinnat :valinnat :as app}]
+    (if (or (:kohteiden-haku-kaynnissa? app)
+            (:huoltokohteiden-haku-kaynnissa? app))
+      app
       (-> app
+          (tuck-apurit/post! :hae-urakan-kohteet
+                             {::urakka/id (get-in valinnat [:urakka :id])}
+                            {:onnistui ->KohteetHaettu
+                             :epaonnistui ->KohteidenHakuEpaonnistui})
           (tuck-apurit/get! :hae-kanavien-huoltokohteet
                             {:onnistui ->HuoltokohteetHaettu
                              :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
           (assoc :huoltokohteiden-haku-kaynnissa? true
                  :valittu-toimenpide (esitaytetty-toimenpide)
-                 :tehtavat (map #(nth % 3) @urakka/urakan-toimenpiteet-ja-tehtavat)
-                 :toimenpideinstanssit @urakka/urakan-toimenpideinstanssit
-                 ;; todo: hae palvelimelta
-                 :kohteet [{::kanavan-kohde/id 123
-                            ::kanavan-kohde/nimi "Hilipati pippaa"}
-                           {::kanavan-kohde/id 666
-                            ::kanavan-kohde/nimi "Trolololo"}]
-                 :huoltokohteet []))
-      app))
+                 :tehtavat (map #(nth % 3) @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                 :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
+                 :kohteet []
+                 :huoltokohteet []))))
 
   TyhjennaValittuToimenpide
   (process-event [_ app]
@@ -127,6 +131,16 @@
   (process-event [{virhe :virhe} app]
     (viesti/nayta! virhe :danger)
     app)
+
+  KohteetHaettu
+  (process-event [{kohteet :kohteet} app]
+    (assoc app :kohteet kohteet
+               :kohteiden-haku-kaynnissa? false))
+
+  KohteidenHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
+    (assoc app :kohteiden-haku-kaynnissa? false))
 
   HuoltokohteetHaettu
   (process-event [{huoltokohteet :huoltokohteet} app]
