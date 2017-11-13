@@ -64,6 +64,7 @@
     :ais-data
     :vv-alukset
     :kan-kanavat
+    :kan-liikennetapahtumat
     :kan-hairio
     :kan-toimenpiteet})
 
