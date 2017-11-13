@@ -59,8 +59,8 @@ SELECT
   -- Listataan hinnoitteluun liittyvät väylätyypit taulukossa.
   (SELECT ARRAY(SELECT DISTINCT (tyyppi)
                 FROM vv_vayla
-                WHERE id IN
-                      (SELECT "vayla-id"
+                WHERE vaylanro IN
+                      (SELECT "vaylanro"
                        FROM reimari_toimenpide
                        WHERE id IN
                              (SELECT "toimenpide-id"
@@ -111,10 +111,10 @@ SELECT
     AS "summa",
   (SELECT tyyppi
    FROM vv_vayla
-   WHERE id =
-         (SELECT "vayla-id"
+   WHERE vaylanro =
+         (SELECT "vaylanro"
           FROM reimari_toimenpide
-          WHERE id =
+          WHERE vaylanro =
                 (SELECT "toimenpide-id"
                  FROM vv_hinnoittelu_toimenpide
                  WHERE "hinnoittelu-id" = oma_hinnoittelu.id
