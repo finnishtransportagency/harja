@@ -16,7 +16,6 @@
             [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-nippu :as lt-nippu]
             [harja.tiedot.urakka :as u]
             [reagent.core :as r])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -25,6 +24,7 @@
 (def tila (atom {:nakymassa? false
                  :liikennetapahtumien-haku-kaynnissa? false
                  :kohteiden-haku-kaynnissa? false
+                 :tallennus-kaynnissa? false
                  :valittu-liikennetapahtuma nil
                  :tapahtumarivit nil
                  :urakan-kohteet nil
@@ -98,19 +98,13 @@
               yleistiedot
               alus
               {:suunta (::lt-alus/suunta alus)}))
-          (::lt/alukset tapahtuma))
+          (::lt/alukset tapahtuma))]
 
-        nipputiedot
-        (map
-          (fn [nippu]
-            (merge yleistiedot nippu {:suunta (::lt-nippu/suunta nippu)}))
-          (::lt/niput tapahtuma))]
-
-    (if (and (empty? alustiedot) (empty? nipputiedot))
-      ;; Alustiedot ja nipputiedot ovat tyhjiä,
+    (if (empty? alustiedot)
+      ;; Alustiedot ovat tyhjiä,
       ;; jos rivi on vain itsepalveluiden kirjaamista.
       [yleistiedot]
-      (concat alustiedot nipputiedot))))
+      alustiedot)))
 
 (defn voi-tallentaa? [t]
   true)
