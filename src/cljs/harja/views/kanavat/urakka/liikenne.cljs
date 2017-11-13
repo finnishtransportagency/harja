@@ -20,6 +20,7 @@
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
+            [harja.id :refer [id-olemassa?]]
 
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.oikeudet :as oikeudet]
@@ -28,16 +29,36 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-nippu :as lt-nippu]
-            [harja.domain.kanavat.kanavan-kohde :as kohde])
+            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
-(defn liikennetapahtumalomake [e! app]
+(defn liikennetapahtumalomake [e! {:keys [valittu-liikennetapahtuma
+                                          tallennus-kaynnissa?] :as app}]
   [:div
    [napit/takaisin "Takaisin" #(e! (tiedot/->ValitseTapahtuma nil))]
-   [:div "WIP"]])
+   [lomake/lomake
+    {:otsikko (if (id-olemassa? (::lt/id valittu-liikennetapahtuma))
+                "Muokkaa liikennetapahtumaa"
+                "Luo uusi liikennetapahtuma")
+     :muokkaa! #(e! (tiedot/->TapahtumaaMuokattu (lomake/ilman-lomaketietoja %)))
+     :voi-muokata? (oikeudet/urakat-kanavat-liikenne)
+     :footer-fn (fn [tapahtuma]
+                  [napit/tallenna
+                   "Tallenna liikennetapahtuma"
+                   #(e! (tiedot/->TallennaLiikennetapahtuma (lomake/ilman-lomaketietoja tapahtuma)))
+                   {:ikoni (ikonit/tallenna)
+                    :disabled (or tallennus-kaynnissa?
+                                  (not (oikeudet/urakat-kanavat-liikenne))
+                                  (not (tiedot/voi-tallentaa? tapahtuma))
+                                  (not (lomake/voi-tallentaa? tapahtuma)))}])}
+    [{:otsikko "Aika"
+      :nimi ::lt/aika
+      :tyyppi :pvm-aika}]
+    valittu-liikennetapahtuma]])
 
 (defn valinnat [e! {:keys [urakan-kohteet] :as app}]
   (let [atomi (partial tiedot/valinta-wrap e! app)]
@@ -86,6 +107,7 @@
                 [ajax-loader-pieni "Päivitetään listaa.."]
                 "Liikennetapahtumat")
      :tunniste (juxt ::lt/id ::lt-alus/id ::lt-nippu/id)
+     :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
      :tyhja (if liikennetapahtumien-haku-kaynnissa?
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}

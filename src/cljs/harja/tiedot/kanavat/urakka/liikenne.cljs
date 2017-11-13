@@ -58,6 +58,10 @@
 (defrecord HaeKohteet [])
 (defrecord KohteetHaettu [tulos])
 (defrecord KohteetEiHaettu [virhe])
+(defrecord TapahtumaaMuokattu [tapahtuma])
+(defrecord TallennaLiikennetapahtuma [tapahtuma])
+(defrecord TapahtumaTallennettu [tulos])
+(defrecord TapahtumaEiTallennettu [virhe])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -107,6 +111,9 @@
       ;; jos rivi on vain itsepalveluiden kirjaamista.
       [yleistiedot]
       (concat alustiedot nipputiedot))))
+
+(defn voi-tallentaa? [t]
+  true)
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -173,4 +180,31 @@
   (process-event [_ app]
     (viesti/nayta! "Virhe kohteiden haussa!" :danger)
     (-> app
-        (assoc :kohteiden-haku-kaynnissa? false))))
+        (assoc :kohteiden-haku-kaynnissa? false)))
+
+  TapahtumaaMuokattu
+  (process-event [{t :tapahtuma} app]
+    (assoc app :valittu-liikennetapahtuma t))
+
+  TallennaLiikennetapahtuma
+  (process-event [{t :tapahtuma} {:keys [tallennus-kaynnissa?] :as app}]
+    (if-not tallennus-kaynnissa?
+      (do
+        (let [haku (tuck/send-async! ->TapahtumaTallennettu {})]
+          (go
+            (async/<! (async/timeout 300))
+            (haku))
+          (assoc app :tallennus-kaynnissa? true)))
+
+      app))
+
+  TapahtumaTallennettu
+  (process-event [{t :tulos} app]
+    (-> app
+        (assoc :tallennus-kaynnissa? false)
+        (assoc :valittu-liikennetapahtuma nil)))
+
+  TapahtumaEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe tapahtuman tallennuksessa!" :danger)
+    (assoc app :tallennus-kaynnissa? false)))
