@@ -6,7 +6,6 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-nippu :as lt-nippu]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.sopimus :as sop]
             [harja.domain.urakka :as ur]))
@@ -43,29 +42,13 @@
                                  ::kohde/nimi "Iso mutka"
                                  ::kohde/tyyppi :silta}
                      ::lt/alukset [{::lt-alus/suunta :ylos
-                                    ::lt-alus/nimi "Ronsu"}]
-                     ::lt/niput [{::lt-nippu/suunta :alas
-                                  ::lt-nippu/lkm 5}
-                                 {::lt-nippu/suunta :alas
-                                  ::lt-nippu/lkm 15}]}]
+                                    ::lt-alus/nimi "Ronsu"}]}]
       (is (= [(merge
                 tapahtuma
                 {::lt-alus/suunta :ylos
                  ::lt-alus/nimi "Ronsu"}
                 {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                 :suunta :ylos})
-              (merge
-                tapahtuma
-                {::lt-nippu/suunta :alas
-                 ::lt-nippu/lkm 5}
-                {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                 :suunta :alas})
-              (merge
-                tapahtuma
-                {::lt-nippu/suunta :alas
-                 ::lt-nippu/lkm 15}
-                {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                 :suunta :alas})]
+                 :suunta :ylos})]
              (tiedot/tapahtumarivit tapahtuma)))))
 
   (testing "Jos ei aluksia tai nippuja, syntyy silti yksi rivi taulukossa"
@@ -127,11 +110,7 @@
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset [{::lt-alus/suunta :ylos
-                                   ::lt-alus/nimi "Ronsu"}]
-                    ::lt/niput [{::lt-nippu/suunta :alas
-                                 ::lt-nippu/lkm 5}
-                                {::lt-nippu/suunta :alas
-                                 ::lt-nippu/lkm 15}]}]
+                                   ::lt-alus/nimi "Ronsu"}]}]
     (is (= {:liikennetapahtumien-haku-kaynnissa? false
             :tapahtumarivit [(merge
                                tapahtuma1
@@ -141,19 +120,7 @@
                                {::lt-alus/suunta :ylos
                                 ::lt-alus/nimi "Ronsu"}
                                {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                                :suunta :ylos})
-                             (merge
-                               tapahtuma2
-                               {::lt-nippu/suunta :alas
-                                ::lt-nippu/lkm 5}
-                               {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                                :suunta :alas})
-                             (merge
-                               tapahtuma2
-                               {::lt-nippu/suunta :alas
-                                ::lt-nippu/lkm 15}
-                               {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                                :suunta :alas})]}
+                                :suunta :ylos})]}
            (e! (tiedot/->LiikennetapahtumatHaettu [tapahtuma1 tapahtuma2]))))))
 
 (deftest tapahtumia-ei-haettu

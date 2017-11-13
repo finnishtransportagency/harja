@@ -31,10 +31,11 @@
     ::laji
     ::lkm
     ::matkustajalkm
+    ::nippulkm
     ::suunta})
 
 (def aluslajit*
-  {:HINT "HINT"
+  {:HIN "HIN"
    :HUV "HUV"
    :LAU "LAU"
    :MAT "MAT"

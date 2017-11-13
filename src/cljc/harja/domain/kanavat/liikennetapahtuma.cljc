@@ -15,13 +15,12 @@
     [harja.domain.sopimus :as sop]
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kanavan-kohde :as kohde]
-    [harja.domain.kanavat.lt-alus :as lt-alus]
-    [harja.domain.kanavat.lt-nippu :as lt-nippu])
+    [harja.domain.kanavat.lt-alus :as lt-alus])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["liikennetapahtuma_toimenpidetyyppi" ::lt-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
+  ["sulutus_toimenpidetyyppi" ::lt-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["liikennetapahtuma_palvelumuoto" ::lt-palvelumuoto (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma" ::liikennetapahtuma
    harja.domain.muokkaustiedot/muokkaustiedot
@@ -39,9 +38,6 @@
     ::alukset (specql.rel/has-many ::id
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuman-alus
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuma-id)
-    ::niput (specql.rel/has-many ::id
-                                 :harja.domain.kanavat.lt-nippu/liikennetapahtuman-nippu
-                                 :harja.domain.kanavat.lt-nippu/liikennetapahtuma-id)
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
@@ -49,9 +45,12 @@
 (def perustiedot
   #{::id
     ::aika
-    ::toimenpide
-    ::palvelumuoto
-    ::palvelumuoto-lkm
+    ::sulku-toimenpide
+    ::sulku-palvelumuoto
+    ::sulku-lkm
+    ::silta-avaus
+    ::silta-palvelumuoto
+    ::silta-lkm
     ::lisatieto
     ::vesipinta-ylaraja
     ::vesipinta-alaraja})
@@ -65,9 +64,6 @@
 (def alusten-tiedot
   #{[::alukset lt-alus/perustiedot]})
 
-(def nippujen-tiedot
-  #{[::niput lt-nippu/perustiedot]})
-
 (def toimenpiteet*
   ^{:private true}
   {:sulutus "Sulutus"
@@ -80,11 +76,17 @@
 
 (def toimenpide-vaihtoehdot (keys toimenpiteet*))
 
+(def palvelumuodot*
+  ^{:private true}
+  {:kauko "Kauko"
+   :itse "Itsepalvelu"
+   :paikallis "Paikallis"
+   :muu "Muu"})
+
+(def palvelumuoto-vaihtoehdot (keys palvelumuodot*))
+
 (defn palvelumuoto->str [palvelumuoto]
-  ({:kauko "Kauko"
-    :itse "Itsepalvelu"
-    :paikallis "Paikallis"
-    :muu "Muu"}
+  (palvelumuodot*
     palvelumuoto))
 
 (def suunta*
@@ -106,8 +108,19 @@
                                                :opt-un [::aikavali ::niput?]))
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req
-                                                  [::id ::aika ::toimenpide ::lisatieto ::vesipinta-alaraja
-                                                   ::vesipinta-ylaraja ::kuittaaja
-                                                   ::kohde]
+                                                  [::id
+                                                   ::aika
+                                                   (or
+                                                     (and
+                                                       ::sulku-toimenpide
+                                                       ::sulku-palvelumuoto
+                                                       ::sulku-lkm)
+                                                     (and
+                                                       ::silta-avaus
+                                                       ::silta-palvelumuoto
+                                                       ::silta-lkm))
+                                                   ::lisatieto
+                                                   ::vesipinta-ylaraja
+                                                   ::vesipinta-alaraja]
                                                   :opt
-                                                  [::niput ::alukset])))
+                                                  [::alukset])))

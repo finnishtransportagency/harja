@@ -41,57 +41,21 @@
                       urakkatieto-fixture))
 
 (deftest kanavien-haku
-  (testing "Nippuja ei palauteta jos parametria ei annettu"
-    (let [urakka-id (hae-saimaan-kanavaurakan-id)
-         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-         params {::ur/id urakka-id
-                 ::sop/id sopimus-id}
-         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :hae-liikennetapahtumat
-                                 +kayttaja-jvh+
-                                 params)]
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+        params {::ur/id urakka-id
+                ::sop/id sopimus-id}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-liikennetapahtumat
+                                +kayttaja-jvh+
+                                params)]
 
-     (is (s/valid? ::lt/hae-liikennetapahtumat-kysely params))
-     (is (s/valid? ::lt/hae-liikennetapahtumat-vastaus vastaus))
+    (is (s/valid? ::lt/hae-liikennetapahtumat-kysely params))
+    (is (s/valid? ::lt/hae-liikennetapahtumat-vastaus vastaus))
 
-     (is (false?
-           (boolean
-             (some
-               (fn [tapahtuma]
-                 (not-empty (::lt/niput tapahtuma)))
-               vastaus))))
-
-     (is (true?
-           (boolean
-             (some
-               (fn [tapahtuma]
-                 (not-empty (::lt/alukset tapahtuma)))
-               vastaus))))))
-
-  (testing "Niput palautuu"
-    (let [urakka-id (hae-saimaan-kanavaurakan-id)
-          sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-          params {::ur/id urakka-id
-                  ::sop/id sopimus-id
-                  :niput? true}
-          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-liikennetapahtumat
-                                  +kayttaja-jvh+
-                                  params)]
-
-      (is (s/valid? ::lt/hae-liikennetapahtumat-kysely params))
-      (is (s/valid? ::lt/hae-liikennetapahtumat-vastaus vastaus))
-
-      (is (true?
-            (boolean
-              (some
-                (fn [tapahtuma]
-                  (not-empty (::lt/niput tapahtuma)))
-                vastaus))))
-
-      (is (true?
-            (boolean
-              (some
-                (fn [tapahtuma]
-                  (not-empty (::lt/alukset tapahtuma)))
-                vastaus)))))))
+    (is (true?
+          (boolean
+            (some
+              (fn [tapahtuma]
+                (not-empty (::lt/alukset tapahtuma)))
+              vastaus))))))

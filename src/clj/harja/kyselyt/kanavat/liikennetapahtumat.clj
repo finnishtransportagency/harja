@@ -20,7 +20,6 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-nippu :as lt-nippu]
             [harja.domain.kanavat.kanavan-kohde :as kohde]))
 
 ;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
@@ -66,8 +65,6 @@
                      lt/perustiedot
                      lt/kuittaajan-tiedot
                      lt/alusten-tiedot
-                     (when niput?
-                       lt/nippujen-tiedot)
                      lt/kohteen-tiedot)
                    (op/and
                      (when (and alku loppu)
@@ -87,13 +84,6 @@
                                      (when suunta
                                        {::lt-alus/suunta suunta})
                                      (when aluslaji
-                                       {::lt-alus/laji aluslaji}))}
-
-                     (when niput?
-                       {::lt/niput (op/and
-                                     (op/or {::m/poistettu? op/null?}
-                                            {::m/poistettu? false})
-                                     (when suunta
-                                       {::lt-nippu/suunta suunta}))})))
+                                       {::lt-alus/laji aluslaji}))}))
      (partial kanavat-q/hae-kohteiden-urakkatiedot db)
      urakka-id)))
