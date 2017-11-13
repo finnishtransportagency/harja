@@ -380,10 +380,9 @@
                                                                 muokkaa-kohdeosat!)})
                      skeema)
 
-            grid-data (r/wrap kohdeosat-nyt
+            grid-data (r/wrap (sort-by first kohdeosat-nyt)
                               muokkaa-kohdeosat!)
             virheet (:virheet opts)]
-
         [:div
          [grid/muokkaus-grid
           {:ohjaus g
