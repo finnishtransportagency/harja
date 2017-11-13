@@ -30,15 +30,21 @@
         (assoc kohde ::kohde/urakat (kohde-ja-urakat (::kohde/id kohde))))
       kohteet)))
 
-(defn- hae-kohteiden-urakkatiedot [db kohteet]
-  (hae-kohteiden-urakkatiedot* kohteet
-                               (specql/fetch db
-                                             ::kohde/kohde<->urakka
-                                             (set/union
-                                               kohde/kohteen-urakkatiedot
-                                               #{::kohde/kohde-id})
-                                             {::kohde/kohde-id (op/in (into #{} (map ::kohde/id kohteet)))
-                                              ::m/poistettu? false})))
+(defn hae-kohteiden-urakkatiedot
+  ([db kohteet]
+    (hae-kohteiden-urakkatiedot db nil kohteet))
+  ([db urakka-id kohteet]
+   (hae-kohteiden-urakkatiedot* kohteet
+                                (specql/fetch db
+                                              ::kohde/kohde<->urakka
+                                              (set/union
+                                                kohde/kohteen-urakkatiedot
+                                                #{::kohde/kohde-id})
+                                              (op/and
+                                                {::kohde/kohde-id (op/in (into #{} (map ::kohde/id kohteet)))
+                                                 ::m/poistettu? false}
+                                                (when urakka-id
+                                                  {::kohde/urakka-id urakka-id}))))))
 
 (defn- hae-kanavat-ja-kohteet* [kanavat kohteen-haku]
   (into []
@@ -63,6 +69,16 @@
                   {::kanava/kohteet (op/or {::m/poistettu? op/null?}
                                            {::m/poistettu? false})})
     (partial hae-kohteiden-urakkatiedot db)))
+
+(defn hae-urakan-kohteet [db urakka-id]
+  (->>
+    (specql/fetch db
+                  ::kohde/kohde
+                  (set/union
+                    kohde/perustiedot-ja-kanava)
+                  {::m/poistettu? false})
+    (hae-kohteiden-urakkatiedot db urakka-id)
+    (remove (comp empty? ::kohde/urakat))))
 
 (defn lisaa-kanavalle-kohteet! [db user kohteet]
   (jdbc/with-db-transaction [db db]
