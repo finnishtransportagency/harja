@@ -124,7 +124,8 @@
 
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
-                             muokkaa! piilota-toiminnot? voi-poistaa? jarjesta vetolaatikot-auki]}]
+                             muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
+                             vetolaatikot-auki]}]
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
@@ -156,8 +157,10 @@
                                           :skeema skeema :voi-poistaa? voi-poistaa?}]
 
                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
-               (if jarjesta
-                 (sort-by (comp jarjesta second) (seq muokatut))
+               (if (or jarjesta jarjesta-avaimen-mukaan)
+                 (if jarjesta
+                   (sort-by (comp jarjesta second) (seq muokatut))
+                   (sort-by (comp jarjesta-avaimen-mukaan first) (seq muokatut)))
                  (seq muokatut))))))))])
 
 (defn muokkaus-grid
@@ -176,6 +179,7 @@
   :voi-poistaa?       funktio, joka palauttaa true tai false.
   :rivinumerot?       Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :jarjesta           jos annettu funktio, sortataan rivit tämän mukaan
+  :jarjesta-avaimen-mukaan jos annettu funktio, sortataan avaimen mukaan
   :paneelikomponentit vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
   :piilota-toiminnot? boolean, piilotetaan toiminnot sarake jos true
   :luokat             Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
@@ -195,7 +199,7 @@
   :virheet-dataan?    jos true, validointivirheet asetetaan rivin datan mäppiin
                       avaimella :harja.ui.grid/virheet"
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
-           voi-muokata? voi-lisata? jarjesta piilota-toiminnot? paneelikomponentit
+           voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -295,7 +299,7 @@
 
     (r/create-class
       {:reagent-render
-       (fn [{:keys [otsikko tallenna jarjesta voi-poistaa? voi-muokata? voi-lisata? voi-kumota?
+       (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
                     vetolaatikot uusi-id paneelikomponentit validoi-aina?
                     nayta-virheet? valiotsikot] :as opts} skeema muokatut]
@@ -341,6 +345,7 @@
                              :nykyinen-fokus nykyinen-fokus :peru! peru!
                              :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
-                             :jarjesta jarjesta :vetolaatikot-auki vetolaatikot-auki})]
+                             :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
+                             :vetolaatikot-auki vetolaatikot-auki})]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))})))

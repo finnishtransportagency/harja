@@ -380,13 +380,14 @@
                                                                 muokkaa-kohdeosat!)})
                      skeema)
 
-            grid-data (r/wrap (sort-by first kohdeosat-nyt)
+            grid-data (r/wrap kohdeosat-nyt
                               muokkaa-kohdeosat!)
             virheet (:virheet opts)]
         [:div
          [grid/muokkaus-grid
           {:ohjaus g
            :id "yllapitokohdeosat"
+           :jarjesta-avaimen-mukaan identity
            :virheet virheet
            :rivinumerot? rivinumerot?
            :voi-muokata? voi-muokata?
