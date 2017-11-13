@@ -1,8 +1,7 @@
-(ns harja.views.kanavat.urakka.toimenpiteet.toimenpiteen-hinnoittelu
+(ns harja.views.kanavat.urakka.toimenpiteet.hinnoittelu
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as tiedot]
-            [harja.ui.komponentti :as komp]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
@@ -17,11 +16,8 @@
             [harja.domain.muokkaustiedot :as m]
             ;; [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.kanavat.hinta :as hinta]
-            ;; [harja.domain.vesivaylat.toimenpide :as to]
-            ;; [harja.domain.vesivaylat.tyo :as tyo]
-            ;; [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
-            ;; [harja.domain.vesivaylat.komponenttityyppi :as tktyyppi]
-            ;; [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
+            [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
+            [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.toimenpidekoodi :as tpk]
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
@@ -47,15 +43,15 @@
   ([e! hinta arvo-kw kentan-optiot asetus-fn]
    [kentta* e! hinta arvo-kw kentan-optiot asetus-fn]))
 
-(defn- kentta-tyolle
-  ([e! tyo arvo-kw kentan-optiot]
-   [kentta-tyolle e! tyo arvo-kw kentan-optiot
-    (fn [uusi]
-      (e! (tiedot/->AsetaTyorivilleTiedot
-            {::tyo/id (::tyo/id tyo)
-             arvo-kw uusi})))])
-  ([e! tyo arvo-kw kentan-optiot asetus-fn]
-   [kentta* e! tyo arvo-kw kentan-optiot asetus-fn]))
+;; (defn- kentta-tyolle
+;;   ([e! tyo arvo-kw kentan-optiot]
+;;    [kentta-tyolle e! tyo arvo-kw kentan-optiot
+;;     (fn [uusi]
+;;       (e! (tiedot/->AsetaTyorivilleTiedot
+;;             {::tyo/id (::tyo/id tyo)
+;;              arvo-kw uusi})))])
+;;   ([e! tyo arvo-kw kentan-optiot asetus-fn]
+;;    [kentta* e! tyo arvo-kw kentan-optiot asetus-fn]))
 
 (defn- hintakentta
   [e! hinta]
@@ -122,19 +118,6 @@
      [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
-(defn- komponentit-header
-  ([] (komponentit-header {:yk-lisa? true}))
-  ([{:keys [yk-lisa?] :as optiot}]
-   [:thead
-    [:tr
-     [:th {:style {:width "40%"}} "Työt ja materiaalikulut"]
-     [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
-     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
-     [:th {:style {:width "5%"}} "Yks."]
-     [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
-     [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
-     [:th {:style {:width "5%"}} ""]]]))
-
 (defn- muu-hinnoittelu-header
   ([] (muu-hinnoittelu-header {:otsikot? false}))
   ([{:keys [otsikot?] :as optiot}]
@@ -150,8 +133,8 @@
 
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
-        tyorivit (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::h/tyot]))
-        hinnat (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
+        ;; tyorivit (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::hinta/toimenpiteen-hinta]))
+        ;; hinnat (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
         hinnat-yhteensa (hinta/hintojen-summa-ilman-yklisaa hinnat)
         tyot-yhteensa (tyo/toiden-kokonaishinta tyorivit suunnitellut-tyot)
         yleiskustannuslisien-osuus (hinta/yklisien-osuus hinnat)]
@@ -169,7 +152,7 @@
                                            yleiskustannuslisien-osuus))]]]]))
 
 (defn- sopimushintaiset-tyot [e! app*]
-  (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+  (let [tyot (get-in app* [:hinnoittele-toimenpide ::hinta/toimenpiteen-hinta])
         ei-poistetut-tyot (remove ::m/poistettu? tyot)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
@@ -204,7 +187,8 @@
                   tyovalinnat])]
               [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
               [:td.tasaa-oikealle
-               [kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
+               #_[kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]
+               "(tässä oli kentta-tyolle)"]
               [:td yksikko]
               [:td.tasaa-oikealle
                (when tyon-hinta-voidaan-laskea? (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta)))]
@@ -239,50 +223,6 @@
             [muu-tyo-hinnoittelurivi e! muu-tyo])]]
     [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
-(defn- komponentit [e! app*]
-  (let [komponenttien-hinnat (tiedot/komponenttien-hinnat app*)]
-    [:div.hinnoitteluosio.komponentit-osio
-     [valiotsikko "Komponentit"]
-     [:table
-      [komponentit-header]
-      [:tbody
-       (for* [komponentin-hinta komponenttien-hinnat]
-         (let [otsikko (fn [k]
-                         (str (get-in k [::tkomp/komponenttityyppi ::tktyyppi/nimi])
-                              (when-let [tila (komp-tila/komponentin-tilakoodi->str (::komp-tila/tilakoodi k))] (str ", " tila))
-                              " (" (::tkomp/sarjanumero k) ")"))]
-           [:tr
-            [:td
-             [yleiset/livi-pudotusvalikko
-              {:valitse-fn #(do
-                              (e! (tiedot/->AsetaHintakentalleTiedot
-                                    {::hinta/id (::hinta/id komponentin-hinta)
-                                     ::hinta/otsikko (otsikko %)
-                                     ::hinta/komponentti-tilamuutos (::komp-tila/tilakoodi %)
-                                     ::hinta/komponentti-id (::tkomp/id %)})))
-               :format-fn #(if %
-                             (otsikko %)
-                             "Valitse komponentti")
-               :class "livi-alasveto-250 inline-block"
-               :valinta (some
-                          #(when (and (= (::tkomp/id %) (::hinta/komponentti-id komponentin-hinta))
-                                      (= (::komp-tila/tilakoodi %) (::hinta/komponentti-tilamuutos komponentin-hinta)))
-                             %)
-                          (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*)))}
-              (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*))]]
-            [:td.tasaa-oikealle
-             [kentta-hinnalle e! komponentin-hinta ::hinta/yksikkohinta {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
-            [:td.tasaa-oikealle
-             [kentta-hinnalle e! komponentin-hinta ::hinta/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
-            [:td
-             [kentta-hinnalle e! komponentin-hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
-            [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen komponentin-hinta))]
-            [:td.keskita [yleiskustannuslisakentta e! komponentin-hinta]]
-            [:td.keskita
-             [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi komponentin-hinta))]]]))]]
-     [rivinlisays "Lisää komponenttirivi"
-      #(e! (tiedot/->LisaaHinnoiteltavaKomponenttirivi))
-      {:disabled (= 0 (count (::to/komponentit (tiedot/hinnoiteltava-toimenpide app*))))}]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
@@ -302,22 +242,21 @@
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
    [muut-tyot e! app*]
-   [komponentit e! app*]
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
                                ]
-  (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
-        toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
-        toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
+  (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])
+        toimenpiteen-nykyiset-hinnat {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::h/hinnat])
+        toimenpiteen-nykyiset-tyot {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::hinta/toimenpiteen-hinta])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
                                                                        valittu-aikavali)
         listaus-tunniste :id]
     [:div
      (if (and hinnoittele-toimenpide-id
-              (= hinnoittele-toimenpide-id (::to/id toimenpide-rivi)))
+              (= hinnoittele-toimenpide-id (::toimenpide/id toimenpide-rivi)))
        ;; Piirrä leijuke
        [:div
         [leijuke {:otsikko "Hinnoittele toimenpide"
@@ -353,8 +292,8 @@
                          :default
                          :arvo-ja-nappi)
           :pelkka-nappi-teksti "Hinnoittele"
-          :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id toimenpide-rivi)))
-          :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::to/id toimenpide-rivi)))
+          :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
+          :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
           :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
