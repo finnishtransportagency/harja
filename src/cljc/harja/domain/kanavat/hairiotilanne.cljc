@@ -58,9 +58,7 @@
   (set/union perustiedot+muokkaustiedot
              #{[::kohde
                 (set/union kkohde/perustiedot
-                           #{[:harja.domain.kanavat.kanavan-kohde/kohteen-kanava
-                              #{:harja.domain.kanavat.kanava/id
-                                :harja.domain.kanavat.kanava/nimi}]})]}))
+                           kkohde/kohteen-kanavatiedot)]}))
 
 ;; Palvelut
 
