@@ -7,12 +7,26 @@
             [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-nippu :as lt-nippu]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]))
+            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.sopimus :as sop]
+            [harja.domain.urakka :as ur]))
 
 
 (deftest hakuparametrit
-  (is (= {:bar 1}
-         (tiedot/hakuparametrit {:valinnat {:foo nil :bar 1}}))))
+  (testing "Jos urakka-id ja sopimus-id ei ole asetettu, palautetaan nil"
+    (is (= nil
+           (tiedot/hakuparametrit {:valinnat {:foo nil :bar 1}}))))
+
+  (is (= {::ur/id 1 ::sop/id 1}
+         (tiedot/hakuparametrit {:valinnat {::ur/id 1 ::sop/id 1}})))
+
+  (is (= {::ur/id 1
+          ::sop/id 1
+          :bar 2}
+         (tiedot/hakuparametrit {:valinnat {::ur/id 1
+                                            ::sop/id 1
+                                            :foo nil
+                                            :bar 2}}))))
 
 (deftest palvelumuoto-gridiin
   (is (= "Itsepalvelu (15 kpl)"
@@ -72,14 +86,36 @@
 (deftest liikennetapahtumien-hakeminen
   (vaadi-async-kutsut
     #{tiedot/->LiikennetapahtumatHaettu tiedot/->LiikennetapahtumatEiHaettu}
-    (is (= {:liikennetapahtumien-haku-kaynnissa? true}
-           (e! (tiedot/->HaeLiikennetapahtumat)))))
-
-  (vaadi-async-kutsut
-    #{}
-    (is (= {:liikennetapahtumien-haku-kaynnissa? true}
+    (is (= {:liikennetapahtumien-haku-kaynnissa? true
+            :valinnat {::ur/id 1 ::sop/id 1}}
            (e! (tiedot/->HaeLiikennetapahtumat)
-               {:liikennetapahtumien-haku-kaynnissa? true})))))
+               {:valinnat {::ur/id 1 ::sop/id 1}}))))
+
+  (testing "Uusi haku ei lähde jos haku on jo käynnissä"
+    (vaadi-async-kutsut
+      #{}
+      (is (= {:liikennetapahtumien-haku-kaynnissa? true
+              :valinnat {::ur/id 1 ::sop/id 1}}
+             (e! (tiedot/->HaeLiikennetapahtumat)
+                 {:liikennetapahtumien-haku-kaynnissa? true
+                  :valinnat {::ur/id 1 ::sop/id 1}})))))
+
+  (testing "Haku ei lähde jos sopimus-id tai urakka-id puuttuu"
+    (vaadi-async-kutsut
+      #{}
+      (is (= {:liikennetapahtumien-haku-kaynnissa? false
+              :valinnat {::ur/id nil ::sop/id 1}}
+             (e! (tiedot/->HaeLiikennetapahtumat)
+                 {:liikennetapahtumien-haku-kaynnissa? false
+                  :valinnat {::ur/id nil ::sop/id 1}}))))
+
+    (vaadi-async-kutsut
+      #{}
+      (is (= {:liikennetapahtumien-haku-kaynnissa? false
+              :valinnat {::ur/id 1 ::sop/id nil}}
+             (e! (tiedot/->HaeLiikennetapahtumat)
+                 {:liikennetapahtumien-haku-kaynnissa? false
+                  :valinnat {::ur/id 1 ::sop/id nil}}))))))
 
 (deftest tapahtumat-haettu
   (let [tapahtuma1 {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
