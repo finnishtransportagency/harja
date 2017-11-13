@@ -107,7 +107,7 @@
                                                       :lahde vaylahaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :vayla])
                                                          (fn [uusi]
-                                                           (e! (PaivitaValinnatKonstruktori {:vayla-id (::va/id uusi)}))))}]]
+                                                           (e! (PaivitaValinnatKonstruktori {:vaylanro (::va/vaylanro uusi)}))))}]]
 
     [:div
      [kentat/tee-otsikollinen-kentta {:otsikko "Turvalaite"
@@ -239,7 +239,7 @@
     (grid/otsikkorivin-tiedot
       (::va/nimi vayla)
       (count vaylan-toimenpiteet))
-    {:id (::va/id vayla)
+    {:id (::va/vaylanro vayla)
      :otsikkokomponentit
      [{:sijainti vaylan-checkbox-sijainti
        :sisalto
@@ -248,7 +248,7 @@
           {:tyyppi :checkbox}
           (r/wrap (tiedot/valinnan-tila vaylan-toimenpiteet)
                   (fn [uusi]
-                    (e! (tiedot/->ValitseVayla {:vayla-id (::va/id vayla)
+                    (e! (tiedot/->ValitseVayla {:vaylanro (::va/vaylanro vayla)
                                                 :valinta uusi}
                                                vaylan-toimenpiteet))))])}]}))
 
