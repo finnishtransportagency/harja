@@ -2,6 +2,7 @@
   (:require
     [clojure.spec.alpha :as s]
     [harja.domain.kanavat.kanavan-kohde :as kohde]
+    [harja.domain.kanavat.hinta :as hinta]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.kayttaja :as kayttaja]
@@ -17,6 +18,7 @@
 
 (define-tables
   ["kan_toimenpidetyyppi" ::kanava-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
+  ;; ["kan_toimenpide_hinta" ::toimenpide->hinta]
   ["kan_toimenpide" ::kanava-toimenpide
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
@@ -24,6 +26,7 @@
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
     "muu_toimenpide" ::muu-toimenpide
+    ;; ::hinnat (specql.rel/has-many ::id ::tp-hinta/hinta ::tp-hinta/toimenpide)
     "kohde" ::kohde-id
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
