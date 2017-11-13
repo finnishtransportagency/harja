@@ -125,14 +125,17 @@
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
                              muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                             vetolaatikot-auki]}]
+                             vetolaatikot-auki virheet-ylos?]}]
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
          colspan (inc (count skeema))]
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan} tyhja]]
-       (let [kaikki-virheet @virheet]
+       (let [kaikki-virheet @virheet
+             virheet-ylos-fn (if virheet-ylos?
+                               #(nil? (get kaikki-virheet (:id %)))
+                               #(constantly nil))]
          (doall
            (mapcat
              identity
@@ -159,8 +162,8 @@
                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                (if (or jarjesta jarjesta-avaimen-mukaan)
                  (if jarjesta
-                   (sort-by (comp jarjesta second) (seq muokatut))
-                   (sort-by (comp jarjesta-avaimen-mukaan first) (seq muokatut)))
+                   (sort-by (comp (juxt virheet-ylos-fn jarjesta) second) (seq muokatut))
+                   (sort-by (comp (juxt virheet-ylos-fn jarjesta-avaimen-mukaan) first) (seq muokatut)))
                  (seq muokatut))))))))])
 
 (defn muokkaus-grid
@@ -197,10 +200,12 @@
                         jonka muutoksen yhteydessä validointi tehdään).
 
   :virheet-dataan?    jos true, validointivirheet asetetaan rivin datan mäppiin
-                      avaimella :harja.ui.grid/virheet"
+                      avaimella :harja.ui.grid/virheet
+  :virheet-ylos?      Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-avaimen-mukaan
+                      avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?"
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
-           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan?] :as opts}
+           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -302,7 +307,7 @@
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
                     vetolaatikot uusi-id paneelikomponentit validoi-aina?
-                    nayta-virheet? valiotsikot] :as opts} skeema muokatut]
+                    nayta-virheet? valiotsikot virheet-ylos?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys
@@ -346,6 +351,6 @@
                              :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
-                             :vetolaatikot-auki vetolaatikot-auki})]
+                             :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?})]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))})))
