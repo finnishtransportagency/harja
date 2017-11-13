@@ -41,22 +41,6 @@
                                      ::kayttaja/etunimi (:etunimi kayttaja)
                                      ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
-(defn hae-valinnat-toimenpiteelle [valinnat haku-valmis! virhe!]
-  ;; todo: tee oikea palvelinkutsu
-  (go (let [vastaus {:kohteet [{::kanavan-kohde/id 123
-                                ::kanavan-kohde/nimi "Hilipati pippaa"}
-                               {::kanavan-kohde/id 666
-                                ::kanavan-kohde/nimi "Trolololo"}]
-                     :huoltokohteet [{::kanavan-huoltokohde/nimi "Kampe"
-                                      ::kanavan-huoltokohde/id 123}
-                                     {::kanavan-huoltokohde/nimi "Hilavitkutin"
-                                      ::kanavan-huoltokohde/id 666}]
-                     :tehtavat (map #(nth % 3) @urakka/urakan-toimenpiteet-ja-tehtavat)
-                     :toimenpideinstanssit @urakka/urakan-toimenpideinstanssit}]
-        (if (k/virhe? vastaus)
-          (virhe!)
-          (haku-valmis! vastaus)))))
-
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [valinnat])
 (defrecord HaeToimenpiteet [valinnat])
@@ -69,6 +53,8 @@
 (defrecord ToimenpideTallennettu [toimenpide])
 (defrecord ValinnatHaettuToimenpiteelle [valinnat])
 (defrecord VirheTapahtui [virhe])
+(defrecord HuoltokohteetHaettu [huoltokohteet])
+(defrecord HuoltokohteidenHakuEpaonnistui [])
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -107,11 +93,23 @@
                :toimenpiteet []))
 
   UusiToimenpide
-  (process-event [_ {valinnat :valinnat :as app}]
-    (hae-valinnat-toimenpiteelle valinnat
-                                 (t/send-async! ->ValinnatHaettuToimenpiteelle)
-                                 (t/send-async! (partial ->VirheTapahtui "Valintojen hakeminen toimenpiteelle epäonnistui")))
-    (assoc (merge app valinnat) :valittu-toimenpide (esitaytetty-toimenpide)))
+  (process-event [_ app]
+    (if (not (:huoltokohteiden-haku-kaynnissa? app))
+      (-> app
+          (tuck-apurit/get! :hae-kanavien-huoltokohteet
+                            {:onnistui ->HuoltokohteetHaettu
+                             :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
+          (assoc :huoltokohteiden-haku-kaynnissa? true
+                 :valittu-toimenpide (esitaytetty-toimenpide)
+                 :tehtavat (map #(nth % 3) @urakka/urakan-toimenpiteet-ja-tehtavat)
+                 :toimenpideinstanssit @urakka/urakan-toimenpideinstanssit
+                 ;; todo: hae palvelimelta
+                 :kohteet [{::kanavan-kohde/id 123
+                            ::kanavan-kohde/nimi "Hilipati pippaa"}
+                           {::kanavan-kohde/id 666
+                            ::kanavan-kohde/nimi "Trolololo"}]
+                 :huoltokohteet []))
+      app))
 
   TyhjennaValittuToimenpide
   (process-event [_ app]
@@ -128,5 +126,15 @@
   VirheTapahtui
   (process-event [{virhe :virhe} app]
     (viesti/nayta! virhe :danger)
-    app))
+    app)
+
+  HuoltokohteetHaettu
+  (process-event [{huoltokohteet :huoltokohteet} app]
+    (assoc app :huoltokohteet huoltokohteet
+               :huoltokohteiden-haku-kaynnissa? false))
+
+  HuoltokohteidenHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Huoltokohteiden haku epäonnistui" :danger)
+    (assoc app :huoltokohteiden-haku-kaynnissa? false)))
 
