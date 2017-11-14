@@ -460,18 +460,16 @@
                checkbox))])))))
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?
-                                            valitse-ainoa? tyhjenna-tuntematon-vaihtoehto?]} data]
+                                            oletusarvo]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
-    ;; Jos on vain yksi vaihtoehto, ja ehto on asetettu, asetetaan se dataan valituksi
-    (when (and valitse-ainoa?
-               (= 1 (count vaihtoehdot)))
-      (reset! data (first vaihtoehdot)))
-    ;; Jos valittu arvo ei ole vaihtoehdoissa, asetetaan arvoksi nil
-    (when (and tyhjenna-tuntematon-vaihtoehto? valittu)
-      (when-not (some (partial = valittu) vaihtoehdot)
-        (reset! data nil)))
+    ;; Jos oletusarvo on annettu, se sisältyy vaihtoehtoihin, ja mitään ei ole valittu,
+    ;; valitaan oletusarvo
+    (when (and (nil? valittu)
+               oletusarvo
+               (some (partial = oletusarvo) vaihtoehdot))
+      (reset! data oletusarvo))
     [:div
      (let [radiobuttonit (doall
                            (for [vaihtoehto vaihtoehdot]
@@ -481,8 +479,7 @@
                                [:input {:type "radio"
                                         ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
                                         ;; jos parametri annettu
-                                        :checked (or (and valitse-ainoa?
-                                                          (= 1 (count vaihtoehdot)))
+                                        :checked (or (and (nil? valittu) (= vaihtoehto oletusarvo))
                                                      (= valittu vaihtoehto))
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
                                                       (if valittu?
