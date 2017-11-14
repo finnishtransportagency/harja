@@ -1,6 +1,6 @@
 (ns harja.kyselyt.kanavat.kanavan-toimenpide
   "Kyselyt kanavatoimenpiteille"
-  (:require [specql.core :refer [fetch]]
+  (:require [specql.core :refer [fetch upsert!]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [jeesql.core :refer [defqueries]]
             [specql.op :as op]))
@@ -17,3 +17,6 @@
                (hae-kanavatoimenpiteet db
                                        {::toimenpide/id (op/in (into #{} (map :id idt)))}))
       [])))
+
+(defn tallenna-toimenpide [db kanavatoimenpide]
+  (upsert! db ::toimenpide/kanava-toimenpide toimenpide/kaikki-kentat kanavatoimenpide))

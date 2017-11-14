@@ -5,8 +5,6 @@
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.kayttaja :as kayttaja]
-    [harja.domain.sopimus :as sopimus]
-    [harja.domain.urakka :as urakka]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
