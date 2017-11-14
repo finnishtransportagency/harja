@@ -34,10 +34,6 @@
     ::toimenpidekoodi (specql.rel/has-one ::toimenpidekoodi-id
                                           :harja.domain.toimenpidekoodi/toimenpidekoodi
                                           :harja.domain.toimenpidekoodi/id)
-    "suorittaja" ::suorittaja-id
-    ::suorittaja (specql.rel/has-one ::suorittaja-id
-                                     :harja.domain.kayttaja/kayttaja
-                                     :harja.domain.kayttaja/id)
     "kuittaaja" ::kuittaaja-id
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
@@ -49,6 +45,7 @@
     ::pvm
     ::muu-toimenpide
     ::lisatieto
+    ::suorittaja
     [::kohde
      #{::kohde/id
        ::kohde/nimi
@@ -60,13 +57,6 @@
     [::toimenpidekoodi
      #{::toimenpidekoodi/id
        ::toimenpidekoodi/nimi}]
-    [::suorittaja
-     #{::kayttaja/id
-       ::kayttaja/etunimi
-       ::kayttaja/sukunimi
-       ::kayttaja/kayttajanimi
-       ::kayttaja/sahkoposti
-       ::kayttaja/puhelin}]
     [::kuittaaja
      #{::kayttaja/id
        ::kayttaja/etunimi

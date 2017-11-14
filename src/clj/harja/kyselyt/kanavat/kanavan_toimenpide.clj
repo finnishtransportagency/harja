@@ -19,4 +19,4 @@
       [])))
 
 (defn tallenna-toimenpide [db kanavatoimenpide]
-  (upsert! db ::toimenpide/kanava-toimenpide toimenpide/kaikki-kentat kanavatoimenpide))
+  (upsert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))
