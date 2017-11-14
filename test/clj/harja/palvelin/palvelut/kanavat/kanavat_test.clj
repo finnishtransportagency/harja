@@ -226,7 +226,7 @@
         (is (= poistettu? false))))))
 
 (deftest kohteen-poistaminen
-  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Taipaleen sulku ja silta';"))
         _ (is (some? kohde-id))
         _ (is (false? poistettu?))
         params {:kohde-id kohde-id}

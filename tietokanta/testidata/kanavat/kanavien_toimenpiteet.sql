@@ -91,7 +91,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2016-11-07',
   (SELECT id
    FROM kan_kohde
-   WHERE nimi = 'Taipaleen sulku'),
+   WHERE nimi = 'Taipaleen sulku ja silta'),
   (SELECT id
    FROM kan_huoltokohde
    WHERE nimi = 'ASENNONMITTAUSLAITTEET'),

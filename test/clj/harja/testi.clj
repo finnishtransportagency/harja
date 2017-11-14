@@ -349,7 +349,7 @@
                    WHERE  nimi = 'Saimaan huollon lisäsopimus';"))))
 
 (defn hae-kanavakohde-taipaleen-sulku []
-  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))))
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku ja silta';"))))
 
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
