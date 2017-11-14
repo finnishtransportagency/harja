@@ -17,7 +17,16 @@
   [:div.ip-osio
    [:div.ip-otsikko
     {:on-click toggle-asia!}
-    [:span.ip-haitari-otsikko.klikattava otsikko]]])
+    (if (vector? otsikko)
+      (let [[vasen oikea] otsikko]
+        [:span
+         [:span.ip-haitari-otsikko.klikattava.ip-otsikko-sarake-vasen vasen]
+         [:span.ip-haitari-otsikko.klikattava oikea]
+         ])
+      ;;else
+      (do
+        [:span.ip-haitari-otsikko.klikattava otsikko]
+        ))]])
 
 (defn- kentan-arvo [skeema data]
   (let [fmt (or (:fmt skeema) identity)
@@ -40,17 +49,17 @@
      (when-let [linkit (tyyppi linkin-kasittelijat)]
        [:div
         (for*
-         [{:keys [teksti ikoni tooltip toiminto] :as linkki}
-          (if (vector? linkit)
-            linkit [linkit])
+          [{:keys [teksti ikoni tooltip toiminto] :as linkki}
+           (if (vector? linkit)
+             linkit [linkit])
 
-          ;; Jos :when avaimella on määritelty ehdollisuus linkille, tarkistetaan se
-          :when (or (nil? (:when linkki))
-                    ((:when linkki) data))]
-         [yleiset/wrap-if tooltip
-          [yleiset/tooltip {} :% tooltip]
-          [napit/yleinen-toissijainen teksti #(toiminto data) {:ikoni ikoni
-                                                               :luokka "ip-toiminto btn-xs"}]])])
+           ;; Jos :when avaimella on määritelty ehdollisuus linkille, tarkistetaan se
+           :when (or (nil? (:when linkki))
+                     ((:when linkki) data))]
+          [yleiset/wrap-if tooltip
+           [yleiset/tooltip {} :% tooltip]
+           [napit/yleinen-toissijainen teksti #(toiminto data) {:ikoni ikoni
+                                                                :luokka "ip-toiminto btn-xs"}]])])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
                           (fn [kentan-skeema]
@@ -72,13 +81,13 @@
      [:span "Pisteestä ei löytynyt hakutuloksia."])
 
    (doall
-    (for [[i asia] (partition 2 (interleave (range) asiat))
-          :let [auki? (avatut-asiat asia)]]
-      ^{:key (str "infopaneelin-elementti_" i)}
-      [:div
-       [otsikko asia #(toggle-asia! asia)]
-       (when auki?
-         [yksityiskohdat asia linkkifunktiot])]))])
+     (for [[i asia] (partition 2 (interleave (range) asiat))
+           :let [auki? (avatut-asiat asia)]]
+       ^{:key (str "infopaneelin-elementti_" i)}
+       [:div
+        [otsikko asia #(toggle-asia! asia)]
+        (when auki?
+          [yksityiskohdat asia linkkifunktiot])]))])
 
 (defn infopaneeli [asiat-pisteessa piilota-fn! linkkifunktiot]
   (let [asiat-skeemamuodossa (atom nil)
@@ -102,11 +111,11 @@
           ;; Infopaneeli saa propseja joka kerta kun karttaa zoomataa, jonka takia avatut asiat
           ;; resetoitiin joka kerta kun vaikka nyt esimerkiksi zoomasi.
           (when-not (= vanhat-asiat uudet-asiat) (paivita-asiat! uudet-asiat))))
-     (fn [{haetaan? :haetaan? :as asiat-pisteessa} piilota-fn! linkkifunktiot]
-       [infopaneeli-komponentti
-        {:haetaan? haetaan?
-         :avatut-asiat @avatut-asiat
-         :toggle-asia! toggle-asia!
-         :piilota-fn! piilota-fn!
-         :linkkifunktiot @linkkifunktiot}
-        @asiat-skeemamuodossa]))))
+      (fn [{haetaan? :haetaan? :as asiat-pisteessa} piilota-fn! linkkifunktiot]
+        [infopaneeli-komponentti
+         {:haetaan? haetaan?
+          :avatut-asiat @avatut-asiat
+          :toggle-asia! toggle-asia!
+          :piilota-fn! piilota-fn!
+          :linkkifunktiot @linkkifunktiot}
+         @asiat-skeemamuodossa]))))

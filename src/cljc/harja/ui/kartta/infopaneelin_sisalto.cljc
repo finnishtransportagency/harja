@@ -359,8 +359,10 @@
                            "havaintoja"
 
                            :else nil)
-                    tila-str (when tila (str ", " tila))]
-                (str (pvm/pvm-aika (:aika tarkastus)) " - " (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str))
+                    tila-str (when tila (str ", " tila))
+                    otsikko-vektori [(str (pvm/pvm-aika (:aika tarkastus))) (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str)]]
+                otsikko-vektori
+                )
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}

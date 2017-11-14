@@ -1,106 +1,108 @@
 @kartan-transition-kesto: .1s;
 #kartta {
-    border: @primaari-sininen 1px ridge;
-    &.piilossa {
-        border: @primaari-sininen 0 ridge;
-    }
-    -webkit-backface-visibility: hidden;
-    -moz-transition: height @kartan-transition-kesto ease;
-    -webkit-transition: height @kartan-transition-kesto ease;
-    -o-transition: height @kartan-transition-kesto ease;
-    transition: height @kartan-transition-kesto ease;
+  border: @primaari-sininen 1px ridge;
+  &.piilossa {
+    border: @primaari-sininen 0 ridge;
+  }
+  -webkit-backface-visibility: hidden;
+  -moz-transition: height @kartan-transition-kesto ease;
+  -webkit-transition: height @kartan-transition-kesto ease;
+  -o-transition: height @kartan-transition-kesto ease;
+  transition: height @kartan-transition-kesto ease;
 }
+
 .ol-viewport > .ol-unselectable {
-    background-color: @harjan-taustavari;
-    z-index: 0;
+  background-color: @harjan-taustavari;
+  z-index: 0;
 }
 
 .ol-control {
-    &.ol-attribution {
-        display: none;
+  &.ol-attribution {
+    display: none;
+  }
+  &.ol-zoom {
+    left: 0;
+    top: 0;
+  }
+  > .ol-zoom-in,
+  > .ol-zoom-out {
+    background-color: @primaari-sininen;
+    &:hover,
+    &:active,
+    &.active {
+      background-color: @primaari-sininen-valittuna;
     }
-    &.ol-zoom {
-        left: 0;
-        top: 0;
-    }
-    > .ol-zoom-in,
-    > .ol-zoom-out {
-        background-color: @primaari-sininen;
-        &:hover,
-        &:active,
-        &.active {
-            background-color: @primaari-sininen-valittuna;
-        }
-    }
+  }
 }
+
 .ikoni-kartta-ctrl {
-    background-color: #FFF;
-    display: inline-block;
-    height: 40px;
-    margin-right: 5px;
-    opacity: 0.7;
-    width: 40px;
-    &:hover {
-        background-color: #F4F4F4;
-        cursor: pointer;
-    }
+  background-color: #FFF;
+  display: inline-block;
+  height: 40px;
+  margin-right: 5px;
+  opacity: 0.7;
+  width: 40px;
+  &:hover {
+    background-color: #F4F4F4;
+    cursor: pointer;
+  }
 }
 
 .kartan-kontrollit, .kartan-selitykset {
-    position: absolute;
-    z-index: 901; //kartan päällä
+  position: absolute;
+  z-index: 901; //kartan päällä
 }
 
 .kartan-koko-kontrollit {
-    position: absolute;
-    width: 100%;
-    button:nth-of-type(2) {
-        margin-left: 20px;
-    }
+  position: absolute;
+  width: 100%;
+  button:nth-of-type(2) {
+    margin-left: 20px;
+  }
 }
 
 .kartan-yleiset-kontrollit {
-    left: 25px;
-    top: 5px;
+  left: 25px;
+  top: 5px;
 }
 
 .kartan-sijaintivalintakontrollit {
-    right: 0;
-    top: 30px;
+  right: 0;
+  top: 30px;
 }
 
 .paivitetaan-karttaa {
-    z-index: 905;
-    position: absolute;
-    padding: 3px;
-    width: 150px;
-    text-align: center;
-    border: 1px solid @harmaa8;
-    background-color: @harmaa15;
+  z-index: 905;
+  position: absolute;
+  padding: 3px;
+  width: 150px;
+  text-align: center;
+  border: 1px solid @harmaa8;
+  background-color: @harmaa15;
 
-    .ajax-loader {
-        > img {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-        }
+  .ajax-loader {
+    > img {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
+  }
 }
 
 .kartan-ohjelaatikko {
-    top: 3px;
-    right: 3px;
-    background-color: @harmaa15;
-    border: 1px solid @harmaa6;
-    padding: 2px;
+  top: 3px;
+  right: 3px;
+  background-color: @harmaa15;
+  border: 1px solid @harmaa6;
+  padding: 2px;
 }
 
 .kartan-ikonien-selitykset {
-    right: 5px;
-    bottom: 5px;
-    background-color: @harmaa15;
-    border: 1px solid @harmaa6;
-    padding: 2px;
+  right: 5px;
+  bottom: 5px;
+  background-color: @harmaa15;
+  border: 1px solid @harmaa6;
+  padding: 2px;
 }
 
 .kartan-ikonien-selitykset-vasen {
@@ -109,59 +111,58 @@
 }
 
 .kartan-ikonien-selitykset-selitys-sarake {
-    padding: 3px;
+  padding: 3px;
 }
 
 .kartan-ikonien-selitykset-ikoni-sarake {
-    padding: 3px;
-    position: relative;
-    top: 0;
-    left: 0;
+  padding: 3px;
+  position: relative;
+  top: 0;
+  left: 0;
 }
 
 .kartan-ikonien-selitykset-ikoni {
-    height: 34px;
-    position: relative;
-    top: 0;
-    left: 0;
+  height: 34px;
+  position: relative;
+  top: 0;
+  left: 0;
 }
 
 .kartan-ikonien-selitykset-ikonin-paalle {
-    height: 34px;
-    position: absolute;
-    top: 3px;
-    left: 3px;
+  height: 34px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
 }
 
 .kartta-ikonien-selitykset-ikoni-rotate {
-    -webkit-transform: rotate(225deg);
-    -moz-transform: rotate(225deg);
-    -ms-transform: rotate(225deg);
-    -o-transform: rotate(225deg);
-    transform: rotate(225deg);
+  -webkit-transform: rotate(225deg);
+  -moz-transform: rotate(225deg);
+  -ms-transform: rotate(225deg);
+  -o-transform: rotate(225deg);
+  transform: rotate(225deg);
 }
 
-
 .kartan-ikonien-selitykset-avaasulje() {
-    color: @sininen3;
-    margin: 2px 5px;
-    font-size: @fontin-koko-h2;
-    &:hover {
-        color: @sininen1;
-    }
-    &:active,
-    &:focus {
-        color: @primaari-sininen-valittuna;
-    }
+  color: @sininen3;
+  margin: 2px 5px;
+  font-size: @fontin-koko-h2;
+  &:hover {
+    color: @sininen1;
+  }
+  &:active,
+  &:focus {
+    color: @primaari-sininen-valittuna;
+  }
 }
 
 .kartan-ikonien-selitykset-avaa {
-    .kartan-ikonien-selitykset-avaasulje();
+  .kartan-ikonien-selitykset-avaasulje();
 }
 
 .kartan-ikonien-selitykset-sulje {
-    .kartan-ikonien-selitykset-avaasulje();
-    text-align: right;
+  .kartan-ikonien-selitykset-avaasulje();
+  text-align: right;
 }
 
 .kartan-ikoni-vari {
@@ -189,6 +190,7 @@
 .avaa-kartta-wrap {
   text-align: center;
 }
+
 .piilota-kartta {
   position: relative;
   right: 0;
@@ -199,28 +201,28 @@
 }
 
 .kartta-tooltip {
-    z-index: 902;
-    display: block;
-    position: absolute;
-    max-width: 200px;
+  z-index: 902;
+  display: block;
+  position: absolute;
+  max-width: 200px;
 
-    box-shadow: 0 1px 7px rgba(0, 0, 0, 0.4);
-    border-radius: 1px;
-    border: 1px solid #bbb;
-    background-color: #fff;
-    cursor: default;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
+  box-shadow: 0 1px 7px rgba(0, 0, 0, 0.4);
+  border-radius: 1px;
+  border: 1px solid #bbb;
+  background-color: #fff;
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 
-    .pohjavesialue {
-        padding-left: 37px;
-        margin-right: 5px;
-        background-size: 32px 20px;
-        background-position: 0 0;
-        background-repeat: no-repeat;
-        background-image: url("../images/pohjavesialue.png");
-    }
+  .pohjavesialue {
+    padding-left: 37px;
+    margin-right: 5px;
+    background-size: 32px 20px;
+    background-position: 0 0;
+    background-repeat: no-repeat;
+    background-image: url("../images/pohjavesialue.png");
+  }
 }
 
 .kartta-progress {
@@ -231,45 +233,50 @@
   background: rgba(0, 60, 136, 0.4);
   width: 0;
   transition: width 250ms;
- }
-
-.kartan-infopaneeli {
- position: absolute;
- z-index: 901;
- top: 0;
- right: 0;
- height: 100%;
- width: 20%;
- min-width: 200px;
- max-width: 1000px;
- background-color: fade(white, 90%);
- padding: 0.5rem;
- padding-top: 1rem;
- overflow-y: auto;
-
- .ip-otsikko {
-   font-weight: bold;
-   font-size: @fontin-koko-h3;
- }
-
- .ip-haitari-otsikko {
-   .ip-otsikko();
-   color: #0088cc;
 }
 
- .ip-osio {
-   padding-top: 0.5rem;
- }
+.kartan-infopaneeli {
+  position: absolute;
+  z-index: 901;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 20%;
+  min-width: 200px;
+  max-width: 1000px;
+  background-color: fade(white, 90%);
+  padding: 0.5rem;
+  padding-top: 1rem;
+  overflow-y: auto;
+
+  .ip-otsikko {
+    font-weight: bold;
+    font-size: @fontin-koko-h3;
+  }
+
+  .ip-haitari-otsikko {
+    .ip-otsikko();
+    color: #0088cc;
+  }
+
+  .ip-otsikko-sarake-vasen {
+    min-width: 120px;
+    display: inline-block;
+  }
+
+  .ip-osio {
+    padding-top: 0.5rem;
+  }
 
   .ip-loader {
     float: right;
   }
 
- .kentan-label {
-   display: inline-block;
-   min-width: 100px;
- }
-    .ip-toiminto {
-        margin: 5px 0 0 5px;
-    }
+  .kentan-label {
+    display: inline-block;
+    min-width: 100px;
+  }
+  .ip-toiminto {
+    margin: 5px 0 0 5px;
+  }
 }
