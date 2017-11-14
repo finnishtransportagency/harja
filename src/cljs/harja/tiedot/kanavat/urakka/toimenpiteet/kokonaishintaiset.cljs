@@ -50,14 +50,31 @@
 (defrecord UusiToimenpide [])
 (defrecord TyhjennaValittuToimenpide [])
 (defrecord AsetaToimenpiteenTiedot [toimenpide])
-(defrecord TallennaToimenpide [toimenpide])
-(defrecord ToimenpideTallennettu [toimenpide])
 (defrecord ValinnatHaettuToimenpiteelle [valinnat])
 (defrecord VirheTapahtui [virhe])
 (defrecord KohteetHaettu [kohteet])
 (defrecord KohteidenHakuEpaonnistui [])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
+(defrecord TallennaToimenpide [toimenpide])
+(defrecord ToimenpideTallennettu [toimenpiteet])
+(defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+
+(defn tallennettava-toimenpide [toimenpide]
+  (-> toimenpide
+      (select-keys [::kanavan-toimenpide/suorittaja
+                    ::kanavan-toimenpide/kuittaaja
+                    ::kanavan-toimenpide/muu-toimenpide
+                    ::kanavan-toimenpide/sopimus-id
+                    ::kanavan-toimenpide/lisatieto
+                    ::kanavan-toimenpide/kohde-id
+                    ::kanavan-toimenpide/toimenpidekoodi-id
+                    ::kanavan-toimenpide/pvm
+                    ::kanavan-toimenpide/huoltokohde-id])
+      (assoc ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
+             ::kanavan-toimenpide/tyyppi :kokonaishintainen
+             ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka))
+      (dissoc ::kanavan-toimenpide/kuittaaja)))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -103,8 +120,8 @@
       (-> app
           (tuck-apurit/post! :hae-urakan-kohteet
                              {::urakka/id (get-in valinnat [:urakka :id])}
-                            {:onnistui ->KohteetHaettu
-                             :epaonnistui ->KohteidenHakuEpaonnistui})
+                             {:onnistui ->KohteetHaettu
+                              :epaonnistui ->KohteidenHakuEpaonnistui})
           (tuck-apurit/get! :hae-kanavien-huoltokohteet
                             {:onnistui ->HuoltokohteetHaettu
                              :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
@@ -150,5 +167,28 @@
   HuoltokohteidenHakuEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Huoltokohteiden haku epäonnistui" :danger)
-    (assoc app :huoltokohteiden-haku-kaynnissa? false)))
+    (assoc app :huoltokohteiden-haku-kaynnissa? false))
 
+  TallennaToimenpide
+  (process-event [{data :toimenpide} {valinnat :valinnat :as app}]
+    app
+    (if (:tallennus-kaynnissa? app)
+      app
+      (let [toimenpide (tallennettava-toimenpide data)
+            hakuehdot (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
+        (-> app
+            (tuck-apurit/post! :tallenna-kanavatoimenpide
+                               {::kanavan-toimenpide/kanava-toimenpide toimenpide
+                                ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
+                               {:onnistui ->ToimenpideTallennettu
+                                :epaonnistui ->ToimenpiteidenTallentaminenEpaonnistui})
+            (assoc :tallennus-kaynnissa? true)))))
+
+  ToimenpideTallennettu
+  (process-event [{toimenpiteet :toimenpide} app]
+    app)
+
+  ToimenpiteidenTallentaminenEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
+    (assoc app :tallennus-kaynnissa? false)))

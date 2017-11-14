@@ -19,6 +19,7 @@
                                        toimenpidekoodi ::toimenpidekoodi/id
                                        tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
                                        :as hakuehdot}]
+  
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (when tyyppi (name tyyppi))]
     (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
@@ -30,10 +31,12 @@
        :toimenpidekoodi toimenpidekoodi
        :tyyppi tyyppi})))
 
-(defn tallenna-kanavatoimenpide [db user urakka-id {tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
-                                                    :as kanavatoimenpide}]
+(defn tallenna-kanavatoimenpide [db user {tyyppi ::kanavan-toimenpide/tyyppi
+                                          urakka-id ::kanavan-toimenpide/urakka-id
+                                          :as kanavatoimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
-  (q-kanavan-toimenpide/tallenna-toimenpide db kanavatoimenpide))
+  (let [kanavatoimenpide (assoc kanavatoimenpide :harja.domain.muokkaustiedot/luoja-id (:id user))]
+    (q-kanavan-toimenpide/tallenna-toimenpide db kanavatoimenpide)))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
@@ -49,11 +52,14 @@
     (julkaise-palvelu
       http
       :tallenna-kanavatoimenpide
-      (fn [user kanavatoimenpide {urakka-id ::kanavan-toimenpide/urakka-id :as hakuehdot}]
-        (tallenna-kanavatoimenpide db user urakka-id kanavatoimenpide)
+      (fn [user {toimenpide ::kanavan-toimenpide/kanava-toimenpide
+                 hakuehdot ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
+                 :as kutsu}]
+        (tallenna-kanavatoimenpide db user toimenpide)
         (hae-kanavatoimenpiteet db user hakuehdot))
-      {:kysely-spec ::kanavan-toimenpide/kanava-toimenpide
+      {:kysely-spec ::kanavan-toimenpide/tallenna-kanavatoimenpide-kutsu
        :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
+
     this)
 
   (stop [this]

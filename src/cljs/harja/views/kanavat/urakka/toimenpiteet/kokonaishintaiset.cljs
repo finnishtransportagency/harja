@@ -66,11 +66,9 @@
                   [:div
                    [napit/palvelinkutsu-nappi
                     "Tallenna"
-                    #(e! (tiedot/->ToimenpideTallennettu %))
+                    #(e! (tiedot/->TallennaToimenpide toimenpide))
                     {:luokka "nappi-ensisijainen"
                      :ikoni (ikonit/tallenna)
-                     :kun-onnistuu #(e! (tiedot/->ToimenpideTallennettu %))
-                     :kun-virhe #(viesti/nayta! "Toimenpiteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
                      :disabled (not (lomake/voi-tallentaa? toimenpide))}]])}
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
@@ -141,7 +139,7 @@
       :nimi ::kanavan-toimenpide/lisatieto
       :tyyppi :string}
      {:otsikko "Suorittaja"
-      :nimi ::kanavan-toimenpide/suorittaja-id
+      :nimi ::kanavan-toimenpide/suorittaja
       :tyyppi :string
       :pakollinen? true}
      {:otsikko "Kuittaaja"

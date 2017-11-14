@@ -75,3 +75,7 @@
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))
+
+(s/def ::tallenna-kanavatoimenpide-kutsu
+  (s/keys :req [::hae-kanavatoimenpiteet-kysely
+                ::kanava-toimenpide]))
