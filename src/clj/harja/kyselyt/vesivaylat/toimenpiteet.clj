@@ -277,7 +277,7 @@
         urakka-id (::vv-toimenpide/urakka-id tiedot)
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
-        vayla-id (::vv-toimenpide/vayla-id tiedot)
+        vaylanro (::vv-toimenpide/vaylanro tiedot)
         turvalaite-id (::vv-toimenpide/turvalaite-id tiedot)
         tyolaji (::vv-toimenpide/reimari-tyolaji tiedot)
         tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
@@ -317,8 +317,8 @@
                                  {::vv-toimenpide/suoritettu (op/between alku loppu)})
                                (when vaylatyyppi
                                  {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
-                               (when vayla-id
-                                 {::vv-toimenpide/vayla-id vayla-id})
+                               (when vaylanro
+                                 {::vv-toimenpide/vaylanro vaylanro})
                                (when turvalaite-id
                                  {::vv-toimenpide/turvalaite-id turvalaite-id})
                                (when tyolaji
