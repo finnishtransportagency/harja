@@ -350,6 +350,24 @@
                          :valitse-fn #(reset! valittu-paikallinen-kaytto-atom %)}
     valinnat]])
 
+(defn kanava-kohde
+  [valittu-kohde-atom kohteet format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Kohde"]
+   [livi-pudotusvalikko {:valinta @valittu-kohde-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-kohde-atom %)}
+    kohteet]])
+
+(defn kanava-aluslaji
+  [valittu-aluslaji-atom kohteet format-fn]
+  [:div.label-ja-alasveto
+   [:span.alasvedon-otsikko "Aluslaji"]
+   [livi-pudotusvalikko {:valinta @valittu-aluslaji-atom
+                         :format-fn format-fn
+                         :valitse-fn #(reset! valittu-aluslaji-atom %)}
+    kohteet]])
+
 (defn urakkavalinnat [{:keys [urakka]} & sisalto]
   [:div.urakkavalinnat (when (and urakka (not (u-domain/vesivaylaurakka? urakka)))
                          {:class "urakkavalinnat-tyyliton"})

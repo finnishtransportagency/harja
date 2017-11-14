@@ -34,6 +34,7 @@
   [harja.palvelin.raportointi.raportit.indeksitarkistus]
   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
+  [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
@@ -290,7 +291,14 @@
     :konteksti #{"urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
-    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-raporttinakyma}])
+    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-raporttinakyma}
+
+   {:nimi :kanavien-laskutusyhteenveto
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti #{"urakka"}
+    :kuvaus "Laskutusyhteenveto"
+    :suorita #'harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto/suorita
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

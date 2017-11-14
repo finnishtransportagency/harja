@@ -106,7 +106,7 @@
                (pvm/hoitokauden-loppupvm (inc vuosi))])
             (range ensimmainen-vuosi viimeinen-vuosi))
 
-      (= :vesivayla-hoito tyyppi)
+      (or (= :vesivayla-hoito tyyppi) (= :vesivayla-kanavien-hoito tyyppi))
       (vesivaylien-sopimuskaudet ensimmainen-vuosi viimeinen-vuosi)
 
       :default
