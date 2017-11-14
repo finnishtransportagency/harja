@@ -297,7 +297,8 @@
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
-            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])]
+            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
+            jarjestys-fn (juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)]
         [:fieldset.lomake-osa
          [:h3 "Tekninen osa"]
 
@@ -324,7 +325,8 @@
            :voi-poistaa? (constantly false)
            :voi-muokata? voi-muokata?
            :virheet (wrap-virheet :paallystystoimenpide)
-           :rivinumerot? true}
+           :rivinumerot? true
+           :jarjesta jarjestys-fn}
           [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
            (assoc paallystys/raekoko-grid-skeema :nimi :toimenpide-raekoko :leveys 10)
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
@@ -356,7 +358,8 @@
            :voi-kumota? false
            :voi-poistaa? (constantly false)
            :voi-muokata? voi-muokata?
-           :virheet (wrap-virheet :kiviaines)}
+           :virheet (wrap-virheet :kiviaines)
+           :jarjesta jarjestys-fn}
           [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
             :leveys 30}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20}
@@ -372,8 +375,7 @@
             :pituus-max 256}]
           paallystystoimenpiteet]
 
-         (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)
-               jarjestys-fn (juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)]
+         (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
                    :jarjesta jarjestys-fn
