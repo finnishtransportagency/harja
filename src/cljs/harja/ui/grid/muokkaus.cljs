@@ -150,7 +150,7 @@
                               [:td {:colSpan colspan}
                                (:teksti otsikko)]]]
                              [])
-                           [^{:key (str i id)}
+                           [^{:key (str i "-" id)}
                            [muokkausrivi {:rivinumerot? rivinumerot? :ohjaus ohjaus
                                           :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
                                           :nayta-virheet? nayta-virheet? :nykyinen-fokus nykyinen-fokus
