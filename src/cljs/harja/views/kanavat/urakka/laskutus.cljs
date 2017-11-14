@@ -2,34 +2,63 @@
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :refer [tuck]]
 
-            [harja.tiedot.kanavat.urakka.laskutus :as tiedot]
             [harja.loki :refer [tarkkaile! log]]
-            [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
-
             [harja.ui.komponentti :as komp]
-            [harja.ui.grid :as grid]
-            [harja.ui.lomake :as lomake]
             [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja] :as yleiset]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.modal :as modal]
+            [harja.tiedot.navigaatio :as nav]
 
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.tiedot.urakka :as u]
+            [harja.tiedot.raportit :as raportit]
+            [harja.ui.raportti :refer [muodosta-html]]
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.ui.upotettu-raportti :as upotettu-raportti])
+
   (:require-macros
     [cljs.core.async.macros :refer [go]]
+    [reagent.ratom :refer [reaction run!]]
+    [harja.atom :refer [reaction<!]]
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
-(defn laskutus* [e! app]
+(defonce laskutus-nakyvissa? (atom false))
+
+(defonce laskutuksen-parametrit
+  (reaction (let [ur @nav/valittu-urakka
+                  [alkupvm loppupvm] (or @u/valittu-hoitokauden-kuukausi @u/valittu-hoitokausi)
+                  nakymassa? @laskutus-nakyvissa?]
+              (pr-str (log "parametrit? " ur alkupvm loppupvm nakymassa?) )
+              (when (and ur alkupvm loppupvm nakymassa?)
+                (raportit/urakkaraportin-parametrit
+                  (:id ur)
+                  :kanavien-laskutusyhteenveto
+                  {:alkupvm  alkupvm
+                   :loppupvm loppupvm})))))
+
+
+(defonce laskutus-tiedot
+  (reaction<! [p @laskutuksen-parametrit]
+              {:nil-kun-haku-kaynnissa? true}
+              (when p
+                (raportit/suorita-raportti p))))
+
+
+(defn laskutus
+  []
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
-                      #(e! (tiedot/->Nakymassa? false)))
+    (komp/lippu laskutus-nakyvissa?)
+    (fn []
+      (let [ur @nav/valittu-urakka
+            tiedot @laskutus-tiedot
+            valittu-aikavali @u/valittu-hoitokauden-kuukausi]
+        [:span.laskutusyhteenveto
+         [valinnat/urakan-hoitokausi-ja-kuukausi ur]
 
-    (fn [e! app]
-      [:div "WIP"])))
+         (when-let [p @laskutuksen-parametrit]
+           [upotettu-raportti/raportin-vientimuodot p])
 
-(defc laskutus []
-  [tuck tiedot/tila laskutus*])
-
-
+         (if-let [tiedot @laskutus-tiedot]
+           [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutus-kanavat)]
+           [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))
