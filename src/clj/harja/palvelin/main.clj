@@ -503,12 +503,14 @@
                                toimenpidehakuvali
                                komponenttityyppihakuvali
                                turvalaitekomponenttihakuvali
-                               vikahakuvali]} (:reimari asetukset)]
+                               vikahakuvali
+                               turvalaiteryhmahakuaika]} (:reimari asetukset)]
                    (reimari/->Reimari url kayttajatunnus salasana
                                       toimenpidehakuvali
                                       komponenttityyppihakuvali
                                       turvalaitekomponenttihakuvali
-                                      vikahakuvali))
+                                      vikahakuvali
+                                      turvalaiteryhmahakuaika))
                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :ais-data (component/using
