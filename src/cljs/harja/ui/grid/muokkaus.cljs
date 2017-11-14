@@ -135,7 +135,7 @@
        (let [kaikki-virheet @virheet
              virheet-ylos-fn (if virheet-ylos?
                                #(nil? (get kaikki-virheet (:id %)))
-                               #(constantly nil))]
+                               (fn [_] nil))]
          (doall
            (mapcat
              identity
