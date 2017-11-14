@@ -25,10 +25,23 @@
                          "Jäljellä") :fmt :raha}])
 
 (defn- kaikki-yhteensa-rivit [kokonaishintaiset sanktiot erilliskustannukset]
-  ["Yhteensä"
-   ""
-   (reduce + 0 (keep :toteutunut-maara (concat kokonaishintaiset sanktiot erilliskustannukset)))
-   ""])
+  (let [kaikkien-kululajien-rivit (concat kokonaishintaiset sanktiot erilliskustannukset)
+        toimenpideinstansseittain (group-by :tpi-nimi kaikkien-kululajien-rivit)
+        rivit (conj
+                (into []
+                      (concat
+                        (for [tpin-rivit toimenpideinstansseittain]
+                          [(key tpin-rivit)
+                           ""
+                           (reduce + 0 (keep :toteutunut-maara (val tpin-rivit)))
+                           ""]
+                          )))
+
+                ["Yhteensä"
+                 ""
+                 (reduce + 0 (keep :toteutunut-maara kaikkien-kululajien-rivit))
+                 ""])]
+    rivit))
 
 
 (defn- toimenpiteiden-summa [kentat]
@@ -110,4 +123,4 @@
                    :sheet-nimi "Yhteensä"
                    :viimeinen-rivi-yhteenveto? true}
         (sarakkeet :yhteenveto)
-        [kaikki-yht-rivit]])]))
+        kaikki-yht-rivit])]))
