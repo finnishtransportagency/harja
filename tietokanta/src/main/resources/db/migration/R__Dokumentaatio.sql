@@ -144,6 +144,11 @@ E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata
 COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
 
+COMMENT ON TABLE reimari_turvalaiteryhma IS
+E'Kuvaa turvalaiteryhmää eli ryhmää turvalaitteita, jotka muodostavat vesiväyläurakka-alueen . Kaikki tiedot tulevat tähän tauluun Reimarista.';
+COMMENT ON COLUMN reimari_turvalaiteryhma."turvalaitteet" IS 'Turvalaiteryhmään kuuluvien turvalaitteiden numerot. Samaa numeroa käytetään turvalaitteen tunnistamiseen myös muualla, esim. vv_turvalaite taulussa.';
+
+
 COMMENT ON TABLE reimari_turvalaitekomponentti IS
 E'Kuvaa turvalaitteeseen liittyvää komponenttia. Kaikki tiedot tulevat tähän tauluun Reimarista.';
 
