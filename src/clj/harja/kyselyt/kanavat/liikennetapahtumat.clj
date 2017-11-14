@@ -64,6 +64,7 @@
                    (set/union
                      lt/perustiedot
                      lt/kuittaajan-tiedot
+                     lt/sopimuksen-tiedot
                      lt/alusten-tiedot
                      lt/kohteen-tiedot)
                    (op/and

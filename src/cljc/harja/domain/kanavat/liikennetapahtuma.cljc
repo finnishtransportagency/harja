@@ -64,17 +64,19 @@
 (def alusten-tiedot
   #{[::alukset lt-alus/perustiedot]})
 
-(def toimenpiteet*
+(def sopimuksen-tiedot
+  #{[::sopimus sop/perustiedot]})
+
+(def sulku-toimenpiteet*
   ^{:private true}
   {:sulutus "Sulutus"
-   :tyhjennys "Tyhjennys"
-   :sillan-avaus "Sillan avaus"})
+   :tyhjennys "Tyhjennys"})
 
-(defn toimenpide->str [toimenpide]
-  (toimenpiteet*
+(defn sulku-toimenpide->str [toimenpide]
+  (sulku-toimenpiteet*
     toimenpide))
 
-(def toimenpide-vaihtoehdot (keys toimenpiteet*))
+(def sulku-toimenpide-vaihtoehdot (keys sulku-toimenpiteet*))
 
 (def palvelumuodot*
   ^{:private true}
@@ -124,3 +126,21 @@
                                                    ::vesipinta-alaraja]
                                                   :opt
                                                   [::alukset])))
+
+(s/def ::tallenna-liikennetapahtuma-kysely (s/keys :req [::aika
+                                                            ::sulku-toimenpide
+                                                            ::sulku-palvelumuoto
+                                                            ::sulku-lkm
+                                                            ::silta-avaus
+                                                            ::silta-palvelumuoto
+                                                            ::silta-lkm
+                                                            ::lisatieto
+                                                            ::vesipinta-ylaraja
+                                                            ::vesipinta-alaraja
+                                                            ::kuittaaja
+                                                            ::kohde
+                                                            ::alukset
+                                                            ::sopimus
+                                                            ::urakka]
+                                                   :opt [::m/poistettu?]))
+(s/def ::tallenna-liikennetapahtuma-vastaus ::hae-liikennetapahtumat-vastaus)
