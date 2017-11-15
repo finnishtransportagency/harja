@@ -24,7 +24,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as navigaatio]
-            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
+            [clojure.string :as str])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -54,6 +55,15 @@
     :tunniste ::kanavan-toimenpide/id}
    toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
+
+(defn valittu-tehtava-muu? [toimenpide tehtavat]
+  (and
+    tehtavat
+    (some #(= % (::kanavan-toimenpide/toimenpidekoodi-id toimenpide))
+          (map :id
+               (filter #(and
+                          (:nimi %)
+                          (not= -1 (.indexOf (str/upper-case (:nimi %)) "MUU"))) tehtavat)))))
 
 (defn kokonaishintainen-toimenpidelomake [e! toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
   [:div
@@ -132,9 +142,10 @@
                                                    (urakan-toimenpiteet/tehtava-idlla
                                                      arvo tehtavat)))
                    (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)))}
-     {:otsikko "Muu toimenpide"
-      :nimi ::kanavan-toimenpide/muu-toimenpide
-      :tyyppi :string}
+     (when (valittu-tehtava-muu? toimenpide tehtavat)
+       {:otsikko "Muu toimenpide"
+        :nimi ::kanavan-toimenpide/muu-toimenpide
+        :tyyppi :string})
      {:otsikko "Lisätieto"
       :nimi ::kanavan-toimenpide/lisatieto
       :tyyppi :string}
