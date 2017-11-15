@@ -4,6 +4,7 @@
             [harja.palvelin.integraatiot.reimari.toimenpidehaku :as toimenpidehaku]
             [harja.palvelin.integraatiot.reimari.komponenttihaku :as komponenttihaku]
             [harja.palvelin.integraatiot.reimari.vikahaku :as vikahaku]
+            [harja.palvelin.integraatiot.reimari.turvalaiteryhmahaku :as turvalaiteryhmahaku]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -22,7 +23,10 @@
 (defprotocol HaeViat
   (hae-viat [this]))
 
-(defrecord Reimari [pohja-url kayttajatunnus salasana tphakuvali kthakuvali tlkhakuvali vikahakuvali]
+(defprotocol HaeTurvalaiteryhmat
+  (hae-turvalaiteryhmat [this]))
+
+(defrecord Reimari [pohja-url kayttajatunnus salasana tphakuvali kthakuvali tlkhakuvali vikahakuvali tlrhakuaika]
   component/Lifecycle
   (start [this]
     (log/info "Käynnistetään Reimari-komponentti, pohja-url" pohja-url)
@@ -32,9 +36,11 @@
            :kt-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein kthakuvali 16
                                     (fn [& args] (hae-komponenttityypit this)))
            :tlk-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein tlkhakuvali 21
-                                     (fn [& args] (hae-turvalaitekomponentit this)))
+                                    (fn [& args] (hae-turvalaitekomponentit this)))
            :viat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-minuutin-valein vikahakuvali 25
-                                      (fn [& args] (hae-viat this)))))
+                                     (fn [& args] (hae-viat this)))
+           :turvalaiteryhmat-ajastus-peruutus-fn (ajastettu-tehtava/ajasta-paivittain tlrhakuaika
+                                     (fn [& args] (hae-turvalaiteryhmat this)))))
   (stop [this]
     (log/debug "Sammutetaan Reimari-komponentti")
     (doseq [k [:tp-ajastus-peruutus-fn :kt-ajastus-peruutus-fn :tlk-ajastus-peruutus-fn]]
@@ -60,4 +66,9 @@
   HaeViat
   (hae-viat [this]
     (log/debug "Reimari HaeViat kutsuttu")
-    (vikahaku/hae-viat (:db this) (:integraatioloki this) pohja-url kayttajatunnus salasana)))
+    (vikahaku/hae-viat (:db this) (:integraatioloki this) pohja-url kayttajatunnus salasana))
+
+   HaeTurvalaiteryhmat
+    (hae-turvalaiteryhmat [this]
+     (log/debug "Reimari HaeTurvalaiteryhmat kutsuttu")
+     (turvalaiteryhmahaku/hae-turvalaiteryhmat (:db this) (:integraatioloki this) pohja-url kayttajatunnus salasana)))
