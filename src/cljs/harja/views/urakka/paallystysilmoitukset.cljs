@@ -292,13 +292,15 @@
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa!]
-  (let [osan-pituus (atom {})]
+  (let [osan-pituus (atom {})
+        jarjestys-fn (juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
-            jarjestys-fn (juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)]
+            yllapitokohde-virheet (wrap-virheet :alikohteet)
+            muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))]
         [:fieldset.lomake-osa
          [:h3 "Tekninen osa"]
 
@@ -311,7 +313,7 @@
                                        (assoc-in [:virheet :alikohteet] virheet)))))
            :rivinumerot? true
            :voi-muokata? voi-muokata?
-           :virheet (wrap-virheet :alikohteet)}
+           :virheet yllapitokohde-virheet}
           urakka tierekisteriosoitteet
           (select-keys lomakedata-nyt
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
@@ -323,8 +325,11 @@
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
-           :voi-muokata? voi-muokata?
+           :voi-muokata? muokkaus-mahdollista?
            :virheet (wrap-virheet :paallystystoimenpide)
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :rivinumerot? true
            :jarjesta jarjestys-fn}
           [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
@@ -357,7 +362,10 @@
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
-           :voi-muokata? voi-muokata?
+           :voi-muokata? muokkaus-mahdollista?
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :virheet (wrap-virheet :kiviaines)
            :jarjesta jarjestys-fn}
           [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256

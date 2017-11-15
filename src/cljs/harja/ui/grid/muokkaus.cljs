@@ -26,9 +26,11 @@
                    [harja.makrot :refer [fnc]]))
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet skeema peru!
-                                voi-lisata? ohjaus uusi-id opts paneelikomponentit historia]}]
+                                voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
+                                virhe-viesti]}]
   [:div.panel-heading
    (when otsikko [:h6.panel-title otsikko])
+   (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
       (when (not= false voi-kumota?)
@@ -202,10 +204,12 @@
   :virheet-dataan?    jos true, validointivirheet asetetaan rivin datan mäppiin
                       avaimella :harja.ui.grid/virheet
   :virheet-ylos?      Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-avaimen-mukaan
-                      avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?"
+                      avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?
+  :virhe-viesti       String, joka näytetään gridin otsikon oikealla puolella punaisella."
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
-           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?] :as opts}
+           muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
+           virhe-viesti] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -307,7 +311,7 @@
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
                     vetolaatikot uusi-id paneelikomponentit validoi-aina?
-                    nayta-virheet? valiotsikot virheet-ylos?] :as opts} skeema muokatut]
+                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys
@@ -329,7 +333,8 @@
             (muokkauspaneeli {:otsikko otsikko :voi-muokata? voi-muokata? :historia historia
                               :voi-kumota? voi-kumota? :muokatut muokatut :virheet virheet
                               :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
-                              :opts opts :paneelikomponentit paneelikomponentit :peru! peru!})
+                              :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
+                              :virhe-viesti virhe-viesti})
             [:div.panel-body
              [:table.grid
               [:thead
