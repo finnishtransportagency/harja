@@ -74,11 +74,10 @@
      :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
      :footer-fn (fn [toimenpide]
                   [:div
-                   [napit/palvelinkutsu-nappi
+                   [napit/tallenna
                     "Tallenna"
                     #(e! (tiedot/->TallennaToimenpide toimenpide))
-                    {:luokka "nappi-ensisijainen"
-                     :ikoni (ikonit/tallenna)
+                    {:tallennus-kaynnissa? tallennus-kaynnissa?
                      :disabled (not (lomake/voi-tallentaa? toimenpide))}]])}
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id

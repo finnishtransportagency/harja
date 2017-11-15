@@ -191,8 +191,11 @@
             (assoc :tallennus-kaynnissa? true)))))
 
   ToimenpideTallennettu
-  (process-event [{toimenpiteet :toimenpide} app]
-    app)
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    (assoc app :tallennus-kaynnissa? false
+               :valittu-toimenpide nil
+               :toimenpiteet toimenpiteet))
+
 
   ToimenpiteidenTallentaminenEpaonnistui
   (process-event [_ app]
