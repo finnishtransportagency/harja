@@ -516,6 +516,11 @@
                    WHERE  urakka = " @oulun-alueurakan-2014-2019-id "
                    AND alkupvm = '2014-10-01' AND loppupvm = '2015-09-30'"))))
 
+(defn hae-merivayla-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Meriväylät'"))))
+
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
