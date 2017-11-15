@@ -54,10 +54,9 @@
     :nimi ::kanavan-toimenpide/muu-toimenpide
     :tyyppi :string}
    {:otsikko "Suorittaja"
-    :nimi :huoltokohde
-    :tyyppi :string
-    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}
+    :nimi ::kanavan-toimenpide/suorittaja
+    :tyyppi :string}
    {:otsikko "Kuittaaja"
-    :nimi :huoltokohde
+    :nimi ::kanavan-toimenpide/kuittaaja
     :tyyppi :string
-    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/suorittaja %))}])
+    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))}])

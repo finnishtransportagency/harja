@@ -184,7 +184,8 @@
     (fn [e! {:keys [toimenpiteet valittu-toimenpide kohteet toimenpideinstanssit tehtavat huoltokohteet] :as app}]
       (let [urakka (get-in app [:valinnat :urakka])
             sopimukset (:sopimukset urakka)]
-        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+        ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+        @tiedot/valinnat
         [:span
          [kokonaishintaiset-nakyma e! app urakka toimenpiteet valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]]))))
 
