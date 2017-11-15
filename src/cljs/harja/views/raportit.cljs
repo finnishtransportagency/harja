@@ -55,7 +55,7 @@
                   v-urakkatyyppi (if (= :vesivayla v-urakkatyyppi)
                                    (if (= (:nimi v-hal) "Kanavat ja avattavat sillat")
                                      urakka-domain/kanava-urakkatyypit
-                                     urakka-domain/vesivayla-urakkatyypit)
+                                     urakka-domain/vesivayla-urakkatyypit-ilman-kanavia)
                                    v-urakkatyyppi)
                   salli-laaja-konteksti? (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
 
