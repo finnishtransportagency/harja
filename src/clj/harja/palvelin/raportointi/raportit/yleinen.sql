@@ -9,7 +9,7 @@ WHERE
   ((:urakka :: INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
   AND (:urakka :: INTEGER IS NOT NULL OR
-       (:urakka :: INTEGER IS NULL AND (:urakkatyyppi::urakkatyyppi IS NULL OR
+       (:urakka :: INTEGER IS NULL AND (TRUE IN (SELECT unnest(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR
                                         u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))))
   AND (:urakka :: INTEGER IS NOT NULL OR :urakka :: INTEGER IS NULL AND ((alkupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (loppupvm :: DATE BETWEEN :alku AND :loppu)

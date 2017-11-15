@@ -40,79 +40,87 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(defn raportti-testien-vastaus
+  [{:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm
+           urakkatyyppi tarkistettavat-sarakkett]}]
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi :turvallisuus
+                                 :konteksti konteksti
+                                 :urakka-id urakka-id
+                                 :hallintayksikko-id hallintayksikko-id
+                                 :parametrit {:alkupvm (c/to-date (apply t/local-date alkupvm))
+                                              :loppupvm (c/to-date (apply t/local-date loppupvm))
+                                              :hoitoluokat #{1 2 3 4 5 6 8 7}
+                                              :urakkatyyppi urakkatyyppi}})]
+    (is (vector? vastaus))
+    (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
+    vastaus))
 
 (deftest raportin-suoritus-urakalle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :turvallisuus
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})]
-    (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
-    (let [otsikko (str "Oulun alueurakka 2014-2019, "
-                       "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
-          taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])]
-      (apurit/tarkista-taulukko-otsikko taulukko otsikko)
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Tyyppi"}
-                                          {:otsikko "Määrä"})
-      (apurit/tarkista-taulukko-yhteensa taulukko 1))))
+  (let [konteksti "urakka"
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        alkupvm [2014 10 1]
+        loppupvm [2015 10 1]
+        urakkatyyppi "hoito"
 
+        vastaus (raportti-testien-vastaus {:konteksti konteksti :urakka-id urakka-id :alkupvm alkupvm
+                                           :loppupvm loppupvm :urakkatyyppi urakkatyyppi})
+
+        otsikko (str "Oulun alueurakka 2014-2019, "
+                     "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
+        taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])]
+    (apurit/tarkista-taulukko-otsikko taulukko otsikko)
+    (apurit/tarkista-taulukko-sarakkeet taulukko
+                                        {:otsikko "Tyyppi"}
+                                        {:otsikko "Määrä"})
+    (apurit/tarkista-taulukko-yhteensa taulukko 1)))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :turvallisuus
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})]
-    (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
-    (let [otsikko (str "Pohjois-Pohjanmaa, "
-                       "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-otsikko taulukko otsikko)
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Tyyppi"} {:otsikko "Määrä"})
-      (apurit/tarkista-taulukko-yhteensa taulukko 1))))
+  (let [konteksti "hallintayksikko"
+        hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+        alkupvm [2014 10 1]
+        loppupvm [2015 10 1]
+        urakkatyyppi "hoito"
+
+        vastaus (raportti-testien-vastaus {:konteksti konteksti :hallintayksikko-id hallintayksikko-id :alkupvm alkupvm
+                                           :loppupvm loppupvm :urakkatyyppi urakkatyyppi})
+
+        otsikko (str "Pohjois-Pohjanmaa, "
+                     "Turvallisuusraportti ajalta 01.10.2014 - 01.10.2015")
+        taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])]
+    (apurit/tarkista-taulukko-otsikko taulukko otsikko)
+    (apurit/tarkista-taulukko-sarakkeet taulukko
+                                        {:otsikko "Tyyppi"}
+                                        {:otsikko "Määrä"})
+    (apurit/tarkista-taulukko-yhteensa taulukko 1)))
 
 (deftest raportin-suoritus-koko-maalle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :turvallisuus
-                                 :konteksti "koko maa"
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2014 1 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 12 31))
-                                              :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})]
-    (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Turvallisuusraportti")
-    (let [otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
-      (apurit/tarkista-taulukko-sarakkeet taulukko
-                                          {:otsikko "Hallintayksikkö"}
-                                          {:otsikko "Työtapaturmat"}
-                                          {:otsikko "Vaaratilanteet"}
-                                          {:otsikko "Turvallisuushavainnot"}
-                                          {:otsikko "Muut"})
-      (apurit/tarkista-taulukko-kaikki-rivit taulukko
-                                             (fn [[alue tyo vaara havainnot muut :as rivi]]
-                                               (and (= (count rivi) 5)
-                                                    (string? alue)
-                                                    (number? tyo)
-                                                    (number? vaara)
-                                                    (number? havainnot)
-                                                    (number? muut)))))
+  (let [konteksti "koko maa"
+        alkupvm [2014 1 1]
+        loppupvm [2015 12 31]
+        urakkatyyppi "hoito"
+
+        vastaus (raportti-testien-vastaus {:konteksti konteksti :alkupvm alkupvm :loppupvm loppupvm
+                                           :urakkatyyppi urakkatyyppi})
+
+        raportin-otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
+        taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+    (apurit/tarkista-taulukko-sarakkeet taulukko
+                                        {:otsikko "Hallintayksikkö"}
+                                        {:otsikko "Työtapaturmat"}
+                                        {:otsikko "Vaaratilanteet"}
+                                        {:otsikko "Turvallisuushavainnot"}
+                                        {:otsikko "Muut"})
+    (apurit/tarkista-taulukko-kaikki-rivit taulukko
+                                           (fn [[alue tyo vaara havainnot muut :as rivi]]
+                                             (and (= (count rivi) 5)
+                                                  (string? alue)
+                                                  (number? tyo)
+                                                  (number? vaara)
+                                                  (number? havainnot)
+                                                  (number? muut))))
     (let [vakavuus (apurit/taulukko-otsikolla vastaus "Turvallisuuspoikkeamat vakavuusasteittain")]
       (apurit/tarkista-taulukko-sarakkeet vakavuus
                                           {:otsikko "Hallintayksikkö"}
@@ -124,3 +132,22 @@
                                                     (string? hal)
                                                     (number? lievat)
                                                     (number? vakavat)))))))
+
+(deftest raportin-suoritus-vesivayla-urakalle-toimii
+  (let [konteksti "urakka"
+        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        alkupvm [2017 1 1]
+        loppupvm [2017 12 31]
+        urakkatyyppi "vesivayla"
+
+        vastaus (raportti-testien-vastaus {:konteksti konteksti :urakka-id urakka-id :alkupvm alkupvm
+                                           :loppupvm loppupvm :urakkatyyppi urakkatyyppi})
+
+        otsikko (str "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL, "
+                     "Turvallisuusraportti ajalta 01.01.2017 - 31.12.2017")
+        taulukko (apurit/elementti vastaus [:taulukko {:otsikko otsikko} _ _])]
+    (apurit/tarkista-taulukko-otsikko taulukko otsikko)
+    (apurit/tarkista-taulukko-sarakkeet taulukko
+                                        {:otsikko "Tyyppi"}
+                                        {:otsikko "Määrä"})
+    (apurit/tarkista-taulukko-yhteensa taulukko 1)))

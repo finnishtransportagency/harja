@@ -463,7 +463,7 @@ FROM laatupoikkeama lp
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
   LEFT JOIN  yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
-                    AND (:urakkatyyppi::urakkatyyppi[] IS NULL OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])))
+                    AND (TRUE IN (SELECT unnest(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND lp.poistettu IS NOT TRUE
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
@@ -501,7 +501,7 @@ FROM laatupoikkeama lp
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
   LEFT JOIN  yllapitokohde ypk ON lp.yllapitokohde = ypk.id
-WHERE lp.urakka IN (SELECT id FROM urakka WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])))
+WHERE lp.urakka IN (SELECT id FROM urakka WHERE (TRUE IN (SELECT unnest(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND lp.poistettu IS NOT TRUE
       AND (:rajaa_tekijalla = FALSE OR lp.tekija = :tekija::osapuoli)
