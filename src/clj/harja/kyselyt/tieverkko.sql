@@ -84,7 +84,7 @@ WHERE tie = :tie AND
 
 -- name: hae-tieosan-ajoradat
 SELECT ajorata
-FROM tr_osan_ajorata
+FROM tr_ajoratojen_pituudet
 WHERE tie = :tie AND osa = :osa
 ORDER BY ajorata ASC;
 
