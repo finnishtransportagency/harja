@@ -445,7 +445,8 @@
 (deftest poista-kohde
   (vaadi-async-kutsut
     #{tiedot/->KohdePoistettu tiedot/->KohdeEiPoistettu}
-    (is (= {:kohderivit [{::kohde/id 2}]
+    (is (= {:kohderivit [{::kohde/id 1}
+                         {::kohde/id 2}]
             :poistettava-kohde {::kohde/id 1}
             :poistaminen-kaynnissa? true}
            (e! (tiedot/->PoistaKohde {::kohde/id 1})
@@ -465,8 +466,11 @@
 
 (deftest poistettu
   (is (= {:poistaminen-kaynnissa? false
-          :poistettava-kohde nil}
-         (e! (tiedot/->KohdePoistettu {})))))
+          :poistettava-kohde nil
+          :kohderivit []}
+         (e! (tiedot/->KohdePoistettu {} {::kohde/id 1})
+             {:kohderivit [{::kohde/id 1}]
+              :poistaminen-kaynnissa? true}))))
 
 (deftest ei-poistettu
   (is (= {:poistaminen-kaynnissa? false}

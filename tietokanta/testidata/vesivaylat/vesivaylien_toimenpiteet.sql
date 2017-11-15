@@ -114,7 +114,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('kokonaishintainen',
     (SELECT id
@@ -150,7 +150,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-   (SELECT id
+   (SELECT vaylanro
     FROM vv_vayla
     WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
@@ -179,7 +179,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('kokonaishintainen',
     (SELECT id
@@ -211,7 +211,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-    (SELECT id
+    (SELECT vaylanro
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
@@ -236,7 +236,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('kokonaishintainen',
     (SELECT id
@@ -268,7 +268,7 @@ VALUES
     '1022541802',
     '1022541903',
     '(123,Akonniemen väylät,55)',
-    (SELECT id
+    (SELECT vaylanro
      FROM vv_vayla
      WHERE nimi = 'Akonniemen väylät'));
 
@@ -294,7 +294,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyoluokka",
  "reimari-vayla",
  "reimari-henkilo-lkm",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('kokonaishintainen',
     (SELECT id
@@ -327,7 +327,7 @@ VALUES
     '1022541903',
     '(123,Akonniemen väylät,55)',
     30,
-   (SELECT id
+   (SELECT vaylanro
     FROM vv_vayla
     WHERE nimi = 'Akonniemen väylät'));
 
@@ -356,7 +356,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('kokonaishintainen',
     (SELECT id
@@ -388,7 +388,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-    (SELECT id
+    (SELECT vaylanro
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
@@ -471,7 +471,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
- "vayla-id")
+ "vaylanro")
 
 VALUES
   ('kokonaishintainen',
@@ -505,7 +505,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-   (SELECT id
+   (SELECT vaylanro
     FROM vv_vayla
     WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
@@ -534,7 +534,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('yksikkohintainen',
     (SELECT id
@@ -566,7 +566,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-    (SELECT id
+    (SELECT vaylanro
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
@@ -603,7 +603,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyoluokka",
  "reimari-vayla",
   "reimari-henkilo-lkm",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('yksikkohintainen',
     '{"(-2139967544,nimitahan,1022540401)","(-2139967548,toinennimi,1022540402)"}',
@@ -638,7 +638,7 @@ VALUES
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
     3,
-   (SELECT id
+   (SELECT vaylanro
     FROM vv_vayla
     WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä'));
 
@@ -675,7 +675,7 @@ INSERT INTO reimari_toimenpide
  "reimari-tyolaji",
  "reimari-tyoluokka",
  "reimari-vayla",
- "vayla-id")
+ "vaylanro")
 VALUES
   ('yksikkohintainen',
     (SELECT id
@@ -707,7 +707,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-    (SELECT id
+    (SELECT vaylanro
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
   ('yksikkohintainen',
@@ -740,7 +740,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-    (SELECT id
+    (SELECT vaylanro
      FROM vv_vayla
      WHERE nimi = 'Hietasaaren läntinen rinnakkaisväylä')),
   ('yksikkohintainen',
@@ -773,7 +773,7 @@ VALUES
     '1022541802',
     '1022541905',
     '(123,Hietasaaren läntinen rinnakkaisväylä,55)',
-    (SELECT id
+    (SELECT vaylanro
      FROM vv_vayla
      WHERE nimi = 'Oulaisten meriväylä'));
 

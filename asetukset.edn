@@ -169,6 +169,7 @@
            ;; :komponenttityyppihakuvali 60
            ;; :turvalaitekomponenttihakuvali 60
            ;; :vikahakuvali 60
+           ;; :turvalaiteryhmahakuaika [2 30 0]
            }
 
  :ais-data {:url "https://meri.digitraffic.fi/api/v1/locations/latest"

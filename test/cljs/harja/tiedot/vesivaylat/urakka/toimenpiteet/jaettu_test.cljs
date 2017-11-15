@@ -24,7 +24,7 @@
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
-                                            ::va/id 1}
+                                            ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -32,7 +32,7 @@
                                {::to/id 1
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
-                                            ::va/id 1}
+                                            ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -41,7 +41,7 @@
                                {::to/id 2
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
-                                            ::va/id 1}
+                                            ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -49,7 +49,7 @@
                                {::to/id 3
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -57,7 +57,7 @@
                                {::to/id 4
                                 ::to/tyolaji :kiinteat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -65,7 +65,7 @@
                                {::to/id 5
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -73,7 +73,7 @@
                                {::to/id 6
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -301,7 +301,7 @@
 (deftest vaylan-rivien-valinta
   (testing "Valitaan Iisalmen väylä"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
+          uusi-tila (e! (tiedot/->ValitseVayla {:vaylanro 1
                                                 :valinta true}
                                                (:toimenpiteet vanha-tila))
                         vanha-tila)
@@ -310,7 +310,7 @@
 
   (testing "Asetetaan valinnat pois Iisalmen väylältä"
     (let [vanha-tila testitila
-          uusi-tila (e! (tiedot/->ValitseVayla {:vayla-id 1
+          uusi-tila (e! (tiedot/->ValitseVayla {:vaylanro 1
                                                 :valinta false}
                                                (:toimenpiteet vanha-tila))
                         vanha-tila)
@@ -482,9 +482,6 @@
   (testing "Valitaan toimenpiteiden väylät"
     (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
            [{::va/nimi "Kuopio, Iisalmen väylä"
-             ::va/id 1}
+             ::va/vaylanro 1}
             {::va/nimi "Varkaus, Kuopion väylä"
-             ::va/id 2}]))))
-
-
-
+             ::va/vaylanro 2}]))))

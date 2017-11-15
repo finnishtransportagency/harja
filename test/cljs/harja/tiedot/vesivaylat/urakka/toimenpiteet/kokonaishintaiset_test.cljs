@@ -27,7 +27,7 @@
                 :toimenpiteet [{::to/id 0
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
-                                            ::va/id 1}
+                                            ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -36,7 +36,7 @@
                                {::to/id 1
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
-                                            ::va/id 1}
+                                            ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -45,7 +45,7 @@
                                {::to/id 2
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Kuopio, Iisalmen väylä"
-                                            ::va/id 1}
+                                            ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -53,7 +53,7 @@
                                {::to/id 3
                                 ::to/tyolaji :viitat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -61,7 +61,7 @@
                                {::to/id 4
                                 ::to/tyolaji :kiinteat
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -69,7 +69,7 @@
                                {::to/id 5
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -77,7 +77,7 @@
                                {::to/id 6
                                 ::to/tyolaji :poijut
                                 ::to/vayla {::va/nimi "Varkaus, Kuopion väylä"
-                                            ::va/id 2}
+                                            ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
                                 ::to/pvm (pvm/nyt)
@@ -129,9 +129,9 @@
   (testing "Valitaan toimenpiteiden väylät"
     (is (= (to/toimenpiteiden-vaylat (:toimenpiteet testitila))
            [{::va/nimi "Kuopio, Iisalmen väylä"
-             ::va/id 1}
+             ::va/vaylanro 1}
             {::va/nimi "Varkaus, Kuopion väylä"
-             ::va/id 2}]))))
+             ::va/vaylanro 2}]))))
 
 (deftest hakuargumenttien-muodostus
   (testing "Hakuargumenttien muodostus toimii"
@@ -142,7 +142,7 @@
                             :sopimus-id 777
                             :aikavali [alku loppu]
                             :vaylatyyppi :muu
-                            :vayla-id 1
+                            :vaylanro 1
                             :tyolaji :poijut
                             :tyoluokka :asennus-ja-huolto
                             :toimenpide :autot-traktorit
@@ -151,7 +151,7 @@
              {::to/urakka-id 666
               ::to/sopimus-id 777
               ::va/vaylatyyppi :muu
-              ::to/vayla-id 1
+              ::to/vaylanro 1
               ::to/reimari-tyolaji (to/reimari-tyolaji-avain->koodi :poijut)
               ::to/reimari-tyoluokat (to/reimari-tyoluokka-avain->koodi :asennus-ja-huolto)
               ::to/reimari-toimenpidetyypit (to/reimari-toimenpidetyyppi-avain->koodi :autot-traktorit)
@@ -195,7 +195,7 @@
                                                      :sopimus-id 777
                                                      :aikavali [(t/now) (t/now)]
                                                      :vaylatyyppi :muu
-                                                     :vayla-id 1
+                                                     :vaylanro 1
                                                      :tyolaji :poijut
                                                      :tyoluokka :asennus-ja-huolto
                                                      :toimenpide :autot-traktorit
@@ -213,8 +213,8 @@
         (is (= (get-in vanha-tila [:valinnat :vaylatyyppi]) :kauppamerenkulku))
         (is (= (get-in uusi-tila [:valinnat :vaylatyyppi]) :muu))
 
-        (is (nil? (get-in vanha-tila [:valinnat :vayla-id])))
-        (is (= (get-in uusi-tila [:valinnat :vayla-id]) 1))
+        (is (nil? (get-in vanha-tila [:valinnat :vaylanro])))
+        (is (= (get-in uusi-tila [:valinnat :vaylanro]) 1))
 
         (is (= (get-in vanha-tila [:valinnat :tyolaji]) :kiintea))
         (is (= (get-in uusi-tila [:valinnat :tyolaji]) :poijut))
