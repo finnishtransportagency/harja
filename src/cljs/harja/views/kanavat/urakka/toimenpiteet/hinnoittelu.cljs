@@ -53,6 +53,9 @@
 ;;   ([e! tyo arvo-kw kentan-optiot asetus-fn]
 ;;    [kentta* e! tyo arvo-kw kentan-optiot asetus-fn]))
 
+(defn- toimenpiteella-oma-hinnoittelu? [rivi]
+  false)
+
 (defn- hintakentta
   [e! hinta]
   [kentta-hinnalle e! hinta ::hinta/summa {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}])
@@ -245,6 +248,7 @@
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
+
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
                                ]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])
@@ -253,7 +257,8 @@
         valittu-aikavali (get-in app* [:valinnat :aikavali])
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
                                                                        valittu-aikavali)
-        listaus-tunniste :id]
+        listaus-tunniste :id
+        nil-suvaitsevainen-+ (fnil + 0)]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::toimenpide/id toimenpide-rivi)))
@@ -274,7 +279,7 @@
             "Valmis"
             #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
             {:disabled (or
-                         (not (tiedot/hinnoittelun-voi-tallentaa? app*))
+                         false ;; (not (tiedot/hinnoittelun-voi-tallentaa? app*))
                          (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
                          (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
@@ -286,7 +291,7 @@
                                                         (get-in app* [:valinnat :urakka-id])))
                          :pelkka-arvo
 
-                         (not (to/toimenpiteella-oma-hinnoittelu? toimenpide-rivi))
+                         (not (toimenpiteella-oma-hinnoittelu? toimenpide-rivi))
                          :pelkka-nappi
 
                          :default
@@ -298,7 +303,7 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
-          :arvo (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
+          :arvo 42 #_(fmt/euro-opt (nil-suvaitsevainen-+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
                                  (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
                                                            suunnitellut-tyot)))
           :ikoninappi? true}))]))

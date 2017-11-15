@@ -4,6 +4,7 @@
 
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as tiedot]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpide-view]
+            [harja.views.kanavat.urakka.toimenpiteet.hinnoittelu :as hinnoittelu-ui]
             [harja.loki :refer [tarkkaile! log]]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
@@ -42,19 +43,22 @@
           ;;todo
           )]]]]))
 
+
+
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
-  [grid/grid
-   {:otsikko "Muutos- ja lisätyöt"
-    :tyhja (if (:toiden-haku-kaynnissa? app)
-             [ajax-loader "Haetaan toimenpiteitä"]
-             "Ei toimenpiteitä")
-    :tunniste ::kanavan-toimenpide/id}
-   (concat toimenpide-view/toimenpidesarakkeet
-           {:otsikko "Hinta"
-            :nimi :hinta
-            :tyyppi :komponentti
-            :komponentti (fn [rivi] [hinnoittelu-ui/hinnoittele-toimenpide e! app rivi])})
-   toimenpiteet])
+  (let [hinta-sarake {:otsikko "Hinta"
+                      :nimi :hinta
+                      :tyyppi :komponentti
+                      :komponentti (fn [rivi] [hinnoittelu-ui/hinnoittele-toimenpide e! app rivi])}
+        sarakkeet (concat toimenpide-view/toimenpidesarakkeet [hinta-sarake])]
+    [grid/grid
+     {:otsikko "Muutos- ja lisätyöt"
+      :tyhja (if (:toiden-haku-kaynnissa? app)
+               [ajax-loader "Haetaan toimenpiteitä"]
+               "Ei toimenpiteitä")
+      :tunniste ::kanavan-toimenpide/id}
+     sarakkeet
+     toimenpiteet]))
 
 (defn lisatyot* [e! app]
   (let [urakka (get-in app [:valinnat :urakka-id])]
@@ -73,8 +77,9 @@
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:div
+         [debug app]
          [suodattimet e! app]
          [taulukko e! app]]))))
 
 (defc lisatyot []
-      [tuck tiedot/tila lisatyot*])
+  [tuck tiedot/tila lisatyot*])
