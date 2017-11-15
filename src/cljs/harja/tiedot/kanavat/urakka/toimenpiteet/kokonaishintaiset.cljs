@@ -76,6 +76,12 @@
              ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka))
       (dissoc ::kanavan-toimenpide/kuittaaja)))
 
+(defn kokonashintaiset-tehtavat [tehtavat]
+  (filter
+    (fn [tehtava]
+      (some #(= % "kokonaishintainen") (:hinnoittelu tehtava)))
+    (map #(nth % 3) tehtavat)))
+
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
@@ -127,7 +133,7 @@
                              :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
           (assoc :huoltokohteiden-haku-kaynnissa? true
                  :valittu-toimenpide (esitaytetty-toimenpide)
-                 :tehtavat (map #(nth % 3) @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                 :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
                  :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
                  :kohteet []
                  :huoltokohteet []))))
