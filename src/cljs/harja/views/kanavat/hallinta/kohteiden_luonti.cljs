@@ -33,7 +33,9 @@
    {:tyhja "Lisää kohteita oikeasta yläkulmasta"
     :tunniste ::kohde/id
     :voi-poistaa? (constantly false)
-    :piilota-toiminnot? true}
+    :jarjesta-avaimen-mukaan identity
+    :piilota-toiminnot? true
+    :uusi-id (count kanavan-kohteet)}
    [{:otsikko "Kohteen nimi"
      :tyyppi :string
      :nimi ::kohde/nimi
@@ -51,7 +53,7 @@
            (map-indexed
              (fn [i k] [i k])
              kanavan-kohteet))
-     #(e! (tiedot/->LisaaKohteita (vals %))))])
+     #(e! (tiedot/->LisaaKohteita (sort-by :id (vals %)))))])
 
 (defn luontilomake [e! {tallennus-kaynnissa? :kohteiden-tallennus-kaynnissa?
                         kanavat :kanavat

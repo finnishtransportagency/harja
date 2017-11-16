@@ -164,11 +164,12 @@
                             :voi-poistaa? (constantly true)
                             :piilota-toiminnot? false
                             :tyhja "Ei työaikoja"
-                            :virheet-dataan? true})
+                            :virheet-dataan? true
+                            :jarjesta-avaimen-mukaan identity})
 
 (defn tyoajat-komponentti-grid [e! tyoajat]
   [muokkaus-grid
-   aikataulu-grid-optiot
+   (assoc aikataulu-grid-optiot :uusi-id (count tyoajat))
    aikataulu-grid-kentat
    (r/wrap (into {}
                  (map-indexed (fn [i ta]
@@ -176,7 +177,7 @@
                                            #(into #{} %))]))
                  tyoajat)
            #(do
-              (e! (tiedot/->PaivitaTyoajat (vals %)
+              (e! (tiedot/->PaivitaTyoajat (sort-by :id (vals %))
                                            (grid-virheita? %)))))])
 
 (defn- valittu-tyon-tyyppi? [tyotyypit tyyppi]

@@ -8,6 +8,7 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-q]
             [clojure.set :as set]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vesivaylien_laskutusyhteenveto.sql")
@@ -122,10 +123,12 @@
                                             :urakka-id urakka-id
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm})
-        raportin-nimi "Laskutusyhteenveto"]
+        urakan-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+        raportin-nimi "Laskutusyhteenveto"
+        raportin-otsikko (raportin-otsikko urakan-nimi raportin-nimi alkupvm loppupvm)]
 
     [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi}
+                :nimi raportin-otsikko}
 
      (let [kauppamerenkulku-kok-hint-rivit (kok-hint-hinnoittelurivit
                                              (:kauppamerenkulku (:kokonaishintaiset raportin-tiedot)))
