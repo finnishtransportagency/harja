@@ -17,10 +17,20 @@
             [harja.domain.kayttaja :as kayttaja]
 
             [harja.pvm :as pvm]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
+
+(defn valittu-tehtava-muu? [toimenpide tehtavat]
+  (and
+    tehtavat
+    (some #(= % (::kanavan-toimenpide/toimenpidekoodi-id toimenpide))
+          (map :id
+               (filter #(and
+                          (:nimi %)
+                          (not= -1 (.indexOf (str/upper-case (:nimi %)) "MUU"))) tehtavat)))))
 
 (def toimenpidesarakkeet
   [{:otsikko "Päivämäärä"
@@ -53,3 +63,73 @@
     :nimi ::kanavan-toimenpide/kuittaaja
     :tyyppi :string
     :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))}])
+
+(defn toimenpidelomakkeen-kentat [toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
+  [{:otsikko "Sopimus"
+    :nimi ::kanavan-toimenpide/sopimus-id
+    :tyyppi :valinta
+    :valinta-arvo first
+    :valinta-nayta second
+    :valinnat sopimukset
+    :pakollinen? true}
+   {:otsikko "Päivämäärä"
+    :nimi ::kanavan-toimenpide/pvm
+    :tyyppi :pvm
+    :fmt pvm/pvm-opt
+    :pakollinen? true}
+   {:otsikko "Kohde"
+    :nimi ::kanavan-toimenpide/kohde
+    :tyyppi :valinta
+    :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
+    :valinnat kohteet}
+   {:otsikko "Huoltokohde"
+    :nimi ::kanavan-toimenpide/huoltokohde
+    :tyyppi :valinta
+    :valinta-nayta #(or (::kanavan-huoltokohde/nimi %) "- Valitse huoltokohde-")
+    :valinnat huoltokohteet
+    :pakollinen? true}
+   {:otsikko "Toimenpide"
+    :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
+    :pakollinen? true
+    :tyyppi :valinta
+    :uusi-rivi? true
+    :valinnat toimenpideinstanssit
+    :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
+    :valinta-arvo :tpi_id
+    :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
+    :aseta (fn [rivi arvo]
+             (-> rivi
+                 (assoc ::kanavan-toimenpide/toimenpideinstanssi-id arvo)
+                 (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
+                 (assoc-in [:tehtava :toimenpidekoodi :id] nil)
+                 (assoc-in [:tehtava :yksikko] nil)))}
+   {:otsikko "Tehtävä"
+    :nimi ::kanavan-toimenpide/toimenpidekoodi-id
+    :pakollinen? true
+    :tyyppi :valinta
+    :valinnat tehtavat
+    :valinta-arvo :id
+    :valinta-nayta #(or (:nimi %) "- Valitse tehtävä -")
+    :hae #(or (::kanavan-toimenpide/toimenpidekoodi-id %)
+              (get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
+    :aseta (fn [rivi arvo]
+             (-> rivi
+                 (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)
+                 (assoc-in [:tehtava :tpk-id] arvo)
+                 (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))))}
+   (when (valittu-tehtava-muu? toimenpide tehtavat)
+     {:otsikko "Muu toimenpide"
+      :nimi ::kanavan-toimenpide/muu-toimenpide
+      :tyyppi :string})
+   {:otsikko "Lisätieto"
+    :nimi ::kanavan-toimenpide/lisatieto
+    :tyyppi :string}
+   {:otsikko "Suorittaja"
+    :nimi ::kanavan-toimenpide/suorittaja
+    :tyyppi :string
+    :pakollinen? true}
+   {:otsikko "Kuittaaja"
+    :nimi ::kanavan-toimenpide/kuittaaja
+    :tyyppi :string
+    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
+    :muokattava? (constantly false)}])

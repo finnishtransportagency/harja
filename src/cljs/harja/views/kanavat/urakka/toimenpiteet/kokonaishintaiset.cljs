@@ -2,6 +2,8 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
+            [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.urakka :as urakkatiedot]
             [harja.loki :refer [tarkkaile! log]]
             [harja.id :refer [id-olemassa?]]
             [harja.ui.lomake :as lomake]
@@ -12,36 +14,28 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
-            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
-            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.kayttaja :as kayttaja]
-            [harja.pvm :as pvm]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.urakka :as u]
-            [harja.tiedot.navigaatio :as navigaatio]
-            [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [clojure.string :as str])
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.views.urakka.valinnat :as urakka-valinnat])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn hakuehdot [e! urakka]
-  [valinnat/urakkavalinnat {:urakka urakka}
-   ^{:key "valinnat"}
-   [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
-   ^{:key "toiminnot"}
-   [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
-    ^{:key "uusi-nappi"}
-    [napit/uusi
-     "Uusi toimenpide"
-     (fn [_]
-       (e! (tiedot/->UusiToimenpide)))]]])
+(defn hakuehdot [e! app]
+  (let [urakka (get-in app [:valinnat :urakka])]
+    [valinnat/urakkavalinnat {:urakka urakka}
+     ^{:key "valinnat"}
+     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+     ^{:key "toiminnot"}
+     [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
+      ^{:key "uusi-nappi"}
+      [napit/uusi
+       "Uusi toimenpide"
+       (fn [_]
+         (e! (tiedot/->UusiToimenpide)))]]]))
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [e! toimenpiteet]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet]}]
   [grid/grid
    {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
@@ -56,134 +50,56 @@
    toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
 
-(defn valittu-tehtava-muu? [toimenpide tehtavat]
-  (and
-    tehtavat
-    (some #(= % (::kanavan-toimenpide/toimenpidekoodi-id toimenpide))
-          (map :id
-               (filter #(and
-                          (:nimi %)
-                          (not= -1 (.indexOf (str/upper-case (:nimi %)) "MUU"))) tehtavat)))))
+(defn kokonaishintainen-toimenpidelomake [e! {:keys [valittu-toimenpide
+                                                     kohteet
+                                                     toimenpideinstanssit
+                                                     tehtavat
+                                                     huoltokohteet]
+                                              :as app}]
+  (let [urakka (get-in app [:valinnat :urakka])
+        sopimukset (:sopimukset urakka)]
+    [:div
+     [napit/takaisin "Takaisin varusteluetteloon"
+      #(e! (tiedot/->TyhjennaValittuToimenpide))]
+     [lomake/lomake
+      {:otsikko "Uusi toimenpide"
+       :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
+       :footer-fn (fn [toimenpide]
+                    [:div
+                     [napit/tallenna
+                      "Tallenna"
+                      #(e! (tiedot/->TallennaToimenpide toimenpide))
+                      {:tallennus-kaynnissa? tallennus-kaynnissa?
+                       :disabled (not (lomake/voi-tallentaa? toimenpide))}]])}
+      (toimenpiteet-view/toimenpidelomakkeen-kentat toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
+      valittu-toimenpide]]))
 
-(defn kokonaishintainen-toimenpidelomake [e! toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
-  [:div
-   [napit/takaisin "Takaisin varusteluetteloon"
-    #(e! (tiedot/->TyhjennaValittuToimenpide))]
-   [lomake/lomake
-    {:otsikko "Uusi toimenpide"
-     :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
-     :footer-fn (fn [toimenpide]
-                  [:div
-                   [napit/tallenna
-                    "Tallenna"
-                    #(e! (tiedot/->TallennaToimenpide toimenpide))
-                    {:tallennus-kaynnissa? tallennus-kaynnissa?
-                     :disabled (not (lomake/voi-tallentaa? toimenpide))}]])}
-    [{:otsikko "Sopimus"
-      :nimi ::kanavan-toimenpide/sopimus-id
-      :tyyppi :valinta
-      :valinta-arvo first
-      :valinta-nayta second
-      :valinnat sopimukset
-      :pakollinen? true}
-     {:otsikko "Päivämäärä"
-      :nimi ::kanavan-toimenpide/pvm
-      :tyyppi :pvm
-      :fmt pvm/pvm-opt
-      :pakollinen? true}
-     {:otsikko "Kohde"
-      :nimi ::kanavan-toimenpide/kohde
-      :tyyppi :valinta
-      :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
-      :valinnat kohteet}
-     #_{:nimi :sijainti
-        :otsikko "Sijainti"
-        :tyyppi :sijaintivalitsin
-        :paikannus? false
-        :muokattava? (constantly true)
-        :karttavalinta-tehty-fn #()}
-     {:otsikko "Huoltokohde"
-      :nimi ::kanavan-toimenpide/huoltokohde
-      :tyyppi :valinta
-      :valinta-nayta #(or (::kanavan-huoltokohde/nimi %) "- Valitse huoltokohde-")
-      :valinnat huoltokohteet
-      :pakollinen? true}
-     {:otsikko "Toimenpide"
-      :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
-      :pakollinen? true
-      :tyyppi :valinta
-      :uusi-rivi? true
-      :valinnat toimenpideinstanssit
-      :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
-      :valinta-arvo :tpi_id
-      :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
-      :aseta (fn [rivi arvo]
-               (-> rivi
-                   (assoc ::kanavan-toimenpide/toimenpideinstanssi-id arvo)
-                   (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
-                   (assoc-in [:tehtava :toimenpidekoodi :id] nil)
-                   (assoc-in [:tehtava :yksikko] nil)))}
-     {:otsikko "Tehtävä"
-      :nimi ::kanavan-toimenpide/toimenpidekoodi-id
-      :pakollinen? true
-      :tyyppi :valinta
-      :valinnat tehtavat
-      :valinta-arvo :id
-      :valinta-nayta #(or (:nimi %) "- Valitse tehtävä -")
-      :hae #(or (::kanavan-toimenpide/toimenpidekoodi-id % )
-                (get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
-      :aseta (fn [rivi arvo]
-               (-> rivi
-                   (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)
-                   (assoc-in [:tehtava :tpk-id] arvo)
-                   (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))))}
-     (when (valittu-tehtava-muu? toimenpide tehtavat)
-       {:otsikko "Muu toimenpide"
-        :nimi ::kanavan-toimenpide/muu-toimenpide
-        :tyyppi :string})
-     {:otsikko "Lisätieto"
-      :nimi ::kanavan-toimenpide/lisatieto
-      :tyyppi :string}
-     {:otsikko "Suorittaja"
-      :nimi ::kanavan-toimenpide/suorittaja
-      :tyyppi :string
-      :pakollinen? true}
-     {:otsikko "Kuittaaja"
-      :nimi ::kanavan-toimenpide/kuittaaja
-      :tyyppi :string
-      :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
-      :muokattava? (constantly false)}]
-    toimenpide]])
-
-(defn kokonaishintaiset-nakyma [e! app urakka toimenpiteet valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
+(defn kokonaishintaiset-nakyma [e! {:keys [valittu-toimenpide]
+                                    :as app}]
   [:div
    (if valittu-toimenpide
-     [kokonaishintainen-toimenpidelomake e! valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
+     [kokonaishintainen-toimenpidelomake e! app]
      [:div
-      [hakuehdot e! urakka]
-      [kokonaishintaiset-toimenpiteet-taulukko e! toimenpiteet]])
+      [hakuehdot e! app]
+      [kokonaishintaiset-toimenpiteet-taulukko e! app]])
    [debug/debug app]])
 
-(defn kokonaishintaiset* [e! app]
+(defn kokonaishintaiset* [e! _]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do
                          (e! (tiedot/->Nakymassa? true))
-                         (e! (tiedot/->PaivitaValinnat
-                               {:urakka @navigaatio/valittu-urakka
-                                :sopimus-id (first @u/valittu-sopimusnumero)
-                                :aikavali @u/valittu-aikavali
-                                :toimenpide @u/valittu-toimenpideinstanssi})))
-                      #(do
-                         (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [toimenpiteet valittu-toimenpide kohteet toimenpideinstanssit tehtavat huoltokohteet] :as app}]
-      (let [urakka (get-in app [:valinnat :urakka])
-            sopimukset (:sopimukset urakka)]
-        ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
-        @tiedot/valinnat
-        [:span
-         [kokonaishintaiset-nakyma e! app urakka toimenpiteet valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]]))))
+                         (e! (tiedot/->PaivitaValinnat {:urakka @navigaatio/valittu-urakka
+                                                        :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
+                                                        :aikavali @urakkatiedot/valittu-aikavali
+                                                        :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})))
+                      #(e! (tiedot/->Nakymassa? false)))
+    (fn [e! app]
+      ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+      @tiedot/valinnat
+      [:span
+       [kokonaishintaiset-nakyma e! app]])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

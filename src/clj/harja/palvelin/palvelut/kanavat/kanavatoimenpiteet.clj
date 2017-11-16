@@ -33,7 +33,6 @@
 (defn tallenna-kanavatoimenpide [db user {tyyppi ::kanavan-toimenpide/tyyppi
                                           urakka-id ::kanavan-toimenpide/urakka-id
                                           :as kanavatoimenpide}]
-  (println "--->>> " kanavatoimenpide)
   (tarkista-kutsu user urakka-id tyyppi)
   (let [kanavatoimenpide (assoc kanavatoimenpide :harja.domain.muokkaustiedot/luoja-id (:id user))]
     (q-kanavan-toimenpide/tallenna-toimenpide db kanavatoimenpide)))
