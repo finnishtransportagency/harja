@@ -7,12 +7,23 @@
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kanavat.kanavat :as q]
 
-            [harja.domain.kanavat.kanava :as kan]))
+            [harja.domain.kanavat.kanava :as kan]
+            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.urakka :as ur]))
 
 
 (defn hae-kanavat-ja-kohteet [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
   (q/hae-kanavat-ja-kohteet db))
+
+(defn hae-urakan-kohteet [db user tiedot]
+  (let [urakka-id (::ur/id tiedot)]
+    (assert urakka-id "Ei voida hakea urakan kohteita, urakka-id puuttuu")
+    ;; TODO Tämä on vähän hassu oikeustarkastus, koska pitää vaan varmistaa, että käyttäjällä
+    ;; on oikeus nähdä, mitkä kohteet kuuluvat kyseiseen urakkaan. Tälle ei vaan ole suoraa omaa oikeutta
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+
+    (q/hae-urakan-kohteet db urakka-id)))
 
 (defn lisaa-kanavalle-kohteita [db user kohteet]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
@@ -43,6 +54,13 @@
       {:vastaus-spec ::kan/hae-kanavat-ja-kohteet-vastaus})
     (julkaise-palvelu
       http
+      :hae-urakan-kohteet
+      (fn [user tiedot]
+        (hae-urakan-kohteet db user tiedot))
+      {:kysely-spec ::kan/hae-urakan-kohteet-kysely
+       :vastaus-spec ::kan/hae-urakan-kohteet-vastaus})
+    (julkaise-palvelu
+      http
       :lisaa-kanavalle-kohteita
       (fn [user kohteet]
         (lisaa-kanavalle-kohteita db user kohteet))
@@ -65,5 +83,9 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kanavat-ja-kohteet)
+      :hae-kanavat-ja-kohteet
+      :hae-urakan-kohteet
+      :lisaa-kanavalle-kohteita
+      :liita-kohde-urakkaan
+      :poista-kohde)
     this))
