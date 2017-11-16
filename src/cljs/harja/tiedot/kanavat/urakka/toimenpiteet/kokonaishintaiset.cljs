@@ -8,6 +8,7 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.urakka :as urakka]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
@@ -57,24 +58,28 @@
                                      ::kayttaja/etunimi (:etunimi kayttaja)
                                      ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
-(defn tallennettava-toimenpide [toimenpide]
-  (-> toimenpide
-      (select-keys [::kanavan-toimenpide/id
-                    ::kanavan-toimenpide/urakka-id
-                    ::kanavan-toimenpide/suorittaja
-                    ::kanavan-toimenpide/kuittaaja
-                    ::kanavan-toimenpide/muu-toimenpide
-                    ::kanavan-toimenpide/sopimus-id
-                    ::kanavan-toimenpide/lisatieto
-                    ::kanavan-toimenpide/toimenpideinstanssi-id
-                    ::kanavan-toimenpide/toimenpidekoodi-id
-                    ::kanavan-toimenpide/pvm])
-      (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
-             ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
-             ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka)
-             ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kanavan-kohde/id])
-             ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id]))
-      (dissoc ::kanavan-toimenpide/kuittaaja)))
+(defn tallennettava-toimenpide [tehtavat toimenpide]
+  (let [tehtava (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
+                    (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
+    (-> toimenpide
+        (select-keys [::kanavan-toimenpide/id
+                      ::kanavan-toimenpide/urakka-id
+                      ::kanavan-toimenpide/suorittaja
+                      ::kanavan-toimenpide/kuittaaja
+                      ::kanavan-toimenpide/sopimus-id
+                      ::kanavan-toimenpide/lisatieto
+                      ::kanavan-toimenpide/toimenpideinstanssi-id
+                      ::kanavan-toimenpide/toimenpidekoodi-id
+                      ::kanavan-toimenpide/pvm])
+        (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
+               ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
+               ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka)
+               ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kanavan-kohde/id])
+               ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id])
+               ::kanavan-toimenpide/muu-toimenpide (if (toimenpiteet/valittu-tehtava-muu? tehtava tehtavat)
+                                                     (::kanavan-toimenpide/muu-toimenpide toimenpide)
+                                                     nil))
+        (dissoc ::kanavan-toimenpide/kuittaaja))))
 
 (defn kokonashintaiset-tehtavat [tehtavat]
   (filter
@@ -179,11 +184,11 @@
     (assoc app :huoltokohteiden-haku-kaynnissa? false))
 
   TallennaToimenpide
-  (process-event [{data :toimenpide} {valinnat :valinnat :as app}]
+  (process-event [{data :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
     app
     (if (:tallennus-kaynnissa? app)
       app
-      (let [toimenpide (tallennettava-toimenpide data)
+      (let [toimenpide (tallennettava-toimenpide tehtavat data)
             hakuehdot (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :tallenna-kanavatoimenpide

@@ -70,8 +70,8 @@
                       "Tallenna"
                       #(e! (tiedot/->TallennaToimenpide toimenpide))
                       {:tallennus-kaynnissa? tallennus-kaynnissa?
-                       :disabled (not (lomake/voi-tallentaa? toimenpide))}]])}
-      (toimenpiteet-view/toimenpidelomakkeen-kentat toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
+                       :disabled (not (lomake/voi-tallentaa? valittu-toimenpide))}]])}
+      (toimenpiteet-view/toimenpidelomakkeen-kentat valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
       valittu-toimenpide]]))
 
 (defn kokonaishintaiset-nakyma [e! {:keys [valittu-toimenpide]
