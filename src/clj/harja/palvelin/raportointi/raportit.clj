@@ -110,7 +110,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Turvallisuusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat/suorita
-    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit-raporttinakyma)}
+    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-kuukausiraportti
     :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -136,7 +136,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Laatupoikkeamaraportti"
     :suorita #'harja.palvelin.raportointi.raportit.laatupoikkeama/suorita
-    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit-raporttinakyma)}
+    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-tehtavien-summat
     :parametrit [{:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -263,7 +263,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Välitavoiteraportti"
     :suorita #'harja.palvelin.raportointi.raportit.valitavoiteraportti/suorita
-    :urakkatyyppi (set/union #{:hoito} urakka-domain/vesivayla-urakkatyypit-raporttinakyma)}
+    :urakkatyyppi (set/union #{:hoito} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-tyot
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
