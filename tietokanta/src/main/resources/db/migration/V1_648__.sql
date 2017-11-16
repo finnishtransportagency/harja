@@ -2,8 +2,7 @@
 
 CREATE TABLE vatu_turvalaite
 (
-  id INTEGER PRIMARY KEY NOT NULL,
-  turvalaitenro INTEGER,
+  turvalaitenro INTEGER PRIMARY KEY NOT NULL,
   nimi VARCHAR,
   sijainti GEOMETRY,
   sijaintikuvaus VARCHAR,
@@ -14,12 +13,11 @@ CREATE TABLE vatu_turvalaite
   toimintatila VARCHAR, -- (Tuntematon, Jatkuva, Toimii tarvittaessa, Poistettu käytöstä, Rajoitettu toiminta-aika, Väliaikainen)
   rakenne VARCHAR, -- (Fasadivalo, Torni, Rajamerkki, Rajalinjamerkki, Kanavan reunavalo, Poijuviitta, Jääpoiju, "Reunakummeli", Viittapoiju, Suurviitta, Levykummeli, Helikopteritasanne, Radiomasto, Vesitorni, Savupiippu, Tutkatorni, Kirkontorni, Suurpoiju, Kompassintarkistuspaikka)
   navigointilaji VARCHAR, -- (Tuntematon, Vasen, Oikea, Pohjois, Etelä, Länsi, Itä, Karimerkki, Turvavesimerkki, Erikoismerkki, Ei sovellettavissa)
-  valaistu BOOLEAN, -- (Vatusta K tai E)
+  valaistu BOOLEAN, -- (Vatusta tulee K tai E)
   omistaja VARCHAR,
   turvalaitenro_aiempi INTEGER,
   paavayla VARCHAR,
   vaylat INTEGER[]
-)
+);
 
-CREATE UNIQUE INDEX vatu_turvalaite_turvalaitenro ON vatu_turvalaite (turvalaitenro);
 CREATE INDEX vatu_turvalaitenro_index ON vatu_turvalaite (turvalaitenro);

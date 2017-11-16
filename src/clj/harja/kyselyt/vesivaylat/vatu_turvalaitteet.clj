@@ -1,4 +1,4 @@
-(ns harja.kyselyt.vesivaylat.turvalaitteet
+(ns harja.kyselyt.vesivaylat.vatu-turvalaitteet
   (:require [jeesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
@@ -18,7 +18,9 @@
             [clojure.string :as str]
             [harja.geo :as geo]))
 
-(defqueries "harja/kyselyt/vesivaylat/turvalaitteet.sql")
+;;TODO: Muokkaa vastaamaan vatu_turvalaite-taulua
+
+(defqueries "harja/kyselyt/vesivaylat/vatu_turvalaitteet.sql")
 
 (defrecord &&op [values]
   op/Op
@@ -49,13 +51,22 @@
           (comp
             (geo/muunna-pg-tulokset ::tu/sijainti))
           (specql/fetch db
-                        ::tu/turvalaite
-                        #{::tu/id
+                        ::tu/vatu_turvalaite
+                        #{::tu/turvalaitenro
                           ::tu/nimi
                           ::tu/sijainti
-                          ::tu/turvalaitenro
+                          ::tu/sijaintikuvaus
                           ::tu/tyyppi
-                          ::tu/kiintea
+                          ::tu/tarkenne
+                          ::tu/tila
+                          ::tu/vah_pvm
+                          ::tu/toimintatila
+                          ::tu/rakenne
+                          ::tu/navigointilaji
+                          ::tu/valaistu
+                          ::tu/omistaja
+                          ::tu/turvalaitenro_aiempi
+                          ::tu/paavayla
                           ::tu/vaylat}
                         (op/and
                           {::m/poistettu? false}
@@ -64,6 +75,7 @@
                           (when (not-empty vaylanumerot)
                             {::tu/vaylat (&& (vec vaylanumerot))}))))))
 
+
 (defn hae-turvalaitteet-tekstilla [db {:keys [hakuteksti]}]
   (let [hakuteksti-numerona (try
                               (Integer. hakuteksti)
@@ -71,9 +83,8 @@
                               ;; Ei onnistu, joten antaa olla
                               )]
     (vec (specql/fetch db ::tu/turvalaite
-                       #{::tu/id
-                         ::tu/nimi
-                         ::tu/turvalaitenro}
+                       #{::tu/turvalaitenro
+                         ::tu/nimi}
                        (op/or {::tu/nimi (op/ilike (str hakuteksti "%"))}
                               (when hakuteksti-numerona
                                 {::tu/turvalaitenro hakuteksti-numerona}))))))

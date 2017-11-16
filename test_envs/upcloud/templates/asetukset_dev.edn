@@ -81,10 +81,13 @@
                         :siltojen-osoite                       "http://185.26.50.104/PTV_silta.shz"
                         :siltojen-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
 
-                        ;;maaritlaine Milloin tää dev-versio tästä filestä tulee käyttöön?
-                        ;;hox muuta tiedostojen nimet
-                        :vv-turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/TODO.shp"
-                        :vv-turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/TODO.shz"
-                        :vv-turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/TODO.shz"
+                        ;;TODO: tiedostojen nimet!
+                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/TODO.shp"
+                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/TODO.shz"
+                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/TODO.shz"
+
                         }
+
+ ;;TODO: täältä puuttuu ainakin reimarin integraatioiden asetukset
+
  }

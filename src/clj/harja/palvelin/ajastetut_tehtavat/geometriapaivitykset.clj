@@ -19,10 +19,15 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.valaistusurakat :as valaistusurakoiden-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
-           (java.sql Timestamp)))
+           (java.sql Timestamp)
+           (org.joda.time DateTimeZone)))
+
+(def virhekasittely
+  {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
 
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
@@ -38,7 +43,8 @@
                                       kohdetiedoston-polku
                                       paivitys
                                       kayttajatunnus
-                                      salasana))))
+                                      salasana))
+            virhekasittely))
 
 (defn tarvitaanko-paikallinen-paivitys? [db paivitystunnus tiedostourl]
   (try
@@ -280,6 +286,23 @@
     :siltojenpalvelusopimusten-shapefile
     siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
 
+(def tee-turvalaitteiden-paivitystehtava
+  (maarittele-paivitystehtava
+    "turvalaitteet"
+    :turvalaitteiden-osoite
+    :turvalaitteiden-tuontikohde
+    :turvalaitteiden-shapefile
+    turvalaitteet/vie-turvalaitteet-kantaan))
+
+(def tee-turvalaitteiden-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "turvalaitteet"
+    :turvalaitteiden-osoite
+    :turvalaitteiden-tuontikohde
+    :turvalaitteiden-shapefile
+    turvalaitteet/vie-turvalaitteet-kantaan))
+
+
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
@@ -305,7 +328,9 @@
       :tekniset-laitteet-urakoiden-hakutehtava (tee-tekniset-laitteet-urakoiden-paivitystehtava this asetukset)
       :tekniset-laitteet-urakoiden-paivitystehtava (tee-tekniset-laitteet-urakoiden-paikallinen-paivitystehtava this asetukset)
       :siltojen-palvelusopimusten-hakutehtava (tee-siltojen-palvelusopimusten-paivitystehtava this asetukset)
-      :siltojen-palvelusopimusten-paivitystehtava (tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava this asetukset)))
+      :siltojen-palvelusopimusten-paivitystehtava (tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava this asetukset)
+      :turvalaitteiden-hakutehtava (tee-turvalaitteiden-paivitystehtava this asetukset)
+      :turvalaitteiden-paivitystehtava (tee-turvalaitteiden-paikallinen-paivitystehtava this asetukset)))
 
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
