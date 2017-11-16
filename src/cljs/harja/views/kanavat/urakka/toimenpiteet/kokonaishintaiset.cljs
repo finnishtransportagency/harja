@@ -15,6 +15,7 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
             [harja.pvm :as pvm]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
@@ -108,7 +109,7 @@
       :valinnat huoltokohteet
       :pakollinen? true}
      {:otsikko "Toimenpide"
-      :nimi :toimenpide
+      :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
       :tyyppi :valinta
       :uusi-rivi? true
@@ -116,7 +117,6 @@
       :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
       :valinta-arvo :tpi_id
       :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
-      :hae (comp :id :toimenpideinstanssi :tehtava)
       :aseta (fn [rivi arvo]
                (-> rivi
                    (assoc ::kanavan-toimenpide/toimenpideinstanssi-id arvo)
@@ -129,13 +129,14 @@
       :tyyppi :valinta
       :valinnat tehtavat
       :valinta-arvo :id
-      :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
-      :hae (comp :tpk-id :tehtava)
+      :valinta-nayta #(or (:nimi %) "- Valitse tehtävä -")
+      :hae #(or (::kanavan-toimenpide/toimenpidekoodi-id % )
+                (get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
       :aseta (fn [rivi arvo]
                (-> rivi
+                   (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)
                    (assoc-in [:tehtava :tpk-id] arvo)
-                   (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))
-                   (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)))}
+                   (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))))}
      (when (valittu-tehtava-muu? toimenpide tehtavat)
        {:otsikko "Muu toimenpide"
         :nimi ::kanavan-toimenpide/muu-toimenpide
