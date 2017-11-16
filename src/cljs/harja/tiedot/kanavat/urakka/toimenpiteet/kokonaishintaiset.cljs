@@ -36,18 +36,19 @@
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
 (defrecord Valitsetoimenpide [toimenpide])
 
-(def tila (atom {:nakymassa? false
-                 :valinnat nil
-                 :haku-kaynnissa? false
-                 :toimenpiteet nil}))
+(def tila
+  (atom {:nakymassa? false
+         :valinnat nil
+         :haku-kaynnissa? false
+         :toimenpiteet nil}))
 
 (defonce valinnat
-         (reaction
-           (when (:nakymassa? @tila)
-             {:urakka @navigaatio/valittu-urakka
-              :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
-              :aikavali @urakkatiedot/valittu-aikavali
-              :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})))
+  (reaction
+    (when (:nakymassa? @tila)
+      {:urakka @navigaatio/valittu-urakka
+       :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
+       :aikavali @urakkatiedot/valittu-aikavali
+       :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})))
 
 (defn esitaytetty-toimenpide []
   (let [kayttaja @istunto/kayttaja]
@@ -64,6 +65,7 @@
                     ::kanavan-toimenpide/muu-toimenpide
                     ::kanavan-toimenpide/sopimus-id
                     ::kanavan-toimenpide/lisatieto
+                    ::kanavan-toimenpide/toimenpideinstanssi-id
                     ::kanavan-toimenpide/toimenpidekoodi-id
                     ::kanavan-toimenpide/pvm])
       (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
@@ -82,27 +84,25 @@
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
-    (if (and nakymassa?
-             (not (:kohteiden-haku-kaynnissa? app))
-             (not (:huoltokohteiden-haku-kaynnissa? app)))
-      (if (or (:kohteiden-haku-kaynnissa? app)
-              (:huoltokohteiden-haku-kaynnissa? app))
-        app
-        (-> app
-            (tuck-apurit/post! :hae-urakan-kohteet
-                               {::urakka/id (:id @navigaatio/valittu-urakka)}
-                               {:onnistui ->KohteetHaettu
-                                :epaonnistui ->KohteidenHakuEpaonnistui})
-            (tuck-apurit/get! :hae-kanavien-huoltokohteet
-                              {:onnistui ->HuoltokohteetHaettu
-                               :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
-            (assoc :nakymassa? true
-                   :kohteiden-haku-kaynnissa? true
-                   :huoltokohteiden-haku-kaynnissa? true
-                   :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
-                   :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
-                   :kohteet []
-                   :huoltokohteet [])))
+    (if (and
+          nakymassa?
+          (not (:kohteiden-haku-kaynnissa? app))
+          (not (:huoltokohteiden-haku-kaynnissa? app)))
+      (-> app
+          (tuck-apurit/post! :hae-urakan-kohteet
+                             {::urakka/id (:id @navigaatio/valittu-urakka)}
+                             {:onnistui ->KohteetHaettu
+                              :epaonnistui ->KohteidenHakuEpaonnistui})
+          (tuck-apurit/get! :hae-kanavien-huoltokohteet
+                            {:onnistui ->HuoltokohteetHaettu
+                             :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
+          (assoc :nakymassa? true
+                 :kohteiden-haku-kaynnissa? true
+                 :huoltokohteiden-haku-kaynnissa? true
+                 :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                 :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
+                 :kohteet []
+                 :huoltokohteet []))
       (assoc app :nakymassa? nakymassa?)))
 
   PaivitaValinnat

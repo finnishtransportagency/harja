@@ -20,10 +20,11 @@
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
-
     "sopimus" ::sopimus-id
-    "muu_toimenpide" ::muu-toimenpide
+    "toimenpideinstanssi" ::toimenpideinstanssi-id
     "kohde" ::kohde-id
+    "muu_toimenpide" ::muu-toimenpide
+    
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
                                 :harja.domain.kanavat.kanavan-kohde/id)
@@ -31,6 +32,7 @@
     ::huoltokohde (specql.rel/has-one ::huoltokohde-id
                                       :harja.domain.kanavat.kanavan-huoltokohde/huoltokohde
                                       :harja.domain.kanavat.kanavan-huoltokohde/id)
+
     "toimenpidekoodi" ::toimenpidekoodi-id
     ::toimenpidekoodi (specql.rel/has-one ::toimenpidekoodi-id
                                           :harja.domain.toimenpidekoodi/toimenpidekoodi
@@ -48,6 +50,7 @@
     ::lisatieto
     ::suorittaja
     ::sopimus-id
+    ::toimenpideinstanssi-id
     [::kohde
      #{::kohde/id
        ::kohde/nimi

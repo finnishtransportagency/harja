@@ -119,6 +119,7 @@
       :hae (comp :id :toimenpideinstanssi :tehtava)
       :aseta (fn [rivi arvo]
                (-> rivi
+                   (assoc ::kanavan-toimenpide/toimenpideinstanssi-id arvo)
                    (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
                    (assoc-in [:tehtava :toimenpidekoodi :id] nil)
                    (assoc-in [:tehtava :yksikko] nil)))}
