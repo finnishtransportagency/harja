@@ -7,12 +7,13 @@
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.kayttaja :as kayttaja]
-            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.urakka :as urakka]
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.navigaatio :as navigaatio]
-            [tuck.core :as t])
+            [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -57,18 +58,19 @@
 
 (defn tallennettava-toimenpide [toimenpide]
   (-> toimenpide
-      (select-keys [::kanavan-toimenpide/suorittaja
+      (select-keys [::kanavan-toimenpide/urakka-id
+                    ::kanavan-toimenpide/suorittaja
                     ::kanavan-toimenpide/kuittaaja
                     ::kanavan-toimenpide/muu-toimenpide
                     ::kanavan-toimenpide/sopimus-id
                     ::kanavan-toimenpide/lisatieto
-                    ::kanavan-toimenpide/kohde-id
                     ::kanavan-toimenpide/toimenpidekoodi-id
-                    ::kanavan-toimenpide/pvm
-                    ::kanavan-toimenpide/huoltokohde-id])
-      (assoc ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
-             ::kanavan-toimenpide/tyyppi :kokonaishintainen
-             ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka))
+                    ::kanavan-toimenpide/pvm])
+      (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
+             ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
+             ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka)
+             ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kanavan-kohde/id])
+             ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id]))
       (dissoc ::kanavan-toimenpide/kuittaaja)))
 
 (defn kokonashintaiset-tehtavat [tehtavat]
@@ -135,7 +137,7 @@
                :toimenpiteet []))
 
   UusiToimenpide
-  (process-event [_ {valinnat :valinnat :as app}]
+  (process-event [_ app]
     (assoc app :valittu-toimenpide (esitaytetty-toimenpide)))
 
   TyhjennaValittuToimenpide

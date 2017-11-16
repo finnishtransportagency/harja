@@ -1,5 +1,5 @@
 (ns harja.views.kanavat.urakka.toimenpiteet.kokonaishintaiset
-  (:require [reagent.core :refer [atom] ]
+  (:require [reagent.core :refer [atom]]
             [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.loki :refer [tarkkaile! log]]
@@ -91,9 +91,8 @@
       :fmt pvm/pvm-opt
       :pakollinen? true}
      {:otsikko "Kohde"
-      :nimi ::kanavan-toimenpide/kohde-id
+      :nimi ::kanavan-toimenpide/kohde
       :tyyppi :valinta
-      :valinta-arvo ::kanavan-kohde/id
       :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
       :valinnat kohteet}
      #_{:nimi :sijainti
@@ -103,9 +102,8 @@
         :muokattava? (constantly true)
         :karttavalinta-tehty-fn #()}
      {:otsikko "Huoltokohde"
-      :nimi ::kanavan-toimenpide/huoltokohde-id
+      :nimi ::kanavan-toimenpide/huoltokohde
       :tyyppi :valinta
-      :valinta-arvo ::kanavan-huoltokohde/id
       :valinta-nayta #(or (::kanavan-huoltokohde/nimi %) "- Valitse huoltokohde-")
       :valinnat huoltokohteet
       :pakollinen? true}
@@ -115,8 +113,7 @@
       :tyyppi :valinta
       :uusi-rivi? true
       :valinnat toimenpideinstanssit
-      :fmt #(:tpi_nimi
-              (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
+      :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
       :valinta-arvo :tpi_id
       :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
       :hae (comp :id :toimenpideinstanssi :tehtava)
@@ -136,9 +133,7 @@
       :aseta (fn [rivi arvo]
                (-> rivi
                    (assoc-in [:tehtava :tpk-id] arvo)
-                   (assoc-in [:tehtava :yksikko] (:yksikko
-                                                   (urakan-toimenpiteet/tehtava-idlla
-                                                     arvo tehtavat)))
+                   (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))
                    (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)))}
      (when (valittu-tehtava-muu? toimenpide tehtavat)
        {:otsikko "Muu toimenpide"

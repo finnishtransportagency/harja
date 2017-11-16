@@ -20,6 +20,7 @@
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
+
     "sopimus" ::sopimus-id
     "muu_toimenpide" ::muu-toimenpide
     "kohde" ::kohde-id
@@ -46,6 +47,7 @@
     ::muu-toimenpide
     ::lisatieto
     ::suorittaja
+    ::sopimus-id
     [::kohde
      #{::kohde/id
        ::kohde/nimi

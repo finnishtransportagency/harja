@@ -17,8 +17,7 @@
                                        alkupvm :alkupvm
                                        loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
-                                       tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
-                                       :as hakuehdot}]
+                                       tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi}]
   
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (when tyyppi (name tyyppi))]
@@ -34,6 +33,7 @@
 (defn tallenna-kanavatoimenpide [db user {tyyppi ::kanavan-toimenpide/tyyppi
                                           urakka-id ::kanavan-toimenpide/urakka-id
                                           :as kanavatoimenpide}]
+  (println "--->>> " kanavatoimenpide)
   (tarkista-kutsu user urakka-id tyyppi)
   (let [kanavatoimenpide (assoc kanavatoimenpide :harja.domain.muokkaustiedot/luoja-id (:id user))]
     (q-kanavan-toimenpide/tallenna-toimenpide db kanavatoimenpide)))
@@ -53,13 +53,11 @@
       http
       :tallenna-kanavatoimenpide
       (fn [user {toimenpide ::kanavan-toimenpide/kanava-toimenpide
-                 hakuehdot ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
-                 :as kutsu}]
+                 hakuehdot ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely}]
         (tallenna-kanavatoimenpide db user toimenpide)
         (hae-kanavatoimenpiteet db user hakuehdot))
       {:kysely-spec ::kanavan-toimenpide/tallenna-kanavatoimenpide-kutsu
        :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
-
     this)
 
   (stop [this]
