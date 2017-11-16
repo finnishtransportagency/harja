@@ -53,6 +53,7 @@
 (defrecord TallennaToimenpide [toimenpide])
 (defrecord ToimenpideTallennettu [toimenpiteet])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+(defrecord Valitsetoimenpide[toimenpide])
 
 (defn tallennettava-toimenpide [toimenpide]
   (-> toimenpide
@@ -194,4 +195,25 @@
   ToimenpiteidenTallentaminenEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
-    (assoc app :tallennus-kaynnissa? false)))
+    (assoc app :tallennus-kaynnissa? false))
+
+
+  Valitsetoimenpide
+  (process-event [{toimenpide :toimenpide} app]
+    (if (or (:kohteiden-haku-kaynnissa? app)
+            (:huoltokohteiden-haku-kaynnissa? app))
+      app
+      (-> app
+          (tuck-apurit/post! :hae-urakan-kohteet
+                             {::urakka/id (get-in valinnat [:urakka :id])}
+                             {:onnistui ->KohteetHaettu
+                              :epaonnistui ->KohteidenHakuEpaonnistui})
+          (tuck-apurit/get! :hae-kanavien-huoltokohteet
+                            {:onnistui ->HuoltokohteetHaettu
+                             :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
+          (assoc :huoltokohteiden-haku-kaynnissa? true
+                 :valittu-toimenpide toimenpide
+                 :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                 :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
+                 :kohteet []
+                 :huoltokohteet [])))))

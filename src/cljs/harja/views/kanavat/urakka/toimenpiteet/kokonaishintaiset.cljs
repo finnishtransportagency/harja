@@ -1,13 +1,11 @@
 (ns harja.views.kanavat.urakka.toimenpiteet.kokonaishintaiset
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :refer [atom] ]
             [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.loki :refer [tarkkaile! log]]
             [harja.id :refer [id-olemassa?]]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :as debug]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
@@ -42,7 +40,7 @@
      (fn [_]
        (e! (tiedot/->UusiToimenpide)))]]])
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [toimenpiteet]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! toimenpiteet]
   [grid/grid
    {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
@@ -52,7 +50,8 @@
     :piilota-toiminnot? true
     :tyhja "Ei kokonaishitaisia toimenpiteita"
     :jarjesta ::kanavan-toimenpide/pvm
-    :tunniste ::kanavan-toimenpide/id}
+    :tunniste ::kanavan-toimenpide/id
+    :rivi-klikattu #(e! (tiedot/->Valitsetoimenpide %))}
    toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
 
@@ -165,7 +164,7 @@
      [kokonaishintainen-toimenpidelomake e! valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
      [:div
       [hakuehdot e! urakka]
-      [kokonaishintaiset-toimenpiteet-taulukko toimenpiteet]])
+      [kokonaishintaiset-toimenpiteet-taulukko e! toimenpiteet]])
    [debug/debug app]])
 
 (defn kokonaishintaiset* [e! app]
