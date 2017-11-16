@@ -106,7 +106,12 @@
                                            :urakkatyyppi urakkatyyppi})
 
         raportin-otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2014 - 31.12.2015"
-        taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+        taulukko (apurit/taulukko-otsikolla vastaus otsikko)
+        hallintayksikot (into #{} (map first (apurit/taulukon-rivit taulukko)))]
+    (= hallintayksikot #{"Uusimaa" "Varsinais-Suomi" "Kaakkois-Suomi"
+                         "Pirkanmaa" "Pohjois-Savo" "Keski-Suomi"
+                         "Etelä-Pohjanmaa" "Pohjois-Pohjanmaa ja Kainuu"
+                         "Lappi" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
                                         {:otsikko "Hallintayksikkö"}
                                         {:otsikko "Työtapaturmat"}
@@ -181,7 +186,9 @@
                                            :urakkatyyppi urakkatyyppi})
 
         raportin-otsikko "KOKO MAA, Turvallisuusraportti ajalta 01.01.2017 - 31.12.2017"
-        taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+        taulukko (apurit/taulukko-otsikolla vastaus otsikko)
+        hallintayksikot (into #{} (map first (apurit/taulukon-rivit taulukko)))]
+    (= hallintayksikot #{"Sisävesiväylät" "Meriväylät" "Kanavat ja avattavat sillat" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
                                         {:otsikko "Hallintayksikkö"}
                                         {:otsikko "Työtapaturmat"}
