@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
-    [clojure.set]
+    [clojure.set :as set]
     [specql.rel :as rel]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -62,7 +62,7 @@
   #{[::kohde kohde/perustiedot-ja-kanava]})
 
 (def alusten-tiedot
-  #{[::alukset lt-alus/perustiedot]})
+  #{[::alukset (set/union lt-alus/perustiedot lt-alus/metatiedot)]})
 
 (def sopimuksen-tiedot
   #{[::sopimus sop/perustiedot]})
@@ -123,24 +123,33 @@
                                                        ::silta-lkm))
                                                    ::lisatieto
                                                    ::vesipinta-ylaraja
-                                                   ::vesipinta-alaraja]
+                                                   ::vesipinta-alaraja
+                                                   ::sopimus
+                                                   ::kuittaaja]
                                                   :opt
                                                   [::alukset])))
 
+(s/def ::hakuparametrit ::hae-liikennetapahtumat-kysely)
+
 (s/def ::tallenna-liikennetapahtuma-kysely (s/keys :req [::aika
-                                                            ::sulku-toimenpide
-                                                            ::sulku-palvelumuoto
-                                                            ::sulku-lkm
-                                                            ::silta-avaus
-                                                            ::silta-palvelumuoto
-                                                            ::silta-lkm
-                                                            ::lisatieto
-                                                            ::vesipinta-ylaraja
-                                                            ::vesipinta-alaraja
-                                                            ::kuittaaja
-                                                            ::kohde
-                                                            ::alukset
-                                                            ::sopimus
-                                                            ::urakka]
-                                                   :opt [::m/poistettu?]))
+                                                         (or
+                                                           (and
+                                                             ::sulku-toimenpide
+                                                             ::sulku-palvelumuoto
+                                                             ::sulku-lkm)
+                                                           (and
+                                                             ::silta-avaus
+                                                             ::silta-palvelumuoto
+                                                             ::silta-lkm))
+                                                         ::lisatieto
+                                                         ::vesipinta-ylaraja
+                                                         ::vesipinta-alaraja
+                                                         ::sopimus-id
+                                                         ::urakka-id
+                                                         ::kuittaaja-id
+                                                         ::kohde-id]
+                                                   :opt [::id
+                                                         ::m/poistettu?
+                                                         ::alukset]
+                                                   :req-un [::hakuparametrit]))
 (s/def ::tallenna-liikennetapahtuma-vastaus ::hae-liikennetapahtumat-vastaus)

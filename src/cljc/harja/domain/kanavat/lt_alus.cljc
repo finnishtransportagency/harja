@@ -34,6 +34,8 @@
     ::nippulkm
     ::suunta})
 
+(def metatiedot m/muokkauskentat)
+
 (def aluslajit*
   {:HIN "HIN"
    :HUV "HUV"
