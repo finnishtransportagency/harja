@@ -14,6 +14,7 @@
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
+            [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet])
@@ -21,7 +22,9 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def tila (atom {:nakymassa? false
-                 :toimenpiteiden-haku-kaynnissa? false}))
+                 :toimenpiteiden-haku-kaynnissa? false
+                 :suunnitellut-tyot []
+                 :suunniteltujen-toiden-haku-kaynnissa? false}))
 
 (defonce valinnat
   (reaction
@@ -61,12 +64,38 @@
          :when (= viitearvo arvo)]
      kandidaatti)))
 
+(defn ilman-poistettuja [mapit-muokkaustiedoilla]
+  (remove ::m/poistettu? mapit-muokkaustiedoilla))
 
+(defn hintaryhman-tyot [app ryhma-kriteeri]
+  (let [tyo-hinnat (etsi-map (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
+                             ::hinta/ryhma ryhma-kriteeri)]
+
+    (ilman-poistettuja tyo-hinnat)))
+
+(defn muut-tyot [app]
+  (hintaryhman-tyot app :tyo))
+
+(defn muut-hinnat [app]
+  (hintaryhman-tyot app :muu))
 
 (defn hinta-otsikolla [hinnat otsikkokriteeri]
   (etsi-map hinnat ::hinta/otsikko otsikkokriteeri))
+
+
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
+
+(defn vakiohintakentta? [otsikko]
+  (boolean ((set vakiohinnat) otsikko)))
+
+(defn ainoa-otsikon-vakiokentta? [hinnat otsikko]
+  (and
+   (vakiohintakentta? otsikko)
+   (-> (group-by ::hinta/otsikko hinnat)
+       (get otsikko)
+       count
+       (= 1))))
 
 (defn- hintakentta
   [hinta]
@@ -183,8 +212,6 @@
 
   PeruToimenpiteenHinnoittelu
   (process-event [_ app]
-    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
-           ;; :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu
-           ))
+    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false))
 
   )

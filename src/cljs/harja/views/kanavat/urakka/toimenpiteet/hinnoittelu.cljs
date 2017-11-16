@@ -136,7 +136,7 @@
 
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (:suunnitellut-tyot app*)
-        ;; tyorivit (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::hinta/toimenpiteen-hinta]))
+        tyorivit (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::hinta/toimenpiteen-hinta]))
         ;; hinnat (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::h/hinnat]))
         hinnat-yhteensa (hinta/hintojen-summa-ilman-yklisaa hinnat)
         tyot-yhteensa (tyo/toiden-kokonaishinta tyorivit suunnitellut-tyot)
