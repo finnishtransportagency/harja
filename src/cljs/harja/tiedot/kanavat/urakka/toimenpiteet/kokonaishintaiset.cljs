@@ -59,7 +59,8 @@
 
 (defn tallennettava-toimenpide [toimenpide]
   (-> toimenpide
-      (select-keys [::kanavan-toimenpide/urakka-id
+      (select-keys [::kanavan-toimenpide/id
+                    ::kanavan-toimenpide/urakka-id
                     ::kanavan-toimenpide/suorittaja
                     ::kanavan-toimenpide/kuittaaja
                     ::kanavan-toimenpide/muu-toimenpide
