@@ -71,9 +71,12 @@
                                  {:urakka @nav/valittu-urakka
                                   :sopimus-id (first @u/valittu-sopimusnumero)
                                   :aikavali @u/valittu-aikavali
-                                  :toimenpide @u/valittu-toimenpideinstanssi})))
+                                  :toimenpide @u/valittu-toimenpideinstanssi}))
+                           (e! (tiedot/->HaeSuunnitellutTyot))
+                           (log "kutsuttiin HaeSuunnitellutTyot"))
                         #(do
                            (e! (tiedot/->Nakymassa? false))))
+
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
         [:div
