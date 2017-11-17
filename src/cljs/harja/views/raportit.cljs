@@ -2,6 +2,7 @@
   "Harjan raporttien pääsivu."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.urakka :as urakka-domain]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
@@ -20,6 +21,7 @@
             [harja.transit :as tr]
             [alandipert.storage-atom :refer [local-storage]]
             [clojure.string :as str]
+            [clojure.set :as set]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.domain.raportointi :as raportti-domain]
@@ -49,7 +51,15 @@
 (def mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko
+                  v-urakkatyyppi #{(:arvo @nav/urakkatyyppi)}
+                  ;; vesiväylä-urakkatyypillä toistaiseksi tunnistetaan kanava vs. vesiväylät hallintayksikön nimestä
+                  v-urakkatyyppi (if (= :vesivayla (first v-urakkatyyppi))
+                                   (if (= (:nimi v-hal) "Kanavat ja avattavat sillat")
+                                     urakka-domain/kanava-urakkatyypit
+                                     urakka-domain/vesivayla-urakkatyypit-ilman-kanavia)
+                                   v-urakkatyyppi)
                   salli-laaja-konteksti? (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+
                   mahdolliset-kontekstit (if salli-laaja-konteksti?
                                            (into #{"koko maa"}
                                                  (keep identity [(when v-ur "urakka")
@@ -57,12 +67,11 @@
 
                                            #{"urakka"})
                   urakkatyypin-raportit (filter
-                                          #((:urakkatyyppi %) (:arvo @nav/urakkatyyppi))
+                                          #(set/subset? v-urakkatyyppi (:urakkatyyppi %))
                                           (vals @raporttityypit))]
 
               (if (and (not salli-laaja-konteksti?) (nil? v-ur))
                 nil
-
                 (sort-by raportin-sort-avain
                          (into []
                                (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
@@ -110,6 +119,9 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
+(defonce vesivaylaurakassa? (reaction (or (urakka-domain/vesivayla-urakkatyypit (:tyyppi @nav/valittu-urakka))
+                                      (urakka-domain/vesivayla-urakkatyypit-raporttinakyma (:tyyppi @nav/valittu-urakka)))))
+
 (defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
 
 (defonce valittu-hoitokausi (reaction-writable
@@ -202,6 +214,7 @@
   ;; ei näytetä hoitokausivalintaa.
   (let [ur @nav/valittu-urakka
         hoitourakassa? @hoitourakassa?
+        vesivaylaurakassa? @vesivaylaurakassa?
         urakkatyyppi @valittu-urakkatyyppi
         hal @nav/valittu-hallintayksikko
         vuosi-eka (if ur
@@ -230,11 +243,13 @@
          (reset! valittu-vuosi %)
          (reset! valittu-hoitokausi nil)
          (reset! valittu-kuukausi nil))]
-      (when (and (= urakkatyyppi :hoito)
-                 (or hoitourakassa? (nil? ur)))
+      (when (or (and (= urakkatyyppi :hoito)
+                     (or hoitourakassa? (nil? ur)))
+                (and (= urakkatyyppi :vesivayla)
+                     (or vesivaylaurakassa? (nil? ur))))
         [ui-valinnat/hoitokausi
          {:disabled @vapaa-aikavali?}
-         (if hoitourakassa?
+         (if (or hoitourakassa? vesivaylaurakassa?)
            (u/hoito-tai-sopimuskaudet ur)
            (u/edelliset-hoitokaudet 5 true))
          valittu-hoitokausi
@@ -655,7 +670,8 @@
                         v-ur "urakka"
                         v-hal "hallintayksikko"
                         :default "koko maa")
-            raportissa? (some? @raportit/suoritettu-raportti)]
+            raportissa? (some? @raportit/suoritettu-raportti)
+            raporttilista @mahdolliset-raporttityypit]
         [:div.raporttivalinnat
          (when-not raportissa?
            [:span
@@ -692,7 +708,7 @@
              "Raportti" (cond
                           (nil? @raporttityypit)
                           [:span "Raportteja haetaan..."]
-                          (empty? @mahdolliset-raporttityypit)
+                          (empty? raporttilista)
                           [:span (ei-raportteja-saatavilla-viesti (str/lower-case (:nimi v-ur-tyyppi)) v-ur)]
                           :default
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
@@ -703,7 +719,7 @@
                                                 :li-luokka-fn #(if (= "Työmaakokousraportti" (:kuvaus %))
                                                                 "tyomaakokous"
                                                                 "")}
-                           @mahdolliset-raporttityypit])]])
+                           raporttilista])]])
 
          (when @valittu-raporttityyppi
            [:div.raportin-asetukset
