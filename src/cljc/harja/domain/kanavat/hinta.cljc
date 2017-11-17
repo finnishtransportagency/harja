@@ -17,7 +17,8 @@
   ["kan_hinta" ::toimenpiteen-hinta
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot]
   ["kan_toimenpide_hinta" ::toimenpide<->hinta
-  {::hinta-tiedot (specql.rel/has-one ::hinta ::toimenpiteen-hinta ::id)}])
+   ;; {::hinta-tiedot (specql.rel/has-one ::hinta ::toimenpiteen-hinta ::id)}
+   ])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::summa (s/nilable number?))
