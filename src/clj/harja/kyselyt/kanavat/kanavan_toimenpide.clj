@@ -29,8 +29,15 @@
       [])))
 
 
+(defn poista-frontin-keksima-id [m id-avain]
+  ;; id-olemassa? katsoo onko id 0 tai negatiivinen, josta päätellään
+  ;; että se on frontin generoima sijais-id
+  (if-not (id-olemassa? (id-avain m))
+    (dissoc m id-avain)
+    m))
+
 (defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat]}]
-  (doseq [hinta hinnat]
+  (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
     (specql/upsert! db
                   ::hinta/toimenpiteen-hinta
                   (merge
@@ -42,7 +49,7 @@
                       ::m/muokkaaja-id (:id user)})))))
 
 (defn tallenna-toimenpiteen-tyot! [{:keys [db user hinnoittelu-id tyot]}]
-  (doseq [tyo tyot]
+  (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
     (if (id-olemassa? (::tyo/id tyo))
       (specql/update! db
                       ::tyo/tyo
