@@ -1,16 +1,3 @@
-INSERT INTO toimenpideinstanssi (urakka,
-                                 toimenpide,
-                                 nimi,
-                                 alkupvm,
-                                 loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Saimaan kanava'),
-        597,
-        'Saimaan kanavan testitoimenpideinstanssi',
-        '2017-01-01',
-        '2090-01-01');
-
 INSERT INTO kan_toimenpide
 (tyyppi,
  urakka,
@@ -68,7 +55,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
         NULL,
         (SELECT id
          FROM toimenpideinstanssi
-         WHERE nimi = 'Saimaan kanavan testitoimenpideinstanssi'));
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -127,7 +114,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
         NULL,
         (SELECT id
          FROM toimenpideinstanssi
-         WHERE nimi = 'Saimaan kanavan testitoimenpideinstanssi'));
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -186,7 +173,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
         NULL,
         (SELECT id
          FROM toimenpideinstanssi
-         WHERE nimi = 'Saimaan kanavan testitoimenpideinstanssi'));
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -245,7 +232,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
         NULL,
         (SELECT id
          FROM toimenpideinstanssi
-         WHERE nimi = 'Saimaan kanavan testitoimenpideinstanssi'));
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -304,7 +291,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
         NULL,
         (SELECT id
          FROM toimenpideinstanssi
-         WHERE nimi = 'Saimaan kanavan testitoimenpideinstanssi'));
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -363,4 +350,4 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
         NULL,
         (SELECT id
          FROM toimenpideinstanssi
-         WHERE nimi = 'Saimaan kanavan testitoimenpideinstanssi'));
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
