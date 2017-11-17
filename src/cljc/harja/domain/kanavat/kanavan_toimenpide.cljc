@@ -48,6 +48,12 @@
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
 
+(def viittaus-idt #{::urakka-id ::sopimus-id ::kohde-id ::toimenpidekoodi-id ::suorittaja-id ::kuittaaja-id})
+(def perustiedot
+  #{::id
+    ::pvm
+    ::lisatieto})
+
 (def kaikki-kentat
   #{::id
     ::tyyppi

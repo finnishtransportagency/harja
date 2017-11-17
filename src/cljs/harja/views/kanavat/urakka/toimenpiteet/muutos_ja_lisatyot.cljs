@@ -16,7 +16,6 @@
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
             [harja.ui.modal :as modal]
-
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.tiedot.navigaatio :as nav]
