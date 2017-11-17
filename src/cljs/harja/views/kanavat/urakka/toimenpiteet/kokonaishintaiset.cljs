@@ -86,15 +86,8 @@
 
 (defn kokonaishintaiset* [e! _]
   (komp/luo
-    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(do
-                         (e! (tiedot/->Nakymassa? true))
-                         (e! (tiedot/->PaivitaValinnat {:urakka @navigaatio/valittu-urakka
-                                                        :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
-                                                        :aikavali @urakkatiedot/valittu-aikavali
-                                                        :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})))
-                      #(e! (tiedot/->Nakymassa? false)))
+    (komp/watcher tiedot/valinnat (fn [_ _ uusi] (e! (tiedot/->PaivitaValinnat uusi))))
+    (komp/sisaan-ulos #(e! (tiedot/->NakymaAvattu)) #(e! (tiedot/->NakymaSuljettu)))
     (fn [e! app]
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat

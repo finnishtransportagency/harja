@@ -18,7 +18,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(defrecord Nakymassa? [nakymassa?])
+(defrecord NakymaAvattu [])
+(defrecord NakymaSuljettu [])
 (defrecord PaivitaValinnat [valinnat])
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
@@ -43,13 +44,16 @@
          :haku-kaynnissa? false
          :toimenpiteet nil}))
 
+(defn alkuvalinnat []
+  {:urakka @navigaatio/valittu-urakka
+   :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
+   :aikavali @urakkatiedot/valittu-aikavali
+   :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})
+
 (defonce valinnat
   (reaction
     (when (:nakymassa? @tila)
-      {:urakka @navigaatio/valittu-urakka
-       :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
-       :aikavali @urakkatiedot/valittu-aikavali
-       :toimenpide @urakkatiedot/valittu-toimenpideinstanssi})))
+      (alkuvalinnat))))
 
 (defn esitaytetty-toimenpide []
   (let [kayttaja @istunto/kayttaja]
@@ -88,28 +92,32 @@
     (map #(nth % 3) tehtavat)))
 
 (extend-protocol tuck/Event
-  Nakymassa?
-  (process-event [{nakymassa? :nakymassa?} app]
-    (if (and
-          nakymassa?
-          (not (:kohteiden-haku-kaynnissa? app))
-          (not (:huoltokohteiden-haku-kaynnissa? app)))
-      (-> app
-          (tuck-apurit/post! :hae-urakan-kohteet
-                             {::urakka/id (:id @navigaatio/valittu-urakka)}
-                             {:onnistui ->KohteetHaettu
-                              :epaonnistui ->KohteidenHakuEpaonnistui})
-          (tuck-apurit/get! :hae-kanavien-huoltokohteet
-                            {:onnistui ->HuoltokohteetHaettu
-                             :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
-          (assoc :nakymassa? true
-                 :kohteiden-haku-kaynnissa? true
-                 :huoltokohteiden-haku-kaynnissa? true
-                 :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
-                 :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
-                 :kohteet []
-                 :huoltokohteet []))
-      (assoc app :nakymassa? nakymassa?)))
+  NakymaAvattu
+  (process-event [_ {:keys [kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?] :as app}]
+    (if (or kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?)
+      (assoc app :nakymassa? true)
+      (let [haku! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
+        (go (haku!))
+        (-> app
+            (tuck-apurit/post! :hae-urakan-kohteet
+                               {::urakka/id (:id @navigaatio/valittu-urakka)}
+                               {:onnistui ->KohteetHaettu
+                                :epaonnistui ->KohteidenHakuEpaonnistui})
+            (tuck-apurit/get! :hae-kanavien-huoltokohteet
+                              {:onnistui ->HuoltokohteetHaettu
+                               :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
+            (assoc :nakymassa? true
+                   :kohteiden-haku-kaynnissa? true
+                   :huoltokohteiden-haku-kaynnissa? true
+
+                   :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                   :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
+                   :kohteet []
+                   :huoltokohteet [])))))
+
+  NakymaSuljettu
+  (process-event [_ app]
+    (assoc app :nakymassa? false))
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
