@@ -29,26 +29,17 @@
       [])))
 
 
-(defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnoittelu-id hinnat]}]
+(defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat]}]
   (doseq [hinta hinnat]
-    (if (id-olemassa? (::hinta/id hinta))
-      (specql/update! db
-                      ::hinta/hinta
-                      (merge
-                        hinta
-                        (if (::m/poistettu? hinta)
-                          {::m/poistettu? true
-                           ::m/poistaja-id (:id user)}
-                          {::m/muokattu (pvm/nyt)
-                           ::m/muokkaaja-id (:id user)}))
-                      {::hinta/id (::hinta/id hinta)})
-
-      (specql/insert! db
-                      ::hinta/hinta
-                      (merge
-                        (dissoc hinta ::hinta/id)
-                        {::m/luotu (pvm/nyt)
-                         ::m/luoja-id (:id user)})))))
+    (specql/upsert! db
+                  ::hinta/toimenpiteen-hinta
+                  (merge
+                   hinta
+                   (if (::m/poistettu? hinta)
+                     {::m/poistettu? true
+                      ::m/poistaja-id (:id user)}
+                     {::m/muokattu (pvm/nyt)
+                      ::m/muokkaaja-id (:id user)})))))
 
 (defn tallenna-toimenpiteen-tyot! [{:keys [db user hinnoittelu-id tyot]}]
   (doseq [tyo tyot]
