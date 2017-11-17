@@ -36,7 +36,7 @@
 (defrecord TallennaToimenpide [toimenpide])
 (defrecord ToimenpideTallennettu [toimenpiteet])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
-(defrecord Valitsetoimenpide [toimenpide])
+(defrecord ValitseToimenpide [toimenpide])
 
 (def tila
   (atom {:nakymassa? false
@@ -218,6 +218,6 @@
     (assoc app :tallennus-kaynnissa? false))
 
 
-  Valitsetoimenpide
+  ValitseToimenpide
   (process-event [{toimenpide :toimenpide} app]
     (assoc app :valittu-toimenpide toimenpide)))

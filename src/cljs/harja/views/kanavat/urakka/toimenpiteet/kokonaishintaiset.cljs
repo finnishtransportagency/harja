@@ -46,7 +46,7 @@
     :tyhja "Ei kokonaishitaisia toimenpiteita"
     :jarjesta ::kanavan-toimenpide/pvm
     :tunniste ::kanavan-toimenpide/id
-    :rivi-klikattu #(e! (tiedot/->Valitsetoimenpide %))}
+    :rivi-klikattu #(e! (tiedot/->ValitseToimenpide %))}
    toimenpiteet-view/toimenpidesarakkeet
    toimenpiteet])
 
