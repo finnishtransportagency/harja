@@ -96,8 +96,8 @@
   (process-event [_ {:keys [kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?] :as app}]
     (if (or kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?)
       (assoc app :nakymassa? true)
-      (let [haku! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
-        (go (haku!))
+      (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
+        (go (aseta-valinnat!))
         (-> app
             (tuck-apurit/post! :hae-urakan-kohteet
                                {::urakka/id (:id @navigaatio/valittu-urakka)}
@@ -109,7 +109,6 @@
             (assoc :nakymassa? true
                    :kohteiden-haku-kaynnissa? true
                    :huoltokohteiden-haku-kaynnissa? true
-
                    :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
                    :kohteet []
