@@ -36,7 +36,7 @@
 (defrecord KorostaToimenpideKartalla [toimenpide lisa-funktiot])
 
 (def valintojen-avaimet [:urakka-id :sopimus-id :aikavali
-                         :vaylatyyppi :vayla-id :turvalaite-id
+                         :vaylatyyppi :vaylanro :turvalaite-id
                          :tyolaji :tyoluokka :toimenpide
                          :vain-vikailmoitukset?])
 
@@ -73,13 +73,13 @@
        " " toiminto "."))
 
 (defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
-                                                     vaylatyyppi vayla-id turvalaite-id
+                                                     vaylatyyppi vaylanro turvalaite-id
                                                      tyolaji tyoluokka toimenpide
                                                      vain-vikailmoitukset? turvalaite] :as valinnat}]
   (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
-                                   ::to/vayla-id vayla-id
+                                   ::to/vaylanro vaylanro
                                    ::to/turvalaite-id turvalaite-id
                                    ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
                                    ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
@@ -175,9 +175,9 @@
 
   ValitseVayla
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
-    (let [vayla-id (:vayla-id tiedot)
+    (let [vaylanro (:vaylanro tiedot)
           valinta (:valinta tiedot)
-          paivitetyt-toimenpiteet (mapv #(if (= (get-in % [::to/vayla ::va/id]) vayla-id)
+          paivitetyt-toimenpiteet (mapv #(if (= (get-in % [::to/vayla ::va/vaylanro]) vaylanro)
                                            (assoc % :valittu? valinta)
                                            %)
                                         listan-toimenpiteet)

@@ -66,7 +66,9 @@
 
 (defn hakuparametrit [app]
   ;; Ei nil arvoja
-  (into {} (filter val (:valinnat app))))
+  (when (and (::sop/id (:valinnat app))
+             (::ur/id (:valinnat app)))
+    (into {} (filter val (:valinnat app)))))
 
 (defn palvelumuoto->str [rivi]
   (let [pm (::lt/palvelumuoto rivi)]
@@ -114,13 +116,15 @@
   HaeLiikennetapahtumat
   (process-event [_ app]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
-      (let [params (hakuparametrit app)]
+      (if-let [params (hakuparametrit app)]
         (-> app
             (tt/post! :hae-liikennetapahtumat
                       params
                       {:onnistui ->LiikennetapahtumatHaettu
                        :epaonnistui ->LiikennetapahtumatEiHaettu})
-            (assoc :liikennetapahtumien-haku-kaynnissa? true)))
+            (assoc :liikennetapahtumien-haku-kaynnissa? true))
+
+        app)
 
       app))
 

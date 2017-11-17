@@ -141,6 +141,7 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 -- Vesiväylät & kanavat
 
 \i testidata/vesivaylat/vaylat_ja_turvalaitteet.sql
+\i testidata/vesivaylat/vesivaylien_turvalaiteryhmat.sql
 \i testidata/vesivaylat/vesivaylien_toimenpiteet.sql
 \i testidata/vesivaylat/vesivaylien_materiaalit.sql
 \i testidata/vesivaylat/kalusto.sql
@@ -149,3 +150,4 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 \i testidata/kanavat/kanavien_toimenpiteet.sql
 \i testidata/kanavat/liikennetapahtumat.sql
 \i testidata/kanavat/hairiotilanteet.sql
+\i testidata/kanavat/kanavien_laskutusyhteenveto.sql

@@ -7,10 +7,7 @@
             [clojure.data.zip.xml :as z]
             [taoensso.timbre :as log]
             [harja.domain.vesivaylat.toimenpide :as toimenpide]
-            [harja.domain.vesivaylat.alus :as alus]
-            [harja.domain.vesivaylat.sopimus :as sopimus]
             [harja.domain.vesivaylat.turvalaite :as turvalaite]
-            [harja.domain.vesivaylat.vayla :as vayla]
             [clojure.string :as str]
             [clojure.set :refer [rename-keys]]
             [harja.pvm :as pvm]))
@@ -89,7 +86,7 @@
     (rename-keys m {:harja.domain.vesivaylat.vika/vika-id :harja.domain.vesivaylat.vika/id})))
 
 (def vayla-avainmuunnos
-  {:harja.domain.vesivaylat.vayla/nro :harja.domain.vesivaylat.vayla/r-nro
+ { :harja.domain.vesivaylat.vayla/nro :harja.domain.vesivaylat.vayla/r-nro
    :harja.domain.vesivaylat.vayla/nimi :harja.domain.vesivaylat.vayla/r-nimi})
 
 (defn- lue-vayla [v]
