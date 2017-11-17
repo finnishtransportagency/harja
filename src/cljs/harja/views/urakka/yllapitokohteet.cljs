@@ -387,7 +387,6 @@
             grid-data (r/wrap kohdeosat-nyt
                               muokkaa-kohdeosat!)
             virheet (:virheet opts)]
-        (log "JARNO grid data " (pr-str grid-data))
         [:div
          [grid/muokkaus-grid
           {:ohjaus g
