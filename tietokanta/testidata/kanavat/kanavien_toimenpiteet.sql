@@ -1,3 +1,14 @@
+DO $$
+DECLARE
+  r RECORD;
+  urakka_id_saimaan_kanava INTEGER := (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');
+  sopimus_id_saimaan_paahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon pääsopimus');
+  sopimus_id_saimaan_lisahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon lisäsopimus');
+  kohde_id_tikkalansaaren_silta INTEGER := (SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta');
+  huoltokohde_id_asennonmittauslaitteet INTEGER := (SELECT id FROM kan_huoltokohde WHERE nimi = 'ASENNONMITTAUSLAITTEET');
+  kayttaja_id_jvh INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
+  toimenpidekoodi_id_emo_24104 INTEGER := (SELECT id FROM toimenpidekoodi WHERE emo = (SELECT id FROM toimenpidekoodi WHERE koodi = '24104') AND nimi = 'Ei yksilöity');
+BEGIN
 INSERT INTO kan_toimenpide
 (tyyppi,
  urakka,
@@ -16,42 +27,21 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
-  (SELECT id
-   FROM urakka
-   WHERE nimi = 'Saimaan kanava'),
-  (SELECT id
-   FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'),
+  urakka_id_saimaan_kanava,
+  sopimus_id_saimaan_paahuolto,
   '2017-10-10',
-  (SELECT id
-   FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
-  (SELECT id
-   FROM kan_huoltokohde
-   WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
-  (SELECT id
-   FROM toimenpidekoodi
-   WHERE emo = (SELECT id
-                FROM toimenpidekoodi
-                WHERE koodi = '24104') AND
-         nimi = 'Ei yksilöity'),
+  kohde_id_tikkalansaaren_silta,
+  huoltokohde_id_asennonmittauslaitteet,
+  toimenpidekoodi_id_emo_24104,
   'Testitoimenpide',
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
+  kayttaja_id_jvh,
+  kayttaja_id_jvh,
   '2017-10-10',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        '2017-10-10',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        FALSE,
-        NULL);
+  kayttaja_id_jvh,
+  '2017-10-10',
+  kayttaja_id_jvh,
+  FALSE,
+  NULL);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -71,42 +61,23 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
-  (SELECT id
-   FROM urakka
-   WHERE nimi = 'Saimaan kanava'),
-  (SELECT id
-   FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'),
+  urakka_id_saimaan_kanava,
+  sopimus_id_saimaan_paahuolto,
   '2016-11-07',
   (SELECT id
    FROM kan_kohde
    WHERE nimi = 'Taipaleen sulku'),
-  (SELECT id
-   FROM kan_huoltokohde
-   WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
-  (SELECT id
-   FROM toimenpidekoodi
-   WHERE emo = (SELECT id
-                FROM toimenpidekoodi
-                WHERE koodi = '24104') AND
-         nimi = 'Ei yksilöity'),
+  huoltokohde_id_asennonmittauslaitteet,
+  toimenpidekoodi_id_emo_24104,
   'Testitoimenpide',
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
+  kayttaja_id_jvh,
+  kayttaja_id_jvh,
   '2016-11-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        '2016-11-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        FALSE,
-        NULL);
+  kayttaja_id_jvh,
+  '2016-11-07',
+  kayttaja_id_jvh,
+  FALSE,
+  NULL);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -126,42 +97,21 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
-  (SELECT id
-   FROM urakka
-   WHERE nimi = 'Saimaan kanava'),
-  (SELECT id
-   FROM sopimus
-   WHERE nimi = 'Saimaan huollon lisäsopimus'),
+  urakka_id_saimaan_kanava,
+  sopimus_id_saimaan_lisahuolto,
   '2017-01-07',
-  (SELECT id
-   FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
-  (SELECT id
-   FROM kan_huoltokohde
-   WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
-  (SELECT id
-   FROM toimenpidekoodi
-   WHERE emo = (SELECT id
-                FROM toimenpidekoodi
-                WHERE koodi = '24104') AND
-         nimi = 'Ei yksilöity'),
+  kohde_id_tikkalansaaren_silta,
+  huoltokohde_id_asennonmittauslaitteet,
+  toimenpidekoodi_id_emo_24104,
   'Testitoimenpide',
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
+  kayttaja_id_jvh,
+  kayttaja_id_jvh,
   '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        FALSE,
-        NULL);
+  kayttaja_id_jvh,
+  '2017-01-07',
+  kayttaja_id_jvh,
+  FALSE,
+  NULL);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -181,42 +131,21 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
-  (SELECT id
-   FROM urakka
-   WHERE nimi = 'Saimaan kanava'),
-  (SELECT id
-   FROM sopimus
-   WHERE nimi = 'Saimaan huollon lisäsopimus'),
+  urakka_id_saimaan_kanava,
+  sopimus_id_saimaan_lisahuolto,
   '2017-01-07',
-  (SELECT id
-   FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
-  (SELECT id
-   FROM kan_huoltokohde
-   WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
-  (SELECT id
-   FROM toimenpidekoodi
-   WHERE emo = (SELECT id
-                FROM toimenpidekoodi
-                WHERE koodi = '24104') AND
-         nimi = 'Ei yksilöity'),
+  kohde_id_tikkalansaaren_silta,
+  huoltokohde_id_asennonmittauslaitteet,
+  toimenpidekoodi_id_emo_24104,
   'Testitoimenpide',
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
+  kayttaja_id_jvh,
+  kayttaja_id_jvh,
   '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        FALSE,
-        NULL);
+   kayttaja_id_jvh,
+   '2017-01-07',
+   kayttaja_id_jvh,
+   FALSE,
+   NULL);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -236,42 +165,21 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
-  (SELECT id
-   FROM urakka
-   WHERE nimi = 'Saimaan kanava'),
-  (SELECT id
-   FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'),
+  urakka_id_saimaan_kanava,
+  sopimus_id_saimaan_paahuolto,
   '2017-01-11',
-  (SELECT id
-   FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
-  (SELECT id
-   FROM kan_huoltokohde
-   WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
-  (SELECT id
-   FROM toimenpidekoodi
-   WHERE emo = (SELECT id
-                FROM toimenpidekoodi
-                WHERE koodi = '24104') AND
-         nimi = 'Ei yksilöity'),
+  kohde_id_tikkalansaaren_silta,
+  huoltokohde_id_asennonmittauslaitteet,
+  toimenpidekoodi_id_emo_24104,
   'Testitoimenpide',
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
+  kayttaja_id_jvh,
+  kayttaja_id_jvh,
   '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        FALSE,
-        NULL);
+  kayttaja_id_jvh,
+  '2017-01-07',
+  kayttaja_id_jvh,
+  FALSE,
+  NULL);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -291,39 +199,19 @@ INSERT INTO kan_toimenpide
  poistettu,
  poistaja)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
-  (SELECT id
-   FROM urakka
-   WHERE nimi = 'Saimaan kanava'),
-  (SELECT id
-   FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'),
+  urakka_id_saimaan_kanava,
+  sopimus_id_saimaan_paahuolto,
   '2017-01-12',
-  (SELECT id
-   FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
-  (SELECT id
-   FROM kan_huoltokohde
-   WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
-  (SELECT id
-   FROM toimenpidekoodi
-   WHERE emo = (SELECT id
-                FROM toimenpidekoodi
-                WHERE koodi = '24104') AND
-         nimi = 'Ei yksilöity'),
+  kohde_id_tikkalansaaren_silta,
+  huoltokohde_id_asennonmittauslaitteet,
+  toimenpidekoodi_id_emo_24104,
   'Testitoimenpide',
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
-  (SELECT id
-   FROM kayttaja
-   WHERE kayttajanimi = 'jvh'),
+  kayttaja_id_jvh,
+  kayttaja_id_jvh,
   '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        '2017-01-07',
-        (SELECT id
-         FROM kayttaja
-         WHERE kayttajanimi = 'jvh'),
-        FALSE,
-        NULL);
+  kayttaja_id_jvh,
+  '2017-01-07',
+  kayttaja_id_jvh,
+  FALSE,
+  NULL);
+END $$;
