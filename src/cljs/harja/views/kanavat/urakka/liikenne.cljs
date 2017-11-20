@@ -57,14 +57,13 @@
      :nimi ::lt-alus/laji
      :validoi [[:ei-tyhja "Valitse aluslaji"]]
      :valinnat lt-alus/aluslajit
-     :valinta-nayta #(or (lt-alus/aluslaji->str %)
-                         (when (= :nippu %) "Nippu")
-                         "- Valitse -")}
+     :valinta-nayta #(or (lt-alus/aluslaji->str %) "- Valitse -")}
     {:otsikko "Nimi"
      :tyyppi :string
      :nimi ::lt-alus/nimi}
     {:otsikko "Kpl"
      :nimi ::lt-alus/lkm
+     :oletusarvo 1
      :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
      :tyyppi :positiivinen-numero}
     {:otsikko "Matkustajia"
@@ -190,6 +189,7 @@
            :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")}
           {:otsikko "Kpl"
            :nimi ::lt/sulku-lkm
+           :oletusarvo 1
            :pakollinen? true
            :tyyppi :positiivinen-numero}))
       (when (kohde/silta? (::lt/kohde valittu-liikennetapahtuma))
@@ -222,6 +222,7 @@
            :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")}
           {:otsikko "Kpl"
            :nimi ::lt/silta-lkm
+           :oletusarvo 1
            :pakollinen? true
            :tyyppi :positiivinen-numero}))
       (when (::lt/kohde valittu-liikennetapahtuma)

@@ -246,45 +246,47 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [kentta data]
+(defmethod tee-kentta :numero [{:keys [oletusarvo] :as kentta} data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
               (:fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
-    (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
-      (let [nykyinen-data @data
-            nykyinen-teksti (or @teksti
-                                (normalisoi-numero (fmt nykyinen-data))
-                                "")
-            kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-            desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                      (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
-                                                      "})?"))]
-        [:input {:class (when lomake? "form-control")
-                 :type "text"
-                 :placeholder (placeholder kentta data)
-                 :on-focus (:on-focus kentta)
-                 :on-blur #(reset! teksti nil)
-                 :value nykyinen-teksti
-                 :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
-                                   v (if vaadi-ei-negatiivinen?
-                                       (str/replace v #"-" "")
-                                       v)]
-                               (when (or (= v "")
-                                         (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                         (re-matches (if kokonaisluku?
-                                                       kokonaisluku-re-pattern
-                                                       desimaaliluku-re-pattern) v))
-                                 (reset! teksti v)
+    (komp/luo
+      (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
+       (let [nykyinen-data @data
+             nykyinen-teksti (or @teksti
+                                 (normalisoi-numero (fmt nykyinen-data))
+                                 "")
+             kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+             desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
+                                                       (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
+                                                       "})?"))]
+         [:input {:class (when lomake? "form-control")
+                  :type "text"
+                  :placeholder (placeholder kentta data)
+                  :on-focus (:on-focus kentta)
+                  :on-blur #(reset! teksti nil)
+                  :value nykyinen-teksti
+                  :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
+                                    v (if vaadi-ei-negatiivinen?
+                                        (str/replace v #"-" "")
+                                        v)]
+                                (when (or (= v "")
+                                          (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                          (re-matches (if kokonaisluku?
+                                                        kokonaisluku-re-pattern
+                                                        desimaaliluku-re-pattern) v))
+                                  (reset! teksti v)
 
-                                 (let [numero (if kokonaisluku?
-                                                (js/parseInt v)
-                                                (js/parseFloat (str/replace v #"," ".")))]
-                                   (if (not (js/isNaN numero))
-                                     (reset! data numero)
-                                     (reset! data nil)))))}]))))
+                                  (let [numero (if kokonaisluku?
+                                                 (js/parseInt v)
+                                                 (js/parseFloat (str/replace v #"," ".")))]
+                                    (if (not (js/isNaN numero))
+                                      (reset! data numero)
+                                      (reset! data nil)))))}])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
