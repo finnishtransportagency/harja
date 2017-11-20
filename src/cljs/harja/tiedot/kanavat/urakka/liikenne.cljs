@@ -47,7 +47,7 @@
 
 (defn uusi-tapahtuma
   ([]
-    (uusi-tapahtuma @istunto/kayttaja @u/valittu-sopimusnumero @nav/valittu-urakka (pvm/nyt)))
+   (uusi-tapahtuma istunto/kayttaja u/valittu-sopimusnumero nav/valittu-urakka (pvm/nyt)))
   ([kayttaja sopimus urakka aika]
    {::lt/kuittaaja (namespacefy @kayttaja {:ns :harja.domain.kayttaja})
     ::lt/aika aika
@@ -117,7 +117,7 @@
                           (str sulku ", " silta)
 
                           :else
-                          (or sulku silta)))))
+                          (or sulku silta "")))))
 
 (defn tapahtumarivit [tapahtuma]
   (let [yleistiedot
@@ -161,14 +161,14 @@
       (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
       (dissoc ::lt/kohde)
       (assoc ::lt/urakka-id (:id @nav/valittu-urakka))
+      (dissoc ::lt/urakka)
       (assoc ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id]))
       (dissoc ::lt/sopimus)
       (update ::lt/alukset (fn [alukset] (map
-                                           #(set/rename-keys % {:poistettu ::m/poistettu?})
+                                           #(-> %
+                                                (set/rename-keys {:poistettu ::m/poistettu?})
+                                                (dissoc :id))
                                            alukset)))))
-
-(defn voi-tallentaa? [t]
-  (s/valid? ::lt/tallenna-liikennetapahtuma-kysely (tallennusparametrit t)))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -282,8 +282,17 @@
               (fn [t]
                 (update t ::lt/alukset
                         (fn [alukset]
-                          (map #(if (= (::lt-alus/id %)
-                                       (::lt-alus/id alus))
+                          (map #(if (or
+                                      (and
+                                        (some? (::lt-alus/id %))
+                                        (some? (::lt-alus/id alus))
+                                        (= (::lt-alus/id %)
+                                           (::lt-alus/id alus)))
+                                      (and
+                                        (some? (:id %))
+                                        (some? (:id alus))
+                                        (= (:id %)
+                                           (:id alus))))
                                   alus
                                   %)
                                alukset)))))))
