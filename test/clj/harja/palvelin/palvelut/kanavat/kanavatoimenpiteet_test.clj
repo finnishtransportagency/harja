@@ -9,14 +9,10 @@
             [clojure.spec.alpha :as s]
             [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
 
-            [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.urakka :as ur]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [harja.pvm :as pvm]
-            [taoensso.timbre :as log]))
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -116,7 +112,17 @@
                                            +kayttaja-ulle+
                                            parametrit)))))
 
-(deftest toimenpiteen-tallentaminen
+(deftest toimenpiteiden-haku-ilman-tyyppia-ei-toimi
+  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+                    ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                    ::toimenpidekoodi/id 597
+                    :alkupvm (pvm/luo-pvm 2017 1 1)
+                    :loppupvm (pvm/luo-pvm 2018 1 1)}]
+
+    (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
+                       parametrit)))))
+
+(deftest toimenpiteen-tallentaminen-toimii
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kayttaja (ffirst (q "select id from kayttaja limit 1"))

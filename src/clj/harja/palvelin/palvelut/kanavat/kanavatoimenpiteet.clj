@@ -7,7 +7,8 @@
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]))
 
 (defn tarkista-kutsu [user urakka-id tyyppi]
-  (assert urakka-id "Urakka-id puuttuu!")
+  (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
+  (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
   (case tyyppi
     :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
     :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id)))
@@ -18,9 +19,9 @@
                                        loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
                                        tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi}]
-  
+
   (tarkista-kutsu user urakka-id tyyppi)
-  (let [tyyppi (when tyyppi (name tyyppi))]
+  (let [tyyppi (name tyyppi)]
     (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
       db
       {:urakka urakka-id
