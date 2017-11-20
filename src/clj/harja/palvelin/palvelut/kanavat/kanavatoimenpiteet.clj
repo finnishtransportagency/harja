@@ -34,9 +34,12 @@
        :tyyppi tyyppi})))
 
 (defn siirra-kanavatoimenpiteet [db user tiedot]
-  (let [urakka-id (::kanavan-toimenpide/urakka-id tiedot)]
+  (let [urakka-id (::kanavan-toimenpide/urakka-id tiedot)
+        siirto-kokonaishintaisiin? (= (::kanavan-toimenpide/tyyppi tiedot) :kokonaishintainen)]
     (assert urakka-id "Urakka-id puuttuu!")
-    ;; TODO Tarkista oikeudet
+    (if siirto-kokonaishintaisiin?
+      (oikeudet/vaadi-oikeus "siirrä-kokonaishintaisiin" oikeudet/urakat-kanavat-lisatyot user urakka-id)
+      (oikeudet/vaadi-oikeus "siirrä-muutos-ja-lisätöihin" oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id))
     (q-kanavan-toimenpide/vaadi-toimenpiteet-kuuluvat-urakkaan db (::kanavan-toimenpide/toimenpide-idt tiedot) urakka-id)
     (q-kanavan-toimenpide/paivita-toimenpiteiden-tyyppi db (::kanavan-toimenpide/toimenpide-idt tiedot) (::kanavan-toimenpide/tyyppi tiedot))
     (::kanavan-toimenpide/toimenpide-idt tiedot)))

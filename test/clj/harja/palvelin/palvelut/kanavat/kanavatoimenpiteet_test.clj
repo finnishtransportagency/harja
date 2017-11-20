@@ -146,3 +146,26 @@
                              uudet-parametrit)
           paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)]
       (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet))))))
+
+(deftest toimenpiteiden-siirtaminen-ilman-oikeutta-ei-toimi
+  (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
+                                               (when (= %1 (second toimenpide))
+                                                 (first toimenpide)))
+                                             %2))
+        kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
+        muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
+        urakka-id (hae-saimaan-kanavaurakan-id)
+        parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                    ::kanavan-toimenpide/urakka-id urakka-id
+                    ::kanavan-toimenpide/tyyppi :muutos-lisatyo}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :siirra-kanavatoimenpiteet
+                                           +kayttaja-ulle+
+                                           parametrit)))
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :siirra-kanavatoimenpiteet
+                                           +kayttaja-ulle+
+                                           (assoc parametrit ::kanavan-toimenpide/tyyppi :kokonaishintainen
+                                                             ::kanavan-toimenpide/toimenpide-idt muutos-ja-lisatyo-toimenpiteiden-idt))))))
