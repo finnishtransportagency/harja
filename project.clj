@@ -168,7 +168,7 @@
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
-            [lein-figwheel "0.5.10"]
+            [lein-figwheel "0.5.14"]
             [codox "0.8.11"]
             [jonase/eastwood "0.2.4"]
             [lein-auto "0.1.2"]
