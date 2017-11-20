@@ -7,7 +7,6 @@
             [harja.views.kanavat.urakka.toimenpiteet.hinnoittelu :as hinnoittelu-ui]
             [harja.loki :refer [tarkkaile! log]]
             [harja.pvm :as pvm]
-            [harja.id :refer [id-olemassa?]]
 
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]

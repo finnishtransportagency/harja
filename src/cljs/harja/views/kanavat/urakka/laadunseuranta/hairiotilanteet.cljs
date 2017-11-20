@@ -5,7 +5,6 @@
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet :as tiedot]
             [harja.loki :refer [tarkkaile! log]]
             [harja.pvm :as pvm]
-            [harja.id :refer [id-olemassa?]]
 
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
