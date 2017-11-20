@@ -17,9 +17,9 @@
 (define-tables
   ["kan_toimenpidetyyppi" ::kanava-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_toimenpide" ::kanava-toimenpide
-   muokkaustiedot/muokkaustiedot
-   muokkaustiedot/poistaja-sarake
-   muokkaustiedot/poistettu?-sarake
+   harja.domain.muokkaustiedot/muokkaustiedot
+   harja.domain.muokkaustiedot/poistaja-sarake
+   harja.domain.muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
     "toimenpideinstanssi" ::toimenpideinstanssi-id
