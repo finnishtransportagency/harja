@@ -14,7 +14,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM urakka
@@ -51,7 +52,10 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
         FALSE,
-        NULL);
+        NULL,
+        (SELECT id
+         FROM toimenpideinstanssi
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -69,7 +73,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM urakka
@@ -106,7 +111,10 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
         FALSE,
-        NULL);
+        NULL,
+        (SELECT id
+         FROM toimenpideinstanssi
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -124,7 +132,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM urakka
@@ -161,7 +170,10 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
         FALSE,
-        NULL);
+        NULL,
+        (SELECT id
+         FROM toimenpideinstanssi
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -179,7 +191,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM urakka
@@ -216,7 +229,10 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
         FALSE,
-        NULL);
+        NULL,
+        (SELECT id
+         FROM toimenpideinstanssi
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -234,7 +250,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM urakka
@@ -271,7 +288,10 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
         FALSE,
-        NULL);
+        NULL,
+        (SELECT id
+         FROM toimenpideinstanssi
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -289,7 +309,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM urakka
@@ -326,4 +347,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
         FALSE,
-        NULL);
+        NULL,
+        (SELECT id
+         FROM toimenpideinstanssi
+         WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP'));
