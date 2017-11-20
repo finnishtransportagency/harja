@@ -160,7 +160,7 @@
 
 (deftest kohteen-liittaminen-urakkaan
   (testing "Uuden linkin lisääminen"
-    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
+    (let [kohde-id (hae-kanavakohde-joensuun-sulku)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -226,7 +226,7 @@
         (is (= poistettu? false))))))
 
 (deftest kohteen-poistaminen
-  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Taipaleen sulku ja silta';"))
+  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Joensuun sulku ja silta';"))
         _ (is (some? kohde-id))
         _ (is (false? poistettu?))
         params {:kohde-id kohde-id}
