@@ -48,7 +48,9 @@
   #{::muokkaustiedot/luoja-id
     ::muokkaustiedot/luotu
     ::muokkaustiedot/muokkaaja-id
-    ::muokkaustiedot/muokattu})
+    ::muokkaustiedot/muokattu
+    ::muokkaustiedot/poistaja-id
+    ::muokkaustiedot/poistettu?})
 
 (def kohteen-tiedot
   #{[::kohde

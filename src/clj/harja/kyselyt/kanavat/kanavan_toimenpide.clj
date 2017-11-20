@@ -5,7 +5,8 @@
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [jeesql.core :refer [defqueries]]
             [specql.op :as op]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.id :as id]))
 
 (defn hae-kanavatoimenpiteet [db hakuehdot]
   (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot))
@@ -21,7 +22,7 @@
       [])))
 
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
-  (if (::toimenpide/id kanavatoimenpide)
+  (if (id/id-olemassa? (::toimenpide/id kanavatoimenpide))
     (let [kanavatoimenpide (assoc kanavatoimenpide
                              ::muokkaustiedot/muokattu (pvm/nyt)
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
