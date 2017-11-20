@@ -148,7 +148,8 @@
   (assert (alus-kuuluu-tapahtumaan? db alus tapahtuma) "Alus ei kuulu tapahtumaan!"))
 
 (defn tallenna-alus-tapahtumaan! [db user alus tapahtuma]
-  (let [olemassa? (id-olemassa? (::lt-alus/id alus))]
+  (let [olemassa? (id-olemassa? (::lt-alus/id alus))
+        alus (assoc alus ::lt-alus/liikennetapahtuma-id (::lt/id tapahtuma))]
     (if olemassa?
       (do
         (vaadi-alus-kuuluu-tapahtumaan! db alus tapahtuma)
@@ -165,7 +166,7 @@
                        {::lt-alus/id (::lt-alus/id alus)}))
 
       (specql/insert! db
-                      ::lt-alus/lt-alus
+                      ::lt-alus/liikennetapahtuman-alus
                       (merge
                         {::m/luoja-id (:id user)}
                         alus)))))
