@@ -57,7 +57,7 @@
    toimenpide-idt
    urakka-id))
 
-(defn tallenna-kanavatoimenpiteen-hinta! [db user tiedot]
+(defn tallenna-kanavatoimenpiteen-hinnoittelu! [db user tiedot]
   (let [urakka-id (::toimenpide/urakka-id tiedot)
         toimenpide-id (::toimenpide/id tiedot)]
     (assert urakka-id "Urakka-id puuttuu!")
@@ -80,7 +80,7 @@
       (q-toimenpide/tallenna-toimenpiteen-tyot!
        {:db db
         :user user
-        :tyot (::hinta/tallennettavat-tyot tiedot)})
+        :tyot (::tyo/tallennettavat-tyot tiedot)})
       (q-toimenpide/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))
 
 (defrecord Kanavatoimenpiteet []
@@ -93,14 +93,13 @@
        (hae-kanavatoimenpiteet db user hakuehdot))
      {:kysely-spec ::toimenpide/hae-kanavatoimenpiteet-kysely
       :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})
-
     (julkaise-palvelu
      http
-     :tallenna-kanavatoimenpiteen-hinta
+     :tallenna-kanavatoimenpiteen-hinnoittelu
      (fn [user hakuehdot]
-       (tallenna-kanavatoimenpiteen-hinta db user hakuehdot))
-     {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinta-kysely
-      :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinta-vastaus})
+       (tallenna-kanavatoimenpiteen-hinnoittelu! db user hakuehdot))
+     {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-kysely
+      :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-vastaus})
     this)
 
   (stop [this]

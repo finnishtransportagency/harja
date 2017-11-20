@@ -2,7 +2,8 @@
   (:require
     [clojure.spec.alpha :as s]
     [harja.domain.kanavat.kanavan-kohde :as kohde]
-    [harja.domain.kanavat.hinta :as hinta]
+    ;; [harja.domain.kanavat.hinta :as hinta]
+    ;; [harja.domain.kanavat.tyo :as tyo]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.kayttaja :as kayttaja]
@@ -96,3 +97,13 @@
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))
+
+(s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-kysely
+  (s/keys
+   :req [::urakka-id
+         ::id
+         :harja.domain.kanavat.hinta/tallennettavat-hinnat
+         :harja.domain.kanavat.tyo/tallennettavat-tyot]))
+
+(s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-vastaus
+  ::kanava-toimenpide)

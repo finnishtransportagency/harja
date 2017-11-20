@@ -43,7 +43,7 @@
 (def alustettu-toimenpiteen-hinnoittelu
   {::toimenpide/id nil
    ::hinta/hinnat nil
-   ::hinta/tyot []})
+   ::tyo/tyot []})
 
 (defonce valinnat
   (reaction
@@ -112,10 +112,10 @@
     (ilman-poistettuja tyo-hinnat)))
 
 (defn muut-tyot [app]
-  (hintaryhman-tyot app :tyo))
+  (hintaryhman-tyot app "tyo"))
 
 (defn muut-hinnat [app]
-  (hintaryhman-tyot app :muu))
+  (hintaryhman-tyot app "muu"))
 
 (defn hinta-otsikolla [hinnat otsikkokriteeri]
   (etsi-map hinnat ::hinta/otsikko otsikkokriteeri))
@@ -140,10 +140,10 @@
   (merge
    {::hinta/summa (cond
                     (or (nil? (::hinta/ryhma hinta))
-                        (#{:muu} (::hinta/ryhma hinta)))
+                        (#{"muu"} (::hinta/ryhma hinta)))
                     0
 
-                    (= :tyo (::hinta/ryhma hinta))
+                    (= "tyo" (::hinta/ryhma hinta))
                     nil)
     ::hinta/yleiskustannuslisa 0
     ::hinta/otsikko ""}
@@ -158,7 +158,7 @@
                           (merge
                            {::hinta/id (dec (- index))
                             ::hinta/otsikko otsikko
-                            ::hinta/ryhma :muu}
+                            ::hinta/ryhma "muu"}
                            olemassa-oleva-hinta))))
                      vakiohinnat)
         ;; Loput kentät ovat käyttäjän itse lisäämiä
@@ -191,7 +191,7 @@
   ([tyo app]
    (lisaa-hintarivi-toimenpiteelle*
     ::tyo/id
-    ;; ::hinta/tyot
+    ;; ::tyo/tyot
     (fn [id]
       (merge {::tyo/id id ::tyo/maara 0} tyo))
     app)))
@@ -209,7 +209,7 @@
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
 
 (defn poista-tyorivi-toimenpiteelta [id app]
-  (poista-hintarivi-toimenpiteelta* id ::tyo/id ::hinta/tyot app))
+  (poista-hintarivi-toimenpiteelta* id ::tyo/id ::tyo/tyot app))
 
 (defn poista-hintarivi-toimenpiteelta [id app]
   (poista-hintarivi-toimenpiteelta* id ::hinta/id ::hinta/hinnat app))
@@ -286,11 +286,11 @@
     (let [hinnoiteltava-toimenpide (etsi-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
           toimenpiteen-oma-hinnoittelu nil ;; (::toimenpide/oma-hinnoittelu hinnoiteltava-toimenpide)
           hinnat (or (::hinta/hinnat toimenpiteen-oma-hinnoittelu) [])
-          tyot (or (::hinta/tyot toimenpiteen-oma-hinnoittelu) [])]
+          tyot (or (::tyo/tyot toimenpiteen-oma-hinnoittelu) [])]
       (assoc app :hinnoittele-toimenpide
              {::toimenpide/id toimenpide-id
               ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
-              ::hinta/tyot tyot})))
+              ::tyo/tyot tyot})))
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
@@ -311,8 +311,8 @@
 
   AsetaTyorivilleTiedot
   (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:hinnoittele-toimenpide ::hinta/tyot]
-              (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide ::hinta/tyot])
+    (assoc-in app [:hinnoittele-toimenpide ::tyo/tyot]
+              (tyo/paivita-tyon-tiedot-idlla (get-in app [:hinnoittele-toimenpide ::tyo/tyot])
                                              tiedot)))
 
   LisaaHinnoiteltavaTyorivi
@@ -322,7 +322,7 @@
   LisaaMuuKulurivi
   (process-event [_ app]
     (lisaa-hintarivi-toimenpiteelle
-      {::hinta/ryhma :muu}
+      {::hinta/ryhma "muu"}
       app))
 
   LisaaMuuTyorivi
@@ -343,11 +343,11 @@
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-apurit/post!
-            :tallenna-kanavatoimenpiteen-hinta
+            :tallenna-kanavatoimenpiteen-hinnoittelu
             {::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
              ::toimenpide/id (get-in app [:hinnoittele-toimenpide ::toimenpide/id])
              ::hinta/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
-             ::hinta/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::hinta/tyot])}
+             ::tyo/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::tyo/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
           (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? true))
