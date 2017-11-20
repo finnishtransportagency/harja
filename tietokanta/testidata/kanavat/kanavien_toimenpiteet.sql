@@ -1,13 +1,12 @@
 DO $$
 DECLARE
-  r RECORD;
   urakka_id_saimaan_kanava INTEGER := (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');
   sopimus_id_saimaan_paahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon pääsopimus');
   sopimus_id_saimaan_lisahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon lisäsopimus');
   kohde_id_tikkalansaaren_silta INTEGER := (SELECT id FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta');
   huoltokohde_id_asennonmittauslaitteet INTEGER := (SELECT id FROM kan_huoltokohde WHERE nimi = 'ASENNONMITTAUSLAITTEET');
   kayttaja_id_jvh INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
-  toimenpidekoodi_id_emo_24104 INTEGER := (SELECT id FROM toimenpidekoodi WHERE emo = (SELECT id FROM toimenpidekoodi WHERE koodi = '24104') AND nimi = 'Ei yksilöity');
+  toimenpidekoodi_id_vv_laaja_yksiloimaton INTEGER := (SELECT id FROM toimenpidekoodi WHERE emo = (SELECT id FROM toimenpidekoodi WHERE koodi = '24104') AND nimi = 'Ei yksilöity');
 BEGIN
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -32,7 +31,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2017-10-10',
   kohde_id_tikkalansaaren_silta,
   huoltokohde_id_asennonmittauslaitteet,
-  toimenpidekoodi_id_emo_24104,
+  toimenpidekoodi_id_vv_laaja_yksiloimaton,
   'Testitoimenpide',
   kayttaja_id_jvh,
   kayttaja_id_jvh,
@@ -68,7 +67,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
    FROM kan_kohde
    WHERE nimi = 'Taipaleen sulku'),
   huoltokohde_id_asennonmittauslaitteet,
-  toimenpidekoodi_id_emo_24104,
+  toimenpidekoodi_id_vv_laaja_yksiloimaton,
   'Testitoimenpide',
   kayttaja_id_jvh,
   kayttaja_id_jvh,
@@ -102,7 +101,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-07',
   kohde_id_tikkalansaaren_silta,
   huoltokohde_id_asennonmittauslaitteet,
-  toimenpidekoodi_id_emo_24104,
+  toimenpidekoodi_id_vv_laaja_yksiloimaton,
   'Testitoimenpide',
   kayttaja_id_jvh,
   kayttaja_id_jvh,
@@ -136,7 +135,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-07',
   kohde_id_tikkalansaaren_silta,
   huoltokohde_id_asennonmittauslaitteet,
-  toimenpidekoodi_id_emo_24104,
+  toimenpidekoodi_id_vv_laaja_yksiloimaton,
   'Testitoimenpide',
   kayttaja_id_jvh,
   kayttaja_id_jvh,
@@ -170,7 +169,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-11',
   kohde_id_tikkalansaaren_silta,
   huoltokohde_id_asennonmittauslaitteet,
-  toimenpidekoodi_id_emo_24104,
+  toimenpidekoodi_id_vv_laaja_yksiloimaton,
   'Testitoimenpide',
   kayttaja_id_jvh,
   kayttaja_id_jvh,
@@ -204,7 +203,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-12',
   kohde_id_tikkalansaaren_silta,
   huoltokohde_id_asennonmittauslaitteet,
-  toimenpidekoodi_id_emo_24104,
+  toimenpidekoodi_id_vv_laaja_yksiloimaton,
   'Testitoimenpide',
   kayttaja_id_jvh,
   kayttaja_id_jvh,
@@ -214,4 +213,5 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   kayttaja_id_jvh,
   FALSE,
   NULL);
+ INSERT INTO kan_tyo ("toimenpidekoodi-id", maara, luoja) VALUES (toimenpidekoodi_id_vv_laaja_yksiloimaton, 4, kayttaja_id_jvh);
 END $$;
