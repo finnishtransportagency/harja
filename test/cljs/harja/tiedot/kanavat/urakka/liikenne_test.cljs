@@ -14,9 +14,9 @@
 
 (deftest uusi-tapahtuma
   (is (= {::lt/kuittaaja {::kayttaja/id 1}
-          ::lt/aika 1234}
-         ::lt/sopimus {::sop/id :a ::sop/nimi :b}
-         ::lt/urakka {::ur/id :foo}
+          ::lt/aika 1234
+          ::lt/sopimus {::sop/id :a ::sop/nimi :b}
+          ::lt/urakka {::ur/id :foo}}
          (tiedot/uusi-tapahtuma
            (atom {:id 1})
            (atom [:a :b])
@@ -42,27 +42,27 @@
 (deftest palvelumuoto-gridiin
   (is (= "Itsepalvelu (15 kpl)"
          (tiedot/palvelumuoto->str {::lt/sulku-palvelumuoto :itse
-                                    ::lt/sulku-palvelumuoto-lkm 15})))
+                                    ::lt/sulku-lkm 15})))
 
   (is (= "Kauko"
          (tiedot/palvelumuoto->str {::lt/sulku-palvelumuoto :kauko
-                                    ::lt/sulku-palvelumuoto-lkm 1})))
+                                    ::lt/sulku-lkm 1})))
 
   (is (= "Paikallis"
          (tiedot/palvelumuoto->str {::lt/silta-palvelumuoto :paikallis
-                                    ::lt/silta-palvelumuoto-lkm 1})))
+                                    ::lt/silta-lkm 1})))
 
   (is (= "Paikallis (sulku), paikallis (silta)"
          (tiedot/palvelumuoto->str {::lt/silta-palvelumuoto :paikallis
-                                    ::lt/silta-palvelumuoto-lkm 1
+                                    ::lt/silta-lkm 1
                                     ::lt/sulku-palvelumuoto :paikallis
-                                    ::lt/sulku-palvelumuoto-lkm 1})))
+                                    ::lt/sulku-lkm 1})))
 
-  (is (= "Itsepalvelu (15 kpl) (sulku), Itsepalvelu (15kpl) (silta)"
+  (is (= "Itsepalvelu (15 kpl) (sulku), itsepalvelu (15 kpl) (silta)"
          (tiedot/palvelumuoto->str {::lt/sulku-palvelumuoto :itse
-                                    ::lt/sulku-palvelumuoto-lkm 15
+                                    ::lt/sulku-lkm 15
                                     ::lt/silta-palvelumuoto :itse
-                                    ::lt/silta-palvelumuoto-lkm 15}))))
+                                    ::lt/silta-lkm 15}))))
 
 (deftest toimenpide-gridiin
   (is (= "Sulutus, sillan avaus"
@@ -107,9 +107,6 @@
          (tiedot/koko-tapahtuma {::lt/id 1}
                                 {:haetut-tapahtumat [{::lt/id 2 :foo :bar}
                                                      {::lt/id 1 :foo :baz}]}))))
-
-(deftest voi-tallentaa
-  (is (true? false)))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
@@ -178,11 +175,13 @@
          (e! (tiedot/->LiikennetapahtumatEiHaettu {})))))
 
 (deftest tapahtuman-valitseminen
-  (is (= {:valittu-liikennetapahtuma {::lt/id 1 :foo :bar}}
+  (is (= {:valittu-liikennetapahtuma {::lt/id 1 :foo :bar}
+          :haetut-tapahtumat [{::lt/id 1 :foo :bar}]}
          (e! (tiedot/->ValitseTapahtuma {::lt/id 1})
              {:haetut-tapahtumat [{::lt/id 1 :foo :bar}]})))
 
-  (is (= {:valittu-liikennetapahtuma {:foo :bar}}
+  (is (= {:valittu-liikennetapahtuma {:foo :bar}
+          :haetut-tapahtumat [{::lt/id 1 :foo :bar}]}
          (e! (tiedot/->ValitseTapahtuma {:foo :bar})
              {:haetut-tapahtumat [{::lt/id 1 :foo :bar}]}))))
 
@@ -201,9 +200,9 @@
           :valittu-liikennetapahtuma {::lt/vesipinta-alaraja 1
                                       ::lt/vesipinta-ylaraja 2}}
          (e! (tiedot/->EdellisetTiedotHaettu {:kohde {::lt/vesipinta-alaraja 1
-                                                    ::lt/vesipinta-ylaraja 2}
-                                            :ylos {:foo :bar}
-                                            :alas {:baz :baz}})))))
+                                                      ::lt/vesipinta-ylaraja 2}
+                                              :ylos {:foo :bar}
+                                              :alas {:baz :baz}})))))
 
 (deftest edelliset-ei-haettu
   (is (= {:edellisten-haku-kaynnissa? false}
@@ -305,7 +304,7 @@
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset [{::lt-alus/suunta :ylos
                                    ::lt-alus/nimi "Ronsu"}]}]
-    (is (= {:tallennus-kaynnissa? false?
+    (is (= {:tallennus-kaynnissa? false
             :valittu-liikennetapahtuma nil
             :liikennetapahtumien-haku-kaynnissa? false
             :haetut-tapahtumat [tapahtuma1 tapahtuma2]
