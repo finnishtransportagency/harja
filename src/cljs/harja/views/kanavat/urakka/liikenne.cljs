@@ -39,8 +39,7 @@
 
 (defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma] :as app}]
   [grid/muokkaus-grid
-   {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
-    :tunniste ::lt-alus/id}
+   {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"}
    [{:otsikko "Suunta"
      :tyyppi :komponentti
      :tasaa :keskita
@@ -49,10 +48,13 @@
                       [napit/yleinen-toissijainen
                        (lt/suunta->str suunta)
                        #(e! (tiedot/->VaihdaSuuntaa rivi))
-                       {:ikoni (if (= :ylos suunta) (ikonit/livicon-arrow-up) (ikonit/livicon-arrow-down))}]))}
+                       {:ikoni (cond (= :ylos suunta) (ikonit/livicon-arrow-up)
+                                     (= :alas suunta) (ikonit/livicon-arrow-down)
+                                     :else (ikonit/livicon-question))}]))}
     {:otsikko "Aluslaji"
      :tyyppi :valinta
      :nimi ::lt-alus/laji
+     :validoi [[:ei-tyhja "Valitse aluslaji"]]
      :valinnat lt-alus/aluslajit
      :valinta-nayta #(or (lt-alus/aluslaji->str %)
                          (when (= :nippu %) "Nippu")
@@ -62,6 +64,7 @@
      :nimi ::lt-alus/nimi}
     {:otsikko "Kpl"
      :nimi ::lt-alus/lkm
+     :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
      :tyyppi :positiivinen-numero}
     {:otsikko "Matkustajia"
      :nimi ::lt-alus/matkustajalkm
@@ -104,7 +107,6 @@
                      {:ikoni (ikonit/tallenna)
                       :disabled (or tallennus-kaynnissa?
                                     (not (oikeudet/urakat-kanavat-liikenne))
-                                    (not (tiedot/voi-tallentaa? tapahtuma))
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
                     [napit/poista
                      "Poista tapahtuma"
@@ -120,12 +122,10 @@
                           {:ikoni (ikonit/livicon-trash)
                            :disabled (or tallennus-kaynnissa?
                                          (not (oikeudet/urakat-kanavat-liikenne))
-                                         (not (tiedot/voi-tallentaa? tapahtuma))
                                          (not (lomake/voi-tallentaa? tapahtuma)))}]])
                      {:ikoni (ikonit/livicon-trash)
                       :disabled (or tallennus-kaynnissa?
                                     (not (oikeudet/urakat-kanavat-liikenne))
-                                    (not (tiedot/voi-tallentaa? tapahtuma))
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
                     (when uusi-tapahtuma?
                       [napit/yleinen-toissijainen
@@ -157,7 +157,8 @@
       (lomake/rivi
         {:otsikko "Aika"
          :nimi ::lt/aika
-         :tyyppi :pvm-aika}
+         :tyyppi :pvm-aika
+         :pakollinen? true}
         {:otsikko "Kohde"
          :nimi ::lt/kohde
          :tyyppi :valinta
@@ -173,21 +174,25 @@
         (lomake/rivi
           {:otsikko "Sulun toimenpide"
            :nimi ::lt/sulku-toimenpide
+           :pakollinen? true
            :tyyppi :radio-group
            :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
            :vaihtoehto-nayta lt/sulku-toimenpide->str}
           {:otsikko "Palvelumuoto"
            :nimi ::lt/sulku-palvelumuoto
+           :pakollinen? true
            :tyyppi :valinta
            :valinnat lt/palvelumuoto-vaihtoehdot
            :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")}
           {:otsikko "Kpl"
            :nimi ::lt/sulku-lkm
+           :pakollinen? true
            :tyyppi :positiivinen-numero}))
       (when (kohde/silta? (::lt/kohde valittu-liikennetapahtuma))
         (lomake/rivi
           {:otsikko "Sillan avaus"
            :nimi ::lt/silta-avaus
+           :pakollinen? true
            :tyyppi :radio-group
            :oletusarvo "Ei"
            :vaihtoehdot ["Kyllä" "Ei"]
@@ -207,11 +212,13 @@
                       (dissoc rivi ::lt/silta-avaus)))}
           {:otsikko "Palvelumuoto"
            :nimi ::lt/silta-palvelumuoto
+           :pakollinen? true
            :tyyppi :valinta
            :valinnat lt/palvelumuoto-vaihtoehdot
            :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")}
           {:otsikko "Kpl"
-           :nimi ::lt/sulku-lkm
+           :nimi ::lt/silta-lkm
+           :pakollinen? true
            :tyyppi :positiivinen-numero}))
       (when (::lt/kohde valittu-liikennetapahtuma)
         (if (and edellisten-haku-kaynnissa? uusi-tapahtuma?)
@@ -240,7 +247,10 @@
          :tyyppi :komponentti
          :palstoja 3
          :nimi :muokattavat-tapahtumat
-         :komponentti (fn [_] [liikenne-muokkausgrid e! app])})]
+         :komponentti (fn [_] [liikenne-muokkausgrid e! app])})
+      {:otsikko "Lisätietoja"
+       :tyyppi :text
+       :nimi ::lt/lisatieto}]
      valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! {:keys [urakan-kohteet] :as app}]
