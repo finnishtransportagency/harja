@@ -156,6 +156,7 @@
 
 (defn tallennusparametrit [t]
   (-> t
+      (dissoc :grid-virheita?)
       (assoc ::lt/kuittaaja-id (get-in t [::lt/kuittaaja ::kayttaja/id]))
       (dissoc ::lt/kuittaaja)
       (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
@@ -167,7 +168,8 @@
       (update ::lt/alukset (fn [alukset] (map
                                            #(-> %
                                                 (set/rename-keys {:poistettu ::m/poistettu?})
-                                                (dissoc :id))
+                                                (dissoc :id)
+                                                (dissoc :harja.ui.grid/virheet))
                                            alukset)))))
 
 (defn voi-tallentaa? [t]
