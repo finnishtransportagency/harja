@@ -121,13 +121,13 @@
                                                        ::silta-avaus
                                                        ::silta-palvelumuoto
                                                        ::silta-lkm))
-                                                   ::lisatieto
                                                    ::vesipinta-ylaraja
                                                    ::vesipinta-alaraja
                                                    ::sopimus
                                                    ::kuittaaja]
                                                   :opt
-                                                  [::alukset])))
+                                                  [::alukset
+                                                   ::lisatieto])))
 
 (s/def ::hakuparametrit ::hae-liikennetapahtumat-kysely)
 
@@ -141,7 +141,6 @@
                                                              ::silta-avaus
                                                              ::silta-palvelumuoto
                                                              ::silta-lkm))
-                                                         ::lisatieto
                                                          ::vesipinta-ylaraja
                                                          ::vesipinta-alaraja
                                                          ::sopimus-id
@@ -149,6 +148,7 @@
                                                          ::kuittaaja-id
                                                          ::kohde-id]
                                                    :opt [::id
+                                                         ::lisatieto
                                                          ::m/poistettu?
                                                          ::alukset]
                                                    :req-un [::hakuparametrit]))
