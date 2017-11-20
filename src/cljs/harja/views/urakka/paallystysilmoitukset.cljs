@@ -28,6 +28,7 @@
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tr]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka :as urakka]
@@ -291,12 +292,15 @@
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa!]
-  (let [osan-pituus (atom {})]
+  (let [osan-pituus (atom {})
+        jarjestys-fn (juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
-            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])]
+            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
+            yllapitokohde-virheet (wrap-virheet :alikohteet)
+            muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))]
         [:fieldset.lomake-osa
          [:h3 "Tekninen osa"]
 
@@ -309,7 +313,7 @@
                                        (assoc-in [:virheet :alikohteet] virheet)))))
            :rivinumerot? true
            :voi-muokata? voi-muokata?
-           :virheet (wrap-virheet :alikohteet)}
+           :virheet yllapitokohde-virheet}
           urakka tierekisteriosoitteet
           (select-keys lomakedata-nyt
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
@@ -321,9 +325,13 @@
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
-           :voi-muokata? voi-muokata?
+           :voi-muokata? muokkaus-mahdollista?
            :virheet (wrap-virheet :paallystystoimenpide)
-           :rivinumerot? true}
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
+           :rivinumerot? true
+           :jarjesta jarjestys-fn}
           [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
            (assoc paallystys/raekoko-grid-skeema :nimi :toimenpide-raekoko :leveys 10)
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
@@ -354,8 +362,12 @@
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
-           :voi-muokata? voi-muokata?
-           :virheet (wrap-virheet :kiviaines)}
+           :voi-muokata? muokkaus-mahdollista?
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
+           :virheet (wrap-virheet :kiviaines)
+           :jarjesta jarjestys-fn}
           [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
             :leveys 30}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20}
@@ -374,18 +386,24 @@
          (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
+                   :jarjesta jarjestys-fn
                    :voi-muokata? alustatoimet-voi-muokata?
                    :voi-kumota? false
                    :uusi-id (inc (count @alustalle-tehdyt-toimet))
-                   :virheet (wrap-virheet :alustalle-tehdyt-toimet)}
+                   :virheet (wrap-virheet :alustalle-tehdyt-toimet)
+                   :virheet-ylos? true}
                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
-                    :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false)
                     :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)

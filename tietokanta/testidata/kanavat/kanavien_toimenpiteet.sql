@@ -1,14 +1,3 @@
-INSERT INTO toimenpideinstanssi (urakka,
-                                 toimenpide,
-                                 nimi,
-                                 alkupvm,
-                                 loppupvm)
-VALUES (31,
-        597,
-        'Testitoimenpideinstanssi',
-        '2017-01-01',
-        '2090-01-01');
-
 INSERT INTO kan_toimenpide
 (tyyppi,
  urakka,

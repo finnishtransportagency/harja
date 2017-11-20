@@ -199,17 +199,17 @@
   (testing "Väyläfiltteri löytää toimenpiteet"
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          vayla-id (hae-vayla-hietarasaari)
+          vaylanro (hae-vayla-hietarasaari)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/vayla-id vayla-id}
+                         ::toi/vaylanro vaylanro}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]
 
       (is (s/valid? ::toi/hae-vesivaylien-toimenpiteet-kysely kysely-params))
       (is (>= (count vastaus) 2))
-      (is (every? #(= (get-in % [::toi/vayla ::va/id]) vayla-id) vastaus))))
+      (is (every? #(= (get-in % [::toi/vayla ::va/vaylanro]) vaylanro) vastaus))))
 
   (testing "Väyläfiltterissä oleva väylä pitää olla samaa tyyppiä kuin väylätyyppi-filtterissä,
             muuten ei palaudu mitään"
@@ -217,11 +217,11 @@
     ;; annetun väylätyypin mukaisia väyliä filtteriksi.
     (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
-          vayla-id (hae-vayla-hietarasaari) ;; Tyyppiä kauppamerenkulku
+          vaylanro (hae-vayla-hietarasaari) ;; Tyyppiä kauppamerenkulku
           vaylatyyppi :muu
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/vayla-id vayla-id
+                         ::toi/vaylanro vaylanro
                          ::va/vaylatyyppi vaylatyyppi}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
@@ -234,7 +234,7 @@
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
-                         ::toi/vayla-id -1}
+                         ::toi/vaylanro -1}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-kokonaishintaiset-toimenpiteet +kayttaja-jvh+
                                   kysely-params)]

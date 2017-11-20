@@ -43,7 +43,7 @@
                     :sopimus-id nil
                     :aikavali [nil nil]
                     :vaylatyyppi nil
-                    :vayla-id nil
+                    :vaylanro nil
                     :turvalaite-id nil
                     :tyolaji nil
                     :tyoluokka nil
