@@ -16,7 +16,8 @@
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]))
+            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]))
 
 ;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
 
@@ -32,7 +33,7 @@
 
 (defn hae-kohteiden-urakkatiedot
   ([db kohteet]
-    (hae-kohteiden-urakkatiedot db nil kohteet))
+   (hae-kohteiden-urakkatiedot db nil kohteet))
   ([db urakka-id kohteet]
    (hae-kohteiden-urakkatiedot* kohteet
                                 (specql/fetch db
@@ -146,3 +147,6 @@
                    ::m/poistaja-id (:id user)
                    ::m/muokattu (pvm/nyt)}
                   {::kohde/id kohde-id}))
+
+(defn hae-huoltokohteet [db]
+  (specql/fetch db ::huoltokohde/huoltokohde huoltokohde/perustiedot {}))

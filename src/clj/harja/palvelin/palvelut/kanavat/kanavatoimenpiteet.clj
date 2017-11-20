@@ -8,8 +8,6 @@
             [harja.id :as id]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.urakka :as urakka]
-            [harja.domain.sopimus :as sopimus]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
@@ -82,6 +80,36 @@
         :user user
         :tyot (::tyo/tallennettavat-tyot tiedot)})
       (q-toimenpide/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))
+(defn tarkista-kutsu [user urakka-id tyyppi]
+  (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
+  (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
+  (case tyyppi
+    :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
+    :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id)))
+
+(defn hae-kanavatoimenpiteet [db user {urakka-id ::toimenpide/urakka-id
+                                       sopimus-id ::toimenpide/sopimus-id
+                                       alkupvm :alkupvm
+                                       loppupvm :loppupvm
+                                       toimenpidekoodi ::toimenpidekoodi/id
+                                       tyyppi ::toimenpide/kanava-toimenpidetyyppi}]
+
+  (tarkista-kutsu user urakka-id tyyppi)
+  (let [tyyppi (name tyyppi)]
+    (q-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
+      db
+      {:urakka urakka-id
+       :sopimus sopimus-id
+       :alkupvm alkupvm
+       :loppupvm loppupvm
+       :toimenpidekoodi toimenpidekoodi
+       :tyyppi tyyppi})))
+
+(defn tallenna-kanavatoimenpide [db user {tyyppi ::toimenpide/tyyppi
+                                          urakka-id ::toimenpide/urakka-id
+                                          :as kanavatoimenpide}]
+  (tarkista-kutsu user urakka-id tyyppi)
+  (q-toimenpide/tallenna-toimenpide db (:id user) kanavatoimenpide))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
@@ -93,6 +121,7 @@
        (hae-kanavatoimenpiteet db user hakuehdot))
      {:kysely-spec ::toimenpide/hae-kanavatoimenpiteet-kysely
       :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})
+
     (julkaise-palvelu
      http
      :tallenna-kanavatoimenpiteen-hinnoittelu
@@ -100,10 +129,23 @@
        (tallenna-kanavatoimenpiteen-hinnoittelu! db user hakuehdot))
      {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-kysely
       :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-vastaus})
+
+    (julkaise-palvelu
+      http
+      :tallenna-kanavatoimenpide
+      (fn [user {toimenpide ::toimenpide/kanava-toimenpide
+                 hakuehdot ::toimenpide/hae-kanavatoimenpiteet-kysely}]
+        (tallenna-kanavatoimenpide db user toimenpide)
+        (hae-kanavatoimenpiteet db user hakuehdot))
+      {:kysely-spec ::toimenpide/tallenna-kanavatoimenpide-kutsu
+       :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})
     this)
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kanavat-ja-kohteet)
+      :hae-kanavatoimenpiteet
+      :tallenna-kanavatoimenpiteen-hinnoittelu
+      :tallenna-kanavatoimenpide
+      )
     this))

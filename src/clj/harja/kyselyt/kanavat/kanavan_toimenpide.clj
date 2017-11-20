@@ -1,6 +1,6 @@
 (ns harja.kyselyt.kanavat.kanavan-toimenpide
   "Kyselyt kanavatoimenpiteille"
-  (:require [specql.core :refer [fetch]]
+  (:require [specql.core :refer [fetch insert! update!]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
@@ -13,7 +13,7 @@
             [specql.op :as op]))
 
 (defn hae-kanavatoimenpiteet [db hakuehdot]
-  (fetch db ::toimenpide/kanava-toimenpide toimenpide/kaikki-kentat hakuehdot))
+  (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot))
 
 (defn hae-hinnat [db hakuehdot]
   (fetch db ::hinta/toimenpiteen-hinta (specql/columns ::hinta/toimenpiteen-hinta) hakuehdot))
@@ -51,7 +51,6 @@
     m))
 
 (defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat]}]
-
   (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
     (specql/upsert! db
                     ::hinta/toimenpiteen-hinta
@@ -79,3 +78,13 @@
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
   {:pre [(integer? toimenpide-id)]}
   (first (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})))
+(defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
+  (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
+    (let [kanavatoimenpide (assoc kanavatoimenpide
+                             ::m/muokattu (pvm/nyt)
+                             ::m/muokkaaja-id kayttaja-id)]
+      (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+    (let [kanavatoimenpide (assoc kanavatoimenpide
+                             ::m/luotu (pvm/nyt)
+                             ::m/luoja-id kayttaja-id)]
+      (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))

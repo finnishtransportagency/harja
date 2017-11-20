@@ -65,8 +65,7 @@
                                                (nil? yllapitokohde)
                                                (not (str/blank? (:havainnot tarkastus))))
                                              alitus))
-                           :nayta-urakoitsijalle (or (nil? (:naytetaan-urakoitsijalle tarkastus))
-                                                     (boolean (Boolean/valueOf (:naytetaan-urakoitsijalle tarkastus))))})
+                           :nayta-urakoitsijalle (boolean (:naytetaan-urakoitsijalle tarkastus))})
                      liitteet (:liitteet tarkastus)]
                    (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                    (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
