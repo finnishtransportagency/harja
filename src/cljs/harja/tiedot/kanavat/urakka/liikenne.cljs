@@ -48,7 +48,8 @@
   {::lt/kuittaaja (namespacefy @istunto/kayttaja {:ns :harja.domain.kayttaja})
    ::lt/aika (pvm/nyt)
    ::lt/sopimus {::sop/id (first @u/valittu-sopimusnumero)
-                 ::sop/nimi (second @u/valittu-sopimusnumero)}})
+                 ::sop/nimi (second @u/valittu-sopimusnumero)}
+   ::lt/urakka {::ur/id (:id @nav/valittu-urakka)}})
 
 (def valinnat
   (reaction
@@ -65,6 +66,9 @@
 (defrecord LiikennetapahtumatHaettu [tulos])
 (defrecord LiikennetapahtumatEiHaettu [virhe])
 (defrecord ValitseTapahtuma [tapahtuma])
+(defrecord HaeEdellisetTiedot [tapahtuma])
+(defrecord EdellisetTiedotHaettu [tulos])
+(defrecord EdellisetTiedotEiHaettu [virhe])
 (defrecord PaivitaValinnat [uudet])
 (defrecord HaeKohteet [])
 (defrecord KohteetHaettu [tulos])
@@ -181,6 +185,33 @@
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
     (assoc app :valittu-liikennetapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)))
+
+  HaeEdellisetTiedot
+  (process-event [{t :tapahtuma} app]
+    (let [params {::lt/urakka-id (get-in t [::lt/urakka ::ur/id])
+                  ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id])
+                  ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id])}]
+      (tt/post! :hae-edelliset-tapahtumat
+                params
+                {:onnistui ->EdellisetTiedotHaettu
+                 :epaonnistui ->EdellisetTiedotEiHaettu})
+      (assoc app :edellisten-haku-kaynnissa? true)))
+
+  EdellisetTiedotHaettu
+  (process-event [{t :tulos} app]
+    (-> app
+        (assoc-in [:edelliset :tama] (:kohde t))
+        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-alaraja] (get-in t [:kohde ::lt/vesipinta-alaraja]))
+        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-ylaraja] (get-in t [:kohde ::lt/vesipinta-ylaraja]))
+        (assoc-in [:edelliset :ylos] (:ylos t))
+        (assoc-in [:edelliset :alas] (:als t))
+        (assoc :edellisten-haku-kaynnissa? false)))
+
+  EdellisetTiedotEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe edellisten tapahtumien haussa!" :danger)
+    (-> app
+        (assoc :edellisten-haku-kaynnissa? false)))
 
   PaivitaValinnat
   (process-event [{u :uudet} app]
