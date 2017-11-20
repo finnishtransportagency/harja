@@ -8,7 +8,7 @@
             [harja.pvm :as pvm]))
 
 (defn hae-kanavatoimenpiteet [db hakuehdot]
-  (fetch db ::toimenpide/kanava-toimenpide toimenpide/kaikki-kentat hakuehdot))
+  (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 

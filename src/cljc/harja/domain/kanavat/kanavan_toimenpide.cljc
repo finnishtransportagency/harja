@@ -10,7 +10,8 @@
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]]))
+        :cljs [[specql.impl.registry]])
+    [clojure.set :as set])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -25,7 +26,7 @@
     "toimenpideinstanssi" ::toimenpideinstanssi-id
     "kohde" ::kohde-id
     "muu_toimenpide" ::muu-toimenpide
-    
+
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kanavan-kohde/kohde
                                 :harja.domain.kanavat.kanavan-kohde/id)
@@ -43,7 +44,39 @@
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
 
-(def kaikki-kentat
+(def muokkaustiedot
+  #{::muokkaustiedot/luoja-id
+    ::muokkaustiedot/luotu
+    ::muokkaustiedot/muokkaaja-id
+    ::muokkaustiedot/muokattu})
+
+(def kohteen-tiedot
+  #{[::kohde
+     #{::kohde/id
+       ::kohde/nimi
+       ::kohde/tyyppi
+       ::kohde/sijainti}]})
+
+(def huoltokohteen-tiedot
+  #{[::huoltokohde
+     #{::huoltokohde/id
+       ::huoltokohde/nimi}]})
+
+(def toimenpiteen-tiedot
+  #{[::toimenpidekoodi
+     #{::toimenpidekoodi/id
+       ::toimenpidekoodi/nimi}]})
+
+(def kuittaajan-tiedot
+  #{[::kuittaaja
+     #{::kayttaja/id
+       ::kayttaja/etunimi
+       ::kayttaja/sukunimi
+       ::kayttaja/kayttajanimi
+       ::kayttaja/sahkoposti
+       ::kayttaja/puhelin}]})
+
+(def perustiedot
   #{::id
     ::tyyppi
     ::pvm
@@ -51,29 +84,15 @@
     ::lisatieto
     ::suorittaja
     ::sopimus-id
-    ::toimenpideinstanssi-id
-    ::muokkaustiedot/luoja-id
-    ::muokkaustiedot/luotu
-    ::muokkaustiedot/muokkaaja-id
-    ::muokkaustiedot/muokattu
-    [::kohde
-     #{::kohde/id
-       ::kohde/nimi
-       ::kohde/tyyppi
-       ::kohde/sijainti}]
-    [::huoltokohde
-     #{::huoltokohde/id
-       ::huoltokohde/nimi}]
-    [::toimenpidekoodi
-     #{::toimenpidekoodi/id
-       ::toimenpidekoodi/nimi}]
-    [::kuittaaja
-     #{::kayttaja/id
-       ::kayttaja/etunimi
-       ::kayttaja/sukunimi
-       ::kayttaja/kayttajanimi
-       ::kayttaja/sahkoposti
-       ::kayttaja/puhelin}]})
+    ::toimenpideinstanssi-id})
+
+(def perustiedot-viittauksineen
+  (set/union perustiedot
+             muokkaustiedot
+             kohteen-tiedot
+             huoltokohteen-tiedot
+             toimenpiteen-tiedot
+             kuittaajan-tiedot))
 
 (s/def ::hae-kanavatoimenpiteet-kysely
   (s/keys :req [::urakka-id
