@@ -1,6 +1,7 @@
 (ns harja.views.kanavat.urakka.liikenne
   (:require [reagent.core :refer [atom] :as r]
             [tuck.core :refer [tuck]]
+            [cljs-time.core :as time]
 
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
             [harja.loki :refer [tarkkaile! log]]
@@ -294,37 +295,51 @@
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
     [{:otsikko "Aika"
+      :leveys 2
       :nimi ::lt/aika
       :fmt pvm/pvm-aika-opt}
      {:otsikko "Kohde"
+      :leveys 5
       :nimi :kohteen-nimi}
      {:otsikko "Tyyppi"
+      :leveys 2
       :nimi :toimenpide
       :hae tiedot/toimenpide->str}
+     {:otsikko "Palvelumuoto"
+      :leveys 3
+      :nimi :palvelumuoto-ja-lkm
+      :hae tiedot/palvelumuoto->str}
      {:otsikko "Suunta"
+      :leveys 1
       :nimi :suunta
       :fmt lt/suunta->str}
      {:otsikko "Alus"
+      :leveys 1
       :nimi ::lt-alus/nimi}
      {:otsikko "Aluslaji"
+      :leveys 1
       :nimi ::lt-alus/laji
       :fmt lt-alus/aluslaji->str}
      {:otsikko "Matkustajia"
+      :leveys 1
       :nimi ::lt-alus/matkustajalkm}
      {:otsikko "Aluksia"
+      :leveys 1
       :nimi ::lt-alus/lkm}
-     {:otsikko "Palvelumuoto"
-      :nimi :palvelumuoto-ja-lkm
-      :hae tiedot/palvelumuoto->str}
      {:otsikko "Nippuja"
+      :leveys 1
       :nimi ::lt-alus/nippulkm}
      {:otsikko "Ylävesi"
+      :leveys 1
       :nimi ::lt/vesipinta-ylaraja}
      {:otsikko "Alavesi"
+      :leveys 1
       :nimi ::lt/vesipinta-alaraja}
      {:otsikko "Lisätiedot"
+      :leveys 2
       :nimi ::lt/lisatieto}
      {:otsikko "Kuittaaja"
+      :leveys 2
       :nimi :kuittaaja
       :hae (comp ::kayttaja/kayttajanimi ::lt/kuittaaja)}]
     (sort-by
@@ -336,6 +351,10 @@
             ::lt-alus/laji
             ::lt-alus/nimi
             ::lt-alus/lkm)
+      (fn [[a-aika & _ :as a] [b-aika & _ :as b]]
+        (if (time/equal? a-aika b-aika)
+          (compare a b)
+          (time/after? a-aika b-aika)))
       tapahtumarivit)]])
 
 (defn liikenne* [e! app valinnat]
