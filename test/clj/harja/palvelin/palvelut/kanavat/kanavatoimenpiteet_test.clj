@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet-test
   (:require [clojure.test :refer :all]
+            [clojure.set :as set]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [com.stuartsierra.component :as component]
             [harja
@@ -115,3 +116,33 @@
                                            :hae-kanavatoimenpiteet
                                            +kayttaja-ulle+
                                            parametrit)))))
+
+(deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
+  (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
+                                               (when (= %1 (second toimenpide))
+                                                 (first toimenpide)))
+                                             %2))
+        kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
+        muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
+        urakka-id (hae-saimaan-kanavaurakan-id)
+        parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                    ::kanavan-toimenpide/urakka-id urakka-id
+                    ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :siirra-kanavatoimenpiteet
+                           +kayttaja-jvh+
+                           parametrit)
+        paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)]
+    (is (= (tyypin-toimenpiteet "muutos-lisatyo" paivitetyt-toimenpiteet)
+           (set/union kokonaishintaisten-toimenpiteiden-idt
+                      muutos-ja-lisatyo-toimenpiteiden-idt)))
+    (let [uudet-parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                            ::kanavan-toimenpide/urakka-id urakka-id
+                            ::kanavan-toimenpide/tyyppi :kokonaishintainen}
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :siirra-kanavatoimenpiteet
+                             +kayttaja-jvh+
+                             uudet-parametrit)
+          paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)]
+      (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet))))))
