@@ -15,4 +15,4 @@
   #{::id
     ::nimi})
 
-(s/def ::hae-huoltokohteet-kysely ::huoltokohde)
+(s/def ::hae-huoltokohteet-kysely (s/coll-of ::huoltokohde))
