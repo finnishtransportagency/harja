@@ -11,6 +11,5 @@ VALUES ('3332', 'TESTIRYKELMÄ POIJU', 'Testiaineiston turvalaiterymä 2', '{888
 INSERT INTO reimari_turvalaiteryhma (tunnus, nimi, kuvaus, turvalaitteet)
 VALUES ('3333', 'TESTIRYKELMÄ AKON', 'Testiaineiston turvalaiterymä 3', '{123}');
 
-
 INSERT INTO reimari_turvalaiteryhma (tunnus, nimi, kuvaus, turvalaitteet)
 VALUES ('3334', 'TESTIRYKELMÄ DIABOLICA', 'Testiaineiston turvalaiterymä 4', '{666}');

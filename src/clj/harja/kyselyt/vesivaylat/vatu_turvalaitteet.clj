@@ -49,12 +49,12 @@
             (not-empty vaylanumerot))
     (into []
           (comp
-            (geo/muunna-pg-tulokset ::tu/sijainti))
+            (geo/muunna-pg-tulokset ::tu/geometria))
           (specql/fetch db
                         ::tu/vatu_turvalaite
                         #{::tu/turvalaitenro
                           ::tu/nimi
-                          ::tu/sijainti
+                          ::tu/koordinaatit
                           ::tu/sijaintikuvaus
                           ::tu/tyyppi
                           ::tu/tarkenne

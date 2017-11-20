@@ -2,10 +2,10 @@
 
 CREATE TABLE vatu_turvalaite
 (
-  turvalaitenro INTEGER PRIMARY KEY NOT NULL,
+  turvalaitenro INTEGER NOT NULL,
   nimi VARCHAR,
-  sijainti GEOMETRY,
-  sijaintikuvaus VARCHAR,
+  koordinaatit VARCHAR,
+  sijainti VARCHAR,
   tyyppi VARCHAR, -- (Tuntematon, Merimajakka, Sektoriloisto, Linjamerkki, Suuntaloisto, Apuloisto, Muu merkki, Reunamerkki, Tutkamerkki, Poiju, Viitta, Tunnusmajakka, Kummeli)
   tarkenne VARCHAR, -- (KELLUVA, KIINTEÄ)
   tila VARCHAR, -- (AIHIO, VAHVISTETTU, POISTETTU)
@@ -17,7 +17,21 @@ CREATE TABLE vatu_turvalaite
   omistaja VARCHAR,
   turvalaitenro_aiempi INTEGER,
   paavayla VARCHAR,
-  vaylat INTEGER[]
+  vaylat INTEGER[],
+  geometria GEOMETRY,
+  luoja VARCHAR,
+  luotu DATE,
+  muokkaaja VARCHAR,
+  muokattu DATE
 );
 
-CREATE INDEX vatu_turvalaitenro_index ON vatu_turvalaite (turvalaitenro);
+CREATE UNIQUE INDEX vatu_turvalaitenro_unique_index ON vatu_turvalaite (turvalaitenro);
+
+
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'turvalaitteet-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'turvalaitteet-muutospaivamaaran-haku');
+
+
+/*
+drop table vatu_turvalaite
+*/

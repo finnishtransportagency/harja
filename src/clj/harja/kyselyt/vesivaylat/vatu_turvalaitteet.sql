@@ -4,8 +4,8 @@ INSERT INTO vatu_turvalaite
 (
   turvalaitenro,
   nimi,
+  koordinaatit,
   sijainti,
-  sijaintikuvaus,
   tyyppi,
   tarkenne,
   tila,
@@ -17,14 +17,17 @@ INSERT INTO vatu_turvalaite
   omistaja,
   turvalaitenro_aiempi,
   paavayla,
-  vaylat
+  vaylat,
+  geometria,
+  luotu,
+  luoja
 )
 VALUES
   (
     :turvalaitenro,
     :nimi,
-    :sijainti :: GEOMETRY,
-    :sijaintikuvaus,
+    :koordinaatit,
+    :sijainti,
     :tyyppi,
     :tarkenne,
     :tila,
@@ -36,15 +39,18 @@ VALUES
     :omistaja,
     :turvalaitenro_aiempi,
     :paavayla,
-    :vaylat :: INTEGER []
+    :vaylat :: INTEGER [],
+    ST_GeomFromText(:geometria) :: GEOMETRY, -- ST_MakePoint on tarkempi
+    current_timestamp,
+    :luoja
   )
 ON CONFLICT (turvalaitenro)
   DO UPDATE
     SET
       turvalaitenro        = :turvalaitenro,
       nimi                 = :nimi,
-      sijainti             = :sijainti :: GEOMETRY,
-      sijaintikuvaus       = :sijaintikuvaus,
+      koordinaatit         = :koordinaatit,
+      sijainti             = :sijainti,
       tyyppi               = :tyyppi,
       tarkenne             = :tarkenne,
       tila                 = :tila,
@@ -56,4 +62,7 @@ ON CONFLICT (turvalaitenro)
       omistaja             = :omistaja,
       turvalaitenro_aiempi = :turvalaitenro_aiempi,
       paavayla             = :paavayla,
-      vaylat               = :vaylat :: INTEGER []
+      vaylat               = :vaylat :: INTEGER [],
+      geometria            = :geometria :: GEOMETRY,
+      muokattu             = current_timestamp,
+      muokkaaja            = :muokkaaja
