@@ -36,22 +36,24 @@
 
 (defn- kentta-hinnalle
   ([e! hinta arvo-kw kentan-optiot]
+   (assert (map? hinta) (pr-str hinta))
    [kentta-hinnalle e! hinta arvo-kw kentan-optiot
     (fn [uusi]
+      (log "kentta-hinnalle: uusi" (pr-str uusi) "hinta" (pr-str hinta) "arvo-kw" (pr-str arvo-kw))
       (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
                                               arvo-kw uusi})))])
   ([e! hinta arvo-kw kentan-optiot asetus-fn]
    [kentta* e! hinta arvo-kw kentan-optiot asetus-fn]))
 
-;; (defn- kentta-tyolle
-;;   ([e! tyo arvo-kw kentan-optiot]
-;;    [kentta-tyolle e! tyo arvo-kw kentan-optiot
-;;     (fn [uusi]
-;;       (e! (tiedot/->AsetaTyorivilleTiedot
-;;             {::tyo/id (::tyo/id tyo)
-;;              arvo-kw uusi})))])
-;;   ([e! tyo arvo-kw kentan-optiot asetus-fn]
-;;    [kentta* e! tyo arvo-kw kentan-optiot asetus-fn]))
+(defn- kentta-tyolle
+  ([e! tyo arvo-kw kentan-optiot]
+   [kentta-tyolle e! tyo arvo-kw kentan-optiot
+    (fn [uusi]
+      (e! (tiedot/->AsetaTyorivilleTiedot
+            {::tyo/id (::tyo/id tyo)
+             arvo-kw uusi})))])
+  ([e! tyo arvo-kw kentan-optiot asetus-fn]
+   [kentta* e! tyo arvo-kw kentan-optiot asetus-fn]))
 
 (defn- toimenpiteella-oma-hinnoittelu? [rivi]
   false)
@@ -190,8 +192,7 @@
                   tyovalinnat])]
               [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
               [:td.tasaa-oikealle
-               #_[kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]
-               "(tässä oli kentta-tyolle)"]
+               [kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
               [:td yksikko]
               [:td.tasaa-oikealle
                (when tyon-hinta-voidaan-laskea? (fmt/euro (* (::tyo/maara tyorivi) yksikkohinta)))]
@@ -229,6 +230,8 @@
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
+    (assert (not (map? hinnat)) "muut-hinnat: tarvitaan joukko mappeja")
+    ;; (log "muut-hinnat: hinnat " (pr-str hinnat))
     [:div.hinnoitteluosio.muut-osio
      [valiotsikko "Muut"]
      [:table
@@ -237,6 +240,7 @@
        (map-indexed
          (fn [index hinta]
            ^{:key index}
+           ;; (log "muut-hinnat: rivin hinta " (pr-str hinta))
            [vapaa-hinnoittelurivi e! hinta (tiedot/ainoa-otsikon-vakiokentta? hinnat (::hinta/otsikko hinta))])
          hinnat)]]
      [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaMuuKulurivi))]]))
@@ -303,7 +307,7 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
-          :arvo 42 #_(fmt/euro-opt (nil-suvaitsevainen-+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
+          :arvo 42 #_(fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
                                  (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
                                                            suunnitellut-tyot)))
           :ikoninappi? true}))]))

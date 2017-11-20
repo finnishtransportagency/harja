@@ -103,12 +103,15 @@
      kandidaatti)))
 
 (defn ilman-poistettuja [mapit-muokkaustiedoilla]
-  (remove ::m/poistettu? mapit-muokkaustiedoilla))
+  (into {} (remove ::m/poistettu? mapit-muokkaustiedoilla))
+  ;; (remove ::m/poistettu? mapit-muokkaustiedoilla)
+  )
 
 (defn hintaryhman-tyot [app ryhma-kriteeri]
   (let [tyo-hinnat (etsi-map (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
                              ::hinta/ryhma ryhma-kriteeri)]
 
+    (log "hintaryhman-tyot: ilman-poistettuja " (pr-str (ilman-poistettuja tyo-hinnat)) " - tyo-hinnat " (pr-str tyo-hinnat))
     (ilman-poistettuja tyo-hinnat)))
 
 (defn muut-tyot [app]
@@ -167,11 +170,12 @@
          (remove #((set vakiohinnat) (::hinta/otsikko %))
                  hinnat)))))
 
-(defn- lisaa-hintarivi-toimenpiteelle* [id-avain kentta-fn app]
-  (let [jutut (get-in app [:hinnoittele-toimenpide :tyot-tai-hinnat-placeholder])
+(defn- lisaa-hintarivi-toimenpiteelle* [id-avain tyot-tai-hinnat kentta-fn app]
+  (let [jutut (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
         idt (map id-avain jutut)
         seuraava-vapaa-id (dec (apply min (conj idt 0)))
         paivitetyt (conj jutut (kentta-fn seuraava-vapaa-id))]
+    (log "lisaa-hintarivi-toimenpiteelle* - seuraava-vapaa-id" seuraava-vapaa-id)
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
 
 (defn lisaa-hintarivi-toimenpiteelle
@@ -179,7 +183,7 @@
   ([hinta app]
    (lisaa-hintarivi-toimenpiteelle*
     ::hinta/id
-    ;; ::h/hinnat
+    ::hinta/hinnat
     (fn [id]
       (hintakentta
        (merge {::hinta/id id} hinta)))
@@ -191,7 +195,7 @@
   ([tyo app]
    (lisaa-hintarivi-toimenpiteelle*
     ::tyo/id
-    ;; ::tyo/tyot
+    ::tyo/tyot
     (fn [id]
       (merge {::tyo/id id ::tyo/maara 0} tyo))
     app)))
@@ -305,6 +309,8 @@
 
   AsetaHintakentalleTiedot
   (process-event [{tiedot :tiedot} app]
+    (when-not (::hinta/id tiedot)
+      (log "AsetaHintakentalleTiedot kutsuttu huonolla id:llä, tiedot:" (pr-str tiedot)))
     (assoc-in app [:hinnoittele-toimenpide ::hinta/hinnat]
               (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
                                                                           ::hinta/hinnat]) tiedot)))
@@ -442,4 +448,6 @@
   ;;   (->> app
   ;;        (poista-hintaryhmien-korostus)
   ;;        (jaettu/korosta-kartalla nil)))
+
+
   )

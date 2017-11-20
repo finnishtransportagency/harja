@@ -78,6 +78,7 @@
 (defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
   {:pre [(integer? toimenpide-id)]}
   (first (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})))
+
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
   (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
     (let [kanavatoimenpide (assoc kanavatoimenpide
