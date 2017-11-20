@@ -153,3 +153,14 @@
                                                          ::alukset]
                                                    :req-un [::hakuparametrit]))
 (s/def ::tallenna-liikennetapahtuma-vastaus ::hae-liikennetapahtumat-vastaus)
+
+(s/def ::hae-edelliset-tapahtumat-kysely (s/keys :req [::urakka-id
+                                                       ::kohde-id
+                                                       ::sopimus-id]))
+
+(s/def ::ylos (s/nilable ::alukset))
+(s/def ::alas (s/nilable ::alukset))
+(s/def ::kohde (s/nilable ::liikennetapahtuma))
+(s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
+                                                           ::alas
+                                                           ::kohde]))
