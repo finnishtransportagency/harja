@@ -4,6 +4,7 @@
     [harja.domain.kanavat.kanavan-kohde :as kohde]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.domain.kayttaja :as kayttaja]
 
     #?@(:clj  [
@@ -16,9 +17,9 @@
 (define-tables
   ["kan_toimenpidetyyppi" ::kanava-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_toimenpide" ::kanava-toimenpide
-   harja.domain.muokkaustiedot/muokkaustiedot
-   harja.domain.muokkaustiedot/poistaja-sarake
-   harja.domain.muokkaustiedot/poistettu?-sarake
+   muokkaustiedot/muokkaustiedot
+   muokkaustiedot/poistaja-sarake
+   muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
     "toimenpideinstanssi" ::toimenpideinstanssi-id
@@ -51,6 +52,10 @@
     ::suorittaja
     ::sopimus-id
     ::toimenpideinstanssi-id
+    ::muokkaustiedot/luoja-id
+    ::muokkaustiedot/luotu
+    ::muokkaustiedot/muokkaaja-id
+    ::muokkaustiedot/muokattu
     [::kohde
      #{::kohde/id
        ::kohde/nimi

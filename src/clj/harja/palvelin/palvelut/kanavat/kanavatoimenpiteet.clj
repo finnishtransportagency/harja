@@ -36,7 +36,7 @@
                                           :as kanavatoimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
   (let [kanavatoimenpide (assoc kanavatoimenpide :harja.domain.muokkaustiedot/luoja-id (:id user))]
-    (q-kanavan-toimenpide/tallenna-toimenpide db kanavatoimenpide)))
+    (q-kanavan-toimenpide/tallenna-toimenpide db (:id user) kanavatoimenpide)))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
