@@ -1,5 +1,6 @@
 (ns harja.tiedot.kanavat.urakka.liikenne
   (:require [reagent.core :refer [atom]]
+            [clojure.spec.alpha :as s]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tt]
             [cljs.core.async :as async]
@@ -44,12 +45,15 @@
                             ::lt-alus/laji nil
                             :niput? false}}))
 
-(defn uusi-tapahtuma []
-  {::lt/kuittaaja (namespacefy @istunto/kayttaja {:ns :harja.domain.kayttaja})
-   ::lt/aika (pvm/nyt)
-   ::lt/sopimus {::sop/id (first @u/valittu-sopimusnumero)
-                 ::sop/nimi (second @u/valittu-sopimusnumero)}
-   ::lt/urakka {::ur/id (:id @nav/valittu-urakka)}})
+(defn uusi-tapahtuma
+  ([]
+    (uusi-tapahtuma @istunto/kayttaja @u/valittu-sopimusnumero @nav/valittu-urakka (pvm/nyt)))
+  ([kayttaja sopimus urakka aika]
+   {::lt/kuittaaja (namespacefy @kayttaja {:ns :harja.domain.kayttaja})
+    ::lt/aika aika
+    ::lt/sopimus {::sop/id (first @sopimus)
+                  ::sop/nimi (second @sopimus)}
+    ::lt/urakka {::ur/id (:id @urakka)}}))
 
 (def valinnat
   (reaction
@@ -150,8 +154,21 @@
       (assoc :haetut-tapahtumat tulos)
       (assoc :tapahtumarivit (mapcat tapahtumarivit tulos))))
 
+(defn tallennusparametrit [t]
+  (-> t
+      (assoc ::lt/kuittaaja-id (get-in t [::lt/kuittaaja ::kayttaja/id]))
+      (dissoc ::lt/kuittaaja)
+      (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
+      (dissoc ::lt/kohde)
+      (assoc ::lt/urakka-id (:id @nav/valittu-urakka))
+      (assoc ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id]))
+      (dissoc ::lt/sopimus)
+      (update ::lt/alukset (fn [alukset] (map
+                                           #(set/rename-keys % {:poistettu ::m/poistettu?})
+                                           alukset)))))
+
 (defn voi-tallentaa? [t]
-  true)
+  (s/valid? ::lt/tallenna-liikennetapahtuma-kysely (tallennusparametrit t)))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -274,18 +291,8 @@
   TallennaLiikennetapahtuma
   (process-event [{t :tapahtuma} {:keys [tallennus-kaynnissa?] :as app}]
     (if-not tallennus-kaynnissa?
-      (let [params (-> t
-                       (assoc ::lt/kuittaaja-id (get-in t [::lt/kuittaaja ::kayttaja/id]))
-                       (dissoc ::lt/kuittaaja)
-                       (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
-                       (dissoc ::lt/kohde)
-                       (assoc ::lt/urakka-id (:id @nav/valittu-urakka))
-                       (assoc ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id]))
-                       (dissoc ::lt/sopimus)
-                       (assoc :hakuparametrit (hakuparametrit app))
-                       (update ::lt/alukset (fn [alukset] (map
-                                                            #(set/rename-keys % {:poistettu ::m/poistettu?})
-                                                            alukset))))]
+      (let [params (-> (tallennusparametrit t)
+                       (assoc :hakuparametrit (hakuparametrit app)))]
         (-> app
             (tt/post! :tallenna-liikennetapahtuma
                       params
