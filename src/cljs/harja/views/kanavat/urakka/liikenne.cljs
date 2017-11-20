@@ -111,25 +111,26 @@
                                     (not (oikeudet/urakat-kanavat-liikenne))
                                     (not (tiedot/voi-tallentaa? tapahtuma))
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
-                    [napit/poista
-                     "Poista tapahtuma"
-                     #(varmistus-modal
-                        [:div "Oletko varma, että haluat poistaa koko liikennetapahtuman?"]
-                        [:div
-                         [napit/takaisin "Peruuta" (fn [] (modal/piilota!))]
-                         [napit/poista
-                          "Poista tapahtuma"
-                          (fn []
-                            (e! (tiedot/->TallennaLiikennetapahtuma
-                                  (lomake/ilman-lomaketietoja (assoc tapahtuma ::m/poistettu? true)))))
-                          {:ikoni (ikonit/livicon-trash)
-                           :disabled (or tallennus-kaynnissa?
-                                         (not (oikeudet/urakat-kanavat-liikenne))
-                                         (not (lomake/voi-tallentaa? tapahtuma)))}]])
-                     {:ikoni (ikonit/livicon-trash)
-                      :disabled (or tallennus-kaynnissa?
-                                    (not (oikeudet/urakat-kanavat-liikenne))
-                                    (not (lomake/voi-tallentaa? tapahtuma)))}]
+                    (when-not uusi-tapahtuma?
+                      [napit/poista
+                      "Poista tapahtuma"
+                      #(varmistus-modal
+                         [:div "Oletko varma, että haluat poistaa koko liikennetapahtuman?"]
+                         [:div
+                          [napit/takaisin "Peruuta" (fn [] (modal/piilota!))]
+                          [napit/poista
+                           "Poista tapahtuma"
+                           (fn []
+                             (e! (tiedot/->TallennaLiikennetapahtuma
+                                   (lomake/ilman-lomaketietoja (assoc tapahtuma ::m/poistettu? true)))))
+                           {:ikoni (ikonit/livicon-trash)
+                            :disabled (or tallennus-kaynnissa?
+                                          (not (oikeudet/urakat-kanavat-liikenne))
+                                          (not (lomake/voi-tallentaa? tapahtuma)))}]])
+                      {:ikoni (ikonit/livicon-trash)
+                       :disabled (or tallennus-kaynnissa?
+                                     (not (oikeudet/urakat-kanavat-liikenne))
+                                     (not (lomake/voi-tallentaa? tapahtuma)))}])
                     (when uusi-tapahtuma?
                       [napit/yleinen-toissijainen
                        "Tyhjennä kentät"
