@@ -12,3 +12,4 @@ VALUES (
   (SELECT id FROM integraatio WHERE jarjestelma = 'reimari' AND nimi = 'hae-turvalaiteryhmat'),
   '10 years',
   '2007-01-01T12:12:12Z');
+
