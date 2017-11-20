@@ -102,8 +102,6 @@
 
 (def suunta-vaihtoehdot (keys suunta*))
 
-#?(:cljs (s/def ::alukset (s/keys :req [::lt-alus/id])))
-
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::toimenpide
                                                      ::kohde
@@ -160,8 +158,8 @@
                                                        ::kohde-id
                                                        ::sopimus-id]))
 
-(s/def ::ylos (s/nilable ::alukset))
-(s/def ::alas (s/nilable ::alukset))
+(s/def ::ylos (s/nilable (s/coll-of ::lt-alus/liikennetapahtuman-alus)))
+(s/def ::alas (s/nilable (s/coll-of ::lt-alus/liikennetapahtuman-alus)))
 (s/def ::kohde (s/nilable ::liikennetapahtuma))
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
