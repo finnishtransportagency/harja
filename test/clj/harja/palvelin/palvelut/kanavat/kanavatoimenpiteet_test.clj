@@ -122,7 +122,7 @@
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
                        parametrit)))))
 
-(deftest toimenpiteen-tallentaminen-toimii
+#_(deftest toimenpiteen-tallentaminen-toimii
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kayttaja (ffirst (q "select id from kayttaja limit 1;"))
