@@ -392,9 +392,6 @@
                    :voi-muokata? alustatoimet-voi-muokata?
                    :voi-kumota? false
                    :uusi-id (inc (count @alustalle-tehdyt-toimet))
-                   :rivin-luokka #(when (:id %)
-                                    (log "--->> uutta tyyliä pukkaapi")
-                                    "muokattu-rivi")
                    :virheet (wrap-virheet :alustalle-tehdyt-toimet)
                    :virheet-ylos? true}
                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
