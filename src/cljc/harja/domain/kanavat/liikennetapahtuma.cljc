@@ -102,6 +102,8 @@
 
 (def suunta-vaihtoehdot (keys suunta*))
 
+#?(:cljs (s/def ::alukset (s/keys :req [::lt-alus/id])))
+
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::toimenpide
                                                      ::kohde
