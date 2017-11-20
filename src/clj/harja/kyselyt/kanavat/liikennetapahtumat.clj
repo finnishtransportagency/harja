@@ -53,9 +53,9 @@
 (def ilman-poistettuja-aluksia (map #(update % ::lt/alukset (partial remove ::m/poistettu?))))
 
 (def vain-uittoniput (keep (fn [t]
-                            (let [t (update t ::lt/alukset
-                                          (partial remove (comp #(or (nil? %) (zero? %)) ::lt-alus/nippulkm)))]
-                              (when-not (empty? (::lt/alukset t)) t)))))
+                             (let [t (update t ::lt/alukset
+                                             (partial remove (comp #(or (nil? %) (zero? %)) ::lt-alus/nippulkm)))]
+                               (when-not (empty? (::lt/alukset t)) t)))))
 
 (defn hae-liikennetapahtumat [db {:keys [niput? aikavali] :as tiedot}]
   (let [urakka-id (::ur/id tiedot)
@@ -106,21 +106,25 @@
 (defn- hae-seuraava-kohde [db tiedot suunta]
   nil)
 
+(defn- hae-kohteen-edellinen-tapahtuma* [tulokset]
+  (first
+    (sort-by ::lt/aika pvm/jalkeen?
+             tulokset)))
+
 (defn- hae-kohteen-edellinen-tapahtuma [db tapahtuma]
   (let [urakka-id (::lt/urakka-id tapahtuma)
         sopimus-id (::lt/sopimus-id tapahtuma)
         kohde-id (::lt/kohde-id tapahtuma)]
     (assert (and urakka-id sopimus-id kohde-id))
-    (first
-      (sort-by ::lt/aika pvm/jalkeen?
-               (specql/fetch
-                 db
-                 ::lt/liikennetapahtuma
-                 (set/union
-                   lt/perustiedot)
-                 {::lt/kohde-id kohde-id
-                  ::lt/urakka-id urakka-id
-                  ::lt/sopimus-id sopimus-id})))))
+    (hae-kohteen-edellinen-tapahtuma*
+      (specql/fetch
+        db
+        ::lt/liikennetapahtuma
+        (set/union
+          lt/perustiedot)
+        {::lt/kohde-id kohde-id
+         ::lt/urakka-id urakka-id
+         ::lt/sopimus-id sopimus-id}))))
 
 ;; TODO Toteuta :)
 (defn- hae-kuittaamattomat-alukset [db kohde suunta]
@@ -154,16 +158,16 @@
       (do
         (vaadi-alus-kuuluu-tapahtumaan! db alus tapahtuma)
         (specql/update! db
-                       ::lt-alus/liikennetapahtuman-alus
-                       (merge
-                         (if (::m/poistettu? alus)
-                           {::m/poistaja-id (:id user)
-                            ::m/muokattu (pvm/nyt)}
+                        ::lt-alus/liikennetapahtuman-alus
+                        (merge
+                          (if (::m/poistettu? alus)
+                            {::m/poistaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)}
 
-                           {::m/muokkaaja-id (:id user)
-                            ::m/muokattu (pvm/nyt)})
-                         alus)
-                       {::lt-alus/id (::lt-alus/id alus)}))
+                            {::m/muokkaaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)})
+                          alus)
+                        {::lt-alus/id (::lt-alus/id alus)}))
 
       (specql/insert! db
                       ::lt-alus/liikennetapahtuman-alus

@@ -3,9 +3,11 @@
             [harja.kyselyt.kanavat.liikennetapahtumat :as q]
 
             [harja.domain.kanavat.liikennetapahtuma :as lt]
+            [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.urakka :as ur]))
+            [harja.domain.urakka :as ur]
+            [harja.domain.muokkaustiedot :as m]))
 
 (deftest urakkatietojen-liittaminen
   (is (= [{::lt/kohde {::kohde/id 1 ::kohde/urakat [1 2 3]}}
@@ -42,3 +44,27 @@
                                                       {::ur/id 5}
                                                       {::ur/id 6}]}])
            1))))
+
+(deftest ilman-poistettuja
+  (is (= [{:id 1 ::lt/alukset [{::m/poistettu? false :id 1}]}
+          {:id 2
+           ::lt/alukset []}]
+         (q/ilman-poistettuja-aluksia [{:id 1
+                                        ::lt/alukset [{::m/poistettu? true}
+                                                      {::m/poistettu? true}
+                                                      {::m/poistettu? false :id 1}]}
+                                       {:id 2
+                                        ::lt/alukset [{::m/poistettu? true}
+                                                      {::m/poistettu? true}]}]))))
+
+(deftest vain-niput
+  (is (= [{:id 1 ::lt/alukset [{::lt-alus/nippulkm 10}]}]
+         (q/vain-uittoniput [{:id 1 ::lt/alukset [{::lt-alus/nippulkm 10}
+                                                  {:id 1}]}
+                             {:id 2 ::lt/alukset [{:id 2} {:id 3}]}]))))
+
+(deftest kohteen-edellinen-tapahtuma
+  (is (= {::lt/aika 1}
+         (#'q/hae-kohteen-edellinen-tapahtuma* [{::lt/aika 10}
+                                                {::lt/aika 1}
+                                                {::lt/aika 5}]))))
