@@ -85,5 +85,14 @@
           :req-un [::alkupvm
                    ::loppupvm]))
 
+(s/def ::toimenpide-idt (s/coll-of ::id))
+
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))
+
+(s/def ::siirra-kanavatoimenpiteet-kysely
+  (s/keys
+    :req [::urakka-id ::toimenpide-idt ::tyyppi]))
+
+(s/def ::siirra-kanavatoimenpiteet-vastaus
+  ::toimenpide-idt)

@@ -24,7 +24,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as u]
+            [harja.ui.debug :as debug])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -77,6 +78,7 @@
 
 (defn kokonaishintaiset-nakyma [e! app]
   [:div
+   [debug/debug app]
    [valinnat e! app]
    [kokonaishintaiset-toimenpiteet-taulukko e! app]])
 

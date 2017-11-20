@@ -105,9 +105,10 @@
   (process-event [_ app]
     (when-not (:toimenpiteioden-siirto-kaynnissa? app)
       (-> app
-          (tuck-apurit/post! :siirra-toimenpiteet
-                             {:toimenpiode-idt (:valitut-toimenpide-idt app)
-                              :uusi-tyyppi :muutos-lisatyo}
+          (tuck-apurit/post! :siirra-kanavatoimenpiteet
+                             {::kanavan-toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
+                              ::kanavan-toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
+                              ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
                              {:onnistui ->ValitutSiirretty
                               :epaonnistui ->ValitutEiSiirretty})
           (assoc :toimenpiteioden-siirto-kaynnissa? true))))

@@ -33,6 +33,14 @@
        :toimenpidekoodi toimenpidekoodi
        :tyyppi tyyppi})))
 
+(defn siirra-kanavatoimenpiteet [db user tiedot]
+  (let [urakka-id (::kanavan-toimenpide/urakka-id tiedot)]
+    (assert urakka-id "Urakka-id puuttuu!")
+    ;; TODO Tarkista oikeudet
+    (q-kanavan-toimenpide/vaadi-toimenpiteet-kuuluvat-urakkaan db (::kanavan-toimenpide/toimenpide-idt tiedot) urakka-id)
+    (q-kanavan-toimenpide/paivita-toimenpiteiden-tyyppi db (::kanavan-toimenpide/toimenpide-idt tiedot) (::kanavan-toimenpide/tyyppi tiedot))
+    (::kanavan-toimenpide/toimenpide-idt tiedot)))
+
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
@@ -43,6 +51,13 @@
         (hae-kanavatoimenpiteet db user hakuehdot))
       {:kysely-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
        :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
+    (julkaise-palvelu
+      http
+      :siirra-kanavatoimenpiteet
+      (fn [user hakuehdot]
+        (siirra-kanavatoimenpiteet db user hakuehdot))
+      {:kysely-spec ::kanavan-toimenpide/siirra-kanavatoimenpiteet-kysely
+       :vastaus-spec ::kanavan-toimenpide/siirra-kanavatoimenpiteet-vastaus})
     this)
 
   (stop [this]

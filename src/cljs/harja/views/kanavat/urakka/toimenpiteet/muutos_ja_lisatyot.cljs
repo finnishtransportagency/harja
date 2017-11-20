@@ -39,8 +39,8 @@
        [napit/yleinen-ensisijainen
         "Siirrä valitut kokonaishintaisiin"
         (fn [_]
-          ;;todo
-          )]
+          (e! (tiedot/->SiirraValitut)))
+        {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
        [napit/uusi
         "Uusi toimenpide"
         (fn [_]
