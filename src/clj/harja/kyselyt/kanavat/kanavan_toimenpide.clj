@@ -3,7 +3,7 @@
   (:require [specql.core :refer [fetch]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
-            [harja.domain.kanavat.hinta :as tyo]
+            [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
@@ -36,38 +36,28 @@
     (dissoc m id-avain)
     m))
 
+(defn kasittele-muokkaustiedot [user m]
+  (merge
+   m
+   (if (::m/poistettu? m)
+     {::m/poistettu? true
+      ::m/poistaja-id (:id user)}
+     {::m/muokattu (pvm/nyt)
+      ::m/muokkaaja-id (:id user)})))
+
 (defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat]}]
   (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
     (specql/upsert! db
-                  ::hinta/toimenpiteen-hinta
-                  (merge
-                   hinta
-                   (if (::m/poistettu? hinta)
-                     {::m/poistettu? true
-                      ::m/poistaja-id (:id user)}
-                     {::m/muokattu (pvm/nyt)
-                      ::m/muokkaaja-id (:id user)})))))
+                    ::hinta/toimenpiteen-hinta
+                    (kasittele-muokkaustiedot user hinnat)
+                    {::m/poistettu? (op/not= true)})))
 
-(defn tallenna-toimenpiteen-tyot! [{:keys [db user hinnoittelu-id tyot]}]
-  (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
-    (if (id-olemassa? (::tyo/id tyo))
-      (specql/update! db
-                      ::tyo/tyo
-                      (merge
-                        {::tyo/toimenpidekoodi-id (::tyo/toimenpidekoodi-id tyo)
-                         ::tyo/maara (::tyo/maara tyo)}
-                        (if (::m/poistettu? tyo)
-                          {::m/poistettu? true
-                           ::m/poistaja-id (:id user)}
-                          {::m/muokattu (pvm/nyt)
-                           ::m/muokkaaja-id (:id user)}))
-                      {::tyo/id (::tyo/id tyo)})
-      (specql/insert! db
-                      ::tyo/tyo
-                      (merge
-                        (dissoc tyo ::tyo/id)
-                        {::m/luotu (pvm/nyt)
-                         ::m/luoja-id (:id user)})))))
+(defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot]}]
+  (doseq [hinta (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
+    (specql/upsert! db
+                    ::tyo/tyo
+                    (kasittele-muokkaustiedot user tyot)
+                    {::m/poistettu? (op/not= true)})))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-id-seq]
   (let [tp-hinnat (specql/fetch db ::hinta/toimenpide<->hinta
