@@ -39,7 +39,8 @@
 
 (defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma] :as app}]
   [grid/muokkaus-grid
-   {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"}
+   {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
+    :virheet-dataan? true}
    [{:otsikko "Suunta"
      :tyyppi :komponentti
      :tasaa :keskita
@@ -77,7 +78,9 @@
            (map-indexed
              (fn [i k] [i k])
              (::lt/alukset valittu-liikennetapahtuma)))
-     #(e! (tiedot/->MuokkaaAluksia (vals %))))])
+     #(e! (tiedot/->MuokkaaAluksia (vals %) (boolean (some
+                                                       (comp not empty? ::grid/virheet)
+                                                       (vals %))))))])
 
 (defn varmistus-modal [sisalto footer]
   (modal/nayta! {:otsikko "Oletko varma?"
@@ -107,6 +110,7 @@
                      {:ikoni (ikonit/tallenna)
                       :disabled (or tallennus-kaynnissa?
                                     (not (oikeudet/urakat-kanavat-liikenne))
+                                    (not (tiedot/voi-tallentaa? tapahtuma))
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
                     [napit/poista
                      "Poista tapahtuma"

@@ -78,7 +78,7 @@
 (defrecord KohteetHaettu [tulos])
 (defrecord KohteetEiHaettu [virhe])
 (defrecord TapahtumaaMuokattu [tapahtuma])
-(defrecord MuokkaaAluksia [alukset])
+(defrecord MuokkaaAluksia [alukset virheita?])
 (defrecord VaihdaSuuntaa [alus])
 (defrecord TallennaLiikennetapahtuma [tapahtuma])
 (defrecord TapahtumaTallennettu [tulos])
@@ -169,6 +169,11 @@
                                                 (set/rename-keys {:poistettu ::m/poistettu?})
                                                 (dissoc :id))
                                            alukset)))))
+
+(defn voi-tallentaa? [t]
+  (and (not (:grid-virheita? t))
+       (empty? (filter :koskematon (::lt/alukset t)))
+       (every? #(some? (::lt-alus/suunta %)) (::lt/alukset t))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -267,9 +272,11 @@
     (assoc app :valittu-liikennetapahtuma t))
 
   MuokkaaAluksia
-  (process-event [{alukset :alukset} app]
+  (process-event [{alukset :alukset v :virheita?} app]
     (if (:valittu-liikennetapahtuma app)
-      (assoc-in app [:valittu-liikennetapahtuma ::lt/alukset] alukset)
+      (-> app
+          (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] alukset)
+          (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
 
       app))
 
