@@ -42,7 +42,7 @@
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])
     :fmt str/lower-case}
-   {:otsikko "Toimenpide"
+   {:otsikko "Tehtävä"
     :nimi :toimenpide
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])}
