@@ -74,7 +74,10 @@
                                   ::lt/silta-avaus false})))
 
   (is (= "Sillan avaus"
-         (tiedot/toimenpide->str {::lt/silta-avaus true}))))
+         (tiedot/toimenpide->str {::lt/silta-avaus true})))
+
+  (is (= ""
+         (tiedot/toimenpide->str {::lt/silta-avaus false}))))
 
 (deftest tapahtumarivit
   (testing "Jokaisesta nipusta ja aluksesta syntyy oma rivi"
@@ -276,7 +279,18 @@
                                                     {::lt-alus/id 2 ::lt-alus/suunta :alas}]}}
          (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :ylos})
              {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ylos}
-                                                        {::lt-alus/id 2 ::lt-alus/suunta :alas}]}}))))
+                                                        {::lt-alus/id 2 ::lt-alus/suunta :alas}]}})))
+
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :ylos}
+                                                    {:id -2 ::lt-alus/suunta :alas}]}}
+         (e! (tiedot/->VaihdaSuuntaa {:id -1 ::lt-alus/suunta :alas})
+             {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :alas}
+                                                        {:id -2 ::lt-alus/suunta :alas}]}})))
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :alas}
+                                                    {:id -2 ::lt-alus/suunta :alas}]}}
+         (e! (tiedot/->VaihdaSuuntaa {:id -1 ::lt-alus/suunta :ylos})
+             {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :ylos}
+                                                        {:id -2 ::lt-alus/suunta :alas}]}}))))
 
 (deftest tallennus
   (vaadi-async-kutsut
