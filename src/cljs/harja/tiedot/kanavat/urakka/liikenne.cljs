@@ -221,7 +221,7 @@
         (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-alaraja] (get-in t [:kohde ::lt/vesipinta-alaraja]))
         (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-ylaraja] (get-in t [:kohde ::lt/vesipinta-ylaraja]))
         (assoc-in [:edelliset :ylos] (:ylos t))
-        (assoc-in [:edelliset :alas] (:als t))
+        (assoc-in [:edelliset :alas] (:alas t))
         (assoc :edellisten-haku-kaynnissa? false)))
 
   EdellisetTiedotEiHaettu
