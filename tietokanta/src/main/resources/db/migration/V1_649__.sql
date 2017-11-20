@@ -14,7 +14,8 @@ CREATE TYPE LIIKENNETAPAHTUMA_ALUSLAJI AS ENUM ('RAH', 'MAT', 'ÖLJ', 'HIN', 'HU
 ALTER TABLE kan_liikennetapahtuma_alus
   RENAME laji TO _laji;
 ALTER TABLE kan_liikennetapahtuma_alus
-  ADD COLUMN laji LIIKENNETAPAHTUMA_ALUSLAJI;
+  ADD COLUMN laji LIIKENNETAPAHTUMA_ALUSLAJI,
+  ALTER COLUMN "liikennetapahtuma-id" SET NOT NULL;
 
 UPDATE kan_liikennetapahtuma_alus
 SET laji = _laji :: TEXT :: LIIKENNETAPAHTUMA_ALUSLAJI;
@@ -24,6 +25,12 @@ ALTER TABLE kan_liikennetapahtuma_alus
 
 -- Pudotetaan vanha
 DROP TYPE _ALUSLAJI;
+
+-- **NOT NULL LIIKENNETAPAHTUMAN PAKOLLISILLE TIEDOILLE **
+ALTER TABLE kan_liikennetapahtuma
+  ALTER COLUMN "kohde-id" SET NOT NULL,
+  ALTER COLUMN "urakka-id" SET NOT NULL,
+  ALTER COLUMN "sopimus-id" SET NOT NULL;
 
 -- ** NIPPU EI OLE OMA TAULUNSA, VAAN OPTIONAALINEN TIETO ALUKSELLA **
 -- Poistetaan nipputaulu ja siirretään nipun lukumäärä alusrivin tietoihin
