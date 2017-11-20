@@ -16,10 +16,10 @@
    :alkupvm (first (:aikavali valinnat))
    :loppupvm (second (:aikavali valinnat))})
 
-(defn valittu-tehtava-muu? [tehtava tehtavat]
+(defn valittu-tehtava-muu? [tehtava-id tehtavat]
   (and
     tehtavat
-    (some #(= % tehtava)
+    (some #(= % tehtava-id)
           (map :id
                (filter #(and
                           (:nimi %)
