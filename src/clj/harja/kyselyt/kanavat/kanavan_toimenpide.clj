@@ -36,27 +36,33 @@
     (dissoc m id-avain)
     m))
 
-(defn kasittele-muokkaustiedot [user m]
-  (merge
-   m
-   (if (::m/poistettu? m)
-     {::m/poistettu? true
-      ::m/poistaja-id (:id user)}
-     {::m/muokattu (pvm/nyt)
-      ::m/muokkaaja-id (:id user)})))
+(defn kasittele-muokkaustiedot [user m muokkaus-id-avain]
+  {:pre [(map? m) (map? user) (keyword? muokkaus-id-avain)]}
+  (let [m (if (get m muokkaus-id-avain)
+            ;; luomistiedoissa ei frontin kontrollia: blokataan muokkaus tai muodostetaan luomistiedot
+            (dissoc m ::m/luoja-id ::m/luotu)
+            (assoc m ::m/luoja-id (:id user) ::m/luotu (pvm/nyt)))
+        m (merge m
+                 (if (::m/poistettu? m)
+                   {::m/poistettu? true
+                    ::m/poistaja-id (:id user)}
+                   {::m/muokattu (pvm/nyt)
+                    ::m/muokkaaja-id (:id user)}))]
+    m))
 
 (defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat]}]
+
   (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
     (specql/upsert! db
                     ::hinta/toimenpiteen-hinta
-                    (kasittele-muokkaustiedot user hinnat)
+                    (kasittele-muokkaustiedot user hinta ::hinta/id)
                     {::m/poistettu? (op/not= true)})))
 
 (defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot]}]
-  (doseq [hinta (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
+  (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
     (specql/upsert! db
                     ::tyo/tyo
-                    (kasittele-muokkaustiedot user tyot)
+                    (kasittele-muokkaustiedot user tyo ::tyo/id)
                     {::m/poistettu? (op/not= true)})))
 
 (defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-id-seq]
