@@ -7,6 +7,7 @@ DECLARE
   huoltokohde_id_asennonmittauslaitteet INTEGER := (SELECT id FROM kan_huoltokohde WHERE nimi = 'ASENNONMITTAUSLAITTEET');
   kayttaja_id_jvh INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
   toimenpidekoodi_id_vv_laaja_yksiloimaton INTEGER := (SELECT id FROM toimenpidekoodi WHERE emo = (SELECT id FROM toimenpidekoodi WHERE koodi = '24104') AND nimi = 'Ei yksilöity');
+  tpk_id_saimaan_kok_hint_tp := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP');
 BEGIN
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -24,7 +25,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   urakka_id_saimaan_kanava,
   sopimus_id_saimaan_paahuolto,
@@ -40,7 +42,8 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2017-10-10',
   kayttaja_id_jvh,
   FALSE,
-  NULL);
+  NULL,
+  tpk_id_saimaan_kok_hint_tp);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -58,7 +61,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   urakka_id_saimaan_kanava,
   sopimus_id_saimaan_paahuolto,
@@ -76,7 +80,8 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2016-11-07',
   kayttaja_id_jvh,
   FALSE,
-  NULL);
+  NULL,
+  tpk_id_saimaan_kok_hint_tp);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -94,7 +99,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   urakka_id_saimaan_kanava,
   sopimus_id_saimaan_lisahuolto,
@@ -110,7 +116,8 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-07',
   kayttaja_id_jvh,
   FALSE,
-  NULL);
+  NULL,
+  tpk_id_saimaan_kok_hint_tp);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -128,7 +135,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   urakka_id_saimaan_kanava,
   sopimus_id_saimaan_lisahuolto,
@@ -144,7 +152,8 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
    '2017-01-07',
    kayttaja_id_jvh,
    FALSE,
-   NULL);
+   NULL,
+   tpk_id_saimaan_kok_hint_tp);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -162,7 +171,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   urakka_id_saimaan_kanava,
   sopimus_id_saimaan_paahuolto,
@@ -178,7 +188,8 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-07',
   kayttaja_id_jvh,
   FALSE,
-  NULL);
+  NULL,
+  tpk_id_saimaan_kok_hint_tp);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
@@ -196,7 +207,8 @@ INSERT INTO kan_toimenpide
  muokattu,
  muokkaaja,
  poistettu,
- poistaja)
+ poistaja,
+ toimenpideinstanssi)
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   urakka_id_saimaan_kanava,
   sopimus_id_saimaan_paahuolto,
@@ -212,6 +224,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-07',
   kayttaja_id_jvh,
   FALSE,
-  NULL);
- INSERT INTO kan_tyo ("toimenpidekoodi-id", maara, luoja) VALUES (toimenpidekoodi_id_vv_laaja_yksiloimaton, 4, kayttaja_id_jvh);
+  NULL,
+  tpk_id_saimaan_kok_hint_tp);
+  INSERT INTO kan_tyo ("toimenpidekoodi-id", maara, luoja) VALUES (toimenpidekoodi_id_vv_laaja_yksiloimaton, 4, kayttaja_id_jvh);
 END $$;
