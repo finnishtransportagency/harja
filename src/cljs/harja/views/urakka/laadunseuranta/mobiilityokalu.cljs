@@ -5,7 +5,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]))
 
-(def sivu "laadunseuranta/mobiilityokalu")
+(def sivu "Laadunseuranta/Mobiilityökalu")
 
 (defn mobiilityokalu []
   (komp/luo

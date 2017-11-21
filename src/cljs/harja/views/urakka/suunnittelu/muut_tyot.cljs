@@ -21,7 +21,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(def sivu "suunnittelu/muut_tyot")
+(def sivu "Suunnittelu/Muut työt")
 
 (defn tallenna-tyot [tyot atomi]
   (go (let [ur @nav/valittu-urakka

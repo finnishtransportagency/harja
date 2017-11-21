@@ -25,7 +25,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
-(def sivu "suunnittelu/yksikkohintaiset_tyot")
+(def sivu "Suunnittelu/Yksikköhintaiset Työt")
 
 (def tuleville? (atom false))
 

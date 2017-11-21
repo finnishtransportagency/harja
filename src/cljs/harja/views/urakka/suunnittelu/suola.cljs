@@ -26,7 +26,7 @@
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
-(def sivu "suunnittelu/suola")
+(def sivu "Suunnittelu/Suola")
 
 (defonce suolasakot-nakyvissa? (atom false))
 

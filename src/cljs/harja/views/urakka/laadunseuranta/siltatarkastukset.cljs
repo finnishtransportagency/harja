@@ -31,7 +31,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-(def sivu "laadunseuranta/siltatarkastukset")
+(def sivu "Laadunseuranta/Siltatarkastukset")
 
 (defonce muokattava-tarkastus (local-storage/local-storage-atom :muokattava-siltatarkastus
                                                                 nil

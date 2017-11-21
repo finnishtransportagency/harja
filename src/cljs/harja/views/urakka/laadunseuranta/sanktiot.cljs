@@ -33,7 +33,7 @@
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
-(def sivu "laadunseuranta/sanktiot")
+(def sivu "Laadunseuranta/Sanktiot")
 
 (defn sanktion-tiedot
   [optiot]

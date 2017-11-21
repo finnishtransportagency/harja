@@ -27,7 +27,7 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(def sivu "laadunseuranta/laatupoikkeamat")
+(def sivu "Laadunseuranta/Laatupoikkeamat")
 
 (defn laatupoikkeamalistaus
   "Listaa urakan laatupoikkeamat"

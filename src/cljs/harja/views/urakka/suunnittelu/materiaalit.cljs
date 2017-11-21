@@ -18,7 +18,7 @@
                    [reagent.ratom :refer [run! reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
-(def sivu "suunnittelu/materiaalit")
+(def sivu "Suunnittelu/Materiaalit")
 
 (defn aseta-hoitokausi [rivi]
   (let [[alkupvm loppupvm] @u/valittu-hoitokausi]

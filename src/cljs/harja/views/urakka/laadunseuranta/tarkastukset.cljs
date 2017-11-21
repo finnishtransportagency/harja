@@ -41,7 +41,7 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(def sivu "laadunseuranta/tarkastukset")
+(def sivu "Laadunseuranta/Tarkastukset")
 
 (def +tarkastustyyppi-hoidolle+ [:tiesto :talvihoito :soratie :laatu])
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])

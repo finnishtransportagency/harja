@@ -32,7 +32,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
-(def sivu "suunnittelu/kokonaishintaiset_tyot")
+(def sivu "Suunnittelu/Kokonaishintaiset työt")
 
 (defn luo-tyhja-tyo [urakkatyyppi tpi [alkupvm loppupvm] kk sn]
   (let [tyon-kalenteri-vuosi (case urakkatyyppi
