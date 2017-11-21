@@ -11,9 +11,9 @@
 (defn laheta-kaytto! [sivu lisatieto tila]
   (go (let [vastaus (<! (k/post!
                           :lokita-kaytto
-                          {:sivu sivu
-                           :lisatieto lisatieto
-                           :tila tila}))])))
+                          {:sivu (str sivu)
+                           :lisatieto (when lisatieto (str lisatieto))
+                           :tila (boolean tila)}))])))
 
 (defn seuraa-kayttoa!
   "Rekisteröi atomin seurattavaksi, ja lähettää palvelimelle tiedon,
