@@ -192,7 +192,7 @@ rooleista."
   "Päättelee kuka osapuoli on kyseessä käyttäjän organisaation perusteella.
    Palauttaa avainsanan :urakoitsija, :konsultti tai :tilaaja."
   [kayttaja]
-  (case (name (get-in kayttaja [:organisaatio :tyyppi]))
+  (case (name (or (get-in kayttaja [:organisaatio :tyyppi]) "tilaaja"))
     "liikennevirasto" :tilaaja
     "urakoitsija" :urakoitsija
     ;; FIXME: laadunvalvontakonsultti ?
