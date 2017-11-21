@@ -27,8 +27,6 @@
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
 
-(seuraa-kayttoa! paallystysilmoitukset-nakymassa? "Päällystysilmoitukset")
-
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
                                           :sopimus-id sopimus-id
