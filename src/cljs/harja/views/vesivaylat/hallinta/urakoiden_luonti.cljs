@@ -26,6 +26,8 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
+(def sivu "Urakoiden luonti")
+
 (defn- sopimukset-grid [e! urakka haetut-sopimukset]
   (let [urakan-sopimukset (remove :poistettu (::u/sopimukset urakka))]
     [grid/muokkaus-grid
@@ -64,6 +66,7 @@
 
 (defn luontilomake [e! app]
   (komp/luo
+    (komp/kirjaa-lomakkeen-kaytto! sivu)
     (komp/sisaan #(e! (tiedot/->HaeLomakevaihtoehdot)))
     (fn [e! {:keys [valittu-urakka tallennus-kaynnissa?
                     haetut-hallintayksikot haetut-hankkeet haetut-urakoitsijat
@@ -224,6 +227,7 @@
 
 (defn urakkagrid [e! app]
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
     (fn [e! {:keys [haetut-urakat urakoiden-haku-kaynnissa?] :as app}]
       [:div
@@ -253,6 +257,7 @@
 
 (defn vesivaylaurakoiden-luonti* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
 
