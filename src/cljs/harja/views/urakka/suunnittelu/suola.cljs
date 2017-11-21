@@ -26,6 +26,8 @@
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
+(def sivu "suunnittelu/suola")
+
 (defonce suolasakot-nakyvissa? (atom false))
 
 (defonce suolasakot-ja-lampotilat
@@ -220,6 +222,7 @@
 
 (defn suola []
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu suolasakot-nakyvissa? pohjavesialueet/karttataso-pohjavesialueet)
     (komp/sisaan #(do
                    (reset! nav/kartan-edellinen-koko @nav/kartan-koko)

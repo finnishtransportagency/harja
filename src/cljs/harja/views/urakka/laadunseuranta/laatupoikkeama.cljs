@@ -299,6 +299,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                 oikeudet/urakat-laadunseuranta-sanktiot
                                                 urakka-id @istunto/kayttaja)]
      (komp/luo
+       (komp/kirjaa-lomakkeen-kaytto! laatupoikkeamat/sivu)
        (fn [laatupoikkeama optiot]
          (let [uusi? (not (:id @laatupoikkeama))
                sanktion-validointi (partial lisaa-sanktion-validointi

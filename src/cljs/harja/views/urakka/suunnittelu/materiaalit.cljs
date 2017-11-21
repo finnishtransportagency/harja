@@ -18,6 +18,8 @@
                    [reagent.ratom :refer [run! reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
+(def sivu "suunnittelu/materiaalit")
+
 (defn aseta-hoitokausi [rivi]
   (let [[alkupvm loppupvm] @u/valittu-hoitokausi]
     ;; lisätään kaikkiin riveihin valittu hoitokausi
@@ -133,6 +135,7 @@
     (hae-urakan-materiaalit ur)
 
     (komp/luo
+      (komp/kirjaa-kaytto! sivu)
 
      {:component-will-receive-props (fn [this & [_ ur]]
                                       (hae-urakan-materiaalit ur))}

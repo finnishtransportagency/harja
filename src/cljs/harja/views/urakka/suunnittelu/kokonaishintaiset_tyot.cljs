@@ -32,7 +32,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
-
+(def sivu "suunnittelu/kokonaishintaiset_tyot")
 
 (defn luo-tyhja-tyo [urakkatyyppi tpi [alkupvm loppupvm] kk sn]
   (let [tyon-kalenteri-vuosi (case urakkatyyppi
@@ -325,6 +325,7 @@
     (aseta-urakka! ur)
 
     (komp/luo
+      (komp/kirjaa-kaytto! sivu)
       {:component-will-receive-props
        (fn [this & [_ ur]]
          (aseta-urakka! ur))

@@ -41,6 +41,8 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def sivu "laadunseuranta/tarkastukset")
+
 (def +tarkastustyyppi-hoidolle+ [:tiesto :talvihoito :soratie :laatu])
 (def +tarkastustyyppi-yllapidolle+ [:katselmus :pistokoe :vastaanotto :takuu])
 
@@ -80,6 +82,7 @@
   ([] (tarkastuslistaus {}))
   ([optiot]
    (komp/luo
+     (komp/kirjaa-gridin-kaytto! sivu)
      (komp/sisaan #(when (u-domain/vesivaylaurakka? @nav/valittu-urakka)
                      ;; VV-urakassa nämä filtterit eivät saa vaikuttaa.
                      (reset! tiedot/tienumero nil)
@@ -274,218 +277,221 @@
       huom-teksti)))
 
 (defn tarkastuslomake [tarkastus-atom optiot]
-  (let [valittu-urakka @nav/valittu-urakka
-        urakka-id (:id valittu-urakka)
-        urakkatyyppi (:tyyppi valittu-urakka)
-        tarkastus @tarkastus-atom
-        jarjestelmasta? (:jarjestelma tarkastus)
-        voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
-                                                  urakka-id)
-        voi-muokata? (and voi-kirjoittaa?
-                          (not jarjestelmasta?))
-        kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
-        yllapitokohteet (:yllapitokohteet optiot)
-        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
-        yllapidon-palvelusopimus? (tiedot-urakka/yllapidon-palvelusopimus? valittu-urakka)
-        vesivaylaurakka? (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)]
-    (if (and yllapitokohdeurakka? (nil? yllapitokohteet))
-      [yleiset/ajax-loader "Ladataan..."]
-      [:div.tarkastus
-       [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
+  (komp/luo
+    (komp/kirjaa-lomakkeen-kaytto! sivu)
+    (fn [tarkastus-atom optiot]
+      (let [valittu-urakka @nav/valittu-urakka
+            urakka-id (:id valittu-urakka)
+            urakkatyyppi (:tyyppi valittu-urakka)
+            tarkastus @tarkastus-atom
+            jarjestelmasta? (:jarjestelma tarkastus)
+            voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
+                                                      urakka-id)
+            voi-muokata? (and voi-kirjoittaa?
+                              (not jarjestelmasta?))
+            kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
+            yllapitokohteet (:yllapitokohteet optiot)
+            yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
+            yllapidon-palvelusopimus? (tiedot-urakka/yllapidon-palvelusopimus? valittu-urakka)
+            vesivaylaurakka? (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)]
+        (if (and yllapitokohdeurakka? (nil? yllapitokohteet))
+          [yleiset/ajax-loader "Ladataan..."]
+          [:div.tarkastus
+           [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
-       (when (and jarjestelmasta?
-                  (not (:nayta-urakoitsijalle tarkastus))
-                  (oikeudet/on-muu-oikeus? "aseta-näkyviin-urakoitsijalle"
-                                           oikeudet/urakat-laadunseuranta-tarkastukset
-                                           urakka-id @istunto/kayttaja))
-         [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-          [napit/yleinen-ensisijainen "Näytä tarkastus urakoitsijalle"
-           (fn []
-             (go (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? true)
-                 (let [vastaus (<! (tiedot/aseta-tarkastus-nakymaan-urakoitsijalle urakka-id (:id tarkastus)))]
-                   (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? false)
-                   (if (k/virhe? vastaus)
-                     (viesti/nayta! "Tarkastuksen asettaminen näkyviin urakoitsijalle epäonnistui." :danger)
-                     (reset! tarkastus-atom vastaus)))))
-           {:tallennus-kaynnissa? @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?
-            :disabled @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?}]])
+           (when (and jarjestelmasta?
+                      (not (:nayta-urakoitsijalle tarkastus))
+                      (oikeudet/on-muu-oikeus? "aseta-näkyviin-urakoitsijalle"
+                                               oikeudet/urakat-laadunseuranta-tarkastukset
+                                               urakka-id @istunto/kayttaja))
+             [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
+              [napit/yleinen-ensisijainen "Näytä tarkastus urakoitsijalle"
+               (fn []
+                 (go (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? true)
+                     (let [vastaus (<! (tiedot/aseta-tarkastus-nakymaan-urakoitsijalle urakka-id (:id tarkastus)))]
+                       (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? false)
+                       (if (k/virhe? vastaus)
+                         (viesti/nayta! "Tarkastuksen asettaminen näkyviin urakoitsijalle epäonnistui." :danger)
+                         (reset! tarkastus-atom vastaus)))))
+               {:tallennus-kaynnissa? @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?
+                :disabled @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?}]])
 
-       [lomake/lomake
-        {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
-         :muokkaa! #(let [uusi-tarkastus
-                          (if (kohde-muuttui? (:yllapitokohde @tarkastus-atom) (:yllapitokohde %))
-                            (tiedot-laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
-                            %)]
-                      (reset! tarkastus-atom uusi-tarkastus))
-         :voi-muokata? voi-muokata?
-         :footer-fn (fn [tarkastus]
-                      (when voi-kirjoittaa?
-                        [napit/palvelinkutsu-nappi
-                         "Tallenna tarkastus"
-                         (fn []
-                           (tiedot/tallenna-tarkastus
-                             (:id valittu-urakka)
-                             (lomake/ilman-lomaketietoja tarkastus)
-                             (:nakyma optiot)))
-                         {:disabled (not (lomake/voi-tallentaa? tarkastus))
-                          :kun-onnistuu (fn [tarkastus]
-                                          (reset! tiedot/valittu-tarkastus nil)
-                                          (tiedot/paivita-tarkastus-listaan! tarkastus))
-                          :virheviesti "Tarkastuksen tallennus epäonnistui."
-                          :ikoni (ikonit/tallenna)}]))}
+           [lomake/lomake
+            {:otsikko (if (:id tarkastus) "Muokkaa tarkastuksen tietoja" "Uusi tarkastus")
+             :muokkaa! #(let [uusi-tarkastus
+                              (if (kohde-muuttui? (:yllapitokohde @tarkastus-atom) (:yllapitokohde %))
+                                (tiedot-laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
+                                %)]
+                          (reset! tarkastus-atom uusi-tarkastus))
+             :voi-muokata? voi-muokata?
+             :footer-fn (fn [tarkastus]
+                          (when voi-kirjoittaa?
+                            [napit/palvelinkutsu-nappi
+                             "Tallenna tarkastus"
+                             (fn []
+                               (tiedot/tallenna-tarkastus
+                                 (:id valittu-urakka)
+                                 (lomake/ilman-lomaketietoja tarkastus)
+                                 (:nakyma optiot)))
+                             {:disabled (not (lomake/voi-tallentaa? tarkastus))
+                              :kun-onnistuu (fn [tarkastus]
+                                              (reset! tiedot/valittu-tarkastus nil)
+                                              (tiedot/paivita-tarkastus-listaan! tarkastus))
+                              :virheviesti "Tarkastuksen tallennus epäonnistui."
+                              :ikoni (ikonit/tallenna)}]))}
 
-        [(when jarjestelmasta?
-           {:otsikko "Lähde" :nimi :luoja :tyyppi :string
-            :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
-            :muokattava? (constantly false)
-            :vihje "Tietojärjestelmästä tulleen tiedon muokkaus ei ole sallittu."})
+            [(when jarjestelmasta?
+               {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+                :hae (fn [rivi] (str "Järjestelmä (" (:kayttajanimi rivi) " / " (:organisaatio rivi) ")"))
+                :muokattava? (constantly false)
+                :vihje "Tietojärjestelmästä tulleen tiedon muokkaus ei ole sallittu."})
 
 
-         {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
-          :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+             {:otsikko "Pvm ja aika" :nimi :aika :tyyppi :pvm-aika :pakollinen? true
+              :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
 
-         (when yllapitokohdeurakka?
-           {:otsikko "Ylläpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
-            :palstoja 1
-            :pakollinen? (not yllapidon-palvelusopimus?)
-            :valinnat yllapitokohteet
-            :jos-tyhja "Ei valittavia kohteita"
-            :valinta-arvo :id
-            :valinta-nayta (fn [arvo muokattava?]
-                             (if arvo
-                               (yllapitokohde-domain/yllapitokohde-tekstina
-                                 arvo {:osoite {:tr-numero (:tr-numero arvo)
-                                                :tr-alkuosa (:tr-alkuosa arvo)
-                                                :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
-                                                :tr-loppuosa (:tr-loppuosa arvo)
-                                                :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
-                               (if muokattava?
-                                 "- Valitse kohde -"
-                                 "")))
-            :validoi (when-not yllapidon-palvelusopimus?
-                       [[:ei-tyhja "Anna tarkastuksen kohde"]])})
+             (when yllapitokohdeurakka?
+               {:otsikko "Ylläpito\u00ADkohde" :tyyppi :valinta :nimi :yllapitokohde
+                :palstoja 1
+                :pakollinen? (not yllapidon-palvelusopimus?)
+                :valinnat yllapitokohteet
+                :jos-tyhja "Ei valittavia kohteita"
+                :valinta-arvo :id
+                :valinta-nayta (fn [arvo muokattava?]
+                                 (if arvo
+                                   (yllapitokohde-domain/yllapitokohde-tekstina
+                                     arvo {:osoite {:tr-numero (:tr-numero arvo)
+                                                    :tr-alkuosa (:tr-alkuosa arvo)
+                                                    :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
+                                                    :tr-loppuosa (:tr-loppuosa arvo)
+                                                    :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
+                                   (if muokattava?
+                                     "- Valitse kohde -"
+                                     "")))
+                :validoi (when-not yllapidon-palvelusopimus?
+                           [[:ei-tyhja "Anna tarkastuksen kohde"]])})
 
-         (if vesivaylaurakka?
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi :tyyppi :string
-            :hae (constantly "Katselmus") :muokattava? (constantly false)}
-           {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
-            :pakollinen? true
-            :tyyppi :valinta
-            :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
-            :valinta-nayta #(or (tiedot/+tarkastustyyppi->nimi+ %) "- valitse -")
-            :palstoja 1})
+             (if vesivaylaurakka?
+               {:otsikko "Tar\u00ADkastus" :nimi :tyyppi :tyyppi :string
+                :hae (constantly "Katselmus") :muokattava? (constantly false)}
+               {:otsikko "Tar\u00ADkastus" :nimi :tyyppi
+                :pakollinen? true
+                :tyyppi :valinta
+                :valinnat (tarkastustyypit-urakkatyypille-ja-tekijalle urakkatyyppi (:tekija tarkastus))
+                :valinta-nayta #(or (tiedot/+tarkastustyyppi->nimi+ %) "- valitse -")
+                :palstoja 1})
 
-         (if vesivaylaurakka?
-           {:nimi :sijainti
-            :otsikko "Sijainti"
-            :tyyppi :sijaintivalitsin
-            :paikannus? false
-            :pakollinen? true
-            ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
-            :karttavalinta-tehty-fn #(swap! tarkastus-atom assoc :sijainti %)}
-           {:tyyppi :tierekisteriosoite
-            :nimi :tr
-            :pakollinen? true
-            :ala-nayta-virhetta-komponentissa? true
-            :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-            :sijainti (r/wrap (:sijainti tarkastus)
-                              #(swap! tarkastus-atom assoc :sijainti %))})
+             (if vesivaylaurakka?
+               {:nimi :sijainti
+                :otsikko "Sijainti"
+                :tyyppi :sijaintivalitsin
+                :paikannus? false
+                :pakollinen? true
+                ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
+                :karttavalinta-tehty-fn #(swap! tarkastus-atom assoc :sijainti %)}
+               {:tyyppi :tierekisteriosoite
+                :nimi :tr
+                :pakollinen? true
+                :ala-nayta-virhetta-komponentissa? true
+                :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+                :sijainti (r/wrap (:sijainti tarkastus)
+                                  #(swap! tarkastus-atom assoc :sijainti %))})
 
-         {:otsikko "Tar\u00ADkastaja"
-          :nimi :tarkastaja
-          :tyyppi :string :pituus-max 256
-          :pakollinen? true
-          :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
-          :palstoja 1}
+             {:otsikko "Tar\u00ADkastaja"
+              :nimi :tarkastaja
+              :tyyppi :string :pituus-max 256
+              :pakollinen? true
+              :validoi [[:ei-tyhja "Anna tarkastajan nimi"]]
+              :palstoja 1}
 
-         (when (= :hoito urakkatyyppi)
-           (case (:tyyppi tarkastus)
-             :talvihoito (talvihoitomittaus)
-             :soratie (soratiemittaus)
-             nil))
+             (when (= :hoito urakkatyyppi)
+               (case (:tyyppi tarkastus)
+                 :talvihoito (talvihoitomittaus)
+                 :soratie (soratiemittaus)
+                 nil))
 
-         (when (and
-                 (= :hoito urakkatyyppi)
-                 (= :laatu (:tyyppi tarkastus)))
-           (talvihoitomittaus))
+             (when (and
+                     (= :hoito urakkatyyppi)
+                     (= :laatu (:tyyppi tarkastus)))
+               (talvihoitomittaus))
 
-         (when (and
-                 (= :hoito urakkatyyppi)
-                 (= :laatu (:tyyppi tarkastus)))
-           (soratiemittaus))
+             (when (and
+                     (= :hoito urakkatyyppi)
+                     (= :laatu (:tyyppi tarkastus)))
+               (soratiemittaus))
 
-         {:otsikko "Havain\u00ADnot"
-          :nimi :havainnot
-          :koko [80 :auto]
-          :pakollinen? (when (:laadunalitus tarkastus) true)
-          :tyyppi :text
-          :palstoja 2
-          :validoi (when (:laadunalitus tarkastus)
-                     [[:ei-tyhja "Kirjaa laadunalituksen havainnot"]])}
+             {:otsikko "Havain\u00ADnot"
+              :nimi :havainnot
+              :koko [80 :auto]
+              :pakollinen? (when (:laadunalitus tarkastus) true)
+              :tyyppi :text
+              :palstoja 2
+              :validoi (when (:laadunalitus tarkastus)
+                         [[:ei-tyhja "Kirjaa laadunalituksen havainnot"]])}
 
-         {:otsikko (when-not voi-muokata?
-                     ;; Näytä otsikko näyttömuodossa
-                     "Laadun alitus")
-          :teksti "Laadun alitus"
-          :nayta-rivina? true
-          :nimi :laadunalitus
-          :tyyppi :checkbox
-          :palstoja 2
-          :fmt fmt/totuus}
+             {:otsikko (when-not voi-muokata?
+                         ;; Näytä otsikko näyttömuodossa
+                         "Laadun alitus")
+              :teksti "Laadun alitus"
+              :nayta-rivina? true
+              :nimi :laadunalitus
+              :tyyppi :checkbox
+              :palstoja 2
+              :fmt fmt/totuus}
 
-         (when (and (not= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
-                    (not (and (nav/yllapitourakka-valittu?)
-                              (= (:tyyppi tarkastus) :katselmus))))
-           {:otsikko (when-not voi-muokata?
-                       ;; Näytä otsikko näyttömuodossa
-                       "Näytä urakoitsijalle")
-            :teksti "Näytä urakoitsijalle"
-            :nimi :nayta-urakoitsijalle
-            :nayta-rivina? true
-            :tyyppi :checkbox
-            :palstoja 2
-            :fmt fmt/totuus})
+             (when (and (not= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
+                        (not (and (nav/yllapitourakka-valittu?)
+                                  (= (:tyyppi tarkastus) :katselmus))))
+               {:otsikko (when-not voi-muokata?
+                           ;; Näytä otsikko näyttömuodossa
+                           "Näytä urakoitsijalle")
+                :teksti "Näytä urakoitsijalle"
+                :nimi :nayta-urakoitsijalle
+                :nayta-rivina? true
+                :tyyppi :checkbox
+                :palstoja 2
+                :fmt fmt/totuus})
 
-         (when (not (empty? (:vakiohavainnot tarkastus)))
-           {:otsikko "Vakio\u00ADhavainnot"
-            :nimi :vakiohavainnot
-            :tyyppi :komponentti
-            :komponentti (fn [_]
-                           [:span (str/join ", " (:vakiohavainnot tarkastus))])
-            :palstoja 2})
+             (when (not (empty? (:vakiohavainnot tarkastus)))
+               {:otsikko "Vakio\u00ADhavainnot"
+                :nimi :vakiohavainnot
+                :tyyppi :komponentti
+                :komponentti (fn [_]
+                               [:span (str/join ", " (:vakiohavainnot tarkastus))])
+                :palstoja 2})
 
-         (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
-           {:otsikko "Liitteet" :nimi :liitteet
-            :tyyppi :komponentti
-            :komponentti (fn [_]
-                           [liitteet/liitteet-ja-lisays urakka-id (:liitteet tarkastus)
-                            {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
-                                                      #(swap! tarkastus-atom assoc :uusi-liite %))
-                             :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
-         (when voi-kirjoittaa?
-           {:rivi? true
-            :uusi-rivi? true
-            :nimi :laatupoikkeama
-            :tyyppi :komponentti
-            :vihje (siirtymanapin-vihjeteksti tarkastus)
-            :komponentti (fn [{tarkastus :data}]
-                           [napit/palvelinkutsu-nappi
-                            (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
-                            (fn []
-                              (go
-                                (let [tarkastus (<! (tiedot/tallenna-tarkastus urakka-id tarkastus (:nakyma optiot)))
-                                      tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
-                                                                    tarkastus
-                                                                    (<! (tiedot/lisaa-laatupoikkeama tarkastus)))]
-                                  tarkastus-ja-laatupoikkeama)))
-                            {:disabled (not (lomake/voi-tallentaa? tarkastus))
-                             :kun-onnistuu (fn [tarkastus]
-                                             (reset! tarkastus-atom nil)
-                                             (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
-                             :virheviesti "Tarkastuksen tallennus epäonnistui."
-                             :ikoni (ikonit/livicon-arrow-right)
-                             :luokka :nappi-toissijainen}])})]
-        tarkastus]])))
+             (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
+               {:otsikko "Liitteet" :nimi :liitteet
+                :tyyppi :komponentti
+                :komponentti (fn [_]
+                               [liitteet/liitteet-ja-lisays urakka-id (:liitteet tarkastus)
+                                {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
+                                                          #(swap! tarkastus-atom assoc :uusi-liite %))
+                                 :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
+             (when voi-kirjoittaa?
+               {:rivi? true
+                :uusi-rivi? true
+                :nimi :laatupoikkeama
+                :tyyppi :komponentti
+                :vihje (siirtymanapin-vihjeteksti tarkastus)
+                :komponentti (fn [{tarkastus :data}]
+                               [napit/palvelinkutsu-nappi
+                                (if (:laatupoikkeamaid tarkastus) "Tallenna ja avaa laatupoikkeama" "Tallenna ja lisää laatupoikkeama")
+                                (fn []
+                                  (go
+                                    (let [tarkastus (<! (tiedot/tallenna-tarkastus urakka-id tarkastus (:nakyma optiot)))
+                                          tarkastus-ja-laatupoikkeama (if (k/virhe? tarkastus)
+                                                                        tarkastus
+                                                                        (<! (tiedot/lisaa-laatupoikkeama tarkastus)))]
+                                      tarkastus-ja-laatupoikkeama)))
+                                {:disabled (not (lomake/voi-tallentaa? tarkastus))
+                                 :kun-onnistuu (fn [tarkastus]
+                                                 (reset! tarkastus-atom nil)
+                                                 (avaa-tarkastuksen-laatupoikkeama (:laatupoikkeamaid tarkastus)))
+                                 :virheviesti "Tarkastuksen tallennus epäonnistui."
+                                 :ikoni (ikonit/livicon-arrow-right)
+                                 :luokka :nappi-toissijainen}])})]
+            tarkastus]])))))
 
 
 (defn- vastaava-tarkastus [klikattu-tarkastus]
@@ -499,6 +505,7 @@
   "Tarkastuksien pääkomponentti"
   [optiot]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu tarkastukset-kartalla/karttataso-tarkastukset)
     (komp/kuuntelija :tarkastus-klikattu #(reset! tiedot/valittu-tarkastus %2))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-tarkastus))
