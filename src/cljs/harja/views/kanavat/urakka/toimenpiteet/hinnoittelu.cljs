@@ -157,7 +157,7 @@
                                            yleiskustannuslisien-osuus))]]]]))
 
 (defn- sopimushintaiset-tyot [e! app*]
-  (let [tyot (get-in app* [:hinnoittele-toimenpide ::hinta/toimenpiteen-hinta])
+  (let [tyot (get-in app* [:hinnoittele-toimenpide ::tyo/tyot])
         ei-poistetut-tyot (remove ::m/poistettu? tyot)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
