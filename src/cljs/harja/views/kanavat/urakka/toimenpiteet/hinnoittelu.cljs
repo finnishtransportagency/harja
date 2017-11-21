@@ -230,17 +230,19 @@
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
-    (assert (not (map? hinnat)) "muut-hinnat: tarvitaan joukko mappeja")
-    ;; (log "muut-hinnat: hinnat " (pr-str hinnat))
+    (assert (every? map? hinnat) (pr-str hinnat))
+    (assert (some? hinnat))
+
     [:div.hinnoitteluosio.muut-osio
      [valiotsikko "Muut"]
      [:table
       [muu-hinnoittelu-header]
       [:tbody
        (map-indexed
-         (fn [index hinta]
+        (fn [index hinta]
+          ;; (log "muut-hinnat: vapaa hinnoittelurivi, rivin hinta " (pr-str hinta))
            ^{:key index}
-           ;; (log "muut-hinnat: rivin hinta " (pr-str hinta))
+
            [vapaa-hinnoittelurivi e! hinta (tiedot/ainoa-otsikon-vakiokentta? hinnat (::hinta/otsikko hinta))])
          hinnat)]]
      [rivinlisays "Lisää kulurivi" #(e! (tiedot/->LisaaMuuKulurivi))]]))

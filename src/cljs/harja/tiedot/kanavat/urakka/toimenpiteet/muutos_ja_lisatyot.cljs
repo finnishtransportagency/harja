@@ -95,23 +95,35 @@
 ;; (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 ;; (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
 
-(defn etsi-map [mapit avain viitearvo]
-  (first
-   (for [kandidaatti mapit
-         :let [arvo (get kandidaatti avain)]
-         :when (= viitearvo arvo)]
-     kandidaatti)))
+(defn etsi-mapit [mapit avain viitearvo]
+  {:pre [(every? map? mapit)]
+   :post [(every? map? %)]}
+
+  (for [kandidaatti mapit
+        :let [arvo (get kandidaatti avain)]
+        :when (= viitearvo arvo)]
+    kandidaatti))
+
+(defn etsi-eka-map [mapit avain viitearvo]
+  (first (etsi-mapit mapit avain viitearvo)))
 
 (defn ilman-poistettuja [mapit-muokkaustiedoilla]
-  (into {} (remove ::m/poistettu? mapit-muokkaustiedoilla))
-  ;; (remove ::m/poistettu? mapit-muokkaustiedoilla)
-  )
+  {:pre [(every? map? mapit-muokkaustiedoilla)]
+   :post [(every? map? %)]}
+  ;; (assert (every? map? mapit-muokkaustiedoilla) (pr-str mapit-muokkaustiedoilla))
+  (let [ok-mapit (remove ::m/poistettu? mapit-muokkaustiedoilla)]
+    ;; (assert (every? map? ok-mapit) (pr-str ok-mapit))
+    ok-mapit))
 
 (defn hintaryhman-tyot [app ryhma-kriteeri]
-  (let [tyo-hinnat (etsi-map (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
-                             ::hinta/ryhma ryhma-kriteeri)]
+  ;; (log "hintaryhman-tyot: kaikki hinnat " (pr-str (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])))
+  ;; (log "hintaryhman-tyot: kriteeri" (pr-str ryhma-kriteeri))
+  ;; (log "hintaryhman-tyot: etsi-mapit tulos"  (pr-str (etsi-mapit (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
+  ;;                                                                ::hinta/ryhma ryhma-kriteeri)))
+  (let [tyo-hinnat (etsi-mapit (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
+                               ::hinta/ryhma ryhma-kriteeri)]
+    (log "hintaryhman-tyot: valitulos " (pr-str tyo-hinnat) "- tyypit " (pr-str (mapv type tyo-hinnat)))
 
-    (log "hintaryhman-tyot: ilman-poistettuja " (pr-str (ilman-poistettuja tyo-hinnat)) " - tyo-hinnat " (pr-str tyo-hinnat))
     (ilman-poistettuja tyo-hinnat)))
 
 (defn muut-tyot [app]
@@ -121,7 +133,7 @@
   (hintaryhman-tyot app "muu"))
 
 (defn hinta-otsikolla [hinnat otsikkokriteeri]
-  (etsi-map hinnat ::hinta/otsikko otsikkokriteeri))
+  (etsi-eka-map hinnat ::hinta/otsikko otsikkokriteeri))
 
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
@@ -287,10 +299,11 @@
   AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]
     app
-    (let [hinnoiteltava-toimenpide (etsi-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
+    (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
           toimenpiteen-oma-hinnoittelu nil ;; (::toimenpide/oma-hinnoittelu hinnoiteltava-toimenpide)
           hinnat (or (::hinta/hinnat toimenpiteen-oma-hinnoittelu) [])
           tyot (or (::tyo/tyot toimenpiteen-oma-hinnoittelu) [])]
+      (log "AloitaToimenpiteenHinnoittelu: toimenpiteen-hintakentat" (pr-str (toimenpiteen-hintakentat hinnat)))
       (assoc app :hinnoittele-toimenpide
              {::toimenpide/id toimenpide-id
               ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
@@ -362,7 +375,7 @@
   ToimenpiteenHinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
-    (let [paivitettava-toimenpide (etsi-map (:toimenpiteet app)
+    (let [paivitettava-toimenpide (etsi-eka-map (:toimenpiteet app)
                                                 ::toimenpide/id
                                                 (get-in app [:hinnoittele-toimenpide ::toimenpide/id]))
           paivitetty-toimenpide (assoc paivitettava-toimenpide ::toimenpide/oma-hinnoittelu vastaus)
