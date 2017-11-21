@@ -48,6 +48,8 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def sivu "Päällystysilmoitukset")
+
 (defn laske-hinta [lomakedata-nyt]
   (let [urakkasopimuksen-mukainen-kokonaishinta (:kokonaishinta-ilman-maaramuutoksia lomakedata-nyt)
         muutokset-kokonaishintaan (:maaramuutokset lomakedata-nyt)
@@ -612,6 +614,7 @@
 (defn- ilmoitusluettelo
   []
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (komp/kuuntelija :avaa-paallystysilmoitus
                      (fn [_ rivi]
                        (avaa-paallystysilmoitus (:paallystyskohde-id rivi))))
@@ -636,6 +639,7 @@
 (defn paallystysilmoituslomake-historia [ilmoituslomake]
   (let [historia (historia/historia ilmoituslomake)]
     (komp/luo
+      (komp/kirjaa-lomakkeen-kaytto! sivu)
       (komp/ulos (historia/kuuntele! historia))
       (fn [ilmoituslomake]
         [paallystysilmoituslomake
@@ -654,6 +658,7 @@
 (defn paallystysilmoitukset [urakka]
   (komp/luo
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
 
     (fn [urakka]
       [:div.paallystysilmoitukset

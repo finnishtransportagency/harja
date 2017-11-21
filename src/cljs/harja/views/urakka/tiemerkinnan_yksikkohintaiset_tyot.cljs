@@ -24,6 +24,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def sivu "Tiemerkinnän yksikköhintaiset")
+
 (defn toteutuneet-tiemerkinnat
   [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet]
   (komp/luo
@@ -197,7 +199,10 @@
      (fmt/euro-opt kaikki-yhteensa)]))
 
 (defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
-  [:div.tiemerkinnan-yks-hint-tyot
-   [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
-   [yhteenveto @tiemerkinnan-toteumat-atom]
-   [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]])
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu)
+    (fn [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
+      [:div.tiemerkinnan-yks-hint-tyot
+      [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
+      [yhteenveto @tiemerkinnan-toteumat-atom]
+      [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]])))

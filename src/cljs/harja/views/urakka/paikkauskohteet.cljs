@@ -24,9 +24,11 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def sivu "Paikkauskohteet")
 
 (defn paikkauskohteet [ur]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (fn [ur]
       [:div.paikkauskohteet
        [kartta/kartan-paikka]
