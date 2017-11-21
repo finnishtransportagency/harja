@@ -9,7 +9,6 @@
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
-            [specql.rel :as rel]
             [specql.op :as op]))
 
 (defn hae-kanavatoimenpiteet [db hakuehdot]
@@ -24,10 +23,12 @@
   (let [idt (hae-sopimuksen-kanavatoimenpiteet-aikavalilta db hakuehdot)]
     (if (not (empty? idt))
       (sort-by ::toimenpide/alkupvm
-               (hae-kanavatoimenpiteet db
-                                       {::toimenpide/id (op/in (into #{} (map :id idt)))}))
+               (hae-kanavatoimenpiteet
+                 db
+                 (op/and
+                   (op/or {::m/poistettu? op/null?} {::m/poistettu? false})
+                   {::toimenpide/id (op/in (into #{} (map :id idt)))})))
       [])))
-
 
 (defn poista-frontin-keksima-id [m id-avain]
   ;; id-olemassa? katsoo onko id 0 tai negatiivinen, josta päätellään
@@ -68,7 +69,7 @@
   (let [tp-hinnat (specql/fetch db ::hinta/toimenpide<->hinta
                                 #{::hinta/toimenpide ::hinta/hinta}
                                 {::hinta/toimenpide (op/in toimenpide-id-seq)})
-        hae-toimenpide-idlla #(first (hae-kanavatoimenpiteet db {::toimenpide/id %} ))
+        hae-toimenpide-idlla #(first (hae-kanavatoimenpiteet db {::toimenpide/id %}))
         hae-hinta-idlla #(first (hae-hinnat db {::hinta/id %}))]
     (for [tp-hinta tp-hinnat
           :let [tp (hae-toimenpide-idlla (::hinta/toimenpide tp-hinta))
