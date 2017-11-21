@@ -52,3 +52,25 @@
   (is (= {:haku-kaynnissa? false
           :toimenpiteet []}
          (e! (tiedot/->KokonaishintaisetToimenpiteetEiHaettu)))))
+
+(deftest SiirraToimenpideMuutosJaLisatoihin
+  (vaadi-async-kutsut
+    #{tiedot/->ValitutSiirretty tiedot/->ValitutEiSiirretty}
+    (is (= {:toimenpiteiden-siirto-kaynnissa? true}
+           (e! (tiedot/->SiirraValitut))))))
+
+(deftest ValitutSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :valitut-toimenpide-idt #{}
+            :toimenpiteet (sequence [])}
+           (e! (tiedot/->ValitutSiirretty) app)))))
+
+(deftest ValitutEiSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+            :valitut-toimenpide-idt #{1}}
+           (e! (tiedot/->ValitutEiSiirretty) app)))))

@@ -103,7 +103,7 @@
 
   SiirraValitut
   (process-event [_ app]
-    (when-not (:toimenpiteioden-siirto-kaynnissa? app)
+    (when-not (:toimenpiteiden-siirto-kaynnissa? app)
       (-> app
           (tuck-apurit/post! :siirra-kanavatoimenpiteet
                              {::kanavan-toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
@@ -111,7 +111,7 @@
                               ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
                              {:onnistui ->ValitutSiirretty
                               :epaonnistui ->ValitutEiSiirretty})
-          (assoc :toimenpiteioden-siirto-kaynnissa? true))))
+          (assoc :toimenpiteiden-siirto-kaynnissa? true))))
 
   ValitutSiirretty
   (process-event [_ app]
