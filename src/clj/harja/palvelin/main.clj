@@ -129,6 +129,7 @@
 
     ;; Metriikat
     [harja.palvelin.komponentit.metriikka :as metriikka]
+    [harja.palvelin.palvelut.kayttoseuranta :as kayttoseuranta]
 
     ;; Vesiväylät
     [harja.palvelin.palvelut.vesivaylat.toimenpiteet :as vv-toimenpiteet]
@@ -172,6 +173,9 @@
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
                        [:todennus :metriikka])
+      :kayttoseuranta (component/using
+                        (kayttoseuranta/->Kayttoseuranta)
+                        [:db :http-palvelin])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
