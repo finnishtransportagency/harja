@@ -25,7 +25,8 @@
     [harja.geo :as geo]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.urakka :as urakka-domain]
-    [taoensso.timbre :as log])
+    [taoensso.timbre :as log]
+    [harja.tyokalut.kayttoseuranta :as kayttoseuranta])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
@@ -244,6 +245,11 @@
                       (and (= sivu :urakat)
                            (not v-ur)) :XL
                       :default valittu-koko)))))
+
+(kayttoseuranta/seuraa-kayttoa! kartan-koko
+                                "Kartan koko"
+                                (fn [] (str @kartan-edellinen-koko " => " @kartan-koko))
+                                (fn [tila] (not= :hidden tila)))
 
 (def kartta-nakyvissa?
   "Kartta ei piilotettu"

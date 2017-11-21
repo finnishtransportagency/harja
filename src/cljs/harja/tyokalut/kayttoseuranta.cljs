@@ -17,17 +17,31 @@
 
 (defn seuraa-kayttoa!
   "Rekisteröi atomin seurattavaksi, ja lähettää palvelimelle tiedon,
-  kun atomin arvo muuttuu. Lähetettävä tila on aina boolean."
+  kun atomin arvo muuttuu. Katso myös harja.ui.komponentti/kirjaa-kaytto!
+
+  Parametrit:
+  * Atomi: Seurattava atomi
+  * Sivu: Kantaan tallennettava otsikkotieto, pakollinen. Merkkijono, tai funktio joka palauttaa merkkijonon.
+  * Lisätieto: Kantaan tallennettava lisätieto, esim 'Lomake' tai 'Grid'. Merkkijono, tai funktio joka palauttaa merkkijonon.
+  * Tila-fn: Funktio, joka muuntaa atomin vanhan ja uuden tilan booleaniksi. Oletuksena 'boolean'"
   ([atomi sivu]
     (seuraa-kayttoa! atomi sivu nil))
   ([atomi sivu lisatieto]
-    (add-watch atomi
-               (keyword (str sivu lisatieto))
-               (fn [_ _ vanha uusi]
-                 (let [vanha (boolean vanha)
-                       uusi (boolean uusi)]
-                   (when-not (= vanha uusi)
-                     (laheta-kaytto! sivu lisatieto uusi)))))))
+    (seuraa-kayttoa! atomi sivu lisatieto boolean))
+  ([atomi sivu lisatieto tila-fn]
+   (add-watch atomi
+              (keyword (str sivu lisatieto))
+              (fn [_ _ vanha uusi]
+                (let [vanha (tila-fn vanha)
+                      uusi (tila-fn uusi)]
+                  (when-not (= vanha uusi)
+                    (laheta-kaytto! (if (fn? sivu)
+                                      (sivu)
+                                      sivu)
+                                    (if (fn? lisatieto)
+                                      (lisatieto)
+                                      lisatieto)
+                                    uusi)))))))
 
 (defn seuraa-polkua!
   "Luo kursorin atomista annetun polun perusteella, ja rekisteröi atomin
