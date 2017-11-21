@@ -83,18 +83,6 @@
 (defrecord SuunnitellutTyotHaettu [vastaus])
 (defrecord SuunnitellutTyotEiHaettu [])
 
-;; Hintaryhmän hinnoittelu
-;; XX koodin hintaryhmä viittaa tietokannan hinnoittelu-taulun riveihin.
-;; kanavissa ei ole tätä joten hintaryhmä-juttuja ei tule tänne.
-;
-
-;; (defrecord AloitaHintaryhmanHinnoittelu [hintaryhma-id])
-;; (defrecord PeruHintaryhmanHinnoittelu [])
-;; (defrecord AsetaHintaryhmakentalleTiedot [tiedot])
-;; (defrecord TallennaHintaryhmanHinnoittelu [tiedot])
-;; (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
-;; (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
-
 (defn etsi-mapit [mapit avain viitearvo]
   {:pre [(every? map? mapit)]
    :post [(every? map? %)]}
@@ -110,20 +98,12 @@
 (defn ilman-poistettuja [mapit-muokkaustiedoilla]
   {:pre [(every? map? mapit-muokkaustiedoilla)]
    :post [(every? map? %)]}
-  ;; (assert (every? map? mapit-muokkaustiedoilla) (pr-str mapit-muokkaustiedoilla))
   (let [ok-mapit (remove ::m/poistettu? mapit-muokkaustiedoilla)]
-    ;; (assert (every? map? ok-mapit) (pr-str ok-mapit))
     ok-mapit))
 
 (defn hintaryhman-tyot [app ryhma-kriteeri]
-  ;; (log "hintaryhman-tyot: kaikki hinnat " (pr-str (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])))
-  ;; (log "hintaryhman-tyot: kriteeri" (pr-str ryhma-kriteeri))
-  ;; (log "hintaryhman-tyot: etsi-mapit tulos"  (pr-str (etsi-mapit (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
-  ;;                                                                ::hinta/ryhma ryhma-kriteeri)))
   (let [tyo-hinnat (etsi-mapit (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
                                ::hinta/ryhma ryhma-kriteeri)]
-    (log "hintaryhman-tyot: valitulos " (pr-str tyo-hinnat) "- tyypit " (pr-str (mapv type tyo-hinnat)))
-
     (ilman-poistettuja tyo-hinnat)))
 
 (defn muut-tyot [app]
