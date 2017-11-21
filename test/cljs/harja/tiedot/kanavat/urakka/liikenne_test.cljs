@@ -261,12 +261,13 @@
          (e! (tiedot/->TapahtumaaMuokattu {:foo :bar})))))
 
 (deftest alusten-muokkaus
-  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:foo :bar}]}}
-         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}])
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:foo :bar}]
+                                      :grid-virheita? false}}
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] false)
              {:valittu-liikennetapahtuma {}})))
 
   (is (= {:valittu-liikennetapahtuma nil}
-         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}])
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] true)
              {:valittu-liikennetapahtuma nil}))))
 
 (deftest suunnan-vaihto
