@@ -21,6 +21,8 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
+(def sivu "Maksuerät")
+
 (defn- tyyppi-enum->string-monikko [tyyppi]
   (case tyyppi
     :kokonaishintainen "Kokonaishintaiset"
@@ -177,6 +179,7 @@
   (komp/luo
     (komp/sisaan #(pollaa-kantaa))
     (komp/ulos #(lopeta-pollaus))
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu maksuerat/nakymassa?)
     (fn []
       (let [urakka-id (:id @nav/valittu-urakka)

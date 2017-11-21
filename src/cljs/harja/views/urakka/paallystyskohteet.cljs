@@ -22,6 +22,8 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Päällystyskohteet")
+
 (defn- materiaalin-indeksisidontarivi
   [{:keys [indeksi lahtotason-vuosi lahtotason-kuukausi]}]
   [:div
@@ -51,6 +53,7 @@
                             (reset! urakka/paallystysurakan-indeksitiedot (<! ch)))))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
+    (komp/kirjaa-kaytto! sivu)
     (komp/luo
      (fn [ur]
        [:div.paallystyskohteet

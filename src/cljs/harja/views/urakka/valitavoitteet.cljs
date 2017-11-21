@@ -21,6 +21,8 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Välitavoitteet")
+
 (defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
   (cond (nil? takaraja)
         "Uusi"
@@ -267,6 +269,7 @@
         nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)]
     (komp/luo
       (komp/lippu tiedot/nakymassa?)
+      (komp/kirjaa-kaytto! sivu)
       (komp/ulos #(when (= @urakka/valittu-urakan-vuosi :kaikki)
                     ;; Muut näkymät eivät tue vuosivalintaa "Kaikki",
                     ;; joten resetoidaan valinta

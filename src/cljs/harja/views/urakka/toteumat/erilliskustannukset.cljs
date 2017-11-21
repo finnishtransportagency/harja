@@ -36,6 +36,8 @@
 
 (defonce valittu-kustannus (atom nil))
 
+(def sivu "Erilliskustannukset")
+
 (defn tallenna-erilliskustannus [muokattu]
   (go (let [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first (:sopimus muokattu))
@@ -153,6 +155,7 @@
         tallennus-kaynnissa (atom false)
         valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit (:tyyppi ur)))]
     (komp/luo
+      (komp/kirjaa-lomakkeen-kaytto! sivu)
       (fn []
         [:div.erilliskustannuksen-tiedot
          [napit/takaisin " Takaisin kustannusluetteloon" #(reset! valittu-kustannus nil)]
@@ -291,64 +294,67 @@
                                                         (or (= (:toimenpideinstanssi %) (:tpi_id toimenpideinstanssi))
                                                             (= (:tpi_nimi toimenpideinstanssi) "Kaikki")))
                                                      @u/erilliskustannukset-hoitokaudella))))))]
-    (fn []
-      (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
-            oikeus? (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
-                      (oikeudet/voi-kirjoittaa?
-                        oikeudet/urakat-toteumat-vesivaylaerilliskustannukset
-                        (:id @nav/valittu-urakka))
+    (komp/luo
+      (komp/kirjaa-gridin-kaytto! sivu)
+      (fn []
+       (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
+             oikeus? (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
+                       (oikeudet/voi-kirjoittaa?
+                         oikeudet/urakat-toteumat-vesivaylaerilliskustannukset
+                         (:id @nav/valittu-urakka))
 
-                      (oikeudet/voi-kirjoittaa?
-                       oikeudet/urakat-toteumat-erilliskustannukset
-                       (:id @nav/valittu-urakka)))]
-        [:div.erilliskustannusten-toteumat
-         [ui-valinnat/urakkavalinnat {:urakka urakka}
-          ^{:key "valinnat"}
-          [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki urakka]
-          (yleiset/wrap-if
-            (not oikeus?)
-            [yleiset/tooltip {} :%
-             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                             (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
-                                               oikeudet/urakat-toteumat-vesivaylaerilliskustannukset
-                                               oikeudet/urakat-toteumat-erilliskustannukset))]
-            ^{:key "toiminnot"}
-            [ui-valinnat/urakkatoiminnot {:urakka urakka}
-             ^{:key "lisaa-kustannus"}
-             [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
-              {:disabled (not oikeus?)}]])]
+                       (oikeudet/voi-kirjoittaa?
+                         oikeudet/urakat-toteumat-erilliskustannukset
+                         (:id @nav/valittu-urakka)))]
+         [:div.erilliskustannusten-toteumat
+          [ui-valinnat/urakkavalinnat {:urakka urakka}
+           ^{:key "valinnat"}
+           [valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide+kaikki urakka]
+           (yleiset/wrap-if
+             (not oikeus?)
+             [yleiset/tooltip {} :%
+              (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                              (if (urakka-domain/vesivaylaurakka? @nav/valittu-urakka)
+                                                oikeudet/urakat-toteumat-vesivaylaerilliskustannukset
+                                                oikeudet/urakat-toteumat-erilliskustannukset))]
+             ^{:key "toiminnot"}
+             [ui-valinnat/urakkatoiminnot {:urakka urakka}
+              ^{:key "lisaa-kustannus"}
+              [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
+               {:disabled (not oikeus?)}]])]
 
-         [grid/grid
-          {:otsikko (str "Erilliskustannukset ")
-           :tyhja (if (nil? @valitut-kustannukset)
-                    [ajax-loader "Erilliskustannuksia haetaan..."]
-                    "Ei erilliskustannuksia saatavilla.")
-           :rivi-klikattu #(reset! valittu-kustannus %)
-           :rivin-luokka #(aseta-rivin-luokka %)}
-          [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "17%"}
-           {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "13%"}
-           {:otsikko "Raha\u00ADmäärä (€)" :tyyppi :string :nimi :rahasumma :tasaa :oikea
-            :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
-           {:otsikko "Indeksi\u00ADkorjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna :tasaa :oikea
-            :hae #(if (nil? (:indeksin_nimi %))
-                    "Ei sidottu indeksiin"
-                    (if (and
-                          (not (nil? (:indeksin_nimi %)))
-                          (nil? (:indeksikorjattuna %)))
-                      nil
-                      (fmt/euro-opt (Math/abs (:indeksikorjattuna %)))))
-            :fmt #(if (nil? %)
-                    [:span.ei-arvoa "Ei indeksiarvoa"]
-                    (str %))
-            :leveys "13%"}
-           {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
-           {:otsikko "Mak\u00ADsaja" :tyyppi :string :nimi :maksaja
-            :hae #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
-           {:otsikko "Lisä\u00ADtieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
-          @valitut-kustannukset]]))))
+          [grid/grid
+           {:otsikko (str "Erilliskustannukset ")
+            :tyhja (if (nil? @valitut-kustannukset)
+                     [ajax-loader "Erilliskustannuksia haetaan..."]
+                     "Ei erilliskustannuksia saatavilla.")
+            :rivi-klikattu #(reset! valittu-kustannus %)
+            :rivin-luokka #(aseta-rivin-luokka %)}
+           [{:otsikko "Tyyppi" :nimi :tyyppi :fmt erilliskustannustyypin-teksti :leveys "17%"}
+            {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys "13%"}
+            {:otsikko "Raha\u00ADmäärä (€)" :tyyppi :string :nimi :rahasumma :tasaa :oikea
+             :hae #(Math/abs (:rahasumma %)) :fmt fmt/euro-opt :leveys "12%"}
+            {:otsikko "Indeksi\u00ADkorjattuna (€)" :tyyppi :string :nimi :indeksikorjattuna :tasaa :oikea
+             :hae #(if (nil? (:indeksin_nimi %))
+                     "Ei sidottu indeksiin"
+                     (if (and
+                           (not (nil? (:indeksin_nimi %)))
+                           (nil? (:indeksikorjattuna %)))
+                       nil
+                       (fmt/euro-opt (Math/abs (:indeksikorjattuna %)))))
+             :fmt #(if (nil? %)
+                     [:span.ei-arvoa "Ei indeksiarvoa"]
+                     (str %))
+             :leveys "13%"}
+            {:otsikko "Indeksi" :nimi :indeksin_nimi :leveys "10%"}
+            {:otsikko "Mak\u00ADsaja" :tyyppi :string :nimi :maksaja
+             :hae #(if (neg? (:rahasumma %)) "Urakoitsija" "Tilaaja") :leveys "10%"}
+            {:otsikko "Lisä\u00ADtieto" :nimi :lisatieto :leveys "35%" :pituus-max 1024}]
+           @valitut-kustannukset]])))))
 
 (defn erilliskustannusten-toteumat [urakka]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu toteumat/erilliskustannukset-nakymassa?)
     (fn [urakka]
       [:span

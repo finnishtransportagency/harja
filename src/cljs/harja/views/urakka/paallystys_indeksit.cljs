@@ -12,6 +12,8 @@
                       "kevyt_polttooljy" "Kevyt polttoöljy"
                       "nestekaasu" "Nestekaasu"})
 
+(def sivu "Päällystys/Indeksit")
+
 (defn- indeksinimi-ja-lahtotaso-fmt
   [rivi]
   (str (:indeksinimi rivi)
@@ -30,6 +32,7 @@
   "Käyttöliittymä päällystysurakassa käytettävien indeksien valintaan."
   [ur]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (fn [ur]
       (let [indeksivalinnat (indeksit/urakkatyypin-indeksit :paallystys)]
         [grid/grid

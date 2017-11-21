@@ -30,6 +30,8 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def sivu "Paikkausilmoitukset")
+
 (defn lisaa-suoritteet-tyhjaan-toteumaan [toteumat]
   (if (or (nil? toteumat) (empty? toteumat))
     (mapv
@@ -148,6 +150,7 @@
         kokonaishinta (reaction (minipot/laske-kokonaishinta (get-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :toteumat])))]
 
     (komp/luo
+      (komp/kirjaa-lomakkeen-kaytto! sivu)
       (komp/lukko (lukko/muodosta-lukon-id "paikkausilmoitus" (:kohdenumero @paikkaus/paikkausilmoitus-lomakedata)))
       (fn []
         (let [kohteen-tiedot (r/wrap {:aloituspvm (:aloituspvm @paikkaus/paikkausilmoitus-lomakedata)
@@ -323,6 +326,7 @@
 (defn ilmoitusluettelo
   []
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (komp/kuuntelija :avaa-paikkausilmoitus
                      (fn [_ rivi]
                        (avaa-paikkausilmoitus (:paikkauskohde-id rivi))))
@@ -359,6 +363,7 @@
 (defn paikkausilmoitukset [urakka]
   (komp/luo
     (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
 
     (fn [urakka]
       [:span.paikkausilmoitukset

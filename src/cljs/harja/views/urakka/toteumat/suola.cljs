@@ -20,6 +20,8 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Toteumat/Suola")
+
 (defonce suolatoteumissa? (atom false))
 
 (defonce toteumat
@@ -48,6 +50,7 @@
   (komp/luo
    (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet
                tiedot-urakka/aseta-kuluva-kk-jos-hoitokaudella?)
+   (komp/kirjaa-kaytto! sivu)
    (fn []
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero

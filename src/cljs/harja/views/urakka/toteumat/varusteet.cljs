@@ -47,6 +47,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
 
+(def sivu "Varusteet")
 (def nayta-max-toteumaa 500)
 
 (defn oikeus-varusteiden-muokkaamiseen? []
@@ -261,54 +262,60 @@
 (def tietolajien-sisaltojen-kuvaukset-url "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
 
 (defn varustetoteumalomake [e! valinnat varustetoteuma]
-  (let [muokattava? (:muokattava? varustetoteuma)
-        ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
-    [:span.varustetoteumalomake
-     [napit/takaisin "Takaisin varusteluetteloon"
-      #(e! (v/->TyhjennaValittuToteuma))]
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu "Toteumalomake")
+    (fn [e! valinnat varustetoteuma]
+      (let [muokattava? (:muokattava? varustetoteuma)
+           ominaisuudet (:ominaisuudet (:tietolajin-kuvaus varustetoteuma))]
+       [:span.varustetoteumalomake
+        [napit/takaisin "Takaisin varusteluetteloon"
+         #(e! (v/->TyhjennaValittuToteuma))]
 
-     [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
-      [:a {:href tietolajien-sisaltojen-kuvaukset-url
-           :target "_blank"}
-       "Tietolajien sisältöjen kuvaukset"]]
-     [lomake/lomake
-      {:otsikko (case (:toiminto varustetoteuma)
-                  :lisatty "Uusi varuste"
-                  :paivitetty "Muokkaa varustetta"
-                  :nayta "Varuste"
-                  "Varustetoteuma")
-       :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
-       :footer-fn (fn [toteuma]
-                    (when muokattava?
-                      [:div
-                       (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet) (empty? ominaisuudet))
-                         (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
-                       [napit/palvelinkutsu-nappi
-                        "Tallenna"
-                        #(varustetiedot/tallenna-varustetoteuma valinnat toteuma)
-                        {:luokka "nappi-ensisijainen"
-                         :ikoni (ikonit/tallenna)
-                         :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
-                         :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
-                         :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
-      [(varustetoteuman-tiedot muokattava? varustetoteuma)
-       (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
-       (varusteen-ominaisuudet muokattava? ominaisuudet (:arvot varustetoteuma))
-       (varusteen-liitteet e! muokattava? varustetoteuma)]
-      varustetoteuma]]))
+        [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
+         [:a {:href tietolajien-sisaltojen-kuvaukset-url
+              :target "_blank"}
+          "Tietolajien sisältöjen kuvaukset"]]
+        [lomake/lomake
+         {:otsikko (case (:toiminto varustetoteuma)
+                     :lisatty "Uusi varuste"
+                     :paivitetty "Muokkaa varustetta"
+                     :nayta "Varuste"
+                     "Varustetoteuma")
+          :muokkaa! #(e! (v/->AsetaToteumanTiedot %))
+          :footer-fn (fn [toteuma]
+                       (when muokattava?
+                         [:div
+                          (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet) (empty? ominaisuudet))
+                            (lomake/yleinen-varoitus "Ladataan tietolajin kuvausta. Kirjaus voidaan tehdä vasta, kun kuvaus on ladattu"))
+                          [napit/palvelinkutsu-nappi
+                           "Tallenna"
+                           #(varustetiedot/tallenna-varustetoteuma valinnat toteuma)
+                           {:luokka "nappi-ensisijainen"
+                            :ikoni (ikonit/tallenna)
+                            :kun-onnistuu #(e! (v/->VarustetoteumaTallennettu %))
+                            :kun-virhe #(viesti/nayta! "Varusteen tallennus epäonnistui" :warning viesti/viestin-nayttoaika-keskipitka)
+                            :disabled (not (lomake/voi-tallentaa? toteuma))}]]))}
+         [(varustetoteuman-tiedot muokattava? varustetoteuma)
+          (varusteen-tunnistetiedot e! muokattava? varustetoteuma)
+          (varusteen-ominaisuudet muokattava? ominaisuudet (:arvot varustetoteuma))
+          (varusteen-liitteet e! muokattava? varustetoteuma)]
+         varustetoteuma]]))))
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat app]
-  [:span
-   [:div.sisalto-container
-    [:h1 "Varustekirjaukset Harjassa"]
-    [valinnat e! nykyiset-valinnat]
-    [toteumataulukko e! naytettavat-toteumat]]
-   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
-     [:div.sisalto-container
-      [:h1 "Varusteet Tierekisterissä"]
-      (when (oikeus-varusteiden-muokkaamiseen?)
-        [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
-      [varustehaku e! app]])])
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu "Hakulomake")
+    (fn [e! nykyiset-valinnat naytettavat-toteumat app]
+      [:span
+      [:div.sisalto-container
+       [:h1 "Varustekirjaukset Harjassa"]
+       [valinnat e! nykyiset-valinnat]
+       [toteumataulukko e! naytettavat-toteumat]]
+      (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+        [:div.sisalto-container
+         [:h1 "Varusteet Tierekisterissä"]
+         (when (oikeus-varusteiden-muokkaamiseen?)
+           [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil))])
+         [varustehaku e! app]])])))
 
 (defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste naytettava-varuste]}]
   (when uudet-varustetoteumat
@@ -324,6 +331,7 @@
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
     (komp/lippu varustetiedot/karttataso-varustetoteuma)
+    (komp/kirjaa-kaytto! sivu)
     (komp/watcher varustetiedot/valinnat
                   (fn [_ _ uusi]
                     (e! (v/->YhdistaValinnat uusi))))

@@ -34,6 +34,8 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
+(def sivu "Toteumat/Muut työt")
+
 (defn hae-muutoshintainen-tyo-tpklla [tpk]
   (first (filter (fn [muutoshinta]
                    (= (:tehtava muutoshinta) tpk))
@@ -121,6 +123,7 @@
   "Muutos-, lisä- ja äkillisen hoitotyön toteuman muokkaaminen ja lisääminen"
   [urakka]
   (komp/luo
+    (komp/kirjaa-lomakkeen-kaytto! sivu)
     (let [muokattu (reaction-writable
                      (if (get-in @muut-tyot/valittu-toteuma [:toteuma :id])
                        (assoc @muut-tyot/valittu-toteuma
@@ -434,6 +437,7 @@
                  toteutuneet-muut-tyot)))]
 
     (komp/luo
+      (komp/kirjaa-gridin-kaytto! sivu)
       (fn []
         (reset! muut-tyot/haetut-muut-tyot @tyorivit)
         (let [aseta-rivin-luokka (aseta-rivin-luokka @korostettavan-rivin-id)
@@ -501,6 +505,7 @@
 (defn muut-tyot-toteumat [ur]
   (komp/luo
     (komp/lippu muut-tyot-kartalla/karttataso-muut-tyot)
+    (komp/kirjaa-kaytto! sivu)
     (komp/kuuntelija :toteuma-klikattu #(reset! muut-tyot/valittu-toteuma %2))
     (komp/sisaan-ulos #(kartta-tiedot/kasittele-infopaneelin-linkit!
                          {:toteuma {:toiminto

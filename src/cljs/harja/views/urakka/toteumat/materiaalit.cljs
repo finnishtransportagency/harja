@@ -25,6 +25,8 @@
 
 (defonce valittu-materiaalin-kaytto (atom nil))
 
+(def sivu "Toteumat/Materiaalit")
+
 (defonce
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
   valittu-aikavali (atom nil))
@@ -141,6 +143,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
         vanha-toteuma? (if (:id @valittu-materiaalin-kaytto) true false)]
 
     (komp/luo
+      (komp/kirjaa-lomakkeen-kaytto! sivu)
       {:component-will-mount
        (fn [_]
          (when (:id @valittu-materiaalin-kaytto)
@@ -301,59 +304,63 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 
 (defn materiaalit-paasivu
   [ur]
-  [:div
-   [valinnat/urakan-sopimus ur]
-   [valinnat/aikavali-nykypvm-taakse ur valittu-aikavali]
+  (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
+    (fn [ur]
+      [:div
+      [valinnat/urakan-sopimus ur]
+      [valinnat/aikavali-nykypvm-taakse ur valittu-aikavali]
 
-   (let [oikeus? (oikeudet/voi-kirjoittaa?
-                   oikeudet/urakat-toteumat-materiaalit
-                   (:id @nav/valittu-urakka))]
-     (yleiset/wrap-if
-       (not oikeus?)
-       [yleiset/tooltip {} :%
-        (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                        oikeudet/urakat-toteumat-materiaalit)]
-       [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
-        {:disabled (not oikeus?)}]))
+      (let [oikeus? (oikeudet/voi-kirjoittaa?
+                      oikeudet/urakat-toteumat-materiaalit
+                      (:id @nav/valittu-urakka))]
+        (yleiset/wrap-if
+          (not oikeus?)
+          [yleiset/tooltip {} :%
+           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                           oikeudet/urakat-toteumat-materiaalit)]
+          [napit/uusi "Lisää toteuma" #(reset! valittu-materiaalin-kaytto {})
+           {:disabled (not oikeus?)}]))
 
-   [grid/grid
-    {:otsikko "Materiaalien käyttö"
-     :tyhja (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Materiaaleja haetaan"] "Ei löytyneitä tietoja.")
-     :tunniste #(:id (:materiaali %))
-     :luokat ["toteumat-paasisalto"]
-     :vetolaatikot
-     (into {}
-           (map
-             (juxt
-               (comp :id :materiaali)
-               (fn [mk] [materiaalinkaytto-vetolaatikko (:id ur) mk]))
-             )
-           (filter
-             (fn [rivi] (> (:kokonaismaara rivi) 0))
-             @urakan-materiaalin-kaytot))
-     }
+      [grid/grid
+       {:otsikko "Materiaalien käyttö"
+        :tyhja (if (nil? @urakan-materiaalin-kaytot) [ajax-loader "Materiaaleja haetaan"] "Ei löytyneitä tietoja.")
+        :tunniste #(:id (:materiaali %))
+        :luokat ["toteumat-paasisalto"]
+        :vetolaatikot
+        (into {}
+              (map
+                (juxt
+                  (comp :id :materiaali)
+                  (fn [mk] [materiaalinkaytto-vetolaatikko (:id ur) mk]))
+                )
+              (filter
+                (fn [rivi] (> (:kokonaismaara rivi) 0))
+                @urakan-materiaalin-kaytot))
+        }
 
-    ;; sarakkeet
-    [{:tyyppi :vetolaatikon-tila :leveys 1}
-     {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys 10}
-     {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys 2}
-     {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys 4 :tasaa :oikea}
-     {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys 4 :tasaa :oikea}
-     {:otsikko "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti :tasaa :oikea
-      :muokattava? (constantly false) :leveys 4
-      :komponentti
-      (fn [{:keys [maara kokonaismaara]}]
-        (if-not maara
-          [:span]
-          (let [erotus (- maara kokonaismaara)]
-            (if (>= erotus 0)
-              [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
-              [:span.materiaalierotus.materiaalierotus-negatiivinen erotus]))))}]
+       ;; sarakkeet
+       [{:tyyppi :vetolaatikon-tila :leveys 1}
+        {:otsikko "Nimi" :nimi :materiaali_nimi :hae (comp :nimi :materiaali) :leveys 10}
+        {:otsikko "Yksik\u00ADkö" :nimi :materiaali_yksikko :hae (comp :yksikko :materiaali) :leveys 2}
+        {:otsikko "Suunniteltu määrä" :nimi :sovittu_maara :hae :maara :leveys 4 :tasaa :oikea}
+        {:otsikko "Käytetty määrä" :nimi :toteutunut_maara :hae :kokonaismaara :leveys 4 :tasaa :oikea}
+        {:otsikko "Jäljellä" :nimi :materiaalierotus :tyyppi :komponentti :tasaa :oikea
+         :muokattava? (constantly false) :leveys 4
+         :komponentti
+         (fn [{:keys [maara kokonaismaara]}]
+           (if-not maara
+             [:span]
+             (let [erotus (- maara kokonaismaara)]
+               (if (>= erotus 0)
+                 [:span.materiaalierotus.materiaalierotus-positiivinen erotus]
+                 [:span.materiaalierotus.materiaalierotus-negatiivinen erotus]))))}]
 
-    (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])
+       (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])))
 
 (defn materiaalit-nakyma [ur]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu materiaali-tiedot/materiaalinakymassa?)
     (fn [ur]
       [:span
