@@ -1,6 +1,6 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot
   "Sanktioiden listaus"
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.views.urakka.valinnat :as urakka-valinnat]
 
@@ -29,7 +29,8 @@
             [harja.ui.viesti :as viesti]
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
-            [harja.ui.valinnat :as valinnat])
+            [harja.ui.valinnat :as valinnat]
+            [harja.ui.liitteet :as liitteet])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -38,7 +39,8 @@
   (let [muokattu (atom @tiedot/valittu-sanktio)
         voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                                (:id @nav/valittu-urakka))
-        tallennus-kaynnissa (atom false)]
+        tallennus-kaynnissa (atom false)
+        urakka-id (:id @nav/valittu-urakka)]
     (fn [optiot]
       (let [yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
             mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
@@ -64,7 +66,7 @@
                           [:span.nappiwrappi
                            [napit/palvelinkutsu-nappi
                             "Tallenna sanktio"
-                            #(tiedot/tallenna-sanktio @muokattu (:id @nav/valittu-urakka))
+                            #(tiedot/tallenna-sanktio @muokattu urakka-id)
                             {:luokka "nappi-ensisijainen"
                              :ikoni (ikonit/tallenna)
                              :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
@@ -87,7 +89,7 @@
                                                     (let [res (tiedot/tallenna-sanktio
                                                                 (assoc @muokattu
                                                                   :poistettu true)
-                                                                (:id @nav/valittu-urakka))]
+                                                                urakka-id)]
                                                       (do (viesti/nayta! "Sanktio poistettu")
                                                           (reset! tiedot/valittu-sanktio nil))))}))}
                               (ikonit/livicon-trash) " Poista sanktio"])])}
@@ -244,7 +246,16 @@
                 :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                 :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
                 :palstoja 1
-                :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})]
+                :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
+
+             {:otsikko "Liitteet" :nimi :liitteet
+              :palstoja 2
+              :tyyppi :komponentti
+              :komponentti (fn [_]
+                             [liitteet/liitteet-ja-lisays urakka-id (:liitteet @muokattu)
+                              {:uusi-liite-atom (r/wrap (:uusi-liite @muokattu)
+                                                        #(swap! muokattu (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
+                               :uusi-liite-teksti "Lisää liite sanktioon"}])}]
             @muokattu]
            [ajax-loader "Ladataan..."])]))))
 

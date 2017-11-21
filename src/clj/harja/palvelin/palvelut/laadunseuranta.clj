@@ -215,7 +215,7 @@
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
-    (log/info "Tuli laatupoikkeama: " laatupoikkeama)
+    (log/debug "Tallenna laatupoikkeama: " laatupoikkeama)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
     (jdbc/with-db-transaction [db db]
       (let [osapuoli (roolit/osapuoli user)
@@ -267,7 +267,8 @@
     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
-                                                                                            :poistettu poista-laatupoikkeama?))]
+                                                                                            :poistettu poista-laatupoikkeama?))
+          liite (tallenna-laatupoikkeaman-liitteet db laatupoikkeama id)]
 
       (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
         (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
