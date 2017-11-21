@@ -14,6 +14,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]))
 
+(def sivu "Vesiväylät/Urakoitsijoiden luonti")
+
 (defn urakan-nimi-ja-pvm [urakat]
   [apply
    tietoja
@@ -25,6 +27,7 @@
 (defn luontilomake [e! app]
   (komp/luo
     (komp/sisaan #(e! (tiedot/->HaeLomakevaihtoehdot)))
+    (komp/kirjaa-lomakkeen-kaytto! sivu)
     (fn [e! {:keys [valittu-urakoitsija tallennus-kaynnissa? haetut-ytunnukset] :as app}]
       (let [urakat (tiedot/urakoitsijan-urakat valittu-urakoitsija)]
        [:div
@@ -81,6 +84,7 @@
 
 (defn urakoitsijagrid [e! app]
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (komp/sisaan #(e! (tiedot/->HaeUrakoitsijat)))
     (fn [e! {:keys [haetut-urakoitsijat urakoitsijoiden-haku-kaynnissa?] :as app}]
       [:div
@@ -109,6 +113,7 @@
 
 (defn vesivaylaurakoitsijoiden-luonti* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
 

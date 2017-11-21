@@ -32,6 +32,8 @@
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
+(def sivu "Kanavat/Häiriötilanteet")
+
 (defn- suodattimet-ja-toiminnot [e! app]
   (let [valittu-urakka (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka valittu-urakka}
@@ -79,33 +81,37 @@
          {:disabled (not oikeus?)}])]]))
 
 (defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
-  [grid/grid
-   {:otsikko (if (and (some? hairiotilanteet) hairiotilanteiden-haku-kaynnissa?)
-               [ajax-loader-pieni "Päivitetään listaa"]
-               "Häiriötilanteet")
-    :tunniste ::hairiotilanne/id
-    :tyhja (if (nil? hairiotilanteet)
-             [ajax-loader "Haetaan häiriötilanteita"]
-             "Häiriötilanteita ei löytynyt")}
-   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
-    {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt kkohde/fmt-kohteen-kanava-nimi :leveys 10}
-    {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
-     :fmt hairio/fmt-vikaluokka}
-    {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
-    {:otsikko "Odo\u00ADtus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika-h :tyyppi :numero :leveys 2}
-    {:otsikko "Am\u00ADmat\u00ADti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 2}
-    {:otsikko "Hu\u00ADvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 2}
-    {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
-    {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 2}
-    {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 3
-     :fmt hairio/fmt-korjauksen-tila}
-    {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
-     :tyyppi :string :fmt fmt/totuus :leveys 2}]
-   hairiotilanteet])
+  (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
+    (fn [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
+      [grid/grid
+      {:otsikko (if (and (some? hairiotilanteet) hairiotilanteiden-haku-kaynnissa?)
+                  [ajax-loader-pieni "Päivitetään listaa"]
+                  "Häiriötilanteet")
+       :tunniste ::hairiotilanne/id
+       :tyhja (if (nil? hairiotilanteet)
+                [ajax-loader "Haetaan häiriötilanteita"]
+                "Häiriötilanteita ei löytynyt")}
+      [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
+       {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
+        :fmt kkohde/fmt-kohteen-kanava-nimi :leveys 10}
+       {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
+        :fmt hairio/fmt-vikaluokka}
+       {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
+       {:otsikko "Odo\u00ADtus\u00ADaika (h)" :nimi ::hairiotilanne/odotusaika-h :tyyppi :numero :leveys 2}
+       {:otsikko "Am\u00ADmat\u00ADti\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/ammattiliikenne-lkm :tyyppi :numero :leveys 2}
+       {:otsikko "Hu\u00ADvi\u00ADlii\u00ADkenne lkm" :nimi ::hairiotilanne/huviliikenne-lkm :tyyppi :numero :leveys 2}
+       {:otsikko "Kor\u00ADjaus\u00ADtoimenpide" :nimi ::hairiotilanne/korjaustoimenpide :tyyppi :string :leveys 10}
+       {:otsikko "Kor\u00ADjaus\u00ADaika" :nimi ::hairiotilanne/korjausaika-h :tyyppi :numero :leveys 2}
+       {:otsikko "Kor\u00ADjauk\u00ADsen tila" :nimi ::hairiotilanne/korjauksen-tila :tyyppi :string :leveys 3
+        :fmt hairio/fmt-korjauksen-tila}
+       {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
+        :tyyppi :string :fmt fmt/totuus :leveys 2}]
+      hairiotilanteet])))
 
 (defn hairiotilanteet* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))

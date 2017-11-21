@@ -12,37 +12,43 @@
             [harja.ui.ikonit :as ikonit]
             [harja.domain.oikeudet :as oikeudet]))
 
+(def sivu "Vesiväylät/Hankkeiden luonti")
+
 (defn luontilomake [e! {:keys [valittu-hanke tallennus-kaynnissa?] :as app}]
-  [:div
-   [napit/takaisin "Takaisin luetteloon" #(e! (tiedot/->ValitseHanke nil))
-    {:disabled tallennus-kaynnissa?}]
-   [lomake/lomake
-    {:otsikko (if (::h/id valittu-hanke)
-                "Muokkaa hanketta"
-                "Luo uusi hanke")
-     :muokkaa! #(e! (tiedot/->HankettaMuokattu (lomake/ilman-lomaketietoja %)))
-     :voi-muokata? (oikeudet/hallinta-vesivaylat)
-     :footer-fn (fn [hanke]
-                  [napit/tallenna
-                   "Tallenna hanke"
-                   #(e! (tiedot/->TallennaHanke (lomake/ilman-lomaketietoja hanke)))
-                   {:ikoni (ikonit/tallenna)
-                    :disabled (or tallennus-kaynnissa?
-                                  (not (lomake/voi-tallentaa? hanke))
-                                  (not (oikeudet/hallinta-vesivaylat)))
-                    :tallennus-kaynnissa? tallennus-kaynnissa?}])}
-    [{:otsikko "Nimi" :nimi ::h/nimi :tyyppi :string :pakollinen? true}
-     (lomake/rivi
-       {:otsikko "Alku" :nimi ::h/alkupvm :tyyppi :pvm :pakollinen? true}
-       {:otsikko "Loppu" :nimi ::h/loppupvm :tyyppi :pvm :pakollinen? true ;; TODO Validointi ei herjaa!?
-        :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
-     (when (get-in valittu-hanke [:urakka :nimi])
-       {:otsikko "Urakka" :nimi :urakan-nimi :tyyppi :string :muokattava? (constantly false)
-        :hae #(get-in % [::h/urakka ::u/nimi])})]
-    valittu-hanke]])
+  (komp/luo
+    (komp/kirjaa-lomakkeen-kaytto! sivu)
+    (fn [e! {:keys [valittu-hanke tallennus-kaynnissa?] :as app}]
+      [:div
+      [napit/takaisin "Takaisin luetteloon" #(e! (tiedot/->ValitseHanke nil))
+       {:disabled tallennus-kaynnissa?}]
+      [lomake/lomake
+       {:otsikko (if (::h/id valittu-hanke)
+                   "Muokkaa hanketta"
+                   "Luo uusi hanke")
+        :muokkaa! #(e! (tiedot/->HankettaMuokattu (lomake/ilman-lomaketietoja %)))
+        :voi-muokata? (oikeudet/hallinta-vesivaylat)
+        :footer-fn (fn [hanke]
+                     [napit/tallenna
+                      "Tallenna hanke"
+                      #(e! (tiedot/->TallennaHanke (lomake/ilman-lomaketietoja hanke)))
+                      {:ikoni (ikonit/tallenna)
+                       :disabled (or tallennus-kaynnissa?
+                                     (not (lomake/voi-tallentaa? hanke))
+                                     (not (oikeudet/hallinta-vesivaylat)))
+                       :tallennus-kaynnissa? tallennus-kaynnissa?}])}
+       [{:otsikko "Nimi" :nimi ::h/nimi :tyyppi :string :pakollinen? true}
+        (lomake/rivi
+          {:otsikko "Alku" :nimi ::h/alkupvm :tyyppi :pvm :pakollinen? true}
+          {:otsikko "Loppu" :nimi ::h/loppupvm :tyyppi :pvm :pakollinen? true ;; TODO Validointi ei herjaa!?
+           :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
+        (when (get-in valittu-hanke [:urakka :nimi])
+          {:otsikko "Urakka" :nimi :urakan-nimi :tyyppi :string :muokattava? (constantly false)
+           :hae #(get-in % [::h/urakka ::u/nimi])})]
+       valittu-hanke]])))
 
 (defn hankegrid [e! app]
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (komp/sisaan #(e! (tiedot/->HaeHankkeet)))
     (fn [e! {:keys [haetut-hankkeet hankkeiden-haku-kaynnissa?] :as app}]
       [:div
@@ -67,6 +73,7 @@
 
 (defn vesivaylahankkeiden-luonti* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
 

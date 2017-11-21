@@ -245,6 +245,7 @@
 (defn hakulomake
   [e! _]
   (komp/luo
+    (komp/kirjaa-kaytto! "Tietyöilmoitukset" "Hakulomake")
     (komp/sisaan #(e! (tiedot/->HaeIlmoitukset)))
     (fn [e! {valinnat-nyt :valinnat
              haetut-ilmoitukset :tietyoilmoitukset

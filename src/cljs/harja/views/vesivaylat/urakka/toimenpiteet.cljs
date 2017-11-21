@@ -13,8 +13,11 @@
             [harja.domain.urakka :as urakka-domain])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn toimenpiteet []
+(def sivu "Toimenpiteet")
+
+(defn toimenpiteet [{:keys [id] :as ur}]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (fn [{:keys [id] :as ur}]
       [bs/tabs {:style :tabs :classes "tabs-taso2"
                 :active (nav/valittu-valilehti-atom :toimenpiteet)}

@@ -243,6 +243,7 @@
   (kuuntele-oikeusvirheita)
   (hairiotiedot/tarkkaile-hairioilmoituksia!)
   (komp/luo
+    (komp/kirjaa-kaytto! "Main")
     (fn []
       (if @nav/render-lupa?
         (let [sivu @nav/valittu-sivu

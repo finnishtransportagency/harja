@@ -4,8 +4,11 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.vesivaylat.urakka.laadunseuranta.viat :as tiedot]))
 
+(def sivu "Vesiväylät/Viat")
+
 (defn viat* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! app]

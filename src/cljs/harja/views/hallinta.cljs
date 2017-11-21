@@ -17,63 +17,66 @@
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.ui.grid :as g]
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.komponentti :as komp]))
 
 (defn hallinta []
-  [bs/tabs {:style :tabs :classes "tabs-taso1"
-            :active (nav/valittu-valilehti-atom :hallinta)}
+  (komp/luo
+    (komp/kirjaa-kaytto! "Hallinta")
+    (fn [] [bs/tabs {:style :tabs :classes "tabs-taso1"
+               :active (nav/valittu-valilehti-atom :hallinta)}
 
-   "Indeksit"
-   :indeksit
-   (when (oikeudet/hallinta-indeksit)
-     ^{:key "indeksit"}
-     [i/indeksit-elementti])
+      "Indeksit"
+      :indeksit
+      (when (oikeudet/hallinta-indeksit)
+        ^{:key "indeksit"}
+        [i/indeksit-elementti])
 
-   "Tehtävät"
-   :tehtavat
-   (when (oikeudet/hallinta-tehtavat)
-     ^{:key "tehtävät"}
-     [tp/toimenpidekoodit])
+      "Tehtävät"
+      :tehtavat
+      (when (oikeudet/hallinta-tehtavat)
+        ^{:key "tehtävät"}
+        [tp/toimenpidekoodit])
 
-   "Välitavoitteet"
-   :valtakunnalliset-valitavoitteet
-   (when (oikeudet/hallinta-valitavoitteet)
-     ^{:key "valtakunnalliset-valitavoitteet"}
-     [valitavoitteet/valitavoitteet])
+      "Välitavoitteet"
+      :valtakunnalliset-valitavoitteet
+      (when (oikeudet/hallinta-valitavoitteet)
+        ^{:key "valtakunnalliset-valitavoitteet"}
+        [valitavoitteet/valitavoitteet])
 
-   "Lämpötilat"
-   :lampotilat
-   (when (oikeudet/hallinta-lampotilat)
-     ^{:key "lämpötilat"}
-     [lampotilat/lampotilat])
+      "Lämpötilat"
+      :lampotilat
+      (when (oikeudet/hallinta-lampotilat)
+        ^{:key "lämpötilat"}
+        [lampotilat/lampotilat])
 
-   "Integraatioloki"
-   :integraatioloki
-   (when (oikeudet/hallinta-integraatioloki)
-     ^{:key "integraatioloki"}
-     [integraatioloki/integraatioloki])
+      "Integraatioloki"
+      :integraatioloki
+      (when (oikeudet/hallinta-integraatioloki)
+        ^{:key "integraatioloki"}
+        [integraatioloki/integraatioloki])
 
-   "Yhteydenpito"
-   :yhteydenpito
-   (when (oikeudet/hallinta-yhteydenpito)
-     ^{:key "yhteydenpito"}
-     [yhteydenpito/yhteydenpito])
+      "Yhteydenpito"
+      :yhteydenpito
+      (when (oikeudet/hallinta-yhteydenpito)
+        ^{:key "yhteydenpito"}
+        [yhteydenpito/yhteydenpito])
 
-   "Häiriöilmoitukset"
-   :hairioilmoitukset
-   (when (oikeudet/hallinta-hairioilmoitukset)
-     ^{:key "integraatioloki"}
-     [hairiot/hairiot])
+      "Häiriöilmoitukset"
+      :hairioilmoitukset
+      (when (oikeudet/hallinta-hairioilmoitukset)
+        ^{:key "integraatioloki"}
+        [hairiot/hairiot])
 
-   "API-järjestelmätunnukset"
-   :api-jarjestelmatunnukset
-   (when (oikeudet/hallinta-api-jarjestelmatunnukset)
-     ^{:key "jarjestelmatunnukset"}
-     [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])
+      "API-järjestelmätunnukset"
+      :api-jarjestelmatunnukset
+      (when (oikeudet/hallinta-api-jarjestelmatunnukset)
+        ^{:key "jarjestelmatunnukset"}
+        [api-jarjestelmatunnukset/api-jarjestelmatunnukset-paakomponentti])
 
-   "Vesiväyläurakat"
-   :vesivayla-hallinta
-   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-              (oikeudet/hallinta-vesivaylat))
-     ^{:key "vesivaylaurakat"}
-     [vu/vesivayla-hallinta])])
+      "Vesiväyläurakat"
+      :vesivayla-hallinta
+      (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+                 (oikeudet/hallinta-vesivaylat))
+        ^{:key "vesivaylaurakat"}
+        [vu/vesivayla-hallinta])])))

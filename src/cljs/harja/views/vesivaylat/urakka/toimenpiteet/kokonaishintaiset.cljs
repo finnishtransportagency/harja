@@ -20,6 +20,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
+(def sivu "Vesiväylät/Kokonaishintaiset")
+
 (defn- kiintiovaihtoehdot [e! {:keys [valittu-kiintio-id toimenpiteet kiintiot] :as app}]
   [:div.inline-block {:style {:margin-right "10px"}}
    [yleiset/livi-pudotusvalikko
@@ -63,6 +65,7 @@
 
 (defn- kokonaishintaiset-toimenpiteet-nakyma [e! app valinnat]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do

@@ -12,6 +12,8 @@
             [harja.loki :refer [log]]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
+(def sivu "Hallinta/Yhteydenpito")
+
 (defn yhteydenttolomake [e! {yhteydenotto :yhteydenotto
                              lahetys-kaynnissa? :lahetys-kaynnissa?
                              :as app}]
@@ -44,6 +46,7 @@
 
 (defn yhteydenpito* []
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu tiedot/nakymassa?)
     (fn [e! app]
       (yhteydenttolomake e! app))))

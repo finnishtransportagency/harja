@@ -19,6 +19,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
+(def sivu "Lämpötilat")
 (defonce lampotilarivit (reaction-writable @tiedot/hoitourakoiden-lampotilat))
 
 (defonce taulukon-virheet (atom nil))
@@ -34,6 +35,7 @@
   "Lämpötilojen pääkomponentti"
   []
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu tiedot/lampotilojen-hallinnassa?)
     (fn []
       (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat)
