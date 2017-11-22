@@ -357,8 +357,8 @@
       :nimi ::lt/lisatieto}
      {:otsikko "Kuittaaja"
       :leveys 2
-      :nimi :kuittaaja
-      :hae (comp ::kayttaja/kayttajanimi ::lt/kuittaaja)}]
+      :nimi ::lt/kuittaaja
+      :fmt kayttaja/kayttaja->str}]
     (sort-by
       ;; Tarvitaan aika monta vaihtoehtoista sorttausavainta, koska
       ;; yhdelle kohteelle voi tulla yhdellä kirjauksella aika monta riviä
