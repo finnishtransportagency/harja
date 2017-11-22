@@ -115,8 +115,11 @@
   (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteidenTallentaminenEpaonnistui))))))
 
 (deftest ValitseToimenpide
-  (let [toimenpide {:foo "bar"}]
-    (is (= toimenpide (:valittu-toimenpide (e! (tiedot/->ValitseToimenpide toimenpide)))))))
+  (let [tiedot {:id 1
+                :valittu? true}
+        app-jalkeen {:valitut-toimenpide-idt #{1}}
+        app-ennen {:valitut-toimenpide-idt #{}}]
+    (is (= app-jalkeen (e! (tiedot/->ValitseToimenpide tiedot) app-ennen)))))
 
 (deftest SiirraToimenpideMuutosJaLisatoihin
   (vaadi-async-kutsut
