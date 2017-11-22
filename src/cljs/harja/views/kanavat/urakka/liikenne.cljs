@@ -21,6 +21,7 @@
             [harja.views.urakka.valinnat :as suodattimet]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
+            [harja.ui.varmista-kayttajalta :refer [varmista-kayttajalta]]
             [harja.id :refer [id-olemassa?]]
 
             [harja.domain.kayttaja :as kayttaja]
@@ -113,24 +114,19 @@
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
                     (when-not uusi-tapahtuma?
                       [napit/poista
-                      "Poista tapahtuma"
-                      #(varmistus-modal
-                         [:div "Oletko varma, että haluat poistaa koko liikennetapahtuman?"]
-                         [:div
-                          [napit/takaisin "Peruuta" (fn [] (modal/piilota!))]
-                          [napit/poista
-                           "Poista tapahtuma"
-                           (fn []
-                             (e! (tiedot/->TallennaLiikennetapahtuma
-                                   (lomake/ilman-lomaketietoja (assoc tapahtuma ::m/poistettu? true)))))
-                           {:ikoni (ikonit/livicon-trash)
-                            :disabled (or tallennus-kaynnissa?
-                                          (not (oikeudet/urakat-kanavat-liikenne))
-                                          (not (lomake/voi-tallentaa? tapahtuma)))}]])
-                      {:ikoni (ikonit/livicon-trash)
-                       :disabled (or tallennus-kaynnissa?
-                                     (not (oikeudet/urakat-kanavat-liikenne))
-                                     (not (lomake/voi-tallentaa? tapahtuma)))}])
+                       "Poista tapahtuma"
+                       #(varmista-kayttajalta
+                         {:otsikko "Poista tapahtuma"
+                          :sisalto [:div "Oletko varma, että haluat poistaa koko liikennetapahtuman?"]
+                          :hyvaksy "Poista tapahtuma"
+                          :toiminto-fn (fn []
+                                         (e! (tiedot/->TallennaLiikennetapahtuma
+                                               (lomake/ilman-lomaketietoja (assoc tapahtuma ::m/poistettu? true)))))
+                          :napit [:takaisin :poista]})
+                       {:ikoni (ikonit/livicon-trash)
+                        :disabled (or tallennus-kaynnissa?
+                                      (not (oikeudet/urakat-kanavat-liikenne))
+                                      (not (lomake/voi-tallentaa? tapahtuma)))}])
                     (when uusi-tapahtuma?
                       [napit/yleinen-toissijainen
                        "Tyhjennä kentät"
