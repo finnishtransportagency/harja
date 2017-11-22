@@ -276,11 +276,11 @@
                        :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
        :arvo-atom (atomi ::lt-alus/suunta)}]
      [kentat/tee-otsikollinen-kentta
-      {:otsikko "Toimenpidetyyppi"
+      {:otsikko "Sulun toimenpide"
        :kentta-params {:tyyppi :valinta
                        :valinta-nayta #(or (lt/sulku-toimenpide->str %) "Kaikki")
                        :valinnat (into [nil] lt/sulku-toimenpide-vaihtoehdot)}
-       :arvo-atom (atomi ::lt/toimenpide)}]
+       :arvo-atom (atomi ::lt/sulku-toimenpide)}]
      [valinnat/kanava-aluslaji
       (atomi ::lt-alus/laji)
       (into [nil] lt-alus/aluslajit)

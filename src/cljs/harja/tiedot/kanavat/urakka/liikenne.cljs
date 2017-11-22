@@ -41,7 +41,7 @@
                             :aikavali nil
                             ::lt/kohde nil
                             ::lt-alus/suunta nil
-                            ::lt/toimenpide nil
+                            ::lt/sulku-toimenpide nil
                             ::lt-alus/laji nil
                             :niput? false}}))
 
@@ -63,7 +63,7 @@
        ::sop/id (first @u/valittu-sopimusnumero)})))
 
 (def valintojen-avaimet
-  [::ur/id ::sop/id :aikavali ::lt/kohde ::lt-alus/suunta ::lt/toimenpide ::lt-alus/laji :niput?])
+  [::ur/id ::sop/id :aikavali ::lt/kohde ::lt-alus/suunta ::lt/sulku-toimenpide ::lt-alus/laji :niput?])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeLiikennetapahtumat [])

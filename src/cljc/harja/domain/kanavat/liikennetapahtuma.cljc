@@ -103,7 +103,7 @@
 (def suunta-vaihtoehdot (keys suunta*))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
-                                               :opt [::toimenpide
+                                               :opt [::sulku-toimenpide
                                                      ::kohde
                                                      ::lt-alus/laji
                                                      ::lt-alus/suunta]
