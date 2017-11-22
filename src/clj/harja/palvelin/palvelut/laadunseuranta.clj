@@ -62,10 +62,20 @@
           tulos (into [] yhteiset/laatupoikkeama-xf uniikit)]
       tulos)))
 
+(defn- vaadi-laatupoikkeama-kuuluu-urakkaan
+  "Tarkistaa, että laatupoikkeama kuuluu annettuun urakkaan"
+  [db urakka-id laatupoikkeama-id]
+  (when (id-olemassa? laatupoikkeama-id)
+    (let [laatupoikkeaman-urakka (:urakka (first (laatupoikkeamat-q/hae-laatupoikkeaman-urakka-id db {:laatupoikkeamaid laatupoikkeama-id})))]
+      (when-not (= laatupoikkeaman-urakka urakka-id)
+        (throw (SecurityException. (str "Laatupoikkeama " laatupoikkeama-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
+
 (defn- hae-sanktion-liitteet
   "Hakee yhden sanktion (laatupoikkeaman kautta) liitteet"
   [db user urakka-id laatupoikkeama-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (vaadi-laatupoikkeama-kuuluu-urakkaan db urakka-id laatupoikkeama-id)
   (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id)))
 
 (defn hae-laatupoikkeaman-tiedot

@@ -510,3 +510,7 @@ WHERE lp.urakka IN (SELECT id FROM urakka WHERE (TRUE IN (SELECT unnest(ARRAY[:u
           OR
           lp.yllapitokohde IS NOT NULL AND
             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+
+--name: hae-laatupoikkeaman-urakka-id
+SELECT urakka FROM laatupoikkeama
+ WHERE id = :laatupoikkeamaid;
