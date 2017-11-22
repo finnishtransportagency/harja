@@ -223,10 +223,9 @@
           :komponentti (fn [_]
                          [varaosataulukko e! valittu-hairiotilanne])})
        {:otsikko "Kuittaaja"
-        ;; todo: lisää kantaan
-        :nimi :kuittaaja
+        :nimi ::hairiotilanne/kuittaaja
         :tyyppi :string
-        :hae #(kayttaja/kokonimi (:kuittaaja %))
+        :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
         :muokattava? (constantly false)}]
       valittu-hairiotilanne]]))
 

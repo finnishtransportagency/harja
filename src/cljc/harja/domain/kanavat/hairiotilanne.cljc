@@ -28,7 +28,11 @@
     "paikallinen_kaytto" ::paikallinen-kaytto?
     "korjausaika_h" ::korjausaika-h
     "odotusaika_h" ::odotusaika-h
-    "korjauksen_tila" ::korjauksen-tila}
+    "korjauksen_tila" ::korjauksen-tila
+    "kuittaaja" ::kuittaaja-id
+    ::kuittaaja (specql.rel/has-one ::kuittaaja-id
+                                    :harja.domain.kayttaja/kayttaja
+                                    :harja.domain.kayttaja/id)}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
                                 ::kkohde/kohde

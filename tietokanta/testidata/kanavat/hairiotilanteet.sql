@@ -1,6 +1,6 @@
 INSERT INTO kan_hairio (urakka, sopimus, pvm, kohde, vikaluokka, syy, odotusaika_h, ammattiliikenne_lkm,
                         huviliikenne_lkm, korjaustoimenpide, korjausaika_h, korjauksen_tila, paikallinen_kaytto,
-                        luoja, luotu)
+                        luoja, luotu, kuittaaja)
 VALUES (
   (SELECT id
    FROM urakka
@@ -18,11 +18,14 @@ VALUES (
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  NOW());
+  NOW(),
+  (SELECT id
+   FROM kayttaja
+   WHERE kayttajanimi = 'jvh'));
 
 INSERT INTO kan_hairio (urakka, sopimus, pvm, kohde, vikaluokka, syy, odotusaika_h, ammattiliikenne_lkm,
                         huviliikenne_lkm, korjaustoimenpide, korjausaika_h, korjauksen_tila, paikallinen_kaytto,
-                        luoja, luotu)
+                        luoja, luotu, kuittaaja)
 VALUES (
   (SELECT id
    FROM urakka
@@ -40,10 +43,13 @@ VALUES (
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  NOW());
+  NOW(),
+  (SELECT id
+   FROM kayttaja
+   WHERE kayttajanimi = 'jvh'));
 
 INSERT INTO kan_hairio (urakka, sopimus, pvm, kohde, vikaluokka, syy, korjauksen_tila,
-                        paikallinen_kaytto, luoja, luotu)
+                        paikallinen_kaytto, luoja, luotu, kuittaaja)
 VALUES (
   (SELECT id
    FROM urakka
@@ -60,4 +66,7 @@ VALUES (
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  NOW());
+  NOW(),
+  (SELECT id
+   FROM kayttaja
+   WHERE kayttajanimi = 'jvh'));

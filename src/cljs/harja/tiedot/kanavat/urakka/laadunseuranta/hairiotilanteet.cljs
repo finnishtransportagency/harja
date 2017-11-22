@@ -4,12 +4,14 @@
             [harja.id :refer [id-olemassa?]]
             [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.domain.urakka :as urakka]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.tiedot.navigaatio :as navigaatio])
+            [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -42,7 +44,11 @@
        :aikavali @urakkatiedot/valittu-aikavali})))
 
 (defn esitaytetty-hairiotilanne []
-  {::hairio/sopimus-id (:paasopimus @navigaatio/valittu-urakka)})
+  (let [kayttaja @istunto/kayttaja]
+    {::hairio/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+     ::hairio/kuittaaja {::kayttaja/id (:id kayttaja)
+                         ::kayttaja/etunimi (:etunimi kayttaja)
+                         ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
 (extend-protocol tuck/Event
   NakymaAvattu
