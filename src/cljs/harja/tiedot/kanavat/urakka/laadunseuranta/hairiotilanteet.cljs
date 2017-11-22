@@ -3,10 +3,11 @@
             [tuck.core :as tuck]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.kanavat.hairiotilanne :as hairio]
+            [harja.domain.urakka :as urakka]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -18,12 +19,15 @@
                  :valinnat nil}))
 
 ;; Yleiset
-(defrecord Nakymassa? [nakymassa?])
+(defrecord NakymaAvattu [])
+(defrecord NakymaSuljettu [])
 (defrecord PaivitaValinnat [valinnat])
 ;; Haut
 (defrecord HaeHairiotilanteet [valinnat])
 (defrecord HairiotilanteetHaettu [tulos])
 (defrecord HairiotilanteetEiHaettu [])
+(defrecord KohteetHaettu [kohteet])
+(defrecord KohteidenHakuEpaonnistui [])
 ;; Muokkaukset
 (defrecord LisaaHairiotilanne [])
 (defrecord TyhjennaValittuHairiotilanne [])
@@ -34,17 +38,29 @@
   (reaction
     (when (:nakymassa? @tila)
       {:urakka @nav/valittu-urakka
-       :sopimus-id (first @u/valittu-sopimusnumero)
-       :aikavali @u/valittu-aikavali})))
+       :sopimus-id (first @urakkatiedot/valittu-sopimusnumero)
+       :aikavali @urakkatiedot/valittu-aikavali})))
 
 (defn esitaytetty-hairiotilanne []
-  (log "---->>> esitäytellään")
   {::hairio/sopimus-id (:paasopimus @navigaatio/valittu-urakka)})
 
 (extend-protocol tuck/Event
-  Nakymassa?
+  NakymaAvattu
   (process-event [{nakymassa? :nakymassa?} app]
+    (-> app
+        (tuck-apurit/post! :hae-urakan-kohteet
+                           {::urakka/id (:id @navigaatio/valittu-urakka)}
+                           {:onnistui ->KohteetHaettu
+                            :epaonnistui ->KohteidenHakuEpaonnistui})
+        (assoc :nakymassa? true
+               :kohteiden-haku-kaynnissa? true
+               :kohteet []))
+
     (assoc app :nakymassa? nakymassa?))
+
+  NakymaSuljettu
+  (process-event [_ app]
+    (assoc app :nakymassa? false))
 
   PaivitaValinnat
   (process-event [{val :valinnat} app]
@@ -100,5 +116,15 @@
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
     ;; todo
     app
-    ))
+    )
+
+  KohteetHaettu
+  (process-event [{kohteet :kohteet} app]
+    (assoc app :kohteet kohteet
+               :kohteiden-haku-kaynnissa? false))
+
+  KohteidenHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
+    (assoc app :kohteiden-haku-kaynnissa? false)))
 

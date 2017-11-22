@@ -15,7 +15,7 @@
             [harja.ui.debug :refer [debug]]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
-            [harja.domain.kanavat.kanavan-kohde :as kkohde]
+            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -87,7 +87,7 @@
              "Häiriötilanteita ei löytynyt")}
    [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt kkohde/fmt-kohteen-kanava-nimi :leveys 10}
+     :fmt kanavan-kohde/fmt-kohteen-kanava-nimi :leveys 10}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
      :fmt hairio/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
@@ -103,8 +103,9 @@
    hairiotilanteet])
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne
-                              tallennus-kaynnissa?]
-                       :as app}]
+                               tallennus-kaynnissa?
+                               kohteet]
+                        :as app}]
   [:div
    [napit/takaisin "Takaisin häiriölistaukseen"
     #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
@@ -118,21 +119,37 @@
                     #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
                     {:tallennus-kaynnissa? tallennus-kaynnissa?
                      :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]])}
-    [{:otsikko "hilipati"
-      :nimi :pippaa
-      :tyyppi :string}]
+    [{:otsikko "Aika"
+      :nimi ::hairiotilanne/pvm
+      :tyyppi :pvm-aika}
+     {:otsikko "Kohde"
+      :nimi ::hairiotilanne/kohde
+      :tyyppi :valinta
+      :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
+      :valinnat kohteet}
+     {:otsikko "Vika"
+      :nimi ::hairiotilanne/vikaluokka
+      :tyyppi :valinta
+      :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka-")
+      :valinta-arvo :arvo
+      :valinnat [{:arvo "sahkotekninen_vika"
+                  :nimi "Sähkötekninen vika"}
+                 {:arvo "konetekninen_vika"
+                  :nimi "Konetekninen vika"}
+                 {:arvo "liikennevaurio"
+                  :nimi "Liikennevaurio"}]}]
     valittu-hairiotilanne]])
 
 (defn hairiotilanteet* [e! app]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
+    (komp/sisaan-ulos #(do (e! (tiedot/->NakymaAvattu))
                            (e! (tiedot/->PaivitaValinnat
                                  {:urakka @nav/valittu-urakka
                                   :sopimus-id (first @u/valittu-sopimusnumero)
                                   :aikavali @u/valittu-aikavali})))
-                      #(e! (tiedot/->Nakymassa? false)))
+                      #(e! (tiedot/->NakymaSuljettu)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
       @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
