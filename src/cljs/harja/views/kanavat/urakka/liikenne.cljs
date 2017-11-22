@@ -261,34 +261,39 @@
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
-     [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
-     [valinnat/kanava-kohde
-      (atomi ::lt/kohde)
-      (into [nil] urakan-kohteet)
-      #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
-         (if-not (empty? nimi)
-           nimi
-           "Kaikki"))]
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Suunta"
-       :kentta-params {:tyyppi :valinta
-                       :valinnat (into [nil] lt/suunta-vaihtoehdot)
-                       :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
-       :arvo-atom (atomi ::lt-alus/suunta)}]
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Sulun toimenpide"
-       :kentta-params {:tyyppi :valinta
-                       :valinta-nayta #(or (lt/sulku-toimenpide->str %) "Kaikki")
-                       :valinnat (into [nil] lt/sulku-toimenpide-vaihtoehdot)}
-       :arvo-atom (atomi ::lt/sulku-toimenpide)}]
-     [valinnat/kanava-aluslaji
-      (atomi ::lt-alus/laji)
-      (into [nil] lt-alus/aluslajit)
-      #(or (lt-alus/aluslaji->str %) "Kaikki")]
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Uittoniput?"
-       :kentta-params {:tyyppi :checkbox}
-       :arvo-atom (atomi :niput?)}]]))
+     [valinnat/valintaryhmat-3
+      [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+
+      [:div
+       [valinnat/kanava-kohde
+        (atomi ::lt/kohde)
+        (into [nil] urakan-kohteet)
+        #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
+           (if-not (empty? nimi)
+             nimi
+             "Kaikki"))]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Sulun toimenpide"
+         :kentta-params {:tyyppi :valinta
+                         :valinta-nayta #(or (lt/sulku-toimenpide->str %) "Kaikki")
+                         :valinnat (into [nil] lt/sulku-toimenpide-vaihtoehdot)}
+         :arvo-atom (atomi ::lt/sulku-toimenpide)}]]
+
+      [:div
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Suunta"
+         :kentta-params {:tyyppi :valinta
+                         :valinnat (into [nil] lt/suunta-vaihtoehdot)
+                         :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
+         :arvo-atom (atomi ::lt-alus/suunta)}]
+       [valinnat/kanava-aluslaji
+        (atomi ::lt-alus/laji)
+        (into [nil] lt-alus/aluslajit)
+        #(or (lt-alus/aluslaji->str %) "Kaikki")]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Uittoniput?"
+         :kentta-params {:tyyppi :checkbox}
+         :arvo-atom (atomi :niput?)}]]]]))
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit
                                             liikennetapahtumien-haku-kaynnissa?] :as app}]
