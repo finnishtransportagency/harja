@@ -226,5 +226,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   FALSE,
   NULL,
   tpk_id_saimaan_kok_hint_tp);
-  INSERT INTO kan_tyo ("toimenpidekoodi-id", maara, luoja) VALUES (toimenpidekoodi_id_vv_laaja_yksiloimaton, 4, kayttaja_id_jvh);
+
+  INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja) VALUES ((SELECT MAX(id) FROM kan_toimenpide),
+      toimenpidekoodi_id_vv_laaja_yksiloimaton, 4, kayttaja_id_jvh);
 END $$;
