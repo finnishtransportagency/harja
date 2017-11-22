@@ -161,7 +161,7 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [["osgeo" "http://download.osgeo.org/webdav/geotools/"]
+  :repositories [ ;["osgeo" "http://download.osgeo.org/webdav/geotools/"]
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 

@@ -292,15 +292,17 @@
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa!]
-  (let [osan-pituus (atom {})
-        jarjestys-fn (juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)]
+  (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
-            muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))]
+            muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
+            jarjestys-fn #(if (not (nil? (:id %)))
+                            [(:id %) 0 0 0]
+                            ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
         [:fieldset.lomake-osa
          [:h3 "Tekninen osa"]
 

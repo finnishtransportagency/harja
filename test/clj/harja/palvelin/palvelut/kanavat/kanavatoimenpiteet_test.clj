@@ -28,7 +28,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -125,16 +125,24 @@
 (deftest toimenpiteen-tallentaminen-toimii
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-        kayttaja (ffirst (q "select id from kayttaja limit 1"))
-        kohde (ffirst (q "select id from kan_kohde limit 1"))
-        huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1"))
+        kayttaja (ffirst (q "select id from kayttaja limit 1;"))
+        kohde (ffirst (q "select id from kan_kohde limit 1;"))
+        huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1;"))
+        kolmostason-toimenpide-id (ffirst (q "select tpk3.id
+                                               from toimenpidekoodi tpk1
+                                                join toimenpidekoodi tpk2 on tpk1.id = tpk2.emo
+                                                  join toimenpidekoodi tpk3 on tpk2.id = tpk3.emo
+                                                  where tpk1.nimi ILIKE '%Hoito, meri%' and
+                                                        tpk2.nimi ILIKE '%Väylänhoito%' and
+                                                              tpk3.nimi ilike '%Laaja toimenpide%';"))
+        tehtava-id (ffirst (q (format "select id from toimenpidekoodi where emo = %s" kolmostason-toimenpide-id)))
         toimenpideinstanssi (ffirst (q "select id from toimenpideinstanssi where nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP';"))
         toimenpide {::kanavan-toimenpide/suorittaja "suorittaja"
                     ::kanavan-toimenpide/muu-toimenpide "muu"
                     ::kanavan-toimenpide/kuittaaja-id kayttaja
                     ::kanavan-toimenpide/sopimus-id sopimus-id
                     ::kanavan-toimenpide/toimenpideinstanssi-id toimenpideinstanssi
-                    ::kanavan-toimenpide/toimenpidekoodi-id 2997
+                    ::kanavan-toimenpide/toimenpidekoodi-id tehtava-id
                     ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
                     ::kanavan-toimenpide/tyyppi :kokonaishintainen
                     ::muokkaustiedot/luoja-id kayttaja
@@ -144,7 +152,7 @@
                     ::kanavan-toimenpide/urakka-id urakka-id}
         hakuehdot {::kanavan-toimenpide/urakka-id urakka-id
                    ::kanavan-toimenpide/sopimus-id sopimus-id
-                   ::toimenpidekoodi/id 597
+                   ::toimenpidekoodi/id kolmostason-toimenpide-id
                    :alkupvm (pvm/luo-pvm 2017 1 1)
                    :loppupvm (pvm/luo-pvm 2018 1 1)
                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
