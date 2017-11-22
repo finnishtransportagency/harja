@@ -77,6 +77,11 @@
                     :vanha-koko vanha-koko
                     :uusi-koko uusi-koko}))))
 
+(kayttoseuranta/seuraa-kayttoa! kartan-kokovalinta
+                                "Kartan kokovalinta"
+                                (fn [] @kartan-kokovalinta)
+                                (fn [tila] (if (#{:hidden :S} tila) false tila)))
+
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
 
 (defn vaihda-vaylamuoto! [ut]
@@ -245,11 +250,6 @@
                       (and (= sivu :urakat)
                            (not v-ur)) :XL
                       :default valittu-koko)))))
-
-(kayttoseuranta/seuraa-kayttoa! kartan-koko
-                                "Kartan koko"
-                                (fn [] (str @kartan-edellinen-koko " => " @kartan-koko))
-                                (fn [tila] (not= :hidden tila)))
 
 (def kartta-nakyvissa?
   "Kartta ei piilotettu"
