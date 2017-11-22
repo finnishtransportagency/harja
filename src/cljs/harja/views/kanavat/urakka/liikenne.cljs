@@ -241,6 +241,7 @@
              :nimi ::lt/vesipinta-ylaraja})))
       (when (and (::lt/kohde valittu-liikennetapahtuma)
                  (not edellisten-haku-kaynnissa?)
+                 (or (:ylos edelliset) (:alas edelliset))
                  uusi-tapahtuma?)
         (lomake/rivi
           {:otsikko "Edelliset alukset"
