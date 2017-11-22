@@ -22,8 +22,6 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.kanavan-kohde :as kohde]))
 
-;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
-
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
     (into []
@@ -103,9 +101,6 @@
       (partial kanavat-q/hae-kohteiden-urakkatiedot db)
       urakka-id)))
 
-(defn- hae-seuraava-kohde [db tiedot suunta]
-  nil)
-
 (defn- hae-kohteen-edellinen-tapahtuma* [tulokset]
   (first
     (sort-by ::lt/aika pvm/jalkeen?
@@ -115,7 +110,8 @@
   (let [urakka-id (::lt/urakka-id tapahtuma)
         sopimus-id (::lt/sopimus-id tapahtuma)
         kohde-id (::lt/kohde-id tapahtuma)]
-    (assert (and urakka-id sopimus-id kohde-id))
+    (assert (and urakka-id sopimus-id kohde-id)
+            "Urakka-, sopimus-, tai kohde-id puuttuu, ei voida hakea edellistä tapahtumaa.")
     (hae-kohteen-edellinen-tapahtuma*
       (specql/fetch
         db

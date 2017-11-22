@@ -177,6 +177,20 @@
        (empty? (filter :koskematon (::lt/alukset t)))
        (every? #(some? (::lt-alus/suunta %)) (::lt/alukset t))))
 
+(defn sama-alusrivi? [a b]
+  ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä
+  (or
+    (and
+      (some? (::lt-alus/id a))
+      (some? (::lt-alus/id b))
+      (= (::lt-alus/id a)
+         (::lt-alus/id b)))
+    (and
+      (some? (:id a))
+      (some? (:id b))
+      (= (:id a)
+         (:id b)))))
+
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
@@ -284,27 +298,14 @@
 
   VaihdaSuuntaa
   (process-event [{alus :alus} app]
-    (let [alus (if (= :ylos (::lt-alus/suunta alus))
+    (let [uusi (if (= :ylos (::lt-alus/suunta alus))
                  (assoc alus ::lt-alus/suunta :alas)
                  (assoc alus ::lt-alus/suunta :ylos))]
       (update app :valittu-liikennetapahtuma
               (fn [t]
                 (update t ::lt/alukset
                         (fn [alukset]
-                          (map #(if (or
-                                      (and
-                                        (some? (::lt-alus/id %))
-                                        (some? (::lt-alus/id alus))
-                                        (= (::lt-alus/id %)
-                                           (::lt-alus/id alus)))
-                                      (and
-                                        (some? (:id %))
-                                        (some? (:id alus))
-                                        (= (:id %)
-                                           (:id alus))))
-                                  alus
-                                  %)
-                               alukset)))))))
+                          (map #(if (sama-alusrivi? uusi %) uusi %) alukset)))))))
 
   TallennaLiikennetapahtuma
   (process-event [{t :tapahtuma} {:keys [tallennus-kaynnissa?] :as app}]
