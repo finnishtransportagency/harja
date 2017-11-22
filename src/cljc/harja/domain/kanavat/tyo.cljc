@@ -14,12 +14,14 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["kan_tyo" ::tyo
-   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
+  ["kan_tyo" ::toimenpiteen-tyo
+   {"toimenpide" ::toimenpide-id}
+
+   m/muokkaus-ja-poistotiedot
    {::toimenpidekoodi (specql.rel/has-one
                         ::toimenpidekoodi-id
-                        :harja.domain.toimenpidekoodi/toimenpidekoodi
-                        :harja.domain.toimenpidekoodi/id)}])
+                        ::tpk/toimenpidekoodi
+                        ::tpk/id)}])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)

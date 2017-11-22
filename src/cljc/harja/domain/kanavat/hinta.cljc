@@ -13,12 +13,10 @@
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-
   ["kan_hinta" ::toimenpiteen-hinta
-   harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot]
-  ["kan_toimenpide_hinta" ::toimenpide<->hinta
-   ;; {::hinta-tiedot (specql.rel/has-one ::hinta ::toimenpiteen-hinta ::id)}
-   ])
+   {"toimenpide" ::toimenpide-id}
+   m/muokkaus-ja-poistotiedot]
+)
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::summa (s/nilable number?))

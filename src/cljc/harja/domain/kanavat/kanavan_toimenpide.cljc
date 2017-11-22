@@ -2,8 +2,8 @@
   (:require
     [clojure.spec.alpha :as s]
     [harja.domain.kanavat.kanavan-kohde :as kohde]
-    ;; [harja.domain.kanavat.hinta :as hinta]
-    ;; [harja.domain.kanavat.tyo :as tyo]
+    [harja.domain.kanavat.hinta :as hinta]
+    [harja.domain.kanavat.tyo :as tyo]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -19,7 +19,6 @@
 
 (define-tables
   ["kan_toimenpidetyyppi" ::kanava-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
-  ;; ["kan_toimenpide_hinta" ::toimenpide->hinta]
   ["kan_toimenpide" ::kanava-toimenpide
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
@@ -27,7 +26,8 @@
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
     "muu_toimenpide" ::muu-toimenpide
-    ;; ::hinnat (specql.rel/has-many ::id ::tp-hinta/hinta ::tp-hinta/toimenpide)
+    ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
+    ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
     "toimenpideinstanssi" ::toimenpideinstanssi-id
     "kohde" ::kohde-id
     ::kohde (specql.rel/has-one ::kohde-id
@@ -70,6 +70,14 @@
      #{::huoltokohde/id
        ::huoltokohde/nimi}]})
 
+(def tyotiedot
+  #{[::tyot
+     tyo/perustiedot]})
+
+(def hintatiedot
+  #{[::hinnat
+     hinta/perustiedot]})
+
 (def toimenpiteen-tiedot
   #{[::toimenpidekoodi
      #{::toimenpidekoodi/id
@@ -100,7 +108,9 @@
              kohteen-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
-             kuittaajan-tiedot))
+             kuittaajan-tiedot
+             hintatiedot
+             tyotiedot))
 
 (s/def ::hae-kanavatoimenpiteet-kysely
   (s/keys :req [::urakka-id
