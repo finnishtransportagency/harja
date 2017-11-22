@@ -112,12 +112,12 @@
                         :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                         :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                  [:pvm-kentan-jalkeen-tai-sama (comp :aika :laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
+                                  [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
                        {:otsikko "Perintäpvm" :nimi :perintapvm
                         :pakollinen? true
                         :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm
                         :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                                  [:pvm-kentan-jalkeen-tai-sama (comp :aika :laatupoikkeama)
+                                  [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
                                    "Ei voi olla ennen havaintoa"]]})
 
          (when yllapitokohdeurakka?
