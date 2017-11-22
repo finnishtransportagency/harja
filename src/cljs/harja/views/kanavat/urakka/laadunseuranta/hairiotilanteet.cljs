@@ -24,7 +24,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.domain.kanavat.hairiotilanne :as hairio]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.domain.kayttaja :as kayttaja])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -101,6 +102,27 @@
     {:otsikko "Paikal\u00ADlinen käyt\u00ADtö" :nimi ::hairiotilanne/paikallinen-kaytto?
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
+
+(defn varaosataulukko [e! {varaosat :varaosat :as hairiotilanne}]
+  [grid/muokkaus-grid
+   {:voi-muokata? (constantly true)
+    :voi-poistaa? (constantly true)
+    :piilota-toiminnot? false
+    :tyhja "Ei varaosia"
+    :jarjesta :jarjestysnro
+    :tunniste :jarjestysnro}
+   [{:otsikko "Varaosa"
+     :nimi :varaosa
+     :pakollinen? true
+     :tyyppi :string}
+    {:otsikko "Määrä"
+     :nimi :maara
+     :tyyppi :positiivinen-numero
+     :kokonaisluku? true}]
+   (r/wrap
+     ;; todo: hae varaosat häiriöltä
+     {1 {:id 1 :varaosa "Suristin" :maara 666}}
+     #(log "--->>> Todo: tee varaosien muokkaus"))])
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne
                                tallennus-kaynnissa?
@@ -193,7 +215,19 @@
           :nimi ::hairiotilanne/paikallinen-kaytto?
           :tyyppi :checkbox
           ::lomake/col-luokka luokka}
-         )]
+         {:otsikko "Varaosat"
+          :nimi :varaosat
+          :tyyppi :komponentti
+          :palstoja 2
+          :uusi-rivi? true
+          :komponentti (fn [_]
+                         [varaosataulukko e! valittu-hairiotilanne])})
+       {:otsikko "Kuittaaja"
+        ;; todo: lisää kantaan
+        :nimi :kuittaaja
+        :tyyppi :string
+        :hae #(kayttaja/kokonimi (:kuittaaja %))
+        :muokattava? (constantly false)}]
       valittu-hairiotilanne]]))
 
 (defn hairiotilanteet* [e! app]
