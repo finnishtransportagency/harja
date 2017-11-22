@@ -16,8 +16,9 @@
 (define-tables
   ["kan_tyo" ::toimenpiteen-tyo
    {"toimenpide" ::toimenpide-id}
-
-   m/muokkaus-ja-poistotiedot
+   harja.domain.muokkaustiedot/muokkaustiedot
+   harja.domain.muokkaustiedot/poistaja-sarake
+   harja.domain.muokkaustiedot/poistettu?-sarake
    {::toimenpidekoodi (specql.rel/has-one
                         ::toimenpidekoodi-id
                         ::tpk/toimenpidekoodi

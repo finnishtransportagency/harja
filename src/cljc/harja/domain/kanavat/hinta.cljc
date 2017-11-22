@@ -15,7 +15,10 @@
 (define-tables
   ["kan_hinta" ::toimenpiteen-hinta
    {"toimenpide" ::toimenpide-id}
-   m/muokkaus-ja-poistotiedot]
+   harja.domain.muokkaustiedot/muokkaustiedot
+   harja.domain.muokkaustiedot/poistaja-sarake
+   harja.domain.muokkaustiedot/poistettu?-sarake
+   ]
 )
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
