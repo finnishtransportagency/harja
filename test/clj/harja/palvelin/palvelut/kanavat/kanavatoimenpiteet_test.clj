@@ -122,19 +122,19 @@
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
                        parametrit)))))
 
-#_(deftest toimenpiteen-tallentaminen-toimii
+(deftest toimenpiteen-tallentaminen-toimii
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kayttaja (ffirst (q "select id from kayttaja limit 1;"))
         kohde (ffirst (q "select id from kan_kohde limit 1;"))
         huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1;"))
-        kolmostason-toimenpide-id (ffirst (q "SELECT tpk3.id
-                                               FROM toimenpidekoodi tpk1
-                                                JOIN toimenpidekoodi tpk2 ON tpk1.id = tpk2.emo
-                                                  JOIN toimenpidekoodi tpk3 ON tpk2.id = tpk3.emo
-                                                  WHERE tpk1.nimi ILIKE '%Hoito, meri%' AND
-                                                        tpk2.nimi ILIKE '%Väylänhoito%' AND
-                                                              tpk3.nimi ILIKE '%Laaja toimenpide%';"))
+        kolmostason-toimenpide-id (ffirst (q "select tpk3.id
+                                               from toimenpidekoodi tpk1
+                                                join toimenpidekoodi tpk2 on tpk1.id = tpk2.emo
+                                                  join toimenpidekoodi tpk3 on tpk2.id = tpk3.emo
+                                                  where tpk1.nimi ILIKE '%Hoito, meri%' and
+                                                        tpk2.nimi ILIKE '%Väylänhoito%' and
+                                                              tpk3.nimi ilike '%Laaja toimenpide%';"))
         tehtava-id (ffirst (q (format "select id from toimenpidekoodi where emo = %s" kolmostason-toimenpide-id)))
         toimenpideinstanssi (ffirst (q "select id from toimenpideinstanssi where nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP';"))
         toimenpide {::kanavan-toimenpide/suorittaja "suorittaja"
