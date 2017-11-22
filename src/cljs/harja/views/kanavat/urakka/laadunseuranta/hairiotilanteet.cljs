@@ -137,7 +137,22 @@
                  {:arvo "konetekninen_vika"
                   :nimi "Konetekninen vika"}
                  {:arvo "liikennevaurio"
-                  :nimi "Liikennevaurio"}]}]
+                  :nimi "Liikennevaurio"}]}
+     {:otsikko "Syy"
+      :nimi ::hairiotilanne/syy
+      :tyyppi :string}
+     {:otsikko "Odotusaika tunneissa"
+      :nimi ::hairiotilanne/odotusaika-h
+      :tyyppi :positiivinen-numero
+      :desimaalien-maara 2}
+     {:otsikko "Ammattiliikenne lkm"
+      :nimi ::hairiotilanne/ammattiliikenne-lkm
+      :tyyppi :positiivinen-numero
+      :desimaalien-maara 0}
+     {:otsikko "Huviliikenne lkm"
+      :nimi ::hairiotilanne/huviliikenne-lkm
+      :tyyppi :positiivinen-numero
+      :desimaalien-maara 0}]
     valittu-hairiotilanne]])
 
 (defn hairiotilanteet* [e! app]
