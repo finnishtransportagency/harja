@@ -14,9 +14,6 @@
 (defn hae-kanavatoimenpiteet [db hakuehdot]
   (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot))
 
-(defn hae-hinnat [db hakuehdot]
-  (fetch db ::hinta/toimenpiteen-hinta (specql/columns ::hinta/toimenpiteen-hinta) hakuehdot))
-
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
 (defn hae-sopimuksen-toimenpiteet-aikavalilta [db hakuehdot]
@@ -65,20 +62,6 @@
                     (kasittele-muokkaustiedot user tyo ::tyo/id)
                     {::m/poistettu? (op/not= true)})))
 
-(defn hae-hinnoittelutiedot-toimenpiteille [db toimenpide-id-seq]
-  (let [tp-hinnat (specql/fetch db ::hinta/toimenpide<->hinta
-                                #{::hinta/toimenpide ::hinta/hinta}
-                                {::hinta/toimenpide (op/in toimenpide-id-seq)})
-        hae-toimenpide-idlla #(first (hae-kanavatoimenpiteet db {::toimenpide/id %}))
-        hae-hinta-idlla #(first (hae-hinnat db {::hinta/id %}))]
-    (for [tp-hinta tp-hinnat
-          :let [tp (hae-toimenpide-idlla (::hinta/toimenpide tp-hinta))
-                hinta (hae-hinta-idlla (::hinta/hinta tp-hinta))]]
-      (merge tp hinta))))
-
-(defn hae-toimenpiteen-oma-hinnoittelu [db toimenpide-id]
-  {:pre [(integer? toimenpide-id)]}
-  (first (hae-hinnoittelutiedot-toimenpiteille db #{toimenpide-id})))
 
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
   (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
