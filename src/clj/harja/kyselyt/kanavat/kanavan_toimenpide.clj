@@ -48,17 +48,18 @@
                     ::m/muokkaaja-id (:id user)}))]
     m))
 
-(defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat]}]
+(defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat toimenpide-id]}]
+  (println "tallenna-omat-hinnat: saatiin" (pr-str hinnat))
   (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
     (specql/upsert! db
                     ::hinta/toimenpiteen-hinta
                     (kasittele-muokkaustiedot user hinta ::hinta/id)
                     {::m/poistettu? (op/not= true)})))
 
-(defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot]}]
+(defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot toimenpide-id]}]
   (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
     (specql/upsert! db
-                    ::tyo/tyo
+                    ::tyo/toimenpiteen-tyo
                     (kasittele-muokkaustiedot user tyo ::tyo/id)
                     {::m/poistettu? (op/not= true)})))
 

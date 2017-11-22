@@ -23,7 +23,7 @@
                    [reagent.ratom :refer [reaction]]))
 
 ;; todo:
-;; - seuraillaan vv-puolen oma-hinnoittelu -casea
+;; - hinnalle ei tallennu toimenpide-id:tä
 ;; - testit
 ;; - suunnitellut työt on täälläkin, määriä vaan ei suunnitella. vv-puolella kutsutaan "yksikkohintaiset-tyot" -palvelusta
 ;;   nämä tiedot ja laitetaan :suunnitellut-tyot alle. tämä toimii listana valintoja joista voi valita
@@ -280,9 +280,8 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
     app
     (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
-          toimenpiteen-oma-hinnoittelu nil ;; (::toimenpide/oma-hinnoittelu hinnoiteltava-toimenpide)
-          hinnat (or (::hinta/hinnat toimenpiteen-oma-hinnoittelu) [])
-          tyot (or (::tyo/tyot toimenpiteen-oma-hinnoittelu) [])]
+          hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
+          tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])]
       (log "AloitaToimenpiteenHinnoittelu: toimenpiteen-hintakentat" (pr-str (toimenpiteen-hintakentat hinnat)))
       (assoc app :hinnoittele-toimenpide
              {::toimenpide/id toimenpide-id

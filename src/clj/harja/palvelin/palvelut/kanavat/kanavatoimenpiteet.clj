@@ -57,7 +57,9 @@
 
 (defn tallenna-kanavatoimenpiteen-hinnoittelu! [db user tiedot]
   (let [urakka-id (::toimenpide/urakka-id tiedot)
-        toimenpide-id (::toimenpide/id tiedot)]
+        toimenpide-id (::toimenpide/id tiedot)
+        liita-tpid-mappeihin (fn [mapit k]
+                               (mapv #(assoc % k toimenpide-id) mapit))]
     (assert urakka-id "Urakka-id puuttuu!")
     (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id) ;; FIXME
     (vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::toimenpide/id tiedot)} urakka-id)
@@ -74,12 +76,13 @@
       (q-toimenpide/tallenna-toimenpiteen-omat-hinnat!
        {:db db
         :user user
-        :hinnat (::hinta/tallennettavat-hinnat tiedot)})
+        :hinnat (liita-tpid-mappeihin (::hinta/tallennettavat-hinnat tiedot) ::hinta/toimenpide-id)})
       (q-toimenpide/tallenna-toimenpiteen-tyot!
        {:db db
         :user user
-        :tyot (::tyo/tallennettavat-tyot tiedot)})
-      (q-toimenpide/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))
+        :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
+      (first (q-toimenpide/hae-kanavatoimenpiteet db {::toimenpide/id toimenpide-id})))))
+
 (defn tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
   (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
