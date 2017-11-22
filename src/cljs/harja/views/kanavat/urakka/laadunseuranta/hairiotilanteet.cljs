@@ -13,14 +13,12 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.modal :as modal]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.kanavat.kanavan-kohde :as kkohde]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
@@ -75,7 +73,7 @@
                                               (:id valittu-urakka))]
         ^{:key "lisaysnappi"}
         [napit/uusi "Lisää häiriötilanne"
-         #(log "TODO Lisää häiriötilanne")
+         #(e! (tiedot/->LisaaHairiotilanne))
          {:disabled (not oikeus?)}])]]))
 
 (defn- hairiolista [e! {:keys [hairiotilanteet hairiotilanteiden-haku-kaynnissa?] :as app}]
@@ -104,6 +102,27 @@
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
+(defn hairiolomake [e! {:keys [valittu-hairiotilanne
+                              tallennus-kaynnissa?]
+                       :as app}]
+  [:div
+   [napit/takaisin "Takaisin häiriölistaukseen"
+    #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
+   [lomake/lomake
+    {:otsikko "Uusi häiriö"
+     :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
+     :footer-fn (fn [hairiotilanne]
+                  [:div
+                   [napit/tallenna
+                    "Tallenna"
+                    #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+                    {:tallennus-kaynnissa? tallennus-kaynnissa?
+                     :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]])}
+    [{:otsikko "hilipati"
+      :nimi :pippaa
+      :tyyppi :string}]
+    valittu-hairiotilanne]])
+
 (defn hairiotilanteet* [e! app]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
@@ -115,12 +134,15 @@
                                   :aikavali @u/valittu-aikavali})))
                       #(e! (tiedot/->Nakymassa? false)))
 
-    (fn [e! app]
+    (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
       @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
       [:div
        [debug/debug app]
-       [suodattimet-ja-toiminnot e! app]
-       [hairiolista e! app]])))
+       (if valittu-hairiotilanne
+         [hairiolomake e! app]
+         [:div
+          [suodattimet-ja-toiminnot e! app]
+          [hairiolista e! app]])])))
 
 (defn hairiotilanteet []
   [tuck tiedot/tila hairiotilanteet*])

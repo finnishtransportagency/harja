@@ -1,16 +1,14 @@
 (ns harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
-            [cljs.core.async :as async]
-            [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
-            [harja.asiakas.kommunikaatio :as k]
             [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
-            [harja.tyokalut.tuck :as tuck-apurit])
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -26,6 +24,11 @@
 (defrecord HaeHairiotilanteet [valinnat])
 (defrecord HairiotilanteetHaettu [tulos])
 (defrecord HairiotilanteetEiHaettu [])
+;; Muokkaukset
+(defrecord LisaaHairiotilanne [])
+(defrecord TyhjennaValittuHairiotilanne [])
+(defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
+(defrecord TallennaHairiotilanne [hairiotilanne])
 
 (def valinnat
   (reaction
@@ -33,6 +36,10 @@
       {:urakka @nav/valittu-urakka
        :sopimus-id (first @u/valittu-sopimusnumero)
        :aikavali @u/valittu-aikavali})))
+
+(defn esitaytetty-hairiotilanne []
+  (log "---->>> esitäytellään")
+  {::hairio/sopimus-id (:paasopimus @navigaatio/valittu-urakka)})
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -75,5 +82,23 @@
   (process-event [_ app]
     (viesti/nayta! "Häiriötilanteiden haku epäonnistui!" :danger)
     (assoc app :hairiotilanteiden-haku-kaynnissa? false
-               :hairiotilanteet [])))
+               :hairiotilanteet []))
+
+  LisaaHairiotilanne
+  (process-event [_ app]
+    (assoc app :valittu-hairiotilanne (esitaytetty-hairiotilanne)))
+
+  TyhjennaValittuHairiotilanne
+  (process-event [_ app]
+    (dissoc app :valittu-hairiotilanne))
+
+  AsetaHairiotilanteenTiedot
+  (process-event [{hairiotilanne :hairiotilanne} app]
+    (assoc app :valittu-hairiotilanne hairiotilanne))
+
+  TallennaHairiotilanne
+  (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
+    ;; todo
+    app
+    ))
 

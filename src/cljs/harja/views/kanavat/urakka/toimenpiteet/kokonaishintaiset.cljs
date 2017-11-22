@@ -54,7 +54,8 @@
                                                      kohteet
                                                      toimenpideinstanssit
                                                      tehtavat
-                                                     huoltokohteet]
+                                                     huoltokohteet
+                                                     tallennus-kaynnissa?]
                                               :as app}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)]
