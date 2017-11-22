@@ -129,7 +129,7 @@
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
-  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaon " laatupoikkeama)
+  (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (log/debug "LAJI ON: " (pr-str laji))
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
   (let [sanktiotyyppi (if (:id tyyppi)
@@ -268,16 +268,15 @@
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                                             :poistettu poista-laatupoikkeama?))
-          liite (tallenna-laatupoikkeaman-liitteet db laatupoikkeama id)]
-
-      (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
-        (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
-                                                          (konv/sql-timestamp kasittelyaika)
-                                                          (name paatos) perustelu
-                                                          (name kasittelytapa) muukasittelytapa
-                                                          (:id user)
-                                                          id))
+          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
+      (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
+                                                        (konv/sql-timestamp kasittelyaika)
+                                                        (name paatos) perustelu
+                                                        (name kasittelytapa) muukasittelytapa
+                                                        (:id user)
+                                                        id)
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
+      (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
 (defn hae-urakkatyypin-sanktiolajit
