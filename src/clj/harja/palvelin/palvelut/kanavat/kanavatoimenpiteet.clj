@@ -1,29 +1,27 @@
 (ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet
-  (:require [clojure.java.jdbc :as jdbc]
-            [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
+  (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.urakka :as urakka]
-            [harja.domain.sopimus :as sopimus]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]))
+
+(defn tarkista-kutsu [user urakka-id tyyppi]
+  (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
+  (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
+  (case tyyppi
+    :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
+    :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id)))
 
 (defn hae-kanavatoimenpiteet [db user {urakka-id ::kanavan-toimenpide/urakka-id
                                        sopimus-id ::kanavan-toimenpide/sopimus-id
                                        alkupvm :alkupvm
                                        loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
-                                       tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi
-                                       :as hakuehdot}]
+                                       tyyppi ::kanavan-toimenpide/kanava-toimenpidetyyppi}]
 
-  (assert urakka-id "Urakka-id puuttuu!")
-  (case tyyppi
-    :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
-    :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id))
-
-  (let [tyyppi (when tyyppi (name tyyppi))]
+  (tarkista-kutsu user urakka-id tyyppi)
+  (let [tyyppi (name tyyppi)]
     (q-kanavan-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
       db
       {:urakka urakka-id
@@ -44,6 +42,12 @@
     (q-kanavan-toimenpide/paivita-toimenpiteiden-tyyppi db (::kanavan-toimenpide/toimenpide-idt tiedot) (::kanavan-toimenpide/tyyppi tiedot))
     (::kanavan-toimenpide/toimenpide-idt tiedot)))
 
+(defn tallenna-kanavatoimenpide [db user {tyyppi ::kanavan-toimenpide/tyyppi
+                                          urakka-id ::kanavan-toimenpide/urakka-id
+                                          :as kanavatoimenpide}]
+  (tarkista-kutsu user urakka-id tyyppi)
+  (q-kanavan-toimenpide/tallenna-toimenpide db (:id user) kanavatoimenpide))
+
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
@@ -61,10 +65,21 @@
         (siirra-kanavatoimenpiteet db user hakuehdot))
       {:kysely-spec ::kanavan-toimenpide/siirra-kanavatoimenpiteet-kysely
        :vastaus-spec ::kanavan-toimenpide/siirra-kanavatoimenpiteet-vastaus})
+    (julkaise-palvelu
+      http
+      :tallenna-kanavatoimenpide
+      (fn [user {toimenpide ::kanavan-toimenpide/kanava-toimenpide
+                 hakuehdot ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely}]
+        (tallenna-kanavatoimenpide db user toimenpide)
+        (hae-kanavatoimenpiteet db user hakuehdot))
+      {:kysely-spec ::kanavan-toimenpide/tallenna-kanavatoimenpide-kutsu
+       :vastaus-spec ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus})
     this)
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kanavat-ja-kohteet)
+      :hae-kanavat-ja-kohteet
+      :siirra-kanavatoimenpiteet
+      :tallenna-kanavatoimenpide)
     this))

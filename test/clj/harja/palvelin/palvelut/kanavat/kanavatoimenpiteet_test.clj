@@ -10,14 +10,10 @@
             [clojure.spec.alpha :as s]
             [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
 
-            [harja.domain.kanavat.kanava :as kanava]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.urakka :as ur]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.muokkaustiedot :as m]
-            [harja.pvm :as pvm]
-            [taoensso.timbre :as log]))
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -33,7 +29,7 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -79,11 +75,11 @@
 
     (testing "Tyyppisuodatus toimii"
       (is (every? #(= (::kanavan-toimenpide/tyyppi %) :kokonaishintainen)
-                 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :hae-kanavatoimenpiteet
-                                 +kayttaja-jvh+
-                                 (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
-                                                       :kokonaishintainen))))
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-kanavatoimenpiteet
+                                  +kayttaja-jvh+
+                                  (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
+                                                        :kokonaishintainen))))
 
       (is (every? #(= (::kanavan-toimenpide/tyyppi %) :muutos-lisatyo)
                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -169,3 +165,52 @@
                                            +kayttaja-ulle+
                                            (assoc parametrit ::kanavan-toimenpide/tyyppi :kokonaishintainen
                                                              ::kanavan-toimenpide/toimenpide-idt muutos-ja-lisatyo-toimenpiteiden-idt))))))
+
+(deftest toimenpiteiden-haku-ilman-tyyppia-ei-toimi
+  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+                    ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                    ::toimenpidekoodi/id 597
+                    :alkupvm (pvm/luo-pvm 2017 1 1)
+                    :loppupvm (pvm/luo-pvm 2018 1 1)}]
+
+    (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
+                       parametrit)))))
+
+(deftest toimenpiteen-tallentaminen-toimii
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+        kayttaja (ffirst (q "select id from kayttaja limit 1;"))
+        kohde (ffirst (q "select id from kan_kohde limit 1;"))
+        huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1;"))
+        kolmostason-toimenpide-id (ffirst (q "select tpk3.id
+                                               from toimenpidekoodi tpk1
+                                                join toimenpidekoodi tpk2 on tpk1.id = tpk2.emo
+                                                  join toimenpidekoodi tpk3 on tpk2.id = tpk3.emo
+                                                  where tpk1.nimi ILIKE '%Hoito, meri%' and
+                                                        tpk2.nimi ILIKE '%Väylänhoito%' and
+                                                              tpk3.nimi ilike '%Laaja toimenpide%';"))
+        tehtava-id (ffirst (q (format "select id from toimenpidekoodi where emo = %s" kolmostason-toimenpide-id)))
+        toimenpideinstanssi (ffirst (q "select id from toimenpideinstanssi where nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP';"))
+        toimenpide {::kanavan-toimenpide/suorittaja "suorittaja"
+                    ::kanavan-toimenpide/muu-toimenpide "muu"
+                    ::kanavan-toimenpide/kuittaaja-id kayttaja
+                    ::kanavan-toimenpide/sopimus-id sopimus-id
+                    ::kanavan-toimenpide/toimenpideinstanssi-id toimenpideinstanssi
+                    ::kanavan-toimenpide/toimenpidekoodi-id tehtava-id
+                    ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
+                    ::kanavan-toimenpide/tyyppi :kokonaishintainen
+                    ::muokkaustiedot/luoja-id kayttaja
+                    ::kanavan-toimenpide/kohde-id kohde
+                    ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
+                    ::kanavan-toimenpide/huoltokohde-id huoltokohde
+                    ::kanavan-toimenpide/urakka-id urakka-id}
+        hakuehdot {::kanavan-toimenpide/urakka-id urakka-id
+                   ::kanavan-toimenpide/sopimus-id sopimus-id
+                   ::toimenpidekoodi/id kolmostason-toimenpide-id
+                   :alkupvm (pvm/luo-pvm 2017 1 1)
+                   :loppupvm (pvm/luo-pvm 2018 1 1)
+                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
+        parametrit {::kanavan-toimenpide/kanava-toimenpide toimenpide
+                    ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kanavatoimenpide +kayttaja-jvh+ parametrit)]
+    (is (some #(= "tämä on testitoimenpide" (::kanavan-toimenpide/lisatieto %)) vastaus))))

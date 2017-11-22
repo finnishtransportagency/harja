@@ -1,36 +1,29 @@
 (ns harja.views.kanavat.urakka.toimenpiteet.kokonaishintaiset
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [reagent.core :refer [atom]]
             [tuck.core :refer [tuck]]
-
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
+            [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.urakka :as urakkatiedot]
             [harja.loki :refer [tarkkaile! log]]
             [harja.id :refer [id-olemassa?]]
-
+            [harja.ui.lomake :as lomake]
+            [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
-
-            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
-            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
-            [harja.domain.kayttaja :as kayttaja]
-
-            [harja.pvm :as pvm]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
-            [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.debug :as debug])
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.ui.debug :as debug]
+            [harja.views.urakka.valinnat :as urakka-valinnat])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn valinnat [e! app]
+(defn hakuehdot [e! app]
   (let [urakka (get-in app [:valinnat :urakka])]
     [valinnat/urakkavalinnat {:urakka urakka}
      ^{:key "valinnat"}
@@ -46,10 +39,9 @@
       [napit/uusi
        "Uusi toimenpide"
        (fn [_]
-         ;; todo
-         )]]]))
+         (e! (tiedot/->UusiToimenpide)))]]]))
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [e! app]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet] :as app}]
   [grid/grid
    {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
@@ -74,29 +66,49 @@
                          (e! (tiedot/->ValitseToimenpide
                                {:id (::kanavan-toimenpide/id rivi)
                                 :valittu? uusi-arvo})))})
-   (:toimenpiteet app)])
+   toimenpiteet])
 
-(defn kokonaishintaiset-nakyma [e! app]
+(defn kokonaishintainen-toimenpidelomake [e! {:keys [valittu-toimenpide
+                                                     kohteet
+                                                     toimenpideinstanssit
+                                                     tehtavat
+                                                     huoltokohteet]
+                                              :as app}]
+  (let [urakka (get-in app [:valinnat :urakka])
+        sopimukset (:sopimukset urakka)]
+    [:div
+     [napit/takaisin "Takaisin varusteluetteloon"
+      #(e! (tiedot/->TyhjennaValittuToimenpide))]
+     [lomake/lomake
+      {:otsikko "Uusi toimenpide"
+       :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
+       :footer-fn (fn [toimenpide]
+                    [:div
+                     [napit/tallenna
+                      "Tallenna"
+                      #(e! (tiedot/->TallennaToimenpide toimenpide))
+                      {:tallennus-kaynnissa? tallennus-kaynnissa?
+                       :disabled (not (lomake/voi-tallentaa? valittu-toimenpide))}]])}
+      (toimenpiteet-view/toimenpidelomakkeen-kentat valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
+      valittu-toimenpide]]))
+
+(defn kokonaishintaiset-nakyma [e! {:keys [valittu-toimenpide]
+                                    :as app}]
   [:div
-   [debug/debug app]
-   [valinnat e! app]
-   [kokonaishintaiset-toimenpiteet-taulukko e! app]])
+   (if valittu-toimenpide
+     [kokonaishintainen-toimenpidelomake e! app]
+     [:div
+      [hakuehdot e! app]
+      [kokonaishintaiset-toimenpiteet-taulukko e! app]])
+   [debug/debug app]])
 
-(defn kokonaishintaiset* [e! app]
+(defn kokonaishintaiset* [e! _]
   (komp/luo
-    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(do
-                         (e! (tiedot/->Nakymassa? true))
-                         (e! (tiedot/->PaivitaValinnat
-                               {:urakka @nav/valittu-urakka
-                                :sopimus-id (first @u/valittu-sopimusnumero)
-                                :aikavali @u/valittu-aikavali
-                                :toimenpide @u/valittu-toimenpideinstanssi})))
-                      #(do
-                         (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
-      @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+    (komp/watcher tiedot/valinnat (fn [_ _ uusi] (e! (tiedot/->PaivitaValinnat uusi))))
+    (komp/sisaan-ulos #(e! (tiedot/->NakymaAvattu)) #(e! (tiedot/->NakymaSuljettu)))
+    (fn [e! app]
+      ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+      @tiedot/valinnat
       [:span
        [kokonaishintaiset-nakyma e! app]])))
 
