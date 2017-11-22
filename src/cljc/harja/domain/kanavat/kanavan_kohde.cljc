@@ -87,3 +87,11 @@
   (kohteen-nimi* (::kanava/nimi kanava)
                  (::nimi kohde)
                  (tyyppi->str (::tyyppi kohde))))
+
+(defn silta? [kohde]
+  (or (= :silta (::tyyppi kohde))
+      (= :sulku-ja-silta (::tyyppi kohde))))
+
+(defn sulku? [kohde]
+  (or (= :sulku (::tyyppi kohde))
+      (= :sulku-ja-silta (::tyyppi kohde))))
