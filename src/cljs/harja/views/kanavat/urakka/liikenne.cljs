@@ -249,7 +249,7 @@
            :nimi :edelliset-alukset
            :komponentti (fn [_] [:div "Tähän tulee taulukko, josta alustiedot täytetään"])}))
       (when (::lt/kohde valittu-liikennetapahtuma)
-        {:otsikko (str "Liikenne " uusi-tapahtuma?)
+        {:otsikko "Liikenne "
          :tyyppi :komponentti
          :palstoja 3
          :nimi :muokattavat-tapahtumat
