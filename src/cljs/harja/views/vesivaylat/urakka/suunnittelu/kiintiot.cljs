@@ -25,33 +25,39 @@
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Vesiväylät/Kiintiöt")
+
 (defn kiintion-toimenpiteet [e! app kiintio]
-  [grid/grid
-   {:tyhja "Ei liitettyjä toimenpiteitä"
-    :tunniste ::to/id}
-   [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
-    {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
-    {:otsikko "Hintatyyppi" :nimi ::to/hintatyyppi :fmt to/hintatyyppi-fmt :leveys 10}
-    {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
-    {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
-     :solu-klikattu (fn [rivi]
-                      (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
-                        (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                         :valittu? (not valittu?)}))))
-     :komponentti (fn [rivi]
-                    (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
-                      [kentat/tee-kentta
-                       {:tyyppi :checkbox}
-                       (r/wrap valittu?
-                               (fn [uusi]
-                                 (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                                  :valittu? uusi}))))]))
-     :leveys 5}]
-   (::kiintio/toimenpiteet kiintio)])
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu "Kiintiön toimenpiteet")
+    (fn [e! app kiintio]
+      [grid/grid
+      {:tyhja "Ei liitettyjä toimenpiteitä"
+       :tunniste ::to/id}
+      [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
+       {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
+       {:otsikko "Hintatyyppi" :nimi ::to/hintatyyppi :fmt to/hintatyyppi-fmt :leveys 10}
+       {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
+       {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
+       {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
+        :solu-klikattu (fn [rivi]
+                         (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
+                           (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                            :valittu? (not valittu?)}))))
+        :komponentti (fn [rivi]
+                       (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
+                         [kentat/tee-kentta
+                          {:tyyppi :checkbox}
+                          (r/wrap valittu?
+                                  (fn [uusi]
+                                    (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                                     :valittu? uusi}))))]))
+        :leveys 5}]
+      (::kiintio/toimenpiteet kiintio)])))
 
 (defn kiintiot* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))

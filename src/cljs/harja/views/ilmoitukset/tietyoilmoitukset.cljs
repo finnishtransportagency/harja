@@ -19,10 +19,13 @@
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Tietyöilmoitukset")
+
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu tiedot/karttataso-tietyoilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ ilmoitus]
                                           (e! (tiedot/->ValitseIlmoitus

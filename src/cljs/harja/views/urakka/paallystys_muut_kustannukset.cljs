@@ -18,6 +18,8 @@
 (def kustannus-hinta-leveys 3)
 (def kustannus-pvm-leveys 3)
 
+(def sivu "Päällystys/Muut kustannukset")
+
 (defn- rivi-poistettavissa? [m]
   (log "rivi-poistettavissa? " (pr-str m))
   (or (-> m :muokattava) (-> m :id neg?)))
@@ -48,6 +50,7 @@
 (defn muut-kustannukset [urakka]
   (komp/luo
    (komp/lippu tiedot/nakymassa?)
+   (komp/kirjaa-kaytto! sivu)
    (fn [urakka]
      [:div.muut-kustannukset
       [grid/grid (assoc grid-opts

@@ -23,6 +23,8 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def sivu "Päällystys/Maksuerät")
+
 (defn- maksuerat* [e! tila]
   (e! (tiedot/->PaivitaValinnat @tiedot/valinnat))
 
@@ -86,6 +88,7 @@
 (defn maksuerat []
   (komp/luo
     (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
 
     (fn []
       [tuck tiedot/tila maksuerat*])))

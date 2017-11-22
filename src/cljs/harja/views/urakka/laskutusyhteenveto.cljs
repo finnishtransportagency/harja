@@ -25,7 +25,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
-
+(def sivu "Laskutusyhteenveto")
 (defonce laskutusyhteenveto-nakyvissa? (atom false))
 
 (defonce laskutusyhteenvedon-parametrit
@@ -51,6 +51,7 @@
   []
   (komp/luo
     (komp/lippu laskutusyhteenveto-nakyvissa?)
+    (komp/kirjaa-kaytto! sivu)
     (fn []
       (let [ur @nav/valittu-urakka
             tiedot @laskutusyhteenvedon-tiedot

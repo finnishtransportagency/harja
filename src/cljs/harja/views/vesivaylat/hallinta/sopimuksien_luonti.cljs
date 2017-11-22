@@ -13,52 +13,58 @@
             [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]))
 
+(def sivu "Vesiväylät/Sopimuksien luonti")
+
 (defn luontilomake [e! {:keys [valittu-sopimus tallennus-kaynnissa? haetut-sopimukset] :as app}]
-  (let [urakat (:urakat valittu-sopimus)]
-    [:div
-     [napit/takaisin "Takaisin luetteloon"
-      #(e! (tiedot/->ValitseSopimus nil))
-      {:disabled tallennus-kaynnissa?}]
-     [lomake/lomake
-      {:otsikko (if (::sopimus/id valittu-sopimus)
-                  "Muokkaa sopimusta"
-                  "Luo uusi sopimus")
-       :muokkaa! #(e! (tiedot/->SopimustaMuokattu (lomake/ilman-lomaketietoja %)))
-       :voi-muokata? (oikeudet/hallinta-vesivaylat)
-       :footer-fn (fn [hanke]
-                    [napit/tallenna
-                     "Tallenna sopimus"
-                     #(e! (tiedot/->TallennaSopimus (lomake/ilman-lomaketietoja hanke)))
-                     {:ikoni (ikonit/tallenna)
-                      :disabled (or tallennus-kaynnissa?
-                                    (not (lomake/voi-tallentaa? hanke))
-                                    (not (oikeudet/hallinta-vesivaylat)))
-                      :tallennus-kaynnissa? tallennus-kaynnissa?}])}
-      [(lomake/rivi
-         {:otsikko "Nimi" :nimi ::sopimus/nimi :tyyppi :string :pakollinen? true}
-         {:otsikko "Diaarinumero" :nimi ::sopimus/reimari-diaarinro :tyyppi :string :pakollinen? false})
-       (lomake/rivi
-         {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :pakollinen? true}
-         {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :pakollinen? true
-          :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
-       {:otsikko "Pääsopimus"
-        :muokattava? (constantly false)
-        :nimi ::sopimus/paasopimus-id
-        :tyyppi :string
-        :hae (fn [s]
-               (if (sopimus/paasopimus-jollekin? haetut-sopimukset s)
-                 "Sopimus on pääsopimus"
-                 (::sopimus/nimi (sopimus/sopimuksen-paasopimus haetut-sopimukset s))))}
-       (if (:id valittu-sopimus)
-         {:otsikko "Urakka"
-          :muokattava? (constantly false)
-          :tyyppi :string
-          :nimi :urakan-nimi
-          :hae #(get-in % [::sopimus/urakka ::urakka/nimi])})]
-      valittu-sopimus]]))
+  (komp/luo
+    (komp/kirjaa-lomakkeen-kaytto! sivu)
+    (fn [e! {:keys [valittu-sopimus tallennus-kaynnissa? haetut-sopimukset] :as app}]
+      (let [urakat (:urakat valittu-sopimus)]
+       [:div
+        [napit/takaisin "Takaisin luetteloon"
+         #(e! (tiedot/->ValitseSopimus nil))
+         {:disabled tallennus-kaynnissa?}]
+        [lomake/lomake
+         {:otsikko (if (::sopimus/id valittu-sopimus)
+                     "Muokkaa sopimusta"
+                     "Luo uusi sopimus")
+          :muokkaa! #(e! (tiedot/->SopimustaMuokattu (lomake/ilman-lomaketietoja %)))
+          :voi-muokata? (oikeudet/hallinta-vesivaylat)
+          :footer-fn (fn [hanke]
+                       [napit/tallenna
+                        "Tallenna sopimus"
+                        #(e! (tiedot/->TallennaSopimus (lomake/ilman-lomaketietoja hanke)))
+                        {:ikoni (ikonit/tallenna)
+                         :disabled (or tallennus-kaynnissa?
+                                       (not (lomake/voi-tallentaa? hanke))
+                                       (not (oikeudet/hallinta-vesivaylat)))
+                         :tallennus-kaynnissa? tallennus-kaynnissa?}])}
+         [(lomake/rivi
+            {:otsikko "Nimi" :nimi ::sopimus/nimi :tyyppi :string :pakollinen? true}
+            {:otsikko "Diaarinumero" :nimi ::sopimus/reimari-diaarinro :tyyppi :string :pakollinen? false})
+          (lomake/rivi
+            {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :pakollinen? true}
+            {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :pakollinen? true
+             :validoi [[:pvm-kentan-jalkeen :alkupvm "Loppu ei voi olla ennen alkua"]]})
+          {:otsikko "Pääsopimus"
+           :muokattava? (constantly false)
+           :nimi ::sopimus/paasopimus-id
+           :tyyppi :string
+           :hae (fn [s]
+                  (if (sopimus/paasopimus-jollekin? haetut-sopimukset s)
+                    "Sopimus on pääsopimus"
+                    (::sopimus/nimi (sopimus/sopimuksen-paasopimus haetut-sopimukset s))))}
+          (if (:id valittu-sopimus)
+            {:otsikko "Urakka"
+             :muokattava? (constantly false)
+             :tyyppi :string
+             :nimi :urakan-nimi
+             :hae #(get-in % [::sopimus/urakka ::urakka/nimi])})]
+         valittu-sopimus]]))))
 
 (defn sopimusgrid [e! app]
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (komp/sisaan #(e! (tiedot/->HaeSopimukset)))
     (fn [e! {:keys [haetut-sopimukset sopimuksien-haku-kaynnissa?] :as app}]
       [:div
@@ -86,6 +92,7 @@
 
 (defn vesivaylasopimuksien-luonti* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
 

@@ -9,7 +9,8 @@
             [goog.events :as events]
             [harja.virhekasittely :as virhekasittely]
             [goog.events.EventType :as EventType]
-            [harja.tiedot.kartta :as kartta-tiedot]))
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.tyokalut.kayttoseuranta :as kayttoseuranta]))
 
 (defn luo
   "Luo uuden komponentin instanssin annetuista toteutuksista.
@@ -33,32 +34,32 @@
         component-will-unmount (keep :component-will-unmount toteutukset)]
 
     (r/create-class
-     {:reagent-render (fn [& args] (try
-                                     (apply render args)
-                                     (catch :default e
-                                       (error "VIRHE RENDERÖITÄESSÄ KOMPONENTTIA!")
-                                       (error e) ;; Logita erikseen, jotta helpompi tarkistaa
-                                       [virhekasittely/rendaa-virhe e])))
-      :get-initial-state (fn [this]
-                           (reduce merge (map #(% this) get-initial-state)))
-      :component-will-receive-props (fn [this new-argv]
-                                      (doseq [f component-will-receive-props]
-                                        (apply f this new-argv)))
-      :component-will-mount (fn [this]
-                              (doseq [f component-will-mount]
+      {:reagent-render (fn [& args] (try
+                                      (apply render args)
+                                      (catch :default e
+                                        (error "VIRHE RENDERÖITÄESSÄ KOMPONENTTIA!")
+                                        (error e) ;; Logita erikseen, jotta helpompi tarkistaa
+                                        [virhekasittely/rendaa-virhe e])))
+       :get-initial-state (fn [this]
+                            (reduce merge (map #(% this) get-initial-state)))
+       :component-will-receive-props (fn [this new-argv]
+                                       (doseq [f component-will-receive-props]
+                                         (apply f this new-argv)))
+       :component-will-mount (fn [this]
+                               (doseq [f component-will-mount]
+                                 (f this)))
+       :component-did-mount (fn [this]
+                              (doseq [f component-did-mount]
                                 (f this)))
-      :component-did-mount (fn [this]
-                             (doseq [f component-did-mount]
-                               (f this)))
-      :component-will-update (fn [this new-argv]
-                               (doseq [f component-will-update]
-                                 (apply f this new-argv)))
-      :component-did-update (fn [this old-argv]
-                              (doseq [f component-did-update]
-                                (apply f this old-argv)))
-      :component-will-unmount (fn [this]
-                                (doseq [f component-will-unmount]
-                                  (f this)))})))
+       :component-will-update (fn [this new-argv]
+                                (doseq [f component-will-update]
+                                  (apply f this new-argv)))
+       :component-did-update (fn [this old-argv]
+                               (doseq [f component-did-update]
+                                 (apply f this old-argv)))
+       :component-will-unmount (fn [this]
+                                 (doseq [f component-will-unmount]
+                                   (f this)))})))
 
 (defn kuuntelija
   "Komponentti mixin tapahtuma-aiheiden kuuntelemiseen.
@@ -78,10 +79,10 @@
                                                              [aihe]
                                                              (seq aihe)))))
                                        kuuntelijat))))
-      :component-will-unmount (fn [this _]
-                                (let [kuuntelijat (-> this r/state ::kuuntelijat)]
-                                  (doseq [k kuuntelijat]
-                                    (k))))}))
+     :component-will-unmount (fn [this _]
+                               (let [kuuntelijat (-> this r/state ::kuuntelijat)]
+                                 (doseq [k kuuntelijat]
+                                   (k))))}))
 
 (defn dom-kuuntelija
   "Mixin DOM tapahtumien kuuntelemiseen annetussa elementissä.
@@ -112,6 +113,19 @@
                            (sisaan))
    :component-will-unmount (fn [& _]
                              (ulos))})
+
+(defn kirjaa-kaytto!
+  "Lähettää palvelimelle tiedon, kun komponentti kutsuu :will-mount ja :will-unmount metodejaan.
+  Lomake- ja Grid-komponenteille kannattaa käyttää kirjaa-lomakkeen-kaytto! ja kirjaa-gridin-kaytto!
+  funktioita."
+  ([sivu]
+   (kirjaa-kaytto! sivu nil))
+  ([sivu lisatieto]
+   (sisaan-ulos #(kayttoseuranta/laheta-kaytto! sivu lisatieto true)
+                #(kayttoseuranta/laheta-kaytto! sivu lisatieto false))))
+
+(def kirjaa-lomakkeen-kaytto! #(kirjaa-kaytto! % "Lomake"))
+(def kirjaa-gridin-kaytto! #(kirjaa-kaytto! % "Grid"))
 
 (defn sisaan
   "Mixin, joka käsittelee component-will-mount ja component-will-unmount elinkaaret. Tällä voi kätevästi tehdä jotain
@@ -237,20 +251,20 @@
   ([] (fokusoi nil))
   ([alipolku]
    (piirretty
-    (fn [this]
-      (let [elt (r/dom-node this)]
-        (when-let [elt (if alipolku
-                         (.querySelector elt alipolku)
-                         elt)]
-          (.focus elt)))))))
+     (fn [this]
+       (let [elt (r/dom-node this)]
+         (when-let [elt (if alipolku
+                          (.querySelector elt alipolku)
+                          elt)]
+           (.focus elt)))))))
 
 (defn skrollaa-nakyviin-absolute
   "Skrollaa absoluuttisesti (ikkunan koordinaateissa olevan) komponentin näkyviin piirron jälkeen"
   []
   (piirretty
-   (fn [this]
-     (let [node (r/dom-node this)
-           [_ y _ h] (dom/sijainti node)
-           korkeus @dom/korkeus]
-       (when (> (+ y h) korkeus)
-         (.scrollBy js/window 0 (- (+ y h) korkeus)))))))
+    (fn [this]
+      (let [node (r/dom-node this)
+            [_ y _ h] (dom/sijainti node)
+            korkeus @dom/korkeus]
+        (when (> (+ y h) korkeus)
+          (.scrollBy js/window 0 (- (+ y h) korkeus)))))))

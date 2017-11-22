@@ -25,7 +25,8 @@
     [harja.geo :as geo]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.urakka :as urakka-domain]
-    [taoensso.timbre :as log])
+    [taoensso.timbre :as log]
+    [harja.tyokalut.kayttoseuranta :as kayttoseuranta])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]])
@@ -75,6 +76,11 @@
       (t/julkaise! {:aihe :kartan-koko-vaihdettu
                     :vanha-koko vanha-koko
                     :uusi-koko uusi-koko}))))
+
+(kayttoseuranta/seuraa-kayttoa! kartan-kokovalinta
+                                "Kartan kokovalinta"
+                                (fn [] @kartan-kokovalinta)
+                                (fn [tila] (if (#{:hidden :S} tila) false tila)))
 
 (def valittu-vaylamuoto "Tällä hetkellä valittu väylämuoto" (atom :tie))
 

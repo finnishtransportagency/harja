@@ -15,7 +15,6 @@
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
 (defn indeksi-grid [{:keys [indeksinimi koodi]}]
 
   (let [indeksit @i/indeksit

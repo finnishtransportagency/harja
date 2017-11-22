@@ -16,7 +16,9 @@
     [harja.domain.paallystysilmoitus :as pot]
     [harja.domain.urakka :as urakka-domain]
     [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-    [harja.ui.viesti :as viesti])
+    [harja.ui.viesti :as viesti]
+
+    [harja.tyokalut.kayttoseuranta :refer [seuraa-kayttoa!]])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]

@@ -13,9 +13,12 @@
             [harja.ui.yleiset :as yleiset]
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
-            [harja.ui.kentat :refer [tee-kentta]])
+            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.komponentti :as komp])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
+
+(def sivu "Toimenpidekoodien ylläpitonäkymä")
 
 (comment
   (add-watch koodit ::debug (fn [_ _ old new]
@@ -194,7 +197,15 @@
 
 (def toimenpidekoodit
   "Toimenpidekoodien hallinnan pääkomponentti"
-  (with-meta
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu)
+    {:displayName "toimenpidekoodit"
+     :component-did-mount
+     (fn [this]
+       (go (let [toimenpidekoodit (<! (k/get! :hae-toimenpidekoodit))
+                 tyokoneiden-reaaliaikaseuranna-tehtavat (<! (k/get! :hae-reaaliaikaseurannan-tehtavat))]
+             (resetoi-koodit toimenpidekoodit)
+             (resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat tyokoneiden-reaaliaikaseuranna-tehtavat))))}
     (fn []
       (let [kaikki-koodit @koodit
             koodit-tasoittain @koodit-tasoittain
@@ -219,10 +230,10 @@
                                         (reset! valittu-taso2 taso2)
                                         (reset! valittu-taso3
                                                 (first
-                                                 (filter (fn [k]
-                                                           (and (= "Laaja toimenpide" (:nimi k))
-                                                                (= (:id taso2) (:emo k))))
-                                                         (get koodit-tasoittain 3)))))
+                                                  (filter (fn [k]
+                                                            (and (= "Laaja toimenpide" (:nimi k))
+                                                                 (= (:id taso2) (:emo k))))
+                                                          (get koodit-tasoittain 3)))))
                           :value (str (:id @valittu-taso2))}
            [:option {:value ""} "-- Valitse 2. taso --"]
            (when-let [emo1 (:id taso1)]
@@ -306,12 +317,4 @@
               :fmt fmt/kayttaja-opt}]
             @tehtavat])
 
-         [api-seuranta kaikki-koodit koodit-tasoittain]]))
-
-    {:displayName "toimenpidekoodit"
-     :component-did-mount
-     (fn [this]
-       (go (let [toimenpidekoodit (<! (k/get! :hae-toimenpidekoodit))
-                 tyokoneiden-reaaliaikaseuranna-tehtavat (<! (k/get! :hae-reaaliaikaseurannan-tehtavat))]
-             (resetoi-koodit toimenpidekoodit)
-             (resetoi-tyokoneiden-reaaliaikaseuranna-tehtavat tyokoneiden-reaaliaikaseuranna-tehtavat))))}))
+         [api-seuranta kaikki-koodit koodit-tasoittain]]))))

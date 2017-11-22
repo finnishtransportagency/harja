@@ -18,6 +18,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def sivu "Integraatioloki")
+
 (defn kartta-merkkijonoksi [kartta]
   (when kartta
     (clojure.string/join
@@ -288,6 +290,7 @@
 (defn integraatioloki []
   (komp/luo
     (komp/ulos (aloita-tapahtumien-paivitys!))
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu tiedot/nakymassa?)
     (fn []
       [:div.integraatioloki

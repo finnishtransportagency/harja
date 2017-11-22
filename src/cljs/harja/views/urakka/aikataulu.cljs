@@ -35,6 +35,8 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Aikataulu")
+
 (defn tiemerkintavalmius-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
   [data]
@@ -195,6 +197,7 @@
   [urakka optiot]
   (komp/luo
     (komp/lippu tiedot/aikataulu-nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
     (fn [urakka optiot]
       (let [{urakka-id :id :as ur} @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)

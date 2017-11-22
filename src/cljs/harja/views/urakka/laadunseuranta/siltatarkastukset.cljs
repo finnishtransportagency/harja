@@ -31,6 +31,7 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+(def sivu "Laadunseuranta/Siltatarkastukset")
 
 (defonce muokattava-tarkastus (local-storage/local-storage-atom :muokattava-siltatarkastus
                                                                 nil
@@ -299,6 +300,7 @@
 
 (defn sillan-tarkastukset []
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (fn []
       (let [muut-tarkastukset (reaction (let [kaikki @st/valitun-sillan-tarkastukset
                                               aika (:tarkastusaika @st/valittu-tarkastus)]
@@ -370,6 +372,7 @@
                   "Luo uusi siltatarkastus"
                   (str "Muokkaa tarkastusta " (pvm/pvm (:tarkastusaika @muokattava-tarkastus))))]
     (komp/luo
+      (komp/kirjaa-lomakkeen-kaytto! sivu)
       (komp/piirretty
         #(do (when (:nayta-localstorage-tarkastus? @muokattava-tarkastus)
                (let [tarkastuksen-muokkaus-aika (:viimeksi-muokattu @muokattava-tarkastus)]
@@ -498,6 +501,7 @@
 (defn siltatarkastukset []
 
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(do
                          (kartta-tasot/taso-paalle! :sillat)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)

@@ -30,6 +30,8 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
+(def sivu "Toteumat/Kokonaishintaiset")
+
 (defn tehtavan-paivakohtaiset-tiedot [urakka-id pvm toimenpidekoodi jarjestelmanlisaama]
   (let [avain [urakka-id pvm toimenpidekoodi jarjestelmanlisaama]
         tiedot (get @tiedot/toteumien-paivakohtaiset-tiedot avain)]
@@ -107,21 +109,24 @@
 (defn kokonaishintaisten-toteumien-listaus
   "Kokonaishintaisten töiden toteumat"
   []
-  [:div
-   [valinnat]
-   (let [oikeus? (oikeudet/voi-kirjoittaa?
-                  oikeudet/urakat-toteumat-kokonaishintaisettyot
-                  (:id @nav/valittu-urakka))]
-     (yleiset/wrap-if
-      (not oikeus?)
-      [yleiset/tooltip {} :%
-       (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                       oikeudet/urakat-toteumat-kokonaishintaisettyot)]
-      [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
-                                           (tiedot/uusi-kokonaishintainen-toteuma))
-       {:disabled (not oikeus?)}]))
-   [taulukko]
-   [yleiset/vihje "Näet työn kartalla klikkaamalla riviä."]])
+  (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
+    (fn []
+      [:div
+      [valinnat]
+      (let [oikeus? (oikeudet/voi-kirjoittaa?
+                      oikeudet/urakat-toteumat-kokonaishintaisettyot
+                      (:id @nav/valittu-urakka))]
+        (yleiset/wrap-if
+          (not oikeus?)
+          [yleiset/tooltip {} :%
+           (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+                                           oikeudet/urakat-toteumat-kokonaishintaisettyot)]
+          [napit/uusi "Lisää toteuma" #(reset! tiedot/valittu-kokonaishintainen-toteuma
+                                               (tiedot/uusi-kokonaishintainen-toteuma))
+           {:disabled (not oikeus?)}]))
+      [taulukko]
+      [yleiset/vihje "Näet työn kartalla klikkaamalla riviä."]])))
 
 (defn kokonaishintainen-toteuma-lomake []
   (let [muokattu (reaction-writable @tiedot/valittu-kokonaishintainen-toteuma)
@@ -138,150 +143,153 @@
                                                                   t4))
                                                               kaikki-tehtavat))]
                              (sort-by :nimi tpin-tehtavat)))]
-    (fnc []
-         [:div
-          [napit/takaisin "Takaisin luetteloon" tiedot/poista-toteuman-valinta!]
+    (komp/luo
+      (komp/kirjaa-lomakkeen-kaytto! sivu)
+      (fnc []
+       [:div
+        [napit/takaisin "Takaisin luetteloon" tiedot/poista-toteuman-valinta!]
 
-          [lomake/lomake
-           {:otsikko      (if (:id @muokattu)
-                            "Muokkaa kokonaishintaista toteumaa"
-                            "Luo uusi kokonaishintainen toteuma")
-            :muokkaa!     #(do (reset! muokattu %))
-            :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))
-            :footer-fn    (fn [tiedot]
-                            [napit/palvelinkutsu-nappi
-                            "Tallenna toteuma"
-                            #(tiedot/tallenna-kokonaishintainen-toteuma! tiedot)
-                            {:luokka       "nappi-ensisijainen"
-                             :ikoni        (ikonit/tallenna)
-                             :kun-onnistuu #(do
-                                             (tiedot/toteuman-tallennus-onnistui %)
-                                             (tiedot/poista-toteuman-valinta!)
-                                             ;; Päiväkohtaiset tiedot vanhentui -> tyhjennä
-                                             (reset! tiedot/toteumien-paivakohtaiset-tiedot {}))
-                             :disabled     (or (not (lomake/voi-tallentaa? tiedot))
-                                               (not (lomake/muokattu? tiedot))
-                                               jarjestelman-lisaama-toteuma?
-                                               (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}
-           ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
-           ;; reitti!
-           [(when jarjestelman-lisaama-toteuma?
-              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
-               :hae (fn [rivi]
-                      (str "Järjestelmä (" (get-in rivi [:suorittaja :nimi]) ")"))
-               :muokattava? (constantly false)
-               :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
-            {:otsikko     "Päivämäärä"
-             :nimi        :alkanut
+        [lomake/lomake
+         {:otsikko (if (:id @muokattu)
+                     "Muokkaa kokonaishintaista toteumaa"
+                     "Luo uusi kokonaishintainen toteuma")
+          :muokkaa! #(do (reset! muokattu %))
+          :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))
+          :footer-fn (fn [tiedot]
+                       [napit/palvelinkutsu-nappi
+                        "Tallenna toteuma"
+                        #(tiedot/tallenna-kokonaishintainen-toteuma! tiedot)
+                        {:luokka "nappi-ensisijainen"
+                         :ikoni (ikonit/tallenna)
+                         :kun-onnistuu #(do
+                                          (tiedot/toteuman-tallennus-onnistui %)
+                                          (tiedot/poista-toteuman-valinta!)
+                                          ;; Päiväkohtaiset tiedot vanhentui -> tyhjennä
+                                          (reset! tiedot/toteumien-paivakohtaiset-tiedot {}))
+                         :disabled (or (not (lomake/voi-tallentaa? tiedot))
+                                       (not (lomake/muokattu? tiedot))
+                                       jarjestelman-lisaama-toteuma?
+                                       (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot (:id @nav/valittu-urakka))))}])}
+         ;; lisatieto, suorittaja {ytunnus, nimi}, pituus
+         ;; reitti!
+         [(when jarjestelman-lisaama-toteuma?
+            {:otsikko "Lähde" :nimi :luoja :tyyppi :string
+             :hae (fn [rivi]
+                    (str "Järjestelmä (" (get-in rivi [:suorittaja :nimi]) ")"))
+             :muokattava? (constantly false)
+             :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
+          {:otsikko "Päivämäärä"
+           :nimi :alkanut
+           :pakollinen? true
+           :tyyppi :pvm-aika
+           :uusi-rivi? true
+           :aseta (fn [rivi arvo]
+                    (-> rivi
+                        (assoc :paattynyt arvo)
+                        (assoc :alkanut arvo)))
+           :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+           :validoi [[:ei-tyhja "Valitse päivämäärä"]]
+           :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+          (if (:jarjestelma @muokattu)
+            {:tyyppi :string
+             :otsikko "Pituus"
+             :fmt fmt/pituus-opt
+             :nimi :pituus
+             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+            (if-not (= (:reitti @muokattu) :hakee)
+              {:tyyppi :tierekisteriosoite
+               :nimi :tr
+               :pakollinen? true
+               :sijainti (r/wrap (:reitti @muokattu)
+                                 #(swap! muokattu assoc :reitti %))
+               :ala-nayta-virhetta-komponentissa? true
+               :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:reitti]]]
+               }
+              {:tyyppi :spinner
+               :nimi :spinner
+               :viesti "Haetaan reittiä"}))
+          {:otsikko "Suorittaja"
+           :uusi-rivi? true
+           :nimi :suorittajan-nimi
+           :hae (comp :nimi :suorittaja)
+           :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :nimi] arvo))
+           :pituus-max 256
+           :tyyppi :string
+           :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+          {:otsikko "Suorittajan Y-tunnus"
+           :nimi :suorittajan-ytunnus
+           :hae (comp :ytunnus :suorittaja)
+           :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :ytunnus] arvo))
+           :pituus-max 9
+           :validoi [[:ytunnus]]
+           :tyyppi :string
+           :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
+          (lomake/ryhma
+            {:otsikko "Tehty työ"
+             :leveys-col 3}
+            {:otsikko "Toimenpide"
+             :nimi :toimenpide
              :pakollinen? true
-             :tyyppi      :pvm-aika
-             :uusi-rivi?  true
+             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+             :tyyppi :valinta
+             :valinnat @toimenpideinstanssit
+             :fmt #(:tpi_nimi
+                     (urakan-toimenpiteet/toimenpideinstanssi-idlla % @toimenpideinstanssit))
+             :valinta-arvo :tpi_id
+             :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
+             :hae (comp :id :toimenpideinstanssi :tehtava)
              :aseta (fn [rivi arvo]
                       (-> rivi
-                          (assoc :paattynyt arvo)
-                          (assoc :alkanut arvo)))
+                          (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
+                          (assoc-in [:tehtava :toimenpidekoodi :id] nil)
+                          (assoc-in [:tehtava :yksikko] nil)))
+             :leveys-col 3}
+            {:otsikko "Tehtävä"
+             :nimi :tehtava
+             :pakollinen? true
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
-             :validoi     [[:ei-tyhja "Valitse päivämäärä"]]
-             :huomauta     [[:urakan-aikana-ja-hoitokaudella]]}
-           (if (:jarjestelma @muokattu)
-              {:tyyppi :string
-               :otsikko "Pituus"
-               :fmt fmt/pituus-opt
-               :nimi :pituus
-               :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
-              (if-not (= (:reitti @muokattu) :hakee)
-                {:tyyppi                            :tierekisteriosoite
-                 :nimi                              :tr
-                 :pakollinen?         true
-                 :sijainti                          (r/wrap (:reitti @muokattu)
-                                                            #(swap! muokattu assoc :reitti %))
-                 :ala-nayta-virhetta-komponentissa? true
-                 :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:reitti]]]
-                 }
-               {:tyyppi :spinner
-                :nimi :spinner
-                :viesti "Haetaan reittiä"}))
-            {:otsikko "Suorittaja"
-             :uusi-rivi? true
-             :nimi :suorittajan-nimi
-             :hae (comp :nimi :suorittaja)
-             :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :nimi] arvo))
-             :pituus-max 256
-             :tyyppi :string
-             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
-            {:otsikko "Suorittajan Y-tunnus"
-             :nimi :suorittajan-ytunnus
-             :hae (comp :ytunnus :suorittaja)
-             :aseta (fn [rivi arvo] (assoc-in rivi [:suorittaja :ytunnus] arvo))
-             :pituus-max 9
-             :validoi [[:ytunnus]]
-             :tyyppi :string
-             :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))}
-            (lomake/ryhma
-              {:otsikko "Tehty työ"
-               :leveys-col 3}
-              {:otsikko       "Toimenpide"
-               :nimi          :toimenpide
-               :pakollinen?   true
-               :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
-               :tyyppi        :valinta
-               :valinnat      @toimenpideinstanssit
-               :fmt           #(:tpi_nimi
-                                (urakan-toimenpiteet/toimenpideinstanssi-idlla % @toimenpideinstanssit))
-               :valinta-arvo  :tpi_id
-               :valinta-nayta #(if % (:tpi_nimi %) "- Valitse toimenpide -")
-               :hae (comp :id :toimenpideinstanssi :tehtava)
-               :aseta (fn [rivi arvo]
-                        (-> rivi
-                            (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
-                            (assoc-in [:tehtava :toimenpidekoodi :id] nil)
-                            (assoc-in [:tehtava :yksikko] nil)))
-               :leveys-col    3}
-              {:otsikko       "Tehtävä"
-               :nimi          :tehtava
-               :pakollinen?   true
-               :muokattava?   (constantly (not jarjestelman-lisaama-toteuma?))
-               :tyyppi        :valinta
-               :valinnat      @tehtavat
-               :valinta-arvo  :id
-               :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
-               :hae           (comp :tpk-id :tehtava)
-               :aseta         (fn [rivi arvo]
-                                (-> rivi
-                                    (assoc-in [:tehtava :tpk-id] arvo)
-                                    (assoc-in [:tehtava :yksikko] (:yksikko
-                                                                    (urakan-toimenpiteet/tehtava-idlla
-                                                                     arvo nelostason-tehtavat)))))
-               :leveys-col    3}
-              {:otsikko "Määrä"
-               :nimi :maara
-               :pakollinen?   true
-               :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
-               :tyyppi :positiivinen-numero
-               :hae (comp :maara :tehtava)
-               :aseta (fn [rivi arvo]
-                        (assoc-in rivi [:tehtava :maara] arvo))
-               :leveys-col 3}
-              {:otsikko "Yksikkö"
-               :nimi :yksikko
-               :muokattava? (constantly false)
-               :tyyppi :string
-               :hae (comp :yksikko :tehtava)
-               :leveys-col 3})
-            {:otsikko "Lisätieto"
-             :nimi :lisatieto
-             :pituus-max 256
-             :tyyppi :text
-             :uusi-rivi? true
+             :tyyppi :valinta
+             :valinnat @tehtavat
+             :valinta-arvo :id
+             :valinta-nayta #(if % (:nimi %) "- Valitse tehtävä -")
+             :hae (comp :tpk-id :tehtava)
+             :aseta (fn [rivi arvo]
+                      (-> rivi
+                          (assoc-in [:tehtava :tpk-id] arvo)
+                          (assoc-in [:tehtava :yksikko] (:yksikko
+                                                          (urakan-toimenpiteet/tehtava-idlla
+                                                            arvo nelostason-tehtavat)))))
+             :leveys-col 3}
+            {:otsikko "Määrä"
+             :nimi :maara
+             :pakollinen? true
              :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
-             :koko [80 :auto]
-             :palstoja 2}]
-           @muokattu]])))
+             :tyyppi :positiivinen-numero
+             :hae (comp :maara :tehtava)
+             :aseta (fn [rivi arvo]
+                      (assoc-in rivi [:tehtava :maara] arvo))
+             :leveys-col 3}
+            {:otsikko "Yksikkö"
+             :nimi :yksikko
+             :muokattava? (constantly false)
+             :tyyppi :string
+             :hae (comp :yksikko :tehtava)
+             :leveys-col 3})
+          {:otsikko "Lisätieto"
+           :nimi :lisatieto
+           :pituus-max 256
+           :tyyppi :text
+           :uusi-rivi? true
+           :muokattava? (constantly (not jarjestelman-lisaama-toteuma?))
+           :koko [80 :auto]
+           :palstoja 2}]
+         @muokattu]]))))
 
 (def debug-toteuma (atom {}))
 
 (defn kokonaishintaiset-toteumat []
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu tiedot/nakymassa? tiedot/karttataso-kokonaishintainen-toteuma)
     (komp/sisaan-ulos #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit!

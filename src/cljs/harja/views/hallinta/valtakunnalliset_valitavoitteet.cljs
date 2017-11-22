@@ -23,6 +23,8 @@
 (def kertaluontoiset-otsikko {:tiemerkinta "Tiemerkinnän kertaluontoisten välitavoitteiden mallipohjat"})
 (def toistuvat-otsikko {:tiemerkinta "Tiemerkinnän vuosittain toistuvien välitavoitteiden mallipohjat"})
 
+(def sivu "Hallinta/Välitavoitteet")
+
 (defn kertaluontoiset-valitavoitteet-grid
   [valitavoitteet-atom kertaluontoiset-valitavoitteet-atom valittu-urakkatyyppi-atom]
   [grid/grid
@@ -93,6 +95,7 @@
 (defn valitavoitteet []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
     (fn []
       (let [nayta-kertaluontoiset-valtakunnalliset?
             (some? (tiedot/valtakunnalliset-kertaluontoiset-valitavoitteet-kaytossa

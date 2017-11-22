@@ -18,6 +18,7 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defonce laskutus-nakyvissa? (atom false))
+(def sivu "Vesiväylät/Laskutus")
 
 (defonce laskutuksen-parametrit
   (reaction (let [ur @nav/valittu-urakka
@@ -41,6 +42,7 @@
 (defn laskutus
   []
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu laskutus-nakyvissa?)
     (fn []
       (let [ur @nav/valittu-urakka

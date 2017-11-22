@@ -33,6 +33,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def sivu "Toteumat/Yksikköhintaiset")
+
 (defn- rivi-tehtavaksi [rivi]
   {:toimenpidekoodi (:tehtava rivi)
    :maara (:maara rivi)
@@ -195,6 +197,7 @@
     (log "Lomake-toteuma: " (pr-str @lomake-toteuma))
     (log "Lomake tehtävät: " (pr-str @lomake-tehtavat))
     (komp/luo
+      (komp/kirjaa-lomakkeen-kaytto! sivu)
       (fn [ur]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin toteumaluetteloon" #(reset! tiedot/valittu-yksikkohintainen-toteuma nil)]
@@ -354,6 +357,7 @@
   "Yksikköhintaisten töiden toteumat tehtävittäin"
   []
   (komp/luo
+    (komp/kirjaa-gridin-kaytto! sivu)
     (fn []
       [:div
        [valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki @nav/valittu-urakka]
@@ -402,6 +406,7 @@
 (defn yksikkohintaisten-toteumat []
   (komp/luo
     (komp/lippu tiedot/yksikkohintaiset-tyot-nakymassa? tiedot/karttataso-yksikkohintainen-toteuma)
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                           {:toteuma

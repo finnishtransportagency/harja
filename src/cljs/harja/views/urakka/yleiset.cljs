@@ -46,6 +46,8 @@
 ;; organisaatio = valinta siitä mitä on tietokannassa
 ;; sampoid
 
+(def sivu "Yleiset")
+
 (defn tallenna-yhteyshenkilot [ur yhteyshenkilot uudet-yhteyshenkilot]
   (go (let [tallennettavat
             (into []
@@ -600,6 +602,7 @@
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
+      (komp/kirjaa-kaytto! sivu)
       (komp/sisaan (fn [_]
                      (nayta-yha-tuontidialogi-tarvittaessa ur)))
       (fn [ur]

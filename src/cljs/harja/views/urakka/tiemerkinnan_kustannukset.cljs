@@ -24,9 +24,12 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
 
+(def sivu "Tiemerkinnän kustannukset")
+
 (defn kustannukset [urakka raportin-parametrit-atom raportin-tiedot-atom]
   (komp/luo
     (komp/lippu tiedot/kustannukset-valilehti-nakyvissa?)
+    (komp/kirjaa-kaytto! sivu)
     (fn [urakka raportin-parametrit-atom raportin-tiedot-atom]
       (let []
         [:div

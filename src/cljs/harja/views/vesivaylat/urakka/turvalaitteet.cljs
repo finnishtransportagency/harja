@@ -5,8 +5,11 @@
             [harja.ui.komponentti :as komp])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Turvalaitteet")
+
 (defn turvalaitteet* [e! app]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan-ulos #(e! (tiedot/->Nakymassa? true))
                       #(e! (tiedot/->Nakymassa? false)))
     (fn [e! app]

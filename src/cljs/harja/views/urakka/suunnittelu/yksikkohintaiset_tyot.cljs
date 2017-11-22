@@ -25,6 +25,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(def sivu "Suunnittelu/Yksikköhintaiset Työt")
 
 (def tuleville? (atom false))
 
@@ -216,6 +217,7 @@
 
     (hae-urakan-tiedot ur)
     (komp/luo
+      (komp/kirjaa-kaytto! sivu)
       {:component-will-receive-props
        (fn [_ & [_ ur]]
          (log "UUSI URAKKA: " (pr-str (dissoc ur :alue)))

@@ -13,12 +13,15 @@
             [harja.atom :refer-macros [reaction<!]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tyokalut.kayttoseuranta :as kayttoseuranta])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (def hakutermi (atom ""))
+
+(kayttoseuranta/seuraa-kayttoa! hakutermi "Hakutermi" nil empty?)
 
 (def hakutulokset
   (reaction<! [termi @hakutermi]

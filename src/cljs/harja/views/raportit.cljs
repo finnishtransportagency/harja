@@ -34,6 +34,8 @@
                    [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def sivu "Raportit")
+
 (def valittu-raporttityyppi-nimi (reaction (nav/valittu-valilehti :raportit)))
 (defn- valitse-raporttityyppi! [nimi]
   (nav/aseta-valittu-valilehti! :raportit nimi))
@@ -727,6 +729,7 @@
 
 (defn nayta-raportti [tyyppi r]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu (:nimi tyyppi))
     (fn [tyyppi r]
       [:span
        [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
@@ -768,6 +771,7 @@
 (defn raportit []
   (komp/luo
     (komp/lippu raportit/raportit-nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
     (komp/sisaan #(do (when (nil? @raporttityypit)
                         (go (reset! raporttityypit (<! (raportit/hae-raportit)))))
                       (nav/valitse-urakoitsija! nil)))

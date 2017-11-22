@@ -29,6 +29,8 @@
                    [harja.atom :refer [reaction-writable]]
                    [harja.tyokalut.ui :refer [for*]]))
 
+(def sivu "Tilannekuva")
+
 (def hallintapaneeli-max-korkeus (atom nil))
 
 (defn aseta-hallintapaneelin-max-korkeus [paneelin-sisalto]
@@ -275,17 +277,24 @@ suodatinryhmat
         tiedot/suodattimet [:varustetoteumat tk/varustetoteumat]]]]]))
 
 (defn nykytilanne-valinnat []
-  [:span.tilannekuva-nykytilanne-valinnat
-   [aikasuodattimet]
-   [aluesuodattimet]])
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu "Nykytilanne")
+    (fn []
+      [:span.tilannekuva-nykytilanne-valinnat
+      [aikasuodattimet]
+      [aluesuodattimet]])))
 
 (defn historiakuva-valinnat []
-  [:span.tilannekuva-historiakuva-valinnat
-   [aikasuodattimet]
-   [aluesuodattimet]])
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu "Historiakuva")
+    (fn []
+      [:span.tilannekuva-historiakuva-valinnat
+      [aikasuodattimet]
+      [aluesuodattimet]])))
 
 (defn tienakyma []
   (komp/luo
+    (komp/kirjaa-kaytto! sivu "Tienäkymä")
     (fn []
       [tienakyma/tienakyma])))
 
@@ -360,6 +369,7 @@ suodatinryhmat
 
 (defn tilannekuva []
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/lippu tiedot/nakymassa? istunto/ajastin-taukotilassa?)
     (komp/watcher tiedot/valittu-tila
                   (fn [_ _ uusi]

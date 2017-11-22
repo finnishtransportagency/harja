@@ -13,6 +13,8 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
+(def sivu "Hallinta/Häiriöt")
+
 (defn- listaa-hairioilmoitus [hairio]
   (str (fmt/pvm (::hairio/pvm hairio))
        " - "
@@ -62,6 +64,7 @@
 (defn hairiot []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
     (komp/ulos #(do (reset! tiedot/hairiot nil)
                     (reset! tiedot/asetetaan-hairioilmoitus? false)))
     (komp/sisaan tiedot/hae-hairiot)

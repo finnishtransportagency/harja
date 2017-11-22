@@ -32,6 +32,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
+(def sivu "Vesiväylät/Yksikköhintaiset")
+
 ;;;;;;;
 ;; Urakkatoiminnot: Hintaryhmän valitseminen
 
@@ -226,6 +228,7 @@
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app ulkoiset-valinnat]
   (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do

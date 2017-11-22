@@ -17,7 +17,10 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.loki :refer [log]]
-            [reagent.core :refer [atom] :as r]))
+            [reagent.core :refer [atom] :as r]
+            [harja.ui.komponentti :as komp]))
+
+(def sivu "Ilmoituksen tiedot")
 
 (defn selitelista [{:keys [selitteet] :as ilmoitus}]
   (let [virka-apu? (ilmoitukset/virka-apupyynto? ilmoitus)]
@@ -28,64 +31,67 @@
      (parsi-selitteet (filter #(not= % :virkaApupyynto) selitteet))]))
 
 (defn ilmoitus [e! ilmoitus]
-  (let [nayta-valitykset? (atom false)]
+  (komp/luo
+    (komp/kirjaa-kaytto! sivu)
     (fn [e! ilmoitus]
-      [:div
-       [bs/panel {}
-        (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
-        [:span
-         [yleiset/tietoja {}
-          "Urakka: " (:urakkanimi ilmoitus)
-          "Id: " (:ilmoitusid ilmoitus)
-          "Tunniste: " (:tunniste ilmoitus)
-          "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-          "Yhteydenottopyyntö:" (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
-          "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
-          "Otsikko: " (:otsikko ilmoitus)
-          "Paikan kuvaus: " (:paikankuvaus ilmoitus)
-          "Lisatieto:  " (when (:lisatieto ilmoitus)
-                           [yleiset/pitka-teksti (:lisatieto ilmoitus)])
-          "Selitteet: " [selitelista ilmoitus]
-          "Aiheutti toimenpiteitä:" (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
-         [:br]
-         [yleiset/tietoja {}
-          "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
-                              tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
-                          (if (and henkilo tyyppi)
-                            (str henkilo ", " tyyppi)
-                            (str (or henkilo tyyppi))))
-          "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
-          "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+      (let [nayta-valitykset? (atom false)]
+       (fn [e! ilmoitus]
+         [:div
+          [bs/panel {}
+           (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
+           [:span
+            [yleiset/tietoja {}
+             "Urakka: " (:urakkanimi ilmoitus)
+             "Id: " (:ilmoitusid ilmoitus)
+             "Tunniste: " (:tunniste ilmoitus)
+             "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+             "Yhteydenottopyyntö:" (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
+             "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
+             "Otsikko: " (:otsikko ilmoitus)
+             "Paikan kuvaus: " (:paikankuvaus ilmoitus)
+             "Lisatieto:  " (when (:lisatieto ilmoitus)
+                              [yleiset/pitka-teksti (:lisatieto ilmoitus)])
+             "Selitteet: " [selitelista ilmoitus]
+             "Aiheutti toimenpiteitä:" (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
+            [:br]
+            [yleiset/tietoja {}
+             "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
+                                 tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
+                             (if (and henkilo tyyppi)
+                               (str henkilo ", " tyyppi)
+                               (str (or henkilo tyyppi))))
+             "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
+             "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
 
-         [:br]
-         [yleiset/tietoja {}
-          "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
-          "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
-          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
-       [:div.kuittaukset
-        [:h3 "Kuittaukset"]
-        [:div
-         ;; Tilannekuvanäkymässä ei voi tehdä kuittauksia, mutta tätä komponenttia käytetään
-         ;; näyttämään ilmoituksen tarkempia tietoja. Tällöin e! on nil
-         (when e!
-           (if-let [uusi-kuittaus (:uusi-kuittaus ilmoitus)]
-             [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
-             (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
-                                             (:id @nav/valittu-urakka))
-
-               (if (:ilmoitusid ilmoitus)
-                 [:button.nappi-ensisijainen
-                  {:class "uusi-kuittaus-nappi"
-                   :on-click #(e! (v/->AvaaUusiKuittaus))}
-                  (ikonit/livicon-plus) " Uusi kuittaus"]
-                 [yleiset/vihje tiedot/vihje-liito]))))
-
-         [harja.ui.kentat/tee-kentta {:tyyppi :checkbox
-                                      :teksti "Näytä välitysviestit"
-                                      :nayta-rivina? true} nayta-valitykset?]
-
-         (when-not (empty? (:kuittaukset ilmoitus))
+            [:br]
+            [yleiset/tietoja {}
+             "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
+             "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
+             "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
+          [:div.kuittaukset
+           [:h3 "Kuittaukset"]
            [:div
-            (for [kuittaus (cond->> (sort-by :kuitattu pvm/jalkeen? (:kuittaukset ilmoitus))
-                                    (not @nayta-valitykset?) (remove ilmoitukset/valitysviesti?))]
-              (kuittaukset/kuittauksen-tiedot kuittaus))])]]])))
+            ;; Tilannekuvanäkymässä ei voi tehdä kuittauksia, mutta tätä komponenttia käytetään
+            ;; näyttämään ilmoituksen tarkempia tietoja. Tällöin e! on nil
+            (when e!
+              (if-let [uusi-kuittaus (:uusi-kuittaus ilmoitus)]
+                [kuittaukset/uusi-kuittaus e! uusi-kuittaus]
+                (when (oikeudet/voi-kirjoittaa? oikeudet/ilmoitukset-ilmoitukset
+                                                (:id @nav/valittu-urakka))
+
+                  (if (:ilmoitusid ilmoitus)
+                    [:button.nappi-ensisijainen
+                     {:class "uusi-kuittaus-nappi"
+                      :on-click #(e! (v/->AvaaUusiKuittaus))}
+                     (ikonit/livicon-plus) " Uusi kuittaus"]
+                    [yleiset/vihje tiedot/vihje-liito]))))
+
+            [harja.ui.kentat/tee-kentta {:tyyppi :checkbox
+                                         :teksti "Näytä välitysviestit"
+                                         :nayta-rivina? true} nayta-valitykset?]
+
+            (when-not (empty? (:kuittaukset ilmoitus))
+              [:div
+               (for [kuittaus (cond->> (sort-by :kuitattu pvm/jalkeen? (:kuittaukset ilmoitus))
+                                       (not @nayta-valitykset?) (remove ilmoitukset/valitysviesti?))]
+                 (kuittaukset/kuittauksen-tiedot kuittaus))])]]])))))

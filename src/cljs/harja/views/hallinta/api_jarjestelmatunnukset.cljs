@@ -12,6 +12,8 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(def sivu "API-tunnukset")
+
 (defn- api-jarjestelmatunnukset [jarjestelmatunnukset-atom]
   (let [ei-muokattava (constantly false)]
     [grid/grid {:otsikko "API järjestelmätunnukset"
@@ -97,6 +99,7 @@
 (defn api-jarjestelmatunnukset-paakomponentti []
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
+    (komp/kirjaa-kaytto! sivu)
     (fn []
       (let [nakyma-alustettu? (some? @tiedot/urakkavalinnat)]
         (if nakyma-alustettu?
