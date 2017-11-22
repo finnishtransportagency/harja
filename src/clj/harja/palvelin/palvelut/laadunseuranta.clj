@@ -62,6 +62,12 @@
           tulos (into [] yhteiset/laatupoikkeama-xf uniikit)]
       tulos)))
 
+(defn- hae-sanktion-liitteet
+  "Hakee yhden sanktion (laatupoikkeaman kautta) liitteet"
+  [db user urakka-id laatupoikkeama-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id)))
+
 (defn hae-laatupoikkeaman-tiedot
   "Hakee yhden laatupoikkeaman kaiken tiedon muokkausnäkymää varten: laatupoikkeaman perustiedot, kommentit ja liitteet, päätös ja sanktiot.
    Ottaa urakka-id:n ja laatupoikkeama-id:n. Urakka id:tä käytetään oikeustarkistukseen, laatupoikkeaman tulee olla annetun urakan
@@ -328,7 +334,11 @@
 
       :hae-urakkatyypin-sanktiolajit
       (fn [user {:keys [urakka-id urakkatyyppi]}]
-        (hae-urakkatyypin-sanktiolajit db user urakka-id urakkatyyppi)))
+        (hae-urakkatyypin-sanktiolajit db user urakka-id urakkatyyppi))
+
+      :hae-sanktion-liitteet
+      (fn [user {:keys [urakka-id laatupoikkeama-id]}]
+        (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -340,6 +350,5 @@
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
                      :hae-urakkatyypin-sanktiolajit
-                     :lisaa-tarkastukselle-laatupoikkeama
-                     :hae-tarkastusajon-reittipisteet)
+                     :hae-sanktion-liitteet)
     this))
