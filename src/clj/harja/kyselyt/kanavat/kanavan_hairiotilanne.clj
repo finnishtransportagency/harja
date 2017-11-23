@@ -19,22 +19,27 @@
          [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h hakuehdot)
          paikallinen-kaytto? (:haku-paikallinen-kaytto? hakuehdot)
          [aikavali-alku aikavali-loppu] (:haku-aikavali hakuehdot)]
-    (hae-kanavatoimenpiteet db (merge
-                                {::hairiotilanne/urakka-id urakka-id}
-                                (when sopimus-id
-                                  {::hairiotilanne/sopimus-id sopimus-id})
-                                (when vikaluokka
-                                  {::hairiotilanne/vikaluokka vikaluokka})
-                                (when korjauksen-tila
-                                  {::hairiotilanne/korjauksen-tila korjauksen-tila})
-                                (when (some? paikallinen-kaytto?)
-                                  {::hairiotilanne/paikallinen-kaytto? paikallinen-kaytto?})
-                                (when (and odotusaika-alku odotusaika-loppu)
-                                  {::hairiotilanne/odotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
-                                (when (and korjausaika-alku korjausaika-loppu)
-                                  {::hairiotilanne/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
-                                (when (and aikavali-alku aikavali-loppu)
-                                  {::hairiotilanne/pvm (op/between aikavali-alku aikavali-loppu)})))))
+
+    
+    (hae-kanavatoimenpiteet db (op/and
+                                 (op/or {::muokkaustiedot/poistettu? op/null?}
+                                        {::muokkaustiedot/poistettu? false})
+                                 (merge
+                                  {::hairiotilanne/urakka-id urakka-id}
+                                  (when sopimus-id
+                                    {::hairiotilanne/sopimus-id sopimus-id})
+                                  (when vikaluokka
+                                    {::hairiotilanne/vikaluokka vikaluokka})
+                                  (when korjauksen-tila
+                                    {::hairiotilanne/korjauksen-tila korjauksen-tila})
+                                  (when (some? paikallinen-kaytto?)
+                                    {::hairiotilanne/paikallinen-kaytto? paikallinen-kaytto?})
+                                  (when (and odotusaika-alku odotusaika-loppu)
+                                    {::hairiotilanne/odotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
+                                  (when (and korjausaika-alku korjausaika-loppu)
+                                    {::hairiotilanne/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
+                                  (when (and aikavali-alku aikavali-loppu)
+                                    {::hairiotilanne/pvm (op/between aikavali-alku aikavali-loppu)}))))))
 
 (defn tallenna-hairiotilanne [db kayttaja-id kanavatoimenpide]
   (if (id/id-olemassa? (::hairiotilanne/id kanavatoimenpide))
