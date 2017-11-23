@@ -192,7 +192,6 @@
 
   TallennaToimenpide
   (process-event [{data :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
-    app
     (if (:tallennus-kaynnissa? app)
       app
       (let [toimenpide (tallennettava-toimenpide tehtavat data)

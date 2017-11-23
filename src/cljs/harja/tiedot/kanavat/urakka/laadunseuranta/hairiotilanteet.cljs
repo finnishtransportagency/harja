@@ -2,9 +2,10 @@
   (:require [reagent.core :refer [atom]]
             [tuck.core :as tuck]
             [harja.id :refer [id-olemassa?]]
-            [harja.domain.kanavat.hairiotilanne :as hairio]
+            [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.urakka :as urakka]
             [harja.domain.kayttaja :as kayttaja]
+            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
@@ -36,6 +37,8 @@
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
 (defrecord TallennaHairiotilanne [hairiotilanne])
 (defrecord PoistaHairiotilanne [hairiotilanne])
+(defrecord HairiotilanneTallennettu [hairiotilanteet])
+(defrecord HairiotilanteenTallentaminenEpaonnistui [])
 
 
 (def valinnat
@@ -47,10 +50,38 @@
 
 (defn esitaytetty-hairiotilanne []
   (let [kayttaja @istunto/kayttaja]
-    {::hairio/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
-     ::hairio/kuittaaja {::kayttaja/id (:id kayttaja)
-                         ::kayttaja/etunimi (:etunimi kayttaja)
-                         ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
+    {::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+     ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
+                                ::kayttaja/etunimi (:etunimi kayttaja)
+                                ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
+
+(defn tallennettava-hairiotilanne [hairiotilanne]
+  (let [hairiotilanne (-> hairiotilanne
+                          (select-keys [::hairiotilanne/sopimus-id
+                                        ::hairiotilanne/paikallinen-kaytto?
+                                        ::hairiotilanne/vikaluokka
+                                        ::hairiotilanne/korjaustoimenpide
+                                        ::hairiotilanne/korjauksen-tila
+                                        ::hairiotilanne/pvm
+                                        ::hairiotilanne/huviliikenne-lkm
+                                        ::hairiotilanne/korjausaika-h
+                                        ::hairiotilanne/syy
+                                        ::hairiotilanne/odotusaika-h
+                                        ::hairiotilanne/ammattiliikenne-lkm])
+                          (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
+                                 ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
+                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kanavan-kohde/id])))]
+    hairiotilanne))
+
+(defn hairiotilanteiden-hakuparametrit [valinnat]
+  {::hairiotilanne/urakka-id (get-in valinnat [:urakka :id])
+   :haku-sopimus-id (:sopimus-id valinnat)
+   :haku-vikaluokka (:vikaluokka valinnat)
+   :haku-korjauksen-tila (:korjauksen-tila valinnat)
+   :haku-odotusaika-h (:odotusaika-h valinnat)
+   :haku-korjausaika-h (:korjausaika-h valinnat)
+   :haku-paikallinen-kaytto? (:paikallinen-kaytto? valinnat)
+   :haku-aikavali (:aikavali valinnat)})
 
 (extend-protocol tuck/Event
   NakymaAvattu
@@ -81,14 +112,7 @@
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:hairiotilanteiden-haku-kaynnissa? app))
              (some? (get-in valinnat [:urakka :id])))
-      (let [argumentit {::hairio/urakka-id (get-in valinnat [:urakka :id])
-                        :haku-sopimus-id (:sopimus-id valinnat)
-                        :haku-vikaluokka (:vikaluokka valinnat)
-                        :haku-korjauksen-tila (:korjauksen-tila valinnat)
-                        :haku-odotusaika-h (:odotusaika-h valinnat)
-                        :haku-korjausaika-h (:korjausaika-h valinnat)
-                        :haku-paikallinen-kaytto? (:paikallinen-kaytto? valinnat)
-                        :haku-aikavali (:aikavali valinnat)}]
+      (let [argumentit (hairiotilanteiden-hakuparametrit valinnat)]
         (-> app
             (tuck-apurit/post! :hae-hairiotilanteet
                                argumentit
@@ -122,16 +146,25 @@
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
-    ;; todo
-    app
-    )
+    (if (:tallennus-kaynnissa? app)
+      app
+      (let [hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
+            parametrit (hairiotilanteiden-hakuparametrit valinnat)]
+        (-> app
+            (tuck-apurit/post! :tallenna-hairiotilanne
+                               {::hairiotilanne/hairiotilanne hairiotilanne
+                                ::hairiotilanne/hae-hairiotilanteet-kysely parametrit}
+                               {:onnistui ->HairiotilanneTallennettu
+                                :epaonnistui ->HairiotilanteenTallentaminenEpaonnistui})
+            (assoc :tallennus-kaynnissa? true))))
+
+    (assoc app :tallennus-kaynnissa? true))
 
   PoistaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
     ;; todo
-    app
-    )
-  
+    (assoc app :poistaminen-kaynnissa? true))
+
   KohteetHaettu
   (process-event [{kohteet :kohteet} app]
     (assoc app :kohteet kohteet
@@ -140,5 +173,16 @@
   KohteidenHakuEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
-    (assoc app :kohteiden-haku-kaynnissa? false)))
+    (assoc app :kohteiden-haku-kaynnissa? false))
+
+  HairiotilanneTallennettu
+  (process-event [{hairiotilanteet :hairiotilanteet} app]
+    (assoc app :tallennus-kaynnissa? false
+               :valittu-hairiotilanne nil
+               :hairiotilanteet hairiotilanteet))
+
+  HairiotilanteenTallentaminenEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Häiriotilanteen tallennus epäonnistui" :danger)
+    (assoc app :tallennus-kaynnissa? false)))
 
