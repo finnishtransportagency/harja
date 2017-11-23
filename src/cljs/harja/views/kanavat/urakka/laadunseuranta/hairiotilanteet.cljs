@@ -85,7 +85,8 @@
     :tunniste ::hairiotilanne/id
     :tyhja (if (nil? hairiotilanteet)
              [ajax-loader "Haetaan häiriötilanteita"]
-             "Häiriötilanteita ei löytynyt")}
+             "Häiriötilanteita ei löytynyt")
+    :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne %))}
    [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
      :fmt kanavan-kohde/fmt-kohteen-kanava-nimi :leveys 10}

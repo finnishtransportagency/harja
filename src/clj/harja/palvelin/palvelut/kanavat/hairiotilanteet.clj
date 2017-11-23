@@ -32,7 +32,7 @@
       http
       :tallenna-hairiotilanne
       (fn [kayttaja {hairiotilanne ::hairio/hairiotilanne
-                 hakuehdot ::hairio/hae-hairiotilanteet-kysely}]
+                     hakuehdot ::hairio/hae-hairiotilanteet-kysely}]
         (tallenna-hairiotilanne db kayttaja hairiotilanne)
         (hae-hairiotilanteet db kayttaja hakuehdot))
       {:kysely-spec ::hairio/tallenna-hairiotilanne-kutsu

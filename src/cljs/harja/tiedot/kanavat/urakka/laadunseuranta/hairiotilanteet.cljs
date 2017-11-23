@@ -25,6 +25,7 @@
 (defrecord NakymaAvattu [])
 (defrecord NakymaSuljettu [])
 (defrecord PaivitaValinnat [valinnat])
+(defrecord ValitseHairiotilanne [hairiotilanne] )
 ;; Haut
 (defrecord HaeHairiotilanteet [valinnat])
 (defrecord HairiotilanteetHaettu [tulos])
@@ -184,5 +185,9 @@
   HairiotilanteenTallentaminenEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Häiriotilanteen tallennus epäonnistui" :danger)
-    (assoc app :tallennus-kaynnissa? false)))
+    (assoc app :tallennus-kaynnissa? false))
+
+  ValitseHairiotilanne
+  (process-event  [{hairiotilanne :hairiotilanne} app]
+    (assoc app :valittu-hairiotilanne hairiotilanne)))
 
