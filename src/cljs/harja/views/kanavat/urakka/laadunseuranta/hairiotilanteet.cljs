@@ -25,7 +25,8 @@
             [harja.tiedot.urakka :as u]
             [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.ui.debug :as debug]
-            [harja.domain.kayttaja :as kayttaja])
+            [harja.domain.kayttaja :as kayttaja]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -222,8 +223,7 @@
     :muokattava? (constantly false)}])
 
 (defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
-                                            tallennus-kaynnissa?
-                                            poistaminen-kaynnissa?]}]
+                                            tallennus-kaynnissa?]}]
   (fn [hairiotilanne]
     ;; todo: tarkista vielä oikeudet
     [:div
@@ -233,10 +233,15 @@
       ;; todo: jostain syystä ennen ensimmäistä muokkausta tallennus on sallittu, vaikka ei pitäisi olla
       {:tallennus-kaynnissa? tallennus-kaynnissa?
        :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]
-     [napit/poista
-      "Poista"
-      #(e! (tiedot/->PoistaHairiotilanne hairiotilanne))
-      {:disabled poistaminen-kaynnissa?}]]))
+
+     (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
+       [napit/poista
+        "Poista"
+        #(varmista-kayttajalta/varmista-kayttajalta
+           {:otsikko "Häiriötilanteen poistaminen"
+            :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
+            :hyvaksy "Poista"
+            :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))})])]))
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne
                                kohteet]

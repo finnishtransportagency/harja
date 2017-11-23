@@ -6,6 +6,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
@@ -58,7 +59,8 @@
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
   (let [hairiotilanne (-> hairiotilanne
-                          (select-keys [::hairiotilanne/sopimus-id
+                          (select-keys [::hairiotilanne/id
+                                        ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
                                         ::hairiotilanne/vikaluokka
                                         ::hairiotilanne/korjaustoimenpide
@@ -68,7 +70,8 @@
                                         ::hairiotilanne/korjausaika-h
                                         ::hairiotilanne/syy
                                         ::hairiotilanne/odotusaika-h
-                                        ::hairiotilanne/ammattiliikenne-lkm])
+                                        ::hairiotilanne/ammattiliikenne-lkm
+                                        ::muokkaustiedot/poistettu?])
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kanavan-kohde/id])))]
@@ -147,10 +150,12 @@
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
+
     (if (:tallennus-kaynnissa? app)
       app
       (let [hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
             parametrit (hairiotilanteiden-hakuparametrit valinnat)]
+        (log "--->>> tallennus lähtee" (pr-str hairiotilanne))
         (-> app
             (tuck-apurit/post! :tallenna-hairiotilanne
                                {::hairiotilanne/hairiotilanne hairiotilanne
@@ -162,9 +167,10 @@
     (assoc app :tallennus-kaynnissa? true))
 
   PoistaHairiotilanne
-  (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
-    ;; todo
-    (assoc app :poistaminen-kaynnissa? true))
+  (process-event [{hairiotilanne :hairiotilanne} app]
+    (let [tallennus! (tuck/send-async! ->TallennaHairiotilanne)]
+      (go (tallennus! (assoc hairiotilanne ::muokkaustiedot/poistettu? true)))
+      app))
 
   KohteetHaettu
   (process-event [{kohteet :kohteet} app]
