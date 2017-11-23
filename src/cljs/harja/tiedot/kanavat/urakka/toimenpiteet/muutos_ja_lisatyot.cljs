@@ -25,7 +25,8 @@
 ;; todo:
 ;; - hinnalle ei tallennu toimenpide-id:tä
 ;; - testit
-;; - suunnitellut työt on täälläkin, määriä vaan ei suunnitella. vv-puolella kutsutaan "yksikkohintaiset-tyot" -palvelusta
+;; - suunnitellut työt on täälläkin, määriä vaan ei suunnitella. vv/yks-puolella kutsutaan "yksikkohintaiset-tyot" -palvelusta,
+;;   tässä muutoshintaiset-tyot" -palvelusta.
 ;;   nämä tiedot ja laitetaan :suunnitellut-tyot alle. tämä toimii listana valintoja joista voi valita
 ;;   töitä/matskuja
 ;;
@@ -232,14 +233,14 @@
     (let [urakka-id (get-in app [:valinnat :urakka :id])
           haku-ei-kaynnissa (not (:suunniteltujen-toiden-haku-kaynnissa? app))]
       (if (and haku-ei-kaynnissa (some? urakka-id))
-        (do (tuck-apurit/post! :yksikkohintaiset-tyot
+        (do (tuck-apurit/post! :muutoshintaiset-tyot
                                  {:urakka urakka-id}
                                  {:onnistui ->SuunnitellutTyotHaettu
                                          :epaonnistui ->SuunnitellutTyotEiHaettu})
             (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
         ;; else
         (do
-          (log "HaeSuunnitellutTyot: ei haeta, koska" (pr-str [urakka-id haku-ei-kaynnissa]))
+          ;; (log "HaeSuunnitellutTyot: ei haeta, koska" (pr-str [urakka-id haku-ei-kaynnissa]))
           app))))
 
   SuunnitellutTyotHaettu

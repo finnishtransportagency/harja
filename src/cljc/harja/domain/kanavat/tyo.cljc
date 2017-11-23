@@ -27,6 +27,9 @@
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
 
+
+
+
 (def perustiedot
   #{::id
     ::maara})

@@ -176,14 +176,14 @@
              ^{:key index}
              [:tr
               [:td
-               (let [tyovalinnat (sort-by :tehtavan_nimi (:suunnitellut-tyot app*))]
+               (let [tyovalinnat (sort-by :tehtavanimi (:suunnitellut-tyot app*))]
                  [yleiset/livi-pudotusvalikko
                   {:valitse-fn #(do
                                   (e! (tiedot/->AsetaTyorivilleTiedot
                                         {::tyo/id (::tyo/id tyorivi)
                                          ::tyo/toimenpidekoodi-id (:tehtava %)})))
                    :format-fn #(if %
-                                 (:tehtavan_nimi %)
+                                 (:tehtavanimi %)
                                  "Valitse työ")
                    :class "livi-alasveto-250 inline-block"
                    :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
