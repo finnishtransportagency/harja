@@ -3,7 +3,8 @@ INSERT INTO kan_toimenpide
  urakka,
  sopimus,
  pvm,
- kohde,
+ "kohde-id",
+ "kohteenosa-id",
  huoltokohde,
  toimenpidekoodi,
  lisatieto,
@@ -26,7 +27,8 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2017-10-10',
   (SELECT id
    FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
+   WHERE nimi = 'Pälli'),
+  NULL,
   (SELECT id
    FROM kan_huoltokohde
    WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
@@ -43,7 +45,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  '2017-10-10',
+        '2017-10-10',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
@@ -62,7 +64,8 @@ INSERT INTO kan_toimenpide
  urakka,
  sopimus,
  pvm,
- kohde,
+ "kohde-id",
+ "kohteenosa-id",
  huoltokohde,
  toimenpidekoodi,
  lisatieto,
@@ -85,7 +88,14 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2016-11-07',
   (SELECT id
    FROM kan_kohde
-   WHERE nimi = 'Taipaleen sulku ja silta'),
+   WHERE nimi = 'Soskua'),
+  (SELECT id
+   FROM kan_kohteenosa
+   WHERE tyyppi = 'silta'
+         AND "kohde-id" = (SELECT id
+                           FROM kan_kohde
+                           WHERE nimi =
+                                 'Soskua')),
   (SELECT id
    FROM kan_huoltokohde
    WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
@@ -102,7 +112,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  '2016-11-07',
+        '2016-11-07',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
@@ -121,7 +131,8 @@ INSERT INTO kan_toimenpide
  urakka,
  sopimus,
  pvm,
- kohde,
+ "kohde-id",
+ "kohteenosa-id",
  huoltokohde,
  toimenpidekoodi,
  lisatieto,
@@ -144,7 +155,8 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-07',
   (SELECT id
    FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
+   WHERE nimi = 'Pälli'),
+  NULL,
   (SELECT id
    FROM kan_huoltokohde
    WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
@@ -161,7 +173,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  '2017-01-07',
+        '2017-01-07',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
@@ -180,7 +192,8 @@ INSERT INTO kan_toimenpide
  urakka,
  sopimus,
  pvm,
- kohde,
+ "kohde-id",
+ "kohteenosa-id",
  huoltokohde,
  toimenpidekoodi,
  lisatieto,
@@ -203,7 +216,8 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-07',
   (SELECT id
    FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
+   WHERE nimi = 'Pälli'),
+  NULL,
   (SELECT id
    FROM kan_huoltokohde
    WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
@@ -220,7 +234,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  '2017-01-07',
+        '2017-01-07',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
@@ -239,7 +253,8 @@ INSERT INTO kan_toimenpide
  urakka,
  sopimus,
  pvm,
- kohde,
+ "kohde-id",
+ "kohteenosa-id",
  huoltokohde,
  toimenpidekoodi,
  lisatieto,
@@ -262,7 +277,14 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-11',
   (SELECT id
    FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
+   WHERE nimi = 'Pälli'),
+  (SELECT id
+   FROM kan_kohteenosa
+   WHERE tyyppi = 'silta'
+         AND "kohde-id" = (SELECT id
+                           FROM kan_kohde
+                           WHERE nimi =
+                                 'Pälli')),
   (SELECT id
    FROM kan_huoltokohde
    WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
@@ -279,7 +301,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  '2017-01-07',
+        '2017-01-07',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),
@@ -298,7 +320,8 @@ INSERT INTO kan_toimenpide
  urakka,
  sopimus,
  pvm,
- kohde,
+ "kohde-id",
+ "kohteenosa-id",
  huoltokohde,
  toimenpidekoodi,
  lisatieto,
@@ -321,7 +344,14 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   '2017-01-12',
   (SELECT id
    FROM kan_kohde
-   WHERE nimi = 'Tikkalansaaren avattava ratasilta'),
+   WHERE nimi = 'Pälli'),
+  (SELECT id
+   FROM kan_kohteenosa
+   WHERE tyyppi = 'silta'
+         AND "kohde-id" = (SELECT id
+                           FROM kan_kohde
+                           WHERE nimi =
+                                 'Pälli')),
   (SELECT id
    FROM kan_huoltokohde
    WHERE nimi = 'ASENNONMITTAUSLAITTEET'),
@@ -338,7 +368,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'),
-  '2017-01-07',
+        '2017-01-07',
         (SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'jvh'),

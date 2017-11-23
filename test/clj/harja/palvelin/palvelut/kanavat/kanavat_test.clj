@@ -81,7 +81,7 @@
 (deftest kohteiden-tallennus
   (let [kohteiden-lkm (count (q "SELECT * FROM kan_kohde WHERE poistettu IS NOT TRUE;"))]
     (testing "Nimen muuttaminen"
-      (let [[kohde-id kanava-id] (first (q "SELECT id, \"kanava-id\" FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta';"))
+      (let [[kohde-id kanava-id] (first (q "SELECT id, \"kanava-id\" FROM kan_kohde WHERE nimi = 'Pälli';"))
             _ (is (some? kohde-id))
             params [{::kohde/nimi "FOOBAR"
                      ::kohde/id kohde-id
@@ -182,7 +182,7 @@
         (is (= poistettu? false)))))
 
   (testing "Linkin poistaminen"
-    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
+    (let [kohde-id (hae-kanavakohde-soskua)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -204,7 +204,7 @@
         (is (= poistettu? true)))))
 
   (testing "Linkin palauttaminen"
-    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
+    (let [kohde-id (hae-kanavakohde-soskua)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -226,7 +226,7 @@
         (is (= poistettu? false))))))
 
 (deftest kohteen-poistaminen
-  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Joensuun sulku ja silta';"))
+  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Iisalmen sillat';"))
         _ (is (some? kohde-id))
         _ (is (false? poistettu?))
         params {:kohde-id kohde-id}

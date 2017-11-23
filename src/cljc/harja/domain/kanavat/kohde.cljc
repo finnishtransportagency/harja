@@ -12,7 +12,8 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
-    [harja.domain.kanavat.kanava :as kanava])
+    [harja.domain.kanavat.kanava :as kanava]
+    [harja.domain.kanavat.kohdekokonaisuus :as kok])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -22,9 +23,9 @@
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
-   {::kohteen-kanava (specql.rel/has-one ::kanava-id
-                                         :harja.domain.kanavat.kanava/kanava
-                                         :harja.domain.kanavat.kanava/id)}]
+   {::kohdekokonaisuus (specql.rel/has-one ::kohdekokonaisuus-id
+                                         :harja.domain.kanavat.kohdekokonaisuus/kohdekokonaisuus
+                                         :harja.domain.kanavat.kohdekokonaisuus/id)}]
   ["kan_kohde_urakka" ::kohde<->urakka
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake

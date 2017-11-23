@@ -1,0 +1,42 @@
+CREATE OR REPLACE FUNCTION osa_kuuluu_kohteeseen()
+  RETURNS TRIGGER AS
+$$
+DECLARE kohteenosan_kohde INTEGER;
+BEGIN
+  IF (NEW."kohteenosa-id" IS NULL AND NEW."kohde-id" IS NOT NULL)
+  THEN
+    RETURN NEW;
+  ELSE
+    kohteenosan_kohde := (SELECT "kohde-id"
+                          FROM kan_kohteenosa
+                          WHERE id = NEW."kohteenosa-id");
+    IF (NEW."kohde-id" = kohteenosan_kohde)
+    THEN
+      RETURN NEW;
+    ELSE
+      RAISE EXCEPTION 'Liikennetapahtuman kohteenosa ei kuulu annettuun kohteeseen';
+      RETURN NULL;
+    END IF;
+    RAISE EXCEPTION 'Liikennetapahtumalle annettiin kohteenosa, mutta ei kohdetta';
+    RETURN NULL;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS hairion_kohteen_tarkastus ON kan_hairio;
+CREATE TRIGGER hairion_kohteen_tarkastus
+BEFORE INSERT OR UPDATE ON kan_hairio
+FOR EACH ROW
+EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
+
+DROP TRIGGER IF EXISTS toimenpiteen_kohteen_tarkastus ON kan_toimenpide;
+CREATE TRIGGER toimenpiteen_kohteen_tarkastus
+BEFORE INSERT OR UPDATE ON kan_toimenpide
+FOR EACH ROW
+EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
+
+DROP TRIGGER IF EXISTS liikennetapahtuman_kohteen_tarkastus ON kan_liikennetapahtuma_osa;
+CREATE TRIGGER liikennetapahtuman_kohteen_tarkastus
+BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_osa
+FOR EACH ROW
+EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
