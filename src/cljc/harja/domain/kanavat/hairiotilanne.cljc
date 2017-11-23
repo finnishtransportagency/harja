@@ -79,6 +79,10 @@
                                                      ::haku-paikallinen-kaytto?]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
 
+(s/def ::tallenna-hairiotilanne-kutsu
+  (s/keys :req [::hae-hairiotilanteet-kysely
+                ::hairiotilanne]))
+
 ;; Apurit
 
 ;; Nämä on vectoreita, koska valintajärjestyksellä väliä

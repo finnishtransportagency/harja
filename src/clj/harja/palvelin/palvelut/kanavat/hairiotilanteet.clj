@@ -1,50 +1,20 @@
 (ns harja.palvelin.palvelut.kanavat.hairiotilanteet
-  (:require [clojure.java.jdbc :as jdbc]
-            [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
+  (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.hairiotilanne :as hairio]
-            [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.kanavat.kanavat :as q]
-            [specql.core :as specql]
-            [specql.op :as op]
-            [harja.domain.kanavat.kanava :as kan]
-            [clojure.set :as set]))
+            [harja.kyselyt.kanavat.kanavan-hairiotilanne :as q-hairiotilanne]))
 
-(defn hae-hairiotilanteet [db user tiedot]
-  (let [urakka-id (::hairio/urakka-id tiedot)
-        sopimus-id (:haku-sopimus-id tiedot)
-        vikaluokka (:haku-vikaluokka tiedot)
-        korjauksen-tila (:haku-korjauksen-tila tiedot)
-        [odotusaika-alku odotusaika-loppu] (:haku-odotusaika-h tiedot)
-        [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h tiedot)
-        paikallinen-kaytto? (:haku-paikallinen-kaytto? tiedot)
-        [aikavali-alku aikavali-loppu] (:haku-aikavali tiedot)]
-    (assert urakka-id "Urakka-id puuttuu!")
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet user urakka-id)
-    (reverse (sort-by
-               ::hairio/pvm
-               (specql/fetch
-                 db
-                 ::hairio/hairiotilanne
-                 hairio/perustiedot+kanava+kohde
-                 (merge
-                   {::hairio/urakka-id urakka-id}
-                   (when sopimus-id
-                     {::hairio/sopimus-id sopimus-id})
-                   (when vikaluokka
-                     {::hairio/vikaluokka vikaluokka})
-                   (when korjauksen-tila
-                     {::hairio/korjauksen-tila korjauksen-tila})
-                   (when (some? paikallinen-kaytto?)
-                     {::hairio/paikallinen-kaytto? paikallinen-kaytto?})
-                   (when (and odotusaika-alku odotusaika-loppu)
-                     {::hairio/odotusaika-h (op/between odotusaika-alku odotusaika-loppu)})
-                   (when (and korjausaika-alku korjausaika-loppu)
-                     {::hairio/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
-                   (when (and aikavali-alku aikavali-loppu)
-                     {::hairio/pvm (op/between aikavali-alku aikavali-loppu)})))))))
+(defn hae-hairiotilanteet [db kayttaja hakuehdot]
+  (let [urakka-id (::hairio/urakka-id hakuehdot)]
+    (assert urakka-id "Häiriötilanteiden hakua ei voi tehdä ilman urakka id:tä")
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
+    (reverse (sort-by ::hairio/pvm (q-hairiotilanne/hae-sopimuksen-hairiotilanteet-aikavalilta db hakuehdot)))))
+
+(defn tallenna-hairiotilanne [db {kayttaja-id :id :as kayttaja} {urakka-id ::hairio/urakka-id :as hairiotilanne}]
+  (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
+  (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
@@ -53,9 +23,19 @@
     (julkaise-palvelu
       http
       :hae-hairiotilanteet
-      (fn [user tiedot]
-        (hae-hairiotilanteet db user tiedot))
+      (fn [kayttaja hakuehdot]
+        (hae-hairiotilanteet db kayttaja hakuehdot))
       {:kysely-spec ::hairio/hae-hairiotilanteet-kysely
+       :vastaus-spec ::hairio/hae-hairiotilanteet-vastaus})
+
+    (julkaise-palvelu
+      http
+      :tallenna-hairiotilanne
+      (fn [kayttaja {hairiotilanne ::hairio/hairiotilanne
+                 hakuehdot ::hairio/hae-hairiotilanteet-kysely}]
+        (tallenna-hairiotilanne db kayttaja hairiotilanne)
+        (hae-hairiotilanteet db kayttaja hakuehdot))
+      {:kysely-spec ::hairio/tallenna-hairiotilanne-kutsu
        :vastaus-spec ::hairio/hae-hairiotilanteet-vastaus})
     this)
 
