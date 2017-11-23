@@ -19,7 +19,6 @@
          [korjausaika-alku korjausaika-loppu] (:haku-korjausaika-h hakuehdot)
          paikallinen-kaytto? (:haku-paikallinen-kaytto? hakuehdot)
          [aikavali-alku aikavali-loppu] (:haku-aikavali hakuehdot)]
-
     
     (hae-kanavatoimenpiteet db (op/and
                                  (op/or {::muokkaustiedot/poistettu? op/null?}

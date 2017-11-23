@@ -14,7 +14,6 @@
 (defn tallenna-hairiotilanne [db {kayttaja-id :id :as kayttaja} {urakka-id ::hairio/urakka-id :as hairiotilanne}]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
-  (println "--->>> tallennettava häiriötilanne" hairiotilanne)
   (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
 
 (defrecord Hairiotilanteet []

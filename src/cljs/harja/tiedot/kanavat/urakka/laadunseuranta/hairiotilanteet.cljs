@@ -155,7 +155,6 @@
       app
       (let [hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
             parametrit (hairiotilanteiden-hakuparametrit valinnat)]
-        (log "--->>> tallennus lähtee" (pr-str hairiotilanne))
         (-> app
             (tuck-apurit/post! :tallenna-hairiotilanne
                                {::hairiotilanne/hairiotilanne hairiotilanne
