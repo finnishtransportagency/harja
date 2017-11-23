@@ -17,6 +17,8 @@
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
+
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.napit :as napit]
@@ -105,7 +107,7 @@
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
-(defn varaosataulukko [e! {varaosat :varaosat :as hairiotilanne}]
+(defn varaosataulukko [e! {materiaalit :materiaalit hairiotilanne :hairiotilanne :as app}]
   [grid/muokkaus-grid
    {:voi-muokata? (constantly true)
     :voi-poistaa? (constantly true)
@@ -116,14 +118,21 @@
    [{:otsikko "Varaosa"
      :nimi :varaosa
      :pakollinen? true
-     :tyyppi :string}
-    {:otsikko "Määrä"
+     :tyyppi :valinta
+     :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
+     :valinnat materiaalit}
+    {:otsikko "Käytettävä määrä"
      :nimi :maara
      :tyyppi :positiivinen-numero
      :kokonaisluku? true}]
    (r/wrap
      ;; todo: hae varaosat häiriöltä
-     {1 {:id 1 :varaosa "Suristin" :maara 666}}
+     {1 {:varaosa {:harja.domain.vesivaylat.materiaali/urakka-id 31
+                   :harja.domain.vesivaylat.materiaali/maara-nyt 123
+                   :harja.domain.vesivaylat.materiaali/halytysraja 666
+                   :harja.domain.vesivaylat.materiaali/alkuperainen-maara 123
+                   :harja.domain.vesivaylat.materiaali/nimi "Hiturinteri"}
+         :maara 666}}
      #(log "--->>> Todo: tee varaosien muokkaus"))])
 
 (defn odottavan-liikenteen-kentat []
@@ -149,7 +158,7 @@
        :kokonaisluku? true
        ::lomake/col-luokka luokka})))
 
-(defn korjauksen-kentat [e! valittu-hairiotilanne]
+(defn korjauksen-kentat [e! app]
   ;; todo: luokan määrittäminen eksplisiittisesti kentälle ei välttämättä ole hyvä idea
   (let [luokka "form-group col-xs-3 col-sm-3 col-md-3 col-lg-2"]
     (lomake/ryhma
@@ -185,9 +194,9 @@
        :tyyppi :komponentti
        :palstoja 2
        :uusi-rivi? true
-       :komponentti (fn [_] [varaosataulukko e! valittu-hairiotilanne])})))
+       :komponentti (fn [_] [varaosataulukko e! app])})))
 
-(defn hairiolomakkeen-kentat [e! valittu-hairiotilanne kohteet]
+(defn hairiolomakkeen-kentat [e! app kohteet]
   [{:otsikko "Aika"
     :nimi ::hairiotilanne/pvm
     :tyyppi :pvm-aika}
@@ -215,7 +224,7 @@
     :koko [90 8]
     :uusi-rivi? true}
    (odottavan-liikenteen-kentat)
-   (korjauksen-kentat e! valittu-hairiotilanne)
+   (korjauksen-kentat e! app)
    {:otsikko "Kuittaaja"
     :nimi ::hairiotilanne/kuittaaja
     :tyyppi :string
@@ -253,7 +262,7 @@
     {:otsikko "Uusi häiriötilanne"
      :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
      :footer-fn (hairiolomakkeen-toiminnot e! app)}
-    (hairiolomakkeen-kentat e! valittu-hairiotilanne kohteet)
+    (hairiolomakkeen-kentat e! app kohteet)
     valittu-hairiotilanne]])
 
 (defn hairiotilanteet* [e! app]
