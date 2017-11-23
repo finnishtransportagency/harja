@@ -7,6 +7,7 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
@@ -26,13 +27,15 @@
 (defrecord NakymaAvattu [])
 (defrecord NakymaSuljettu [])
 (defrecord PaivitaValinnat [valinnat])
-(defrecord ValitseHairiotilanne [hairiotilanne] )
+(defrecord ValitseHairiotilanne [hairiotilanne])
 ;; Haut
 (defrecord HaeHairiotilanteet [valinnat])
 (defrecord HairiotilanteetHaettu [tulos])
 (defrecord HairiotilanteetEiHaettu [])
 (defrecord KohteetHaettu [kohteet])
 (defrecord KohteidenHakuEpaonnistui [])
+(defrecord MateriaalitHaettu [materiaalit])
+(defrecord MateriaalienHakuEpaonnistui [])
 ;; Muokkaukset
 (defrecord LisaaHairiotilanne [])
 (defrecord TyhjennaValittuHairiotilanne [])
@@ -89,17 +92,24 @@
 
 (extend-protocol tuck/Event
   NakymaAvattu
-  (process-event [{nakymassa? :nakymassa?} app]
-    (-> app
-        (tuck-apurit/post! :hae-urakan-kohteet
-                           {::urakka/id (:id @navigaatio/valittu-urakka)}
-                           {:onnistui ->KohteetHaettu
-                            :epaonnistui ->KohteidenHakuEpaonnistui})
-        (assoc :nakymassa? true
-               :kohteiden-haku-kaynnissa? true
-               :kohteet []))
-
-    (assoc app :nakymassa? nakymassa?))
+  (process-event [_ {:keys [kohteiden-haku-kaynnissa? materiaalien-haku-kaynnissa?] :as app}]
+    (if (or kohteiden-haku-kaynnissa? materiaalien-haku-kaynnissa?)
+      (assoc app :nakymassa? true)
+      (let [urakka-id (:id @navigaatio/valittu-urakka)]
+        (-> app
+            (tuck-apurit/post! :hae-urakan-kohteet
+                               {::urakka/id urakka-id}
+                               {:onnistui ->KohteetHaettu
+                                :epaonnistui ->KohteidenHakuEpaonnistui})
+            (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
+                               {::materiaalit/urakka-id urakka-id}
+                               {:onnistui ->MateriaalitHaettu
+                                :epaonnistui ->MateriaalienHakuEpaonnistui})
+            (assoc :nakymassa? true
+                   :kohteiden-haku-kaynnissa? true
+                   :materiaalien-haku-kaynnissa? true
+                   :kohteet []
+                   :materiaalit [])))))
 
   NakymaSuljettu
   (process-event [_ app]
@@ -181,6 +191,16 @@
     (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
     (assoc app :kohteiden-haku-kaynnissa? false))
 
+  MateriaalitHaettu
+  (process-event [{materiaalit :materiaalit} app]
+    (assoc app :materiaalit materiaalit
+               :materiaalien-haku-kaynnissa? false))
+
+  MateriaalienHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Materiaalien haku epäonnistui" :danger)
+    (assoc app :materiaalien-haku-kaynnissa? false))
+
   HairiotilanneTallennettu
   (process-event [{hairiotilanteet :hairiotilanteet} app]
     (assoc app :tallennus-kaynnissa? false
@@ -193,6 +213,6 @@
     (assoc app :tallennus-kaynnissa? false))
 
   ValitseHairiotilanne
-  (process-event  [{hairiotilanne :hairiotilanne} app]
+  (process-event [{hairiotilanne :hairiotilanne} app]
     (assoc app :valittu-hairiotilanne hairiotilanne)))
 
