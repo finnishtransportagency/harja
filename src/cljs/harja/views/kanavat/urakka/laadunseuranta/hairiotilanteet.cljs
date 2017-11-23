@@ -231,7 +231,11 @@
                     "Tallenna"
                     #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
                     {:tallennus-kaynnissa? tallennus-kaynnissa?
-                     :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]])}
+                     :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]
+                   [napit/poista
+                    "Poista"
+                    #(e! (tiedot/->PoistaHairiotilanne hairiotilanne))
+                    {:disabled (:poisto-kaynnissa? app)}]])}
     (hairiolomakkeen-kentat e! valittu-hairiotilanne kohteet)
     valittu-hairiotilanne]])
 

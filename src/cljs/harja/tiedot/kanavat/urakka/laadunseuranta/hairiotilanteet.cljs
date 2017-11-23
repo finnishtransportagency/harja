@@ -35,6 +35,8 @@
 (defrecord TyhjennaValittuHairiotilanne [])
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
 (defrecord TallennaHairiotilanne [hairiotilanne])
+(defrecord PoistaHairiotilanne [hairiotilanne])
+
 
 (def valinnat
   (reaction
@@ -124,6 +126,12 @@
     app
     )
 
+  PoistaHairiotilanne
+  (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
+    ;; todo
+    app
+    )
+  
   KohteetHaettu
   (process-event [{kohteet :kohteet} app]
     (assoc app :kohteet kohteet
