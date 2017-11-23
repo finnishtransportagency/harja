@@ -124,110 +124,116 @@
      {1 {:id 1 :varaosa "Suristin" :maara 666}}
      #(log "--->>> Todo: tee varaosien muokkaus"))])
 
+(defn hairiolomakkeen-kentat [e! valittu-hairiotilanne kohteet]
+  ;; todo: luokan määrittäminen eksplisiittisesti kentälle ei välttämättä ole hyvä idea
+  (let [luokka "form-group col-xs-3 col-sm-3 col-md-3 col-lg-2"]
+    [{:otsikko "Aika"
+      :nimi ::hairiotilanne/pvm
+      :tyyppi :pvm-aika}
+     {:otsikko "Kohde"
+      :nimi ::hairiotilanne/kohde
+      :tyyppi :valinta
+      :pakollinen? true
+      :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
+      :valinnat kohteet}
+     {:otsikko "Vika"
+      :nimi ::hairiotilanne/vikaluokka
+      :tyyppi :valinta
+      :pakollinen? true
+      :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka-")
+      :valinta-arvo :arvo
+      :valinnat [{:arvo :sahkotekninen_vika
+                  :nimi "Sähkötekninen vika"}
+                 {:arvo :konetekninen_vika
+                  :nimi "Konetekninen vika"}
+                 {:arvo :liikennevaurio
+                  :nimi "Liikennevaurio"}]}
+     {:otsikko "Syy"
+      :nimi ::hairiotilanne/syy
+      :tyyppi :text
+      :koko [90 8]
+      :uusi-rivi? true}
+
+     (lomake/ryhma
+       {:otsikko "Odottava liikenne"
+        :rivi? true
+        :uusi-rivi? true}
+       {:otsikko "Odotusaika tunneissa"
+        :nimi ::hairiotilanne/odotusaika-h
+        :tyyppi :positiivinen-numero
+        :desimaalien-maara 2
+        ::lomake/col-luokka luokka}
+       {:otsikko "Ammattiliikenne lkm"
+        :nimi ::hairiotilanne/ammattiliikenne-lkm
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
+        ::lomake/col-luokka luokka}
+       {:otsikko "Huviliikenne lkm"
+        :nimi ::hairiotilanne/huviliikenne-lkm
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
+        ::lomake/col-luokka luokka})
+
+     (lomake/ryhma
+       {:otsikko "Korjaustoimenpide"
+        :uusi-rivi? true}
+       {:otsikko "Korjaus"
+        :nimi ::hairiotilanne/korjaustoimenpide
+        :tyyppi :text
+        :koko [90 8]}
+       {:otsikko "Korjausaika tunneissa"
+        :nimi ::hairiotilanne/korjausaika-h
+        :uusi-rivi? true
+        :tyyppi :positiivinen-numero
+        :desimaalien-maara 2
+        ::lomake/col-luokka luokka}
+       {:otsikko "Korjauksen tila"
+        :nimi ::hairiotilanne/korjauksen-tila
+        :tyyppi :valinta
+        :pakollinen? true
+        :valinta-nayta #(or (:nimi %) "- Valitse korjauksen tila-")
+        :valinta-arvo :arvo
+        :valinnat [{:arvo :kesken
+                    :nimi "Kesken"}
+                   {:arvo :valmis
+                    :nimi "Valmis"}]
+        ::lomake/col-luokka luokka}
+       {:otsikko "Siirrytty paikalliskäyttöön"
+        :nimi ::hairiotilanne/paikallinen-kaytto?
+        :tyyppi :checkbox
+        ::lomake/col-luokka luokka}
+       {:otsikko "Varaosat"
+        :nimi :varaosat
+        :tyyppi :komponentti
+        :palstoja 2
+        :uusi-rivi? true
+        :komponentti (fn [_]
+                       [varaosataulukko e! valittu-hairiotilanne])})
+     {:otsikko "Kuittaaja"
+      :nimi ::hairiotilanne/kuittaaja
+      :tyyppi :string
+      :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
+      :muokattava? (constantly false)}]))
+
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne
                                tallennus-kaynnissa?
                                kohteet]
                         :as app}]
-  ;; todo: luokan määrittäminen eksplisiittisesti kentälle ei välttämättä ole hyvä idea
-  (let [luokka "form-group col-xs-3 col-sm-3 col-md-3 col-lg-2"]
-    [:div
-     [napit/takaisin "Takaisin häiriölistaukseen"
-      #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
-     [lomake/lomake
-      {:otsikko "Uusi häiriötilanne"
-       :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
-       :footer-fn (fn [hairiotilanne]
-                    [:div
-                     [napit/tallenna
-                      "Tallenna"
-                      #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
-                      {:tallennus-kaynnissa? tallennus-kaynnissa?
-                       :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]])}
-      [{:otsikko "Aika"
-        :nimi ::hairiotilanne/pvm
-        :tyyppi :pvm-aika}
-       {:otsikko "Kohde"
-        :nimi ::hairiotilanne/kohde
-        :tyyppi :valinta
-        :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
-        :valinnat kohteet}
-       {:otsikko "Vika"
-        :nimi ::hairiotilanne/vikaluokka
-        :tyyppi :valinta
-        :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka-")
-        :valinta-arvo :arvo
-        :valinnat [{:arvo :sahkotekninen_vika
-                    :nimi "Sähkötekninen vika"}
-                   {:arvo :konetekninen_vika
-                    :nimi "Konetekninen vika"}
-                   {:arvo :liikennevaurio
-                    :nimi "Liikennevaurio"}]}
-       {:otsikko "Syy"
-        :nimi ::hairiotilanne/syy
-        :tyyppi :text
-        :koko [90 8]
-        :uusi-rivi? true}
-
-       (lomake/ryhma
-         {:otsikko "Odottava liikenne"
-          :rivi? true
-          :uusi-rivi? true}
-         {:otsikko "Odotusaika tunneissa"
-          :nimi ::hairiotilanne/odotusaika-h
-          :tyyppi :positiivinen-numero
-          :desimaalien-maara 2
-          ::lomake/col-luokka luokka}
-         {:otsikko "Ammattiliikenne lkm"
-          :nimi ::hairiotilanne/ammattiliikenne-lkm
-          :tyyppi :positiivinen-numero
-          :kokonaisluku? true
-          ::lomake/col-luokka luokka}
-         {:otsikko "Huviliikenne lkm"
-          :nimi ::hairiotilanne/huviliikenne-lkm
-          :tyyppi :positiivinen-numero
-          :kokonaisluku? true
-          ::lomake/col-luokka luokka})
-
-       (lomake/ryhma
-         {:otsikko "Korjaustoimenpide"
-          :uusi-rivi? true}
-         {:otsikko "Korjaus"
-          :nimi ::hairiotilanne/korjaustoimenpide
-          :tyyppi :text
-          :koko [90 8]}
-         {:otsikko "Korjausaika tunneissa"
-          :nimi ::hairiotilanne/korjausaika-h
-          :uusi-rivi? true
-          :tyyppi :positiivinen-numero
-          :desimaalien-maara 2
-          ::lomake/col-luokka luokka}
-         {:otsikko "Korjauksen tila"
-          :nimi ::hairiotilanne/korjauksen-tila
-          :tyyppi :valinta
-          :valinta-nayta #(or (:nimi %) "- Valitse korjauksen tila-")
-          :valinta-arvo :arvo
-          :valinnat [{:arvo :kesken
-                      :nimi "Kesken"}
-                     {:arvo :valmis
-                      :nimi "Valmis"}]
-          ::lomake/col-luokka luokka}
-         {:otsikko "Siirrytty paikalliskäyttöön"
-          :nimi ::hairiotilanne/paikallinen-kaytto?
-          :tyyppi :checkbox
-          ::lomake/col-luokka luokka}
-         {:otsikko "Varaosat"
-          :nimi :varaosat
-          :tyyppi :komponentti
-          :palstoja 2
-          :uusi-rivi? true
-          :komponentti (fn [_]
-                         [varaosataulukko e! valittu-hairiotilanne])})
-       {:otsikko "Kuittaaja"
-        :nimi ::hairiotilanne/kuittaaja
-        :tyyppi :string
-        :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
-        :muokattava? (constantly false)}]
-      valittu-hairiotilanne]]))
+  [:div
+   [napit/takaisin "Takaisin häiriölistaukseen"
+    #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
+   [lomake/lomake
+    {:otsikko "Uusi häiriötilanne"
+     :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
+     :footer-fn (fn [hairiotilanne]
+                  [:div
+                   [napit/tallenna
+                    "Tallenna"
+                    #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+                    {:tallennus-kaynnissa? tallennus-kaynnissa?
+                     :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]])}
+    (hairiolomakkeen-kentat e! valittu-hairiotilanne kohteet)
+    valittu-hairiotilanne]])
 
 (defn hairiotilanteet* [e! app]
   (komp/luo
