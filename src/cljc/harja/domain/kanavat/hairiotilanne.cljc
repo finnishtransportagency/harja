@@ -11,7 +11,8 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
-    [harja.domain.kanavat.kanavan-kohde :as kkohde]
+    [harja.domain.kanavat.kohde :as kohde]
+    [harja.domain.kanavat.kohteenosa :as kohteenosa]
     [harja.domain.urakka :as ur])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
@@ -22,7 +23,6 @@
   ["kan_hairio" ::hairiotilanne
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
-    "kohde" ::kohde-id
     "ammattiliikenne_lkm" ::ammattiliikenne-lkm
     "huviliikenne_lkm" ::huviliikenne-lkm
     "paikallinen_kaytto" ::paikallinen-kaytto?
@@ -31,8 +31,11 @@
     "korjauksen_tila" ::korjauksen-tila}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
-                                ::kkohde/kohde
-                                ::kkohde/id)}])
+                                ::kohde/kohde
+                                ::kohde/id)
+    ::kohteenosa (specql.rel/has-one ::kohteenosa-id
+                                     :harja.domain.kanavat.kohteenosa/kohteenosa
+                                     :harja.domain.kanavat.kohteenosa/id)}])
 
 (def perustiedot+muokkaustiedot
   #{::m/muokattu
@@ -57,8 +60,9 @@
 (def perustiedot+kanava+kohde
   (set/union perustiedot+muokkaustiedot
              #{[::kohde
-                (set/union kkohde/perustiedot
-                           kkohde/kohteen-kanavatiedot)]}))
+                (set/union kohde/perustiedot
+                           kohde/kohteen-kohdekokonaisuus)]}
+             #{[::kohteenosa kohteenosa/perustiedot]}))
 
 ;; Palvelut
 

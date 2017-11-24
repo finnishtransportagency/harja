@@ -1,7 +1,8 @@
 (ns harja.domain.kanavat.kanavan-toimenpide
   (:require
     [clojure.spec.alpha :as s]
-    [harja.domain.kanavat.kanavan-kohde :as kohde]
+    [harja.domain.kanavat.kohde :as kohde]
+    [harja.domain.kanavat.kohteenosa :as osa]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -24,12 +25,16 @@
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
     "toimenpideinstanssi" ::toimenpideinstanssi-id
-    "kohde" ::kohde-id
     "muu_toimenpide" ::muu-toimenpide
 
     ::kohde (specql.rel/has-one ::kohde-id
-                                :harja.domain.kanavat.kanavan-kohde/kohde
-                                :harja.domain.kanavat.kanavan-kohde/id)
+                                :harja.domain.kanavat.kohde/kohde
+                                :harja.domain.kanavat.kohde/id)
+
+    ::kohteenosa (specql.rel/has-one ::kohteenosa-id
+                                     :harja.domain.kanavat.kohteenosa/kohteenosa
+                                     :harja.domain.kanavat.kohteenosa/id)
+
     "huoltokohde" ::huoltokohde-id
     ::huoltokohde (specql.rel/has-one ::huoltokohde-id
                                       :harja.domain.kanavat.kanavan-huoltokohde/huoltokohde
@@ -53,30 +58,19 @@
     ::muokkaustiedot/poistettu?})
 
 (def kohteen-tiedot
-  #{[::kohde
-     #{::kohde/id
-       ::kohde/nimi
-       ::kohde/tyyppi
-       ::kohde/sijainti}]})
+  #{[::kohde kohde/perustiedot]})
+
+(def kohteenosan-tiedot
+  #{[::kohteenosa osa/perustiedot]})
 
 (def huoltokohteen-tiedot
-  #{[::huoltokohde
-     #{::huoltokohde/id
-       ::huoltokohde/nimi}]})
+  #{[::huoltokohde huoltokohde/perustiedot]})
 
 (def toimenpiteen-tiedot
-  #{[::toimenpidekoodi
-     #{::toimenpidekoodi/id
-       ::toimenpidekoodi/nimi}]})
+  #{[::toimenpidekoodi toimenpidekoodi/perustiedot]})
 
 (def kuittaajan-tiedot
-  #{[::kuittaaja
-     #{::kayttaja/id
-       ::kayttaja/etunimi
-       ::kayttaja/sukunimi
-       ::kayttaja/kayttajanimi
-       ::kayttaja/sahkoposti
-       ::kayttaja/puhelin}]})
+  #{[::kuittaaja kayttaja/perustiedot]})
 
 (def perustiedot
   #{::id
@@ -92,6 +86,7 @@
   (set/union perustiedot
              muokkaustiedot
              kohteen-tiedot
+             kohteenosan-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
              kuittaajan-tiedot))
