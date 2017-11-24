@@ -13,6 +13,7 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as navigaatio])
@@ -42,6 +43,7 @@
 (defrecord SiirraValitut [])
 (defrecord ValitutSiirretty [])
 (defrecord ValitutEiSiirretty [])
+(defrecord PoistaToimenpide [toimenpide])
 
 (def tila (atom {:nakymassa? false
                  :valinnat nil
@@ -80,7 +82,8 @@
                       ::kanavan-toimenpide/lisatieto
                       ::kanavan-toimenpide/toimenpideinstanssi-id
                       ::kanavan-toimenpide/toimenpidekoodi-id
-                      ::kanavan-toimenpide/pvm])
+                      ::kanavan-toimenpide/pvm
+                      ::muokkaustiedot/poistettu?])
         (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
                ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
                ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka)
@@ -267,4 +270,10 @@
   ToimenpiteidenTallentaminenEpaonnistui
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
-    (assoc app :tallennus-kaynnissa? false)))
+    (assoc app :tallennus-kaynnissa? false))
+
+  PoistaToimenpide
+  (process-event [{toimenpide :toimenpide} app]
+    (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
+      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
+      app)))

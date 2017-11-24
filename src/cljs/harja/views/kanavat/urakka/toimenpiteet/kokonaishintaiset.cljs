@@ -5,7 +5,6 @@
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.loki :refer [tarkkaile! log]]
-            [harja.id :refer [id-olemassa?]]
             [harja.ui.lomake :as lomake]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
@@ -18,7 +17,8 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.ui.debug :as debug]
-            [harja.views.urakka.valinnat :as urakka-valinnat])
+            [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -68,6 +68,22 @@
                                 :valittu? uusi-arvo})))})
    toimenpiteet])
 
+(defn lomake-toiminnot [e! toimenpide]
+  [:div
+   [napit/tallenna
+    "Tallenna"
+    #(e! (tiedot/->TallennaToimenpide toimenpide))
+    {:tallennus-kaynnissa? tallennus-kaynnissa?
+     :disabled (not (lomake/voi-tallentaa? toimenpide))}]
+   (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
+     [napit/poista
+      "Poista"
+      #(varmista-kayttajalta/varmista-kayttajalta
+         {:otsikko "Varusteen poistaminen Tierekisteristä"
+          :sisalto [:div "Haluatko varmasti poistaa toimenpiteen?"]
+          :hyvaksy "Poista"
+          :toiminto-fn (fn [] (e! (tiedot/->PoistaToimenpide toimenpide)))})])])
+
 (defn kokonaishintainen-toimenpidelomake [e! {:keys [valittu-toimenpide
                                                      kohteet
                                                      toimenpideinstanssit
@@ -82,13 +98,7 @@
      [lomake/lomake
       {:otsikko "Uusi toimenpide"
        :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
-       :footer-fn (fn [toimenpide]
-                    [:div
-                     [napit/tallenna
-                      "Tallenna"
-                      #(e! (tiedot/->TallennaToimenpide toimenpide))
-                      {:tallennus-kaynnissa? tallennus-kaynnissa?
-                       :disabled (not (lomake/voi-tallentaa? valittu-toimenpide))}]])}
+       :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
       (toimenpiteet-view/toimenpidelomakkeen-kentat valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
       valittu-toimenpide]]))
 

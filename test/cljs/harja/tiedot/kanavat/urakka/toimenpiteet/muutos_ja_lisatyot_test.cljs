@@ -1,6 +1,7 @@
 (ns harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
   (:require [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as tiedot]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.kanavat.hinta :as hinta]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
@@ -53,3 +54,9 @@
             :toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
             :valitut-toimenpide-idt #{1}}
            (e! (tiedot/->ValitutEiSiirretty) app)))))
+
+(deftest toimenpiteen-hinnoittelun-peruminen
+  (let [vanha-tila testitila
+        uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
+                      vanha-tila)]
+    (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::hinta/hinnat])))))

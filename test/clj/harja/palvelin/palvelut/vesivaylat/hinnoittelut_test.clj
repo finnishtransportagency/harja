@@ -48,7 +48,7 @@
     (is (number? toimenpide-id))
     (is (= (count vastaus) 1))))
 
-(deftest tallenna-toimenpiteelle-hinta
+(deftest tallenna-vv-toimenpiteen-hinta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
@@ -77,14 +77,14 @@
                                                    ::hinta/ryhma :komponentti}]
                        ::h/tallennettavat-tyot []}
         insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                       :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                                        insert-params)
         hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
         hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
     (testing "Uusien hintojen lisäys"
-      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely insert-params))
-      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
+      (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-kysely insert-params))
+      (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-vastaus insert-vastaus))
 
       (is (= (count (::h/hinnat insert-vastaus)) 3))
       (is (some #(== (::hinta/summa %) 666) (::h/hinnat insert-vastaus)))
@@ -109,13 +109,13 @@
                                                            (::h/hinnat insert-vastaus))
                            ::h/tallennettavat-tyot []}
             update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                           :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                                            update-params)
             hinnat-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
             hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
-        (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
-        (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
+        (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-kysely update-params))
+        (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-vastaus update-vastaus))
 
         (is (= (count (::h/hinnat update-vastaus)) 3))
         (is (some #(== (::hinta/summa %) 555) (::h/hinnat update-vastaus)))
@@ -140,13 +140,13 @@
                           {::tyo/toimenpidekoodi-id toimenpidekoodi-id
                            ::tyo/maara 123}]}
           insert-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                         :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                                          insert-params)
           tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
           hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
-      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely insert-params))
-      (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus insert-vastaus))
+      (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-kysely insert-params))
+      (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-vastaus insert-vastaus))
 
       (is (= (count (::h/tyot insert-vastaus)) 2))
       (is (some #(== (::tyo/maara %) 666) (::h/tyot insert-vastaus)))
@@ -168,13 +168,13 @@
                                    (::h/tyot insert-vastaus))
                              ::h/tallennettavat-hinnat []}
               update-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                             :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                                              update-params)
               tyot-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_tyo WHERE poistettu IS NOT TRUE"))
               hinnoittelut-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))]
 
-          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-kysely update-params))
-          (is (s/valid? ::h/tallenna-toimenpiteelle-hinta-vastaus update-vastaus))
+          (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-kysely update-params))
+          (is (s/valid? ::h/tallenna-vv-toimenpiteen-hinta-vastaus update-vastaus))
 
           (is (= (count (::h/tyot update-vastaus)) 2))
           (is (some #(== (::tyo/maara %) 555) (::h/tyot update-vastaus)))
@@ -182,7 +182,7 @@
           (is (= hinnoittelut-ennen hinnoittelut-jalkeen))
           (is (= tyot-ennen tyot-jalkeen)))))))
 
-(deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
+(deftest tallenna-vv-toimenpiteen-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         muhos-id (hae-muhoksen-paallystysurakan-id)
         insert-params {::toi/urakka-id muhos-id
@@ -190,7 +190,7 @@
                        ::h/tallennettavat-hinnat []
                        ::h/tallennettavat-tyot []}]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                         :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                         :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                          insert-params)))))
 
 (deftest tallenna-tyot-jotka-eivat-kuulu-toimenpiteeseen
@@ -210,10 +210,10 @@
                          ::tyo/maara 123
                          ::tyo/id 2}]}]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                                                    insert-params)))))
 
-(deftest tallenna-toimenpiteelle-hinta-ilman-kirjoitusoikeutta
+(deftest tallenna-vv-toimenpiteen-hinta-ilman-kirjoitusoikeutta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
@@ -222,10 +222,10 @@
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :tallenna-toimenpiteelle-hinta +kayttaja-tero+
+                                           :tallenna-vv-toimenpiteen-hinta +kayttaja-tero+
                                            kysely-params)))))
 
-(deftest tallenna-toimenpiteelle-hinta-kun-toimenpide-ei-kuulu-urakkaan
+(deftest tallenna-vv-toimenpiteen-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-muhoksen-paallystysurakan-id)
         kysely-params {::toi/urakka-id urakka-id
@@ -234,10 +234,10 @@
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                                                    kysely-params)))))
 
-(deftest tallenna-toimenpiteelle-hinta-kun-hinnat-eivat-kuulu-toimenpiteeseen
+(deftest tallenna-vv-toimenpiteen-hinta-kun-hinnat-eivat-kuulu-toimenpiteeseen
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
         urakka-id (hae-helsingin-vesivaylaurakan-id)
         kysely-params {::toi/urakka-id urakka-id
@@ -250,7 +250,7 @@
                        ::h/tallennettavat-tyot []}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :tallenna-toimenpiteelle-hinta +kayttaja-jvh+
+                                                   :tallenna-vv-toimenpiteen-hinta +kayttaja-jvh+
                                                    kysely-params)))))
 
 (deftest tallenna-toimenpiteelle-ylimaarainen-hinnoittelu

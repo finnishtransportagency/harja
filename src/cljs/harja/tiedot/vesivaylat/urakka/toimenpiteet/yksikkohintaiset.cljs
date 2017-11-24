@@ -583,7 +583,7 @@
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/post!
-            :tallenna-toimenpiteelle-hinta
+            :tallenna-vv-toimenpiteen-hinta
             {::to/urakka-id (get-in app [:valinnat :urakka-id])
              ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
              ::h/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])
