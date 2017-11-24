@@ -1,18 +1,16 @@
 (ns harja.domain.kanavat.hairiotilanne
   (:require
-    [clojure.string :as str]
     [clojure.spec.alpha :as s]
-    [specql.transform :as xf]
     [clojure.set :as set]
-    [specql.rel :as rel]
+
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]])
 
-    [harja.domain.muokkaustiedot :as m]
-    [harja.domain.kanavat.kanavan-kohde :as kkohde]
-    [harja.domain.urakka :as ur])
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
+    [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+    [harja.domain.kayttaja :as kayttaja])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -28,27 +26,40 @@
     "paikallinen_kaytto" ::paikallinen-kaytto?
     "korjausaika_h" ::korjausaika-h
     "odotusaika_h" ::odotusaika-h
-    "korjauksen_tila" ::korjauksen-tila}
+    "korjauksen_tila" ::korjauksen-tila
+    "kuittaaja" ::kuittaaja-id
+    ::kuittaaja (specql.rel/has-one ::kuittaaja-id
+                                    :harja.domain.kayttaja/kayttaja
+                                    :harja.domain.kayttaja/id)}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
-                                ::kkohde/kohde
-                                ::kkohde/id)}])
+                                ::kanavan-kohde/kohde
+                                ::kanavan-kohde/id)}])
+
+(def kuittaajan-tiedot
+  #{[::kuittaaja
+     #{::kayttaja/id
+       ::kayttaja/etunimi
+       ::kayttaja/sukunimi
+       ::kayttaja/kayttajanimi
+       ::kayttaja/sahkoposti
+       ::kayttaja/puhelin}]})
 
 (def perustiedot+muokkaustiedot
-  #{::m/muokattu
+  #{::muokkaustiedot/muokattu
     ::vikaluokka
-    ::m/poistettu?
+    ::muokkaustiedot/poistettu?
     ::huviliikenne-lkm
     ::korjaustoimenpide
     ::paikallinen-kaytto?
     ::pvm
     ::urakka-id
-    ::m/muokkaaja-id
+    ::muokkaustiedot/muokkaaja-id
     ::korjausaika-h
-    ::m/luotu
+    ::muokkaustiedot/luotu
     ::odotusaika-h
     ::syy
-    ::m/luoja-id
+    ::muokkaustiedot/luoja-id
     ::id
     ::korjauksen-tila
     ::sopimus-id
@@ -56,9 +67,10 @@
 
 (def perustiedot+kanava+kohde
   (set/union perustiedot+muokkaustiedot
+             kuittaajan-tiedot
              #{[::kohde
-                (set/union kkohde/perustiedot
-                           kkohde/kohteen-kanavatiedot)]}))
+                (set/union kanavan-kohde/perustiedot
+                           kanavan-kohde/kohteen-kanavatiedot)]}))
 
 ;; Palvelut
 
@@ -74,6 +86,10 @@
                                                      ::haku-korjauksen-tila
                                                      ::haku-paikallinen-kaytto?]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
+
+(s/def ::tallenna-hairiotilanne-kutsu
+  (s/keys :req [::hae-hairiotilanteet-kysely
+                ::hairiotilanne]))
 
 ;; Apurit
 

@@ -354,6 +354,13 @@
 (defn hae-kanavakohde-joensuun-sulku []
   (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Joensuun sulku ja silta';"))))
 
+(defn hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id []
+  (ffirst (q "SELECT kk.id
+              FROM kan_kohde kk
+                JOIN kan_kohde_urakka kku ON kk.id = kku.\"kohde-id\"
+                JOIN urakka u ON u.id = kku.\"urakka-id\"
+              WHERE u.nimi = 'Saimaan kanava' AND kk.nimi = 'Tikkalansaaren sulku';")))
+
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
                    FROM   urakka
