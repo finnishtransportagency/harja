@@ -30,7 +30,6 @@
     ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
     ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
     "toimenpideinstanssi" ::toimenpideinstanssi-id
-    "muu_toimenpide" ::muu-toimenpide
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kohde/kohde
                                 :harja.domain.kanavat.kohde/id)
