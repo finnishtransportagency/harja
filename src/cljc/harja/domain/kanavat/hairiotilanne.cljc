@@ -37,32 +37,26 @@
                                      :harja.domain.kanavat.kohteenosa/kohteenosa
                                      :harja.domain.kanavat.kohteenosa/id)}])
 
-(def perustiedot+muokkaustiedot
-  #{::m/muokattu
-    ::vikaluokka
-    ::m/poistettu?
+(def perustiedot
+  #{::vikaluokka
     ::huviliikenne-lkm
     ::korjaustoimenpide
     ::paikallinen-kaytto?
     ::pvm
     ::urakka-id
-    ::m/muokkaaja-id
     ::korjausaika-h
-    ::m/luotu
     ::odotusaika-h
     ::syy
-    ::m/luoja-id
     ::id
     ::korjauksen-tila
     ::sopimus-id
     ::ammattiliikenne-lkm})
 
-(def perustiedot+kohteenosa+kohde
-  (set/union perustiedot+muokkaustiedot
-             #{[::kohde
-                (set/union kohde/perustiedot
-                           kohde/kohteen-kohdekokonaisuus)]}
-             #{[::kohteenosa kohteenosa/perustiedot]}))
+(def muokkaustiedot m/muokkauskentat)
+
+(def kohteenosan-tiedot #{[::kohteenosa kohteenosa/perustiedot]})
+
+(def kohteen-tiedot #{[::kohde (set/union kohde/perustiedot)]})
 
 ;; Palvelut
 
