@@ -6,7 +6,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.kanavat.kanavat :as q]
+            [harja.kyselyt.kanavat.kohteet :as q]
             [specql.core :as specql]
             [specql.op :as op]
             [clojure.set :as set]))

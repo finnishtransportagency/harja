@@ -1,4 +1,4 @@
-(ns harja.kyselyt.kanavat.kanavat
+(ns harja.kyselyt.kanavat.kohteet
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
             [clojure.future :refer :all]
@@ -48,11 +48,11 @@
                                                 (when urakka-id
                                                   {::kohde/urakka-id urakka-id}))))))
 
-(defn- hae-kanavat-ja-kohteet* [kanavat kohteen-haku]
+(defn- hae-kokonaisuudet-ja-kohteet* [kokonaisuudet kohteen-haku]
   (into []
         (comp
           (map #(update % ::kok/kohteet kohteen-haku)))
-        kanavat))
+        kokonaisuudet))
 
 (defn hae-kohteen-urakat [db kohde]
   (specql/fetch db
@@ -61,8 +61,8 @@
                 {::kohde/kohde-id kohde
                  ::m/poistettu? false}))
 
-(defn hae-kanavat-ja-kohteet [db]
-  (hae-kanavat-ja-kohteet*
+(defn hae-kokonaisuudet-ja-kohteet [db]
+  (hae-kokonaisuudet-ja-kohteet*
     (specql/fetch db
                   ::kok/kohdekokonaisuus
                   (set/union
@@ -107,7 +107,7 @@
             (dissoc ::osa/id)
             (assoc ::osa/kohde-id (::kohde/id kohde)))))))
 
-(defn lisaa-kanavalle-kohteet! [db user kohteet]
+(defn lisaa-kokonaisuudelle-kohteet! [db user kohteet]
   (jdbc/with-db-transaction [db db]
     (doseq [kohde kohteet]
       (let [osat (::kohde/kohteenosat kohde)

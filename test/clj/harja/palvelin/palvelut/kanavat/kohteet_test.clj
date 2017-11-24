@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.kanavat.kanavat-test
+(ns harja.palvelin.palvelut.kanavat.kohteet-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [com.stuartsierra.component :as component]
@@ -12,7 +12,7 @@
             [taoensso.timbre :as log]
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
-            [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+            [harja.palvelin.palvelut.kanavat.kohteet :as kan-kohteet]
             [clojure.string :as str]
             
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
@@ -30,7 +30,7 @@
                         :http-palvelin (testi-http-palvelin)
                         :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :kan-kanavat (component/using
-                                       (kan-kanavat/->Kanavat)
+                                       (kan-kohteet/->Kohteet)
                                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))

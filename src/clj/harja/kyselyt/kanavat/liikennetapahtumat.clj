@@ -13,7 +13,7 @@
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
 
-            [harja.kyselyt.kanavat.kanavat :as kanavat-q]
+            [harja.kyselyt.kanavat.kohteet :as kohteet-q]
 
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
@@ -98,7 +98,7 @@
                                                   {::lt-alus/suunta suunta})
                                                 (when aluslaji
                                                   {::lt-alus/laji aluslaji}))})))))
-      (partial kanavat-q/hae-kohteiden-urakkatiedot db)
+      (partial kohteet-q/hae-kohteiden-urakkatiedot db)
       urakka-id)))
 
 (defn- hae-kohteen-edellinen-tapahtuma* [tulokset]

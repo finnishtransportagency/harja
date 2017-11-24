@@ -1,6 +1,6 @@
 (ns harja.kyselyt.kanavat.kanavat-test
   (:require [clojure.test :refer :all]
-            [harja.kyselyt.kanavat.kanavat :as q]
+            [harja.kyselyt.kanavat.kohteet :as q]
 
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohdekokonaisuus :as kok]))
@@ -21,7 +21,7 @@
 (deftest hae-kanavat
   (is (= [{::kok/id 1 ::kok/kohteet 1}
           {::kok/id 2 ::kok/kohteet 2}]
-         (#'q/hae-kanavat-ja-kohteet*
+         (#'q/hae-kokonaisuudet-ja-kohteet*
            [{::kok/id 1 ::kok/kohteet 0}
             {::kok/id 2 ::kok/kohteet 1}]
            inc))))

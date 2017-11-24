@@ -44,16 +44,16 @@
 
 (s/def ::hakuteksti string?)
 
-(s/def ::hae-kanavat-ja-kohteet-vastaus
+(s/def ::hae-kohdekokonaisuudet-ja-kohteet-vastaus
   (s/coll-of (s/keys :req [::id ::nimi ::kohteet])))
 
-(s/def ::lisaa-kanavalle-kohteita-kysely
+(s/def ::lisaa-kohdekokonaisuudelle-kohteita-kysely
   (s/coll-of (s/keys :req [:harja.domain.kanavat.kohde/kohdekokonaisuus-id
                            :harja.domain.kanavat.kohde/id]
                      :opt [:harja.domain.kanavat.kohde/nimi
                            ::m/poistettu?])))
 
-(s/def ::lisaa-kanavalle-kohteita-vastaus ::hae-kanavat-ja-kohteet-vastaus)
+(s/def ::lisaa-kohdekokonaisuudelle-kohteita-vastaus ::hae-kohdekokonaisuudet-ja-kohteet-vastaus)
 
 (s/def ::liita-kohde-urakkaan-kysely (s/keys :req-un [::urakka-id
                                                       ::kohde-id
