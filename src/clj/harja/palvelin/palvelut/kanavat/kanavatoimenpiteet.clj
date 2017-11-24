@@ -37,23 +37,22 @@
       :toimenpidekoodi toimenpidekoodi
       :tyyppi tyyppi})))
 
-(defn- vaadi-toimenpiteet-kuuluvat-urakkaan* [toimenpiteet toimenpide-idt urakka-id]
-  (when (or
-         (nil? urakka-id)
-         (not (->> toimenpiteet
-                   (map ::toimenpide/urakka-id)
-                   (every? (partial = urakka-id)))))
-    (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
+(defn- vaadi-rivit-kuuluvat-emoon* [rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
+  (let [emo-idt (set (keep rivin-emo-id-avain rivit))]
+    (when (not= emo-idt #{vaadittu-emo-id})
+      (throw (SecurityException. (str "Rivit " rivi-idt " eivät kuulu emoon " vaadittu-emo-id))))))
 
-(defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
-  (vaadi-toimenpiteet-kuuluvat-urakkaan*
-   (specql/fetch
-    db
-    ::toimenpide/kanava-toimenpide
-    (set/union toimenpide/perustiedot toimenpide/viittaus-idt)
-    {::toimenpide/id (op/in toimenpide-idt)})
-   toimenpide-idt
-   urakka-id))
+
+(defn vaadi-rivit-kuuluvat-emoon [db rivien-taulu rivin-emo-id-avain rivin-id-avain rivi-idt emo-id]
+  (let [rivit (specql/fetch
+               db
+               rivien-taulu
+               #{rivin-emo-id-avain rivin-id-avain}
+               {rivin-id-avain (op/in rivi-idt)})]
+    (println "rivit" rivit)
+    (when (not-empty rivi-idt)
+      (vaadi-rivit-kuuluvat-emoon* rivit rivi-idt rivin-emo-id-avain emo-id))))
+
 
 (defn tallenna-kanavatoimenpiteen-hinnoittelu! [db user tiedot]
   (let [urakka-id (::toimenpide/urakka-id tiedot)
@@ -62,15 +61,16 @@
                                (mapv #(assoc % k toimenpide-id) mapit))]
     (assert urakka-id "Urakka-id puuttuu!")
     (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id) ;; FIXME
-    (vaadi-toimenpiteet-kuuluvat-urakkaan db #{(::toimenpide/id tiedot)} urakka-id)
+    (vaadi-rivit-kuuluvat-emoon db ::toimenpide/kanava-toimenpide ::toimenpide/urakka-id ::toimenpide/id #{(::toimenpide/id tiedot)} urakka-id)
     (let [olemassa-olevat-hinta-idt (->> (keep ::hinta/id (::hinta/tallennettavat-hinnat tiedot))
                                          (filter id/id-olemassa?)
                                          (set))
           olemassa-olevat-tyo-idt (->> (keep ::tyo/id (::hinta/tallennettavat-tyot tiedot))
                                        (filter id/id-olemassa?)
                                        (set))]
-      #_(vaadi-hinnat-kuuluvat-toimenpiteeseen db olemassa-olevat-hinta-idt toimenpide-id) ;; FIXME
-      #_(vaadi-tyot-kuuluvat-toimenpiteeseen db olemassa-olevat-tyo-idt toimenpide-id))
+      (vaadi-rivit-kuuluvat-emoon db ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id ::hinta/id olemassa-olevat-hinta-idt toimenpide-id)
+      (vaadi-rivit-kuuluvat-emoon db ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id ::tyo/id olemassa-olevat-tyo-idt toimenpide-id))
+
 
     (jdbc/with-db-transaction [db db]
       (q-toimenpide/tallenna-toimenpiteen-omat-hinnat!
