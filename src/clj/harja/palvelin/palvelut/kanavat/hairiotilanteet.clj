@@ -27,7 +27,7 @@
                (specql/fetch
                  db
                  ::hairio/hairiotilanne
-                 hairio/perustiedot+kanava+kohde
+                 hairio/perustiedot+kohteenosa+kohde
                  (merge
                    {::hairio/urakka-id urakka-id}
                    (when sopimus-id

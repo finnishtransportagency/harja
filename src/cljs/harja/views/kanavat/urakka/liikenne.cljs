@@ -158,7 +158,7 @@
          :tyyppi :valinta
          :valinnat urakan-kohteet
          :pakollinen? true
-         :valinta-nayta #(if % (kohde/fmt-kohteen-kanava-nimi %) "- Valitse kohde -")
+         :valinta-nayta #(if % (kohde/fmt-kohteen-kokonaisuus-nimi %) "- Valitse kohde -")
          :aseta (fn [rivi arvo]
                   (let [rivi (assoc rivi ::lt/kohde arvo)]
                     (when uusi-tapahtuma?
@@ -262,7 +262,7 @@
        [valinnat/kanava-kohde
         (atomi ::lt/kohde)
         (into [nil] urakan-kohteet)
-        #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
+        #(let [nimi (kohde/fmt-kohteen-kokonaisuus-nimi %)]
            (if-not (empty? nimi)
              nimi
              "Kaikki"))]

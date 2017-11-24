@@ -80,29 +80,29 @@
     :sulku-ja-silta "sulku ja silta"}
     kohde))
 
-(defn- kohteen-nimi* [kanava-nimi kohteen-nimi kohteen-tyyppi]
+(defn- kohteen-nimi* [kokonaisuus-nimi kohteen-nimi kohteen-tyyppi]
   (str
-    (when kanava-nimi
-      (str kanava-nimi ", "))
+    (when kokonaisuus-nimi
+      (str kokonaisuus-nimi ", "))
     (when kohteen-nimi
       (str kohteen-nimi ", "))
     (when kohteen-tyyppi
       (str kohteen-tyyppi))))
 
 ;; Kohteen nimen formatointi on hieman monimutkaista, koska täyteen nimeen kuuluu
-;; kanavan nimi, kohteen nimi (joka usein tyhjä?), ja kohteen tyyppi.
+;; kokonaisuuden nimi, kohteen nimi (joka usein tyhjä?), ja kohteen tyyppi.
 ;; Koska nämä tiedot nousevat kannasta hieman eri muodossa, riippuen kyselyistä,
 ;; formatointifunktioitakin on kehittynyt useammanlaisia.
 ;; Tästä ei varsinaisesti ole muuta haittaa kuin nimeämisen vaikeus
 
-(defn fmt-kohteen-kanava-nimi
-  "Ottaa mapin, jossa on kohteen tiedot ja ::kohteen-kanava avaimen takana kanavan tiedot."
+(defn fmt-kohteen-kokonaisuus-nimi
+  "Ottaa mapin, jossa on kohteen tiedot ja ::kohdekokonaisuus avaimen takana kanavan tiedot."
   [kohde-ja-kanava]
-  (kohteen-nimi* (get-in kohde-ja-kanava [::kohteen-kanava ::kok/nimi])
+  (kohteen-nimi* (get-in kohde-ja-kanava [::kohdekokonaisuus ::kok/nimi])
                  (::nimi kohde-ja-kanava)
                  (tyyppi->str (::tyyppi kohde-ja-kanava))))
 
-(defn fmt-kanava-ja-kohde-nimi
+(defn fmt-kokonaisuus-ja-kohde-nimi
   "Ottaa kanavan mäpissä, jossa on ::kok/nimi, ja kohteen mäpissä, jossa on ::kohde/nimi ja ::kohde/tyyppi.
   Palauttaa kohteen täyden nimen."
   [kanava kohde]

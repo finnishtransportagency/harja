@@ -57,7 +57,7 @@
     ::sopimus-id
     ::ammattiliikenne-lkm})
 
-(def perustiedot+kanava+kohde
+(def perustiedot+kohteenosa+kohde
   (set/union perustiedot+muokkaustiedot
              #{[::kohde
                 (set/union kohde/perustiedot
