@@ -44,6 +44,7 @@
 (defrecord PoistaHairiotilanne [hairiotilanne])
 (defrecord HairiotilanneTallennettu [hairiotilanteet])
 (defrecord HairiotilanteenTallentaminenEpaonnistui [])
+(defrecord MuokkaaMateriaaleja [materiaalit])
 
 
 (def valinnat
@@ -214,5 +215,12 @@
 
   ValitseHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} app]
-    (assoc app :valittu-hairiotilanne hairiotilanne)))
+    (assoc app :valittu-hairiotilanne hairiotilanne))
+
+  MuokkaaMateriaaleja
+  (process-event [{materiaalit :materiaalit} app]
+    (if (:valittu-hairiotilanne app)
+      (assoc app :valittu-hairiotilanne
+                 (assoc (:valittu-hairiotilanne app) ::hairiotilanne/materiaalit materiaalit))
+      app)))
 

@@ -107,7 +107,7 @@
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
-(defn varaosataulukko [e! {materiaalit :materiaalit hairiotilanne :hairiotilanne :as app}]
+(defn varaosataulukko [e! {materiaalit :materiaalit hairiotilanne :valittu-hairiotilanne}]
   [grid/muokkaus-grid
    {:voi-muokata? (constantly true)
     :voi-poistaa? (constantly true)
@@ -126,14 +126,8 @@
      :tyyppi :positiivinen-numero
      :kokonaisluku? true}]
    (r/wrap
-     ;; todo: hae varaosat häiriöltä
-     {1 {:varaosa {:harja.domain.vesivaylat.materiaali/urakka-id 31
-                   :harja.domain.vesivaylat.materiaali/maara-nyt 123
-                   :harja.domain.vesivaylat.materiaali/halytysraja 666
-                   :harja.domain.vesivaylat.materiaali/alkuperainen-maara 123
-                   :harja.domain.vesivaylat.materiaali/nimi "Varaosa"}
-         :maara 123}}
-     #(log "--->>> Todo: tee varaosien muokkaus"))])
+     (:harja.domain.kanavat.hairiotilanne/materiaalit hairiotilanne)
+     #(e! (tiedot/->MuokkaaMateriaaleja %)))])
 
 (defn odottavan-liikenteen-kentat []
   ;; todo: luokan määrittäminen eksplisiittisesti kentälle ei välttämättä ole hyvä idea
@@ -189,13 +183,12 @@
        :nimi ::hairiotilanne/paikallinen-kaytto?
        :tyyppi :checkbox
        ::lomake/col-luokka luokka}
-      ;; todo: toteutetaan myöhemmin
-      #_{:otsikko "Varaosat"
-         :nimi :varaosat
-         :tyyppi :komponentti
-         :palstoja 2
-         :uusi-rivi? true
-         :komponentti (fn [_] [varaosataulukko e! app])})))
+      {:otsikko "Varaosat"
+       :nimi :varaosat
+       :tyyppi :komponentti
+       :palstoja 2
+       :uusi-rivi? true
+       :komponentti (fn [_] [varaosataulukko e! app])})))
 
 (defn hairiolomakkeen-kentat [e! app kohteet]
   [{:otsikko "Aika"

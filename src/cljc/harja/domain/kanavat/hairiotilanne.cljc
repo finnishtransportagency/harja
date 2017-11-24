@@ -10,7 +10,8 @@
 
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
-    [harja.domain.kayttaja :as kayttaja])
+    [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.vesivaylat.materiaali :as materiaali])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -30,7 +31,8 @@
     "kuittaaja" ::kuittaaja-id
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
-                                    :harja.domain.kayttaja/id)}
+                                    :harja.domain.kayttaja/id)
+    ::materiaalit (specql.rel/has-many ::id ::materiaali/materiaali ::materiaali/hairiotilanne)}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
                                 ::kanavan-kohde/kohde
