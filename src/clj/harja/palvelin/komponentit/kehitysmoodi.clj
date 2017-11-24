@@ -47,7 +47,9 @@
   (let [{:keys [status body headers] :as res}
         @(http/get (wmts-osoite uri)
                    {:query-params query-params
-                    :headers {"Authorization" (str "Basic " @basic-auth-header)}})]
+                    :headers {"Authorization" (str "Basic " @basic-auth-header)}
+                    :timeout 500 ;; tarvitaan lyhyt timeout, koska harja-test palomuuri on teergrube ja hyydyttää appin jos käytetään tavan verkosta
+                    })]
     (reset! debug-last-wmts-response res)
     {:status status
      :body body

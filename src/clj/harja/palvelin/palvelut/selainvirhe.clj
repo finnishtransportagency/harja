@@ -149,7 +149,7 @@
   "Logittaa yksittäisen käyttäjän raportoimat selainvirheet"
   [user katkostiedot]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (log/debug "Vastaanotettu yhteyskatkostiedot: " (pr-str katkostiedot))
+  ;;(log/debug "Vastaanotettu yhteyskatkostiedot: " (pr-str katkostiedot))
   (log/warn (formatoi-yhteyskatkos user katkostiedot))
   {:ok? true})
 
