@@ -15,8 +15,6 @@
             [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
             [clojure.string :as str]
 
-            [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
             [harja.domain.muokkaustiedot :as m]
@@ -63,7 +61,7 @@
 (deftest edellisten-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-        kohde-id (hae-kanavakohde-soskua)
+        kohde-id (hae-kohde-soskua)
         params {::lt/urakka-id urakka-id
                 ::lt/sopimus-id sopimus-id
                 ::lt/kohde-id kohde-id}
@@ -88,7 +86,7 @@
   (testing "Uuden luonti"
     (let [urakka-id (hae-saimaan-kanavaurakan-id)
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-          kohde-id (hae-kanavakohde-soskua)
+          kohde-id (hae-kohde-soskua)
           hakuparametrit {::ur/id urakka-id
                           ::sop/id sopimus-id}
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -121,7 +119,7 @@
   (testing "Muokkaaminen"
     (let [urakka-id (hae-saimaan-kanavaurakan-id)
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-          kohde-id (hae-kanavakohde-soskua)
+          kohde-id (hae-kohde-soskua)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR';")))
           hakuparametrit {::ur/id urakka-id
                           ::sop/id sopimus-id}
@@ -159,7 +157,7 @@
   (testing "Poistaminen"
     (let [urakka-id (hae-saimaan-kanavaurakan-id)
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-          kohde-id (hae-kanavakohde-soskua)
+          kohde-id (hae-kohde-soskua)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR FOOBAR';")))
           hakuparametrit {::ur/id urakka-id
                           ::sop/id sopimus-id}

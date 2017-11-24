@@ -15,8 +15,6 @@
             [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
             [clojure.string :as str]
 
-            [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
             [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]))

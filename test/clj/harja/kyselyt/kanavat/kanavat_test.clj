@@ -2,8 +2,8 @@
   (:require [clojure.test :refer :all]
             [harja.kyselyt.kanavat.kanavat :as q]
 
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.kanavat.kanava :as kanava]))
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]))
 
 (deftest kohteiden-urakkatiedot
   (is (= [{::kohde/id 1 ::kohde/urakat [{:foo :bar}
@@ -19,9 +19,9 @@
             {::kohde/kohde-id 2 ::kohde/linkin-urakka {:foo :baz}}]))))
 
 (deftest hae-kanavat
-  (is (= [{::kanava/id 1 ::kanava/kohteet 1}
-          {::kanava/id 2 ::kanava/kohteet 2}]
+  (is (= [{::kok/id 1 ::kok/kohteet 1}
+          {::kok/id 2 ::kok/kohteet 2}]
          (#'q/hae-kanavat-ja-kohteet*
-           [{::kanava/id 1 ::kanava/kohteet 0}
-            {::kanava/id 2 ::kanava/kohteet 1}]
+           [{::kok/id 1 ::kok/kohteet 0}
+            {::kok/id 2 ::kok/kohteet 1}]
            inc))))

@@ -348,11 +348,11 @@
                    FROM   sopimus
                    WHERE  nimi = 'Saimaan huollon lisäsopimus';"))))
 
-(defn hae-kanavakohde-soskua []
+(defn hae-kohde-soskua []
   (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Soskua';"))))
 
-(defn hae-kanavakohde-joensuun-sulku []
-  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Iisalmen sillat';"))))
+(defn hae-kohde-iisalmen-kanava []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Iisalmen kanava';"))))
 
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
