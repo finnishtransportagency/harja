@@ -10,7 +10,7 @@
             [harja.ui.debug :refer [debug]]
 
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
@@ -36,7 +36,7 @@
    {:otsikko "Kohde"
     :nimi :kohde
     :tyyppi :string
-    :hae #(get-in % [::kanavan-toimenpide/kohde ::kanavan-kohde/nimi])}
+    :hae #(get-in % [::kanavan-toimenpide/kohde ::kohde/nimi])}
    {:otsikko "Huoltokohde"
     :nimi :huoltokohde
     :tyyppi :string
@@ -77,7 +77,7 @@
      {:otsikko "Kohde"
       :nimi ::kanavan-toimenpide/kohde
       :tyyppi :valinta
-      :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
+      :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
       :valinnat kohteet}
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde

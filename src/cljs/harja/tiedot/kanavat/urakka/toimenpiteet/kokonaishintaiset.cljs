@@ -10,7 +10,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tiedot.istunto :as istunto]
@@ -78,7 +78,7 @@
         (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
                ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
                ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka)
-               ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kanavan-kohde/id])
+               ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
                ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id])
                ::kanavan-toimenpide/muu-toimenpide (if (toimenpiteet/valittu-tehtava-muu? tehtava tehtavat)
                                                      (::kanavan-toimenpide/muu-toimenpide toimenpide)

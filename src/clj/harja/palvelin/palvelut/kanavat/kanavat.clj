@@ -6,9 +6,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.kanavat.kanavat :as q]
-
-            [harja.domain.kanavat.kanava :as kan]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.urakka :as ur]))
 
@@ -56,33 +56,33 @@
       :hae-kanavat-ja-kohteet
       (fn [user]
         (hae-kanavat-ja-kohteet db user))
-      {:vastaus-spec ::kan/hae-kanavat-ja-kohteet-vastaus})
+      {:vastaus-spec ::kok/hae-kanavat-ja-kohteet-vastaus})
     (julkaise-palvelu
       http
       :hae-urakan-kohteet
       (fn [user tiedot]
         (hae-urakan-kohteet db user tiedot))
-      {:kysely-spec ::kan/hae-urakan-kohteet-kysely
-       :vastaus-spec ::kan/hae-urakan-kohteet-vastaus})
+      {:kysely-spec ::kok/hae-urakan-kohteet-kysely
+       :vastaus-spec ::kok/hae-urakan-kohteet-vastaus})
     (julkaise-palvelu
       http
       :lisaa-kanavalle-kohteita
       (fn [user kohteet]
         (lisaa-kanavalle-kohteita db user kohteet))
-      {:kysely-spec ::kan/lisaa-kanavalle-kohteita-kysely
-       :vastaus-spec ::kan/lisaa-kanavalle-kohteita-vastaus})
+      {:kysely-spec ::kok/lisaa-kanavalle-kohteita-kysely
+       :vastaus-spec ::kok/lisaa-kanavalle-kohteita-vastaus})
     (julkaise-palvelu
       http
       :liita-kohde-urakkaan
       (fn [user tiedot]
         (liita-kohde-urakkaan! db user tiedot))
-      {:kysely-spec ::kan/liita-kohde-urakkaan-kysely})
+      {:kysely-spec ::kok/liita-kohde-urakkaan-kysely})
     (julkaise-palvelu
       http
       :poista-kohde
       (fn [user tiedot]
         (poista-kohde! db user tiedot))
-      {:kysely-spec ::kan/poista-kohde-kysely})
+      {:kysely-spec ::kok/poista-kohde-kysely})
     (julkaise-palvelu
       http
       :hae-kanavien-huoltokohteet

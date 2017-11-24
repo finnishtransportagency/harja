@@ -9,7 +9,6 @@
             [harja.kyselyt.kanavat.kanavat :as q]
             [specql.core :as specql]
             [specql.op :as op]
-            [harja.domain.kanavat.kanava :as kan]
             [clojure.set :as set]))
 
 (defn hae-hairiotilanteet [db user tiedot]

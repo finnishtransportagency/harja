@@ -20,7 +20,7 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]))
+            [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]

@@ -20,8 +20,8 @@
             [harja.domain.sopimus :as sop]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kayttaja :as kayttaja]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.kanavat.kanava :as kanava]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [clojure.set :as set]
@@ -124,7 +124,7 @@
         (merge
           tapahtuma
           {:kohteen-nimi (str
-                           (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/kohteen-kanava ::kanava/nimi])]
+                           (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/kohteen-kanava ::kok/nimi])]
                              (str nimi ", "))
                            (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/nimi])]
                              (str nimi ", "))

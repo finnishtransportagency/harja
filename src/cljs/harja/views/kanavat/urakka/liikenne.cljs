@@ -31,7 +31,7 @@
             [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.ui.ikonit :as ikonit])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
