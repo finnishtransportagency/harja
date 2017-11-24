@@ -4,7 +4,9 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
-            [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]))
+            [harja.kyselyt.kanavat.kanavan-toimenpide :as q-kanavan-toimenpide]
+            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
+            [clojure.java.jdbc :as jdbc]))
 
 (defn tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
@@ -12,6 +14,12 @@
   (case tyyppi
     :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
     :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id)))
+
+(defn tehtava-paivitetaan? [hintatyyppi tehtava]
+  (let [hintatyyppi-loytyi? (some #(when (= hintatyyppi %) %)
+                                  (get-in tehtava [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/hinnoittelu]))]
+    (if hintatyyppi-loytyi?
+      false true)))
 
 (defn hae-kanavatoimenpiteet [db user {urakka-id ::kanavan-toimenpide/urakka-id
                                        sopimus-id ::kanavan-toimenpide/sopimus-id
@@ -33,14 +41,27 @@
 
 (defn siirra-kanavatoimenpiteet [db user tiedot]
   (let [urakka-id (::kanavan-toimenpide/urakka-id tiedot)
-        siirto-kokonaishintaisiin? (= (::kanavan-toimenpide/tyyppi tiedot) :kokonaishintainen)]
+        siirto-kokonaishintaisiin? (= (::kanavan-toimenpide/tyyppi tiedot) :kokonaishintainen)
+        toimenpide-idt (::kanavan-toimenpide/toimenpide-idt tiedot)]
     (assert urakka-id "Urakka-id puuttuu!")
     (if siirto-kokonaishintaisiin?
       (oikeudet/vaadi-oikeus "siirrä-kokonaishintaisiin" oikeudet/urakat-kanavat-lisatyot user urakka-id)
       (oikeudet/vaadi-oikeus "siirrä-muutos-ja-lisätöihin" oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id))
     (q-kanavan-toimenpide/vaadi-toimenpiteet-kuuluvat-urakkaan db (::kanavan-toimenpide/toimenpide-idt tiedot) urakka-id)
-    (q-kanavan-toimenpide/paivita-toimenpiteiden-tyyppi db (::kanavan-toimenpide/toimenpide-idt tiedot) (::kanavan-toimenpide/tyyppi tiedot))
-    (::kanavan-toimenpide/toimenpide-idt tiedot)))
+    (jdbc/with-db-transaction [db db]
+                              (let [tehtavat (q-kanavan-toimenpide/hae-toimenpiteiden-tehtavan-hinnoittelu db toimenpide-idt)
+                                    paivitettavat-tehtava-idt (into #{}
+                                                                    (keep (fn [tehtava]
+                                                                            (::kanavan-toimenpide/id
+                                                                              (if siirto-kokonaishintaisiin?
+                                                                                (when (tehtava-paivitetaan? "kokonaishintainen" tehtava) tehtava)
+                                                                                (when (tehtava-paivitetaan? "muutoshintainen" tehtava) tehtava)))))
+                                                                    tehtavat)
+                                    tehtavan-id (:id (first (q-toimenpidekoodit/hae-tehtavan-id db {:nimi "Ei yksilöity"
+                                                                                                    :kolmois-tason-tehtavan-koodi "24104"})))]
+                                (q-kanavan-toimenpide/paivita-toimenpiteiden-tehtava db paivitettavat-tehtava-idt tehtavan-id)
+                                (q-kanavan-toimenpide/paivita-toimenpiteiden-tyyppi db toimenpide-idt (::kanavan-toimenpide/tyyppi tiedot))
+                                toimenpide-idt))))
 
 (defn tallenna-kanavatoimenpide [db user {tyyppi ::kanavan-toimenpide/tyyppi
                                           urakka-id ::kanavan-toimenpide/urakka-id

@@ -3,6 +3,7 @@
   (:require [specql.core :refer [fetch insert! update!]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [jeesql.core :refer [defqueries]]
             [specql.op :as op]
             [harja.pvm :as pvm]
@@ -54,3 +55,15 @@
                              ::muokkaustiedot/luotu (pvm/nyt)
                              ::muokkaustiedot/luoja-id kayttaja-id)]
       (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))
+
+(defn hae-toimenpiteiden-tehtavan-hinnoittelu [db toimenpide-idt]
+  (fetch db
+         ::toimenpide/kanava-toimenpide
+         #{::toimenpide/id
+           [::toimenpide/toimenpidekoodi #{::toimenpidekoodi/hinnoittelu}]}
+         {::toimenpide/id (op/in toimenpide-idt)}))
+
+(defn paivita-toimenpiteiden-tehtava [db paivitettavat-tehtava-idt tehtava-id]
+  (update! db ::toimenpide/kanava-toimenpide
+           {::toimenpide/toimenpidekoodi-id tehtava-id}
+           {::toimenpide/id (op/in paivitettavat-tehtava-idt)}))
