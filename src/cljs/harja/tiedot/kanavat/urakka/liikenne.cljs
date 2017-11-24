@@ -124,7 +124,7 @@
         (merge
           tapahtuma
           {:kohteen-nimi (str
-                           (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/kohteen-kanava ::kok/nimi])]
+                           (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/kohdekokonaisuus ::kok/nimi])]
                              (str nimi ", "))
                            (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/nimi])]
                              (str nimi ", "))

@@ -63,5 +63,5 @@
 
 (s/def ::hae-urakan-kohteet-kysely (s/keys :req [::ur/id]))
 (s/def ::hae-urakan-kohteet-vastaus (s/coll-of (s/keys :req [:harja.domain.kanavat.kohde/id
-                                                             :harja.domain.kanavat.kohde/kohteen-kanava]
+                                                             :harja.domain.kanavat.kohde/kohdekokonaisuus]
                                                        :opt [:harja.domain.kanavat.kohde/nimi])))

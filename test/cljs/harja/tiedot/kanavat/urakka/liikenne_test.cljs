@@ -81,7 +81,7 @@
 
 (deftest tapahtumarivit
   (testing "Jokaisesta nipusta ja aluksesta syntyy oma rivi"
-    (let [tapahtuma {::lt/kohde {::kohde/kohteen-kanava {::kok/nimi "Saimaa"}
+    (let [tapahtuma {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                  ::kohde/nimi "Iso mutka"
                                  ::kohde/tyyppi :silta}
                      ::lt/alukset [{::lt-alus/suunta :ylos
@@ -95,7 +95,7 @@
              (tiedot/tapahtumarivit tapahtuma)))))
 
   (testing "Jos ei aluksia tai nippuja, syntyy silti yksi rivi taulukossa"
-    (let [tapahtuma {::lt/kohde {::kohde/kohteen-kanava {::kok/nimi "Saimaa"}
+    (let [tapahtuma {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                  ::kohde/nimi "Iso mutka"
                                  ::kohde/tyyppi :silta}
                      ::lt/alukset []
@@ -150,12 +150,12 @@
                   :valinnat {::ur/id 1 ::sop/id nil}}))))))
 
 (deftest tapahtumat-haettu
-  (let [tapahtuma1 {::lt/kohde {::kohde/kohteen-kanava {::kok/nimi "Saimaa"}
+  (let [tapahtuma1 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset []
                     ::lt/niput []}
-        tapahtuma2 {::lt/kohde {::kohde/kohteen-kanava {::kok/nimi "Saimaa"}
+        tapahtuma2 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset [{::lt-alus/suunta :ylos
@@ -309,12 +309,12 @@
 (deftest tallennus-valmis
   (swap! modal/modal-sisalto assoc :nakyvissa? true)
 
-  (let [tapahtuma1 {::lt/kohde {::kohde/kohteen-kanava {::kok/nimi "Saimaa"}
+  (let [tapahtuma1 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset []
                     ::lt/niput []}
-        tapahtuma2 {::lt/kohde {::kohde/kohteen-kanava {::kok/nimi "Saimaa"}
+        tapahtuma2 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset [{::lt-alus/suunta :ylos
