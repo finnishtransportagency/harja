@@ -82,11 +82,6 @@
                                                        (comp not empty? ::grid/virheet)
                                                        (vals %))))))])
 
-(defn varmistus-modal [sisalto footer]
-  (modal/nayta! {:otsikko "Oletko varma?"
-                 :footer footer}
-                sisalto))
-
 (defn liikennetapahtumalomake [e! {:keys [valittu-liikennetapahtuma
                                           tallennus-kaynnissa?
                                           edellisten-haku-kaynnissa?
@@ -116,13 +111,13 @@
                       [napit/poista
                        "Poista tapahtuma"
                        #(varmista-kayttajalta
-                         {:otsikko "Poista tapahtuma"
-                          :sisalto [:div "Oletko varma, että haluat poistaa koko liikennetapahtuman?"]
-                          :hyvaksy "Poista tapahtuma"
-                          :toiminto-fn (fn []
-                                         (e! (tiedot/->TallennaLiikennetapahtuma
-                                               (lomake/ilman-lomaketietoja (assoc tapahtuma ::m/poistettu? true)))))
-                          :napit [:takaisin :poista]})
+                          {:otsikko "Poista tapahtuma"
+                           :sisalto [:div "Oletko varma, että haluat poistaa koko liikennetapahtuman?"]
+                           :hyvaksy "Poista tapahtuma"
+                           :toiminto-fn (fn []
+                                          (e! (tiedot/->TallennaLiikennetapahtuma
+                                                (lomake/ilman-lomaketietoja (assoc tapahtuma ::m/poistettu? true)))))
+                           :napit [:takaisin :poista]})
                        {:ikoni (ikonit/livicon-trash)
                         :disabled (or tallennus-kaynnissa?
                                       (not (oikeudet/urakat-kanavat-liikenne))
@@ -130,15 +125,14 @@
                     (when uusi-tapahtuma?
                       [napit/yleinen-toissijainen
                        "Tyhjennä kentät"
-                       #(varmistus-modal
-                          [:div "Oletko varma, että haluat tyhjentää kaikki kentät?"]
-                          [:div
-                           [napit/takaisin "Peruuta" (fn [] (modal/piilota!))]
-                           [napit/yleinen-ensisijainen
-                            "Tyhjennä kentät"
-                            (fn [] (e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma))))
-                            {:ikoni (ikonit/refresh)
-                             :disabled tallennus-kaynnissa?}]])])])}
+                       #(varmista-kayttajalta
+                          {:otsikko "Tyhjennä kentät"
+                           :sisalto [:div "Oletko varma, että haluat tyhjentää kaikki kentät?"]
+                           :hyvaksy "Tyhjennä"
+                           :toiminto-fn (fn [] (e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma))))
+                           :napit [:takaisin :hyvaksy]})
+                       {:ikoni (ikonit/refresh)
+                        :disabled tallennus-kaynnissa?}])])}
      [(lomake/rivi
         {:otsikko "Kuittaaja"
          :nimi ::lt/kuittaaja
