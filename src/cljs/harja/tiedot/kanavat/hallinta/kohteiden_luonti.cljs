@@ -79,7 +79,7 @@
           (-> kohde
               (assoc ::kok/id (::kok/id kanava-ja-kohteet))
               (assoc ::kok/nimi (::kok/nimi kanava-ja-kohteet))
-              (assoc :rivin-teksti (kohde/fmt-kokonaisuus-ja-kohde-nimi kanava-ja-kohteet kohde))))
+              (assoc :rivin-teksti (str "FIXME"))))
         (::kok/kohteet kanava-ja-kohteet)))
     tulos))
 
