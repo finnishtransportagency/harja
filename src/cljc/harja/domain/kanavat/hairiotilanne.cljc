@@ -47,6 +47,14 @@
        ::kayttaja/sahkoposti
        ::kayttaja/puhelin}]})
 
+(def materiaalien-tiedot
+  ;; todo: tämä ilmeisesti ei toimi many-to-one suhteessa
+  #{[::materiaalit
+     #{::materiaali/id
+       ::materiaali/nimi
+       ::materiaali/maara
+       ::materiaali/pvm}]})
+
 (def perustiedot+muokkaustiedot
   #{::muokkaustiedot/muokattu
     ::vikaluokka
@@ -70,6 +78,7 @@
 (def perustiedot+kanava+kohde
   (set/union perustiedot+muokkaustiedot
              kuittaajan-tiedot
+             materiaalien-tiedot
              #{[::kohde
                 (set/union kanavan-kohde/perustiedot
                            kanavan-kohde/kohteen-kanavatiedot)]}))

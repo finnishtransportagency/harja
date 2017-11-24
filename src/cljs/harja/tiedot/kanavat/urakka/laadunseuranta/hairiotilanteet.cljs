@@ -75,6 +75,7 @@
                                         ::hairiotilanne/syy
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
+                                        ::hairiotilanne/materiaalit materiaalit
                                         ::muokkaustiedot/poistettu?])
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
