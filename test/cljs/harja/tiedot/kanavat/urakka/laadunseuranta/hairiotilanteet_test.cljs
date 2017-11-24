@@ -116,3 +116,9 @@
 
 (deftest HairiotilanteenTallentaminenEpaonnistui
   (is (false? (:tallennus-kaynnissa? (e! (tiedot/->HairiotilanteenTallentaminenEpaonnistui))))))
+
+(deftest MuokkaaMateriaaleja
+  (is (= {:valittu-hairiotilanne {:harja.domain.kanavat.hairiotilanne/materiaalit [{:materiaali 1}]}}
+         (e! (tiedot/->MuokkaaMateriaaleja [{:materiaali 1}]) {:valittu-hairiotilanne {}})))
+  (is (= {}
+         (e! (tiedot/->MuokkaaMateriaaleja [{:materiaali 1}])))))
