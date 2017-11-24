@@ -7,7 +7,7 @@ VALUES (
    WHERE nimi = 'Saimaan kanava'),
   (SELECT id
    FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-07-14',
+   WHERE nimi = 'Saimaan huollon pääsopimus'), NOW() - INTERVAL '1 minutes',
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
@@ -36,7 +36,7 @@ VALUES (
    WHERE nimi = 'Saimaan kanava'),
   (SELECT id
    FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-01-15',
+   WHERE nimi = 'Saimaan huollon pääsopimus'), NOW() - INTERVAL '20 minutes',
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
@@ -58,7 +58,7 @@ VALUES (
    WHERE nimi = 'Saimaan kanava'),
   (SELECT id
    FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-07-15',
+   WHERE nimi = 'Saimaan huollon pääsopimus'), NOW() - INTERVAL '5 minutes',
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
