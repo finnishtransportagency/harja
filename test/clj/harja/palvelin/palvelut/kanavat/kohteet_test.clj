@@ -77,10 +77,10 @@
 
 (deftest kanavien-haku
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-kanavat-ja-kohteet
+                                :hae-kohdekokonaisuudet-ja-kohteet
                                 +kayttaja-jvh+)]
 
-    (is (s/valid? ::kok/hae-kanavat-ja-kohteet-vastaus vastaus))
+    (is (s/valid? ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus vastaus))
 
     (is (jollain-kanavalla-nimi? vastaus))
     (is (pakolliset-kentat? vastaus))))
@@ -95,11 +95,11 @@
                      ::kohde/kohdekokonaisuus-id kohdekokonaisuus-id
                      ::m/poistettu? false}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :lisaa-kanavalle-kohteita
+                                    :lisaa-kohdekokonaisuudelle-kohteita
                                     +kayttaja-jvh+
                                     params)]
-        (is (s/valid? ::kok/lisaa-kanavalle-kohteita-kysely params))
-        (is (s/valid? ::kok/lisaa-kanavalle-kohteita-vastaus vastaus))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely params))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus vastaus))
 
         (is (jollain-kanavalla-nimi? vastaus))
         (is (pakolliset-kentat? vastaus))
@@ -122,11 +122,11 @@
                      ::kohde/kohdekokonaisuus-id kohdekokonaisuus-id
                      ::m/poistettu? true}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :lisaa-kanavalle-kohteita
+                                    :lisaa-kohdekokonaisuudelle-kohteita
                                     +kayttaja-jvh+
                                     params)]
-        (is (s/valid? ::kok/lisaa-kanavalle-kohteita-kysely params))
-        (is (s/valid? ::kok/lisaa-kanavalle-kohteita-vastaus vastaus))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely params))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus vastaus))
 
 
         (is (pakolliset-kentat? vastaus))
@@ -140,11 +140,11 @@
                      ::kohde/id -1
                      ::m/poistettu? false}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :lisaa-kanavalle-kohteita
+                                    :lisaa-kohdekokonaisuudelle-kohteita
                                     +kayttaja-jvh+
                                     params)]
-        (is (s/valid? ::kok/lisaa-kanavalle-kohteita-kysely params))
-        (is (s/valid? ::kok/lisaa-kanavalle-kohteita-vastaus vastaus))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely params))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus vastaus))
 
         (is (jollain-kanavalla-nimi? vastaus))
         (is (pakolliset-kentat? vastaus))
