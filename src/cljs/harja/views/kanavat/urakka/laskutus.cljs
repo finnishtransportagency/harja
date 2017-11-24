@@ -3,7 +3,6 @@
             [tuck.core :refer [tuck]]
 
             [harja.loki :refer [tarkkaile! log]]
-            [harja.id :refer [id-olemassa?]]
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja] :as yleiset]
