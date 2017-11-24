@@ -189,12 +189,13 @@
        :nimi ::hairiotilanne/paikallinen-kaytto?
        :tyyppi :checkbox
        ::lomake/col-luokka luokka}
-      {:otsikko "Varaosat"
-       :nimi :varaosat
-       :tyyppi :komponentti
-       :palstoja 2
-       :uusi-rivi? true
-       :komponentti (fn [_] [varaosataulukko e! app])})))
+      ;; todo: toteutetaan myöhemmin
+      #_{:otsikko "Varaosat"
+         :nimi :varaosat
+         :tyyppi :komponentti
+         :palstoja 2
+         :uusi-rivi? true
+         :komponentti (fn [_] [varaosataulukko e! app])})))
 
 (defn hairiolomakkeen-kentat [e! app kohteet]
   [{:otsikko "Aika"
