@@ -68,8 +68,9 @@ CREATE TABLE kan_kohteenosa(
 );
 
 ALTER TABLE kan_hairio
-    ADD COLUMN "kohde-id" INTEGER REFERENCES kan_kohde(id),
-    ADD COLUMN "kohteenosa-id" INTEGER REFERENCES kan_kohteenosa(id);
+  ADD COLUMN "kohde-id" INTEGER REFERENCES kan_kohde (id),
+  ADD COLUMN "kohteenosa-id" INTEGER REFERENCES kan_kohteenosa (id),
+  ADD COLUMN poistaja INTEGER REFERENCES kayttaja (id);
 
 ALTER TABLE kan_toimenpide
   ADD COLUMN "kohde-id" INTEGER REFERENCES kan_kohde(id),
