@@ -45,7 +45,6 @@
     (let [polku (if (not tiedostourl) nil (.substring (.getSchemeSpecificPart (URI. tiedostourl)) 2))
           tiedosto (if (not polku) nil (io/file polku))
           tiedoston-muutospvm (if (not tiedosto) nil (coerce/to-sql-time (Timestamp. (.lastModified tiedosto))))]
-      (log/debug (format "Tarvitaanko paikallinen paivitys aineistolle: %s" paivitystunnus))
       (if (and
             (not (nil? tiedosto))
             (.exists tiedosto)
@@ -54,7 +53,7 @@
           (log/debug (format "Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
           true)
         (do
-          (log/debug (format "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
+          ;; (log/debug (format "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
           false)))
     (catch Exception e
       (log/warn e (format "Tarkistettaessa paikallista ajoa geometriapäivitykselle: %s tapahtui poikkeus." paivitystunnus))

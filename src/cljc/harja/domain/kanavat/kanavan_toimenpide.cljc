@@ -3,6 +3,8 @@
     [clojure.spec.alpha :as s]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.kohteenosa :as osa]
+    [harja.domain.kanavat.hinta :as hinta]
+    [harja.domain.kanavat.tyo :as tyo]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -24,9 +26,11 @@
    harja.domain.muokkaustiedot/poistettu?-sarake
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
+    "muu_toimenpide" ::muu-toimenpide
+    ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
+    ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
     "toimenpideinstanssi" ::toimenpideinstanssi-id
     "muu_toimenpide" ::muu-toimenpide
-
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kohde/kohde
                                 :harja.domain.kanavat.kohde/id)
@@ -49,6 +53,9 @@
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
 
+(def viittaus-idt #{::urakka-id ::sopimus-id ::kohde-id ::toimenpidekoodi-id ::kuittaaja-id})
+
+
 (def muokkaustiedot
   #{::muokkaustiedot/luoja-id
     ::muokkaustiedot/luotu
@@ -65,6 +72,14 @@
 
 (def huoltokohteen-tiedot
   #{[::huoltokohde huoltokohde/perustiedot]})
+
+(def tyotiedot
+  #{[::tyot
+     tyo/perustiedot]})
+
+(def hintatiedot
+  #{[::hinnat
+     hinta/perustiedot]})
 
 (def toimenpiteen-tiedot
   #{[::toimenpidekoodi toimenpidekoodi/perustiedot]})
@@ -89,7 +104,9 @@
              kohteenosan-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
-             kuittaajan-tiedot))
+             kuittaajan-tiedot
+             hintatiedot
+             tyotiedot))
 
 (s/def ::hae-kanavatoimenpiteet-kysely
   (s/keys :req [::urakka-id
@@ -101,6 +118,16 @@
 
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))
+
+(s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-kysely
+  (s/keys
+   :req [::urakka-id
+         ::id
+         :harja.domain.kanavat.hinta/tallennettavat-hinnat
+         :harja.domain.kanavat.tyo/tallennettavat-tyot]))
+
+(s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-vastaus
+  ::kanava-toimenpide)
 
 (s/def ::tallenna-kanavatoimenpide-kutsu
   (s/keys :req [::hae-kanavatoimenpiteet-kysely

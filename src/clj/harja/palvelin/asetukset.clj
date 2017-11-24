@@ -177,7 +177,7 @@
                 :salasana ""}
 
    :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
-   :geometriapaivitykset {:tuontivali 1}
+   :geometriapaivitykset {:tuontivali 100}
    })
 
 (defn yhdista-asetukset [oletukset asetukset]
