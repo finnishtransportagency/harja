@@ -312,7 +312,8 @@
       :fmt pvm/pvm-aika-opt}
      {:otsikko "Kohde"
       :leveys 5
-      :nimi :kohteen-nimi}
+      :nimi ::lt/kohde
+      :fmt kohde/fmt-kohteen-nimi}
      {:otsikko "Tyyppi"
       :leveys 2
       :nimi :toimenpide
