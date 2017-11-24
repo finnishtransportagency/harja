@@ -131,8 +131,8 @@
                    :harja.domain.vesivaylat.materiaali/maara-nyt 123
                    :harja.domain.vesivaylat.materiaali/halytysraja 666
                    :harja.domain.vesivaylat.materiaali/alkuperainen-maara 123
-                   :harja.domain.vesivaylat.materiaali/nimi "Hiturinteri"}
-         :maara 666}}
+                   :harja.domain.vesivaylat.materiaali/nimi "Varaosa"}
+         :maara 123}}
      #(log "--->>> Todo: tee varaosien muokkaus"))])
 
 (defn odottavan-liikenteen-kentat []
@@ -229,29 +229,35 @@
    {:otsikko "Kuittaaja"
     :nimi ::hairiotilanne/kuittaaja
     :tyyppi :string
+    :uusi-rivi? true
     :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
     :muokattava? (constantly false)}])
 
 (defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
-                                            tallennus-kaynnissa?]}]
+                                            tallennus-kaynnissa?
+                                            valinnat]}]
   (fn [hairiotilanne]
     ;; todo: tarkista vielä oikeudet
-    [:div
-     [napit/tallenna
-      "Tallenna"
-      #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
-      ;; todo: jostain syystä ennen ensimmäistä muokkausta tallennus on sallittu, vaikka ei pitäisi olla
-      {:tallennus-kaynnissa? tallennus-kaynnissa?
-       :disabled (not (lomake/voi-tallentaa? valittu-hairiotilanne))}]
+    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-kokonaishintaiset (get-in valinnat [:urakka id]))]
+      [:div
+       [napit/tallenna
+        "Tallenna"
+        #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+        ;; todo: jostain syystä ennen ensimmäistä muokkausta tallennus on sallittu, vaikka ei pitäisi olla
+        {:tallennus-kaynnissa? tallennus-kaynnissa?
+         :disabled (or
+                     (not oikeus?)
+                     (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
 
-     (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
-       [napit/poista
-        "Poista"
-        #(varmista-kayttajalta/varmista-kayttajalta
-           {:otsikko "Häiriötilanteen poistaminen"
-            :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
-            :hyvaksy "Poista"
-            :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))})])]))
+       (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
+         [napit/poista
+          "Poista"
+          #(varmista-kayttajalta/varmista-kayttajalta
+             {:otsikko "Häiriötilanteen poistaminen"
+              :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
+              :hyvaksy "Poista"
+              :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
+              :disabled (not oikeus?)})])])))
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne
                                kohteet]
