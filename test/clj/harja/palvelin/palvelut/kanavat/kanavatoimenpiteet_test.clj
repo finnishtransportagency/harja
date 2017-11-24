@@ -115,8 +115,30 @@
 
 (deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
   (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        toimenpiteiden-kentta (fn [toimenpiteet kentta]
+                                ())
+        kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
+                                                         (apply concat
+                                                                (q "SELECT tk4.id
+                                                                    FROM toimenpidekoodi tk4
+                                                                     JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                                                    WHERE tk3.koodi='24104' AND
+                                                                          'kokonaishintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
+        muutoshintaisten-toimenpiteiden-tehtavat (into #{}
+                                                       (apply concat
+                                                              (q "SELECT tk4.id
+                                                                  FROM toimenpidekoodi tk4
+                                                                   JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                                                  WHERE tk3.koodi='24104' AND
+                                                                        'muutoshintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
+        ei-yksiloity-tehtava (into #{}
+                                   (first (q "SELECT tk4.id
+                                              FROM toimenpidekoodi tk4
+                                               JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                              WHERE tk4.nimi='Ei yksilöity' AND
+                                                    tk3.koodi='24104';")))
         tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
-                                               (when (= %1 (second toimenpide))
+                                               (when (= %1 (last toimenpide))
                                                  (first toimenpide)))
                                              %2))
         kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
@@ -126,22 +148,34 @@
                     ::kanavan-toimenpide/urakka-id urakka-id
                     ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                           :siirra-kanavatoimenpiteet
-                           +kayttaja-jvh+
-                           parametrit)
-        paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)]
+                          :siirra-kanavatoimenpiteet
+                          +kayttaja-jvh+
+                          parametrit)
+        paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        ei-kokonaishintaisia-toimenpiteita? (empty? (transduce
+                                                      (comp (map #(nil? ((set/union muutoshintaisten-toimenpiteiden-tehtavat
+                                                                                    ei-yksiloity-tehtava)
+                                                                          (second %))))
+                                                            (filter true?))
+                                                      conj paivitetyt-toimenpiteet))]
     (is (= (tyypin-toimenpiteet "muutos-lisatyo" paivitetyt-toimenpiteet)
            (set/union kokonaishintaisten-toimenpiteiden-idt
                       muutos-ja-lisatyo-toimenpiteiden-idt)))
+    (is ei-kokonaishintaisia-toimenpiteita?)
     (let [uudet-parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
                             ::kanavan-toimenpide/urakka-id urakka-id
                             ::kanavan-toimenpide/tyyppi :kokonaishintainen}
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                             :siirra-kanavatoimenpiteet
-                             +kayttaja-jvh+
-                             uudet-parametrit)
-          paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)]
-      (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet))))))
+                            :siirra-kanavatoimenpiteet
+                            +kayttaja-jvh+
+                            uudet-parametrit)
+          paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+          ei-muutoshintaisia-toimenpiteita? (empty? (transduce
+                                                      (comp (map #(nil? (kokonaishintaisten-toimenpiteiden-tehtavat (second %))))
+                                                            (filter true?))
+                                                      conj paivitetyt-toimenpiteet))]
+      (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet)))
+      (is ei-muutoshintaisia-toimenpiteita?))))
 
 (deftest toimenpiteiden-siirtaminen-ilman-oikeutta-ei-toimi
   (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)

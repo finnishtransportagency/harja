@@ -365,7 +365,7 @@
                    WHERE  urakoitsija = " urakoitsija-id ";"))))
 
 (defn hae-saimaan-kanavaurakan-toimenpiteet []
-  (q (str "SELECT id, tyyppi
+  (q (str "SELECT id, toimenpidekoodi, tyyppi
            FROM kan_toimenpide
            WHERE urakka=" (hae-saimaan-kanavaurakan-id))))
 
