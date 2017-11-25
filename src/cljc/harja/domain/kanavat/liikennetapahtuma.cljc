@@ -111,15 +111,6 @@
                                           (s/keys :req
                                                   [::id
                                                    ::aika
-                                                   (or
-                                                     (and
-                                                       ::sulku-toimenpide
-                                                       ::sulku-palvelumuoto
-                                                       ::sulku-lkm)
-                                                     (and
-                                                       ::silta-avaus
-                                                       ::silta-palvelumuoto
-                                                       ::silta-lkm))
                                                    ::vesipinta-ylaraja
                                                    ::vesipinta-alaraja
                                                    ::sopimus
