@@ -1,4 +1,7 @@
 -- Lisätään sulkutapahtumia
+BEGIN;
+SET CONSTRAINTS ALL DEFERRED;
+
 INSERT INTO kan_liikennetapahtuma ("urakka-id", "sopimus-id", "kohde-id", aika, lisatieto, "vesipinta-alaraja", "vesipinta-ylaraja", "kuittaaja-id", luoja, poistettu)
 VALUES
   ((SELECT id FROM urakka WHERE nimi = 'Saimaan kanava'), (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon pääsopimus'),
@@ -119,3 +122,4 @@ INSERT INTO kan_liikennetapahtuma_osa ("liikennetapahtuma-id", "kohde-id", "koht
        'kauko',
        1,
        (SELECT id FROM kayttaja WHERE kayttajanimi='tero'));
+COMMIT;
