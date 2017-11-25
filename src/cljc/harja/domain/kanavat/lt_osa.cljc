@@ -18,7 +18,7 @@
 
 (define-tables
   ["liikennetapahtuma_toimenpidetyyppi" ::lt-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
-  ["liikennetapahtuma_palvelumuoto" ::lt-palvelumuoto (specql.transform/transform (specql.transform/to-keyword))]
+  ["liikennetapahtuma_palvelumuoto" ::kohteenosa/osan-palvelumuoto (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma_osa" ::liikennetapahtuman-osa
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
