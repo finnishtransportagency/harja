@@ -14,14 +14,13 @@
     [harja.domain.urakka :as ur]
     [harja.domain.sopimus :as sop]
     [harja.domain.kayttaja :as kayttaja]
-    [harja.domain.kanavat.kanavan-kohde :as kohde]
-    [harja.domain.kanavat.lt-alus :as lt-alus])
+    [harja.domain.kanavat.kohde :as kohde]
+    [harja.domain.kanavat.lt-alus :as lt-alus]
+    [harja.domain.kanavat.lt-osa :as lt-osa])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
 (define-tables
-  ["sulutus_toimenpidetyyppi" ::lt-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
-  ["liikennetapahtuma_palvelumuoto" ::lt-palvelumuoto (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma" ::liikennetapahtuma
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
@@ -33,11 +32,14 @@
                                   :harja.domain.sopimus/sopimus
                                   :harja.domain.sopimus/id)
     ::kohde (specql.rel/has-one ::kohde-id
-                                :harja.domain.kanavat.kanavan-kohde/kohde
-                                :harja.domain.kanavat.kanavan-kohde/id)
+                                :harja.domain.kanavat.kohde/kohde
+                                :harja.domain.kanavat.kohde/id)
     ::alukset (specql.rel/has-many ::id
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuman-alus
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuma-id)
+    ::osat (specql.rel/has-many ::id
+                                :harja.domain.kanavat.lt-osa/liikennetapahtuman-osa
+                                :harja.domain.kanavat.lt-osa/liikennetapahtuma-id)
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
@@ -45,12 +47,6 @@
 (def perustiedot
   #{::id
     ::aika
-    ::sulku-toimenpide
-    ::sulku-palvelumuoto
-    ::sulku-lkm
-    ::silta-avaus
-    ::silta-palvelumuoto
-    ::silta-lkm
     ::lisatieto
     ::vesipinta-ylaraja
     ::vesipinta-alaraja})
@@ -59,10 +55,13 @@
   #{[::kuittaaja kayttaja/perustiedot]})
 
 (def kohteen-tiedot
-  #{[::kohde kohde/perustiedot-ja-kanava]})
+  #{[::kohde kohde/perustiedot+osat]})
 
 (def alusten-tiedot
   #{[::alukset (set/union lt-alus/perustiedot lt-alus/metatiedot)]})
+
+(def osien-tiedot
+  #{[::osat lt-osa/perustiedot]})
 
 (def sopimuksen-tiedot
   #{[::sopimus sop/perustiedot]})
@@ -112,15 +111,6 @@
                                           (s/keys :req
                                                   [::id
                                                    ::aika
-                                                   (or
-                                                     (and
-                                                       ::sulku-toimenpide
-                                                       ::sulku-palvelumuoto
-                                                       ::sulku-lkm)
-                                                     (and
-                                                       ::silta-avaus
-                                                       ::silta-palvelumuoto
-                                                       ::silta-lkm))
                                                    ::vesipinta-ylaraja
                                                    ::vesipinta-alaraja
                                                    ::sopimus

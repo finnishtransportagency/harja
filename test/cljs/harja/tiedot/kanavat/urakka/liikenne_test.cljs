@@ -4,9 +4,9 @@
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
 
             [harja.domain.kanavat.liikennetapahtuma :as lt]
-            [harja.domain.kanavat.kanava :as kanava]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.sopimus :as sop]
             [harja.domain.urakka :as ur]
             [harja.domain.kayttaja :as kayttaja]
@@ -81,7 +81,7 @@
 
 (deftest tapahtumarivit
   (testing "Jokaisesta nipusta ja aluksesta syntyy oma rivi"
-    (let [tapahtuma {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+    (let [tapahtuma {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                  ::kohde/nimi "Iso mutka"
                                  ::kohde/tyyppi :silta}
                      ::lt/alukset [{::lt-alus/suunta :ylos
@@ -95,7 +95,7 @@
              (tiedot/tapahtumarivit tapahtuma)))))
 
   (testing "Jos ei aluksia tai nippuja, syntyy silti yksi rivi taulukossa"
-    (let [tapahtuma {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+    (let [tapahtuma {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                  ::kohde/nimi "Iso mutka"
                                  ::kohde/tyyppi :silta}
                      ::lt/alukset []
@@ -150,12 +150,12 @@
                   :valinnat {::ur/id 1 ::sop/id nil}}))))))
 
 (deftest tapahtumat-haettu
-  (let [tapahtuma1 {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+  (let [tapahtuma1 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset []
                     ::lt/niput []}
-        tapahtuma2 {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+        tapahtuma2 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset [{::lt-alus/suunta :ylos
@@ -309,12 +309,12 @@
 (deftest tallennus-valmis
   (swap! modal/modal-sisalto assoc :nakyvissa? true)
 
-  (let [tapahtuma1 {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+  (let [tapahtuma1 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset []
                     ::lt/niput []}
-        tapahtuma2 {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+        tapahtuma2 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset [{::lt-alus/suunta :ylos

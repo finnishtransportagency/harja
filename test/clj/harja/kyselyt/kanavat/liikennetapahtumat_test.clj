@@ -5,8 +5,7 @@
 
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.kanavat.kanava :as kanava]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]))
 

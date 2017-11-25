@@ -14,7 +14,7 @@
             [harja.ui.debug :refer [debug]]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
-            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.materiaali :as materiaali]
 
@@ -91,7 +91,7 @@
     :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne %))}
    [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt kanavan-kohde/fmt-kohteen-kanava-nimi :leveys 10}
+     :fmt kohde/fmt-kohteen-nimi :leveys 10}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
      :fmt hairio/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
@@ -204,7 +204,7 @@
     :nimi ::hairiotilanne/kohde
     :tyyppi :valinta
     :pakollinen? true
-    :valinta-nayta #(or (::kanavan-kohde/nimi %) "- Valitse kohde -")
+    :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
     :valinnat kohteet}
    {:otsikko "Vika"
     :nimi ::hairiotilanne/vikaluokka

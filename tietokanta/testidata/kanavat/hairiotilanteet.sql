@@ -1,4 +1,4 @@
-INSERT INTO kan_hairio (urakka, sopimus, pvm, kohde, vikaluokka, syy, odotusaika_h, ammattiliikenne_lkm,
+INSERT INTO kan_hairio (urakka, sopimus, pvm, "kohde-id", "kohteenosa-id", vikaluokka, syy, odotusaika_h, ammattiliikenne_lkm,
                         huviliikenne_lkm, korjaustoimenpide, korjausaika_h, korjauksen_tila, paikallinen_kaytto,
                         luoja, luotu, kuittaaja)
 VALUES (
@@ -7,11 +7,12 @@ VALUES (
    WHERE nimi = 'Saimaan kanava'),
   (SELECT id
    FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-07-14',
+   WHERE nimi = 'Saimaan huollon pääsopimus'), NOW() - INTERVAL '1 minutes',
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
-         'Taipaleen sulku ja silta'),
+         'Soskua'),
+  NULL,
   'sahkotekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Jotain meni vikaan', 60, 1, 2,
   'Vika korjattiin', 100, 'valmis' :: KAN_HAIRIO_KORJAUKSEN_TILA,
   TRUE,
@@ -23,7 +24,7 @@ VALUES (
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'));
 
-INSERT INTO kan_hairio (urakka, sopimus, pvm, kohde, vikaluokka, syy, odotusaika_h, ammattiliikenne_lkm,
+INSERT INTO kan_hairio (urakka, sopimus, pvm, "kohde-id", "kohteenosa-id", vikaluokka, syy, odotusaika_h, ammattiliikenne_lkm,
                         huviliikenne_lkm, korjaustoimenpide, korjausaika_h, korjauksen_tila, paikallinen_kaytto,
                         luoja, luotu, kuittaaja)
 VALUES (
@@ -32,11 +33,12 @@ VALUES (
    WHERE nimi = 'Saimaan kanava'),
   (SELECT id
    FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-01-15',
+   WHERE nimi = 'Saimaan huollon pääsopimus'), NOW() - INTERVAL '20 minutes',
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
-         'Tikkalansaaren avattava ratasilta'),
+         'Pälli'),
+  NULL,
   'sahkotekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Edellinen korjaus tehtiin huonosti, korjattu nyt uudestaan.', 70, 5, 6,
   'Vika korjattiin', 20, 'valmis' :: KAN_HAIRIO_KORJAUKSEN_TILA,
   TRUE,
@@ -48,7 +50,7 @@ VALUES (
    FROM kayttaja
    WHERE kayttajanimi = 'jvh'));
 
-INSERT INTO kan_hairio (urakka, sopimus, pvm, kohde, vikaluokka, syy, korjauksen_tila,
+INSERT INTO kan_hairio (urakka, sopimus, pvm, "kohde-id", "kohteenosa-id", vikaluokka, syy, korjauksen_tila,
                         paikallinen_kaytto, luoja, luotu, kuittaaja)
 VALUES (
   (SELECT id
@@ -56,11 +58,12 @@ VALUES (
    WHERE nimi = 'Saimaan kanava'),
   (SELECT id
    FROM sopimus
-   WHERE nimi = 'Saimaan huollon pääsopimus'), '2017-07-15',
+   WHERE nimi = 'Saimaan huollon pääsopimus'), NOW() - INTERVAL '5 minutes',
   (SELECT id
    FROM kan_kohde
    WHERE nimi =
-         'Taipaleen sulku ja silta'),
+         'Soskua'),
+  NULL,
   'konetekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Syy ei tiedossa', 'kesken' :: KAN_HAIRIO_KORJAUKSEN_TILA,
   FALSE,
   (SELECT id

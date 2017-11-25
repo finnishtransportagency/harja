@@ -1,14 +1,24 @@
 (ns harja.kyselyt.kanavat.kanavan-hairiotilanne
   (:require [specql.core :refer [fetch insert! update!]]
-            [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [jeesql.core :refer [defqueries]]
             [specql.op :as op]
             [harja.pvm :as pvm]
-            [harja.id :as id]))
+            [harja.id :as id]
+
+            [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [clojure.set :as set]))
 
 (defn hae-kanavatoimenpiteet [db hakuehdot]
-  (fetch db ::hairiotilanne/hairiotilanne hairiotilanne/perustiedot+kanava+kohde hakuehdot))
+  (fetch db
+         ::hairiotilanne/hairiotilanne
+         (set/union
+           hairiotilanne/perustiedot
+           hairiotilanne/viittaus-idt
+           hairiotilanne/muokkaustiedot
+           hairiotilanne/kuittaajan-tiedot
+           hairiotilanne/kohteen-tiedot)
+         hakuehdot))
 
 (defn hae-sopimuksen-hairiotilanteet-aikavalilta [db hakuehdot]
   (let [urakka-id (::hairiotilanne/urakka-id hakuehdot)

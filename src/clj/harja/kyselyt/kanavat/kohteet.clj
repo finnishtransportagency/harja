@@ -1,4 +1,4 @@
-(ns harja.kyselyt.kanavat.kanavat
+(ns harja.kyselyt.kanavat.kohteet
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
             [clojure.future :refer :all]
@@ -15,8 +15,9 @@
 
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]))
 
 ;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
@@ -47,11 +48,11 @@
                                                 (when urakka-id
                                                   {::kohde/urakka-id urakka-id}))))))
 
-(defn- hae-kanavat-ja-kohteet* [kanavat kohteen-haku]
+(defn- hae-kokonaisuudet-ja-kohteet* [kokonaisuudet kohteen-haku]
   (into []
         (comp
-          (map #(update % ::kanava/kohteet kohteen-haku)))
-        kanavat))
+          (map #(update % ::kok/kohteet kohteen-haku)))
+        kokonaisuudet))
 
 (defn hae-kohteen-urakat [db kohde]
   (specql/fetch db
@@ -60,15 +61,15 @@
                 {::kohde/kohde-id kohde
                  ::m/poistettu? false}))
 
-(defn hae-kanavat-ja-kohteet [db]
-  (hae-kanavat-ja-kohteet*
+(defn hae-kokonaisuudet-ja-kohteet [db]
+  (hae-kokonaisuudet-ja-kohteet*
     (specql/fetch db
-                  ::kanava/kanava
+                  ::kok/kohdekokonaisuus
                   (set/union
-                    kanava/perustiedot
-                    kanava/kohteet)
-                  {::kanava/kohteet (op/or {::m/poistettu? op/null?}
-                                           {::m/poistettu? false})})
+                    kok/perustiedot
+                    kok/kohteet)
+                  {::kok/kohteet (op/or {::m/poistettu? op/null?}
+                                        {::m/poistettu? false})})
     (partial hae-kohteiden-urakkatiedot db)))
 
 (defn hae-urakan-kohteet [db urakka-id]
@@ -76,34 +77,64 @@
     (specql/fetch db
                   ::kohde/kohde
                   (set/union
-                    kohde/perustiedot-ja-kanava)
+                    kohde/perustiedot-ja-kohdekokonaisuus)
                   {::m/poistettu? false})
     (hae-kohteiden-urakkatiedot db urakka-id)
     (remove (comp empty? ::kohde/urakat))))
 
-(defn lisaa-kanavalle-kohteet! [db user kohteet]
+(defn lisaa-kohteelle-osa! [db user osa kohde]
+  (if (id-olemassa? (::osa/id osa))
+    (specql/update!
+      db
+      ::osa/kohteenosa
+      (merge
+        (if (::m/poistettu? kohde)
+          {::m/poistaja-id (:id user)
+           ::m/muokattu (pvm/nyt)}
+
+          {::m/muokkaaja-id (:id user)
+           ::m/muokattu (pvm/nyt)})
+        osa)
+      {::osa/id (::osa/id kohde)
+       ::osa/kohde-id (::kohde/id kohde)})
+
+    (specql/insert!
+      db
+      ::osa/kohteenosa
+      (merge
+        {::m/luoja-id (:id user)}
+        (-> osa
+            (dissoc ::osa/id)
+            (assoc ::osa/kohde-id (::kohde/id kohde)))))))
+
+(defn lisaa-kokonaisuudelle-kohteet! [db user kohteet]
   (jdbc/with-db-transaction [db db]
     (doseq [kohde kohteet]
-      (if (id-olemassa? (::kohde/id kohde))
-        (specql/update!
-          db
-          ::kohde/kohde
-          (merge
-            (if (::m/poistettu? kohde)
-              {::m/poistaja-id (:id user)
-               ::m/muokattu (pvm/nyt)}
+      (let [osat (::kohde/kohteenosat kohde)
+            kohde (if (id-olemassa? (::kohde/id kohde))
+                    (do
+                      (specql/update!
+                        db
+                        ::kohde/kohde
+                        (merge
+                          (if (::m/poistettu? kohde)
+                            {::m/poistaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)}
 
-              {::m/muokkaaja-id (:id user)
-               ::m/muokattu (pvm/nyt)})
-            kohde)
-          {::kohde/id (::kohde/id kohde)})
+                            {::m/muokkaaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)})
+                          (dissoc kohde ::kohde/kohteenosat))
+                        {::kohde/id (::kohde/id kohde)})
+                      kohde)
 
-        (specql/insert!
-          db
-          ::kohde/kohde
-          (merge
-            {::m/luoja-id (:id user)}
-            (dissoc kohde ::kohde/id)))))))
+                    (specql/insert!
+                      db
+                      ::kohde/kohde
+                      (merge
+                        {::m/luoja-id (:id user)}
+                        (dissoc kohde ::kohde/id ::kohde/kohteenosat))))]
+        (doseq [osa osat]
+          (lisaa-kohteelle-osa! db user osa kohde))))))
 
 (defn liita-kohde-urakkaan! [db user kohde-id urakka-id poistettu?]
   (jdbc/with-db-transaction [db db]
