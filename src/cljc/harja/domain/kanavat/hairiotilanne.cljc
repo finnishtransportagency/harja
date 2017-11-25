@@ -1,10 +1,8 @@
 (ns harja.domain.kanavat.hairiotilanne
   (:require
-    [clojure.string :as str]
     [clojure.spec.alpha :as s]
-    [specql.transform :as xf]
     [clojure.set :as set]
-    [specql.rel :as rel]
+
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
@@ -13,7 +11,9 @@
     [harja.domain.muokkaustiedot :as m]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.kohteenosa :as kohteenosa]
-    [harja.domain.urakka :as ur])
+    [harja.domain.urakka :as ur]
+    [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.muokkaustiedot :as muokkaustiedot])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -28,7 +28,11 @@
     "paikallinen_kaytto" ::paikallinen-kaytto?
     "korjausaika_h" ::korjausaika-h
     "odotusaika_h" ::odotusaika-h
-    "korjauksen_tila" ::korjauksen-tila}
+    "korjauksen_tila" ::korjauksen-tila
+    "kuittaaja" ::kuittaaja-id
+    ::kuittaaja (specql.rel/has-one ::kuittaaja-id
+                                    :harja.domain.kayttaja/kayttaja
+                                    :harja.domain.kayttaja/id)}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
                                 ::kohde/kohde
@@ -43,16 +47,26 @@
     ::korjaustoimenpide
     ::paikallinen-kaytto?
     ::pvm
-    ::urakka-id
+    ::korjausaika-h
+    ::odotusaika-h
+    ::syy
     ::korjausaika-h
     ::odotusaika-h
     ::syy
     ::id
     ::korjauksen-tila
-    ::sopimus-id
     ::ammattiliikenne-lkm})
 
-(def muokkaustiedot m/muokkauskentat)
+(def viittaus-idt
+  #{::urakka-id
+    ::sopimus-id
+    ::kohde-id
+    ::kohteenosa-id})
+
+(def muokkaustiedot muokkaustiedot/muokkauskentat)
+
+(def kuittaajan-tiedot
+  #{[::kuittaaja kayttaja/perustiedot]})
 
 (def kohteenosan-tiedot #{[::kohteenosa kohteenosa/perustiedot]})
 
@@ -72,6 +86,10 @@
                                                      ::haku-korjauksen-tila
                                                      ::haku-paikallinen-kaytto?]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
+
+(s/def ::tallenna-hairiotilanne-kutsu
+  (s/keys :req [::hae-hairiotilanteet-kysely
+                ::hairiotilanne]))
 
 ;; Apurit
 
