@@ -12,13 +12,7 @@ VALUES (
    FROM kan_kohde
    WHERE nimi =
          'Soskua'),
-  (SELECT id
-  FROM kan_kohteenosa
-  WHERE tyyppi = 'sulku'
-  AND "kohde-id" = (SELECT id
-                    FROM kan_kohde
-                    WHERE nimi =
-                          'Soskua')),
+  NULL,
   'sahkotekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Jotain meni vikaan', 60, 1, 2,
   'Vika korjattiin', 100, 'valmis' :: KAN_HAIRIO_KORJAUKSEN_TILA,
   TRUE,
@@ -69,13 +63,7 @@ VALUES (
    FROM kan_kohde
    WHERE nimi =
          'Soskua'),
-  (SELECT id
-   FROM kan_kohteenosa
-   WHERE tyyppi = 'silta'
-         AND "kohde-id" = (SELECT id
-                           FROM kan_kohde
-                           WHERE nimi =
-                                 'Soskua')),
+  NULL,
   'konetekninen_vika' :: KAN_HAIRIO_VIKALUOKKA, 'Syy ei tiedossa', 'kesken' :: KAN_HAIRIO_KORJAUKSEN_TILA,
   FALSE,
   (SELECT id
