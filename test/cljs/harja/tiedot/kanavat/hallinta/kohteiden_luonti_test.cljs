@@ -13,18 +13,18 @@
            ::kohde/tyyppi :sulku
            ::kok/id 1
            ::kok/nimi "Foobar"
-           :rivin-teksti "Foobar, sulku"}
+           :rivin-teksti "FIXME"}
           {::kohde/id 2
            ::kohde/tyyppi :silta
            ::kohde/nimi "komea silta"
            ::kok/id 1
            ::kok/nimi "Foobar"
-           :rivin-teksti "Foobar, komea silta, silta"}
+           :rivin-teksti "FIXME"}
           {::kohde/id 3
            ::kohde/tyyppi :sulku
            ::kok/id 2
            ::kok/nimi "Bazbar"
-           :rivin-teksti "Bazbar, sulku"}]
+           :rivin-teksti "FIXME"}]
          (tiedot/kohderivit
            [{::kok/id 1
              ::kok/nimi "Foobar"
@@ -268,18 +268,18 @@
                         ::kohde/tyyppi :sulku
                         ::kok/id 1
                         ::kok/nimi "Foobar"
-                        :rivin-teksti "Foobar, sulku"}
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 2
                         ::kohde/tyyppi :silta
                         ::kohde/nimi "komea silta"
                         ::kok/id 1
                         ::kok/nimi "Foobar"
-                        :rivin-teksti "Foobar, komea silta, silta"}
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 3
                         ::kohde/tyyppi :sulku
                         ::kok/id 2
                         ::kok/nimi "Bazbar"
-                        :rivin-teksti "Bazbar, sulku"}]}
+                        :rivin-teksti "FIXME"}]}
          (e! (tiedot/->KohteetHaettu [{::kok/id 1
                                        ::kok/nimi "Foobar"
                                        ::kok/kohteet [{::kohde/id 1
@@ -343,18 +343,18 @@
                         ::kohde/tyyppi :sulku
                         ::kok/id 1
                         ::kok/nimi "Foobar"
-                        :rivin-teksti "Foobar, sulku"}
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 2
                         ::kohde/tyyppi :silta
                         ::kohde/nimi "komea silta"
                         ::kok/id 1
                         ::kok/nimi "Foobar"
-                        :rivin-teksti "Foobar, komea silta, silta"}
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 3
                         ::kohde/tyyppi :sulku
                         ::kok/id 2
                         ::kok/nimi "Bazbar"
-                        :rivin-teksti "Bazbar, sulku"}]
+                        :rivin-teksti "FIXME"}]
           :kanavat [{::kok/id 1
                      ::kok/nimi "Foobar"}
                     {::kok/id 2
