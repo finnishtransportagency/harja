@@ -15,7 +15,7 @@
 
 (defn hae-kohdekokonaisuudet-ja-kohteet [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-  (q/hae-kokonaisuudet-ja-kohteet db))
+  (q/hae-kokonaisuudet-ja-kohteet db user))
 
 (defn hae-urakan-kohteet [db user tiedot]
   (let [urakka-id (::ur/id tiedot)]
@@ -23,8 +23,7 @@
     ;; TODO Tämä on vähän hassu oikeustarkastus, koska pitää vaan varmistaa, että käyttäjällä
     ;; on oikeus nähdä, mitkä kohteet kuuluvat kyseiseen urakkaan. Tälle ei vaan ole suoraa omaa oikeutta
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
-
-    (q/hae-urakan-kohteet db urakka-id)))
+    (q/hae-urakan-kohteet db user urakka-id)))
 
 (defn lisaa-kohdekokonaisuudelle-kohteita [db user kohteet]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
