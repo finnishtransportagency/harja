@@ -212,4 +212,5 @@
         [luontilomake e! app]))))
 
 (defc kohteiden-luonti []
-  [tuck tiedot/tila kohteiden-luonti*])
+  #_[tuck tiedot/tila kohteiden-luonti*]
+  [:div "Kohteiden luonti on hetkellisesti pois käytöstä. Katso HAR-6747"])
