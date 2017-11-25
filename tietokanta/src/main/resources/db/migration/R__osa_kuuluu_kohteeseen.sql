@@ -7,6 +7,10 @@ BEGIN
       (NEW."kohteenosa-id" IS NULL AND NEW."kohde-id" IS NULL))
   THEN
     RETURN NEW;
+  ELSEIF (NEW."kohteenosa-id" IS NOT NULL AND NEW."kohde-id" IS NULL)
+    THEN
+      RAISE EXCEPTION 'Annettiin kohteenosa, mutta ei kohdetta';
+      RETURN NULL;
   ELSE
     kohteenosan_kohde := (SELECT "kohde-id"
                           FROM kan_kohteenosa
@@ -18,8 +22,6 @@ BEGIN
       RAISE EXCEPTION 'Kohteenosa % ei kuulu annettuun kohteeseen %', NEW."kohteenosa-id", NEW."kohde-id";
       RETURN NULL;
     END IF;
-    RAISE EXCEPTION 'Annettiin kohteenosa, mutta ei kohdetta';
-    RETURN NULL;
   END IF;
 END;
 $$ LANGUAGE plpgsql;
