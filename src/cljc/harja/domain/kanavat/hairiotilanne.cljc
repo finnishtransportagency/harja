@@ -50,9 +50,6 @@
     ::korjausaika-h
     ::odotusaika-h
     ::syy
-    ::korjausaika-h
-    ::odotusaika-h
-    ::syy
     ::id
     ::korjauksen-tila
     ::ammattiliikenne-lkm})
