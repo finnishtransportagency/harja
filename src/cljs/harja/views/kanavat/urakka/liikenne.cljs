@@ -103,6 +103,7 @@
                      #(e! (tiedot/->TallennaLiikennetapahtuma (lomake/ilman-lomaketietoja tapahtuma)))
                      {:ikoni (ikonit/tallenna)
                       :disabled (or tallennus-kaynnissa?
+                                    true ;; Disabloitu HAR-6659 takia, odottaa HAR-6746
                                     (not (oikeudet/urakat-kanavat-liikenne))
                                     (not (tiedot/voi-tallentaa? tapahtuma))
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
@@ -119,6 +120,7 @@
                            :napit [:takaisin :poista]})
                        {:ikoni (ikonit/livicon-trash)
                         :disabled (or tallennus-kaynnissa?
+                                      true ;; Disabloitu HAR-6659 takia, odottaa HAR-6746
                                       (not (oikeudet/urakat-kanavat-liikenne))
                                       (not (lomake/voi-tallentaa? tapahtuma)))}])
                     (when uusi-tapahtuma?
