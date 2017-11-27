@@ -63,7 +63,7 @@
     :hairioilmoitukset
     :ais-data
     :vv-alukset
-    :kan-kanavat
+    :kan-kohteet
     :kan-liikennetapahtumat
     :kan-hairio
     :kan-toimenpiteet})

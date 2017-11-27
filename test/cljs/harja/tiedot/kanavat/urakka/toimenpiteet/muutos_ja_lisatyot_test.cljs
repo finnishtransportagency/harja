@@ -56,7 +56,7 @@
            (e! (tiedot/->ValitutEiSiirretty) app)))))
 
 (deftest toimenpiteen-hinnoittelun-peruminen
-  (let [vanha-tila testitila
+  (let [vanha-tila {}
         uusi-tila (e! (tiedot/->PeruToimenpiteenHinnoittelu)
                       vanha-tila)]
     (is (nil? (get-in uusi-tila [:hinnoittele-toimenpide ::hinta/hinnat])))))

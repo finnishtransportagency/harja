@@ -1,18 +1,19 @@
 (ns harja.domain.kanavat.hairiotilanne
   (:require
-    [clojure.string :as str]
     [clojure.spec.alpha :as s]
-    [specql.transform :as xf]
     [clojure.set :as set]
-    [specql.rel :as rel]
+
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
-    [harja.domain.kanavat.kanavan-kohde :as kkohde]
-    [harja.domain.urakka :as ur])
+    [harja.domain.kanavat.kohde :as kohde]
+    [harja.domain.kanavat.kohteenosa :as kohteenosa]
+    [harja.domain.urakka :as ur]
+    [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.muokkaustiedot :as muokkaustiedot])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -22,43 +23,51 @@
   ["kan_hairio" ::hairiotilanne
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
-    "kohde" ::kohde-id
     "ammattiliikenne_lkm" ::ammattiliikenne-lkm
     "huviliikenne_lkm" ::huviliikenne-lkm
     "paikallinen_kaytto" ::paikallinen-kaytto?
     "korjausaika_h" ::korjausaika-h
     "odotusaika_h" ::odotusaika-h
-    "korjauksen_tila" ::korjauksen-tila}
+    "korjauksen_tila" ::korjauksen-tila
+    "kuittaaja" ::kuittaaja-id
+    ::kuittaaja (specql.rel/has-one ::kuittaaja-id
+                                    :harja.domain.kayttaja/kayttaja
+                                    :harja.domain.kayttaja/id)}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
-                                ::kkohde/kohde
-                                ::kkohde/id)}])
+                                ::kohde/kohde
+                                ::kohde/id)
+    ::kohteenosa (specql.rel/has-one ::kohteenosa-id
+                                     :harja.domain.kanavat.kohteenosa/kohteenosa
+                                     :harja.domain.kanavat.kohteenosa/id)}])
 
-(def perustiedot+muokkaustiedot
-  #{::m/muokattu
-    ::vikaluokka
-    ::m/poistettu?
+(def perustiedot
+  #{::vikaluokka
     ::huviliikenne-lkm
     ::korjaustoimenpide
     ::paikallinen-kaytto?
     ::pvm
-    ::urakka-id
-    ::m/muokkaaja-id
     ::korjausaika-h
-    ::m/luotu
     ::odotusaika-h
     ::syy
-    ::m/luoja-id
     ::id
     ::korjauksen-tila
-    ::sopimus-id
     ::ammattiliikenne-lkm})
 
-(def perustiedot+kanava+kohde
-  (set/union perustiedot+muokkaustiedot
-             #{[::kohde
-                (set/union kkohde/perustiedot
-                           kkohde/kohteen-kanavatiedot)]}))
+(def viittaus-idt
+  #{::urakka-id
+    ::sopimus-id
+    ::kohde-id
+    ::kohteenosa-id})
+
+(def muokkaustiedot muokkaustiedot/muokkauskentat)
+
+(def kuittaajan-tiedot
+  #{[::kuittaaja kayttaja/perustiedot]})
+
+(def kohteenosan-tiedot #{[::kohteenosa kohteenosa/perustiedot]})
+
+(def kohteen-tiedot #{[::kohde (set/union kohde/perustiedot)]})
 
 ;; Palvelut
 
@@ -74,6 +83,10 @@
                                                      ::haku-korjauksen-tila
                                                      ::haku-paikallinen-kaytto?]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
+
+(s/def ::tallenna-hairiotilanne-kutsu
+  (s/keys :req [::hae-hairiotilanteet-kysely
+                ::hairiotilanne]))
 
 ;; Apurit
 
