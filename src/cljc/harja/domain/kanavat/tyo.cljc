@@ -32,11 +32,14 @@
 
 (def perustiedot
   #{::id
-    ::maara})
+    ::maara
+    ::toimenpide-id})
 
 (def viittaus-idt
   #{::hinnoittelu-id
-    ::toimenpidekoodi-id})
+    ::toimenpidekoodi})
+
+(def perustiedot-viittauksineen (clojure.set/union perustiedot viittaus-idt))
 
 (def metatiedot m/muokkauskentat)
 

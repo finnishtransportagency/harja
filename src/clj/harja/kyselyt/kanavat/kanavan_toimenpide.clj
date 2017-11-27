@@ -12,20 +12,25 @@
             [specql.op :as op]))
 
 (defn hae-kanavatoimenpiteet [db hakuehdot]
-  (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot))
+  (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
+        tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %})
+        tp-tyot #(fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot-viittauksineen {::tyo/toimenpide-id %})]
+    (for [tp toimenpiteet
+          :let [tp-id (::toimenpide/id tp)]]
+      (merge tp {::toimenpide/hinnat (tp-hinnat tp-id)
+                 ::toimenpide/tyot (tp-tyot tp-id)}))))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
 (defn hae-sopimuksen-toimenpiteet-aikavalilta [db hakuehdot]
-  (let [idt (hae-sopimuksen-kanavatoimenpiteet-aikavalilta db hakuehdot)]
-    (if (not (empty? idt))
-      (sort-by ::toimenpide/alkupvm
-               (hae-kanavatoimenpiteet
-                 db
-                 (op/and
-                   (op/or {::m/poistettu? op/null?} {::m/poistettu? false})
-                   {::toimenpide/id (op/in (into #{} (map :id idt)))})))
-      [])))
+  (if-let [idt (seq (hae-sopimuksen-kanavatoimenpiteet-aikavalilta db hakuehdot))]
+    (sort-by ::toimenpide/alkupvm
+             (hae-kanavatoimenpiteet
+              db
+              (op/and
+               (op/or {::m/poistettu? op/null?} {::m/poistettu? false})
+               {::toimenpide/id (op/in (into #{} (map :id idt)))})))
+    []))
 
 (defn poista-frontin-keksima-id [m id-avain]
   ;; id-olemassa? katsoo onko id 0 tai negatiivinen, josta päätellään

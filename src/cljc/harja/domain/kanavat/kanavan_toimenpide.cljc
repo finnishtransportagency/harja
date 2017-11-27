@@ -26,8 +26,9 @@
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
     "muu_toimenpide" ::muu-toimenpide
-    ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
-    ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
+    ;;; ei saatu joineja toimimaan oikein meidän vanhan specql:n kanssa
+    ;; ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
+    ;; ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
     "toimenpideinstanssi" ::toimenpideinstanssi-id
     "kohde" ::kohde-id
     ::kohde (specql.rel/has-one ::kohde-id
@@ -48,7 +49,6 @@
                                     :harja.domain.kayttaja/id)}])
 
 (def viittaus-idt #{::urakka-id ::sopimus-id ::kohde-id ::toimenpidekoodi-id ::kuittaaja-id})
-
 
 (def muokkaustiedot
   #{::muokkaustiedot/luoja-id
