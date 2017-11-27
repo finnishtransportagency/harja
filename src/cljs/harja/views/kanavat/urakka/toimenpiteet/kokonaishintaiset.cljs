@@ -83,7 +83,7 @@
      [napit/poista
       "Poista"
       #(varmista-kayttajalta/varmista-kayttajalta
-         {:otsikko "Varusteen poistaminen Tierekisteristä"
+         {:otsikko "Toimenpiteen poistaminen"
           :sisalto [:div "Haluatko varmasti poistaa toimenpiteen?"]
           :hyvaksy "Poista"
           :toiminto-fn (fn [] (e! (tiedot/->PoistaToimenpide toimenpide)))})])])
