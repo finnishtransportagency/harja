@@ -37,10 +37,10 @@
       :toimenpidekoodi toimenpidekoodi
       :tyyppi tyyppi})))
 
-(defn- vaadi-rivit-kuuluvat-emoon* [rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
+(defn- vaadi-rivit-kuuluvat-emoon* [taulu rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
   (let [emo-idt (set (keep rivin-emo-id-avain rivit))]
     (when (not= emo-idt #{vaadittu-emo-id})
-      (throw (SecurityException. (str "Rivit " rivi-idt " eivät kuulu emoon " vaadittu-emo-id))))))
+      (throw (SecurityException. (str "Rivi-idt " rivi-idt " taulusta " taulu " eivät kuulu emoon " rivin-emo-id-avain ": " emo-idt " != " vaadittu-emo-id))))))
 
 
 (defn vaadi-rivit-kuuluvat-emoon [db rivien-taulu rivin-emo-id-avain rivin-id-avain rivi-idt emo-id]
@@ -51,7 +51,7 @@
                {rivin-id-avain (op/in rivi-idt)})]
     (println "rivit" rivit)
     (when (not-empty rivi-idt)
-      (vaadi-rivit-kuuluvat-emoon* rivit rivi-idt rivin-emo-id-avain emo-id))))
+      (vaadi-rivit-kuuluvat-emoon* rivien-taulu rivit rivi-idt rivin-emo-id-avain emo-id))))
 
 
 (defn tallenna-kanavatoimenpiteen-hinnoittelu! [db user tiedot]

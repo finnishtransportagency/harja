@@ -24,6 +24,7 @@
 
 ;; todo:
 ;; - hinnalle ei tallennu toimenpide-id:tä
+;; - urakka-id voi olla nil kun yritetään tallentaa?
 ;; - testit
 ;; - suunnitellut työt on täälläkin, määriä vaan ei suunnitella. vv/yks-puolella kutsutaan "yksikkohintaiset-tyot" -palvelusta,
 ;;   tässä muutoshintaiset-tyot" -palvelusta.
@@ -40,6 +41,8 @@
                  :toimenpiteiden-haku-kaynnissa? false
                  :suunnitellut-tyot nil
                  :suunniteltujen-toiden-haku-kaynnissa? false}))
+
+
 
 (def alustettu-toimenpiteen-hinnoittelu
   {::toimenpide/id nil
@@ -203,6 +206,7 @@
                    (assoc % ::m/poistettu? true)
                    %)
                 rivit))]
+    (log "poista-hintarivi: paivitetyt " (count paivitetyt) " rivit " (count rivit))
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
 
 (defn poista-tyorivi-toimenpiteelta [id app]
@@ -279,7 +283,7 @@
 
   AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]
-    app
+    (assert (get-in app [:valinnat :urakka :id]))
     (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
           hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])]
@@ -332,6 +336,7 @@
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tyo :tyo} app]
+    (log "poista tyorivi: id " (::tyo/id tyo))
     (poista-tyorivi-toimenpiteelta (::tyo/id tyo) app))
 
   PoistaHinnoiteltavaHintarivi
@@ -355,16 +360,13 @@
   ToimenpiteenHinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
-    (let [paivitettava-toimenpide (etsi-eka-map (:toimenpiteet app)
-                                                ::toimenpide/id
-                                                (get-in app [:hinnoittele-toimenpide ::toimenpide/id]))
-          paivitetty-toimenpide (assoc paivitettava-toimenpide ::toimenpide/oma-hinnoittelu vastaus)
-          paivitetyt-toimenpiteet (mapv
-                                    (fn [toimenpide]
-                                      (if (= (::toimenpide/id toimenpide) (::toimenpide/id paivitettava-toimenpide))
-                                        paivitetty-toimenpide
-                                        toimenpide))
-                                    (:toimenpiteet app))]
+    (let [paivitetyt-toimenpiteet (mapv
+                                   (fn [toimenpide]
+                                     (if (= (::toimenpide/id toimenpide) (::toimenpide/id vastaus))
+                                       vastaus
+                                       toimenpide))
+                                   (:toimenpiteet app))]
+
       (assoc app :toimenpiteet paivitetyt-toimenpiteet
                  :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
                  :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))

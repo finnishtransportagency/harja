@@ -15,14 +15,16 @@
 
 (define-tables
   ["kan_tyo" ::toimenpiteen-tyo
-   {"toimenpide" ::toimenpide-id}
+   {"toimenpide" ::toimenpide-id
+    "toimenpidekoodi-id" ::toimenpidekoodi-id
+    ::toimenpidekoodi (specql.rel/has-one
+                       ::toimenpidekoodi-id
+                       ::tpk/toimenpidekoodi
+                       ::tpk/id)}
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
-   {::toimenpidekoodi (specql.rel/has-one
-                        ::toimenpidekoodi-id
-                        ::tpk/toimenpidekoodi
-                        ::tpk/id)}])
+   ])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
@@ -33,7 +35,8 @@
 (def perustiedot
   #{::id
     ::maara
-    ::toimenpide-id})
+    ::toimenpide-id
+    ::toimenpidekoodi-id})
 
 (def viittaus-idt
   #{::hinnoittelu-id

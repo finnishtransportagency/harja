@@ -160,10 +160,10 @@
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::tyo/tyot])
         ei-poistetut-tyot (remove ::m/poistettu? tyot)]
     (log "sopimushintaiset tyot:" (pr-str ei-poistetut-tyot))
+
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
      [:table
-      ;; TODO Tämä voisi olla käytännöllisempää muuttaa comboboksiksi
       [sopimushintaiset-tyot-header {:yk-lisa? false}]
       [:tbody
        (map-indexed
@@ -173,10 +173,16 @@
                  yksikko (:yksikko toimenpidekoodi)
                  yksikkohinta (:yksikkohinta toimenpidekoodi)
                  tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
+
              ^{:key index}
              [:tr
               [:td
                (let [tyovalinnat (sort-by :tehtavanimi (:suunnitellut-tyot app*))]
+                 (log "valinnat" (pr-str tyovalinnat) " -> valinta: " (pr-str (first (filter #(do
+                                                                                                (log "onko" (pr-str tyorivi) (pr-str [(::tyo/toimenpidekoodi-id tyorivi) (:tehtava %)]))
+                                                                                                (= (::tyo/toimenpidekoodi-id tyorivi)
+                                                                                                     (:tehtava %)))
+                                                       tyovalinnat))))
                  [yleiset/livi-pudotusvalikko
                   {:valitse-fn #(do
                                   (e! (tiedot/->AsetaTyorivilleTiedot
@@ -226,7 +232,7 @@
      [:tbody
       (for* [muu-tyo muut-tyot]
             [muu-tyo-hinnoittelurivi e! muu-tyo])]]
-    [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
+     [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
 
 (defn- muut-hinnat [e! app*]
