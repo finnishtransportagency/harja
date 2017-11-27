@@ -105,4 +105,4 @@ SELECT tk4.id
 FROM toimenpidekoodi tk4
   JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
 WHERE tk4.nimi=:nimi AND
-      tk3.koodi=:kolmois-tason-tehtavan-koodi;
+      tk3.koodi=:kolmostason-tehtavan-koodi;

@@ -110,9 +110,11 @@
                                                         (when (tehtava-paivitetaan? "kokonaishintainen" tehtava) tehtava)
                                                         (when (tehtava-paivitetaan? "muutoshintainen" tehtava) tehtava)))))
                                             tehtavat)
-            tehtavan-id (:id (first (q-toimenpidekoodit/hae-tehtavan-id db {:nimi "Ei yksilöity"
-                                                                            :kolmois-tason-tehtavan-koodi "24104"})))]
-        (q-toimenpide/paivita-toimenpiteiden-tehtava db paivitettavat-tehtava-idt tehtavan-id)
+            ei-yksiloity-tehtavan-id (:id (first (q-toimenpidekoodit/hae-tehtavan-id
+                                                   db
+                                                   {:nimi "Ei yksilöity"
+                                                    :kolmostason-tehtavan-koodi "24104"})))]
+        (q-toimenpide/paivita-toimenpiteiden-tehtava db paivitettavat-tehtava-idt ei-yksiloity-tehtavan-id)
         (q-toimenpide/paivita-toimenpiteiden-tyyppi db toimenpide-idt (::toimenpide/tyyppi tiedot))
         toimenpide-idt))))
 
