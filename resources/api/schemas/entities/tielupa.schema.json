@@ -1,0 +1,964 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "perustiedot": {
+      "id": "urn:harja/tielupa/perustiedot",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tunniste": {
+          "id": "urn:harja/tielupa/perustiedot/tunniste",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+          "required": true
+        },
+        "tyyppi": {
+          "id": "urn:harja/tielupa/perustiedot/tyyppi",
+          "required": true,
+          "type": "string"
+        },
+        "paatoksen-diaarinumero": {
+          "id": "urn:harja/tielupa/perustiedot/paatoksen-diaarinumero",
+          "type": "string",
+          "required": true
+        },
+        "saapumispvm": {
+          "id": "urn:harja/tielupa/perustiedot/saapumispvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "myontamispvm": {
+          "id": "urn:harja/tielupa/perustiedot/myontamispvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "voimassaolon-alkupvm": {
+          "id": "urn:harja/tielupa/perustiedot/voimassaolon-alkupvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "voimassaolon-loppupvm": {
+          "id": "urn:harja/tielupa/perustiedot/voimassaolon-loppupvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "otsikko": {
+          "id": "urn:harja/tielupa/perustiedot/otsikko",
+          "type": "string",
+          "required": true
+        },
+        "katselmus-url": {
+          "id": "urn:harja/tielupa/perustiedot/katselmus-url",
+          "type": "string"
+        },
+        "ely": {
+          "id": "urn:harja/tielupa/perustiedot/ely",
+          "required": true,
+          "enum": [
+            "Uusimaa",
+            "Keski-Suomi",
+            "Lappi",
+            "Etelä-Pohjanmaa",
+            "Pohjois-Pohjanmaa",
+            "Kaakkois-Suomi",
+            "Varsinais-Suomi",
+            "Pohjois-Savo",
+            "Pirkanmaa"
+          ]
+        },
+        "alueurakka": {
+          "id": "urn:harja/tielupa/perustiedot/alueurakka",
+          "type": "string"
+        },
+        "kunta": {
+          "id": "urn:harja/tielupa/perustiedot/kunta",
+          "required": true,
+          "type": "string"
+        },
+        "kohteen-lahioisoite": {
+          "id": "urn:harja/tielupa/perustiedot/kohteen-lahioisoite",
+          "type": "string"
+        },
+        "kohteen-postinumero": {
+          "id": "urn:harja/tielupa/perustiedot/kohteen-postinumero",
+          "type": "string"
+        },
+        "kohteen-postitoimipaikka": {
+          "id": "urn:harja/tielupa/perustiedot/kohteen-postitoimipaikka",
+          "type": "string"
+        },
+        "tien-nimi": {
+          "id": "urn:harja/tielupa/perustiedot/tien-nimi",
+          "type": "string"
+        }
+      }
+    },
+    "sijainnit": {
+      "id": "urn:harja/tielupa/sijainnit",
+      "type": "array",
+      "items": {
+        "id": "urn:harja/tielupa/sijainnit/0",
+        "type": "object",
+        "properties": {
+          "sijainti": {
+            "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+          }
+        }
+      }
+    },
+    "hakija": {
+      "id": "urn:harja/tielupa/hakija",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nimi": {
+          "id": "urn:harja/tielupa/hakija/nimi",
+          "required": true,
+          "type": "string"
+        },
+        "osasto": {
+          "id": "urn:harja/tielupa/hakija/osasto",
+          "type": "string"
+        },
+        "postiosoite": {
+          "id": "urn:harja/tielupa/hakija/postiosoite",
+          "required": true,
+          "type": "string"
+        },
+        "postinumero": {
+          "id": "urn:harja/tielupa/hakija/postinumero",
+          "required": true,
+          "type": "string"
+        },
+        "puhelinnumero": {
+          "id": "urn:harja/tielupa/hakija/puhelinnumero",
+          "type": "string"
+        },
+        "sahkopostiosoite": {
+          "id": "urn:harja/tielupa/hakija/sahkopostiosoite",
+          "required": true,
+          "type": "string"
+        },
+        "tyyppi": {
+          "id": "urn:harja/tielupa/hakija/tyyppi",
+          "enum": [
+            "kunta",
+            "kotitalous",
+            "elinkeinoelama",
+            "valtio",
+            "muu"
+          ]
+        },
+        "maakoodi": {
+          "id": "urn:harja/tielupa/hakija/maakoodi",
+          "type": "string"
+        }
+      }
+    },
+    "urakoitsija": {
+      "id": "urn:harja/tielupa/urakoitsija",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nimi": {
+          "id": "urn:harja/tielupa/urakoitsija/nimi",
+          "required": true,
+          "type": "string"
+        },
+        "yhteyshenkilo": {
+          "id": "urn:harja/tielupa/urakoitsija/yhteyshenkilo",
+          "type": "string"
+        },
+        "puhelinnumero": {
+          "id": "urn:harja/tielupa/urakoitsija/puhelinnumero",
+          "type": "string"
+        },
+        "sahkopostiosoite": {
+          "id": "urn:harja/tielupa/urakoitsija/sahkopostiosoite",
+          "type": "string"
+        }
+      }
+    },
+    "liikenteenohjauksesta-vastaava": {
+      "id": "urn:harja/tielupa/liikenteenohjauksesta-vastaava",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nimi": {
+          "id": "urn:harja/tielupa/liikenteenohjauksesta-vastaava/nimi",
+          "required": true,
+          "type": "string"
+        },
+        "yhteyshenkilo": {
+          "id": "urn:harja/tielupa/liikenteenohjauksesta-vastaava/yhteyshenkilo",
+          "type": "string"
+        },
+        "puhelinnumero": {
+          "id": "urn:harja/tielupa/liikenteenohjauksesta-vastaava/puhelinnumero",
+          "type": "string"
+        },
+        "sahkopostiosoite": {
+          "id": "urn:harja/tielupa/liikenteenohjauksesta-vastaava/sahkopostiosoite",
+          "type": "string"
+        }
+      }
+    },
+    "tienpitoviranomainen": {
+      "id": "urn:harja/tielupa/tienpitoviranomainen",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "yhteyshenkilo": {
+          "id": "urn:harja/tielupa/tienpitoviranomainen/yhteyshenkilo",
+          "type": "string"
+        },
+        "puhelinnumero": {
+          "id": "urn:harja/tielupa/tienpitoviranomainen/puhelinnumero",
+          "type": "string"
+        },
+        "sahkopostiosoite": {
+          "id": "urn:harja/tielupa/tienpitoviranomainen/sahkopostiosoite",
+          "type": "string"
+        },
+        "lupapaallikko": {
+          "id": "urn:harja/tielupa/tienpitoviranomainen/lupapaallikko",
+          "type": "string"
+        },
+        "kasittelija": {
+          "id": "urn:harja/tielupa/tienpitoviranomainen/kasittelija",
+          "type": "string"
+        }
+      }
+    },
+    "valmistumisilmoitus": {
+      "id": "urn:harja/tielupa/valmistumisilmoitus",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "vaaditaan": {
+          "id": "urn:harja/tielupa/valmistumisilmoitus/vaaditaan",
+          "type": "boolean"
+        },
+        "palautettu": {
+          "id": "urn:harja/tielupa/valmistumisilmoitus/palautettu",
+          "type": "boolean"
+        },
+        "valmistumisilmoitus": {
+          "id": "urn:harja/tielupa/valmistumisilmoitus/valmistumisilmoitus",
+          "type": "string"
+        }
+      }
+    },
+    "johto-ja-kaapelilupa": {
+      "id": "urn:harja/tielupa/johto-ja-kaapelilupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maakaapelia-yhteensa": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/maakaapelia-yhteensa",
+          "type": "number"
+        },
+        "ilmakaapelia-yhteensa": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/ilmajohtoa-metreissa",
+          "type": "number"
+        },
+        "tienylityksia": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/tienylityksia",
+          "type": "integer"
+        },
+        "silta-asennuksia": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/silta-asennuksia",
+          "type": "integer"
+        },
+        "kaapeliasennukset": {
+          "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0",
+            "type": "object",
+            "properties": {
+              "kaapeliasennus": {
+                "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "laite": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/laite",
+                    "required": true,
+                    "enum": [
+                      "0,4 kV maakaapeli",
+                      "0,4 ja 1 kV maakaapeli",
+                      "0,4 ja 20 kV maakaapeli",
+                      "1 kV maakaapeli",
+                      "20 kV maakaapeli",
+                      "45 kV maakaapeli",
+                      "110 kV maakaapeli",
+                      "maakaapeli",
+                      "0,4 kV ilmajohto",
+                      "0,4 ja 1 kV ilmajohto",
+                      "0,4 ja 20 kV ilmajohto,1 kV ilmajohto",
+                      "20 kV ilmajohto",
+                      "45 kV ilmajohto",
+                      "110 kV ilmajohto",
+                      "ilmajohto",
+                      "Puistomuuntamo",
+                      "Pylväsmuuntamo",
+                      "Jakokaappi",
+                      "Telekaapeli",
+                      "Kaukolämpöjohto",
+                      "Maakaasuputki"
+                    ]
+                  },
+                  "asennustyyppi": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/asennustyyppi",
+                    "required": true,
+                    "enum": [
+                      "Tien varressa",
+                      "Tien ylitys",
+                      "Tien alitus",
+                      "Silta",
+                      "Tiealueen ulkopuolella",
+                      "Suojaputki"
+                    ]
+                  },
+                  "ohjeet": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/ohjeet",
+                    "type": "string"
+                  },
+                  "kommentit": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/kommentit",
+                    "type": "string"
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  },
+                  "maakaapelia-metreissa": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/maakaapelia-metreissa",
+                    "type": "number"
+                  },
+                  "ilmakaapelia-metreissa": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/ilmajohtoa-metreissa",
+                    "type": "number"
+                  } ,
+                  "nopeusrajoitus": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/nopeusrajoitus",
+                    "type": "integer"
+                  },
+                  "liikennemaara": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/liikennemaara",
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "liittymalupa": {
+      "id": "urn:harja/tielupa/liittymalupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "myonnetty-kauttotarkoitus": {
+          "id": "urn:harja/tielupa/liittymalupa/myonnetty-kauttotarkoitus",
+          "enum": [
+            "elinkeinon-harjoittaminen",
+            "asuinkiinteisto",
+            "lomakiintiesto",
+            "maa-ja-metsatalauskaytto",
+            "maatalous",
+            "katu",
+            "muu"
+          ]
+        },
+        "haettu-kayttotarkoitus": {
+          "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus",
+          "enum": [
+            "maa-ja-metsatalous",
+            "asuinkiinteistolle-kulkeminen",
+            "liike-tai-teollisuuskiinteistölle-kulkeminen",
+            "jalankulku-tai-pyoraliikenne",
+            "lomakiinteistolle-kulku",
+            "muu"
+          ]
+        },
+        "liittyman-siirto": {
+          "id": "urn:harja/tielupa/liittymalupa/liittyman-siirto",
+          "type": "boolean"
+        },
+        "tarkoituksen-kuvaus": {
+          "id": "urn:harja/tielupa/liittymalupa/tarkoituksen-kuvaus",
+          "type": "string"
+        },
+        "tilapainen": {
+          "id": "urn:harja/tielupa/liittymalupa/tilapainen",
+          "type": "boolean"
+        },
+        "sijainnin-kuvaus": {
+          "id": "urn:harja/tielupa/liittymalupa/sijainnin-kuvaus",
+          "type": "string"
+        },
+        "arvioitu-kokonaisliikenne": {
+          "id": "urn:harja/tielupa/liittymalupa/arvioitu-kokonaisliikenne",
+          "type": "integer"
+        },
+        "arvioitu-kuorma-autoliikenne": {
+          "id": "urn:harja/tielupa/liittymalupa/arvioitu-kuorma-autoliikenne",
+          "type": "integer"
+        },
+        "nykyisen-liittyman-numero": {
+          "id": "urn:harja/tielupa/liittymalupa/nykyisen-liittyman-numero",
+          "type": "integer"
+        },
+        "nykyisen-liittyman-paivays": {
+          "id": "urn:harja/tielupa/liittymalupa/nykyisen-liittyman-paivays",
+          "type": "string",
+          "format": "date-time"
+        },
+        "kiinteisto-rn": {
+          "id": "urn:harja/tielupa/perustiedot/kiinteisto-rn",
+          "type": "string"
+        },
+        "muut-kulkuyhteydet": {
+          "id": "urn:harja/tielupa/liittymalupa/muut-kulkuyhteydet",
+          "type": "string"
+        },
+        "valmistumisen-takaraja": {
+          "id": "urn:harja/tielupa/liittymalupa/valmistumisen-takaraja",
+          "type": "string",
+          "format": "date-time"
+        },
+        "kyla": {
+          "id": "urn:harja/tielupa/liittymalupa/kyla",
+          "type": "string"
+        },
+        "liittymaohje": {
+          "id": "urn:harja/tielupa/liittymalupa/liittymaohje",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "liittymakaari": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liittymakaari",
+              "type": "number"
+            },
+            "leveys-metreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/leveys-metreissa",
+              "type": "integer"
+            },
+            "rumpu": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rumpu",
+              "type": "boolean"
+            },
+            "rummun-halkaisija-millimetreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-halkaisija-millimetreissa",
+              "type": "number"
+            },
+            "rummun-etaisyys-metreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-etaisyys-metreissa",
+              "type": "integer"
+            },
+            "odotustila-metreissa": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/odotustila-metreissa",
+              "type": "integer"
+            },
+            "nakemapisteen-etaisyys": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/nakemapisteen-etaisyys",
+              "type": "integer"
+            },
+            "liikennemerkit": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liikennemerkit",
+              "type": "string"
+            },
+            "lisaohjeet": {
+              "id": "urn:harja/tielupa/liittymalupa/liittymaohje/lisaohjeet",
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "mainosilmoitus": {
+      "id": "urn:harja/tielupa/mainosilmoitus",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mainostettava-asia": {
+          "id": "urn:harja/tielupa/mainosilmoitus/mainostettava-asia",
+          "type": "string",
+          "required": true
+        },
+        "sijainnin-kuvaus": {
+          "id": "urn:harja/tielupa/mainosilmoitus/sijainnin-kuvaus",
+          "type": "string"
+        },
+        "korvaava-paatos": {
+          "id": "urn:harja/tielupa/mainosilmoitus/korvaava-paatos",
+          "type": "boolean"
+        },
+        "tiedoksi-elykeskukselle": {
+          "id": "urn:harja/tielupa/mainosilmoitus/tiedoksi-elykeskukselle",
+          "type": "boolean"
+        },
+        "asemakaava-alueella": {
+          "id": "urn:harja/tielupa/mainosilmoitus/asemakaava-alueella",
+          "type": "boolean"
+        },
+        "suoja-alueen-leveys": {
+          "id": "urn:harja/tielupa/mainosilmoitus/suoja-alueen-leveys",
+          "type": "number"
+        },
+        "mainokset": {
+          "id": "urn:harja/tielupa/mainosilmoitus/mainokset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/mainosilmoitus/mainokset/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mainos": {
+                "id": "urn:harja/tielupa/mainosilmoitus/mainokset/0/mainos",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "mainoslupa": {
+      "id": "urn:harja/tielupa/mainoslupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sijainnin-kuvaus": {
+          "id": "urn:harja/tielupa/mainoslupa/sijainnin-kuvaus",
+          "type": "string"
+        },
+        "lisatiedot": {
+          "id": "urn:harja/tielupa/mainoslupa/lisatiedot",
+          "type": "string"
+        },
+        "korvaava-paatos": {
+          "id": "urn:harja/tielupa/mainosilmoitus/korvaava-paatos",
+          "type": "boolean"
+        },
+        "tiedoksi-elykeskukselle": {
+          "id": "urn:harja/tielupa/mainosilmoitus/tiedoksi-elykeskukselle",
+          "type": "boolean"
+        },
+        "asemakaava-alueella": {
+          "id": "urn:harja/tielupa/mainoslupa/asemakaava-alueella",
+          "type": "boolean"
+        },
+        "suoja-alueen-leveys": {
+          "id": "urn:harja/tielupa/mainoslupa/suoja-alueen-leveys",
+          "type": "number"
+        },
+        "mainokset": {
+          "id": "urn:harja/tielupa/mainoslupa/mainokset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/mainoslupa/mainokset/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mainos": {
+                "id": "urn:harja/tielupa/mainoslupa/mainokset/0/mainos",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "opastelupa": {
+      "id": "urn:harja/tielupa/opastelupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kohteen-nimi": {
+          "id": "urn:harja/tielupa/opastelupa/kohteen-nimi",
+          "type": "string"
+        },
+        "palvelukohteen-opastaulu": {
+          "id": "urn:harja/tielupa/opastelupa/opastaulu",
+          "type": "boolean"
+        },
+        "palvelukohteen-osoiteviitta": {
+          "id": "urn:harja/tielupa/opastelupa/palvelukohteen-osoiteviitta",
+          "type": "boolean"
+        },
+        "osoiteviitta": {
+          "id": "urn:harja/tielupa/opastelupa/osoiteviitta",
+          "type": "boolean"
+        },
+        "ennakkomerkki": {
+          "id": "urn:harja/tielupa/opastelupa/ennakkomerkki",
+          "type": "boolean"
+        },
+        "opasteen-teksti": {
+          "id": "urn:harja/tielupa/opastelupa/opasteen-teksti",
+          "type": "string"
+        },
+        "osoiteviitan-tunnus": {
+          "id": "urn:harja/tielupa/opastelupa/osoiteviitan-tunnus",
+          "type": "string"
+        },
+        "lisatiedot": {
+          "id": "urn:harja/tielupa/opastelupa/lisatiedot",
+          "type": "string"
+        },
+        "kohteen-url-osoite": {
+          "id": "urn:harja/tielupa/opastelupa/kohteen-url-osoite",
+          "type": "string"
+        },
+        "jatkolupa": {
+          "id": "urn:harja/tielupa/opastelupa/jatkolupa",
+          "type": "boolean"
+        },
+        "alkuperainen-lupanro": {
+          "id": "urn:harja/tielupa/opastelupa/alkuperainen-lupanro",
+          "type": "integer"
+        },
+        "alkuperaisen-luvan-alkupvm": {
+          "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-alkupvm",
+          "type": "string"
+        },
+        "alkuperaisen-luvan-loppupvm": {
+          "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-loppupvm",
+          "type": "string",
+          "format": "date-time"
+        },
+        "nykyinen-opastus": {
+          "id": "urn:harja/tielupa/opastelupa/nykyinen-opastus",
+          "type": "string"
+        },
+        "opasteet": {
+          "id": "urn:harja/tielupa/opastelupa/opasteet",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/opastelupa/opasteet/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "opaste": {
+                "id": "urn:harja/tielupa/opastelupa/opasteet/0/opaste",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "tulostenumero": {
+                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/tulostenumero",
+                    "type": "integer"
+                  },
+                  "kuvaus": {
+                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/kuvaus",
+                    "required": true,
+                    "enum": [
+                      "Opastustaulu",
+                      "Osoiteviitta",
+                      "Ennakkomerkki",
+                      "Erkanemisviitta"
+                    ]
+                  },
+                  "sijainti": {
+                    "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "suoja-aluerakentamislupa": {
+      "id": "urn:harja/tielupa/suoja-aluerakentamislupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rakennettava-asia": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/rakennettava-asia",
+          "type": "string"
+        },
+        "lisatiedot": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/lisatiedot",
+          "type": "string"
+        },
+        "esitetty-etaisyys-tien-keskilinjaan": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/esitetty-etaisyys-tien-keskilinjaan",
+          "type": "number"
+        },
+        "vahimmaisetaisyys-tien-keskilinjasta": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/vahimmaisetaisyys-tien-keskilinjasta",
+          "type": "number"
+        },
+        "valitoimenpiteet": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/valitoimenpiteet",
+          "type": "string"
+        },
+        "suoja-alueen-leveys": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/suoja-alueen-leveys",
+          "type": "number"
+        },
+        "suoja-alue": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/suoja-alue",
+          "type": "boolean"
+        },
+        "nakema-alue": {
+          "id": "urn:harja/tielupa/suoja-aluerakentamislupa/nakema-alue",
+          "type": "boolean"
+        },
+        "kiinteisto-rn": {
+          "id": "urn:harja/tielupa/perustiedot/kiinteisto-rn",
+          "type": "string"
+        }
+      }
+    },
+    "tilapainen-myyntilupa": {
+      "id": "urn:harja/tielupa/tilapainen-myyntilupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aihe": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/aihe",
+          "type": "string"
+        },
+        "alueen-nimi": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/alueen-nimi",
+          "type": "string"
+        },
+        "aikaisempi-myyntilupa": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/aikaisempi-myyntilupa",
+          "type": "string"
+        },
+        "opastusmerkit": {
+          "id": "urn:harja/tielupa/tilapainen-myyntilupa/opastusmerkit",
+          "type": "string"
+        }
+      }
+    },
+    "tilapaiset-liikennemerkkijarjestelyt": {
+      "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aihe": {
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/aihe",
+          "type": "string"
+        },
+        "sijainnin-kuvaus": {
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/sijainnin-kuvaus",
+          "type": "string"
+        },
+        "tapahtuman-tiedot": {
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/tapahtuman-tiedot",
+          "type": "string"
+        },
+        "nopeusrajoituksen-syy": {
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/nopesurajoituksen-syy",
+          "type": "string"
+        },
+        "lisatiedot-nopeusrajoituksesta": {
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
+          "type": "string"
+        },
+        "muut-liikennemerkit": {
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/lisatiedot-nopeusrajoituksesta",
+          "type": "string"
+        },
+        "jarjestelyt": {
+          "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "jarjestely": {
+                "id": "urn:harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "alkuperainen-nopeusrajoitus": {
+                    "id": "urn:/harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely/alkuperainen-nopeusrajoitus",
+                    "type": "string"
+                  },
+                  "alennettu-nopeusrajoitus": {
+                    "id": "urn:/harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely/alennettu-nopeusrajoitus",
+                    "type": "string"
+                  },
+                  "nopeusrajoituksen-pituus": {
+                    "id": "urn:/harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely/nopeusrajoituksen-pituus",
+                    "type": "string"
+                  },
+                  "sijainti": {
+                    "id": "urn:/harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+
+
+      }
+    },
+    "tyolupa": {
+      "id": "urn:harja/tielupa/tyolupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tyon-sisalto": {
+          "id": "urn:harja/tielupa/tyolupa/tyon-sisalto",
+          "type": "string"
+        },
+        "tyon-saa-aloittaa": {
+          "id": "urn:harja/tielupa/tyolupa/tyon-saa-aloittaa",
+          "type": "string",
+          "format": "date-time"
+        },
+        "viimeistely-oltava": {
+          "id": "urn:harja/tielupa/tyolupa/viimeistely-oltava",
+          "type": "string",
+          "format": "date-time"
+        },
+        "ohjeet-tyon-suorittamiseen": {
+          "id": "urn:harja/tielupa/tyolupa/ohjeet-tyon-suorittamiseen",
+          "type": "string"
+        },
+        "los-puuttuu": {
+          "id": "urn:harja/tielupa/tyolupa/los-puuttuu",
+          "type": "boolean"
+        },
+        "ilmoitus-tieliikennekeskukseen": {
+          "id": "urn:harja/tielupa/tyolupa/ilmoitus-tieliikennekeskukseen",
+          "type": "boolean"
+        },
+        "tilapainen-nopeusrajoitus": {
+          "id": "urn:harja/tielupa/tyolupa/tilapainen-nopeusrajoitus",
+          "type": "boolean"
+        },
+        "los-lisatiedot": {
+          "id": "urn:harja/tielupa/tyolupa/los-lisatiedot",
+          "type": "string"
+        },
+        "tieliikennekusksen-sahkopostiosoite": {
+          "id": "urn:harja/tielupa/tyolupa/tieliikennekusksen-sahkopostiosoite",
+          "type": "string"
+        }
+      }
+    },
+    "vesihuoltolupa": {
+      "id": "urn:harja/tielupa/vesihuoltolupa",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tienylityksia": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/tienylityksia",
+          "type": "integer"
+        },
+        "silta-asennuksia": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/silta-asennuksia",
+          "type": "integer"
+        },
+        "johtoasennukset": {
+          "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset",
+          "type": "array",
+          "items": {
+            "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "johtoasennus": {
+                "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "laite": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/laite",
+                    "required": true,
+                    "enum": [
+                      "Vesijohto",
+                      "Vesi- ja viemärijohto",
+                      "Jätevesiviemäri",
+                      "Hulevesiviemäri",
+                      "Pumppaamo",
+                      "Sulkuventtiilit",
+                      "Muu laite"
+                    ]
+                  },
+                  "tyyppi": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/tyyppi",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "ohjeet": {
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/ohjeet",
+                    "type": "string"
+                  },
+                  "kommentit": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/kommentit",
+                    "type": "string"
+                  },
+                  "toiminnot": {
+                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/toiminnot",
+                    "required": true,
+                    "enum": [
+                      ""
+                    ]
+                  },
+                  "sijainti": {
+                    "id": "urn:harja/tielupa/sijainnit/0/sijainti",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "liitteet": {
+      "id": "urn:harja/tielupa/liitteet",
+      "type": "object",
+      "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+    }
+  }
+}
