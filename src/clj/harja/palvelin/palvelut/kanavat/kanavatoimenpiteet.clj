@@ -28,7 +28,6 @@
                rivien-taulu
                #{rivin-emo-id-avain rivin-id-avain}
                {rivin-id-avain (op/in rivi-idt)})]
-    (println "rivit" rivit)
     (when (not-empty rivi-idt)
       (vaadi-rivit-kuuluvat-emoon* rivit rivi-idt rivin-emo-id-avain emo-id))))
 
