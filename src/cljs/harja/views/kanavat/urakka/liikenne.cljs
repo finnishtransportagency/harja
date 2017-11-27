@@ -30,7 +30,7 @@
             [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.ui.ikonit :as ikonit])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
@@ -103,6 +103,7 @@
                      #(e! (tiedot/->TallennaLiikennetapahtuma (lomake/ilman-lomaketietoja tapahtuma)))
                      {:ikoni (ikonit/tallenna)
                       :disabled (or tallennus-kaynnissa?
+                                    true ;; Disabloitu HAR-6659 takia, odottaa HAR-6746
                                     (not (oikeudet/urakat-kanavat-liikenne))
                                     (not (tiedot/voi-tallentaa? tapahtuma))
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
@@ -119,6 +120,7 @@
                            :napit [:takaisin :poista]})
                        {:ikoni (ikonit/livicon-trash)
                         :disabled (or tallennus-kaynnissa?
+                                      true ;; Disabloitu HAR-6659 takia, odottaa HAR-6746
                                       (not (oikeudet/urakat-kanavat-liikenne))
                                       (not (lomake/voi-tallentaa? tapahtuma)))}])
                     (when uusi-tapahtuma?
@@ -157,7 +159,7 @@
          :tyyppi :valinta
          :valinnat urakan-kohteet
          :pakollinen? true
-         :valinta-nayta #(if % (kohde/fmt-kohteen-kanava-nimi %) "- Valitse kohde -")
+         :valinta-nayta #(if % (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
          :aseta (fn [rivi arvo]
                   (let [rivi (assoc rivi ::lt/kohde arvo)]
                     (when uusi-tapahtuma?
@@ -261,7 +263,7 @@
        [valinnat/kanava-kohde
         (atomi ::lt/kohde)
         (into [nil] urakan-kohteet)
-        #(let [nimi (kohde/fmt-kohteen-kanava-nimi %)]
+        #(let [nimi (kohde/fmt-kohteen-nimi %)]
            (if-not (empty? nimi)
              nimi
              "Kaikki"))]
@@ -311,7 +313,8 @@
       :fmt pvm/pvm-aika-opt}
      {:otsikko "Kohde"
       :leveys 5
-      :nimi :kohteen-nimi}
+      :nimi ::lt/kohde
+      :fmt kohde/fmt-kohteen-nimi}
      {:otsikko "Tyyppi"
       :leveys 2
       :nimi :toimenpide

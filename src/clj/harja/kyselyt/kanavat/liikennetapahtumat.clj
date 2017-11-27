@@ -13,14 +13,14 @@
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
 
-            [harja.kyselyt.kanavat.kanavat :as kanavat-q]
+            [harja.kyselyt.kanavat.kohteet :as kohteet-q]
 
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]))
+            [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
@@ -98,7 +98,7 @@
                                                   {::lt-alus/suunta suunta})
                                                 (when aluslaji
                                                   {::lt-alus/laji aluslaji}))})))))
-      (partial kanavat-q/hae-kohteiden-urakkatiedot db)
+      (partial kohteet-q/hae-kohteiden-urakkatiedot db)
       urakka-id)))
 
 (defn- hae-kohteen-edellinen-tapahtuma* [tulokset]
