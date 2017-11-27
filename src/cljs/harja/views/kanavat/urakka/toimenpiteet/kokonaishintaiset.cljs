@@ -52,8 +52,7 @@
      :voi-poistaa? false
      :voi-kumota? false
      :piilota-toiminnot? true
-     :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot
-                                     {:toimenpide rivi})))
+     :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
      :tyhja "Ei kokonaishitaisia toimenpiteita"
      :jarjesta ::kanavan-toimenpide/pvm
      :tunniste ::kanavan-toimenpide/id}
