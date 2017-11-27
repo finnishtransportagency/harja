@@ -102,7 +102,7 @@
       #(e! (tiedot/->TyhjennaAvattuToimenpide))]
      [lomake/lomake
       {:otsikko "Uusi toimenpide"
-       :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
+       :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
        :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
       (toimenpiteet-view/toimenpidelomakkeen-kentat avattu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
       avattu-toimenpide]]))
