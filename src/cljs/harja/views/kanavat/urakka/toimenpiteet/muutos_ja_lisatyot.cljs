@@ -22,7 +22,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.napit :as napit]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -68,14 +69,16 @@
         toimenpidesarakkeet-ilman-valinta-saraketta (subvec toimenpidesarakkeet 0 (dec (count toimenpidesarakkeet)))
         valinta-sarake (last toimenpidesarakkeet)
         sarakkeet (concat toimenpidesarakkeet-ilman-valinta-saraketta [hinta-sarake] [valinta-sarake])]
-    [grid/grid
+    [:div
+     [toimenpiteet-view/ei-yksiloity-vihje]
+     [grid/grid
      {:otsikko "Muutos- ja lisätyöt"
       :tyhja (if (:toiden-haku-kaynnissa? app)
                [ajax-loader "Haetaan toimenpiteitä"]
                "Ei toimenpiteitä")
       :tunniste ::kanavan-toimenpide/id}
      sarakkeet
-     toimenpiteet]))
+     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
 
 (defn lisatyot* [e! app]
   (let [urakka (get-in app [:valinnat :urakka-id])]

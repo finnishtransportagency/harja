@@ -18,7 +18,8 @@
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -42,7 +43,9 @@
          (e! (tiedot/->UusiToimenpide)))]]]))
 
 (defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet] :as app}]
-  [grid/grid
+  [:div
+   [toimenpiteet-view/ei-yksiloity-vihje]
+   [grid/grid
    {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
     :voi-muokata? false
@@ -66,7 +69,7 @@
                          (e! (tiedot/->ValitseToimenpide
                                {:id (::kanavan-toimenpide/id rivi)
                                 :valittu? uusi-arvo})))})
-   toimenpiteet])
+   (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
 (defn lomake-toiminnot [e! toimenpide]
   [:div

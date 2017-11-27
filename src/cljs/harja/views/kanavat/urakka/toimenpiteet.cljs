@@ -8,7 +8,8 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavatoimenpidetiedot]))
+            [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavatoimenpidetiedot]
+            [harja.ui.yleiset :as yleiset]))
 
 (defn valittu-tehtava [toimenpide]
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
@@ -135,3 +136,9 @@
       :tyyppi :string
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}]))
+
+(defn- ei-yksiloity-vihje []
+  [yleiset/vihje-elementti [:span
+                            [:span "Ei-yksilöidyt toimenpiderivit näytetään "]
+                            [:span.bold "lihavoituna"]
+                            [:span "."]]])
