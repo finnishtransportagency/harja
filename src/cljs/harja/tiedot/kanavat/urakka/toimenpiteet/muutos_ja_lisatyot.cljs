@@ -18,7 +18,8 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet])
+            [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -37,9 +38,12 @@
 ;;                kan_hinta.ryhma <-> ?? - ei mitään tekemistä tämän ns:n Hintaryhmien kanssa kuitenkaan
 
 (def tila (atom {:nakymassa? false
+                 :toimenpiteiden-siirto-kaynnissa? false
+                 :valitut-toimenpide-idt #{}
+                 :toimenpiteet nil
                  :toimenpiteiden-haku-kaynnissa? false
-                 :suunnitellut-tyot nil
-                 :suunniteltujen-toiden-haku-kaynnissa? false}))
+                 :suunniteltujen-toiden-haku-kaynnissa? false
+                 :suunnitellut-tyot nil}))
 
 (def alustettu-toimenpiteen-hinnoittelu
   {::toimenpide/id nil
@@ -61,6 +65,12 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [tulos])
 (defrecord ToimenpiteetEiHaettu [])
+;; UI-toiminnot
+(defrecord ValitseToimenpide [tiedot])
+(defrecord ValitseToimenpiteet [tiedot])
+(defrecord SiirraValitut [])
+(defrecord ValitutSiirretty [])
+(defrecord ValitutEiSiirretty [])
 
 ;; Hinnoittelu
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
@@ -275,7 +285,52 @@
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden haku epäonnistui!" :danger)
     (assoc app :toimenpiteiden-haku-kaynnissa? false
-           :toimenpiteet []))
+               :toimenpiteet []))
+
+  ValitseToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (let [toimenpide-id (:id tiedot)
+          valittu? (:valittu? tiedot)
+          aseta-valinta (if valittu? conj disj)]
+      (assoc app :valitut-toimenpide-idt
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
+
+  ValitseToimenpiteet
+  (process-event [{tiedot :tiedot} app]
+    (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
+      (if kaikki-valittu?
+        (assoc app :valitut-toimenpide-idt
+                   (set (map ::toimenpide/id (:toimenpiteet app))))
+        (assoc app :valitut-toimenpide-idt #{}))))
+
+  SiirraValitut
+  (process-event [_ app]
+    (when-not (:toimenpiteiden-siirto-kaynnissa? app)
+      (-> app
+          (tuck-apurit/post! :siirra-kanavatoimenpiteet
+                             {::toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
+                              ::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
+                              ::toimenpide/tyyppi :kokonaishintainen}
+                             {:onnistui ->ValitutSiirretty
+                              :epaonnistui ->ValitutEiSiirretty})
+          (assoc :toimenpiteiden-siirto-kaynnissa? true))))
+
+  ValitutSiirretty
+  (process-event [_ app]
+    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+                     (count (:valitut-toimenpide-idt app)) "siirretty") :success)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false
+               :valitut-toimenpide-idt #{}
+               :toimenpiteet (filter
+                               (fn [toimenpide]
+                                 (not ((:valitut-toimenpide-idt app)
+                                        (::toimenpide/id toimenpide))))
+                               (:toimenpiteet app))))
+
+  ValitutEiSiirretty
+  (process-event [_ app]
+    (viesti/nayta! "Siiro epäonnistui" :danger)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false))
 
   AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]

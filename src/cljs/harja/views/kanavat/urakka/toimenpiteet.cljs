@@ -1,64 +1,71 @@
 (ns harja.views.kanavat.urakka.toimenpiteet
-  (:require [reagent.core :refer [atom] :as r]
-            [tuck.core :refer [tuck]]
-
-            [harja.loki :refer [tarkkaile! log]]
-            [harja.id :refer [id-olemassa?]]
-
-            [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
-            [harja.ui.debug :refer [debug]]
-
+  (:require [harja.ui.grid :as grid]
+            [harja.pvm :as pvm]
+            [clojure.string :as str]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
-            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
-
-            [harja.pvm :as pvm]
-            [clojure.string :as str]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
-            [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavatoimenpidetiedot])
-  (:require-macros
-    [cljs.core.async.macros :refer [go]]
-    [harja.makrot :refer [defc fnc]]))
+            [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavatoimenpidetiedot]
+            [harja.ui.yleiset :as yleiset]))
 
 (defn valittu-tehtava [toimenpide]
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
       (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id])))
 
-(def toimenpidesarakkeet
-  [{:otsikko "Päivämäärä"
+(defn toimenpidesarakkeet [e! app {:keys [rivi-valittu?-fn rivi-valittu-fn kaikki-valittu?-fn otsikko-valittu-fn]}]
+  [{:otsikko "Päivä\u00ADmäärä"
     :nimi ::kanavan-toimenpide/pvm
     :tyyppi :pvm
-    :fmt pvm/pvm-opt}
+    :fmt pvm/pvm-opt
+    :leveys 5}
    {:otsikko "Kohde"
     :nimi :kohde
     :tyyppi :string
+    :leveys 10
     :hae #(get-in % [::kanavan-toimenpide/kohde ::kohde/nimi])}
-   {:otsikko "Huoltokohde"
+   {:otsikko "Huolto\u00ADkohde"
     :nimi :huoltokohde
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])
-    :fmt str/lower-case}
+    :fmt str/lower-case
+    :leveys 10}
    {:otsikko "Tehtävä"
     :nimi :toimenpide
     :tyyppi :string
-    :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])}
-   {:otsikko "Lisätieto"
+    :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])
+    :leveys 15}
+   {:otsikko "Lisä\u00ADtieto"
     :nimi ::kanavan-toimenpide/lisatieto
-    :tyyppi :string}
-   {:otsikko "Muu toimenpide"
+    :tyyppi :string
+    :leveys 10}
+   {:otsikko "Muu toimen\u00ADpide"
     :nimi ::kanavan-toimenpide/muu-toimenpide
-    :tyyppi :string}
-   {:otsikko "Suorittaja"
+    :tyyppi :string
+    :leveys 10}
+   {:otsikko "Suorit\u00ADtaja"
     :nimi ::kanavan-toimenpide/suorittaja
-    :tyyppi :string}
-   {:otsikko "Kuittaaja"
+    :tyyppi :string
+    :leveys 10}
+   {:otsikko "Kuit\u00ADtaaja"
     :nimi ::kanavan-toimenpide/kuittaaja
     :tyyppi :string
-    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))}])
+    :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
+    :leveys 10}
+   (grid/rivinvalintasarake
+     {:otsikkovalinta? true
+      :kaikki-valittu?-fn kaikki-valittu?-fn
+      :otsikko-valittu-fn otsikko-valittu-fn
+      :rivi-valittu?-fn rivi-valittu?-fn
+      :rivi-valittu-fn rivi-valittu-fn
+      :leveys 5})])
+
+(defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
+  (str toimenpiteiden-lkm " "
+       (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
+       " " toiminto "."))
 
 (defn toimenpidelomakkeen-kentat [toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
   (let [tehtava (valittu-tehtava toimenpide)]
@@ -129,3 +136,9 @@
       :tyyppi :string
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}]))
+
+(defn- ei-yksiloity-vihje []
+  [yleiset/vihje-elementti [:span
+                            [:span "Ei-yksilöidyt toimenpiderivit näytetään "]
+                            [:span.bold "lihavoituna"]
+                            [:span "."]]])

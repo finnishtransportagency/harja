@@ -1,5 +1,6 @@
 (ns harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
   (:require [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as tiedot]
+            [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
@@ -32,6 +33,27 @@
           :toimenpiteet []}
          (e! (tiedot/->ToimenpiteetEiHaettu)))))
 
+(deftest SiirraToimenpideKokonaishintaisiin
+  (vaadi-async-kutsut
+    #{tiedot/->ValitutSiirretty tiedot/->ValitutEiSiirretty}
+    (is (= {:toimenpiteiden-siirto-kaynnissa? true}
+           (e! (tiedot/->SiirraValitut))))))
+
+(deftest ValitutSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :valitut-toimenpide-idt #{}
+            :toimenpiteet (sequence [])}
+           (e! (tiedot/->ValitutSiirretty) app)))))
+
+(deftest ValitutEiSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+            :valitut-toimenpide-idt #{1}}
+           (e! (tiedot/->ValitutEiSiirretty) app)))))
 
 (deftest toimenpiteen-hinnoittelun-peruminen
   (let [vanha-tila {}

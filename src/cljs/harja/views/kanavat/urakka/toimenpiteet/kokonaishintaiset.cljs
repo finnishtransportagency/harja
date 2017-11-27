@@ -16,8 +16,10 @@
             [harja.ui.valinnat :as valinnat]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.yleiset :as yleiset])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -30,13 +32,20 @@
      ^{:key "toiminnot"}
      [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
       ^{:key "uusi-nappi"}
+      [napit/yleinen-ensisijainen
+       "Siirrä valitut muutos- ja lisätöihin"
+       (fn [_]
+         (e! (tiedot/->SiirraValitut)))
+       {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
       [napit/uusi
        "Uusi toimenpide"
        (fn [_]
          (e! (tiedot/->UusiToimenpide)))]]]))
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet]}]
-  [grid/grid
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet] :as app}]
+  [:div
+   [toimenpiteet-view/ei-yksiloity-vihje]
+   [grid/grid
    {:otsikko "Kokonaishintaiset toimenpiteet"
     :voi-lisata? false
     :voi-muokata? false
@@ -45,10 +54,22 @@
     :piilota-toiminnot? true
     :tyhja "Ei kokonaishitaisia toimenpiteita"
     :jarjesta ::kanavan-toimenpide/pvm
-    :tunniste ::kanavan-toimenpide/id
-    :rivi-klikattu #(e! (tiedot/->ValitseToimenpide %))}
-   toimenpiteet-view/toimenpidesarakkeet
-   toimenpiteet])
+    :tunniste ::kanavan-toimenpide/id}
+   (toimenpiteet-view/toimenpidesarakkeet
+     e! app
+     {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
+                              (count (:valitut-toimenpide-idt app)))
+      :otsikko-valittu-fn (fn [uusi-arvo]
+                            (e! (tiedot/->ValitseToimenpiteet
+                                  {:kaikki-valittu? uusi-arvo})))
+      :rivi-valittu?-fn (fn [rivi]
+                          (boolean ((:valitut-toimenpide-idt app)
+                                     (::kanavan-toimenpide/id rivi))))
+      :rivi-valittu-fn (fn [rivi uusi-arvo]
+                         (e! (tiedot/->ValitseToimenpide
+                               {:id (::kanavan-toimenpide/id rivi)
+                                :valittu? uusi-arvo})))})
+   (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
 (defn lomake-toiminnot [e! toimenpide]
   [:div

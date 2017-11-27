@@ -3,6 +3,7 @@
             [tuck.core :as tuck]
             [harja.id :refer [id-olemassa?]]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -37,14 +38,19 @@
 (defrecord TallennaToimenpide [toimenpide])
 (defrecord ToimenpideTallennettu [toimenpiteet])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
-(defrecord ValitseToimenpide [toimenpide])
+(defrecord ValitseToimenpide [tiedot])
+(defrecord ValitseToimenpiteet [tiedot])
+(defrecord SiirraValitut [])
+(defrecord ValitutSiirretty [])
+(defrecord ValitutEiSiirretty [])
 (defrecord PoistaToimenpide [toimenpide])
 
-(def tila
-  (atom {:nakymassa? false
-         :valinnat nil
-         :haku-kaynnissa? false
-         :toimenpiteet nil}))
+(def tila (atom {:nakymassa? false
+                 :valinnat nil
+                 :haku-kaynnissa? false
+                 :toimenpiteiden-siirto-kaynnissa? false
+                 :valitut-toimenpide-idt #{}
+                 :toimenpiteet nil}))
 
 (defn alkuvalinnat []
   {:urakka @navigaatio/valittu-urakka
@@ -152,6 +158,52 @@
     (assoc app :haku-kaynnissa? false
                :toimenpiteet []))
 
+  ValitseToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (let [toimenpide-id (:id tiedot)
+          valittu? (:valittu? tiedot)
+          aseta-valinta (if valittu? conj disj)]
+      (assoc app :valitut-toimenpide-idt
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
+
+  ValitseToimenpiteet
+  (process-event [{tiedot :tiedot} app]
+    (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
+      (if kaikki-valittu?
+        (assoc app :valitut-toimenpide-idt
+                   (set (map ::kanavan-toimenpide/id (:toimenpiteet app))))
+        (assoc app :valitut-toimenpide-idt #{}))))
+
+
+  SiirraValitut
+  (process-event [_ app]
+    (when-not (:toimenpiteiden-siirto-kaynnissa? app)
+      (-> app
+          (tuck-apurit/post! :siirra-kanavatoimenpiteet
+                             {::kanavan-toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
+                              ::kanavan-toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
+                              ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
+                             {:onnistui ->ValitutSiirretty
+                              :epaonnistui ->ValitutEiSiirretty})
+          (assoc :toimenpiteiden-siirto-kaynnissa? true))))
+
+  ValitutSiirretty
+  (process-event [_ app]
+    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+                     (count (:valitut-toimenpide-idt app)) "siirretty") :success)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false
+               :valitut-toimenpide-idt #{}
+               :toimenpiteet (filter
+                               (fn [toimenpide]
+                                 (not ((:valitut-toimenpide-idt app)
+                                        (::kanavan-toimenpide/id toimenpide))))
+                               (:toimenpiteet app))))
+
+  ValitutEiSiirretty
+  (process-event [_ app]
+    (viesti/nayta! "Siiro epäonnistui" :danger)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false))
+
   UusiToimenpide
   (process-event [_ app]
     (assoc app :valittu-toimenpide (esitaytetty-toimenpide)))
@@ -218,10 +270,6 @@
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
     (assoc app :tallennus-kaynnissa? false))
-  
-  ValitseToimenpide
-  (process-event [{toimenpide :toimenpide} app]
-    (assoc app :valittu-toimenpide toimenpide))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]

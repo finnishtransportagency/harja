@@ -207,36 +207,23 @@
                     :nayta-lisatyt-liitteet? false ; Tässä näkymässä liitteet eivät odota erillistä linkitystä,
                     ; vaan ne linkitetään toimenpiteeseen heti
                     :grid? true}])})
+
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
-  {:otsikko [napit/nappi
-             nil
-             #(if (tiedot/kaikki-valittu? (:toimenpiteet app))
-                (e! (tiedot/->ValitseToimenpiteet false toimenpiteet))
-                (e! (tiedot/->ValitseToimenpiteet true toimenpiteet)))
-             {:ikoni (if (tiedot/kaikki-valittu? (:toimenpiteet app))
-                       (ikonit/livicon-square)
-                       (ikonit/livicon-check))
-              :ikoninappi? true}]
-   :nimi :valinta
-   :tyyppi :komponentti
-   :tasaa :keskita
-   :solu-klikattu (fn [rivi]
-                    (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                     :valinta (not (:valittu? rivi))}
-                                                    toimenpiteet)))
-   :komponentti (fn [rivi]
-                  [kentat/tee-kentta
-                   {:tyyppi :checkbox}
-                   (r/wrap (:valittu? rivi)
-                           (fn [uusi]
-                             (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                              :valinta uusi}
-                                                             toimenpiteet))))])
-   :leveys 3})
+  (grid/rivinvalintasarake
+    {:otsikkovalinta? true
+     :kaikki-valittu?-fn #(tiedot/kaikki-valittu? (:toimenpiteet app))
+     :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
+     :rivi-valittu?-fn (fn [rivi]
+                         (:valittu? rivi))
+     :rivi-valittu-fn (fn [rivi uusi-arvo]
+                        (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                         :valinta uusi-arvo}
+                                                        toimenpiteet)))
+     :leveys 3}))
 
 (defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
-    (grid/otsikkorivin-tiedot
+    (grid/otsikko-ja-maara
       (::va/nimi vayla)
       (count vaylan-toimenpiteet))
     {:id (::va/vaylanro vayla)
@@ -298,8 +285,8 @@
            (fn [tyolaji]
              [tyolaji
               [:span
-               (grid/otsikkorivin-tiedot (to/reimari-tyolaji-fmt tyolaji)
-                                         (count (tiedot/toimenpiteet-tyolajilla
+               (grid/otsikko-ja-maara (to/reimari-tyolaji-fmt tyolaji)
+                                      (count (tiedot/toimenpiteet-tyolajilla
                                                   toimenpiteet
                                                   tyolaji)))
                (when toimenpiteiden-haku-kaynnissa? [:span " " [ajax-loader-pieni]])]
