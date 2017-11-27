@@ -103,7 +103,7 @@
     (jdbc/with-db-transaction
       [db db]
       ;; Tarkistetaan, että toimenpidekoodi, johon toimenpide liittyy, on olemassa myös uudella toimenpidetyypillä.
-      ;; Mikäli näin ei ole, tehtäväksi vaihdetaan "Ei yksilöity".
+      ;; Mikäli näin ei ole, niin tehtäväksi vaihdetaan "Ei yksilöity".
       (let [tehtavat (q-toimenpide/hae-toimenpiteiden-tehtavan-hinnoittelu db toimenpide-idt)
             paivitettavat-tehtava-idt (into #{}
                                             (keep (fn [tehtava]
