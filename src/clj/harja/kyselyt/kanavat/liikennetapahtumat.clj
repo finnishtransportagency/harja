@@ -41,9 +41,10 @@
                  #(when (= (::ur/id %) urakka-id) %)
                  urakat))))
 
-(defn- hae-liikennetapahtumat* [tapahtumat urakkatiedot-fn urakka-id]
+(defn- hae-liikennetapahtumat* [tapahtumat osien-tiedot-fn urakkatiedot-fn urakka-id]
   (->>
     tapahtumat
+    osien-tiedot-fn
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
     (map (partial urakat-idlla urakka-id))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))
@@ -54,6 +55,23 @@
                              (let [t (update t ::lt/alukset
                                              (partial remove (comp #(or (nil? %) (zero? %)) ::lt-alus/nippulkm)))]
                                (when-not (empty? (::lt/alukset t)) t)))))
+
+(defn hae-tapahtumien-palvelumuodot [db tapahtumat]
+  (let [id-ja-osat
+        (->>
+          (specql/fetch db
+                        ::lt/liikennetapahtuma
+                        (set/union
+                          lt/perustiedot
+                          lt/osien-tiedot)
+                        {::lt/id (op/in (map ::lt/id tapahtumat))})
+          (group-by ::lt/id)
+          (map (fn [[id osat]] [id (get-in osat [0 ::lt/osat])]))
+          (into {}))]
+    (map
+      (fn [tapahtuma]
+        (assoc tapahtuma ::lt/osat (id-ja-osat (::lt/id tapahtuma))))
+      tapahtumat)))
 
 (defn hae-liikennetapahtumat [db user {:keys [niput? aikavali] :as tiedot}]
   (let [urakka-id (::ur/id tiedot)
@@ -98,6 +116,7 @@
                                                   {::lt-alus/suunta suunta})
                                                 (when aluslaji
                                                   {::lt-alus/laji aluslaji}))})))))
+      (partial hae-tapahtumien-palvelumuodot db)
       (partial kohteet-q/hae-kohteiden-urakkatiedot db user)
       urakka-id)))
 

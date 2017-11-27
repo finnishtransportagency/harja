@@ -55,7 +55,7 @@
   #{[::kuittaaja kayttaja/perustiedot]})
 
 (def kohteen-tiedot
-  #{[::kohde kohde/perustiedot+osat]})
+  #{[::kohde kohde/perustiedot]})
 
 (def alusten-tiedot
   #{[::alukset (set/union lt-alus/perustiedot lt-alus/metatiedot)]})
