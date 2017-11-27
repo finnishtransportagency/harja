@@ -71,8 +71,7 @@
 (defn tehtava-paivitetaan? [hintatyyppi tehtava]
   (let [hintatyyppi-loytyi? (some #(when (= hintatyyppi %) %)
                                   (get-in tehtava [::toimenpide/toimenpidekoodi ::toimenpidekoodi/hinnoittelu]))]
-    (if hintatyyppi-loytyi?
-      false true)))
+    (not hintatyyppi-loytyi?)))
 
 (defn hae-kanavatoimenpiteet [db user {urakka-id ::toimenpide/urakka-id
                                        sopimus-id ::toimenpide/sopimus-id
