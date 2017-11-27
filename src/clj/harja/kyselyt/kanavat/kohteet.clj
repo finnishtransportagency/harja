@@ -29,7 +29,8 @@
                              (map (fn [[kohde-id urakat]] [kohde-id (filter
                                                                       (fn [urakka]
                                                                         ;; TODO oikeus nähdä urakkaan liitetty kohde
-                                                                        (oikeudet/voi-lukea?
+                                                                        true
+                                                                        #_(oikeudet/voi-lukea?
                                                                           oikeudet/urakat-kanavat-kokonaishintaiset
                                                                           (::ur/id urakka)
                                                                           user))
@@ -86,7 +87,9 @@
     (specql/fetch db
                   ::kohde/kohde
                   (set/union
-                    kohde/perustiedot-ja-kohdekokonaisuus)
+                    kohde/perustiedot
+                    kohde/kohteen-kohdekokonaisuus
+                    kohde/kohteenosat)
                   {::m/poistettu? false})
     (hae-kohteiden-urakkatiedot db user urakka-id)
     (remove (comp empty? ::kohde/urakat))))
