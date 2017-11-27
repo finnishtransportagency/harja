@@ -28,10 +28,10 @@
                    {::toimenpide/id (op/in (into #{} (map :id idt)))})))
       [])))
 
-(defn- vaadi-toimenpiteet-kuuluvat-urakkaan* [toimenpiteet toimenpide-idt urakka-id]
+(defn- vaadi-toimenpiteet-kuuluvat-urakkaan* [toimenpiteet-kannassa toimenpide-idt urakka-id]
   (when (or
           (nil? urakka-id)
-          (not (->> toimenpiteet
+          (not (->> toimenpiteet-kannassa
                     (map ::toimenpide/urakka-id)
                     (every? (partial = urakka-id)))))
     (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
