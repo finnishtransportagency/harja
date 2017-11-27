@@ -20,12 +20,15 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+;; YLeiset
 (defrecord NakymaAvattu [])
 (defrecord NakymaSuljettu [])
 (defrecord PaivitaValinnat [valinnat])
+;; Haut
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteidenHakuEpaonnistui [])
+;; Lomake
 (defrecord UusiToimenpide [])
 (defrecord TyhjennaValittuToimenpide [])
 (defrecord AsetaToimenpiteenTiedot [toimenpide])
@@ -38,12 +41,13 @@
 (defrecord TallennaToimenpide [toimenpide])
 (defrecord ToimenpideTallennettu [toimenpiteet])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+(defrecord PoistaToimenpide [toimenpide])
+;; Siirto
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
 (defrecord SiirraValitut [])
 (defrecord ValitutSiirretty [])
 (defrecord ValitutEiSiirretty [])
-(defrecord PoistaToimenpide [toimenpide])
 
 (def tila (atom {:nakymassa? false
                  :valinnat nil
