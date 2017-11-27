@@ -247,4 +247,6 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
     '{muutoshintainen}', (SELECT id FROM toimenpidekoodi WHERE koodi='24104'));
   INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus, poistettu, muokkaaja, muokattu)
   VALUES ('2016-08-01', '2019-07-30', 'h', 41, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Henkilöstö: muutosaskare'), urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto, 'f', kayttaja_id_jvh, '2017-11-23T13:17:24.301474');
+  INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja) VALUES ((SELECT MAX(id) FROM kan_toimenpide),
+  (SELECT id FROM toimenpidekoodi WHERE nimi = 'Henkilöstö: muutosaskare'), 4, kayttaja_id_jvh);
 END $$;
