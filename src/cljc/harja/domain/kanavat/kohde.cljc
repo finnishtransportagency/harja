@@ -59,9 +59,6 @@
 (def kohteenosat
   #{[::kohteenosat osa/perustiedot]})
 
-(def perustiedot+osat
-  (set/union perustiedot kohteenosat))
-
 (def metatiedot m/muokkauskentat)
 
 (def perustiedot-ja-sijainti (conj perustiedot ::sijainti))
@@ -70,8 +67,6 @@
 
 (def kohteen-kohdekokonaisuus #{[::kohdekokonaisuus kok/perustiedot]})
 
-(def perustiedot-ja-kohdekokonaisuus
-  (set/union perustiedot kohteen-kohdekokonaisuus))
 ;; Domain-funktiot
 
 (defn tyyppi->str [kohde]
