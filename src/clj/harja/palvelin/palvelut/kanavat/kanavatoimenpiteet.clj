@@ -24,10 +24,10 @@
 
 (defn vaadi-rivit-kuuluvat-emoon [db rivien-taulu rivin-emo-id-avain rivin-id-avain rivi-idt emo-id]
   (let [rivit (specql/fetch
-               db
-               rivien-taulu
-               #{rivin-emo-id-avain rivin-id-avain}
-               {rivin-id-avain (op/in rivi-idt)})]
+                db
+                rivien-taulu
+                #{rivin-emo-id-avain rivin-id-avain}
+                {rivin-id-avain (op/in rivi-idt)})]
     (when (not-empty rivi-idt)
       (vaadi-rivit-kuuluvat-emoon* rivit rivi-idt rivin-emo-id-avain emo-id))))
 
@@ -52,13 +52,13 @@
 
     (jdbc/with-db-transaction [db db]
       (q-toimenpide/tallenna-toimenpiteen-omat-hinnat!
-       {:db db
-        :user user
-        :hinnat (liita-tpid-mappeihin (::hinta/tallennettavat-hinnat tiedot) ::hinta/toimenpide-id)})
+        {:db db
+         :user user
+         :hinnat (liita-tpid-mappeihin (::hinta/tallennettavat-hinnat tiedot) ::hinta/toimenpide-id)})
       (q-toimenpide/tallenna-toimenpiteen-tyot!
-       {:db db
-        :user user
-        :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
+        {:db db
+         :user user
+         :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
       (first (q-toimenpide/hae-kanavatoimenpiteet db {::toimenpide/id toimenpide-id})))))
 
 (defn tarkista-kutsu [user urakka-id tyyppi]
@@ -100,20 +100,21 @@
       (oikeudet/vaadi-oikeus "siirrä-kokonaishintaisiin" oikeudet/urakat-kanavat-lisatyot user urakka-id)
       (oikeudet/vaadi-oikeus "siirrä-muutos-ja-lisätöihin" oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id))
     (q-toimenpide/vaadi-toimenpiteet-kuuluvat-urakkaan db (::toimenpide/toimenpide-idt tiedot) urakka-id)
-    (jdbc/with-db-transaction [db db]
-                              (let [tehtavat (q-toimenpide/hae-toimenpiteiden-tehtavan-hinnoittelu db toimenpide-idt)
-                                    paivitettavat-tehtava-idt (into #{}
-                                                                    (keep (fn [tehtava]
-                                                                            (::toimenpide/id
-                                                                              (if siirto-kokonaishintaisiin?
-                                                                                (when (tehtava-paivitetaan? "kokonaishintainen" tehtava) tehtava)
-                                                                                (when (tehtava-paivitetaan? "muutoshintainen" tehtava) tehtava)))))
-                                                                    tehtavat)
-                                    tehtavan-id (:id (first (q-toimenpidekoodit/hae-tehtavan-id db {:nimi "Ei yksilöity"
-                                                                                                    :kolmois-tason-tehtavan-koodi "24104"})))]
-                                (q-toimenpide/paivita-toimenpiteiden-tehtava db paivitettavat-tehtava-idt tehtavan-id)
-                                (q-toimenpide/paivita-toimenpiteiden-tyyppi db toimenpide-idt (::toimenpide/tyyppi tiedot))
-                                toimenpide-idt))))
+    (jdbc/with-db-transaction
+      [db db]
+      (let [tehtavat (q-toimenpide/hae-toimenpiteiden-tehtavan-hinnoittelu db toimenpide-idt)
+            paivitettavat-tehtava-idt (into #{}
+                                            (keep (fn [tehtava]
+                                                    (::toimenpide/id
+                                                      (if siirto-kokonaishintaisiin?
+                                                        (when (tehtava-paivitetaan? "kokonaishintainen" tehtava) tehtava)
+                                                        (when (tehtava-paivitetaan? "muutoshintainen" tehtava) tehtava)))))
+                                            tehtavat)
+            tehtavan-id (:id (first (q-toimenpidekoodit/hae-tehtavan-id db {:nimi "Ei yksilöity"
+                                                                            :kolmois-tason-tehtavan-koodi "24104"})))]
+        (q-toimenpide/paivita-toimenpiteiden-tehtava db paivitettavat-tehtava-idt tehtavan-id)
+        (q-toimenpide/paivita-toimenpiteiden-tyyppi db toimenpide-idt (::toimenpide/tyyppi tiedot))
+        toimenpide-idt))))
 
 (defn tallenna-kanavatoimenpide [db user {tyyppi ::toimenpide/tyyppi
                                           urakka-id ::toimenpide/urakka-id
@@ -139,12 +140,12 @@
       {:kysely-spec ::toimenpide/siirra-kanavatoimenpiteet-kysely
        :vastaus-spec ::toimenpide/siirra-kanavatoimenpiteet-vastaus})
     (julkaise-palvelu
-     http
-     :tallenna-kanavatoimenpiteen-hinnoittelu
-     (fn [user hakuehdot]
-       (tallenna-kanavatoimenpiteen-hinnoittelu! db user hakuehdot))
-     {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-kysely
-      :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-vastaus})
+      http
+      :tallenna-kanavatoimenpiteen-hinnoittelu
+      (fn [user hakuehdot]
+        (tallenna-kanavatoimenpiteen-hinnoittelu! db user hakuehdot))
+      {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-kysely
+       :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-vastaus})
     (julkaise-palvelu
       http
       :tallenna-kanavatoimenpide
