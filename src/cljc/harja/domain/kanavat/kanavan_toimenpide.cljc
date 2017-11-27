@@ -72,14 +72,6 @@
 (def huoltokohteen-tiedot
   #{[::huoltokohde huoltokohde/perustiedot]})
 
-(def tyotiedot
-  #{[::tyot
-     tyo/perustiedot]})
-
-(def hintatiedot
-  #{[::hinnat
-     hinta/perustiedot]})
-
 (def toimenpiteen-tiedot
   #{[::toimenpidekoodi toimenpidekoodi/perustiedot]})
 
@@ -103,9 +95,7 @@
              kohteenosan-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
-             kuittaajan-tiedot
-             hintatiedot
-             tyotiedot))
+             kuittaajan-tiedot))
 
 (s/def ::hae-kanavatoimenpiteet-kysely
   (s/keys :req [::urakka-id
