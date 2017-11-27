@@ -3,10 +3,11 @@ TRUNCATE kan_kanava CASCADE;
 ALTER TABLE kan_hairio DROP COLUMN kohde;
 ALTER TABLE kan_toimenpide DROP COLUMN kohde;
 ALTER TABLE kan_liikennetapahtuma DROP COLUMN "kohde-id";
+ALTER TABLE kan_kohde_urakka DROP CONSTRAINT "kan_kohde_urakka_kohde-id_fkey";
 
-DROP TABLE kan_kohde_urakka;
 DROP TABLE kan_kohde;
 DROP TABLE kan_kanava;
+DROP TABLE kan_kohde_urakka;
 
 
 CREATE TABLE kan_kohdekokonaisuus (
