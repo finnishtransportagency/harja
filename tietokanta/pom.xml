@@ -27,6 +27,7 @@
                     <baselineOnMigrate>true</baselineOnMigrate>
                     <allowMixedMigrations>false</allowMixedMigrations>
                     <baselineVersion>0</baselineVersion>
+                    <outOfOrder>true</outOfOrder>
                     <url>${databaseUrl}</url>
                     <user>${databaseUser}</user>
                 </configuration>
