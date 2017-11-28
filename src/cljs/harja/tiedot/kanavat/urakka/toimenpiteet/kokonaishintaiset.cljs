@@ -30,8 +30,8 @@
 (defrecord ToimenpiteidenHakuEpaonnistui [])
 ;; Lomake
 (defrecord UusiToimenpide [])
-(defrecord TyhjennaValittuToimenpide [])
-(defrecord AsetaToimenpiteenTiedot [toimenpide])
+(defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
+(defrecord TyhjennaAvattuToimenpide [])
 (defrecord ValinnatHaettuToimenpiteelle [valinnat])
 (defrecord VirheTapahtui [virhe])
 (defrecord KohteetHaettu [kohteet])
@@ -42,7 +42,7 @@
 (defrecord ToimenpideTallennettu [toimenpiteet])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
 (defrecord PoistaToimenpide [toimenpide])
-;; Siirto
+;; Rivien valinta ja niiden toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
 (defrecord SiirraValitut [])
@@ -51,6 +51,12 @@
 
 (def tila (atom {:nakymassa? false
                  :valinnat nil
+                 :avattu-toimenpide nil
+                 :kohteet nil
+                 :toimenpideinstanssit nil
+                 :tehtavat nil
+                 :huoltokohteet nil
+                 :tallennus-kaynnissa? false
                  :haku-kaynnissa? false
                  :toimenpiteiden-siirto-kaynnissa? false
                  :valitut-toimenpide-idt #{}
@@ -210,15 +216,15 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :valittu-toimenpide (esitaytetty-toimenpide)))
+    (assoc app :avattu-toimenpide (esitaytetty-toimenpide)))
 
-  TyhjennaValittuToimenpide
+  TyhjennaAvattuToimenpide
   (process-event [_ app]
-    (dissoc app :valittu-toimenpide))
+    (dissoc app :avattu-toimenpide))
 
-  AsetaToimenpiteenTiedot
+  AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (assoc app :valittu-toimenpide toimenpide))
+    (assoc app :avattu-toimenpide toimenpide))
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
@@ -265,8 +271,9 @@
 
   ToimenpideTallennettu
   (process-event [{toimenpiteet :toimenpiteet} app]
+    (viesti/nayta! "Toimenpide tallennettu" :success)
     (assoc app :tallennus-kaynnissa? false
-               :valittu-toimenpide nil
+               :avattu-toimenpide nil
                :toimenpiteet toimenpiteet))
 
 

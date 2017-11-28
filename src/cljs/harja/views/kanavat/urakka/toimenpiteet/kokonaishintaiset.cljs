@@ -46,30 +46,31 @@
   [:div
    [toimenpiteet-view/ei-yksiloity-vihje]
    [grid/grid
-   {:otsikko "Kokonaishintaiset toimenpiteet"
-    :voi-lisata? false
-    :voi-muokata? false
-    :voi-poistaa? false
-    :voi-kumota? false
-    :piilota-toiminnot? true
-    :tyhja "Ei kokonaishitaisia toimenpiteita"
-    :jarjesta ::kanavan-toimenpide/pvm
-    :tunniste ::kanavan-toimenpide/id}
-   (toimenpiteet-view/toimenpidesarakkeet
-     e! app
-     {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
-                              (count (:valitut-toimenpide-idt app)))
-      :otsikko-valittu-fn (fn [uusi-arvo]
-                            (e! (tiedot/->ValitseToimenpiteet
-                                  {:kaikki-valittu? uusi-arvo})))
-      :rivi-valittu?-fn (fn [rivi]
-                          (boolean ((:valitut-toimenpide-idt app)
-                                     (::kanavan-toimenpide/id rivi))))
-      :rivi-valittu-fn (fn [rivi uusi-arvo]
-                         (e! (tiedot/->ValitseToimenpide
-                               {:id (::kanavan-toimenpide/id rivi)
-                                :valittu? uusi-arvo})))})
-   (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
+    {:otsikko "Kokonaishintaiset toimenpiteet"
+     :voi-lisata? false
+     :voi-muokata? false
+     :voi-poistaa? false
+     :voi-kumota? false
+     :piilota-toiminnot? true
+     :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
+     :tyhja "Ei kokonaishitaisia toimenpiteita"
+     :jarjesta ::kanavan-toimenpide/pvm
+     :tunniste ::kanavan-toimenpide/id}
+    (toimenpiteet-view/toimenpidesarakkeet
+      e! app
+      {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
+                               (count (:valitut-toimenpide-idt app)))
+       :otsikko-valittu-fn (fn [uusi-arvo]
+                             (e! (tiedot/->ValitseToimenpiteet
+                                   {:kaikki-valittu? uusi-arvo})))
+       :rivi-valittu?-fn (fn [rivi]
+                           (boolean ((:valitut-toimenpide-idt app)
+                                      (::kanavan-toimenpide/id rivi))))
+       :rivi-valittu-fn (fn [rivi uusi-arvo]
+                          (e! (tiedot/->ValitseToimenpide
+                                {:id (::kanavan-toimenpide/id rivi)
+                                 :valittu? uusi-arvo})))})
+    (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
 (defn lomake-toiminnot [e! toimenpide]
   [:div
@@ -87,7 +88,7 @@
           :hyvaksy "Poista"
           :toiminto-fn (fn [] (e! (tiedot/->PoistaToimenpide toimenpide)))})])])
 
-(defn kokonaishintainen-toimenpidelomake [e! {:keys [valittu-toimenpide
+(defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide
                                                      kohteet
                                                      toimenpideinstanssit
                                                      tehtavat
@@ -95,21 +96,29 @@
                                                      tallennus-kaynnissa?]
                                               :as app}]
   (let [urakka (get-in app [:valinnat :urakka])
-        sopimukset (:sopimukset urakka)]
+        sopimukset (:sopimukset urakka)
+        lomake-valmis? (not (empty? huoltokohteet))]
     [:div
-     [napit/takaisin "Takaisin varusteluetteloon"
-      #(e! (tiedot/->TyhjennaValittuToimenpide))]
-     [lomake/lomake
-      {:otsikko "Uusi toimenpide"
-       :muokkaa! #(e! (tiedot/->AsetaToimenpiteenTiedot %))
-       :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
-      (toimenpiteet-view/toimenpidelomakkeen-kentat valittu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
-      valittu-toimenpide]]))
+     [napit/takaisin "Takaisin toimenpideluetteloon"
+      #(e! (tiedot/->TyhjennaAvattuToimenpide))]
+     (if lomake-valmis?
+       [lomake/lomake
+        {:otsikko "Uusi toimenpide"
+         :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
+         :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
+        (toimenpiteet-view/toimenpidelomakkeen-kentat {:avattu-toimenpide avattu-toimenpide
+                                                       :sopimukset sopimukset
+                                                       :kohteet kohteet
+                                                       :huoltokohteet huoltokohteet
+                                                       :toimenpideinstanssit toimenpideinstanssit
+                                                       :tehtavat tehtavat})
+        avattu-toimenpide]
+       [ajax-loader "Ladataan..."])]))
 
-(defn kokonaishintaiset-nakyma [e! {:keys [valittu-toimenpide]
+(defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
                                     :as app}]
   [:div
-   (if valittu-toimenpide
+   (if avattu-toimenpide
      [kokonaishintainen-toimenpidelomake e! app]
      [:div
       [hakuehdot e! app]
