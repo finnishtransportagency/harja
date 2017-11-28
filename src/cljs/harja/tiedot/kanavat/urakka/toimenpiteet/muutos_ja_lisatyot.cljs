@@ -331,7 +331,7 @@
   LisaaMuuTyorivi
   (process-event [_ app]
     (lisaa-hintarivi-toimenpiteelle
-      {::hinta/ryhma :tyo}
+      {::hinta/ryhma "tyo"}
       app))
 
   PoistaHinnoiteltavaTyorivi
