@@ -70,6 +70,9 @@
 
 (def kohteen-kohdekokonaisuus #{[::kohdekokonaisuus kok/perustiedot]})
 
+(def perustiedot-ja-kohdekokonaisuus
+  (set/union perustiedot kohteen-kohdekokonaisuus))
+
 ;; Domain-funktiot
 
 (defn tyyppi->str [kohde]
