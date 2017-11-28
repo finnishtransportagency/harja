@@ -7,6 +7,7 @@
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
+            [harja.loki :refer [log]]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavatoimenpidetiedot]
             [harja.ui.yleiset :as yleiset]))
@@ -67,8 +68,10 @@
        (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
        " " toiminto "."))
 
-(defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]}]
-  (let [tehtava (valittu-tehtava toimenpide)]
+(defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
+                                          toimenpideinstanssit tehtavat]}]
+  (let [tehtava (valittu-tehtava toimenpide)
+        valittu-kohde (::kanavan-toimenpide/kohde toimenpide)]
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
@@ -85,6 +88,11 @@
       :nimi ::kanavan-toimenpide/kohde
       :tyyppi :valinta
       :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
+      :valinnat kohteet}
+     {:otsikko "Kohteen osa"
+      :nimi ::kanavan-toimenpide/kohteenosa
+      :tyyppi :valinta
+      :valinta-nayta #(or (::kohde/nimi %) "- Valitse osa -")
       :valinnat kohteet}
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde
