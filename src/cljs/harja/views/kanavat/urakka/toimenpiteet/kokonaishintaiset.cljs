@@ -96,16 +96,24 @@
                                                      tallennus-kaynnissa?]
                                               :as app}]
   (let [urakka (get-in app [:valinnat :urakka])
-        sopimukset (:sopimukset urakka)]
+        sopimukset (:sopimukset urakka)
+        lomake-valmis? (not (empty? huoltokohteet))]
     [:div
      [napit/takaisin "Takaisin varusteluetteloon"
       #(e! (tiedot/->TyhjennaAvattuToimenpide))]
-     [lomake/lomake
-      {:otsikko "Uusi toimenpide"
-       :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-       :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
-      (toimenpiteet-view/toimenpidelomakkeen-kentat avattu-toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat)
-      avattu-toimenpide]]))
+     (if lomake-valmis?
+       [lomake/lomake
+        {:otsikko "Uusi toimenpide"
+         :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
+         :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
+        (toimenpiteet-view/toimenpidelomakkeen-kentat {:avattu-toimenpide avattu-toimenpide
+                                                       :sopimukset sopimukset
+                                                       :kohteet kohteet
+                                                       :huoltokohteet huoltokohteet
+                                                       :toimenpideinstanssit toimenpideinstanssit
+                                                       :tehtavat tehtavat})
+        avattu-toimenpide]
+       [ajax-loader "Ladataan..."])]))
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
                                     :as app}]

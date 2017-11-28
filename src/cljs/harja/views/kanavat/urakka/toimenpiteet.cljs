@@ -67,7 +67,7 @@
        (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
        " " toiminto "."))
 
-(defn toimenpidelomakkeen-kentat [toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]
+(defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)]
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
