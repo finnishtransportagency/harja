@@ -1,4 +1,4 @@
--- name: hae-sopimuksen-kanavatoimenpiteet-aikavalilta
+-- name: hae-kanavatoimenpiteet-aikavalilta
 SELECT kt.id
 FROM kan_toimenpide kt
   JOIN kan_kohde kh ON kt."kohde-id" = kh.id
