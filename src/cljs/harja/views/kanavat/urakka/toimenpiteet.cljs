@@ -4,6 +4,7 @@
             [clojure.string :as str]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
@@ -71,7 +72,9 @@
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
                                           toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)
-        valittu-kohde (::kanavan-toimenpide/kohde toimenpide)]
+        valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
+        valitun-kohteen-osat (::kohde/kohteenosat (first (filter #(= (::kohde/id %) valittu-kohde-id) kohteet)))]
+
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
@@ -92,8 +95,10 @@
      {:otsikko "Kohteen osa"
       :nimi ::kanavan-toimenpide/kohteenosa
       :tyyppi :valinta
-      :valinta-nayta #(or (::kohde/nimi %) "- Valitse osa -")
-      :valinnat kohteet}
+      :valinta-nayta #(do
+                        (log "KOHDEOSA NÄYTÄ: " (pr-str %))
+                        (or (kohteenosa/fmt-kohdeosa-tyyppi %) "- Valitse osa -"))
+      :valinnat (or valitun-kohteen-osat [])}
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde
       :tyyppi :valinta
@@ -128,6 +133,7 @@
                    (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)
                    (assoc-in [:tehtava :tpk-id] arvo)
                    (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))))}
+     ;; TODO Tämä päättely ei toimi
      (when (kanavatoimenpidetiedot/valittu-tehtava-muu? tehtava tehtavat)
        {:otsikko "Muu toimenpide"
         :nimi ::kanavan-toimenpide/muu-toimenpide
