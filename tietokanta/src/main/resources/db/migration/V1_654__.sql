@@ -36,8 +36,8 @@ CREATE TYPE TIELUVAN_KAAPELIASENNUS AS (
 );
 
 CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
-  laite     VARCHAR(128),
-  tyyppi    VARCHAR(128),
+  laite     TEXT,
+  tyyppi    TEXT,
   ohjeet    TEXT,
   kommentit TEXT,
   toiminnot TEXT,
@@ -62,7 +62,7 @@ CREATE TABLE tielupa (
   id                                                              SERIAL PRIMARY KEY,
   "ulkoinen-tunniste"                                             INTEGER                              NOT NULL,
   tyyppi                                                          TIELUPATYYPPI                        NOT NULL,
-  "paatoksen-diaarinumero"                                        VARCHAR(128)                         NOT NULL,
+  "paatoksen-diaarinumero"                                        TEXT                                 NOT NULL,
   saapumispvm                                                     DATE,
   myontamispvm                                                    DATE,
   "voimassaolon-alkupvm"                                          DATE,
@@ -71,42 +71,42 @@ CREATE TABLE tielupa (
   "katselmus-url"                                                 TEXT,
   ely                                                             INTEGER REFERENCES organisaatio (id) NOT NULL,
   urakka                                                          INTEGER REFERENCES urakka (id),
-  "urakan-nimi"                                                   VARCHAR(512),
-  kunta                                                           VARCHAR(256)                         NOT NULL,
-  "kohde-lahiosoite"                                              VARCHAR(512),
-  "kohde-postinumero"                                             VARCHAR(5),
-  "kohde-postitoimipaikka"                                        VARCHAR(512),
-  "tien-nimi"                                                     VARCHAR(512),
+  "urakan-nimi"                                                   TEXT,
+  kunta                                                           TEXT                                 NOT NULL,
+  "kohde-lahiosoite"                                              TEXT,
+  "kohde-postinumero"                                             TEXT,
+  "kohde-postitoimipaikka"                                        TEXT,
+  "tien-nimi"                                                     TEXT,
   sijainnit                                                       TR_OSOITE_LAAJENNETTU [],
 
   -- hakijan tiedot
-  "hakija-nimi"                                                   VARCHAR(512)                         NOT NULL,
-  "hakija-osasto"                                                 VARCHAR(512),
-  "hakija-postinosoite"                                           VARCHAR(512)                         NOT NULL,
-  "hakija-postinumero"                                            VARCHAR(5)                           NOT NULL,
-  "hakija-puhelinnumero"                                          VARCHAR(32),
-  "hakija-sahkopostiosoite"                                       VARCHAR(512)                         NOT NULL,
-  "hakija-tyyppi"                                                 VARCHAR(256),
-  "hakija-maakoodi"                                               VARCHAR(128),
+  "hakija-nimi"                                                   TEXT                                 NOT NULL,
+  "hakija-osasto"                                                 TEXT,
+  "hakija-postinosoite"                                           TEXT                                 NOT NULL,
+  "hakija-postinumero"                                            TEXT                                 NOT NULL,
+  "hakija-puhelinnumero"                                          TEXT,
+  "hakija-sahkopostiosoite"                                       TEXT                                 NOT NULL,
+  "hakija-tyyppi"                                                 TEXT,
+  "hakija-maakoodi"                                               TEXT,
 
   -- urakoitsijan tiedot
-  "urakoitsija-nimi"                                              VARCHAR(512)                         NOT NULL,
-  "urakoitsija-yhteyshenkilo"                                     VARCHAR(512),
-  "urakoitsija-puhelinnumero"                                     VARCHAR(32),
-  "urakoitsija-sahkopostiosoite"                                  VARCHAR(512),
+  "urakoitsija-nimi"                                              TEXT                                 NOT NULL,
+  "urakoitsija-yhteyshenkilo"                                     TEXT,
+  "urakoitsija-puhelinnumero"                                     TEXT,
+  "urakoitsija-sahkopostiosoite"                                  TEXT,
 
   -- liikenteenohjauksesta vastaavan tiedot
-  "liikenneohjaajan-nimi"                                         VARCHAR(512)                         NOT NULL,
-  "liikenneohjaajan-yhteyshenkilo"                                VARCHAR(512),
-  "liikenneohjaajan-puhelinnumero"                                VARCHAR(32),
-  "liikenneohjaajan-sahkopostiosoite"                             VARCHAR(512),
+  "liikenneohjaajan-nimi"                                         TEXT                                 NOT NULL,
+  "liikenneohjaajan-yhteyshenkilo"                                TEXT,
+  "liikenneohjaajan-puhelinnumero"                                TEXT,
+  "liikenneohjaajan-sahkopostiosoite"                             TEXT,
 
   -- tienpitoviranomaisen tiedot
-  "tienpitoviranomainen-yhteyshenkilo"                            VARCHAR(512),
-  "tienpitoviranomainen-puhelinnumero"                            VARCHAR(32),
-  "tienpitoviranomainen-sahkopostiosoite"                         VARCHAR(512),
-  "tienpitoviranomainen-lupapaallikko"                            VARCHAR(512),
-  "tienpitoviranomainen-kasittelija"                              VARCHAR(512),
+  "tienpitoviranomainen-yhteyshenkilo"                            TEXT,
+  "tienpitoviranomainen-puhelinnumero"                            TEXT,
+  "tienpitoviranomainen-sahkopostiosoite"                         TEXT,
+  "tienpitoviranomainen-lupapaallikko"                            TEXT,
+  "tienpitoviranomainen-kasittelija"                              TEXT,
 
   -- valmistumisilmoitus
   "valmistumisilmoitus-vaaditaan"                                 BOOLEAN,
@@ -120,8 +120,8 @@ CREATE TABLE tielupa (
   "johtolupa-silta-asennuksia"                                    INTEGER,
 
   -- liittymäluvan tiedot
-  "liittymalupa-myonnetty-kayttotarkoitus"                        VARCHAR(256),
-  "liittymalupa-haettu-kayttotarkoitus"                           VARCHAR(256),
+  "liittymalupa-myonnetty-kayttotarkoitus"                        TEXT,
+  "liittymalupa-haettu-kayttotarkoitus"                           TEXT,
   "liittymalupa-liittyman-siirto"                                 BOOLEAN,
   "liittymalupa-tarkoituksen-kuvaus"                              TEXT,
   "liittymalupa-tilapainen"                                       BOOLEAN,
@@ -130,10 +130,10 @@ CREATE TABLE tielupa (
   "liittymalupa-arvioitu-kuorma-autoliikenne"                     INTEGER,
   "liittymalupa-nykyisen-liittyman-numero"                        INTEGER,
   "liittymalupa-nykyisen-liittyman-paivays"                       DATE,
-  "liittymalupa-kiinteisto-rn"                                    VARCHAR(128),
+  "liittymalupa-kiinteisto-rn"                                    TEXT,
   "liittymalupa-muut-kulkuyhteydet"                               TEXT,
   "liittymalupa-valmistumisen-takaraja"                           DATE,
-  "liittymalupa-kyla"                                             VARCHAR(256),
+  "liittymalupa-kyla"                                             TEXT,
 
   -- liittymäluvan liittymäohje
   "liittymalupa-liittymaohje-liittymakaari"                       DECIMAL,
@@ -180,7 +180,7 @@ CREATE TABLE tielupa (
   "suoja-aluerakentamislupa-suoja-alueen-leveys"                  DECIMAL,
   "suoja-aluerakentamislupa-suoja-alue"                           BOOLEAN,
   "suoja-aluerakentamislupa-nakema-alue"                          BOOLEAN,
-  "suoja-aluerakentamislupa-kiinteisto-rn"                        VARCHAR(128),
+  "suoja-aluerakentamislupa-kiinteisto-rn"                        TEXT,
 
   -- tilapäinen myyntilupa
   "myyntilupa-aihe"                                               TEXT,
@@ -195,7 +195,6 @@ CREATE TABLE tielupa (
   "liikennemerkkijarjestely-nopeusrajoituksen-syy"                TEXT,
   "liikennemerkkijarjestely-lisatiedot-nopeusrajoituksesta"       TEXT,
   "liikennemerkkijarjestely-muut-liikennemerkit"                  TEXT,
-
 
   -- tyolupa
   "tyolupa-tyon-sisalto"                                          TEXT,
