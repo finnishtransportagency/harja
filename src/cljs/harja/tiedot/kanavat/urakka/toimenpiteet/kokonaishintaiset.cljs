@@ -271,8 +271,9 @@
 
   ToimenpideTallennettu
   (process-event [{toimenpiteet :toimenpiteet} app]
+    (viesti/nayta! "Toimenpide tallennettu" :success)
     (assoc app :tallennus-kaynnissa? false
-               :valittu-toimenpide nil
+               :avattu-toimenpide nil
                :toimenpiteet toimenpiteet))
 
 
