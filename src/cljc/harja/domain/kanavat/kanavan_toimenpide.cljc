@@ -66,7 +66,10 @@
     ::muokkaustiedot/poistettu?})
 
 (def kohteen-tiedot
-  #{[::kohde kohde/perustiedot+osat]})
+  #{[::kohde kohde/perustiedot]})
+
+(def kohteenosan-tiedot
+  #{[::kohteenosa osa/perustiedot]})
 
 (def huoltokohteen-tiedot
   #{[::huoltokohde huoltokohde/perustiedot]})
@@ -99,6 +102,7 @@
   (set/union perustiedot
              muokkaustiedot
              kohteen-tiedot
+             kohteenosan-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
              kuittaajan-tiedot
@@ -127,10 +131,10 @@
 
 (s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-kysely
   (s/keys
-   :req [::urakka-id
-         ::id
-         :harja.domain.kanavat.hinta/tallennettavat-hinnat
-         :harja.domain.kanavat.tyo/tallennettavat-tyot]))
+    :req [::urakka-id
+          ::id
+          :harja.domain.kanavat.hinta/tallennettavat-hinnat
+          :harja.domain.kanavat.tyo/tallennettavat-tyot]))
 
 (s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-vastaus
   ::kanava-toimenpide)
