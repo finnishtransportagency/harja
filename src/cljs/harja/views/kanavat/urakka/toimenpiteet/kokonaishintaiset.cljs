@@ -99,7 +99,7 @@
         sopimukset (:sopimukset urakka)
         lomake-valmis? (not (empty? huoltokohteet))]
     [:div
-     [napit/takaisin "Takaisin varusteluetteloon"
+     [napit/takaisin "Takaisin toimenpideluetteloon"
       #(e! (tiedot/->TyhjennaAvattuToimenpide))]
      (if lomake-valmis?
        [lomake/lomake
