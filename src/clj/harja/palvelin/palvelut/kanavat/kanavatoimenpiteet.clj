@@ -82,7 +82,7 @@
 
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (name tyyppi)]
-    (q-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
+    (q-toimenpide/hae-sopimuksen-toimenpiteet
       db
       {:urakka urakka-id
        :sopimus sopimus-id

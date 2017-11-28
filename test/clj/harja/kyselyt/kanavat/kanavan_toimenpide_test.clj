@@ -10,7 +10,7 @@
 
 (deftest hae-kanavan-toimenpiteet
   (let [db (tietokanta/luo-tietokanta testitietokanta)
-        vastaus (kanava-q/hae-sopimuksen-toimenpiteet-aikavalilta
+        vastaus (kanava-q/hae-sopimuksen-toimenpiteet
                   db
                   {:urakka (hae-saimaan-kanavaurakan-id)
                    :sopimus (hae-saimaan-kanavaurakan-paasopimuksen-id)

@@ -17,7 +17,7 @@
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
-(defn hae-sopimuksen-toimenpiteet-aikavalilta [db hakuehdot]
+(defn hae-sopimuksen-toimenpiteet [db hakuehdot]
   (let [idt (hae-kanavatoimenpiteet-aikavalilta db hakuehdot)]
     (if (not (empty? idt))
       (sort-by ::toimenpide/alkupvm
