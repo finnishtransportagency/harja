@@ -61,14 +61,14 @@
          :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
       (first (q-toimenpide/hae-kanavatoimenpiteet db {::toimenpide/id toimenpide-id})))))
 
-(defn tarkista-kutsu [user urakka-id tyyppi]
+(defn- tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
   (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
   (case tyyppi
     :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
     :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id)))
 
-(defn tehtava-paivitetaan? [hintatyyppi tehtava]
+(defn- tehtava-paivitetaan? [hintatyyppi tehtava]
   (let [hintatyyppi-loytyi? (some #(when (= hintatyyppi %) %)
                                   (get-in tehtava [::toimenpide/toimenpidekoodi ::toimenpidekoodi/hinnoittelu]))]
     (not hintatyyppi-loytyi?)))
