@@ -66,10 +66,7 @@
     ::muokkaustiedot/poistettu?})
 
 (def kohteen-tiedot
-  #{[::kohde kohde/perustiedot]})
-
-(def kohteenosan-tiedot
-  #{[::kohteenosa osa/perustiedot]})
+  #{[::kohde kohde/perustiedot+osat]})
 
 (def huoltokohteen-tiedot
   #{[::huoltokohde huoltokohde/perustiedot]})
@@ -102,7 +99,6 @@
   (set/union perustiedot
              muokkaustiedot
              kohteen-tiedot
-             kohteenosan-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
              kuittaajan-tiedot

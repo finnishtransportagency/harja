@@ -59,6 +59,9 @@
 (def kohteenosat
   #{[::kohteenosat osa/perustiedot]})
 
+(def perustiedot+osat
+  (set/union perustiedot #{[::kohteenosat osa/perustiedot]}))
+
 (def metatiedot m/muokkauskentat)
 
 (def perustiedot-ja-sijainti (conj perustiedot ::sijainti))
