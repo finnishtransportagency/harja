@@ -25,7 +25,7 @@
     :nimi :kohde
     :tyyppi :string
     :leveys 10
-    :hae #(get-in % [::kanavan-toimenpide/kohde ::kohde/nimi])}
+    :hae kanavan-toimenpide/fmt-toimenpiteen-kohde}
    {:otsikko "Huolto\u00ADkohde"
     :nimi :huoltokohde
     :tyyppi :string

@@ -153,3 +153,14 @@
 
 (defn korosta-ei-yksiloidyt [toimenpiteet]
   (map korosta-ei-yksiloity toimenpiteet))
+
+(defn fmt-toimenpiteen-kohde
+  "Ottaa mapin, jossa on toimenpiteen kohde (ja kohdeosa).
+   Mikäli toimenpide liittyy kohdeosaan, näyttää sen nimen, muussa tapauksessa näyttää vain
+   kohteen nimen. Jos kohdetta ei ole, palauttaa tekstin 'Ei kohdetta'."
+  [toimenpide]
+  (let [kohde (::kohde toimenpide)
+        kohdeosa (::kohteenosa toimenpide)]
+    (or (::osa/nimi kohdeosa)
+        (::kohde/nimi kohde)
+        "Ei kohdetta")))
