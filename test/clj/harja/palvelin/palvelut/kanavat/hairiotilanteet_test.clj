@@ -9,7 +9,8 @@
             [harja.tyokalut.functor :refer [fmap]]
             [clojure.spec.alpha :as s]
             [harja.palvelin.palvelut.kanavat.hairiotilanteet :as hairiotilanteet]
-            [harja.domain.kanavat.hairiotilanne :as hairiotilanne])
+            [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
+            [harja.domain.vesivaylat.materiaali :as vv-materiaali])
   (:import (java.util UUID)))
 
 (defn jarjestelma-fixture [testit]
@@ -122,7 +123,11 @@
 (defn tallennuksen-parametrit [syy]
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-        kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id)]
+        kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id)
+        ;; Saimaan materiaalien haku näyttää vähän rumalta, koska harja.testi/q funktio
+        ;; käyttää jdbc funktioita suoraan eikä konvertoi PgArrayta nätisti Clojure vektoriksi.
+        ;; Siksipä se muunnos täytyy tehdä itse.
+        saimaan-materiaalit (hae-saimaan-kanavan-materiaalit)]
     {::hairiotilanne/hairiotilanne {::hairiotilanne/sopimus-id sopimus-id
                                     ::hairiotilanne/kohde-id kohde-id
                                     ::hairiotilanne/paikallinen-kaytto? true
@@ -136,6 +141,12 @@
                                     ::hairiotilanne/korjausaika-h 1
                                     ::hairiotilanne/syy syy
                                     ::hairiotilanne/odotusaika-h 4
+                                    ::hairiotilanne/materiaalit [{:varaosa {::vv-materiaali/muutokset (first (:muutokset saimaan-materiaalit))
+                                                                            ::vv-materiaali/nimi (first (:nimi saimaan-materiaalit))}
+                                                                  :maara 10}
+                                                                 {:varaosa {::vv-materiaali/muutokset (second (:muutokset saimaan-materiaalit))
+                                                                            ::vv-materiaali/nimi (second (:muutokset saimaan-materiaalit))}
+                                                                  :maara 20}]
                                     ::hairiotilanne/ammattiliikenne-lkm 2}
      ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}}))
 

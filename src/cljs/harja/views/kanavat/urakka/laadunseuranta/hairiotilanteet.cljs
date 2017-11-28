@@ -108,6 +108,7 @@
    hairiotilanteet])
 
 (defn varaosataulukko [e! {materiaalit :materiaalit hairiotilanne :valittu-hairiotilanne}]
+  (println "VARAOSATAULUKKO: " (pr-str materiaalit) " JA " (pr-str hairiotilanne))
   [grid/muokkaus-grid
    {:voi-muokata? (constantly true)
     :voi-poistaa? (constantly true)

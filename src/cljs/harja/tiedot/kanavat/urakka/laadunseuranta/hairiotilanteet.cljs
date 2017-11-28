@@ -162,7 +162,7 @@
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
-
+    (println "HAIRIOTILANNE: " (pr-str (dissoc hairiotilanne :harja.ui.lomake/skeema)))
     (if (:tallennus-kaynnissa? app)
       app
       (let [hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
@@ -221,7 +221,6 @@
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
     (if (:valittu-hairiotilanne app)
-      (assoc app :valittu-hairiotilanne
-                 (assoc (:valittu-hairiotilanne app) ::hairiotilanne/materiaalit materiaalit))
+      (update app :valittu-hairiotilanne #(assoc % ::hairiotilanne/materiaalit materiaalit))
       app)))
 
