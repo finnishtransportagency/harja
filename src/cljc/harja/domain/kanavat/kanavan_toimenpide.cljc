@@ -139,7 +139,9 @@
   (s/keys :req [::hae-kanavatoimenpiteet-kysely
                 ::kanava-toimenpide]))
 
-(defn korosta-ei-yksiloity [toimenpide]
+(defn korosta-ei-yksiloity
+  "Korostaa ei yksilöidyt toimenpiteet gridissä"
+  [toimenpide]
   (let [toimenpidekoodi-nimi (get-in toimenpide [::toimenpidekoodi ::toimenpidekoodi/nimi])]
     (if (= (str/lower-case toimenpidekoodi-nimi) "ei yksilöity")
       (assoc toimenpide :lihavoi true)
