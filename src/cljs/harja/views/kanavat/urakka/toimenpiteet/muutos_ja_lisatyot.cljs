@@ -29,7 +29,7 @@
     [harja.tyokalut.ui :refer [for*]]))
 
 (defn suodattimet [e! app]
-  (let [urakka (get-in app [:valinnat :urakka])]
+  (let [urakka (get-in app [:valinnat :urakka :id])]
     [:div
      [valinnat/urakkavalinnat {:urakka urakka}
       ^{:key "valinnat"}
@@ -59,28 +59,28 @@
      toimenpiteet]))
 
 (defn lisatyot* [e! app]
-  (let [urakka (get-in app [:valinnat :urakka-id])]
-    (komp/luo
-      (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                      (e! (tiedot/->PaivitaValinnat uusi))))
-      (komp/sisaan-ulos #(do
-                           (e! (tiedot/->Nakymassa? true))
-                           (e! (tiedot/->PaivitaValinnat
-                                 {:urakka @nav/valittu-urakka
-                                  :sopimus-id (first @u/valittu-sopimusnumero)
-                                  :aikavali @u/valittu-aikavali
-                                  :toimenpide @u/valittu-toimenpideinstanssi}))
-                           (e! (tiedot/->HaeSuunnitellutTyot))
-                           (log "kutsuttiin HaeSuunnitellutTyot"))
-                        #(do
-                           (e! (tiedot/->Nakymassa? false))))
+  (komp/luo
+   (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                   (e! (tiedot/->PaivitaValinnat uusi))))
+   (komp/sisaan-ulos #(do
+                        @tiedot/valinnat ;; luetaan sivuvaikutusten vuoksi
+                        (e! (tiedot/->Nakymassa? true))
+                        (e! (tiedot/->PaivitaValinnat
+                             {:urakka @nav/valittu-urakka
+                              :sopimus-id (first @u/valittu-sopimusnumero)
+                              :aikavali @u/valittu-aikavali
+                              :toimenpide @u/valittu-toimenpideinstanssi}))
+                        (e! (tiedot/->HaeSuunnitellutTyot))
+                        (log "kutsuttiin HaeSuunnitellutTyot"))
+                     #(do
+                        (e! (tiedot/->Nakymassa? false))))
 
-      (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
-        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
-        [:div
-         [debug app]
-         [suodattimet e! app]
-         [taulukko e! app]]))))
+   (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
+     @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+     [:div
+      [debug app]
+      [suodattimet e! app]
+      [taulukko e! app]])))
 
 (defc lisatyot []
   [tuck tiedot/tila lisatyot*])

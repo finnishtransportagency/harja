@@ -301,7 +301,7 @@
        ;; Solun sisältö
        (grid/arvo-ja-nappi
          {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                        (get-in app* [:valinnat :urakka-id])))
+                                                        (get-in app* [:valinnat :urakka :id])))
                          :pelkka-arvo
 
                          (not (toimenpiteella-oma-hinnoittelu? toimenpide-rivi))
