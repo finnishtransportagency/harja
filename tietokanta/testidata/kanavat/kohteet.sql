@@ -21,7 +21,6 @@ INSERT INTO kan_kohde(nimi, "kohdekokonaisuus-id", luoja)
 INSERT INTO kan_kohteenosa (tyyppi, nimi, oletuspalvelumuoto, "kohde-id", luoja)
     VALUES
       ('silta', NULL, 'itse', (SELECT id FROM kan_kohde WHERE nimi = 'Pälli'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero')),
-      ('sulku', 'Pällin sulku', 'itse', (SELECT id FROM kan_kohde WHERE nimi = 'Pälli'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero')),
 
       ('sulku', NULL, 'kauko', (SELECT id FROM kan_kohde WHERE nimi = 'Kansola'), (SELECT id FROM kayttaja WHERE kayttajanimi='tero')),
 
