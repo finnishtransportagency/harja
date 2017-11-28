@@ -4,11 +4,13 @@ DECLARE
   sopimus_id_saimaan_paahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon pääsopimus');
   sopimus_id_saimaan_lisahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon lisäsopimus');
   kohde_id_palli INTEGER := (SELECT id FROM kan_kohde WHERE nimi = 'Pälli');
+  kohdeosa_id_pallin_sulku INTEGER := (SELECT id FROM kan_kohteenosa WHERE nimi = 'Pällin sulku');
   huoltokohde_id_asennonmittauslaitteet INTEGER := (SELECT id FROM kan_huoltokohde WHERE nimi = 'ASENNONMITTAUSLAITTEET');
   kayttaja_id_jvh INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
   toimenpidekoodi_id_vv_laaja_yksiloimaton INTEGER := (SELECT id FROM toimenpidekoodi WHERE emo = (SELECT id FROM toimenpidekoodi WHERE koodi = '24104') AND nimi = 'Ei yksilöity');
   tpk_id_saimaan_kok_hint_tp INTEGER := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP');
 BEGIN
+
 INSERT INTO kan_toimenpide
 (tyyppi,
  urakka,
@@ -46,6 +48,44 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   FALSE,
   NULL,
   tpk_id_saimaan_kok_hint_tp);
+
+  INSERT INTO kan_toimenpide
+  (tyyppi,
+   urakka,
+   sopimus,
+   pvm,
+   "kohde-id",
+   "kohteenosa-id",
+   huoltokohde,
+   toimenpidekoodi,
+   lisatieto,
+   suorittaja,
+   kuittaaja,
+   luotu,
+   luoja,
+   muokattu,
+   muokkaaja,
+   poistettu,
+   poistaja,
+   toimenpideinstanssi)
+  VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
+    urakka_id_saimaan_kanava,
+    sopimus_id_saimaan_paahuolto,
+    '2017-10-10',
+    kohde_id_palli,
+    kohdeosa_id_pallin_sulku,
+    huoltokohde_id_asennonmittauslaitteet,
+    toimenpidekoodi_id_vv_laaja_yksiloimaton,
+    'Testitoimenpide kohdeosalle',
+    kayttaja_id_jvh,
+    kayttaja_id_jvh,
+          '2017-10-10',
+          kayttaja_id_jvh,
+          '2017-10-10',
+          kayttaja_id_jvh,
+          FALSE,
+          NULL,
+          tpk_id_saimaan_kok_hint_tp);
 
 INSERT INTO kan_toimenpide
 (tyyppi,
