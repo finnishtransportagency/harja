@@ -95,9 +95,7 @@
      {:otsikko "Kohteen osa"
       :nimi ::kanavan-toimenpide/kohteenosa
       :tyyppi :valinta
-      :valinta-nayta #(do
-                        (log "KOHDEOSA NÄYTÄ: " (pr-str %))
-                        (or (kohteenosa/fmt-kohdeosa-tyyppi %) "- Valitse osa -"))
+      :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
       :valinnat (or valitun-kohteen-osat [])}
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde
@@ -133,7 +131,7 @@
                    (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)
                    (assoc-in [:tehtava :tpk-id] arvo)
                    (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))))}
-     ;; TODO Tämä päättely ei toimi
+     ;; FIXME Tämä päättely ei enää toimi
      (when (kanavatoimenpidetiedot/valittu-tehtava-muu? tehtava tehtavat)
        {:otsikko "Muu toimenpide"
         :nimi ::kanavan-toimenpide/muu-toimenpide
