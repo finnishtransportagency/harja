@@ -650,7 +650,7 @@
         },
         "alkuperaisen-luvan-alkupvm": {
           "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-alkupvm",
-          "type": "string"
+          "type": "date-time"
         },
         "alkuperaisen-luvan-loppupvm": {
           "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-loppupvm",
@@ -928,7 +928,7 @@
                     ]
                   },
                   "ohjeet": {
-                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/ohjeet",
+                    "id": "urn:harja/tielupa/johto-ja-kaapelilupa/johtoasennukset/0/johtoasennus/ohjeet",
                     "type": "string"
                   },
                   "kommentit": {
