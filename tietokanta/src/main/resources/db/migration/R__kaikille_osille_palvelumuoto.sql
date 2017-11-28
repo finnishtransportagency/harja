@@ -13,7 +13,7 @@ BEGIN
   THEN
     RETURN NEW;
   ELSE
-    RAISE EXCEPTION 'Liikennetapahtuman % kohde sisältää osat %, mutta palvelumuodot kohteille %', NEW.id, kohteen_osat, palvelumuodot;
+    RAISE EXCEPTION 'Liikennetapahtumalle pitää kirjata palvelumuoto jokaiselle kohteessa olevalle kohteenosalle. Liikennetapahtuman % kohde sisältää osat %, mutta palvelumuodot kohteille %', NEW.id, kohteen_osat, palvelumuodot;
     RETURN NULL;
   END IF;
 END;
