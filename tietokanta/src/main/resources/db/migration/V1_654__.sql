@@ -36,12 +36,12 @@ CREATE TYPE TIELUVAN_KAAPELIASENNUS AS (
 );
 
 CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
-  laite     TEXT,
-  tyyppi    TEXT,
-  ohjeet    TEXT,
-  kommentit TEXT,
-  toiminnot TEXT,
-  sijainti  TR_OSOITE_LAAJENNETTU
+  laite         TEXT,
+  asennustyyppi TEXT,
+  ohjeet        TEXT,
+  kommentit     TEXT,
+  toiminnot     TEXT,
+  sijainti      TR_OSOITE_LAAJENNETTU
 );
 
 CREATE TYPE TIELUVAN_OPASTE AS (
@@ -54,13 +54,13 @@ CREATE TYPE TIELUVAN_LIIKENNEMERKKIJARJESTELY AS (
   "alkuperainen-nopeusrajoitus" TEXT,
   "alennettu-nopeusrajoitus"    TEXT,
   "nopeusrajoituksen-pituus"    TEXT,
-  sijainti                      TR_OSOITE
+  sijainti                      TR_OSOITE_LAAJENNETTU
 );
 
 CREATE TABLE tielupa (
   -- hakemuksen perustiedot
   id                                                              SERIAL PRIMARY KEY,
-  luotu                                                           TIMESTAMP,
+  luotu                                                           TIMESTAMP DEFAULT NOW(),
   "ulkoinen-tunniste"                                             INTEGER                              NOT NULL,
   tyyppi                                                          TIELUPATYYPPI                        NOT NULL,
   "paatoksen-diaarinumero"                                        TEXT                                 NOT NULL,
