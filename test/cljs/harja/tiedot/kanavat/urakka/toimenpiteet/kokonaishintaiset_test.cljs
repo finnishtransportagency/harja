@@ -115,6 +115,30 @@
   (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteidenTallentaminenEpaonnistui))))))
 
 (deftest ValitseToimenpide
-  (let [toimenpide {:foo "bar"}]
-    (is (= toimenpide (:valittu-toimenpide (e! (tiedot/->ValitseToimenpide toimenpide)))))))
+  (let [tiedot {:id 1
+                :valittu? true}
+        app-jalkeen {:valitut-toimenpide-idt #{1}}
+        app-ennen {:valitut-toimenpide-idt #{}}]
+    (is (= app-jalkeen (e! (tiedot/->ValitseToimenpide tiedot) app-ennen)))))
 
+(deftest SiirraToimenpideMuutosJaLisatoihin
+  (vaadi-async-kutsut
+    #{tiedot/->ValitutSiirretty tiedot/->ValitutEiSiirretty}
+    (is (= {:toimenpiteiden-siirto-kaynnissa? true}
+           (e! (tiedot/->SiirraValitut))))))
+
+(deftest ValitutSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :valitut-toimenpide-idt #{}
+            :toimenpiteet (sequence [])}
+           (e! (tiedot/->ValitutSiirretty) app)))))
+
+(deftest ValitutEiSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+            :valitut-toimenpide-idt #{1}}
+           (e! (tiedot/->ValitutEiSiirretty) app)))))

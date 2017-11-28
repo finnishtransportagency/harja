@@ -371,6 +371,11 @@
                    FROM   urakka
                    WHERE  urakoitsija = " urakoitsija-id ";"))))
 
+(defn hae-saimaan-kanavaurakan-toimenpiteet []
+  (q (str "SELECT id, toimenpidekoodi, tyyppi
+           FROM kan_toimenpide
+           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))
+
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
                    WHERE

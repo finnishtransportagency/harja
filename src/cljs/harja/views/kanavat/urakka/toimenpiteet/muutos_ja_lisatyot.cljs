@@ -22,7 +22,8 @@
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.napit :as napit]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -35,28 +36,49 @@
       ^{:key "valinnat"}
       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
       [valinnat/urakkatoiminnot {:urakka urakka}
+       [napit/yleinen-ensisijainen
+        "Siirrä valitut kokonaishintaisiin"
+        (fn [_]
+          (e! (tiedot/->SiirraValitut)))
+        {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
        [napit/uusi
         "Uusi toimenpide"
         (fn [_]
           ;;todo
           )]]]]))
 
-
-
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   (let [hinta-sarake {:otsikko "Hinta"
                       :nimi :hinta
                       :tyyppi :komponentti
                       :komponentti (fn [rivi] [hinnoittelu-ui/hinnoittele-toimenpide e! app rivi])}
-        sarakkeet (concat toimenpide-view/toimenpidesarakkeet [hinta-sarake])]
-    [grid/grid
+        toimenpidesarakkeet (toimenpide-view/toimenpidesarakkeet
+                              e! app
+                              {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
+                                                       (count (:valitut-toimenpide-idt app)))
+                               :otsikko-valittu-fn (fn [uusi-arvo]
+                                                     (e! (tiedot/->ValitseToimenpiteet
+                                                           {:kaikki-valittu? uusi-arvo})))
+                               :rivi-valittu?-fn (fn [rivi]
+                                                   (boolean ((:valitut-toimenpide-idt app)
+                                                              (::kanavan-toimenpide/id rivi))))
+                               :rivi-valittu-fn (fn [rivi uusi-arvo]
+                                                  (e! (tiedot/->ValitseToimenpide
+                                                        {:id (::kanavan-toimenpide/id rivi)
+                                                         :valittu? uusi-arvo})))})
+        toimenpidesarakkeet-ilman-valinta-saraketta (subvec toimenpidesarakkeet 0 (dec (count toimenpidesarakkeet)))
+        valinta-sarake (last toimenpidesarakkeet)
+        sarakkeet (concat toimenpidesarakkeet-ilman-valinta-saraketta [hinta-sarake] [valinta-sarake])]
+    [:div
+     [toimenpiteet-view/ei-yksiloity-vihje]
+     [grid/grid
      {:otsikko "Muutos- ja lisätyöt"
       :tyhja (if (:toiden-haku-kaynnissa? app)
                [ajax-loader "Haetaan toimenpiteitä"]
                "Ei toimenpiteitä")
       :tunniste ::kanavan-toimenpide/id}
      sarakkeet
-     toimenpiteet]))
+     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
 
 (defn lisatyot* [e! app]
   (let [urakka (get-in app [:valinnat :urakka-id])]
