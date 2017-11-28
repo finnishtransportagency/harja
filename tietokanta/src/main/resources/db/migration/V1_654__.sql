@@ -28,11 +28,11 @@ CREATE TYPE TIELUVAN_KAAPELIASENNUS AS (
   asennustyyppi            TEXT,
   ohjeet                   TEXT,
   kommentit                TEXT,
-  sijainti                 TR_OSOITE_LAAJENNETTU,
   "maakaapelia-metreissa"  DECIMAL,
   "ilmakaapelia-metreissa" DECIMAL,
   nopeusrajoitus           INTEGER,
-  liikennemaara            DECIMAL
+  liikennemaara            DECIMAL,
+  sijainti                 TR_OSOITE_LAAJENNETTU
 );
 
 CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
@@ -60,6 +60,7 @@ CREATE TYPE TIELUVAN_LIIKENNEMERKKIJARJESTELY AS (
 CREATE TABLE tielupa (
   -- hakemuksen perustiedot
   id                                                              SERIAL PRIMARY KEY,
+  luotu                                                           TIMESTAMP,
   "ulkoinen-tunniste"                                             INTEGER                              NOT NULL,
   tyyppi                                                          TIELUPATYYPPI                        NOT NULL,
   "paatoksen-diaarinumero"                                        TEXT                                 NOT NULL,
