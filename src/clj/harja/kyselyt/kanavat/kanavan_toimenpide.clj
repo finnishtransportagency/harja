@@ -2,9 +2,10 @@
   "Kyselyt kanavatoimenpiteille"
   (:require [specql.core :refer [fetch insert! update!]]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
-            [harja.domain.muokkaustiedot :as m]
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
@@ -34,6 +35,29 @@
                {::toimenpide/id (op/in (into #{} (map :id idt)))})))
     []))
 
+(defn- vaadi-toimenpiteet-kuuluvat-urakkaan* [toimenpiteet-kannassa toimenpide-idt urakka-id]
+  (when (or
+          (nil? urakka-id)
+          (not (->> toimenpiteet-kannassa
+                    (map ::toimenpide/urakka-id)
+                    (every? (partial = urakka-id)))))
+    (throw (SecurityException. (str "Toimenpiteet " toimenpide-idt " eivät kuulu urakkaan " urakka-id)))))
+
+(defn vaadi-toimenpiteet-kuuluvat-urakkaan [db toimenpide-idt urakka-id]
+  (vaadi-toimenpiteet-kuuluvat-urakkaan*
+    (fetch
+      db
+      ::toimenpide/kanava-toimenpide
+      #{::toimenpide/urakka-id}
+      {::toimenpide/id (op/in toimenpide-idt)})
+    toimenpide-idt
+    urakka-id))
+
+(defn paivita-toimenpiteiden-tyyppi [db toimenpide-idt uusi-tyyppi]
+  (update! db ::toimenpide/kanava-toimenpide
+           {::toimenpide/tyyppi (name uusi-tyyppi)}
+           {::toimenpide/id (op/in toimenpide-idt)}))
+
 (defn poista-frontin-keksima-id [m id-avain]
   ;; id-olemassa? katsoo onko id 0 tai negatiivinen, josta päätellään
   ;; että se on frontin generoima sijais-id
@@ -45,14 +69,14 @@
   {:pre [(map? m) (map? user) (keyword? muokkaus-id-avain)]}
   (let [m (if (get m muokkaus-id-avain)
             ;; luomistiedoissa ei frontin kontrollia: blokataan muokkaus tai muodostetaan luomistiedot
-            (dissoc m ::m/luoja-id ::m/luotu)
-            (assoc m ::m/luoja-id (:id user) ::m/luotu (pvm/nyt)))
+            (dissoc m ::muokkaustiedot/luoja-id ::muokkaustiedot/luotu)
+            (assoc m ::muokkaustiedot/luoja-id (:id user) ::muokkaustiedot/luotu (pvm/nyt)))
         m (merge m
-                 (if (::m/poistettu? m)
-                   {::m/poistettu? true
-                    ::m/poistaja-id (:id user)}
-                   {::m/muokattu (pvm/nyt)
-                    ::m/muokkaaja-id (:id user)}))]
+                 (if (::muokkaustiedot/poistettu? m)
+                   {::muokkaustiedot/poistettu? true
+                    ::muokkaustiedot/poistaja-id (:id user)}
+                   {::muokkaustiedot/muokattu (pvm/nyt)
+                    ::muokkaustiedot/muokkaaja-id (:id user)}))]
     m))
 
 (defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat toimenpide-id]}]
@@ -62,7 +86,7 @@
     (specql/upsert! db
                     ::hinta/toimenpiteen-hinta
                     (kasittele-muokkaustiedot user hinta ::hinta/id)
-                    {::m/poistettu? (op/not= true)})))
+                    {::muokkaustiedot/poistettu? (op/not= true)})))
 
 (defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot toimenpide-id]}]
   (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
@@ -70,16 +94,27 @@
     (specql/upsert! db
                     ::tyo/toimenpiteen-tyo
                     (kasittele-muokkaustiedot user tyo ::tyo/id)
-                    {::m/poistettu? (op/not= true)})))
-
+                    {::muokkaustiedot/poistettu? (op/not= true)})))
 
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
   (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
     (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::m/muokattu (pvm/nyt)
-                             ::m/muokkaaja-id kayttaja-id)]
+                             ::muokkaustiedot/muokattu (pvm/nyt)
+                             ::muokkaustiedot/muokkaaja-id kayttaja-id)]
       (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
     (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::m/luotu (pvm/nyt)
-                             ::m/luoja-id kayttaja-id)]
+                             ::muokkaustiedot/luotu (pvm/nyt)
+                             ::muokkaustiedot/luoja-id kayttaja-id)]
       (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))
+
+(defn hae-toimenpiteiden-tehtavan-hinnoittelu [db toimenpide-idt]
+  (fetch db
+         ::toimenpide/kanava-toimenpide
+         #{::toimenpide/id
+           [::toimenpide/toimenpidekoodi #{::toimenpidekoodi/hinnoittelu}]}
+         {::toimenpide/id (op/in toimenpide-idt)}))
+
+(defn paivita-toimenpiteiden-tehtava [db paivitettavat-tehtava-idt tehtava-id]
+  (update! db ::toimenpide/kanava-toimenpide
+           {::toimenpide/toimenpidekoodi-id tehtava-id}
+           {::toimenpide/id (op/in paivitettavat-tehtava-idt)}))

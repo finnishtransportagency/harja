@@ -20,7 +20,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS kaikille_osille_palvelumuoto_trigger
-ON kan_liikennetapahtuma_osa;
+ON kan_liikennetapahtuma;
 
 CREATE CONSTRAINT TRIGGER kaikille_osille_palvelumuoto_trigger
 AFTER INSERT OR UPDATE ON kan_liikennetapahtuma

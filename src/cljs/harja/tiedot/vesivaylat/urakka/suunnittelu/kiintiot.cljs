@@ -79,7 +79,7 @@
             (tuck-apurit/post! :hae-kiintiot-ja-toimenpiteet
                                parametrit
                                {:onnistui ->KiintiotHaettu
-                                       :epaonnistui ->KiintiotEiHaettu})
+                                :epaonnistui ->KiintiotEiHaettu})
             (assoc :kiintioiden-haku-kaynnissa? true)))
 
       app))
@@ -110,9 +110,9 @@
             (tuck-apurit/post! :tallenna-kiintiot
                                parametrit
                                {:onnistui ->KiintiotTallennettu
-                                       :onnistui-parametrit [ch]
-                                       :epaonnistui ->KiintiotEiTallennettu
-                                       :epaonnistui-parametrit [ch]})
+                                :onnistui-parametrit [ch]
+                                :epaonnistui ->KiintiotEiTallennettu
+                                :epaonnistui-parametrit [ch]})
             (assoc :kiintioiden-tallennus-kaynnissa? true)))
       app))
 
@@ -145,7 +145,7 @@
             (tuck-apurit/post! :irrota-toimenpiteet-kiintiosta
                                parametrit
                                {:onnistui ->IrrotettuKiintiosta
-                                       :epaonnistui ->EiIrrotettuKiintiosta})
+                                :epaonnistui ->EiIrrotettuKiintiosta})
             (assoc :kiintiosta-irrotus-kaynnissa? true)))
       app))
 

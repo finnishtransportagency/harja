@@ -1,6 +1,7 @@
 (ns harja.domain.kanavat.kanavan-toimenpide
   (:require
     [clojure.spec.alpha :as s]
+    [clojure.string :as str]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.kohteenosa :as osa]
     [harja.domain.kanavat.hinta :as hinta]
@@ -14,7 +15,8 @@
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]])
-    [clojure.set :as set])
+    [clojure.set :as set]
+    [clojure.string :as str])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -105,8 +107,17 @@
           :req-un [::alkupvm
                    ::loppupvm]))
 
+(s/def ::toimenpide-idt (s/coll-of ::id))
+
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))
+
+(s/def ::siirra-kanavatoimenpiteet-kysely
+  (s/keys
+    :req [::urakka-id ::toimenpide-idt ::tyyppi]))
+
+(s/def ::siirra-kanavatoimenpiteet-vastaus
+  ::toimenpide-idt)
 
 (s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-kysely
   (s/keys
@@ -121,3 +132,12 @@
 (s/def ::tallenna-kanavatoimenpide-kutsu
   (s/keys :req [::hae-kanavatoimenpiteet-kysely
                 ::kanava-toimenpide]))
+
+(defn korosta-ei-yksiloity [toimenpide]
+  (let [toimenpidekoodi-nimi (get-in toimenpide [::toimenpidekoodi ::toimenpidekoodi/nimi])]
+    (if (= (str/lower-case toimenpidekoodi-nimi) "ei yksilöity")
+      (assoc toimenpide :lihavoi true)
+      toimenpide)))
+
+(defn korosta-ei-yksiloidyt [toimenpiteet]
+  (map korosta-ei-yksiloity toimenpiteet))
