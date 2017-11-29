@@ -61,6 +61,7 @@ CREATE TABLE tielupa (
   -- hakemuksen perustiedot
   id                                                              SERIAL PRIMARY KEY,
   luotu                                                           TIMESTAMP DEFAULT NOW(),
+  muokattu                                                        TIMESTAMP,
   "ulkoinen-tunniste"                                             INTEGER                              NOT NULL,
   tyyppi                                                          TIELUPATYYPPI                        NOT NULL,
   "paatoksen-diaarinumero"                                        TEXT                                 NOT NULL,

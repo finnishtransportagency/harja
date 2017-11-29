@@ -19,7 +19,8 @@
   ["tieluvan_liikennemerkkijarjestely" ::liikennemerkkijarjestelytyyppi]
   ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
   ["tielupa" ::tielupa
-   {"luotu" ::muokkautiedot/luotu}]
+   {"luotu" ::muokkautiedot/luotu
+    "muokattu" ::muokkautiedot/muokattu}]
   ;; todo: miten listata liitteet?
   )
 
