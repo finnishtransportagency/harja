@@ -43,7 +43,7 @@
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
 (defrecord TallennaHairiotilanne [hairiotilanne])
 (defrecord PoistaHairiotilanne [hairiotilanne])
-(defrecord HairiotilanneTallennettu [hairiotilanteet])
+(defrecord HairiotilanneTallennettu [tallennuksen-vastaus])
 (defrecord HairiotilanteenTallentaminenEpaonnistui [])
 (defrecord MuokkaaMateriaaleja [materiaalit])
 
@@ -95,7 +95,7 @@
         ;; Käsitellään pelkästään lähetettävää mappia
         (map :varaosa)
         ;; Lisätään muokkauspäivämäärää ja häiriö-id
-        (map #(assoc % ::materiaalit/pvm (pvm/nyt)
+        (map #(assoc % ::materiaalit/pvm (or (::materiaalit/pvm %) (pvm/nyt))
                        ::materiaalit/hairiotilanne hairiotilanne-id
                        ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
                                                     " kohteessa " kohteen-nimi)))
@@ -187,7 +187,6 @@
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
-    (println "HAIRIOTILANNE: " (pr-str (dissoc hairiotilanne :harja.ui.lomake/skeema)))
     (if (:tallennus-kaynnissa? app)
       app
       (let [tal-hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
@@ -229,10 +228,13 @@
     (assoc app :materiaalien-haku-kaynnissa? false))
 
   HairiotilanneTallennettu
-  (process-event [{hairiotilanteet :hairiotilanteet} app]
-    (assoc app :tallennus-kaynnissa? false
-               :valittu-hairiotilanne nil
-               :hairiotilanteet hairiotilanteet))
+  (process-event [{tallennuksen-vastaus :tallennuksen-vastaus} app]
+    (let [{hairiotilanteet :hairiotilanteet
+           materiaalilistaukset :materiaalilistaukset} tallennuksen-vastaus]
+      (assoc app :tallennus-kaynnissa? false
+                 :valittu-hairiotilanne nil
+                 :hairiotilanteet hairiotilanteet
+                 :materiaalit materiaalilistaukset)))
 
   HairiotilanteenTallentaminenEpaonnistui
   (process-event [_ app]
@@ -240,8 +242,29 @@
     (assoc app :tallennus-kaynnissa? false))
 
   ValitseHairiotilanne
-  (process-event [{hairiotilanne :hairiotilanne} app]
-    (assoc app :valittu-hairiotilanne hairiotilanne))
+  (process-event [{hairiotilanne :hairiotilanne} {:keys [materiaalit] :as app}]
+    ;;hairiotilanteiden mukana voisi kannasta tuoda myös häiriötilanteiden materiaalit
+    ;;mutta ne täytyisi joka tapauksessa formatoida varaosat gridille sopivaan muotoon,
+    ;;niin sama formatoida jo haetuista materiaalilistauksista.
+    (let [materiaali-kirjaukset (mapcat (fn [materiaalilistaus]
+                                       (transduce
+                                         (comp
+                                           ;; Filtteröidään ensin hairiotilanteelle kuuluvat
+                                           ;; materiaalikirjaukset
+                                           (filter #(when (= (::hairiotilanne/id hairiotilanne)
+                                                             (::materiaalit/hairiotilanne %))
+                                                      %))
+                                           ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet
+                                           (map #(identity {:maara (- (::materiaalit/maara %))
+                                                            :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+                                                                      ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+                                                                      ::materiaalit/pvm (::materiaalit/pvm %)
+                                                                      ::materiaalit/id (::materiaalit/id %)}})))
+                                         conj (::materiaalit/muutokset materiaalilistaus)))
+                                     materiaalit)]
+      (-> app
+          (assoc :valittu-hairiotilanne hairiotilanne)
+          (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset))))
 
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]

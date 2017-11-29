@@ -7,6 +7,7 @@
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [clojure.set :as set]))
 
 (defn hae-kanavatoimenpiteet [db hakuehdot]

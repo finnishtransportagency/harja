@@ -107,14 +107,11 @@
    hairiotilanteet])
 
 (defn varaosataulukko [e! {materiaalit :materiaalit hairiotilanne :valittu-hairiotilanne}]
-  (println "VARAOSATAULUKKO: " (pr-str materiaalit) " JA " (pr-str hairiotilanne))
   [grid/muokkaus-grid
    {:voi-muokata? (constantly true)
     :voi-poistaa? (constantly true)
     :piilota-toiminnot? false
-    :tyhja "Ei varaosia"
-    :jarjesta :jarjestysnro
-    :tunniste :jarjestysnro}
+    :tyhja "Ei varaosia"}
    [{:otsikko "Varaosa"
      :nimi :varaosa
      :pakollinen? true

@@ -49,10 +49,12 @@
       (fn [kayttaja {hairiotilanne ::hairio/hairiotilanne
                      materiaalit ::materiaali/materiaalikirjaukset
                      hakuehdot ::hairio/hae-hairiotilanteet-kysely}]
-        (tallenna-hairiotilanne db fim email kayttaja hairiotilanne materiaalit)
-        (hae-hairiotilanteet db kayttaja hakuehdot))
+        (jdbc/with-db-transaction [db db]
+                                  (tallenna-hairiotilanne db fim email kayttaja hairiotilanne materiaalit)
+                                  {:hairiotilanteet (hae-hairiotilanteet db kayttaja hakuehdot)
+                                   :materiaalilistaukset (m-q/hae-materiaalilistaus db {::materiaali/urakka-id (::hairio/urakka-id hairiotilanne)})}))
       {:kysely-spec ::hairio/tallenna-hairiotilanne-kutsu
-       :vastaus-spec ::hairio/hae-hairiotilanteet-vastaus})
+       :vastaus-spec ::hairio/tallenna-hairiotilanne-vastaus})
     this)
 
   (stop [this]

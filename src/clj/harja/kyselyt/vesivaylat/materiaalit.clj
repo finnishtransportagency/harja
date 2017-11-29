@@ -11,8 +11,12 @@
 
 (defn kirjaa-materiaali [db user materiaalikirjaus]
   "Kirjaa materiaalin käytön tai lisäyksen"
-  (insert! db ::m/materiaali
-           (muok/lisaa-muokkaustiedot materiaalikirjaus ::m/id user)))
+  (if (::m/id materiaalikirjaus)
+    (update! db ::m/materiaali
+             (muok/lisaa-muokkaustiedot materiaalikirjaus ::m/id user)
+             {::m/id (::m/id materiaalikirjaus)})
+    (insert! db ::m/materiaali
+             (muok/lisaa-muokkaustiedot materiaalikirjaus ::m/id user))))
 
 (defn poista-materiaalikirjaus [db user materiaali-id]
   (update! db ::m/materiaali

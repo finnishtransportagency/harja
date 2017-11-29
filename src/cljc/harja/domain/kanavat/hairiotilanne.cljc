@@ -123,6 +123,14 @@
                 ::hairiotilanne
                 ::materiaali/materiaalikirjaukset]))
 
+(s/def ::hairiotilanteet (s/coll-of ::hairiotilanne))
+
+(s/def ::materiaalilistaukset (s/coll-of ::materiaali/materiaalilistaus))
+
+(s/def ::tallenna-hairiotilanne-vastaus
+  (s/keys :req-un [::hairiotilanteet
+                   ::materiaalilistaukset]))
+
 ;; Apurit
 
 ;; Nämä on vectoreita, koska valintajärjestyksellä väliä
