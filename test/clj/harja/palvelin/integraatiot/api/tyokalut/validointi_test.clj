@@ -1,10 +1,11 @@
-(ns harja.palvelin.integraatiot.api.tyokalut.validointi
+(ns harja.palvelin.integraatiot.api.tyokalut.validointi_test
   (:require [clojure.test :refer :all]
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [slingshot.slingshot :refer [throw+]]
-            [slingshot.test]))
+            [slingshot.test]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
 
 (defn tasmaa-poikkeus [{:keys [type virheet]} tyyppi koodi viesti]
   (and

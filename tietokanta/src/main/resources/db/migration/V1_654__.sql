@@ -225,4 +225,4 @@ CREATE TABLE tielupa_liite (
   liite   INTEGER REFERENCES liite (id)
 );
 
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'lisaa-tielupa');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-tielupa');
