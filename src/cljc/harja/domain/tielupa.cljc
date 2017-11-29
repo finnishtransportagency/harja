@@ -43,7 +43,9 @@
     ::kohde-postinumero
     ::kohde-postitoimipaikka
     ::tien-nimi
-    ::sijainnit})
+    ::sijainnit
+    ::muokkautiedot/luotu
+    ::muokkautiedot/muokattu})
 
 (def hakijan-tiedot
   #{::hakija-nimi
