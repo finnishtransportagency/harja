@@ -92,8 +92,7 @@
                               :sopimus-id (first @u/valittu-sopimusnumero)
                               :aikavali @u/valittu-aikavali
                               :toimenpide @u/valittu-toimenpideinstanssi}))
-                        (e! (tiedot/->HaeSuunnitellutTyot))
-                        (log "kutsuttiin HaeSuunnitellutTyot"))
+                        (e! (tiedot/->HaeSuunnitellutTyot)))
                      #(do
                         (e! (tiedot/->Nakymassa? false))))
 
