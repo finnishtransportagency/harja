@@ -15,9 +15,9 @@
 (defn hae-kanavatoimenpiteet [db hakuehdot]
   (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
         tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %
-                                                                                          ::m/poistettu? false})
+                                                                                          ::muokkaustiedot/poistettu? false})
         tp-tyot #(fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id %
-                                                                   ::m/poistettu? false})]
+                                                                   ::muokkaustiedot/poistettu? false})]
     (for [tp toimenpiteet
           :let [tp-id (::toimenpide/id tp)]]
       (merge tp {::toimenpide/hinnat (tp-hinnat tp-id)
@@ -31,7 +31,7 @@
              (hae-kanavatoimenpiteet
               db
               (op/and
-               (op/or {::m/poistettu? op/null?} {::m/poistettu? false})
+               (op/or {::muokkaustiedot/poistettu? op/null?} {::muokkaustiedot/poistettu? false})
                {::toimenpide/id (op/in (into #{} (map :id idt)))})))
     []))
 
