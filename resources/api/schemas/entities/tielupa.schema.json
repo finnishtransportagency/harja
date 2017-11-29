@@ -79,7 +79,7 @@
           "required": true,
           "type": "string"
         },
-        "kohteen-lahioisoite": {
+        "kohteen-lahiosoite": {
           "id": "urn:harja/tielupa/perustiedot/kohteen-lahioisoite",
           "type": "string"
         },

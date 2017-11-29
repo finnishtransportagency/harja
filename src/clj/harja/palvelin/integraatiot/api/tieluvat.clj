@@ -23,8 +23,12 @@
     (julkaise-reitti
       http :kirjaa-tielupa
       (POST "/api/tieluvat" request
-        (kasittele-kutsu db integraatioloki :kirjaa-tielupa request
-                         json-skeemat/turvallisuuspoikkeamien-kirjaus json-skeemat/kirjausvastaus
+        (kasittele-kutsu db
+                         integraatioloki
+                         :kirjaa-tielupa
+                         request
+                         json-skeemat/tieluvan-kirjaus-request
+                         json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (kirjaa-tielupa liitteiden-hallinta db parametrit data kayttaja)))))
     this)

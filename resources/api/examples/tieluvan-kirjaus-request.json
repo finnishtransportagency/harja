@@ -18,7 +18,7 @@
         "id": 1234
       },
       "tyyppi": "työlupa",
-      "paatoksen-diaarinumero": 123456789,
+      "paatoksen-diaarinumero": "123456789",
       "saapumispvm": "2017-09-22T12:00:00+02:00",
       "myontamispvm": "2018-09-22T12:00:00+02:00",
       "voimassaolon-alkupvm": "2020-09-22T12:00:00+02:00",
@@ -52,7 +52,7 @@
       "postinumero": "90900",
       "puhelinnumero": "987-7889087",
       "sahkopostiosoite": "henna.hakija@example.com",
-      "tyyppi": ""
+      "tyyppi": "kotitalous"
     },
     "urakoitsija": {
       "nimi": "Puulaaki Oy",
@@ -67,7 +67,6 @@
       "sahkopostiosoite": "lilli.liikenteenohjaaja@example.com"
     },
     "tienpitoviranomainen": {
-      "nimi": "Viranomainen",
       "yhteyshenkilo": "Teijo Tienpitäjä",
       "puhelinnumero": "987-7889087",
       "sahkopostiosoite": "teijo.tienpitaja@example.com"
@@ -85,7 +84,6 @@
       "los-puuttuu": false,
       "ilmoitus-tieliikennekeskukseen": true,
       "tilapainen-nopeusrajoitus": true,
-      "liikenteenohjaustekstit": "",
       "los-lisatiedot": "",
       "tieliikennekusksen-sahkopostiosoite": ""
     }
