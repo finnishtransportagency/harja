@@ -20,4 +20,5 @@
              virheet/+kayttajalla-puutteelliset-oikeudet+
              virheet/+kayttajalla-puutteelliset-oikeudet+
              "Käyttäjällä ei resurssiin.")
-          (validointi/tarkista-onko-liikenneviraston-jarjestelma db +kayttaja-jvh+)))))
+          (validointi/tarkista-onko-liikenneviraston-jarjestelma db +kayttaja-jvh+)))
+    (validointi/tarkista-onko-liikenneviraston-jarjestelma db +livi-jarjestelma-kayttaja+)))

@@ -231,11 +231,11 @@
         (if vastaus-spec
           (if (post-kutsu? f)
             (fn [user payload]
-             (let [v (f user payload)]
-               (testing (str "Palvelun " nimi " vastaus on validi")
-                 (is (s/valid? vastaus-spec v)
-                     (s/explain-str vastaus-spec v)))
-               v))
+              (let [v (f user payload)]
+                (testing (str "Palvelun " nimi " vastaus on validi")
+                  (is (s/valid? vastaus-spec v)
+                      (s/explain-str vastaus-spec v)))
+                v))
 
             (fn [user]
               (let [v (f user)]
@@ -741,11 +741,16 @@
 
 ;; Sepolla ei ole oikeutta mihinkään. :(
 (def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmalli"
-                      :organisaatio nil
-                      :roolit #{}
-                      :urakkaroolit {}
-                      :organisaatioroolit {}
-                      :organisaation-urakat #{}})
+                       :organisaatio nil
+                       :roolit #{}
+                       :urakkaroolit {}
+                       :organisaatioroolit {}
+                       :organisaation-urakat #{}})
+
+(def +livi-jarjestelma-kayttaja+
+  {:id 14
+   :kayttajanimi "livi"
+   :jarjestelma true})
 
 (def +kayttaja-urakan-vastuuhenkilo+
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]
