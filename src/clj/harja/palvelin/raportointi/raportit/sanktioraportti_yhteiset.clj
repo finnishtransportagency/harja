@@ -4,7 +4,11 @@
     [jeesql.core :refer [defqueries]]
     [harja.tyokalut.functor :refer [fmap]]
     [clojure.string :as str]
-    [harja.kyselyt.konversio :as konv]))
+    [clojure.set :as set]
+    [harja.kyselyt.konversio :as konv]
+    [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+    [harja.kyselyt.urakat :as urakat-q]
+    [harja.kyselyt.hallintayksikot :as hallintayksikot-q]))
 
 (defn- rivi-kuuluu-talvihoitoon? [rivi]
   (if (:toimenpidekoodi_taso2 rivi)
@@ -129,3 +133,69 @@
            (luo-rivi-sakkojen-summa sakkorivin-nimi rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
            (when-not yllapito?
              (luo-rivi-kaikki-yht "Kaikki yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))])))
+
+(defn suorita-runko [db user {:keys [alkupvm loppupvm
+                                     urakka-id hallintayksikko-id
+                                     urakkatyyppi db-haku-fn
+                                     raportin-nimi raportin-rivit-fn
+                                     info-teksti]}]
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        naytettavat-alueet (yleinen/naytettavat-alueet db konteksti {:urakka urakka-id
+                                                                     :hallintayksikko hallintayksikko-id
+                                                                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                                     :alku alkupvm
+                                                                     :loppu loppupvm})
+        sanktiot-kannassa (into []
+                                (comp
+                                  (map #(konv/string->keyword % :sakkoryhma))
+                                  (map #(konv/array->set % :sanktiotyyppi_laji keyword)))
+                                (db-haku-fn db
+                                            {:urakka urakka-id
+                                             :hallintayksikko hallintayksikko-id
+                                             :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                             :alku alkupvm
+                                             :loppu loppupvm}))
+
+        urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi :loppupvm]) sanktiot-kannassa))
+        ;; jos on jostain syystä sanktioita urakassa joka ei käynnissä, spesiaalikäsittely, I'm sorry
+        naytettavat-alueet (if (= konteksti :hallintayksikko)
+                             (vec (sort-by :nimi (set/union (into #{} naytettavat-alueet)
+                                                            urakat-joista-loytyi-sanktioita)))
+                             naytettavat-alueet)
+        yhteensa-sarake? (> (count naytettavat-alueet) 1)
+        raportin-otsikot (into [] (concat
+                                    [{:otsikko "" :leveys 12}]
+                                    (mapv
+                                      (fn [alue]
+                                        {:otsikko (if (= konteksti :koko-maa)
+                                                    (str (:elynumero alue) " " (:nimi alue))
+                                                    (:nimi alue))
+                                         :leveys 15
+                                         :fmt :raha})
+                                      naytettavat-alueet)
+                                    (when yhteensa-sarake?
+                                      [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :raha}])))
+        otsikko (yleinen/raportin-otsikko
+                  (case konteksti
+                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
+                                                     db hallintayksikko-id)))
+                    :koko-maa "KOKO MAA")
+                  raportin-nimi alkupvm loppupvm)
+        raportin-rivit (raportin-rivit-fn {:konteksti konteksti
+                                           :naytettavat-alueet naytettavat-alueet
+                                           :sanktiot-kannassa sanktiot-kannassa
+                                           :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
+                                           :yhteensa-sarake? yhteensa-sarake?})
+        runko [:raportti {:nimi raportin-nimi
+                          :orientaatio :landscape}
+               [:taulukko {:otsikko otsikko
+                           :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
+                           :sheet-nimi raportin-nimi}
+                raportin-otsikot
+                raportin-rivit]]]
+    (if info-teksti
+      (conj runko [:teksti info-teksti])
+      runko)))

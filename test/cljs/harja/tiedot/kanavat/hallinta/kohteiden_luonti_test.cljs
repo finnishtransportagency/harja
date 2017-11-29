@@ -2,60 +2,60 @@
   (:require [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
-
-            [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as ur]))
 
 (deftest kohderivit
   (is (= [{::kohde/id 1
            ::kohde/tyyppi :sulku
-           ::kanava/id 1
-           ::kanava/nimi "Foobar"
-           :rivin-teksti "Foobar, sulku"}
+           ::kok/id 1
+           ::kok/nimi "Foobar"
+           :rivin-teksti "FIXME"}
           {::kohde/id 2
            ::kohde/tyyppi :silta
            ::kohde/nimi "komea silta"
-           ::kanava/id 1
-           ::kanava/nimi "Foobar"
-           :rivin-teksti "Foobar, komea silta, silta"}
+           ::kok/id 1
+           ::kok/nimi "Foobar"
+           :rivin-teksti "FIXME"}
           {::kohde/id 3
            ::kohde/tyyppi :sulku
-           ::kanava/id 2
-           ::kanava/nimi "Bazbar"
-           :rivin-teksti "Bazbar, sulku"}]
+           ::kok/id 2
+           ::kok/nimi "Bazbar"
+           :rivin-teksti "FIXME"}]
          (tiedot/kohderivit
-           [{::kanava/id 1
-             ::kanava/nimi "Foobar"
-             ::kanava/kohteet [{::kohde/id 1
+           [{::kok/id 1
+             ::kok/nimi "Foobar"
+             ::kok/kohteet [{::kohde/id 1
                                 ::kohde/tyyppi :sulku}
                                {::kohde/id 2
                                 ::kohde/tyyppi :silta
                                 ::kohde/nimi "komea silta"}]}
-            {::kanava/id 2
-             ::kanava/nimi "Bazbar"
-             ::kanava/kohteet [{::kohde/id 3
+            {::kok/id 2
+             ::kok/nimi "Bazbar"
+             ::kok/kohteet [{::kohde/id 3
                                 ::kohde/tyyppi :sulku}]}]))))
 
 (deftest kanavat
-  (is (= [{::kanava/id 1
-           ::kanava/nimi "Foobar"}
-          {::kanava/id 2
-           ::kanava/nimi "Bazbar"}]
+  (is (= [{::kok/id 1
+           ::kok/nimi "Foobar"}
+          {::kok/id 2
+           ::kok/nimi "Bazbar"}]
          (tiedot/kanavat
-           [{::kanava/id 1
-             ::kanava/nimi "Foobar"
+           [{::kok/id 1
+             ::kok/nimi "Foobar"
              :huahuhue "joo"
-             ::kanava/kohteet [{::kohde/id 1
+             ::kok/kohteet [{::kohde/id 1
                                 ::kohde/tyyppi :sulku}
                                {::kohde/id 2
                                 ::kohde/tyyppi :silta
                                 ::kohde/nimi "komea silta"}]}
-            {::kanava/id 2
-             ::kanava/nimi "Bazbar"
+            {::kok/id 2
+             ::kok/nimi "Bazbar"
              :huahuhue "joo"
-             ::kanava/kohteet [{::kohde/id 3
+             ::kok/kohteet [{::kohde/id 3
                                 ::kohde/tyyppi :sulku}]}]))))
 
 (deftest voi-tallentaa?
@@ -97,7 +97,7 @@
            ::kohde/kanava-id 1
            ::kohde/tyyppi :sulku}]
          (tiedot/tallennusparametrit
-           {:kanava {::kanava/id 1}
+           {:kanava {::kok/id 1}
             :kohteet [{::kohde/nimi :foo
                        :id 1
                        ::kohde/kanava-id 1
@@ -260,36 +260,36 @@
 
 (deftest kohteet-haettu
   (is (= {:kohteiden-haku-kaynnissa? false
-          :kanavat [{::kanava/id 1
-                     ::kanava/nimi "Foobar"}
-                    {::kanava/id 2
-                     ::kanava/nimi "Bazbar"}]
+          :kanavat [{::kok/id 1
+                     ::kok/nimi "Foobar"}
+                    {::kok/id 2
+                     ::kok/nimi "Bazbar"}]
           :kohderivit [{::kohde/id 1
                         ::kohde/tyyppi :sulku
-                        ::kanava/id 1
-                        ::kanava/nimi "Foobar"
-                        :rivin-teksti "Foobar, sulku"}
+                        ::kok/id 1
+                        ::kok/nimi "Foobar"
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 2
                         ::kohde/tyyppi :silta
                         ::kohde/nimi "komea silta"
-                        ::kanava/id 1
-                        ::kanava/nimi "Foobar"
-                        :rivin-teksti "Foobar, komea silta, silta"}
+                        ::kok/id 1
+                        ::kok/nimi "Foobar"
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 3
                         ::kohde/tyyppi :sulku
-                        ::kanava/id 2
-                        ::kanava/nimi "Bazbar"
-                        :rivin-teksti "Bazbar, sulku"}]}
-         (e! (tiedot/->KohteetHaettu [{::kanava/id 1
-                                       ::kanava/nimi "Foobar"
-                                       ::kanava/kohteet [{::kohde/id 1
+                        ::kok/id 2
+                        ::kok/nimi "Bazbar"
+                        :rivin-teksti "FIXME"}]}
+         (e! (tiedot/->KohteetHaettu [{::kok/id 1
+                                       ::kok/nimi "Foobar"
+                                       ::kok/kohteet [{::kohde/id 1
                                                           ::kohde/tyyppi :sulku}
                                                          {::kohde/id 2
                                                           ::kohde/tyyppi :silta
                                                           ::kohde/nimi "komea silta"}]}
-                                      {::kanava/id 2
-                                       ::kanava/nimi "Bazbar"
-                                       ::kanava/kohteet [{::kohde/id 3
+                                      {::kok/id 2
+                                       ::kok/nimi "Bazbar"
+                                       ::kok/kohteet [{::kohde/id 3
                                                           ::kohde/tyyppi :sulku}]}])))))
 
 (deftest kohteet-ei-haettu
@@ -306,20 +306,20 @@
          (e! (tiedot/->SuljeKohdeLomake)))))
 
 (deftest valitse-kanava
-  (is (= {:lomakkeen-tiedot {:kanava {::kanava/id 1}
-                             :kohteet [{::kanava/id 1 :id 1}
-                                       {::kanava/id 1 :id 3}]}
-          :kohderivit [{::kanava/id 1 :id 1}
-                       {::kanava/id 2 :id 2}
-                       {::kanava/id 1 :id 3}
-                       {::kanava/id 3 :id 4}
-                       {::kanava/id 2 :id 5}]}
-         (e! (tiedot/->ValitseKanava {::kanava/id 1})
-             {:kohderivit [{::kanava/id 1 :id 1}
-                           {::kanava/id 2 :id 2}
-                           {::kanava/id 1 :id 3}
-                           {::kanava/id 3 :id 4}
-                           {::kanava/id 2 :id 5}]}))))
+  (is (= {:lomakkeen-tiedot {:kanava {::kok/id 1}
+                             :kohteet [{::kok/id 1 :id 1}
+                                       {::kok/id 1 :id 3}]}
+          :kohderivit [{::kok/id 1 :id 1}
+                       {::kok/id 2 :id 2}
+                       {::kok/id 1 :id 3}
+                       {::kok/id 3 :id 4}
+                       {::kok/id 2 :id 5}]}
+         (e! (tiedot/->ValitseKanava {::kok/id 1})
+             {:kohderivit [{::kok/id 1 :id 1}
+                           {::kok/id 2 :id 2}
+                           {::kok/id 1 :id 3}
+                           {::kok/id 3 :id 4}
+                           {::kok/id 2 :id 5}]}))))
 
 (deftest kohteiden-lisays
   (is (= {:lomakkeen-tiedot {:kohteet [{:foo :bar}]
@@ -341,37 +341,37 @@
 (deftest kohteet-tallennettu
   (is (= {:kohderivit [{::kohde/id 1
                         ::kohde/tyyppi :sulku
-                        ::kanava/id 1
-                        ::kanava/nimi "Foobar"
-                        :rivin-teksti "Foobar, sulku"}
+                        ::kok/id 1
+                        ::kok/nimi "Foobar"
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 2
                         ::kohde/tyyppi :silta
                         ::kohde/nimi "komea silta"
-                        ::kanava/id 1
-                        ::kanava/nimi "Foobar"
-                        :rivin-teksti "Foobar, komea silta, silta"}
+                        ::kok/id 1
+                        ::kok/nimi "Foobar"
+                        :rivin-teksti "FIXME"}
                        {::kohde/id 3
                         ::kohde/tyyppi :sulku
-                        ::kanava/id 2
-                        ::kanava/nimi "Bazbar"
-                        :rivin-teksti "Bazbar, sulku"}]
-          :kanavat [{::kanava/id 1
-                     ::kanava/nimi "Foobar"}
-                    {::kanava/id 2
-                     ::kanava/nimi "Bazbar"}]
+                        ::kok/id 2
+                        ::kok/nimi "Bazbar"
+                        :rivin-teksti "FIXME"}]
+          :kanavat [{::kok/id 1
+                     ::kok/nimi "Foobar"}
+                    {::kok/id 2
+                     ::kok/nimi "Bazbar"}]
           :kohdelomake-auki? false
           :lomakkeen-tiedot nil
           :kohteiden-tallennus-kaynnissa? false}
-         (e! (tiedot/->KohteetTallennettu [{::kanava/id 1
-                                            ::kanava/nimi "Foobar"
-                                            ::kanava/kohteet [{::kohde/id 1
+         (e! (tiedot/->KohteetTallennettu [{::kok/id 1
+                                            ::kok/nimi "Foobar"
+                                            ::kok/kohteet [{::kohde/id 1
                                                                ::kohde/tyyppi :sulku}
                                                               {::kohde/id 2
                                                                ::kohde/tyyppi :silta
                                                                ::kohde/nimi "komea silta"}]}
-                                           {::kanava/id 2
-                                            ::kanava/nimi "Bazbar"
-                                            ::kanava/kohteet [{::kohde/id 3
+                                           {::kok/id 2
+                                            ::kok/nimi "Bazbar"
+                                            ::kok/kohteet [{::kohde/id 3
                                                                ::kohde/tyyppi :sulku}]}])))))
 
 (deftest kohteet-ei-tallennettu

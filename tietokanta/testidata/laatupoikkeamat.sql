@@ -12,3 +12,7 @@ INSERT INTO laatupoikkeama
 (lahde, kohde, tekija, tarkastuspiste, luoja, luotu, aika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) VALUES
 ('harja-ui'::lahde, 'Testikohde', 'urakoitsija'::osapuoli, 123, 1, NOW(), '2015-10-16 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'Roskakori kaatunut', 1, 2, 3, 4, point(418717, 7204244)::GEOMETRY, 5);
 
+-- Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL
+INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) VALUES ('harja-ui'::lahde, 'Testikohde', 'tilaaja'::osapuoli, 'puhelin'::laatupoikkeaman_kasittelytapa, '', 'hylatty'::laatupoikkeaman_paatostyyppi, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2017-10-11 06:06.37', '2017-10-11 06:06.37', false, false, (SELECT id FROM urakka WHERE nimi='Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL'), 'Testihavainto 3', NULL, NULL, NULL, NULL, point(382455, 6672682)::GEOMETRY, NULL);
+
+

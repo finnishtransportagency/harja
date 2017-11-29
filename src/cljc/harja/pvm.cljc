@@ -210,10 +210,23 @@
            (= (millisekunteina eka) (millisekunteina toka))))
      false)))
 
-(defn jalkeen? [eka toka]
-  (if (and eka toka)
-    (t/after? eka toka)
-    false))
+#?(:cljs
+   (defn jalkeen? [eka toka]
+     (if (and eka toka)
+       (t/after? eka toka)
+       false))
+
+   :clj
+   (defn jalkeen? [eka toka]
+     (if (and eka toka)
+       (cond
+         (or (instance? java.util.Date eka)
+             (instance? java.util.Date toka))
+         (.after eka toka)
+         (or (joda-time? eka)
+             (joda-time? toka))
+         (t/after? eka toka))
+       false)))
 
 (defn sama-tai-jalkeen?
   "Tarkistaa, onko ensimmäisenä annettu pvm sama tai toisena annettun pvm:n jälkeen.

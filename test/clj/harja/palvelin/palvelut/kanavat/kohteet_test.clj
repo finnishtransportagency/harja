@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.kanavat.kanavat-test
+(ns harja.palvelin.palvelut.kanavat.kohteet-test
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [com.stuartsierra.component :as component]
@@ -12,11 +12,12 @@
             [taoensso.timbre :as log]
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
-            [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+            [harja.palvelin.palvelut.kanavat.kohteet :as kan-kohteet]
             [clojure.string :as str]
-
-            [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]))
 
@@ -29,7 +30,7 @@
                         :http-palvelin (testi-http-palvelin)
                         :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :kan-kanavat (component/using
-                                       (kan-kanavat/->Kanavat)
+                                       (kan-kohteet/->Kohteet)
                                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -46,34 +47,40 @@
         (map
           (fn [kohde]
             (::kohde/nimi kohde))
-          (::kanava/kohteet kanava)))
+          (::kok/kohteet kanava)))
       vastaus)))
 
 (defn- pakolliset-kentat? [vastaus]
   (every?
     (fn [kanava]
       ;; nämä arvot täytyy löytyä
-      (and (every? some? ((juxt ::kanava/id ::kanava/nimi ::kanava/kohteet) kanava))
+      (and (every? some? ((juxt ::kok/id ::kok/nimi ::kok/kohteet) kanava))
            (every?
              (fn [kohde]
                ;; nämä arvot täytyy löytyä
-               (and (every? some? ((juxt ::kohde/id ::kohde/tyyppi) kohde))
+               (and (every? some? ((juxt ::kohde/id) kohde))
                     ;; Nämä avaimet pitää olla
                     (every? (partial contains? kohde) [::kohde/urakat])
+                    #_(every? (partial contains? kohde) [::kohde/kohteenosat])
+                    #_(every?
+                      (fn [osa]
+                        ;; nämä arvot täytyy löytyä
+                        (every? some? ((juxt ::osa/id ::osa/tyyppi) urakka)))
+                      (::kohde/kohteenosat kohde))
                     (every?
                       (fn [urakka]
                         ;; nämä arvot täytyy löytyä
                         (every? some? ((juxt ::ur/id ::ur/nimi) urakka)))
                       (::kohde/urakat kohde))))
-             (::kanava/kohteet kanava))))
+             (::kok/kohteet kanava))))
     vastaus))
 
 (deftest kanavien-haku
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-kanavat-ja-kohteet
+                                :hae-kohdekokonaisuudet-ja-kohteet
                                 +kayttaja-jvh+)]
 
-    (is (s/valid? ::kanava/hae-kanavat-ja-kohteet-vastaus vastaus))
+    (is (s/valid? ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus vastaus))
 
     (is (jollain-kanavalla-nimi? vastaus))
     (is (pakolliset-kentat? vastaus))))
@@ -81,19 +88,18 @@
 (deftest kohteiden-tallennus
   (let [kohteiden-lkm (count (q "SELECT * FROM kan_kohde WHERE poistettu IS NOT TRUE;"))]
     (testing "Nimen muuttaminen"
-      (let [[kohde-id kanava-id] (first (q "SELECT id, \"kanava-id\" FROM kan_kohde WHERE nimi = 'Tikkalansaaren avattava ratasilta';"))
+      (let [[kohde-id kohdekokonaisuus-id] (first (q "SELECT id, \"kohdekokonaisuus-id\" FROM kan_kohde WHERE nimi = 'Pälli';"))
             _ (is (some? kohde-id))
             params [{::kohde/nimi "FOOBAR"
                      ::kohde/id kohde-id
-                     ::kohde/kanava-id kanava-id
-                     ::kohde/tyyppi :silta
+                     ::kohde/kohdekokonaisuus-id kohdekokonaisuus-id
                      ::m/poistettu? false}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :lisaa-kanavalle-kohteita
+                                    :lisaa-kohdekokonaisuudelle-kohteita
                                     +kayttaja-jvh+
                                     params)]
-        (is (s/valid? ::kanava/lisaa-kanavalle-kohteita-kysely params))
-        (is (s/valid? ::kanava/lisaa-kanavalle-kohteita-vastaus vastaus))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely params))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus vastaus))
 
         (is (jollain-kanavalla-nimi? vastaus))
         (is (pakolliset-kentat? vastaus))
@@ -105,23 +111,22 @@
               (map
                 (fn [kohde]
                   (::kohde/nimi kohde))
-                (::kanava/kohteet kanava)))
+                (::kok/kohteet kanava)))
             vastaus))))
 
     (testing "Poistaminen"
-      (let [[kohde-id kanava-id] (first (q "SELECT id, \"kanava-id\" FROM kan_kohde WHERE nimi = 'FOOBAR';"))
+      (let [[kohde-id kohdekokonaisuus-id] (first (q "SELECT id, \"kohdekokonaisuus-id\" FROM kan_kohde WHERE nimi = 'FOOBAR';"))
             _ (is (some? kohde-id))
             params [{::kohde/nimi "FOOBAR"
                      ::kohde/id kohde-id
-                     ::kohde/kanava-id kanava-id
-                     ::kohde/tyyppi :silta
+                     ::kohde/kohdekokonaisuus-id kohdekokonaisuus-id
                      ::m/poistettu? true}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :lisaa-kanavalle-kohteita
+                                    :lisaa-kohdekokonaisuudelle-kohteita
                                     +kayttaja-jvh+
                                     params)]
-        (is (s/valid? ::kanava/lisaa-kanavalle-kohteita-kysely params))
-        (is (s/valid? ::kanava/lisaa-kanavalle-kohteita-vastaus vastaus))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely params))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus vastaus))
 
 
         (is (pakolliset-kentat? vastaus))
@@ -129,18 +134,17 @@
                (count (q "SELECT * FROM kan_kohde WHERE poistettu IS NOT TRUE;"))))))
 
     (testing "Uuden lisääminen"
-      (let [[kanava-id] (first (q "SELECT \"kanava-id\" FROM kan_kohde WHERE nimi = 'FOOBAR';"))
+      (let [[kohdekokonaisuus-id] (first (q "SELECT \"kohdekokonaisuus-id\" FROM kan_kohde WHERE nimi = 'FOOBAR';"))
             params [{::kohde/nimi "UUSI"
-                     ::kohde/kanava-id kanava-id
-                     ::kohde/tyyppi :silta
+                     ::kohde/kohdekokonaisuus-id kohdekokonaisuus-id
                      ::kohde/id -1
                      ::m/poistettu? false}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :lisaa-kanavalle-kohteita
+                                    :lisaa-kohdekokonaisuudelle-kohteita
                                     +kayttaja-jvh+
                                     params)]
-        (is (s/valid? ::kanava/lisaa-kanavalle-kohteita-kysely params))
-        (is (s/valid? ::kanava/lisaa-kanavalle-kohteita-vastaus vastaus))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely params))
+        (is (s/valid? ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus vastaus))
 
         (is (jollain-kanavalla-nimi? vastaus))
         (is (pakolliset-kentat? vastaus))
@@ -152,7 +156,7 @@
               (map
                 (fn [kohde]
                   (::kohde/nimi kohde))
-                (::kanava/kohteet kanava)))
+                (::kok/kohteet kanava)))
             vastaus))
 
         (is (= kohteiden-lkm
@@ -160,7 +164,7 @@
 
 (deftest kohteen-liittaminen-urakkaan
   (testing "Uuden linkin lisääminen"
-    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
+    (let [kohde-id (hae-kohde-iisalmen-kanava)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -173,7 +177,7 @@
                                   :liita-kohde-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kanava/liita-kohde-urakkaan-kysely params))
+      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -182,7 +186,7 @@
         (is (= poistettu? false)))))
 
   (testing "Linkin poistaminen"
-    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
+    (let [kohde-id (hae-kohde-soskua)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -195,7 +199,7 @@
                                   :liita-kohde-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kanava/liita-kohde-urakkaan-kysely params))
+      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -204,7 +208,7 @@
         (is (= poistettu? true)))))
 
   (testing "Linkin palauttaminen"
-    (let [kohde-id (hae-kanavakohde-taipaleen-sulku)
+    (let [kohde-id (hae-kohde-soskua)
           urakka-id (hae-saimaan-kanavaurakan-id)
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
@@ -217,7 +221,7 @@
                                   :liita-kohde-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kanava/liita-kohde-urakkaan-kysely params))
+      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -226,7 +230,7 @@
         (is (= poistettu? false))))))
 
 (deftest kohteen-poistaminen
-  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Taipaleen sulku';"))
+  (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Iisalmen kanava';"))
         _ (is (some? kohde-id))
         _ (is (false? poistettu?))
         params {:kohde-id kohde-id}
@@ -234,7 +238,7 @@
                                 :poista-kohde
                                 +kayttaja-jvh+
                                 params)]
-    (is (s/valid? ::kanava/poista-kohde-kysely params))
+    (is (s/valid? ::kok/poista-kohde-kysely params))
 
     (let [[id poistettu?] (first (q (str "SELECT id, poistettu FROM kan_kohde WHERE id = " kohde-id ";")))]
       (is (= id kohde-id))

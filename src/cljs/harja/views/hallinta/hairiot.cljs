@@ -9,8 +9,7 @@
             [harja.loki :refer [log]]
             [harja.fmt :as fmt]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.kentat :as kentat])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- listaa-hairioilmoitus [hairio]

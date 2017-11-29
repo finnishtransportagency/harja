@@ -21,6 +21,7 @@
             [harja.transit :as tr]
             [alandipert.storage-atom :refer [local-storage]]
             [clojure.string :as str]
+            [clojure.set :as set]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.domain.raportointi :as raportti-domain]
@@ -50,9 +51,9 @@
 (def mahdolliset-raporttityypit
   (reaction (let [v-ur @nav/valittu-urakka
                   v-hal @nav/valittu-hallintayksikko
-                  v-urakkatyyppi (:arvo @nav/urakkatyyppi)
+                  v-urakkatyyppi #{(:arvo @nav/urakkatyyppi)}
                   ;; vesiväylä-urakkatyypillä toistaiseksi tunnistetaan kanava vs. vesiväylät hallintayksikön nimestä
-                  v-urakkatyyppi (if (= :vesivayla v-urakkatyyppi)
+                  v-urakkatyyppi (if (= :vesivayla (first v-urakkatyyppi))
                                    (if (= (:nimi v-hal) "Kanavat ja avattavat sillat")
                                      urakka-domain/kanava-urakkatyypit
                                      urakka-domain/vesivayla-urakkatyypit-ilman-kanavia)
@@ -66,13 +67,11 @@
 
                                            #{"urakka"})
                   urakkatyypin-raportit (filter
-                                          #(or ((:urakkatyyppi %) v-urakkatyyppi)
-                                               (= (:urakkatyyppi %) v-urakkatyyppi))
+                                          #(set/subset? v-urakkatyyppi (:urakkatyyppi %))
                                           (vals @raporttityypit))]
 
               (if (and (not salli-laaja-konteksti?) (nil? v-ur))
                 nil
-
                 (sort-by raportin-sort-avain
                          (into []
                                (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))

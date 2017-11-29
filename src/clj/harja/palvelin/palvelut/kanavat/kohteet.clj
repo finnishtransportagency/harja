@@ -1,20 +1,21 @@
-(ns harja.palvelin.palvelut.kanavat.kanavat
+(ns harja.palvelin.palvelut.kanavat.kohteet
   (:require [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.kanavat.kanavat :as q]
-
-            [harja.domain.kanavat.kanava :as kan]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.kyselyt.kanavat.kohteet :as q]
+            
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.urakka :as ur]))
 
 
-(defn hae-kanavat-ja-kohteet [db user]
+(defn hae-kohdekokonaisuudet-ja-kohteet [db user]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-  (q/hae-kanavat-ja-kohteet db))
+  (q/hae-kokonaisuudet-ja-kohteet db))
 
 (defn hae-urakan-kohteet [db user tiedot]
   (let [urakka-id (::ur/id tiedot)]
@@ -25,10 +26,10 @@
 
     (q/hae-urakan-kohteet db urakka-id)))
 
-(defn lisaa-kanavalle-kohteita [db user kohteet]
+(defn lisaa-kohdekokonaisuudelle-kohteita [db user kohteet]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-  (q/lisaa-kanavalle-kohteet! db user kohteet)
-  (hae-kanavat-ja-kohteet db user))
+  (q/lisaa-kokonaisuudelle-kohteet! db user kohteet)
+  (hae-kohdekokonaisuudet-ja-kohteet db user))
 
 (defn liita-kohde-urakkaan! [db user {:keys [kohde-id urakka-id poistettu?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
@@ -42,50 +43,62 @@
                                 {:virhe :kohteella-on-urakoita}
                                 (q/merkitse-kohde-poistetuksi! db user kohde-id)))))
 
-(defrecord Kanavat []
+(defn hae-huoltokohteet [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+  (q/hae-huoltokohteet db))
+
+(defrecord Kohteet []
   component/Lifecycle
   (start [{http :http-palvelin
            db :db :as this}]
     (julkaise-palvelu
       http
-      :hae-kanavat-ja-kohteet
+      :hae-kohdekokonaisuudet-ja-kohteet
       (fn [user]
-        (hae-kanavat-ja-kohteet db user))
-      {:vastaus-spec ::kan/hae-kanavat-ja-kohteet-vastaus})
+        (hae-kohdekokonaisuudet-ja-kohteet db user))
+      {:vastaus-spec ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus})
     (julkaise-palvelu
       http
       :hae-urakan-kohteet
       (fn [user tiedot]
         (hae-urakan-kohteet db user tiedot))
-      {:kysely-spec ::kan/hae-urakan-kohteet-kysely
-       :vastaus-spec ::kan/hae-urakan-kohteet-vastaus})
+      {:kysely-spec ::kok/hae-urakan-kohteet-kysely
+       :vastaus-spec ::kok/hae-urakan-kohteet-vastaus})
     (julkaise-palvelu
       http
-      :lisaa-kanavalle-kohteita
+      :lisaa-kohdekokonaisuudelle-kohteita
       (fn [user kohteet]
-        (lisaa-kanavalle-kohteita db user kohteet))
-      {:kysely-spec ::kan/lisaa-kanavalle-kohteita-kysely
-       :vastaus-spec ::kan/lisaa-kanavalle-kohteita-vastaus})
+        (lisaa-kohdekokonaisuudelle-kohteita db user kohteet))
+      {:kysely-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely
+       :vastaus-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus})
     (julkaise-palvelu
       http
       :liita-kohde-urakkaan
       (fn [user tiedot]
         (liita-kohde-urakkaan! db user tiedot))
-      {:kysely-spec ::kan/liita-kohde-urakkaan-kysely})
+      {:kysely-spec ::kok/liita-kohde-urakkaan-kysely})
     (julkaise-palvelu
       http
       :poista-kohde
       (fn [user tiedot]
         (poista-kohde! db user tiedot))
-      {:kysely-spec ::kan/poista-kohde-kysely})
+      {:kysely-spec ::kok/poista-kohde-kysely})
+    (julkaise-palvelu
+      http
+      :hae-kanavien-huoltokohteet
+      (fn [user]
+        (hae-huoltokohteet db user))
+      {:vastaus-spec ::huoltokohde/hae-huoltokohteet-kysely})
+
     this)
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-kanavat-ja-kohteet
+      :hae-kohdekokonaisuudet-ja-kohteet
       :hae-urakan-kohteet
-      :lisaa-kanavalle-kohteita
+      :lisaa-kohdekokonaisuudelle-kohteita
       :liita-kohde-urakkaan
-      :poista-kohde)
+      :poista-kohde
+      :hae-kanavien-huoltokohteet)
     this))
