@@ -3,7 +3,11 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.hairiotilanne :as hairio]
-            [harja.kyselyt.kanavat.kanavan-hairiotilanne :as q-hairiotilanne]))
+            [harja.domain.vesivaylat.materiaali :as materiaali]
+            [harja.kyselyt.kanavat.kanavan-hairiotilanne :as q-hairiotilanne]
+            [harja.kyselyt.vesivaylat.materiaalit :as m-q]
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]))
 
 (defn hae-hairiotilanteet [db kayttaja hakuehdot]
   (let [urakka-id (::hairio/urakka-id hakuehdot)]
@@ -11,15 +15,26 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
     (reverse (sort-by ::hairio/pvm (q-hairiotilanne/hae-sopimuksen-hairiotilanteet-aikavalilta db hakuehdot)))))
 
-(defn tallenna-hairiotilanne [db {kayttaja-id :id :as kayttaja} {urakka-id ::hairio/urakka-id :as hairiotilanne}]
+(defn tallenna-hairiotilanne [db fim email
+                              {kayttaja-id :id :as kayttaja}
+                              {urakka-id ::hairio/urakka-id :as hairiotilanne}
+                              materiaalikirjaukset]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
-  (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
+  (println "HÄIRIÖTILANNE: " (pr-str hairiotilanne))
+  (println "MATERIAALIT: " (pr-str materiaalikirjaukset))
+  (jdbc/with-db-transaction [db db]
+                            (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
+                            (doseq [mk materiaalikirjaukset]
+                              (m-q/kirjaa-materiaali db kayttaja mk)
+                              (materiaali-palvelu/hoida-halytysraja db mk fim email))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
   (start [{http :http-palvelin
-           db :db :as this}]
+           db :db
+           fim :fim
+           email :sonja-sahkoposti :as this}]
     (julkaise-palvelu
       http
       :hae-hairiotilanteet
@@ -32,8 +47,9 @@
       http
       :tallenna-hairiotilanne
       (fn [kayttaja {hairiotilanne ::hairio/hairiotilanne
+                     materiaalit ::materiaali/materiaalikirjaukset
                      hakuehdot ::hairio/hae-hairiotilanteet-kysely}]
-        (tallenna-hairiotilanne db kayttaja hairiotilanne)
+        (tallenna-hairiotilanne db fim email kayttaja hairiotilanne materiaalit)
         (hae-hairiotilanteet db kayttaja hakuehdot))
       {:kysely-spec ::hairio/tallenna-hairiotilanne-kutsu
        :vastaus-spec ::hairio/hae-hairiotilanteet-vastaus})

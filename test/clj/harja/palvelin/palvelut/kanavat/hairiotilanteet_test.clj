@@ -141,7 +141,7 @@
                                     ::hairiotilanne/korjausaika-h 1
                                     ::hairiotilanne/syy syy
                                     ::hairiotilanne/odotusaika-h 4
-                                    ::hairiotilanne/materiaalit [{:varaosa {::vv-materiaali/muutokset (first (:muutokset saimaan-materiaalit))
+                                    ::vv-materiaali/materiaalit [{:varaosa {::vv-materiaali/muutokset (first (:muutokset saimaan-materiaalit))
                                                                             ::vv-materiaali/nimi (first (:nimi saimaan-materiaalit))}
                                                                   :maara 10}
                                                                  {:varaosa {::vv-materiaali/muutokset (second (:muutokset saimaan-materiaalit))

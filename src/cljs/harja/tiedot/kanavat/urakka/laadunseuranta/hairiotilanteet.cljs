@@ -14,7 +14,8 @@
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.navigaatio :as navigaatio]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -75,12 +76,32 @@
                                         ::hairiotilanne/syy
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
-                                        ::hairiotilanne/materiaalit materiaalit
                                         ::muokkaustiedot/poistettu?])
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kanavan-kohde/id])))]
     hairiotilanne))
+
+(defn tallennettava-materiaali [hairiotilanne]
+  (let [materiaali-kirjaukset (::materiaalit/materiaalit (select-keys hairiotilanne [::materiaalit/materiaalit]))]
+    (println "FOOBAR: " (pr-str materiaali-kirjaukset))
+    (transduce
+      (comp
+        ;; Lisätään käytetty määrä lähetettävään mappiin ja
+        ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
+        (map #(assoc-in % [:varaosa ::materiaalit/maara] (- (:maara %))))
+        ;; Käsitellään pelkästään lähetettävää mappia
+        (map :varaosa)
+        ;; Lisätään muokkauspäivämäärää
+        (map #(assoc % ::materiaalit/pvm (pvm/nyt)))
+        ;; Otetaan kaikki vv_materiaalilistaus tiedot pois paitsi urakka-id ja nimi
+        (map #(dissoc %
+                      ::materiaalit/maara-nyt
+                      ::materiaalit/lisatieto
+                      ::materiaalit/halytysraja
+                      ::materiaalit/muutokset
+                      ::materiaalit/alkuperainen-maara)))
+      conj materiaali-kirjaukset)))
 
 (defn hairiotilanteiden-hakuparametrit [valinnat]
   {::hairiotilanne/urakka-id (get-in valinnat [:urakka :id])
@@ -165,17 +186,17 @@
     (println "HAIRIOTILANNE: " (pr-str (dissoc hairiotilanne :harja.ui.lomake/skeema)))
     (if (:tallennus-kaynnissa? app)
       app
-      (let [hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
+      (let [tal-hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
+            tal-materiaalit (tallennettava-materiaali hairiotilanne)
             parametrit (hairiotilanteiden-hakuparametrit valinnat)]
         (-> app
             (tuck-apurit/post! :tallenna-hairiotilanne
-                               {::hairiotilanne/hairiotilanne hairiotilanne
+                               {::hairiotilanne/hairiotilanne tal-hairiotilanne
+                                ::materiaalit/materiaalikirjaukset tal-materiaalit
                                 ::hairiotilanne/hae-hairiotilanteet-kysely parametrit}
                                {:onnistui ->HairiotilanneTallennettu
                                 :epaonnistui ->HairiotilanteenTallentaminenEpaonnistui})
-            (assoc :tallennus-kaynnissa? true))))
-
-    (assoc app :tallennus-kaynnissa? true))
+            (assoc :tallennus-kaynnissa? true)))))
 
   PoistaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} app]
@@ -221,6 +242,6 @@
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
     (if (:valittu-hairiotilanne app)
-      (update app :valittu-hairiotilanne #(assoc % ::hairiotilanne/materiaalit materiaalit))
+      (update app :valittu-hairiotilanne #(assoc % ::materiaalit/materiaalit materiaalit))
       app)))
 

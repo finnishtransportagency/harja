@@ -100,7 +100,8 @@
 
 (s/def ::tallenna-hairiotilanne-kutsu
   (s/keys :req [::hae-hairiotilanteet-kysely
-                ::hairiotilanne]))
+                ::hairiotilanne
+                ::materiaali/materiaalikirjaukset]))
 
 ;; Apurit
 

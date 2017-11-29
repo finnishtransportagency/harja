@@ -127,8 +127,11 @@
      :tyyppi :positiivinen-numero
      :kokonaisluku? true}]
    (r/wrap
-     (:harja.domain.kanavat.hairiotilanne/materiaalit hairiotilanne)
-     #(e! (tiedot/->MuokkaaMateriaaleja %)))])
+     (zipmap (range)
+             (::materiaali/materiaalit hairiotilanne))
+     #(e! (tiedot/->MuokkaaMateriaaleja (sort-by (fn [materiaalin-kirjaus]
+                                                   [(:id materiaalin-kirjaus) (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])])
+                                                 (vals %)))))])
 
 (defn odottavan-liikenteen-kentat []
   ;; todo: luokan määrittäminen eksplisiittisesti kentälle ei välttämättä ole hyvä idea
