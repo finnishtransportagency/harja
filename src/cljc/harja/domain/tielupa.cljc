@@ -2,6 +2,7 @@
   (:require
     [clojure.spec.alpha :as s]
     [harja.domain.muokkaustiedot :as muokkautiedot]
+    [specql.data-types :as d]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -10,12 +11,15 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
+(s/def ::d/geometry any?)
+
 (define-tables
   ["tielupatyyppi" ::tielupatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["tieluvan_kaapeliasennus" ::kaapeliasennustyyppi]
   ["tieluvan_johtoasennus" ::johtoasennustyyppi]
   ["tieluvan_opaste" ::opastetyyppi]
   ["tieluvan_liikennemerkkijarjestely" ::liikennemerkkijarjestelytyyppi]
+  ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
   ["tielupa" ::tielupa
    {"luotu" ::muokkautiedot/luotu}]
   ;; todo: miten listata liitteet?
@@ -23,7 +27,6 @@
 
 (def perustiedot
   #{::id
-    ::luotu
     ::ulkoinen-tunniste
     ::tyyppi
     ::paatoksen-diaarinumero
