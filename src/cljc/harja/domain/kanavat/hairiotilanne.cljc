@@ -9,7 +9,7 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [harja.domain.vesivaylat.materiaali :as materiaali])
+    [harja.domain.vesivaylat.materiaali :as materiaali]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.kohteenosa :as kohteenosa]
     [harja.domain.urakka :as ur]
@@ -87,14 +87,6 @@
     ::id
     ::korjauksen-tila
     ::ammattiliikenne-lkm})
-
-(def perustiedot+kanava+kohde
-  (set/union perustiedot+muokkaustiedot
-             kuittaajan-tiedot
-             materiaalien-tiedot
-             #{[::kohde
-                (set/union kohde/perustiedot
-                           kohde/kohteen-kanavatiedot)]}))
 
 (def viittaus-idt
   #{::urakka-id
