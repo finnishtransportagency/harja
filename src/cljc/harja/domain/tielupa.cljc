@@ -13,6 +13,11 @@
 
 (s/def ::d/geometry any?)
 
+#?(:clj
+   (defmethod specql.impl.composite/parse-value :specql.data-types/geometry [yks kaks]
+     (println "---->>> hilipati" yks kaks)
+     nil))
+
 (define-tables
   ["tielupatyyppi" ::tielupatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["tieluvan_kaapeliasennus" ::kaapeliasennustyyppi]
