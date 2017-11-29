@@ -25,6 +25,7 @@
 
 ;; todo:
 ;; - testit
+;; - varaosat ja materiaalit
 ;; huomioita:
 ;; terminologiaa: vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
 ;;                koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
