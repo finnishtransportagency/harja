@@ -224,3 +224,5 @@ CREATE TABLE tielupa_liite (
   tielupa INTEGER REFERENCES tielupa (id),
   liite   INTEGER REFERENCES liite (id)
 );
+
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'lisaa-tielupa');
