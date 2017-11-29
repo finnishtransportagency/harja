@@ -224,7 +224,13 @@
 
   AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (assoc app :avattu-toimenpide toimenpide))
+    (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohteenosa]))
+                                 (not= (::kanavan-toimenpide/kohde toimenpide)
+                                       (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohde])))
+          toimenpide (if kohdeosa-vaihtui?
+                       (assoc toimenpide ::kanavan-toimenpide/kohteenosa nil)
+                       toimenpide)]
+      (assoc app :avattu-toimenpide toimenpide)))
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
