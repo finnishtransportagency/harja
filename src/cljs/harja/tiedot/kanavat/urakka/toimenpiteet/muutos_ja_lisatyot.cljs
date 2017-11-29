@@ -49,7 +49,6 @@
 
 (defonce valinnat
   (reaction
-   (log "valinnat-reaktio päivittyy - tila: " (pr-str tila))
    (when (:nakymassa? @tila)
      {:urakka @nav/valittu-urakka
       :sopimus-id (first @u/valittu-sopimusnumero)
@@ -176,9 +175,6 @@
         idt (map id-avain jutut)
         seuraava-vapaa-id (dec (apply min (conj idt 0)))
         paivitetyt (conj jutut (kentta-fn seuraava-vapaa-id))]
-    (log "lisaa-hintarivi-toimenpiteelle* - seuraava-vapaa-id" seuraava-vapaa-id)
-    (log "tyot-tai-hinnat=" (pr-str tyot-tai-hinnat))
-    (log "vanha " (pr-str jutut) " -> uudet: " (pr-str paivitetyt))
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
 
 (defn lisaa-hintarivi-toimenpiteelle
@@ -213,7 +209,6 @@
                    (assoc % ::m/poistettu? true)
                    %)
                 rivit))]
-    (log "poista-hintarivi: paivitetyt " (count paivitetyt) " rivit " (count rivit))
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
 
 (defn poista-tyorivi-toimenpiteelta [id app]
@@ -231,8 +226,6 @@
   (process-event [{valinnat :valinnat} app]
     (let [haku (tuck/send-async! ->HaeToimenpiteet)]
       (go (haku valinnat))
-      (if-not (get-in app [:valinnat :urakka :id])
-        (log "huonot valinnat, puuttuu urakka-id"))
       (assoc app :valinnat valinnat)))
 
   TyhjennaSuunnitellutTyot
@@ -348,7 +341,6 @@
                 :urakka urakka-id})
         (do
           (log "ei aloiteta hinnoittelua, koska ei tiedetä urakkaa - valinnat: " (pr-str (:valinnat app)))
-          (log "valinnat atomissa:" (pr-str (deref valinnat)))
           app))))
 
   LisaaHinnoiteltavaTyorivi
@@ -394,7 +386,6 @@
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tyo :tyo} app]
-    (log "poista tyorivi: id " (::tyo/id tyo))
     (poista-tyorivi-toimenpiteelta (::tyo/id tyo) app))
 
   PoistaHinnoiteltavaHintarivi

@@ -39,7 +39,7 @@
    (assert (map? hinta) (pr-str hinta))
    [kentta-hinnalle e! hinta arvo-kw kentan-optiot
     (fn [uusi]
-      (log "kentta-hinnalle: uusi" (pr-str uusi) "hinta" (pr-str hinta) "arvo-kw" (pr-str arvo-kw))
+      ;; (log "kentta-hinnalle: uusi" (pr-str uusi) "hinta" (pr-str hinta) "arvo-kw" (pr-str arvo-kw))
       (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
                                               arvo-kw uusi})))])
   ([e! hinta arvo-kw kentan-optiot asetus-fn]
@@ -159,7 +159,7 @@
 (defn- sopimushintaiset-tyot [e! app*]
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::tyo/tyot])
         ei-poistetut-tyot (remove ::m/poistettu? tyot)]
-    (log "sopimushintaiset tyot:" (pr-str ei-poistetut-tyot))
+    ;; (log "sopimushintaiset tyot:" (pr-str ei-poistetut-tyot))
 
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
@@ -178,11 +178,6 @@
              [:tr
               [:td
                (let [tyovalinnat (sort-by :tehtavan_nimi (:suunnitellut-tyot app*))]
-                 (log "valinnat" (pr-str tyovalinnat) " -> valinta: " (pr-str (first (filter #(do
-                                                                                                (log "onko" (pr-str tyorivi) (pr-str [(::tyo/toimenpidekoodi-id tyorivi) (:tehtava %)]))
-                                                                                                (= (::tyo/toimenpidekoodi-id tyorivi)
-                                                                                                     (:tehtava %)))
-                                                       tyovalinnat))))
                  [yleiset/livi-pudotusvalikko
                   {:valitse-fn #(do
                                   (e! (tiedot/->AsetaTyorivilleTiedot
@@ -225,7 +220,6 @@
 
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
-    (log "muut työt: " (pr-str muut-tyot))
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
     [valiotsikko "Muut työt (ei indeksilaskentaa)"]
     [:table
@@ -252,7 +246,6 @@
       [:tbody
        (map-indexed
         (fn [index hinta]
-          ;; (log "muut-hinnat: vapaa hinnoittelurivi, rivin hinta " (pr-str hinta))
            ^{:key index}
 
            [vapaa-hinnoittelurivi e! hinta (tiedot/ainoa-otsikon-vakiokentta? hinnat (::hinta/otsikko hinta))])
@@ -269,7 +262,6 @@
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
                                ]
-  (log "hinnoittele-toimenpide: :valinnat " (pr-str (:valinnat app*)))
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])
         toimenpiteen-nykyiset-hinnat {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::h/hinnat])
         toimenpiteen-nykyiset-tyot {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::hinta/toimenpiteen-hinta])
