@@ -2,21 +2,14 @@
   (:require
     [clojure.spec.alpha :as s]
     [harja.domain.muokkaustiedot :as muokkautiedot]
-    [specql.data-types :as d]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
-     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
-
-(s/def ::d/geometry any?)
-
-#?(:clj
-   (defmethod specql.impl.composite/parse-value :specql.data-types/geometry [yks kaks]
-     (println "---->>> hilipati" yks kaks)
-     nil))
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
+  (:import (org.postgis PGgeometry)))
 
 (define-tables
   ["tielupatyyppi" ::tielupatyyppi (specql.transform/transform (specql.transform/to-keyword))]
