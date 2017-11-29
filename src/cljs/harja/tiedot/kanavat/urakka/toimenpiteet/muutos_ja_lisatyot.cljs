@@ -211,8 +211,6 @@
 (defn poista-hintarivi-toimenpiteelta [id app]
   (poista-hintarivi-toimenpiteelta* id ::hinta/id ::hinta/hinnat app))
 
-
-
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
@@ -235,7 +233,7 @@
     (let [urakka-id (get-in app [:valinnat :urakka :id])
           haku-ei-kaynnissa (not (:suunniteltujen-toiden-haku-kaynnissa? app))]
       (if (and haku-ei-kaynnissa (some? urakka-id))
-        (do (tuck-apurit/post! :muutoshintaiset-tyot
+        (do (tuck-apurit/post! :yksikkohintaiset-tyot
                                  {:urakka urakka-id}
                                  {:onnistui ->SuunnitellutTyotHaettu
                                          :epaonnistui ->SuunnitellutTyotEiHaettu})

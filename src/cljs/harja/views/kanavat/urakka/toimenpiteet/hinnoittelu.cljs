@@ -177,7 +177,7 @@
              ^{:key index}
              [:tr
               [:td
-               (let [tyovalinnat (sort-by :tehtavanimi (:suunnitellut-tyot app*))]
+               (let [tyovalinnat (sort-by :tehtavan_nimi (:suunnitellut-tyot app*))]
                  (log "valinnat" (pr-str tyovalinnat) " -> valinta: " (pr-str (first (filter #(do
                                                                                                 (log "onko" (pr-str tyorivi) (pr-str [(::tyo/toimenpidekoodi-id tyorivi) (:tehtava %)]))
                                                                                                 (= (::tyo/toimenpidekoodi-id tyorivi)
@@ -189,7 +189,7 @@
                                         {::tyo/id (::tyo/id tyorivi)
                                          ::tyo/toimenpidekoodi-id (:tehtava %)})))
                    :format-fn #(if %
-                                 (:tehtavanimi %)
+                                 (:tehtavan_nimi %)
                                  "Valitse työ")
                    :class "livi-alasveto-250 inline-block"
                    :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
@@ -225,6 +225,7 @@
 
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
+    (log "muut työt: " (pr-str muut-tyot))
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
     [valiotsikko "Muut työt (ei indeksilaskentaa)"]
     [:table
@@ -232,6 +233,10 @@
      [:tbody
       (for* [muu-tyo muut-tyot]
             [muu-tyo-hinnoittelurivi e! muu-tyo])]]
+     ;; kutsuketju rivinlisäyksessä:
+     ;; tiedot/->LisaaMuuTyorivi -> lisaa-hintarivi-toimenpiteelle (ryhma "tyo")
+     ;; (huom lisaa-hintarivi, ei lisaa-tyorivi, vaikka kyseessä on ui:lla työ)
+
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
 
@@ -264,14 +269,14 @@
 
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
                                ]
+  (log "hinnoittele-toimenpide: :valinnat " (pr-str (:valinnat app*)))
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])
         toimenpiteen-nykyiset-hinnat {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::h/hinnat])
         toimenpiteen-nykyiset-tyot {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::hinta/toimenpiteen-hinta])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
         suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
                                                                        valittu-aikavali)
-        listaus-tunniste :id
-        nil-suvaitsevainen-+ (fnil + 0)]
+        listaus-tunniste :id]
     [:div
      (if (and hinnoittele-toimenpide-id
               (= hinnoittele-toimenpide-id (::toimenpide/id toimenpide-rivi)))
