@@ -52,7 +52,6 @@
                  (let [tyon-tpk (tpk/toimenpidekoodi-tehtavalla
                                   suunnitellut-tyot
                                   (::toimenpidekoodi-id tyo))]
-                   ;; (.log js/console "saatiin tyon-tpk" (pr-str tyon-tpk) " ja sille maara, yksikkohinta " (pr-str [(::maara tyo) (:yksikkohinta tyon-tpk)]))
                    (* (::maara tyo) (:yksikkohinta tyon-tpk))))
                tyot)))
 
