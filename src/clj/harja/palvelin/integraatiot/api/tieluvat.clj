@@ -15,7 +15,8 @@
 (defn kirjaa-tielupa [liitteiden-hallinta db parametrit data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
   (println "-->>> parametrit " parametrit)
-  (println "-->>> data " data))
+  (println "-->>> data " data)
+  (tee-kirjausvastauksen-body {:ilmoitukset "Tielupa kirjattu onnistuneesti"}))
 
 (defrecord Tieluvat []
   component/Lifecycle
