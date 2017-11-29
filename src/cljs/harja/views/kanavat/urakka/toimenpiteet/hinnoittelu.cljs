@@ -55,9 +55,6 @@
   ([e! tyo arvo-kw kentan-optiot asetus-fn]
    [kentta* e! tyo arvo-kw kentan-optiot asetus-fn]))
 
-(defn- toimenpiteella-oma-hinnoittelu? [rivi]
-  false)
-
 (defn- hintakentta
   [e! hinta]
   [kentta-hinnalle e! hinta ::hinta/summa {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}])
@@ -260,18 +257,28 @@
    [hinnoittelun-yhteenveto app*]])
 
 
+(defn- nykyisten-arvo [app* tp aikavali]
+  (let [nykyiset-hinnat (::toimenpide/hinnat tp)
+        nykyiset-tyot (::toimenpide/tyot tp)
+        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
+                                                                       aikavali)]
+    (log "tyot" (pr-str nykyiset-tyot))
+    (log ":suunnitellut" (pr-str (:suunnitellut-tyot app*)))
+    (log "-> " (pr-str suunnitellut-tyot ))
+    (log "aikavali" (pr-str aikavali))
+    (+ (hinta/kokonaishinta-yleiskustannuslisineen nykyiset-hinnat)
+       (tyo/toiden-kokonaishinta nykyiset-tyot
+                                 suunnitellut-tyot))))
+
 (defn- hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
                                ]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])
-        toimenpiteen-nykyiset-hinnat {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::h/hinnat])
-        toimenpiteen-nykyiset-tyot {} ;; (get-in toimenpide-rivi [::toimenpide/oma-hinnoittelu ::hinta/toimenpiteen-hinta])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
-        suunnitellut-tyot (tpk/aikavalin-hinnalliset-suunnitellut-tyot (:suunnitellut-tyot app*)
-                                                                       valittu-aikavali)
         listaus-tunniste :id]
+
     [:div
      (if (and hinnoittele-toimenpide-id
-              (= hinnoittele-toimenpide-id (::toimenpide/id toimenpide-rivi)))
+                (= hinnoittele-toimenpide-id (::toimenpide/id toimenpide-rivi)))
        ;; Piirrä leijuke
        [:div
         [leijuke {:otsikko "Hinnoittele toimenpide"
@@ -296,24 +303,21 @@
                                                        (:id @nav/valittu-urakka))))}]]]]]
 
        ;; Solun sisältö
-       (grid/arvo-ja-nappi
-         {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                        (get-in app* [:valinnat :urakka :id])))
-                         :pelkka-arvo
+       (do
+         (log "arvo-ja-nappi. arvo vois olla " (pr-str (nykyisten-arvo app* toimenpide-rivi valittu-aikavali)))
+         (grid/arvo-ja-nappi
+          {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                         (get-in app* [:valinnat :urakka :id])))
+                          :pelkka-arvo
 
-                         (not (toimenpiteella-oma-hinnoittelu? toimenpide-rivi))
-                         :pelkka-nappi
-
-                         :default
-                         :arvo-ja-nappi)
-          :pelkka-nappi-teksti "Hinnoittele"
-          :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
-          :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
-          :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
-                                       (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                                     oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                                     (:id @nav/valittu-urakka))))}
-          :arvo 42 #_(fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
-                                 (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
-                                                           suunnitellut-tyot)))
-          :ikoninappi? true}))]))
+                          :default
+                          :arvo-ja-nappi)
+           :pelkka-nappi-teksti "Hinnoittele"
+           :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
+           :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
+           :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
+                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                      (:id @nav/valittu-urakka))))}
+           :arvo (fmt/euro-opt (nykyisten-arvo app* toimenpide-rivi valittu-aikavali))
+           :ikoninappi? true})))]))
