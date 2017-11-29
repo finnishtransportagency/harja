@@ -650,7 +650,8 @@
         },
         "alkuperaisen-luvan-alkupvm": {
           "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-alkupvm",
-          "type": "date-time"
+          "type": "string",
+          "format": "date-time"
         },
         "alkuperaisen-luvan-loppupvm": {
           "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-loppupvm",
