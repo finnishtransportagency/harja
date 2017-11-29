@@ -10,3 +10,11 @@
         haettu-osasto "Osasto 123"
         vastaus (tielupa-q/hae-tieluvat db {::tielupa/hakija-osasto haettu-osasto})]
     (is (every? #(= haettu-osasto (::tielupa/hakija-osasto %)) vastaus) "Jokainen löytynyt tietue vastaa hakuehtoa")))
+
+
+(deftest onko-olemassa-ulkoisella-tunnisteella
+  (let [db (tietokanta/luo-tietokanta testitietokanta)]
+    (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db nil)))
+    (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666)))
+    (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 2345)))
+    (is (false? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db "foo")))))
