@@ -1,4 +1,4 @@
-(ns harja.kyselyt.vesivaylat.vatu-turvalaitteet
+(ns harja.kyselyt.vesivaylat.turvalaiteryhmat
   (:require [jeesql.core :refer [defqueries]]
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
@@ -18,8 +18,5 @@
             [clojure.string :as str]
             [harja.geo :as geo]))
 
+(defqueries "harja/kyselyt/vesivaylat/turvalaiteryhmat.sql")
 
-
-(defqueries "harja/kyselyt/vesivaylat/vatu_turvalaitteet.sql")
-
-;;TODO: Täydennä kun turvalaiterefactorointi tehdään (vrt. kyselyt.vesivaylat.turvalaitteet)

@@ -3,19 +3,36 @@
             [harja.palvelin.integraatiot.reimari.apurit :as r-apurit]
             [harja.palvelin.integraatiot.reimari.sanomat.hae-turvalaiteryhmat :as turvalaiteryhmat-sanoma]
             [harja.domain.vesivaylat.turvalaiteryhma :as turvalaiteryhma]
+            [harja.kyselyt.vesivaylat.turvalaiteryhmat :as turvalaiteryhmat-kysely]
             [harja.pvm :as pvm]
             [clojure.java.jdbc :as jdbc]
             [specql.core :as specql]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [clojure.set :refer [rename-keys]]))
+            [clojure.set :refer [rename-keys]]
+            [namespacefy.core :refer [unnamespacefy]]
+            [harja.kyselyt.konversio :as konv]
+            [clojure.string :as str]))
 
+
+(defn lisaa-muokkaustiedot
+  [turvalaiteryhma]
+  (merge turvalaiteryhma {:luoja "Integraatio"
+                          :muokkaaja "Integraatio"}))
+
+;TODO: refacktor - tää vois olla harja.kyselyt.konversio:ssa
+(defn turvalaiteryhman-turvalaitteet->array
+  [turvalaiteryhma]
+  (assoc turvalaiteryhma :turvalaitteet (konv/seq->array (map #(Integer. %) (:turvalaitteet turvalaiteryhma)))))
 
 (defn kasittele-turvalaiteryhma-vastaus [db vastaus-xml]
   (let [sanoman-tiedot (turvalaiteryhmat-sanoma/lue-hae-turvalaiteryhmat-vastaus vastaus-xml)
         kanta-tiedot (for [turvalaiteryhma-tiedot-raaka sanoman-tiedot
-                           :let [turvalaiteryhma-tiedot turvalaiteryhma-tiedot-raaka]]
-                       (specql/upsert! db ::turvalaiteryhma/reimari-turvalaiteryhma #{::turvalaiteryhma/tunnus} turvalaiteryhma-tiedot))]
+                           :let [turvalaiteryhma-tiedot (lisaa-muokkaustiedot
+                                                          (turvalaiteryhman-turvalaitteet->array
+                                                            (unnamespacefy turvalaiteryhma-tiedot-raaka)))]]
+                       (konv/array->vec
+                         (turvalaiteryhmat-kysely/vie-turvalaiteryhmatauluun<! db turvalaiteryhma-tiedot) :turvalaitteet))]
     (vec kanta-tiedot)))
 
 (defn hae-turvalaiteryhmat [db integraatioloki pohja-url kayttajatunnus salasana]

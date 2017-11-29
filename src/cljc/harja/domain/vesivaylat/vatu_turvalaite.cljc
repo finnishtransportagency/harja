@@ -10,28 +10,11 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-;;TODO; muuta koodi käyttämään tätä luokkaa
+;;TODO: refaktoroi turvalaitteeseen liittyvä koodi käyttämään tätä luokkaa vesivaylat.turvalaite-luokan sijaan
 
 (define-tables
-  ["turvalaitenro" ::turvalaitenro
-   "nimi" ::nimi
-   "sijainti" ::sijainti
-   "sijaintikuvaus" ::sijaintikuvaus
-   "tyyppi" ::tyyppi
-   "tarkenne" ::tarkenne
-   "tila" ::tila
-   "vah_pvm" ::vah_pvm
-   "toimintatila" ::toimintatila
-   "rakenne" ::rakenne
-   "navigointilaji" ::navigointilaji
-   "valaistu" ::valaistu
-   "omistaja" ::omistaja
-   "turvalaitenro_aiempi" ::turvalaitenro_aiempi
-   "paavayla" ::paavayla
-   "vaylat" ::vaylat
-   [harja.domain.muokkaustiedot/muokkaustiedot]])
+  ["vatu_turvalaite" ::vatu-turvalaite])
 
-(def tyypit (s/describe ::tyyppi))
 
 (def perustiedot
   #{:turvalaitenro
@@ -49,7 +32,11 @@
     :omistaja
     :turvalaitenro_aiempi
     :paavayla
-    :vaylat})
+    :vaylat
+    :muokkaaja
+    :muokattu
+    :luoja
+    :luotu})
 
 (s/def ::hae-turvalaitteet-kartalle-kysely
   (s/keys :req []))
