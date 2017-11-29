@@ -10,7 +10,9 @@
             [clojure.spec.alpha :as s]
             [harja.palvelin.palvelut.kanavat.hairiotilanteet :as hairiotilanteet]
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
-            [harja.domain.vesivaylat.materiaali :as vv-materiaali])
+            [harja.domain.vesivaylat.materiaali :as vv-materiaali]
+            [clojure.test.check.generators :as gen]
+            [harja.palvelin.palvelut.vesivaylat.materiaalit-test :as materiaalit-test])
   (:import (java.util UUID)))
 
 (defn jarjestelma-fixture [testit]
@@ -124,10 +126,8 @@
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id)
-        ;; Saimaan materiaalien haku näyttää vähän rumalta, koska harja.testi/q funktio
-        ;; käyttää jdbc funktioita suoraan eikä konvertoi PgArrayta nätisti Clojure vektoriksi.
-        ;; Siksipä se muunnos täytyy tehdä itse.
-        saimaan-materiaalit (hae-saimaan-kanavan-materiaalit)]
+        saimaan-materiaalit (hae-saimaan-kanavan-materiaalit)
+        ]
     {::hairiotilanne/hairiotilanne {::hairiotilanne/sopimus-id sopimus-id
                                     ::hairiotilanne/kohde-id kohde-id
                                     ::hairiotilanne/paikallinen-kaytto? true

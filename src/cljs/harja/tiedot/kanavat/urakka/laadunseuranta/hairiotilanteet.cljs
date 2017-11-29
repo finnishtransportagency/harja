@@ -83,8 +83,10 @@
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]
-  (let [materiaali-kirjaukset (::materiaalit/materiaalit (select-keys hairiotilanne [::materiaalit/materiaalit]))]
-    (println "FOOBAR: " (pr-str materiaali-kirjaukset))
+  (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
+        hairiotilanne-id (::hairiotilanne/id hairiotilanne)
+        paivamaara (::hairiotilanne/pvm hairiotilanne)
+        kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
         ;; Lisätään käytetty määrä lähetettävään mappiin ja
@@ -92,12 +94,14 @@
         (map #(assoc-in % [:varaosa ::materiaalit/maara] (- (:maara %))))
         ;; Käsitellään pelkästään lähetettävää mappia
         (map :varaosa)
-        ;; Lisätään muokkauspäivämäärää
-        (map #(assoc % ::materiaalit/pvm (pvm/nyt)))
-        ;; Otetaan kaikki vv_materiaalilistaus tiedot pois paitsi urakka-id ja nimi
+        ;; Lisätään muokkauspäivämäärää ja häiriö-id
+        (map #(assoc % ::materiaalit/pvm (pvm/nyt)
+                       ::materiaalit/hairiotilanne hairiotilanne-id
+                       ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
+                                                    " kohteessa " kohteen-nimi)))
+        ;; Otetaan joitain vv_materiaalilistaus tiedot pois
         (map #(dissoc %
                       ::materiaalit/maara-nyt
-                      ::materiaalit/lisatieto
                       ::materiaalit/halytysraja
                       ::materiaalit/muutokset
                       ::materiaalit/alkuperainen-maara)))

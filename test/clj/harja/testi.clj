@@ -367,6 +367,9 @@
   (let [haku (q "SELECT muutokset, nimi
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');")
+        ;; Saimaan materiaalien haku näyttää vähän rumalta, koska q funktio
+        ;; käyttää jdbc funktioita suoraan eikä konvertoi PgArrayta nätisti Clojure vektoriksi.
+        ;; Siksipä se muunnos täytyy tehdä itse.
         saimaan-materiaalit (mapv (fn [materiaali-pg-array]
                                     (let [materiaali-vector (konv/array->vec materiaali-pg-array 0)
                                           muutokset (transduce
@@ -380,13 +383,13 @@
                                                             ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
                                                             ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
                                                             ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
-                                                            (map #(let [tyhja-nilliksi-fn (fn [funktio teksti]
+                                                            (map #(let [tyhja-string->nil (fn [funktio teksti]
                                                                                             (if (= teksti "")
                                                                                               nil (funktio teksti)))]
-                                                                    (assoc % :pvm (tyhja-nilliksi-fn pvm/dateksi (:pvm %))
-                                                                             :maara (tyhja-nilliksi-fn (fn [x] (Integer. x)) (:maara %))
-                                                                             :id (tyhja-nilliksi-fn (fn [x] (Integer. x)) (:id %))
-                                                                             :hairiotilanne (tyhja-nilliksi-fn (fn [x] (Integer. x)) (:hairiotilanne %))))))
+                                                                    (assoc % :pvm (tyhja-string->nil pvm/dateksi (:pvm %))
+                                                                             :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
+                                                                             :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
+                                                                             :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))))))
                                                       conj [] (first materiaali-vector))
                                           nimi (second materiaali-vector)]
                                       {:muutokset muutokset :nimi nimi}))
