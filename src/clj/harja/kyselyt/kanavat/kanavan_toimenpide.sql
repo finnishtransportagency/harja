@@ -1,7 +1,7 @@
 -- name: hae-sopimuksen-kanavatoimenpiteet-aikavalilta
 SELECT kt.id
 FROM kan_toimenpide kt
-  JOIN kan_kohde kh ON kt.kohde = kh.id
+  JOIN kan_kohde kh ON kt."kohde-id" = kh.id
   JOIN toimenpidekoodi tpk4 ON kt.toimenpidekoodi = tpk4.id
   JOIN toimenpidekoodi tpk3 ON tpk3.id = tpk4.emo
 WHERE kt.urakka = :urakka AND

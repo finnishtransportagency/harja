@@ -5,7 +5,7 @@
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.urakka :as urakka]
             [harja.domain.kayttaja :as kayttaja]
-            [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
@@ -79,7 +79,7 @@
                                         ::muokkaustiedot/poistettu?])
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
-                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kanavan-kohde/id])))]
+                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])))]
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]

@@ -11,8 +11,8 @@
             [harja.tyokalut.tuck :as tt]
             [namespacefy.core :refer [namespacefy]]
 
-            [harja.domain.kanavat.kanava :as kanava]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as ur]
             [clojure.string :as str])
@@ -77,14 +77,14 @@
       (map
         (fn [kohde]
           (-> kohde
-              (assoc ::kanava/id (::kanava/id kanava-ja-kohteet))
-              (assoc ::kanava/nimi (::kanava/nimi kanava-ja-kohteet))
-              (assoc :rivin-teksti (kohde/fmt-kanava-ja-kohde-nimi kanava-ja-kohteet kohde))))
-        (::kanava/kohteet kanava-ja-kohteet)))
+              (assoc ::kok/id (::kok/id kanava-ja-kohteet))
+              (assoc ::kok/nimi (::kok/nimi kanava-ja-kohteet))
+              (assoc :rivin-teksti (str "FIXME"))))
+        (::kok/kohteet kanava-ja-kohteet)))
     tulos))
 
 (defn kanavat [tulos]
-  (map #(select-keys % #{::kanava/id ::kanava/nimi}) tulos))
+  (map #(select-keys % #{::kok/id ::kok/nimi}) tulos))
 
 (defn kohteet-voi-tallentaa? [kohteet]
   (boolean
@@ -99,7 +99,7 @@
   (get-in app [:lomakkeen-tiedot :kohteet]))
 
 (defn tallennusparametrit [lomake]
-  (let [kanava-id (get-in lomake [:kanava ::kanava/id])
+  (let [kanava-id (get-in lomake [:kanava ::kok/id])
         params (->> (:kohteet lomake)
                     (map #(assoc % ::kohde/kanava-id kanava-id))
                     (map #(set/rename-keys % {:id ::kohde/id
@@ -208,8 +208,8 @@
         (assoc-in [:lomakkeen-tiedot :kohteet]
                   (filter
                     (fn [kohde]
-                      (= (::kanava/id kohde)
-                         (::kanava/id kanava)))
+                      (= (::kok/id kohde)
+                         (::kok/id kanava)))
                     (:kohderivit app)))))
 
   LisaaKohteita

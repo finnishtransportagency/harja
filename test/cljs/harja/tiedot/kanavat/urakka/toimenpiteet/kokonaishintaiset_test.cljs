@@ -2,6 +2,7 @@
   (:require [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
             [clojure.test :refer-macros [deftest is testing]]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
@@ -67,19 +68,19 @@
          (e! (tiedot/->ToimenpiteidenHakuEpaonnistui)))))
 
 (deftest UusiToimenpide
-  (is (= {:valittu-toimenpide {:harja.domain.kanavat.kanavan-toimenpide/sopimus-id nil
-                               :harja.domain.kanavat.kanavan-toimenpide/kuittaaja
-                               {:harja.domain.kayttaja/id nil
-                                :harja.domain.kayttaja/etunimi nil
-                                :harja.domain.kayttaja/sukunimi nil}}}
+  (is (= {:avattu-toimenpide {::kanavan-toimenpide/sopimus-id nil
+                               ::kanavan-toimenpide/kuittaaja
+                               {::kayttaja/id nil
+                                ::kayttaja/etunimi nil
+                                ::kayttaja/sukunimi nil}}}
          (e! (tiedot/->UusiToimenpide)))))
 
 (deftest TyhjennaValittuToimenpide
-  (is (false? (contains? (e! (tiedot/->TyhjennaValittuToimenpide)) :valittu-toimenpide))))
+  (is (false? (contains? (e! (tiedot/->TyhjennaAvattuToimenpide)) :avattu-toimenpide))))
 
 (deftest AsetaToimenpiteenTiedot
   (let [toimenpide {:testi-pieni "Olen vain"}]
-    (is (= toimenpide (:valittu-toimenpide (e! (tiedot/->AsetaToimenpiteenTiedot toimenpide)))))))
+    (is (= toimenpide (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot toimenpide)))))))
 
 (deftest ValinnatHaettuToimenpiteelle
   (let [valinnat {:foo "bar"}]
@@ -106,15 +107,40 @@
 
 (deftest ToimenpideTallennettu
   (let [haetut-toimenpiteet [{:foo "bar"}]
-        {:keys [tallennus-kaynnissa? valittu-toimenpide toimenpiteet]} (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet))]
+        {:keys [tallennus-kaynnissa? avattu-toimenpide toimenpiteet]}
+        (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet))]
     (is (false? tallennus-kaynnissa?))
-    (is (nil? valittu-toimenpide))
+    (is (nil? avattu-toimenpide))
     (is (= haetut-toimenpiteet toimenpiteet))))
 
 (deftest ToimenpiteidenTallentaminenEpaonnistui
   (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteidenTallentaminenEpaonnistui))))))
 
 (deftest ValitseToimenpide
-  (let [toimenpide {:foo "bar"}]
-    (is (= toimenpide (:valittu-toimenpide (e! (tiedot/->ValitseToimenpide toimenpide)))))))
+  (let [tiedot {:id 1
+                :valittu? true}
+        app-jalkeen {:valitut-toimenpide-idt #{1}}
+        app-ennen {:valitut-toimenpide-idt #{}}]
+    (is (= app-jalkeen (e! (tiedot/->ValitseToimenpide tiedot) app-ennen)))))
 
+(deftest SiirraToimenpideMuutosJaLisatoihin
+  (vaadi-async-kutsut
+    #{tiedot/->ValitutSiirretty tiedot/->ValitutEiSiirretty}
+    (is (= {:toimenpiteiden-siirto-kaynnissa? true}
+           (e! (tiedot/->SiirraValitut))))))
+
+(deftest ValitutSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :valitut-toimenpide-idt #{}
+            :toimenpiteet (sequence [])}
+           (e! (tiedot/->ValitutSiirretty) app)))))
+
+(deftest ValitutEiSiirretty
+  (let [app {:toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+             :valitut-toimenpide-idt #{1}}]
+    (is (= {:toimenpiteiden-siirto-kaynnissa? false
+            :toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
+            :valitut-toimenpide-idt #{1}}
+           (e! (tiedot/->ValitutEiSiirretty) app)))))

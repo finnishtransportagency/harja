@@ -140,7 +140,7 @@
     [harja.palvelin.palvelut.vesivaylat.alukset :as vv-alukset]
 
     ;; Kanavat
-    [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+    [harja.palvelin.palvelut.kanavat.kohteet :as kan-kohteet]
 
     [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
     [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
@@ -336,8 +336,8 @@
       :vv-alukset (component/using
                     (vv-alukset/->Alukset)
                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
-      :kan-kanavat (component/using
-                     (kan-kanavat/->Kanavat)
+      :kan-kohteet (component/using
+                     (kan-kohteet/->Kohteet)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :kan-liikennetapahtumat (component/using
                                 (kan-liikennetapahtumat/->Liikennetapahtumat)

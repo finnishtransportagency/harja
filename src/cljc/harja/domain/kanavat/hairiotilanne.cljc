@@ -9,9 +9,12 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [harja.domain.kanavat.kanavan-kohde :as kanavan-kohde]
-    [harja.domain.kayttaja :as kayttaja]
     [harja.domain.vesivaylat.materiaali :as materiaali])
+    [harja.domain.kanavat.kohde :as kohde]
+    [harja.domain.kanavat.kohteenosa :as kohteenosa]
+    [harja.domain.urakka :as ur]
+    [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.muokkaustiedot :as muokkaustiedot])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -21,7 +24,6 @@
   ["kan_hairio" ::hairiotilanne
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
-    "kohde" ::kohde-id
     "ammattiliikenne_lkm" ::ammattiliikenne-lkm
     "huviliikenne_lkm" ::huviliikenne-lkm
     "paikallinen_kaytto" ::paikallinen-kaytto?
@@ -35,8 +37,11 @@
     ::materiaalit (specql.rel/has-many ::id ::materiaali/materiaali ::materiaali/hairiotilanne)}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
-                                ::kanavan-kohde/kohde
-                                ::kanavan-kohde/id)}])
+                                ::kohde/kohde
+                                ::kohde/id)
+    ::kohteenosa (specql.rel/has-one ::kohteenosa-id
+                                     :harja.domain.kanavat.kohteenosa/kohteenosa
+                                     :harja.domain.kanavat.kohteenosa/id)}])
 
 (def kuittaajan-tiedot
   #{[::kuittaaja
@@ -63,16 +68,24 @@
     ::korjaustoimenpide
     ::paikallinen-kaytto?
     ::pvm
-    ::urakka-id
-    ::muokkaustiedot/muokkaaja-id
     ::korjausaika-h
-    ::muokkaustiedot/luotu
     ::odotusaika-h
     ::syy
-    ::muokkaustiedot/luoja-id
     ::id
     ::korjauksen-tila
-    ::sopimus-id
+    ::ammattiliikenne-lkm})
+
+(def perustiedot
+  #{::vikaluokka
+    ::huviliikenne-lkm
+    ::korjaustoimenpide
+    ::paikallinen-kaytto?
+    ::pvm
+    ::korjausaika-h
+    ::odotusaika-h
+    ::syy
+    ::id
+    ::korjauksen-tila
     ::ammattiliikenne-lkm})
 
 (def perustiedot+kanava+kohde
@@ -80,8 +93,23 @@
              kuittaajan-tiedot
              materiaalien-tiedot
              #{[::kohde
-                (set/union kanavan-kohde/perustiedot
-                           kanavan-kohde/kohteen-kanavatiedot)]}))
+                (set/union kohde/perustiedot
+                           kohde/kohteen-kanavatiedot)]}))
+
+(def viittaus-idt
+  #{::urakka-id
+    ::sopimus-id
+    ::kohde-id
+    ::kohteenosa-id})
+
+(def muokkaustiedot muokkaustiedot/muokkauskentat)
+
+(def kuittaajan-tiedot
+  #{[::kuittaaja kayttaja/perustiedot]})
+
+(def kohteenosan-tiedot #{[::kohteenosa kohteenosa/perustiedot]})
+
+(def kohteen-tiedot #{[::kohde (set/union kohde/perustiedot)]})
 
 ;; Palvelut
 

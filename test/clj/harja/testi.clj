@@ -350,11 +350,11 @@
                    FROM   sopimus
                    WHERE  nimi = 'Saimaan huollon lisäsopimus';"))))
 
-(defn hae-kanavakohde-taipaleen-sulku []
-  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Taipaleen sulku ja silta';"))))
+(defn hae-kohde-soskua []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Soskua';"))))
 
-(defn hae-kanavakohde-joensuun-sulku []
-  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Joensuun sulku ja silta';"))))
+(defn hae-kohde-iisalmen-kanava []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Iisalmen kanava';"))))
 
 (defn hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id []
   (ffirst (q "SELECT kk.id
@@ -402,6 +402,11 @@
   (map :id (q-map (str "SELECT id
                    FROM   urakka
                    WHERE  urakoitsija = " urakoitsija-id ";"))))
+
+(defn hae-saimaan-kanavaurakan-toimenpiteet []
+  (q (str "SELECT id, toimenpidekoodi, tyyppi
+           FROM kan_toimenpide
+           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))
 
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
