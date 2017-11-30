@@ -32,7 +32,7 @@
    [:div
     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
     [valinnat/kanava-kohde
-     (r/wrap (get-in app [:valinnat :kanava-kohde])
+     (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
              (fn [uusi]
                (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
      (into [nil] kohteet)

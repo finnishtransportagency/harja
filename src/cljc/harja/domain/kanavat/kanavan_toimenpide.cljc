@@ -113,7 +113,8 @@
   (s/keys :req [::urakka-id
                 ::sopimus-id
                 ::kanava-toimenpidetyyppi
-                ::toimenpidekoodi/id]
+                ::toimenpidekoodi/id
+                ::kohde-id]
           :req-un [::alkupvm
                    ::loppupvm]))
 
