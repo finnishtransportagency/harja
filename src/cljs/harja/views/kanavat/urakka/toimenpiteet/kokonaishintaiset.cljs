@@ -126,13 +126,16 @@
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
                                     :as app}]
-  [:div
-   (if avattu-toimenpide
-     [kokonaishintainen-toimenpidelomake e! app]
-     [:div
-      [hakuehdot e! app] ;; TODO Vaatii kohteet, testaa hidas yhteys. ajax-loader jos ei kohteita?
-      [kokonaishintaiset-toimenpiteet-taulukko e! app]])
-   [debug/debug app]])
+  (let [nakyma-voidaan-nayttaa? (some? (:kohteet app))]
+    [:div
+     (if nakyma-voidaan-nayttaa?
+       (if avattu-toimenpide
+         [kokonaishintainen-toimenpidelomake e! app]
+         [:div
+          [hakuehdot e! app]
+          [kokonaishintaiset-toimenpiteet-taulukko e! app]])
+       [ajax-loader "Ladataan..."])
+     [debug/debug app]]))
 
 (defn kokonaishintaiset* [e! _]
   (komp/luo

@@ -136,8 +136,8 @@
                    :huoltokohteiden-haku-kaynnissa? true
                    :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
-                   :kohteet []
-                   :huoltokohteet [])))))
+                   :kohteet nil
+                   :huoltokohteet nil)))))
 
   NakymaSuljettu
   (process-event [_ app]
