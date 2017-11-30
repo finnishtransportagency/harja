@@ -107,7 +107,8 @@
                     ::toimenpidekoodi/id 597
                     :alkupvm (pvm/luo-pvm 2017 1 1)
                     :loppupvm (pvm/luo-pvm 2018 1 1)
-                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
+                    ::kanavan-toimenpide/kohde-id nil}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-kanavatoimenpiteet
