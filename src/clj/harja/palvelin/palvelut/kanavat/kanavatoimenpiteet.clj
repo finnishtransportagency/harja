@@ -81,7 +81,7 @@
                                        kohde ::toimenpide/kohde-id}]
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (name tyyppi)]
-    (q-toimenpide/hae-kanavatoimenpiteet
+    (q-toimenpide/hae-kanavatoimenpiteet*
       db
       {:urakka urakka-id
        :sopimus sopimus-id
