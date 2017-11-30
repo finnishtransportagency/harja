@@ -4,6 +4,7 @@ DECLARE
   sopimus_id_saimaan_paahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon pääsopimus');
   sopimus_id_saimaan_lisahuolto INTEGER := (SELECT id FROM sopimus WHERE nimi = 'Saimaan huollon lisäsopimus');
   kohde_id_palli INTEGER := (SELECT id FROM kan_kohde WHERE nimi = 'Pälli');
+  kohdeosa_id_palli INTEGER := (SELECT id FROM kan_kohteenosa WHERE "kohde-id" = kohde_id_palli LIMIT 1);
   huoltokohde_id_asennonmittauslaitteet INTEGER := (SELECT id FROM kan_huoltokohde WHERE nimi = 'ASENNONMITTAUSLAITTEET');
   kayttaja_id_jvh INTEGER := (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh');
   toimenpidekoodi_id_vv_laaja_yksiloimaton INTEGER := (SELECT id FROM toimenpidekoodi WHERE emo = (SELECT id FROM toimenpidekoodi WHERE koodi = '24104') AND nimi = 'Ei yksilöity');
@@ -34,7 +35,7 @@ VALUES ('kokonaishintainen' :: KAN_TOIMENPIDETYYPPI,
   sopimus_id_saimaan_paahuolto,
   '2017-10-10',
   kohde_id_palli,
-  NULL,
+  kohdeosa_id_palli,
   huoltokohde_id_asennonmittauslaitteet,
   toimenpidekoodi_id_vv_laaja_yksiloimaton,
   'Testitoimenpide',

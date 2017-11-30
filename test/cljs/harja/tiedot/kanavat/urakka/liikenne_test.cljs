@@ -235,27 +235,6 @@
              (e! (tiedot/->PaivitaValinnat {:aikavali 3})
                  {:valinnat {:aikavali 1}}))))))
 
-(deftest kohteiden-haku
-  (vaadi-async-kutsut
-    #{tiedot/->KohteetHaettu tiedot/->KohteetEiHaettu}
-    (is (= {:kohteiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeKohteet)))))
-
-  (vaadi-async-kutsut
-    #{}
-    (is (= {:kohteiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeKohteet)
-               {:kohteiden-haku-kaynnissa? true})))))
-
-(deftest kohteet-haettu
-  (is (= {:urakan-kohteet [1 2 3]
-          :kohteiden-haku-kaynnissa? false}
-         (e! (tiedot/->KohteetHaettu [1 2 3])))))
-
-(deftest kohteet-ei-haettu
-  (is (= {:kohteiden-haku-kaynnissa? false}
-         (e! (tiedot/->KohteetEiHaettu {})))))
-
 (deftest tapahtuman-muokkaus
   (is (= {:valittu-liikennetapahtuma {:foo :bar}}
          (e! (tiedot/->TapahtumaaMuokattu {:foo :bar})))))

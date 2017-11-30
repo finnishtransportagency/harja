@@ -59,37 +59,37 @@
         {:db db
          :user user
          :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
-      (first (q-toimenpide/hae-kanavatoimenpiteet db {::toimenpide/id toimenpide-id})))))
+      (first (q-toimenpide/hae-kanavatoimenpiteet* db {::toimenpide/id toimenpide-id})))))
 
-(defn tarkista-kutsu [user urakka-id tyyppi]
+(defn- tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
   (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
   (case tyyppi
     :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
     :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id)))
 
-(defn tehtava-paivitetaan? [hintatyyppi tehtava]
+(defn- tehtava-paivitetaan? [hintatyyppi tehtava]
   (let [hintatyyppi-loytyi? (some #(when (= hintatyyppi %) %)
                                   (get-in tehtava [::toimenpide/toimenpidekoodi ::toimenpidekoodi/hinnoittelu]))]
     (not hintatyyppi-loytyi?)))
 
 (defn hae-kanavatoimenpiteet [db user {urakka-id ::toimenpide/urakka-id
                                        sopimus-id ::toimenpide/sopimus-id
-                                       alkupvm :alkupvm
-                                       loppupvm :loppupvm
+                                       alkupvm :alkupvm loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
-                                       tyyppi ::toimenpide/kanava-toimenpidetyyppi}]
-
+                                       tyyppi ::toimenpide/kanava-toimenpidetyyppi
+                                       kohde ::toimenpide/kohde-id}]
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (name tyyppi)]
-    (q-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
+    (q-toimenpide/hae-kanavatoimenpiteet
       db
       {:urakka urakka-id
        :sopimus sopimus-id
        :alkupvm alkupvm
        :loppupvm loppupvm
        :toimenpidekoodi toimenpidekoodi
-       :tyyppi tyyppi})))
+       :tyyppi tyyppi
+       :kohde kohde})))
 
 (defn siirra-kanavatoimenpiteet [db user tiedot]
   (let [urakka-id (::toimenpide/urakka-id tiedot)

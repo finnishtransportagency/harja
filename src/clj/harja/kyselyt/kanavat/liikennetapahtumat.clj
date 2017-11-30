@@ -55,7 +55,7 @@
                                              (partial remove (comp #(or (nil? %) (zero? %)) ::lt-alus/nippulkm)))]
                                (when-not (empty? (::lt/alukset t)) t)))))
 
-(defn hae-liikennetapahtumat [db {:keys [niput? aikavali] :as tiedot}]
+(defn hae-liikennetapahtumat [db user {:keys [niput? aikavali] :as tiedot}]
   (let [urakka-id (::ur/id tiedot)
         sopimus-id (::sop/id tiedot)
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
@@ -98,7 +98,7 @@
                                                   {::lt-alus/suunta suunta})
                                                 (when aluslaji
                                                   {::lt-alus/laji aluslaji}))})))))
-      (partial kohteet-q/hae-kohteiden-urakkatiedot db)
+      (partial kohteet-q/hae-kohteiden-urakkatiedot db user)
       urakka-id)))
 
 (defn- hae-kohteen-edellinen-tapahtuma* [tulokset]

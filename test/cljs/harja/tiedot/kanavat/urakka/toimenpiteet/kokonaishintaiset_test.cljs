@@ -15,6 +15,7 @@
         odotettu {::kanavan-toimenpide/urakka-id 666
                   ::kanavan-toimenpide/sopimus-id 666
                   ::toimenpidekoodi/id 666
+                  ::kanavan-toimenpide/kohde-id nil
                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
                   :alkupvm (pvm/luo-pvm 2017 1 1)
                   :loppupvm (pvm/luo-pvm 2018 1 1)}]
@@ -29,8 +30,6 @@
 (deftest NakymaAvattu
   (vaadi-async-kutsut
     #{tiedot/->PaivitaValinnat
-      tiedot/->KohteetHaettu
-      tiedot/->KohteidenHakuEpaonnistui
       tiedot/->HuoltokohteetHaettu
       tiedot/->HuoltokohteidenHakuEpaonnistui}
     (let [{:keys [nakymassa?
@@ -85,12 +84,6 @@
 (deftest ValinnatHaettuToimenpiteelle
   (let [valinnat {:foo "bar"}]
     (is (= valinnat (e! (tiedot/->ValinnatHaettuToimenpiteelle valinnat))))))
-
-(deftest KohteetHaettu
-  (let [haetut [{:foo "bar"}]
-        {:keys [kohteet kohteiden-haku-kaynnissa?]} (e! (tiedot/->KohteetHaettu haetut))]
-    (is (false? kohteiden-haku-kaynnissa?))
-    (is (= kohteet haetut))))
 
 (deftest HuoltokohteetHaettu
   (let [haetut [{:foo "bar"}]
