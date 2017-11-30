@@ -243,10 +243,14 @@
         hakuehdot {::kanavan-toimenpide/urakka-id urakka-id
                    ::kanavan-toimenpide/sopimus-id sopimus-id
                    ::toimenpidekoodi/id kolmostason-toimenpide-id
+                   ::kanavan-toimenpide/kohde-id nil
                    :alkupvm (pvm/luo-pvm 2017 1 1)
                    :loppupvm (pvm/luo-pvm 2018 1 1)
                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
-        parametrit {::kanavan-toimenpide/kanava-toimenpide toimenpide
+        argumentit {::kanavan-toimenpide/kanava-toimenpide toimenpide
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kanavatoimenpide +kayttaja-jvh+ parametrit)]
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-kanavatoimenpide
+                                +kayttaja-jvh+
+                                argumentit)]
     (is (some #(= "tämä on testitoimenpide" (::kanavan-toimenpide/lisatieto %)) vastaus))))
