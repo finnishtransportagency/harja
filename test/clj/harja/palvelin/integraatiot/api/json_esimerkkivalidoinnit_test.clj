@@ -77,7 +77,12 @@
 
   (is (nil? (validoi json-skeemat/urakan-tyotuntien-kirjaus-request json-esimerkit/+urakan-tyotuntien-kirjaus-request+)))
 
-  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request+))))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-johto-ja-kaapelilupa+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-liittymalupa+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-mainoslupa+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-opastelupa+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-suoja-alue-rakentamislupa+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely+)))
 
-(deftest asdf
-  )
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-tyolupa+))))

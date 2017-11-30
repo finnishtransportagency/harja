@@ -75,3 +75,10 @@
 (def +urakan-tyotuntien-kirjaus-request+ "api/examples/urakan-tyotuntien-kirjaus-request.json")
 
 (def +tieluvan-kirjaus-request+ "api/examples/tieluvan-kirjaus-request.json")
+(def +tieluvan-kirjaus-request-johto-ja-kaapelilupa+ "api/examples/tieluvan-kirjaus-request-johto-ja-kaapelilupa.json")
+(def +tieluvan-kirjaus-request-liittymalupa+ "api/examples/tieluvan-kirjaus-request-liittymalupa.json")
+(def +tieluvan-kirjaus-request-mainoslupa+ "api/examples/tieluvan-kirjaus-request-mainoslupa.json")
+(def +tieluvan-kirjaus-request-opastelupa+ "api/examples/tieluvan-kirjaus-request-opastelupa.json")
+(def +tieluvan-kirjaus-request-suoja-alue-rakentamislupa+ "api/examples/tieluvan-kirjaus-request-suoja-alue-rakentamislupa.json")
+(def +tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely+ "api/examples/tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely.json")
+(def +tieluvan-kirjaus-request-tyolupa+ "api/examples/tieluvan-kirjaus-request-tyolupa.json")
