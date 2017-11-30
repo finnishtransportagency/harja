@@ -19,7 +19,7 @@ BEGIN
     THEN
       RETURN NEW;
     ELSE
-      RAISE EXCEPTION 'Kohteenosa % ei kuulu annettuun kohteeseen %', NEW."kohteenosa-id", NEW."kohde-id";
+      RAISE EXCEPTION 'Kanavakohteenosa % ei kuulu annettuun kohteeseen %', NEW."kohteenosa-id", NEW."kohde-id";
       RETURN NULL;
     END IF;
   END IF;
