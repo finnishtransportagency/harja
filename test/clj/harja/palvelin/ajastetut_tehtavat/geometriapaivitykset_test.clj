@@ -86,7 +86,6 @@
           "file:///Users/mikkoro/Desktop/Soratiehoitoluokat-testi/Sorateiden-hoitoluokat.shp")))))
 
 
-;; TODO: autentikointiparametrit
 (defn aja-turvalaitteiden-paivitys
   "REPL-testiajofunktio"
   []
@@ -134,20 +133,4 @@
       (alk/hae-tiedosto integraatioloki testitietokanta "tieverkko-haku" fake-tiedosto-url kohdetiedosto)
       (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
       (clojure.java.io/delete-file kohdetiedosto))))
-
-
-(deftest testaa-turvalaitetiedoston-luku-kantaan
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        fake-tiedosto-url "http://www.example.com/test_file.zip"
-        kohdetiedosto "Users/maaritla/Downloads/Turvalaite-testi/Turvalaitteet.zip"
-        fake-vastaus {:status 200 :body (IOUtils/toByteArray (io/input-stream "test/resurssit/arkistot/test_zip.zip"))}]
-    (component/start integraatioloki)
-    (turvalaitteet-tuonti/vie-turvalaitteet-kantaan testitietokanta kohdetiedosto)
-    (with-fake-http
-      [{:url fake-tiedosto-url :method :get} fake-vastaus]
-      (alk/hae-tiedosto integraatioloki testitietokanta "tieverkko-haku" fake-tiedosto-url kohdetiedosto)
-      (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
-      (clojure.java.io/delete-file kohdetiedosto))))
-
 

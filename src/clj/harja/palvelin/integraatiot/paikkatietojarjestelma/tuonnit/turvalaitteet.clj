@@ -13,7 +13,6 @@
   (let [pvm_str (:vahv_pvm turvalaite)
         turvalaitenro (int (:tlnumero turvalaite))
         nimi (:nimi turvalaite)
-        ;koordinaatit (:koord turvalaite)                      ;;sanomassa vastaanotetut koordinaatit, itse geometria tallennetaan geometria-sarakkeeseen
         sijainti (:sijainti turvalaite)
         tyyppi (:tyyppi turvalaite)
         tarkenne (:alatyyppi turvalaite)
@@ -30,7 +29,6 @@
         geometria (.toString (:the_geom turvalaite))
         sql-parametrit {:turvalaitenro turvalaitenro
                         :nimi nimi
-                        ;:koordinaatit koordinaatit
                         :sijainti sijainti
                         :tyyppi tyyppi
                         :tarkenne tarkenne
@@ -49,7 +47,6 @@
                         :muokkaaja "Integraatio"}]
 
     (do
-      (log/debug (str "Tallennetaan turvalaitenumero " turvalaitenro))
       (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit)
       )))
 
