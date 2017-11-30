@@ -81,6 +81,8 @@
                                      ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide]
+  ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai haettaessa valmis
+  ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
   (let [tehtava (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
                     (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
     (-> toimenpide
