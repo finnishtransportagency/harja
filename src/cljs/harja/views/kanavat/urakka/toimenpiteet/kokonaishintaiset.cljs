@@ -34,7 +34,7 @@
     [valinnat/kanava-kohde
      (r/wrap (get-in app [:valinnat :kanava-kohde])
              (fn [uusi]
-               (e! (tiedot/->PaivitaValinnat {:kanava-kohde uusi}))))
+               (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
      (into [nil] kohteet)
      #(let [nimi (kohde/fmt-kohteen-nimi %)]
         (if (empty? nimi) "Kaikki" nimi))]]

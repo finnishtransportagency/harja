@@ -141,7 +141,8 @@
   (process-event [{valinnat :valinnat} app]
     (let [haku (tuck/send-async! ->HaeToimenpiteet)]
       (go (haku valinnat))
-      (assoc app :valinnat valinnat)))
+      (assoc app :valinnat (merge (:valinnat app)
+                                  valinnat))))
 
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
