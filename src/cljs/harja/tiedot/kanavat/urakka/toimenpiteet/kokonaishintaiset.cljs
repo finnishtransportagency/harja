@@ -35,8 +35,6 @@
 (defrecord TyhjennaAvattuToimenpide [])
 (defrecord ValinnatHaettuToimenpiteelle [valinnat])
 (defrecord VirheTapahtui [virhe])
-(defrecord KohteetHaettu [kohteet])
-(defrecord KohteidenHakuEpaonnistui [])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
 (defrecord TallennaToimenpide [toimenpide])
@@ -53,7 +51,6 @@
 (def tila (atom {:nakymassa? false
                  :valinnat nil
                  :avattu-toimenpide nil
-                 :kohteet nil
                  :toimenpideinstanssit nil
                  :tehtavat nil
                  :huoltokohteet nil
@@ -82,7 +79,7 @@
                                      ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka]
-  ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai haettaessa valmis
+  ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
   (let [tehtava (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
                     (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
@@ -122,12 +119,6 @@
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
         (-> app
-            ;; TODO Kohteet haetaan monessa paikkaa samalla tavalla, tutki voisiko pitää yllä
-            ;; urakanlaajuisessa atomissa
-            (tuck-apurit/post! :hae-urakan-kohteet
-                               {::urakka/id (:id @navigaatio/valittu-urakka)}
-                               {:onnistui ->KohteetHaettu
-                                :epaonnistui ->KohteidenHakuEpaonnistui})
             (tuck-apurit/get! :hae-kanavien-huoltokohteet
                               {:onnistui ->HuoltokohteetHaettu
                                :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
@@ -136,7 +127,6 @@
                    :huoltokohteiden-haku-kaynnissa? true
                    :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
-                   :kohteet nil
                    :huoltokohteet nil)))))
 
   NakymaSuljettu
@@ -248,16 +238,6 @@
   (process-event [{virhe :virhe} app]
     (viesti/nayta! virhe :danger)
     app)
-
-  KohteetHaettu
-  (process-event [{kohteet :kohteet} app]
-    (assoc app :kohteet kohteet
-               :kohteiden-haku-kaynnissa? false))
-
-  KohteidenHakuEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
-    (assoc app :kohteiden-haku-kaynnissa? false))
 
   HuoltokohteetHaettu
   (process-event [{huoltokohteet :huoltokohteet} app]

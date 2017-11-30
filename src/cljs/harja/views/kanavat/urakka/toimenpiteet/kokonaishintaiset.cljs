@@ -3,6 +3,7 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.loki :refer [tarkkaile! log]]
             [harja.ui.lomake :as lomake]
@@ -26,7 +27,7 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn hakuehdot [e! {:keys [urakka kohteet] :as app}]
+(defn hakuehdot [e! {:keys [urakka] :as app} kohteet]
   [valinnat/urakkavalinnat {:urakka urakka}
    ^{:key "valinnat"}
    [:div
@@ -117,7 +118,7 @@
          :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
         (toimenpiteet-view/toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
                                                        :sopimukset sopimukset
-                                                       :kohteet kohteet
+                                                       :kohteet @kanavaurakka/kanavakohteet
                                                        :huoltokohteet huoltokohteet
                                                        :toimenpideinstanssit toimenpideinstanssit
                                                        :tehtavat tehtavat})
@@ -125,14 +126,15 @@
        [ajax-loader "Ladataan..."])]))
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
-                                    :as app}]
-  (let [nakyma-voidaan-nayttaa? (some? (:kohteet app))]
+                                    :as app}
+                                kohteet]
+  (let [nakyma-voidaan-nayttaa? (some? kohteet)]
     [:div
      (if nakyma-voidaan-nayttaa?
        (if avattu-toimenpide
          [kokonaishintainen-toimenpidelomake e! app]
          [:div
-          [hakuehdot e! app]
+          [hakuehdot e! app kohteet]
           [kokonaishintaiset-toimenpiteet-taulukko e! app]])
        [ajax-loader "Ladataan..."])
      [debug/debug app]]))
@@ -145,7 +147,7 @@
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
       [:span
-       [kokonaishintaiset-nakyma e! app]])))
+       [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet]])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])
