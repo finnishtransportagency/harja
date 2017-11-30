@@ -37,6 +37,8 @@
   #{::id
     ::toimenpide
     ::palvelumuoto
+    ::kohde-id
+    ::kohteenosa-id
     ::lkm})
 
 (def kohteen-tiedot
