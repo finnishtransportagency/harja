@@ -29,4 +29,5 @@
   #{::id
     ::tyyppi
     ::nimi
-    ::oletuspalvelumuoto})
+    ::oletuspalvelumuoto
+    ::kohde-id})
