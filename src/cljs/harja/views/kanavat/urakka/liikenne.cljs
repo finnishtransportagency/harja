@@ -30,8 +30,11 @@
             [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
+            [harja.domain.kanavat.lt-osa :as lt-osa]
             [harja.domain.kanavat.kohde :as kohde]
-            [harja.ui.ikonit :as ikonit])
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.ui.ikonit :as ikonit]
+            [clojure.string :as str])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -61,7 +64,7 @@
     {:otsikko "Nimi"
      :tyyppi :string
      :nimi ::lt-alus/nimi}
-    {:otsikko "Kpl"
+    {:otsikko "Alusten lkm"
      :nimi ::lt-alus/lkm
      :oletusarvo 1
      :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
@@ -103,7 +106,6 @@
                      #(e! (tiedot/->TallennaLiikennetapahtuma (lomake/ilman-lomaketietoja tapahtuma)))
                      {:ikoni (ikonit/tallenna)
                       :disabled (or tallennus-kaynnissa?
-                                    true ;; Disabloitu HAR-6659 takia, odottaa HAR-6746
                                     (not (oikeudet/urakat-kanavat-liikenne))
                                     (not (tiedot/voi-tallentaa? tapahtuma))
                                     (not (lomake/voi-tallentaa? tapahtuma)))}]
@@ -120,7 +122,6 @@
                            :napit [:takaisin :poista]})
                        {:ikoni (ikonit/livicon-trash)
                         :disabled (or tallennus-kaynnissa?
-                                      true ;; Disabloitu HAR-6659 takia, odottaa HAR-6746
                                       (not (oikeudet/urakat-kanavat-liikenne))
                                       (not (lomake/voi-tallentaa? tapahtuma)))}])
                     (when uusi-tapahtuma?
@@ -134,121 +135,105 @@
                            :napit [:takaisin :hyvaksy]})
                        {:ikoni (ikonit/refresh)
                         :disabled tallennus-kaynnissa?}])])}
-     [(lomake/rivi
-        {:otsikko "Kuittaaja"
-         :nimi ::lt/kuittaaja
-         :muokattava? (constantly false)
-         :tyyppi :string
-         :fmt kayttaja/kayttaja->str}
-        {:otsikko "Sopimus"
-         :nimi ::lt/sopimus
-         :pakollinen? true
-         :muokattava? #(if uusi-tapahtuma? true false)
-         :tyyppi :valinta
-         :valinta-nayta ::sop/nimi
-         :valinnat (map (fn [[id nimi]] {::sop/id id ::sop/nimi nimi}) (:sopimukset @nav/valittu-urakka))
-         :fmt ::sop/nimi
-         :palstoja 1})
-      (lomake/rivi
-        {:otsikko "Aika"
-         :nimi ::lt/aika
-         :tyyppi :pvm-aika
-         :pakollinen? true}
-        {:otsikko "Kohde"
-         :nimi ::lt/kohde
-         :tyyppi :valinta
-         :valinnat urakan-kohteet
-         :pakollinen? true
-         :valinta-nayta #(if % (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
-         :aseta (fn [rivi arvo]
-                  (let [rivi (assoc rivi ::lt/kohde arvo)]
-                    (when uusi-tapahtuma?
-                      (e! (tiedot/->HaeEdellisetTiedot rivi)))
-                    rivi))})
-      (when (kohde/sulku? (::lt/kohde valittu-liikennetapahtuma))
-        (lomake/rivi
-          {:otsikko "Sulun toimenpide"
-           :nimi ::lt/sulku-toimenpide
-           :pakollinen? true
-           :tyyppi :radio-group
-           :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
-           :vaihtoehto-nayta lt/sulku-toimenpide->str}
-          {:otsikko "Palvelumuoto"
-           :nimi ::lt/sulku-palvelumuoto
-           :pakollinen? true
-           :tyyppi :valinta
-           :valinnat lt/palvelumuoto-vaihtoehdot
-           :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")}
-          {:otsikko "Kpl"
-           :nimi ::lt/sulku-lkm
-           :oletusarvo 1
-           :pakollinen? true
-           :tyyppi :positiivinen-numero}))
-      (when (kohde/silta? (::lt/kohde valittu-liikennetapahtuma))
-        (lomake/rivi
-          {:otsikko "Sillan avaus"
-           :nimi ::lt/silta-avaus
-           :pakollinen? true
-           :tyyppi :radio-group
-           :oletusarvo "Ei"
-           :vaihtoehdot ["Kyllä" "Ei"]
-           :hae (fn [rivi] (cond (true? (::lt/silta-avaus rivi)) "Kyllä"
+     (flatten
+       [(lomake/rivi
+         {:otsikko "Kuittaaja"
+          :nimi ::lt/kuittaaja
+          :muokattava? (constantly false)
+          :tyyppi :string
+          :fmt kayttaja/kayttaja->str}
+         {:otsikko "Sopimus"
+          :nimi ::lt/sopimus
+          :pakollinen? true
+          :muokattava? #(if uusi-tapahtuma? true false)
+          :tyyppi :valinta
+          :valinta-nayta ::sop/nimi
+          :valinnat (map (fn [[id nimi]] {::sop/id id ::sop/nimi nimi}) (:sopimukset @nav/valittu-urakka))
+          :fmt ::sop/nimi
+          :palstoja 1})
+       (lomake/rivi
+         {:otsikko "Aika"
+          :nimi ::lt/aika
+          :tyyppi :pvm-aika
+          :pakollinen? true}
+         {:otsikko "Kohde"
+          :nimi ::lt/kohde
+          :tyyppi :valinta
+          :valinnat urakan-kohteet
+          :pakollinen? true
+          :valinta-nayta #(if % (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
+          :aseta (fn [rivi arvo]
+                   (let [rivi (tiedot/kohteenosatiedot-lt-osiin rivi arvo)]
+                     (when uusi-tapahtuma?
+                       (e! (tiedot/->HaeEdellisetTiedot rivi)))
+                     rivi))})
 
-                                 (false? (::lt/silta-avaus rivi)) "Ei"
-
-                                 :else nil))
-           :aseta (fn [rivi arvo]
-                    (case arvo
-                      "Kyllä"
-                      (assoc rivi ::lt/silta-avaus true)
-
-                      "Ei"
-                      (assoc rivi ::lt/silta-avaus false)
-
-                      (dissoc rivi ::lt/silta-avaus)))}
-          {:otsikko "Palvelumuoto"
-           :nimi ::lt/silta-palvelumuoto
-           :pakollinen? true
-           :tyyppi :valinta
-           :valinnat lt/palvelumuoto-vaihtoehdot
-           :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")}
-          {:otsikko "Kpl"
-           :nimi ::lt/silta-lkm
-           :oletusarvo 1
-           :pakollinen? true
-           :tyyppi :positiivinen-numero}))
-      (when (::lt/kohde valittu-liikennetapahtuma)
-        (if (and edellisten-haku-kaynnissa? uusi-tapahtuma?)
-          {:otsikko ""
-           :nimi :spinneri
-           :tyyppi :komponentti
-           :komponentti (fn [] [ajax-loader "Haetaan edellisiä tietoja"])}
-          (lomake/rivi
-            {:otsikko "Alapinta"
-             :tyyppi :positiivinen-numero
-             :nimi ::lt/vesipinta-alaraja}
-            {:otsikko "Yläpinta"
-             :tyyppi :positiivinen-numero
-             :nimi ::lt/vesipinta-ylaraja})))
-      (when (and (::lt/kohde valittu-liikennetapahtuma)
-                 (not edellisten-haku-kaynnissa?)
-                 (or (:ylos edelliset) (:alas edelliset))
-                 uusi-tapahtuma?)
-        (lomake/rivi
-          {:otsikko "Edelliset alukset"
-           :tyyppi :komponentti
-           :palstoja 3
-           :nimi :edelliset-alukset
-           :komponentti (fn [_] [:div "Tähän tulee taulukko, josta alustiedot täytetään"])}))
-      (when (::lt/kohde valittu-liikennetapahtuma)
-        {:otsikko "Liikenne "
-         :tyyppi :komponentti
-         :palstoja 3
-         :nimi :muokattavat-tapahtumat
-         :komponentti (fn [_] [liikenne-muokkausgrid e! app])})
-      {:otsikko "Lisätietoja"
-       :tyyppi :text
-       :nimi ::lt/lisatieto}]
+        (map-indexed
+          (fn [i osa]
+            ^{:key (str "palvelumuoto-" i)}
+            (lomake/ryhma
+              (kohde/fmt-kohteenosan-nimi osa)
+              {:otsikko "Toimenpide"
+               :nimi (str i"-toimenpide")
+               :pakollinen? true
+               :tyyppi :radio-group
+               :vaihtoehdot (lt/toimenpide-vaihtoehdot osa)
+               :vaihtoehto-nayta lt/toimenpide->str
+               :hae (constantly (::lt-osa/toimenpide osa))
+               :aseta (fn [rivi arvo]
+                        (tiedot/paivita-lt-osan-tiedot rivi (assoc osa ::lt-osa/toimenpide arvo)))}
+              (when-not (= (::lt-osa/toimenpide osa) :ei-avausta)
+                {:otsikko "Palvelumuoto"
+                :nimi (str i "-palvelumuoto")
+                :pakollinen? true
+                :tyyppi :valinta
+                :valinnat lt/palvelumuoto-vaihtoehdot
+                :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")
+                :hae (constantly (::lt-osa/palvelumuoto osa))
+                :aseta (fn [rivi arvo]
+                         (tiedot/paivita-lt-osan-tiedot rivi (assoc osa ::lt-osa/palvelumuoto arvo)))})
+              (when (= (::lt-osa/palvelumuoto osa) :itse)
+                {:otsikko "Itsepalveluiden lukumäärä"
+                 :nimi (str i"-lkm")
+                 :pakollinen? true
+                 :tyyppi :positiivinen-numero
+                 :hae (constantly (::lt-osa/lkm osa))
+                 :aseta (fn [rivi arvo]
+                          (tiedot/paivita-lt-osan-tiedot rivi (assoc osa ::lt-osa/lkm arvo)))})))
+          (::lt/osat valittu-liikennetapahtuma)
+          #_(tiedot/osat valittu-liikennetapahtuma))
+       (when (::lt/kohde valittu-liikennetapahtuma)
+         (if (and edellisten-haku-kaynnissa? uusi-tapahtuma?)
+           {:otsikko ""
+            :nimi :spinneri
+            :tyyppi :komponentti
+            :komponentti (fn [] [ajax-loader "Haetaan edellisiä tietoja"])}
+           (lomake/rivi
+             {:otsikko "Alapinta"
+              :tyyppi :positiivinen-numero
+              :nimi ::lt/vesipinta-alaraja}
+             {:otsikko "Yläpinta"
+              :tyyppi :positiivinen-numero
+              :nimi ::lt/vesipinta-ylaraja})))
+       (when (and (::lt/kohde valittu-liikennetapahtuma)
+                  (not edellisten-haku-kaynnissa?)
+                  (or (:ylos edelliset) (:alas edelliset))
+                  uusi-tapahtuma?)
+         (lomake/rivi
+           {:otsikko "Edelliset alukset"
+            :tyyppi :komponentti
+            :palstoja 3
+            :nimi :edelliset-alukset
+            :komponentti (fn [_] [:div "Tähän tulee taulukko, josta alustiedot täytetään"])}))
+       (when (::lt/kohde valittu-liikennetapahtuma)
+         {:otsikko "Liikenne "
+          :tyyppi :komponentti
+          :palstoja 3
+          :nimi :muokattavat-tapahtumat
+          :komponentti (fn [_] [liikenne-muokkausgrid e! app])})
+       {:otsikko "Lisätietoja"
+        :tyyppi :text
+        :nimi ::lt/lisatieto}])
      valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! {:keys [urakan-kohteet] :as app}]

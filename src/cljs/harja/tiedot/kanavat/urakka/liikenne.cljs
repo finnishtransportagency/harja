@@ -21,9 +21,11 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
+            [harja.domain.kanavat.lt-osa :as lt-osa]
             [clojure.set :as set]
             [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -95,54 +97,25 @@
              (::ur/id (:valinnat app)))
     (into {} (filter val (:valinnat app)))))
 
-(defn- palvelumuoto->str* [pm lkm]
-  (when pm
-    (if (= :itse pm)
-      (str (lt/palvelumuoto->str pm) " (" lkm " kpl)")
-      (lt/palvelumuoto->str pm))))
+(defn palvelumuoto->str [tapahtuma]
+  (str/join ", " (into #{} (keep (comp lt/palvelumuoto->str ::lt-osa/palvelumuoto) (::lt/osat tapahtuma)))))
 
-(defn palvelumuoto->str [rivi]
-  (let [sulku (palvelumuoto->str* (::lt/sulku-palvelumuoto rivi) (::lt/sulku-lkm rivi))
-        silta (palvelumuoto->str* (::lt/silta-palvelumuoto rivi) (::lt/silta-lkm rivi))]
-    (cond (and sulku silta)
-          (str sulku " (sulku), " (str/lower-case silta) " (silta)")
-
-          :else
-          (or sulku silta))))
-
-(defn toimenpide->str [rivi]
-  (let [sulku (lt/sulku-toimenpide->str (::lt/sulku-toimenpide rivi))
-        silta (when (::lt/silta-avaus rivi) "sillan avaus")]
-    (str/capitalize (cond (and sulku silta)
-                          (str sulku ", " silta)
-
-                          :else
-                          (or sulku silta "")))))
+(defn toimenpide->str [tapahtuma]
+  (str/join ", " (into #{} (keep (comp lt/toimenpide->str ::lt-osa/toimenpide) (::lt/osat tapahtuma)))))
 
 (defn tapahtumarivit [tapahtuma]
-  (let [yleistiedot
-        (merge
-          tapahtuma
-          {:kohteen-nimi (str
-                           (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/kohdekokonaisuus ::kok/nimi])]
-                             (str nimi ", "))
-                           (when-let [nimi (get-in tapahtuma [::lt/kohde ::kohde/nimi])]
-                             (str nimi ", "))
-                           (when-let [tyyppi (kohde/tyyppi->str (get-in tapahtuma [::lt/kohde ::kohde/tyyppi]))]
-                             (str tyyppi)))})
-        alustiedot
+  (let [alustiedot
         (map
           (fn [alus]
             (merge
-              yleistiedot
-              alus
-              {:suunta (::lt-alus/suunta alus)}))
+              tapahtuma
+              alus))
           (::lt/alukset tapahtuma))]
 
     (if (empty? alustiedot)
       ;; Alustiedot ovat tyhjiä,
       ;; jos rivi on vain itsepalveluiden kirjaamista.
-      [yleistiedot]
+      [tapahtuma]
       alustiedot)))
 
 (defn koko-tapahtuma [rivi {:keys [haetut-tapahtumat]}]
@@ -170,7 +143,12 @@
                                                 (set/rename-keys {:poistettu ::m/poistettu?})
                                                 (dissoc :id)
                                                 (dissoc :harja.ui.grid/virheet))
-                                           alukset)))))
+                                           alukset)))
+      (update ::lt/osat (fn [osat] (map (fn [osa]
+                                          (->> (keys osa)
+                                               (filter #(= (namespace %) "harja.domain.kanavat.lt-osa"))
+                                               (select-keys osa)))
+                                        osat)))))
 
 (defn voi-tallentaa? [t]
   (and (not (:grid-virheita? t))
@@ -190,6 +168,47 @@
       (some? (:id b))
       (= (:id a)
          (:id b)))))
+
+(defn osat [tapahtuma]
+  (let
+    [lt-osat (::lt/osat tapahtuma)
+     kohteenosat (get-in tapahtuma [::lt/kohde ::kohde/kohteenosat])]
+    (mapcat (fn [[_ v]] (apply merge v)) (group-by #(or (::lt-osa/kohteenosa-id %)
+                                                        (::osa/id %))
+                                                   (concat lt-osat kohteenosat)))))
+
+(defn paivita-lt-osan-tiedot [tapahtuma lt-osa]
+  (assoc
+    tapahtuma
+    ::lt/osat
+    (mapcat val
+            (assoc
+              (group-by ::lt-osa/kohteenosa-id (::lt/osat tapahtuma))
+              ;; Etsi palvelumuoto kohteenosan id:llä, ja korvaa/luo arvo
+              (::lt-osa/kohteenosa-id lt-osa)
+              [lt-osa]))))
+
+(defn kohteenosatiedot-lt-osiin
+  "Ottaa tapahtuman ja kohteen, ja yhdistää tapahtuman :lt-osiin kohteen kohteenosien tiedot.
+  Jos kyseessä on olemassaoleva tapahtuma, liitetään vanhoihin lt-osa tietoihin mm. kohteenosan nimi.
+  Jos kyseessä on uusi tapahtuma, luodaan tapahtumalle tyhjät lt-osa tiedot, jotka täytetään loppuun lomakkeella."
+  [tapahtuma kohde]
+  (-> tapahtuma
+      (assoc ::lt/kohde kohde)
+      (update ::lt/osat
+              (fn [osat]
+                (let [vanhat (group-by ::lt-osa/kohteenosa-id osat)]
+                  (map
+                    (fn [osa]
+                      (merge
+                        (-> osa
+                           (set/rename-keys {::osa/id ::lt-osa/kohteenosa-id
+                                             ::osa/kohde-id ::lt-osa/kohde-id})
+                           (assoc ::lt-osa/lkm 1)
+                           (assoc ::lt-osa/palvelumuoto (::osa/oletuspalvelumuoto osa))
+                           (assoc ::lt-osa/toimenpide (when (kohde/silta? osa) :ei-avausta)))
+                        (first (vanhat (::osa/id osa)))))
+                    (::kohde/kohteenosat kohde)))))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -222,7 +241,8 @@
 
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
-    (assoc app :valittu-liikennetapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)))
+    (assoc app :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
+                                            (kohteenosatiedot-lt-osiin tapahtuma (::lt/kohde tapahtuma)))))
 
   HaeEdellisetTiedot
   (process-event [{t :tapahtuma} app]
