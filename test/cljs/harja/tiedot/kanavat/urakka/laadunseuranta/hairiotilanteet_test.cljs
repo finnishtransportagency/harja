@@ -15,8 +15,7 @@
                   materiaalit]} (e! (tiedot/->NakymaAvattu))]
       (is nakymassa?)
       (is materiaalien-haku-kaynnissa?)
-      (is (= kohteet []))
-      (is (= materiaalit [])))))
+      (is (= materiaalit nil)))))
 
 (deftest NakymaSuljettu
   (is (false? (:nakymassa? (e! (tiedot/->NakymaSuljettu))))))
