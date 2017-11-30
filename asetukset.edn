@@ -125,10 +125,9 @@
 
                         :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
 
-                        ;TODO: tiedostojen nimet!
-                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/TODO.shp"
-                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/TODO.shz"
-                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/TODO.shz"
+                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/Turvalaitteet.shp"
+                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
+                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
                         }
 

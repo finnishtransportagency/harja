@@ -26,7 +26,7 @@ VALUES
   (
     :turvalaitenro,
     :nimi,
-    :koordinaatit,
+    :geometria, --tallennetaan koordinaattipiste tekstinä
     :sijainti,
     :tyyppi,
     :tarkenne,
@@ -40,7 +40,7 @@ VALUES
     :turvalaitenro_aiempi,
     :paavayla,
     :vaylat :: INTEGER [],
-    ST_GeomFromText(:geometria) :: GEOMETRY, -- ST_MakePoint on tarkempi
+    ST_GeomFromText(:geometria) :: GEOMETRY,
     current_timestamp,
     :luoja
   )
@@ -49,7 +49,7 @@ ON CONFLICT (turvalaitenro)
     SET
       turvalaitenro        = :turvalaitenro,
       nimi                 = :nimi,
-      koordinaatit         = :koordinaatit,
+      koordinaatit         = :geometria,
       sijainti             = :sijainti,
       tyyppi               = :tyyppi,
       tarkenne             = :tarkenne,
