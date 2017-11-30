@@ -29,8 +29,6 @@
 (deftest NakymaAvattu
   (vaadi-async-kutsut
     #{tiedot/->PaivitaValinnat
-      tiedot/->KohteetHaettu
-      tiedot/->KohteidenHakuEpaonnistui
       tiedot/->HuoltokohteetHaettu
       tiedot/->HuoltokohteidenHakuEpaonnistui}
     (let [{:keys [nakymassa?
