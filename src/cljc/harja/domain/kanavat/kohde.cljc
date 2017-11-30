@@ -24,8 +24,8 @@
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
    {::kohdekokonaisuus (specql.rel/has-one ::kohdekokonaisuus-id
-                                         :harja.domain.kanavat.kohdekokonaisuus/kohdekokonaisuus
-                                         :harja.domain.kanavat.kohdekokonaisuus/id)
+                                           :harja.domain.kanavat.kohdekokonaisuus/kohdekokonaisuus
+                                           :harja.domain.kanavat.kohdekokonaisuus/id)
     ::ylos (specql.rel/has-one ::ylos-id
                                ::kohde
                                ::id)
@@ -33,8 +33,8 @@
                                ::kohde
                                ::id)
     ::kohteenosat (specql.rel/has-many ::id
-                                :harja.domain.kanavat.kohteenosa/kohteenosa
-                                :harja.domain.kanavat.kohteenosa/kohde-id)}]
+                                       :harja.domain.kanavat.kohteenosa/kohteenosa
+                                       :harja.domain.kanavat.kohteenosa/kohde-id)}]
   ["kan_kohde_urakka" ::kohde<->urakka
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake

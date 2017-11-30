@@ -26,14 +26,14 @@
 (defn- hae-kohteiden-urakkatiedot* [user kohteet linkit]
   (let [kohde-ja-urakat (->> linkit
                              (group-by ::kohde/kohde-id)
-                             (map (fn [[kohde-id urakat]] [kohde-id (filter
-                                                                      (fn [urakka]
-                                                                        ;; TODO oikeus nähdä urakkaan liitetty kohde
-                                                                        (oikeudet/voi-lukea?
-                                                                          oikeudet/urakat-kanavat-kokonaishintaiset
-                                                                          (::ur/id urakka)
-                                                                          user))
-                                                                      (map ::kohde/linkin-urakka urakat))]))
+                             (map (fn [[kohde-id urakat]]
+                                    [kohde-id (filter
+                                                (fn [urakka]
+                                                  (oikeudet/voi-lukea?
+                                                    oikeudet/urakat-kanavat-kokonaishintaiset
+                                                    (::ur/id urakka)
+                                                    user))
+                                                (map ::kohde/linkin-urakka urakat))]))
                              (into {}))]
     (map
       (fn [kohde]

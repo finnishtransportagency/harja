@@ -194,6 +194,8 @@ E'Kohteet ovat kanavalla sijaitsevia alueita, joihin urakat kohdistuvat. \n
 COMMENT ON TABLE kan_kohteenosa IS
 E'Kohteenosat ovat siltoja ja sulkuja, jotka sisältyvät kohteeseen. Toimenpiteet kohdistetaan yleensä kohteenosaan.';
 
+COMMENT ON COLUMN kan_kohteenosa.oletuspalvelumuoto IS 'Palvelumuoto, joka annetaan kohdeosalle oletuksena, kun kirjataan liikennetapahtuma';
+
 COMMENT ON TABLE kan_liikennetapahtuma IS
 E'Kun alus kulkee kohteen läpi, siitä kirjataan liikennetapahtumalle. Aluksista, ja kohteenosilla käytettävistä palvelumuodoista pidetään kirjaa.';
 

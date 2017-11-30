@@ -33,11 +33,9 @@
 
 (def tila (atom {:nakymassa? false
                  :liikennetapahtumien-haku-kaynnissa? false
-                 :kohteiden-haku-kaynnissa? false
                  :tallennus-kaynnissa? false
                  :valittu-liikennetapahtuma nil
                  :tapahtumarivit nil
-                 :urakan-kohteet nil
                  :valinnat {::ur/id nil
                             ::sop/id nil
                             :aikavali nil
@@ -76,9 +74,6 @@
 (defrecord EdellisetTiedotHaettu [tulos])
 (defrecord EdellisetTiedotEiHaettu [virhe])
 (defrecord PaivitaValinnat [uudet])
-(defrecord HaeKohteet [])
-(defrecord KohteetHaettu [tulos])
-(defrecord KohteetEiHaettu [virhe])
 (defrecord TapahtumaaMuokattu [tapahtuma])
 (defrecord MuokkaaAluksia [alukset virheita?])
 (defrecord VaihdaSuuntaa [alus])
@@ -283,30 +278,6 @@
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
-
-  HaeKohteet
-  (process-event [_ app]
-    (if-not (:kohteiden-haku-kaynnissa? app)
-      (-> app
-          (tt/post! :hae-urakan-kohteet
-                    {::ur/id (:id @nav/valittu-urakka)}
-                    {:onnistui ->KohteetHaettu
-                     :epaonnistui ->KohteetEiHaettu})
-          (assoc :kohteiden-haku-kaynnissa? true))
-
-      app))
-
-  KohteetHaettu
-  (process-event [{tulos :tulos} app]
-    (-> app
-        (assoc :kohteiden-haku-kaynnissa? false)
-        (assoc :urakan-kohteet tulos)))
-
-  KohteetEiHaettu
-  (process-event [_ app]
-    (viesti/nayta! "Virhe kohteiden haussa!" :danger)
-    (-> app
-        (assoc :kohteiden-haku-kaynnissa? false)))
 
   TapahtumaaMuokattu
   (process-event [{t :tapahtuma} app]
