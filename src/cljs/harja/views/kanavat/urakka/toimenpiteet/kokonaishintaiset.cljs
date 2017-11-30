@@ -130,7 +130,7 @@
    (if avattu-toimenpide
      [kokonaishintainen-toimenpidelomake e! app]
      [:div
-      [hakuehdot e! app]
+      [hakuehdot e! app] ;; TODO Vaatii kohteet, testaa hidas yhteys. ajax-loader jos ei kohteita?
       [kokonaishintaiset-toimenpiteet-taulukko e! app]])
    [debug/debug app]])
 
