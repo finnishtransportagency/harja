@@ -14,7 +14,8 @@
    ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
    ::kanavatoimenpide/kanava-toimenpidetyyppi tyyppi
    :alkupvm (first (:aikavali valinnat))
-   :loppupvm (second (:aikavali valinnat))})
+   :loppupvm (second (:aikavali valinnat))
+   ::kanavatoimenpide/kohde-id (:kanava-kohde-id valinnat)})
 
 (defn valittu-tehtava-muu? [tehtava-id tehtavat]
   (and
