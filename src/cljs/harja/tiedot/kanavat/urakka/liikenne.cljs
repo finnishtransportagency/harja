@@ -169,14 +169,6 @@
       (= (:id a)
          (:id b)))))
 
-(defn osat [tapahtuma]
-  (let
-    [lt-osat (::lt/osat tapahtuma)
-     kohteenosat (get-in tapahtuma [::lt/kohde ::kohde/kohteenosat])]
-    (mapcat (fn [[_ v]] (apply merge v)) (group-by #(or (::lt-osa/kohteenosa-id %)
-                                                        (::osa/id %))
-                                                   (concat lt-osat kohteenosat)))))
-
 (defn paivita-lt-osan-tiedot [tapahtuma lt-osa]
   (assoc
     tapahtuma
