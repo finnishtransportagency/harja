@@ -89,6 +89,8 @@
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
+        ;; ensin poistetaan mapista poistetuksi merkatut rivit
+        (remove #(:poistettu %))
         ;; Lisätään käytetty määrä lähetettävään mappiin ja
         ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
         (map #(assoc-in % [:varaosa ::materiaalit/maara] (- (:maara %))))
@@ -99,7 +101,7 @@
                        ::materiaalit/hairiotilanne hairiotilanne-id
                        ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
                                                     " kohteessa " kohteen-nimi)))
-        ;; Otetaan joitain vv_materiaalilistaus tiedot pois
+        ;; Otetaan joitain vv_materiaalilistaus tietoja pois (muuten tulee herjaa palvelin päässä)
         (map #(dissoc %
                       ::materiaalit/maara-nyt
                       ::materiaalit/halytysraja
@@ -251,10 +253,10 @@
                                          (comp
                                            ;; Filtteröidään ensin hairiotilanteelle kuuluvat
                                            ;; materiaalikirjaukset
-                                           (filter #(when (= (::hairiotilanne/id hairiotilanne)
-                                                             (::materiaalit/hairiotilanne %))
-                                                      %))
-                                           ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet
+                                           (filter #(= (::hairiotilanne/id hairiotilanne)
+                                                       (::materiaalit/hairiotilanne %)))
+                                           ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
+                                           ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
                                            (map #(identity {:maara (- (::materiaalit/maara %))
                                                             :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                                                       ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)

@@ -33,7 +33,7 @@
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span.pull-right.muokkaustoiminnot
-      (when (not= false voi-kumota?)
+      (when voi-kumota?
         [:button.nappi-toissijainen
          {:disabled (empty? @historia)
           :on-click #(do (.stopPropagation %)

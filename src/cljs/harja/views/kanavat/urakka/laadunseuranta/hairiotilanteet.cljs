@@ -108,8 +108,9 @@
 
 (defn varaosataulukko [e! {materiaalit :materiaalit hairiotilanne :valittu-hairiotilanne}]
   [grid/muokkaus-grid
-   {:voi-muokata? (constantly true)
+   {:voi-muokata? true
     :voi-poistaa? (constantly true)
+    :voi-kumota? false
     :piilota-toiminnot? false
     :tyhja "Ei varaosia"}
    [{:otsikko "Varaosa"
