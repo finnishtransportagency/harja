@@ -19,28 +19,37 @@
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.kanavat.kohde :as kohde]
+            [reagent.core :as r])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn hakuehdot [e! app]
-  (let [urakka (get-in app [:valinnat :urakka])]
-    [valinnat/urakkavalinnat {:urakka urakka}
-     ^{:key "valinnat"}
-     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
-     ^{:key "toiminnot"}
-     [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
-      ^{:key "uusi-nappi"}
-      [napit/yleinen-ensisijainen
-       "Siirrä valitut muutos- ja lisätöihin"
-       (fn [_]
-         (e! (tiedot/->SiirraValitut)))
-       {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
-      [napit/uusi
-       "Uusi toimenpide"
-       (fn [_]
-         (e! (tiedot/->UusiToimenpide)))]]]))
+(defn hakuehdot [e! {:keys [urakka urakan-kohteet] :as app}]
+  [valinnat/urakkavalinnat {:urakka urakka}
+   ^{:key "valinnat"}
+   [:div
+    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
+   [valinnat/kanava-kohde
+    (r/wrap (get-in app [:valinnat :kanava-kohde])
+            (fn [uusi]
+              (e! (tiedot/->PaivitaValinnat {:kanava-kohde uusi}))))
+    (into [nil] urakan-kohteet)
+    #(let [nimi (kohde/fmt-kohteen-nimi %)]
+       (if (empty? nimi) "Kaikki" nimi))]
+   ^{:key "toiminnot"}
+   [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
+    ^{:key "uusi-nappi"}
+    [napit/yleinen-ensisijainen
+     "Siirrä valitut muutos- ja lisätöihin"
+     (fn [_]
+       (e! (tiedot/->SiirraValitut)))
+     {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
+    [napit/uusi
+     "Uusi toimenpide"
+     (fn [_]
+       (e! (tiedot/->UusiToimenpide)))]]])
 
 (defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet] :as app}]
   [:div
