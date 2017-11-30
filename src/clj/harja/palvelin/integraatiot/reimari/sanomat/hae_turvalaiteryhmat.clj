@@ -26,8 +26,7 @@
     (xml/lue-attribuutit tlr
                          #(keyword "harja.domain.vesivaylat.turvalaiteryhma" (name %))
                          turvalaiteryhma-attribuutit)
-    {::turvalaiteryhma/turvalaitteet (map :harja.domain.vesivaylat.turvalaite/nro (z/xml-> tlr :turvalaitteet :turvalaite lue-turvalaite))}
-    ))
+    {::turvalaiteryhma/turvalaitteet (map :harja.domain.vesivaylat.turvalaite/nro (z/xml-> tlr :turvalaitteet :turvalaite lue-turvalaite))}))
 
 (defn hae-turvalaiteryhmat-vastaus [vastaus-xml]
   (if-let [ht (z/xml1-> vastaus-xml :S:Body :HaeTurvalaiteryhmat)]
