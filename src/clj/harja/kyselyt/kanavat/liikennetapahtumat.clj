@@ -20,7 +20,7 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-osa :as lt-osa]
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
@@ -63,11 +63,11 @@
         (->>
           osien-tiedot
           (group-by ::lt/id)
-          (map (fn [[id osat]] [id (get-in osat [0 ::lt/osat])]))
+          (map (fn [[id osat]] [id (get-in osat [0 ::lt/toiminnot])]))
           (into {}))]
     (map
       (fn [tapahtuma]
-        (assoc tapahtuma ::lt/osat (id-ja-osat (::lt/id tapahtuma))))
+        (assoc tapahtuma ::lt/toiminnot (id-ja-osat (::lt/id tapahtuma))))
       tapahtumat)))
 
 (defn hae-tapahtumien-palvelumuodot [db tapahtumat]
@@ -232,22 +232,22 @@
   (some?
     (first
       (specql/fetch db
-                    ::lt-osa/liikennetapahtuman-osa
-                    #{::lt-osa/id}
-                    {::lt-osa/liikennetapahtuma-id (::lt/id tapahtuma)
-                     ::lt-osa/id (::lt-osa/id osa)}))))
+                    ::toiminto/liikennetapahtuman-osa
+                    #{::toiminto/id}
+                    {::toiminto/liikennetapahtuma-id (::lt/id tapahtuma)
+                     ::toiminto/id (::toiminto/id osa)}))))
 
 (defn vaadi-osa-kuuluu-tapahtumaan! [db osa tapahtuma]
   (assert (osa-kuuluu-tapahtumaan? db osa tapahtuma) "Alus ei kuulu tapahtumaan!"))
 
 (defn tallenna-osa-tapahtumaan! [db user osa tapahtuma]
-  (let [olemassa? (id-olemassa? (::lt-osa/id osa))
-        osa (assoc osa ::lt-osa/liikennetapahtuma-id (::lt/id tapahtuma))]
+  (let [olemassa? (id-olemassa? (::toiminto/id osa))
+        osa (assoc osa ::toiminto/liikennetapahtuma-id (::lt/id tapahtuma))]
     (if olemassa?
       (do
         (vaadi-osa-kuuluu-tapahtumaan! db osa tapahtuma)
         (specql/update! db
-                        ::lt-osa/liikennetapahtuman-osa
+                        ::toiminto/liikennetapahtuman-osa
                         (merge
                           (if (::m/poistettu? osa)
                             {::m/poistaja-id (:id user)
@@ -256,10 +256,10 @@
                             {::m/muokkaaja-id (:id user)
                              ::m/muokattu (pvm/nyt)})
                           osa)
-                        {::lt-osa/id (::lt-osa/id osa)}))
+                        {::toiminto/id (::toiminto/id osa)}))
 
       (specql/insert! db
-                      ::lt-osa/liikennetapahtuman-osa
+                      ::toiminto/liikennetapahtuman-osa
                       (merge
                         {::m/luoja-id (:id user)}
                         osa)))))
@@ -294,7 +294,7 @@
                                                   ::m/muokattu (pvm/nyt)})
                                                (dissoc tapahtuma
                                                        ::lt/alukset
-                                                       ::lt/osat))
+                                                       ::lt/toiminnot))
                                              {::lt/id (::lt/id tapahtuma)})
                              ;; Palautetaan päivitetty tapahtuma
                              tapahtuma)
@@ -305,9 +305,9 @@
                                              {::m/luoja-id (:id user)}
                                              (dissoc tapahtuma
                                                      ::lt/alukset
-                                                     ::lt/osat))))]
+                                                     ::lt/toiminnot))))]
       (doseq [alus (::lt/alukset tapahtuma)]
         (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma))
 
-      (doseq [osa (::lt/osat tapahtuma)]
+      (doseq [osa (::lt/toiminnot tapahtuma)]
         (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma)))))

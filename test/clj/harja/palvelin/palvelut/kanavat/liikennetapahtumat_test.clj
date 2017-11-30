@@ -20,7 +20,7 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-osa :as lt-osa]))
+            [harja.domain.kanavat.lt-toiminto :as toiminto]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -102,11 +102,11 @@
                   ::lt/sopimus-id sopimus-id
                   ::lt/kohde-id kohde-id
                   ::lt/aika (pvm/nyt)
-                  ::lt/osat [{::lt-osa/kohteenosa-id kohteenosa-id
-                              ::lt-osa/kohde-id kohde-id
-                              ::lt-osa/toimenpide :sulutus
-                              ::lt-osa/palvelumuoto :kauko
-                              ::lt-osa/lkm 1}]
+                  ::lt/toiminnot [{::toiminto/kohteenosa-id kohteenosa-id
+                              ::toiminto/kohde-id kohde-id
+                              ::toiminto/toimenpide :sulutus
+                              ::toiminto/palvelumuoto :kauko
+                              ::toiminto/lkm 1}]
                   ::lt/alukset [{::lt-alus/laji :HUV
                                  ::lt-alus/lkm 1
                                  ::lt-alus/suunta :ylos}]
@@ -144,7 +144,7 @@
                   ::lt/kohde-id kohde-id
                   ::lt/id tapahtuma-id
                   ::lt/aika (pvm/nyt)
-                  ::lt/osat []
+                  ::lt/toiminnot []
                   ::lt/vesipinta-alaraja 500
                   ::lt/vesipinta-ylaraja 1000
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
@@ -180,7 +180,7 @@
                   ::lt/kohde-id kohde-id
                   ::lt/id tapahtuma-id
                   ::lt/aika (pvm/nyt)
-                  ::lt/osat []
+                  ::lt/toiminnot []
                   ::lt/vesipinta-alaraja 500
                   ::lt/vesipinta-ylaraja 1000
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)

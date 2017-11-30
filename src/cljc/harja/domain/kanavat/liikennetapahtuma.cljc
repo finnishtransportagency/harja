@@ -16,7 +16,7 @@
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.lt-alus :as lt-alus]
-    [harja.domain.kanavat.lt-osa :as lt-osa])
+    [harja.domain.kanavat.lt-toiminto :as toiminto])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -37,9 +37,9 @@
     ::alukset (specql.rel/has-many ::id
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuman-alus
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuma-id)
-    ::osat (specql.rel/has-many ::id
-                                :harja.domain.kanavat.lt-osa/liikennetapahtuman-osa
-                                :harja.domain.kanavat.lt-osa/liikennetapahtuma-id)
+    ::toiminnot (specql.rel/has-many ::id
+                                :harja.domain.kanavat.lt-toiminto/liikennetapahtuman-osa
+                                :harja.domain.kanavat.lt-toiminto/liikennetapahtuma-id)
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
@@ -61,7 +61,7 @@
   #{[::alukset (set/union lt-alus/perustiedot lt-alus/metatiedot)]})
 
 (def osien-tiedot
-  #{[::osat lt-osa/perustiedot]})
+  #{[::toiminnot toiminto/perustiedot]})
 
 (def sopimuksen-tiedot
   #{[::sopimus sop/perustiedot]})
@@ -109,10 +109,10 @@
   (palvelumuodot*
     palvelumuoto))
 
-(defn fmt-palvelumuoto [lt-osa]
-  (str (palvelumuoto->str (::lt-osa/palvelumuoto lt-osa))
-       (when (= :itse (::lt-osa/palvelumuoto lt-osa))
-         (str " (" (::lt-osa/lkm lt-osa) " kpl)"))))
+(defn fmt-palvelumuoto [toiminto]
+  (str (palvelumuoto->str (::toiminto/palvelumuoto toiminto))
+       (when (= :itse (::toiminto/palvelumuoto toiminto))
+         (str " (" (::toiminto/lkm toiminto) " kpl)"))))
 
 (def suunta*
   ^{:private true}
@@ -126,7 +126,7 @@
 (def suunta-vaihtoehdot (keys suunta*))
 
 (s/def ::alukset (s/coll-of ::lt-alus/liikennetapahtuman-alus))
-(s/def ::osat (s/coll-of ::lt-osa/liikennetapahtuman-osa))
+(s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-osa))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::sulku-toimenpide
@@ -142,7 +142,7 @@
                                                    ::vesipinta-alaraja
                                                    ::sopimus
                                                    ::kuittaaja
-                                                   ::osat]
+                                                   ::toiminnot]
                                                   :opt
                                                   [::alukset
                                                    ::lisatieto])))
@@ -156,7 +156,7 @@
                                                          ::urakka-id
                                                          ::kuittaaja-id
                                                          ::kohde-id
-                                                         ::osat]
+                                                         ::toiminnot]
                                                    :opt [::id
                                                          ::lisatieto
                                                          ::m/poistettu?

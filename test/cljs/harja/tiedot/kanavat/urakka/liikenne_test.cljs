@@ -6,7 +6,7 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-osa :as lt-osa]
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.sopimus :as sop]
@@ -46,44 +46,44 @@
 (deftest palvelumuoto-gridiin
   (is (= "Kauko"
          (tiedot/palvelumuoto->str
-           {::lt/osat [{::lt-osa/palvelumuoto :kauko}
-                       {::lt-osa/palvelumuoto :kauko}
-                       {::lt-osa/palvelumuoto :kauko}]})))
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}]})))
   (is (= "Kauko"
          (tiedot/palvelumuoto->str
-           {::lt/osat [{::lt-osa/palvelumuoto :kauko}
-                       {::lt-osa/palvelumuoto :kauko}
-                       {::lt-osa/palvelumuoto :kauko}]})))
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}]})))
   (is (= "Kauko, Paikallis"
          (tiedot/palvelumuoto->str
-           {::lt/osat [{::lt-osa/palvelumuoto :kauko}
-                       {::lt-osa/palvelumuoto :paikallis}
-                       {::lt-osa/palvelumuoto :kauko}]})))
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :paikallis}
+                       {::toiminto/palvelumuoto :kauko}]})))
   (is (= "Itsepalvelu (15 kpl), Kauko"
          (tiedot/palvelumuoto->str
-           {::lt/osat [{::lt-osa/palvelumuoto :kauko}
-                       {::lt-osa/palvelumuoto :itse
-                        ::lt-osa/lkm 15}
-                       {::lt-osa/palvelumuoto :kauko}]})))
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :itse
+                        ::toiminto/lkm 15}
+                       {::toiminto/palvelumuoto :kauko}]})))
   (is (= "Itsepalvelu (150 kpl)"
          (tiedot/palvelumuoto->str
-           {::lt/osat [{::lt-osa/palvelumuoto :itse
-                        ::lt-osa/lkm 150}]}))))
+           {::lt/toiminnot [{::toiminto/palvelumuoto :itse
+                        ::toiminto/lkm 150}]}))))
 
 (deftest toimenpide-gridiin
   (is (= "Sillan avaus, Sulutus"
-         (tiedot/toimenpide->str {::lt/osat [{::lt-osa/toimenpide :sulutus}
-                                             {::lt-osa/toimenpide :avaus}]})))
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :sulutus}
+                                             {::toiminto/toimenpide :avaus}]})))
 
   (is (= "Tyhjennys"
-         (tiedot/toimenpide->str {::lt/osat [{::lt-osa/toimenpide :tyhjennys}
-                                             {::lt-osa/toimenpide :ei-avausta}]})))
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :tyhjennys}
+                                             {::toiminto/toimenpide :ei-avausta}]})))
 
   (is (= "Sillan avaus"
-         (tiedot/toimenpide->str {::lt/osat [{::lt-osa/toimenpide :avaus}]})))
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :avaus}]})))
 
   (is (= ""
-         (tiedot/toimenpide->str {::lt/osat [{::lt-osa/toimenpide :ei-avausta}]}))))
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :ei-avausta}]}))))
 
 (deftest tapahtumarivit
   (testing "Jokaisesta nipusta ja aluksesta syntyy oma rivi"
@@ -128,7 +128,7 @@
           ::lt/sopimus-id 1
           ::lt/alukset [{::m/poistettu? true
                          ::lt-alus/id 1}]
-          ::lt/osat [{::lt-osa/id 1}]}
+          ::lt/toiminnot [{::toiminto/id 1}]}
          (tiedot/tallennusparametrit
            {:grid-virheita? false
             ::lt/kuittaaja {::kayttaja/id 1}
@@ -138,7 +138,7 @@
                            :id 1
                            :harja.ui.grid/virheet []
                            ::lt-alus/id 1}]
-            ::lt/osat [{::lt-osa/id 1
+            ::lt/toiminnot [{::toiminto/id 1
                         ::osa/id 1}]}))))
 
 (deftest voiko-tallentaa?
@@ -167,14 +167,14 @@
   (is (false? (tiedot/sama-alusrivi? {::lt-alus/id 1} {:id 1 ::lt-alus/id 2}))))
 
 (deftest osatietojen-paivittaminen
-  (is (= {::lt/osat [{::lt-osa/kohteenosa-id 1
-                      ::lt-osa/palvelumuoto :kauko}
-                     {::lt-osa/kohteenosa-id 2}]}
-         (tiedot/paivita-lt-osan-tiedot
-           {::lt/osat [{::lt-osa/kohteenosa-id 1}
-                       {::lt-osa/kohteenosa-id 2}]}
-           {::lt-osa/kohteenosa-id 1
-            ::lt-osa/palvelumuoto :kauko}))))
+  (is (= {::lt/toiminnot [{::toiminto/kohteenosa-id 1
+                      ::toiminto/palvelumuoto :kauko}
+                     {::toiminto/kohteenosa-id 2}]}
+         (tiedot/paivita-toiminnon-tiedot
+           {::lt/toiminnot [{::toiminto/kohteenosa-id 1}
+                       {::toiminto/kohteenosa-id 2}]}
+           {::toiminto/kohteenosa-id 1
+            ::toiminto/palvelumuoto :kauko}))))
 
 (deftest osatietojen-yhdistaminen
   (testing "Olemassaolevaan yhdistäminen"
@@ -185,17 +185,17 @@
                                               ::osa/tyyppi :silta
                                               ::osa/nimi "Iso silta"
                                               ::osa/oletuspalvelumuoto :kauko}]}
-            ::lt/osat [{::lt/id 1
-                        ::lt-osa/kohteenosa-id 1
-                        ::lt-osa/kohde-id 1
-                        ::lt-osa/palvelumuoto :itse
-                        ::lt-osa/lkm 15
-                        ::lt-osa/toimenpide :avaus
-                        
+            ::lt/toiminnot [{::lt/id 1
+                        ::toiminto/kohteenosa-id 1
+                        ::toiminto/kohde-id 1
+                        ::toiminto/palvelumuoto :itse
+                        ::toiminto/lkm 15
+                        ::toiminto/toimenpide :avaus
+
                         ::osa/tyyppi :silta
                         ::osa/nimi "Iso silta"
                         ::osa/oletuspalvelumuoto :kauko}]}
-          (tiedot/kohteenosatiedot-lt-osiin
+          (tiedot/kohteenosatiedot-toimintoihin
             {::lt/id 1
              ::lt/kohde {::kohde/id 1
                          ::kohde/kohteenosat [{::osa/id 1
@@ -203,12 +203,12 @@
                                                ::osa/tyyppi :silta
                                                ::osa/nimi "Iso silta"
                                                ::osa/oletuspalvelumuoto :kauko}]}
-             ::lt/osat [{::lt/id 1
-                         ::lt-osa/kohteenosa-id 1
-                         ::lt-osa/kohde-id 1
-                         ::lt-osa/palvelumuoto :itse
-                         ::lt-osa/lkm 15
-                         ::lt-osa/toimenpide :avaus}]}
+             ::lt/toiminnot [{::lt/id 1
+                         ::toiminto/kohteenosa-id 1
+                         ::toiminto/kohde-id 1
+                         ::toiminto/palvelumuoto :itse
+                         ::toiminto/lkm 15
+                         ::toiminto/toimenpide :avaus}]}
             {::kohde/id 1
              ::kohde/kohteenosat [{::osa/id 1
                                    ::osa/kohde-id 1
@@ -223,16 +223,16 @@
                                               ::osa/tyyppi :silta
                                               ::osa/nimi "Iso silta"
                                               ::osa/oletuspalvelumuoto :kauko}]}
-            ::lt/osat [{::osa/tyyppi :silta
+            ::lt/toiminnot [{::osa/tyyppi :silta
                         ::osa/nimi "Iso silta"
                         ::osa/oletuspalvelumuoto :kauko
 
-                        ::lt-osa/kohteenosa-id 1
-                        ::lt-osa/kohde-id 1
-                        ::lt-osa/lkm 1
-                        ::lt-osa/toimenpide :ei-avausta
-                        ::lt-osa/palvelumuoto :kauko}]}
-           (tiedot/kohteenosatiedot-lt-osiin
+                        ::toiminto/kohteenosa-id 1
+                        ::toiminto/kohde-id 1
+                        ::toiminto/lkm 1
+                        ::toiminto/toimenpide :ei-avausta
+                        ::toiminto/palvelumuoto :kauko}]}
+           (tiedot/kohteenosatiedot-toimintoihin
              {::lt/id 1}
              {::kohde/id 1
               ::kohde/kohteenosat [{::osa/id 1
@@ -308,34 +308,34 @@
     (is (= {:valittu-liikennetapahtuma nil}
            (e! (tiedot/->ValitseTapahtuma nil)))))
 
-  (testing "Olemassaolevan tapahtuman valitseminen liittää lt-osiin kohteenosan tiedot"
+  (testing "Olemassaolevan tapahtuman valitseminen liittää toimintoihin kohteenosan tiedot"
     (is (= {:valittu-liikennetapahtuma {::lt/id 1
                                         ::lt/kohde {::kohde/id 1
                                                     ::kohde/kohteenosat [{::osa/id 1
                                                                           ::osa/tyyppi :silta
                                                                           ::osa/nimi "Iso silta"
                                                                           ::osa/oletuspalvelumuoto :kauko}]}
-                                        ::lt/osat [{::lt-osa/id 1
-                                                    ::lt-osa/kohteenosa-id 1
-                                                    ::lt-osa/kohde-id 1
-                                                    ::lt-osa/lkm 15
-                                                    ::lt-osa/palvelumuoto :itse
+                                        ::lt/toiminnot [{::toiminto/id 1
+                                                    ::toiminto/kohteenosa-id 1
+                                                    ::toiminto/kohde-id 1
+                                                    ::toiminto/lkm 15
+                                                    ::toiminto/palvelumuoto :itse
                                                     ::osa/tyyppi :silta
                                                     ::osa/nimi "Iso silta"
                                                     ::osa/oletuspalvelumuoto :kauko
-                                                    ::lt-osa/toimenpide :sillan-avaus}]}
+                                                    ::toiminto/toimenpide :sillan-avaus}]}
             :haetut-tapahtumat [{::lt/id 1
                                  ::lt/kohde {::kohde/id 1
                                              ::kohde/kohteenosat [{::osa/id 1
                                                                    ::osa/tyyppi :silta
                                                                    ::osa/nimi "Iso silta"
                                                                    ::osa/oletuspalvelumuoto :kauko}]}
-                                 ::lt/osat [{::lt-osa/id 1
-                                             ::lt-osa/kohteenosa-id 1
-                                             ::lt-osa/kohde-id 1
-                                             ::lt-osa/lkm 15
-                                             ::lt-osa/palvelumuoto :itse
-                                             ::lt-osa/toimenpide :sillan-avaus}]}]}
+                                 ::lt/toiminnot [{::toiminto/id 1
+                                             ::toiminto/kohteenosa-id 1
+                                             ::toiminto/kohde-id 1
+                                             ::toiminto/lkm 15
+                                             ::toiminto/palvelumuoto :itse
+                                             ::toiminto/toimenpide :sillan-avaus}]}]}
            (e! (tiedot/->ValitseTapahtuma
                  {::lt/id 1})
                {:haetut-tapahtumat [{::lt/id 1
@@ -344,16 +344,16 @@
                                                                        ::osa/tyyppi :silta
                                                                        ::osa/nimi "Iso silta"
                                                                        ::osa/oletuspalvelumuoto :kauko}]}
-                                     ::lt/osat [{::lt-osa/id 1
-                                                 ::lt-osa/kohteenosa-id 1
-                                                 ::lt-osa/kohde-id 1
-                                                 ::lt-osa/lkm 15
-                                                 ::lt-osa/palvelumuoto :itse
-                                                 ::lt-osa/toimenpide :sillan-avaus}]}]}))))
+                                     ::lt/toiminnot [{::toiminto/id 1
+                                                 ::toiminto/kohteenosa-id 1
+                                                 ::toiminto/kohde-id 1
+                                                 ::toiminto/lkm 15
+                                                 ::toiminto/palvelumuoto :itse
+                                                 ::toiminto/toimenpide :sillan-avaus}]}]}))))
 
   (testing "Uuden tapahtuman avaaminen"
     (is (= {:valittu-liikennetapahtuma {:foo :bar
-                                        ::lt/osat []
+                                        ::lt/toiminnot []
                                         ::lt/kohde nil}
             :haetut-tapahtumat [{::lt/id 1
                                  ::lt/kohde {::kohde/id 1
@@ -361,12 +361,12 @@
                                                                    ::osa/tyyppi :silta
                                                                    ::osa/nimi "Iso silta"
                                                                    ::osa/oletuspalvelumuoto :kauko}]}
-                                 ::lt/osat [{::lt-osa/id 1
-                                             ::lt-osa/kohteenosa-id 1
-                                             ::lt-osa/kohde-id 1
-                                             ::lt-osa/lkm 15
-                                             ::lt-osa/palvelumuoto :itse
-                                             ::lt-osa/toimenpide :sillan-avaus}]}]}
+                                 ::lt/toiminnot [{::toiminto/id 1
+                                             ::toiminto/kohteenosa-id 1
+                                             ::toiminto/kohde-id 1
+                                             ::toiminto/lkm 15
+                                             ::toiminto/palvelumuoto :itse
+                                             ::toiminto/toimenpide :sillan-avaus}]}]}
            (e! (tiedot/->ValitseTapahtuma {:foo :bar})
                {:haetut-tapahtumat [{::lt/id 1
                                      ::lt/kohde {::kohde/id 1
@@ -374,12 +374,12 @@
                                                                        ::osa/tyyppi :silta
                                                                        ::osa/nimi "Iso silta"
                                                                        ::osa/oletuspalvelumuoto :kauko}]}
-                                     ::lt/osat [{::lt-osa/id 1
-                                                 ::lt-osa/kohteenosa-id 1
-                                                 ::lt-osa/kohde-id 1
-                                                 ::lt-osa/lkm 15
-                                                 ::lt-osa/palvelumuoto :itse
-                                                 ::lt-osa/toimenpide :sillan-avaus}]}]})))))
+                                     ::lt/toiminnot [{::toiminto/id 1
+                                                 ::toiminto/kohteenosa-id 1
+                                                 ::toiminto/kohde-id 1
+                                                 ::toiminto/lkm 15
+                                                 ::toiminto/palvelumuoto :itse
+                                                 ::toiminto/toimenpide :sillan-avaus}]}]})))))
 
 (deftest edellisten-haku
   (vaadi-async-kutsut

@@ -31,7 +31,7 @@
             [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-osa :as lt-osa]
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa])
   (:require-macros
@@ -162,7 +162,7 @@
           :pakollinen? true
           :valinta-nayta #(if % (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
           :aseta (fn [rivi arvo]
-                   (let [rivi (tiedot/kohteenosatiedot-lt-osiin rivi arvo)]
+                   (let [rivi (tiedot/kohteenosatiedot-toimintoihin rivi arvo)]
                      (when uusi-tapahtuma?
                        (e! (tiedot/->HaeEdellisetTiedot rivi)))
                      rivi))})
@@ -177,28 +177,28 @@
                :tyyppi :radio-group
                :vaihtoehdot (lt/toimenpide-vaihtoehdot osa)
                :vaihtoehto-nayta lt/toimenpide->str
-               :hae (constantly (::lt-osa/toimenpide osa))
+               :hae (constantly (::toiminto/toimenpide osa))
                :aseta (fn [rivi arvo]
-                        (tiedot/paivita-lt-osan-tiedot rivi (assoc osa ::lt-osa/toimenpide arvo)))}
-              (when-not (= (::lt-osa/toimenpide osa) :ei-avausta)
+                        (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo)))}
+              (when-not (= (::toiminto/toimenpide osa) :ei-avausta)
                 {:otsikko "Palvelumuoto"
                 :nimi (str i "-palvelumuoto")
                 :pakollinen? true
                 :tyyppi :valinta
                 :valinnat lt/palvelumuoto-vaihtoehdot
                 :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")
-                :hae (constantly (::lt-osa/palvelumuoto osa))
+                :hae (constantly (::toiminto/palvelumuoto osa))
                 :aseta (fn [rivi arvo]
-                         (tiedot/paivita-lt-osan-tiedot rivi (assoc osa ::lt-osa/palvelumuoto arvo)))})
-              (when (= (::lt-osa/palvelumuoto osa) :itse)
+                         (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo)))})
+              (when (= (::toiminto/palvelumuoto osa) :itse)
                 {:otsikko "Itsepalveluiden lukumäärä"
                  :nimi (str i"-lkm")
                  :pakollinen? true
                  :tyyppi :positiivinen-numero
-                 :hae (constantly (::lt-osa/lkm osa))
+                 :hae (constantly (::toiminto/lkm osa))
                  :aseta (fn [rivi arvo]
-                          (tiedot/paivita-lt-osan-tiedot rivi (assoc osa ::lt-osa/lkm arvo)))})))
-          (::lt/osat valittu-liikennetapahtuma))
+                          (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))})))
+          (::lt/toiminnot valittu-liikennetapahtuma))
        (when (::lt/kohde valittu-liikennetapahtuma)
          (if (and edellisten-haku-kaynnissa? uusi-tapahtuma?)
            {:otsikko ""

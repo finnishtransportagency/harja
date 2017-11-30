@@ -25,7 +25,7 @@
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-osa :as lt-osa]
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
             [clojure.set :as set]
             [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -93,15 +93,15 @@
     (into {} (filter val (:valinnat app)))))
 
 (defn palvelumuoto->str [tapahtuma]
-  (str/join ", " (into #{} (sort (keep lt/fmt-palvelumuoto (::lt/osat tapahtuma))))))
+  (str/join ", " (into #{} (sort (keep lt/fmt-palvelumuoto (::lt/toiminnot tapahtuma))))))
 
 (defn toimenpide->str [tapahtuma]
-  (str/join ", " (into #{} (sort (keep (comp lt/toimenpide->str ::lt-osa/toimenpide)
+  (str/join ", " (into #{} (sort (keep (comp lt/toimenpide->str ::toiminto/toimenpide)
                                        (remove
                                          (comp
                                            (partial = :ei-avausta)
-                                           ::lt-osa/toimenpide)
-                                         (::lt/osat tapahtuma)))))))
+                                           ::toiminto/toimenpide)
+                                         (::lt/toiminnot tapahtuma)))))))
 
 (defn tapahtumarivit [tapahtuma]
   (let [alustiedot
@@ -144,9 +144,9 @@
                                                 (dissoc :id)
                                                 (dissoc :harja.ui.grid/virheet))
                                            alukset)))
-      (update ::lt/osat (fn [osat] (map (fn [osa]
+      (update ::lt/toiminnot (fn [osat] (map (fn [osa]
                                           (->> (keys osa)
-                                               (filter #(= (namespace %) "harja.domain.kanavat.lt-osa"))
+                                               (filter #(= (namespace %) "harja.domain.kanavat.lt-toiminto"))
                                                (select-keys osa)))
                                         osat)))))
 
@@ -169,36 +169,36 @@
       (= (:id a)
          (:id b)))))
 
-(defn paivita-lt-osan-tiedot [tapahtuma lt-osa]
+(defn paivita-toiminnon-tiedot [tapahtuma toiminto]
   (assoc
     tapahtuma
-    ::lt/osat
+    ::lt/toiminnot
     (mapcat val
             (assoc
-              (group-by ::lt-osa/kohteenosa-id (::lt/osat tapahtuma))
+              (group-by ::toiminto/kohteenosa-id (::lt/toiminnot tapahtuma))
               ;; Etsi palvelumuoto kohteenosan id:llä, ja korvaa/luo arvo
-              (::lt-osa/kohteenosa-id lt-osa)
-              [lt-osa]))))
+              (::toiminto/kohteenosa-id toiminto)
+              [toiminto]))))
 
-(defn kohteenosatiedot-lt-osiin
-  "Ottaa tapahtuman ja kohteen, ja yhdistää tapahtuman :lt-osiin kohteen kohteenosien tiedot.
-  Jos kyseessä on olemassaoleva tapahtuma, liitetään vanhoihin lt-osa tietoihin mm. kohteenosan nimi.
-  Jos kyseessä on uusi tapahtuma, luodaan tapahtumalle tyhjät lt-osa tiedot, jotka täytetään loppuun lomakkeella."
+(defn kohteenosatiedot-toimintoihin
+  "Ottaa tapahtuman ja kohteen, ja yhdistää tapahtuman toimintoihin kohteen kohteenosien tiedot.
+  Jos kyseessä on olemassaoleva tapahtuma, liitetään vanhoihin toiminto tietoihin mm. kohteenosan nimi.
+  Jos kyseessä on uusi tapahtuma, luodaan tapahtumalle tyhjät toiminto tiedot, jotka täytetään loppuun lomakkeella."
   [tapahtuma kohde]
   (-> tapahtuma
       (assoc ::lt/kohde kohde)
-      (update ::lt/osat
+      (update ::lt/toiminnot
               (fn [osat]
-                (let [vanhat (group-by ::lt-osa/kohteenosa-id osat)]
+                (let [vanhat (group-by ::toiminto/kohteenosa-id osat)]
                   (map
                     (fn [osa]
                       (merge
                         (-> osa
-                           (set/rename-keys {::osa/id ::lt-osa/kohteenosa-id
-                                             ::osa/kohde-id ::lt-osa/kohde-id})
-                           (assoc ::lt-osa/lkm 1)
-                           (assoc ::lt-osa/palvelumuoto (::osa/oletuspalvelumuoto osa))
-                           (assoc ::lt-osa/toimenpide (when (kohde/silta? osa) :ei-avausta)))
+                           (set/rename-keys {::osa/id ::toiminto/kohteenosa-id
+                                             ::osa/kohde-id ::toiminto/kohde-id})
+                           (assoc ::toiminto/lkm 1)
+                           (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
+                           (assoc ::toiminto/toimenpide (when (kohde/silta? osa) :ei-avausta)))
                         (first (vanhat (::osa/id osa)))))
                     (::kohde/kohteenosat kohde)))))))
 
@@ -234,7 +234,7 @@
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
     (assoc app :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
-                                            (kohteenosatiedot-lt-osiin tapahtuma (::lt/kohde tapahtuma)))))
+                                            (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma)))))
 
   HaeEdellisetTiedot
   (process-event [{t :tapahtuma} app]

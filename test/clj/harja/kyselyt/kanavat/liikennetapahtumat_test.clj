@@ -5,7 +5,7 @@
 
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-osa :as lt-osa]
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]))
@@ -67,19 +67,19 @@
 (deftest hae-palvelumuodot
   (is (= [{::lt/id 1
            :foo :bar
-           ::lt/osat [{::lt-osa/id 1}
-                      {::lt-osa/id 2}]}
+           ::lt/toiminnot [{::toiminto/id 1}
+                      {::toiminto/id 2}]}
           {::lt/id 2
            :foo :bar
-           ::lt/osat [{::lt-osa/id 3}
-                      {::lt-osa/id 4}]}]
+           ::lt/toiminnot [{::toiminto/id 3}
+                      {::toiminto/id 4}]}]
          (#'q/hae-tapahtumien-palvelumuodot*
            [{::lt/id 1
-             ::lt/osat [{::lt-osa/id 1}
-                        {::lt-osa/id 2}]}
+             ::lt/toiminnot [{::toiminto/id 1}
+                        {::toiminto/id 2}]}
             {::lt/id 2
-             ::lt/osat [{::lt-osa/id 3}
-                        {::lt-osa/id 4}]}]
+             ::lt/toiminnot [{::toiminto/id 3}
+                        {::toiminto/id 4}]}]
            [{::lt/id 1
              :foo :bar}
             {::lt/id 2
