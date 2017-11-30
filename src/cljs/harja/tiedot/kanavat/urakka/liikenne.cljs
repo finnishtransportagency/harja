@@ -98,10 +98,15 @@
     (into {} (filter val (:valinnat app)))))
 
 (defn palvelumuoto->str [tapahtuma]
-  (str/join ", " (into #{} (keep (comp lt/palvelumuoto->str ::lt-osa/palvelumuoto) (::lt/osat tapahtuma)))))
+  (str/join ", " (into #{} (sort (keep lt/fmt-palvelumuoto (::lt/osat tapahtuma))))))
 
 (defn toimenpide->str [tapahtuma]
-  (str/join ", " (into #{} (keep (comp lt/toimenpide->str ::lt-osa/toimenpide) (::lt/osat tapahtuma)))))
+  (str/join ", " (into #{} (sort (keep (comp lt/toimenpide->str ::lt-osa/toimenpide)
+                                       (remove
+                                         (comp
+                                           (partial = :ei-avausta)
+                                           ::lt-osa/toimenpide)
+                                         (::lt/osat tapahtuma)))))))
 
 (defn tapahtumarivit [tapahtuma]
   (let [alustiedot

@@ -109,6 +109,11 @@
   (palvelumuodot*
     palvelumuoto))
 
+(defn fmt-palvelumuoto [lt-osa]
+  (str (palvelumuoto->str (::lt-osa/palvelumuoto lt-osa))
+       (when (= :itse (::lt-osa/palvelumuoto lt-osa))
+         (str " (" (::lt-osa/lkm lt-osa) " kpl)"))))
+
 (def suunta*
   ^{:private true}
   {:ylos "Ylös"
