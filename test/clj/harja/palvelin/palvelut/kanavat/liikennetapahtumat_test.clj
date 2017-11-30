@@ -18,7 +18,9 @@
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.kanavat.liikennetapahtuma :as lt]))
+            [harja.domain.kanavat.liikennetapahtuma :as lt]
+            [harja.domain.kanavat.lt-alus :as lt-alus]
+            [harja.domain.kanavat.lt-osa :as lt-osa]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -82,15 +84,13 @@
           (some? (:kohde vastaus))
           (number? (get-in vastaus [:kohde ::lt/id]))))))
 
-;; HAR-6659 tietomallimuutos rikkoi tämän testin.
-;; Disabloitu, koska HAR-6746 taskissa joudutaan joka tapauksessa tekemään
-;; kattavia muutoksia liikennetapahtuman palveluihin.
-
-#_(deftest tapahtuman-tallentaminen
+(deftest tapahtuman-tallentaminen
   (testing "Uuden luonti"
     (let [urakka-id (hae-saimaan-kanavaurakan-id)
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-          kohde-id (hae-kohde-soskua)
+          kohde-id (hae-kohde-kansola)
+          [kohteenosa-id tyyppi] (hae-kohteenosat-kansola)
+          _ (is (= tyyppi "sulku") "Kansolan kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
           hakuparametrit {::ur/id urakka-id
                           ::sop/id sopimus-id}
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -102,9 +102,14 @@
                   ::lt/sopimus-id sopimus-id
                   ::lt/kohde-id kohde-id
                   ::lt/aika (pvm/nyt)
-                  ::lt/silta-avaus true
-                  ::lt/silta-palvelumuoto :kauko
-                  ::lt/silta-lkm 1
+                  ::lt/osat [{::lt-osa/kohteenosa-id kohteenosa-id
+                              ::lt-osa/kohde-id kohde-id
+                              ::lt-osa/toimenpide :sulutus
+                              ::lt-osa/palvelumuoto :kauko
+                              ::lt-osa/lkm 1}]
+                  ::lt/alukset [{::lt-alus/laji :HUV
+                                 ::lt-alus/lkm 1
+                                 ::lt-alus/suunta :ylos}]
                   ::lt/vesipinta-alaraja 500
                   ::lt/vesipinta-ylaraja 1000
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
@@ -123,7 +128,9 @@
   (testing "Muokkaaminen"
     (let [urakka-id (hae-saimaan-kanavaurakan-id)
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-          kohde-id (hae-kohde-soskua)
+          [kohteenosa-id tyyppi] (hae-kohteenosat-kansola)
+          _ (is (= tyyppi "sulku") "Kansolan kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
+          kohde-id (hae-kohde-kansola)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR';")))
           hakuparametrit {::ur/id urakka-id
                           ::sop/id sopimus-id}
@@ -137,9 +144,7 @@
                   ::lt/kohde-id kohde-id
                   ::lt/id tapahtuma-id
                   ::lt/aika (pvm/nyt)
-                  ::lt/silta-avaus true
-                  ::lt/silta-palvelumuoto :kauko
-                  ::lt/silta-lkm 1
+                  ::lt/osat []
                   ::lt/vesipinta-alaraja 500
                   ::lt/vesipinta-ylaraja 1000
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
@@ -161,7 +166,7 @@
   (testing "Poistaminen"
     (let [urakka-id (hae-saimaan-kanavaurakan-id)
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-          kohde-id (hae-kohde-soskua)
+          kohde-id (hae-kohde-kansola)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR FOOBAR';")))
           hakuparametrit {::ur/id urakka-id
                           ::sop/id sopimus-id}
@@ -175,9 +180,7 @@
                   ::lt/kohde-id kohde-id
                   ::lt/id tapahtuma-id
                   ::lt/aika (pvm/nyt)
-                  ::lt/silta-avaus true
-                  ::lt/silta-palvelumuoto :kauko
-                  ::lt/silta-lkm 1
+                  ::lt/osat []
                   ::lt/vesipinta-alaraja 500
                   ::lt/vesipinta-ylaraja 1000
                   ::lt/kuittaaja-id (:id +kayttaja-jvh+)
