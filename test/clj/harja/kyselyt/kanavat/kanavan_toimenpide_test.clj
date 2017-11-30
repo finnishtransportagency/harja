@@ -10,7 +10,7 @@
 
 (deftest hae-kanavan-toimenpiteet
   (let [db (tietokanta/luo-tietokanta testitietokanta)
-        vastaus (kanava-q/hae-sopimuksen-toimenpiteet
+        vastaus (kanava-q/hae-kanavatoimenpiteet
                   db
                   {:urakka (hae-saimaan-kanavaurakan-id)
                    :sopimus (hae-saimaan-kanavaurakan-paasopimuksen-id)
@@ -49,7 +49,7 @@
         maara-lisayksen-jalkeen (hae-maara)
         paivitettava (assoc tallennettu ::kanavan-toimenpide/lisatieto "lisätieto on muuttunut")
         _ (kanava-q/tallenna-toimenpide db kayttaja-id paivitettava)
-        paivitetty (first (kanava-q/hae-kanavatoimenpiteet
+        paivitetty (first (kanava-q/hae-kanavatoimenpiteet*
                             db
                             (op/and
                               (op/or {::muokkaustiedot/poistettu? op/null?} {::muokkaustiedot/poistettu? false})

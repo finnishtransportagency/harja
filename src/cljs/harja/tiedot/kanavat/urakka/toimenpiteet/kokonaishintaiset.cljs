@@ -118,6 +118,8 @@
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
         (-> app
+            ;; TODO Kohteet haetaan monessa paikkaa samalla tavalla, tutki voisiko pitää yllä
+            ;; urakanlaajuisessa atomissa
             (tuck-apurit/post! :hae-urakan-kohteet
                                {::urakka/id (:id @navigaatio/valittu-urakka)}
                                {:onnistui ->KohteetHaettu

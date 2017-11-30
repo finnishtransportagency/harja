@@ -59,7 +59,7 @@
         {:db db
          :user user
          :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
-      (first (q-toimenpide/hae-kanavatoimenpiteet db {::toimenpide/id toimenpide-id})))))
+      (first (q-toimenpide/hae-kanavatoimenpiteet* db {::toimenpide/id toimenpide-id})))))
 
 (defn- tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
@@ -75,21 +75,21 @@
 
 (defn hae-kanavatoimenpiteet [db user {urakka-id ::toimenpide/urakka-id
                                        sopimus-id ::toimenpide/sopimus-id
-                                       alkupvm :alkupvm
-                                       loppupvm :loppupvm
+                                       alkupvm :alkupvm loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
-                                       tyyppi ::toimenpide/kanava-toimenpidetyyppi}]
-
+                                       tyyppi ::toimenpide/kanava-toimenpidetyyppi
+                                       kohde ::toimenpide/kohde-id}]
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (name tyyppi)]
-    (q-toimenpide/hae-sopimuksen-toimenpiteet
+    (q-toimenpide/hae-kanavatoimenpiteet
       db
       {:urakka urakka-id
        :sopimus sopimus-id
        :alkupvm alkupvm
        :loppupvm loppupvm
        :toimenpidekoodi toimenpidekoodi
-       :tyyppi tyyppi})))
+       :tyyppi tyyppi
+       :kohde kohde})))
 
 (defn siirra-kanavatoimenpiteet [db user tiedot]
   (let [urakka-id (::toimenpide/urakka-id tiedot)

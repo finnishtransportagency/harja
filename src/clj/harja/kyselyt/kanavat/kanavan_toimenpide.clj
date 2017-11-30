@@ -12,20 +12,20 @@
             [specql.core :as specql]
             [specql.op :as op]))
 
-(defn hae-kanavatoimenpiteet [db hakuehdot]
+(defn hae-kanavatoimenpiteet* [db hakuehdot]
   (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
-(defn hae-sopimuksen-toimenpiteet [db hakuehdot]
-  (let [idt (hae-kanavatoimenpiteet-aikavalilta db hakuehdot)]
-    (if (not (empty? idt))
+(defn hae-kanavatoimenpiteet [db hakuehdot]
+  (let [toimenpiteet (hae-kanavatoimenpiteet-aikavalilta db hakuehdot)]
+    (if (not (empty? toimenpiteet))
       (sort-by ::toimenpide/alkupvm
-               (hae-kanavatoimenpiteet
+               (hae-kanavatoimenpiteet*
                  db
                  (op/and
                    (op/or {::muokkaustiedot/poistettu? op/null?} {::muokkaustiedot/poistettu? false})
-                   {::toimenpide/id (op/in (into #{} (map :id idt)))})))
+                   {::toimenpide/id (op/in (into #{} (map :id toimenpiteet)))})))
       [])))
 
 (defn- vaadi-toimenpiteet-kuuluvat-urakkaan* [toimenpiteet-kannassa toimenpide-idt urakka-id]
