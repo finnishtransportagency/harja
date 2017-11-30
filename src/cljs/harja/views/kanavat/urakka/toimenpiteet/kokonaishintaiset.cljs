@@ -26,18 +26,18 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn hakuehdot [e! {:keys [urakka urakan-kohteet] :as app}]
+(defn hakuehdot [e! {:keys [urakka kohteet] :as app}]
   [valinnat/urakkavalinnat {:urakka urakka}
    ^{:key "valinnat"}
    [:div
-    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]]
-   [valinnat/kanava-kohde
-    (r/wrap (get-in app [:valinnat :kanava-kohde])
-            (fn [uusi]
-              (e! (tiedot/->PaivitaValinnat {:kanava-kohde uusi}))))
-    (into [nil] urakan-kohteet)
-    #(let [nimi (kohde/fmt-kohteen-nimi %)]
-       (if (empty? nimi) "Kaikki" nimi))]
+    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+    [valinnat/kanava-kohde
+     (r/wrap (get-in app [:valinnat :kanava-kohde])
+             (fn [uusi]
+               (e! (tiedot/->PaivitaValinnat {:kanava-kohde uusi}))))
+     (into [nil] kohteet)
+     #(let [nimi (kohde/fmt-kohteen-nimi %)]
+        (if (empty? nimi) "Kaikki" nimi))]]
    ^{:key "toiminnot"}
    [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
     ^{:key "uusi-nappi"}
