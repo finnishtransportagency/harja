@@ -59,7 +59,7 @@
         {:db db
          :user user
          :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
-      (first (q-toimenpide/hae-kanavatoimenpiteet* db {::toimenpide/id toimenpide-id})))))
+      (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id toimenpide-id})))))
 
 (defn- tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
@@ -81,7 +81,7 @@
                                        kohde ::toimenpide/kohde-id}]
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (name tyyppi)]
-    (q-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
+    (q-toimenpide/hae-kanavatomenpiteet-jeesql
       db
       {:urakka urakka-id
        :sopimus sopimus-id

@@ -12,7 +12,7 @@
             [specql.core :as specql]
             [specql.op :as op]))
 
-(defn hae-kanavatoimenpiteet* [db hakuehdot]
+(defn hae-kanavatoimenpiteet-specql [db hakuehdot]
   (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
         tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %
                                                                                           ::muokkaustiedot/poistettu? false})
@@ -25,10 +25,10 @@
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
-(defn hae-sopimuksen-toimenpiteet-aikavalilta [db hakuehdot]
+(defn hae-kanavatomenpiteet-jeesql [db hakuehdot]
   (if-let [idt (seq (hae-kanavatoimenpiteet-aikavalilta db hakuehdot))]
     (sort-by ::toimenpide/alkupvm
-             (hae-kanavatoimenpiteet*
+             (hae-kanavatoimenpiteet-specql
               db
               (op/and
                (op/or {::muokkaustiedot/poistettu? op/null?} {::muokkaustiedot/poistettu? false})
