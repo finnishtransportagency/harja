@@ -18,6 +18,7 @@
   ["tieluvan_opaste" ::opastetyyppi]
   ["tieluvan_liikennemerkkijarjestely" ::liikennemerkkijarjestelytyyppi]
   ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
+  ["suoja_alue_rakenteen_sijoitus" ::suoja-alue-rakenteen-sijoitus]
   ["tielupa" ::tielupa
    {"luotu" ::muokkautiedot/luotu
     "muokattu" ::muokkautiedot/muokattu}]
