@@ -82,7 +82,7 @@
                                  :valittu? uusi-arvo})))})
     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
-(defn lomake-toiminnot [e! toimenpide]
+(defn lomake-toiminnot [e! {:keys [tallennus-kaynnissa?] :as app} toimenpide]
   [:div
    [napit/tallenna
     "Tallenna"
@@ -115,7 +115,8 @@
        [lomake/lomake
         {:otsikko "Uusi toimenpide"
          :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-         :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
+         :footer-fn (fn [toimenpide]
+                      (lomake-toiminnot e! app toimenpide))}
         (toimenpiteet-view/toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
                                                        :sopimukset sopimukset
                                                        :kohteet @kanavaurakka/kanavakohteet
