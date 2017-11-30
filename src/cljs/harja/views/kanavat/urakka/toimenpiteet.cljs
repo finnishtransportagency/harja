@@ -131,7 +131,6 @@
                    (assoc ::kanavan-toimenpide/toimenpidekoodi-id arvo)
                    (assoc-in [:tehtava :tpk-id] arvo)
                    (assoc-in [:tehtava :yksikko] (:yksikko (urakan-toimenpiteet/tehtava-idlla arvo tehtavat)))))}
-     ;; FIXME Tämä päättely ei enää toimi
      (when (kanavatoimenpidetiedot/valittu-tehtava-muu? tehtava tehtavat)
        {:otsikko "Muu toimenpide"
         :nimi ::kanavan-toimenpide/muu-toimenpide
