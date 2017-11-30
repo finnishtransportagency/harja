@@ -26,7 +26,6 @@ CREATE TYPE TIELUPATYYPPI AS ENUM (
 CREATE TYPE TIELUVAN_KAAPELIASENNUS AS (
   laite                    TEXT,
   asennustyyppi            TEXT,
-  ohjeet                   TEXT,
   kommentit                TEXT,
   "maakaapelia-metreissa"  DECIMAL,
   "ilmakaapelia-metreissa" DECIMAL,
@@ -38,7 +37,6 @@ CREATE TYPE TIELUVAN_KAAPELIASENNUS AS (
 CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
   laite         TEXT,
   asennustyyppi TEXT,
-  ohjeet        TEXT,
   kommentit     TEXT,
   toiminnot     TEXT,
   sijainti      TR_OSOITE_LAAJENNETTU
@@ -55,6 +53,11 @@ CREATE TYPE TIELUVAN_LIIKENNEMERKKIJARJESTELY AS (
   "alennettu-nopeusrajoitus"    TEXT,
   "nopeusrajoituksen-pituus"    TEXT,
   sijainti                      TR_OSOITE_LAAJENNETTU
+);
+
+CREATE TYPE SUOJA_ALUE_RAKENTEEN_SIJOITUS AS ENUM (
+  'suoja-alue',
+  'nakemisalue'
 );
 
 CREATE TABLE tielupa (
@@ -118,6 +121,7 @@ CREATE TABLE tielupa (
   -- johto- ja kaapeliluvan tiedot
   "johtolupa-maakaapelia-yhteensa"                                DECIMAL,
   "johtolupa-ilmakaapelia-yhteensa"                               DECIMAL,
+  "johtolupa-tienalituksia"                                       INTEGER,
   "johtolupa-tienylityksia"                                       INTEGER,
   "johtolupa-silta-asennuksia"                                    INTEGER,
 
@@ -145,6 +149,7 @@ CREATE TABLE tielupa (
   "liittymalupa-liittymaohje-rummun-etaisyys-metreissa"           INTEGER,
   "liittymalupa-liittymaohje-odotustila-metreissa"                INTEGER,
   "liittymalupa-liittymaohje-nakemapisteen-etaisyys"              INTEGER,
+  "liittymalupa-liittymaohje-liittymisnakema"                     INTEGER,
   "liittymalupa-liittymaohje-liikennemerkit"                      TEXT,
   "liittymalupa-liittymaohje-lisaohjeet"                          TEXT,
 
@@ -178,10 +183,8 @@ CREATE TABLE tielupa (
   "suoja-aluerakentamislupa-lisatiedot"                           TEXT,
   "suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan"  DECIMAL,
   "suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta" DECIMAL,
-  "suoja-aluerakentamislupa-valitoimenpiteet"                     TEXT,
   "suoja-aluerakentamislupa-suoja-alueen-leveys"                  DECIMAL,
-  "suoja-aluerakentamislupa-suoja-alue"                           BOOLEAN,
-  "suoja-aluerakentamislupa-nakema-alue"                          BOOLEAN,
+  "suoja-aluerakentamislupa-sijoitus"                             SUOJA_ALUE_RAKENTEEN_SIJOITUS,
   "suoja-aluerakentamislupa-kiinteisto-rn"                        TEXT,
 
   -- tilapäinen myyntilupa
@@ -211,6 +214,7 @@ CREATE TABLE tielupa (
 
   -- vesihuoltolupa
   "vesihuoltolupa-tienylityksia"                                  INTEGER,
+  "vesihuoltolupa-tienalituksia"                                  INTEGER,
   "vesihuoltolupa-silta-asennuksia"                               INTEGER,
 
   mainokset                                                       TR_OSOITE_LAAJENNETTU [],
