@@ -8,14 +8,15 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
-            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]))
+            [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
+            [harja.palvelin.integraatiot.api.kasittely.tielupa :as kasittely]
+            [harja.kyselyt.tielupa :as tielupa-q]))
 
 (defn kirjaa-tielupa [liitteiden-hallinta db parametrit data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
-  (println "-->>> parametrit " parametrit)
-  (println "-->>> data " data)
+  (let [tielupa (kasittely/tallennettava-tielupa (:tielupa data))]
+    (tielupa-q/tallenna-tielupa db tielupa))
   (tee-kirjausvastauksen-body {:ilmoitukset "Tielupa kirjattu onnistuneesti"}))
 
 (defrecord Tieluvat []
