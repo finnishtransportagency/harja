@@ -84,12 +84,6 @@
   (let [valinnat {:foo "bar"}]
     (is (= valinnat (e! (tiedot/->ValinnatHaettuToimenpiteelle valinnat))))))
 
-(deftest KohteetHaettu
-  (let [haetut [{:foo "bar"}]
-        {:keys [kohteet kohteiden-haku-kaynnissa?]} (e! (tiedot/->KohteetHaettu haetut))]
-    (is (false? kohteiden-haku-kaynnissa?))
-    (is (= kohteet haetut))))
-
 (deftest HuoltokohteetHaettu
   (let [haetut [{:foo "bar"}]
         {:keys [huoltokohteet huoltokohteiden-haku-kaynnissa?]} (e! (tiedot/->HuoltokohteetHaettu haetut))]
