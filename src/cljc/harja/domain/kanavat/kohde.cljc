@@ -80,18 +80,27 @@
   [kohde]
   (::nimi kohde))
 
-(defn fmt-kohteenosan-nimi
+(defn fmt-kohteenosan-tyyppi->str [tyyppi]
+  ({:silta "silta"
+    :rautatiesilta "rautatiesilta"
+    :sulku "sulku"}
+    tyyppi))
+
+(defn fmt-kohde-ja-osa-nimi
   [kohde osa]
   (str
     (::nimi kohde)
     (cond
       (::osa/nimi osa) (str ", " (::osa/nimi osa))
-      (::osa/tyyppi osa) (str ", " (::osa/tyyppi osa))
+      (::osa/tyyppi osa) (str ", " (fmt-kohteenosan-tyyppi->str (::osa/tyyppi osa)))
       :else "")))
 
+(defn fmt-kohteenosan-nimi [osa]
+  (str/capitalize (or (::osa/nimi osa) (fmt-kohteenosan-tyyppi->str (::osa/tyyppi osa)))))
+
 (defn silta? [osa]
-  (or (= :silta (::tyyppi osa))
-      (= :rautatiesilta (::tyyppi osa))))
+  (or (= :silta (::osa/tyyppi osa))
+      (= :rautatiesilta (::osa/tyyppi osa))))
 
 (defn sulku? [osa]
-  (= :sulku (::tyyppi osa)))
+  (= :sulku (::osa/tyyppi osa)))
