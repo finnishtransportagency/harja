@@ -29,8 +29,7 @@
                              (map (fn [[kohde-id urakat]] [kohde-id (filter
                                                                       (fn [urakka]
                                                                         ;; TODO oikeus nähdä urakkaan liitetty kohde
-                                                                        true
-                                                                        #_(oikeudet/voi-lukea?
+                                                                        (oikeudet/voi-lukea?
                                                                           oikeudet/urakat-kanavat-kokonaishintaiset
                                                                           (::ur/id urakka)
                                                                           user))
