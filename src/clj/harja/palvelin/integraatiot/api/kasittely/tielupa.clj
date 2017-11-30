@@ -1,4 +1,5 @@
-(ns harja.palvelin.integraatiot.api.kasittely.tielupa)
+(ns harja.palvelin.integraatiot.api.kasittely.tielupa
+  (:require [harja.domain.tielupa :as tielupa]))
 
 (def testidata
   {:otsikko
@@ -70,6 +71,90 @@
      :tilapainen-nopeusrajoitus true,
      :tyon-saa-aloittaa "2017-09-22T12:00:00+02:00"}}})
 
-(defn tallennettava-tielupa [data]
+(defn hae-ely [ely]
+  ;; todo: hae kannasta vastaava
+  )
+
+(defn hae-tieluvan-urakka [tielupa]
+  ;; todo: hae kannasta
+  )
+
+(defn perustiedot [tielupa]
+  {::tielupa/ely (hae-ely (:ely tielupa))
+   ::tielupa/urakka (hae-tieluvan-urakka tielupa)
+   ::tielupa/hakija-postinumero (:kohteen-postinumero tielupa)
+   ::tielupa/voimassaolon-alkupvm (:voimassaolon-alkupvm tielupa)
+   ::tielupa/voimassaolon-loppupvm (:voimassaolon-loppupvm tielupa)
+   ::tielupa/kohde-lahiosoite (:kohteen-lahiosoite tielupa)
+   ::tielupa/paatoksen-diaarinumero (:paatoksen-diaarinumero tielupa)
+   ::tielupa/saapumispvm (:saapumispvm tielupa)
+   ::tielupa/otsikko (:otsikko tielupa)
+   ::tielupa/katselmus-url (:katselmus-url tielupa)
+   ::tielupa/ulkoinen-tunniste (:tunniste tielupa)
+   ::tielupa/tien-nimi (:tien-nimi tielupa)
+   ::tielupa/myontamispvm (:myontamispvm tielupa)
+   ::tielupa/urakan-nimi (:alueurakka tielupa)
+   ::tielupa/tyyppi (:tyyppi tielupa)})
+
+(defn hae-geometria-tieosoitteelle [{:keys [numero
+                                            aosa
+                                            aet
+                                            losa
+                                            let
+                                            ajorata]}]
+  ;; todo: hae kannasta
+  )
+
+(defn sijainnit [sijainnit]
+  {::tielupa/sijainnit (mapv #({
+
+                                ::tielupa/tie(:numero %)
+                                ::tielupa/aosa(:aosa %)
+                                ::tielupa/aet(:aet %)
+                                ::tielupa/losa (:losa %)
+                                ::tielupa/let (:let %)
+                                ::tielupa/ajorata(:ajorata %)
+                                ::tielupa/kaista(:kaista %)
+                                ::tielupa/puoli(:puoli %)
+                                ::tielupa/geometria (hae-geometria-tieosoitteelle %)
+
+
+                                })
+
+                             sijainnit)})
+
+(defn hakijan-tiedot [hakija]
+  {::tielupa/hakija-nimi (:nimi hakija)
+   ::tielupa/hakija-postinosoite (:postiosoite hakija)
+   ::tielupa/hakija-postinumero (:postinumero hakija)
+   ::tielupa/hakija-puhelinnumero (:puhelinnumero hakija)
+   ::tielupa/hakija-sahkopostiosoite (:sahkopostiosoite hakija)
+   ::tielupa/tyyppi (:tyyppi hakija)})
+
+(defn urakoitsijan-tiedot [urakoitsija]
+  {::tielupa/urakoitsija-nimi (:nimi urakoitsija)
+   ::tielupa/urakoitsija-yhteyshenkilo (:yhteyshenkilo urakoitsija)
+   ::tielupa/urakoitsija-puhelinnumero (:puhelinnumero urakoitsija)
+   ::tielupa/urakoitsija-sahkopostiosoite (:sahkopostiosoite urakoitsija)})
+
+(defn liikenneohjaajan-tiedot [liikenneohjaaja]
+  {::tielupa/liikenneohjaajan-nimi (:nimi liikenneohjaaja)
+   ::tielupa/liikenneohjaajan-yhteyshenkilo (:yhteyshenkilo liikenneohjaaja)
+   ::tielupa/liikenneohjaajan-puhelinnumero (:puhelinnumero liikenneohjaaja)
+   ::tielupa/liikenneohjaajan-sahkopostiosoite (:sahkopostiosoite liikenneohjaaja)})
+
+(defn tienpitoviranomaisen-tiedot [tienpitoviraonomainen]
+  {::tielupa/tienpitoviranomainen-yhteyshenkilo(:yhteyshenkilo tienpitoviraonomainen)
+   ::tielupa/tienpitoviranomainen-puhelinnumero(:puhelinnumero tienpitoviraonomainen)
+   ::tielupa/tienpitoviranomainen-sahkopostiosoite(:sahkopostiosoite tienpitoviraonomainen)})
+
+(defn tallennettava-tielupa [{tielupa :tielupa}]
+  (-> (perustiedot tielupa)
+      (merge (sijainnit (:sijainnit tielupa)))
+      (merge (hakijan-tiedot (:hakija tielupa)))
+      (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
+      (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
+      (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa))))
+  (println "--->>>" tielupa)
 
   )
