@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.kasittely.tielupa
-  (:require [harja.domain.tielupa :as tielupa]))
+  (:require [harja.domain.tielupa :as tielupa]
+            [harja.tyokalut.xml :as tyokalut]))
 
 (def testidata
   {:otsikko
@@ -79,22 +80,26 @@
   ;; todo: hae kannasta
   )
 
-(defn perustiedot [tielupa]
-  {::tielupa/ely (hae-ely (:ely tielupa))
+(defn perustiedot [{:keys [perustiedot tunniste] :as tielupa}]
+  (println "--->>> TYYPPI" (type (:myontamispvm perustiedot)))
+  {::tielupa/ely (hae-ely (:ely perustiedot))
    ::tielupa/urakka (hae-tieluvan-urakka tielupa)
-   ::tielupa/hakija-postinumero (:kohteen-postinumero tielupa)
-   ::tielupa/voimassaolon-alkupvm (:voimassaolon-alkupvm tielupa)
-   ::tielupa/voimassaolon-loppupvm (:voimassaolon-loppupvm tielupa)
-   ::tielupa/kohde-lahiosoite (:kohteen-lahiosoite tielupa)
-   ::tielupa/paatoksen-diaarinumero (:paatoksen-diaarinumero tielupa)
-   ::tielupa/saapumispvm (:saapumispvm tielupa)
-   ::tielupa/otsikko (:otsikko tielupa)
-   ::tielupa/katselmus-url (:katselmus-url tielupa)
-   ::tielupa/ulkoinen-tunniste (:tunniste tielupa)
-   ::tielupa/tien-nimi (:tien-nimi tielupa)
-   ::tielupa/myontamispvm (:myontamispvm tielupa)
-   ::tielupa/urakan-nimi (:alueurakka tielupa)
-   ::tielupa/tyyppi (:tyyppi tielupa)})
+   ::tielupa/hakija-postinumero (:kohteen-postinumero perustiedot)
+   ::tielupa/kohde-postitoimipaikka (:kohteen-postitoimipaikka perustiedot)
+   ::tielupa/kohde-postinumero (:kohteen-postinumero perustiedot)
+   ::tielupa/kunta (:kunta perustiedot)
+   ::tielupa/voimassaolon-alkupvm (tyokalut/json-date-time->xml-xs-date (:voimassaolon-alkupvm perustiedot))
+   ::tielupa/voimassaolon-loppupvm (tyokalut/json-date-time->xml-xs-date (:voimassaolon-loppupvm perustiedot))
+   ::tielupa/kohde-lahiosoite (:kohteen-lahiosoite perustiedot)
+   ::tielupa/paatoksen-diaarinumero (:paatoksen-diaarinumero perustiedot)
+   ::tielupa/saapumispvm (tyokalut/json-date-time->xml-xs-date (:saapumispvm perustiedot))
+   ::tielupa/otsikko (:otsikko perustiedot)
+   ::tielupa/katselmus-url (:katselmus-url perustiedot)
+   ::tielupa/ulkoinen-tunniste (:id tunniste)
+   ::tielupa/tien-nimi (:tien-nimi perustiedot)
+   ::tielupa/myontamispvm (tyokalut/json-date-time->xml-xs-date (:myontamispvm perustiedot))
+   ::tielupa/urakan-nimi (:alueurakka perustiedot)
+   ::tielupa/tyyppi (keyword (:tyyppi perustiedot))})
 
 (defn hae-geometria-tieosoitteelle [{:keys [numero
                                             aosa
@@ -106,21 +111,16 @@
   )
 
 (defn sijainnit [sijainnit]
-  {::tielupa/sijainnit (mapv #({
-
-                                ::tielupa/tie(:numero %)
-                                ::tielupa/aosa(:aosa %)
-                                ::tielupa/aet(:aet %)
-                                ::tielupa/losa (:losa %)
-                                ::tielupa/let (:let %)
-                                ::tielupa/ajorata(:ajorata %)
-                                ::tielupa/kaista(:kaista %)
-                                ::tielupa/puoli(:puoli %)
-                                ::tielupa/geometria (hae-geometria-tieosoitteelle %)
-
-
-                                })
-
+  {::tielupa/sijainnit (mapv (fn [sijainti]
+                               {::tielupa/tie (:numero sijainti)
+                                ::tielupa/aosa (:aosa sijainti)
+                                ::tielupa/aet (:aet sijainti)
+                                ::tielupa/losa (:losa sijainti)
+                                ::tielupa/let (:let sijainti)
+                                ::tielupa/ajorata (:ajorata sijainti)
+                                ::tielupa/kaista (:kaista sijainti)
+                                ::tielupa/puoli (:puoli sijainti)
+                                ::tielupa/geometria (hae-geometria-tieosoitteelle sijainti)})
                              sijainnit)})
 
 (defn hakijan-tiedot [hakija]
@@ -129,7 +129,7 @@
    ::tielupa/hakija-postinumero (:postinumero hakija)
    ::tielupa/hakija-puhelinnumero (:puhelinnumero hakija)
    ::tielupa/hakija-sahkopostiosoite (:sahkopostiosoite hakija)
-   ::tielupa/tyyppi (:tyyppi hakija)})
+   ::tielupa/hakija-tyyppi (:tyyppi hakija)})
 
 (defn urakoitsijan-tiedot [urakoitsija]
   {::tielupa/urakoitsija-nimi (:nimi urakoitsija)
@@ -144,17 +144,17 @@
    ::tielupa/liikenneohjaajan-sahkopostiosoite (:sahkopostiosoite liikenneohjaaja)})
 
 (defn tienpitoviranomaisen-tiedot [tienpitoviraonomainen]
-  {::tielupa/tienpitoviranomainen-yhteyshenkilo(:yhteyshenkilo tienpitoviraonomainen)
-   ::tielupa/tienpitoviranomainen-puhelinnumero(:puhelinnumero tienpitoviraonomainen)
-   ::tielupa/tienpitoviranomainen-sahkopostiosoite(:sahkopostiosoite tienpitoviraonomainen)})
+  {::tielupa/tienpitoviranomainen-yhteyshenkilo (:yhteyshenkilo tienpitoviraonomainen)
+   ::tielupa/tienpitoviranomainen-puhelinnumero (:puhelinnumero tienpitoviraonomainen)
+   ::tielupa/tienpitoviranomainen-sahkopostiosoite (:sahkopostiosoite tienpitoviraonomainen)})
 
-(defn tallennettava-tielupa [{tielupa :tielupa}]
-  (-> (perustiedot tielupa)
-      (merge (sijainnit (:sijainnit tielupa)))
-      (merge (hakijan-tiedot (:hakija tielupa)))
-      (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
-      (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
-      (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa))))
-  (println "--->>>" tielupa)
-
-  )
+(defn tallennettava-tielupa [tielupa]
+  (let [tallennettava (-> (perustiedot tielupa)
+                          (merge (sijainnit (:sijainnit tielupa)))
+                          (merge (hakijan-tiedot (:hakija tielupa)))
+                          (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
+                          (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
+                          (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa))))]
+    (println "--->>> tielupa" tielupa)
+    (println "--->>> tallennettava" tallennettava)
+    tallennettava))

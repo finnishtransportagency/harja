@@ -19,7 +19,18 @@
         "tyyppi": {
           "id": "urn:harja/tielupa/perustiedot/tyyppi",
           "required": true,
-          "type": "string"
+          "enum": [
+            "johto-ja-kaapelilupa",
+            "liittymalupa",
+            "mainoslupa",
+            "mainosilmoitus",
+            "opastelupa",
+            "suoja-aluerakentamislupa",
+            "tilapainen-myyntilupa",
+            "tilapainen-liikennemerkkijarjestely",
+            "tietyolupa",
+            "vesihuoltolupa"
+          ]
         },
         "paatoksen-diaarinumero": {
           "id": "urn:harja/tielupa/perustiedot/paatoksen-diaarinumero",
@@ -739,7 +750,8 @@
             "nakema-alue"
           ]
         },
-        "kiinteisto-rn": {     <
+        "kiinteisto-rn": {
+          <
           "id": "urn:harja/tielupa/perustiedot/kiinteisto-rn",
           "type": "string"
         }
