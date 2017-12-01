@@ -14,11 +14,26 @@
             [harja.domain.tielupa :as tielupa]
             [harja.kyselyt.tielupa :as tielupa-q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
+            [harja.kyselyt.tieverkko :as tieverkko-q]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn hae-sijainti [db sijainti]
+  (let [parametrit {:tie (::tielupa/tie sijainti)
+                    :aosa (::tielupa/aosa sijainti)
+                    :aet (::tielupa/aet sijainti)
+                    :losa (::tielupa/losa sijainti)
+                    :let (::tielupa/let sijainti)}
+        geometria (if (and (::osa parametrit) (:let parametrit))
+                    (tieverkko-q/tierekisteriosoite-viivaksi db parametrit)
+                    (tieverkko-q/tierekisteriosoite-pisteeksi db parametrit))]
+    (assoc sijainti ::tielupa/geometria geometria)))
+
 (defn hae-sijainnit [db tielupa]
-  tielupa)
+  (let [sijainnit (::tielupa/sijainnit tielupa)]
+    (if (empty? sijainnit)
+      tielupa
+      (assoc tielupa ::tielupa/sijainnit (map #(hae-sijainti db %) sijainnit)))))
 
 (defn hae-urakka [db tielupa]
   tielupa)

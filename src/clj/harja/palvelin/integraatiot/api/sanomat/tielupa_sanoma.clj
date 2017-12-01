@@ -21,7 +21,7 @@
    ::tielupa/tyyppi (keyword (:tyyppi perustiedot))})
 
 (defn sijainnit [sijainnit]
-  {::tielupa/sijainnit (mapv (fn [sijainti]
+  {::tielupa/sijainnit (mapv (fn [{sijainti :sijainti}]
                                {::tielupa/tie (:numero sijainti)
                                 ::tielupa/aosa (:aosa sijainti)
                                 ::tielupa/aet (:aet sijainti)
