@@ -1,7 +1,5 @@
 (ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet
   (:require [com.stuartsierra.component :as component]
-            [clojure.set :as set]
-            [taoensso.timbre :as log]
             [specql.core :as specql]
             [specql.op :as op]
             [clojure.java.jdbc :as jdbc]
@@ -21,7 +19,6 @@
                                        toimenpidekoodi ::toimenpidekoodi/id
                                        tyyppi ::toimenpide/kanava-toimenpidetyyppi
                                        :as hakuehdot}]
-
   (assert urakka-id "Urakka-id puuttuu!")
   (case tyyppi
     :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)

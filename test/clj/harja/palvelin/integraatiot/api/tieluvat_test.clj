@@ -34,3 +34,23 @@
              "Tuntematon ELY Tuntematon")
           (tieluvat/hae-ely db {} "Tuntematon")))))
 
+(deftest hae-sijainnit
+  (let [db (luo-testitietokanta)
+        tielupa-pistesijainnilla {::tielupa/sijainnit [{:harja.domain.tielupa/tie 20
+                                                        :harja.domain.tielupa/aet 1
+                                                        :harja.domain.tielupa/aosa 1}]}
+        tielupa-pistesijainteineen (tieluvat/hae-sijainnit db tielupa-pistesijainnilla)
+        tielupa-sijaintivalilla {::tielupa/sijainnit [{:harja.domain.tielupa/tie 20
+                                                       :harja.domain.tielupa/aet 1
+                                                       :harja.domain.tielupa/aosa 1
+                                                       :losa 1
+                                                       :let 300}]}
+        tielupa-sijaintivaleineen (tieluvat/hae-sijainnit db tielupa-sijaintivalilla)
+        tarkasta-tielupa (fn [ilman-sijainti sijainnin-kanssa]
+                           (let [avaimet (fn [tielupa] (mapv #(select-keys % [::tielupa/tie ::tielupa/aosa ::tielupa/aet])
+                                                             (::tielupa/sijainnit tielupa)))]
+                             (is (= (avaimet ilman-sijainti) (avaimet sijainnin-kanssa))))
+                           (is (every? #(not (nil? (::tielupa/geometria %))) (::tielupa/sijainnit sijainnin-kanssa))))]
+    (tarkasta-tielupa tielupa-pistesijainnilla tielupa-pistesijainteineen)
+    (tarkasta-tielupa tielupa-sijaintivalilla tielupa-sijaintivaleineen)))
+
