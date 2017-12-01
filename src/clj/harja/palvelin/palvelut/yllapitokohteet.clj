@@ -441,7 +441,7 @@
                 (log/warn (str "[YLLAPITOKOHDEOSA-DEBUG] Havaittu ylläpitokohdeosien tallennus, jonka lopputulos ei täytä pääkohdetta!"
                                "\nARGS: " tiedot
                                "\nYLLÄPITOKOHDE: " yllapitokohde
-                               "\nALLENNETUT OSAT: " osat
+                               "\nALLENNETUT OSAT: " yllapitokohdeosat
                                "\nKUTSUPINO: " (mapv #(str % "\n") (.getStackTrace e))))))))
 
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
