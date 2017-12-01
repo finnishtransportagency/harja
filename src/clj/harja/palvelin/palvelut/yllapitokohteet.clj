@@ -33,7 +33,8 @@
             [harja.domain.roolit :as roolit]
             [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.tyokalut.lukot :as lukot])
+            [harja.palvelin.tyokalut.lukot :as lukot]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -398,7 +399,7 @@
   "Tallentaa ylläpitokohdeosat kantaan.
    Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
    Palauttaa kohteen päivittyneet kohdeosat."
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat]}]
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
@@ -408,12 +409,8 @@
                                                            {:urakka-id urakka-id
                                                             :sopimus-id sopimus-id
                                                             :yllapitokohde-id yllapitokohde-id})
-          vanhat-osa-idt (into #{}
-                               (map :id)
-                               (hae-osat))
-          uudet-osa-idt (into #{}
-                              (keep :id)
-                              osat)
+          vanhat-osa-idt (into #{} (map :id) (hae-osat))
+          uudet-osa-idt (into #{} (keep :id) osat)
           poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
       (doseq [id poistuneet-osa-idt]
@@ -428,6 +425,25 @@
       (yy/paivita-yllapitourakan-geometria db urakka-id)
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
+
+        (let
+          ;; TODO Väliaikainen debug-koodi, joka tarkistaa, että kohdeosa täyttää pääkohteen kokonaisuudessaan
+          ;; Mikäli näin ei ole, logittaa tästä virheen. Tarkoituksena löytää syy ongelmalle, miksi
+          ;; kantaan menee jossain harvinaisessa tilanteessa kohdeosat, jotka eivät
+          ;; täytä koko kohdetta (mm. HAR-6510)
+          ;; Kun ongelma on ratkaisu, tämän voi poistaa.
+          [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
+           debug-avaimet [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+          (try
+            (when-not (every? #(tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde %) yllapitokohdeosat)
+              (throw (RuntimeException.)))
+            (catch Exception e
+              (log/warn (str "[YLLAPITOKOHDEOSA-DEBUG] Havaittu ylläpitokohdeosien tallennus, jonka lopputulos ei täytä pääkohdetta!"
+                             "\nALLENNETUT OSAT (ilman geometriaa): " (mapv #(select-keys % debug-avaimet) yllapitokohdeosat)
+                             "\nYLLÄPITOKOHDE: " (select-keys yllapitokohde debug-avaimet)
+                             "\nARGS: " (vec tiedot)
+                             "\nKUTSUPINO: " (mapv #(str % "\n") (.getStackTrace e)))))))
+
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
 (defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
@@ -503,9 +519,9 @@
                         (fn [user tiedot]
                           (hae-yllapitokohteen-urakan-yhteyshenkilot db fim user tiedot)))
       (assoc this ::sahkopostin-lahetys
-             (tee-ajastettu-sahkopostin-lahetystehtava
-              db fim email
-              (:paivittainen-sahkopostin-lahetysaika asetukset)))))
+                  (tee-ajastettu-sahkopostin-lahetystehtava
+                    db fim email
+                    (:paivittainen-sahkopostin-lahetysaika asetukset)))))
 
   (stop [{sahkopostin-lahetys ::sahkopostin-lahetys :as this}]
     (poista-palvelut (:http-palvelin this)
