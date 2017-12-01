@@ -435,7 +435,7 @@
           [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
            debug-avaimet [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
           (try
-            (when-not (every? #(tierekisteri/tr-vali-paakohteen-sisalla? % yllapitokohde) yllapitokohdeosat)
+            (when-not (every? #(tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde %) yllapitokohdeosat)
               (throw (RuntimeException.)))
             (catch Exception e
               (log/warn (str "[YLLAPITOKOHDEOSA-DEBUG] Havaittu ylläpitokohdeosien tallennus, jonka lopputulos ei täytä pääkohdetta!"
