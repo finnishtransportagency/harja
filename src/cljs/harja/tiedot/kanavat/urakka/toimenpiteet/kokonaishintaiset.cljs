@@ -12,6 +12,7 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.tiedot.urakka :as urakkatiedot]
@@ -34,8 +35,6 @@
 (defrecord TyhjennaAvattuToimenpide [])
 (defrecord ValinnatHaettuToimenpiteelle [valinnat])
 (defrecord VirheTapahtui [virhe])
-(defrecord KohteetHaettu [kohteet])
-(defrecord KohteidenHakuEpaonnistui [])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
 (defrecord TallennaToimenpide [toimenpide])
@@ -52,7 +51,6 @@
 (def tila (atom {:nakymassa? false
                  :valinnat nil
                  :avattu-toimenpide nil
-                 :kohteet nil
                  :toimenpideinstanssit nil
                  :tehtavat nil
                  :huoltokohteet nil
@@ -80,7 +78,9 @@
                                      ::kayttaja/etunimi (:etunimi kayttaja)
                                      ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
-(defn tallennettava-toimenpide [tehtavat toimenpide]
+(defn tallennettava-toimenpide [tehtavat toimenpide urakka]
+  ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
+  ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
   (let [tehtava (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
                     (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
     (-> toimenpide
@@ -96,8 +96,9 @@
                       ::muokkaustiedot/poistettu?])
         (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
                ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
-               ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka)
+               ::kanavan-toimenpide/urakka-id (:id urakka)
                ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
+               ::kanavan-toimenpide/kohteenosa-id (get-in toimenpide [::kanavan-toimenpide/kohteenosa ::osa/id])
                ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id])
                ::kanavan-toimenpide/muu-toimenpide (if (toimenpiteet/valittu-tehtava-muu? tehtava tehtavat)
                                                      (::kanavan-toimenpide/muu-toimenpide toimenpide)
@@ -118,10 +119,6 @@
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
         (-> app
-            (tuck-apurit/post! :hae-urakan-kohteet
-                               {::urakka/id (:id @navigaatio/valittu-urakka)}
-                               {:onnistui ->KohteetHaettu
-                                :epaonnistui ->KohteidenHakuEpaonnistui})
             (tuck-apurit/get! :hae-kanavien-huoltokohteet
                               {:onnistui ->HuoltokohteetHaettu
                                :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
@@ -130,8 +127,7 @@
                    :huoltokohteiden-haku-kaynnissa? true
                    :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
-                   :kohteet []
-                   :huoltokohteet [])))))
+                   :huoltokohteet nil)))))
 
   NakymaSuljettu
   (process-event [_ app]
@@ -139,9 +135,11 @@
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
-    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
-      (go (haku valinnat))
-      (assoc app :valinnat valinnat)))
+    (let [uudet-valinnat (merge (:valinnat app)
+                                valinnat)
+          haku (tuck/send-async! ->HaeToimenpiteet)]
+      (go (haku uudet-valinnat))
+      (assoc app :valinnat uudet-valinnat)))
 
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
@@ -224,7 +222,13 @@
 
   AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (assoc app :avattu-toimenpide toimenpide))
+    (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohteenosa]))
+                                 (not= (::kanavan-toimenpide/kohde toimenpide)
+                                       (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohde])))
+          toimenpide (if kohdeosa-vaihtui?
+                       (assoc toimenpide ::kanavan-toimenpide/kohteenosa nil)
+                       toimenpide)]
+      (assoc app :avattu-toimenpide toimenpide)))
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
@@ -234,16 +238,6 @@
   (process-event [{virhe :virhe} app]
     (viesti/nayta! virhe :danger)
     app)
-
-  KohteetHaettu
-  (process-event [{kohteet :kohteet} app]
-    (assoc app :kohteet kohteet
-               :kohteiden-haku-kaynnissa? false))
-
-  KohteidenHakuEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
-    (assoc app :kohteiden-haku-kaynnissa? false))
 
   HuoltokohteetHaettu
   (process-event [{huoltokohteet :huoltokohteet} app]
@@ -256,10 +250,10 @@
     (assoc app :huoltokohteiden-haku-kaynnissa? false))
 
   TallennaToimenpide
-  (process-event [{data :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
+  (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
     (if (:tallennus-kaynnissa? app)
       app
-      (let [toimenpide (tallennettava-toimenpide tehtavat data)
+      (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]))
             hakuehdot (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :tallenna-kanavatoimenpide
