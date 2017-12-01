@@ -25,14 +25,14 @@
   (let [db (luo-testitietokanta)
         uudenmaan-elyn-id (ffirst (q "select id from organisaatio where elynumero = 1;"))]
 
-    (is (= {::tielupa/ely uudenmaan-elyn-id} (tieluvat/hae-ely db {} "Uusimaa")))
+    (is (= {::tielupa/ely uudenmaan-elyn-id} (tieluvat/hae-ely db "Uusimaa" {})))
     (is (thrown+?
           #(tyokalut/tasmaa-poikkeus
              %
              virheet/+viallinen-kutsu+
              virheet/+tuntematon-ely+
              "Tuntematon ELY Tuntematon")
-          (tieluvat/hae-ely db {} "Tuntematon")))))
+          (tieluvat/hae-ely db "Tuntematon" {})))))
 
 (deftest hae-sijainnit
   (let [db (luo-testitietokanta)

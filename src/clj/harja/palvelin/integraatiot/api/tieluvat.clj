@@ -19,6 +19,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-sijainti [db sijainti]
+  (println "--->>> sijanti" sijainti)
   (let [parametrit {:tie (::tielupa/tie sijainti)
                     :aosa (::tielupa/aosa sijainti)
                     :aet (::tielupa/aet sijainti)
