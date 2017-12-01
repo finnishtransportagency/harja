@@ -46,6 +46,7 @@
 (defrecord HairiotilanneTallennettu [tallennuksen-vastaus])
 (defrecord HairiotilanteenTallentaminenEpaonnistui [])
 (defrecord MuokkaaMateriaaleja [materiaalit])
+(defrecord LisaaMateriaali [])
 
 
 (def valinnat
@@ -63,14 +64,15 @@
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
-  (let [hairiotilanne (-> hairiotilanne
+  (let [paivamaara (:paivamaara hairiotilanne)
+        aika (:aika hairiotilanne)
+        hairiotilanne (-> hairiotilanne
                           (select-keys [::hairiotilanne/id
                                         ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
                                         ::hairiotilanne/vikaluokka
                                         ::hairiotilanne/korjaustoimenpide
                                         ::hairiotilanne/korjauksen-tila
-                                        ::hairiotilanne/pvm
                                         ::hairiotilanne/huviliikenne-lkm
                                         ::hairiotilanne/korjausaika-h
                                         ::hairiotilanne/syy
@@ -79,7 +81,8 @@
                                         ::muokkaustiedot/poistettu?])
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
-                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])))]
+                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+                                 ::hairiotilanne/pvm (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]
@@ -263,14 +266,24 @@
                                                                       ::materiaalit/pvm (::materiaalit/pvm %)
                                                                       ::materiaalit/id (::materiaalit/id %)}})))
                                          conj (::materiaalit/muutokset materiaalilistaus)))
-                                     materiaalit)]
+                                     materiaalit)
+          paivamaara-ja-aika (pvm/DateTime->pvm-ja-aika (::hairiotilanne/pvm hairiotilanne))
+          _ (println (pr-str paivamaara-ja-aika))
+          keskenerainen (str (get-in paivamaara-ja-aika [:aika :tunnit]) ":"
+                             (get-in paivamaara-ja-aika [:aika :minuutit]))]
       (-> app
           (assoc :valittu-hairiotilanne hairiotilanne)
+          (assoc-in [:valittu-hairiotilanne :paivamaara] (:pvm paivamaara-ja-aika))
+          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika {:keskenerainen keskenerainen}))
           (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset))))
 
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
     (if (:valittu-hairiotilanne app)
       (update app :valittu-hairiotilanne #(assoc % ::materiaalit/materiaalit materiaalit))
-      app)))
+      app))
+
+  LisaaMateriaali
+  (process-event [_ app]
+    (update-in app [:valittu-hairiotilanne ::materiaalit/materiaalit] #(conj (vec %) {:foo (- (rand-int 100))}))))
 

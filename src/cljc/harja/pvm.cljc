@@ -514,6 +514,21 @@
   [pvm]
   (t/day (d pvm)))
 
+(defn tunti
+  "Palauttaa annetun DateTime kuukauden"
+  [pvm]
+  (t/hour (d pvm)))
+
+(defn minuutti
+  "Palauttaa annetun DateTime kuukauden"
+  [pvm]
+  (t/minute (d pvm)))
+
+(defn sekuntti
+  "Palauttaa annetun DateTime kuukauden"
+  [pvm]
+  (t/second (d pvm)))
+
 (defn paivamaaran-hoitokausi
   "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"
   [pvm]
@@ -831,3 +846,20 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 (defn vuodet-valissa [alku loppu]
   (range (vuosi alku) (inc (vuosi loppu))))
+
+#?(:cljs
+   (defn yhdista-pvm-ja-aika
+     "Yhdistaa DateTime ja Aika tyypit yhdeksi DateTime:ksi"
+     [pvm aika]
+     (let [t (:tunnit aika)
+           min (:minuutit aika)
+           s (:sekunnit aika)]
+       (aikana pvm t min s 0))))
+
+#?(:cljs
+   (defn DateTime->pvm-ja-aika
+     "Annettunna DateTime, palauttaa mapin, jossa :pvm avaimessa on DateTime muuttamattomana ja
+      :aika avaimessa on Aika tyyppi, joka vastaa annetun DateTime:n aikaa"
+     [pvm]
+     {:pvm pvm
+      :aika (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))}))
