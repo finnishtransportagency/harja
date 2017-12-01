@@ -12,33 +12,50 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.sanomat.tielupa-sanoma :as tielupa-sanoma]
             [harja.domain.tielupa :as tielupa]
-            [harja.kyselyt.tielupa :as tielupa-q]))
+            [harja.kyselyt.tielupa :as tielupa-q]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
+  (:use [slingshot.slingshot :only [throw+]]))
 
-(defn hae-sijainnit [db tielupa ]
+(defn hae-sijainnit [db tielupa]
   tielupa)
 
 (defn hae-urakka [db tielupa]
   tielupa)
 
-(defn hae-ely [db tielupa]
-  (assoc tielupa ::tielupa/ely 12))
+(defn hae-ely [db tielupa ely]
+  (let [ely-numero (case ely
+                     "Uusimaa" 1
+                     "Keski-Suomi" 9
+                     "Lappi" 14
+                     "Etelä-Pohjanmaa" 10
+                     "Pohjois-Pohjanmaa ja Kainuu" 12
+                     "Kaakkois-Suomi" 3
+                     "Varsinais-Suomi" 2
+                     "Pohjois-Savo" 8
+                     "Pirkanmaa" 4
+                     (throw+ {:type virheet/+viallinen-kutsu+
+                              :virheet [{:koodi virheet/+tuntematon-ely+
+                                         :viesti (str "Tuntematon ELY " ely)}]}))
+        ely-id (:id (first (kayttajat-q/hae-ely-numerolla db ely-numero)))]
+    (assoc tielupa ::tielupa/ely ely-id)))
 
 (defn kirjaa-tielupa [liitteiden-hallinta db parametrit data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
 
   (->> (tielupa-sanoma/api->domain (:tielupa data))
-      (hae-sijainnit db)
-      (hae-urakka db)
-      (hae-ely db)
-      (tielupa-q/tallenna-tielupa db))
-  (tee-kirjausvastauksen-body {:ilmoitukset "Tielupa kirjattu onnistuneesti"}))
+       (hae-sijainnit db)
+       (hae-urakka db)
+       (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
+       (tielupa-q/tallenna-tielupa db))
+  (tee-kirjausvastauksen-body {:ilmoitukset " Tielupa kirjattu onnistuneesti "}))
 
 (defrecord Tieluvat []
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :kirjaa-tielupa
-      (POST "/api/tieluvat" request
+      (POST " /api/tieluvat " request
         (kasittele-kutsu db
                          integraatioloki
                          :kirjaa-tielupa
