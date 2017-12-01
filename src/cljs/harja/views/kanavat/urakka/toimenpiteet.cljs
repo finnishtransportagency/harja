@@ -4,9 +4,11 @@
             [clojure.string :as str]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
+            [harja.loki :refer [log]]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavatoimenpidetiedot]
             [harja.ui.yleiset :as yleiset]))
@@ -25,7 +27,7 @@
     :nimi :kohde
     :tyyppi :string
     :leveys 10
-    :hae #(get-in % [::kanavan-toimenpide/kohde ::kohde/nimi])}
+    :hae kanavan-toimenpide/fmt-toimenpiteen-kohde}
    {:otsikko "Huolto\u00ADkohde"
     :nimi :huoltokohde
     :tyyppi :string
@@ -67,8 +69,12 @@
        (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
        " " toiminto "."))
 
-(defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet toimenpideinstanssit tehtavat]}]
-  (let [tehtava (valittu-tehtava toimenpide)]
+(defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
+                                          toimenpideinstanssit tehtavat]}]
+  (let [tehtava (valittu-tehtava toimenpide)
+        valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
+        valitun-kohteen-osat (::kohde/kohteenosat (first (filter #(= (::kohde/id %) valittu-kohde-id) kohteet)))]
+
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
@@ -86,6 +92,11 @@
       :tyyppi :valinta
       :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
       :valinnat kohteet}
+     {:otsikko "Kohteen osa"
+      :nimi ::kanavan-toimenpide/kohteenosa
+      :tyyppi :valinta
+      :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+      :valinnat (or valitun-kohteen-osat [])}
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde
       :tyyppi :valinta

@@ -31,7 +31,8 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.kohde :as kohde]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -84,8 +85,8 @@
 (defn liikennetapahtumalomake [e! {:keys [valittu-liikennetapahtuma
                                           tallennus-kaynnissa?
                                           edellisten-haku-kaynnissa?
-                                          urakan-kohteet
-                                          edelliset] :as app}]
+                                          edelliset] :as app}
+                               kohteet]
   (let [uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))]
     [:div
     [debug app]
@@ -157,7 +158,7 @@
         {:otsikko "Kohde"
          :nimi ::lt/kohde
          :tyyppi :valinta
-         :valinnat urakan-kohteet
+         :valinnat kohteet
          :pakollinen? true
          :valinta-nayta #(if % (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
          :aseta (fn [rivi arvo]
@@ -251,7 +252,7 @@
        :nimi ::lt/lisatieto}]
      valittu-liikennetapahtuma]]))
 
-(defn valinnat [e! {:keys [urakan-kohteet] :as app}]
+(defn valinnat [e! app kohteet]
   (let [atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
@@ -262,7 +263,7 @@
       [:div
        [valinnat/kanava-kohde
         (atomi ::lt/kohde)
-        (into [nil] urakan-kohteet)
+        (into [nil] kohteet)
         #(let [nimi (kohde/fmt-kohteen-nimi %)]
            (if-not (empty? nimi)
              nimi
@@ -290,11 +291,11 @@
          :kentta-params {:tyyppi :checkbox}
          :arvo-atom (atomi :niput?)}]]]]))
 
-(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit
-                                            liikennetapahtumien-haku-kaynnissa?] :as app}]
+(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?] :as app}
+                                 kohteet]
   [:div
    [debug app]
-   [valinnat e! app]
+   [valinnat e! app kohteet]
    [napit/uusi
     "Lisää tapahtuma"
     #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]
@@ -379,15 +380,14 @@
                            ;; Valintojen päivittäminen laukaisee myös liikennetapahtumien haun
                            (e! (tiedot/->PaivitaValinnat {::ur/id (:urakka valinnat)
                                                           ::sop/id (:sopimus valinnat)
-                                                          :aikavali (:aikavali valinnat)}))
-                           (e! (tiedot/->HaeKohteet)))
+                                                          :aikavali (:aikavali valinnat)})))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {:keys [valittu-liikennetapahtuma] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
       (if-not valittu-liikennetapahtuma
-        [liikennetapahtumataulukko e! app]
-        [liikennetapahtumalomake e! app]))))
+        [liikennetapahtumataulukko e! app @kanavaurakka/kanavakohteet]
+        [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))
 
 (defn liikennetapahtumat [e! app]
   [liikenne* e! app {:urakka (:id @nav/valittu-urakka)

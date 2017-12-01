@@ -30,3 +30,15 @@
     ::tyyppi
     ::nimi
     ::oletuspalvelumuoto})
+
+(def fmt-kohdeosa-tyyppi
+  {:sulku "Sulku"
+   :silta "Silta"
+   :rautatiesilta "Rautatiesilta"})
+
+
+(defn fmt-kohdeosa
+  "Palauttaa kohdeosan nimen tai tyypin formatoituna."
+  [kohdeosa]
+  (or (::nimi kohdeosa)
+      (fmt-kohdeosa-tyyppi (::tyyppi kohdeosa))))
