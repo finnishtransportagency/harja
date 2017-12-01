@@ -64,6 +64,4 @@
                           (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
                           (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
                           (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa))))]
-    (println "--->>> tielupa" tielupa)
-    (println "--->>> tallennettava" tallennettava)
     tallennettava))

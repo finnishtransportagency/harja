@@ -111,7 +111,6 @@
 (defn tallenna-kanavatoimenpide [db user {tyyppi ::toimenpide/tyyppi
                                           urakka-id ::toimenpide/urakka-id
                                           :as kanavatoimenpide}]
-  (println "--->>> " kanavatoimenpide)
   (tarkista-kutsu user urakka-id tyyppi)
   (q-toimenpide/tallenna-toimenpide db (:id user) kanavatoimenpide))
 
