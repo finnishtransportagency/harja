@@ -23,13 +23,13 @@
 (defn hae-urakka [db tielupa]
   tielupa)
 
-(defn hae-ely [db tielupa ely]
+(defn hae-ely [db ely tielupa]
   (let [ely-numero (case ely
                      "Uusimaa" 1
                      "Keski-Suomi" 9
                      "Lappi" 14
                      "Etelä-Pohjanmaa" 10
-                     "Pohjois-Pohjanmaa ja Kainuu" 12
+                     "Pohjois-Pohjanmaa" 12
                      "Kaakkois-Suomi" 3
                      "Varsinais-Suomi" 2
                      "Pohjois-Savo" 8
@@ -42,7 +42,6 @@
 
 (defn kirjaa-tielupa [liitteiden-hallinta db parametrit data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
-
   (->> (tielupa-sanoma/api->domain (:tielupa data))
        (hae-sijainnit db)
        (hae-urakka db)
