@@ -76,7 +76,7 @@
                  ::lt/liikennetapahtuma
                  (set/union
                    lt/perustiedot
-                   lt/osien-tiedot)
+                   lt/toimintojen-tiedot)
                  {::lt/id (op/in (map ::lt/id tapahtumat))})
     tapahtumat))
 
@@ -232,7 +232,7 @@
   (some?
     (first
       (specql/fetch db
-                    ::toiminto/liikennetapahtuman-osa
+                    ::toiminto/liikennetapahtuman-toiminto
                     #{::toiminto/id}
                     {::toiminto/liikennetapahtuma-id (::lt/id tapahtuma)
                      ::toiminto/id (::toiminto/id osa)}))))
@@ -247,7 +247,7 @@
       (do
         (vaadi-osa-kuuluu-tapahtumaan! db osa tapahtuma)
         (specql/update! db
-                        ::toiminto/liikennetapahtuman-osa
+                        ::toiminto/liikennetapahtuman-toiminto
                         (merge
                           (if (::m/poistettu? osa)
                             {::m/poistaja-id (:id user)
@@ -259,7 +259,7 @@
                         {::toiminto/id (::toiminto/id osa)}))
 
       (specql/insert! db
-                      ::toiminto/liikennetapahtuman-osa
+                      ::toiminto/liikennetapahtuman-toiminto
                       (merge
                         {::m/luoja-id (:id user)}
                         osa)))))

@@ -38,7 +38,7 @@
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuman-alus
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuma-id)
     ::toiminnot (specql.rel/has-many ::id
-                                :harja.domain.kanavat.lt-toiminto/liikennetapahtuman-osa
+                                :harja.domain.kanavat.lt-toiminto/liikennetapahtuman-toiminto
                                 :harja.domain.kanavat.lt-toiminto/liikennetapahtuma-id)
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
@@ -60,7 +60,7 @@
 (def alusten-tiedot
   #{[::alukset (set/union lt-alus/perustiedot lt-alus/metatiedot)]})
 
-(def osien-tiedot
+(def toimintojen-tiedot
   #{[::toiminnot toiminto/perustiedot]})
 
 (def sopimuksen-tiedot
@@ -126,7 +126,7 @@
 (def suunta-vaihtoehdot (keys suunta*))
 
 (s/def ::alukset (s/coll-of ::lt-alus/liikennetapahtuman-alus))
-(s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-osa))
+(s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::sulku-toimenpide
