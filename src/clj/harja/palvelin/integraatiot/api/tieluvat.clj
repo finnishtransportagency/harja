@@ -10,13 +10,27 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.integraatiot.api.kasittely.tielupa :as kasittely]
+            [harja.palvelin.integraatiot.api.sanomat.tielupa-sanoma :as tielupa-sanoma]
+            [harja.domain.tielupa :as tielupa]
             [harja.kyselyt.tielupa :as tielupa-q]))
+
+(defn hae-sijainnit [db tielupa ]
+  tielupa)
+
+(defn hae-urakka [db tielupa]
+  tielupa)
+
+(defn hae-ely [db tielupa]
+  (assoc tielupa ::tielupa/ely 12))
 
 (defn kirjaa-tielupa [liitteiden-hallinta db parametrit data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
-  (let [tielupa (kasittely/tallennettava-tielupa (:tielupa data))]
-    (tielupa-q/tallenna-tielupa db tielupa))
+
+  (->> (tielupa-sanoma/api->domain (:tielupa data))
+      (hae-sijainnit db)
+      (hae-urakka db)
+      (hae-ely db)
+      (tielupa-q/tallenna-tielupa db))
   (tee-kirjausvastauksen-body {:ilmoitukset "Tielupa kirjattu onnistuneesti"}))
 
 (defrecord Tieluvat []
