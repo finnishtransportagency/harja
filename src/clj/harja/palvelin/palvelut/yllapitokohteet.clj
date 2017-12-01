@@ -426,23 +426,23 @@
       (let [yllapitokohdeosat (hae-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
 
-        (doall
-          (let
-            ;; TODO Väliaikainen debug-koodi, joka tarkistaa, että kohdeosa täyttää pääkohteen kokonaisuudessaan
-            ;; Mikäli näin ei ole, logittaa tästä virheen. Tarkoituksena löytää syy ongelmalle, miksi
-            ;; kantaan menee jossain harvinaisessa tilanteessa kohdeosat, jotka eivät
-            ;; täytä koko kohdetta (mm. HAR-6510)
-            ;; Kun ongelma on ratkaisu, tämän voi poistaa.
-            [yllapitokohde (q/hae-yllapitokohde db {:id yllapitokohde-id})]
-            (try
-              (when-not (tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde yllapitokohdeosat)
-                (throw (RuntimeException.)))
-              (catch Exception e
-                (log/warn (str "[YLLAPITOKOHDEOSA-DEBUG] Havaittu ylläpitokohdeosien tallennus, jonka lopputulos ei täytä pääkohdetta!"
-                               "\nARGS: " tiedot
-                               "\nYLLÄPITOKOHDE: " yllapitokohde
-                               "\nALLENNETUT OSAT: " yllapitokohdeosat
-                               "\nKUTSUPINO: " (mapv #(str % "\n") (.getStackTrace e))))))))
+        (let
+          ;; TODO Väliaikainen debug-koodi, joka tarkistaa, että kohdeosa täyttää pääkohteen kokonaisuudessaan
+          ;; Mikäli näin ei ole, logittaa tästä virheen. Tarkoituksena löytää syy ongelmalle, miksi
+          ;; kantaan menee jossain harvinaisessa tilanteessa kohdeosat, jotka eivät
+          ;; täytä koko kohdetta (mm. HAR-6510)
+          ;; Kun ongelma on ratkaisu, tämän voi poistaa.
+          [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
+           debug-avaimet [:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+          (try
+            (when-not (tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde yllapitokohdeosat)
+              (throw (RuntimeException.)))
+            (catch Exception e
+              (log/warn (str "[YLLAPITOKOHDEOSA-DEBUG] Havaittu ylläpitokohdeosien tallennus, jonka lopputulos ei täytä pääkohdetta!"
+                             "\nALLENNETUT OSAT (ilman geometriaa): " (mapv #(select-keys % debug-avaimet) yllapitokohdeosat)
+                             "\nYLLÄPITOKOHDE: " (select-keys yllapitokohde debug-avaimet)
+                             "\nARGS: " (vec tiedot)
+                             "\nKUTSUPINO: " (mapv #(str % "\n") (.getStackTrace e)))))))
 
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
