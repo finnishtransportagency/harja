@@ -268,13 +268,12 @@
                                          conj (::materiaalit/muutokset materiaalilistaus)))
                                      materiaalit)
           paivamaara-ja-aika (pvm/DateTime->pvm-ja-aika (::hairiotilanne/pvm hairiotilanne))
-          _ (println (pr-str paivamaara-ja-aika))
           keskenerainen (str (get-in paivamaara-ja-aika [:aika :tunnit]) ":"
                              (get-in paivamaara-ja-aika [:aika :minuutit]))]
       (-> app
           (assoc :valittu-hairiotilanne hairiotilanne)
           (assoc-in [:valittu-hairiotilanne :paivamaara] (:pvm paivamaara-ja-aika))
-          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika {:keskenerainen keskenerainen}))
+          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika (merge (:aika paivamaara-ja-aika) {:keskenerainen keskenerainen})))
           (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset))))
 
   MuokkaaMateriaaleja
