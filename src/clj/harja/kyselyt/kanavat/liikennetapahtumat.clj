@@ -181,7 +181,25 @@
          ::lt/sopimus-id sopimus-id}))))
 
 (defn- hae-kuittaamattomat-alukset* [tulokset]
-  (group-by ::ketjutus/suunta tulokset))
+  (into {}
+        (map
+          (fn [[suunta tapahtumat]]
+            [suunta
+             (when-let [edelliset
+                        (map
+                          (fn [[kohde alukset]]
+                            (assoc
+                              kohde
+                              :alukset
+                              (map ::ketjutus/alus alukset)))
+                          (group-by ::ketjutus/kohteelta tapahtumat))]
+               (assert
+                 (= 1 (count edelliset))
+                 ;; Ketjutus menee aina yksi-yhteen, joten edellisiä kohteita
+                 ;; voi samasta suunnasta olla vain yksi
+                 "Liikennetapahtumien ketjutuksessa virhe. Kohteelle saapuu aluksia samasta suunnasta, monesta kohteesta.")
+               (first edelliset))])
+          (group-by (comp ::lt-alus/suunta ::ketjutus/alus) tulokset))))
 
 (defn- hae-kuittaamattomat-alukset [db tapahtuma]
   (let [urakka-id (::lt/urakka-id tapahtuma)
@@ -195,10 +213,12 @@
         ::ketjutus/liikennetapahtuman-ketjutus
         (set/union
           ketjutus/perustiedot
-          ketjutus/aluksen-tiedot)
-        {::ketjutus/kohde-id kohde-id
+          ketjutus/aluksen-tiedot
+          ketjutus/kohteelta-tiedot)
+        {::ketjutus/kohteelle-id kohde-id
          ::ketjutus/urakka-id urakka-id
-         ::ketjutus/sopimus-id sopimus-id}))))
+         ::ketjutus/sopimus-id sopimus-id
+         ::ketjutus/kuitattu-id op/null?}))))
 
 (defn hae-edelliset-tapahtumat [db tiedot]
   (let [{:keys [ylos alas]}  (hae-kuittaamattomat-alukset db tiedot)
@@ -279,7 +299,8 @@
                       ::toiminto/liikennetapahtuman-toiminto
                       (merge
                         {::m/luoja-id (:id user)}
-                        osa)))))
+                        ;; Poistetaan kentät joissa arvo on nil, specql ei tykännyt
+                        (into {} (filter (comp some? val) osa)))))))
 
 (defn tapahtuma-kuuluu-urakkaan? [db tapahtuma]
   (some?
@@ -293,43 +314,38 @@
 (defn vaadi-tapahtuma-kuuluu-urakkaan! [db tapahtuma]
   (assert (tapahtuma-kuuluu-urakkaan? db tapahtuma) "Tapahtuma ei kuulu urakkaan!"))
 
-(defn hae-seuraava-kohde [db kohde-id suunta]
-  [suunta
-   (specql/fetch
-     db
-     ::kohde/kohde
-     kohde/perustiedot
-     {(if (= suunta :ylos)
-        ::kohde/alas-id
-        ::kohde/ylos-id)
-      kohde-id})])
+(defn hae-seuraava-kohde [db kohteelta-id suunta]
+  (specql/fetch
+    db
+    ::kohde/kohde
+    kohde/perustiedot
+    {(if (= suunta :ylos)
+       ::kohde/alas-id
+       ::kohde/ylos-id)
+     kohteelta-id}))
 
 (defn tallenna-ketjutus! [db user tapahtuma]
   (let [alukset (::lt/alukset tapahtuma)
-        kohde (::lt/kohde-id tapahtuma)
+        kohteelta-id (::lt/kohde-id tapahtuma)
         ;; Kun uusi alus palautuu insertistä, suunta on merkkijono
         suunnat (into #{} (map (comp keyword ::lt-alus/suunta) alukset))
-        seuraavat-kohteet (doall (map (partial hae-seuraava-kohde db kohde) suunnat))]
+        seuraavat-kohteet (doall (mapcat (partial hae-seuraava-kohde db kohteelta-id) suunnat))]
     ;; Yleensä aluksia menee vain yhteen suuntaan, mutta teoriassa on mahdollista, että siltojen
     ;; ali mennään molempiin suuntiin
-    (log/debug "Tallenna ketjutus!")
-    (log/debug (pr-str alukset))
-    (log/debug (pr-str seuraavat-kohteet))
-    (doseq [[suunta kohteet] seuraavat-kohteet]
+    (doseq [kohteelle seuraavat-kohteet]
       ;; Oikeassa elämässä ei ole haarautuvia kanavia, eli kohteelta mennään aina yhdelle kohteelle
       ;; Ehkä joskus Harjan tulevaisuudessa tämä muuttuu.
-      (when-let [kohde (first kohteet)]
-        (doseq [alus alukset]
-          (specql/insert! db
-                          ::ketjutus/liikennetapahtuman-ketjutus
-                          {::ketjutus/kohde-id (::kohde/id kohde)
-                           ::ketjutus/suunta suunta
-                           ::ketjutus/aika (::lt/aika tapahtuma)
-                           ::ketjutus/alus-id (::lt-alus/id alus)
+      (doseq [alus alukset]
+        (specql/insert! db
+                        ::ketjutus/liikennetapahtuman-ketjutus
+                        {::ketjutus/kohteelle-id (::kohde/id kohteelle)
+                         ::ketjutus/kohteelta-id kohteelta-id
+                         ::ketjutus/aika (::lt/aika tapahtuma)
+                         ::ketjutus/alus-id (::lt-alus/id alus)
 
-                           ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
-                           ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)
-                           ::m/luoja-id (:id user)}))))))
+                         ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
+                         ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)
+                         ::m/luoja-id (:id user)})))))
 
 (defn tallenna-liikennetapahtuma [db user tapahtuma]
   (jdbc/with-db-transaction [db db]
