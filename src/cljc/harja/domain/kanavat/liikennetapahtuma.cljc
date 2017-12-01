@@ -168,8 +168,6 @@
                                                        ::kohde-id
                                                        ::sopimus-id]))
 
-(s/def ::ylos (s/nilable (s/coll-of ::lt-alus/liikennetapahtuman-alus)))
-(s/def ::alas (s/nilable (s/coll-of ::lt-alus/liikennetapahtuman-alus)))
 (s/def ::kohde (s/nilable ::liikennetapahtuma))
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
