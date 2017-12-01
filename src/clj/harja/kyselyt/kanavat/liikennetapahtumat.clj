@@ -21,6 +21,7 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
+            [harja.domain.kanavat.lt-ketjutus :as ketjutus]
             [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
@@ -179,14 +180,28 @@
          ::lt/urakka-id urakka-id
          ::lt/sopimus-id sopimus-id}))))
 
-;; TODO Toteuta :)
-(defn- hae-kuittaamattomat-alukset [db kohde suunta]
-  nil)
+(defn- hae-kuittaamattomat-alukset* [tulokset]
+  (group-by ::ketjutus/suunta tulokset))
+
+(defn- hae-kuittaamattomat-alukset [db tapahtuma]
+  (let [urakka-id (::lt/urakka-id tapahtuma)
+        sopimus-id (::lt/sopimus-id tapahtuma)
+        kohde-id (::lt/kohde-id tapahtuma)]
+    (assert (and urakka-id sopimus-id kohde-id)
+            "Urakka-, sopimus-, tai kohde-id puuttuu, ei voida hakea ketjutustietoja.")
+    (hae-kuittaamattomat-alukset*
+      (specql/fetch
+        db
+        ::ketjutus/liikennetapahtuman-ketjutus
+        (set/union
+          ketjutus/perustiedot
+          ketjutus/aluksen-tiedot)
+        {::ketjutus/kohde-id kohde-id
+         ::ketjutus/urakka-id urakka-id
+         ::ketjutus/sopimus-id sopimus-id}))))
 
 (defn hae-edelliset-tapahtumat [db tiedot]
-  ;; TODO kun kohteille tulee järjestys, niin täällä otetaan sekin huomioon
-  (let [ylos (hae-kuittaamattomat-alukset db tiedot :ylos)
-        alas (hae-kuittaamattomat-alukset db tiedot :alas)
+  (let [{:keys [ylos alas]}  (hae-kuittaamattomat-alukset db tiedot)
         kohde (hae-kohteen-edellinen-tapahtuma db tiedot)]
     {:ylos ylos
      :alas alas
@@ -220,7 +235,9 @@
                             {::m/muokkaaja-id (:id user)
                              ::m/muokattu (pvm/nyt)})
                           alus)
-                        {::lt-alus/id (::lt-alus/id alus)}))
+                        {::lt-alus/id (::lt-alus/id alus)})
+        ;; Palauta luotu alus
+        alus)
 
       (specql/insert! db
                       ::lt-alus/liikennetapahtuman-alus
@@ -276,6 +293,44 @@
 (defn vaadi-tapahtuma-kuuluu-urakkaan! [db tapahtuma]
   (assert (tapahtuma-kuuluu-urakkaan? db tapahtuma) "Tapahtuma ei kuulu urakkaan!"))
 
+(defn hae-seuraava-kohde [db kohde-id suunta]
+  [suunta
+   (specql/fetch
+     db
+     ::kohde/kohde
+     kohde/perustiedot
+     {(if (= suunta :ylos)
+        ::kohde/alas-id
+        ::kohde/ylos-id)
+      kohde-id})])
+
+(defn tallenna-ketjutus! [db user tapahtuma]
+  (let [alukset (::lt/alukset tapahtuma)
+        kohde (::lt/kohde-id tapahtuma)
+        ;; Kun uusi alus palautuu insertistä, suunta on merkkijono
+        suunnat (into #{} (map (comp keyword ::lt-alus/suunta) alukset))
+        seuraavat-kohteet (doall (map (partial hae-seuraava-kohde db kohde) suunnat))]
+    ;; Yleensä aluksia menee vain yhteen suuntaan, mutta teoriassa on mahdollista, että siltojen
+    ;; ali mennään molempiin suuntiin
+    (log/debug "Tallenna ketjutus!")
+    (log/debug (pr-str alukset))
+    (log/debug (pr-str seuraavat-kohteet))
+    (doseq [[suunta kohteet] seuraavat-kohteet]
+      ;; Oikeassa elämässä ei ole haarautuvia kanavia, eli kohteelta mennään aina yhdelle kohteelle
+      ;; Ehkä joskus Harjan tulevaisuudessa tämä muuttuu.
+      (when-let [kohde (first kohteet)]
+        (doseq [alus alukset]
+          (specql/insert! db
+                          ::ketjutus/liikennetapahtuman-ketjutus
+                          {::ketjutus/kohde-id (::kohde/id kohde)
+                           ::ketjutus/suunta suunta
+                           ::ketjutus/aika (::lt/aika tapahtuma)
+                           ::ketjutus/alus-id (::lt-alus/id alus)
+
+                           ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
+                           ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)
+                           ::m/luoja-id (:id user)}))))))
+
 (defn tallenna-liikennetapahtuma [db user tapahtuma]
   (jdbc/with-db-transaction [db db]
     (jdbc/execute! db ["SET CONSTRAINTS ALL DEFERRED"])
@@ -306,8 +361,14 @@
                                              (dissoc tapahtuma
                                                      ::lt/alukset
                                                      ::lt/toiminnot))))]
-      (doseq [alus (::lt/alukset tapahtuma)]
-        (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma))
 
       (doseq [osa (::lt/toiminnot tapahtuma)]
-        (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma)))))
+        (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
+
+      (let [alukset
+            (doall
+              (for [alus (::lt/alukset tapahtuma)]
+                (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma)))]
+
+
+        (tallenna-ketjutus! db user (assoc tapahtuma ::lt/alukset alukset))))))
