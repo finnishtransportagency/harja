@@ -93,10 +93,10 @@
     (into {} (filter val (:valinnat app)))))
 
 (defn palvelumuoto->str [tapahtuma]
-  (str/join ", " (into #{} (sort (keep lt/fmt-palvelumuoto (::lt/toiminnot tapahtuma))))))
+  (str/join ", " (into #{} (sort (map lt/fmt-palvelumuoto (filter ::toiminto/palvelumuoto (::lt/toiminnot tapahtuma)))))))
 
 (defn toimenpide->str [tapahtuma]
-  (str/join ", " (into #{} (sort (keep (comp lt/toimenpide->str ::toiminto/toimenpide)
+  (str/join ", " (into #{} (sort (map (comp lt/toimenpide->str ::toiminto/toimenpide)
                                        (remove
                                          (comp
                                            (partial = :ei-avausta)
@@ -144,11 +144,15 @@
                                                 (dissoc :id)
                                                 (dissoc :harja.ui.grid/virheet))
                                            alukset)))
-      (update ::lt/toiminnot (fn [osat] (map (fn [osa]
-                                          (->> (keys osa)
-                                               (filter #(= (namespace %) "harja.domain.kanavat.lt-toiminto"))
-                                               (select-keys osa)))
-                                        osat)))))
+      (update ::lt/toiminnot (fn [toiminnot] (map (fn [toiminto]
+                                                    (->
+                                                      (->> (keys toiminto)
+                                                          (filter #(= (namespace %) "harja.domain.kanavat.lt-toiminto"))
+                                                          (select-keys toiminto))
+                                                      (update ::toiminto/palvelumuoto #(if (= :ei-avausta (::toiminto/toimenpide toiminto))
+                                                                                         nil
+                                                                                         %))))
+                                                  toiminnot)))))
 
 (defn voi-tallentaa? [t]
   (and (not (:grid-virheita? t))
