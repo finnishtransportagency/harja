@@ -30,12 +30,12 @@
     [harja.tyokalut.ui :refer [for*]]))
 
 (defn suodattimet [e! app]
-  (let [urakka (get-in app [:valinnat :urakka :id])]
+  (let [urakka-map (get-in app [:valinnat :urakka])]
     [:div
-     [valinnat/urakkavalinnat {:urakka urakka}
+     [valinnat/urakkavalinnat {:urakka urakka-map}
       ^{:key "valinnat"}
       [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
-      [valinnat/urakkatoiminnot {:urakka urakka}
+      [valinnat/urakkatoiminnot {:urakka urakka-map}
        [napit/yleinen-ensisijainen
         "Siirrä valitut kokonaishintaisiin"
         (fn [_]
