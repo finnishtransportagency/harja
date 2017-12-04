@@ -23,7 +23,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view])
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -71,13 +72,13 @@
     [:div
      [toimenpiteet-view/ei-yksiloity-vihje]
      [grid/grid
-     {:otsikko "Muutos- ja lisätyöt"
-      :tyhja (if (:toiden-haku-kaynnissa? app)
-               [ajax-loader "Haetaan toimenpiteitä"]
-               "Ei toimenpiteitä")
-      :tunniste ::kanavan-toimenpide/id}
-     sarakkeet
-     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
+      {:otsikko "Muutos- ja lisätyöt"
+       :tyhja (if (:toiden-haku-kaynnissa? app)
+                [ajax-loader "Haetaan toimenpiteitä"]
+                "Ei toimenpiteitä")
+       :tunniste ::kanavan-toimenpide/id}
+      sarakkeet
+      (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
 
 (defn lisatyot* [e! app]
   (let [urakka (get-in app [:valinnat :urakka-id])]
@@ -98,10 +99,14 @@
 
       (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
-        [:div
-         [debug app]
-         [suodattimet e! app]
-         [taulukko e! app]]))))
+        (let [kohteet @kanavaurakka/kanavakohteet
+              nakyma-voidaan-nayttaa? (some? kohteet)]
+          (if nakyma-voidaan-nayttaa?
+            [:div
+             [debug app]
+             [suodattimet e! app]
+             [taulukko e! app]]
+            [ajax-loader "Ladataan..."]))))))
 
 (defc lisatyot []
-  [tuck tiedot/tila lisatyot*])
+      [tuck tiedot/tila lisatyot*])

@@ -3,6 +3,7 @@
             [harja.id :refer [id-olemassa?]]
             [harja.loki :refer [log tarkkaile!]]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide]
             [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -17,9 +18,9 @@
    :loppupvm (second (:aikavali valinnat))
    ::kanavatoimenpide/kohde-id (:kanava-kohde-id valinnat)})
 
-(defn esitaytetty-toimenpide [kayttaja]
-  {::kanavan-toimenpide/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
-   ::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
+(defn esitaytetty-toimenpide [kayttaja urakka]
+  {::kanavatoimenpide/sopimus-id (:paasopimus urakka)
+   ::kanavatoimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
                                    ::kayttaja/etunimi (:etunimi kayttaja)
                                    ::kayttaja/sukunimi (:sukunimi kayttaja)}})
 

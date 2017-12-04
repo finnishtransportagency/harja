@@ -20,7 +20,8 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -435,4 +436,4 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpide @istunto/kayttaja))))
+    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpide @istunto/kayttaja @navigaatio/valittu-urakka))))
