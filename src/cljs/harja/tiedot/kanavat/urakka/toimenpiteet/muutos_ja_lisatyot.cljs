@@ -71,6 +71,8 @@
 ;; Lomake
 (defrecord UusiToimenpide [])
 (defrecord TyhjennaAvattuToimenpide [])
+(defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
+
 ;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
@@ -438,4 +440,8 @@
 
   TyhjennaAvattuToimenpide
   (process-event [_ app]
-    (dissoc app :avattu-toimenpide)))
+    (toimenpiteet/tyhjenna-avattu-toimenpide app))
+
+  AsetaLomakkeenToimenpiteenTiedot
+  (process-event [{toimenpide :toimenpide} app]
+    (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide)))

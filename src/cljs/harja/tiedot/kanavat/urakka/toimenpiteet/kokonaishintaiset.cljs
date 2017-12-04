@@ -71,31 +71,6 @@
     (when (:nakymassa? @tila)
       (alkuvalinnat))))
 
-(defn tallennettava-toimenpide [tehtavat toimenpide urakka]
-  ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
-  ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
-  (let [tehtava (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
-                    (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
-    (-> toimenpide
-        (select-keys [::kanavan-toimenpide/id
-                      ::kanavan-toimenpide/urakka-id
-                      ::kanavan-toimenpide/suorittaja
-                      ::kanavan-toimenpide/sopimus-id
-                      ::kanavan-toimenpide/lisatieto
-                      ::kanavan-toimenpide/toimenpideinstanssi-id
-                      ::kanavan-toimenpide/toimenpidekoodi-id
-                      ::kanavan-toimenpide/pvm
-                      ::muokkaustiedot/poistettu?])
-        (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
-               ::kanavan-toimenpide/urakka-id (:id urakka)
-               ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-               ::kanavan-toimenpide/kohteenosa-id (get-in toimenpide [::kanavan-toimenpide/kohteenosa ::osa/id])
-               ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id])
-               ::kanavan-toimenpide/muu-toimenpide (if (toimenpiteet/valittu-tehtava-muu? tehtava tehtavat)
-                                                     (::kanavan-toimenpide/muu-toimenpide toimenpide)
-                                                     nil))
-        (dissoc ::kanavan-toimenpide/kuittaaja))))
-
 (defn kokonashintaiset-tehtavat [tehtavat]
   (filter
     (fn [tehtava]
@@ -209,17 +184,11 @@
 
   TyhjennaAvattuToimenpide
   (process-event [_ app]
-    (dissoc app :avattu-toimenpide))
+    (toimenpiteet/tyhjenna-avattu-toimenpide app))
 
   AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohteenosa]))
-                                 (not= (::kanavan-toimenpide/kohde toimenpide)
-                                       (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohde])))
-          toimenpide (if kohdeosa-vaihtui?
-                       (assoc toimenpide ::kanavan-toimenpide/kohteenosa nil)
-                       toimenpide)]
-      (assoc app :avattu-toimenpide toimenpide)))
+    (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide))
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
@@ -242,17 +211,11 @@
 
   TallennaToimenpide
   (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
-    (if (:tallennus-kaynnissa? app)
-      app
-      (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]))
-            hakuehdot (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
-        (-> app
-            (tuck-apurit/post! :tallenna-kanavatoimenpide
-                               {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
-                                ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
-                               {:onnistui ->ToimenpideTallennettu
-                                :epaonnistui ->ToimenpiteidenTallentaminenEpaonnistui})
-            (assoc :tallennus-kaynnissa? true)))))
+    (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
+                                           :tehtavat tehtavat
+                                           :toimenpide toimenpide
+                                           :toimenpide-tallennettu ->ToimenpideTallennettu
+                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
   (process-event [{toimenpiteet :toimenpiteet} app]

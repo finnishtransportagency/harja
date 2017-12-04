@@ -82,21 +82,14 @@
                                  :valittu? uusi-arvo})))})
     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
-(defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide
-                                                     kohteet
-                                                     toimenpideinstanssit
-                                                     tehtavat
-                                                     huoltokohteet
-                                                     tallennus-kaynnissa?]
-                                              :as app}]
+(defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
+                                                     tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
                                            :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
 
-(defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
-                                    :as app}
-                                kohteet]
+(defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide] :as app} kohteet]
   (let [nakyma-voidaan-nayttaa? (some? kohteet)]
     [:div
      (if nakyma-voidaan-nayttaa?

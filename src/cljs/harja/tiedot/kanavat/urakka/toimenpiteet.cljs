@@ -5,8 +5,13 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -36,3 +41,53 @@
                (filter #(and
                           (:nimi %)
                           (not= -1 (.indexOf (str/upper-case (:nimi %)) "MUU"))) tehtavat)))))
+
+(defn tyhjenna-avattu-toimenpide [app]
+  (assoc app :avattu-toimenpide nil))
+
+(defn aseta-lomakkeen-tiedot [app toimenpide]
+  (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohteenosa]))
+                               (not= (::kanavatoimenpide/kohde toimenpide)
+                                     (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohde])))
+        toimenpide (if kohdeosa-vaihtui?
+                     (assoc toimenpide ::kanavatoimenpide/kohteenosa nil)
+                     toimenpide)]
+    (assoc app :avattu-toimenpide toimenpide)))
+
+(defn tallennettava-toimenpide [tehtavat toimenpide urakka]
+  ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
+  ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
+  (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
+                    (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
+    (-> toimenpide
+        (select-keys [::kanavatoimenpide/id
+                      ::kanavatoimenpide/urakka-id
+                      ::kanavatoimenpide/suorittaja
+                      ::kanavatoimenpide/sopimus-id
+                      ::kanavatoimenpide/lisatieto
+                      ::kanavatoimenpide/toimenpideinstanssi-id
+                      ::kanavatoimenpide/toimenpidekoodi-id
+                      ::kanavatoimenpide/pvm
+                      ::muokkaustiedot/poistettu?])
+        (assoc ::kanavatoimenpide/tyyppi :kokonaishintainen
+               ::kanavatoimenpide/urakka-id (:id urakka)
+               ::kanavatoimenpide/kohde-id (get-in toimenpide [::kanavatoimenpide/kohde ::kohde/id])
+               ::kanavatoimenpide/kohteenosa-id (get-in toimenpide [::kanavatoimenpide/kohteenosa ::osa/id])
+               ::kanavatoimenpide/huoltokohde-id (get-in toimenpide [::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/id])
+               ::kanavatoimenpide/muu-toimenpide (if (valittu-tehtava-muu? tehtava tehtavat)
+                                                     (::kanavatoimenpide/muu-toimenpide toimenpide)
+                                                     nil))
+        (dissoc ::kanavatoimenpide/kuittaaja))))
+
+(defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat toimenpide-tallennettu toimenpide-ei-tallennetti]}]
+  (if (:tallennus-kaynnissa? app)
+    app
+    (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]))
+          hakuehdot (muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
+      (-> app
+          (tuck-apurit/post! :tallenna-kanavatoimenpide
+                             {::kanavatoimenpide/tallennettava-kanava-toimenpide toimenpide
+                              ::kanavatoimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
+                             {:onnistui toimenpide-tallennettu
+                              :epaonnistui toimenpide-ei-tallennetti})
+          (assoc :tallennus-kaynnissa? true)))))
