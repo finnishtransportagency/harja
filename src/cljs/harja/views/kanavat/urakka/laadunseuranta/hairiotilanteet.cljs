@@ -213,16 +213,10 @@
                      :nimi "Kesken"}
                     {:arvo :valmis
                      :nimi "Valmis"}]}
-        {:tyyppi :komponentti
+        {:tyyppi :checkbox
          :nimi ::hairiotilanne/paikallinen-kaytto?
          ::lomake/col-luokka luokka
-         :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                        [:div
-                         [:div.kentta-ja-yksikko
-                          [tee-kentta {:tyyppi :checkbox
-                                       :teksti "Siirrytty paikalliskäyttöön"}
-                           (r/wrap (::hairiotilanne/paikallinen-kaytto? data)
-                                   #(muokkaa-lomaketta (assoc data ::hairiotilanne/paikallinen-kaytto? %)))]]])})
+         :teksti "Siirrytty paikalliskäyttöön"})
       {:nimi :varaosat
        :tyyppi :komponentti
        :palstoja 2
