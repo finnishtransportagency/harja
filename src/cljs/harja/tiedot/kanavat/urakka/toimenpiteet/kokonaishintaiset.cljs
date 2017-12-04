@@ -71,13 +71,6 @@
     (when (:nakymassa? @tila)
       (alkuvalinnat))))
 
-(defn esitaytetty-toimenpide []
-  (let [kayttaja @istunto/kayttaja]
-    {::kanavan-toimenpide/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
-     ::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
-                                     ::kayttaja/etunimi (:etunimi kayttaja)
-                                     ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
-
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka]
   ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
@@ -214,7 +207,7 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :avattu-toimenpide (esitaytetty-toimenpide)))
+    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpide @istunto/kayttaja)))
 
   TyhjennaAvattuToimenpide
   (process-event [_ app]

@@ -19,7 +19,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view])
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.tiedot.istunto :as istunto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -40,6 +41,7 @@
 (def tila (atom {:nakymassa? false
                  :toimenpiteiden-siirto-kaynnissa? false
                  :valitut-toimenpide-idt #{}
+                 :avattu-toimenpide nil
                  :toimenpiteet nil
                  :toimenpiteiden-haku-kaynnissa? false
                  :suunniteltujen-toiden-haku-kaynnissa? false
@@ -65,6 +67,8 @@
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [tulos])
 (defrecord ToimenpiteetEiHaettu [])
+;; Lomake
+(defrecord UusiToimenpide [])
 ;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
@@ -427,4 +431,8 @@
   ToimenpiteenHinnoitteluEiTallennettu
   (process-event [_ app]
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
-    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false)))
+    (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false))
+
+  UusiToimenpide
+  (process-event [_ app]
+    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpide @istunto/kayttaja))))

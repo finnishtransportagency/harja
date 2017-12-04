@@ -17,6 +17,12 @@
    :loppupvm (second (:aikavali valinnat))
    ::kanavatoimenpide/kohde-id (:kanava-kohde-id valinnat)})
 
+(defn esitaytetty-toimenpide [kayttaja]
+  {::kanavan-toimenpide/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+   ::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
+                                   ::kayttaja/etunimi (:etunimi kayttaja)
+                                   ::kayttaja/sukunimi (:sukunimi kayttaja)}})
+
 (defn valittu-tehtava-muu? [tehtava-id tehtavat]
   (and
     tehtavat

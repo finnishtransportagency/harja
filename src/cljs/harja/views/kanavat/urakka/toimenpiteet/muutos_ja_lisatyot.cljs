@@ -44,8 +44,7 @@
        [napit/uusi
         "Uusi toimenpide"
         (fn [_]
-          ;;todo
-          )]]]]))
+          (e! (tiedot/->UusiToimenpide)))]]]]))
 
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   (let [hinta-sarake {:otsikko "Hinta"
