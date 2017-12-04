@@ -337,6 +337,7 @@
       (if urakka-id
         (assoc app :hinnoittele-toimenpide
                {::toimenpide/id toimenpide-id
+                ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
                 ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
                 ::tyo/tyot tyot
                 :urakka urakka-id})
