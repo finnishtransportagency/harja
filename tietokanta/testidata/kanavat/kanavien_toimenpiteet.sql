@@ -294,11 +294,11 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   VALUES ((SELECT id FROM kan_toimenpide WHERE lisatieto = 'Testitoimenpide 20171112'),
           (SELECT id FROM toimenpidekoodi WHERE nimi = 'Henkilöstö: muutosaskare'), 10, kayttaja_id_jvh);
 
-  INSERT INTO kan_hinta (toimenpide, otsikko, yksikko, yksikkohinta, maara, luoja)
-  VALUES ((SELECT id FROM kan_toimenpide WHERE lisatieto = 'Testitoimenpide 20171112'), 'Automies ja konevuokra', 'h', 200, 3, kayttaja_id_jvh);
+  INSERT INTO kan_hinta (toimenpide, otsikko, yksikko, yksikkohinta, maara, luoja, ryhma)
+  VALUES ((SELECT id FROM kan_toimenpide WHERE lisatieto = 'Testitoimenpide 20171112'), 'Automies ja konevuokra', 'h', 200, 3, kayttaja_id_jvh, 'tyo');
 
-  INSERT INTO kan_hinta (toimenpide, otsikko, summa, luoja)
-  VALUES ((SELECT id FROM kan_toimenpide WHERE lisatieto = 'Testitoimenpide 20171112'), 'Muuta könttäsummasälää', 400, kayttaja_id_jvh);
+  INSERT INTO kan_hinta (toimenpide, otsikko, summa, luoja, ryhma)
+  VALUES ((SELECT id FROM kan_toimenpide WHERE lisatieto = 'Testitoimenpide 20171112'), 'Muuta könttäsummasälää', 400, kayttaja_id_jvh, 'muu');
   INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
   VALUES ('2017-08-01', '2018-07-31', 1, 'h', 45, tyonjohto_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto);
   INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
