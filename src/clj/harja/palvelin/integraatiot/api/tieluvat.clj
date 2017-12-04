@@ -69,7 +69,7 @@
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :kirjaa-tielupa
-      (POST " /api/tieluvat " request
+      (POST "/api/tieluvat" request
         (kasittele-kutsu db
                          integraatioloki
                          :kirjaa-tielupa
