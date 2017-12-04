@@ -19,11 +19,11 @@
                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
                   :alkupvm (pvm/luo-pvm 2017 1 1)
                   :loppupvm (pvm/luo-pvm 2018 1 1)}]
-    (is (= (toimenpiteet/muodosta-hakuargumentit {:urakka {:id 666}
+    (is (= (toimenpiteet/muodosta-kohteiden-hakuargumentit {:urakka {:id 666}
                                                   :sopimus-id 666
                                                   :toimenpide {:id 666}
                                                   :aikavali aikavali}
-                                                 :kokonaishintainen)
+                                                           :kokonaishintainen)
            odotettu))
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely odotettu))))
 

@@ -1,4 +1,5 @@
 (ns harja.tiedot.kanavat.urakka.toimenpiteet
+  "Kanavatoimenpiteiden yhteiset asiat"
   (:require [reagent.core :refer [atom]]
             [harja.id :refer [id-olemassa?]]
             [harja.loki :refer [log tarkkaile!]]
@@ -9,7 +10,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(defn muodosta-hakuargumentit [valinnat tyyppi]
+(defn muodosta-kohteiden-hakuargumentit [valinnat tyyppi]
   {::kanavatoimenpide/urakka-id (:id (:urakka valinnat))
    ::kanavatoimenpide/sopimus-id (:sopimus-id valinnat)
    ::toimenpidekoodi/id (get-in valinnat [:toimenpide :id])
@@ -18,7 +19,7 @@
    :loppupvm (second (:aikavali valinnat))
    ::kanavatoimenpide/kohde-id (:kanava-kohde-id valinnat)})
 
-(defn esitaytetty-toimenpide [kayttaja urakka]
+(defn esitaytetty-toimenpidelomake [kayttaja urakka]
   {::kanavatoimenpide/sopimus-id (:paasopimus urakka)
    ::kanavatoimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
                                    ::kayttaja/etunimi (:etunimi kayttaja)

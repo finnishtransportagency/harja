@@ -113,7 +113,7 @@
       #(e! (tiedot/->TyhjennaAvattuToimenpide))]
      (if lomake-valmis?
        [lomake/lomake
-        {:otsikko "Uusi toimenpide"
+        {:otsikko (if (::kanavan-toimenpide/id avattu-toimenpide) "Muokkaa toimenpidettä" "Uusi toimenpide")
          :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
          :footer-fn (fn [toimenpide]
                       (lomake-toiminnot e! app toimenpide))}

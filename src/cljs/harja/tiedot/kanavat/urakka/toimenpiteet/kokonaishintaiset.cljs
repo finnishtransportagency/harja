@@ -139,7 +139,7 @@
     (if (and
           (get-in valinnat [:urakka :id])
           (not (:haku-kaynnissa? app)))
-      (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
+      (let [argumentit (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
@@ -207,7 +207,7 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpide @istunto/kayttaja @navigaatio/valittu-urakka)))
+    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpidelomake @istunto/kayttaja @navigaatio/valittu-urakka)))
 
   TyhjennaAvattuToimenpide
   (process-event [_ app]
@@ -247,7 +247,7 @@
     (if (:tallennus-kaynnissa? app)
       app
       (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]))
-            hakuehdot (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
+            hakuehdot (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :tallenna-kanavatoimenpide
                                {::kanavan-toimenpide/kanava-toimenpide toimenpide

@@ -70,13 +70,13 @@
 (defrecord ToimenpiteetEiHaettu [])
 ;; Lomake
 (defrecord UusiToimenpide [])
+(defrecord TyhjennaAvattuToimenpide [])
 ;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
 (defrecord SiirraValitut [])
 (defrecord ValitutSiirretty [])
 (defrecord ValitutEiSiirretty [])
-
 ;; Hinnoittelu
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord PeruToimenpiteenHinnoittelu [])
@@ -91,8 +91,6 @@
 (defrecord TallennaToimenpiteenHinnoittelu [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
-
-
 ;; Suunnitellut työt
 (defrecord TyhjennaSuunnitellutTyot [])
 (defrecord HaeSuunnitellutTyot [])
@@ -272,7 +270,7 @@
   (process-event [{valinnat :valinnat} app]
     (if (and (not (:toimenpiteiden-haku-kaynnissa? app))
              (get-in valinnat [:urakka :id]))
-      (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :muutos-lisatyo)]
+      (let [argumentit (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :muutos-lisatyo)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
@@ -436,4 +434,8 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpide @istunto/kayttaja @navigaatio/valittu-urakka))))
+    (assoc app :avattu-toimenpide (toimenpiteet/esitaytetty-toimenpidelomake @istunto/kayttaja @navigaatio/valittu-urakka)))
+
+  TyhjennaAvattuToimenpide
+  (process-event [_ app]
+    (dissoc app :avattu-toimenpide)))
