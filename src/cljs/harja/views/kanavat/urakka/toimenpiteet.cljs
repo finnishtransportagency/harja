@@ -10,8 +10,13 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.loki :refer [log]]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as kanavatoimenpidetiedot]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
 (defn valittu-tehtava [toimenpide]
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
@@ -155,3 +160,46 @@
                             [:span "Ei-yksilöidyt toimenpiderivit näytetään "]
                             [:span.bold "lihavoituna"]
                             [:span "."]]])
+
+(defn- lomake-toiminnot [{:keys [tallenna-lomake-fn poista-toimenpide-fn]}
+                         {:keys [tallennus-kaynnissa?] :as app}
+                         toimenpide]
+  [:div
+   [napit/tallenna
+    "Tallenna"
+    tallenna-lomake-fn
+    {:tallennus-kaynnissa? tallennus-kaynnissa?
+     :disabled (not (lomake/voi-tallentaa? toimenpide))}]
+   (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
+     [napit/poista
+      "Poista"
+      #(varmista-kayttajalta/varmista-kayttajalta
+         {:otsikko "Toimenpiteen poistaminen"
+          :sisalto [:div "Haluatko varmasti poistaa toimenpiteen?"]
+          :hyvaksy "Poista"
+          :toiminto-fn poista-toimenpide-fn})])])
+
+(defn lomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
+              {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
+                      tallenna-lomake-fn poista-toimenpide-fn]}]
+  (let [urakka (get-in app [:valinnat :urakka])
+        sopimukset (:sopimukset urakka)
+        lomake-valmis? (not (empty? huoltokohteet))]
+    [:div
+     [napit/takaisin "Takaisin toimenpideluetteloon" tyhjenna-fn]
+     (if lomake-valmis?
+       [lomake/lomake
+        {:otsikko (if (::kanavan-toimenpide/id avattu-toimenpide) "Muokkaa toimenpidettä" "Uusi toimenpide")
+         :muokkaa! aseta-toimenpiteen-tiedot-fn
+         :footer-fn (fn [toimenpide]
+                      (lomake-toiminnot {:tallenna-lomake-fn tallenna-lomake-fn
+                                         :poista-toimenpide-fn poista-toimenpide-fn}
+                                        app toimenpide))}
+        (toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
+                                     :sopimukset sopimukset
+                                     :kohteet @kanavaurakka/kanavakohteet
+                                     :huoltokohteet huoltokohteet
+                                     :toimenpideinstanssit toimenpideinstanssit
+                                     :tehtavat tehtavat})
+        avattu-toimenpide]
+       [ajax-loader "Ladataan..."])]))
