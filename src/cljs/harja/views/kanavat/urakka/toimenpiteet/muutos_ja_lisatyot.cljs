@@ -84,6 +84,7 @@
        :tyhja (if (:toiden-haku-kaynnissa? app)
                 [ajax-loader "Haetaan toimenpiteitä"]
                 "Ei toimenpiteitä")
+       :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
        :tunniste ::kanavan-toimenpide/id}
       sarakkeet
       (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
