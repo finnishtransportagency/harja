@@ -309,7 +309,3 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja) VALUES ((SELECT MAX(id) FROM kan_toimenpide),
     tyonjohto_tpk_id, 3, kayttaja_id_jvh);
 END $$;
-
-select * from kan_toimenpide ktp
-left join kan_hinta h ON h.toimenpide = ktp.id
-where ktp.id = 7;
