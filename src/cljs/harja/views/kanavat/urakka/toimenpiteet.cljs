@@ -110,6 +110,7 @@
                           "- Valitse huoltokohde -")
       :valinnat huoltokohteet
       :pakollinen? true}
+     ;; TODO kaatuu muutos- ja lisätöissä
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
@@ -125,6 +126,7 @@
                    (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
                    (assoc-in [:tehtava :toimenpidekoodi :id] nil)
                    (assoc-in [:tehtava :yksikko] nil)))}
+     ;; TODO kaatuu muutos- ja lisätöissä
      {:otsikko "Tehtävä"
       :nimi ::kanavan-toimenpide/toimenpidekoodi-id
       :pakollinen? true
@@ -184,7 +186,9 @@
                       tallenna-lomake-fn poista-toimenpide-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
-        lomake-valmis? (not (empty? huoltokohteet))]
+        kanavakohteet @kanavaurakka/kanavakohteet
+        lomake-valmis? (and (not (empty? huoltokohteet))
+                            (not (empty? kanavakohteet)))]
     [:div
      [napit/takaisin "Takaisin toimenpideluetteloon" tyhjenna-fn]
      (if lomake-valmis?
@@ -197,7 +201,7 @@
                                         app toimenpide))}
         (toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
                                      :sopimukset sopimukset
-                                     :kohteet @kanavaurakka/kanavakohteet
+                                     :kohteet kanavakohteet
                                      :huoltokohteet huoltokohteet
                                      :toimenpideinstanssit toimenpideinstanssit
                                      :tehtavat tehtavat})
