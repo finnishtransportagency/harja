@@ -101,6 +101,7 @@
                                   :aikavali @u/valittu-aikavali
                                   :toimenpide @u/valittu-toimenpideinstanssi}))
                            (e! (tiedot/->HaeSuunnitellutTyot))
+                           (e! (tiedot/->HaeHuoltokohteet))
                            (log "kutsuttiin HaeSuunnitellutTyot"))
                         #(do
                            (e! (tiedot/->Nakymassa? false))))

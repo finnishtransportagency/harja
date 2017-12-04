@@ -99,6 +99,8 @@
 (defrecord TallennaToimenpiteenHinnoittelu [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
+(defrecord HaeHuoltokohteet [])
+
 ;; Suunnitellut työt
 (defrecord TyhjennaSuunnitellutTyot [])
 (defrecord HaeSuunnitellutTyot [])
@@ -189,7 +191,6 @@
         idt (map id-avain jutut)
         seuraava-vapaa-id (dec (apply min (conj idt 0)))
         paivitetyt (conj jutut (kentta-fn seuraava-vapaa-id))]
-    (log "lisaa-hintarivi-toimenpiteelle* - seuraava-vapaa-id" seuraava-vapaa-id)
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
 
 (defn lisaa-hintarivi-toimenpiteelle
@@ -259,10 +260,7 @@
                                  {:onnistui ->SuunnitellutTyotHaettu
                                          :epaonnistui ->SuunnitellutTyotEiHaettu})
             (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
-        ;; else
-        (do
-          ;; (log "HaeSuunnitellutTyot: ei haeta, koska" (pr-str [urakka-id haku-ei-kaynnissa]))
-          app))))
+        app)))
 
   SuunnitellutTyotHaettu
   (process-event [{vastaus :vastaus} app]
@@ -349,7 +347,6 @@
     (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
           hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])]
-      (log "AloitaToimenpiteenHinnoittelu: toimenpiteen-hintakentat" (pr-str (toimenpiteen-hintakentat hinnat)))
       (assoc app :hinnoittele-toimenpide
              {::toimenpide/id toimenpide-id
               ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
@@ -368,8 +365,6 @@
 
   AsetaHintakentalleTiedot
   (process-event [{tiedot :tiedot} app]
-    (when-not (::hinta/id tiedot)
-      (log "AsetaHintakentalleTiedot kutsuttu huonolla id:llä, tiedot:" (pr-str tiedot)))
     (assoc-in app [:hinnoittele-toimenpide ::hinta/hinnat]
               (hinta/paivita-hintajoukon-hinnan-tiedot-idlla (get-in app [:hinnoittele-toimenpide
                                                                           ::hinta/hinnat]) tiedot)))
@@ -474,6 +469,13 @@
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
       app))
+
+  HaeHuoltokohteet
+  (process-event [{toimenpide :toimenpide} app]
+    (tuck-apurit/get! :hae-kanavien-huoltokohteet
+                      {:onnistui ->HuoltokohteetHaettu
+                       :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
+    app)
 
   HuoltokohteetHaettu
   (process-event [{huoltokohteet :huoltokohteet} app]
