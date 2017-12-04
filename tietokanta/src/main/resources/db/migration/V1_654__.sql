@@ -259,11 +259,14 @@ BEGIN
   FROM alueurakka
   WHERE st_contains(alue, tieluvan_geometria);
 
-  SELECT INTO urakka_id_ id
-  FROM urakka
-  WHERE urakkanro = alueurakkanro_;
+  IF alueurakkanro_ IS NOT NULL
+  THEN
+    SELECT INTO urakka_id_ id
+    FROM urakka
+    WHERE urakkanro = alueurakkanro_;
+  END IF;
 
-  RETURN urakka_id_;
+  RETURN NEW;
 END;
 $$
 LANGUAGE plpgsql;
