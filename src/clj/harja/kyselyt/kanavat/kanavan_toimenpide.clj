@@ -73,7 +73,6 @@
     m))
 
 (defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat toimenpide-id]}]
-  (println "tallenna-omat-hinnat: saatiin" (pr-str hinnat))
   (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
 
     (specql/upsert! db
@@ -83,7 +82,6 @@
 
 (defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot toimenpide-id]}]
   (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
-    (println "upsertoidaan" (pr-str (kasittele-muokkaustiedot user tyo ::tyo/id)))
     (specql/upsert! db
                     ::tyo/toimenpiteen-tyo
                     (kasittele-muokkaustiedot user tyo ::tyo/id)
@@ -96,6 +94,7 @@
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
       (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
     (let [kanavatoimenpide (assoc kanavatoimenpide
+                             ::toimenpide/kuittaaja-id kayttaja-id
                              ::muokkaustiedot/luotu (pvm/nyt)
                              ::muokkaustiedot/luoja-id kayttaja-id)]
       (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))

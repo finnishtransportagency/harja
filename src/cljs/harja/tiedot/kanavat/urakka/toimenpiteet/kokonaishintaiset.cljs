@@ -80,7 +80,6 @@
         (select-keys [::kanavan-toimenpide/id
                       ::kanavan-toimenpide/urakka-id
                       ::kanavan-toimenpide/suorittaja
-                      ::kanavan-toimenpide/kuittaaja
                       ::kanavan-toimenpide/sopimus-id
                       ::kanavan-toimenpide/lisatieto
                       ::kanavan-toimenpide/toimenpideinstanssi-id
@@ -88,7 +87,6 @@
                       ::kanavan-toimenpide/pvm
                       ::muokkaustiedot/poistettu?])
         (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
-               ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
                ::kanavan-toimenpide/urakka-id (:id urakka)
                ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
                ::kanavan-toimenpide/kohteenosa-id (get-in toimenpide [::kanavan-toimenpide/kohteenosa ::osa/id])
