@@ -22,7 +22,8 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.navigaatio :as navigaatio])
+            [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.urakka :as urakkatiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -148,43 +149,43 @@
 
 (defn ainoa-otsikon-vakiokentta? [hinnat otsikko]
   (and
-   (vakiohintakentta? otsikko)
-   (-> (group-by ::hinta/otsikko hinnat)
-       (get otsikko)
-       count
-       (= 1))))
+    (vakiohintakentta? otsikko)
+    (-> (group-by ::hinta/otsikko hinnat)
+        (get otsikko)
+        count
+        (= 1))))
 
 (defn- hintakentta
   [hinta]
   (merge
-   {::hinta/summa (cond
-                    (or (nil? (::hinta/ryhma hinta))
-                        (#{"muu"} (::hinta/ryhma hinta)))
-                    0
+    {::hinta/summa (cond
+                     (or (nil? (::hinta/ryhma hinta))
+                         (#{"muu"} (::hinta/ryhma hinta)))
+                     0
 
-                    (= "tyo" (::hinta/ryhma hinta))
-                    nil)
-    ::hinta/yleiskustannuslisa 0
-    ::hinta/otsikko ""}
-   hinta))
+                     (= "tyo" (::hinta/ryhma hinta))
+                     nil)
+     ::hinta/yleiskustannuslisa 0
+     ::hinta/otsikko ""}
+    hinta))
 
 (defn- toimenpiteen-hintakentat [hinnat]
   (vec (concat
-        ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-        (map-indexed (fn [index otsikko]
-                       (let [olemassa-oleva-hinta (hinta-otsikolla hinnat otsikko)]
-                         (hintakentta
-                          (merge
-                           {::hinta/id (dec (- index))
-                            ::hinta/otsikko otsikko
-                            ::hinta/ryhma "muu"}
-                           olemassa-oleva-hinta))))
-                     vakiohinnat)
-        ;; Loput kentät ovat käyttäjän itse lisäämiä
-        (map
-         hintakentta
-         (remove #((set vakiohinnat) (::hinta/otsikko %))
-                 hinnat)))))
+         ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
+         (map-indexed (fn [index otsikko]
+                        (let [olemassa-oleva-hinta (hinta-otsikolla hinnat otsikko)]
+                          (hintakentta
+                            (merge
+                              {::hinta/id (dec (- index))
+                               ::hinta/otsikko otsikko
+                               ::hinta/ryhma "muu"}
+                              olemassa-oleva-hinta))))
+                      vakiohinnat)
+         ;; Loput kentät ovat käyttäjän itse lisäämiä
+         (map
+           hintakentta
+           (remove #((set vakiohinnat) (::hinta/otsikko %))
+                   hinnat)))))
 
 (defn- lisaa-hintarivi-toimenpiteelle* [id-avain tyot-tai-hinnat kentta-fn app]
   (let [jutut (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
@@ -197,23 +198,23 @@
   ([app] (lisaa-hintarivi-toimenpiteelle {} app))
   ([hinta app]
    (lisaa-hintarivi-toimenpiteelle*
-    ::hinta/id
-    ::hinta/hinnat
-    (fn [id]
-      (hintakentta
-       (merge {::hinta/id id} hinta)))
-    app)))
+     ::hinta/id
+     ::hinta/hinnat
+     (fn [id]
+       (hintakentta
+         (merge {::hinta/id id} hinta)))
+     app)))
 
 
 (defn lisaa-tyorivi-toimenpiteelle
   ([app] (lisaa-tyorivi-toimenpiteelle {} app))
   ([tyo app]
    (lisaa-hintarivi-toimenpiteelle*
-    ::tyo/id
-    ::tyo/tyot
-    (fn [id]
-      (merge {::tyo/id id ::tyo/maara 0} tyo))
-    app)))
+     ::tyo/id
+     ::tyo/tyot
+     (fn [id]
+       (merge {::tyo/id id ::tyo/maara 0} tyo))
+     app)))
 
 (defn- poista-hintarivi-toimenpiteelta* [id id-avain tyot-tai-hinnat app]
   (let [rivit (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
@@ -238,7 +239,12 @@
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
-    (assoc app :nakymassa? nakymassa?))
+    (merge app
+           {:nakymassa? nakymassa?}
+           (when nakymassa?
+             {:tehtavat (toimenpiteet/tehtavat-tyypilla @urakkatiedot/urakan-toimenpiteet-ja-tehtavat
+                                                        "kokonaishintainen") ;; TODO Muutos- ja lisätyö
+              :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit})))
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
@@ -256,9 +262,9 @@
           haku-ei-kaynnissa (not (:suunniteltujen-toiden-haku-kaynnissa? app))]
       (if (and haku-ei-kaynnissa (some? urakka-id))
         (do (tuck-apurit/post! :muutoshintaiset-tyot
-                                 {:urakka urakka-id}
-                                 {:onnistui ->SuunnitellutTyotHaettu
-                                         :epaonnistui ->SuunnitellutTyotEiHaettu})
+                               {:urakka urakka-id}
+                               {:onnistui ->SuunnitellutTyotHaettu
+                                :epaonnistui ->SuunnitellutTyotEiHaettu})
             (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
         app)))
 
@@ -348,9 +354,9 @@
           hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])]
       (assoc app :hinnoittele-toimenpide
-             {::toimenpide/id toimenpide-id
-              ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
-              ::tyo/tyot tyot})))
+                 {::toimenpide/id toimenpide-id
+                  ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
+                  ::tyo/tyot tyot})))
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
@@ -359,8 +365,8 @@
   PeruToimenpiteenHinnoittelu
   (process-event [_ app]
     (assoc app
-           :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
-           :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
+      :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
+      :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu))
 
 
   AsetaHintakentalleTiedot

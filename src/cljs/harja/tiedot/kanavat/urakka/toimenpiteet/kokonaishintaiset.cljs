@@ -90,7 +90,8 @@
                                :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
             (assoc :nakymassa? true
                    :huoltokohteiden-haku-kaynnissa? true
-                   :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                   :tehtavat (toimenpiteet/tehtavat-tyypilla @urakkatiedot/urakan-toimenpiteet-ja-tehtavat
+                                                             "kokonaishintainen")
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
                    :huoltokohteet nil)))))
 

@@ -111,3 +111,9 @@
 (defn huoltokohteet-ei-haettu [app]
   (viesti/nayta! "Huoltokohteiden haku epäonnistui" :danger)
   (assoc app :huoltokohteiden-haku-kaynnissa? false))
+
+(defn tehtavat-tyypilla [tehtavat tyyppi]
+  (filter
+    (fn [tehtava]
+      (some #(= % tyyppi) (:hinnoittelu tehtava)))
+    (map #(nth % 3) tehtavat)))
