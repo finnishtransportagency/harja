@@ -250,7 +250,7 @@
             hakuehdot (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :tallenna-kanavatoimenpide
-                               {::kanavan-toimenpide/kanava-toimenpide toimenpide
+                               {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
                                 ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
                                {:onnistui ->ToimenpideTallennettu
                                 :epaonnistui ->ToimenpiteidenTallentaminenEpaonnistui})

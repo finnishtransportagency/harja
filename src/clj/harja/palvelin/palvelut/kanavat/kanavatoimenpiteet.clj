@@ -122,9 +122,9 @@
 
 (defn tallenna-kanavatoimenpide [db user {tyyppi ::toimenpide/tyyppi
                                           urakka-id ::toimenpide/urakka-id
-                                          :as kanavatoimenpide}]
+                                          :as toimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
-  (q-toimenpide/tallenna-toimenpide db (:id user) kanavatoimenpide))
+  (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
@@ -153,7 +153,7 @@
     (julkaise-palvelu
       http
       :tallenna-kanavatoimenpide
-      (fn [user {toimenpide ::toimenpide/kanava-toimenpide
+      (fn [user {toimenpide ::toimenpide/tallennettava-kanava-toimenpide
                  hakuehdot ::toimenpide/hae-kanavatoimenpiteet-kysely}]
         (tallenna-kanavatoimenpide db user toimenpide)
         (hae-kanavatoimenpiteet db user hakuehdot))

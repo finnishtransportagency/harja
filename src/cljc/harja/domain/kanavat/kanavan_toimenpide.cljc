@@ -140,9 +140,25 @@
 (s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-vastaus
   ::kanava-toimenpide)
 
+(s/def ::tallennettava-kanava-toimenpide
+  (s/keys :req [::urakka-id
+                ::sopimus-id
+                ::pvm
+                ::huoltokohde-id
+                ::toimenpideinstanssi-id
+                ::suorittaja
+                ::tyyppi]
+          :opt [::kohteenosa-id
+                ::lisatieto
+                ::kohde-id
+                ::id
+                ::toimenpidekoodi-id
+                ::muu-toimenpide
+                ::kuittaaja-id]))
+
 (s/def ::tallenna-kanavatoimenpide-kutsu
   (s/keys :req [::hae-kanavatoimenpiteet-kysely
-                ::kanava-toimenpide]))
+                ::tallennettava-kanava-toimenpide]))
 
 (defn korosta-ei-yksiloity
   "Korostaa ei yksilöidyt toimenpiteet gridissä"
