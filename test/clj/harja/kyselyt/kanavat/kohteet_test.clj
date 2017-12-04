@@ -1,5 +1,6 @@
-(ns harja.kyselyt.kanavat.kanavat-test
+(ns harja.kyselyt.kanavat.kohteet-test
   (:require [clojure.test :refer :all]
+            [harja.testi :refer :all]
             [harja.kyselyt.kanavat.kohteet :as q]
 
             [harja.domain.kanavat.kohde :as kohde]
@@ -12,6 +13,7 @@
           {::kohde/id 2 ::kohde/urakat [{:foo :baz}]}
           {::kohde/id 3 ::kohde/urakat nil}]
          (#'q/hae-kohteiden-urakkatiedot*
+           +kayttaja-jvh+
            [{::kohde/id 1}
             {::kohde/id 2}
             {::kohde/id 3}]
@@ -19,7 +21,7 @@
             {::kohde/kohde-id 1 ::kohde/linkin-urakka {:foo :baz}}
             {::kohde/kohde-id 2 ::kohde/linkin-urakka {:foo :baz}}]))))
 
-(deftest hae-kanavat
+(deftest hae-kokonaisuudet-ja-kohteet
   (is (= [{::kok/id 1 ::kok/kohteet 1}
           {::kok/id 2 ::kok/kohteet 2}]
          (#'q/hae-kokonaisuudet-ja-kohteet*
