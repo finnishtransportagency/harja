@@ -81,7 +81,7 @@
      [toimenpiteet-view/ei-yksiloity-vihje]
      [grid/grid
       {:otsikko "Muutos- ja lisätyöt"
-       :tyhja (if (:toiden-haku-kaynnissa? app)
+       :tyhja (if (:toimenpiteiden-haku-kaynnissa? app)
                 [ajax-loader "Haetaan toimenpiteitä"]
                 "Ei toimenpiteitä")
        :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))

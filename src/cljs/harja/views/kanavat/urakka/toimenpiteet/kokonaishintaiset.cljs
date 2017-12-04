@@ -53,7 +53,7 @@
        (fn [_]
          (e! (tiedot/->UusiToimenpide)))]]]))
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet] :as app}]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
   [:div
    [toimenpiteet-view/ei-yksiloity-vihje]
    [grid/grid
@@ -64,7 +64,7 @@
      :voi-kumota? false
      :piilota-toiminnot? true
      :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
-     :tyhja "Ei kokonaishitaisia toimenpiteita"
+     :tyhja (if haku-kaynnissa? [ajax-loader "Haetaan toimenpiteitä"] "Ei toimenpiteitä")
      :jarjesta ::kanavan-toimenpide/pvm
      :tunniste ::kanavan-toimenpide/id}
     (toimenpiteet-view/toimenpidesarakkeet
