@@ -220,16 +220,11 @@
 
   ToimenpideTallennettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (viesti/nayta! "Toimenpide tallennettu" :success)
-    (assoc app :tallennus-kaynnissa? false
-               :avattu-toimenpide nil
-               :toimenpiteet toimenpiteet))
-
+    (toimenpiteet/toimenpide-tallennettu app toimenpiteet))
 
   ToimenpiteidenTallentaminenEpaonnistui
   (process-event [_ app]
-    (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
-    (assoc app :tallennus-kaynnissa? false))
+    (toimenpiteet/toimenpide-ei-tallennettu app))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]

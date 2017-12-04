@@ -11,7 +11,8 @@
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide]
             [clojure.string :as str]
-            [harja.tyokalut.tuck :as tuck-apurit])
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -92,3 +93,13 @@
                              {:onnistui toimenpide-tallennettu
                               :epaonnistui toimenpide-ei-tallennetti})
           (assoc :tallennus-kaynnissa? true)))))
+
+(defn toimenpide-tallennettu [app toimenpiteet]
+  (viesti/nayta! "Toimenpide tallennettu" :success)
+  (assoc app :tallennus-kaynnissa? false
+             :avattu-toimenpide nil
+             :toimenpiteet toimenpiteet))
+
+(defn toimenpide-ei-tallennettu [app]
+  (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
+  (assoc app :tallennus-kaynnissa? false))
