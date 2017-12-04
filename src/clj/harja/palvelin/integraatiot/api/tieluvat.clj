@@ -19,7 +19,6 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-sijainti [db sijainti]
-  (println "--->>> sijanti" sijainti)
   (let [parametrit {:tie (::tielupa/tie sijainti)
                     :aosa (::tielupa/aosa sijainti)
                     :aet (::tielupa/aet sijainti)
@@ -59,7 +58,7 @@
 (defn kirjaa-tielupa [liitteiden-hallinta db parametrit data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
   (->> (tielupa-sanoma/api->domain (:tielupa data))
-       (hae-sijainnit db)
+       (hae-sijainnit db) ;; todo: tämä pitää laajentaa hakemaan sijainnit myös mainoksille, kaapeliasennuksille jne.
        (hae-urakka db)
        (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
        (tielupa-q/tallenna-tielupa db))
