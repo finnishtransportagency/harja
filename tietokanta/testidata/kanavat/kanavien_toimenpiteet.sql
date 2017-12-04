@@ -280,7 +280,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
           tpk_id_saimaan_kok_hint_tp);
 
   INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja)
-  VALUES ((SELECT MAX(id) FROM kan_toimenpide),
+  VALUES ((SELECT MAX(id) FROM kan_toimenpide WHERE tyyppi = 'kokonaishintainen'),
       toimenpidekoodi_id_vv_laaja_yksiloimaton, 4, kayttaja_id_jvh);
 
   INSERT INTO toimenpidekoodi (nimi, taso, luotu, yksikko, suoritettavatehtava, hinnoittelu, emo)
@@ -299,7 +299,6 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
 
   INSERT INTO kan_hinta (toimenpide, otsikko, summa, luoja)
   VALUES ((SELECT id FROM kan_toimenpide WHERE lisatieto = 'Testitoimenpide 20171112'), 'Muuta könttäsummasälää', 400, kayttaja_id_jvh);
-
   INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
   VALUES ('2017-08-01', '2018-07-31', 1, 'h', 45, tyonjohto_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto);
   INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
