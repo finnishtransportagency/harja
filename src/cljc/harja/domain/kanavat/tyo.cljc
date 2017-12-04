@@ -15,14 +15,16 @@
 
 (define-tables
   ["kan_tyo" ::toimenpiteen-tyo
-   {"toimenpide" ::toimenpide-id}
+   {"toimenpide" ::toimenpide-id
+    "toimenpidekoodi-id" ::toimenpidekoodi-id
+    ::toimenpidekoodi (specql.rel/has-one
+                       ::toimenpidekoodi-id
+                       ::tpk/toimenpidekoodi
+                       ::tpk/id)}
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
-   {::toimenpidekoodi (specql.rel/has-one
-                        ::toimenpidekoodi-id
-                        ::tpk/toimenpidekoodi
-                        ::tpk/id)}])
+   ])
 
 ;; Löysennetään tyyppejä numeroiksi, koska JS-maailmassa ei ole BigDeccejä
 (s/def ::maara number?)
@@ -32,15 +34,19 @@
 
 (def perustiedot
   #{::id
-    ::maara})
+    ::maara
+    ::toimenpide-id
+    ::toimenpidekoodi-id})
 
 (def viittaus-idt
   #{::hinnoittelu-id
-    ::toimenpidekoodi-id})
+    ::toimenpidekoodi})
+
+(def perustiedot-viittauksineen (clojure.set/union perustiedot viittaus-idt))
 
 (def metatiedot m/muokkauskentat)
 
-(defn- toiden-kokonaishinta [tyot suunnitellut-tyot]
+(defn toiden-kokonaishinta [tyot suunnitellut-tyot]
   (reduce + 0
           (map (fn [tyo]
                  (let [tyon-tpk (tpk/toimenpidekoodi-tehtavalla
@@ -49,7 +55,7 @@
                    (* (::maara tyo) (:yksikkohinta tyon-tpk))))
                tyot)))
 
-(defn- paivita-tyon-tiedot-idlla
+(defn paivita-tyon-tiedot-idlla
   "Päivittää töiden joukosta yksittäisen työn, jolla annettu id."
   [tyot tiedot]
   (mapv (fn [tyo]

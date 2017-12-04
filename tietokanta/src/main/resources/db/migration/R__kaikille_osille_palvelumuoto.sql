@@ -8,12 +8,12 @@ DECLARE palvelumuodot INTEGER[];
 BEGIN
   tapahtuman_kohde := NEW."kohde-id";
   kohteen_osat := (SELECT ARRAY((SELECT id FROM kan_kohteenosa WHERE "kohde-id" = tapahtuman_kohde)));
-  palvelumuodot := (SELECT ARRAY((SELECT "kohteenosa-id" FROM kan_liikennetapahtuma_osa WHERE "liikennetapahtuma-id" = NEW.id)));
+  palvelumuodot := (SELECT ARRAY((SELECT "kohteenosa-id" FROM kan_liikennetapahtuma_toiminto WHERE "liikennetapahtuma-id" = NEW.id)));
   IF (kohteen_osat <@ palvelumuodot AND palvelumuodot <@ kohteen_osat)
   THEN
     RETURN NEW;
   ELSE
-    RAISE EXCEPTION 'Liikennetapahtuman % kohde sisältää osat %, mutta palvelumuodot kohteille %', NEW.id, kohteen_osat, palvelumuodot;
+    RAISE EXCEPTION 'Liikennetapahtumalle pitää kirjata palvelumuoto jokaiselle kohteessa olevalle kohteenosalle. Liikennetapahtuman % kohde sisältää osat %, mutta palvelumuodot kohteille %', NEW.id, kohteen_osat, palvelumuodot;
     RETURN NULL;
   END IF;
 END;

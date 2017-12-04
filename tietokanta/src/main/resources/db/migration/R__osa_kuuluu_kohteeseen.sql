@@ -19,7 +19,7 @@ BEGIN
     THEN
       RETURN NEW;
     ELSE
-      RAISE EXCEPTION 'Kohteenosa % ei kuulu annettuun kohteeseen %', NEW."kohteenosa-id", NEW."kohde-id";
+      RAISE EXCEPTION 'Kanavakohteenosa % ei kuulu annettuun kohteeseen %', NEW."kohteenosa-id", NEW."kohde-id";
       RETURN NULL;
     END IF;
   END IF;
@@ -41,8 +41,8 @@ FOR EACH ROW
 EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
 
 DROP TRIGGER IF EXISTS liikennetapahtuman_kohteen_tarkastus
-ON kan_liikennetapahtuma_osa;
+ON kan_liikennetapahtuma_toiminto;
 CREATE TRIGGER liikennetapahtuman_kohteen_tarkastus
-BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_osa
+BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_toiminto
 FOR EACH ROW
 EXECUTE PROCEDURE osa_kuuluu_kohteeseen();

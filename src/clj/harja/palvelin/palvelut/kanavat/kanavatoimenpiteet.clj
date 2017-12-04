@@ -16,10 +16,10 @@
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
             [clojure.java.jdbc :as jdbc]))
 
-(defn- vaadi-rivit-kuuluvat-emoon* [rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
+(defn- vaadi-rivit-kuuluvat-emoon* [taulu rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
   (let [emo-idt (set (keep rivin-emo-id-avain rivit))]
     (when (not= emo-idt #{vaadittu-emo-id})
-      (throw (SecurityException. (str "Rivit " rivi-idt " eivät kuulu emoon " vaadittu-emo-id))))))
+      (throw (SecurityException. (str "Rivi-idt " rivi-idt " taulusta " taulu " eivät kuulu emoon " rivin-emo-id-avain ": " emo-idt " != " vaadittu-emo-id))))))
 
 
 (defn vaadi-rivit-kuuluvat-emoon [db rivien-taulu rivin-emo-id-avain rivin-id-avain rivi-idt emo-id]
@@ -29,7 +29,7 @@
                 #{rivin-emo-id-avain rivin-id-avain}
                 {rivin-id-avain (op/in rivi-idt)})]
     (when (not-empty rivi-idt)
-      (vaadi-rivit-kuuluvat-emoon* rivit rivi-idt rivin-emo-id-avain emo-id))))
+      (vaadi-rivit-kuuluvat-emoon* rivien-taulu rivit rivi-idt rivin-emo-id-avain emo-id))))
 
 
 (defn tallenna-kanavatoimenpiteen-hinnoittelu! [db user tiedot]
@@ -59,37 +59,37 @@
         {:db db
          :user user
          :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
-      (first (q-toimenpide/hae-kanavatoimenpiteet db {::toimenpide/id toimenpide-id})))))
+      (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id toimenpide-id})))))
 
-(defn tarkista-kutsu [user urakka-id tyyppi]
+(defn- tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
   (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
   (case tyyppi
     :kokonaishintainen (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user urakka-id)
     :muutos-lisatyo (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-lisatyot user urakka-id)))
 
-(defn tehtava-paivitetaan? [hintatyyppi tehtava]
+(defn- tehtava-paivitetaan? [hintatyyppi tehtava]
   (let [hintatyyppi-loytyi? (some #(when (= hintatyyppi %) %)
                                   (get-in tehtava [::toimenpide/toimenpidekoodi ::toimenpidekoodi/hinnoittelu]))]
     (not hintatyyppi-loytyi?)))
 
 (defn hae-kanavatoimenpiteet [db user {urakka-id ::toimenpide/urakka-id
                                        sopimus-id ::toimenpide/sopimus-id
-                                       alkupvm :alkupvm
-                                       loppupvm :loppupvm
+                                       alkupvm :alkupvm loppupvm :loppupvm
                                        toimenpidekoodi ::toimenpidekoodi/id
-                                       tyyppi ::toimenpide/kanava-toimenpidetyyppi}]
-
+                                       tyyppi ::toimenpide/kanava-toimenpidetyyppi
+                                       kohde ::toimenpide/kohde-id}]
   (tarkista-kutsu user urakka-id tyyppi)
   (let [tyyppi (name tyyppi)]
-    (q-toimenpide/hae-sopimuksen-toimenpiteet-aikavalilta
+    (q-toimenpide/hae-kanavatomenpiteet-jeesql
       db
       {:urakka urakka-id
        :sopimus sopimus-id
        :alkupvm alkupvm
        :loppupvm loppupvm
        :toimenpidekoodi toimenpidekoodi
-       :tyyppi tyyppi})))
+       :tyyppi tyyppi
+       :kohde kohde})))
 
 (defn siirra-kanavatoimenpiteet [db user tiedot]
   (let [urakka-id (::toimenpide/urakka-id tiedot)

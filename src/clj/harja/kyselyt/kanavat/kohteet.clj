@@ -18,14 +18,22 @@
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
-            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]))
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
+            [harja.domain.oikeudet :as oikeudet]))
 
 ;(defqueries "harja/kyselyt/kanavat/kanavat.sql")
 
-(defn- hae-kohteiden-urakkatiedot* [kohteet linkit]
+(defn- hae-kohteiden-urakkatiedot* [user kohteet linkit]
   (let [kohde-ja-urakat (->> linkit
                              (group-by ::kohde/kohde-id)
-                             (map (fn [[kohde-id urakat]] [kohde-id (map ::kohde/linkin-urakka urakat)]))
+                             (map (fn [[kohde-id urakat]]
+                                    [kohde-id (filter
+                                                (fn [urakka]
+                                                  (oikeudet/voi-lukea?
+                                                    oikeudet/urakat-kanavat-kokonaishintaiset
+                                                    (::ur/id urakka)
+                                                    user))
+                                                (map ::kohde/linkin-urakka urakat))]))
                              (into {}))]
     (map
       (fn [kohde]
@@ -33,10 +41,11 @@
       kohteet)))
 
 (defn hae-kohteiden-urakkatiedot
-  ([db kohteet]
-   (hae-kohteiden-urakkatiedot db nil kohteet))
-  ([db urakka-id kohteet]
-   (hae-kohteiden-urakkatiedot* kohteet
+  ([db user kohteet]
+   (hae-kohteiden-urakkatiedot db user nil kohteet))
+  ([db user urakka-id kohteet]
+   (hae-kohteiden-urakkatiedot* user
+                                kohteet
                                 (specql/fetch db
                                               ::kohde/kohde<->urakka
                                               (set/union
@@ -61,7 +70,7 @@
                 {::kohde/kohde-id kohde
                  ::m/poistettu? false}))
 
-(defn hae-kokonaisuudet-ja-kohteet [db]
+(defn hae-kokonaisuudet-ja-kohteet [db user]
   (hae-kokonaisuudet-ja-kohteet*
     (specql/fetch db
                   ::kok/kohdekokonaisuus
@@ -70,16 +79,18 @@
                     kok/kohteet)
                   {::kok/kohteet (op/or {::m/poistettu? op/null?}
                                         {::m/poistettu? false})})
-    (partial hae-kohteiden-urakkatiedot db)))
+    (partial hae-kohteiden-urakkatiedot db user)))
 
-(defn hae-urakan-kohteet [db urakka-id]
+(defn hae-urakan-kohteet [db user urakka-id]
   (->>
     (specql/fetch db
                   ::kohde/kohde
                   (set/union
-                    kohde/perustiedot-ja-kohdekokonaisuus)
+                    kohde/perustiedot
+                    kohde/kohteen-kohdekokonaisuus
+                    kohde/kohteenosat)
                   {::m/poistettu? false})
-    (hae-kohteiden-urakkatiedot db urakka-id)
+    (hae-kohteiden-urakkatiedot db user urakka-id)
     (remove (comp empty? ::kohde/urakat))))
 
 (defn lisaa-kohteelle-osa! [db user osa kohde]
