@@ -230,3 +230,40 @@ CREATE TABLE tielupa_liite (
 );
 
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-tielupa');
+
+CREATE OR REPLACE FUNCTION hae_tieluvalle_urakka(tielupa_id INTEGER)
+  RETURNS INTEGER AS
+$$
+DECLARE
+  sijainti_          TR_OSOITE_LAAJENNETTU;
+  sijainnit_         TR_OSOITE_LAAJENNETTU [];
+  geometriat_        GEOMETRY [];
+  tieluvan_geometria GEOMETRY;
+  alueurakkanro_     TEXT;
+  urakka_id_         INTEGER;
+BEGIN
+  SELECT INTO sijainnit_ sijainnit
+  FROM tielupa
+  WHERE id = tielupa_id;
+
+  RAISE NOTICE '%', sijainnit_;
+
+  FOREACH sijainti_ IN ARRAY sijainnit_
+  LOOP
+    geometriat_ := array_append(geometriat_, sijainti_.geometria);
+  END LOOP;
+
+  tieluvan_geometria := st_union(geometriat_);
+
+  SELECT INTO alueurakkanro_ alueurakkanro
+  FROM alueurakka
+  WHERE st_contains(alue, tieluvan_geometria);
+
+  SELECT INTO urakka_id_ id
+  FROM urakka
+  WHERE urakkanro = alueurakkanro_;
+
+  RETURN urakka_id_;
+END;
+$$
+LANGUAGE plpgsql;
