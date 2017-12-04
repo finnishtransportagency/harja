@@ -200,13 +200,11 @@
 
   HuoltokohteetHaettu
   (process-event [{huoltokohteet :huoltokohteet} app]
-    (assoc app :huoltokohteet huoltokohteet
-               :huoltokohteiden-haku-kaynnissa? false))
+    (toimenpiteet/huoltokohteet-haettu app huoltokohteet))
 
   HuoltokohteidenHakuEpaonnistui
   (process-event [_ app]
-    (viesti/nayta! "Huoltokohteiden haku epäonnistui" :danger)
-    (assoc app :huoltokohteiden-haku-kaynnissa? false))
+    (toimenpiteet/huoltokohteet-ei-haettu app))
 
   TallennaToimenpide
   (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]

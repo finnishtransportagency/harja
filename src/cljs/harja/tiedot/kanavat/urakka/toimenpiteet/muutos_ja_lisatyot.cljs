@@ -77,6 +77,8 @@
 (defrecord ToimenpideTallennettu [toimenpiteet])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
 (defrecord PoistaToimenpide [toimenpide])
+(defrecord HuoltokohteetHaettu [huoltokohteet])
+(defrecord HuoltokohteidenHakuEpaonnistui [])
 ;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
@@ -471,4 +473,12 @@
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
-      app)))
+      app))
+
+  HuoltokohteetHaettu
+  (process-event [{huoltokohteet :huoltokohteet} app]
+    (toimenpiteet/huoltokohteet-haettu app huoltokohteet))
+
+  HuoltokohteidenHakuEpaonnistui
+  (process-event [_ app]
+    (toimenpiteet/huoltokohteet-ei-haettu app)))

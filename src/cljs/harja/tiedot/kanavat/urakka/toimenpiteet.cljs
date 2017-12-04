@@ -103,3 +103,11 @@
 (defn toimenpide-ei-tallennettu [app]
   (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
   (assoc app :tallennus-kaynnissa? false))
+
+(defn huoltokohteet-haettu [app huoltokohteet]
+  (assoc app :huoltokohteet huoltokohteet
+             :huoltokohteiden-haku-kaynnissa? false))
+
+(defn huoltokohteet-ei-haettu [app]
+  (viesti/nayta! "Huoltokohteiden haku epäonnistui" :danger)
+  (assoc app :huoltokohteiden-haku-kaynnissa? false))
