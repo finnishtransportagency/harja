@@ -182,8 +182,8 @@
           :toiminto-fn (fn [] (poista-toimenpide-fn toimenpide))})])])
 
 (defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
-              {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
-                      tallenna-lomake-fn poista-toimenpide-fn]}]
+                        {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
+                                tallenna-lomake-fn poista-toimenpide-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
         kanavakohteet @kanavaurakka/kanavakohteet

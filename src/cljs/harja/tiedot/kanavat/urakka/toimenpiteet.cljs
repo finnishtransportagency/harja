@@ -85,7 +85,7 @@
   (if (:tallennus-kaynnissa? app)
     app
     (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]) tyyppi)
-          hakuehdot (muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
+          hakuehdot (muodosta-kohteiden-hakuargumentit valinnat tyyppi)]
       (-> app
           (tuck-apurit/post! :tallenna-kanavatoimenpide
                              {::kanavatoimenpide/tallennettava-kanava-toimenpide toimenpide
