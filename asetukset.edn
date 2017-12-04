@@ -8,16 +8,16 @@
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")}
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
-              :portti 5432
+              :portti 7731
               :yhteyspoolin-koko 16
-              :kayttaja "harja"
-              :salasana ""}
+              :kayttaja "flyway"
+              :salasana "s_flyway"}
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
-                      :portti 5432
+                      :portti 7731
                       :yhteyspoolin-koko 16
-                      :kayttaja "harja"
-                      :salasana ""}
+                      :kayttaja "flyway"
+                      :salasana "s_flyway"}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
