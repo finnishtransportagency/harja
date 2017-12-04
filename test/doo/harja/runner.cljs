@@ -107,6 +107,5 @@
            'harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
            'harja.tiedot.kanavat.urakka.liikenne-test
-           'harja.tiedot.kanavat.urakka.laskutus-test
            ;; uusi testi tähän
            )

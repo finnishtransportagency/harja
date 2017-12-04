@@ -14,12 +14,12 @@
   (assert (::lt/urakka-id tiedot) "Urakka id puuttuu, ei voi tallentaa liikennetapahtumaa!")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kanavat-liikenne user (::lt/urakka-id tiedot))
   (q/tallenna-liikennetapahtuma db user (dissoc tiedot :hakuparametrit))
-  (q/hae-liikennetapahtumat db (:hakuparametrit tiedot)))
+  (q/hae-liikennetapahtumat db user (:hakuparametrit tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
   (assert (::ur/id tiedot) "Urakka id puuttuu, ei voida hakea liikennetapahtumia!")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-liikenne user (::ur/id tiedot))
-  (q/hae-liikennetapahtumat db tiedot))
+  (q/hae-liikennetapahtumat db user tiedot))
 
 (defn hae-edelliset-tapahtumat [db user tiedot]
   (assert (::lt/urakka-id tiedot) "Urakka id puuttuu, ei voida hakea edellisiä tapahtumia!")

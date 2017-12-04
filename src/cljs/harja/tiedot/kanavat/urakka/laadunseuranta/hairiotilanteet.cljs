@@ -33,8 +33,6 @@
 (defrecord HaeHairiotilanteet [valinnat])
 (defrecord HairiotilanteetHaettu [tulos])
 (defrecord HairiotilanteetEiHaettu [])
-(defrecord KohteetHaettu [kohteet])
-(defrecord KohteidenHakuEpaonnistui [])
 (defrecord MateriaalitHaettu [materiaalit])
 (defrecord MateriaalienHakuEpaonnistui [])
 ;; Muokkaukset
@@ -124,24 +122,18 @@
 
 (extend-protocol tuck/Event
   NakymaAvattu
-  (process-event [_ {:keys [kohteiden-haku-kaynnissa? materiaalien-haku-kaynnissa?] :as app}]
-    (if (or kohteiden-haku-kaynnissa? materiaalien-haku-kaynnissa?)
+  (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
+    (if materiaalien-haku-kaynnissa?
       (assoc app :nakymassa? true)
       (let [urakka-id (:id @navigaatio/valittu-urakka)]
         (-> app
-            (tuck-apurit/post! :hae-urakan-kohteet
-                               {::urakka/id urakka-id}
-                               {:onnistui ->KohteetHaettu
-                                :epaonnistui ->KohteidenHakuEpaonnistui})
             (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
                                {::materiaalit/urakka-id urakka-id}
                                {:onnistui ->MateriaalitHaettu
                                 :epaonnistui ->MateriaalienHakuEpaonnistui})
             (assoc :nakymassa? true
-                   :kohteiden-haku-kaynnissa? true
                    :materiaalien-haku-kaynnissa? true
-                   :kohteet []
-                   :materiaalit [])))))
+                   :materiaalit nil)))))
 
   NakymaSuljettu
   (process-event [_ app]
@@ -211,16 +203,6 @@
     (let [tallennus! (tuck/send-async! ->TallennaHairiotilanne)]
       (go (tallennus! (assoc hairiotilanne ::muokkaustiedot/poistettu? true)))
       app))
-
-  KohteetHaettu
-  (process-event [{kohteet :kohteet} app]
-    (assoc app :kohteet kohteet
-               :kohteiden-haku-kaynnissa? false))
-
-  KohteidenHakuEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
-    (assoc app :kohteiden-haku-kaynnissa? false))
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]

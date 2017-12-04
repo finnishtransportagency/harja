@@ -27,7 +27,8 @@
             [harja.domain.kanavat.hairiotilanne :as hairio]
             [harja.ui.debug :as debug]
             [harja.domain.kayttaja :as kayttaja]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -303,10 +304,7 @@
               :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
               :disabled (not oikeus?)})])])))
 
-(defn hairiolomake [e! {:keys [valittu-hairiotilanne
-                               kohteet
-                               valinnat]
-                        :as app}]
+(defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat] :as app} kohteet]
   [:div
    [napit/takaisin "Takaisin häiriölistaukseen"
     #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
@@ -334,7 +332,7 @@
       [:div
        [debug/debug app]
        (if valittu-hairiotilanne
-         [hairiolomake e! app]
+         [hairiolomake e! app @kanavaurakka/kanavakohteet]
          [:div
           [suodattimet-ja-toiminnot e! app]
           [hairiolista e! app]])])))
