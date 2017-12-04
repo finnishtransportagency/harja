@@ -82,22 +82,6 @@
                                  :valittu? uusi-arvo})))})
     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
-(defn lomake-toiminnot [e! {:keys [tallennus-kaynnissa?] :as app} toimenpide]
-  [:div
-   [napit/tallenna
-    "Tallenna"
-    #(e! (tiedot/->TallennaToimenpide toimenpide))
-    {:tallennus-kaynnissa? tallennus-kaynnissa?
-     :disabled (not (lomake/voi-tallentaa? toimenpide))}]
-   (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
-     [napit/poista
-      "Poista"
-      #(varmista-kayttajalta/varmista-kayttajalta
-         {:otsikko "Toimenpiteen poistaminen"
-          :sisalto [:div "Haluatko varmasti poistaa toimenpiteen?"]
-          :hyvaksy "Poista"
-          :toiminto-fn (fn [] (e! (tiedot/->PoistaToimenpide toimenpide)))})])])
-
 (defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide
                                                      kohteet
                                                      toimenpideinstanssit
@@ -105,26 +89,10 @@
                                                      huoltokohteet
                                                      tallennus-kaynnissa?]
                                               :as app}]
-  (let [urakka (get-in app [:valinnat :urakka])
-        sopimukset (:sopimukset urakka)
-        lomake-valmis? (not (empty? huoltokohteet))]
-    [:div
-     [napit/takaisin "Takaisin toimenpideluetteloon"
-      #(e! (tiedot/->TyhjennaAvattuToimenpide))]
-     (if lomake-valmis?
-       [lomake/lomake
-        {:otsikko (if (::kanavan-toimenpide/id avattu-toimenpide) "Muokkaa toimenpidettä" "Uusi toimenpide")
-         :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-         :footer-fn (fn [toimenpide]
-                      (lomake-toiminnot e! app toimenpide))}
-        (toimenpiteet-view/toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
-                                                       :sopimukset sopimukset
-                                                       :kohteet @kanavaurakka/kanavakohteet
-                                                       :huoltokohteet huoltokohteet
-                                                       :toimenpideinstanssit toimenpideinstanssit
-                                                       :tehtavat tehtavat})
-        avattu-toimenpide]
-       [ajax-loader "Ladataan..."])]))
+  [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
+                                           :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
+                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
                                     :as app}

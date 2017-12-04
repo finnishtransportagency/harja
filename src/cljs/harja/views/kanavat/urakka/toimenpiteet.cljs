@@ -167,7 +167,7 @@
   [:div
    [napit/tallenna
     "Tallenna"
-    tallenna-lomake-fn
+    #(tallenna-lomake-fn toimenpide)
     {:tallennus-kaynnissa? tallennus-kaynnissa?
      :disabled (not (lomake/voi-tallentaa? toimenpide))}]
    (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
@@ -177,9 +177,9 @@
          {:otsikko "Toimenpiteen poistaminen"
           :sisalto [:div "Haluatko varmasti poistaa toimenpiteen?"]
           :hyvaksy "Poista"
-          :toiminto-fn poista-toimenpide-fn})])])
+          :toiminto-fn (fn [] (poista-toimenpide-fn toimenpide))})])])
 
-(defn lomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
+(defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
               {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
                       tallenna-lomake-fn poista-toimenpide-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
