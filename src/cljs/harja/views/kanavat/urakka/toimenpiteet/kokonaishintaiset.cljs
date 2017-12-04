@@ -27,30 +27,31 @@
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn hakuehdot [e! {:keys [urakka] :as app} kohteet]
-  [valinnat/urakkavalinnat {:urakka urakka}
-   ^{:key "valinnat"}
-   [:div
-    [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
-    [valinnat/kanava-kohde
-     (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
-             (fn [uusi]
-               (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
-     (into [nil] kohteet)
-     #(let [nimi (kohde/fmt-kohteen-nimi %)]
-        (if (empty? nimi) "Kaikki" nimi))]]
-   ^{:key "toiminnot"}
-   [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
-    ^{:key "uusi-nappi"}
-    [napit/yleinen-ensisijainen
-     "Siirrä valitut muutos- ja lisätöihin"
-     (fn [_]
-       (e! (tiedot/->SiirraValitut)))
-     {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
-    [napit/uusi
-     "Uusi toimenpide"
-     (fn [_]
-       (e! (tiedot/->UusiToimenpide)))]]])
+(defn hakuehdot [e! app kohteet]
+  (let [urakka-map (get-in app [:valinnat :urakka])]
+    [valinnat/urakkavalinnat {:urakka urakka-map}
+     ^{:key "valinnat"}
+     [:div
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
+      [valinnat/kanava-kohde
+       (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
+               (fn [uusi]
+                 (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
+       (into [nil] kohteet)
+       #(let [nimi (kohde/fmt-kohteen-nimi %)]
+          (if (empty? nimi) "Kaikki" nimi))]]
+     ^{:key "toiminnot"}
+     [valinnat/urakkatoiminnot {:urakka urakka-map :sticky? true}
+      ^{:key "uusi-nappi"}
+      [napit/yleinen-ensisijainen
+       "Siirrä valitut muutos- ja lisätöihin"
+       (fn [_]
+         (e! (tiedot/->SiirraValitut)))
+       {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
+      [napit/uusi
+       "Uusi toimenpide"
+       (fn [_]
+         (e! (tiedot/->UusiToimenpide)))]]]))
 
 (defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet] :as app}]
   [:div

@@ -33,7 +33,7 @@ INSERT INTO kan_liikennetapahtuma_alus ("liikennetapahtuma-id", nimi, laji, lkm,
       ((SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'Testidata 6'), '', 'ÖLJ', 1, NULL, 'alas', NULL, (SELECT luoja FROM kan_liikennetapahtuma WHERE lisatieto = 'Testidata 6' )),
       ((SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'Testidata 8'), '', 'ÖLJ', 1, NULL, 'alas', NULL, (SELECT luoja FROM kan_liikennetapahtuma WHERE lisatieto = 'Testidata 6' ));
 
-INSERT INTO kan_liikennetapahtuma_osa ("liikennetapahtuma-id", "kohde-id", "kohteenosa-id", toimenpide, palvelumuoto, lkm, luoja)
+INSERT INTO kan_liikennetapahtuma_toiminto ("liikennetapahtuma-id", "kohde-id", "kohteenosa-id", toimenpide, palvelumuoto, lkm, luoja)
     VALUES
       ((SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'Testidata 1'),
        (SELECT id FROM kan_kohde WHERE nimi = 'Kansola'),

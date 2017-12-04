@@ -59,9 +59,6 @@
 (def kohteenosat
   #{[::kohteenosat osa/perustiedot]})
 
-(def perustiedot+osat
-  (set/union perustiedot kohteenosat))
-
 (def metatiedot m/muokkauskentat)
 
 (def perustiedot-ja-sijainti (conj perustiedot ::sijainti))
@@ -69,9 +66,6 @@
 (def kohteen-urakkatiedot #{[::linkin-urakka #{:harja.domain.urakka/id :harja.domain.urakka/nimi}]})
 
 (def kohteen-kohdekokonaisuus #{[::kohdekokonaisuus kok/perustiedot]})
-
-(def perustiedot-ja-kohdekokonaisuus
-  (set/union perustiedot kohteen-kohdekokonaisuus))
 
 ;; Domain-funktiot
 
@@ -86,18 +80,27 @@
   [kohde]
   (::nimi kohde))
 
-(defn fmt-kohteenosan-nimi
+(defn fmt-kohteenosan-tyyppi->str [tyyppi]
+  ({:silta "silta"
+    :rautatiesilta "rautatiesilta"
+    :sulku "sulku"}
+    tyyppi))
+
+(defn fmt-kohde-ja-osa-nimi
   [kohde osa]
   (str
     (::nimi kohde)
     (cond
       (::osa/nimi osa) (str ", " (::osa/nimi osa))
-      (::osa/tyyppi osa) (str ", " (::osa/tyyppi osa))
+      (::osa/tyyppi osa) (str ", " (fmt-kohteenosan-tyyppi->str (::osa/tyyppi osa)))
       :else "")))
 
+(defn fmt-kohteenosan-nimi [osa]
+  (str/capitalize (or (::osa/nimi osa) (fmt-kohteenosan-tyyppi->str (::osa/tyyppi osa)))))
+
 (defn silta? [osa]
-  (or (= :silta (::tyyppi osa))
-      (= :rautatiesilta (::tyyppi osa))))
+  (or (= :silta (::osa/tyyppi osa))
+      (= :rautatiesilta (::osa/tyyppi osa))))
 
 (defn sulku? [osa]
-  (= :sulku (::tyyppi osa)))
+  (= :sulku (::osa/tyyppi osa)))
