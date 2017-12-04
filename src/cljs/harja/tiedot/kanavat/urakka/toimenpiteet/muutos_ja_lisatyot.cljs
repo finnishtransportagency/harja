@@ -243,7 +243,7 @@
            {:nakymassa? nakymassa?}
            (when nakymassa?
              {:tehtavat (toimenpiteet/tehtavat-tyypilla @urakkatiedot/urakan-toimenpiteet-ja-tehtavat
-                                                        "kokonaishintainen") ;; TODO Muutos- ja lisätyö
+                                                        "muutoshintainen")
               :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit})))
 
   PaivitaValinnat
