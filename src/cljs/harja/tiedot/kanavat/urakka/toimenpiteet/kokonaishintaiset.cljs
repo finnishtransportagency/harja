@@ -79,8 +79,8 @@
 
 (extend-protocol tuck/Event
   NakymaAvattu
-  (process-event [_ {:keys [kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?] :as app}]
-    (if (or kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?)
+  (process-event [_ {:keys [huoltokohteiden-haku-kaynnissa?] :as app}]
+    (if huoltokohteiden-haku-kaynnissa?
       (assoc app :nakymassa? true)
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
@@ -89,7 +89,6 @@
                               {:onnistui ->HuoltokohteetHaettu
                                :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
             (assoc :nakymassa? true
-                   :kohteiden-haku-kaynnissa? true
                    :huoltokohteiden-haku-kaynnissa? true
                    :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
