@@ -4,8 +4,8 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.660"]
+  :dependencies [[org.clojure/clojure "1.9.0-RC2"]
+                 [org.clojure/clojurescript "1.9.946"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-alpha17"]
