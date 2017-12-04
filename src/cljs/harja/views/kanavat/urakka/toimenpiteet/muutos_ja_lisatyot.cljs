@@ -47,34 +47,13 @@
         (fn [_]
           (e! (tiedot/->UusiToimenpide)))]]]]))
 
-(defn lisatyot-lomake [e! {:keys [avattu-toimenpide
-                                  kohteet
-                                  toimenpideinstanssit
-                                  tehtavat
-                                  huoltokohteet
-                                  tallennus-kaynnissa?]
+(defn lisatyot-lomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
+                                  tehtavat huoltokohteet tallennus-kaynnissa?]
                            :as app}]
-  (let [urakka (get-in app [:valinnat :urakka])
-        sopimukset (:sopimukset urakka)
-        lomake-valmis? (not (empty? huoltokohteet))]
-    ;; TODO
-    #_[:div
-     [napit/takaisin "Takaisin toimenpideluetteloon"
-      #(e! (tiedot/->TyhjennaAvattuToimenpide))]
-     (if lomake-valmis?
-       [lomake/lomake
-        {:otsikko (if (::kanavan-toimenpide/id avattu-toimenpide) "Muokkaa toimenpidettä" "Uusi toimenpide")
-         :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-         :footer-fn (fn [toimenpide]
-                      (lomake-toiminnot e! app toimenpide))}
-        (toimenpiteet-view/toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
-                                                       :sopimukset sopimukset
-                                                       :kohteet @kanavaurakka/kanavakohteet
-                                                       :huoltokohteet huoltokohteet
-                                                       :toimenpideinstanssit toimenpideinstanssit
-                                                       :tehtavat tehtavat})
-        avattu-toimenpide]
-       [ajax-loader "Ladataan..."])]))
+  [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
+                                           :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
+                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
 
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   (let [hinta-sarake {:otsikko "Hinta"
@@ -140,4 +119,4 @@
             [ajax-loader "Ladataan..."]))))))
 
 (defc lisatyot []
-      [tuck tiedot/tila lisatyot*])
+  [tuck tiedot/tila lisatyot*])

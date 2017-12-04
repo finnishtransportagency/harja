@@ -214,6 +214,7 @@
     (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
                                            :tehtavat tehtavat
                                            :toimenpide toimenpide
+                                           :tyyppi :kokonaishintainen
                                            :toimenpide-tallennettu ->ToimenpideTallennettu
                                            :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
 

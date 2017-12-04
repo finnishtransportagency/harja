@@ -54,7 +54,7 @@
                      toimenpide)]
     (assoc app :avattu-toimenpide toimenpide)))
 
-(defn tallennettava-toimenpide [tehtavat toimenpide urakka]
+(defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
   ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
   (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
@@ -69,7 +69,7 @@
                       ::kanavatoimenpide/toimenpidekoodi-id
                       ::kanavatoimenpide/pvm
                       ::muokkaustiedot/poistettu?])
-        (assoc ::kanavatoimenpide/tyyppi :kokonaishintainen
+        (assoc ::kanavatoimenpide/tyyppi tyyppi
                ::kanavatoimenpide/urakka-id (:id urakka)
                ::kanavatoimenpide/kohde-id (get-in toimenpide [::kanavatoimenpide/kohde ::kohde/id])
                ::kanavatoimenpide/kohteenosa-id (get-in toimenpide [::kanavatoimenpide/kohteenosa ::osa/id])
@@ -79,10 +79,11 @@
                                                      nil))
         (dissoc ::kanavatoimenpide/kuittaaja))))
 
-(defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat toimenpide-tallennettu toimenpide-ei-tallennetti]}]
+(defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi
+                                       toimenpide-tallennettu toimenpide-ei-tallennetti]}]
   (if (:tallennus-kaynnissa? app)
     app
-    (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]))
+    (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]) tyyppi)
           hakuehdot (muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
       (-> app
           (tuck-apurit/post! :tallenna-kanavatoimenpide

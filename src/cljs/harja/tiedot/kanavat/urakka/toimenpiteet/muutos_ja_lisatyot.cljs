@@ -72,7 +72,10 @@
 (defrecord UusiToimenpide [])
 (defrecord TyhjennaAvattuToimenpide [])
 (defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
-
+(defrecord TallennaToimenpide [toimenpide])
+(defrecord ToimenpideTallennettu [toimenpiteet])
+(defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+(defrecord PoistaToimenpide [toimenpide])
 ;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
@@ -444,4 +447,33 @@
 
   AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide)))
+    (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide))
+
+  TallennaToimenpide
+  (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
+    (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
+                                           :tehtavat tehtavat
+                                           :toimenpide toimenpide
+                                           :tyyppi :muutos-lisatyo
+                                           :toimenpide-tallennettu ->ToimenpideTallennettu
+                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
+
+  ;; TODO Yhteiseen koodipesään nämä alemmat
+  ToimenpideTallennettu
+  (process-event [{toimenpiteet :toimenpiteet} app]
+    (viesti/nayta! "Toimenpide tallennettu" :success)
+    (assoc app :tallennus-kaynnissa? false
+               :avattu-toimenpide nil
+               :toimenpiteet toimenpiteet))
+
+
+  ToimenpiteidenTallentaminenEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
+    (assoc app :tallennus-kaynnissa? false))
+
+  PoistaToimenpide
+  (process-event [{toimenpide :toimenpide} app]
+    (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
+      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
+      app)))
