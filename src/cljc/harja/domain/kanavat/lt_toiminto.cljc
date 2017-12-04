@@ -1,4 +1,4 @@
-(ns harja.domain.kanavat.lt-osa
+(ns harja.domain.kanavat.lt-toiminto
   (:require
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
@@ -19,7 +19,7 @@
 (define-tables
   ["liikennetapahtuma_toimenpidetyyppi" ::lt-toimenpidetyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["liikennetapahtuma_palvelumuoto" ::kohteenosa/osan-palvelumuoto (specql.transform/transform (specql.transform/to-keyword))]
-  ["kan_liikennetapahtuma_osa" ::liikennetapahtuman-osa
+  ["kan_liikennetapahtuma_toiminto" ::liikennetapahtuman-toiminto
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
@@ -37,6 +37,8 @@
   #{::id
     ::toimenpide
     ::palvelumuoto
+    ::kohde-id
+    ::kohteenosa-id
     ::lkm})
 
 (def kohteen-tiedot

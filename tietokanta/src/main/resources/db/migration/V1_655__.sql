@@ -1,0 +1,1 @@
+ALTER TABLE kan_liikennetapahtuma_osa RENAME TO kan_liikennetapahtuma_toiminto;
