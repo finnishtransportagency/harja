@@ -25,6 +25,9 @@
                                    ::kayttaja/etunimi (:etunimi kayttaja)
                                    ::kayttaja/sukunimi (:sukunimi kayttaja)}})
 
+(defn uusi-toimenpide [app kayttaja urakka]
+  (assoc app :avattu-toimenpide (esitaytetty-toimenpidelomake kayttaja urakka)))
+
 (defn valittu-tehtava-muu? [tehtava-id tehtavat]
   (and
     tehtavat

@@ -100,7 +100,9 @@
      {:otsikko "Huoltokohde"
       :nimi ::kanavan-toimenpide/huoltokohde
       :tyyppi :valinta
-      :valinta-nayta #(or (::kanavan-huoltokohde/nimi %) "- Valitse huoltokohde-")
+      :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
+                            (str/lower-case nimi))
+                          "- Valitse huoltokohde -")
       :valinnat huoltokohteet
       :pakollinen? true}
      {:otsikko "Toimenpide"
