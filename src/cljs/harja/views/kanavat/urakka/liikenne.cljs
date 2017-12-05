@@ -356,16 +356,17 @@
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Uittoniput?"
          :kentta-params {:tyyppi :checkbox}
-         :arvo-atom (atomi :niput?)}]]]]))
+         :arvo-atom (atomi :niput?)}]]]
+     [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
+      [napit/uusi
+       "Lisää tapahtuma"
+       #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]))
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?] :as app}
                                  kohteet]
   [:div
    [debug app]
    [valinnat e! app kohteet]
-   [napit/uusi
-    "Lisää tapahtuma"
-    #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]
    [grid/grid
     {:otsikko (if liikennetapahtumien-haku-kaynnissa?
                 [ajax-loader-pieni "Päivitetään listaa.."]
