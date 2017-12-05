@@ -254,9 +254,19 @@
 (defn vaadi-alus-kuuluu-tapahtumaan! [db alus tapahtuma]
   (assert (alus-kuuluu-tapahtumaan? db alus tapahtuma) "Alus ei kuulu tapahtumaan!"))
 
+(defn poista-ketjutus! [db alus]
+  (specql/delete! db
+                  ::ketjutus/liikennetapahtuman-ketjutus
+                  {::ketjutus/alus-id (::lt-alus/id alus)
+                   ::ketjutus/tapahtumaan-id op/null?}))
+
 (defn tallenna-alus-tapahtumaan! [db user alus tapahtuma]
   (let [olemassa? (id-olemassa? (::lt-alus/id alus))
         alus (assoc alus ::lt-alus/liikennetapahtuma-id (::lt/id tapahtuma))]
+
+    (when (and olemassa? (::m/poistettu? alus))
+      (poista-ketjutus! db alus))
+
     (if (and olemassa? (alus-kuuluu-tapahtumaan? db alus tapahtuma))
       (do
         (specql/update! db
@@ -441,5 +451,5 @@
                 (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma)))]
 
 
-        (luo-uusi-ketjutus! db (assoc tapahtuma ::lt/alukset alukset
+        (luo-uusi-ketjutus! db (assoc tapahtuma ::lt/alukset (remove ::m/poistettu? alukset)
                                                 ::lt/id (::lt/id uusi-tapahtuma)))))))
