@@ -82,8 +82,8 @@
                  [figwheel "0.5.14"]
 
                  [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                 [cljsjs/react-with-addons "15.6.1-0"]
-                 [cljsjs/react-dom "15.6.1-0" :exclusions [cljsjs/react]]
+                 [cljsjs/react-with-addons "15.4.2-2"]
+                 [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
 
                  [alandipert/storage-atom "2.0.1"]
 
