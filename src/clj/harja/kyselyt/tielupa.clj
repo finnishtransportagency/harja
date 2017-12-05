@@ -20,7 +20,8 @@
            harja.domain.tielupa/hakijan-tiedot
            harja.domain.tielupa/urakoitsijan-tiedot
            harja.domain.tielupa/liikenneohjaajan-tiedot
-           harja.domain.tielupa/tienpitoviranomaisen-tiedot)
+           harja.domain.tielupa/tienpitoviranomaisen-tiedot
+           harja.domain.tielupa/johto-ja-kaapeliluvan-tiedot)
          hakuehdot))
 
 (defn hae-ulkoisella-tunnistella [db ulkoinen-id]

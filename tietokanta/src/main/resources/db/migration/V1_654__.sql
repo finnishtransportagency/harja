@@ -31,7 +31,17 @@ CREATE TYPE TIELUVAN_KAAPELIASENNUS AS (
   "ilmakaapelia-metreissa" DECIMAL,
   nopeusrajoitus           INTEGER,
   liikennemaara            DECIMAL,
-  sijainti                 TR_OSOITE_LAAJENNETTU
+  -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
+  tie       INTEGER,
+  aosa      INTEGER,
+  aet       INTEGER,
+  losa      INTEGER,
+  let       INTEGER,
+  ajorata   INTEGER,
+  kaista    INTEGER,
+  puoli     INTEGER,
+  karttapvm DATE,
+  geometria GEOMETRY
 );
 
 CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
@@ -39,20 +49,50 @@ CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
   asennustyyppi TEXT,
   kommentit     TEXT,
   toiminnot     TEXT,
-  sijainti      TR_OSOITE_LAAJENNETTU
+  -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
+  tie       INTEGER,
+  aosa      INTEGER,
+  aet       INTEGER,
+  losa      INTEGER,
+  let       INTEGER,
+  ajorata   INTEGER,
+  kaista    INTEGER,
+  puoli     INTEGER,
+  karttapvm DATE,
+  geometria GEOMETRY
 );
 
 CREATE TYPE TIELUVAN_OPASTE AS (
   tulostenumero INTEGER,
   kuvaus        TEXT,
-  sijainti      TR_OSOITE_LAAJENNETTU
+  -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
+  tie       INTEGER,
+  aosa      INTEGER,
+  aet       INTEGER,
+  losa      INTEGER,
+  let       INTEGER,
+  ajorata   INTEGER,
+  kaista    INTEGER,
+  puoli     INTEGER,
+  karttapvm DATE,
+  geometria GEOMETRY
 );
 
 CREATE TYPE TIELUVAN_LIIKENNEMERKKIJARJESTELY AS (
   "alkuperainen-nopeusrajoitus" TEXT,
   "alennettu-nopeusrajoitus"    TEXT,
   "nopeusrajoituksen-pituus"    TEXT,
-  sijainti                      TR_OSOITE_LAAJENNETTU
+  -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
+  tie       INTEGER,
+  aosa      INTEGER,
+  aet       INTEGER,
+  losa      INTEGER,
+  let       INTEGER,
+  ajorata   INTEGER,
+  kaista    INTEGER,
+  puoli     INTEGER,
+  karttapvm DATE,
+  geometria GEOMETRY
 );
 
 CREATE TYPE SUOJA_ALUE_RAKENTEEN_SIJOITUS AS ENUM (

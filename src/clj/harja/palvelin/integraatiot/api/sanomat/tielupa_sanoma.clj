@@ -84,7 +84,7 @@
    ::tielupa/johtolupa-tienalituksia (:tienalituksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-tienylityksia (:tienylityksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-silta-asennuksia (:silta-asennuksia johto-ja-kaapelilupa)
-   ::tielupa/johtoasennukset (kaapeliasennukset (:kaapeliasennukset johto-ja-kaapelilupa))})
+   ::tielupa/kaapeliasennukset (kaapeliasennukset (:kaapeliasennukset johto-ja-kaapelilupa))})
 
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
