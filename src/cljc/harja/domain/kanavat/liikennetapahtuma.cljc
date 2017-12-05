@@ -172,3 +172,8 @@
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
                                                            ::kohde]))
+
+(s/def ::poista-ketjutus-kysely (s/keys :req [::lt-alus/id
+                                              ::urakka-id]))
+
+(s/def ::poista-ketjutus-vastaus some?)
