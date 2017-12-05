@@ -94,9 +94,9 @@
                  [cljsjs/openlayers "4.4.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.17"]
-                 [org.apache.poi/poi-scratchpad "3.17"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.17"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "3.16"] ; TODO Voisi päivittää, mutta 3.17 aiheutti ongelman: Unable to find static field: RETURN_NULL_AND_BLAN
+                 [org.apache.poi/poi-scratchpad "3.16"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.16"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
@@ -124,7 +124,7 @@
                  [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.12.0"]
+                 [dk.ative/docjure "1.11.0"] ; TODO Voisi päivittää, mutta 1.12.0 aiheutti ongelman: Unable to find static field: ALIGN_RIGHT in interface org.apache.poi.ss.usermodel.CellStyle, compiling:(harja/palvelin/raportointi/excel.clj:156:44)
 
                  [com.cemerick/piggieback "0.2.2"]
                  [figwheel-sidecar "0.5.14"]
