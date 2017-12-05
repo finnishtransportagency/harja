@@ -8,7 +8,6 @@
                  [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta 1.9.946 aiheuttaa ongelman: eventtype.js is not a relative path
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [org.clojure/clojure "1.9.0-RC2"]
 
                  [prismatic/schema "1.1.7"]
                  [org.clojure/core.async "0.3.465"]

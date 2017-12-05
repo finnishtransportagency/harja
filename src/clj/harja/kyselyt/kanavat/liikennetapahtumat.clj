@@ -1,7 +1,7 @@
 (ns harja.kyselyt.kanavat.liikennetapahtumat
   (:require [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
-            [clojure.future :refer :all]
+
             [clojure.set :as set]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]

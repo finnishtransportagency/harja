@@ -6,7 +6,7 @@
             [harja.domain.tierekisteri :as tr]
             [harja.domain.organisaatio :as o]
             #?(:clj [harja.kyselyt.specql-db :refer [define-tables]])
-            #?(:clj [clojure.future :refer :all])
+            #?(:clj )
             #?(:cljs [specql.impl.registry]))
   #?(:cljs (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 

@@ -3,7 +3,7 @@
   #?@(:clj  [
              (:require [clojure.spec.alpha :as s]
                        [harja.kyselyt.specql-db :refer [define-tables]]
-                       [clojure.future :refer :all])]
+                       )]
       :cljs [(:require [clojure.spec.alpha :as s]
                [specql.impl.registry]
                [specql.data-types])
