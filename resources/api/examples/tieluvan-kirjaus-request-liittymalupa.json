@@ -17,7 +17,7 @@
       "tunniste": {
         "id": 1234
       },
-      "tyyppi": "johto- tai kaapeli-ilmoitus",
+      "tyyppi": "liittymalupa",
       "paatoksen-diaarinumero": "123456789",
       "saapumispvm": "2017-09-22T12:00:00+02:00",
       "myontamispvm": "2018-09-22T12:00:00+02:00",

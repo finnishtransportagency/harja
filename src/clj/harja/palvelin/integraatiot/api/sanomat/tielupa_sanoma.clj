@@ -2,6 +2,10 @@
   (:require [harja.domain.tielupa :as tielupa]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]))
 
+(defn nil-turvallinen-bigdec[arvo]
+  (when (not (nil? arvo))
+    (bigdec arvo)))
+
 (defn perustiedot [{perustiedot :perustiedot}]
   {::tielupa/ulkoinen-tunniste (get-in perustiedot [:tunniste :id])
    ::tielupa/tyyppi (keyword (:tyyppi perustiedot))
@@ -71,20 +75,49 @@
           (merge {::tielupa/laite (:laite kaapeliasennus)
                   ::tielupa/asennustyyppi (:asennustyyppi kaapeliasennus)
                   ::tielupa/kommentit (:kommentit kaapeliasennus)
-                  ::tielupa/maakaapelia-metreissa (bigdec (:maakaapelia-metreissa kaapeliasennus))
-                  ::tielupa/ilmakaapelia-metreissa (bigdec (:ilmakaapelia-metreissa kaapeliasennus))
+                  ::tielupa/maakaapelia-metreissa (nil-turvallinen-bigdec (:maakaapelia-metreissa kaapeliasennus))
+                  ::tielupa/ilmakaapelia-metreissa (nil-turvallinen-bigdec (:ilmakaapelia-metreissa kaapeliasennus))
                   ::tielupa/nopeusrajoitus (:nopeusrajoitus kaapeliasennus)
-                  ::tielupa/liikennemaara (bigdec (:liikennemaara kaapeliasennus))}
+                  ::tielupa/liikennemaara (nil-turvallinen-bigdec (:liikennemaara kaapeliasennus))}
                  (sijainti (:sijainti kaapeliasennus))))
         kaapeliasennukset))
 
 (defn johto-ja-kaapelilupa [johto-ja-kaapelilupa]
-  {::tielupa/johtolupa-maakaapelia-yhteensa (bigdec (:maakaapelia-yhteensa johto-ja-kaapelilupa))
-   ::tielupa/johtolupa-ilmakaapelia-yhteensa (bigdec (:ilmakaapelia-yhteensa johto-ja-kaapelilupa))
+  {::tielupa/johtolupa-maakaapelia-yhteensa (nil-turvallinen-bigdec (:maakaapelia-yhteensa johto-ja-kaapelilupa))
+   ::tielupa/johtolupa-ilmakaapelia-yhteensa (nil-turvallinen-bigdec (:ilmakaapelia-yhteensa johto-ja-kaapelilupa))
    ::tielupa/johtolupa-tienalituksia (:tienalituksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-tienylityksia (:tienylityksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-silta-asennuksia (:silta-asennuksia johto-ja-kaapelilupa)
    ::tielupa/kaapeliasennukset (kaapeliasennukset (:kaapeliasennukset johto-ja-kaapelilupa))})
+
+(defn liittymalupa [{liittymaohje :liittymaohje :as liittymalupa}]
+  (println "--->>>>")
+  (clojure.pprint/pprint liittymalupa)
+  (println "--->>>>")
+  {::tielupa/liittymalupa-myonnetty-kayttotarkoitus (:myonnetty-kauttotarkoitus liittymalupa)
+   ::tielupa/liittymalupa-haettu-kayttotarkoitus (:haettu-kayttotarkoitus liittymalupa)
+   ::tielupa/liittymalupa-liittyman-siirto (:liittyman-siirto liittymalupa)
+   ::tielupa/liittymalupa-tarkoituksen-kuvaus (:tarkoituksen-kuvaus liittymalupa)
+   ::tielupa/liittymalupa-tilapainen (:tilapainen liittymalupa)
+   ::tielupa/liittymalupa-sijainnin-kuvaus (:sijainnin-kuvaus liittymalupa)
+   ::tielupa/liittymalupa-arvioitu-kokonaisliikenne (:arvioitu-kokonaisliikenne liittymalupa)
+   ::tielupa/liittymalupa-arvioitu-kuorma-autoliikenne (:arvioitu-kuorma-autoliikenne liittymalupa)
+   ::tielupa/liittymalupa-nykyisen-liittyman-numero (:nykyisen-liittyman-numero liittymalupa)
+   ::tielupa/liittymalupa-nykyisen-liittyman-paivays (json-tyokalut/aika-string->java-sql-date(:nykyisen-liittyman-paivays liittymalupa))
+   ::tielupa/liittymalupa-kiinteisto-rn (:kiinteisto-rn liittymalupa)
+   ::tielupa/liittymalupa-muut-kulkuyhteydet (:muut-kulkuyhteydet liittymalupa)
+   ::tielupa/liittymalupa-valmistumisen-takaraja (json-tyokalut/aika-string->java-sql-date (:valmistumisen-takaraja liittymalupa))
+   ::tielupa/liittymalupa-kyla (:kyla liittymalupa)
+   ::tielupa/liittymalupa-liittymaohje-liittymakaari (:liittymakaari liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-leveys-metreissa (:leveys-metreissa liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-rumpu (:rumpu liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa (:rummun-halkaisija-millimetreissa liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-rummun-etaisyys-metreissa (:rummun-etaisyys-metreissa liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-odotustila-metreissa (:odotustila-metreissa liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-nakemapisteen-etaisyys (:nakemapisteen-etaisyys liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-liittymisnakema (:liittymisnakema liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-liikennemerkit (:liikennemerkit liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-lisaohjeet (:lisaohjeet liittymaohje)})
 
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
@@ -94,5 +127,6 @@
                    (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
                    (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa)))
                    (merge (valmistumisilmoitus (:valmistumisilmoitus tielupa)))
-                   (merge (johto-ja-kaapelilupa (:johto-ja-kaapelilupa tielupa))))]
+                   (merge (johto-ja-kaapelilupa (:johto-ja-kaapelilupa tielupa)))
+                   (merge (liittymalupa (:liittymalupa tielupa))))]
     domain))
