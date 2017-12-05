@@ -544,6 +544,8 @@
   [:span.livicon-arrow-up])
 (defn livicon-arrow-down []
   [:span.livicon-arrow-down])
+(defn livicon-arrow-bottom []
+  [:span.livicon-arrow-bottom])
 (defn livicon-check []
   [:span.livicon-check])
 (defn livicon-wrench []
