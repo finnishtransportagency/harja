@@ -19,17 +19,18 @@
    ::tielupa/kohde-postinumero (:kohteen-postinumero perustiedot)
    ::tielupa/tien-nimi (:tien-nimi perustiedot)})
 
+(defn sijainti [sijainti]
+  {::tielupa/tie (:numero sijainti)
+   ::tielupa/aosa (:aosa sijainti)
+   ::tielupa/aet (:aet sijainti)
+   ::tielupa/losa (:losa sijainti)
+   ::tielupa/let (:let sijainti)
+   ::tielupa/ajorata (:ajorata sijainti)
+   ::tielupa/kaista (:kaista sijainti)
+   ::tielupa/puoli (:puoli sijainti)})
+
 (defn sijainnit [sijainnit]
-  {::tielupa/sijainnit (mapv (fn [{sijainti :sijainti}]
-                               {::tielupa/tie (:numero sijainti)
-                                ::tielupa/aosa (:aosa sijainti)
-                                ::tielupa/aet (:aet sijainti)
-                                ::tielupa/losa (:losa sijainti)
-                                ::tielupa/let (:let sijainti)
-                                ::tielupa/ajorata (:ajorata sijainti)
-                                ::tielupa/kaista (:kaista sijainti)
-                                ::tielupa/puoli (:puoli sijainti)})
-                             sijainnit)})
+  {::tielupa/sijainnit (mapv #(sijainti (:sijainti %)) sijainnit)})
 
 (defn hakijan-tiedot [hakija]
   {::tielupa/hakija-nimi (:nimi hakija)
@@ -65,6 +66,26 @@
    ::tielupa/valmistumisilmoitus-palautettu (:palautettu valmistumisilmoitus)
    ::tielupa/valmistumisilmoitus-vaaditaan (:vaaditaan valmistumisilmoitus)})
 
+(defn kaapeliasennukset [kaapeliasennukset]
+  (mapv (fn [{kaapeliasennus :kaapeliasennus}]
+          {::tielupa/laite (:laite kaapeliasennus)
+           ::tielupa/asennustyyppi (:asennustyyppi kaapeliasennus)
+           ::tielupa/kommentit (:kommentit kaapeliasennus)
+           ::tielupa/maakaapelia-metreissa (:maakaapelia-metreissa kaapeliasennus)
+           ::tielupa/ilmakaapelia-metreissa (:ilmakaapelia-metreissa kaapeliasennus)
+           ::tielupa/nopeusrajoitus (:nopeusrajoitus kaapeliasennus)
+           ::tielupa/liikennemaara (:liikennemaara kaapeliasennus)
+           ::tielupa/sijainti (sijainti (:sijainti kaapeliasennus))})
+        kaapeliasennukset))
+
+(defn johto-ja-kaapelilupa [johto-ja-kaapelilupa]
+  {::tielupa/johtolupa-maakaapelia-yhteensa (:maakaapelia-yhteensa johto-ja-kaapelilupa)
+   ::tielupa/johtolupa-ilmakaapelia-yhteensa (:ilmakaapelia-yhteensa johto-ja-kaapelilupa)
+   ::tielupa/johtolupa-tienalituksia-yhteensa (:tienalituksia johto-ja-kaapelilupa)
+   ::tielupa/johtolupa-tienylityksia (:tienylityksia johto-ja-kaapelilupa)
+   ::tielupa/johtolupa-silta-asennuksia (:silta-asennuksia johto-ja-kaapelilupa)
+   ::tielupa/johtoasennukset (kaapeliasennukset (:kaapeliasennukset johto-ja-kaapelilupa))})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -72,5 +93,6 @@
                    (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
                    (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
                    (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa)))
-                   (merge (valmistumisilmoitus (:valmistumisilmoitus tielupa))))]
+                   (merge (valmistumisilmoitus (:valmistumisilmoitus tielupa)))
+                   (merge (johto-ja-kaapelilupa (:johto-ja-kaapelilupa tielupa))))]
     domain))

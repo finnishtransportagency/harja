@@ -132,11 +132,51 @@
     (is (= (tielupa-sanoma/tienpitoviranomaisen-tiedot data) odotettu))))
 
 (deftest valmistumisilmoitus
-  (let [data {:vaaditaan true,
-              :palautettu true,
+  (let [data {:vaaditaan true
+              :palautettu true
               :valmistumisilmoitus "Työt valmistuneet 22.9.2017"}
         odotettu {:harja.domain.tielupa/valmistumisilmoitus
-                  "Työt valmistuneet 22.9.2017",
-                  :harja.domain.tielupa/valmistumisilmoitus-palautettu true,
+                  "Työt valmistuneet 22.9.2017"
+                  :harja.domain.tielupa/valmistumisilmoitus-palautettu true
                   :harja.domain.tielupa/valmistumisilmoitus-vaaditaan true}]
     (is (= (tielupa-sanoma/valmistumisilmoitus data) odotettu))))
+
+(deftest johto-ja-kaapelilupa
+  (let [data {:maakaapelia-yhteensa 44.3
+              :ilmakaapelia-yhteensa 10.3
+              :tienylityksia 1
+              :silta-asennuksia 2
+              :kaapeliasennukset
+              [{:kaapeliasennus
+                {:laite "04 kV maakaapeli"
+                 :asennustyyppi "Tien varressa"
+                 :kommentit "Vedetään uutta kaapelia"
+                 :sijainti
+                 {:numero 20 :aet 2631 :aosa 6 :ajorata 0 :kaista 1 :puoli 0}
+                 :maakaapelia-metreissa 44.3
+                 :ilmakaapelia-metreissa 10.3
+                 :nopeusrajoitus 30
+                 :liikennemaara 10.2}}]}
+        odotettu {:harja.domain.tielupa/johtolupa-maakaapelia-yhteensa 44.3
+                  :harja.domain.tielupa/johtolupa-ilmakaapelia-yhteensa 10.3
+                  :harja.domain.tielupa/johtolupa-tienalituksia-yhteensa nil
+                  :harja.domain.tielupa/johtolupa-tienylityksia 1
+                  :harja.domain.tielupa/johtolupa-silta-asennuksia 2
+                  :harja.domain.tielupa/johtoasennukset
+                  [{:harja.domain.tielupa/laite "04 kV maakaapeli"
+                    :harja.domain.tielupa/asennustyyppi "Tien varressa"
+                    :harja.domain.tielupa/kommentit "Vedetään uutta kaapelia"
+                    :harja.domain.tielupa/maakaapelia-metreissa 44.3
+                    :harja.domain.tielupa/ilmakaapelia-metreissa 10.3
+                    :harja.domain.tielupa/nopeusrajoitus 30
+                    :harja.domain.tielupa/liikennemaara 10.2
+                    :harja.domain.tielupa/sijainti
+                    {:harja.domain.tielupa/tie 20
+                     :harja.domain.tielupa/aosa 6
+                     :harja.domain.tielupa/aet 2631
+                     :harja.domain.tielupa/losa nil
+                     :harja.domain.tielupa/let nil
+                     :harja.domain.tielupa/ajorata 0
+                     :harja.domain.tielupa/kaista 1
+                     :harja.domain.tielupa/puoli 0}}]}]
+    (is (= (tielupa-sanoma/johto-ja-kaapelilupa data) odotettu))))
