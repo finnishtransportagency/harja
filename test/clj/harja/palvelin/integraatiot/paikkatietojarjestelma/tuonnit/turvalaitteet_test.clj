@@ -46,8 +46,5 @@
    :harja.domain.vesivaylat.vatu-turvalaite/geometria "POINT (431153.667 7203743.451)"}
   )
 
-(t/use-fixtures :once ht/tietokanta-fixture)
-
-
 (t/deftest vie-turvalaite-entry-test
            (turvalaite-tuonti/vie-turvalaite-entry (:db ht/jarjestelma) referenssi-turvalaite-shapefilestä))
