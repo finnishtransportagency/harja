@@ -10,10 +10,10 @@
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-alpha17"]
 
-                 [prismatic/schema "1.1.6"]
-                 [org.clojure/core.async "0.3.443"]
+                 [prismatic/schema "1.1.7"]
+                 [org.clojure/core.async "0.3.465"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.239"]
+                 [com.cognitect/transit-cljs "0.8.243"]
                  [com.cognitect/transit-clj "0.8.300"]
 
                  [cljsjs/exif "2.1.1-1"]
@@ -32,30 +32,30 @@
                  [org.clojure/java.jmx "0.3.4"]
 
                  ;; JSON encode/decode
-                 [cheshire "5.7.0"]
+                 [cheshire "5.8.0"]
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.2.0"]
-                 [compojure "1.5.2"]
+                 [compojure "1.6.0"]
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.6.5"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "9.4.1212"]
+                 [org.postgresql/postgresql "42.1.4"]
                  ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [webjure/postgis-jdbc "2.1.7"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
-                 [webjure/jeesql "0.4.6"]
+                 [webjure/jeesql "0.4.7"]
                  [specql "0.7.0-alpha10"]
 
                  ;; GeoTools
-                 [org.geotools/gt-shapefile "16.1"]
-                 [org.geotools/gt-process-raster "16.1"]
-                 [org.geotools/gt-epsg-wkt "16.1"] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "16.1"] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "18.1"]
+                 [org.geotools/gt-process-raster "18.1"]
+                 [org.geotools/gt-epsg-wkt "18.1"] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "18.1"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varustetestit failasi
@@ -69,7 +69,7 @@
                  [com.draines/postal "2.0.2"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
-                 [org.apache.activemq/activemq-client "5.14.3"]
+                 [org.apache.activemq/activemq-client "5.15.2"]
 
                  ;; Fileyard  liitetiedostojen tallennus
                  [fileyard "0.2"]
