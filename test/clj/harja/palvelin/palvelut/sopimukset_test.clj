@@ -48,7 +48,7 @@
   (let [testisopimukset (map #(-> %
                                   (assoc ::sopimus/paasopimus-id nil)
                                   (dissoc ::sopimus/id))
-                             (gen/sample (s/gen ::harja.domain.sopimus/tallenna-sopimus-kysely)))]
+                             (gen/sample (s/gen ::sopimus/tallenna-sopimus-kysely)))]
 
     (doseq [sopimus testisopimukset]
       ;; Luo uusi sopimus
