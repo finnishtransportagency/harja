@@ -353,6 +353,12 @@
 (defn hae-kohde-soskua []
   (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Soskua';"))))
 
+(defn hae-kohde-kansola []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Kansola';"))))
+
+(defn hae-kohteenosat-kansola []
+  (first (q (str "SELECT id, tyyppi FROM kan_kohteenosa WHERE \"kohde-id\" = (SELECT id FROM kan_kohde WHERE nimi = 'Kansola');"))))
+
 (defn hae-kohde-iisalmen-kanava []
   (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Iisalmen kanava';"))))
 

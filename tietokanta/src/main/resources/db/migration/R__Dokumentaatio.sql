@@ -202,7 +202,7 @@ E'Kun alus kulkee kohteen läpi, siitä kirjataan liikennetapahtumalle. Aluksist
 COMMENT ON TABLE kan_liikennetapahtuma_alus IS
 E'Liikennetapahtumaan kirjattava alus.';
 
-COMMENT ON TABLE kan_liikennetapahtuma_osa IS
+COMMENT ON TABLE kan_liikennetapahtuma_toiminto IS
 E'Liikennetapahtumat kohdistetaan koko kohteelle, mutta kohteenosat voivat käyttää eri palvelumuotoja, ja eri toimenpiteitä.';
 
 COMMENT ON TABLE kan_huoltokohde IS

@@ -29,7 +29,8 @@
   #{::id
     ::tyyppi
     ::nimi
-    ::oletuspalvelumuoto})
+    ::oletuspalvelumuoto
+    ::kohde-id})
 
 (def fmt-kohdeosa-tyyppi
   {:sulku "Sulku"

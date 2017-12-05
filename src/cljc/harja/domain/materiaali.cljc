@@ -11,11 +11,12 @@
     "Erityisalueet NaCl" 5
     "Erityisalueet NaCl-liuos" 6
     "Kaliumformiaatti" 7
-    "Hiekoitushiekan suola" 8
-    "Kesäsuola (pölynsidonta)" 9
-    "Kesäsuola (sorateiden kevätkunnostus)" 10
-    "Hiekoitushiekka" 11
-    "Jätteet kaatopaikalle" 12
-    "Murskeet" 13
-    "Rikkaruohojen torjunta-aineet" 14
-    15))
+    "Natriumformiaatti" 8
+    "Hiekoitushiekan suola" 9
+    "Kesäsuola (pölynsidonta)" 10
+    "Kesäsuola (sorateiden kevätkunnostus)" 11
+    "Hiekoitushiekka" 12
+    "Jätteet kaatopaikalle" 13
+    "Murskeet" 14
+    "Rikkaruohojen torjunta-aineet" 15
+    16))
