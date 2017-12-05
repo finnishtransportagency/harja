@@ -54,15 +54,17 @@
     (let [odotettu-otsikko "Saimaan kanava, Laskutusyhteenveto ajalta 01.08.2017 - 30.07.2018"
           saatu-otsikko (:nimi (second vastaus))
           kok-hint (yhteensa-rivi (nth vastaus 2))
-          sanktiot (yhteensa-rivi (nth vastaus 3))
-          erilliskustannukset (yhteensa-rivi (nth vastaus 4))
-          kaikki-yhteensa (yhteensa-rivi (nth vastaus 5))]
+          muutos-ja-lisatyot (yhteensa-rivi (nth vastaus 3))
+          sanktiot (yhteensa-rivi (nth vastaus 4))
+          erilliskustannukset (yhteensa-rivi (nth vastaus 5))
+          kaikki-yhteensa (yhteensa-rivi (nth vastaus 6))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
 
       (is (=marginaalissa? (second kok-hint) 15000M))
       (is (=marginaalissa? (nth kok-hint 2) 15000M))
       (is (=marginaalissa? (nth kok-hint 3) 0M))
+      (is (=marginaalissa? (nth muutos-ja-lisatyot 2) 1545.00M))
       (is (=marginaalissa? (nth sanktiot 2) 5000M))
       (is (=marginaalissa? (nth erilliskustannukset 2) 10000M))
-      (is (=marginaalissa? (nth kaikki-yhteensa 2) 30000M)))))
+      (is (=marginaalissa? (nth kaikki-yhteensa 2) 31545M)))))
