@@ -3,22 +3,21 @@
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]))
 
 (defn perustiedot [{perustiedot :perustiedot}]
-  {::tielupa/hakija-postinumero (:kohteen-postinumero perustiedot)
-   ::tielupa/kohde-postitoimipaikka (:kohteen-postitoimipaikka perustiedot)
-   ::tielupa/kohde-postinumero (:kohteen-postinumero perustiedot)
-   ::tielupa/kunta (:kunta perustiedot)
-   ::tielupa/voimassaolon-alkupvm (json-tyokalut/aika-string->java-sql-date (:voimassaolon-alkupvm perustiedot))
-   ::tielupa/voimassaolon-loppupvm (json-tyokalut/aika-string->java-sql-date (:voimassaolon-loppupvm perustiedot))
-   ::tielupa/kohde-lahiosoite (:kohteen-lahiosoite perustiedot)
+  {::tielupa/ulkoinen-tunniste (get-in perustiedot [:tunniste :id])
+   ::tielupa/tyyppi (keyword (:tyyppi perustiedot))
    ::tielupa/paatoksen-diaarinumero (:paatoksen-diaarinumero perustiedot)
    ::tielupa/saapumispvm (json-tyokalut/aika-string->java-sql-date (:saapumispvm perustiedot))
+   ::tielupa/myontamispvm (json-tyokalut/aika-string->java-sql-date (:myontamispvm perustiedot))
+   ::tielupa/voimassaolon-alkupvm (json-tyokalut/aika-string->java-sql-date (:voimassaolon-alkupvm perustiedot))
+   ::tielupa/voimassaolon-loppupvm (json-tyokalut/aika-string->java-sql-date (:voimassaolon-loppupvm perustiedot))
    ::tielupa/otsikko (:otsikko perustiedot)
    ::tielupa/katselmus-url (:katselmus-url perustiedot)
-   ::tielupa/ulkoinen-tunniste (get-in perustiedot [:tunniste :id])
-   ::tielupa/tien-nimi (:tien-nimi perustiedot)
-   ::tielupa/myontamispvm (json-tyokalut/aika-string->java-sql-date (:myontamispvm perustiedot))
    ::tielupa/urakan-nimi (:alueurakka perustiedot)
-   ::tielupa/tyyppi (keyword (:tyyppi perustiedot))})
+   ::tielupa/kunta (:kunta perustiedot)
+   ::tielupa/kohde-lahiosoite (:kohteen-lahiosoite perustiedot)
+   ::tielupa/kohde-postitoimipaikka (:kohteen-postitoimipaikka perustiedot)
+   ::tielupa/kohde-postinumero (:kohteen-postinumero perustiedot)
+   ::tielupa/tien-nimi (:tien-nimi perustiedot)})
 
 (defn sijainnit [sijainnit]
   {::tielupa/sijainnit (mapv (fn [{sijainti :sijainti}]
@@ -34,11 +33,13 @@
 
 (defn hakijan-tiedot [hakija]
   {::tielupa/hakija-nimi (:nimi hakija)
+   ::tielupa/hakija-osasto (:osasto hakija)
    ::tielupa/hakija-postinosoite (:postiosoite hakija)
    ::tielupa/hakija-postinumero (:postinumero hakija)
    ::tielupa/hakija-puhelinnumero (:puhelinnumero hakija)
    ::tielupa/hakija-sahkopostiosoite (:sahkopostiosoite hakija)
-   ::tielupa/hakija-tyyppi (:tyyppi hakija)})
+   ::tielupa/hakija-tyyppi (:tyyppi hakija)
+   ::tielupa/hakija-maakoodi (:maakoodi hakija)})
 
 (defn urakoitsijan-tiedot [urakoitsija]
   {::tielupa/urakoitsija-nimi (:nimi urakoitsija)
@@ -55,7 +56,9 @@
 (defn tienpitoviranomaisen-tiedot [tienpitoviraonomainen]
   {::tielupa/tienpitoviranomainen-yhteyshenkilo (:yhteyshenkilo tienpitoviraonomainen)
    ::tielupa/tienpitoviranomainen-puhelinnumero (:puhelinnumero tienpitoviraonomainen)
-   ::tielupa/tienpitoviranomainen-sahkopostiosoite (:sahkopostiosoite tienpitoviraonomainen)})
+   ::tielupa/tienpitoviranomainen-sahkopostiosoite (:sahkopostiosoite tienpitoviraonomainen)
+   ::tielupa/tienpitoviranomainen-lupapaallikko (:lupapaallikko tienpitoviraonomainen)
+   ::tielupa/tienpitoviranomainen-kasittelija (::kasittelija tienpitoviraonomainen)})
 
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)

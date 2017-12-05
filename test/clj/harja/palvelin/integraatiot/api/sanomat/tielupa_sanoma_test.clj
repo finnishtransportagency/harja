@@ -91,7 +91,9 @@
                   :harja.domain.tielupa/hakija-puhelinnumero "987-7889087"
                   :harja.domain.tielupa/hakija-sahkopostiosoite
                   "henna.hakija@example.com"
-                  :harja.domain.tielupa/hakija-tyyppi "kotitalous"}]
+                  :harja.domain.tielupa/hakija-tyyppi "kotitalous"
+                  :harja.domain.tielupa/hakija-maakoodi nil
+                  :harja.domain.tielupa/hakija-osasto nil}]
     (is (= (tielupa-sanoma/hakijan-tiedot data) odotettu))))
 
 (deftest urakoitsijan-tiedot
@@ -113,21 +115,18 @@
               :puhelinnumero "987-7889087"
               :sahkopostiosoite "lilli.liikenteenohjaaja@example.com"}
         odotettu {:harja.domain.tielupa/liikenneohjaajan-nimi "Liikenneohjaus Oy"
-                  :harja.domain.tielupa/liikenneohjaajan-yhteyshenkilo
-                  "Lilli Liikenteenohjaaja"
+                  :harja.domain.tielupa/liikenneohjaajan-yhteyshenkilo "Lilli Liikenteenohjaaja"
                   :harja.domain.tielupa/liikenneohjaajan-puhelinnumero "987-7889087"
-                  :harja.domain.tielupa/liikenneohjaajan-sahkopostiosoite
-                  "lilli.liikenteenohjaaja@example.com"}]
+                  :harja.domain.tielupa/liikenneohjaajan-sahkopostiosoite "lilli.liikenteenohjaaja@example.com"}]
     (is (= (tielupa-sanoma/liikenneohjaajan-tiedot data) odotettu))))
 
 (deftest tienpitoviranomaisen-tiedot
   (let [data {:yhteyshenkilo "Teijo Tienpitäjä"
               :puhelinnumero "987-7889087"
               :sahkopostiosoite "teijo.tienpitaja@example.com"}
-        odotettu {:harja.domain.tielupa/tienpitoviranomainen-yhteyshenkilo
-                  "Teijo Tienpitäjä"
-                  :harja.domain.tielupa/tienpitoviranomainen-puhelinnumero
-                  "987-7889087"
-                  :harja.domain.tielupa/tienpitoviranomainen-sahkopostiosoite
-                  "teijo.tienpitaja@example.com"}]
+        odotettu {:harja.domain.tielupa/tienpitoviranomainen-yhteyshenkilo "Teijo Tienpitäjä"
+                  :harja.domain.tielupa/tienpitoviranomainen-puhelinnumero "987-7889087"
+                  :harja.domain.tielupa/tienpitoviranomainen-sahkopostiosoite "teijo.tienpitaja@example.com"
+                  :harja.domain.tielupa/tienpitoviranomainen-kasittelija nil
+                  :harja.domain.tielupa/tienpitoviranomainen-lupapaallikko nil}]
     (is (= (tielupa-sanoma/tienpitoviranomaisen-tiedot data) odotettu))))
