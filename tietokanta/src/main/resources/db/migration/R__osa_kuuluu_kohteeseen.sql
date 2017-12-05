@@ -41,8 +41,8 @@ FOR EACH ROW
 EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
 
 DROP TRIGGER IF EXISTS liikennetapahtuman_kohteen_tarkastus
-ON kan_liikennetapahtuma_osa;
+ON kan_liikennetapahtuma_toiminto;
 CREATE TRIGGER liikennetapahtuman_kohteen_tarkastus
-BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_osa
+BEFORE INSERT OR UPDATE ON kan_liikennetapahtuma_toiminto
 FOR EACH ROW
 EXECUTE PROCEDURE osa_kuuluu_kohteeseen();
