@@ -78,29 +78,29 @@
                  [spyscope "0.1.6"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
-                 [cljs-ajax "0.6.0"]
-                 [figwheel "0.5.10"]
+                 [cljs-ajax "0.7.3"]
+                 [figwheel "0.5.14"]
 
                  [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
                  [cljsjs/react-with-addons "15.6.1-0"]
-                 [cljsjs/react-dom "15.6.1-0" :exclusions [cljsjs/react]]
+                 [cljsjs/react-dom "16.2.0-0" :exclusions [cljsjs/react]]
 
                  [alandipert/storage-atom "2.0.1"]
 
-                 [clj-time "0.13.0"]
-                 [com.andrewmcveigh/cljs-time "0.5.0"]
+                 [clj-time "0.14.2"]
+                 [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
-                 [cljsjs/openlayers "3.15.1"]
+                 [cljsjs/openlayers "4.4.1-1"]
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.16"]
-                 [org.apache.poi/poi-scratchpad "3.16"] ;; .ppt varten
-                 [org.apache.poi/poi-ooxml "3.16"] ;; .xlsx tiedoston lukua varten
+                 [org.apache.poi/poi "3.17"]
+                 [org.apache.poi/poi-scratchpad "3.17"] ;; .ppt varten
+                 [org.apache.poi/poi-ooxml "3.17"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
-                 [jarohen/chime "0.2.0"]
+                 [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
@@ -118,29 +118,29 @@
                  [http-kit.fake "0.2.2"]
 
                  ;; Apache ANT core
-                 [org.apache.ant/ant "1.10.0"]
+                 [org.apache.ant/ant "1.10.1"]
 
                  ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.3.6"]
+                 [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.11.0"]
+                 [dk.ative/docjure "1.12.0"]
 
                  [com.cemerick/piggieback "0.2.2"]
-                 [figwheel-sidecar "0.5.10"]
+                 [figwheel-sidecar "0.5.14"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.4.1"]
+                 [webjure/tuck "0.4.3"]
 
                  ;; Laadunseurantatyökalua varten
-                 [org.clojure/data.codec "0.1.0"]
-                 [devcards "0.2.2" :exclusions [cljsjs/react]]
+                 [org.clojure/data.codec "0.1.1"]
+                 [devcards "0.2.4" :exclusions [cljsjs/react]]
 
                   ;; Parsi sourcemapit
-                 [com.atlassian.sourcemap/sourcemap "1.7.5"]
+                 [com.atlassian.sourcemap/sourcemap "1.7.6"]
 
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]]
@@ -148,7 +148,7 @@
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]
-                                  [org.apache.pdfbox/pdfbox "2.0.6"]]
+                                  [org.apache.pdfbox/pdfbox "2.0.8"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.1.0"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
@@ -156,8 +156,8 @@
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
                    }
              :test {:dependencies [[clj-webdriver "0.7.2"]
-                                   [org.seleniumhq.selenium/selenium-java "3.0.1"]
-                                   [org.seleniumhq.selenium/selenium-firefox-driver "3.0.1"]]}}
+                                   [org.seleniumhq.selenium/selenium-java "3.8.1"]
+                                   [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
