@@ -78,10 +78,17 @@
      :tyyppi :string}]
    (remove (comp (or siirretyt-alukset #{}) ::lt-alus/id) alukset)])
 
-(defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma] :as app}]
+(defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma siirretyt-alukset] :as app}]
   [grid/muokkaus-grid
    {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
-    :virheet-dataan? true}
+    :virheet-dataan? true
+    :toimintonappi-fn (fn [rivi muokkaa!]
+                        (when (siirretyt-alukset (::lt-alus/id rivi))
+                          [:span.klikattava {:on-click
+                                            #(do (.preventDefault %)
+                                                 (e! (tiedot/->SiirraTapahtumasta rivi))
+                                                 (muokkaa! (constantly nil)))}
+                          (ikonit/livicon-arrow-top)]))}
    [{:otsikko "Suunta"
      :tyyppi :komponentti
      :tasaa :keskita
@@ -122,7 +129,7 @@
              (::lt/alukset valittu-liikennetapahtuma)))
      #(e! (tiedot/->MuokkaaAluksia (vals %) (boolean (some
                                                        (comp not empty? ::grid/virheet)
-                                                       (vals %))))))])
+                                                       (remove :poistettu (vals %)))))))])
 
 (defn liikennetapahtumalomake [e! {:keys [valittu-liikennetapahtuma
                                           tallennus-kaynnissa?

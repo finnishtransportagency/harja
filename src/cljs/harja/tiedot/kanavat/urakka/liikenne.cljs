@@ -82,6 +82,7 @@
 (defrecord TapahtumaTallennettu [tulos])
 (defrecord TapahtumaEiTallennettu [virhe])
 (defrecord SiirraTapahtumaan [alus])
+(defrecord SiirraTapahtumasta [alus])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -369,7 +370,15 @@
     (assoc app :tallennus-kaynnissa? false))
 
   SiirraTapahtumaan
-  (process-event [{alus :alus} {tapahtuma :valittu-liikennetapahtuma :as app}]
+  (process-event [{alus :alus} app]
     (-> app
         (update :siirretyt-alukset (fn [s] (if (nil? s) #{(::lt-alus/id alus)} (conj s (::lt-alus/id alus)))))
-        (update-in [:valittu-liikennetapahtuma ::lt/alukset] conj alus))))
+        (update-in [:valittu-liikennetapahtuma ::lt/alukset] conj alus)))
+
+  SiirraTapahtumasta
+  (process-event [{alus :alus} app]
+    (-> app
+        (update :siirretyt-alukset (fn [s] (disj s (::lt-alus/id alus))))
+        (update-in [:valittu-liikennetapahtuma ::lt/alukset]
+                   (fn [alukset]
+                     (into [] (disj (into #{} alukset) alus)))))))
