@@ -81,6 +81,7 @@
 (defrecord TallennaLiikennetapahtuma [tapahtuma])
 (defrecord TapahtumaTallennettu [tulos])
 (defrecord TapahtumaEiTallennettu [virhe])
+(defrecord SiirraKaikkiTapahtumaan [alukset])
 (defrecord SiirraTapahtumaan [alus])
 (defrecord SiirraTapahtumasta [alus])
 (defrecord PoistaKetjutus [alus])
@@ -388,6 +389,13 @@
   (process-event [_ app]
     (viesti/nayta! "Virhe tapahtuman tallennuksessa!" :danger)
     (assoc app :tallennus-kaynnissa? false))
+
+  SiirraKaikkiTapahtumaan
+  (process-event [{alukset :alukset} app]
+    (let [idt (map ::lt-alus/id alukset)]
+      (-> app
+         (update :siirretyt-alukset (fn [s] (if (nil? s) (set idt) (into s idt))))
+         (update-in [:valittu-liikennetapahtuma ::lt/alukset] concat alukset))))
 
   SiirraTapahtumaan
   (process-event [{alus :alus} app]

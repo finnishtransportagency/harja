@@ -42,52 +42,59 @@
     [harja.tyokalut.ui :refer [for*]]))
 
 (defn edelliset-grid [e! {:keys [siirretyt-alukset ketjutuksen-poistot] :as app} {:keys [alukset] :as tiedot}]
-  [grid/grid
-   {:tunniste ::lt-alus/id
-    :tyhja "Kaikki alukset siirretty"}
-   [{:otsikko ""
-     :tyyppi :komponentti
-     :tasaa :keskita
-     :komponentti (fn [alus]
-                    [napit/yleinen-toissijainen
-                     "Kuittaa"
-                     #(e! (tiedot/->SiirraTapahtumaan alus))
-                     {:ikoni (ikonit/livicon-arrow-bottom)}])}
-    {:otsikko "Aluslaji"
-     :tyyppi :string
-     :nimi ::lt-alus/laji
-     :fmt lt-alus/aluslaji->str}
-    {:otsikko "Nimi"
-     :tyyppi :string
-     :nimi ::lt-alus/nimi}
-    {:otsikko "Alusten lkm"
-     :nimi ::lt-alus/lkm
-     :tyyppi :positiivinen-numero}
-    {:otsikko "Matkustajia"
-     :nimi ::lt-alus/matkustajalkm
-     :tyyppi :positiivinen-numero}
-    {:otsikko "Nippuluku"
-     :nimi ::lt-alus/nippulkm
-     :tyyppi :positiivinen-numero}
-    {:otsikko "Edellinen tapahtuma"
-     :nimi ::lt/aika
-     :tyyppi :pvm-aika
-     :fmt pvm/pvm-aika-opt}
-    {:otsikko "Lisätiedot"
-     :nimi ::lt/lisatieto
-     :tyyppi :string}
-    {:otsikko ""
-     :nimi :poistettu
-     :tyyppi :komponentti
-     :komponentti (fn [rivi]
-                    (if-not (ketjutuksen-poistot (::lt-alus/id rivi))
-                      [:span.klikattava {:on-click
-                                        #(do (.preventDefault %)
-                                             (e! (tiedot/->PoistaKetjutus rivi)))}
-                      (ikonit/livicon-trash)]
+  (let [kuitattavat (remove (comp (or siirretyt-alukset #{}) ::lt-alus/id) alukset)]
+    [:div
+     [grid/grid
+      {:tunniste ::lt-alus/id
+       :tyhja "Kaikki alukset siirretty"}
+      [{:otsikko ""
+        :tyyppi :komponentti
+        :tasaa :keskita
+        :komponentti (fn [alus]
+                       [napit/yleinen-toissijainen
+                        "Kuittaa"
+                        #(e! (tiedot/->SiirraTapahtumaan alus))
+                        {:ikoni (ikonit/livicon-arrow-bottom)}])}
+       {:otsikko "Aluslaji"
+        :tyyppi :string
+        :nimi ::lt-alus/laji
+        :fmt lt-alus/aluslaji->str}
+       {:otsikko "Nimi"
+        :tyyppi :string
+        :nimi ::lt-alus/nimi}
+       {:otsikko "Alusten lkm"
+        :nimi ::lt-alus/lkm
+        :tyyppi :positiivinen-numero}
+       {:otsikko "Matkustajia"
+        :nimi ::lt-alus/matkustajalkm
+        :tyyppi :positiivinen-numero}
+       {:otsikko "Nippuluku"
+        :nimi ::lt-alus/nippulkm
+        :tyyppi :positiivinen-numero}
+       {:otsikko "Edellinen tapahtuma"
+        :nimi ::lt/aika
+        :tyyppi :pvm-aika
+        :fmt pvm/pvm-aika-opt}
+       {:otsikko "Lisätiedot"
+        :nimi ::lt/lisatieto
+        :tyyppi :string}
+       {:otsikko ""
+        :nimi :poistettu
+        :tyyppi :komponentti
+        :komponentti (fn [rivi]
+                       (if-not (ketjutuksen-poistot (::lt-alus/id rivi))
+                         [:span.klikattava {:on-click
+                                            #(do (.preventDefault %)
+                                                 (e! (tiedot/->PoistaKetjutus rivi)))}
+                          (ikonit/livicon-trash)]
 
-                      [ajax-loader-pieni]))}]
-   (remove (comp (or siirretyt-alukset #{}) ::lt-alus/id) alukset)])
+                         [ajax-loader-pieni]))}]
+      kuitattavat]
+     [napit/yleinen-toissijainen
+      "Kuittaa kaikki tapahtumaan"
+      #(e! (tiedot/->SiirraKaikkiTapahtumaan kuitattavat))
+      {:ikoni (ikonit/livicon-arrow-bottom)
+       :disabled (empty? kuitattavat)}]]))
 
 (defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma siirretyt-alukset] :as app}]
   [grid/muokkaus-grid
