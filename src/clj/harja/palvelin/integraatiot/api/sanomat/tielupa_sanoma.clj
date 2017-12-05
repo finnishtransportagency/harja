@@ -81,7 +81,7 @@
 (defn johto-ja-kaapelilupa [johto-ja-kaapelilupa]
   {::tielupa/johtolupa-maakaapelia-yhteensa (:maakaapelia-yhteensa johto-ja-kaapelilupa)
    ::tielupa/johtolupa-ilmakaapelia-yhteensa (:ilmakaapelia-yhteensa johto-ja-kaapelilupa)
-   ::tielupa/johtolupa-tienalituksia-yhteensa (:tienalituksia johto-ja-kaapelilupa)
+   ::tielupa/johtolupa-tienalituksia (:tienalituksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-tienylityksia (:tienylityksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-silta-asennuksia (:silta-asennuksia johto-ja-kaapelilupa)
    ::tielupa/johtoasennukset (kaapeliasennukset (:kaapeliasennukset johto-ja-kaapelilupa))})

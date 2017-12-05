@@ -159,7 +159,7 @@
                  :liikennemaara 10.2}}]}
         odotettu {:harja.domain.tielupa/johtolupa-maakaapelia-yhteensa 44.3
                   :harja.domain.tielupa/johtolupa-ilmakaapelia-yhteensa 10.3
-                  :harja.domain.tielupa/johtolupa-tienalituksia-yhteensa nil
+                  :harja.domain.tielupa/johtolupa-tienalituksia nil
                   :harja.domain.tielupa/johtolupa-tienylityksia 1
                   :harja.domain.tielupa/johtolupa-silta-asennuksia 2
                   :harja.domain.tielupa/johtoasennukset
