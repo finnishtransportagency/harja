@@ -35,9 +35,6 @@
       tielupa
       (assoc tielupa ::tielupa/sijainnit (map #(hae-sijainti db %) sijainnit)))))
 
-(defn hae-urakka [db tielupa]
-  tielupa)
-
 (defn hae-ely [db ely tielupa]
   (let [ely-numero (case ely
                      "Uusimaa" 1
@@ -55,14 +52,14 @@
         ely-id (:id (first (kayttajat-q/hae-ely-numerolla db ely-numero)))]
     (assoc tielupa ::tielupa/ely ely-id)))
 
-(defn kirjaa-tielupa [liitteiden-hallinta db parametrit data kayttaja]
+(defn kirjaa-tielupa [liitteiden-hallinta db data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
   (->> (tielupa-sanoma/api->domain (:tielupa data))
        (hae-sijainnit db) ;; todo: tämä pitää laajentaa hakemaan sijainnit myös mainoksille, kaapeliasennuksille jne.
-       (hae-urakka db)
        (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
        (tielupa-q/tallenna-tielupa db))
   (tielupa-q/aseta-tieluvalle-urakka-ulkoisella-tunnisteella db (get-in data [:tielupa :perustiedot :tunniste :id]))
+  ;; todo tallenna liitteet
   (tee-kirjausvastauksen-body {:ilmoitukset " Tielupa kirjattu onnistuneesti "}))
 
 (defrecord Tieluvat []
@@ -77,8 +74,8 @@
                          request
                          json-skeemat/tieluvan-kirjaus-request
                          json-skeemat/kirjausvastaus
-                         (fn [parametrit data kayttaja db]
-                           (kirjaa-tielupa liitteiden-hallinta db parametrit data kayttaja)))))
+                         (fn [_ data kayttaja db]
+                           (kirjaa-tielupa liitteiden-hallinta db data kayttaja)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

@@ -58,10 +58,10 @@
    ::tielupa/tienpitoviranomainen-sahkopostiosoite (:sahkopostiosoite tienpitoviraonomainen)})
 
 (defn api->domain [tielupa]
-  (let [tallennettava (-> (perustiedot tielupa)
+  (let [domain (-> (perustiedot tielupa)
                           (merge (sijainnit (:sijainnit tielupa)))
                           (merge (hakijan-tiedot (:hakija tielupa)))
                           (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
                           (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
                           (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa))))]
-    tallennettava))
+    domain))
