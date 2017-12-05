@@ -23,8 +23,8 @@
                     :aosa (::tielupa/aosa sijainti)
                     :aet (::tielupa/aet sijainti)
                     :losa (::tielupa/losa sijainti)
-                    :let (::tielupa/let sijainti)}
-        geometria (if (and (::osa parametrit) (:let parametrit))
+                    :loppuet (::tielupa/let sijainti)}
+        geometria (if (and (:losa parametrit) (:loppuet parametrit))
                     (tieverkko-q/tierekisteriosoite-viivaksi db parametrit)
                     (tieverkko-q/tierekisteriosoite-pisteeksi db parametrit))]
     (assoc sijainti ::tielupa/geometria geometria)))
@@ -62,6 +62,7 @@
        (hae-urakka db)
        (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
        (tielupa-q/tallenna-tielupa db))
+  (tielupa-q/aseta-tieluvalle-urakka-ulkoisella-tunnisteella db (get-in data [:tielupa :perustiedot :tunniste :id]))
   (tee-kirjausvastauksen-body {:ilmoitukset " Tielupa kirjattu onnistuneesti "}))
 
 (defrecord Tieluvat []

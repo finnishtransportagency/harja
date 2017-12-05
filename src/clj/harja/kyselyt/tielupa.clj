@@ -2,11 +2,15 @@
   (:require
     [harja.kyselyt.specql-db :refer [define-tables]]
     [specql.core :refer [fetch update! insert! upsert!]]
+    [jeesql.core :refer [defqueries]]
     [clojure.set :as set]
     [harja.id :refer [id-olemassa?]]
     [harja.domain.tielupa :as tielupa]
     [harja.pvm :as pvm]
     [harja.domain.muokkaustiedot :as muokkaustiedot]))
+
+(defqueries "harja/kyselyt/tielupa.sql"
+            {:positional? true})
 
 (defn hae-tieluvat [db hakuehdot]
   (fetch db
@@ -37,5 +41,9 @@
       (if (onko-olemassa-ulkoisella-tunnisteella? db ulkoinen-tunniste)
         (update! db ::tielupa/tielupa muokattu {::tielupa/ulkoinen-tunniste ulkoinen-tunniste})
         (insert! db ::tielupa/tielupa uusi)))))
+
+(defn aseta-tieluvalle-urakka-ulkoisella-tunnisteella [db ulkoinen-tunniste]
+  (when-let [id (:id (first (harja.kyselyt.tielupa/hae-id-ulkoisella-tunnisteella db ulkoinen-tunniste)))]
+    (harja.kyselyt.tielupa/aseta-tieluvalle-urakka db id)))
 
 

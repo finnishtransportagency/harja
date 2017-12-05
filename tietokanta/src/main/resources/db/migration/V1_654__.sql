@@ -231,8 +231,8 @@ CREATE TABLE tielupa_liite (
 
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-tielupa');
 
-CREATE OR REPLACE FUNCTION hae_tieluvalle_urakka(tielupa_id INTEGER)
-  RETURNS INTEGER AS
+CREATE OR REPLACE FUNCTION aseta_tieluvalle_urakka(tielupa_id INTEGER)
+  RETURNS VOID AS
 $$
 DECLARE
   sijainti_          TR_OSOITE_LAAJENNETTU;
@@ -259,14 +259,17 @@ BEGIN
   FROM alueurakka
   WHERE st_contains(alue, tieluvan_geometria);
 
-  IF alueurakkanro_ IS NOT NULL
-  THEN
-    SELECT INTO urakka_id_ id
-    FROM urakka
-    WHERE urakkanro = alueurakkanro_;
-  END IF;
+  SELECT INTO urakka_id_ id
+  FROM urakka
+  WHERE urakkanro = alueurakkanro_
+  ORDER BY loppupvm DESC
+  LIMIT 1;
 
-  RETURN NEW;
+  UPDATE tielupa
+  SET urakka = urakka_id_
+  WHERE id = tielupa_id;
+
+  RETURN;
 END;
 $$
 LANGUAGE plpgsql;
