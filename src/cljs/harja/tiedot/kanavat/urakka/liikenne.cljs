@@ -138,12 +138,17 @@
       (assoc ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id]))
       (update ::lt/alukset (fn [alukset] (map
                                            (fn [alus]
-                                             (-> (->> (keys alus)
-                                                      (filter #(= (namespace %) "harja.domain.kanavat.lt-alus"))
-                                                      (select-keys alus))
-                                                 (set/rename-keys {:poistettu ::m/poistettu?})
-                                                 (dissoc :id)
-                                                 (dissoc :harja.ui.grid/virheet)))
+                                             (let [alus
+                                                   (-> alus
+                                                       (dissoc ::m/poistettu?)
+                                                       (set/rename-keys {:poistettu ::m/poistettu?})
+                                                       (dissoc :id)
+                                                       (dissoc :harja.ui.grid/virheet))]
+                                               (->> (keys alus)
+                                                    (filter #(#{"harja.domain.kanavat.lt-alus"
+                                                                "harja.domain.muokkaustiedot"}
+                                                               (namespace %)))
+                                                    (select-keys alus))))
                                            alukset)))
       (update ::lt/toiminnot (fn [toiminnot] (map (fn [toiminto]
                                                     (->
