@@ -19,12 +19,12 @@
 (define-tables
   ["liikennetapahtuma_suunta" ::alus/aluksen-suunta (specql.transform/transform (specql.transform/to-keyword))]
   ["kan_liikennetapahtuma_ketjutus" ::liikennetapahtuman-ketjutus
-   harja.domain.muokkaustiedot/muokkaustiedot
-   harja.domain.muokkaustiedot/poistaja-sarake
-   harja.domain.muokkaustiedot/poistettu?-sarake
-   {::kuitattu-tapahtumaan (specql.rel/has-one ::kuitattu-id
+   {::kuitattu-tapahtumaan (specql.rel/has-one ::tapahtumaan-id
                                                :harja.domain.kanavat.liikennetapahtuma/liikennetapahtuma
                                                :harja.domain.kanavat.liikennetapahtuma/id)
+    ::tapahtumasta (specql.rel/has-one ::tapahtumasta-id
+                                       :harja.domain.kanavat.liikennetapahtuma/liikennetapahtuma
+                                       :harja.domain.kanavat.liikennetapahtuma/id)
     ::alus (specql.rel/has-one ::alus-id
                                :harja.domain.kanavat.lt-alus/liikennetapahtuman-alus
                                :harja.domain.kanavat.lt-alus/id)
@@ -36,14 +36,11 @@
                                 :harja.domain.kanavat.kohde/id)}])
 
 (def perustiedot
-  #{::id
-    ::aika
-
-    ::kohteelta-id
+  #{::kohteelta-id
     ::kohteelle-id
     ::urakka-id
     ::sopimus-id
-    ::kuitattu-id
+    ::tapahtumaan-id
     ::alus-id})
 
 (def aluksen-tiedot
@@ -54,5 +51,9 @@
 
 (def kohteelta-tiedot
   #{[::kohteelta kohde/perustiedot]})
+
+(def tapahtumasta-tiedot
+  #{[::tapahtumasta #{:harja.domain.kanavat.liikennetapahtuma/lisatieto
+                      :harja.domain.kanavat.liikennetapahtuma/aika}]})
 
 (def metatiedot m/muokkauskentat)
