@@ -247,7 +247,7 @@
                    :alkupvm (pvm/luo-pvm 2017 1 1)
                    :loppupvm (pvm/luo-pvm 2018 1 1)
                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
-        argumentit {::kanavan-toimenpide/kanava-toimenpide toimenpide
+        argumentit {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-kanavatoimenpide

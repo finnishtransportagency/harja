@@ -53,7 +53,7 @@
        (fn [_]
          (e! (tiedot/->UusiToimenpide)))]]]))
 
-(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet] :as app}]
+(defn kokonaishintaiset-toimenpiteet-taulukko [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
   [:div
    [toimenpiteet-view/ei-yksiloity-vihje]
    [grid/grid
@@ -64,7 +64,7 @@
      :voi-kumota? false
      :piilota-toiminnot? true
      :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
-     :tyhja "Ei kokonaishitaisia toimenpiteita"
+     :tyhja (if haku-kaynnissa? [ajax-loader "Haetaan toimenpiteitä"] "Ei toimenpiteitä")
      :jarjesta ::kanavan-toimenpide/pvm
      :tunniste ::kanavan-toimenpide/id}
     (toimenpiteet-view/toimenpidesarakkeet
@@ -83,53 +83,14 @@
                                  :valittu? uusi-arvo})))})
     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
-(defn lomake-toiminnot [e! {:keys [tallennus-kaynnissa?] :as app} toimenpide]
-  [:div
-   [napit/tallenna
-    "Tallenna"
-    #(e! (tiedot/->TallennaToimenpide toimenpide))
-    {:tallennus-kaynnissa? tallennus-kaynnissa?
-     :disabled (not (lomake/voi-tallentaa? toimenpide))}]
-   (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
-     [napit/poista
-      "Poista"
-      #(varmista-kayttajalta/varmista-kayttajalta
-         {:otsikko "Toimenpiteen poistaminen"
-          :sisalto [:div "Haluatko varmasti poistaa toimenpiteen?"]
-          :hyvaksy "Poista"
-          :toiminto-fn (fn [] (e! (tiedot/->PoistaToimenpide toimenpide)))})])])
+(defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
+                                                     tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
+  [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
+                                           :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
+                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
 
-(defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide
-                                                     kohteet
-                                                     toimenpideinstanssit
-                                                     tehtavat
-                                                     huoltokohteet
-                                                     tallennus-kaynnissa?]
-                                              :as app}]
-  (let [urakka (get-in app [:valinnat :urakka])
-        sopimukset (:sopimukset urakka)
-        lomake-valmis? (not (empty? huoltokohteet))]
-    [:div
-     [napit/takaisin "Takaisin toimenpideluetteloon"
-      #(e! (tiedot/->TyhjennaAvattuToimenpide))]
-     (if lomake-valmis?
-       [lomake/lomake
-        {:otsikko "Uusi toimenpide"
-         :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-         :footer-fn (fn [toimenpide]
-                      (lomake-toiminnot e! app toimenpide))}
-        (toimenpiteet-view/toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
-                                                       :sopimukset sopimukset
-                                                       :kohteet @kanavaurakka/kanavakohteet
-                                                       :huoltokohteet huoltokohteet
-                                                       :toimenpideinstanssit toimenpideinstanssit
-                                                       :tehtavat tehtavat})
-        avattu-toimenpide]
-       [ajax-loader "Ladataan..."])]))
-
-(defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
-                                    :as app}
-                                kohteet]
+(defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide] :as app} kohteet]
   (let [nakyma-voidaan-nayttaa? (some? kohteet)]
     [:div
      (if nakyma-voidaan-nayttaa?

@@ -71,40 +71,6 @@
     (when (:nakymassa? @tila)
       (alkuvalinnat))))
 
-(defn esitaytetty-toimenpide []
-  (let [kayttaja @istunto/kayttaja]
-    {::kanavan-toimenpide/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
-     ::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
-                                     ::kayttaja/etunimi (:etunimi kayttaja)
-                                     ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
-
-(defn tallennettava-toimenpide [tehtavat toimenpide urakka]
-  ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
-  ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
-  (let [tehtava (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
-                    (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
-    (-> toimenpide
-        (select-keys [::kanavan-toimenpide/id
-                      ::kanavan-toimenpide/urakka-id
-                      ::kanavan-toimenpide/suorittaja
-                      ::kanavan-toimenpide/kuittaaja
-                      ::kanavan-toimenpide/sopimus-id
-                      ::kanavan-toimenpide/lisatieto
-                      ::kanavan-toimenpide/toimenpideinstanssi-id
-                      ::kanavan-toimenpide/toimenpidekoodi-id
-                      ::kanavan-toimenpide/pvm
-                      ::muokkaustiedot/poistettu?])
-        (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
-               ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
-               ::kanavan-toimenpide/urakka-id (:id urakka)
-               ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-               ::kanavan-toimenpide/kohteenosa-id (get-in toimenpide [::kanavan-toimenpide/kohteenosa ::osa/id])
-               ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id])
-               ::kanavan-toimenpide/muu-toimenpide (if (toimenpiteet/valittu-tehtava-muu? tehtava tehtavat)
-                                                     (::kanavan-toimenpide/muu-toimenpide toimenpide)
-                                                     nil))
-        (dissoc ::kanavan-toimenpide/kuittaaja))))
-
 (defn kokonashintaiset-tehtavat [tehtavat]
   (filter
     (fn [tehtava]
@@ -113,8 +79,8 @@
 
 (extend-protocol tuck/Event
   NakymaAvattu
-  (process-event [_ {:keys [kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?] :as app}]
-    (if (or kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?)
+  (process-event [_ {:keys [huoltokohteiden-haku-kaynnissa?] :as app}]
+    (if huoltokohteiden-haku-kaynnissa?
       (assoc app :nakymassa? true)
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
@@ -123,9 +89,9 @@
                               {:onnistui ->HuoltokohteetHaettu
                                :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
             (assoc :nakymassa? true
-                   :kohteiden-haku-kaynnissa? true
                    :huoltokohteiden-haku-kaynnissa? true
-                   :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                   :tehtavat (toimenpiteet/tehtavat-tyypilla @urakkatiedot/urakan-toimenpiteet-ja-tehtavat
+                                                             "kokonaishintainen")
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
                    :huoltokohteet nil)))))
 
@@ -146,7 +112,7 @@
     (if (and
           (get-in valinnat [:urakka :id])
           (not (:haku-kaynnissa? app)))
-      (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
+      (let [argumentit (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
@@ -214,21 +180,15 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :avattu-toimenpide (esitaytetty-toimenpide)))
+    (toimenpiteet/uusi-toimenpide app @istunto/kayttaja @navigaatio/valittu-urakka))
 
   TyhjennaAvattuToimenpide
   (process-event [_ app]
-    (dissoc app :avattu-toimenpide))
+    (toimenpiteet/tyhjenna-avattu-toimenpide app))
 
   AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohteenosa]))
-                                 (not= (::kanavan-toimenpide/kohde toimenpide)
-                                       (get-in app [:avattu-toimenpide ::kanavan-toimenpide/kohde])))
-          toimenpide (if kohdeosa-vaihtui?
-                       (assoc toimenpide ::kanavan-toimenpide/kohteenosa nil)
-                       toimenpide)]
-      (assoc app :avattu-toimenpide toimenpide)))
+    (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide))
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
@@ -241,40 +201,28 @@
 
   HuoltokohteetHaettu
   (process-event [{huoltokohteet :huoltokohteet} app]
-    (assoc app :huoltokohteet huoltokohteet
-               :huoltokohteiden-haku-kaynnissa? false))
+    (toimenpiteet/huoltokohteet-haettu app huoltokohteet))
 
   HuoltokohteidenHakuEpaonnistui
   (process-event [_ app]
-    (viesti/nayta! "Huoltokohteiden haku epäonnistui" :danger)
-    (assoc app :huoltokohteiden-haku-kaynnissa? false))
+    (toimenpiteet/huoltokohteet-ei-haettu app))
 
   TallennaToimenpide
   (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
-    (if (:tallennus-kaynnissa? app)
-      app
-      (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]))
-            hakuehdot (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
-        (-> app
-            (tuck-apurit/post! :tallenna-kanavatoimenpide
-                               {::kanavan-toimenpide/kanava-toimenpide toimenpide
-                                ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
-                               {:onnistui ->ToimenpideTallennettu
-                                :epaonnistui ->ToimenpiteidenTallentaminenEpaonnistui})
-            (assoc :tallennus-kaynnissa? true)))))
+    (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
+                                           :tehtavat tehtavat
+                                           :toimenpide toimenpide
+                                           :tyyppi :kokonaishintainen
+                                           :toimenpide-tallennettu ->ToimenpideTallennettu
+                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (viesti/nayta! "Toimenpide tallennettu" :success)
-    (assoc app :tallennus-kaynnissa? false
-               :avattu-toimenpide nil
-               :toimenpiteet toimenpiteet))
-
+    (toimenpiteet/toimenpide-tallennettu app toimenpiteet))
 
   ToimenpiteidenTallentaminenEpaonnistui
   (process-event [_ app]
-    (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
-    (assoc app :tallennus-kaynnissa? false))
+    (toimenpiteet/toimenpide-ei-tallennettu app))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]
