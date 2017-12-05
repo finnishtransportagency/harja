@@ -81,7 +81,7 @@
         (dissoc ::kanavatoimenpide/kuittaaja))))
 
 (defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi
-                                       toimenpide-tallennettu toimenpide-ei-tallennetti]}]
+                                       toimenpide-tallennettu toimenpide-ei-tallennettu]}]
   (if (:tallennus-kaynnissa? app)
     app
     (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]) tyyppi)
@@ -91,7 +91,7 @@
                              {::kanavatoimenpide/tallennettava-kanava-toimenpide toimenpide
                               ::kanavatoimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
                              {:onnistui toimenpide-tallennettu
-                              :epaonnistui toimenpide-ei-tallennetti})
+                              :epaonnistui toimenpide-ei-tallennettu})
           (assoc :tallennus-kaynnissa? true)))))
 
 (defn toimenpide-tallennettu [app toimenpiteet]
