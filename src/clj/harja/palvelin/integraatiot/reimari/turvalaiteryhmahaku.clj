@@ -20,20 +20,17 @@
   (merge turvalaiteryhma {:luoja "Integraatio"
                           :muokkaaja "Integraatio"}))
 
-;TODO: refacktor - tää vois olla harja.kyselyt.konversio:ssa
-(defn turvalaiteryhman-turvalaitteet->array
-  [turvalaiteryhma]
-  (assoc turvalaiteryhma :turvalaitteet (konv/seq->array (map #(Integer. %) (:turvalaitteet turvalaiteryhma)))))
-
 (defn kasittele-turvalaiteryhma-vastaus [db vastaus-xml]
-  (let [sanoman-tiedot (turvalaiteryhmat-sanoma/lue-hae-turvalaiteryhmat-vastaus vastaus-xml)
-        kanta-tiedot (for [turvalaiteryhma-tiedot-raaka sanoman-tiedot
-                           :let [turvalaiteryhma-tiedot (lisaa-muokkaustiedot
-                                                          (turvalaiteryhman-turvalaitteet->array
-                                                            (unnamespacefy turvalaiteryhma-tiedot-raaka)))]]
-                       (konv/array->vec
-                         (turvalaiteryhmat-kysely/vie-turvalaiteryhmatauluun<! db turvalaiteryhma-tiedot) :turvalaitteet))]
-    (vec kanta-tiedot)))
+  (jdbc/with-db-transaction [db db]
+                            (let [sanoman-tiedot (turvalaiteryhmat-sanoma/lue-hae-turvalaiteryhmat-vastaus vastaus-xml)
+                                  kanta-tiedot (for [turvalaiteryhma-tiedot-raaka sanoman-tiedot
+                                                     :let [turvalaiteryhma-tiedot (-> turvalaiteryhma-tiedot-raaka
+                                                                                      unnamespacefy
+                                                                                      konv/turvalaiteryhman-turvalaitteet->array
+                                                                                      lisaa-muokkaustiedot)]]
+                                                 (konv/array->vec
+                                                   (turvalaiteryhmat-kysely/vie-turvalaiteryhmatauluun<! db turvalaiteryhma-tiedot) :turvalaitteet))]
+                              (vec kanta-tiedot))))
 
 (defn hae-turvalaiteryhmat [db integraatioloki pohja-url kayttajatunnus salasana]
   (let [hakuparametrit {:soap-action "http://www.liikennevirasto.fi/xsd/harja/reimari/HaeTurvalaiteryhmat"
