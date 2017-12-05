@@ -20,6 +20,7 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
@@ -41,7 +42,9 @@
                  #(when (= (::ur/id %) urakka-id) %)
                  urakat))))
 
-(defn- hae-liikennetapahtumat* [tapahtumat urakkatiedot-fn urakka-id]
+(defn- hae-liikennetapahtumat* [tapahtumat
+                                urakkatiedot-fn
+                                urakka-id]
   (->>
     tapahtumat
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
@@ -55,7 +58,60 @@
                                              (partial remove (comp #(or (nil? %) (zero? %)) ::lt-alus/nippulkm)))]
                                (when-not (empty? (::lt/alukset t)) t)))))
 
-(defn hae-liikennetapahtumat [db user {:keys [niput? aikavali] :as tiedot}]
+(defn- hae-tapahtumien-palvelumuodot* [osien-tiedot tapahtumat]
+  (let [id-ja-osat
+        (->>
+          osien-tiedot
+          (group-by ::lt/id)
+          (map (fn [[id osat]] [id (get-in osat [0 ::lt/toiminnot])]))
+          (into {}))]
+    (map
+      (fn [tapahtuma]
+        (assoc tapahtuma ::lt/toiminnot (id-ja-osat (::lt/id tapahtuma))))
+      tapahtumat)))
+
+(defn hae-tapahtumien-palvelumuodot [db tapahtumat]
+  (hae-tapahtumien-palvelumuodot*
+    (specql/fetch db
+                 ::lt/liikennetapahtuma
+                 (set/union
+                   lt/perustiedot
+                   lt/toimintojen-tiedot)
+                 {::lt/id (op/in (map ::lt/id tapahtumat))})
+    tapahtumat))
+
+(defn- hae-tapahtumien-kohdetiedot* [kohdetiedot tapahtumat]
+  (let [id-ja-kohde
+        (->>
+          kohdetiedot
+          (group-by ::kohde/id))]
+    (map
+      (fn [tapahtuma]
+        (assoc tapahtuma ::lt/kohde (first (id-ja-kohde (::lt/kohde-id tapahtuma)))))
+      tapahtumat)))
+
+(defn hae-tapahtumien-kohdetiedot [db tapahtumat]
+  (hae-tapahtumien-kohdetiedot*
+    (specql/fetch db
+                 ::kohde/kohde
+                 (set/union
+                   kohde/perustiedot
+                   kohde/kohteenosat)
+                 {::kohde/id (op/in (map ::lt/kohde-id tapahtumat))
+                  ::m/poistettu? false})
+    tapahtumat))
+
+(defn- hae-tapahtumien-perustiedot* [tapahtumat {:keys [niput?]}]
+  (into []
+        (apply comp
+               (remove nil?
+                       [(when niput? vain-uittoniput)
+                        ;; Jos hakuehdossa otetaan pois poistetut alukset,
+                        ;; niin ei palaudu tapahtumat, joiden kaikki alukset ovat poistettuja.
+                        ilman-poistettuja-aluksia]))
+        tapahtumat))
+
+(defn hae-tapahtumien-perustiedot [db {:keys [aikavali] :as tiedot}]
   (let [urakka-id (::ur/id tiedot)
         sopimus-id (::sop/id tiedot)
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
@@ -63,43 +119,44 @@
         aluslaji (::lt-alus/laji tiedot)
         suunta (::lt-alus/suunta tiedot)
         [alku loppu] aikavali]
-    (hae-liikennetapahtumat*
-      (into []
-            (apply comp
-                   (remove nil?
-                           [(when niput? vain-uittoniput)
-                            ;; Jos hakuehdossa otetaan pois poistetut alukset,
-                            ;; niin ei palaudu tapahtumat, joiden kaikki alukset ovat poistettuja.
-                            ilman-poistettuja-aluksia]))
-            (specql/fetch db
-                          ::lt/liikennetapahtuma
-                          (set/union
-                            lt/perustiedot
-                            lt/kuittaajan-tiedot
-                            lt/sopimuksen-tiedot
-                            lt/alusten-tiedot
-                            lt/kohteen-tiedot)
-                          (op/and
-                            (when (and alku loppu)
-                              {::lt/aika (op/between alku loppu)})
-                            (when kohde-id
-                              {::lt/kohde-id kohde-id})
-                            (when toimenpide
-                              {::lt/sulku-toimenpide toimenpide})
+    (hae-tapahtumien-perustiedot*
+      (specql/fetch db
+                   ::lt/liikennetapahtuma
+                   (set/union
+                     lt/perustiedot
+                     lt/kuittaajan-tiedot
+                     lt/sopimuksen-tiedot
+                     lt/alusten-tiedot
+                     ;; Liikennetapahtumalle tarvitaan kohde JA kohteenosat, mutta specql
+                     ;; bugittaa eikä saa palautettua kaikkea dataa. Liitetään kohdetiedot erikseen.
+                     #{::lt/kohde-id})
+                   (op/and
+                     (when (and alku loppu)
+                       {::lt/aika (op/between alku loppu)})
+                     (when kohde-id
+                       {::lt/kohde-id kohde-id})
+                     (when toimenpide
+                       {::lt/sulku-toimenpide toimenpide})
 
-                            (op/and
-                              {::m/poistettu? false
-                               ::lt/urakka-id urakka-id
-                               ::lt/sopimus-id sopimus-id
-                               ::lt/kohde {::m/poistettu? false}}
-                              (when (or suunta aluslaji)
-                                {::lt/alukset (op/and
-                                                (when suunta
-                                                  {::lt-alus/suunta suunta})
-                                                (when aluslaji
-                                                  {::lt-alus/laji aluslaji}))})))))
-      (partial kohteet-q/hae-kohteiden-urakkatiedot db user)
-      urakka-id)))
+                     (op/and
+                       {::m/poistettu? false
+                        ::lt/urakka-id urakka-id
+                        ::lt/sopimus-id sopimus-id}
+                       (when (or suunta aluslaji)
+                         {::lt/alukset (op/and
+                                         (when suunta
+                                           {::lt-alus/suunta suunta})
+                                         (when aluslaji
+                                           {::lt-alus/laji aluslaji}))}))))
+      tiedot)))
+
+(defn hae-liikennetapahtumat [db user tiedot]
+  (hae-liikennetapahtumat*
+    (->> (hae-tapahtumien-perustiedot db tiedot)
+         (hae-tapahtumien-palvelumuodot db)
+         (hae-tapahtumien-kohdetiedot db))
+    (partial kohteet-q/hae-kohteiden-urakkatiedot db user)
+    (::ur/id tiedot)))
 
 (defn- hae-kohteen-edellinen-tapahtuma* [tulokset]
   (first
@@ -171,6 +228,42 @@
                         {::m/luoja-id (:id user)}
                         alus)))))
 
+(defn- osa-kuuluu-tapahtumaan? [db osa tapahtuma]
+  (some?
+    (first
+      (specql/fetch db
+                    ::toiminto/liikennetapahtuman-toiminto
+                    #{::toiminto/id}
+                    {::toiminto/liikennetapahtuma-id (::lt/id tapahtuma)
+                     ::toiminto/id (::toiminto/id osa)}))))
+
+(defn vaadi-osa-kuuluu-tapahtumaan! [db osa tapahtuma]
+  (assert (osa-kuuluu-tapahtumaan? db osa tapahtuma) "Alus ei kuulu tapahtumaan!"))
+
+(defn tallenna-osa-tapahtumaan! [db user osa tapahtuma]
+  (let [olemassa? (id-olemassa? (::toiminto/id osa))
+        osa (assoc osa ::toiminto/liikennetapahtuma-id (::lt/id tapahtuma))]
+    (if olemassa?
+      (do
+        (vaadi-osa-kuuluu-tapahtumaan! db osa tapahtuma)
+        (specql/update! db
+                        ::toiminto/liikennetapahtuman-toiminto
+                        (merge
+                          (if (::m/poistettu? osa)
+                            {::m/poistaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)}
+
+                            {::m/muokkaaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)})
+                          osa)
+                        {::toiminto/id (::toiminto/id osa)}))
+
+      (specql/insert! db
+                      ::toiminto/liikennetapahtuman-toiminto
+                      (merge
+                        {::m/luoja-id (:id user)}
+                        osa)))))
+
 (defn tapahtuma-kuuluu-urakkaan? [db tapahtuma]
   (some?
     (first
@@ -185,6 +278,7 @@
 
 (defn tallenna-liikennetapahtuma [db user tapahtuma]
   (jdbc/with-db-transaction [db db]
+    (jdbc/execute! db ["SET CONSTRAINTS ALL DEFERRED"])
     (let [olemassa? (id-olemassa? (::lt/id tapahtuma))
           uusi-tapahtuma (if olemassa?
                            (do
@@ -198,7 +292,9 @@
 
                                                  {::m/muokkaaja-id (:id user)
                                                   ::m/muokattu (pvm/nyt)})
-                                               (dissoc tapahtuma ::lt/alukset))
+                                               (dissoc tapahtuma
+                                                       ::lt/alukset
+                                                       ::lt/toiminnot))
                                              {::lt/id (::lt/id tapahtuma)})
                              ;; Palautetaan päivitetty tapahtuma
                              tapahtuma)
@@ -207,6 +303,11 @@
                                            ::lt/liikennetapahtuma
                                            (merge
                                              {::m/luoja-id (:id user)}
-                                             (dissoc tapahtuma ::lt/alukset))))]
+                                             (dissoc tapahtuma
+                                                     ::lt/alukset
+                                                     ::lt/toiminnot))))]
       (doseq [alus (::lt/alukset tapahtuma)]
-        (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma)))))
+        (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma))
+
+      (doseq [osa (::lt/toiminnot tapahtuma)]
+        (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma)))))
