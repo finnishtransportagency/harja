@@ -26,6 +26,7 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
+            [harja.domain.kanavat.lt-ketjutus :as ketjutus]
             [clojure.set :as set]
             [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -80,6 +81,7 @@
 (defrecord TallennaLiikennetapahtuma [tapahtuma])
 (defrecord TapahtumaTallennettu [tulos])
 (defrecord TapahtumaEiTallennettu [virhe])
+(defrecord SiirraTapahtumaan [alus])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -129,20 +131,18 @@
 
 (defn tallennusparametrit [t]
   (-> t
-      (dissoc :grid-virheita?)
       (assoc ::lt/kuittaaja-id (get-in t [::lt/kuittaaja ::kayttaja/id]))
-      (dissoc ::lt/kuittaaja)
       (assoc ::lt/kohde-id (get-in t [::lt/kohde ::kohde/id]))
-      (dissoc ::lt/kohde)
       (assoc ::lt/urakka-id (:id @nav/valittu-urakka))
-      (dissoc ::lt/urakka)
       (assoc ::lt/sopimus-id (get-in t [::lt/sopimus ::sop/id]))
-      (dissoc ::lt/sopimus)
       (update ::lt/alukset (fn [alukset] (map
-                                           #(-> %
-                                                (set/rename-keys {:poistettu ::m/poistettu?})
-                                                (dissoc :id)
-                                                (dissoc :harja.ui.grid/virheet))
+                                           (fn [alus]
+                                             (-> (->> (keys alus)
+                                                      (filter #(= (namespace %) "harja.domain.kanavat.lt-alus"))
+                                                      (select-keys alus))
+                                                 (set/rename-keys {:poistettu ::m/poistettu?})
+                                                 (dissoc :id)
+                                                 (dissoc :harja.ui.grid/virheet)))
                                            alukset)))
       (update ::lt/toiminnot (fn [toiminnot] (map (fn [toiminto]
                                                     (->
@@ -151,13 +151,29 @@
                                                           (select-keys toiminto))
                                                       (update ::toiminto/palvelumuoto #(if (= :ei-avausta (::toiminto/toimenpide toiminto))
                                                                                          nil
-                                                                                         %))))
-                                                  toiminnot)))))
+                                                                                         %))
+                                                      (update ::toiminto/lkm #(cond (= :itse (::toiminto/palvelumuoto toiminto))
+                                                                                    %
+
+                                                                                    (nil? (::toiminto/palvelumuoto toiminto))
+                                                                                    nil
+
+                                                                                    :else 1))))
+                                                  toiminnot)))
+      (dissoc :grid-virheita?
+              :valittu-suunta
+              ::lt/kuittaaja
+              ::lt/kohde
+              ::lt/urakka
+              ::lt/sopimus)))
 
 (defn voi-tallentaa? [t]
   (and (not (:grid-virheita? t))
        (empty? (filter :koskematon (::lt/alukset t)))
-       (every? #(some? (::lt-alus/suunta %)) (::lt/alukset t))))
+       (every? #(some? (::lt-alus/suunta %)) (::lt/alukset t))
+       (or
+         (not-empty (::lt/alukset t))
+         (every? #(= :itse (::toiminto/palvelumuoto %)) (::lt/toiminnot t)))))
 
 (defn sama-alusrivi? [a b]
   ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä
@@ -202,9 +218,33 @@
                                              ::osa/kohde-id ::toiminto/kohde-id})
                            (assoc ::toiminto/lkm 1)
                            (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
-                           (assoc ::toiminto/toimenpide (when (kohde/silta? osa) :ei-avausta)))
+                           (assoc ::toiminto/toimenpide (if (kohde/silta? osa)
+                                                          :ei-avausta
+                                                          :sulutus)))
                         (first (vanhat (::osa/id osa)))))
                     (::kohde/kohteenosat kohde)))))))
+
+(defn kohde-sisaltaa-sulun? [kohde]
+  (some kohde/sulku? (::kohde/kohteenosat kohde)))
+
+(defn tapahtuman-kohde-sisaltaa-sulun? [tapahtuma]
+  (kohde-sisaltaa-sulun? (::lt/kohde tapahtuma)))
+
+(defn aseta-suunta [rivi kohde]
+  (if (kohde-sisaltaa-sulun? kohde)
+    (assoc rivi :valittu-suunta nil)
+    (assoc rivi :valittu-suunta :molemmat)))
+
+(defn kasittele-uudet-alukset [tapahtuma alukset]
+  (if-not (id-olemassa? tapahtuma)
+    (map (fn [a]
+           (if-let [suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))]
+             (assoc a ::lt-alus/suunta suunta)
+
+             a))
+         alukset)
+
+    alukset))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -237,8 +277,10 @@
 
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
-    (assoc app :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
-                                            (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma)))))
+    (-> app
+        (assoc :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
+                                         (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
+        (assoc :siirretyt-alukset #{})))
 
   HaeEdellisetTiedot
   (process-event [{t :tapahtuma} app]
@@ -280,10 +322,10 @@
     (assoc app :valittu-liikennetapahtuma t))
 
   MuokkaaAluksia
-  (process-event [{alukset :alukset v :virheita?} app]
-    (if (:valittu-liikennetapahtuma app)
+  (process-event [{alukset :alukset v :virheita?} {tapahtuma :valittu-liikennetapahtuma :as app}]
+    (if tapahtuma
       (-> app
-          (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] alukset)
+          (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-uudet-alukset tapahtuma alukset))
           (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
 
       app))
@@ -324,4 +366,10 @@
   TapahtumaEiTallennettu
   (process-event [_ app]
     (viesti/nayta! "Virhe tapahtuman tallennuksessa!" :danger)
-    (assoc app :tallennus-kaynnissa? false)))
+    (assoc app :tallennus-kaynnissa? false))
+
+  SiirraTapahtumaan
+  (process-event [{alus :alus} {tapahtuma :valittu-liikennetapahtuma :as app}]
+    (-> app
+        (update :siirretyt-alukset (fn [s] (if (nil? s) #{(::lt-alus/id alus)} (conj s (::lt-alus/id alus)))))
+        (update-in [:valittu-liikennetapahtuma ::lt/alukset] conj alus))))

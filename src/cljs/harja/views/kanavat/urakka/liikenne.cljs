@@ -31,13 +31,52 @@
             [harja.domain.sopimus :as sop]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
+            [harja.domain.kanavat.lt-ketjutus :as ketjutus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]
-            [harja.domain.kanavat.kohteenosa :as osa])
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [clojure.string :as str])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
+
+(defn edelliset-muokkausgrid [e! {:keys [siirretyt-alukset] :as app} {:keys [alukset] :as tiedot}]
+  [grid/grid
+   {:tunniste ::lt-alus/id
+    :tyhja "Kaikki alukset siirretty"}
+   [{:otsikko ""
+     :tyyppi :komponentti
+     :tasaa :keskita
+     :komponentti (fn [alus]
+                    [napit/yleinen-toissijainen
+                     "Siirrä"
+                     #(e! (tiedot/->SiirraTapahtumaan alus))
+                     {:ikoni (ikonit/livicon-arrow-bottom)}])}
+    {:otsikko "Aluslaji"
+     :tyyppi :string
+     :nimi ::lt-alus/laji
+     :fmt lt-alus/aluslaji->str}
+    {:otsikko "Nimi"
+     :tyyppi :string
+     :nimi ::lt-alus/nimi}
+    {:otsikko "Alusten lkm"
+     :nimi ::lt-alus/lkm
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Matkustajia"
+     :nimi ::lt-alus/matkustajalkm
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Nippuluku"
+     :nimi ::lt-alus/nippulkm
+     :tyyppi :positiivinen-numero}
+    {:otsikko "Edellinen tapahtuma"
+     :nimi ::lt/aika
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt}
+    {:otsikko "Lisätiedot"
+     :nimi ::lt/lisatieto
+     :tyyppi :string}]
+   (remove (comp (or siirretyt-alukset #{}) ::lt-alus/id) alukset)])
 
 (defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma] :as app}]
   [grid/muokkaus-grid
@@ -47,13 +86,15 @@
      :tyyppi :komponentti
      :tasaa :keskita
      :komponentti (fn [rivi]
-                    (let [suunta (::lt-alus/suunta rivi)]
+                    (let [suunta (::lt-alus/suunta rivi)
+                          valittu-suunta (:valittu-suunta valittu-liikennetapahtuma)]
                       [napit/yleinen-toissijainen
                        (lt/suunta->str suunta)
                        #(e! (tiedot/->VaihdaSuuntaa rivi))
                        {:ikoni (cond (= :ylos suunta) (ikonit/livicon-arrow-up)
                                      (= :alas suunta) (ikonit/livicon-arrow-down)
-                                     :else (ikonit/livicon-question))}]))}
+                                     :else (ikonit/livicon-question))
+                        :disabled (some? (#{:ylos :alas} valittu-suunta))}]))}
     {:otsikko "Aluslaji"
      :tyyppi :valinta
      :nimi ::lt-alus/laji
@@ -160,9 +201,12 @@
           :tyyppi :valinta
           :valinnat kohteet
           :pakollinen? true
+          :muokattava? #(if uusi-tapahtuma? true false)
           :valinta-nayta #(if % (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
           :aseta (fn [rivi arvo]
-                   (let [rivi (tiedot/kohteenosatiedot-toimintoihin rivi arvo)]
+                   (let [rivi (-> rivi
+                                  (tiedot/kohteenosatiedot-toimintoihin arvo)
+                                  (tiedot/aseta-suunta arvo))]
                      (when uusi-tapahtuma?
                        (e! (tiedot/->HaeEdellisetTiedot rivi)))
                      rivi))})
@@ -212,17 +256,34 @@
              {:otsikko "Yläpinta"
               :tyyppi :positiivinen-numero
               :nimi ::lt/vesipinta-ylaraja})))
+        (when (and uusi-tapahtuma?
+                   (tiedot/tapahtuman-kohde-sisaltaa-sulun? valittu-liikennetapahtuma))
+          {:otsikko "Suunta"
+           :nimi :valittu-suunta
+           :tyyppi :radio-group
+           :vaihtoehdot lt/suunta-vaihtoehdot
+           :vaihtoehto-nayta (fn [suunta]
+                               (str (lt/suunta->str suunta)
+                                    (when (suunta edelliset)
+                                      (str ", " (count (get-in edelliset [suunta :alukset])) " lähestyvää alusta"))))})
        (when (and (::lt/kohde valittu-liikennetapahtuma)
                   (not edellisten-haku-kaynnissa?)
-                  (or (:ylos edelliset) (:alas edelliset))
+                  (or (:alas edelliset) (:ylos edelliset))
+                  (some? (:valittu-suunta valittu-liikennetapahtuma))
                   uusi-tapahtuma?)
-         (lomake/rivi
-           {:otsikko "Edelliset alukset"
-            :tyyppi :komponentti
-            :palstoja 3
-            :nimi :edelliset-alukset
-            :komponentti (fn [_] [:div "Tähän tulee taulukko, josta alustiedot täytetään"])}))
-       (when (::lt/kohde valittu-liikennetapahtuma)
+         (for* [[suunta tiedot] (dissoc edelliset :tama)]
+           (when (and (some? tiedot)
+                      (or (= suunta (:valittu-suunta valittu-liikennetapahtuma))
+                          (= :molemmat (:valittu-suunta valittu-liikennetapahtuma))))
+             (lomake/rivi
+               {:otsikko (str "Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) " )")
+                :tyyppi :komponentti
+                :palstoja 3
+                :nimi :edelliset-alukset
+                :komponentti (fn [_] [edelliset-muokkausgrid e! app tiedot])}))))
+       (when (and (::lt/kohde valittu-liikennetapahtuma)
+                  (or (not uusi-tapahtuma?)
+                      (:valittu-suunta valittu-liikennetapahtuma)))
          {:otsikko "Liikenne "
           :tyyppi :komponentti
           :palstoja 3
@@ -307,7 +368,7 @@
       :hae tiedot/palvelumuoto->str}
      {:otsikko "Suunta"
       :leveys 1
-      :nimi :suunta
+      :nimi ::lt-alus/suunta
       :fmt lt/suunta->str}
      {:otsikko "Alus"
       :leveys 1
