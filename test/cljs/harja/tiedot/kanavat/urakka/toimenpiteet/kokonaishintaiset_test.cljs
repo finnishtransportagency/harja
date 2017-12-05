@@ -33,10 +33,8 @@
       tiedot/->HuoltokohteetHaettu
       tiedot/->HuoltokohteidenHakuEpaonnistui}
     (let [{:keys [nakymassa?
-                  kohteiden-haku-kaynnissa?
                   huoltokohteiden-haku-kaynnissa?]} (e! (tiedot/->NakymaAvattu))]
       (is nakymassa?)
-      (is kohteiden-haku-kaynnissa?)
       (is huoltokohteiden-haku-kaynnissa?))))
 
 (deftest NakymaSuljettu
