@@ -229,3 +229,36 @@
                   :harja.domain.tielupa/liittymalupa-myonnetty-kayttotarkoitus "lomakiintiesto"
                   :harja.domain.tielupa/liittymalupa-arvioitu-kuorma-autoliikenne 5}]
     (is (= (tielupa-sanoma/liittymalupa data) odotettu))))
+
+(deftest mainoslupa
+  (let [data {:sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen.",
+              :tiedoksi-elykeskukselle true
+              :asemakaava-alueella true
+              :suoja-alueen-leveys 1.2M
+              :mainokset
+              [{:mainos
+                {:sijainti
+                 {:numero 20
+                  :aet 2631
+                  :aosa 6
+                  :ajorata 0
+                  :kaista 1
+                  :puoli 0
+                  :sijoitus "oikea"}}}]}
+        odotettu {:harja.domain.tielupa/mainoslupa-mainostettava-asia nil,
+                  :harja.domain.tielupa/mainoslupa-sijainnin-kuvaus
+                  "Kiimingin keskustasta 10 km pohjoiseen.",
+                  :harja.domain.tielupa/mainoslupa-korvaava-paatos nil,
+                  :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true,
+                  :harja.domain.tielupa/mainoslupa-asemakaava-alueella true,
+                  :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M,
+                  :harja.domain.tielupa/mainokset
+                  [{:harja.domain.tielupa/tie 20,
+                    :harja.domain.tielupa/aosa 6,
+                    :harja.domain.tielupa/aet 2631,
+                    :harja.domain.tielupa/losa nil,
+                    :harja.domain.tielupa/let nil,
+                    :harja.domain.tielupa/ajorata 0,
+                    :harja.domain.tielupa/kaista 1,
+                    :harja.domain.tielupa/puoli 0}]}]
+    (is (= (tielupa-sanoma/mainoslupa data) odotettu))))

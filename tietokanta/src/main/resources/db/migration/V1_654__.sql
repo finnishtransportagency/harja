@@ -199,7 +199,7 @@ CREATE TABLE tielupa (
   "mainoslupa-korvaava-paatos"                                    BOOLEAN,
   "mainoslupa-tiedoksi-elykeskukselle"                            BOOLEAN,
   "mainoslupa-asemakaava-alueella"                                BOOLEAN,
-  "mainoslupa-suoja-alueen-leveys"                                INTEGER,
+  "mainoslupa-suoja-alueen-leveys"                                DECIMAL,
   "mainoslupa-lisatiedot"                                         TEXT,
 
   -- opasteluvan tiedot

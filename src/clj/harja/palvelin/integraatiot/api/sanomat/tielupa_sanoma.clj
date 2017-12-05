@@ -2,7 +2,7 @@
   (:require [harja.domain.tielupa :as tielupa]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]))
 
-(defn nil-turvallinen-bigdec[arvo]
+(defn nil-turvallinen-bigdec [arvo]
   (when (not (nil? arvo))
     (bigdec arvo)))
 
@@ -91,9 +91,6 @@
    ::tielupa/kaapeliasennukset (kaapeliasennukset (:kaapeliasennukset johto-ja-kaapelilupa))})
 
 (defn liittymalupa [{liittymaohje :liittymaohje :as liittymalupa}]
-  (println "--->>>>")
-  (clojure.pprint/pprint liittymalupa)
-  (println "--->>>>")
   {::tielupa/liittymalupa-myonnetty-kayttotarkoitus (:myonnetty-kauttotarkoitus liittymalupa)
    ::tielupa/liittymalupa-haettu-kayttotarkoitus (:haettu-kayttotarkoitus liittymalupa)
    ::tielupa/liittymalupa-liittyman-siirto (:liittyman-siirto liittymalupa)
@@ -103,7 +100,7 @@
    ::tielupa/liittymalupa-arvioitu-kokonaisliikenne (:arvioitu-kokonaisliikenne liittymalupa)
    ::tielupa/liittymalupa-arvioitu-kuorma-autoliikenne (:arvioitu-kuorma-autoliikenne liittymalupa)
    ::tielupa/liittymalupa-nykyisen-liittyman-numero (:nykyisen-liittyman-numero liittymalupa)
-   ::tielupa/liittymalupa-nykyisen-liittyman-paivays (json-tyokalut/aika-string->java-sql-date(:nykyisen-liittyman-paivays liittymalupa))
+   ::tielupa/liittymalupa-nykyisen-liittyman-paivays (json-tyokalut/aika-string->java-sql-date (:nykyisen-liittyman-paivays liittymalupa))
    ::tielupa/liittymalupa-kiinteisto-rn (:kiinteisto-rn liittymalupa)
    ::tielupa/liittymalupa-muut-kulkuyhteydet (:muut-kulkuyhteydet liittymalupa)
    ::tielupa/liittymalupa-valmistumisen-takaraja (json-tyokalut/aika-string->java-sql-date (:valmistumisen-takaraja liittymalupa))
@@ -119,6 +116,20 @@
    ::tielupa/liittymalupa-liittymaohje-liikennemerkit (:liikennemerkit liittymaohje)
    ::tielupa/liittymalupa-liittymaohje-lisaohjeet (:lisaohjeet liittymaohje)})
 
+(defn mainokset [mainokset]
+  (mapv (fn [{mainos :mainos}]
+          (sijainti (:sijainti mainos)))
+        mainokset))
+
+(defn mainoslupa [mainoslupa]
+  {::tielupa/mainoslupa-mainostettava-asia (:mainostettava-asia mainoslupa)
+   ::tielupa/mainoslupa-sijainnin-kuvaus (:sijainnin-kuvaus mainoslupa)
+   ::tielupa/mainoslupa-korvaava-paatos (:korvaava-paatos mainoslupa)
+   ::tielupa/mainoslupa-tiedoksi-elykeskukselle (:tiedoksi-elykeskukselle mainoslupa)
+   ::tielupa/mainoslupa-asemakaava-alueella (:asemakaava-alueella mainoslupa)
+   ::tielupa/mainoslupa-suoja-alueen-leveys (nil-turvallinen-bigdec (:suoja-alueen-leveys mainoslupa))
+   ::tielupa/mainokset (mainokset (:mainokset mainoslupa))})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -128,5 +139,6 @@
                    (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa)))
                    (merge (valmistumisilmoitus (:valmistumisilmoitus tielupa)))
                    (merge (johto-ja-kaapelilupa (:johto-ja-kaapelilupa tielupa)))
-                   (merge (liittymalupa (:liittymalupa tielupa))))]
+                   (merge (liittymalupa (:liittymalupa tielupa)))
+                   (merge (mainoslupa (:mainoslupa tielupa))))]
     domain))

@@ -17,7 +17,7 @@
       "tunniste": {
         "id": 1234
       },
-      "tyyppi": "mainosilmoitus",
+      "tyyppi": "mainoslupa",
       "paatoksen-diaarinumero": "123456789",
       "saapumispvm": "2017-09-22T12:00:00+02:00",
       "myontamispvm": "2018-09-22T12:00:00+02:00",
@@ -76,7 +76,7 @@
       "palautettu": true,
       "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
     },
-    "mainosilmoitus": {
+    "mainoslupa": {
       "mainostettava-asia": "Koitelin Kosket",
       "sijainnin-kuvaus": "Kiimingin keskustasta 10 km pohjoiseen.",
       "tiedoksi-elykeskukselle": true,
