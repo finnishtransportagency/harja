@@ -74,11 +74,11 @@
 (defn hae-tapahtumien-palvelumuodot [db tapahtumat]
   (hae-tapahtumien-palvelumuodot*
     (specql/fetch db
-                 ::lt/liikennetapahtuma
-                 (set/union
-                   lt/perustiedot
-                   lt/toimintojen-tiedot)
-                 {::lt/id (op/in (map ::lt/id tapahtumat))})
+                  ::lt/liikennetapahtuma
+                  (set/union
+                    lt/perustiedot
+                    lt/toimintojen-tiedot)
+                  {::lt/id (op/in (map ::lt/id tapahtumat))})
     tapahtumat))
 
 (defn- hae-tapahtumien-kohdetiedot* [kohdetiedot tapahtumat]
@@ -94,12 +94,12 @@
 (defn hae-tapahtumien-kohdetiedot [db tapahtumat]
   (hae-tapahtumien-kohdetiedot*
     (specql/fetch db
-                 ::kohde/kohde
-                 (set/union
-                   kohde/perustiedot
-                   kohde/kohteenosat)
-                 {::kohde/id (op/in (map ::lt/kohde-id tapahtumat))
-                  ::m/poistettu? false})
+                  ::kohde/kohde
+                  (set/union
+                    kohde/perustiedot
+                    kohde/kohteenosat)
+                  {::kohde/id (op/in (map ::lt/kohde-id tapahtumat))
+                   ::m/poistettu? false})
     tapahtumat))
 
 (defn- hae-tapahtumien-perustiedot* [tapahtumat {:keys [niput?]}]
@@ -122,33 +122,33 @@
         [alku loppu] aikavali]
     (hae-tapahtumien-perustiedot*
       (specql/fetch db
-                   ::lt/liikennetapahtuma
-                   (set/union
-                     lt/perustiedot
-                     lt/kuittaajan-tiedot
-                     lt/sopimuksen-tiedot
-                     lt/alusten-tiedot
-                     ;; Liikennetapahtumalle tarvitaan kohde JA kohteenosat, mutta specql
-                     ;; bugittaa eikä saa palautettua kaikkea dataa. Liitetään kohdetiedot erikseen.
-                     #{::lt/kohde-id})
-                   (op/and
-                     (when (and alku loppu)
-                       {::lt/aika (op/between alku loppu)})
-                     (when kohde-id
-                       {::lt/kohde-id kohde-id})
-                     (when toimenpide
-                       {::lt/sulku-toimenpide toimenpide})
+                    ::lt/liikennetapahtuma
+                    (set/union
+                      lt/perustiedot
+                      lt/kuittaajan-tiedot
+                      lt/sopimuksen-tiedot
+                      lt/alusten-tiedot
+                      ;; Liikennetapahtumalle tarvitaan kohde JA kohteenosat, mutta specql
+                      ;; bugittaa eikä saa palautettua kaikkea dataa. Liitetään kohdetiedot erikseen.
+                      #{::lt/kohde-id})
+                    (op/and
+                      (when (and alku loppu)
+                        {::lt/aika (op/between alku loppu)})
+                      (when kohde-id
+                        {::lt/kohde-id kohde-id})
+                      (when toimenpide
+                        {::lt/sulku-toimenpide toimenpide})
 
-                     (op/and
-                       {::m/poistettu? false
-                        ::lt/urakka-id urakka-id
-                        ::lt/sopimus-id sopimus-id}
-                       (when (or suunta aluslaji)
-                         {::lt/alukset (op/and
-                                         (when suunta
-                                           {::lt-alus/suunta suunta})
-                                         (when aluslaji
-                                           {::lt-alus/laji aluslaji}))}))))
+                      (op/and
+                        {::m/poistettu? false
+                         ::lt/urakka-id urakka-id
+                         ::lt/sopimus-id sopimus-id}
+                        (when (or suunta aluslaji)
+                          {::lt/alukset (op/and
+                                          (when suunta
+                                            {::lt-alus/suunta suunta})
+                                          (when aluslaji
+                                            {::lt-alus/laji aluslaji}))}))))
       tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
@@ -199,12 +199,12 @@
                                             ::ketjutus/kohteelta
                                             ::ketjutus/alus)
                                     (apply
-                                     merge
-                                     (map
-                                       val
-                                       (select-keys k [::ketjutus/tapahtumasta
-                                                       ::ketjutus/kohteelta
-                                                       ::ketjutus/alus])))))
+                                      merge
+                                      (map
+                                        val
+                                        (select-keys k [::ketjutus/tapahtumasta
+                                                        ::ketjutus/kohteelta
+                                                        ::ketjutus/alus])))))
                                 ketjut)))
                           (group-by ::ketjutus/kohteelta tapahtumat))]
                (assert
@@ -236,7 +236,7 @@
          ::ketjutus/tapahtumaan-id op/null?}))))
 
 (defn hae-edelliset-tapahtumat [db tiedot]
-  (let [{:keys [ylos alas]}  (hae-kuittaamattomat-alukset db tiedot)
+  (let [{:keys [ylos alas]} (hae-kuittaamattomat-alukset db tiedot)
         kohde (hae-kohteen-edellinen-tapahtuma db tiedot)]
     {:ylos ylos
      :alas alas
@@ -254,10 +254,30 @@
 (defn vaadi-alus-kuuluu-tapahtumaan! [db alus tapahtuma]
   (assert (alus-kuuluu-tapahtumaan? db alus tapahtuma) "Alus ei kuulu tapahtumaan!"))
 
-(defn poista-ketjutus! [db alus]
+(defn ketjutus-kuuluu-urakkaan? [db alus-id urakka-id]
+  (let [tapahtuma-id (first
+                       (map
+                         ::ketjutus/tapahtumasta-id
+                         (specql/fetch db
+                                       ::ketjutus/liikennetapahtuman-ketjutus
+                                       #{::ketjutus/tapahtumasta-id}
+                                       {::ketjutus/alus-id alus-id
+                                        ::ketjutus/tapahtumaan-id op/null?})))]
+    (not-empty
+      (specql/fetch db
+                   ::lt/liikennetapahtuma
+                   #{::lt/urakka-id ::lt/id}
+                   {::lt/id tapahtuma-id
+                    ::lt/urakka-id urakka-id}))))
+
+(defn vaadi-ketjutus-kuuluu-urakkaan! [db alus-id urakka-id]
+  (assert (ketjutus-kuuluu-urakkaan? db alus-id urakka-id) (str "Aluksen " alus-id " tapahtuma ei kuulu urakkaan " urakka-id)))
+
+(defn poista-ketjutus! [db alus-id urakka-id]
+  (vaadi-ketjutus-kuuluu-urakkaan! db alus-id urakka-id)
   (specql/delete! db
                   ::ketjutus/liikennetapahtuman-ketjutus
-                  {::ketjutus/alus-id (::lt-alus/id alus)
+                  {::ketjutus/alus-id alus-id
                    ::ketjutus/tapahtumaan-id op/null?}))
 
 (defn tallenna-alus-tapahtumaan! [db user alus tapahtuma]
@@ -265,7 +285,7 @@
         alus (assoc alus ::lt-alus/liikennetapahtuma-id (::lt/id tapahtuma))]
 
     (when (and olemassa? (::m/poistettu? alus))
-      (poista-ketjutus! db alus))
+      (poista-ketjutus! db (::lt-alus/id alus) (::lt/urakka-id tapahtuma)))
 
     (if (and olemassa? (alus-kuuluu-tapahtumaan? db alus tapahtuma))
       (do
