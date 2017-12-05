@@ -110,7 +110,6 @@
                           "- Valitse huoltokohde -")
       :valinnat huoltokohteet
       :pakollinen? true}
-     ;; TODO kaatuu muutos- ja lisätöissä
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
@@ -126,7 +125,6 @@
                    (assoc-in [:tehtava :toimenpideinstanssi :id] arvo)
                    (assoc-in [:tehtava :toimenpidekoodi :id] nil)
                    (assoc-in [:tehtava :yksikko] nil)))}
-     ;; TODO kaatuu muutos- ja lisätöissä
      {:otsikko "Tehtävä"
       :nimi ::kanavan-toimenpide/toimenpidekoodi-id
       :pakollinen? true
