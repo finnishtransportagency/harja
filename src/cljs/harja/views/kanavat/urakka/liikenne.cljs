@@ -41,7 +41,7 @@
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
-(defn edelliset-muokkausgrid [e! {:keys [siirretyt-alukset] :as app} {:keys [alukset] :as tiedot}]
+(defn edelliset-grid [e! {:keys [siirretyt-alukset ketjutuksen-poistot] :as app} {:keys [alukset] :as tiedot}]
   [grid/grid
    {:tunniste ::lt-alus/id
     :tyhja "Kaikki alukset siirretty"}
@@ -50,7 +50,7 @@
      :tasaa :keskita
      :komponentti (fn [alus]
                     [napit/yleinen-toissijainen
-                     "Siirrä"
+                     "Kuittaa"
                      #(e! (tiedot/->SiirraTapahtumaan alus))
                      {:ikoni (ikonit/livicon-arrow-bottom)}])}
     {:otsikko "Aluslaji"
@@ -75,7 +75,18 @@
      :fmt pvm/pvm-aika-opt}
     {:otsikko "Lisätiedot"
      :nimi ::lt/lisatieto
-     :tyyppi :string}]
+     :tyyppi :string}
+    {:otsikko ""
+     :nimi :poistettu
+     :tyyppi :komponentti
+     :komponentti (fn [rivi]
+                    (if-not (ketjutuksen-poistot (::lt-alus/id rivi))
+                      [:span.klikattava {:on-click
+                                        #(do (.preventDefault %)
+                                             (e! (tiedot/->PoistaKetjutus rivi)))}
+                      (ikonit/livicon-trash)]
+
+                      [ajax-loader-pieni]))}]
    (remove (comp (or siirretyt-alukset #{}) ::lt-alus/id) alukset)])
 
 (defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma siirretyt-alukset] :as app}]
@@ -287,7 +298,7 @@
                 :tyyppi :komponentti
                 :palstoja 3
                 :nimi :edelliset-alukset
-                :komponentti (fn [_] [edelliset-muokkausgrid e! app tiedot])}))))
+                :komponentti (fn [_] [edelliset-grid e! app tiedot])}))))
        (when (and (::lt/kohde valittu-liikennetapahtuma)
                   (or (not uusi-tapahtuma?)
                       (:valittu-suunta valittu-liikennetapahtuma)))

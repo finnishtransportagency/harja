@@ -83,6 +83,9 @@
 (defrecord TapahtumaEiTallennettu [virhe])
 (defrecord SiirraTapahtumaan [alus])
 (defrecord SiirraTapahtumasta [alus])
+(defrecord PoistaKetjutus [alus])
+(defrecord KetjutusPoistettu [tulos id])
+(defrecord KetjutusEiPoistettu [virhe id])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -100,11 +103,11 @@
 
 (defn toimenpide->str [tapahtuma]
   (str/join ", " (into #{} (sort (map (comp lt/toimenpide->str ::toiminto/toimenpide)
-                                       (remove
-                                         (comp
-                                           (partial = :ei-avausta)
-                                           ::toiminto/toimenpide)
-                                         (::lt/toiminnot tapahtuma)))))))
+                                      (remove
+                                        (comp
+                                          (partial = :ei-avausta)
+                                          ::toiminto/toimenpide)
+                                        (::lt/toiminnot tapahtuma)))))))
 
 (defn tapahtumarivit [tapahtuma]
   (let [alustiedot
@@ -153,8 +156,8 @@
       (update ::lt/toiminnot (fn [toiminnot] (map (fn [toiminto]
                                                     (->
                                                       (->> (keys toiminto)
-                                                          (filter #(= (namespace %) "harja.domain.kanavat.lt-toiminto"))
-                                                          (select-keys toiminto))
+                                                           (filter #(= (namespace %) "harja.domain.kanavat.lt-toiminto"))
+                                                           (select-keys toiminto))
                                                       (update ::toiminto/palvelumuoto #(if (= :ei-avausta (::toiminto/toimenpide toiminto))
                                                                                          nil
                                                                                          %))
@@ -220,13 +223,13 @@
                     (fn [osa]
                       (merge
                         (-> osa
-                           (set/rename-keys {::osa/id ::toiminto/kohteenosa-id
-                                             ::osa/kohde-id ::toiminto/kohde-id})
-                           (assoc ::toiminto/lkm 1)
-                           (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
-                           (assoc ::toiminto/toimenpide (if (kohde/silta? osa)
-                                                          :ei-avausta
-                                                          :sulutus)))
+                            (set/rename-keys {::osa/id ::toiminto/kohteenosa-id
+                                              ::osa/kohde-id ::toiminto/kohde-id})
+                            (assoc ::toiminto/lkm 1)
+                            (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
+                            (assoc ::toiminto/toimenpide (if (kohde/silta? osa)
+                                                           :ei-avausta
+                                                           :sulutus)))
                         (first (vanhat (::osa/id osa)))))
                     (::kohde/kohteenosat kohde)))))))
 
@@ -251,6 +254,17 @@
          alukset)
 
     alukset))
+
+(defn poista-ketjutus [app alus-id]
+  (let [poista-idlla (fn [alus-id alukset]
+                       (remove (comp (partial = alus-id) ::lt-alus/id) alukset))]
+    (-> app
+       (update-in
+         [:edelliset :ylos :alukset]
+         (partial poista-idlla alus-id))
+       (update-in
+         [:edelliset :alas :alukset]
+         (partial poista-idlla alus-id)))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -285,8 +299,9 @@
   (process-event [{t :tapahtuma} app]
     (-> app
         (assoc :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
-                                         (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
-        (assoc :siirretyt-alukset #{})))
+                                            (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
+        (assoc :siirretyt-alukset #{})
+        (assoc :ketjutuksen-poistot #{})))
 
   HaeEdellisetTiedot
   (process-event [{t :tapahtuma} app]
@@ -386,4 +401,39 @@
         (update :siirretyt-alukset (fn [s] (disj s (::lt-alus/id alus))))
         (update-in [:valittu-liikennetapahtuma ::lt/alukset]
                    (fn [alukset]
-                     (into [] (disj (into #{} alukset) alus)))))))
+                     (into [] (disj (into #{} alukset) alus))))))
+
+  PoistaKetjutus
+  (process-event [{a :alus} {:keys [ketjutuksen-poistot] :as app}]
+    (let [id (::lt-alus/id a)]
+      (if-not (ketjutuksen-poistot id)
+        (-> app
+            (tt/post! :poista-ketjutus
+                      {::lt-alus/id id
+                       ::lt/urakka-id (:id @nav/valittu-urakka)}
+                      {:onnistui ->KetjutusPoistettu
+                       :onnistui-parametrit [id]
+                       :epaonnistui ->KetjutusEiPoistettu
+                       :epaonnistui-parametrit [id]})
+            (update :ketjutuksen-poistot (fn [s] (if (nil? s)
+                                                  #{id}
+                                                  (conj s id)))))
+
+        app)))
+
+  KetjutusPoistettu
+  (process-event [{_ :tulos id :id} app]
+    (when (modal/nakyvissa?) (modal/piilota!))
+    (-> app
+        (poista-ketjutus id)
+        (update :ketjutuksen-poistot (fn [s] (if (nil? s)
+                                              #{}
+                                              (disj s id))))))
+
+  KetjutusEiPoistettu
+  (process-event [{_ :virhe id :id} app]
+    (viesti/nayta! "Virhe ketjutuksen poistossa!" :danger)
+    (-> app
+        (update :ketjutuksen-poistot (fn [s] (if (nil? s)
+                                               #{}
+                                               (disj s id)))))))
