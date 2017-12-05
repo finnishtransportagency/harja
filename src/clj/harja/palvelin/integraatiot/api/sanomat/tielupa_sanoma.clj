@@ -68,19 +68,19 @@
 
 (defn kaapeliasennukset [kaapeliasennukset]
   (mapv (fn [{kaapeliasennus :kaapeliasennus}]
-          {::tielupa/laite (:laite kaapeliasennus)
-           ::tielupa/asennustyyppi (:asennustyyppi kaapeliasennus)
-           ::tielupa/kommentit (:kommentit kaapeliasennus)
-           ::tielupa/maakaapelia-metreissa (:maakaapelia-metreissa kaapeliasennus)
-           ::tielupa/ilmakaapelia-metreissa (:ilmakaapelia-metreissa kaapeliasennus)
-           ::tielupa/nopeusrajoitus (:nopeusrajoitus kaapeliasennus)
-           ::tielupa/liikennemaara (:liikennemaara kaapeliasennus)
-           ::tielupa/sijainti (sijainti (:sijainti kaapeliasennus))})
+          (merge {::tielupa/laite (:laite kaapeliasennus)
+                  ::tielupa/asennustyyppi (:asennustyyppi kaapeliasennus)
+                  ::tielupa/kommentit (:kommentit kaapeliasennus)
+                  ::tielupa/maakaapelia-metreissa (bigdec (:maakaapelia-metreissa kaapeliasennus))
+                  ::tielupa/ilmakaapelia-metreissa (bigdec (:ilmakaapelia-metreissa kaapeliasennus))
+                  ::tielupa/nopeusrajoitus (:nopeusrajoitus kaapeliasennus)
+                  ::tielupa/liikennemaara (bigdec (:liikennemaara kaapeliasennus))}
+                 (sijainti (:sijainti kaapeliasennus))))
         kaapeliasennukset))
 
 (defn johto-ja-kaapelilupa [johto-ja-kaapelilupa]
-  {::tielupa/johtolupa-maakaapelia-yhteensa (:maakaapelia-yhteensa johto-ja-kaapelilupa)
-   ::tielupa/johtolupa-ilmakaapelia-yhteensa (:ilmakaapelia-yhteensa johto-ja-kaapelilupa)
+  {::tielupa/johtolupa-maakaapelia-yhteensa (bigdec (:maakaapelia-yhteensa johto-ja-kaapelilupa))
+   ::tielupa/johtolupa-ilmakaapelia-yhteensa (bigdec (:ilmakaapelia-yhteensa johto-ja-kaapelilupa))
    ::tielupa/johtolupa-tienalituksia (:tienalituksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-tienylityksia (:tienylityksia johto-ja-kaapelilupa)
    ::tielupa/johtolupa-silta-asennuksia (:silta-asennuksia johto-ja-kaapelilupa)
