@@ -13,8 +13,6 @@
        :clj
             [clojure.core.async :refer [<! go]])
     #?(:clj
-            )
-    #?(:clj
             [harja.tyokalut.spec :refer [defn+]]))
   #?(:cljs (:require-macros [harja.tyokalut.spec :refer [defn+]]
              [cljs.core.async.macros :refer [go]])))
