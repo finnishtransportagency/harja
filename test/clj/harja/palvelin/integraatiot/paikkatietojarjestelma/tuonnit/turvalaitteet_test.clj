@@ -1,11 +1,10 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet-test
   (:require  [harja.testi :as ht]
              [clojure.test :as t]
-             [ harja.domain.vesivaylat.vatu-turvalaite :as turvalaite]
+             [harja.domain.vesivaylat.vatu-turvalaite :as turvalaite]
              [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaite-tuonti]))
 
-
-
+(t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
 (def referenssi-turvalaite-shapefilestä
   {:tlnumero 6666666
@@ -51,4 +50,4 @@
 
 
 (t/deftest vie-turvalaite-entry-test
-           (turvalaite-tuonti/vie-turvalaite-entry :db referenssi-turvalaite-shapefilestä))
+           (turvalaite-tuonti/vie-turvalaite-entry (:db ht/jarjestelma) referenssi-turvalaite-shapefilestä))
