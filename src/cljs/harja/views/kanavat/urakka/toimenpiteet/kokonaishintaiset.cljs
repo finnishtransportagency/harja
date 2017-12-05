@@ -3,6 +3,7 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as tiedot]
             [harja.tiedot.navigaatio :as navigaatio]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.loki :refer [tarkkaile! log]]
             [harja.ui.lomake :as lomake]
@@ -19,18 +20,28 @@
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.domain.kanavat.kohde :as kohde]
+            [reagent.core :as r])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
 
-(defn hakuehdot [e! app]
-  (let [urakka (get-in app [:valinnat :urakka])]
-    [valinnat/urakkavalinnat {:urakka urakka}
+(defn hakuehdot [e! app kohteet]
+  (let [urakka-map (get-in app [:valinnat :urakka])]
+    [valinnat/urakkavalinnat {:urakka urakka-map}
      ^{:key "valinnat"}
-     [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+     [:div
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
+      [valinnat/kanava-kohde
+       (r/wrap (first (filter #(= (::kohde/id %) (get-in app [:valinnat :kanava-kohde-id])) kohteet))
+               (fn [uusi]
+                 (e! (tiedot/->PaivitaValinnat {:kanava-kohde-id (::kohde/id uusi)}))))
+       (into [nil] kohteet)
+       #(let [nimi (kohde/fmt-kohteen-nimi %)]
+          (if (empty? nimi) "Kaikki" nimi))]]
      ^{:key "toiminnot"}
-     [valinnat/urakkatoiminnot {:urakka urakka :sticky? true}
+     [valinnat/urakkatoiminnot {:urakka urakka-map :sticky? true}
       ^{:key "uusi-nappi"}
       [napit/yleinen-ensisijainen
        "Siirrä valitut muutos- ja lisätöihin"
@@ -72,7 +83,7 @@
                                  :valittu? uusi-arvo})))})
     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
 
-(defn lomake-toiminnot [e! toimenpide]
+(defn lomake-toiminnot [e! {:keys [tallennus-kaynnissa?] :as app} toimenpide]
   [:div
    [napit/tallenna
     "Tallenna"
@@ -105,10 +116,11 @@
        [lomake/lomake
         {:otsikko "Uusi toimenpide"
          :muokkaa! #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-         :footer-fn (fn [toimenpide] (lomake-toiminnot e! toimenpide))}
+         :footer-fn (fn [toimenpide]
+                      (lomake-toiminnot e! app toimenpide))}
         (toimenpiteet-view/toimenpidelomakkeen-kentat {:toimenpide avattu-toimenpide
                                                        :sopimukset sopimukset
-                                                       :kohteet kohteet
+                                                       :kohteet @kanavaurakka/kanavakohteet
                                                        :huoltokohteet huoltokohteet
                                                        :toimenpideinstanssit toimenpideinstanssit
                                                        :tehtavat tehtavat})
@@ -116,14 +128,18 @@
        [ajax-loader "Ladataan..."])]))
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide]
-                                    :as app}]
-  [:div
-   (if avattu-toimenpide
-     [kokonaishintainen-toimenpidelomake e! app]
-     [:div
-      [hakuehdot e! app]
-      [kokonaishintaiset-toimenpiteet-taulukko e! app]])
-   [debug/debug app]])
+                                    :as app}
+                                kohteet]
+  (let [nakyma-voidaan-nayttaa? (some? kohteet)]
+    [:div
+     (if nakyma-voidaan-nayttaa?
+       (if avattu-toimenpide
+         [kokonaishintainen-toimenpidelomake e! app]
+         [:div
+          [hakuehdot e! app kohteet]
+          [kokonaishintaiset-toimenpiteet-taulukko e! app]])
+       [ajax-loader "Ladataan..."])
+     [debug/debug app]]))
 
 (defn kokonaishintaiset* [e! _]
   (komp/luo
@@ -133,7 +149,7 @@
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
       [:span
-       [kokonaishintaiset-nakyma e! app]])))
+       [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet]])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

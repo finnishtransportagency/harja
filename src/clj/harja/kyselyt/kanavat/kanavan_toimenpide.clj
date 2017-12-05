@@ -12,21 +12,28 @@
             [specql.core :as specql]
             [specql.op :as op]))
 
-(defn hae-kanavatoimenpiteet [db hakuehdot]
-  (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot))
+(defn hae-kanavatoimenpiteet-specql [db hakuehdot]
+  (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
+        tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %
+                                                                                          ::muokkaustiedot/poistettu? false})
+        tp-tyot #(fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id %
+                                                                   ::muokkaustiedot/poistettu? false})]
+    (for [tp toimenpiteet
+          :let [tp-id (::toimenpide/id tp)]]
+      (merge tp {::toimenpide/hinnat (tp-hinnat tp-id)
+                 ::toimenpide/tyot (tp-tyot tp-id)}))))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
-(defn hae-sopimuksen-toimenpiteet-aikavalilta [db hakuehdot]
-  (let [idt (hae-sopimuksen-kanavatoimenpiteet-aikavalilta db hakuehdot)]
-    (if (not (empty? idt))
-      (sort-by ::toimenpide/alkupvm
-               (hae-kanavatoimenpiteet
-                 db
-                 (op/and
-                   (op/or {::muokkaustiedot/poistettu? op/null?} {::muokkaustiedot/poistettu? false})
-                   {::toimenpide/id (op/in (into #{} (map :id idt)))})))
-      [])))
+(defn hae-kanavatomenpiteet-jeesql [db hakuehdot]
+  (if-let [idt (seq (hae-kanavatoimenpiteet-aikavalilta db hakuehdot))]
+    (sort-by ::toimenpide/alkupvm
+             (hae-kanavatoimenpiteet-specql
+              db
+              (op/and
+               (op/or {::muokkaustiedot/poistettu? op/null?} {::muokkaustiedot/poistettu? false})
+               {::toimenpide/id (op/in (into #{} (map :id idt)))})))
+    []))
 
 (defn- vaadi-toimenpiteet-kuuluvat-urakkaan* [toimenpiteet-kannassa toimenpide-idt urakka-id]
   (when (or
@@ -73,7 +80,6 @@
     m))
 
 (defn tallenna-toimenpiteen-omat-hinnat! [{:keys [db user hinnat toimenpide-id]}]
-  (println "tallenna-omat-hinnat: saatiin" (pr-str hinnat))
   (doseq [hinta (map #(poista-frontin-keksima-id % ::hinta/id) hinnat)]
 
     (specql/upsert! db
@@ -83,7 +89,6 @@
 
 (defn tallenna-toimenpiteen-tyot! [{:keys [db user tyot toimenpide-id]}]
   (doseq [tyo (map #(poista-frontin-keksima-id % ::tyo/id) tyot)]
-    (println "upsertoidaan" (pr-str (kasittele-muokkaustiedot user tyo ::tyo/id)))
     (specql/upsert! db
                     ::tyo/toimenpiteen-tyo
                     (kasittele-muokkaustiedot user tyo ::tyo/id)

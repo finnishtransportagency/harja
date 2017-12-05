@@ -161,7 +161,7 @@
                               (s/optional-key :komponenttityyppihakuvali) s/Int
                               (s/optional-key :turvalaitekomponenttihakuvali) s/Int
                               (s/optional-key :vikahakuvali) s/Int
-                              (s/optional-key :turvalaiteryhmahakuaika) s/Num}
+                              (s/optional-key :turvalaiteryhmahakuaika) [s/Num]}
 
 
    (s/optional-key :ais-data) {:url s/Str

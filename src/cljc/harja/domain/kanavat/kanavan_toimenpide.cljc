@@ -29,8 +29,9 @@
    {"urakka" ::urakka-id
     "sopimus" ::sopimus-id
     "muu_toimenpide" ::muu-toimenpide
-    ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
-    ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
+    ;;; ei saatu joineja toimimaan oikein meidän vanhan specql:n kanssa
+    ;; ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
+    ;; ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
     "toimenpideinstanssi" ::toimenpideinstanssi-id
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kohde/kohde
@@ -56,7 +57,6 @@
 
 (def viittaus-idt #{::urakka-id ::sopimus-id ::kohde-id ::toimenpidekoodi-id ::kuittaaja-id})
 
-
 (def muokkaustiedot
   #{::muokkaustiedot/luoja-id
     ::muokkaustiedot/luotu
@@ -73,14 +73,6 @@
 
 (def huoltokohteen-tiedot
   #{[::huoltokohde huoltokohde/perustiedot]})
-
-(def tyotiedot
-  #{[::tyot
-     tyo/perustiedot]})
-
-(def hintatiedot
-  #{[::hinnat
-     hinta/perustiedot]})
 
 (def toimenpiteen-tiedot
   #{[::toimenpidekoodi toimenpidekoodi/perustiedot]})
@@ -105,15 +97,14 @@
              kohteenosan-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
-             kuittaajan-tiedot
-             hintatiedot
-             tyotiedot))
+             kuittaajan-tiedot))
 
 (s/def ::hae-kanavatoimenpiteet-kysely
   (s/keys :req [::urakka-id
                 ::sopimus-id
                 ::kanava-toimenpidetyyppi
-                ::toimenpidekoodi/id]
+                ::toimenpidekoodi/id
+                ::kohde-id]
           :req-un [::alkupvm
                    ::loppupvm]))
 
@@ -131,10 +122,10 @@
 
 (s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-kysely
   (s/keys
-   :req [::urakka-id
-         ::id
-         :harja.domain.kanavat.hinta/tallennettavat-hinnat
-         :harja.domain.kanavat.tyo/tallennettavat-tyot]))
+    :req [::urakka-id
+          ::id
+          :harja.domain.kanavat.hinta/tallennettavat-hinnat
+          :harja.domain.kanavat.tyo/tallennettavat-tyot]))
 
 (s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-vastaus
   ::kanava-toimenpide)
@@ -143,7 +134,9 @@
   (s/keys :req [::hae-kanavatoimenpiteet-kysely
                 ::kanava-toimenpide]))
 
-(defn korosta-ei-yksiloity [toimenpide]
+(defn korosta-ei-yksiloity
+  "Korostaa ei yksilöidyt toimenpiteet gridissä"
+  [toimenpide]
   (let [toimenpidekoodi-nimi (get-in toimenpide [::toimenpidekoodi ::toimenpidekoodi/nimi])]
     (if (= (str/lower-case toimenpidekoodi-nimi) "ei yksilöity")
       (assoc toimenpide :lihavoi true)
@@ -151,3 +144,14 @@
 
 (defn korosta-ei-yksiloidyt [toimenpiteet]
   (map korosta-ei-yksiloity toimenpiteet))
+
+(defn fmt-toimenpiteen-kohde
+  "Ottaa mapin, jossa on toimenpiteen kohde (ja kohdeosa).
+   Mikäli toimenpide liittyy kohdeosaan, näyttää sen nimen, muussa tapauksessa näyttää vain
+   kohteen nimen. Jos kohdetta ei ole, palauttaa tekstin 'Ei kohdetta'."
+  [toimenpide]
+  (let [kohde (::kohde toimenpide)
+        kohdeosa (::kohteenosa toimenpide)]
+    (or (::osa/nimi kohdeosa)
+        (::kohde/nimi kohde)
+        "Ei kohdetta")))

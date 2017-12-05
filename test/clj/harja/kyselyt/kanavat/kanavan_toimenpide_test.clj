@@ -10,14 +10,15 @@
 
 (deftest hae-kanavan-toimenpiteet
   (let [db (tietokanta/luo-tietokanta testitietokanta)
-        vastaus (kanava-q/hae-sopimuksen-toimenpiteet-aikavalilta
+        vastaus (kanava-q/hae-kanavatomenpiteet-jeesql
                   db
                   {:urakka (hae-saimaan-kanavaurakan-id)
                    :sopimus (hae-saimaan-kanavaurakan-paasopimuksen-id)
                    :alkupvm (harja.pvm/luo-pvm 2016 1 1)
                    :loppupvm (harja.pvm/luo-pvm 2018 1 1)
                    :toimenpidekoodi 597
-                   :tyyppi "kokonaishintainen"})]
+                   :tyyppi "kokonaishintainen"
+                   :kohde nil})]
     (is (every? ::kanavan-toimenpide/id vastaus))
     (is (every? ::kanavan-toimenpide/kohde vastaus))
     (is (every? ::kanavan-toimenpide/toimenpidekoodi vastaus))
@@ -49,7 +50,7 @@
         maara-lisayksen-jalkeen (hae-maara)
         paivitettava (assoc tallennettu ::kanavan-toimenpide/lisatieto "lisätieto on muuttunut")
         _ (kanava-q/tallenna-toimenpide db kayttaja-id paivitettava)
-        paivitetty (first (kanava-q/hae-kanavatoimenpiteet
+        paivitetty (first (kanava-q/hae-kanavatoimenpiteet-specql
                             db
                             (op/and
                               (op/or {::muokkaustiedot/poistettu? op/null?} {::muokkaustiedot/poistettu? false})

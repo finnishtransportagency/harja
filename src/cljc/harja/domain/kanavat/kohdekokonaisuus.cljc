@@ -11,6 +11,7 @@
         :cljs [[specql.impl.registry]])
 
     [harja.domain.muokkaustiedot :as m]
+    [harja.domain.kanavat.kohteenosa :as osa]
     [harja.domain.urakka :as ur])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
@@ -33,7 +34,8 @@
 
 (def kohteet
   #{[::kohteet #{:harja.domain.kanavat.kohde/id
-                 :harja.domain.kanavat.kohde/nimi}]})
+                 :harja.domain.kanavat.kohde/nimi
+                 [:harja.domain.kanavat.kohde/kohteenosat osa/perustiedot]}]})
 
 (def kohteet-sijainteineen
   #{[::kohteet #{:harja.domain.kanavat.kohde/id

@@ -24,14 +24,10 @@
                    [reagent.ratom :refer [reaction]]))
 
 ;; todo:
-;; - hinnalle ei tallennu toimenpide-id:tä
 ;; - testit
-;; - suunnitellut työt on täälläkin, määriä vaan ei suunnitella. vv/yks-puolella kutsutaan "yksikkohintaiset-tyot" -palvelusta,
-;;   tässä muutoshintaiset-tyot" -palvelusta.
-;;   nämä tiedot ja laitetaan :suunnitellut-tyot alle. tämä toimii listana valintoja joista voi valita
-;;   töitä/matskuja
-;;
+;; - varaosat ja materiaalit
 ;; huomioita:
+;; vv-filtterit layout samoin kuin vv-puolella
 ;; terminologiaa: vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
 ;;                koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
 ;;                kan_hinta <-> Hinnoittelu
@@ -45,6 +41,8 @@
                  :suunniteltujen-toiden-haku-kaynnissa? false
                  :suunnitellut-tyot nil}))
 
+
+
 (def alustettu-toimenpiteen-hinnoittelu
   {::toimenpide/id nil
    ::hinta/hinnat nil
@@ -52,11 +50,11 @@
 
 (defonce valinnat
   (reaction
-    (when (:nakymassa? @tila)
-      {:urakka @nav/valittu-urakka
-       :sopimus-id (first @u/valittu-sopimusnumero)
-       :aikavali @u/valittu-aikavali
-       :toimenpide @u/valittu-toimenpideinstanssi})))
+   (when (:nakymassa? @tila)
+     {:urakka @nav/valittu-urakka
+      :sopimus-id (first @u/valittu-sopimusnumero)
+      :aikavali @u/valittu-aikavali
+      :toimenpide @u/valittu-toimenpideinstanssi})))
 
 ;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
@@ -178,7 +176,6 @@
         idt (map id-avain jutut)
         seuraava-vapaa-id (dec (apply min (conj idt 0)))
         paivitetyt (conj jutut (kentta-fn seuraava-vapaa-id))]
-    (log "lisaa-hintarivi-toimenpiteelle* - seuraava-vapaa-id" seuraava-vapaa-id)
     (assoc-in app [:hinnoittele-toimenpide tyot-tai-hinnat] paivitetyt)))
 
 (defn lisaa-hintarivi-toimenpiteelle
@@ -221,8 +218,6 @@
 (defn poista-hintarivi-toimenpiteelta [id app]
   (poista-hintarivi-toimenpiteelta* id ::hinta/id ::hinta/hinnat app))
 
-
-
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
@@ -243,7 +238,7 @@
     (let [urakka-id (get-in app [:valinnat :urakka :id])
           haku-ei-kaynnissa (not (:suunniteltujen-toiden-haku-kaynnissa? app))]
       (if (and haku-ei-kaynnissa (some? urakka-id))
-        (do (tuck-apurit/post! :muutoshintaiset-tyot
+        (do (tuck-apurit/post! :yksikkohintaiset-tyot
                                  {:urakka urakka-id}
                                  {:onnistui ->SuunnitellutTyotHaettu
                                          :epaonnistui ->SuunnitellutTyotEiHaettu})
@@ -334,15 +329,21 @@
 
   AloitaToimenpiteenHinnoittelu
   (process-event [{toimenpide-id :toimenpide-id} app]
-    app
+
     (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
           hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
-          tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])]
-      (log "AloitaToimenpiteenHinnoittelu: toimenpiteen-hintakentat" (pr-str (toimenpiteen-hintakentat hinnat)))
-      (assoc app :hinnoittele-toimenpide
-             {::toimenpide/id toimenpide-id
-              ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
-              ::tyo/tyot tyot})))
+          tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
+          urakka-id (get-in app [:valinnat :urakka :id])]
+      (if urakka-id
+        (assoc app :hinnoittele-toimenpide
+               {::toimenpide/id toimenpide-id
+                ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
+                ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
+                ::tyo/tyot tyot
+                :urakka urakka-id})
+        (do
+          (log "ei aloiteta hinnoittelua, koska ei tiedetä urakkaa - valinnat: " (pr-str (:valinnat app)))
+          app))))
 
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
@@ -382,7 +383,7 @@
   LisaaMuuTyorivi
   (process-event [_ app]
     (lisaa-hintarivi-toimenpiteelle
-      {::hinta/ryhma :tyo}
+      {::hinta/ryhma "tyo"}
       app))
 
   PoistaHinnoiteltavaTyorivi
@@ -410,16 +411,13 @@
   ToimenpiteenHinnoitteluTallennettu
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Hinnoittelu tallennettu!" :success)
-    (let [paivitettava-toimenpide (etsi-eka-map (:toimenpiteet app)
-                                                ::toimenpide/id
-                                                (get-in app [:hinnoittele-toimenpide ::toimenpide/id]))
-          paivitetty-toimenpide (assoc paivitettava-toimenpide ::toimenpide/oma-hinnoittelu vastaus)
-          paivitetyt-toimenpiteet (mapv
-                                    (fn [toimenpide]
-                                      (if (= (::toimenpide/id toimenpide) (::toimenpide/id paivitettava-toimenpide))
-                                        paivitetty-toimenpide
-                                        toimenpide))
-                                    (:toimenpiteet app))]
+    (let [paivitetyt-toimenpiteet (mapv
+                                   (fn [toimenpide]
+                                     (if (= (::toimenpide/id toimenpide) (::toimenpide/id vastaus))
+                                       vastaus
+                                       toimenpide))
+                                   (:toimenpiteet app))]
+
       (assoc app :toimenpiteet paivitetyt-toimenpiteet
                  :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false
                  :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))

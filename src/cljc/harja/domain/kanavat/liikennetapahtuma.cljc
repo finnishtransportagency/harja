@@ -16,7 +16,7 @@
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.lt-alus :as lt-alus]
-    [harja.domain.kanavat.lt-osa :as lt-osa])
+    [harja.domain.kanavat.lt-toiminto :as toiminto])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -37,9 +37,9 @@
     ::alukset (specql.rel/has-many ::id
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuman-alus
                                    :harja.domain.kanavat.lt-alus/liikennetapahtuma-id)
-    ::osat (specql.rel/has-many ::id
-                                :harja.domain.kanavat.lt-osa/liikennetapahtuman-osa
-                                :harja.domain.kanavat.lt-osa/liikennetapahtuma-id)
+    ::toiminnot (specql.rel/has-many ::id
+                                :harja.domain.kanavat.lt-toiminto/liikennetapahtuman-toiminto
+                                :harja.domain.kanavat.lt-toiminto/liikennetapahtuma-id)
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
                                     :harja.domain.kayttaja/id)}])
@@ -55,13 +55,13 @@
   #{[::kuittaaja kayttaja/perustiedot]})
 
 (def kohteen-tiedot
-  #{[::kohde kohde/perustiedot+osat]})
+  #{[::kohde kohde/perustiedot]})
 
 (def alusten-tiedot
   #{[::alukset (set/union lt-alus/perustiedot lt-alus/metatiedot)]})
 
-(def osien-tiedot
-  #{[::osat lt-osa/perustiedot]})
+(def toimintojen-tiedot
+  #{[::toiminnot toiminto/perustiedot]})
 
 (def sopimuksen-tiedot
   #{[::sopimus sop/perustiedot]})
@@ -71,11 +71,30 @@
   {:sulutus "Sulutus"
    :tyhjennys "Tyhjennys"})
 
+(def silta-toimenpiteet*
+  ^{:private true}
+  {:avaus "Sillan avaus"
+   :ei-avausta "Ei avausta"})
+
 (defn sulku-toimenpide->str [toimenpide]
   (sulku-toimenpiteet*
     toimenpide))
 
+(defn silta-toimenpide->str [toimenpide]
+  (silta-toimenpiteet*
+    toimenpide))
+
+(defn toimenpide->str [toimenpide]
+  (or (sulku-toimenpide->str toimenpide)
+      (silta-toimenpide->str toimenpide)))
+
 (def sulku-toimenpide-vaihtoehdot (keys sulku-toimenpiteet*))
+(def silta-toimenpide-vaihtoehdot (keys silta-toimenpiteet*))
+
+(defn toimenpide-vaihtoehdot [osa]
+  (if (kohde/sulku? osa)
+    sulku-toimenpide-vaihtoehdot
+    silta-toimenpide-vaihtoehdot))
 
 (def palvelumuodot*
   ^{:private true}
@@ -90,6 +109,11 @@
   (palvelumuodot*
     palvelumuoto))
 
+(defn fmt-palvelumuoto [toiminto]
+  (str (palvelumuoto->str (::toiminto/palvelumuoto toiminto))
+       (when (= :itse (::toiminto/palvelumuoto toiminto))
+         (str " (" (::toiminto/lkm toiminto) " kpl)"))))
+
 (def suunta*
   ^{:private true}
   {:ylos "Ylös"
@@ -100,6 +124,9 @@
     suunta))
 
 (def suunta-vaihtoehdot (keys suunta*))
+
+(s/def ::alukset (s/coll-of ::lt-alus/liikennetapahtuman-alus))
+(s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::sulku-toimenpide
@@ -114,7 +141,8 @@
                                                    ::vesipinta-ylaraja
                                                    ::vesipinta-alaraja
                                                    ::sopimus
-                                                   ::kuittaaja]
+                                                   ::kuittaaja
+                                                   ::toiminnot]
                                                   :opt
                                                   [::alukset
                                                    ::lisatieto])))
@@ -122,21 +150,13 @@
 (s/def ::hakuparametrit ::hae-liikennetapahtumat-kysely)
 
 (s/def ::tallenna-liikennetapahtuma-kysely (s/keys :req [::aika
-                                                         (or
-                                                           (and
-                                                             ::sulku-toimenpide
-                                                             ::sulku-palvelumuoto
-                                                             ::sulku-lkm)
-                                                           (and
-                                                             ::silta-avaus
-                                                             ::silta-palvelumuoto
-                                                             ::silta-lkm))
                                                          ::vesipinta-ylaraja
                                                          ::vesipinta-alaraja
                                                          ::sopimus-id
                                                          ::urakka-id
                                                          ::kuittaaja-id
-                                                         ::kohde-id]
+                                                         ::kohde-id
+                                                         ::toiminnot]
                                                    :opt [::id
                                                          ::lisatieto
                                                          ::m/poistettu?
