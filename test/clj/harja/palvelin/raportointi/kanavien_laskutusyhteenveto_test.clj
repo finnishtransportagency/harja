@@ -67,4 +67,4 @@
       (is (=marginaalissa? (nth muutos-ja-lisatyot 2) 1545.00M))
       (is (=marginaalissa? (nth sanktiot 2) 5000M))
       (is (=marginaalissa? (nth erilliskustannukset 2) 10000M))
-      (is (=marginaalissa? (nth kaikki-yhteensa 2) 31540M)))))
+      (is (=marginaalissa? (nth kaikki-yhteensa 2) 31545M)))))
