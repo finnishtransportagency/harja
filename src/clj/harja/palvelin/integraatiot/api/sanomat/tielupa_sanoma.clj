@@ -60,11 +60,17 @@
    ::tielupa/tienpitoviranomainen-lupapaallikko (:lupapaallikko tienpitoviraonomainen)
    ::tielupa/tienpitoviranomainen-kasittelija (::kasittelija tienpitoviraonomainen)})
 
+(defn valmistumisilmoitus [valmistumisilmoitus]
+  {::tielupa/valmistumisilmoitus (:valmistumisilmoitus valmistumisilmoitus)
+   ::tielupa/valmistumisilmoitus-palautettu (:palautettu valmistumisilmoitus)
+   ::tielupa/valmistumisilmoitus-vaaditaan (:vaaditaan valmistumisilmoitus)})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
-                          (merge (sijainnit (:sijainnit tielupa)))
-                          (merge (hakijan-tiedot (:hakija tielupa)))
-                          (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
-                          (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
-                          (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa))))]
+                   (merge (sijainnit (:sijainnit tielupa)))
+                   (merge (hakijan-tiedot (:hakija tielupa)))
+                   (merge (urakoitsijan-tiedot (:urakoitsija tielupa)))
+                   (merge (liikenneohjaajan-tiedot (:liikenteenohjauksesta-vastaava tielupa)))
+                   (merge (tienpitoviranomaisen-tiedot (:tienpitoviranomainen tielupa)))
+                   (merge (valmistumisilmoitus (:valmistumisilmoitus tielupa))))]
     domain))

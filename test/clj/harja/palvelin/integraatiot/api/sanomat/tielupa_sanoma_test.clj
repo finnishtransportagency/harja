@@ -130,3 +130,13 @@
                   :harja.domain.tielupa/tienpitoviranomainen-kasittelija nil
                   :harja.domain.tielupa/tienpitoviranomainen-lupapaallikko nil}]
     (is (= (tielupa-sanoma/tienpitoviranomaisen-tiedot data) odotettu))))
+
+(deftest valmistumisilmoitus
+  (let [data {:vaaditaan true,
+              :palautettu true,
+              :valmistumisilmoitus "Työt valmistuneet 22.9.2017"}
+        odotettu {:harja.domain.tielupa/valmistumisilmoitus
+                  "Työt valmistuneet 22.9.2017",
+                  :harja.domain.tielupa/valmistumisilmoitus-palautettu true,
+                  :harja.domain.tielupa/valmistumisilmoitus-vaaditaan true}]
+    (is (= (tielupa-sanoma/valmistumisilmoitus data) odotettu))))
