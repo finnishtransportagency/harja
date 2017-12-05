@@ -187,11 +187,25 @@
             [suunta
              (when-let [edelliset
                         (map
-                          (fn [[kohde alukset]]
+                          (fn [[kohde ketjut]]
                             (assoc
                               kohde
                               :alukset
-                              (map ::ketjutus/alus alukset)))
+                              (map
+                                (fn [k]
+                                  (merge
+                                    (dissoc k
+                                            ::ketjutus/tapahtumasta
+                                            ::ketjutus/kohteelta
+                                            ::ketjutus/alus)
+                                    (apply
+                                     merge
+                                     (map
+                                       val
+                                       (select-keys k [::ketjutus/tapahtumasta
+                                                       ::ketjutus/kohteelta
+                                                       ::ketjutus/alus])))))
+                                ketjut)))
                           (group-by ::ketjutus/kohteelta tapahtumat))]
                (assert
                  (= 1 (count edelliset))
@@ -214,11 +228,12 @@
         (set/union
           ketjutus/perustiedot
           ketjutus/aluksen-tiedot
-          ketjutus/kohteelta-tiedot)
+          ketjutus/kohteelta-tiedot
+          ketjutus/tapahtumasta-tiedot)
         {::ketjutus/kohteelle-id kohde-id
          ::ketjutus/urakka-id urakka-id
          ::ketjutus/sopimus-id sopimus-id
-         ::ketjutus/kuitattu-id op/null?}))))
+         ::ketjutus/tapahtumaan-id op/null?}))))
 
 (defn hae-edelliset-tapahtumat [db tiedot]
   (let [{:keys [ylos alas]}  (hae-kuittaamattomat-alukset db tiedot)
@@ -242,9 +257,8 @@
 (defn tallenna-alus-tapahtumaan! [db user alus tapahtuma]
   (let [olemassa? (id-olemassa? (::lt-alus/id alus))
         alus (assoc alus ::lt-alus/liikennetapahtuma-id (::lt/id tapahtuma))]
-    (if olemassa?
+    (if (and olemassa? (alus-kuuluu-tapahtumaan? db alus tapahtuma))
       (do
-        (vaadi-alus-kuuluu-tapahtumaan! db alus tapahtuma)
         (specql/update! db
                         ::lt-alus/liikennetapahtuman-alus
                         (merge
@@ -263,7 +277,11 @@
                       ::lt-alus/liikennetapahtuman-alus
                       (merge
                         {::m/luoja-id (:id user)}
-                        alus)))))
+                        (->
+                          (->> (keys alus)
+                               (filter #(= (namespace %) "harja.domain.kanavat.lt-alus"))
+                               (select-keys alus))
+                          (dissoc ::lt-alus/id)))))))
 
 (defn- osa-kuuluu-tapahtumaan? [db osa tapahtuma]
   (some?
@@ -292,7 +310,7 @@
 
                             {::m/muokkaaja-id (:id user)
                              ::m/muokattu (pvm/nyt)})
-                          osa)
+                          (into {} (filter (comp some? val) osa)))
                         {::toiminto/id (::toiminto/id osa)}))
 
       (specql/insert! db
@@ -314,38 +332,72 @@
 (defn vaadi-tapahtuma-kuuluu-urakkaan! [db tapahtuma]
   (assert (tapahtuma-kuuluu-urakkaan? db tapahtuma) "Tapahtuma ei kuulu urakkaan!"))
 
-(defn hae-seuraava-kohde [db kohteelta-id suunta]
-  (specql/fetch
-    db
-    ::kohde/kohde
-    kohde/perustiedot
-    {(if (= suunta :ylos)
-       ::kohde/alas-id
-       ::kohde/ylos-id)
-     kohteelta-id}))
+(defn kuittaa-vanhat-ketjutukset! [db tapahtuma]
+  (specql/update! db
+                  ::ketjutus/liikennetapahtuman-ketjutus
+                  {::ketjutus/tapahtumaan-id (::lt/id tapahtuma)}
+                  {::ketjutus/alus-id (op/in (map ::lt-alus/id (::lt/alukset tapahtuma)))
+                   ::ketjutus/kohteelle-id (::lt/kohde-id tapahtuma)}))
 
-(defn tallenna-ketjutus! [db user tapahtuma]
+(defn ketjutus-olemassa? [db alus]
+  (not-empty
+    (specql/fetch db
+                  ::ketjutus/liikennetapahtuman-ketjutus
+                  #{::ketjutus/alus-id}
+                  {::ketjutus/alus-id (::lt-alus/id alus)})))
+
+(defn hae-seuraavat-kohteet [db kohteelta-id suunta]
+  (mapcat
+    vals
+    (specql/fetch
+      db
+      ::kohde/kohde
+      (if (= suunta :ylos)
+        #{::kohde/ylos-id}
+        #{::kohde/alas-id})
+      {::kohde/id kohteelta-id})))
+
+;; specql:n insert ei käytä paluuarvoihin transformaatioita, eli kun tallennuksessa
+;; insertoidaan uusia aluksia, niiden ::suunta on merkkijono. Keywordin ja merkkijonon
+;; vertailu on toki yksinkertaista, mutta tein tämän funktion turvatakseni tulevaisuutta -
+;; voi hyvin olla, että jossain tulevassa specql-päivityksessä transformaatiot vaikuttavat myös
+;; inserttien paluuarvoihin.
+(defn- sama-suunta?
+  "Vertailee kahta suuntaa. Suunnat voivat olla keywordejä tai merkkijonoja."
+  [a b]
+  (cond
+    (and (keyword? a) (keyword? b))
+    (= a b)
+
+    (and (string? a) (string? b))
+    (= a b)
+
+    (and (keyword? a) (string? b))
+    (= (name a) b)
+
+    (and (string? a) (keyword? b))
+    (= (keyword a) b)
+
+    :else false))
+
+(defn luo-uusi-ketjutus! [db tapahtuma]
   (let [alukset (::lt/alukset tapahtuma)
         kohteelta-id (::lt/kohde-id tapahtuma)
         ;; Kun uusi alus palautuu insertistä, suunta on merkkijono
-        suunnat (into #{} (map (comp keyword ::lt-alus/suunta) alukset))
-        seuraavat-kohteet (doall (mapcat (partial hae-seuraava-kohde db kohteelta-id) suunnat))]
-    ;; Yleensä aluksia menee vain yhteen suuntaan, mutta teoriassa on mahdollista, että siltojen
-    ;; ali mennään molempiin suuntiin
-    (doseq [kohteelle seuraavat-kohteet]
-      ;; Oikeassa elämässä ei ole haarautuvia kanavia, eli kohteelta mennään aina yhdelle kohteelle
-      ;; Ehkä joskus Harjan tulevaisuudessa tämä muuttuu.
-      (doseq [alus alukset]
-        (specql/insert! db
-                        ::ketjutus/liikennetapahtuman-ketjutus
-                        {::ketjutus/kohteelle-id (::kohde/id kohteelle)
-                         ::ketjutus/kohteelta-id kohteelta-id
-                         ::ketjutus/aika (::lt/aika tapahtuma)
-                         ::ketjutus/alus-id (::lt-alus/id alus)
+        suunnat (into #{} (map (comp keyword ::lt-alus/suunta) alukset))]
+    (doseq [suunta suunnat]
+      (doseq [kohteelle-id (hae-seuraavat-kohteet db kohteelta-id suunta)]
+        (doseq [alus (filter (comp (partial sama-suunta? suunta) ::lt-alus/suunta) alukset)]
+          (when-not (ketjutus-olemassa? db alus)
+            (specql/insert! db
+                            ::ketjutus/liikennetapahtuman-ketjutus
+                            {::ketjutus/kohteelle-id kohteelle-id
+                             ::ketjutus/kohteelta-id kohteelta-id
+                             ::ketjutus/alus-id (::lt-alus/id alus)
+                             ::ketjutus/tapahtumasta-id (::lt/id tapahtuma)
 
-                         ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
-                         ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)
-                         ::m/luoja-id (:id user)})))))
+                             ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
+                             ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)})))))))
 
 (defn tallenna-liikennetapahtuma [db user tapahtuma]
   (jdbc/with-db-transaction [db db]
@@ -381,10 +433,13 @@
       (doseq [osa (::lt/toiminnot tapahtuma)]
         (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
 
+      (kuittaa-vanhat-ketjutukset! db (assoc tapahtuma ::lt/id (::lt/id uusi-tapahtuma)))
+
       (let [alukset
             (doall
               (for [alus (::lt/alukset tapahtuma)]
                 (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma)))]
 
 
-        (tallenna-ketjutus! db user (assoc tapahtuma ::lt/alukset alukset))))))
+        (luo-uusi-ketjutus! db (assoc tapahtuma ::lt/alukset alukset
+                                                ::lt/id (::lt/id uusi-tapahtuma)))))))
