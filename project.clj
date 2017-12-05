@@ -36,7 +36,7 @@
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.2.0"]
-                 [compojure "1.6.0"]
+                 [compojure "1.5.2"] ; TODO Voisi päivittää, mutta 1.6.0 aiheuttaa kaatumisen kaikille GET-pyynnöille
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
