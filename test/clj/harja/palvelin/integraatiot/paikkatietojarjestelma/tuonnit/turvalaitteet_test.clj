@@ -20,7 +20,7 @@
    :nav_laji "Ei sovellettavissa"
    :valaistu "K"
    :omistaja "Kerttu Kilpikonna"
-   :vanhatlnro "1"
+   :vanhatlnro 1
    :paavayla "6666"
    :vaylat "1"
    :the_geom "POINT (431153.667 7203743.451)"})
