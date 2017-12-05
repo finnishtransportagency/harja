@@ -180,7 +180,7 @@
 
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :avattu-toimenpide (toimenpiteet/uusi-toimenpide app @istunto/kayttaja @navigaatio/valittu-urakka)))
+    (toimenpiteet/uusi-toimenpide app @istunto/kayttaja @navigaatio/valittu-urakka))
 
   TyhjennaAvattuToimenpide
   (process-event [_ app]
