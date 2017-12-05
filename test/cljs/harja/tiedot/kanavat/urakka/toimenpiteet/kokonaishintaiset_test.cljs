@@ -73,7 +73,7 @@
          (e! (tiedot/->UusiToimenpide)))))
 
 (deftest TyhjennaValittuToimenpide
-  (is (false? (contains? (e! (tiedot/->TyhjennaAvattuToimenpide)) :avattu-toimenpide))))
+  (is (nil? (:avattu-toimenpide (e! (tiedot/->TyhjennaAvattuToimenpide))))))
 
 (deftest AsetaToimenpiteenTiedot
   (let [toimenpide {:testi-pieni "Olen vain"}]
