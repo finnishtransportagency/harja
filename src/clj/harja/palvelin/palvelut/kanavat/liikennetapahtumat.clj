@@ -14,7 +14,7 @@
 (defn tallenna-liikennetapahtuma [db user tiedot]
   (assert (::lt/urakka-id tiedot) "Urakka id puuttuu, ei voi tallentaa liikennetapahtumaa!")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kanavat-liikenne user (::lt/urakka-id tiedot))
-  (q/tallenna-liikennetapahtuma db user (dissoc tiedot :hakuparametrit))
+  (q/tallenna-liikennetapahtuma! db user (dissoc tiedot :hakuparametrit))
   (q/hae-liikennetapahtumat db user (:hakuparametrit tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]

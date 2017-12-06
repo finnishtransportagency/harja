@@ -280,38 +280,55 @@
                   {::ketjutus/alus-id alus-id
                    ::ketjutus/tapahtumaan-id op/null?}))
 
+(defn vapauta-ketjutus! [db tapahtuma-id]
+  (specql/update! db
+                  ::ketjutus/liikennetapahtuman-ketjutus
+                  {::ketjutus/tapahtumaan-id nil}
+                  {::ketjutus/tapahtumaan-id tapahtuma-id}))
+
+(defn poista-alus! [db user alus tapahtuma]
+  (vaadi-alus-kuuluu-tapahtumaan! db alus tapahtuma)
+  (specql/update! db
+                  ::lt-alus/liikennetapahtuman-alus
+                  (merge
+                    {::m/poistaja-id (:id user)
+                     ::m/poistettu? true
+                     ::m/muokattu (pvm/nyt)}
+                    alus)
+                  {::lt-alus/id (::lt-alus/id alus)})
+
+  (poista-ketjutus! db (::lt-alus/id alus) (::lt/urakka-id tapahtuma)))
+
 (defn tallenna-alus-tapahtumaan! [db user alus tapahtuma]
   (let [olemassa? (id-olemassa? (::lt-alus/id alus))
         alus (assoc alus ::lt-alus/liikennetapahtuma-id (::lt/id tapahtuma))]
 
-    (when (and olemassa? (::m/poistettu? alus))
-      (poista-ketjutus! db (::lt-alus/id alus) (::lt/urakka-id tapahtuma)))
 
-    (if (and olemassa? (alus-kuuluu-tapahtumaan? db alus tapahtuma))
-      (do
-        (specql/update! db
+
+    (if (and olemassa? (::m/poistettu? alus))
+      (poista-alus! db user alus tapahtuma)
+
+      (if (and olemassa? (alus-kuuluu-tapahtumaan? db alus tapahtuma))
+        (do
+          (specql/update! db
+                          ::lt-alus/liikennetapahtuman-alus
+                          (merge
+                            {::m/muokkaaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)}
+                            alus)
+                          {::lt-alus/id (::lt-alus/id alus)})
+          ;; Palauta luotu alus
+          alus)
+
+        (specql/insert! db
                         ::lt-alus/liikennetapahtuman-alus
                         (merge
-                          (if (::m/poistettu? alus)
-                            {::m/poistaja-id (:id user)
-                             ::m/muokattu (pvm/nyt)}
-
-                            {::m/muokkaaja-id (:id user)
-                             ::m/muokattu (pvm/nyt)})
-                          alus)
-                        {::lt-alus/id (::lt-alus/id alus)})
-        ;; Palauta luotu alus
-        alus)
-
-      (specql/insert! db
-                      ::lt-alus/liikennetapahtuman-alus
-                      (merge
-                        {::m/luoja-id (:id user)}
-                        (->
-                          (->> (keys alus)
-                               (filter #(= (namespace %) "harja.domain.kanavat.lt-alus"))
-                               (select-keys alus))
-                          (dissoc ::lt-alus/id)))))))
+                          {::m/luoja-id (:id user)}
+                          (->
+                            (->> (keys alus)
+                                 (filter #(= (namespace %) "harja.domain.kanavat.lt-alus"))
+                                 (select-keys alus))
+                            (dissoc ::lt-alus/id))))))))
 
 (defn- osa-kuuluu-tapahtumaan? [db osa tapahtuma]
   (some?
@@ -429,47 +446,74 @@
                              ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
                              ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)})))))))
 
-(defn tallenna-liikennetapahtuma [db user tapahtuma]
+(defn poista-toiminto! [db user toiminto]
+  (specql/update! db
+                 ::toiminto/liikennetapahtuman-toiminto
+                  {::m/poistaja-id (:id user)
+                   ::m/muokattu (pvm/nyt)
+                   ::m/poistettu? true}
+                  {::toiminto/id (::toiminto/id toiminto)}))
+
+(defn poista-tapahtuma! [db user tapahtuma]
+  (specql/update! db
+                  ::lt/liikennetapahtuma
+                  (merge
+                    {::m/poistaja-id (:id user)
+                     ::m/poistettu? true
+                     ::m/muokattu (pvm/nyt)}
+                    (dissoc tapahtuma
+                            ::lt/alukset
+                            ::lt/toiminnot))
+                  {::lt/id (::lt/id tapahtuma)})
+
+  (vapauta-ketjutus! db (::lt/id tapahtuma))
+
+  (doseq [alus (::lt/alukset tapahtuma)]
+    (poista-alus! db user alus tapahtuma))
+
+  (doseq [toiminto (::lt/toiminnot tapahtuma)]
+    (poista-toiminto! db user toiminto)))
+
+(defn tallenna-liikennetapahtuma! [db user tapahtuma]
   (jdbc/with-db-transaction [db db]
     (jdbc/execute! db ["SET CONSTRAINTS ALL DEFERRED"])
-    (let [olemassa? (id-olemassa? (::lt/id tapahtuma))
-          uusi-tapahtuma (if olemassa?
-                           (do
-                             (vaadi-tapahtuma-kuuluu-urakkaan! db tapahtuma)
-                             (specql/update! db
+    (if (::m/poistettu? tapahtuma)
+      (poista-tapahtuma! db user tapahtuma)
+
+      (let [olemassa? (id-olemassa? (::lt/id tapahtuma))
+            uusi-tapahtuma (if olemassa?
+                             (do
+                               (vaadi-tapahtuma-kuuluu-urakkaan! db tapahtuma)
+                               (specql/update! db
+                                               ::lt/liikennetapahtuma
+                                               (merge
+                                                 {::m/muokkaaja-id (:id user)
+                                                  ::m/muokattu (pvm/nyt)}
+                                                 (dissoc tapahtuma
+                                                         ::lt/alukset
+                                                         ::lt/toiminnot))
+                                               {::lt/id (::lt/id tapahtuma)})
+                               ;; Palautetaan päivitetty tapahtuma
+                               tapahtuma)
+
+                             (specql/insert! db
                                              ::lt/liikennetapahtuma
                                              (merge
-                                               (if (::m/poistettu? tapahtuma)
-                                                 {::m/poistaja-id (:id user)
-                                                  ::m/muokattu (pvm/nyt)}
-
-                                                 {::m/muokkaaja-id (:id user)
-                                                  ::m/muokattu (pvm/nyt)})
+                                               {::m/luoja-id (:id user)}
                                                (dissoc tapahtuma
                                                        ::lt/alukset
-                                                       ::lt/toiminnot))
-                                             {::lt/id (::lt/id tapahtuma)})
-                             ;; Palautetaan päivitetty tapahtuma
-                             tapahtuma)
+                                                       ::lt/toiminnot))))]
 
-                           (specql/insert! db
-                                           ::lt/liikennetapahtuma
-                                           (merge
-                                             {::m/luoja-id (:id user)}
-                                             (dissoc tapahtuma
-                                                     ::lt/alukset
-                                                     ::lt/toiminnot))))]
+        (doseq [osa (::lt/toiminnot tapahtuma)]
+          (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
 
-      (doseq [osa (::lt/toiminnot tapahtuma)]
-        (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
+        (kuittaa-vanhat-ketjutukset! db (assoc tapahtuma ::lt/id (::lt/id uusi-tapahtuma)))
 
-      (kuittaa-vanhat-ketjutukset! db (assoc tapahtuma ::lt/id (::lt/id uusi-tapahtuma)))
-
-      (let [alukset
-            (doall
-              (for [alus (::lt/alukset tapahtuma)]
-                (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma)))]
+        (let [alukset
+              (doall
+                (for [alus (::lt/alukset tapahtuma)]
+                  (tallenna-alus-tapahtumaan! db user alus uusi-tapahtuma)))]
 
 
-        (luo-uusi-ketjutus! db (assoc tapahtuma ::lt/alukset (remove ::m/poistettu? alukset)
-                                                ::lt/id (::lt/id uusi-tapahtuma)))))))
+          (luo-uusi-ketjutus! db (assoc tapahtuma ::lt/alukset (remove ::m/poistettu? alukset)
+                                                  ::lt/id (::lt/id uusi-tapahtuma))))))))
