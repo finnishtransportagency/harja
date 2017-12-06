@@ -131,6 +131,7 @@
      :nimi ::lt-alus/nimi}
     {:otsikko "Alusten lkm"
      :nimi ::lt-alus/lkm
+     :muokattava? #(= :HUV (::lt-alus/laji %))
      :oletusarvo 1
      :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
      :tyyppi :positiivinen-numero}
