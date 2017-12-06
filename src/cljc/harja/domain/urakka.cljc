@@ -74,6 +74,12 @@
 (defn vesivaylaurakkatyyppi? [tyyppi]
   (boolean (vesivayla-urakkatyypit tyyppi)))
 
+(defn vesivaylaurakka-ei-kanavatyyppi? [tyyppi]
+  (boolean (vesivayla-urakkatyypit-ilman-kanavia tyyppi)))
+
+(defn vesivaylaurakka-ei-kanava? [urakka]
+  (vesivaylaurakka-ei-kanavatyyppi? (:tyyppi urakka)))
+
 (defn vesivaylaurakka? [urakka]
   (vesivaylaurakkatyyppi? (:tyyppi urakka)))
 
