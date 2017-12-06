@@ -322,12 +322,12 @@
            (if-not (empty? nimi)
              nimi
              "Kaikki"))]
-       [kentat/tee-otsikollinen-kentta
+       #_[kentat/tee-otsikollinen-kentta
         {:otsikko "Sulun toimenpide"
          :kentta-params {:tyyppi :valinta
                          :valinta-nayta #(or (lt/sulku-toimenpide->str %) "Kaikki")
                          :valinnat (into [nil] lt/sulku-toimenpide-vaihtoehdot)}
-         :arvo-atom (atomi ::lt/sulku-toimenpide)}]]
+         :arvo-atom (atomi ::toiminto/toimenpide)}]]
 
       [:div
        [kentat/tee-otsikollinen-kentta

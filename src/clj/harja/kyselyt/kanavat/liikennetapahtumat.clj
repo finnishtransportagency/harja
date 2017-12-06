@@ -116,7 +116,6 @@
   (let [urakka-id (::ur/id tiedot)
         sopimus-id (::sop/id tiedot)
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
-        toimenpide (::lt/sulku-toimenpide tiedot)
         aluslaji (::lt-alus/laji tiedot)
         suunta (::lt-alus/suunta tiedot)
         [alku loppu] aikavali]
@@ -136,9 +135,6 @@
                         {::lt/aika (op/between alku loppu)})
                       (when kohde-id
                         {::lt/kohde-id kohde-id})
-                      (when toimenpide
-                        {::lt/sulku-toimenpide toimenpide})
-
                       (op/and
                         {::m/poistettu? false
                          ::lt/urakka-id urakka-id

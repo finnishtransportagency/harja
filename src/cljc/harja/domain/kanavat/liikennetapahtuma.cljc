@@ -130,8 +130,7 @@
 (s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
-                                               :opt [::sulku-toimenpide
-                                                     ::kohde
+                                               :opt [::kohde
                                                      ::lt-alus/laji
                                                      ::lt-alus/suunta]
                                                :opt-un [::aikavali ::niput?]))
