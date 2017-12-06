@@ -242,8 +242,17 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
        [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
                                        :data data})]
        (if muokattava?
-         (do (have #(contains? % :tyyppi) s)
-             [tee-kentta (assoc s :lomake? true) arvo])
+         (if (and (= :valinta (:tyyppi s))
+                  (= 1 (count (:valinnat s)))
+                  (:valitse-ainoa? s))
+           (do (reset! arvo (first (:valinnat s)))
+               [:div.form-control-static
+                (if fmt
+                  (fmt ((or hae #(get % nimi)) data))
+                  (nayta-arvo s arvo))])
+
+           (do (have #(contains? % :tyyppi) s)
+              [tee-kentta (assoc s :lomake? true) arvo]))
          [:div.form-control-static
           (if fmt
             (fmt ((or hae #(get % nimi)) data))
