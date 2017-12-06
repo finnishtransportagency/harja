@@ -86,6 +86,7 @@
       :valinta-arvo first
       :valinta-nayta second
       :valinnat sopimukset
+      :valitse-ainoa? true
       :pakollinen? true}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
@@ -115,6 +116,7 @@
       :pakollinen? true
       :tyyppi :valinta
       :uusi-rivi? true
+      :valitse-ainoa? true
       :valinnat toimenpideinstanssit
       :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
       :valinta-arvo :tpi_id

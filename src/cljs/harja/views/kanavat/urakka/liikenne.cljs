@@ -146,6 +146,7 @@
           :pakollinen? true
           :muokattava? #(if uusi-tapahtuma? true false)
           :tyyppi :valinta
+          :valitse-ainoa? true
           :valinta-nayta ::sop/nimi
           :valinnat (map (fn [[id nimi]] {::sop/id id ::sop/nimi nimi}) (:sopimukset @nav/valittu-urakka))
           :fmt ::sop/nimi
