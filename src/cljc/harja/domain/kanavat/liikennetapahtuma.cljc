@@ -175,11 +175,12 @@
                                            ::lt-alus/suunta
                                            ::lt-alus/laji
                                            ::lt-alus/lkm
-                                           ::lt-alus/matkustajalkm
+                                           ::aika]
+                                     :opt [::lt-alus/matkustajalkm
                                            ::lt-alus/nimi
-                                           ::aika
-                                           ::lisatieto]
-                                     :opt [::ketjutus/alus-id
+                                           ::lt-alus/nippulkm
+                                           ::lisatieto
+                                           ::ketjutus/alus-id
                                            ::ketjutus/kohteelle-id
                                            ::ketjutus/kohteelta-id
                                            ::ketjutus/sopimus-id
@@ -187,9 +188,9 @@
                                            ::kohde/id
                                            ::kohde/nimi]))
 (s/def ::edelliset-alukset (s/coll-of ::edellinen-alustieto))
-(s/def ::ylos (s/keys :req [::kohde/nimi
-                            ::kohde/id]
-                      :req-un [::edelliset-alukset]))
+(s/def ::ylos (s/nilable (s/keys :req [::kohde/nimi
+                             ::kohde/id]
+                       :req-un [::edelliset-alukset])))
 (s/def ::alas ::ylos)
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
