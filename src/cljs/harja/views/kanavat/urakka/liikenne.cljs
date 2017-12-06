@@ -242,7 +242,8 @@
            (fn [i osa]
              ^{:key (str "palvelumuoto-" i)}
              (lomake/ryhma
-               (kohde/fmt-kohteenosan-nimi osa)
+               {:otsikko (kohde/fmt-kohteenosan-nimi osa)
+                :rivi? true}
                {:otsikko "Toimenpide"
                 :nimi (str i "-toimenpide")
                 :pakollinen? true
@@ -262,7 +263,8 @@
                   :hae (constantly (::toiminto/palvelumuoto osa))
                   :aseta (fn [rivi arvo]
                            (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo)))})
-               (when (= (::toiminto/palvelumuoto osa) :itse)
+               (when (and (not= (::toiminto/toimenpide osa) :ei-avausta)
+                          (= (::toiminto/palvelumuoto osa) :itse))
                  {:otsikko "Itsepalveluiden lukumäärä"
                   :nimi (str i "-lkm")
                   :pakollinen? true
@@ -272,28 +274,31 @@
                            (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/lkm arvo)))})))
            (::lt/toiminnot valittu-liikennetapahtuma))
          (when (::lt/kohde valittu-liikennetapahtuma)
-           (if (and edellisten-haku-kaynnissa? uusi-tapahtuma?)
-             {:otsikko ""
-              :nimi :spinneri
-              :tyyppi :komponentti
-              :komponentti (fn [] [ajax-loader "Haetaan edellisiä tietoja"])}
-             (lomake/rivi
-               {:otsikko "Alapinta"
-                :tyyppi :positiivinen-numero
-                :nimi ::lt/vesipinta-alaraja}
-               {:otsikko "Yläpinta"
-                :tyyppi :positiivinen-numero
-                :nimi ::lt/vesipinta-ylaraja})))
-         (when (and uusi-tapahtuma?
-                    (tiedot/tapahtuman-kohde-sisaltaa-sulun? valittu-liikennetapahtuma))
-           {:otsikko "Suunta"
-            :nimi :valittu-suunta
-            :tyyppi :radio-group
-            :vaihtoehdot lt/suunta-vaihtoehdot
-            :vaihtoehto-nayta (fn [suunta]
-                                (str (lt/suunta->str suunta)
-                                     (when (suunta edelliset)
-                                       (str ", " (count (get-in edelliset [suunta :alukset])) " lähestyvää alusta"))))})
+           (apply lomake/rivi
+             (concat
+               (if (and edellisten-haku-kaynnissa? uusi-tapahtuma?)
+                 [{:otsikko ""
+                   :nimi :spinneri
+                   :tyyppi :komponentti
+                   :komponentti (fn [] [ajax-loader "Haetaan edellisiä tietoja"])}]
+
+                 [{:otsikko "Alapinta"
+                   :tyyppi :positiivinen-numero
+                   :nimi ::lt/vesipinta-alaraja}
+                  {:otsikko "Yläpinta"
+                   :tyyppi :positiivinen-numero
+                   :nimi ::lt/vesipinta-ylaraja}])
+
+               (when (and uusi-tapahtuma?
+                          (tiedot/tapahtuman-kohde-sisaltaa-sulun? valittu-liikennetapahtuma))
+                 [{:otsikko "Suunta"
+                   :nimi :valittu-suunta
+                   :tyyppi :radio-group
+                   :vaihtoehdot lt/suunta-vaihtoehdot
+                   :vaihtoehto-nayta (fn [suunta]
+                                       (str (lt/suunta->str suunta)
+                                            (when (suunta edelliset)
+                                              (str ", " (count (get-in edelliset [suunta :alukset])) " lähestyvää alusta"))))}]))))
          (when (and (::lt/kohde valittu-liikennetapahtuma)
                     (not edellisten-haku-kaynnissa?)
                     (or (:alas edelliset) (:ylos edelliset))
@@ -317,9 +322,12 @@
             :palstoja 3
             :nimi :muokattavat-tapahtumat
             :komponentti (fn [_] [liikenne-muokkausgrid e! app])})
-         {:otsikko "Lisätietoja"
-          :tyyppi :text
-          :nimi ::lt/lisatieto}])
+         (when (and (::lt/kohde valittu-liikennetapahtuma)
+                    (or (not uusi-tapahtuma?)
+                        (:valittu-suunta valittu-liikennetapahtuma)))
+           {:otsikko "Lisätietoja"
+           :tyyppi :text
+           :nimi ::lt/lisatieto})])
       valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! app kohteet]
