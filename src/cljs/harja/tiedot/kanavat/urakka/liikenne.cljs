@@ -174,7 +174,9 @@
 (defn voi-tallentaa? [t]
   (and (not (:grid-virheita? t))
        (empty? (filter :koskematon (::lt/alukset t)))
-       (every? #(some? (::lt-alus/suunta %)) (::lt/alukset t))
+       (every? #(and (some? (::lt-alus/suunta %))
+                     (some? (::lt-alus/laji %)))
+               (::lt/alukset t))
        (or
          (not-empty (::lt/alukset t))
          (every? #(= :itse (::toiminto/palvelumuoto %)) (::lt/toiminnot t)))))
