@@ -35,7 +35,8 @@
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.fmt :as fmt])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -61,7 +62,7 @@
        {:otsikko "Aluslaji"
         :tyyppi :string
         :nimi ::lt-alus/laji
-        :fmt lt-alus/aluslaji->str}
+        :fmt lt-alus/aluslaji->laji-str}
        {:otsikko "Alusten lkm"
         :nimi ::lt-alus/lkm
         :tyyppi :positiivinen-numero}
@@ -128,7 +129,7 @@
      :nimi ::lt-alus/laji
      :validoi [[:ei-tyhja "Valitse aluslaji"]]
      :valinnat lt-alus/aluslajit
-     :valinta-nayta #(or (lt-alus/aluslaji->str %) "- Valitse -")}
+     :valinta-nayta #(or (lt-alus/aluslaji->koko-str %) "- Valitse -")}
     {:otsikko "Alusten lkm"
      :nimi ::lt-alus/lkm
      :muokattava? lt-alus/tayta-lukumaara?
@@ -363,7 +364,7 @@
        [valinnat/kanava-aluslaji
         (atomi ::lt-alus/laji)
         (into [nil] lt-alus/aluslajit)
-        #(or (lt-alus/aluslaji->str %) "Kaikki")]
+        #(or (lt-alus/aluslaji->koko-str %) "Kaikki")]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Uittoniput?"
          :kentta-params {:tyyppi :checkbox}
@@ -399,6 +400,11 @@
       :leveys 2
       :nimi :toimenpide
       :hae tiedot/toimenpide->str}
+     {:otsikko "Sillan avaus"
+      :leveys 1
+      :nimi :sillan-avaus?
+      :hae tiedot/silta-avattu?
+      :fmt fmt/totuus-ikoni}
      {:otsikko "Palvelumuoto"
       :leveys 3
       :nimi :palvelumuoto-ja-lkm
@@ -413,7 +419,7 @@
      {:otsikko "Aluslaji"
       :leveys 1
       :nimi ::lt-alus/laji
-      :fmt lt-alus/aluslaji->str}
+      :fmt lt-alus/aluslaji->laji-str}
      {:otsikko "Matkustajia"
       :leveys 1
       :nimi ::lt-alus/matkustajalkm}

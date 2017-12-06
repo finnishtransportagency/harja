@@ -6,7 +6,8 @@
             #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
             #?(:cljs [goog.i18n.NumberFormat])
             [clojure.string :as s]
-            [harja.tyokalut.big :as big])
+            [harja.tyokalut.big :as big]
+            [harja.ui.ikonit :as ikonit])
   #?(:clj
      (:import (java.text NumberFormat)
               (java.util Locale))))
@@ -552,6 +553,10 @@
   (if arvo
     "Kyllä"
     "Ei"))
+
+(defn totuus-ikoni [arvo]
+  (when arvo
+    (ikonit/livicon-check)))
 
 (defn leikkaa-merkkijono
   "Näyttää annetusta merkkijonosta korkeintaan pituuden määrän merkkejä.

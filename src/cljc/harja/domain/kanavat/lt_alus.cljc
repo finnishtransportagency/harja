@@ -37,14 +37,14 @@
 (def metatiedot m/muokkauskentat)
 
 (def aluslajit*
-  {:HIN "HIN - Hinaaja"
-   :HUV "HUV - Huvivene"
-   :LAU "LAU - Lautta"
-   :MAT "MAT - Matkustajalaiva"
-   :PRO "PRO - Proomu"
-   :RAH "RAH - Rahtilaiva"
-   :SEK "SEK - "
-   :ÖLJ "ÖLJ - Öljylaiva"})
+  {:HIN ["HIN" "- Hinaaja"]
+   :HUV ["HUV" "- Huvivene"]
+   :LAU ["LAU" "- Lautta"]
+   :MAT ["MAT" "- Matkustajalaiva"]
+   :PRO ["PRO" "- Proomu"]
+   :RAH ["RAH" "- Rahtilaiva"]
+   :SEK ["SEK" "- "]
+   :ÖLJ ["ÖLJ" "- Öljylaiva"]})
 
 (defn tayta-lukumaara? [alus]
   (#{:HUV} (::laji alus)))
@@ -57,5 +57,8 @@
 
 (def aluslajit (keys aluslajit*))
 
-(defn aluslaji->str [laji]
-  (aluslajit* laji))
+(defn aluslaji->koko-str [laji]
+  (when-let [laji (aluslajit* laji)] (apply str laji)))
+
+(defn aluslaji->laji-str [laji]
+  (first (aluslajit* laji)))
