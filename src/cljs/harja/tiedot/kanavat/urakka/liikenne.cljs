@@ -1,20 +1,20 @@
 (ns harja.tiedot.kanavat.urakka.liikenne
-  (:require [reagent.core :refer [atom]]
-            [clojure.spec.alpha :as s]
+  (:require [clojure.string :as str]
+            [clojure.set :as set]
+            [cljs-time.core :as time]
+            [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
-            [harja.tyokalut.tuck :as tt]
-            [cljs.core.async :as async]
+            [namespacefy.core :refer [namespacefy]]
+
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
-            [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log tarkkaile!]]
+            [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
+            [harja.ui.modal :as modal]
             [harja.tiedot.navigaatio :as nav]
-            [namespacefy.core :refer [namespacefy]]
             [harja.tiedot.urakka :as u]
-            [reagent.core :as r]
             [harja.tiedot.istunto :as istunto]
-            [clojure.string :as str]
 
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
@@ -22,13 +22,9 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
-            [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-toiminto :as toiminto]
-            [harja.domain.kanavat.lt-ketjutus :as ketjutus]
-            [clojure.set :as set]
-            [harja.ui.modal :as modal])
+            [harja.domain.kanavat.lt-toiminto :as toiminto])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -264,6 +260,70 @@
         (update-in
           [:edelliset :alas :alukset]
           (partial poista-idlla alus-id)))))
+
+(defn nayta-palvelumuoto? [osa]
+  (not= (::toiminto/toimenpide osa) :ei-avausta))
+
+(defn nayta-itsepalvelut? [osa]
+  (and (not= (::toiminto/toimenpide osa) :ei-avausta)
+       (= (::toiminto/palvelumuoto osa) :itse)))
+
+(defn suuntavalinta-str [edelliset suunta]
+  (str (lt/suunta->str suunta)
+       (when (suunta edelliset)
+         (str ", " (count (get-in edelliset [suunta :alukset])) " lähestyvää alusta"))))
+
+(defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
+                                        edellisten-haku-kaynnissa?
+                                        edelliset]}]
+  (and (::lt/kohde valittu-liikennetapahtuma)
+       (not edellisten-haku-kaynnissa?)
+       (or (:alas edelliset) (:ylos edelliset))
+       (some? (:valittu-suunta valittu-liikennetapahtuma))
+       (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
+
+(defn nayta-suunnan-ketjutukset? [{:keys [valittu-liikennetapahtuma]} suunta tiedot]
+  (and (some? tiedot)
+       (or (= suunta (:valittu-suunta valittu-liikennetapahtuma))
+           (= :molemmat (:valittu-suunta valittu-liikennetapahtuma)))))
+
+(defn nayta-liikennegrid? [{:keys [valittu-liikennetapahtuma]}]
+  (and (::lt/kohde valittu-liikennetapahtuma)
+       (or (id-olemassa? (::lt/id valittu-liikennetapahtuma))
+           (:valittu-suunta valittu-liikennetapahtuma))))
+
+(defn jarjesta-tapahtumat [tapahtumat]
+  (sort-by
+    ;; Tarvitaan aika monta vaihtoehtoista sorttausavainta, koska
+    ;; yhdelle kohteelle voi tulla yhdellä kirjauksella aika monta riviä
+    (juxt ::lt/aika
+          (comp ::kohde/nimi ::lt/kohde)
+          ::lt/toimenpide
+          ::lt-alus/nimi
+          ::lt-alus/laji
+          ::lt-alus/lkm)
+    (fn [[a-aika & _ :as a] [b-aika & _ :as b]]
+      (if (time/equal? a-aika b-aika)
+        (compare a b)
+        (time/after? a-aika b-aika)))
+    tapahtumat))
+
+(defn nayta-lisatiedot? [app]
+  (nayta-liikennegrid? app))
+
+(defn kuittausta-odottavat [{:keys [siirretyt-alukset] :as app} alukset]
+  (remove (comp (or siirretyt-alukset #{}) ::lt-alus/id) alukset))
+
+(defn ketjutuksen-poisto-kaynnissa? [{:keys [ketjutuksen-poistot]} alus]
+  (ketjutuksen-poistot (::lt-alus/id alus)))
+
+(defn ketjutuksen-voi-siirtaa? [{:keys [siirretyt-alukset]} alus]
+  (siirretyt-alukset (::lt-alus/id alus)))
+
+(defn grid-virheita? [rivit]
+  (boolean (some
+             (comp not empty? :harja.ui.grid/virheet)
+             (remove :poistettu (vals rivit)))))
 
 (extend-protocol tuck/Event
   Nakymassa?
