@@ -265,10 +265,10 @@
                                         ::ketjutus/tapahtumaan-id op/null?})))]
     (not-empty
       (specql/fetch db
-                   ::lt/liikennetapahtuma
-                   #{::lt/urakka-id ::lt/id}
-                   {::lt/id tapahtuma-id
-                    ::lt/urakka-id urakka-id}))))
+                    ::lt/liikennetapahtuma
+                    #{::lt/urakka-id ::lt/id}
+                    {::lt/id tapahtuma-id
+                     ::lt/urakka-id urakka-id}))))
 
 (defn vaadi-ketjutus-kuuluu-urakkaan! [db alus-id urakka-id]
   (assert (ketjutus-kuuluu-urakkaan? db alus-id urakka-id) (str "Aluksen " alus-id " tapahtuma ei kuulu urakkaan " urakka-id)))
@@ -448,7 +448,7 @@
 
 (defn poista-toiminto! [db user toiminto]
   (specql/update! db
-                 ::toiminto/liikennetapahtuman-toiminto
+                  ::toiminto/liikennetapahtuman-toiminto
                   {::m/poistaja-id (:id user)
                    ::m/muokattu (pvm/nyt)
                    ::m/poistettu? true}

@@ -260,12 +260,12 @@
   (let [poista-idlla (fn [alus-id alukset]
                        (remove (comp (partial = alus-id) ::lt-alus/id) alukset))]
     (-> app
-       (update-in
-         [:edelliset :ylos :alukset]
-         (partial poista-idlla alus-id))
-       (update-in
-         [:edelliset :alas :alukset]
-         (partial poista-idlla alus-id)))))
+        (update-in
+          [:edelliset :ylos :alukset]
+          (partial poista-idlla alus-id))
+        (update-in
+          [:edelliset :alas :alukset]
+          (partial poista-idlla alus-id)))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -394,8 +394,8 @@
   (process-event [{alukset :alukset} app]
     (let [idt (map ::lt-alus/id alukset)]
       (-> app
-         (update :siirretyt-alukset (fn [s] (if (nil? s) (set idt) (into s idt))))
-         (update-in [:valittu-liikennetapahtuma ::lt/alukset] concat alukset))))
+          (update :siirretyt-alukset (fn [s] (if (nil? s) (set idt) (into s idt))))
+          (update-in [:valittu-liikennetapahtuma ::lt/alukset] concat alukset))))
 
   SiirraTapahtumaan
   (process-event [{alus :alus} app]
@@ -424,8 +424,8 @@
                        :epaonnistui ->KetjutusEiPoistettu
                        :epaonnistui-parametrit [id]})
             (update :ketjutuksen-poistot (fn [s] (if (nil? s)
-                                                  #{id}
-                                                  (conj s id)))))
+                                                   #{id}
+                                                   (conj s id)))))
 
         app)))
 
@@ -435,8 +435,8 @@
     (-> app
         (poista-ketjutus id)
         (update :ketjutuksen-poistot (fn [s] (if (nil? s)
-                                              #{}
-                                              (disj s id))))))
+                                               #{}
+                                               (disj s id))))))
 
   KetjutusEiPoistettu
   (process-event [{_ :virhe id :id} app]
