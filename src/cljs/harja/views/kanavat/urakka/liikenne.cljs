@@ -389,15 +389,15 @@
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
     [{:otsikko "Aika"
-      :leveys 2
+      :leveys 3
       :nimi ::lt/aika
       :fmt pvm/pvm-aika-opt}
      {:otsikko "Kohde"
-      :leveys 5
+      :leveys 3
       :nimi ::lt/kohde
       :fmt kohde/fmt-kohteen-nimi}
      {:otsikko "Tyyppi"
-      :leveys 2
+      :leveys 3
       :nimi :toimenpide
       :hae tiedot/toimenpide->str}
      {:otsikko "Sillan avaus"
@@ -410,36 +410,36 @@
       :nimi :palvelumuoto-ja-lkm
       :hae tiedot/palvelumuoto->str}
      {:otsikko "Suunta"
-      :leveys 1
+      :leveys 2
       :nimi ::lt-alus/suunta
       :fmt lt/suunta->str}
      {:otsikko "Alus"
-      :leveys 1
+      :leveys 3
       :nimi ::lt-alus/nimi}
      {:otsikko "Aluslaji"
-      :leveys 1
+      :leveys 2
       :nimi ::lt-alus/laji
       :fmt lt-alus/aluslaji->laji-str}
      {:otsikko "Aluksia"
       :leveys 1
       :nimi ::lt-alus/lkm}
-     {:otsikko "Matkustajia"
+     {:otsikko "Matkus\u00ADtajia"
       :leveys 1
       :nimi ::lt-alus/matkustajalkm}
      {:otsikko "Nippuja"
       :leveys 1
       :nimi ::lt-alus/nippulkm}
      {:otsikko "Ylävesi"
-      :leveys 1
+      :leveys 2
       :nimi ::lt/vesipinta-ylaraja}
      {:otsikko "Alavesi"
-      :leveys 1
+      :leveys 2
       :nimi ::lt/vesipinta-alaraja}
      {:otsikko "Lisätiedot"
-      :leveys 2
+      :leveys 5
       :nimi ::lt/lisatieto}
      {:otsikko "Kuittaaja"
-      :leveys 2
+      :leveys 3
       :nimi ::lt/kuittaaja
       :fmt kayttaja/kayttaja->str}]
     (sort-by
