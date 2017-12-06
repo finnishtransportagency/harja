@@ -6,6 +6,7 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
+            [harja.domain.kanavat.lt-ketjutus :as ketjutus]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.urakka :as ur]
             [harja.domain.muokkaustiedot :as m]))
@@ -183,3 +184,66 @@
            (#'q/hae-kohteen-edellinen-tapahtuma* [{::lt/aika (t/minus (t/now) (t/hours 5))}
                                                   nyt
                                                   {::lt/aika (t/minus (t/now) (t/hours 10))}])))))
+
+(deftest kuittaamattomat-alukset
+  (is (= {:ylos {::kohde/id 1
+                 ::kohde/nimi "Pälli"
+                 :alukset [{::lt-alus/suunta :ylos
+                            ::lt-alus/id 1
+                            ::kohde/id 1
+                            ::kohde/nimi "Pälli"
+                            ::lt/id 1}
+                           {::lt-alus/suunta :ylos
+                            ::lt-alus/id 2
+                            ::kohde/id 1
+                            ::kohde/nimi "Pälli"
+                            ::lt/id 1}
+                           {::lt-alus/suunta :ylos
+                            ::lt-alus/id 4
+                            ::kohde/id 1
+                            ::kohde/nimi "Pälli"
+                            ::lt/id 3}]}
+          :alas {::kohde/id 2
+                 ::kohde/nimi "Soskua"
+                 :alukset [{::lt-alus/suunta :alas
+                            ::lt-alus/id 3
+                            ::kohde/id 2
+                            ::kohde/nimi "Soskua"
+                            ::lt/id 2}]}}
+         (#'q/hae-kuittaamattomat-alukset* [{::ketjutus/alus {::lt-alus/suunta :ylos
+                                                              ::lt-alus/id 1}
+                                             ::ketjutus/kohteelta {::kohde/id 1
+                                                                   ::kohde/nimi "Pälli"}
+                                             ::ketjutus/tapahtumasta {::lt/id 1}}
+                                            {::ketjutus/alus {::lt-alus/suunta :ylos
+                                                              ::lt-alus/id 2}
+                                             ::ketjutus/kohteelta {::kohde/id 1
+                                                                   ::kohde/nimi "Pälli"}
+                                             ::ketjutus/tapahtumasta {::lt/id 1}}
+                                            {::ketjutus/alus {::lt-alus/suunta :ylos
+                                                              ::lt-alus/id 4}
+                                             ::ketjutus/kohteelta {::kohde/id 1
+                                                                   ::kohde/nimi "Pälli"}
+                                             ::ketjutus/tapahtumasta {::lt/id 3}}
+                                            {::ketjutus/alus {::lt-alus/suunta :alas
+                                                              ::lt-alus/id 3}
+                                             ::ketjutus/kohteelta {::kohde/id 2
+                                                                   ::kohde/nimi "Soskua"}
+                                             ::ketjutus/tapahtumasta {::lt/id 2}}]))))
+
+(deftest hae-seuraavat-kohteet
+  (is (= [1 2 3]
+         (#'q/hae-seuraavat-kohteet* [{:id 1} {:id 2} {:id 3}]))))
+
+(deftest sama-suunta?
+  (is (true? (#'q/sama-suunta? :a :a)))
+  (is (true? (#'q/sama-suunta? :a "a")))
+  (is (true? (#'q/sama-suunta? "a" :a)))
+  (is (true? (#'q/sama-suunta? "a" "a")))
+
+  (is (false? (#'q/sama-suunta? :b :a)))
+  (is (false? (#'q/sama-suunta? :b "a")))
+  (is (false? (#'q/sama-suunta? "b" :a)))
+  (is (false? (#'q/sama-suunta? "b" "a")))
+  (is (false? (#'q/sama-suunta? "b" nil)))
+  (is (false? (#'q/sama-suunta? nil "a"))))

@@ -393,16 +393,18 @@
                   #{::ketjutus/alus-id}
                   {::ketjutus/alus-id (::lt-alus/id alus)})))
 
+(defn- hae-seuraavat-kohteet* [kohteet]
+  (mapcat vals kohteet))
+
 (defn hae-seuraavat-kohteet [db kohteelta-id suunta]
-  (mapcat
-    vals
+  (hae-seuraavat-kohteet*
     (specql/fetch
-      db
-      ::kohde/kohde
-      (if (= suunta :ylos)
-        #{::kohde/ylos-id}
-        #{::kohde/alas-id})
-      {::kohde/id kohteelta-id})))
+     db
+     ::kohde/kohde
+     (if (= suunta :ylos)
+       #{::kohde/ylos-id}
+       #{::kohde/alas-id})
+     {::kohde/id kohteelta-id})))
 
 ;; specql:n insert ei käytä paluuarvoihin transformaatioita, eli kun tallennuksessa
 ;; insertoidaan uusia aluksia, niiden ::suunta on merkkijono. Keywordin ja merkkijonon
