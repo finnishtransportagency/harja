@@ -420,12 +420,12 @@
       :leveys 1
       :nimi ::lt-alus/laji
       :fmt lt-alus/aluslaji->laji-str}
-     {:otsikko "Matkustajia"
-      :leveys 1
-      :nimi ::lt-alus/matkustajalkm}
      {:otsikko "Aluksia"
       :leveys 1
       :nimi ::lt-alus/lkm}
+     {:otsikko "Matkustajia"
+      :leveys 1
+      :nimi ::lt-alus/matkustajalkm}
      {:otsikko "Nippuja"
       :leveys 1
       :nimi ::lt-alus/nippulkm}
