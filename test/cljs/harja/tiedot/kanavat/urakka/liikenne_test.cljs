@@ -344,19 +344,19 @@
                                           {:foo :bar}]))))
 
 (deftest ketjutuksen-poisto
-  (let [app {:edelliset {:ylos {:alukset [{::lt-alus/id 1}
+  (let [app {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                           {::lt-alus/id 2}
                                           {::lt-alus/id 3}]}
-                         :alas {:alukset [{::lt-alus/id 4}]}}}]
-    (is (= {:edelliset {:ylos {:alukset [{::lt-alus/id 1}
+                         :alas {:edelliset-alukset [{::lt-alus/id 4}]}}}]
+    (is (= {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                          {::lt-alus/id 2}
                                          {::lt-alus/id 3}]}
-                        :alas {:alukset []}}}
+                        :alas {:edelliset-alukset []}}}
            (tiedot/poista-ketjutus app 4)))
 
-    (is (= {:edelliset {:ylos {:alukset [{::lt-alus/id 1}
+    (is (= {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                          {::lt-alus/id 2}]}
-                        :alas {:alukset [{::lt-alus/id 4}]}}}
+                        :alas {:edelliset-alukset [{::lt-alus/id 4}]}}}
            (tiedot/poista-ketjutus app 3)))))
 
 (deftest nayta-palvelumuoto
@@ -374,9 +374,9 @@
 
 (deftest suuntavalinta-str
   (is (= "Ylös, 1 lähestyvää alusta"
-         (tiedot/suuntavalinta-str {:ylos {:alukset [{:foo :bar}]}} :ylos)))
+         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :ylos)))
   (is (= "Alas"
-         (tiedot/suuntavalinta-str {:ylos {:alukset [{:foo :bar}]}} :alas))))
+         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :alas))))
 
 (deftest nayta-edelliset
   (is (true? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
@@ -795,18 +795,18 @@
 
 (deftest ketjutus-poistettu
   (is (= {:ketjutuksen-poistot #{}
-          :edelliset {:ylos {:alukset [{::lt-alus/id 2}]}
-                      :alas {:alukset []}}}
+          :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 2}]}
+                      :alas {:edelliset-alukset []}}}
          (e! (tiedot/->KetjutusPoistettu {} 1)
              {:ketjutuksen-poistot #{1}
-              :edelliset {:ylos {:alukset [{::lt-alus/id 1}
+              :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                            {::lt-alus/id 2}]}}}))))
 
 (deftest ketjutus-ei-poistettu
   (is (= {:ketjutuksen-poistot #{}
-          :edelliset {:ylos {:alukset [{::lt-alus/id 1}
+          :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                        {::lt-alus/id 2}]}}}
          (e! (tiedot/->KetjutusEiPoistettu {} 1)
              {:ketjutuksen-poistot #{1}
-              :edelliset {:ylos {:alukset [{::lt-alus/id 1}
+              :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                            {::lt-alus/id 2}]}}}))))

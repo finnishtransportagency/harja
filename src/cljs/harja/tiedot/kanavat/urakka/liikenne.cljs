@@ -261,10 +261,10 @@
                        (remove (comp (partial = alus-id) ::lt-alus/id) alukset))]
     (-> app
         (update-in
-          [:edelliset :ylos :alukset]
+          [:edelliset :ylos :edelliset-alukset]
           (partial poista-idlla alus-id))
         (update-in
-          [:edelliset :alas :alukset]
+          [:edelliset :alas :edelliset-alukset]
           (partial poista-idlla alus-id)))))
 
 (defn nayta-palvelumuoto? [osa]
@@ -279,7 +279,7 @@
 (defn suuntavalinta-str [edelliset suunta]
   (str (lt/suunta->str suunta)
        (when (suunta edelliset)
-         (str ", " (count (get-in edelliset [suunta :alukset])) " lähestyvää alusta"))))
+         (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta"))))
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
                                         edellisten-haku-kaynnissa?

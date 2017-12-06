@@ -16,7 +16,8 @@
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.lt-alus :as lt-alus]
-    [harja.domain.kanavat.lt-toiminto :as toiminto])
+    [harja.domain.kanavat.lt-toiminto :as toiminto]
+    [harja.domain.kanavat.lt-ketjutus :as ketjutus])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -169,6 +170,27 @@
                                                        ::sopimus-id]))
 
 (s/def ::kohde (s/nilable ::liikennetapahtuma))
+
+(s/def ::edellinen-alustieto (s/keys :req [::lt-alus/id
+                                           ::lt-alus/suunta
+                                           ::lt-alus/laji
+                                           ::lt-alus/lkm
+                                           ::lt-alus/matkustajalkm
+                                           ::lt-alus/nimi
+                                           ::aika
+                                           ::lisatieto]
+                                     :opt [::ketjutus/alus-id
+                                           ::ketjutus/kohteelle-id
+                                           ::ketjutus/kohteelta-id
+                                           ::ketjutus/sopimus-id
+                                           ::ketjutus/urakka-id
+                                           ::kohde/id
+                                           ::kohde/nimi]))
+(s/def ::edelliset-alukset (s/coll-of ::edellinen-alustieto))
+(s/def ::ylos (s/keys :req [::kohde/nimi
+                            ::kohde/id]
+                      :req-un [::edelliset-alukset]))
+(s/def ::alas ::ylos)
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
                                                            ::kohde]))

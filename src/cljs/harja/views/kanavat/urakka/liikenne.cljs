@@ -36,8 +36,8 @@
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
-(defn edelliset-grid [e! app {:keys [alukset]}]
-  (let [kuitattavat (tiedot/kuittausta-odottavat app alukset)]
+(defn edelliset-grid [e! app {:keys [edelliset-alukset]}]
+  (let [kuitattavat (tiedot/kuittausta-odottavat app edelliset-alukset)]
     [:div
      [grid/grid
       {:tunniste ::lt-alus/id

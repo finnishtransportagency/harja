@@ -190,7 +190,7 @@
                           (fn [[kohde ketjut]]
                             (assoc
                               kohde
-                              :alukset
+                              :edelliset-alukset
                               (map
                                 (fn [k]
                                   (merge

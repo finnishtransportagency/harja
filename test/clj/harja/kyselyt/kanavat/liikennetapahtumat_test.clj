@@ -188,28 +188,28 @@
 (deftest kuittaamattomat-alukset
   (is (= {:ylos {::kohde/id 1
                  ::kohde/nimi "Pälli"
-                 :alukset [{::lt-alus/suunta :ylos
-                            ::lt-alus/id 1
-                            ::kohde/id 1
-                            ::kohde/nimi "Pälli"
-                            ::lt/id 1}
-                           {::lt-alus/suunta :ylos
-                            ::lt-alus/id 2
-                            ::kohde/id 1
-                            ::kohde/nimi "Pälli"
-                            ::lt/id 1}
-                           {::lt-alus/suunta :ylos
-                            ::lt-alus/id 4
-                            ::kohde/id 1
-                            ::kohde/nimi "Pälli"
-                            ::lt/id 3}]}
+                 :edelliset-alukset [{::lt-alus/suunta :ylos
+                                      ::lt-alus/id 1
+                                      ::kohde/id 1
+                                      ::kohde/nimi "Pälli"
+                                      ::lt/id 1}
+                                     {::lt-alus/suunta :ylos
+                                      ::lt-alus/id 2
+                                      ::kohde/id 1
+                                      ::kohde/nimi "Pälli"
+                                      ::lt/id 1}
+                                     {::lt-alus/suunta :ylos
+                                      ::lt-alus/id 4
+                                      ::kohde/id 1
+                                      ::kohde/nimi "Pälli"
+                                      ::lt/id 3}]}
           :alas {::kohde/id 2
                  ::kohde/nimi "Soskua"
-                 :alukset [{::lt-alus/suunta :alas
-                            ::lt-alus/id 3
-                            ::kohde/id 2
-                            ::kohde/nimi "Soskua"
-                            ::lt/id 2}]}}
+                 :edelliset-alukset [{::lt-alus/suunta :alas
+                                      ::lt-alus/id 3
+                                      ::kohde/id 2
+                                      ::kohde/nimi "Soskua"
+                                      ::lt/id 2}]}}
          (#'q/hae-kuittaamattomat-alukset* [{::ketjutus/alus {::lt-alus/suunta :ylos
                                                               ::lt-alus/id 1}
                                              ::ketjutus/kohteelta {::kohde/id 1
