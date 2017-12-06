@@ -263,12 +263,14 @@
                                        #{::ketjutus/tapahtumasta-id}
                                        {::ketjutus/alus-id alus-id
                                         ::ketjutus/tapahtumaan-id op/null?})))]
-    (not-empty
-      (specql/fetch db
-                    ::lt/liikennetapahtuma
-                    #{::lt/urakka-id ::lt/id}
-                    {::lt/id tapahtuma-id
-                     ::lt/urakka-id urakka-id}))))
+    (boolean
+      (when tapahtuma-id
+       (not-empty
+         (specql/fetch db
+                       ::lt/liikennetapahtuma
+                       #{::lt/urakka-id ::lt/id}
+                       {::lt/id tapahtuma-id
+                        ::lt/urakka-id urakka-id}))))))
 
 (defn vaadi-ketjutus-kuuluu-urakkaan! [db alus-id urakka-id]
   (assert (ketjutus-kuuluu-urakkaan? db alus-id urakka-id) (str "Aluksen " alus-id " tapahtuma ei kuulu urakkaan " urakka-id)))
@@ -503,6 +505,7 @@
                                              (merge
                                                {::m/luoja-id (:id user)}
                                                (dissoc tapahtuma
+                                                       ::lt/id
                                                        ::lt/alukset
                                                        ::lt/toiminnot))))]
 
