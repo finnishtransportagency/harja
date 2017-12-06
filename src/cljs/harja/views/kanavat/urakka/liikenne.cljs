@@ -96,7 +96,7 @@
    {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
     :virheet-dataan? true
     :toimintonappi-fn (fn [alus muokkaa!]
-                        (when (tiedot/ketjutuksen-voi-siirtaa? app alus)
+                        (when (tiedot/ketjutuksen-voi-siirtaa-tapahtumasta? app alus)
                           [:span.klikattava {:on-click
                                              #(do (.preventDefault %)
                                                   (e! (tiedot/->SiirraTapahtumasta alus))

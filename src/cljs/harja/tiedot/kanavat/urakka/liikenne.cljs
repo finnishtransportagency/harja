@@ -156,7 +156,10 @@
                                                       (update ::toiminto/palvelumuoto #(if (= :ei-avausta (::toiminto/toimenpide toiminto))
                                                                                          nil
                                                                                          %))
-                                                      (update ::toiminto/lkm #(cond (= :itse (::toiminto/palvelumuoto toiminto))
+                                                      (update ::toiminto/lkm #(cond (= :ei-avausta (::toiminto/toimenpide toiminto))
+                                                                                    nil
+
+                                                                                    (= :itse (::toiminto/palvelumuoto toiminto))
                                                                                     %
 
                                                                                     (nil? (::toiminto/palvelumuoto toiminto))
@@ -172,14 +175,15 @@
               ::lt/sopimus)))
 
 (defn voi-tallentaa? [t]
-  (and (not (:grid-virheita? t))
-       (empty? (filter :koskematon (::lt/alukset t)))
-       (every? #(and (some? (::lt-alus/suunta %))
-                     (some? (::lt-alus/laji %)))
-               (::lt/alukset t))
-       (or
-         (not-empty (::lt/alukset t))
-         (every? #(= :itse (::toiminto/palvelumuoto %)) (::lt/toiminnot t)))))
+  (boolean
+    (and (not (:grid-virheita? t))
+        (empty? (filter :koskematon (::lt/alukset t)))
+        (every? #(and (some? (::lt-alus/suunta %))
+                      (some? (::lt-alus/laji %)))
+                (::lt/alukset t))
+        (or
+          (not-empty (::lt/alukset t))
+          (every? #(= :itse (::toiminto/palvelumuoto %)) (::lt/toiminnot t))))))
 
 (defn sama-alusrivi? [a b]
   ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä
@@ -231,7 +235,7 @@
                     (::kohde/kohteenosat kohde)))))))
 
 (defn kohde-sisaltaa-sulun? [kohde]
-  (some kohde/sulku? (::kohde/kohteenosat kohde)))
+  (boolean (some kohde/sulku? (::kohde/kohteenosat kohde))))
 
 (defn tapahtuman-kohde-sisaltaa-sulun? [tapahtuma]
   (kohde-sisaltaa-sulun? (::lt/kohde tapahtuma)))
@@ -264,11 +268,13 @@
           (partial poista-idlla alus-id)))))
 
 (defn nayta-palvelumuoto? [osa]
-  (not= (::toiminto/toimenpide osa) :ei-avausta))
+  (boolean
+    (not= (::toiminto/toimenpide osa) :ei-avausta)))
 
 (defn nayta-itsepalvelut? [osa]
-  (and (not= (::toiminto/toimenpide osa) :ei-avausta)
-       (= (::toiminto/palvelumuoto osa) :itse)))
+  (boolean
+    (and (not= (::toiminto/toimenpide osa) :ei-avausta)
+        (= (::toiminto/palvelumuoto osa) :itse))))
 
 (defn suuntavalinta-str [edelliset suunta]
   (str (lt/suunta->str suunta)
@@ -278,21 +284,24 @@
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
                                         edellisten-haku-kaynnissa?
                                         edelliset]}]
-  (and (::lt/kohde valittu-liikennetapahtuma)
-       (not edellisten-haku-kaynnissa?)
-       (or (:alas edelliset) (:ylos edelliset))
-       (some? (:valittu-suunta valittu-liikennetapahtuma))
-       (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
+  (boolean
+    (and (::lt/kohde valittu-liikennetapahtuma)
+        (not edellisten-haku-kaynnissa?)
+        (or (:alas edelliset) (:ylos edelliset))
+        (some? (:valittu-suunta valittu-liikennetapahtuma))
+        (not (id-olemassa? (::lt/id valittu-liikennetapahtuma))))))
 
 (defn nayta-suunnan-ketjutukset? [{:keys [valittu-liikennetapahtuma]} suunta tiedot]
-  (and (some? tiedot)
-       (or (= suunta (:valittu-suunta valittu-liikennetapahtuma))
-           (= :molemmat (:valittu-suunta valittu-liikennetapahtuma)))))
+  (boolean
+    (and (some? tiedot)
+        (or (= suunta (:valittu-suunta valittu-liikennetapahtuma))
+            (= :molemmat (:valittu-suunta valittu-liikennetapahtuma))))))
 
 (defn nayta-liikennegrid? [{:keys [valittu-liikennetapahtuma]}]
-  (and (::lt/kohde valittu-liikennetapahtuma)
-       (or (id-olemassa? (::lt/id valittu-liikennetapahtuma))
-           (:valittu-suunta valittu-liikennetapahtuma))))
+  (boolean
+    (and (::lt/kohde valittu-liikennetapahtuma)
+        (or (id-olemassa? (::lt/id valittu-liikennetapahtuma))
+            (:valittu-suunta valittu-liikennetapahtuma)))))
 
 (defn jarjesta-tapahtumat [tapahtumat]
   (sort-by
@@ -317,10 +326,10 @@
   (remove (comp (or siirretyt-alukset #{}) ::lt-alus/id) alukset))
 
 (defn ketjutuksen-poisto-kaynnissa? [{:keys [ketjutuksen-poistot]} alus]
-  (ketjutuksen-poistot (::lt-alus/id alus)))
+  (boolean (ketjutuksen-poistot (::lt-alus/id alus))))
 
-(defn ketjutuksen-voi-siirtaa? [{:keys [siirretyt-alukset]} alus]
-  (siirretyt-alukset (::lt-alus/id alus)))
+(defn ketjutuksen-voi-siirtaa-tapahtumasta? [{:keys [siirretyt-alukset]} alus]
+  (boolean (siirretyt-alukset (::lt-alus/id alus))))
 
 (defn grid-virheita? [rivit]
   (boolean (some
