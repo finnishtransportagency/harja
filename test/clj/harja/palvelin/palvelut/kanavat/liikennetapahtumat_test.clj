@@ -79,9 +79,9 @@
 
     (is (some? (get-in vastaus [:ylos ::kohde/nimi])))
     (is (some? (get-in vastaus [:ylos ::kohde/id])))
-    (is (not-empty (get-in vastaus [:ylos :alukset])))
+    (is (not-empty (get-in vastaus [:ylos :edelliset-alukset])))
     (is (every?
-          (first (get-in vastaus [:ylos :alukset]))
+          (first (get-in vastaus [:ylos :edelliset-alukset]))
           [:harja.domain.kanavat.kohde/id
            :harja.domain.kanavat.kohde/nimi
            :harja.domain.kanavat.liikennetapahtuma/aika
