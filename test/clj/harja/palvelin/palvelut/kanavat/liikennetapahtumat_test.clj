@@ -18,6 +18,7 @@
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]))
@@ -75,9 +76,28 @@
     (is (s/valid? ::lt/hae-edelliset-tapahtumat-kysely params))
     (is (s/valid? ::lt/hae-edelliset-tapahtumat-vastaus vastaus))
 
-    ;; Nämä muuttuu kun palvelu päivitetään palauttamaan
-    ;; edellisten kohteiden tietoja
-    (is (nil? (:ylos vastaus)))
+
+    (is (some? (get-in vastaus [:ylos ::kohde/nimi])))
+    (is (some? (get-in vastaus [:ylos ::kohde/id])))
+    (is (not-empty (get-in vastaus [:ylos :alukset])))
+    (is (every?
+          (first (get-in vastaus [:ylos :alukset]))
+          [:harja.domain.kanavat.kohde/id
+           :harja.domain.kanavat.kohde/nimi
+           :harja.domain.kanavat.liikennetapahtuma/aika
+           :harja.domain.kanavat.liikennetapahtuma/lisatieto
+           :harja.domain.kanavat.lt-alus/id
+           :harja.domain.kanavat.lt-alus/laji
+           :harja.domain.kanavat.lt-alus/lkm
+           :harja.domain.kanavat.lt-alus/nimi
+           :harja.domain.kanavat.lt-alus/suunta
+           :harja.domain.kanavat.lt-ketjutus/alus-id
+           :harja.domain.kanavat.lt-ketjutus/kohteelle-id
+           :harja.domain.kanavat.lt-ketjutus/kohteelta-id
+           :harja.domain.kanavat.lt-ketjutus/sopimus-id
+           :harja.domain.kanavat.lt-ketjutus/urakka-id]))
+
+    ;; Testidatassa ei ole ketjutuksia alaspäin
     (is (nil? (:alas vastaus)))
 
     (is (and
