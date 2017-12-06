@@ -55,13 +55,13 @@
                         "Kuittaa"
                         #(e! (tiedot/->SiirraTapahtumaan alus))
                         {:ikoni (ikonit/livicon-arrow-bottom)}])}
+       {:otsikko "Nimi"
+        :tyyppi :string
+        :nimi ::lt-alus/nimi}
        {:otsikko "Aluslaji"
         :tyyppi :string
         :nimi ::lt-alus/laji
         :fmt lt-alus/aluslaji->str}
-       {:otsikko "Nimi"
-        :tyyppi :string
-        :nimi ::lt-alus/nimi}
        {:otsikko "Alusten lkm"
         :nimi ::lt-alus/lkm
         :tyyppi :positiivinen-numero}
@@ -120,26 +120,28 @@
                                      (= :alas suunta) (ikonit/livicon-arrow-down)
                                      :else (ikonit/livicon-question))
                         :disabled (some? (#{:ylos :alas} valittu-suunta))}]))}
+    {:otsikko "Nimi"
+     :tyyppi :string
+     :nimi ::lt-alus/nimi}
     {:otsikko "Aluslaji"
      :tyyppi :valinta
      :nimi ::lt-alus/laji
      :validoi [[:ei-tyhja "Valitse aluslaji"]]
      :valinnat lt-alus/aluslajit
      :valinta-nayta #(or (lt-alus/aluslaji->str %) "- Valitse -")}
-    {:otsikko "Nimi"
-     :tyyppi :string
-     :nimi ::lt-alus/nimi}
     {:otsikko "Alusten lkm"
      :nimi ::lt-alus/lkm
-     :muokattava? #(= :HUV (::lt-alus/laji %))
+     :muokattava? lt-alus/tayta-lukumaara?
      :oletusarvo 1
      :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
      :tyyppi :positiivinen-numero}
     {:otsikko "Matkustajia"
      :nimi ::lt-alus/matkustajalkm
+     :muokattava? lt-alus/tayta-matkustajamaara?
      :tyyppi :positiivinen-numero}
     {:otsikko "Nippuluku"
      :nimi ::lt-alus/nippulkm
+     :muokattava? lt-alus/tayta-nippuluku?
      :tyyppi :positiivinen-numero}]
    (r/wrap
      (into {}
