@@ -2,7 +2,6 @@
   "Tielupien hallinta API:n kautta"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET DELETE]]
-            [taoensso.timbre :as log]
             [clojure.string :refer [join]]
             [slingshot.slingshot :refer [try+ throw+]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
@@ -11,6 +10,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.sanomat.tielupa-sanoma :as tielupa-sanoma]
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]
             [harja.domain.tielupa :as tielupa]
             [harja.kyselyt.tielupa :as tielupa-q]
             [harja.kyselyt.kayttajat :as kayttajat-q]
@@ -66,8 +66,15 @@
        (hae-sijainnit-avaimella db ::tielupa/johtoasennukset)
        (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
        (tielupa-q/tallenna-tielupa db))
-  (tielupa-q/aseta-tieluvalle-urakka-ulkoisella-tunnisteella db (get-in data [:tielupa :perustiedot :tunniste :id]))
-  ;; todo tallenna liitteet
+
+  (let [tielupa (first (tielupa-q/hae-tieluvat db {::tielupa/ulkoinen-tunniste (get-in data [:tielupa :perustiedot :tunniste :id])}))
+        tielupa-id (::tielupa/id tielupa)
+        urakka-id (::tielupa/urakka tielupa)]
+    (tielupa-q/aseta-tieluvalle-urakka db tielupa-id)
+
+    (when-let [liitteet (get-in data [:tielupa :liitteet])]
+      (liitteet/tallenna-liitteet-tieluvalle db liitteiden-hallinta urakka-id tielupa-id kayttaja liitteet)))
+
   (tee-kirjausvastauksen-body {:ilmoitukset "Tielupa kirjattu onnistuneesti"}))
 
 (defrecord Tieluvat []

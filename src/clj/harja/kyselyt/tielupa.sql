@@ -5,3 +5,7 @@ SELECT aseta_tieluvalle_urakka(:id);
 SELECT id
 FROM tielupa
 WHERE "ulkoinen-tunniste" = :ulkoinen_tunniste;
+
+-- name: liita-liite-tieluvalle<!
+INSERT INTO tielupa_liite (tielupa, liite)
+VALUES (:tielupa, :liite);

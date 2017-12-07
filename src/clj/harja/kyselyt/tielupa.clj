@@ -43,8 +43,4 @@
         (update! db ::tielupa/tielupa muokattu {::tielupa/ulkoinen-tunniste ulkoinen-tunniste})
         (insert! db ::tielupa/tielupa uusi)))))
 
-(defn aseta-tieluvalle-urakka-ulkoisella-tunnisteella [db ulkoinen-tunniste]
-  (when-let [id (:id (first (harja.kyselyt.tielupa/hae-id-ulkoisella-tunnisteella db ulkoinen-tunniste)))]
-    (harja.kyselyt.tielupa/aseta-tieluvalle-urakka db id)))
-
 
