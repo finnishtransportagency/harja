@@ -3,7 +3,6 @@
             [tuck.core :refer [tuck]]
 
             [harja.loki :refer [tarkkaile! log]]
-            [harja.id :refer [id-olemassa?]]
             [harja.ui.komponentti :as komp]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja] :as yleiset]
@@ -29,7 +28,6 @@
   (reaction (let [ur @nav/valittu-urakka
                   [alkupvm loppupvm] (or @u/valittu-hoitokauden-kuukausi @u/valittu-hoitokausi)
                   nakymassa? @laskutus-nakyvissa?]
-              (pr-str (log "parametrit? " ur alkupvm loppupvm nakymassa?) )
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
                   (:id ur)

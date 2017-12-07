@@ -14,8 +14,8 @@
             [harja.ui.debug :refer [debug]]
 
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.kanavat.kanava :as kanava]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
@@ -33,7 +33,9 @@
    {:tyhja "Lisää kohteita oikeasta yläkulmasta"
     :tunniste ::kohde/id
     :voi-poistaa? (constantly false)
-    :piilota-toiminnot? true}
+    :jarjesta-avaimen-mukaan identity
+    :piilota-toiminnot? true
+    :uusi-id (count kanavan-kohteet)}
    [{:otsikko "Kohteen nimi"
      :tyyppi :string
      :nimi ::kohde/nimi
@@ -51,7 +53,7 @@
            (map-indexed
              (fn [i k] [i k])
              kanavan-kohteet))
-     #(e! (tiedot/->LisaaKohteita (vals %))))])
+     #(e! (tiedot/->LisaaKohteita (sort-by :id (vals %)))))])
 
 (defn luontilomake [e! {tallennus-kaynnissa? :kohteiden-tallennus-kaynnissa?
                         kanavat :kanavat
@@ -77,8 +79,8 @@
     [{:otsikko "Kanava"
       :tyyppi :valinta
       :nimi :kanava
-      :valinnat (sort-by ::kanava/nimi kanavat)
-      :valinta-nayta #(or (::kanava/nimi %) "Valitse kanava")
+      :valinnat (sort-by ::kok/nimi kanavat)
+      :valinta-nayta #(or (::kok/nimi %) "Valitse kanava")
       :aseta (fn [_ arvo]
                ;; kentat/atomina funktiossa katsotaan, onko :aseta ehto annettu
                ;; jos on, oletetaan, että funktio palauttaa lomakkeen käyttämän datan
@@ -210,4 +212,5 @@
         [luontilomake e! app]))))
 
 (defc kohteiden-luonti []
-  [tuck tiedot/tila kohteiden-luonti*])
+  #_[tuck tiedot/tila kohteiden-luonti*]
+  [:div "Kohteiden luonti on hetkellisesti pois käytöstä. Katso HAR-6747"])

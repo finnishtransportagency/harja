@@ -31,10 +31,13 @@
     ::laji
     ::lkm
     ::matkustajalkm
+    ::nippulkm
     ::suunta})
 
+(def metatiedot m/muokkauskentat)
+
 (def aluslajit*
-  {:HINT "HINT"
+  {:HIN "HIN"
    :HUV "HUV"
    :LAU "LAU"
    :MAT "MAT"

@@ -11,7 +11,8 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [clj-time.coerce :as c]
-            [harja.domain.yllapitokohde :as yllapitokohde-domain]))
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.domain.urakka :as urakka]))
 
 (defn- hae-laatupoikkeamat-urakalle [db {:keys [urakka-id alkupvm loppupvm laatupoikkeamatekija]}]
   (laatupoikkeamat-q/hae-urakan-laatupoikkeamat-liitteineen-raportille db
@@ -24,7 +25,7 @@
 (defn- hae-laatupoikkeamat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (laatupoikkeamat-q/hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille db
                                                                                 hallintayksikko-id
-                                                                                (when urakkatyyppi (name urakkatyyppi))
+                                                                                (when urakkatyyppi (mapv name urakkatyyppi))
                                                                                 alkupvm
                                                                                 loppupvm
                                                                                 (not (nil? laatupoikkeamatekija))
@@ -32,7 +33,7 @@
 
 (defn- hae-laatupoikkeamat-koko-maalle [db {:keys [alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (laatupoikkeamat-q/hae-koko-maan-laatupoikkeamat-liitteineen-raportille db
-                                                                          (when urakkatyyppi (name urakkatyyppi))
+                                                                          (when urakkatyyppi (mapv name urakkatyyppi))
                                                                           alkupvm
                                                                           loppupvm
                                                                           (not (nil? laatupoikkeamatekija))
@@ -77,7 +78,11 @@
   (mapv kasittele-laatupoikkeaman-kohde laatupoikkeamarivit))
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi] :as parametrit}]
-  (let [konteksti (cond urakka-id :urakka
+  (let [urakkatyyppi (when urakkatyyppi
+                       (if (= urakkatyyppi :vesivayla)
+                         (into [] urakka/vesivayla-urakkatyypit)
+                         [urakkatyyppi]))
+        konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         poikkeamat (hae-laatupoikkeamat db {:konteksti konteksti

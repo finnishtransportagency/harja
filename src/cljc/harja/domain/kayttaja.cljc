@@ -36,3 +36,6 @@
 
 (defn kokonimi [kayttaja]
   (str (::etunimi kayttaja) " " (::sukunimi kayttaja)))
+
+(defn kayttaja->str [k]
+  (str (::etunimi k) " " (::sukunimi k)))

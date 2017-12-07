@@ -479,6 +479,7 @@ SET
   tyomenetelma     = :tyomenetelma,
   massamaara       = :massamaara,
   toimenpide       = :toimenpide,
+  muokattu         = NOW(),
   sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
                       FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
                                                              CAST(:tr_alkuosa AS INTEGER),
@@ -494,7 +495,8 @@ WHERE id = :id
 -- name: poista-yllapitokohdeosa!
 -- Poistaa ylläpitokohdeosan
 UPDATE yllapitokohdeosa
-SET poistettu = TRUE
+SET poistettu = TRUE,
+    muokattu = NOW()
 WHERE id = :id
       AND yllapitokohde IN (SELECT id
                             FROM yllapitokohde
@@ -502,7 +504,8 @@ WHERE id = :id
 
 -- name: merkitse-yllapitokohteen-kohdeosat-poistetuiksi!
 UPDATE yllapitokohdeosa
-SET poistettu = TRUE
+SET poistettu = TRUE,
+    muokattu = NOW()
 WHERE yllapitokohde IN (SELECT id
                         FROM yllapitokohde
                         WHERE urakka = :urakka AND

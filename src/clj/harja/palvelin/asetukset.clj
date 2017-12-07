@@ -155,7 +155,7 @@
                               (s/optional-key :komponenttityyppihakuvali) s/Int
                               (s/optional-key :turvalaitekomponenttihakuvali) s/Int
                               (s/optional-key :vikahakuvali) s/Int
-                              (s/optional-key :turvalaiteryhmahakuaika) s/Num}
+                              (s/optional-key :turvalaiteryhmahakuaika) [s/Num]}
 
 
    (s/optional-key :ais-data) {:url s/Str
@@ -177,7 +177,7 @@
                 :salasana ""}
 
    :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
-   :geometriapaivitykset {:tuontivali 1}
+   :geometriapaivitykset {:tuontivali 100}
    })
 
 (defn yhdista-asetukset [oletukset asetukset]

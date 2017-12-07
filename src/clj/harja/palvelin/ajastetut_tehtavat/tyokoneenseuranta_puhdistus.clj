@@ -8,7 +8,7 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
 
 (defn poista-vanhat-tyokonesijainnit [db]
-  (log/debug "Poistetaan vanhentuneet työkonehavainnot")
+  ;;(log/debug "Poistetaan vanhentuneet työkonehavainnot")
   (tks/poista-vanhentuneet-havainnot! db))
 
 (defrecord TyokoneenseurantaPuhdistus []

@@ -4,13 +4,28 @@
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
 
             [harja.domain.kanavat.liikennetapahtuma :as lt]
-            [harja.domain.kanavat.kanava :as kanava]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.lt-alus :as lt-alus]
-            [harja.domain.kanavat.lt-nippu :as lt-nippu]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
+            [harja.domain.kanavat.lt-toiminto :as toiminto]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.sopimus :as sop]
-            [harja.domain.urakka :as ur]))
+            [harja.domain.urakka :as ur]
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.kayttaja :as kayttaja]
+            [harja.ui.modal :as modal]
+            [harja.tiedot.navigaatio :as nav]))
 
+(deftest uusi-tapahtuma
+  (is (= {::lt/kuittaaja {::kayttaja/id 1}
+          ::lt/aika 1234
+          ::lt/sopimus {::sop/id :a ::sop/nimi :b}
+          ::lt/urakka {::ur/id :foo}}
+         (tiedot/uusi-tapahtuma
+           (atom {:id 1})
+           (atom [:a :b])
+           (atom {:id :foo})
+           1234))))
 
 (deftest hakuparametrit
   (testing "Jos urakka-id ja sopimus-id ei ole asetettu, palautetaan nil"
@@ -29,55 +44,202 @@
                                             :bar 2}}))))
 
 (deftest palvelumuoto-gridiin
-  (is (= "Itsepalvelu (15 kpl)"
-         (tiedot/palvelumuoto->str {::lt/palvelumuoto :itse
-                                    ::lt/palvelumuoto-lkm 15})))
-
   (is (= "Kauko"
-         (tiedot/palvelumuoto->str {::lt/palvelumuoto :kauko
-                                    ::lt/palvelumuoto-lkm 1}))))
+         (tiedot/palvelumuoto->str
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}]})))
+  (is (= "Kauko"
+         (tiedot/palvelumuoto->str
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :kauko}]})))
+  (is (= "Kauko, Paikallis"
+         (tiedot/palvelumuoto->str
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :paikallis}
+                       {::toiminto/palvelumuoto :kauko}]})))
+  (is (= "Itsepalvelu (15 kpl), Kauko"
+         (tiedot/palvelumuoto->str
+           {::lt/toiminnot [{::toiminto/palvelumuoto :kauko}
+                       {::toiminto/palvelumuoto :itse
+                        ::toiminto/lkm 15}
+                       {::toiminto/palvelumuoto :kauko}]})))
+  (is (= "Itsepalvelu (150 kpl)"
+         (tiedot/palvelumuoto->str
+           {::lt/toiminnot [{::toiminto/palvelumuoto :itse
+                        ::toiminto/lkm 150}]}))))
+
+(deftest toimenpide-gridiin
+  (is (= "Sillan avaus, Sulutus"
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :sulutus}
+                                             {::toiminto/toimenpide :avaus}]})))
+
+  (is (= "Tyhjennys"
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :tyhjennys}
+                                             {::toiminto/toimenpide :ei-avausta}]})))
+
+  (is (= "Sillan avaus"
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :avaus}]})))
+
+  (is (= ""
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :ei-avausta}]}))))
 
 (deftest tapahtumarivit
   (testing "Jokaisesta nipusta ja aluksesta syntyy oma rivi"
-    (let [tapahtuma {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
-                                 ::kohde/nimi "Iso mutka"
-                                 ::kohde/tyyppi :silta}
+    (let [tapahtuma {:foo :bar
                      ::lt/alukset [{::lt-alus/suunta :ylos
-                                    ::lt-alus/nimi "Ronsu"}]
-                     ::lt/niput [{::lt-nippu/suunta :alas
-                                  ::lt-nippu/lkm 5}
-                                 {::lt-nippu/suunta :alas
-                                  ::lt-nippu/lkm 15}]}]
-      (is (= [(merge
-                tapahtuma
-                {::lt-alus/suunta :ylos
-                 ::lt-alus/nimi "Ronsu"}
-                {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                 :suunta :ylos})
-              (merge
-                tapahtuma
-                {::lt-nippu/suunta :alas
-                 ::lt-nippu/lkm 5}
-                {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                 :suunta :alas})
-              (merge
-                tapahtuma
-                {::lt-nippu/suunta :alas
-                 ::lt-nippu/lkm 15}
-                {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                 :suunta :alas})]
+                                    ::lt-alus/nimi "Ronsu"}
+                                   {::lt-alus/suunta :ylos
+                                    ::lt-alus/nimi "Ransu"}]}]
+      (is (= [{::lt-alus/suunta :ylos
+               ::lt-alus/nimi "Ronsu"
+               :foo :bar
+               ::lt/alukset [{::lt-alus/suunta :ylos
+                              ::lt-alus/nimi "Ronsu"}
+                             {::lt-alus/suunta :ylos
+                              ::lt-alus/nimi "Ransu"}]}
+              {::lt-alus/suunta :ylos
+               ::lt-alus/nimi "Ransu"
+               :foo :bar
+               ::lt/alukset [{::lt-alus/suunta :ylos
+                              ::lt-alus/nimi "Ronsu"}
+                             {::lt-alus/suunta :ylos
+                              ::lt-alus/nimi "Ransu"}]}]
              (tiedot/tapahtumarivit tapahtuma)))))
 
   (testing "Jos ei aluksia tai nippuja, syntyy silti yksi rivi taulukossa"
-    (let [tapahtuma {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
-                                 ::kohde/nimi "Iso mutka"
-                                 ::kohde/tyyppi :silta}
-                     ::lt/alukset []
-                     ::lt/niput []}]
-      (is (= [(merge
-                tapahtuma
-                {:kohteen-nimi "Saimaa, Iso mutka, silta"})]
+    (let [tapahtuma {:foo :bar
+                     ::lt/alukset []}]
+      (is (= [{:foo :bar
+               ::lt/alukset []}]
              (tiedot/tapahtumarivit tapahtuma))))))
+
+(deftest koko-tapahtuma
+  (is (= {::lt/id 1 :foo :baz}
+         (tiedot/koko-tapahtuma {::lt/id 1}
+                                {:haetut-tapahtumat [{::lt/id 2 :foo :bar}
+                                                     {::lt/id 1 :foo :baz}]}))))
+
+(deftest tallennusparametrien-kasaus
+  (is (= {::lt/kuittaaja-id 1
+          ::lt/kohde-id 1
+          ::lt/urakka-id nil ;; tulee atomista, siksi nil.. :/
+          ::lt/sopimus-id 1
+          ::lt/alukset [{::m/poistettu? true
+                         ::lt-alus/id 1}]
+          ::lt/toiminnot [{::toiminto/id 1}]}
+         (tiedot/tallennusparametrit
+           {:grid-virheita? false
+            ::lt/kuittaaja {::kayttaja/id 1}
+            ::lt/kohde {::kohde/id 1}
+            ::lt/sopimus {::sop/id 1}
+            ::lt/alukset [{:poistettu true
+                           :id 1
+                           :harja.ui.grid/virheet []
+                           ::lt-alus/id 1}]
+            ::lt/toiminnot [{::toiminto/id 1
+                        ::osa/id 1}]}))))
+
+(deftest voiko-tallentaa?
+  (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
+                                     ::lt/alukset [{:koskematon false
+                                                    ::lt-alus/suunta :ylos}]})))
+
+  (is (false? (tiedot/voi-tallentaa? {:grid-virheita? true
+                                     ::lt/alukset [{:koskematon false
+                                                    ::lt-alus/suunta :ylos}]})))
+  (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
+                                     ::lt/alukset [{:koskematon true
+                                                    ::lt-alus/suunta :ylos}]})))
+  (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
+                                     ::lt/alukset [{:koskematon false}]}))))
+
+
+(deftest sama-alus?
+  (is (true? (tiedot/sama-alusrivi? {::lt-alus/id 1} {::lt-alus/id 1})))
+  (is (true? (tiedot/sama-alusrivi? {:id 1} {:id 1})))
+
+  (is (false? (tiedot/sama-alusrivi? {::lt-alus/id 2} {::lt-alus/id 1})))
+  (is (false? (tiedot/sama-alusrivi? {:id 2} {:id 1})))
+  (is (false? (tiedot/sama-alusrivi? {::lt-alus/id 1} {:id 1})))
+
+  (is (false? (tiedot/sama-alusrivi? {::lt-alus/id 1} {:id 1 ::lt-alus/id 2}))))
+
+(deftest osatietojen-paivittaminen
+  (is (= {::lt/toiminnot [{::toiminto/kohteenosa-id 1
+                      ::toiminto/palvelumuoto :kauko}
+                     {::toiminto/kohteenosa-id 2}]}
+         (tiedot/paivita-toiminnon-tiedot
+           {::lt/toiminnot [{::toiminto/kohteenosa-id 1}
+                       {::toiminto/kohteenosa-id 2}]}
+           {::toiminto/kohteenosa-id 1
+            ::toiminto/palvelumuoto :kauko}))))
+
+(deftest osatietojen-yhdistaminen
+  (testing "Olemassaolevaan yhdistäminen"
+    (is (= {::lt/id 1
+            ::lt/kohde {::kohde/id 1
+                        ::kohde/kohteenosat [{::osa/id 1
+                                              ::osa/kohde-id 1
+                                              ::osa/tyyppi :silta
+                                              ::osa/nimi "Iso silta"
+                                              ::osa/oletuspalvelumuoto :kauko}]}
+            ::lt/toiminnot [{::lt/id 1
+                        ::toiminto/kohteenosa-id 1
+                        ::toiminto/kohde-id 1
+                        ::toiminto/palvelumuoto :itse
+                        ::toiminto/lkm 15
+                        ::toiminto/toimenpide :avaus
+
+                        ::osa/tyyppi :silta
+                        ::osa/nimi "Iso silta"
+                        ::osa/oletuspalvelumuoto :kauko}]}
+          (tiedot/kohteenosatiedot-toimintoihin
+            {::lt/id 1
+             ::lt/kohde {::kohde/id 1
+                         ::kohde/kohteenosat [{::osa/id 1
+                                               ::osa/kohde-id 1
+                                               ::osa/tyyppi :silta
+                                               ::osa/nimi "Iso silta"
+                                               ::osa/oletuspalvelumuoto :kauko}]}
+             ::lt/toiminnot [{::lt/id 1
+                         ::toiminto/kohteenosa-id 1
+                         ::toiminto/kohde-id 1
+                         ::toiminto/palvelumuoto :itse
+                         ::toiminto/lkm 15
+                         ::toiminto/toimenpide :avaus}]}
+            {::kohde/id 1
+             ::kohde/kohteenosat [{::osa/id 1
+                                   ::osa/kohde-id 1
+                                   ::osa/tyyppi :silta
+                                   ::osa/nimi "Iso silta"
+                                   ::osa/oletuspalvelumuoto :kauko}]}))))
+  (testing "Uuteen yhdistäminen"
+    (is (= {::lt/id 1
+            ::lt/kohde {::kohde/id 1
+                        ::kohde/kohteenosat [{::osa/id 1
+                                              ::osa/kohde-id 1
+                                              ::osa/tyyppi :silta
+                                              ::osa/nimi "Iso silta"
+                                              ::osa/oletuspalvelumuoto :kauko}]}
+            ::lt/toiminnot [{::osa/tyyppi :silta
+                        ::osa/nimi "Iso silta"
+                        ::osa/oletuspalvelumuoto :kauko
+
+                        ::toiminto/kohteenosa-id 1
+                        ::toiminto/kohde-id 1
+                        ::toiminto/lkm 1
+                        ::toiminto/toimenpide :ei-avausta
+                        ::toiminto/palvelumuoto :kauko}]}
+           (tiedot/kohteenosatiedot-toimintoihin
+             {::lt/id 1}
+             {::kohde/id 1
+              ::kohde/kohteenosat [{::osa/id 1
+                                    ::osa/kohde-id 1
+                                    ::osa/tyyppi :silta
+                                    ::osa/nimi "Iso silta"
+                                    ::osa/oletuspalvelumuoto :kauko}]})))))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
@@ -118,42 +280,23 @@
                   :valinnat {::ur/id 1 ::sop/id nil}}))))))
 
 (deftest tapahtumat-haettu
-  (let [tapahtuma1 {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+  (let [tapahtuma1 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset []
                     ::lt/niput []}
-        tapahtuma2 {::lt/kohde {::kohde/kohteen-kanava {::kanava/nimi "Saimaa"}
+        tapahtuma2 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
                                 ::kohde/nimi "Iso mutka"
                                 ::kohde/tyyppi :silta}
                     ::lt/alukset [{::lt-alus/suunta :ylos
-                                   ::lt-alus/nimi "Ronsu"}]
-                    ::lt/niput [{::lt-nippu/suunta :alas
-                                 ::lt-nippu/lkm 5}
-                                {::lt-nippu/suunta :alas
-                                 ::lt-nippu/lkm 15}]}]
+                                   ::lt-alus/nimi "Ronsu"}]}]
     (is (= {:liikennetapahtumien-haku-kaynnissa? false
-            :tapahtumarivit [(merge
-                               tapahtuma1
-                               {:kohteen-nimi "Saimaa, Iso mutka, silta"})
+            :haetut-tapahtumat [tapahtuma1 tapahtuma2]
+            :tapahtumarivit [tapahtuma1
                              (merge
                                tapahtuma2
                                {::lt-alus/suunta :ylos
-                                ::lt-alus/nimi "Ronsu"}
-                               {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                                :suunta :ylos})
-                             (merge
-                               tapahtuma2
-                               {::lt-nippu/suunta :alas
-                                ::lt-nippu/lkm 5}
-                               {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                                :suunta :alas})
-                             (merge
-                               tapahtuma2
-                               {::lt-nippu/suunta :alas
-                                ::lt-nippu/lkm 15}
-                               {:kohteen-nimi "Saimaa, Iso mutka, silta"
-                                :suunta :alas})]}
+                                ::lt-alus/nimi "Ronsu"})]}
            (e! (tiedot/->LiikennetapahtumatHaettu [tapahtuma1 tapahtuma2]))))))
 
 (deftest tapahtumia-ei-haettu
@@ -161,8 +304,105 @@
          (e! (tiedot/->LiikennetapahtumatEiHaettu {})))))
 
 (deftest tapahtuman-valitseminen
-  (is (= {:valittu-liikennetapahtuma 1}
-         (e! (tiedot/->ValitseTapahtuma 1)))))
+  (testing "Tyhjän valitseminen"
+    (is (= {:valittu-liikennetapahtuma nil}
+           (e! (tiedot/->ValitseTapahtuma nil)))))
+
+  (testing "Olemassaolevan tapahtuman valitseminen liittää toimintoihin kohteenosan tiedot"
+    (is (= {:valittu-liikennetapahtuma {::lt/id 1
+                                        ::lt/kohde {::kohde/id 1
+                                                    ::kohde/kohteenosat [{::osa/id 1
+                                                                          ::osa/tyyppi :silta
+                                                                          ::osa/nimi "Iso silta"
+                                                                          ::osa/oletuspalvelumuoto :kauko}]}
+                                        ::lt/toiminnot [{::toiminto/id 1
+                                                    ::toiminto/kohteenosa-id 1
+                                                    ::toiminto/kohde-id 1
+                                                    ::toiminto/lkm 15
+                                                    ::toiminto/palvelumuoto :itse
+                                                    ::osa/tyyppi :silta
+                                                    ::osa/nimi "Iso silta"
+                                                    ::osa/oletuspalvelumuoto :kauko
+                                                    ::toiminto/toimenpide :sillan-avaus}]}
+            :haetut-tapahtumat [{::lt/id 1
+                                 ::lt/kohde {::kohde/id 1
+                                             ::kohde/kohteenosat [{::osa/id 1
+                                                                   ::osa/tyyppi :silta
+                                                                   ::osa/nimi "Iso silta"
+                                                                   ::osa/oletuspalvelumuoto :kauko}]}
+                                 ::lt/toiminnot [{::toiminto/id 1
+                                             ::toiminto/kohteenosa-id 1
+                                             ::toiminto/kohde-id 1
+                                             ::toiminto/lkm 15
+                                             ::toiminto/palvelumuoto :itse
+                                             ::toiminto/toimenpide :sillan-avaus}]}]}
+           (e! (tiedot/->ValitseTapahtuma
+                 {::lt/id 1})
+               {:haetut-tapahtumat [{::lt/id 1
+                                     ::lt/kohde {::kohde/id 1
+                                                 ::kohde/kohteenosat [{::osa/id 1
+                                                                       ::osa/tyyppi :silta
+                                                                       ::osa/nimi "Iso silta"
+                                                                       ::osa/oletuspalvelumuoto :kauko}]}
+                                     ::lt/toiminnot [{::toiminto/id 1
+                                                 ::toiminto/kohteenosa-id 1
+                                                 ::toiminto/kohde-id 1
+                                                 ::toiminto/lkm 15
+                                                 ::toiminto/palvelumuoto :itse
+                                                 ::toiminto/toimenpide :sillan-avaus}]}]}))))
+
+  (testing "Uuden tapahtuman avaaminen"
+    (is (= {:valittu-liikennetapahtuma {:foo :bar
+                                        ::lt/toiminnot []
+                                        ::lt/kohde nil}
+            :haetut-tapahtumat [{::lt/id 1
+                                 ::lt/kohde {::kohde/id 1
+                                             ::kohde/kohteenosat [{::osa/id 1
+                                                                   ::osa/tyyppi :silta
+                                                                   ::osa/nimi "Iso silta"
+                                                                   ::osa/oletuspalvelumuoto :kauko}]}
+                                 ::lt/toiminnot [{::toiminto/id 1
+                                             ::toiminto/kohteenosa-id 1
+                                             ::toiminto/kohde-id 1
+                                             ::toiminto/lkm 15
+                                             ::toiminto/palvelumuoto :itse
+                                             ::toiminto/toimenpide :sillan-avaus}]}]}
+           (e! (tiedot/->ValitseTapahtuma {:foo :bar})
+               {:haetut-tapahtumat [{::lt/id 1
+                                     ::lt/kohde {::kohde/id 1
+                                                 ::kohde/kohteenosat [{::osa/id 1
+                                                                       ::osa/tyyppi :silta
+                                                                       ::osa/nimi "Iso silta"
+                                                                       ::osa/oletuspalvelumuoto :kauko}]}
+                                     ::lt/toiminnot [{::toiminto/id 1
+                                                 ::toiminto/kohteenosa-id 1
+                                                 ::toiminto/kohde-id 1
+                                                 ::toiminto/lkm 15
+                                                 ::toiminto/palvelumuoto :itse
+                                                 ::toiminto/toimenpide :sillan-avaus}]}]})))))
+
+(deftest edellisten-haku
+  (vaadi-async-kutsut
+    #{tiedot/->EdellisetTiedotHaettu tiedot/->EdellisetTiedotEiHaettu}
+    (is (= {:edellisten-haku-kaynnissa? true}
+           (e! (tiedot/->HaeEdellisetTiedot {}))))))
+
+(deftest edelliset-haettu
+  (is (= {:edelliset {:tama {::lt/vesipinta-alaraja 1
+                             ::lt/vesipinta-ylaraja 2}
+                      :ylos {:foo :bar}
+                      :alas {:baz :baz}}
+          :edellisten-haku-kaynnissa? false
+          :valittu-liikennetapahtuma {::lt/vesipinta-alaraja 1
+                                      ::lt/vesipinta-ylaraja 2}}
+         (e! (tiedot/->EdellisetTiedotHaettu {:kohde {::lt/vesipinta-alaraja 1
+                                                      ::lt/vesipinta-ylaraja 2}
+                                              :ylos {:foo :bar}
+                                              :alas {:baz :baz}})))))
+
+(deftest edelliset-ei-haettu
+  (is (= {:edellisten-haku-kaynnissa? false}
+         (e! (tiedot/->EdellisetTiedotEiHaettu {})))))
 
 (deftest suodatinten-päivittäminen
   (testing "Vanhoja tietoja ei ylikirjoiteta"
@@ -188,23 +428,78 @@
              (e! (tiedot/->PaivitaValinnat {:aikavali 3})
                  {:valinnat {:aikavali 1}}))))))
 
-(deftest kohteiden-haku
+(deftest tapahtuman-muokkaus
+  (is (= {:valittu-liikennetapahtuma {:foo :bar}}
+         (e! (tiedot/->TapahtumaaMuokattu {:foo :bar})))))
+
+(deftest alusten-muokkaus
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:foo :bar}]
+                                      :grid-virheita? false}}
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] false)
+             {:valittu-liikennetapahtuma {}})))
+
+  (is (= {:valittu-liikennetapahtuma nil}
+         (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] true)
+             {:valittu-liikennetapahtuma nil}))))
+
+(deftest suunnan-vaihto
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ylos}
+                                                    {::lt-alus/id 2 ::lt-alus/suunta :alas}]}}
+         (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :alas})
+             {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :alas}
+                                                        {::lt-alus/id 2 ::lt-alus/suunta :alas}]}})))
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :alas}
+                                                    {::lt-alus/id 2 ::lt-alus/suunta :alas}]}}
+         (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :ylos})
+             {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ylos}
+                                                        {::lt-alus/id 2 ::lt-alus/suunta :alas}]}})))
+
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :ylos}
+                                                    {:id -2 ::lt-alus/suunta :alas}]}}
+         (e! (tiedot/->VaihdaSuuntaa {:id -1 ::lt-alus/suunta :alas})
+             {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :alas}
+                                                        {:id -2 ::lt-alus/suunta :alas}]}})))
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :alas}
+                                                    {:id -2 ::lt-alus/suunta :alas}]}}
+         (e! (tiedot/->VaihdaSuuntaa {:id -1 ::lt-alus/suunta :ylos})
+             {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :ylos}
+                                                        {:id -2 ::lt-alus/suunta :alas}]}}))))
+
+(deftest tallennus
   (vaadi-async-kutsut
-    #{tiedot/->KohteetHaettu tiedot/->KohteetEiHaettu}
-    (is (= {:kohteiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeKohteet)))))
+    #{tiedot/->TapahtumaTallennettu tiedot/->TapahtumaEiTallennettu}
+    (is (= {:tallennus-kaynnissa? true}
+           (e! (tiedot/->TallennaLiikennetapahtuma {})
+               {:tallennus-kaynnissa? false}))))
 
   (vaadi-async-kutsut
     #{}
-    (is (= {:kohteiden-haku-kaynnissa? true}
-           (e! (tiedot/->HaeKohteet)
-               {:kohteiden-haku-kaynnissa? true})))))
+    (is (= {:tallennus-kaynnissa? true}
+           (e! (tiedot/->TallennaLiikennetapahtuma {})
+               {:tallennus-kaynnissa? true})))))
 
-(deftest kohteet-haettu
-  (is (= {:urakan-kohteet [1 2 3]
-          :kohteiden-haku-kaynnissa? false}
-         (e! (tiedot/->KohteetHaettu [1 2 3])))))
+(deftest tallennus-valmis
+  (swap! modal/modal-sisalto assoc :nakyvissa? true)
 
-(deftest kohteet-ei-haettu
-  (is (= {:kohteiden-haku-kaynnissa? false}
-         (e! (tiedot/->KohteetEiHaettu {})))))
+  (let [tapahtuma1 {::lt/kohde {::kohde/nimi "Iso mutka"}
+                    ::lt/alukset []
+                    ::lt/niput []}
+        tapahtuma2 {::lt/kohde {::kohde/nimi "Iso mutka"}
+                    ::lt/alukset [{::lt-alus/suunta :ylos
+                                   ::lt-alus/nimi "Ronsu"}]}]
+    (is (= {:tallennus-kaynnissa? false
+            :valittu-liikennetapahtuma nil
+            :liikennetapahtumien-haku-kaynnissa? false
+            :haetut-tapahtumat [tapahtuma1 tapahtuma2]
+            :tapahtumarivit [tapahtuma1
+                             (merge
+                               tapahtuma2
+                               {::lt-alus/suunta :ylos
+                                ::lt-alus/nimi "Ronsu"})]}
+           (e! (tiedot/->TapahtumaTallennettu [tapahtuma1 tapahtuma2])))))
+
+  (is (false? (:nakyvissa? @modal/modal-sisalto))))
+
+(deftest ei-tallennettu
+  (is (= {:tallennus-kaynnissa? false}
+         (e! (tiedot/->TapahtumaEiTallennettu {})))))
