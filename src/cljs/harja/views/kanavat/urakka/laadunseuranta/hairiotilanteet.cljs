@@ -145,40 +145,22 @@
        :uusi-rivi? true}
       {:otsikko "Odotusaika"
        :nimi ::hairiotilanne/odotusaika-h
-       :tyyppi :komponentti
-       ::lomake/col-luokka luokka
-       :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                      [:div.kentta-ja-yksikko
-                       [tee-kentta {:tyyppi :positiivinen-numero
-                                    :desimaalien-maara 2
-                                    :lomake? true}
-                        (r/wrap (::hairiotilanne/odotusaika-h data)
-                                #(muokkaa-lomaketta (assoc data ::hairiotilanne/odotusaika-h %)))]
-                       [:span.kentan-ulkoinen-yksikko "h"]])}
+       :tyyppi :positiivinen-numero
+       :desimaalien-maara 2
+       :yksikko-kentalle "h"
+       ::lomake/col-luokka luokka}
       {:otsikko "Ammattiliikenne"
        :nimi ::hairiotilanne/ammattiliikenne-lkm
-       :tyyppi :komponentti
-       ::lomake/col-luokka luokka
-       :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                      [:div.kentta-ja-yksikko
-                       [tee-kentta {:tyyppi :positiivinen-numero
-                                    :kokonaisluku? true
-                                    :lomake? true}
-                        (r/wrap (::hairiotilanne/ammattiliikenne-lkm data)
-                                #(muokkaa-lomaketta (assoc data ::hairiotilanne/ammattiliikenne-lkm %)))]
-                       [:span.kentan-ulkoinen-yksikko "alusta"]])}
+       :tyyppi :positiivinen-numero
+       :kokonaisluku? true
+       :yksikko-kentalle "h"
+       ::lomake/col-luokka luokka}
       {:otsikko "Huviliikenne"
        :nimi ::hairiotilanne/huviliikenne-lkm
-       :tyyppi :komponentti
-       ::lomake/col-luokka luokka
-       :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                      [:div.kentta-ja-yksikko
-                       [tee-kentta {:tyyppi :positiivinen-numero
-                                    :kokonaisluku? true
-                                    :lomake? true}
-                        (r/wrap (::hairiotilanne/huviliikenne-lkm data)
-                                #(muokkaa-lomaketta (assoc data ::hairiotilanne/huviliikenne-lkm %)))]
-                       [:span.kentan-ulkoinen-yksikko "alusta"]])})))
+       :tyyppi :positiivinen-numero
+       :kokonaisluku? true
+       :yksikko-kentalle "h"
+       ::lomake/col-luokka luokka})))
 
 (defn korjauksen-kentat [e! app]
   ;; todo: luokan määrittäminen eksplisiittisesti kentälle ei välttämättä ole hyvä idea
@@ -191,17 +173,11 @@
        :tyyppi :text
        :koko [90 8]}
       (lomake/rivi
-        {:tyyppi :komponentti
+        {:tyyppi :positiivinen-numero
          :nimi ::hairiotilanne/korjausaika-h
+         :yksikko-kentalle "h"
          :otsikko "Korjausaika"
-         ::lomake/col-luokka luokka
-         :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                        [:div.kentta-ja-yksikko
-                         [tee-kentta {:tyyppi :positiivinen-numero
-                                      :lomake? true}
-                          (r/wrap (::hairiotilanne/korjausaika-h data)
-                                  #(muokkaa-lomaketta (assoc data ::hairiotilanne/korjausaika-h %)))]
-                         [:span.kentan-ulkoinen-yksikko "h"]])}
+         ::lomake/col-luokka luokka}
         {:otsikko "Korjauksen tila"
          :nimi ::hairiotilanne/korjauksen-tila
          :tyyppi :valinta

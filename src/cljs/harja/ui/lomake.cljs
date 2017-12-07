@@ -210,6 +210,25 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 
+(defn kentan-input
+  [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle] :as s}
+   data muokattava? muokkaa arvo]
+  (let [kentta (if (= tyyppi :komponentti)
+                 [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                 :data data})]
+                 (if muokattava?
+                   (do (have #(contains? % :tyyppi) s)
+                       [tee-kentta (assoc s :lomake? true) arvo])
+                   [:div.form-control-static
+                    (if fmt
+                      (fmt ((or hae #(get % nimi)) data))
+                      (nayta-arvo s arvo))]))]
+    (if yksikko-kentalle
+      [:div.kentta-ja-yksikko
+       kentta
+       [:span.kentan-yksikko yksikko-kentalle]]
+      kentta)))
+
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?
@@ -238,16 +257,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         [:span
          [:span.kentan-label otsikko]
          (when yksikko [:span.kentan-yksikko yksikko])]])
-     (if (= tyyppi :komponentti)
-       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
-                                       :data data})]
-       (if muokattava?
-         (do (have #(contains? % :tyyppi) s)
-             [tee-kentta (assoc s :lomake? true) arvo])
-         [:div.form-control-static
-          (if fmt
-            (fmt ((or hae #(get % nimi)) data))
-            (nayta-arvo s arvo))]))
+     [kentan-input s data muokattava? muokkaa arvo]
 
      (when (and muokattu?
                 (not (empty? virheet)))
