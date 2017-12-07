@@ -114,6 +114,7 @@
                        {:ikoni (cond (= :ylos suunta) (ikonit/livicon-arrow-up)
                                      (= :alas suunta) (ikonit/livicon-arrow-down)
                                      :else (ikonit/livicon-question))
+                        :luokka "nappi-grid"
                         :disabled (some? (#{:ylos :alas} valittu-suunta))}]))}
     {:otsikko "Nimi"
      :tyyppi :string
