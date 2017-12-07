@@ -9,7 +9,8 @@
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
-  (:import (org.postgis PGgeometry)))
+  #?(:clj
+     (:import (org.postgis PGgeometry))))
 
 (define-tables
   ["tielupatyyppi" ::tielupatyyppi (specql.transform/transform (specql.transform/to-keyword))]
