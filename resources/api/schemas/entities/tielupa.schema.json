@@ -945,13 +945,6 @@
                     "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/kommentit",
                     "type": "string"
                   },
-                  "toiminnot": {
-                    "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/toiminnot",
-                    "required": true,
-                    "enum": [
-                      ""
-                    ]
-                  },
                   "sijainti": {
                     "id": "urn:harja/tielupa/sijainnit/0/sijainti",
                     "type": "object",

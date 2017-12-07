@@ -84,4 +84,6 @@
   (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-opastelupa+)))
   (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-suoja-alue-rakentamislupa+)))
   (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-tilapainen-myyntilupa+)))
-  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-tyolupa+))))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-tyolupa+)))
+  (is (nil? (validoi json-skeemat/tieluvan-kirjaus-request json-esimerkit/+tieluvan-kirjaus-request-vesihuoltolupa+))))

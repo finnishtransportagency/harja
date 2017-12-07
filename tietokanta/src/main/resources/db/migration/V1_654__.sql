@@ -48,7 +48,6 @@ CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
   laite         TEXT,
   asennustyyppi TEXT,
   kommentit     TEXT,
-  toiminnot     TEXT,
   -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
   tie           INTEGER,
   aosa          INTEGER,

@@ -190,9 +190,7 @@
    ::tielupa/liikennemerkkijarjestelyt (liikennemerkkijarjestelyt (:jarjestelyt tilapaiset-liikennemerkkijarjestelyt))})
 
 (defn tyolupa [tyolupa]
-  (println"--->>>")
-  (clojure.pprint/pprint tyolupa)
-  (println"--->>>")
+
   {::tielupa/tyolupa-tyon-sisalto (:tyon-sisalto tyolupa)
    ::tielupa/tyolupa-tyon-saa-aloittaa (json-tyokalut/aika-string->java-sql-date (:tyon-saa-aloittaa tyolupa))
    ::tielupa/tyolupa-viimeistely-oltava (json-tyokalut/aika-string->java-sql-date (:viimeistely-oltava tyolupa))
@@ -202,6 +200,23 @@
    ::tielupa/tyolupa-tilapainen-nopeusrajoitus (:tilapainen-nopeusrajoitus tyolupa)
    ::tielupa/tyolupa-los-lisatiedot (:los-lisatiedot tyolupa)
    ::tielupa/tyolupa-tieliikennekusksen-sahkopostiosoite (:tieliikennekusksen-sahkopostiosoite tyolupa)})
+
+(defn johtoasennukset [johtoasennukset]
+  (mapv (fn [{johtoasennus :johtoasennus}]
+          (merge {::tielupa/laite (:laite johtoasennus)
+                  ::tielupa/asennustyyppi (:asennustyyppi johtoasennus)
+                  ::tielupa/kommentit (:kommentit johtoasennus)}
+                 (sijainti (:sijainti johtoasennus))))
+        johtoasennukset))
+
+(defn vesihuoltolupa [vesihuoltolupa]
+  (println "--->>>")
+  (clojure.pprint/pprint vesihuoltolupa)
+  (println "--->>>")
+  {::tielupa/vesihuoltolupa-tienylityksia (:tienylityksia vesihuoltolupa)
+   ::tielupa/vesihuoltolupa-tienalituksia (:tienalituksia vesihuoltolupa)
+   ::tielupa/vesihuoltolupa-silta-asennuksia (:silta-asennuksia vesihuoltolupa)
+   ::tielupa/johtoasennukset (johtoasennukset (:johtoasennukset vesihuoltolupa))})
 
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
@@ -220,5 +235,6 @@
                    (merge (tilapainen-myyntilupa (:tilapainen-myyntilupa tielupa)))
                    (merge (tilapaiset-liikennemerkkijarjestelyt (:tilapaiset-liikennemerkkijarjestelyt tielupa)))
                    (merge (tyolupa (:tyolupa tielupa)))
+                   (merge (vesihuoltolupa (:vesihuoltolupa tielupa)))
                    )]
     domain))

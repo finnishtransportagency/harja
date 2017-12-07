@@ -76,16 +76,19 @@
       "palautettu": true,
       "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
     },
-    "tyolupa": {
-      "tyon-sisalto": "Töitä",
-      "tyon-saa-aloittaa": "2017-09-22T12:00:00+02:00",
-      "viimeistely-oltava": "2017-10-22T12:00:00+02:00",
-      "ohjeet-tyon-suorittamiseen": "",
-      "los-puuttuu": false,
-      "ilmoitus-tieliikennekeskukseen": true,
-      "tilapainen-nopeusrajoitus": true,
-      "los-lisatiedot": "",
-      "tieliikennekusksen-sahkopostiosoite": ""
+    "vesihuoltolupa": {
+      "tienylityksia": 2,
+      "tienalituksia": 5,
+      "silta-asennuksia": 0,
+      "johtoasennukset": [
+        {
+          "johtoasennus": {
+            "laite": "Vesijohto",
+            "asennustyyppi": "",
+            "kommentit": ""
+          }
+        }
+      ]
     }
   }
 }
