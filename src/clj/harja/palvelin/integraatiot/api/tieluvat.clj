@@ -63,6 +63,7 @@
        (hae-sijainnit-avaimella db ::tielupa/mainokset)
        (hae-sijainnit-avaimella db ::tielupa/opasteet)
        (hae-sijainnit-avaimella db ::tielupa/liikennemerkkijarjestelyt)
+       (hae-sijainnit-avaimella db ::tielupa/johtoasennukset)
        (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
        (tielupa-q/tallenna-tielupa db))
   (tielupa-q/aseta-tieluvalle-urakka-ulkoisella-tunnisteella db (get-in data [:tielupa :perustiedot :tunniste :id]))

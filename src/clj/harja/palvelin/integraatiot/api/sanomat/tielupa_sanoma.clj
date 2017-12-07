@@ -210,9 +210,6 @@
         johtoasennukset))
 
 (defn vesihuoltolupa [vesihuoltolupa]
-  (println "--->>>")
-  (clojure.pprint/pprint vesihuoltolupa)
-  (println "--->>>")
   {::tielupa/vesihuoltolupa-tienylityksia (:tienylityksia vesihuoltolupa)
    ::tielupa/vesihuoltolupa-tienalituksia (:tienalituksia vesihuoltolupa)
    ::tielupa/vesihuoltolupa-silta-asennuksia (:silta-asennuksia vesihuoltolupa)

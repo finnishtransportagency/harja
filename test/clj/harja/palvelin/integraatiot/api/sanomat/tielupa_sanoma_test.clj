@@ -415,3 +415,28 @@
                     :harja.domain.tielupa/nopeusrajoituksen-pituus "250"
                     :harja.domain.tielupa/kaista 1}]}]
     (is (= (tielupa-sanoma/tilapaiset-liikennemerkkijarjestelyt data) odotettu))))
+
+(deftest vesihuoltolupa
+  (let [data {:tienylityksia 2,
+              :tienalituksia 5,
+              :silta-asennuksia 0,
+              :johtoasennukset
+              [{:johtoasennus
+                {:laite "Vesijohto", :asennustyyppi "", :kommentit ""}}]}
+        odotettu {:harja.domain.tielupa/vesihuoltolupa-tienylityksia 2,
+                  :harja.domain.tielupa/vesihuoltolupa-tienalituksia 5,
+                  :harja.domain.tielupa/vesihuoltolupa-silta-asennuksia 0,
+                  :harja.domain.tielupa/johtoasennukset
+                  [{:harja.domain.tielupa/ajorata nil,
+                    :harja.domain.tielupa/tie nil,
+                    :harja.domain.tielupa/aosa nil,
+                    :harja.domain.tielupa/let nil,
+                    :harja.domain.tielupa/laite "Vesijohto",
+                    :harja.domain.tielupa/kommentit "",
+                    :harja.domain.tielupa/puoli nil,
+                    :harja.domain.tielupa/aet nil,
+                    :harja.domain.tielupa/losa nil,
+                    :harja.domain.tielupa/asennustyyppi "",
+                    :harja.domain.tielupa/kaista nil}]}]
+
+    (is (= (tielupa-sanoma/vesihuoltolupa data) odotettu))))

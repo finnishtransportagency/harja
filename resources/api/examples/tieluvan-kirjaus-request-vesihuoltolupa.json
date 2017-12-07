@@ -85,7 +85,16 @@
           "johtoasennus": {
             "laite": "Vesijohto",
             "asennustyyppi": "",
-            "kommentit": ""
+            "kommentit": "",
+            "sijainti": {
+              "numero": 20,
+              "aet": 2631,
+              "aosa": 6,
+              "ajorata": 0,
+              "kaista": 1,
+              "puoli:": 0,
+              "sijoitus": "oikea"
+            }
           }
         }
       ]
