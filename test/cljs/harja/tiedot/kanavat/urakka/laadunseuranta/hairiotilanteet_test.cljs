@@ -8,19 +8,14 @@
 (deftest NakymaAvattu
   (vaadi-async-kutsut
     #{tiedot/->MateriaalitHaettu
-      tiedot/->MateriaalienHakuEpaonnistui
-      tiedot/->KohteidenHakuEpaonnistui
-      tiedot/->KohteetHaettu}
+      tiedot/->MateriaalienHakuEpaonnistui}
     (let [{:keys [nakymassa?
-                  kohteiden-haku-kaynnissa?
                   materiaalien-haku-kaynnissa?
                   kohteet
                   materiaalit]} (e! (tiedot/->NakymaAvattu))]
       (is nakymassa?)
-      (is kohteiden-haku-kaynnissa?)
       (is materiaalien-haku-kaynnissa?)
-      (is (= kohteet []))
-      (is (= materiaalit [])))))
+      (is (= materiaalit nil)))))
 
 (deftest NakymaSuljettu
   (is (false? (:nakymassa? (e! (tiedot/->NakymaSuljettu))))))
@@ -67,15 +62,6 @@
 (deftest ValitseHairiotilanne
   (let [hairiotilanne {:hairio :tilanne}]
     (is (= hairiotilanne (:valittu-hairiotilanne (e! (tiedot/->ValitseHairiotilanne hairiotilanne)))))))
-
-(deftest KohteetHaettu
-  (let [haetut [{:kohde 1}]
-        {:keys [kohteet kohteiden-haku-kaynnissa?]} (e! (tiedot/->KohteetHaettu haetut))]
-    (is (false? kohteiden-haku-kaynnissa?))
-    (is (= kohteet haetut))))
-
-(deftest KohteidenHakuEpaonnistui
-  (is (false? (:kohteiden-haku-kaynnissa? (e! (tiedot/->KohteidenHakuEpaonnistui))))))
 
 (deftest MateriaalitHaettu
   (let [haetut [{:materiaali 1}]

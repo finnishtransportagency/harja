@@ -3,6 +3,7 @@
             [tuck.core :as tuck]
             [harja.id :refer [id-olemassa?]]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -11,6 +12,7 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.tiedot.urakka :as urakkatiedot]
@@ -19,32 +21,44 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
+;; YLeiset
 (defrecord NakymaAvattu [])
 (defrecord NakymaSuljettu [])
 (defrecord PaivitaValinnat [valinnat])
+;; Haut
 (defrecord HaeToimenpiteet [valinnat])
 (defrecord ToimenpiteetHaettu [toimenpiteet])
 (defrecord ToimenpiteidenHakuEpaonnistui [])
+;; Lomake
 (defrecord UusiToimenpide [])
-(defrecord TyhjennaValittuToimenpide [])
-(defrecord AsetaToimenpiteenTiedot [toimenpide])
+(defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
+(defrecord TyhjennaAvattuToimenpide [])
 (defrecord ValinnatHaettuToimenpiteelle [valinnat])
 (defrecord VirheTapahtui [virhe])
-(defrecord KohteetHaettu [kohteet])
-(defrecord KohteidenHakuEpaonnistui [])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
 (defrecord TallennaToimenpide [toimenpide])
 (defrecord ToimenpideTallennettu [toimenpiteet])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
-(defrecord ValitseToimenpide [toimenpide])
 (defrecord PoistaToimenpide [toimenpide])
+;; Rivien valinta ja niiden toiminnot
+(defrecord ValitseToimenpide [tiedot])
+(defrecord ValitseToimenpiteet [tiedot])
+(defrecord SiirraValitut [])
+(defrecord ValitutSiirretty [])
+(defrecord ValitutEiSiirretty [])
 
-(def tila
-  (atom {:nakymassa? false
-         :valinnat nil
-         :haku-kaynnissa? false
-         :toimenpiteet nil}))
+(def tila (atom {:nakymassa? false
+                 :valinnat nil
+                 :avattu-toimenpide nil
+                 :toimenpideinstanssit nil
+                 :tehtavat nil
+                 :huoltokohteet nil
+                 :tallennus-kaynnissa? false
+                 :haku-kaynnissa? false
+                 :toimenpiteiden-siirto-kaynnissa? false
+                 :valitut-toimenpide-idt #{}
+                 :toimenpiteet nil}))
 
 (defn alkuvalinnat []
   {:urakka @navigaatio/valittu-urakka
@@ -57,37 +71,6 @@
     (when (:nakymassa? @tila)
       (alkuvalinnat))))
 
-(defn esitaytetty-toimenpide []
-  (let [kayttaja @istunto/kayttaja]
-    {::kanavan-toimenpide/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
-     ::kanavan-toimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
-                                     ::kayttaja/etunimi (:etunimi kayttaja)
-                                     ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
-
-(defn tallennettava-toimenpide [tehtavat toimenpide]
-  (let [tehtava (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
-                    (get-in toimenpide [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
-    (-> toimenpide
-        (select-keys [::kanavan-toimenpide/id
-                      ::kanavan-toimenpide/urakka-id
-                      ::kanavan-toimenpide/suorittaja
-                      ::kanavan-toimenpide/kuittaaja
-                      ::kanavan-toimenpide/sopimus-id
-                      ::kanavan-toimenpide/lisatieto
-                      ::kanavan-toimenpide/toimenpideinstanssi-id
-                      ::kanavan-toimenpide/toimenpidekoodi-id
-                      ::kanavan-toimenpide/pvm
-                      ::muokkaustiedot/poistettu?])
-        (assoc ::kanavan-toimenpide/tyyppi :kokonaishintainen
-               ::kanavan-toimenpide/kuittaaja-id (get-in toimenpide [::kanavan-toimenpide/kuittaaja ::kayttaja/id])
-               ::kanavan-toimenpide/urakka-id (:id @navigaatio/valittu-urakka)
-               ::kanavan-toimenpide/kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-               ::kanavan-toimenpide/huoltokohde-id (get-in toimenpide [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/id])
-               ::kanavan-toimenpide/muu-toimenpide (if (toimenpiteet/valittu-tehtava-muu? tehtava tehtavat)
-                                                     (::kanavan-toimenpide/muu-toimenpide toimenpide)
-                                                     nil))
-        (dissoc ::kanavan-toimenpide/kuittaaja))))
-
 (defn kokonashintaiset-tehtavat [tehtavat]
   (filter
     (fn [tehtava]
@@ -96,26 +79,21 @@
 
 (extend-protocol tuck/Event
   NakymaAvattu
-  (process-event [_ {:keys [kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?] :as app}]
-    (if (or kohteiden-haku-kaynnissa? huoltokohteiden-haku-kaynnissa?)
+  (process-event [_ {:keys [huoltokohteiden-haku-kaynnissa?] :as app}]
+    (if huoltokohteiden-haku-kaynnissa?
       (assoc app :nakymassa? true)
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
         (-> app
-            (tuck-apurit/post! :hae-urakan-kohteet
-                               {::urakka/id (:id @navigaatio/valittu-urakka)}
-                               {:onnistui ->KohteetHaettu
-                                :epaonnistui ->KohteidenHakuEpaonnistui})
             (tuck-apurit/get! :hae-kanavien-huoltokohteet
                               {:onnistui ->HuoltokohteetHaettu
                                :epaonnistui ->HuoltokohteidenHakuEpaonnistui})
             (assoc :nakymassa? true
-                   :kohteiden-haku-kaynnissa? true
                    :huoltokohteiden-haku-kaynnissa? true
-                   :tehtavat (kokonashintaiset-tehtavat @urakkatiedot/urakan-toimenpiteet-ja-tehtavat)
+                   :tehtavat (toimenpiteet/tehtavat-tyypilla @urakkatiedot/urakan-toimenpiteet-ja-tehtavat
+                                                             "kokonaishintainen")
                    :toimenpideinstanssit @urakkatiedot/urakan-toimenpideinstanssit
-                   :kohteet []
-                   :huoltokohteet [])))))
+                   :huoltokohteet nil)))))
 
   NakymaSuljettu
   (process-event [_ app]
@@ -123,16 +101,18 @@
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
-    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
-      (go (haku valinnat))
-      (assoc app :valinnat valinnat)))
+    (let [uudet-valinnat (merge (:valinnat app)
+                                valinnat)
+          haku (tuck/send-async! ->HaeToimenpiteet)]
+      (go (haku uudet-valinnat))
+      (assoc app :valinnat uudet-valinnat)))
 
   HaeToimenpiteet
   (process-event [{valinnat :valinnat} app]
     (if (and
           (get-in valinnat [:urakka :id])
           (not (:haku-kaynnissa? app)))
-      (let [argumentit (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
+      (let [argumentit (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
@@ -152,17 +132,63 @@
     (assoc app :haku-kaynnissa? false
                :toimenpiteet []))
 
+  ValitseToimenpide
+  (process-event [{tiedot :tiedot} app]
+    (let [toimenpide-id (:id tiedot)
+          valittu? (:valittu? tiedot)
+          aseta-valinta (if valittu? conj disj)]
+      (assoc app :valitut-toimenpide-idt
+                 (aseta-valinta (:valitut-toimenpide-idt app) toimenpide-id))))
+
+  ValitseToimenpiteet
+  (process-event [{tiedot :tiedot} app]
+    (let [kaikki-valittu? (:kaikki-valittu? tiedot)]
+      (if kaikki-valittu?
+        (assoc app :valitut-toimenpide-idt
+                   (set (map ::kanavan-toimenpide/id (:toimenpiteet app))))
+        (assoc app :valitut-toimenpide-idt #{}))))
+
+
+  SiirraValitut
+  (process-event [_ app]
+    (when-not (:toimenpiteiden-siirto-kaynnissa? app)
+      (-> app
+          (tuck-apurit/post! :siirra-kanavatoimenpiteet
+                             {::kanavan-toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
+                              ::kanavan-toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
+                              ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
+                             {:onnistui ->ValitutSiirretty
+                              :epaonnistui ->ValitutEiSiirretty})
+          (assoc :toimenpiteiden-siirto-kaynnissa? true))))
+
+  ValitutSiirretty
+  (process-event [_ app]
+    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+                     (count (:valitut-toimenpide-idt app)) "siirretty") :success)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false
+               :valitut-toimenpide-idt #{}
+               :toimenpiteet (filter
+                               (fn [toimenpide]
+                                 (not ((:valitut-toimenpide-idt app)
+                                        (::kanavan-toimenpide/id toimenpide))))
+                               (:toimenpiteet app))))
+
+  ValitutEiSiirretty
+  (process-event [_ app]
+    (viesti/nayta! "Siiro epäonnistui" :danger)
+    (assoc app :toimenpiteiden-siirto-kaynnissa? false))
+
   UusiToimenpide
   (process-event [_ app]
-    (assoc app :valittu-toimenpide (esitaytetty-toimenpide)))
+    (toimenpiteet/uusi-toimenpide app @istunto/kayttaja @navigaatio/valittu-urakka))
 
-  TyhjennaValittuToimenpide
+  TyhjennaAvattuToimenpide
   (process-event [_ app]
-    (dissoc app :valittu-toimenpide))
+    (toimenpiteet/tyhjenna-avattu-toimenpide app))
 
-  AsetaToimenpiteenTiedot
+  AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
-    (assoc app :valittu-toimenpide toimenpide))
+    (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide))
 
   ValinnatHaettuToimenpiteelle
   (process-event [{valinnat :valinnat} app]
@@ -173,55 +199,30 @@
     (viesti/nayta! virhe :danger)
     app)
 
-  KohteetHaettu
-  (process-event [{kohteet :kohteet} app]
-    (assoc app :kohteet kohteet
-               :kohteiden-haku-kaynnissa? false))
-
-  KohteidenHakuEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta! "Kohteiden haku epäonnistui" :danger)
-    (assoc app :kohteiden-haku-kaynnissa? false))
-
   HuoltokohteetHaettu
   (process-event [{huoltokohteet :huoltokohteet} app]
-    (assoc app :huoltokohteet huoltokohteet
-               :huoltokohteiden-haku-kaynnissa? false))
+    (toimenpiteet/huoltokohteet-haettu app huoltokohteet))
 
   HuoltokohteidenHakuEpaonnistui
   (process-event [_ app]
-    (viesti/nayta! "Huoltokohteiden haku epäonnistui" :danger)
-    (assoc app :huoltokohteiden-haku-kaynnissa? false))
+    (toimenpiteet/huoltokohteet-ei-haettu app))
 
   TallennaToimenpide
-  (process-event [{data :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
-    (if (:tallennus-kaynnissa? app)
-      app
-      (let [toimenpide (tallennettava-toimenpide tehtavat data)
-            hakuehdot (toimenpiteet/muodosta-hakuargumentit valinnat :kokonaishintainen)]
-        (-> app
-            (tuck-apurit/post! :tallenna-kanavatoimenpide
-                               {::kanavan-toimenpide/kanava-toimenpide toimenpide
-                                ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
-                               {:onnistui ->ToimenpideTallennettu
-                                :epaonnistui ->ToimenpiteidenTallentaminenEpaonnistui})
-            (assoc :tallennus-kaynnissa? true)))))
+  (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
+    (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
+                                           :tehtavat tehtavat
+                                           :toimenpide toimenpide
+                                           :tyyppi :kokonaishintainen
+                                           :toimenpide-tallennettu ->ToimenpideTallennettu
+                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
   (process-event [{toimenpiteet :toimenpiteet} app]
-    (assoc app :tallennus-kaynnissa? false
-               :valittu-toimenpide nil
-               :toimenpiteet toimenpiteet))
-
+    (toimenpiteet/toimenpide-tallennettu app toimenpiteet))
 
   ToimenpiteidenTallentaminenEpaonnistui
   (process-event [_ app]
-    (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
-    (assoc app :tallennus-kaynnissa? false))
-  
-  ValitseToimenpide
-  (process-event [{toimenpide :toimenpide} app]
-    (assoc app :valittu-toimenpide toimenpide))
+    (toimenpiteet/toimenpide-ei-tallennettu app))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]

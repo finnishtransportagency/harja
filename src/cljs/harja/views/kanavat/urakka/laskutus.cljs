@@ -28,7 +28,6 @@
   (reaction (let [ur @nav/valittu-urakka
                   [alkupvm loppupvm] (or @u/valittu-hoitokauden-kuukausi @u/valittu-hoitokausi)
                   nakymassa? @laskutus-nakyvissa?]
-              (pr-str (log "parametrit? " ur alkupvm loppupvm nakymassa?) )
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
                   (:id ur)

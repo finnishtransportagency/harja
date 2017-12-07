@@ -15,6 +15,30 @@ SELECT tpi.id as "tpi-id", tpi.nimi as "tpi-nimi",
 FROM toimenpideinstanssi tpi WHERE tpi.urakka = :urakkaid
 GROUP BY tpi.id;
 
+
+-- name: hae-muutos-ja-lisatyot
+SELECT tpi.id as "tpi-id", tpi.nimi as "tpi-nimi",
+  COALESCE(SUM(hinta.summa), 0) as summat,
+  COALESCE(SUM(hinta.maara * hinta.yksikkohinta), 0) as summat_kan_hinta_yksikkohinnalla,
+
+  (SELECT COALESCE(sum(tyo.maara * yht.yksikkohinta))
+   FROM kan_toimenpide tp
+     JOIN kan_tyo tyo ON tyo.toimenpide = tp.id
+     JOIN yksikkohintainen_tyo yht ON yht.tehtava = tyo."toimenpidekoodi-id" AND
+                                      tp.pvm BETWEEN yht.alkupvm AND yht.loppupvm
+   WHERE tp.tyyppi = 'muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI AND
+         tp.pvm BETWEEN :alkupvm AND :loppupvm AND
+         tyo.toimenpide = tp.id) as summat_yht_yksikkohinnalla
+
+FROM kan_toimenpide ktp
+  JOIN kan_hinta hinta ON hinta.toimenpide = ktp.id
+  JOIN toimenpideinstanssi tpi ON tpi.id = ktp.toimenpideinstanssi
+WHERE ktp.tyyppi = 'muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI
+      AND ktp.pvm >= :alkupvm
+      AND ktp.pvm <= :loppupvm
+      AND ktp.urakka = :urakkaid
+GROUP BY tpi.id;
+
 -- name: hae-sanktiot
 SELECT tpi.id as "tpi-id", tpi.nimi as "tpi-nimi",
        COALESCE(SUM(maara), 0) AS "toteutunut-maara"

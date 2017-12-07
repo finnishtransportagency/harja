@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet-test
   (:require [clojure.test :refer :all]
+            [clojure.set :as set]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [com.stuartsierra.component :as component]
             [harja
@@ -39,7 +40,8 @@
                         ::toimenpidekoodi/id 597
                         :alkupvm (pvm/luo-pvm 2017 1 1)
                         :loppupvm (pvm/luo-pvm 2018 1 1)
-                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
+                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
+                        ::kanavan-toimenpide/kohde-id nil}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-kanavatoimenpiteet
                                 +kayttaja-jvh+
@@ -105,12 +107,100 @@
                     ::toimenpidekoodi/id 597
                     :alkupvm (pvm/luo-pvm 2017 1 1)
                     :loppupvm (pvm/luo-pvm 2018 1 1)
-                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
+                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
+                    ::kanavan-toimenpide/kohde-id nil}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-kanavatoimenpiteet
                                            +kayttaja-ulle+
                                            parametrit)))))
+
+(deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
+  (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        toimenpiteiden-kentta (fn [toimenpiteet kentta]
+                                ())
+        kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
+                                                         (apply concat
+                                                                (q "SELECT tk4.id
+                                                                    FROM toimenpidekoodi tk4
+                                                                     JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                                                    WHERE tk3.koodi='24104' AND
+                                                                          'kokonaishintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
+        muutoshintaisten-toimenpiteiden-tehtavat (into #{}
+                                                       (apply concat
+                                                              (q "SELECT tk4.id
+                                                                  FROM toimenpidekoodi tk4
+                                                                   JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                                                  WHERE tk3.koodi='24104' AND
+                                                                        'muutoshintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
+        ei-yksiloity-tehtava (into #{}
+                                   (first (q "SELECT tk4.id
+                                              FROM toimenpidekoodi tk4
+                                               JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+                                              WHERE tk4.nimi='Ei yksilöity' AND
+                                                    tk3.koodi='24104';")))
+        tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
+                                               (when (= %1 (last toimenpide))
+                                                 (first toimenpide)))
+                                             %2))
+        kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
+        muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
+        urakka-id (hae-saimaan-kanavaurakan-id)
+        parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                    ::kanavan-toimenpide/urakka-id urakka-id
+                    ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :siirra-kanavatoimenpiteet
+                          +kayttaja-jvh+
+                          parametrit)
+        paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        ei-kokonaishintaisia-toimenpiteita? (empty? (transduce
+                                                      (comp (map #(nil? ((set/union muutoshintaisten-toimenpiteiden-tehtavat
+                                                                                    ei-yksiloity-tehtava)
+                                                                          (second %))))
+                                                            (filter true?))
+                                                      conj paivitetyt-toimenpiteet))]
+    (is (= (tyypin-toimenpiteet "muutos-lisatyo" paivitetyt-toimenpiteet)
+           (set/union kokonaishintaisten-toimenpiteiden-idt
+                      muutos-ja-lisatyo-toimenpiteiden-idt)))
+    (is ei-kokonaishintaisia-toimenpiteita?)
+    (let [uudet-parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                            ::kanavan-toimenpide/urakka-id urakka-id
+                            ::kanavan-toimenpide/tyyppi :kokonaishintainen}
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :siirra-kanavatoimenpiteet
+                            +kayttaja-jvh+
+                            uudet-parametrit)
+          paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+          ei-muutoshintaisia-toimenpiteita? (empty? (transduce
+                                                      (comp (map #(nil? (kokonaishintaisten-toimenpiteiden-tehtavat (second %))))
+                                                            (filter true?))
+                                                      conj paivitetyt-toimenpiteet))]
+      (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet)))
+      (is ei-muutoshintaisia-toimenpiteita?))))
+
+(deftest toimenpiteiden-siirtaminen-ilman-oikeutta-ei-toimi
+  (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
+        tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
+                                               (when (= %1 (second toimenpide))
+                                                 (first toimenpide)))
+                                             %2))
+        kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
+        muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
+        urakka-id (hae-saimaan-kanavaurakan-id)
+        parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                    ::kanavan-toimenpide/urakka-id urakka-id
+                    ::kanavan-toimenpide/tyyppi :muutos-lisatyo}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :siirra-kanavatoimenpiteet
+                                           +kayttaja-ulle+
+                                           parametrit)))
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :siirra-kanavatoimenpiteet
+                                           +kayttaja-ulle+
+                                           (assoc parametrit ::kanavan-toimenpide/tyyppi :kokonaishintainen
+                                                             ::kanavan-toimenpide/toimenpide-idt muutos-ja-lisatyo-toimenpiteiden-idt))))))
 
 (deftest toimenpiteiden-haku-ilman-tyyppia-ei-toimi
   (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
@@ -153,10 +243,14 @@
         hakuehdot {::kanavan-toimenpide/urakka-id urakka-id
                    ::kanavan-toimenpide/sopimus-id sopimus-id
                    ::toimenpidekoodi/id kolmostason-toimenpide-id
+                   ::kanavan-toimenpide/kohde-id nil
                    :alkupvm (pvm/luo-pvm 2017 1 1)
                    :loppupvm (pvm/luo-pvm 2018 1 1)
                    ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
-        parametrit {::kanavan-toimenpide/kanava-toimenpide toimenpide
+        argumentit {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kanavatoimenpide +kayttaja-jvh+ parametrit)]
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-kanavatoimenpide
+                                +kayttaja-jvh+
+                                argumentit)]
     (is (some #(= "tämä on testitoimenpide" (::kanavan-toimenpide/lisatieto %)) vastaus))))

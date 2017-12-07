@@ -351,6 +351,12 @@
 (defn hae-kohde-soskua []
   (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Soskua';"))))
 
+(defn hae-kohde-kansola []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Kansola';"))))
+
+(defn hae-kohteenosat-kansola []
+  (first (q (str "SELECT id, tyyppi FROM kan_kohteenosa WHERE \"kohde-id\" = (SELECT id FROM kan_kohde WHERE nimi = 'Kansola');"))))
+
 (defn hae-kohde-iisalmen-kanava []
   (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Iisalmen kanava';"))))
 
@@ -370,6 +376,11 @@
   (map :id (q-map (str "SELECT id
                    FROM   urakka
                    WHERE  urakoitsija = " urakoitsija-id ";"))))
+
+(defn hae-saimaan-kanavaurakan-toimenpiteet []
+  (q (str "SELECT id, toimenpidekoodi, tyyppi
+           FROM kan_toimenpide
+           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))
 
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide

@@ -41,6 +41,8 @@
 
 (def metatiedot m/muokkauskentat)
 
+(def perustiedot-viittauksineen (clojure.set/union perustiedot viittaus-idt))
+
 ;; Yleinen yleiskustannuslisä (%), joka käytössä sopimuksissa
 (def yleinen-yleiskustannuslisa 12)
 

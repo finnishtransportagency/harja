@@ -24,8 +24,8 @@
    {:leveys 1 :otsikko (when (kokonais-tai-yksikkohintainen? tyyppi)
                          "Jäljellä") :fmt :raha}])
 
-(defn- kaikki-yhteensa-rivit [kokonaishintaiset sanktiot erilliskustannukset]
-  (let [kaikkien-kululajien-rivit (concat kokonaishintaiset sanktiot erilliskustannukset)
+(defn- kaikki-yhteensa-rivit [kokonaishintaiset muutos-ja-lisatyot sanktiot erilliskustannukset]
+  (let [kaikkien-kululajien-rivit (concat kokonaishintaiset muutos-ja-lisatyot sanktiot erilliskustannukset)
         toimenpideinstansseittain (group-by :tpi-nimi kaikkien-kululajien-rivit)
         rivit (conj
                 (into []
@@ -81,13 +81,25 @@
     (tpi-kohtaiset-rivit tietorivit tyyppi)
     (summarivi tietorivit tyyppi)))
 
+(defn- taulukko [otsikko tyyppi data]
+  [:taulukko {:otsikko otsikko
+              :tyhja (when (empty? data) "Ei raportoitavaa.")
+              :sheet-nimi otsikko
+              :viimeinen-rivi-yhteenveto? true}
+   (sarakkeet tyyppi)
+   (kulutyypin-rivit data tyyppi)])
+
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [urakan-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
         raportin-nimi "Laskutusyhteenveto"
         raportin-otsikko (raportin-otsikko urakan-nimi raportin-nimi alkupvm loppupvm)
         hakuparametrit {:urakkaid urakka-id :alkupvm alkupvm :loppupvm loppupvm}
         kokonaishintaiset (hae-kokonaishintaiset-toimenpiteet db hakuparametrit)
-        ;; TODO Yksikköhintaiset
+        muutos-ja-lisatyot (map #(assoc % :toteutunut-maara
+                                   (+ (:summat %)
+                                      (:summat_kan_hinta_yksikkohinnalla %)
+                                      (:summat_yht_yksikkohinnalla %)))
+                                (hae-muutos-ja-lisatyot db hakuparametrit))
         sanktiot (hae-sanktiot db hakuparametrit)
         erilliskustannukset (hae-erilliskustannukset db hakuparametrit)]
     (log/debug "Kanavien Laskutusyhteenveto, suorita: " parametrit)
@@ -95,29 +107,13 @@
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
 
-     [:taulukko {:otsikko "Kokonaishintaiset työt"
-                 :tyhja (when (empty? kokonaishintaiset) "Ei raportoitavaa.")
-                 :sheet-nimi "Kokonaishintaiset"
-                 :viimeinen-rivi-yhteenveto? true}
-      (sarakkeet :kokonaishintaiset)
-      (kulutyypin-rivit kokonaishintaiset :kokonaishintaiset)]
+     (taulukko "Kokonaishintaiset työt" :kokonaishintaiset kokonaishintaiset)
+     (taulukko "Muutos- ja lisätyöt" :muutos-ja-lisatyot muutos-ja-lisatyot)
+     (taulukko "Sanktiot" :sanktiot sanktiot)
+     (taulukko "Erilliskustannukset" :erilliskustannukset erilliskustannukset)
 
-     [:taulukko {:otsikko "Sanktiot"
-                 :tyhja (when (empty? sanktiot) "Ei raportoitavaa.")
-                 :sheet-nimi "Sanktiot"
-                 :viimeinen-rivi-yhteenveto? true}
-      (sarakkeet :sanktiot)
-      (kulutyypin-rivit sanktiot :sanktiot)]
-
-     [:taulukko {:otsikko "Erilliskustannukset"
-                 :tyhja (when (empty? erilliskustannukset) "Ei raportoitavaa.")
-                 :sheet-nimi "Erilliskustannukset"
-                 :viimeinen-rivi-yhteenveto? true}
-      (sarakkeet :erilliskustannuket)
-      (kulutyypin-rivit erilliskustannukset :erilliskustannukset)]
-
-
-     (let [kaikki-yht-rivit (kaikki-yhteensa-rivit kokonaishintaiset sanktiot erilliskustannukset)]
+     (let [kaikki-yht-rivit (kaikki-yhteensa-rivit kokonaishintaiset muutos-ja-lisatyot
+                                                   sanktiot erilliskustannukset)]
        [:taulukko {:otsikko "Kaikki yhteensä"
                    :tyhja (when (empty? kaikki-yht-rivit) "Ei raportoitavaa.")
                    :sheet-nimi "Yhteensä"
