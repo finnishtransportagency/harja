@@ -32,16 +32,16 @@ CREATE TYPE TIELUVAN_KAAPELIASENNUS AS (
   nopeusrajoitus           INTEGER,
   liikennemaara            DECIMAL,
   -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
-  tie       INTEGER,
-  aosa      INTEGER,
-  aet       INTEGER,
-  losa      INTEGER,
-  let       INTEGER,
-  ajorata   INTEGER,
-  kaista    INTEGER,
-  puoli     INTEGER,
-  karttapvm DATE,
-  geometria GEOMETRY
+  tie                      INTEGER,
+  aosa                     INTEGER,
+  aet                      INTEGER,
+  losa                     INTEGER,
+  let                      INTEGER,
+  ajorata                  INTEGER,
+  kaista                   INTEGER,
+  puoli                    INTEGER,
+  karttapvm                DATE,
+  geometria                GEOMETRY
 );
 
 CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
@@ -50,32 +50,32 @@ CREATE TYPE TIELUVAN_JOHTOASENNUS AS (
   kommentit     TEXT,
   toiminnot     TEXT,
   -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
-  tie       INTEGER,
-  aosa      INTEGER,
-  aet       INTEGER,
-  losa      INTEGER,
-  let       INTEGER,
-  ajorata   INTEGER,
-  kaista    INTEGER,
-  puoli     INTEGER,
-  karttapvm DATE,
-  geometria GEOMETRY
+  tie           INTEGER,
+  aosa          INTEGER,
+  aet           INTEGER,
+  losa          INTEGER,
+  let           INTEGER,
+  ajorata       INTEGER,
+  kaista        INTEGER,
+  puoli         INTEGER,
+  karttapvm     DATE,
+  geometria     GEOMETRY
 );
 
 CREATE TYPE TIELUVAN_OPASTE AS (
   tulostenumero INTEGER,
   kuvaus        TEXT,
   -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
-  tie       INTEGER,
-  aosa      INTEGER,
-  aet       INTEGER,
-  losa      INTEGER,
-  let       INTEGER,
-  ajorata   INTEGER,
-  kaista    INTEGER,
-  puoli     INTEGER,
-  karttapvm DATE,
-  geometria GEOMETRY
+  tie           INTEGER,
+  aosa          INTEGER,
+  aet           INTEGER,
+  losa          INTEGER,
+  let           INTEGER,
+  ajorata       INTEGER,
+  kaista        INTEGER,
+  puoli         INTEGER,
+  karttapvm     DATE,
+  geometria     GEOMETRY
 );
 
 CREATE TYPE TIELUVAN_LIIKENNEMERKKIJARJESTELY AS (
@@ -83,16 +83,16 @@ CREATE TYPE TIELUVAN_LIIKENNEMERKKIJARJESTELY AS (
   "alennettu-nopeusrajoitus"    TEXT,
   "nopeusrajoituksen-pituus"    TEXT,
   -- todo: refaktoroi käyttämään saraketta tyypillä TR_OSOITE_LAAJENNETTU, kun SpecQL:n versio 0.7 on käytössä
-  tie       INTEGER,
-  aosa      INTEGER,
-  aet       INTEGER,
-  losa      INTEGER,
-  let       INTEGER,
-  ajorata   INTEGER,
-  kaista    INTEGER,
-  puoli     INTEGER,
-  karttapvm DATE,
-  geometria GEOMETRY
+  tie                           INTEGER,
+  aosa                          INTEGER,
+  aet                           INTEGER,
+  losa                          INTEGER,
+  let                           INTEGER,
+  ajorata                       INTEGER,
+  kaista                        INTEGER,
+  puoli                         INTEGER,
+  karttapvm                     DATE,
+  geometria                     GEOMETRY
 );
 
 CREATE TYPE SUOJA_ALUE_RAKENTEEN_SIJOITUS AS ENUM (

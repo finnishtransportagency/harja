@@ -133,6 +133,30 @@
 (defn mainosilmoitus [mainosilmoitus]
   (assoc (mainoslupa mainosilmoitus) ::tielupa/mainoslupa-mainostettava-asia (:mainostettava-asia mainosilmoitus)))
 
+(defn opasteet [opasteet]
+  (mapv (fn [{opaste :opaste}]
+          (merge {::tielupa/kuvaus (:kuvaus opaste)
+                  ::tielupa/tulostenumero (:tulostenumero opaste)}
+                 (sijainti (:sijainti opaste))))
+        opasteet))
+
+(defn opastelupa [opastelupa]
+  {::tielupa/opastelupa-kohteen-nimi (:kohteen-nimi opastelupa)
+   ::tielupa/opastelupa-palvelukohteen-opastaulu (:palvelukohteen-opastaulu opastelupa)
+   ::tielupa/opastelupa-palvelukohteen-osoiteviitta (:palvelukohteen-osoiteviitta opastelupa)
+   ::tielupa/opastelupa-osoiteviitta (:osoiteviitta opastelupa)
+   ::tielupa/opastelupa-ennakkomerkki (:ennakkomerkki opastelupa)
+   ::tielupa/opastelupa-opasteen-teksti (:opasteen-teksti opastelupa)
+   ::tielupa/opastelupa-osoiteviitan-tunnus (:osoiteviitan-tunnus opastelupa)
+   ::tielupa/opastelupa-lisatiedot (:lisatiedot opastelupa)
+   ::tielupa/opastelupa-kohteen-url-osoite (:kohteen-url-osoite opastelupa)
+   ::tielupa/opastelupa-jatkolupa (:jatkolupa opastelupa)
+   ::tielupa/opastelupa-alkuperainen-lupanro (:alkuperainen-lupanro opastelupa)
+   ::tielupa/opastelupa-alkuperaisen-luvan-alkupvm (json-tyokalut/aika-string->java-sql-date (:alkuperaisen-luvan-alkupvm opastelupa))
+   ::tielupa/opastelupa-alkuperaisen-luvan-loppupvm (json-tyokalut/aika-string->java-sql-date (:alkuperaisen-luvan-loppupvm opastelupa))
+   ::tielupa/opastelupa-nykyinen-opastus (:nykyinen-opastus opastelupa)
+   ::tielupa/opasteet (opasteet (:opasteet opastelupa))})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -144,5 +168,6 @@
                    (merge (johto-ja-kaapelilupa (:johto-ja-kaapelilupa tielupa)))
                    (merge (liittymalupa (:liittymalupa tielupa)))
                    (merge (mainoslupa (:mainoslupa tielupa)))
-                   (merge (mainosilmoitus (:mainosilmoitus tielupa))))]
+                   (merge (mainosilmoitus (:mainosilmoitus tielupa)))
+                   (merge (opastelupa (:opastelupa tielupa))))]
     domain))

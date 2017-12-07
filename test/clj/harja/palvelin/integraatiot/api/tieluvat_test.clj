@@ -39,13 +39,13 @@
         tielupa-pistesijainnilla {::tielupa/sijainnit [{:harja.domain.tielupa/tie 20
                                                         :harja.domain.tielupa/aet 1
                                                         :harja.domain.tielupa/aosa 1}]}
-        tielupa-pistesijainteineen (tieluvat/hae-sijainnit db tielupa-pistesijainnilla)
+        tielupa-pistesijainteineen (tieluvat/hae-tieluvan-sijainnit db tielupa-pistesijainnilla)
         tielupa-sijaintivalilla {::tielupa/sijainnit [{:harja.domain.tielupa/tie 20
                                                        :harja.domain.tielupa/aet 1
                                                        :harja.domain.tielupa/aosa 1
                                                        :losa 1
                                                        :let 300}]}
-        tielupa-sijaintivaleineen (tieluvat/hae-sijainnit db tielupa-sijaintivalilla)
+        tielupa-sijaintivaleineen (tieluvat/hae-tieluvan-sijainnit db tielupa-sijaintivalilla)
         tarkasta-tielupa (fn [ilman-sijainti sijainnin-kanssa]
                            (let [avaimet (fn [tielupa] (mapv #(select-keys % [::tielupa/tie ::tielupa/aosa ::tielupa/aet])
                                                              (::tielupa/sijainnit tielupa)))]

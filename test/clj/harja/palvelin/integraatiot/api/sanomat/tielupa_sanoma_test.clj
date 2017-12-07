@@ -295,3 +295,55 @@
                     :harja.domain.tielupa/kaista 1
                     :harja.domain.tielupa/puoli 0}]}]
     (is (= (tielupa-sanoma/mainoslupa data) odotettu))))
+
+(deftest opastelupa
+  (let [data {:ennakkomerkki true
+              :palvelukohteen-osoiteviitta true
+              :alkuperainen-lupanro 123
+              :osoiteviitta true
+              :kohteen-nimi "Koitelinkosken lomamökeille viitan pystyttäminen"
+              :nykyinen-opastus ""
+              :lisatiedot ""
+              :kohteen-url-osoite "http://example.com"
+              :opasteen-teksti "Koitelinkosken lomamökit"
+              :opasteet
+              [{:opaste
+                {:kuvaus "Opastustaulu"
+                 :tulostenumero 123
+                 :sijainti
+                 {:numero 20
+                  :aet 2631
+                  :aosa 6
+                  :ajorata 0
+                  :kaista 1
+                  :puoli 0
+                  :sijoitus "oikea"}}}]
+              :alkuperaisen-luvan-loppupvm "2017-09-22T12:00:00+02:00"
+              :alkuperaisen-luvan-alkupvm "2012-09-22T12:00:00+02:00"
+              :jatkolupa false
+              :osoiteviitan-tunnus "123"}
+        odotettu {:harja.domain.tielupa/opastelupa-palvelukohteen-osoiteviitta true
+                  :harja.domain.tielupa/opastelupa-osoiteviitan-tunnus "123"
+                  :harja.domain.tielupa/opastelupa-alkuperainen-lupanro 123
+                  :harja.domain.tielupa/opastelupa-lisatiedot ""
+                  :harja.domain.tielupa/opastelupa-kohteen-nimi "Koitelinkosken lomamökeille viitan pystyttäminen"
+                  :harja.domain.tielupa/opastelupa-osoiteviitta true
+                  :harja.domain.tielupa/opastelupa-ennakkomerkki true
+                  :harja.domain.tielupa/opastelupa-alkuperaisen-luvan-loppupvm #inst "2017-09-22T10:00:00.000-00:00"
+                  :harja.domain.tielupa/opastelupa-kohteen-url-osoite "http://example.com"
+                  :harja.domain.tielupa/opastelupa-opasteen-teksti "Koitelinkosken lomamökit"
+                  :harja.domain.tielupa/opastelupa-alkuperaisen-luvan-alkupvm #inst "2012-09-22T10:00:00.000-00:00"
+                  :harja.domain.tielupa/opastelupa-nykyinen-opastus ""
+                  :harja.domain.tielupa/opastelupa-jatkolupa false
+                  :harja.domain.tielupa/opastelupa-palvelukohteen-opastaulu nil
+                  :harja.domain.tielupa/opasteet [{:harja.domain.tielupa/aet 2631
+                                                   :harja.domain.tielupa/ajorata 0
+                                                   :harja.domain.tielupa/aosa 6
+                                                   :harja.domain.tielupa/kaista 1
+                                                   :harja.domain.tielupa/kuvaus "Opastustaulu"
+                                                   :harja.domain.tielupa/let nil
+                                                   :harja.domain.tielupa/losa nil
+                                                   :harja.domain.tielupa/puoli 0
+                                                   :harja.domain.tielupa/tie 20
+                                                   :harja.domain.tielupa/tulostenumero 123}]}]
+    (is (= (tielupa-sanoma/opastelupa data) odotettu))))
