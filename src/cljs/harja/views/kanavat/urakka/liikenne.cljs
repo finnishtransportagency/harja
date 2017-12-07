@@ -49,30 +49,38 @@
                        [napit/yleinen-toissijainen
                         "Kuittaa"
                         #(e! (tiedot/->SiirraTapahtumaan alus))
-                        {:ikoni (ikonit/livicon-arrow-bottom)}])}
+                        {:ikoni (ikonit/livicon-arrow-bottom)}])
+        :leveys 1}
        {:otsikko "Nimi"
         :tyyppi :string
-        :nimi ::lt-alus/nimi}
+        :nimi ::lt-alus/nimi
+        :leveys 1}
        {:otsikko "Aluslaji"
         :tyyppi :string
         :nimi ::lt-alus/laji
-        :fmt lt-alus/aluslaji->laji-str}
+        :fmt lt-alus/aluslaji->laji-str
+        :leveys 1}
        {:otsikko "Alusten lkm"
         :nimi ::lt-alus/lkm
-        :tyyppi :positiivinen-numero}
+        :tyyppi :positiivinen-numero
+        :leveys 1}
        {:otsikko "Matkustajia"
         :nimi ::lt-alus/matkustajalkm
-        :tyyppi :positiivinen-numero}
+        :tyyppi :positiivinen-numero
+        :leveys 1}
        {:otsikko "Nippuluku"
         :nimi ::lt-alus/nippulkm
-        :tyyppi :positiivinen-numero}
+        :tyyppi :positiivinen-numero
+        :leveys 1}
        {:otsikko "Edellinen tapahtuma"
         :nimi ::lt/aika
         :tyyppi :pvm-aika
-        :fmt pvm/pvm-aika-opt}
+        :fmt pvm/pvm-aika-opt
+        :leveys 1}
        {:otsikko "Lisätiedot"
         :nimi ::lt/lisatieto
-        :tyyppi :string}
+        :tyyppi :string
+        :leveys 1}
        {:otsikko ""
         :nimi :poistettu
         :tyyppi :komponentti
@@ -83,7 +91,8 @@
                                                  (e! (tiedot/->PoistaKetjutus alus)))}
                           (ikonit/livicon-trash)]
 
-                         [ajax-loader-pieni]))}]
+                         [ajax-loader-pieni]))
+        :leveys 1}]
       kuitattavat]
      [napit/yleinen-toissijainen
       "Kuittaa kaikki tapahtumaan"
@@ -115,30 +124,36 @@
                                      (= :alas suunta) (ikonit/livicon-arrow-down)
                                      :else (ikonit/livicon-question))
                         :luokka "nappi-grid"
-                        :disabled (some? (#{:ylos :alas} valittu-suunta))}]))}
+                        :disabled (some? (#{:ylos :alas} valittu-suunta))}]))
+     :leveys 1}
     {:otsikko "Nimi"
      :tyyppi :string
-     :nimi ::lt-alus/nimi}
+     :nimi ::lt-alus/nimi
+     :leveys 1}
     {:otsikko "Aluslaji"
      :tyyppi :valinta
      :nimi ::lt-alus/laji
      :validoi [[:ei-tyhja "Valitse aluslaji"]]
      :valinnat lt-alus/aluslajit
-     :valinta-nayta #(or (lt-alus/aluslaji->koko-str %) "- Valitse -")}
+     :valinta-nayta #(or (lt-alus/aluslaji->koko-str %) "- Valitse -")
+     :leveys 1}
     {:otsikko "Alusten lkm"
      :nimi ::lt-alus/lkm
      :muokattava? lt-alus/tayta-lukumaara?
      :oletusarvo 1
      :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
-     :tyyppi :positiivinen-numero}
+     :tyyppi :positiivinen-numero
+     :leveys 1}
     {:otsikko "Matkustajia"
      :nimi ::lt-alus/matkustajalkm
      :muokattava? lt-alus/tayta-matkustajamaara?
-     :tyyppi :positiivinen-numero}
+     :tyyppi :positiivinen-numero
+     :leveys 1}
     {:otsikko "Nippuluku"
      :nimi ::lt-alus/nippulkm
      :muokattava? lt-alus/tayta-nippuluku?
-     :tyyppi :positiivinen-numero}]
+     :tyyppi :positiivinen-numero
+     :leveys 1}]
    (r/wrap
      (zipmap (range) (::lt/alukset valittu-liikennetapahtuma))
      #(e! (tiedot/->MuokkaaAluksia (vals %) (tiedot/grid-virheita? %))))])
