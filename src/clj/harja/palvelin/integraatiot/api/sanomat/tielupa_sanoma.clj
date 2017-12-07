@@ -189,6 +189,20 @@
    ::tielupa/liikennemerkkijarjestely-muut-liikennemerkit (:muut-liikennemerkit tilapaiset-liikennemerkkijarjestelyt)
    ::tielupa/liikennemerkkijarjestelyt (liikennemerkkijarjestelyt (:jarjestelyt tilapaiset-liikennemerkkijarjestelyt))})
 
+(defn tyolupa [tyolupa]
+  (println"--->>>")
+  (clojure.pprint/pprint tyolupa)
+  (println"--->>>")
+  {::tielupa/tyolupa-tyon-sisalto (:tyon-sisalto tyolupa)
+   ::tielupa/tyolupa-tyon-saa-aloittaa (json-tyokalut/aika-string->java-sql-date (:tyon-saa-aloittaa tyolupa))
+   ::tielupa/tyolupa-viimeistely-oltava (json-tyokalut/aika-string->java-sql-date (:viimeistely-oltava tyolupa))
+   ::tielupa/tyolupa-ohjeet-tyon-suorittamiseen (:ohjeet-tyon-suorittamiseen tyolupa)
+   ::tielupa/tyolupa-los-puuttuu (:los-puuttuu tyolupa)
+   ::tielupa/tyolupa-ilmoitus-tieliikennekeskukseen (:ilmoitus-tielii/pprkennekeskukseen tyolupa)
+   ::tielupa/tyolupa-tilapainen-nopeusrajoitus (:tilapainen-nopeusrajoitus tyolupa)
+   ::tielupa/tyolupa-los-lisatiedot (:los-lisatiedot tyolupa)
+   ::tielupa/tyolupa-tieliikennekusksen-sahkopostiosoite (:tieliikennekusksen-sahkopostiosoite tyolupa)})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -205,5 +219,6 @@
                    (merge (suoja-aluerakentamislupa (:suoja-aluerakentamislupa tielupa)))
                    (merge (tilapainen-myyntilupa (:tilapainen-myyntilupa tielupa)))
                    (merge (tilapaiset-liikennemerkkijarjestelyt (:tilapaiset-liikennemerkkijarjestelyt tielupa)))
+                   (merge (tyolupa (:tyolupa tielupa)))
                    )]
     domain))
