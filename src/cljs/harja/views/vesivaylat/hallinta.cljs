@@ -43,9 +43,9 @@
      ^{:key "kohteiden-luonti"}
      [kohteiden-luonti/kohteiden-luonti])
 
-   "Huoltokohteiden hallinta"
-   :kanavien-huoltokohteet
-   (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+   ;"Huoltokohteiden hallinta"
+   ;:kanavien-huoltokohteet
+   #_(when (and (istunto/ominaisuus-kaytossa? :vesivayla)
               (oikeudet/hallinta-kanavat))
      ^{:key "huoltokohteiden-hallinta"}
      [huoltokohteiden-hallinta/hallinta])])
