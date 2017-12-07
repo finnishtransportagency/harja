@@ -1,13 +1,13 @@
 (ns harja.fmt
   "Yleisiä apureita erityyppisen datan formatointiin."
   (:require [harja.pvm :as pvm]
-            #?(:cljs [goog.i18n.currencyCodeMap])
-            #?(:cljs [goog.i18n.NumberFormatSymbols])
-            #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
-            #?(:cljs [goog.i18n.NumberFormat])
+    #?(:cljs [goog.i18n.currencyCodeMap])
+    #?(:cljs [goog.i18n.NumberFormatSymbols])
+    #?(:cljs [goog.i18n.NumberFormatSymbols_fi_FI])
+    #?(:cljs [goog.i18n.NumberFormat])
             [clojure.string :as s]
             [harja.tyokalut.big :as big]
-            #?(:cljs [harja.ui.ikonit :as ikonit]))
+    #?(:cljs [harja.ui.ikonit :as ikonit]))
   #?(:clj
      (:import (java.text NumberFormat)
               (java.util Locale))))
@@ -39,16 +39,16 @@
         ;; vasta IE11 versiosta lähtien.
         (let [tulos (.format euro-number-format eur)]
           (if (or
-               (or (nil? eur) (and (string? eur) (empty? eur)))
-               (frontin-formatointivirheviestit tulos))
+                (or (nil? eur) (and (string? eur) (empty? eur)))
+                (frontin-formatointivirheviestit tulos))
             (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
             (str tulos " \u20AC")))
 
         :clj
         (.format (doto
-                     (if nayta-euromerkki
-                       (NumberFormat/getCurrencyInstance)
-                       (NumberFormat/getNumberInstance))
+                   (if nayta-euromerkki
+                     (NumberFormat/getCurrencyInstance)
+                     (NumberFormat/getNumberInstance))
                    (.setMaximumFractionDigits 2)
                    (.setMinimumFractionDigits 2)) eur)))))
 
@@ -461,30 +461,30 @@
   ([luku] (desimaaliluku luku 2 false))
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
-   #?(:cljs
+    #?(:cljs
        ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-      (if (= tarkkuus 0)
-        (.toFixed luku 0)
-        (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
-          (cond
-            (or
-              (or (nil? luku) (and (string? luku) (empty? luku)))
-              (frontin-formatointivirheviestit formatoitu))
-            (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+       (if (= tarkkuus 0)
+         (.toFixed luku 0)
+         (let [formatoitu (.format (desimaali-fmt tarkkuus) luku)]
+           (cond
+             (or
+               (or (nil? luku) (and (string? luku) (empty? luku)))
+               (frontin-formatointivirheviestit formatoitu))
+             (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
 
-            ryhmitelty?
-            formatoitu
+             ryhmitelty?
+             formatoitu
 
-            :default
-            (s/replace formatoitu #" " ""))))
-      :clj
-      (.format (doto (java.text.DecimalFormat.)
-                 (.setDecimalFormatSymbols desimaali-symbolit)
-                 (.setMinimumFractionDigits tarkkuus)
-                 (.setMaximumFractionDigits tarkkuus)
-                 (.setGroupingSize (if ryhmitelty? 3 0)))
+             :default
+             (s/replace formatoitu #" " ""))))
+       :clj
+       (.format (doto (java.text.DecimalFormat.)
+                  (.setDecimalFormatSymbols desimaali-symbolit)
+                  (.setMinimumFractionDigits tarkkuus)
+                  (.setMaximumFractionDigits tarkkuus)
+                  (.setGroupingSize (if ryhmitelty? 3 0)))
 
-               (double luku)))))
+                (double luku)))))
 
 (defn desimaaliluku-opt
   ([luku] (desimaaliluku-opt luku 2 false))
@@ -556,8 +556,8 @@
 
 #?(:cljs
    (defn totuus-ikoni [arvo]
-   (when arvo
-     (ikonit/livicon-check))))
+     (when arvo
+       (ikonit/livicon-check))))
 
 (defn leikkaa-merkkijono
   "Näyttää annetusta merkkijonosta korkeintaan pituuden määrän merkkejä.
