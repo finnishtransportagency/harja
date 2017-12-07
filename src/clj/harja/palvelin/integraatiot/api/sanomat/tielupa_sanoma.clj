@@ -166,6 +166,12 @@
    ::tielupa/suoja-aluerakentamislupa-sijoitus (:sijoitus suoja-aluerakentamislupa)
    ::tielupa/suoja-aluerakentamislupa-kiinteisto-rn (:kiinteisto-rn suoja-aluerakentamislupa)})
 
+(defn tilapainen-myyntilupa [tilapainen-myyntilupa]
+  {::tielupa/myyntilupa-aihe (:aihe tilapainen-myyntilupa)
+   ::tielupa/myyntilupa-alueen-nimi (:alueen-nimi tilapainen-myyntilupa)
+   ::tielupa/myyntilupa-aikaisempi-myyntilupa (:aikaisempi-myyntilupa tilapainen-myyntilupa)
+   ::tielupa/myyntilupa-opastusmerkit (:opastusmerkit tilapainen-myyntilupa)})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -179,5 +185,6 @@
                    (merge (mainoslupa (:mainoslupa tielupa)))
                    (merge (mainosilmoitus (:mainosilmoitus tielupa)))
                    (merge (opastelupa (:opastelupa tielupa)))
-                   (merge (suoja-aluerakentamislupa (:suoja-aluerakentamislupa tielupa))))]
+                   (merge (suoja-aluerakentamislupa (:suoja-aluerakentamislupa tielupa)))
+                   (merge (tilapainen-myyntilupa (:tilapainen-myyntilupa tielupa))))]
     domain))

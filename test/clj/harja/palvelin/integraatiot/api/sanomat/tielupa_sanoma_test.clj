@@ -364,3 +364,14 @@
                   :harja.domain.tielupa/suoja-aluerakentamislupa-sijoitus "suoja-alue"
                   :harja.domain.tielupa/suoja-aluerakentamislupa-kiinteisto-rn "12344"}]
     (is (= (tielupa-sanoma/suoja-aluerakentamislupa data) odotettu))))
+
+(deftest tilapainen-myyntilupa
+  (let [data {:aihe "Hyviä marjoja myytävänä",
+              :alueen-nimi "Kiimingin keskusta",
+              :aikaisempi-myyntilupa "Lupa 123",
+              :opastusmerkit "Kyltti tien poskessa"}
+        odotettu {:harja.domain.tielupa/myyntilupa-aihe "Hyviä marjoja myytävänä",
+                  :harja.domain.tielupa/myyntilupa-alueen-nimi "Kiimingin keskusta",
+                  :harja.domain.tielupa/myyntilupa-aikaisempi-myyntilupa "Lupa 123",
+                  :harja.domain.tielupa/myyntilupa-opastusmerkit "Kyltti tien poskessa"}]
+    (is (= (tielupa-sanoma/tilapainen-myyntilupa data) odotettu))))
