@@ -366,12 +366,52 @@
     (is (= (tielupa-sanoma/suoja-aluerakentamislupa data) odotettu))))
 
 (deftest tilapainen-myyntilupa
-  (let [data {:aihe "Hyviä marjoja myytävänä",
-              :alueen-nimi "Kiimingin keskusta",
-              :aikaisempi-myyntilupa "Lupa 123",
+  (let [data {:aihe "Hyviä marjoja myytävänä"
+              :alueen-nimi "Kiimingin keskusta"
+              :aikaisempi-myyntilupa "Lupa 123"
               :opastusmerkit "Kyltti tien poskessa"}
-        odotettu {:harja.domain.tielupa/myyntilupa-aihe "Hyviä marjoja myytävänä",
-                  :harja.domain.tielupa/myyntilupa-alueen-nimi "Kiimingin keskusta",
-                  :harja.domain.tielupa/myyntilupa-aikaisempi-myyntilupa "Lupa 123",
+        odotettu {:harja.domain.tielupa/myyntilupa-aihe "Hyviä marjoja myytävänä"
+                  :harja.domain.tielupa/myyntilupa-alueen-nimi "Kiimingin keskusta"
+                  :harja.domain.tielupa/myyntilupa-aikaisempi-myyntilupa "Lupa 123"
                   :harja.domain.tielupa/myyntilupa-opastusmerkit "Kyltti tien poskessa"}]
     (is (= (tielupa-sanoma/tilapainen-myyntilupa data) odotettu))))
+
+(deftest tilapaiset-liikennemerkkijarjestelyt
+  (let [data {:aihe "Nopeusrajoitusten laskeminen festivaalien ajaksi"
+              :sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+              :tapahtuman-tiedot "Kiiminki kolisee"
+              :nopeusrajoituksen-syy "Paljon ihmisiä tien läheisyydessä liikenteessä"
+              :lisatiedot-nopeusrajoituksesta ""
+              :muut-liikennemerkit ""
+              :jarjestelyt
+              [{:jarjestely
+                {:alkuperainen-nopeusrajoitus "60"
+                 :alennettu-nopeusrajoitus "30"
+                 :nopeusrajoituksen-pituus "250"
+                 :sijainti
+                 {:numero 20
+                  :aet 2631
+                  :aosa 6
+                  :ajorata 0
+                  :kaista 1
+                  :puoli 0
+                  :sijoitus "oikea"}}}]}
+        odotettu {:harja.domain.tielupa/liikennemerkkijarjestely-aihe "Nopeusrajoitusten laskeminen festivaalien ajaksi"
+                  :harja.domain.tielupa/liikennemerkkijarjestely-sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+                  :harja.domain.tielupa/liikennemerkkijarjestely-tapahtuman-tiedot "Kiiminki kolisee"
+                  :harja.domain.tielupa/liikennemerkkijarjestely-nopeusrajoituksen-syy "Paljon ihmisiä tien läheisyydessä liikenteessä"
+                  :harja.domain.tielupa/liikennemerkkijarjestely-lisatiedot-nopeusrajoituksesta ""
+                  :harja.domain.tielupa/liikennemerkkijarjestely-muut-liikennemerkit ""
+                  :harja.domain.tielupa/liikennemerkkijarjestelyt
+                  [{:harja.domain.tielupa/ajorata 0
+                    :harja.domain.tielupa/alkuperainen-nopeusrajoitus "60"
+                    :harja.domain.tielupa/tie 20
+                    :harja.domain.tielupa/aosa 6
+                    :harja.domain.tielupa/let nil
+                    :harja.domain.tielupa/puoli 0
+                    :harja.domain.tielupa/aet 2631
+                    :harja.domain.tielupa/losa nil
+                    :harja.domain.tielupa/alennettu-nopeusrajoitus "30"
+                    :harja.domain.tielupa/nopeusrajoituksen-pituus "250"
+                    :harja.domain.tielupa/kaista 1}]}]
+    (is (= (tielupa-sanoma/tilapaiset-liikennemerkkijarjestelyt data) odotettu))))

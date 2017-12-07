@@ -172,6 +172,23 @@
    ::tielupa/myyntilupa-aikaisempi-myyntilupa (:aikaisempi-myyntilupa tilapainen-myyntilupa)
    ::tielupa/myyntilupa-opastusmerkit (:opastusmerkit tilapainen-myyntilupa)})
 
+(defn liikennemerkkijarjestelyt [jarjestelyt]
+  (mapv (fn [{jarjestely :jarjestely}]
+          (merge {::tielupa/alkuperainen-nopeusrajoitus (:alkuperainen-nopeusrajoitus jarjestely)
+                  ::tielupa/alennettu-nopeusrajoitus (:alennettu-nopeusrajoitus jarjestely)
+                  ::tielupa/nopeusrajoituksen-pituus (:nopeusrajoituksen-pituus jarjestely)}
+                 (sijainti (:sijainti jarjestely))))
+        jarjestelyt))
+
+(defn tilapaiset-liikennemerkkijarjestelyt [tilapaiset-liikennemerkkijarjestelyt]
+  {::tielupa/liikennemerkkijarjestely-aihe (:aihe tilapaiset-liikennemerkkijarjestelyt)
+   ::tielupa/liikennemerkkijarjestely-sijainnin-kuvaus (:sijainnin-kuvaus tilapaiset-liikennemerkkijarjestelyt)
+   ::tielupa/liikennemerkkijarjestely-tapahtuman-tiedot (:tapahtuman-tiedot tilapaiset-liikennemerkkijarjestelyt)
+   ::tielupa/liikennemerkkijarjestely-nopeusrajoituksen-syy (:nopeusrajoituksen-syy tilapaiset-liikennemerkkijarjestelyt)
+   ::tielupa/liikennemerkkijarjestely-lisatiedot-nopeusrajoituksesta (:lisatiedot-nopeusrajoituksesta tilapaiset-liikennemerkkijarjestelyt)
+   ::tielupa/liikennemerkkijarjestely-muut-liikennemerkit (:muut-liikennemerkit tilapaiset-liikennemerkkijarjestelyt)
+   ::tielupa/liikennemerkkijarjestelyt (liikennemerkkijarjestelyt (:jarjestelyt tilapaiset-liikennemerkkijarjestelyt))})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -186,5 +203,7 @@
                    (merge (mainosilmoitus (:mainosilmoitus tielupa)))
                    (merge (opastelupa (:opastelupa tielupa)))
                    (merge (suoja-aluerakentamislupa (:suoja-aluerakentamislupa tielupa)))
-                   (merge (tilapainen-myyntilupa (:tilapainen-myyntilupa tielupa))))]
+                   (merge (tilapainen-myyntilupa (:tilapainen-myyntilupa tielupa)))
+                   (merge (tilapaiset-liikennemerkkijarjestelyt (:tilapaiset-liikennemerkkijarjestelyt tielupa)))
+                   )]
     domain))

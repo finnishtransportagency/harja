@@ -55,8 +55,6 @@
         ely-id (:id (first (kayttajat-q/hae-ely-numerolla db ely-numero)))]
     (assoc tielupa ::tielupa/ely ely-id)))
 
-
-
 (defn kirjaa-tielupa [liitteiden-hallinta db data kayttaja]
   (validointi/tarkista-onko-liikenneviraston-jarjestelma db kayttaja)
   (->> (tielupa-sanoma/api->domain (:tielupa data))
@@ -64,11 +62,12 @@
        (hae-sijainnit-avaimella db ::tielupa/kaapeliasennukset)
        (hae-sijainnit-avaimella db ::tielupa/mainokset)
        (hae-sijainnit-avaimella db ::tielupa/opasteet)
+       (hae-sijainnit-avaimella db ::tielupa/liikennemerkkijarjestelyt)
        (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
        (tielupa-q/tallenna-tielupa db))
   (tielupa-q/aseta-tieluvalle-urakka-ulkoisella-tunnisteella db (get-in data [:tielupa :perustiedot :tunniste :id]))
   ;; todo tallenna liitteet
-  (tee-kirjausvastauksen-body {:ilmoitukset " Tielupa kirjattu onnistuneesti "}))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Tielupa kirjattu onnistuneesti"}))
 
 (defrecord Tieluvat []
   component/Lifecycle
