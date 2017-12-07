@@ -347,3 +347,20 @@
                                                    :harja.domain.tielupa/tie 20
                                                    :harja.domain.tielupa/tulostenumero 123}]}]
     (is (= (tielupa-sanoma/opastelupa data) odotettu))))
+
+(deftest suoja-aluerakentamislupa
+  (let [data {:rakennettava-asia "Aitta"
+              :lisatiedot "Komia aiatta"
+              :esitetty-etaisyys-tien-keskilinjaan 48
+              :vahimmaisetaisyys-tien-keskilinjasta 48
+              :suoja-alueen-leveys 4
+              :sijoitus "suoja-alue"
+              :kiinteisto-rn "12344"}
+        odotettu {:harja.domain.tielupa/suoja-aluerakentamislupa-rakennettava-asia "Aitta"
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-lisatiedot "Komia aiatta"
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan 48
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta 48
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys 4
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-sijoitus "suoja-alue"
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-kiinteisto-rn "12344"}]
+    (is (= (tielupa-sanoma/suoja-aluerakentamislupa data) odotettu))))

@@ -157,6 +157,15 @@
    ::tielupa/opastelupa-nykyinen-opastus (:nykyinen-opastus opastelupa)
    ::tielupa/opasteet (opasteet (:opasteet opastelupa))})
 
+(defn suoja-aluerakentamislupa [suoja-aluerakentamislupa]
+  {::tielupa/suoja-aluerakentamislupa-rakennettava-asia (:rakennettava-asia suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-lisatiedot (:lisatiedot suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan (:esitetty-etaisyys-tien-keskilinjaan suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta (:vahimmaisetaisyys-tien-keskilinjasta suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys (:suoja-alueen-leveys suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-sijoitus (:sijoitus suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-kiinteisto-rn (:kiinteisto-rn suoja-aluerakentamislupa)})
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -169,5 +178,6 @@
                    (merge (liittymalupa (:liittymalupa tielupa)))
                    (merge (mainoslupa (:mainoslupa tielupa)))
                    (merge (mainosilmoitus (:mainosilmoitus tielupa)))
-                   (merge (opastelupa (:opastelupa tielupa))))]
+                   (merge (opastelupa (:opastelupa tielupa)))
+                   (merge (suoja-aluerakentamislupa (:suoja-aluerakentamislupa tielupa))))]
     domain))
