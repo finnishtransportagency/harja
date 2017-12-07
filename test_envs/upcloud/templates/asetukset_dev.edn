@@ -73,6 +73,7 @@
                         :talvihoidon-hoitoluokkien-osoite      "http://185.26.50.104/PTV_tl132.shz"
                         :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
 
+
                         :soratien-hoitoluokkien-shapefile          "file://shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shp"
                         :soratien-hoitoluokkien-osoite         "http://185.26.50.104/PTV_TIIRA_KP_SORATIELUOKKA.shz"
                         :soratien-hoitoluokkien-tuontikohde    "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
@@ -81,13 +82,11 @@
                         :siltojen-osoite                       "http://185.26.50.104/PTV_silta.shz"
                         :siltojen-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
 
-                        ;;TODO: tiedostojen nimet!
-                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/TODO.shp"
-                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/TODO.shz"
-                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/TODO.shz"
+                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/Turvalaitteet.shp"
+                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
+                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
                         }
 
- ;;TODO: täältä puuttuu ainakin reimarin integraatioiden asetukset
 
  }
