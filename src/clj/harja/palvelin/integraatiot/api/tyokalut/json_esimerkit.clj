@@ -81,4 +81,5 @@
 (def +tieluvan-kirjaus-request-opastelupa+ "api/examples/tieluvan-kirjaus-request-opastelupa.json")
 (def +tieluvan-kirjaus-request-suoja-alue-rakentamislupa+ "api/examples/tieluvan-kirjaus-request-suoja-alue-rakentamislupa.json")
 (def +tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely+ "api/examples/tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely.json")
+(def +tieluvan-kirjaus-request-tilapainen-myyntilupa+ "api/examples/tieluvan-kirjaus-request-tilapainen-myyntilupa.json")
 (def +tieluvan-kirjaus-request-tyolupa+ "api/examples/tieluvan-kirjaus-request-tyolupa.json")

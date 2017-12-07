@@ -17,7 +17,7 @@
       "tunniste": {
         "id": 1234
       },
-      "tyyppi": "tilapainen-liikennemerkkijarjestely",
+      "tyyppi": "tilapainen-myyntilupa",
       "paatoksen-diaarinumero": "123456789",
       "saapumispvm": "2017-09-22T12:00:00+02:00",
       "myontamispvm": "2018-09-22T12:00:00+02:00",
@@ -76,31 +76,11 @@
       "palautettu": true,
       "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
     },
-    "tilapaiset-liikennemerkkijarjestelyt": {
-      "aihe": "Nopeusrajoitusten laskeminen festivaalien ajaksi",
-      "sijainnin-kuvaus": "Kiimingin keskustasta 10 km pohjoiseen.",
-      "tapahtuman-tiedot": "Kiiminki kolisee",
-      "nopeusrajoituksen-syy": "Paljon ihmisiä tien läheisyydessä liikenteessä",
-      "lisatiedot-nopeusrajoituksesta": "",
-      "muut-liikennemerkit": "",
-      "jarjestelyt": [
-        {
-          "jarjestely": {
-            "alkuperainen-nopeusrajoitus": "60",
-            "alennettu-nopeusrajoitus": "30",
-            "nopeusrajoituksen-pituus": "250",
-            "sijainti": {
-              "numero": 20,
-              "aet": 2631,
-              "aosa": 6,
-              "ajorata": 0,
-              "kaista": 1,
-              "puoli:": 0,
-              "sijoitus": "oikea"
-            }
-          }
-        }
-      ]
+    "tilapainen-myyntilupa": {
+      "aihe": "Hyviä marjoja myytävänä",
+      "alueen-nimi": "Kiimingin keskusta",
+      "aikaisempi-myyntilupa": "Lupa 123",
+      "opastusmerkit": "Kyltti tien poskessa"
     }
   }
 }
