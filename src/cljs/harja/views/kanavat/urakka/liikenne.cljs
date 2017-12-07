@@ -375,45 +375,45 @@
       :leveys 3
       :nimi :toimenpide
       :hae tiedot/toimenpide->str}
-     {:otsikko "Sillan avaus"
+     {:otsikko "Sil\u00ADlan avaus"
       :leveys 1
       :nimi :sillan-avaus?
       :hae tiedot/silta-avattu?
       :fmt fmt/totuus-ikoni}
-     {:otsikko "Palvelumuoto"
+     {:otsikko "Pal\u00ADvelu\u00ADmuoto"
       :leveys 3
       :nimi :palvelumuoto-ja-lkm
       :hae tiedot/palvelumuoto->str}
-     {:otsikko "Suunta"
+     {:otsikko "Suun\u00ADta"
       :leveys 2
       :nimi ::lt-alus/suunta
       :fmt lt/suunta->str}
      {:otsikko "Alus"
       :leveys 3
       :nimi ::lt-alus/nimi}
-     {:otsikko "Aluslaji"
+     {:otsikko "Alus\u00ADlaji"
       :leveys 2
       :nimi ::lt-alus/laji
       :fmt lt-alus/aluslaji->laji-str}
-     {:otsikko "Aluksia"
+     {:otsikko "Aluk\u00ADsia"
       :leveys 1
       :nimi ::lt-alus/lkm}
-     {:otsikko "Matkus\u00ADtajia"
+     {:otsikko "Mat\u00ADkus\u00ADtajia"
       :leveys 1
       :nimi ::lt-alus/matkustajalkm}
-     {:otsikko "Nippuja"
+     {:otsikko "Nip\u00ADpuja"
       :leveys 1
       :nimi ::lt-alus/nippulkm}
-     {:otsikko "Ylävesi"
+     {:otsikko "Ylä\u00ADvesi"
       :leveys 2
       :nimi ::lt/vesipinta-ylaraja}
-     {:otsikko "Alavesi"
+     {:otsikko "Ala\u00ADvesi"
       :leveys 2
       :nimi ::lt/vesipinta-alaraja}
-     {:otsikko "Lisätiedot"
+     {:otsikko "Lisä\u00ADtiedot"
       :leveys 5
       :nimi ::lt/lisatieto}
-     {:otsikko "Kuittaaja"
+     {:otsikko "Kuit\u00ADtaaja"
       :leveys 3
       :nimi ::lt/kuittaaja
       :fmt kayttaja/kayttaja->str}]
