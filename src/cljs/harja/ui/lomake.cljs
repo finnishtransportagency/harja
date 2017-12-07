@@ -211,6 +211,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 
 (defn kentan-input
+  "Määritellään kentän input"
   [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle] :as s}
    data muokattava? muokkaa arvo]
   (let [kentta (if (= tyyppi :komponentti)
@@ -231,8 +232,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?
-           komponentti] :as s}
+  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen?] :as s}
    data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
@@ -410,8 +410,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
-                                 (footer-fn (assoc validoitu-data
-                                              ::skeema skeema))
+                                 (if (:validointi (meta footer-fn))
+                                   (footer-fn (assoc validoitu-data
+                                                ::skeema skeema)
+                                              (fn []
+                                                (muokkaa! validoitu-data)
+                                                (voi-tallentaa? validoitu-data)))
+                                   (footer-fn (assoc validoitu-data
+                                                ::skeema skeema)))
                                  footer)]
                [:div.lomake-footer.row
                 [:div.col-md-12 footer]])]))))))

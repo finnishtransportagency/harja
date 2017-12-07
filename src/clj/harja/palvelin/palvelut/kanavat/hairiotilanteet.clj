@@ -21,13 +21,11 @@
                               materiaalikirjaukset]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
-  (println "HÄIRIÖTILANNE: " (pr-str hairiotilanne))
-  (println "MATERIAALIT: " (pr-str materiaalikirjaukset))
   (jdbc/with-db-transaction [db db]
-                            (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
-                            (doseq [mk materiaalikirjaukset]
-                              (m-q/kirjaa-materiaali db kayttaja mk)
-                              (materiaali-palvelu/hoida-halytysraja db mk fim email))))
+                            (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)]
+                              (doseq [mk (assoc materiaalikirjaukset ::materiaali/hairiotilanne hairio-id)]
+                                (m-q/kirjaa-materiaali db kayttaja mk)
+                                (materiaali-palvelu/hoida-halytysraja db mk fim email)))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle

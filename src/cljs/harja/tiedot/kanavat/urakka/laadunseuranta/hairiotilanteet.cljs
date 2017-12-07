@@ -10,6 +10,7 @@
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
+            [harja.ui.lomake :as lomake]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -45,6 +46,7 @@
 (defrecord HairiotilanteenTallentaminenEpaonnistui [])
 (defrecord MuokkaaMateriaaleja [materiaalit])
 (defrecord LisaaMateriaali [])
+(defrecord LisaaVirhe [virhe])
 
 
 (def valinnat
@@ -86,20 +88,24 @@
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
-        paivamaara (::hairiotilanne/pvm hairiotilanne)
+        paivamaara (or (::hairiotilanne/pvm hairiotilanne)
+                       (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
+                                                (:aika hairiotilanne)))
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
         ;; ensin poistetaan mapista poistetuksi merkatut rivit
         (remove #(:poistettu %))
+        ;; Poistetaan tyhjäksi jätetyt rivit
+        (remove #(empty? (dissoc % :jarjestysnumero)))
         ;; Lisätään käytetty määrä lähetettävään mappiin ja
         ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
         (map #(assoc-in % [:varaosa ::materiaalit/maara] (- (:maara %))))
         ;; Käsitellään pelkästään lähetettävää mappia
         (map :varaosa)
-        ;; Lisätään muokkauspäivämäärää ja häiriö-id
+        ;; Lisätään lisätieto
+        ;;TODO Mihin tää pvm menee ja onko turha?
         (map #(assoc % ::materiaalit/pvm (or (::materiaalit/pvm %) (pvm/nyt))
-                       ::materiaalit/hairiotilanne hairiotilanne-id
                        ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
                                                     " kohteessa " kohteen-nimi)))
         ;; Otetaan joitain vv_materiaalilistaus tietoja pois (muuten tulee herjaa palvelin päässä)
@@ -234,21 +240,21 @@
     ;;mutta ne täytyisi joka tapauksessa formatoida varaosat gridille sopivaan muotoon,
     ;;niin sama formatoida jo haetuista materiaalilistauksista.
     (let [materiaali-kirjaukset (mapcat (fn [materiaalilistaus]
-                                       (transduce
-                                         (comp
-                                           ;; Filtteröidään ensin hairiotilanteelle kuuluvat
-                                           ;; materiaalikirjaukset
-                                           (filter #(= (::hairiotilanne/id hairiotilanne)
-                                                       (::materiaalit/hairiotilanne %)))
-                                           ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
-                                           ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
-                                           (map #(identity {:maara (- (::materiaalit/maara %))
-                                                            :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
-                                                                      ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
-                                                                      ::materiaalit/pvm (::materiaalit/pvm %)
-                                                                      ::materiaalit/id (::materiaalit/id %)}})))
-                                         conj (::materiaalit/muutokset materiaalilistaus)))
-                                     materiaalit)
+                                          (transduce
+                                            (comp
+                                              ;; Filtteröidään ensin hairiotilanteelle kuuluvat
+                                              ;; materiaalikirjaukset
+                                              (filter #(= (::hairiotilanne/id hairiotilanne)
+                                                          (::materiaalit/hairiotilanne %)))
+                                              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
+                                              ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
+                                              (map #(identity {:maara (- (::materiaalit/maara %))
+                                                               :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+                                                                         ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+                                                                         ::materiaalit/pvm (::materiaalit/pvm %)
+                                                                         ::materiaalit/id (::materiaalit/id %)}})))
+                                            conj (::materiaalit/muutokset materiaalilistaus)))
+                                        materiaalit)
           paivamaara-ja-aika (pvm/DateTime->pvm-ja-aika (::hairiotilanne/pvm hairiotilanne))
           keskenerainen (str (get-in paivamaara-ja-aika [:aika :tunnit]) ":"
                              (get-in paivamaara-ja-aika [:aika :minuutit]))]
@@ -266,5 +272,15 @@
 
   LisaaMateriaali
   (process-event [_ app]
-    (update-in app [:valittu-hairiotilanne ::materiaalit/materiaalit] #(conj (vec %) {:foo (- (rand-int 100))}))))
+    ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
+    ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
+    (update-in app
+               [:valittu-hairiotilanne ::materiaalit/materiaalit]
+               #(let [vanha-id (apply min (map :jarjestysnumero %))
+                      uusi-id (if (nil? vanha-id) -1 (dec vanha-id))]
+                  (conj (vec %) {:jarjestysnumero uusi-id}))))
+
+  LisaaVirhe
+  (process-event [{virhe :virhe} app]
+    (assoc-in app [:valittu-hairiotilanne ::lomake/virheet] virhe)))
 
