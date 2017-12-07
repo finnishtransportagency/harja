@@ -10,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja totuus-ikoni]]
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.napit :as napit]
@@ -396,7 +396,7 @@
       :leveys 1
       :nimi :sillan-avaus?
       :hae tiedot/silta-avattu?
-      :fmt fmt/totuus-ikoni}
+      :fmt totuus-ikoni}
      {:otsikko "Pal\u00ADvelu\u00ADmuoto"
       :leveys 3
       :nimi :palvelumuoto-ja-lkm

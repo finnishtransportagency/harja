@@ -554,11 +554,6 @@
     "Kyllä"
     "Ei"))
 
-#?(:cljs
-   (defn totuus-ikoni [arvo]
-     (when arvo
-       (ikonit/livicon-check))))
-
 (defn leikkaa-merkkijono
   "Näyttää annetusta merkkijonosta korkeintaan pituuden määrän merkkejä.
 
