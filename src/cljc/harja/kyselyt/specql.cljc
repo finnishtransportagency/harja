@@ -8,7 +8,8 @@
             [clojure.future :refer :all]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
-  (:import (org.postgis PGgeometry)))
+  #?(:clj
+     (:import (org.postgis PGgeometry))))
 
 (s/def ::d/geometry any?)
 

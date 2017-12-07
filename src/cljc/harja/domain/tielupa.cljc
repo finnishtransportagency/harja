@@ -21,9 +21,7 @@
   ["suoja_alue_rakenteen_sijoitus" ::suoja-alue-rakenteen-sijoitus]
   ["tielupa" ::tielupa
    {"luotu" ::muokkautiedot/luotu
-    "muokattu" ::muokkautiedot/muokattu}]
-  ;; todo: miten listata liitteet?
-  )
+    "muokattu" ::muokkautiedot/muokattu}])
 
 (def perustiedot
   #{::id
