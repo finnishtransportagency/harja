@@ -375,7 +375,7 @@
       :leveys 3
       :nimi :toimenpide
       :hae tiedot/toimenpide->str}
-     {:otsikko "Sil\u00ADlan avaus"
+     {:otsikko "Sil\u00ADlan ava\u00ADus"
       :leveys 1
       :nimi :sillan-avaus?
       :hae tiedot/silta-avattu?
@@ -398,10 +398,10 @@
      {:otsikko "Aluk\u00ADsia"
       :leveys 1
       :nimi ::lt-alus/lkm}
-     {:otsikko "Mat\u00ADkus\u00ADtajia"
+     {:otsikko "Mat\u00ADkus\u00ADta\u00ADji\u00ADa"
       :leveys 1
       :nimi ::lt-alus/matkustajalkm}
-     {:otsikko "Nip\u00ADpuja"
+     {:otsikko "Nip\u00ADpu\u00ADja"
       :leveys 1
       :nimi ::lt-alus/nippulkm}
      {:otsikko "Ylä\u00ADvesi"
