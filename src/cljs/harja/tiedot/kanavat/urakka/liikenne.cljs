@@ -179,9 +179,9 @@
         (empty? (filter :koskematon (::lt/alukset t)))
         (every? #(and (some? (::lt-alus/suunta %))
                       (some? (::lt-alus/laji %)))
-                (::lt/alukset t))
+                (remove :poistettu (::lt/alukset t)))
         (or
-          (not-empty (::lt/alukset t))
+          (not-empty (remove :poistettu (::lt/alukset t)))
           (every? #(= :itse (::toiminto/palvelumuoto %)) (::lt/toiminnot t))))))
 
 (defn sama-alusrivi? [a b]
