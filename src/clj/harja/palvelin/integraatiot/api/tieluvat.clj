@@ -36,12 +36,16 @@
       (assoc tielupa ::tielupa/sijainnit (map #(hae-sijainti db %) sijainnit)))))
 
 (defn hae-sijainnit-kaapeliasennuksille [db tielupa]
-  (clojure.pprint/pprint (::tielupa/kaapeliasennukset tielupa))
   (assoc tielupa
     ::tielupa/kaapeliasennukset
     (mapv #(hae-sijainti db %)
          (::tielupa/kaapeliasennukset tielupa))))
 
+(defn hae-sijainnit-mainoksille [db tielupa]
+  (assoc tielupa
+    ::tielupa/mainokset
+    (mapv #(hae-sijainti db %)
+          (::tielupa/mainokset tielupa))))
 
 (defn hae-ely [db ely tielupa]
   (let [ely-numero (case ely
@@ -65,6 +69,7 @@
   (->> (tielupa-sanoma/api->domain (:tielupa data))
        (hae-sijainnit db)
        (hae-sijainnit-kaapeliasennuksille db)
+       (hae-sijainnit-mainoksille db)
        (hae-ely db (get-in data [:tielupa :perustiedot :ely]))
        (tielupa-q/tallenna-tielupa db))
   (tielupa-q/aseta-tieluvalle-urakka-ulkoisella-tunnisteella db (get-in data [:tielupa :perustiedot :tunniste :id]))
