@@ -101,6 +101,7 @@
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
       (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
     (let [kanavatoimenpide (assoc kanavatoimenpide
+                             ::toimenpide/kuittaaja-id kayttaja-id
                              ::muokkaustiedot/luotu (pvm/nyt)
                              ::muokkaustiedot/luoja-id kayttaja-id)]
       (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))

@@ -23,7 +23,8 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view])
+            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -44,8 +45,15 @@
        [napit/uusi
         "Uusi toimenpide"
         (fn [_]
-          ;;todo
-          )]]]]))
+          (e! (tiedot/->UusiToimenpide)))]]]]))
+
+(defn lisatyot-lomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
+                                  tehtavat huoltokohteet tallennus-kaynnissa?]
+                           :as app}]
+  [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
+                                           :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
+                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
 
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   (let [hinta-sarake {:otsikko "Hinta"
@@ -72,36 +80,45 @@
     [:div
      [toimenpiteet-view/ei-yksiloity-vihje]
      [grid/grid
-     {:otsikko "Muutos- ja lisätyöt"
-      :tyhja (if (:toiden-haku-kaynnissa? app)
-               [ajax-loader "Haetaan toimenpiteitä"]
-               "Ei toimenpiteitä")
-      :tunniste ::kanavan-toimenpide/id}
-     sarakkeet
-     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
+      {:otsikko "Muutos- ja lisätyöt"
+       :tyhja (if (:toimenpiteiden-haku-kaynnissa? app)
+                [ajax-loader "Haetaan toimenpiteitä"]
+                "Ei toimenpiteitä")
+       :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
+       :tunniste ::kanavan-toimenpide/id}
+      sarakkeet
+      (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
 
 (defn lisatyot* [e! app]
-  (komp/luo
-   (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                   (e! (tiedot/->PaivitaValinnat uusi))))
-   (komp/sisaan-ulos #(do
-                        @tiedot/valinnat ;; luetaan sivuvaikutusten vuoksi
-                        (e! (tiedot/->Nakymassa? true))
-                        (e! (tiedot/->PaivitaValinnat
-                             {:urakka @nav/valittu-urakka
-                              :sopimus-id (first @u/valittu-sopimusnumero)
-                              :aikavali @u/valittu-aikavali
-                              :toimenpide @u/valittu-toimenpideinstanssi}))
-                        (e! (tiedot/->HaeSuunnitellutTyot)))
-                     #(do
-                        (e! (tiedot/->Nakymassa? false))))
+  (let [urakka (get-in app [:valinnat :urakka-id])]
+    (komp/luo
+      (komp/watcher tiedot/valinnat (fn [_ _ uusi]
+                                      (e! (tiedot/->PaivitaValinnat uusi))))
+      (komp/sisaan-ulos #(do
+                           (e! (tiedot/->Nakymassa? true))
+                           (e! (tiedot/->PaivitaValinnat
+                                 {:urakka @nav/valittu-urakka
+                                  :sopimus-id (first @u/valittu-sopimusnumero)
+                                  :aikavali @u/valittu-aikavali
+                                  :toimenpide @u/valittu-toimenpideinstanssi}))
+                           (e! (tiedot/->HaeSuunnitellutTyot))
+                           (e! (tiedot/->HaeHuoltokohteet))
+                           (log "kutsuttiin HaeSuunnitellutTyot"))
+                        #(do
+                           (e! (tiedot/->Nakymassa? false))))
 
-   (fn [e! {:keys [toimenpiteet haku-kaynnissa?] :as app}]
-     @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
-     [:div
-      [debug app]
-      [suodattimet e! app]
-      [taulukko e! app]])))
+      (fn [e! {:keys [toimenpiteet haku-kaynnissa? avattu-toimenpide] :as app}]
+        @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
+        (let [kohteet @kanavaurakka/kanavakohteet
+              nakyma-voidaan-nayttaa? (some? kohteet)]
+          (if nakyma-voidaan-nayttaa?
+            [:div
+             [debug app]
+             [suodattimet e! app]
+             (if avattu-toimenpide
+               [lisatyot-lomake e! app]
+               [taulukko e! app])]
+            [ajax-loader "Ladataan..."]))))))
 
 (defc lisatyot []
   [tuck tiedot/tila lisatyot*])

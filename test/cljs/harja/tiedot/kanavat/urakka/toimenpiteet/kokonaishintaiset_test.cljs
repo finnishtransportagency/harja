@@ -19,11 +19,11 @@
                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
                   :alkupvm (pvm/luo-pvm 2017 1 1)
                   :loppupvm (pvm/luo-pvm 2018 1 1)}]
-    (is (= (toimenpiteet/muodosta-hakuargumentit {:urakka {:id 666}
+    (is (= (toimenpiteet/muodosta-kohteiden-hakuargumentit {:urakka {:id 666}
                                                   :sopimus-id 666
                                                   :toimenpide {:id 666}
                                                   :aikavali aikavali}
-                                                 :kokonaishintainen)
+                                                           :kokonaishintainen)
            odotettu))
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely odotettu))))
 
@@ -33,10 +33,8 @@
       tiedot/->HuoltokohteetHaettu
       tiedot/->HuoltokohteidenHakuEpaonnistui}
     (let [{:keys [nakymassa?
-                  kohteiden-haku-kaynnissa?
                   huoltokohteiden-haku-kaynnissa?]} (e! (tiedot/->NakymaAvattu))]
       (is nakymassa?)
-      (is kohteiden-haku-kaynnissa?)
       (is huoltokohteiden-haku-kaynnissa?))))
 
 (deftest NakymaSuljettu
@@ -75,7 +73,7 @@
          (e! (tiedot/->UusiToimenpide)))))
 
 (deftest TyhjennaValittuToimenpide
-  (is (false? (contains? (e! (tiedot/->TyhjennaAvattuToimenpide)) :avattu-toimenpide))))
+  (is (nil? (:avattu-toimenpide (e! (tiedot/->TyhjennaAvattuToimenpide))))))
 
 (deftest AsetaToimenpiteenTiedot
   (let [toimenpide {:testi-pieni "Olen vain"}]
