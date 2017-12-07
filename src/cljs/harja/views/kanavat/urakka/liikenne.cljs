@@ -306,7 +306,7 @@
           (for* [[suunta tiedot] (dissoc edelliset :tama)]
             (when (tiedot/nayta-suunnan-ketjutukset? app suunta tiedot)
               (lomake/rivi
-                {:otsikko (str "Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) " )")
+                {:otsikko (str "Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) ")")
                  :tyyppi :komponentti
                  :palstoja 3
                  :nimi :edelliset-alukset
