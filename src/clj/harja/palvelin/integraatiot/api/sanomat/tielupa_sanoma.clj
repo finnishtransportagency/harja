@@ -130,6 +130,9 @@
    ::tielupa/mainoslupa-suoja-alueen-leveys (nil-turvallinen-bigdec (:suoja-alueen-leveys mainoslupa))
    ::tielupa/mainokset (mainokset (:mainokset mainoslupa))})
 
+(defn mainosilmoitus [mainosilmoitus]
+  (assoc (mainoslupa mainosilmoitus) ::tielupa/mainoslupa-mainostettava-asia (:mainostettava-asia mainosilmoitus)))
+
 (defn api->domain [tielupa]
   (let [domain (-> (perustiedot tielupa)
                    (merge (sijainnit (:sijainnit tielupa)))
@@ -140,5 +143,6 @@
                    (merge (valmistumisilmoitus (:valmistumisilmoitus tielupa)))
                    (merge (johto-ja-kaapelilupa (:johto-ja-kaapelilupa tielupa)))
                    (merge (liittymalupa (:liittymalupa tielupa)))
-                   (merge (mainoslupa (:mainoslupa tielupa))))]
+                   (merge (mainoslupa (:mainoslupa tielupa)))
+                   (merge (mainosilmoitus (:mainosilmoitus tielupa))))]
     domain))

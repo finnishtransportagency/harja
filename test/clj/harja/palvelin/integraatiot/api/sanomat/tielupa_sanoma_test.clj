@@ -180,29 +180,29 @@
     (is (= (tielupa-sanoma/johto-ja-kaapelilupa data) odotettu))))
 
 (deftest liittymalupa
-  (let [data {:myonnetty-kauttotarkoitus "lomakiintiesto",
-              :tarkoituksen-kuvaus "Kulku kesämökille",
-              :sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen.",
-              :nykyisen-liittyman-paivays "2011-09-22T12:00:00+02:00",
+  (let [data {:myonnetty-kauttotarkoitus "lomakiintiesto"
+              :tarkoituksen-kuvaus "Kulku kesämökille"
+              :sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+              :nykyisen-liittyman-paivays "2011-09-22T12:00:00+02:00"
               :liittymaohje
-              {:rummun-etaisyys-metreissa 4,
-               :odotustila-metreissa 4,
-               :rummun-halkaisija-millimetreissa 1,
-               :liikennemerkit "Tieviitta",
-               :nakemapisteen-etaisyys 6,
-               :rumpu true,
-               :lisaohjeet "",
-               :leveys-metreissa 4,
-               :liittymakaari 12},
-              :haettu-kayttotarkoitus "lomakiinteistolle-kulku",
-              :arvioitu-kokonaisliikenne 22,
-              :arvioitu-kuorma-autoliikenne 5,
-              :kyla "Kiiminki",
-              :muut-kulkuyhteydet "",
-              :valmistumisen-takaraja "2018-01-01T00:00:00+02:00",
-              :kiinteisto-rn "12344",
-              :nykyisen-liittyman-numero 123,
-              :liittyman-siirto true,
+              {:rummun-etaisyys-metreissa 4
+               :odotustila-metreissa 4
+               :rummun-halkaisija-millimetreissa 1
+               :liikennemerkit "Tieviitta"
+               :nakemapisteen-etaisyys 6
+               :rumpu true
+               :lisaohjeet ""
+               :leveys-metreissa 4
+               :liittymakaari 12}
+              :haettu-kayttotarkoitus "lomakiinteistolle-kulku"
+              :arvioitu-kokonaisliikenne 22
+              :arvioitu-kuorma-autoliikenne 5
+              :kyla "Kiiminki"
+              :muut-kulkuyhteydet ""
+              :valmistumisen-takaraja "2018-01-01T00:00:00+02:00"
+              :kiinteisto-rn "12344"
+              :nykyisen-liittyman-numero 123
+              :liittyman-siirto true
               :tilapainen false}
         odotettu {:harja.domain.tielupa/liittymalupa-kyla "Kiiminki"
                   :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa 1
@@ -231,7 +231,7 @@
     (is (= (tielupa-sanoma/liittymalupa data) odotettu))))
 
 (deftest mainoslupa
-  (let [data {:sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen.",
+  (let [data {:sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
               :tiedoksi-elykeskukselle true
               :asemakaava-alueella true
               :suoja-alueen-leveys 1.2M
@@ -245,20 +245,53 @@
                   :kaista 1
                   :puoli 0
                   :sijoitus "oikea"}}}]}
-        odotettu {:harja.domain.tielupa/mainoslupa-mainostettava-asia nil,
+        odotettu {:harja.domain.tielupa/mainoslupa-mainostettava-asia nil
                   :harja.domain.tielupa/mainoslupa-sijainnin-kuvaus
-                  "Kiimingin keskustasta 10 km pohjoiseen.",
-                  :harja.domain.tielupa/mainoslupa-korvaava-paatos nil,
-                  :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true,
-                  :harja.domain.tielupa/mainoslupa-asemakaava-alueella true,
-                  :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M,
+                  "Kiimingin keskustasta 10 km pohjoiseen."
+                  :harja.domain.tielupa/mainoslupa-korvaava-paatos nil
+                  :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true
+                  :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
+                  :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M
                   :harja.domain.tielupa/mainokset
-                  [{:harja.domain.tielupa/tie 20,
-                    :harja.domain.tielupa/aosa 6,
-                    :harja.domain.tielupa/aet 2631,
-                    :harja.domain.tielupa/losa nil,
-                    :harja.domain.tielupa/let nil,
-                    :harja.domain.tielupa/ajorata 0,
-                    :harja.domain.tielupa/kaista 1,
+                  [{:harja.domain.tielupa/tie 20
+                    :harja.domain.tielupa/aosa 6
+                    :harja.domain.tielupa/aet 2631
+                    :harja.domain.tielupa/losa nil
+                    :harja.domain.tielupa/let nil
+                    :harja.domain.tielupa/ajorata 0
+                    :harja.domain.tielupa/kaista 1
+                    :harja.domain.tielupa/puoli 0}]}]
+    (is (= (tielupa-sanoma/mainoslupa data) odotettu))))
+
+(deftest mainosilmoitus
+  (let [data {:sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+              :tiedoksi-elykeskukselle true
+              :mainostettava-asia "Hyvä hitutinteri"
+              :asemakaava-alueella true
+              :suoja-alueen-leveys 1.2M
+              :mainokset
+              [{:mainos
+                {:sijainti
+                 {:numero 20
+                  :aet 2631
+                  :aosa 6
+                  :ajorata 0
+                  :kaista 1
+                  :puoli 0
+                  :sijoitus "oikea"}}}]}
+        odotettu {:harja.domain.tielupa/mainoslupa-sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+                  :harja.domain.tielupa/mainoslupa-korvaava-paatos nil
+                  :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true
+                  :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
+                  :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M
+                  :harja.domain.tielupa/mainoslupa-mainostettava-asia "Hyvä hitutinteri"
+                  :harja.domain.tielupa/mainokset
+                  [{:harja.domain.tielupa/tie 20
+                    :harja.domain.tielupa/aosa 6
+                    :harja.domain.tielupa/aet 2631
+                    :harja.domain.tielupa/losa nil
+                    :harja.domain.tielupa/let nil
+                    :harja.domain.tielupa/ajorata 0
+                    :harja.domain.tielupa/kaista 1
                     :harja.domain.tielupa/puoli 0}]}]
     (is (= (tielupa-sanoma/mainoslupa data) odotettu))))
