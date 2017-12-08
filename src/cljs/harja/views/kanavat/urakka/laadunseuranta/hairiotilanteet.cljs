@@ -28,7 +28,8 @@
             [harja.ui.debug :as debug]
             [harja.domain.kayttaja :as kayttaja]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -197,41 +198,48 @@
          :uusi-rivi? true
          :komponentti (fn [_] [varaosataulukko e! app])})))
 
-(defn hairiolomakkeen-kentat [e! app kohteet]
-  [{:otsikko "Aika"
-    :nimi ::hairiotilanne/pvm
-    :tyyppi :pvm-aika}
-   {:otsikko "Kohde"
-    :nimi ::hairiotilanne/kohde
-    :tyyppi :valinta
-    :pakollinen? true
-    :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
-    :valinnat kohteet}
-   {:otsikko "Vika"
-    :nimi ::hairiotilanne/vikaluokka
-    :tyyppi :valinta
-    :pakollinen? true
-    :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka-")
-    :valinta-arvo :arvo
-    :valinnat [{:arvo :sahkotekninen_vika
-                :nimi "Sähkötekninen vika"}
-               {:arvo :konetekninen_vika
-                :nimi "Konetekninen vika"}
-               {:arvo :liikennevaurio
-                :nimi "Liikennevaurio"}]}
-   {:otsikko "Syy"
-    :nimi ::hairiotilanne/syy
-    :tyyppi :text
-    :koko [90 8]
-    :uusi-rivi? true}
-   (odottavan-liikenteen-kentat)
-   (korjauksen-kentat e! app)
-   {:otsikko "Kuittaaja"
-    :nimi ::hairiotilanne/kuittaaja
-    :tyyppi :string
-    :uusi-rivi? true
-    :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
-    :muokattava? (constantly false)}])
+(defn hairiolomakkeen-kentat [e! {:keys [valittu-hairiotilanne] :as app} kohteet]
+  (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+        valitun-kohteen-osat (::kohde/kohteenosat (first (filter #(= (::kohde/id %) valittu-kohde-id) kohteet)))]
+    [{:otsikko "Aika"
+      :nimi ::hairiotilanne/pvm
+      :tyyppi :pvm-aika}
+     {:otsikko "Kohde"
+      :nimi ::hairiotilanne/kohde
+      :tyyppi :valinta
+      :pakollinen? true
+      :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
+      :valinnat kohteet}
+     {:otsikko "Kohteen osa"
+      :nimi ::hairiotilanne/kohteenosa
+      :tyyppi :valinta
+      :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+      :valinnat (or valitun-kohteen-osat [])}
+     {:otsikko "Vika"
+      :nimi ::hairiotilanne/vikaluokka
+      :tyyppi :valinta
+      :pakollinen? true
+      :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka-")
+      :valinta-arvo :arvo
+      :valinnat [{:arvo :sahkotekninen_vika
+                  :nimi "Sähkötekninen vika"}
+                 {:arvo :konetekninen_vika
+                  :nimi "Konetekninen vika"}
+                 {:arvo :liikennevaurio
+                  :nimi "Liikennevaurio"}]}
+     {:otsikko "Syy"
+      :nimi ::hairiotilanne/syy
+      :tyyppi :text
+      :koko [90 8]
+      :uusi-rivi? true}
+     (odottavan-liikenteen-kentat)
+     (korjauksen-kentat e! app)
+     {:otsikko "Kuittaaja"
+      :nimi ::hairiotilanne/kuittaaja
+      :tyyppi :string
+      :uusi-rivi? true
+      :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
+      :muokattava? (constantly false)}]))
 
 (defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
                                             tallennus-kaynnissa?
