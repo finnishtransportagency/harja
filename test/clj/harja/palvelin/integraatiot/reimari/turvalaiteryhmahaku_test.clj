@@ -5,8 +5,7 @@
             [com.stuartsierra.component :as component]
             [specql.core :as specql]
             [harja.testi :as ht]
-            [clojure.test :as t]
-            [namespacefy.core :refer [unnamespacefy]]))
+            [clojure.test :as t]))
 
 (def jarjestelma-fixture
   (ht/laajenna-integraatiojarjestelmafixturea
@@ -25,7 +24,6 @@
    :harja.domain.vesivaylat.turvalaiteryhma/kuvaus "1234: Merireimari"
    :harja.domain.vesivaylat.turvalaiteryhma/turvalaitteet
    [5678 5679 5670 5671]})
-
 (def toinen-turvalaiteryhma-tietue
   {:harja.domain.vesivaylat.turvalaiteryhma/tunnus 1235,
    :harja.domain.vesivaylat.turvalaiteryhma/nimi "Järvireimari"
@@ -40,7 +38,6 @@
    :harja.domain.vesivaylat.turvalaiteryhma/kuvaus "1236: Testireimari"
    :harja.domain.vesivaylat.turvalaiteryhma/turvalaitteet
    [3678 3679 3670 3671]})
-
 (def testi-turvalaiteryhma-tietue-muutettu
   {:harja.domain.vesivaylat.turvalaiteryhma/tunnus 1236,
    :harja.domain.vesivaylat.turvalaiteryhma/nimi "Muuttoreimari - oli testi"
@@ -53,7 +50,7 @@
   "Testaa funktion kasittele-vastaus-kantatallennus"
   (let [db (:db ht/jarjestelma)
         tarkista-fn #(ht/tarkista-map-arvot
-                       (unnamespacefy referenssi-turvalaiteryhma-tietue)
+                       referenssi-turvalaiteryhma-tietue
                        (first (tlrhaku/kasittele-turvalaiteryhma-vastaus db (slurp "resources/xsd/reimari/haeturvalaiteryhmat-vastaus.xml"))))]
 
     (t/testing "Tarkista map"
