@@ -16,9 +16,6 @@
             [harja.views.haku :as haku]
             [cljs.core.async :refer [put! close! chan timeout]]
 
-            ;; Pakollinen require, muuten frontin prod-käännös ei toimi
-            [harja.domain.vesivaylat.vatu-turvalaite :as vatu-turvalaite]
-
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
             [harja.views.tilannekuva.tilannekuva :as tilannekuva]
