@@ -229,13 +229,11 @@
         toimenpideinstanssi (ffirst (q "select id from toimenpideinstanssi where nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP';"))
         toimenpide {::kanavan-toimenpide/suorittaja "suorittaja"
                     ::kanavan-toimenpide/muu-toimenpide "muu"
-                    ::kanavan-toimenpide/kuittaaja-id kayttaja
                     ::kanavan-toimenpide/sopimus-id sopimus-id
                     ::kanavan-toimenpide/toimenpideinstanssi-id toimenpideinstanssi
                     ::kanavan-toimenpide/toimenpidekoodi-id tehtava-id
                     ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
                     ::kanavan-toimenpide/tyyppi :kokonaishintainen
-                    ::muokkaustiedot/luoja-id kayttaja
                     ::kanavan-toimenpide/kohde-id kohde
                     ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
                     ::kanavan-toimenpide/huoltokohde-id huoltokohde
@@ -254,3 +252,33 @@
                                 +kayttaja-jvh+
                                 argumentit)]
     (is (some #(= "tämä on testitoimenpide" (::kanavan-toimenpide/lisatieto %)) vastaus))))
+
+(deftest toimenpiteen-tallentaminen-ilman-oikeutta
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+        kohde (ffirst (q "select id from kan_kohde limit 1;"))
+        toimenpide {::kanavan-toimenpide/suorittaja "suorittaja"
+                    ::kanavan-toimenpide/muu-toimenpide "muu"
+                    ::kanavan-toimenpide/sopimus-id sopimus-id
+                    ::kanavan-toimenpide/toimenpideinstanssi-id 2
+                    ::kanavan-toimenpide/toimenpidekoodi-id 3
+                    ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
+                    ::kanavan-toimenpide/tyyppi :kokonaishintainen
+                    ::kanavan-toimenpide/kohde-id kohde
+                    ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
+                    ::kanavan-toimenpide/huoltokohde-id 123
+                    ::kanavan-toimenpide/urakka-id urakka-id}
+        hakuehdot {::kanavan-toimenpide/urakka-id urakka-id
+                   ::kanavan-toimenpide/sopimus-id sopimus-id
+                   ::toimenpidekoodi/id 13
+                   ::kanavan-toimenpide/kohde-id nil
+                   :alkupvm (pvm/luo-pvm 2017 1 1)
+                   :loppupvm (pvm/luo-pvm 2018 1 1)
+                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
+        argumentit {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
+                    ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-kanavatoimenpide
+                                           +kayttaja-ulle+
+                                           argumentit)))))
