@@ -62,6 +62,7 @@
       (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id toimenpide-id})))))
 
 (defn- tarkista-kutsu [user urakka-id tyyppi]
+  ;; TODO Tsekkaa, että kohde kuuluu urakkaan, ja että kohdeosa-id kuuluu kohteeseen.
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
   (assert tyyppi "Kanavatoimenpiteellä ei ole tyyppiä.")
   (case tyyppi
