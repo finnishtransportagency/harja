@@ -216,7 +216,7 @@
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kayttaja (ffirst (q "select id from kayttaja limit 1;"))
-        kohde (ffirst (q "select id from kan_kohde limit 1;"))
+        kohde-kohde (ffirst (q "select id from kan_kohde limit 1;"))
         huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1;"))
         kolmostason-toimenpide-id (ffirst (q "select tpk3.id
                                                from toimenpidekoodi tpk1
@@ -234,7 +234,7 @@
                     ::kanavan-toimenpide/toimenpidekoodi-id tehtava-id
                     ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
                     ::kanavan-toimenpide/tyyppi :kokonaishintainen
-                    ::kanavan-toimenpide/kohde-id kohde
+                    ::kanavan-toimenpide/kohde-id kohde-kohde
                     ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
                     ::kanavan-toimenpide/huoltokohde-id huoltokohde
                     ::kanavan-toimenpide/urakka-id urakka-id}
@@ -256,7 +256,7 @@
 (deftest toimenpiteen-tallentaminen-ilman-oikeutta
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-        kohde (ffirst (q "select id from kan_kohde limit 1;"))
+        kohde-id (ffirst (q "select id from kan_kohde limit 1;"))
         toimenpide {::kanavan-toimenpide/suorittaja "suorittaja"
                     ::kanavan-toimenpide/muu-toimenpide "muu"
                     ::kanavan-toimenpide/sopimus-id sopimus-id
@@ -264,7 +264,7 @@
                     ::kanavan-toimenpide/toimenpidekoodi-id 3
                     ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
                     ::kanavan-toimenpide/tyyppi :kokonaishintainen
-                    ::kanavan-toimenpide/kohde-id kohde
+                    ::kanavan-toimenpide/kohde-id kohde-id
                     ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
                     ::kanavan-toimenpide/huoltokohde-id 123
                     ::kanavan-toimenpide/urakka-id urakka-id}
@@ -281,4 +281,36 @@
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-kanavatoimenpide
                                            +kayttaja-ulle+
+                                           argumentit)))))
+
+(deftest toimenpiteen-tallentaminen-eri-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+        kohde-id (ffirst (q "select id from kan_kohde limit 1;"))
+        id (ffirst (q "select id from kan_toimenpide limit 1;"))
+        toimenpide {::kanavan-toimenpide/id id
+                    ::kanavan-toimenpide/suorittaja "suorittaja"
+                    ::kanavan-toimenpide/muu-toimenpide "muu"
+                    ::kanavan-toimenpide/sopimus-id sopimus-id
+                    ::kanavan-toimenpide/toimenpideinstanssi-id 2
+                    ::kanavan-toimenpide/toimenpidekoodi-id 3
+                    ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
+                    ::kanavan-toimenpide/tyyppi :kokonaishintainen
+                    ::kanavan-toimenpide/kohde-id kohde-id
+                    ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
+                    ::kanavan-toimenpide/huoltokohde-id 123
+                    ::kanavan-toimenpide/urakka-id urakka-id}
+        hakuehdot {::kanavan-toimenpide/urakka-id urakka-id
+                   ::kanavan-toimenpide/sopimus-id sopimus-id
+                   ::toimenpidekoodi/id 13
+                   ::kanavan-toimenpide/kohde-id nil
+                   :alkupvm (pvm/luo-pvm 2017 1 1)
+                   :loppupvm (pvm/luo-pvm 2018 1 1)
+                   ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}
+        argumentit {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
+                    ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-kanavatoimenpide
+                                           +kayttaja-jvh+
                                            argumentit)))))
