@@ -121,7 +121,8 @@
 (s/def ::tallenna-hairiotilanne-kutsu
   (s/keys :req [::hae-hairiotilanteet-kysely
                 ::hairiotilanne
-                ::materiaali/materiaalikirjaukset]))
+                ::materiaali/materiaalikirjaukset
+                ::materiaali/poista-materiaalikirjauksia]))
 
 (s/def ::hairiotilanteet (s/coll-of ::hairiotilanne))
 

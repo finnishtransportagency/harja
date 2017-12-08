@@ -21,5 +21,5 @@
 (defn poista-materiaalikirjaus [db user materiaali-id]
   (update! db ::m/materiaali
            (muok/poistotiedot user)
-           {::m/id (::m/id materiaali-id)}))
+           {::m/id materiaali-id}))
 

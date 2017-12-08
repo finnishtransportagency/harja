@@ -25,3 +25,5 @@
 (s/def ::poista-materiaalikirjaus (s/keys :req [::id ::urakka-id]))
 (s/def ::muuta-materiaalien-alkuperainen-maara (s/keys :req [::urakka-id]
                                                        :req-un [::uudet-alkuperaiset-maarat]))
+
+(s/def ::poista-materiaalikirjauksia (s/coll-of ::poista-materiaalikirjaus))

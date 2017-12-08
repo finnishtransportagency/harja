@@ -90,7 +90,7 @@
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
-        muookkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
+        muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
         paivamaara (or (::hairiotilanne/pvm hairiotilanne)
                        (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
@@ -101,7 +101,7 @@
         ;; Poistetaan muokkaamattomat materiaalit (muuten backin kantaan viennissä jää muokattu timestamp)
         (remove (fn [materiaalikirjaus]
                   (some #(= materiaalikirjaus %)
-                        muookkaamattomat-materiaali-kirjaukset)))
+                        muokkaamattomat-materiaali-kirjaukset)))
         ;; poistetaan mapista poistetuksi merkatut rivit
         (remove #(:poistettu %))
         ;; Poistetaan tyhjäksi jätetyt rivit
@@ -122,6 +122,20 @@
                       ::materiaalit/halytysraja
                       ::materiaalit/muutokset
                       ::materiaalit/alkuperainen-maara)))
+      conj materiaali-kirjaukset)))
+
+(defn poistettava-materiaali [hairiotilanne]
+  (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)]
+    (transduce
+      (comp
+        ;; poistetaan mapista poistetuksi merkatut uudet rivit
+        (remove #(and (:poistettu %)
+                      (:jarjestysnumero %)))
+        ;; Käsitellään pelkästään poistetuksi merkattuja
+        (filter :poistettu)
+        ;; Käsitellään kannasta materiaalin poistaminen
+        (map (fn [{varaosa :varaosa}]
+               (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id}))))
       conj materiaali-kirjaukset)))
 
 (defn hairiotilanteiden-hakuparametrit [valinnat]
@@ -202,11 +216,13 @@
       app
       (let [tal-hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
             tal-materiaalit (tallennettava-materiaali hairiotilanne)
+            pois-materiaalit (poistettava-materiaali hairiotilanne)
             parametrit (hairiotilanteiden-hakuparametrit valinnat)]
         (-> app
             (tuck-apurit/post! :tallenna-hairiotilanne
                                {::hairiotilanne/hairiotilanne tal-hairiotilanne
                                 ::materiaalit/materiaalikirjaukset tal-materiaalit
+                                ::materiaalit/poista-materiaalikirjauksia pois-materiaalit
                                 ::hairiotilanne/hae-hairiotilanteet-kysely parametrit}
                                {:onnistui ->HairiotilanneTallennettu
                                 :epaonnistui ->HairiotilanteenTallentaminenEpaonnistui})
@@ -215,7 +231,9 @@
   PoistaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} app]
     (let [tallennus! (tuck/send-async! ->TallennaHairiotilanne)]
-      (go (tallennus! (assoc hairiotilanne ::muokkaustiedot/poistettu? true)))
+      (go (tallennus! (assoc hairiotilanne ::muokkaustiedot/poistettu? true
+                                           ::materiaalit/materiaalit (map #(assoc % :poistettu true)
+                                                                          (::materiaalit/materiaalit hairiotilanne)))))
       app))
 
   MateriaalitHaettu
