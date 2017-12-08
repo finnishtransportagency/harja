@@ -32,7 +32,9 @@
   "Tarkistaa, että taulussa olevista riveistä ainakin yksi linkittyy annettuun id-arvoon.
    Jos ei linkity, heittää poikkeuksen.
    Jos id:tä ei anneta, ei tee mitään.
-   Jos linkitys-id puuttuu, heittää poikkeuksen (älä kutsu jos linkitystä ei ole olemassa)"
+   Jos linkitys-id puuttuu, heittää poikkeuksen (älä kutsu jos linkitystä ei ole olemassa).
+
+   Tällä voi tarkistaa esim. sen, että linkitystaulussa oleva rivi liittyy annettuun urakkaan."
   [db taulu id-sarake id-arvo linkitys-sarake vaadittu-linkki-id]
   (vaadi-linkki-id vaadittu-linkki-id taulu linkitys-sarake)
 
