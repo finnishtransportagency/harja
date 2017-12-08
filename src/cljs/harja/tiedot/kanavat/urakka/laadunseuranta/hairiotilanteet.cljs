@@ -6,6 +6,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
@@ -54,6 +55,7 @@
 (defn esitaytetty-hairiotilanne []
   (let [kayttaja @istunto/kayttaja]
     {::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
+     ;; TODO Kuittaaja pitää tallentaa palvelimella header-tiedoista, muuten voi spooffata.
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
@@ -75,7 +77,8 @@
                                         ::muokkaustiedot/poistettu?])
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
-                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])))]
+                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+                                 ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])))]
     hairiotilanne))
 
 (defn hairiotilanteiden-hakuparametrit [valinnat]
