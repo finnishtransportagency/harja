@@ -237,7 +237,6 @@
                                             tallennus-kaynnissa?
                                             valinnat]}]
   (fn [hairiotilanne]
-    ;; todo: tarkista vielä oikeudet
     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-kokonaishintaiset (get-in valinnat [:urakka id]))]
       [:div
        [napit/tallenna
