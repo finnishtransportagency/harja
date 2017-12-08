@@ -128,11 +128,11 @@
      :kokonaisluku? true}]
    (r/wrap
      ;; todo: hae varaosat häiriöltä
-     {1 {:varaosa {:harja.domain.vesivaylat.materiaali/urakka-id 31
-                   :harja.domain.vesivaylat.materiaali/maara-nyt 123
-                   :harja.domain.vesivaylat.materiaali/halytysraja 666
-                   :harja.domain.vesivaylat.materiaali/alkuperainen-maara 123
-                   :harja.domain.vesivaylat.materiaali/nimi "Varaosa"}
+     {1 {:varaosa {::materiaali/urakka-id 31
+                   ::materiaali/maara-nyt 123
+                   ::materiaali/halytysraja 666
+                   ::materiaali/alkuperainen-maara 123
+                   ::materiaali/nimi "Varaosa"}
          :maara 123}}
      #(log "--->>> Todo: tee varaosien muokkaus"))])
 
