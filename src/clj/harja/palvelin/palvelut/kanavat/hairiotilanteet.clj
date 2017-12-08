@@ -3,6 +3,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.hairiotilanne :as hairio]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.tyokalut.tietoturva :as tietoturva]
             [harja.kyselyt.kanavat.kanavan-hairiotilanne :as q-hairiotilanne]))
 
@@ -14,10 +16,11 @@
 
 (defn tallenna-hairiotilanne [db {kayttaja-id :id :as kayttaja} {urakka-id ::hairio/urakka-id :as hairiotilanne}]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
-  ;; TODO Tsekkaa, että kohdeosa-id kuuluu kohteeseen + testi
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
-  (tietoturva/tarkista-linkitys db ::hairio/hairiotilanne ::hairio/id
-                                (::hairio/id hairiotilanne) ::hairio/urakka-id urakka-id)
+  (tietoturva/tarkista-linkitys db ::hairio/hairiotilanne ::hairio/id (::hairio/id hairiotilanne)
+                                ::hairio/urakka-id urakka-id)
+  (tietoturva/tarkista-linkitys db ::osa/kohteenosa ::osa/id (::hairio/kohteenosa-id hairiotilanne)
+                                ::osa/kohde-id (::hairio/kohde-id hairiotilanne))
   (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
 
 (defrecord Hairiotilanteet []
