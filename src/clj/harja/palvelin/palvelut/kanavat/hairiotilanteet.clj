@@ -26,8 +26,6 @@
   (jdbc/with-db-transaction [db db]
                             (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
                                   hairio-id (or hairio-id (::hairio/id hairiotilanne))]
-                              (println "---> MATSKUT: " (pr-str materiaalikirjaukset))
-                              (println "---> POISTETTAVAT MATSKUT: " (pr-str materiaalipoistot))
                               (doseq [mk (map #(assoc % ::materiaali/hairiotilanne hairio-id) materiaalikirjaukset)]
                                 (m-q/kirjaa-materiaali db kayttaja mk)
                                 (materiaali-palvelu/hoida-halytysraja db mk fim email))
