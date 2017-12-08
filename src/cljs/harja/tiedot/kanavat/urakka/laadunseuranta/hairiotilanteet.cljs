@@ -148,7 +148,13 @@
 
   AsetaHairiotilanteenTiedot
   (process-event [{hairiotilanne :hairiotilanne} app]
-    (assoc app :valittu-hairiotilanne hairiotilanne))
+    (let [kohdeosa-vaihtui? (and (some? (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohteenosa]))
+                                 (not= (::hairiotilanne/kohde hairiotilanne)
+                                       (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohde])))
+          hairiotilanne (if kohdeosa-vaihtui?
+                          (assoc hairiotilanne ::hairiotilanne/kohteenosa nil)
+                          hairiotilanne)]
+      (assoc app :valittu-hairiotilanne hairiotilanne)))
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
@@ -163,9 +169,7 @@
                                 ::hairiotilanne/hae-hairiotilanteet-kysely parametrit}
                                {:onnistui ->HairiotilanneTallennettu
                                 :epaonnistui ->HairiotilanteenTallentaminenEpaonnistui})
-            (assoc :tallennus-kaynnissa? true))))
-
-    (assoc app :tallennus-kaynnissa? true))
+            (assoc :tallennus-kaynnissa? true)))))
 
   PoistaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} app]
