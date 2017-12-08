@@ -55,7 +55,7 @@
 (defn esitaytetty-hairiotilanne []
   (let [kayttaja @istunto/kayttaja]
     {::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
-     ;; TODO Kuittaaja pitää tallentaa palvelimella header-tiedoista, muuten voi spooffata.
+     ;; TODO Kuittaaja pitää tallentaa ja hakea palvelimella header-tiedoista, muuten voi spooffata.
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
