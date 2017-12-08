@@ -344,7 +344,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
                   funktiolle annetaan validoitu data parametrina. Parametriin on liitetty
-                  avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat
+                  avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat.
+                  Tälle funktiolle voi antaa metadatana :validointi avaimen arvoksi booleanin. Jos
+                  arvo on truthy, niin footer-fn:lle annetaan toisena argumenttina funktio, joka käyttää
+                  muokkaa! funktiota nykyiseen dataan ja palauttaa true tai false riippuen onko data validi.
+                  Todennäköisesti tämä on hyödyllinen funktio vain, jos halutaan tarkistaa lomakkeen validius ennen kuin
+                  sitä on muokattu.
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
 

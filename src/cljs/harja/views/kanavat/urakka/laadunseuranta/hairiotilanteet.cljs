@@ -208,7 +208,6 @@
     :nimi :paivamaara
     :pakollinen? true
     :tyyppi :pvm}
-   ;;TODO Tää kellonaika on heti punasena
    {:otsikko "Kellonaika"
     :nimi :aika
     :pakollinen? true

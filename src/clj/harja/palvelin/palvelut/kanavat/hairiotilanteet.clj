@@ -22,8 +22,9 @@
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)]
-                              (doseq [mk (assoc materiaalikirjaukset ::materiaali/hairiotilanne hairio-id)]
+                            (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
+                                  hairio-id (or hairio-id (::hairio/id hairiotilanne))]
+                              (doseq [mk (map #(assoc % ::materiaali/hairiotilanne hairio-id) materiaalikirjaukset)]
                                 (m-q/kirjaa-materiaali db kayttaja mk)
                                 (materiaali-palvelu/hoida-halytysraja db mk fim email)))))
 
@@ -45,10 +46,10 @@
       http
       :tallenna-hairiotilanne
       (fn [kayttaja {hairiotilanne ::hairio/hairiotilanne
-                     materiaalit ::materiaali/materiaalikirjaukset
+                     materiaalikirjaukset ::materiaali/materiaalikirjaukset
                      hakuehdot ::hairio/hae-hairiotilanteet-kysely}]
         (jdbc/with-db-transaction [db db]
-                                  (tallenna-hairiotilanne db fim email kayttaja hairiotilanne materiaalit)
+                                  (tallenna-hairiotilanne db fim email kayttaja hairiotilanne materiaalikirjaukset)
                                   {:hairiotilanteet (hae-hairiotilanteet db kayttaja hakuehdot)
                                    :materiaalilistaukset (m-q/hae-materiaalilistaus db {::materiaali/urakka-id (::hairio/urakka-id hairiotilanne)})}))
       {:kysely-spec ::hairio/tallenna-hairiotilanne-kutsu

@@ -61,7 +61,10 @@
     {::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
-                                ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
+                                ::kayttaja/sukunimi (:sukunimi kayttaja)}
+     ;; aika kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
+     ;; tulee punainen virhemerkintä
+     :aika (pvm/map->Aika {:tunnit 0})}))
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
   (let [paivamaara (:paivamaara hairiotilanne)
@@ -87,6 +90,7 @@
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
+        muookkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
         paivamaara (or (::hairiotilanne/pvm hairiotilanne)
                        (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
@@ -94,7 +98,11 @@
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
-        ;; ensin poistetaan mapista poistetuksi merkatut rivit
+        ;; Poistetaan muokkaamattomat materiaalit (muuten backin kantaan viennissä jää muokattu timestamp)
+        (remove (fn [materiaalikirjaus]
+                  (some #(= materiaalikirjaus %)
+                        muookkaamattomat-materiaali-kirjaukset)))
+        ;; poistetaan mapista poistetuksi merkatut rivit
         (remove #(:poistettu %))
         ;; Poistetaan tyhjäksi jätetyt rivit
         (remove #(empty? (dissoc % :jarjestysnumero)))
@@ -103,8 +111,8 @@
         (map #(assoc-in % [:varaosa ::materiaalit/maara] (- (:maara %))))
         ;; Käsitellään pelkästään lähetettävää mappia
         (map :varaosa)
-        ;; Lisätään lisätieto
-        ;;TODO Mihin tää pvm menee ja onko turha?
+        ;; Lisätään lisätieto ja materiaalin pvm, koska se on required field. Materiaalia
+        ;; muokatessa kumminkin ei vaihdeta pvm:ää
         (map #(assoc % ::materiaalit/pvm (or (::materiaalit/pvm %) (pvm/nyt))
                        ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
                                                     " kohteessa " kohteen-nimi)))
@@ -262,7 +270,8 @@
           (assoc :valittu-hairiotilanne hairiotilanne)
           (assoc-in [:valittu-hairiotilanne :paivamaara] (:pvm paivamaara-ja-aika))
           (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika (merge (:aika paivamaara-ja-aika) {:keskenerainen keskenerainen})))
-          (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset))))
+          (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset)
+          (assoc-in [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit] materiaali-kirjaukset))))
 
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
