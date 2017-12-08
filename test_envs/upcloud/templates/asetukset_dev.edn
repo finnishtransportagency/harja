@@ -73,7 +73,6 @@
                         :talvihoidon-hoitoluokkien-osoite      "http://185.26.50.104/PTV_tl132.shz"
                         :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
 
-
                         :soratien-hoitoluokkien-shapefile          "file://shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shp"
                         :soratien-hoitoluokkien-osoite         "http://185.26.50.104/PTV_TIIRA_KP_SORATIELUOKKA.shz"
                         :soratien-hoitoluokkien-tuontikohde    "./shp/Soratieluokat/PTV_TIIRA_KP_SORATIELUOKKA.shz"
@@ -81,12 +80,5 @@
                         :siltojen-shapefile                        "file://shp/Sillat/PTV_silta.shp"
                         :siltojen-osoite                       "http://185.26.50.104/PTV_silta.shz"
                         :siltojen-tuontikohde                  "./shp/Sillat/PTV_silta.shz"
-
-                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/Turvalaitteet.shp"
-                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
-                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
-
                         }
-
-
  }

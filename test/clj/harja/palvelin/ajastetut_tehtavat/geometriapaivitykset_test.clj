@@ -10,7 +10,6 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.pohjavesialueet :as pohjavesialueen-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as siltojen-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet-tuonti]
             [clj-time.coerce :as time-coerce]
             [clojure.java.io :as io])
   (:use org.httpkit.fake)
@@ -85,25 +84,6 @@
           testitietokanta
           "file:///Users/mikkoro/Desktop/Soratiehoitoluokat-testi/Sorateiden-hoitoluokat.shp")))))
 
-
-(defn aja-turvalaitteiden-paivitys
-  "REPL-testiajofunktio"
-  []
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
-    (component/start integraatioloki)
-    (alk/kaynnista-paivitys
-      integraatioloki
-      testitietokanta
-      "turvalaitteet"
-      "http://185.26.50.104/Turvalaitteet.tgz"
-      "/Users/maaritla/Downloads/Turvalaite-testi/"
-      (fn []
-        (tieverkon-tuonti/vie-tieverkko-kantaan
-          testitietokanta
-          "file:///Users/maaritla/Downloads/Turvalaite-testi/Turvalaitteet.shp")))))
-
-
 (def kayttaja "jvh")
 
 (deftest testaa-tiedoston-muokkausajan-selvitys-alustalla
@@ -133,4 +113,3 @@
       (alk/hae-tiedosto integraatioloki testitietokanta "tieverkko-haku" fake-tiedosto-url kohdetiedosto)
       (is (true? (.exists (clojure.java.io/file kohdetiedosto))))
       (clojure.java.io/delete-file kohdetiedosto))))
-
