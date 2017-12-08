@@ -124,22 +124,23 @@
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (or kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id))
         kohteenosa-id kohdeosa-id]
-    {::hairiotilanne/hairiotilanne {::hairiotilanne/id id
-                                    ::hairiotilanne/sopimus-id sopimus-id
-                                    ::hairiotilanne/kohde-id kohde-id
-                                    ::hairiotilanne/kohteenosa-id kohteenosa-id
-                                    ::hairiotilanne/paikallinen-kaytto? true
-                                    ::hairiotilanne/vikaluokka :sahkotekninen_vika
-                                    ::hairiotilanne/korjaustoimenpide "Vähennetään sähköä"
-                                    ::hairiotilanne/korjauksen-tila :kesken
-                                    ::hairiotilanne/pvm (pvm/luo-pvm 2017 11 17)
-                                    ::hairiotilanne/urakka-id urakka-id
-                                    ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
-                                    ::hairiotilanne/huviliikenne-lkm 1
-                                    ::hairiotilanne/korjausaika-h 1
-                                    ::hairiotilanne/syy syy
-                                    ::hairiotilanne/odotusaika-h 4
-                                    ::hairiotilanne/ammattiliikenne-lkm 2}
+    {::hairiotilanne/hairiotilanne (merge
+                                     (when id {::hairiotilanne/id id})
+                                     {::hairiotilanne/sopimus-id sopimus-id
+                                      ::hairiotilanne/kohde-id kohde-id
+                                      ::hairiotilanne/kohteenosa-id kohteenosa-id
+                                      ::hairiotilanne/paikallinen-kaytto? true
+                                      ::hairiotilanne/vikaluokka :sahkotekninen_vika
+                                      ::hairiotilanne/korjaustoimenpide "Vähennetään sähköä"
+                                      ::hairiotilanne/korjauksen-tila :kesken
+                                      ::hairiotilanne/pvm (pvm/luo-pvm 2017 11 17)
+                                      ::hairiotilanne/urakka-id urakka-id
+                                      ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
+                                      ::hairiotilanne/huviliikenne-lkm 1
+                                      ::hairiotilanne/korjausaika-h 1
+                                      ::hairiotilanne/syy syy
+                                      ::hairiotilanne/odotusaika-h 4
+                                      ::hairiotilanne/ammattiliikenne-lkm 2})
      ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}}))
 
 (deftest hairiotilanteen-tallennus
@@ -159,6 +160,17 @@
         syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         oulun-urakka-2014 (hae-oulun-alueurakan-2014-2019-id)
         parametrit (tallennuksen-parametrit paivitettava-id oulun-urakka-2014 nil nil syy)]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-hairiotilanne
+                                                   +kayttaja-jvh+
+                                                   parametrit)))))
+
+(deftest hairiotilanteen-tallennus-vaaraan-kohteeseen
+  (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
+        urakka-id (hae-saimaan-kanavaurakan-id)
+        kohde-id 66666
+        parametrit (tallennuksen-parametrit nil urakka-id kohde-id nil syy)]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hairiotilanne

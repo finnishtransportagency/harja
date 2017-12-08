@@ -17,10 +17,17 @@
 (defn tallenna-hairiotilanne [db {kayttaja-id :id :as kayttaja} {urakka-id ::hairio/urakka-id :as hairiotilanne}]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
-  (tietoturva/tarkista-linkitys db ::hairio/hairiotilanne ::hairio/id (::hairio/id hairiotilanne)
-                                ::hairio/urakka-id urakka-id)
-  (tietoturva/tarkista-linkitys db ::osa/kohteenosa ::osa/id (::hairio/kohteenosa-id hairiotilanne)
-                                ::osa/kohde-id (::hairio/kohde-id hairiotilanne))
+  ;; Häiriötilanne kuuluu urakkaan
+  (tietoturva/vaadi-linkitys db ::hairio/hairiotilanne ::hairio/id (::hairio/id hairiotilanne)
+                             ::hairio/urakka-id urakka-id)
+  ;; Häiriötilanteen kohde kuuluu urakkaan
+  (when (::hairio/kohde-id hairiotilanne)
+    (tietoturva/vaadi-ainakin-yksi-linkitys db ::kohde/kohde<->urakka ::kohde/kohde-id (::hairio/kohde-id hairiotilanne)
+                                            ::kohde/urakka-id urakka-id))
+  ;; Häiriötilanteen kohdeosa kuuluu kohteeseen
+  (when (::hairio/kohteenosa-id hairiotilanne)
+    (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::hairio/kohteenosa-id hairiotilanne)
+                               ::osa/kohde-id (::hairio/kohde-id hairiotilanne)))
   (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
 
 (defrecord Hairiotilanteet []
