@@ -151,6 +151,18 @@
     (is (some #(= syy (::hairiotilanne/syy %)) vastaus))
     (is (+ maara-ennen 1) maara-jalkeen)))
 
+(deftest hairiotilanteen-tallennus-vaaraan-urakkaan
+  (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
+        oulun-urakka-2014 (hae-oulun-alueurakan-2014-2019-id)
+        parametrit (assoc (tallennuksen-parametrit syy)
+                     ::hairiotilanne/urakka-id oulun-urakka-2014)
+        maara-ennen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))]
+
+    (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :tallenna-hairiotilanne
+                                                   +kayttaja-jvh+
+                                                   parametrit)))))
+
 (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         parametrit (tallennuksen-parametrit syy)]
