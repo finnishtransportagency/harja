@@ -119,11 +119,12 @@
                                            +kayttaja-ulle+
                                            args)))))
 
-(defn tallennuksen-parametrit [syy]
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+(defn tallennuksen-parametrit [id urakka-id syy]
+  (let [urakka-id (or urakka-id (hae-saimaan-kanavaurakan-id))
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id)]
-    {::hairiotilanne/hairiotilanne {::hairiotilanne/sopimus-id sopimus-id
+    {::hairiotilanne/hairiotilanne {::hairiotilanne/id id
+                                    ::hairiotilanne/sopimus-id sopimus-id
                                     ::hairiotilanne/kohde-id kohde-id
                                     ::hairiotilanne/paikallinen-kaytto? true
                                     ::hairiotilanne/vikaluokka :sahkotekninen_vika
@@ -141,7 +142,7 @@
 
 (deftest hairiotilanteen-tallennus
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        parametrit (tallennuksen-parametrit syy)
+        parametrit (tallennuksen-parametrit nil nil syy)
         maara-ennen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-hairiotilanne
@@ -152,10 +153,10 @@
     (is (+ maara-ennen 1) maara-jalkeen)))
 
 (deftest hairiotilanteen-tallennus-vaaraan-urakkaan
-  (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
+  (let [paivitettava-id (ffirst (q "SELECT id FROM kan_hairio LIMIT 1"))
+        syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         oulun-urakka-2014 (hae-oulun-alueurakan-2014-2019-id)
-        parametrit (assoc (tallennuksen-parametrit syy)
-                     ::hairiotilanne/urakka-id oulun-urakka-2014)
+        parametrit (tallennuksen-parametrit paivitettava-id oulun-urakka-2014 syy)
         maara-ennen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -165,7 +166,7 @@
 
 (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        parametrit (tallennuksen-parametrit syy)]
+        parametrit (tallennuksen-parametrit nil nil syy)]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-hairiotilanne
