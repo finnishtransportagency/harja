@@ -8,6 +8,8 @@
 (defn vaadi-linkitys
   "Tarkistaa, että taulussa oleva rivi linkittyy annettuun id-arvoon.
    Jos ei linkity, heittää poikkeuksen.
+   Jos id:tä ei anneta, ei tee mitään.
+   Jos linkitys-id puuttuu, heittää poikkeuksen (älä kutsu jos linkitystä ei ole olemassa)
 
    Tällä voi tarkistaa esim. sen, että päivitettävä rivi kuuluu siihen urakkaan, johon
    oikeustarkistus on tehty."
@@ -28,7 +30,9 @@
 
 (defn vaadi-ainakin-yksi-linkitys
   "Tarkistaa, että taulussa olevista riveistä ainakin yksi linkittyy annettuun id-arvoon.
-   Jos ei linkity, heittää poikkeuksen.."
+   Jos ei linkity, heittää poikkeuksen.
+   Jos id:tä ei anneta, ei tee mitään.
+   Jos linkitys-id puuttuu, heittää poikkeuksen (älä kutsu jos linkitystä ei ole olemassa)"
   [db taulu id-sarake id-arvo linkitys-sarake vaadittu-linkki-id]
   (vaadi-linkki-id vaadittu-linkki-id taulu linkitys-sarake)
 
