@@ -13,7 +13,7 @@
 
 (defn tallenna-hairiotilanne [db {kayttaja-id :id :as kayttaja} {urakka-id ::hairio/urakka-id :as hairiotilanne}]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
-  ;; TODO Tsekkaa, että kohde kuuluu urakkaan, ja että kohdeosa-id kuuluu kohteeseen.
+  ;; TODO Tsekkaa, että kohde kuuluu urakkaan, ja että kohdeosa-id kuuluu kohteeseen + testi
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
 

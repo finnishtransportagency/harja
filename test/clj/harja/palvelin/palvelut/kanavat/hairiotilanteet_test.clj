@@ -142,11 +142,14 @@
 (deftest hairiotilanteen-tallennus
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         parametrit (tallennuksen-parametrit syy)
+        maara-ennen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-hairiotilanne
                                 +kayttaja-jvh+
-                                parametrit)]
-    (is (some #(= syy (::hairiotilanne/syy %)) vastaus))))
+                                parametrit)
+        maara-jalkeen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))]
+    (is (some #(= syy (::hairiotilanne/syy %)) vastaus))
+    (is (+ maara-ennen 1) maara-jalkeen)))
 
 (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
