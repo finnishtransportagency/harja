@@ -113,8 +113,8 @@
         sort-fn (fn [materiaalin-kirjaus]
                   (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
                            (nil? (:jarjestysnumero materiaalin-kirjaus)))
-                    [(get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi]) nil]
-                    [nil (:jarjestysnumero materiaalin-kirjaus)]))]
+                    [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
+                    [(:jarjestysnumero materiaalin-kirjaus) nil]))]
     [grid/muokkaus-grid
      {:voi-muokata? voi-muokata?
       :voi-lisata? false
