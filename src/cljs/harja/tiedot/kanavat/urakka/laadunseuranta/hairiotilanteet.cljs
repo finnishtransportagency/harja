@@ -303,8 +303,8 @@
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
     (update-in app
                [:valittu-hairiotilanne ::materiaalit/materiaalit]
-               #(let [vanha-id (apply min (map :jarjestysnumero %))
-                      uusi-id (if (nil? vanha-id) -1 (dec vanha-id))]
+               #(let [vanha-id (apply max (map :jarjestysnumero %))
+                      uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
                   (conj (vec %) {:jarjestysnumero uusi-id}))))
 
   LisaaVirhe

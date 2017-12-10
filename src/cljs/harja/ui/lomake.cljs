@@ -345,11 +345,6 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
                   funktiolle annetaan validoitu data parametrina. Parametriin on liitetty
                   avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat.
-                  Tälle funktiolle voi antaa metadatana :validointi avaimen arvoksi booleanin. Jos
-                  arvo on truthy, niin footer-fn:lle annetaan toisena argumenttina funktio, joka käyttää
-                  muokkaa! funktiota nykyiseen dataan ja palauttaa true tai false riippuen onko data validi.
-                  Todennäköisesti tämä on hyödyllinen funktio vain, jos halutaan tarkistaa lomakkeen validius ennen kuin
-                  sitä on muokattu.
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
 
@@ -359,8 +354,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
   :data                 validoitu data
   "
-  [_ _ _]
-  (let [fokus (atom nil)]
+  [{validoi-alussa? :validoi-alussa? muokkaa! :muokkaa!} skeema data]
+  (let [fokus (atom nil)
+        _ (when validoi-alussa? (muokkaa! (validoi data skeema)))]
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
                  voi-muokata? ei-borderia?] :as opts} skeema
          {muokatut ::muokatut
@@ -415,14 +411,8 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                  (rivita skeema)))
 
              (when-let [footer (if footer-fn
-                                 (if (:validointi (meta footer-fn))
-                                   (footer-fn (assoc validoitu-data
-                                                ::skeema skeema)
-                                              (fn []
-                                                (muokkaa! validoitu-data)
-                                                (voi-tallentaa? validoitu-data)))
-                                   (footer-fn (assoc validoitu-data
-                                                ::skeema skeema)))
+                                 (footer-fn (assoc validoitu-data
+                                              ::skeema skeema))
                                  footer)]
                [:div.lomake-footer.row
                 [:div.col-md-12 footer]])]))))))

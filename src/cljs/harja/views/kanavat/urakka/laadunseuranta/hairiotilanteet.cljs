@@ -251,31 +251,28 @@
 (defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
                                             tallennus-kaynnissa?
                                             valinnat] :as hairio-data}]
-  (with-meta
-    (fn [hairiotilanne validi-data?-fn]
-      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
-        [:div
-         [:div {:style {:width "100%"}}
-          [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
-         [napit/tallenna
-          "Tallenna"
-          #(when (validi-data?-fn)
-            (e! (tiedot/->TallennaHairiotilanne hairiotilanne)))
-          {:tallennus-kaynnissa? tallennus-kaynnissa?
-           :disabled (or
-                       (not oikeus?)
-                       (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
+  (fn [hairiotilanne]
+    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
+      [:div
+       [:div {:style {:width "100%"}}
+        [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
+       [napit/tallenna
+        "Tallenna"
+        #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+        {:tallennus-kaynnissa? tallennus-kaynnissa?
+         :disabled (or
+                     (not oikeus?)
+                     (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
 
-         (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
-           [napit/poista
-            "Poista"
-            #(varmista-kayttajalta/varmista-kayttajalta
-               {:otsikko "Häiriötilanteen poistaminen"
-                :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
-                :hyvaksy "Poista"
-                :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
-                :disabled (not oikeus?)})])]))
-    {:validointi true}))
+       (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
+         [napit/poista
+          "Poista"
+          #(varmista-kayttajalta/varmista-kayttajalta
+             {:otsikko "Häiriötilanteen poistaminen"
+              :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
+              :hyvaksy "Poista"
+              :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
+              :disabled (not oikeus?)})])])))
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat] :as app} kohteet]
   [:div
@@ -284,6 +281,7 @@
    [lomake/lomake
     {:otsikko "Uusi häiriötilanne"
      :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
+     :validoi-alussa? false
      :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
      :footer-fn (hairiolomakkeen-toiminnot e! app)}
     (hairiolomakkeen-kentat e! app kohteet)
