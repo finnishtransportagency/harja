@@ -350,6 +350,12 @@
                    FROM   sopimus
                    WHERE  nimi = 'Saimaan huollon lisäsopimus';"))))
 
+(defn hae-kohde-palli []
+  (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Pälli';"))))
+
+(defn hae-kohteenosat-palli []
+  (first (q (str "SELECT id, tyyppi FROM kan_kohteenosa WHERE \"kohde-id\" = (SELECT id FROM kan_kohde WHERE nimi = 'Pälli');"))))
+
 (defn hae-kohde-soskua []
   (ffirst (q (str "SELECT id FROM kan_kohde WHERE nimi = 'Soskua';"))))
 
