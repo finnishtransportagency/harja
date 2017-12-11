@@ -423,6 +423,7 @@
 
       ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
       (let [korjatut-kohdeosat (tierekisteri/korjaa-paakohteen-alikohteet kohde (:kohdeosat kohde))]
+        (log/debug "Käsitellään kohdeosat")
         (paivita-yllapitokohdeosa db user urakka-id (:kohdeosat kohde))))
     (yy/paivita-yllapitourakan-geometria db urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
