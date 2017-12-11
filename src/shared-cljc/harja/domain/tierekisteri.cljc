@@ -266,3 +266,13 @@
 (defn tr-vali-paakohteen-sisalla-validaattori [paakohde _ alikohde]
   (when-not (tr-vali-paakohteen-sisalla? paakohde alikohde)
     "Ei pääkohteen sisällä"))
+
+(defn tr-vali-leikkaa-tr-valin?
+  "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen (osuu edes osittain sen sisälle).
+
+   Mikäli sisallyta-rajat? on true (oletuksena on), niin leikkauseksi lasketaan myös tilanne, jossa
+   toisen tien osoite päättyy ensimmäisen alkuun tai alkaa toisen lopusta. Jos on false,
+   niin leikkaukseksi lasketaan vain sellaiset osoitteet, jotka ovat ainakin metrin verran toisen sisällä."
+  ([tr-vali1 tr-vali2] (tr-vali-leikkaa-tr-valin? tr-vali1 tr-vali2 true))
+  ([tr-vali1 tr-vali2 sisallyta-rajat?]
+  nil))
