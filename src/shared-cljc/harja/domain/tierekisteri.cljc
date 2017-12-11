@@ -231,14 +231,13 @@
                   (< tie 30000)))
     false))
 
-(defn tr-osoite-kasvusuuntaan [{alkuosa :tr-alkuosa
-                                alkuetaisyys :tr-alkuetaisyys
-                                loppuosa :tr-loppuosa
-                                loppuetaisyys :tr-loppuetaisyys}]
-  {:tr-alkuosa (if (> alkuosa loppuosa) loppuosa alkuosa)
-   :tr-alkuetaisyys (if (> alkuosa loppuosa) loppuetaisyys alkuetaisyys)
-   :tr-loppuosa (if (> alkuosa loppuosa) alkuosa loppuosa)
-   :tr-loppuetaisyys (if (> alkuosa loppuosa) alkuetaisyys loppuetaisyys)})
+(defn tr-osoite-kasvusuuntaan [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tr-osoite}]
+  (let [kasvava-osoite {:tr-alkuosa (if (> tr-alkuosa tr-loppuosa) tr-loppuosa tr-alkuosa)
+                        :tr-alkuetaisyys (if (> tr-alkuosa tr-loppuosa) tr-loppuetaisyys tr-alkuetaisyys)
+                        :tr-loppuosa (if (> tr-alkuosa tr-loppuosa) tr-alkuosa tr-loppuosa)
+                        :tr-loppuetaisyys (if (> tr-alkuosa tr-loppuosa) tr-alkuetaisyys tr-loppuetaisyys)}]
+    ;; Palautetaan korjattu tr-osoite. Jos mapissa oli muita avaimia, ne saa jäädä
+    (merge tr-osoite kasvava-osoite)))
 
 (defn tr-vali-paakohteen-sisalla? [paakohde alikohde]
   (let [{paa-alkuosa :tr-alkuosa
@@ -282,7 +281,7 @@
                       (or (> (:tr-alkuosa tr-vali2) (:tr-loppuosa tr-vali1))
                           (and (= (:tr-alkuosa tr-vali2) (:tr-loppuosa tr-vali1))
                                (> (:tr-alkuetaisyys tr-vali2) (:tr-loppuetaisyys tr-vali1)))))]
-    (not ei-leikkaa?)))
+    (boolean (not ei-leikkaa?))))
 
 (defn korjaa-paakohteen-alikohteet
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
@@ -291,4 +290,4 @@
    - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
      pääkohteen loppuun."
   ([paakohde alikohteet]
-   nil))
+   (let [paakohde (tr-osoite-kasvusuuntaan paakohde)])))
