@@ -451,13 +451,13 @@
                    {:tr-kaista nil
                     :sijainti _
                     :tr-ajorata nil
-                    :tr-loppuosa 2
+                    :tr-numero 20
                     :tr-alkuosa 1
+                    :tr-alkuetaisyys 1
+                    :tr-loppuosa 2
                     :tr-loppuetaisyys 2
                     :nimi "Testiosa123456"
                     :id _
-                    :tr-alkuetaisyys 1
-                    :tr-numero 20
                     :toimenpide "Ei tehdä mitään"}
                    true))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))))))
