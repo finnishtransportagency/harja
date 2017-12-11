@@ -361,36 +361,43 @@
 (deftest korjaa-paakohteen-alikohteet
 
   (is (= (tierekisteri/korjaa-paakohteen-alikohteet
-           {:tr-alkuosa 3
+           {:tr-numero 1
+            :tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
             :tr-loppuetaisyys 200}
            [{:id 1
+             :tr-numero 1
              :tr-alkuosa 1
              :tr-alkuetaisyys 50
              :tr-loppuosa 3
              :tr-loppuetaisyys 50}
             {:id 2
+             :tr-numero 1
              :tr-alkuosa 3
              :tr-alkuetaisyys 50
              :tr-loppuosa 4
              :tr-loppuetaisyys 200}
             {:id 3
+             :tr-numero 1
              :tr-alkuosa 4
              :tr-alkuetaisyys 200
              :tr-loppuosa 5
              :tr-loppuetaisyys 300}
             {:id 4
+             :tr-numero 1
              :tr-alkuosa 5
              :tr-alkuetaisyys 200
              :tr-loppuosa 10
              :tr-loppuetaisyys 0}])
          [{:id 2
+           :tr-numero 1
            :tr-alkuosa 3
            :tr-alkuetaisyys 100
            :tr-loppuosa 4
            :tr-loppuetaisyys 200}
           {:id 3
+           :tr-numero 1
            :tr-alkuosa 4
            :tr-alkuetaisyys 200
            :tr-loppuosa 5
@@ -449,17 +456,50 @@
            :tr-loppuetaisyys 200}]))
 
   (is (= (tierekisteri/korjaa-paakohteen-alikohteet
-           {:tr-alkuosa 3
+           {:tr-numero 1
+            :tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
             :tr-loppuetaisyys 200}
            [{:id 1
+             :tr-numero 1
              :tr-alkuosa 3
              :tr-alkuetaisyys 25
              :tr-loppuosa 5
              :tr-loppuetaisyys 300}])
          [{:id 1
+           :tr-numero 1
            :tr-alkuosa 3
            :tr-alkuetaisyys 100
            :tr-loppuosa 5
-           :tr-loppuetaisyys 200}])))
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+           {:tr-numero 1
+            :tr-alkuosa 2
+            :tr-alkuetaisyys 1
+            :tr-loppuosa 2
+            :tr-loppuetaisyys 1}
+           [{:id 1
+             :tr-numero 1
+             :tr-alkuosa 1
+             :tr-alkuetaisyys 1
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 1}])
+         [{:id 1
+           :tr-numero 1
+           :tr-alkuosa 2
+           :tr-alkuetaisyys 1
+           :tr-loppuosa 3
+           :tr-loppuetaisyys 1}])
+      "Pistemäinen kohde osataan korjata")
+
+  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+           {:tr-numero 1
+            :tr-alkuosa 2
+            :tr-alkuetaisyys 1
+            :tr-loppuosa 2
+            :tr-loppuetaisyys 1}
+           [])
+         [])
+      "Tyhjä kohdelista osataan käsitellä"))
