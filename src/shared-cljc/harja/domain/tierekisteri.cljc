@@ -297,6 +297,11 @@
 
    Olettaa, että pääkohde alikohteineen on samalla tiellä."
   ([paakohde alikohteet]
+   (assert (not (empty? (filter #(tr-vali-leikkaa-tr-valin? paakohde %)
+                         (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet))))
+           (str"Ainakin yhden alikohteen tulee leikata pääkohde, muutan korjaus ei ole mahdollista.
+            Saatu pääkohde: " paakohde " ja osat: " alikohteet))
+
    (let [paakohde (tr-osoite-kasvusuuntaan paakohde)
          alikohteet (map tr-osoite-kasvusuuntaan alikohteet)
          alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
