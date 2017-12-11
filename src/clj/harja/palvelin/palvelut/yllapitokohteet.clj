@@ -422,9 +422,8 @@
         (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde))
 
       ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
-
-
-      )
+      (let [korjatut-kohdeosat (tierekisteri/korjaa-paakohteen-alikohteet kohde (:kohdeosat kohde))]
+        (paivita-yllapitokohdeosa db user urakka-id (:kohdeosat kohde))))
     (yy/paivita-yllapitourakan-geometria db urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id
