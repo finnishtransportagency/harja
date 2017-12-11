@@ -86,10 +86,10 @@
                                                          ::materiaali/hairiotilanne 2}]
                                 ::materiaali/nimi "Ämpäreitä"})}
         kysely {::hairiotilanne/id 2
-                ::hairiotilanne/pvm (pvm/luo-pvm 2017 11 10)}
+                ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 10)}
         vastaus {:materiaalit (:materiaalit state)
                  :valittu-hairiotilanne {::hairiotilanne/id 2
-                                         ::hairiotilanne/pvm (pvm/luo-pvm 2017 11 10)
+                                         ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 10)
                                          :paivamaara (pvm/luo-pvm 2017 11 10)
                                          :aika (pvm/map->Aika (merge (:aika (pvm/DateTime->pvm-ja-aika (pvm/luo-pvm 2017 11 10)))
                                                                      {:keskenerainen "0:0"}))

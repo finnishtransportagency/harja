@@ -85,14 +85,14 @@
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
-                                 ::hairiotilanne/pvm (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
+                                 ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
         muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
-        paivamaara (or (::hairiotilanne/pvm hairiotilanne)
+        paivamaara (or (::hairiotilanne/havaintoaika hairiotilanne)
                        (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
                                                 (:aika hairiotilanne)))
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
@@ -281,7 +281,7 @@
                                                                          ::materiaalit/id (::materiaalit/id %)}})))
                                             conj (::materiaalit/muutokset materiaalilistaus)))
                                         materiaalit)
-          paivamaara-ja-aika (pvm/DateTime->pvm-ja-aika (::hairiotilanne/pvm hairiotilanne))
+          paivamaara-ja-aika (pvm/DateTime->pvm-ja-aika (::hairiotilanne/havaintoaika hairiotilanne))
           keskenerainen (str (get-in paivamaara-ja-aika [:aika :tunnit]) ":"
                              (get-in paivamaara-ja-aika [:aika :minuutit]))]
       (-> app

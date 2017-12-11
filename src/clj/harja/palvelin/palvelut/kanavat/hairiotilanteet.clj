@@ -14,7 +14,7 @@
   (let [urakka-id (::hairio/urakka-id hakuehdot)]
     (assert urakka-id "Häiriötilanteiden hakua ei voi tehdä ilman urakka id:tä")
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
-    (reverse (sort-by ::hairio/pvm (q-hairiotilanne/hae-sopimuksen-hairiotilanteet-aikavalilta db hakuehdot)))))
+    (reverse (sort-by ::hairio/havaintoaika (q-hairiotilanne/hae-sopimuksen-hairiotilanteet-aikavalilta db hakuehdot)))))
 
 (defn tallenna-hairiotilanne [db fim email
                               {kayttaja-id :id :as kayttaja}
