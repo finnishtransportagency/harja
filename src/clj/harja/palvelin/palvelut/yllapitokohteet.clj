@@ -255,6 +255,86 @@
                                    :sopimus-id sopimus-id
                                    :vuosi vuosi})))
 
+(defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
+                                  {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
+                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
+                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
+  (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
+  (when-not poistettu
+    (q/luo-yllapitokohdeosa<! db
+                              {:yllapitokohde yllapitokohde-id
+                               :nimi nimi
+                               :tunnus tunnus
+                               :tr_numero tr-numero
+                               :tr_alkuosa tr-alkuosa
+                               :tr_alkuetaisyys tr-alkuetaisyys
+                               :tr_loppuosa tr-loppuosa
+                               :tr_loppuetaisyys tr-loppuetaisyys
+                               :tr_ajorata tr-ajorata
+                               :tr_kaista tr-kaista
+                               :paallystetyyppi paallystetyyppi
+                               :raekoko raekoko
+                               :tyomenetelma tyomenetelma
+                               :massamaara massamaara
+                               :toimenpide toimenpide
+                               :ulkoinen-id nil})))
+
+(defn- paivita-yllapitokohdeosa [db user urakka-id
+                                 {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
+                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
+                                  :as kohdeosa}]
+
+  (log/debug "Päivitetään ylläpitokohdeosa")
+  (q/paivita-yllapitokohdeosa<! db
+                                {:nimi nimi
+                                 :tr_numero tr-numero
+                                 :tr_alkuosa tr-alkuosa
+                                 :tr_alkuetaisyys tr-alkuetaisyys
+                                 :tr_loppuosa tr-loppuosa
+                                 :tr_loppuetaisyys tr-loppuetaisyys
+                                 :tr_ajorata tr-ajorata
+                                 :tr_kaista tr-kaista
+                                 :paallystetyyppi paallystetyyppi
+                                 :raekoko raekoko
+                                 :tyomenetelma tyomenetelma
+                                 :massamaara massamaara
+                                 :toimenpide toimenpide
+                                 :id id
+                                 :urakka urakka-id}))
+
+(defn tallenna-yllapitokohdeosat
+  "Tallentaa ylläpitokohdeosat kantaan.
+   Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
+   Palauttaa kohteen päivittyneet kohdeosat."
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat] :as tiedot}]
+  (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+  (jdbc/with-db-transaction [db db]
+    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
+
+    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
+                                                           {:urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :yllapitokohde-id yllapitokohde-id})
+          vanhat-osa-idt (into #{} (map :id) (hae-osat))
+          uudet-osa-idt (into #{} (keep :id) osat)
+          poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
+
+      (doseq [id poistuneet-osa-idt]
+        (q/poista-yllapitokohdeosa! db {:urakka urakka-id
+                                        :id id}))
+
+      (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
+      (doseq [osa osat]
+        (if (id-olemassa? (:id osa))
+          (paivita-yllapitokohdeosa db user urakka-id osa)
+          (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
+      (yy/paivita-yllapitourakan-geometria db urakka-id)
+      (let [yllapitokohdeosat (hae-osat)]
+        (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
+        (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
+
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
                                {:keys [kohdenumero nimi
                                        tr-numero tr-alkuosa tr-alkuetaisyys
@@ -339,93 +419,18 @@
       (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
       (if (id-olemassa? (:id kohde))
         (paivita-yllapitokohde db user urakka-id kohde)
-        (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
+        (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde))
+
+      ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
+
+
+      )
     (yy/paivita-yllapitourakan-geometria db urakka-id)
     (let [paallystyskohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id
                                                                  :vuosi vuosi})]
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
-
-(defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
-                                  {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
-                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
-  (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
-  (when-not poistettu
-    (q/luo-yllapitokohdeosa<! db
-                              {:yllapitokohde yllapitokohde-id
-                               :nimi nimi
-                               :tunnus tunnus
-                               :tr_numero tr-numero
-                               :tr_alkuosa tr-alkuosa
-                               :tr_alkuetaisyys tr-alkuetaisyys
-                               :tr_loppuosa tr-loppuosa
-                               :tr_loppuetaisyys tr-loppuetaisyys
-                               :tr_ajorata tr-ajorata
-                               :tr_kaista tr-kaista
-                               :paallystetyyppi paallystetyyppi
-                               :raekoko raekoko
-                               :tyomenetelma tyomenetelma
-                               :massamaara massamaara
-                               :toimenpide toimenpide
-                               :ulkoinen-id nil})))
-
-(defn- paivita-yllapitokohdeosa [db user urakka-id
-                                 {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
-                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
-                                  :as kohdeosa}]
-
-  (log/debug "Päivitetään ylläpitokohdeosa")
-  (q/paivita-yllapitokohdeosa<! db
-                                {:nimi nimi
-                                 :tr_numero tr-numero
-                                 :tr_alkuosa tr-alkuosa
-                                 :tr_alkuetaisyys tr-alkuetaisyys
-                                 :tr_loppuosa tr-loppuosa
-                                 :tr_loppuetaisyys tr-loppuetaisyys
-                                 :tr_ajorata tr-ajorata
-                                 :tr_kaista tr-kaista
-                                 :paallystetyyppi paallystetyyppi
-                                 :raekoko raekoko
-                                 :tyomenetelma tyomenetelma
-                                 :massamaara massamaara
-                                 :toimenpide toimenpide
-                                 :id id
-                                 :urakka urakka-id}))
-
-(defn tallenna-yllapitokohdeosat
-  "Tallentaa ylläpitokohdeosat kantaan.
-   Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
-   Palauttaa kohteen päivittyneet kohdeosat."
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat] :as tiedot}]
-  (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
-  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
-  (jdbc/with-db-transaction [db db]
-    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-
-    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
-                                                           {:urakka-id urakka-id
-                                                            :sopimus-id sopimus-id
-                                                            :yllapitokohde-id yllapitokohde-id})
-          vanhat-osa-idt (into #{} (map :id) (hae-osat))
-          uudet-osa-idt (into #{} (keep :id) osat)
-          poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
-
-      (doseq [id poistuneet-osa-idt]
-        (q/poista-yllapitokohdeosa! db {:urakka urakka-id
-                                        :id id}))
-
-      (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
-      (doseq [osa osat]
-        (if (id-olemassa? (:id osa))
-          (paivita-yllapitokohdeosa db user urakka-id osa)
-          (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
-      (yy/paivita-yllapitourakan-geometria db urakka-id)
-      (let [yllapitokohdeosat (hae-osat)]
-        (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-        (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
 (defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
   (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
