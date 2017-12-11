@@ -293,18 +293,6 @@
                 :tr-loppuosa 3
                 :tr-loppuetaisyys 100})))
 
-  ;; Alikohde päättyy pääkohteen alkuun
-  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
-               {:tr-alkuosa 3
-                :tr-alkuetaisyys 100
-                :tr-loppuosa 5
-                :tr-loppuetaisyys 200}
-               {:tr-alkuosa 3
-                :tr-alkuetaisyys 50
-                :tr-loppuosa 3
-                :tr-loppuetaisyys 100}
-               false)))
-
   ;; Alikohde pääkohteen sisällä
   (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
                {:tr-alkuosa 3
@@ -348,16 +336,6 @@
                 :tr-alkuetaisyys 200
                 :tr-loppuosa 6
                 :tr-loppuetaisyys 300})))
-  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
-               {:tr-alkuosa 3
-                :tr-alkuetaisyys 100
-                :tr-loppuosa 5
-                :tr-loppuetaisyys 200}
-               {:tr-alkuosa 5
-                :tr-alkuetaisyys 200
-                :tr-loppuosa 6
-                :tr-loppuetaisyys 300}
-               false)))
 
   ;; ALikohde alkaa pääkohteen jälkeen
   (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?

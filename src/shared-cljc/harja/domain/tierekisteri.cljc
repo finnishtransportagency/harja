@@ -268,14 +268,21 @@
     "Ei pääkohteen sisällä"))
 
 (defn tr-vali-leikkaa-tr-valin?
-  "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen (osuu edes osittain sen sisälle).
-
-   Mikäli sisallyta-rajat? on true (oletuksena on), niin leikkauseksi lasketaan myös tilanne, jossa
-   toisen tien osoite päättyy ensimmäisen alkuun tai alkaa toisen lopusta. Jos on false,
-   niin leikkaukseksi lasketaan vain sellaiset osoitteet, jotka ovat ainakin metrin verran toisen sisällä."
-  ([tr-vali1 tr-vali2] (tr-vali-leikkaa-tr-valin? tr-vali1 tr-vali2 true))
-  ([tr-vali1 tr-vali2 sisallyta-rajat?]
-  nil))
+  "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen.
+   Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin metrin verran osoitteen 1 tien sisällä."
+  [tr-vali1 tr-vali2]
+  ;; Väli 2 ei varmasti leikkaa väliä 1, jos se päättyy ennen välin 1 alkua tai alkaa välin 2 jälkeen
+  ;; Tutkitaan siis tämä tilanne.
+  (let [tr-vali1 (tr-osoite-kasvusuuntaan tr-vali1)
+        tr-vali2 (tr-osoite-kasvusuuntaan tr-vali2)
+        ei-leikkaa? (or
+                      (or (< (:tr-loppuosa tr-vali2) (:tr-alkuosa tr-vali1))
+                          (and (= (:tr-loppuosa tr-vali2) (:tr-alkuosa tr-vali1))
+                               (< (:tr-loppuetaisyys tr-vali2) (:tr-alkuetaisyys tr-vali1))))
+                      (or (> (:tr-alkuosa tr-vali2) (:tr-loppuosa tr-vali1))
+                          (and (= (:tr-alkuosa tr-vali2) (:tr-loppuosa tr-vali1))
+                               (> (:tr-alkuetaisyys tr-vali2) (:tr-loppuetaisyys tr-vali1)))))]
+    (not ei-leikkaa?)))
 
 (defn korjaa-paakohteen-alikohteet
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
@@ -283,5 +290,5 @@
    - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
    - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
      pääkohteen loppuun."
-  ([paakohde alikohteet])
-   nil)
+  ([paakohde alikohteet]
+   nil))
