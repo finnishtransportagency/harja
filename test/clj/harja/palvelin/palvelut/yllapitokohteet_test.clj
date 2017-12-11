@@ -60,8 +60,8 @@
                               :tr-numero 20
                               :tr-alkuosa 1
                               :tr-alkuetaisyys 1
-                              :tr-loppuosa 1
-                              :tr-loppuetaisyys 1
+                              :tr-loppuosa 2
+                              :tr-loppuetaisyys 2
                               :bitumi_indeksi 123
                               :kaasuindeksi 123})
 
@@ -360,6 +360,7 @@
                               :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :kohteet [(assoc yllapitokohde-testidata
+                                                                                    :id yllapitokohde-id
                                                                                     :tr-loppuosa uusi-loppuosa
                                                                                     :tr-loppuetaisyys uusi-loppuetaisyys)]})
             kohdeosat (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -367,7 +368,6 @@
                                       +kayttaja-jvh+ {:urakka-id urakka-id
                                                       :sopimus-id sopimus-id
                                                       :yllapitokohde-id yllapitokohde-id})
-            _ (log/debug "KOHDEOSAT: " (pr-str kohdeosat))
             kohdeosa (first kohdeosat)]
 
         (is (= (:tr-alkuosa kohdeosa) (:tr-alkuosa yllapitokohde-testidata)))
