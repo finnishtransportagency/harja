@@ -281,7 +281,7 @@
    [lomake/lomake
     {:otsikko "Uusi häiriötilanne"
      :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
-     :validoi-alussa? false
+     :validoi-alussa? true
      :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
      :footer-fn (hairiolomakkeen-toiminnot e! app)}
     (hairiolomakkeen-kentat e! app kohteet)
