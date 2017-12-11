@@ -339,3 +339,7 @@
   java.util.Date
   (sql-value [v]
     (sql-timestamp v)))
+
+(defn turvalaiteryhman-turvalaitteet->array
+  [turvalaiteryhma]
+  (assoc turvalaiteryhma :turvalaitteet (seq->array (map #(Integer. %) (:turvalaitteet turvalaiteryhma)))))

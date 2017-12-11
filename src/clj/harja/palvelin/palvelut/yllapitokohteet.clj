@@ -439,7 +439,7 @@
               (throw (RuntimeException.)))
             (catch Exception e
               (log/warn (str "[YLLAPITOKOHDEOSA-DEBUG] Havaittu ylläpitokohdeosien tallennus, jonka lopputulos ei täytä pääkohdetta!"
-                             "\nALLENNETUT OSAT (ilman geometriaa): " (mapv #(select-keys % debug-avaimet) yllapitokohdeosat)
+                             "\nANNETUT OSAT (ilman geometriaa): " (mapv #(select-keys % debug-avaimet) yllapitokohdeosat)
                              "\nYLLÄPITOKOHDE: " (select-keys yllapitokohde debug-avaimet)
                              "\nARGS: " (vec tiedot)
                              "\nKUTSUPINO: " (mapv #(str % "\n") (.getStackTrace e)))))))
