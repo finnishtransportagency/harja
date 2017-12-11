@@ -261,7 +261,7 @@
                  :tr-loppuetaisyys 4815}))
         "Sama väli eri suuntiin on ok")))
 
-(defn tr-vali-leikkaa-tr-valin? []
+(deftest tr-vali-leikkaa-tr-valin?
 
   ;; Alikohteen osuminen pääkohteen alkupuolelle
 
