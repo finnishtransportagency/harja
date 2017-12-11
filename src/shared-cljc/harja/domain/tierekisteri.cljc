@@ -271,10 +271,10 @@
   "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen.
    Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin metrin verran osoitteen 1 tien sisällä."
   [tr-vali1 tr-vali2]
-  ;; Väli 2 ei varmasti leikkaa väliä 1, jos se päättyy ennen välin 1 alkua tai alkaa välin 2 jälkeen
-  ;; Tutkitaan siis tämä tilanne.
   (let [tr-vali1 (tr-osoite-kasvusuuntaan tr-vali1)
         tr-vali2 (tr-osoite-kasvusuuntaan tr-vali2)
+        ;; Väli 2 ei varmasti leikkaa väliä 1, jos se päättyy ennen välin 1 alkua tai alkaa välin 2 jälkeen
+        ;; Tutkitaan siis se, ja annetaan vastaus käänteisenä.
         ei-leikkaa? (or
                       (or (< (:tr-loppuosa tr-vali2) (:tr-alkuosa tr-vali1))
                           (and (= (:tr-loppuosa tr-vali2) (:tr-alkuosa tr-vali1))
