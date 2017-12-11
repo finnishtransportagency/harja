@@ -268,7 +268,9 @@
 
 (defn tr-vali-leikkaa-tr-valin?
   "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen.
-   Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin metrin verran osoitteen 1 tien sisällä."
+   Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin metrin verran osoitteen 1 tien sisällä.
+
+   Olettaa, että tr-välit ovat samalla tiellä."
   [tr-vali1 tr-vali2]
   (let [tr-vali1 (tr-osoite-kasvusuuntaan tr-vali1)
         tr-vali2 (tr-osoite-kasvusuuntaan tr-vali2)
@@ -285,9 +287,31 @@
 
 (defn korjaa-paakohteen-alikohteet
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
+   pPlauttaa korjatut kohteet.
+
    Muokkaus tehdään seuraavasti:
    - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
    - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
-     pääkohteen loppuun."
+     pääkohteen loppuun.
+
+   Olettaa, että pääkohde alikohteineen on samalla tiellä."
   ([paakohde alikohteet]
-   (let [paakohde (tr-osoite-kasvusuuntaan paakohde)])))
+   (let [paakohde (tr-osoite-kasvusuuntaan paakohde)
+         alikohteet (map tr-osoite-kasvusuuntaan alikohteet)
+         alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
+         leikkaavat-alikohteet (filter #(tr-vali-leikkaa-tr-valin? paakohde %) alikohteet-jarjestyksessa)
+         ensimmainen-alikohde (first leikkaavat-alikohteet)
+         viimeinen-alikohde (last leikkaavat-alikohteet)
+         ensimmainen-alikohde-venytettyna (assoc ensimmainen-alikohde
+                                            :tr-alkuosa (:tr-alkuosa paakohde)
+                                            :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
+         viimeinen-alikohde-venytettyna (assoc ensimmainen-alikohde
+                                          :tr-loppuosa (:tr-loppuosa paakohde)
+                                          :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
+         valiin-jaavat-aikohteet (or (butlast (rest leikkaavat-alikohteet)) [])]
+
+    (if (= ensimmainen-alikohde viimeinen-alikohde)
+      ;; Jos leikkaavia alikoihteita on vain yksi, palautetaan se venytettynä kattamaan koko pääkohde
+      [(merge ensimmainen-alikohde-venytettyna viimeinen-alikohde-venytettyna)]
+      ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
+      (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna])))))
