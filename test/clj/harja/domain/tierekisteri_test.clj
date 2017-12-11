@@ -261,3 +261,101 @@
                  :tr-loppuetaisyys 4815}))
         "Sama väli eri suuntiin on ok")))
 
+(defn tr-vali-leikkaa-tr-valin? []
+
+  ;; Alikohteen osuminen pääkohteen alkupuolelle
+
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 100
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 200}
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 50
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 99})))
+
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 3
+                :tr-loppuetaisyys 100})))
+
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 1
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 2
+                :tr-loppuetaisyys 300})))
+
+  ;; Alikohde pääkohteen sisällä
+
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 4
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 300})))
+
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 4
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 2
+                :tr-loppuetaisyys 300})))
+
+  ;; Alikohteen osuminen pääkohteen loppupuolelle
+
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 5
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 6
+                :tr-loppuetaisyys 300})))
+
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 5
+                :tr-alkuetaisyys 200
+                :tr-loppuosa 6
+                :tr-loppuetaisyys 300})))
+
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 5
+                :tr-alkuetaisyys 300
+                :tr-loppuosa 6
+                :tr-loppuetaisyys 300})))
+
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 100
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 200}
+                {:tr-alkuosa 5
+                 :tr-alkuetaisyys 300
+                 :tr-loppuosa 6
+                 :tr-loppuetaisyys 600}))))
+
