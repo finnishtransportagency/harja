@@ -288,7 +288,7 @@
 
 (defn korjaa-paakohteen-alikohteet
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
-   pPlauttaa korjatut kohteet.
+   Palauttaa korjatut kohteet.
 
    Muokkaus tehdään seuraavasti:
    - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
