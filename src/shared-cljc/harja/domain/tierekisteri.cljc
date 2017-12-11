@@ -268,7 +268,8 @@
 
 (defn tr-vali-leikkaa-tr-valin?
   "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen.
-   Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin metrin verran osoitteen 1 tien sisällä.
+   Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin hieman osoitteen 1 tien sisällä,
+   ei siis riitä, että peölkästään alku/loppu on samassa kohtaa.
 
    Olettaa, että tr-välit ovat samalla tiellä."
   [tr-vali1 tr-vali2]
@@ -279,10 +280,10 @@
         ei-leikkaa? (or
                       (or (< (:tr-loppuosa tr-vali2) (:tr-alkuosa tr-vali1))
                           (and (= (:tr-loppuosa tr-vali2) (:tr-alkuosa tr-vali1))
-                               (< (:tr-loppuetaisyys tr-vali2) (:tr-alkuetaisyys tr-vali1))))
+                               (<= (:tr-loppuetaisyys tr-vali2) (:tr-alkuetaisyys tr-vali1))))
                       (or (> (:tr-alkuosa tr-vali2) (:tr-loppuosa tr-vali1))
                           (and (= (:tr-alkuosa tr-vali2) (:tr-loppuosa tr-vali1))
-                               (> (:tr-alkuetaisyys tr-vali2) (:tr-loppuetaisyys tr-vali1)))))]
+                               (>= (:tr-alkuetaisyys tr-vali2) (:tr-loppuetaisyys tr-vali1)))))]
     (boolean (not ei-leikkaa?))))
 
 (defn korjaa-paakohteen-alikohteet
