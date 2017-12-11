@@ -313,6 +313,8 @@
 
     (if (= ensimmainen-alikohde viimeinen-alikohde)
       ;; Jos leikkaavia alikoihteita on vain yksi, palautetaan se venytettynä kattamaan koko pääkohde
-      [(merge ensimmainen-alikohde-venytettyna viimeinen-alikohde-venytettyna)]
+      [(assoc ensimmainen-alikohde-venytettyna
+         :tr-loppuosa (:tr-loppuosa viimeinen-alikohde-venytettyna)
+         :tr-loppuetaisyys (:tr-loppuetaisyys viimeinen-alikohde-venytettyna))]
       ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
       (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna])))))
