@@ -305,7 +305,7 @@
          ensimmainen-alikohde-venytettyna (assoc ensimmainen-alikohde
                                             :tr-alkuosa (:tr-alkuosa paakohde)
                                             :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
-         viimeinen-alikohde-venytettyna (assoc ensimmainen-alikohde
+         viimeinen-alikohde-venytettyna (assoc viimeinen-alikohde
                                           :tr-loppuosa (:tr-loppuosa paakohde)
                                           :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
          valiin-jaavat-aikohteet (or (butlast (rest leikkaavat-alikohteet)) [])]
