@@ -12,7 +12,8 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavatoimenpide]
             [clojure.string :as str]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.domain.vesivaylat.materiaali :as materiaalit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -117,3 +118,24 @@
     (fn [tehtava]
       (some #(= % tyyppi) (:hinnoittelu tehtava)))
     (map #(nth % 3) tehtavat)))
+
+
+(defn yksi-tallennettava-materiaalikirjaus [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
+  "Palauttaa tallennettavan mapin kun saadaan annetaan muokattu, ei-tyhjat, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...}"
+  (let [muokattu? (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
+        tyhja? (= [:jarjestysnumero] (keys m-kirjaus))
+        poistettu? (:poistettu m-kirjaus)
+        varaosa (:varaosa m-kirjaus)]
+    (when-not (or tyhja? poistettu? (not muokattu?))
+      ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
+      (assoc varaosa
+             ::materiaalit/maara (- (:maara m-kirjaus))
+             ::materiaalit/lisätieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
+
+(defn tallennettavat-materiaalit [tp]
+  (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
+        muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
+        tp-id (::kanavatoimenpide/id tp)
+        paivamaara (::kanavatoimenpide/pvm tp)
+        kohteen-nimi (get-in hairiotilanne [::kanavatoimenpide/kohde ::kohde/nimi])]
+    (keep yksi-tallennettava-materiaalikirjaus materiaali-kirjaukset)))
