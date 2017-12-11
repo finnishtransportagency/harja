@@ -446,4 +446,72 @@
            :tr-alkuosa 4
            :tr-alkuetaisyys 200
            :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+           {:tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 50
+             :tr-loppuosa 3
+             :tr-loppuetaisyys 200}
+            {:id 2
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 4
+             :tr-loppuetaisyys 200}
+            {:id 3
+             :tr-alkuosa 4
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 300}])
+         [{:id 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 3
+           :tr-loppuetaisyys 200}
+          {:id 2
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 200
+           :tr-loppuosa 4
+           :tr-loppuetaisyys 200}
+          {:id 3
+           :tr-alkuosa 4
+           :tr-alkuetaisyys 200
+           :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+           {:tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 100
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 300}])
+         [{:id 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+           {:tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 25
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 300}])
+         [{:id 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 5
            :tr-loppuetaisyys 200}])))
