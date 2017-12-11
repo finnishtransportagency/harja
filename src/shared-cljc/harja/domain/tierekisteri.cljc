@@ -276,3 +276,12 @@
   ([tr-vali1 tr-vali2] (tr-vali-leikkaa-tr-valin? tr-vali1 tr-vali2 true))
   ([tr-vali1 tr-vali2 sisallyta-rajat?]
   nil))
+
+(defn korjaa-paakohteen-alikohteet
+  "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
+   Muokkaus tehdään seuraavasti:
+   - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
+   - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
+     pääkohteen loppuun."
+  ([paakohde alikohteet])
+   nil)

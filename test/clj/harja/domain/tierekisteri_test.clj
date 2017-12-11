@@ -381,7 +381,7 @@
 
 (deftest korjaa-paakohteen-alikohteet
 
-  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
            {:tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
@@ -412,7 +412,7 @@
            :tr-loppuosa 10
            :tr-loppuetaisyys 0}]))
 
-  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
            {:tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
@@ -448,7 +448,7 @@
            :tr-loppuosa 5
            :tr-loppuetaisyys 200}]))
 
-  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
            {:tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
@@ -484,7 +484,7 @@
            :tr-loppuosa 5
            :tr-loppuetaisyys 200}]))
 
-  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
            {:tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
@@ -500,7 +500,7 @@
            :tr-loppuosa 5
            :tr-loppuetaisyys 200}]))
 
-  (is (= (tierekisteri/tr-vali-leikkaa-tr-valin?
+  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
            {:tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
