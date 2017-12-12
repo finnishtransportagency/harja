@@ -193,8 +193,9 @@
                {:id "test"
                 :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"
                                "test/cljs" "test/doo" "test/shared-cljs"]
-                :compiler {:output-to "target/cljs/test/test.js"
-                           :output-dir "target/cljs/test"
+                :compiler {:asset-path "base/target/cljs/test/out"
+                           :output-to "target/cljs/test/test.js"
+                           :output-dir "target/cljs/test/out"
                            :optimizations :none
                            :pretty-print true
                            :source-map true
