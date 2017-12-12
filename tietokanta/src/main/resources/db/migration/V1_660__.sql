@@ -285,8 +285,6 @@ BEGIN
   FROM tielupa
   WHERE id = tielupa_id;
 
-  RAISE NOTICE '%', sijainnit_;
-
   FOREACH sijainti_ IN ARRAY sijainnit_
   LOOP
     geometriat_ := array_append(geometriat_, sijainti_.geometria);

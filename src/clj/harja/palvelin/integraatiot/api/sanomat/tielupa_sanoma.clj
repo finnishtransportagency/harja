@@ -190,7 +190,6 @@
    ::tielupa/liikennemerkkijarjestelyt (liikennemerkkijarjestelyt (:jarjestelyt tilapaiset-liikennemerkkijarjestelyt))})
 
 (defn tyolupa [tyolupa]
-
   {::tielupa/tyolupa-tyon-sisalto (:tyon-sisalto tyolupa)
    ::tielupa/tyolupa-tyon-saa-aloittaa (json-tyokalut/aika-string->java-sql-date (:tyon-saa-aloittaa tyolupa))
    ::tielupa/tyolupa-viimeistely-oltava (json-tyokalut/aika-string->java-sql-date (:viimeistely-oltava tyolupa))
@@ -232,6 +231,5 @@
                    (merge (tilapainen-myyntilupa (:tilapainen-myyntilupa tielupa)))
                    (merge (tilapaiset-liikennemerkkijarjestelyt (:tilapaiset-liikennemerkkijarjestelyt tielupa)))
                    (merge (tyolupa (:tyolupa tielupa)))
-                   (merge (vesihuoltolupa (:vesihuoltolupa tielupa)))
-                   )]
+                   (merge (vesihuoltolupa (:vesihuoltolupa tielupa))))]
     domain))
