@@ -216,7 +216,7 @@
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kayttaja (ffirst (q "select id from kayttaja limit 1;"))
-        kohde-kohde (ffirst (q "select id from kan_kohde limit 1;"))
+        kohde-id (ffirst (q "select id from kan_kohde limit 1;"))
         huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1;"))
         kolmostason-toimenpide-id (ffirst (q "select tpk3.id
                                                from toimenpidekoodi tpk1
@@ -234,7 +234,7 @@
                     ::kanavan-toimenpide/toimenpidekoodi-id tehtava-id
                     ::kanavan-toimenpide/lisatieto "tämä on testitoimenpide"
                     ::kanavan-toimenpide/tyyppi :kokonaishintainen
-                    ::kanavan-toimenpide/kohde-id kohde-kohde
+                    ::kanavan-toimenpide/kohde-id kohde-id
                     ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
                     ::kanavan-toimenpide/huoltokohde-id huoltokohde
                     ::kanavan-toimenpide/urakka-id urakka-id}
@@ -311,9 +311,9 @@
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :tallenna-kanavatoimenpide
-                                           +kayttaja-jvh+
-                                           argumentit)))))
+                                                   :tallenna-kanavatoimenpide
+                                                   +kayttaja-jvh+
+                                                   argumentit)))))
 
 (deftest toimenpiteen-tallentaminen-eri-kohteen-kohdeosalle
   (let [urakka-id (hae-saimaan-kanavaurakan-id)

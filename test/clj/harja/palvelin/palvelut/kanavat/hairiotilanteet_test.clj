@@ -143,8 +143,10 @@
                                            +kayttaja-ulle+
                                            args)))))
 
-(defn tallennuksen-parametrit [id urakka-id kohde-id kohdeosa-id syy]
-  (let [urakka-id (or urakka-id (hae-saimaan-kanavaurakan-id))
+(defn tallennuksen-parametrit [{:keys [id urakka-id kohde-id kohdeosa-id syy naulan-kulutus amparin-kulutus]}]
+  (let [naulan-kulutus (or naulan-kulutus 0)
+        amparin-kulutus (or amparin-kulutus 0)
+        urakka-id (or urakka-id (hae-saimaan-kanavaurakan-id))
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (or kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id))
         kohteenosa-id kohdeosa-id]
@@ -165,11 +167,19 @@
                                       ::hairiotilanne/syy syy
                                       ::hairiotilanne/odotusaika-h 4
                                       ::hairiotilanne/ammattiliikenne-lkm 2})
+     ::vv-materiaali/materiaalikirjaukset [{::vv-materiaali/maara naulan-kulutus
+                                            ::vv-materiaali/nimi "Naulat"
+                                            ::vv-materiaali/urakka-id urakka-id
+                                            ::vv-materiaali/pvm (pvm/nyt)}
+                                           {::vv-materiaali/maara amparin-kulutus
+                                            ::vv-materiaali/nimi "Ämpäreitä"
+                                            ::vv-materiaali/urakka-id urakka-id
+                                            ::vv-materiaali/pvm (pvm/nyt)}]
      ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}}))
 
 (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        parametrit (tallennuksen-parametrit nil nil nil nil syy)]
+        parametrit (tallennuksen-parametrit {:syy syy})]
     (defn tallennuksen-parametrit [{:keys [naulan-kulutus amparin-kulutus]}]
       (let [naulan-kulutus (or naulan-kulutus 0)
             amparin-kulutus (or amparin-kulutus 0)
@@ -336,7 +346,7 @@
 
 (deftest hairiotilanteen-tallennus
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        parametrit (tallennuksen-parametrit nil nil nil nil syy)
+        parametrit (tallennuksen-parametrit {:syy syy})
         maara-ennen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-hairiotilanne
@@ -350,7 +360,9 @@
   (let [paivitettava-id (ffirst (q "SELECT id FROM kan_hairio LIMIT 1"))
         syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         oulun-urakka-2014 (hae-oulun-alueurakan-2014-2019-id)
-        parametrit (tallennuksen-parametrit paivitettava-id oulun-urakka-2014 nil nil syy)]
+        parametrit (tallennuksen-parametrit {:id paivitettava-id
+                                             :syy syy
+                                             :urakka-id oulun-urakka-2014})]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hairiotilanne
@@ -361,7 +373,9 @@
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         urakka-id (hae-saimaan-kanavaurakan-id)
         kohde-id 66666
-        parametrit (tallennuksen-parametrit nil urakka-id kohde-id nil syy)]
+        parametrit (tallennuksen-parametrit {:kohde-id kohde-id
+                                             :syy syy
+                                             :urakka-id urakka-id})]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hairiotilanne
@@ -373,7 +387,10 @@
         urakka-id (hae-saimaan-kanavaurakan-id)
         kohde-id (ffirst (q (str "SELECT \"kohde-id\" FROM kan_kohde_urakka WHERE \"urakka-id\" = " urakka-id ";")))
         kohdeosa-id (ffirst (q (str "SELECT id FROM kan_kohteenosa WHERE \"kohde-id\" != " kohde-id ";")))
-        parametrit (tallennuksen-parametrit nil urakka-id kohde-id kohdeosa-id syy)]
+        parametrit (tallennuksen-parametrit {:kohde-id kohde-id
+                                             :kohdeosa-id kohdeosa-id
+                                             :syy syy
+                                             :urakka-id urakka-id})]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :tallenna-hairiotilanne
