@@ -270,7 +270,7 @@
     :pakollinen? true
     :uusi-rivi? true
     :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
-    :valinta-arvo :arvo
+    :valinta-arvo :arvo ;; TODO ALEMPI LÖYTYY DOMAINISTA
     :valinnat [{:arvo :sahkotekninen_vika
                 :nimi "Sähkötekninen vika"}
                {:arvo :konetekninen_vika
