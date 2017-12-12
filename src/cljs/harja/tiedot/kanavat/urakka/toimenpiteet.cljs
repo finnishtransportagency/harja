@@ -139,3 +139,15 @@
         paivamaara (::kanavatoimenpide/pvm tp)
         kohteen-nimi (get-in hairiotilanne [::kanavatoimenpide/kohde ::kohde/nimi])]
     (keep yksi-tallennettava-materiaalikirjaus materiaali-kirjaukset)))
+
+
+(defn listaus->kirjaus [materiaalilistaus]
+  (for [muutos (::materiaalit/muutokset materiaalilistaus)]
+    {:maara (- (::materiaalit/maara muutos))
+     :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+               ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+               ::materiaalit/pvm (::materiaalit/pvm muutos)
+               ::materiaalit/id (::materiaalit/id muutos)}}))
+
+(defn materiaali-listaukset->materiaali-kirjaukset [m-listaukset]
+  (mapv listaus->kirjaus m-listaukset))

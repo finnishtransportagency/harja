@@ -2,10 +2,12 @@
   (:require [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
             [clojure.string :as str]
+            [reagent.core :refer [atom] :as r]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
             [harja.loki :refer [log]]
@@ -74,6 +76,40 @@
        (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
        " " toiminto "."))
 
+
+(defn varaosataulukko [e! {:keys [materiaalit avattu-toimenpide] :as app}]
+  (let [voi-muokata? true
+        virhe-atom (r/wrap (::lomake/virheet avattu-toimenpide)
+                           (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
+        sort-fn (fn [materiaalin-kirjaus]
+                  (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
+                           (nil? (:jarjestysnumero materiaalin-kirjaus)))
+                    [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
+                    [(:jarjestysnumero materiaalin-kirjaus) nil]))]
+    [grid/muokkaus-grid
+     {:voi-muokata? voi-muokata?
+      :voi-lisata? false
+      :voi-poistaa? (constantly voi-muokata?)
+      :voi-kumota? false
+      :virheet virhe-atom
+      :piilota-toiminnot? false
+      :tyhja "Ei varaosia"
+      :otsikko "Varaosat"}
+     [{:otsikko "Varaosa"
+       :nimi :varaosa
+       :validoi [[:ei-tyhja "Tieto puuttuu"]]
+       :tyyppi :valinta
+       :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
+       :valinnat materiaalit}
+      {:otsikko "Käytetty määrä"
+       :nimi :maara
+       :validoi [[:ei-tyhja "Tieto puuttuu"]]
+       :tyyppi :positiivinen-numero
+       :kokonaisluku? true}]
+     (r/wrap
+       (zipmap (range)
+               (sort-by sort-fn (::materiaali/materiaalit avattu-toimenpide)))
+       #(e! (tiedot/->MuokkaaMateriaaleja (sort-by sort-fn (vals %)))))]))
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
                                           toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)
@@ -153,7 +189,22 @@
       :nimi ::kanavan-toimenpide/kuittaaja
       :tyyppi :string
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
-      :muokattava? (constantly false)}]))
+      :muokattava? (constantly false)}
+     {:nimi :varaosat
+      :tyyppi :komponentti
+      :palstoja 2
+      :komponentti (fn [_]
+                     [varaosataulukko e! app])
+      :validoi [#(when-not (empty? (::lomake/virheet %2))
+                   "virhe")]}
+     {:nimi :lisaa-varaosa
+      :tyyppi :komponentti
+      :uusi-rivi? true
+      :komponentti (fn [_]
+                     [napit/uusi "Lisää varaosa"
+                      #(e! (harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset/->LisaaMateriaali))
+                      ;; todo: katsotaan oikeustarkistuksesta näytetäänkö nappia
+                      {:disabled false}])}]))
 
 (defn- ei-yksiloity-vihje []
   [yleiset/vihje-elementti [:span

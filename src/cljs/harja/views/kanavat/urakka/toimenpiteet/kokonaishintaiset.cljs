@@ -16,6 +16,7 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -82,6 +83,8 @@
                                 {:id (::kanavan-toimenpide/id rivi)
                                  :valittu? uusi-arvo})))})
     (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
+
+
 
 (defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
                                                      tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]

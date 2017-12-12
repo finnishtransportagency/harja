@@ -11,6 +11,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
@@ -47,6 +48,15 @@
 (defrecord SiirraValitut [])
 (defrecord ValitutSiirretty [])
 (defrecord ValitutEiSiirretty [])
+
+;; Materiaalit
+
+(defrecord HaeMateriaalit [])
+(defrecord MuokkaaMateriaaleja [materiaalit])
+(defrecord MateriaalitHaettu [materiaalit])
+(defrecord MateriaalienHakuEpaonnistui [])
+(defrecord LisaaMateriaali [])
+
 
 (def tila (atom {:nakymassa? false
                  :valinnat nil
@@ -103,8 +113,10 @@
   (process-event [{valinnat :valinnat} app]
     (let [uudet-valinnat (merge (:valinnat app)
                                 valinnat)
-          haku (tuck/send-async! ->HaeToimenpiteet)]
-      (go (haku uudet-valinnat))
+          tp-haku (tuck/send-async! ->HaeToimenpiteet)
+          ml-haku (tuck/send-async! ->HaeMateriaalit)]
+      (go (tp-haku uudet-valinnat))
+      (go (ml-haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
 
   HaeToimenpiteet
@@ -114,6 +126,10 @@
           (not (:haku-kaynnissa? app)))
       (let [argumentit (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
+            (tuck-apurit/post! :hae-kanavatoimenpiteet
+                               argumentit
+                               {:onnistui ->ToimenpiteetHaettu
+                                :epaonnistui ->ToimenpiteidenHakuEpaonnistui})
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
                                {:onnistui ->ToimenpiteetHaettu
@@ -228,4 +244,46 @@
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
-      app)))
+      app))
+
+  HaeMateriaalit
+  (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
+    (log "HaeMateriaalit " materiaalien-haku-kaynnissa?)
+    (when-not materiaalien-haku-kaynnissa?
+      (let [urakka-id (:id @navigaatio/valittu-urakka)]
+        (-> app
+            (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
+                               {::materiaalit/urakka-id urakka-id}
+                               {:onnistui ->MateriaalitHaettu
+                                :epaonnistui ->MateriaalienHakuEpaonnistui})
+            (assoc :materiaalien-haku-kaynnissa? true
+                   :materiaalit nil)))))
+
+  MateriaalitHaettu
+  (process-event [{materiaalit :materiaalit} app]
+    (assoc app
+           :materiaalit materiaalit
+           :materiaalien-haku-kaynnissa? false))
+
+  MateriaalienHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Materiaalien haku epäonnistui" :danger)
+    (assoc app :materiaalien-haku-kaynnissa? false))
+
+  MuokkaaMateriaaleja
+  (process-event [{materiaalit :materiaalit} app]
+    (if (:avattu-toimenpide app)
+      (update app :avattu-toimenpide #(assoc % ::materiaalit/materiaalit materiaalit))
+      app))
+
+  LisaaMateriaali
+  (process-event [_ app]
+    ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
+    ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
+    (log "LisaaMateriaali kutsuttu")
+    (update-in app
+               [:avattu-toimenpide ::materiaalit/materiaalit]
+               #(let [vanha-id (apply max (map :jarjestysnumero %))
+                      uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
+                  (log  )
+                  (conj (vec %) {:jarjestysnumero uusi-id})))))
