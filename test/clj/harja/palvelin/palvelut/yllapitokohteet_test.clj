@@ -445,9 +445,17 @@
                                                  :urakan-yllapitokohteet
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
+
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-ennen-testia))
-             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-testin-jalkeen)))))))
+      ;; Kohteet ovat kannassa samat kuin aiemmin
+      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?
+                                        :kohdeosat
+                                        :muokattu)
+                               kohteet-ennen-testia))
+             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?
+                                        :kohdeosat
+                                        :muokattu)
+                               kohteet-testin-jalkeen)))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
