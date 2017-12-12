@@ -57,7 +57,7 @@
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet
                              nayta-virheet? nykyinen-fokus i voi-muokata? fokus
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
-                             voi-poistaa?]}]
+                             voi-poistaa? toimintonappi-fn]}]
   [:tr.muokataan {:class (str (if (even? (+ i 1))
                                 "parillinen"
                                 "pariton"))}
@@ -111,15 +111,16 @@
                                 (get rivi nimi)))])))) skeema))
    (when-not piilota-toiminnot?
      [:td.toiminnot
-      (when (and (not= false voi-muokata?)
-                 (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-        [:span.klikattava {:on-click
-                           #(do (.preventDefault %)
-                                (muokkaa! muokatut-atom
-                                          virheet skeema
-                                          id assoc
-                                          :poistettu true))}
-         (ikonit/livicon-trash)])
+      (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
+          (when (and (not= false voi-muokata?)
+                     (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
+            [:span.klikattava {:on-click
+                               #(do (.preventDefault %)
+                                    (muokkaa! muokatut-atom
+                                              virheet skeema
+                                              id assoc
+                                              :poistettu true))}
+             (ikonit/livicon-trash)]))
       (when-not (empty? rivin-virheet)
         [:span.rivilla-virheita
          (ikonit/livicon-warning-sign)])])])
@@ -127,7 +128,7 @@
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
                              muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                             vetolaatikot-auki virheet-ylos?]}]
+                             vetolaatikot-auki virheet-ylos? toimintonappi-fn]}]
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
@@ -159,7 +160,8 @@
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
-                                          :skeema skeema :voi-poistaa? voi-poistaa?}]
+                                          :skeema skeema :voi-poistaa? voi-poistaa?
+                                          :toimintonappi-fn toimintonappi-fn}]
 
                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
                (if (or jarjesta jarjesta-avaimen-mukaan)
@@ -187,6 +189,11 @@
   :jarjesta-avaimen-mukaan jos annettu funktio, sortataan avaimen mukaan
   :paneelikomponentit vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
   :piilota-toiminnot? boolean, piilotetaan toiminnot sarake jos true
+  :toimintonappi-fn   funktio, joka saa parametrikseen rivin, ja rivin muokkausfunktion.
+                      Jos palauttaa nil, näytetään oletustoiminto (roskakori).
+                      Funktion pitää palauttaa hiccup-elementti, esim [:span]. Oletuksena (constantly nil).
+                      Parametrina saatava muokkausfunktio ottaa parametrikseen funktion ja sen parametrit,
+                      joilla muutos riviin tehdään. Esim (muokkaa! assoc :poistettu true)
   :luokat             Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
   :virheet            atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
                       luodaan sisäisesti atomi virheille
@@ -209,7 +216,7 @@
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
-           virhe-viesti] :as opts}
+           virhe-viesti toimintonappi-fn] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -275,13 +282,14 @@
                                   (update-in muokatut [id]
                                              (fn [rivi]
                                                (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
-                                                 (if virheet-dataan?
-                                                   (assoc uusi-rivi
-                                                     :harja.ui.grid/virheet (validointi/validoi-rivi
-                                                                 (assoc muokatut id uusi-rivi)
-                                                                 uusi-rivi
-                                                                 skeema))
-                                                   uusi-rivi))))))]
+                                                 (when uusi-rivi
+                                                   (if virheet-dataan?
+                                                    (assoc uusi-rivi
+                                                      :harja.ui.grid/virheet (validointi/validoi-rivi
+                                                                               (assoc muokatut id uusi-rivi)
+                                                                               uusi-rivi
+                                                                               skeema))
+                                                    uusi-rivi)))))))]
 
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
@@ -311,7 +319,7 @@
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
                     vetolaatikot uusi-id paneelikomponentit validoi-aina?
-                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti] :as opts} skeema muokatut]
+                    nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys
@@ -356,6 +364,7 @@
                              :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
-                             :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?})]
+                             :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?
+                             :toimintonappi-fn (or toimintonappi-fn (constantly nil))})]
              (when (and (not= false voi-muokata?) muokkaa-footer)
                [muokkaa-footer ohjaus])]]))})))
