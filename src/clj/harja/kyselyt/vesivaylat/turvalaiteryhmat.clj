@@ -3,7 +3,6 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.spec.alpha :as s]
             [clojure.set :as set]
-            [clojure.future :refer :all]
             [namespacefy.core :as namespacefy]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
