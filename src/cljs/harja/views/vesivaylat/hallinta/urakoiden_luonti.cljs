@@ -187,6 +187,7 @@
   (let [lahetys-kaynnissa? (some? (lahetykset (::u/id urakka)))
         tila (tiedot/urakan-sahke-tila urakka)]
     [:button
+     ;; TODO Käytä harja.ui.napit rajapintaa
      {:disabled (or (not (oikeudet/hallinta-vesivaylat)) lahetys-kaynnissa?)
       :class (str (case tila
                     :lahetetty "nappi-toissijainen "

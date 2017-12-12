@@ -14,13 +14,16 @@
   ["vv_materiaali_muutos" ::muutos]
   ["vv_materiaalilistaus" ::materiaalilistaus])
 
-
 (s/def ::materiaalilistauksen-haku (s/keys :req [::urakka-id]))
 (s/def ::materiaalilistauksen-vastaus (s/coll-of ::materiaalilistaus))
 
 (s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::maara ::pvm]
-                                   :opt [::lisatieto ::halytysraja]))
+                                   :opt [::lisatieto ::halytysraja ::hairiotilanne]))
+
+(s/def ::materiaalikirjaukset (s/coll-of ::materiaalikirjaus))
 
 (s/def ::poista-materiaalikirjaus (s/keys :req [::id ::urakka-id]))
 (s/def ::muuta-materiaalien-alkuperainen-maara (s/keys :req [::urakka-id]
                                                        :req-un [::uudet-alkuperaiset-maarat]))
+
+(s/def ::poista-materiaalikirjauksia (s/coll-of ::poista-materiaalikirjaus))

@@ -15,7 +15,8 @@
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.lt-alus :as lt-alus]
-    [harja.domain.kanavat.lt-toiminto :as toiminto])
+    [harja.domain.kanavat.lt-toiminto :as toiminto]
+    [harja.domain.kanavat.lt-ketjutus :as ketjutus])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -128,8 +129,7 @@
 (s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
-                                               :opt [::sulku-toimenpide
-                                                     ::kohde
+                                               :opt [::kohde
                                                      ::lt-alus/laji
                                                      ::lt-alus/suunta]
                                                :opt-un [::aikavali ::niput?]))
@@ -167,9 +167,34 @@
                                                        ::kohde-id
                                                        ::sopimus-id]))
 
-(s/def ::ylos (s/nilable (s/coll-of ::lt-alus/liikennetapahtuman-alus)))
-(s/def ::alas (s/nilable (s/coll-of ::lt-alus/liikennetapahtuman-alus)))
 (s/def ::kohde (s/nilable ::liikennetapahtuma))
+
+(s/def ::edellinen-alustieto (s/keys :req [::lt-alus/id
+                                           ::lt-alus/suunta
+                                           ::lt-alus/laji
+                                           ::lt-alus/lkm
+                                           ::aika]
+                                     :opt [::lt-alus/matkustajalkm
+                                           ::lt-alus/nimi
+                                           ::lt-alus/nippulkm
+                                           ::lisatieto
+                                           ::ketjutus/alus-id
+                                           ::ketjutus/kohteelle-id
+                                           ::ketjutus/kohteelta-id
+                                           ::ketjutus/sopimus-id
+                                           ::ketjutus/urakka-id
+                                           ::kohde/id
+                                           ::kohde/nimi]))
+(s/def ::edelliset-alukset (s/coll-of ::edellinen-alustieto))
+(s/def ::ylos (s/nilable (s/keys :req [::kohde/nimi
+                             ::kohde/id]
+                       :req-un [::edelliset-alukset])))
+(s/def ::alas ::ylos)
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
                                                            ::kohde]))
+
+(s/def ::poista-ketjutus-kysely (s/keys :req [::lt-alus/id
+                                              ::urakka-id]))
+
+(s/def ::poista-ketjutus-vastaus some?)

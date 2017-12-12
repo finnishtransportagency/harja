@@ -26,37 +26,42 @@
         (throw (SecurityException. (str "Materiaali " materiaali-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " materiaalin-urakka-id)))))))
 
-(defn- hae-materiaalilistaus [db user params]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id params))
-  (specql/fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) params))
-
-(defn- kirjaa-materiaali [db user materiaali fim email]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
-                                  (::m/urakka-id materiaali))
+(defn hoida-halytysraja
+  "Tarkistaa ensin kannasta, että onko annettu materiaali alittanut hälytysrajan urakassa.
+   Jos on, lähettää siitä sähköposti-ilmoituksen tilaajan urakanvalvojalle"
+  [db materiaalikirjaus fim email]
   (jdbc/with-db-transaction [db db]
-    (specql/insert! db ::m/materiaali
-                    (muok/lisaa-muokkaustiedot materiaali ::m/id user))
-    (let [materiaalilistaus (hae-materiaalilistaus db user (select-keys materiaali #{::m/urakka-id}))
-          muokattu-materiaali (some #(when (and (= (::m/urakka-id %) (::m/urakka-id materiaali))
-                                                (= (::m/nimi %) (::m/nimi materiaali)))
-                                       %)
-                                    materiaalilistaus)]
-      (when (and (::m/halytysraja muokattu-materiaali)
-                 (< (::m/maara-nyt muokattu-materiaali) (::m/halytysraja muokattu-materiaali)))
-        (let [parametrit {:id (::m/urakka-id muokattu-materiaali)}
-              urakan-tiedot (first (m-q/urakan-tiedot-sahkopostin-lahetysta-varten db parametrit))
-              urakan-ja-materiaalin-tiedot (merge urakan-tiedot (select-keys muokattu-materiaali [::m/halytysraja ::m/maara-nyt ::m/nimi]))]
+    (let [materiaalilistaukset (m-q/hae-materiaalilistaus db (select-keys materiaalikirjaus [::m/urakka-id]))
+          materiaalin-tiedot (some #(when (= (::m/nimi %) (::m/nimi materiaalikirjaus))
+                                     %)
+                                  materiaalilistaukset)
+          halytysraja-ylitetty? (and (::m/halytysraja materiaalin-tiedot)
+                                     (< (::m/maara-nyt materiaalin-tiedot) (::m/halytysraja materiaalin-tiedot)))]
+      (when halytysraja-ylitetty?
+        (let [haku-parametrit {:id (::m/urakka-id materiaalin-tiedot)}
+              urakan-tiedot (first (m-q/urakan-tiedot-sahkopostin-lahetysta-varten db haku-parametrit))
+              urakan-ja-materiaalin-tiedot (merge urakan-tiedot (select-keys materiaalin-tiedot [::m/halytysraja ::m/maara-nyt ::m/nimi]))]
           (viestinta/laheta-sposti-materiaalin-halyraja fim email urakan-ja-materiaalin-tiedot)))
-      materiaalilistaus)))
+      materiaalilistaukset)))
+
+(defn- hae-materiaalilistaus [db user hakuehdot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivayla-materiaalit user (::m/urakka-id hakuehdot))
+  (m-q/hae-materiaalilistaus db hakuehdot))
+
+(defn- kirjaa-materiaali [db user materiaalikirjaus fim email]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
+                                  (::m/urakka-id materiaalikirjaus))
+  (jdbc/with-db-transaction [db db]
+                            (m-q/kirjaa-materiaali db user materiaalikirjaus)
+                            (hoida-halytysraja db materiaalikirjaus fim email)))
 
 (defn- poista-materiaalikirjaus [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id tiedot))
-  (vaadi-materiaali-kuuluu-urakkaan db (::m/urakka-id tiedot) (::m/id tiedot))
-  (specql/update! db ::m/materiaali
-                  (muok/poistotiedot user)
-                  {::m/id (::m/id tiedot)})
-  (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))
+  (jdbc/with-db-transaction [db db]
+                            (vaadi-materiaali-kuuluu-urakkaan db (::m/urakka-id tiedot) (::m/id tiedot))
+                            (m-q/poista-materiaalikirjaus db user (::m/id tiedot))
+                            (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
 
 (defn- muuta-materiaalin-alkuperainen-maara [db materiaali]
   (m-q/paivita-materiaalin-alkuperainen-maara<!
