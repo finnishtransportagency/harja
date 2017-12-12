@@ -67,7 +67,7 @@
     ::huviliikenne-lkm
     ::korjaustoimenpide
     ::paikallinen-kaytto?
-    ::pvm
+    ::havaintoaika
     ::korjausaika-h
     ::odotusaika-h
     ::syy
@@ -80,7 +80,7 @@
     ::huviliikenne-lkm
     ::korjaustoimenpide
     ::paikallinen-kaytto?
-    ::pvm
+    ::havaintoaika
     ::korjausaika-h
     ::odotusaika-h
     ::syy

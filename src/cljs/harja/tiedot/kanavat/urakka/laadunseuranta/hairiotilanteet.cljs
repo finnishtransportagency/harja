@@ -85,14 +85,14 @@
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
-                                 ::hairiotilanne/pvm (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
+                                 ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
         muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
-        paivamaara (or (::hairiotilanne/pvm hairiotilanne)
+        paivamaara (or (::hairiotilanne/havaintoaika hairiotilanne)
                        (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
                                                 (:aika hairiotilanne)))
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
@@ -103,7 +103,7 @@
                   (some #(= materiaalikirjaus %)
                         muokkaamattomat-materiaali-kirjaukset)))
         ;; poistetaan mapista poistetuksi merkatut rivit
-        (remove #(:poistettu %))
+        (remove :poistettu)
         ;; Poistetaan tyhjäksi jätetyt rivit
         (remove #(empty? (dissoc % :jarjestysnumero)))
         ;; Lisätään käytetty määrä lähetettävään mappiin ja
@@ -281,13 +281,13 @@
                                                                          ::materiaalit/id (::materiaalit/id %)}})))
                                             conj (::materiaalit/muutokset materiaalilistaus)))
                                         materiaalit)
-          paivamaara-ja-aika (pvm/DateTime->pvm-ja-aika (::hairiotilanne/pvm hairiotilanne))
-          keskenerainen (str (get-in paivamaara-ja-aika [:aika :tunnit]) ":"
-                             (get-in paivamaara-ja-aika [:aika :minuutit]))]
+          paivamaaran-aika (pvm/DateTime->Aika (::hairiotilanne/havaintoaika hairiotilanne))
+          keskenerainen (str (:tunnit paivamaaran-aika) ":"
+                             (:minuutit paivamaaran-aika))]
       (-> app
           (assoc :valittu-hairiotilanne hairiotilanne)
-          (assoc-in [:valittu-hairiotilanne :paivamaara] (:pvm paivamaara-ja-aika))
-          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika (merge (:aika paivamaara-ja-aika) {:keskenerainen keskenerainen})))
+          (assoc-in [:valittu-hairiotilanne :paivamaara] (::hairiotilanne/havaintoaika hairiotilanne))
+          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika (merge paivamaaran-aika {:keskenerainen keskenerainen})))
           (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset)
           (assoc-in [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit] materiaali-kirjaukset))))
 

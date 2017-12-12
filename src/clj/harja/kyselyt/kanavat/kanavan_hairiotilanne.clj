@@ -49,7 +49,7 @@
                                    (when (and korjausaika-alku korjausaika-loppu)
                                      {::hairiotilanne/korjausaika-h (op/between korjausaika-alku korjausaika-loppu)})
                                    (when (and aikavali-alku aikavali-loppu)
-                                     {::hairiotilanne/pvm (op/between aikavali-alku aikavali-loppu)}))))))
+                                     {::hairiotilanne/havaintoaika (op/between aikavali-alku aikavali-loppu)}))))))
 
 (defn tallenna-hairiotilanne [db kayttaja-id hairiotilanne]
   (if (id/id-olemassa? (::hairiotilanne/id hairiotilanne))

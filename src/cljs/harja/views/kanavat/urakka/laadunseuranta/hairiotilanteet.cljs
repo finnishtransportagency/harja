@@ -89,7 +89,7 @@
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")
     :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne %))}
-   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
+   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/havaintoaika :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
     {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
      :fmt kohde/fmt-kohteen-nimi :leveys 10}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
@@ -281,7 +281,7 @@
    [lomake/lomake
     {:otsikko "Uusi häiriötilanne"
      :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
-     :validoi-alussa? false
+     :validoi-alussa? true
      :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
      :footer-fn (hairiolomakkeen-toiminnot e! app)}
     (hairiolomakkeen-kentat e! app kohteet)

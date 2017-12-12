@@ -858,9 +858,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
        (aikana pvm t min s 0))))
 
 #?(:cljs
-   (defn DateTime->pvm-ja-aika
-     "Annettunna DateTime, palauttaa mapin, jossa :pvm avaimessa on DateTime muuttamattomana ja
-      :aika avaimessa on Aika tyyppi, joka vastaa annetun DateTime:n aikaa"
+   (defn DateTime->Aika
+     "Annettunna DateTime, palauttaa Aika tyyppin, joka vastaa annetun DateTime:n aikaa"
      [pvm]
-     {:pvm pvm
-      :aika (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))}))
+     (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))))

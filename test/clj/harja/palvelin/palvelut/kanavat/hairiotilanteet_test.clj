@@ -155,7 +155,7 @@
                                     ::hairiotilanne/vikaluokka :sahkotekninen_vika
                                     ::hairiotilanne/korjaustoimenpide "Vähennetään sähköä"
                                     ::hairiotilanne/korjauksen-tila :kesken
-                                    ::hairiotilanne/pvm (pvm/luo-pvm 2017 11 17)
+                                    ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 17)
                                     ::hairiotilanne/urakka-id urakka-id
                                     ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
                                     ::hairiotilanne/huviliikenne-lkm 1
