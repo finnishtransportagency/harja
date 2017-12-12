@@ -4,7 +4,7 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.9.0-RC2"]
+  :dependencies [[org.clojure/clojure "1.9.0"]
                  [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta 1.9.946 aiheuttaa ongelman: eventtype.js is not a relative path
 
                  ;;;;;;; Yleiset ;;;;;;;
