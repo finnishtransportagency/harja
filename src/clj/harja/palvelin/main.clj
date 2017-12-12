@@ -344,7 +344,7 @@
                                 [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :kan-hairio (component/using
                     (kan-hairio/->Hairiotilanteet)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :kan-toimenpiteet (component/using
                           (kan-toimenpiteet/->Kanavatoimenpiteet)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
