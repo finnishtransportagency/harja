@@ -344,7 +344,7 @@
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
 
       ;; Jos ylläpitokohteen osoitetta muutetaan, tarkistetaan, että myös alikohteen osoite muuttui
-      ;; Luodaan kohtelle testiä varten kohdeosa
+      ;; Luodaan kohteelle testiä varten kohdeosa
       (let [yllapitokohde-id (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = '" (:nimi yllapitokohde-testidata)) "';"))
             _ (u (str "INSERT INTO yllapitokohdeosa (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, yllapitokohde)
                     VALUES ("
