@@ -107,35 +107,6 @@
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
-<<<<<<< HEAD
-(defn varaosataulukko [e! {materiaalit :materiaalit hairiotilanne :hairiotilanne :as app}]
-  [grid/muokkaus-grid
-   {:voi-muokata? (constantly true)
-    :voi-poistaa? (constantly true)
-    :piilota-toiminnot? false
-    :tyhja "Ei varaosia"
-    :jarjesta :jarjestysnro
-    :tunniste :jarjestysnro}
-   [{:otsikko "Varaosa"
-     :nimi :varaosa
-     :pakollinen? true
-     :tyyppi :valinta
-     :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
-     :valinnat materiaalit}
-    {:otsikko "Käytettävä määrä"
-     :nimi :maara
-     :tyyppi :positiivinen-numero
-     :kokonaisluku? true}]
-   (r/wrap
-     ;; todo: hae varaosat häiriöltä
-     {1 {:varaosa {::materiaali/urakka-id 31
-                   ::materiaali/maara-nyt 123
-                   ::materiaali/halytysraja 666
-                   ::materiaali/alkuperainen-maara 123
-                   ::materiaali/nimi "Varaosa"}
-         :maara 123}}
-     #(log "--->>> Todo: tee varaosien muokkaus"))])
-=======
 (defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
         virhe-atom (r/wrap (::lomake/virheet valittu-hairiotilanne)
@@ -169,7 +140,6 @@
        (zipmap (range)
                (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
        #(e! (tiedot/->MuokkaaMateriaaleja (sort-by sort-fn (vals %)))))]))
->>>>>>> develop
 
 (defn odottavan-liikenteen-kentat []
   (lomake/ryhma

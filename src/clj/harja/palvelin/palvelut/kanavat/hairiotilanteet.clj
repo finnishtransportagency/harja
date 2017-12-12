@@ -26,7 +26,6 @@
                               materiaalipoistot]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
-  <<<<<<< HEAD
   ;; Häiriötilanne kuuluu urakkaan
   (tietoturva/vaadi-linkitys db ::hairio/hairiotilanne ::hairio/id (::hairio/id hairiotilanne)
                              ::hairio/urakka-id urakka-id)
@@ -38,17 +37,14 @@
   (when (::hairio/kohteenosa-id hairiotilanne)
     (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::hairio/kohteenosa-id hairiotilanne)
                                ::osa/kohde-id (::hairio/kohde-id hairiotilanne)))
-  (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
-=======
-(jdbc/with-db-transaction [db db]
-  (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
-        hairio-id (or hairio-id (::hairio/id hairiotilanne))]
-    (doseq [mk (map #(assoc % ::materiaali/hairiotilanne hairio-id) materiaalikirjaukset)]
-      (m-q/kirjaa-materiaali db kayttaja mk)
-      (materiaali-palvelu/hoida-halytysraja db mk fim email))
-    (doseq [mk materiaalipoistot]
-      (m-q/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
->>>>>>> develop
+  (jdbc/with-db-transaction [db db]
+    (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
+          hairio-id (or hairio-id (::hairio/id hairiotilanne))]
+      (doseq [mk (map #(assoc % ::materiaali/hairiotilanne hairio-id) materiaalikirjaukset)]
+        (m-q/kirjaa-materiaali db kayttaja mk)
+        (materiaali-palvelu/hoida-halytysraja db mk fim email))
+      (doseq [mk materiaalipoistot]
+        (m-q/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle

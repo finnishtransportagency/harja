@@ -87,8 +87,8 @@
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
-                                 ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])))
-        ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)]
+                                 ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])
+                                 ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]
