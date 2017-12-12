@@ -73,14 +73,15 @@
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
-     (goog.date.DateTime.
-       (.getYear dt)
-       (.getMonth dt)
-       (.getDate dt)
-       tunnit
-       minuutit
-       sekunnit
-       millisekunnit)
+     (when dt
+       (goog.date.DateTime.
+        (.getYear dt)
+        (.getMonth dt)
+        (.getDate dt)
+        tunnit
+        minuutit
+        sekunnit
+        millisekunnit))
 
      :clj
      (cond (instance? java.util.Date dt)
