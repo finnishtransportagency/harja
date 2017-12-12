@@ -204,17 +204,22 @@
                      #(e! (tiedot/->LisaaMateriaali))
                      {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))
 
-<<<<<<< HEAD
 (defn hairiolomakkeen-kentat [e! {:keys [valittu-hairiotilanne] :as app} kohteet]
   (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
         valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
-    [{:otsikko "Aika"
-      :nimi ::hairiotilanne/pvm
-      :tyyppi :pvm-aika}
+    [{:otsikko "Päivämäärä"
+      :nimi :paivamaara
+      :pakollinen? true
+      :tyyppi :pvm}
+     {:otsikko "Kellonaika"
+      :nimi :aika
+      :pakollinen? true
+      :tyyppi :aika}
      {:otsikko "Kohde"
       :nimi ::hairiotilanne/kohde
       :tyyppi :valinta
       :pakollinen? true
+      :uusi-rivi? true
       :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
       :valinnat kohteet}
      {:otsikko "Kohteen osa"
@@ -222,20 +227,23 @@
       :tyyppi :valinta
       :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
       :valinnat (or valitun-kohteen-osat [])}
-     {:otsikko "Vika"
+     {:otsikko "Vikaluokka"
       :nimi ::hairiotilanne/vikaluokka
       :tyyppi :valinta
       :pakollinen? true
-      :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka-")
-      :valinta-arvo :arvo
+      :uusi-rivi? true
+      :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
+      :valinta-arvo :arvo ;; TODO ALEMPI LÖYTYY DOMAINISTA
       :valinnat [{:arvo :sahkotekninen_vika
                   :nimi "Sähkötekninen vika"}
                  {:arvo :konetekninen_vika
                   :nimi "Konetekninen vika"}
                  {:arvo :liikennevaurio
                   :nimi "Liikennevaurio"}]}
-     {:otsikko "Syy"
+     {:otsikko "Häiriön syy"
       :nimi ::hairiotilanne/syy
+      :palstoja 2
+      :pakollinen? true
       :tyyppi :text
       :koko [90 8]
       :uusi-rivi? true}
@@ -247,51 +255,6 @@
       :uusi-rivi? true
       :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
       :muokattava? (constantly false)}]))
-=======
-(defn hairiolomakkeen-kentat [e! app kohteet]
-  [{:otsikko "Päivämäärä"
-    :nimi :paivamaara
-    :pakollinen? true
-    :tyyppi :pvm}
-   {:otsikko "Kellonaika"
-    :nimi :aika
-    :pakollinen? true
-    :tyyppi :aika}
-   {:otsikko "Kohde"
-    :nimi ::hairiotilanne/kohde
-    :tyyppi :valinta
-    :pakollinen? true
-    :uusi-rivi? true
-    :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
-    :valinnat kohteet}
-   {:otsikko "Vikaluokka"
-    :nimi ::hairiotilanne/vikaluokka
-    :tyyppi :valinta
-    :pakollinen? true
-    :uusi-rivi? true
-    :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
-    :valinta-arvo :arvo ;; TODO ALEMPI LÖYTYY DOMAINISTA
-    :valinnat [{:arvo :sahkotekninen_vika
-                :nimi "Sähkötekninen vika"}
-               {:arvo :konetekninen_vika
-                :nimi "Konetekninen vika"}
-               {:arvo :liikennevaurio
-                :nimi "Liikennevaurio"}]}
-   {:otsikko "Häiriön syy"
-    :nimi ::hairiotilanne/syy
-    :palstoja 2
-    :pakollinen? true
-    :tyyppi :text
-    :koko [90 8]
-    :uusi-rivi? true}
-   (odottavan-liikenteen-kentat)
-   (korjauksen-kentat e! app)
-   {:otsikko "Kuittaaja"
-    :nimi ::hairiotilanne/kuittaaja
-    :tyyppi :string
-    :uusi-rivi? true
-    :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
-    :muokattava? (constantly false)}])
 >>>>>>> develop
 
 (defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
@@ -345,7 +308,7 @@
                       #(e! (tiedot/->NakymaSuljettu)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
-      @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
+      @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
       [:div
        [debug/debug app]
        (if valittu-hairiotilanne
