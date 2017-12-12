@@ -160,12 +160,16 @@
                                {:onnistui ->MateriaalitHaettu
                                 :epaonnistui ->MateriaalienHakuEpaonnistui})
             (assoc :nakymassa? true
-                   :materiaalien-haku-kaynnissa? true
-                   :materiaalit nil)))))
+                   :materiaalien-haku-kaynnissa? true)))))
 
   NakymaSuljettu
   (process-event [_ app]
-    (assoc app :nakymassa? false))
+    (-> app
+        (assoc :nakymassa? false)
+        ;; Jos näkymästä lähdetään, niin poistetaan tallentamattomat muokkaukset materiaaligriddiin
+        ;; ja tyhjennetään virheet. Tämä sentakia, että virheet ei toimi oikein, jos vaihtelee näkymää.
+        (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] (get-in app [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit]))
+        (assoc-in [:valittu-hairiotilanne ::lomake/virheet] {})))
 
   PaivitaValinnat
   (process-event [{val :valinnat} app]
