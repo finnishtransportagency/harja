@@ -316,7 +316,7 @@
        :tr-loppuosa (:tr-loppuosa paakohde)
        :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))]
 
-     ;;  Muokkaus tehdään seuraavasti:
+     ;;  Oletuskeissi, jossa pääkohde on reitillinen. Muokkaus tehdään seuraavasti:
      ;; - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
      ;; - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
      ;; pääkohteen loppuun.
