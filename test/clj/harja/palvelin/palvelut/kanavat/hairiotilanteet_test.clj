@@ -143,7 +143,6 @@
                                            +kayttaja-ulle+
                                            args)))))
 
-<<<<<<< HEAD
 (defn tallennuksen-parametrit [id urakka-id kohde-id kohdeosa-id syy]
   (let [urakka-id (or urakka-id (hae-saimaan-kanavaurakan-id))
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
@@ -167,6 +166,173 @@
                                       ::hairiotilanne/odotusaika-h 4
                                       ::hairiotilanne/ammattiliikenne-lkm 2})
      ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}}))
+
+(deftest hairiotilanteiden-tallennus-ilman-oikeuksia
+  (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
+        parametrit (tallennuksen-parametrit nil nil nil nil syy)]
+    (defn tallennuksen-parametrit [{:keys [naulan-kulutus amparin-kulutus]}]
+      (let [naulan-kulutus (or naulan-kulutus 0)
+            amparin-kulutus (or amparin-kulutus 0)
+            urakka-id (hae-saimaan-kanavaurakan-id)
+            sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+            kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id)]
+        {::hairiotilanne/hairiotilanne {::hairiotilanne/sopimus-id sopimus-id
+                                        ::hairiotilanne/kohde-id kohde-id
+                                        ::hairiotilanne/paikallinen-kaytto? true
+                                        ::hairiotilanne/vikaluokka :sahkotekninen_vika
+                                        ::hairiotilanne/korjaustoimenpide "Vähennetään sähköä"
+                                        ::hairiotilanne/korjauksen-tila :kesken
+                                        ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 17)
+                                        ::hairiotilanne/urakka-id urakka-id
+                                        ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
+                                        ::hairiotilanne/huviliikenne-lkm 1
+                                        ::hairiotilanne/korjausaika-h 1
+                                        ::hairiotilanne/syy "hairiotilanteen-tallennus-testi"
+                                        ::hairiotilanne/odotusaika-h 4
+                                        ::hairiotilanne/ammattiliikenne-lkm 2}
+         ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}
+         ::vv-materiaali/materiaalikirjaukset [{::vv-materiaali/maara naulan-kulutus
+                                                ::vv-materiaali/nimi "Naulat"
+                                                ::vv-materiaali/urakka-id urakka-id
+                                                ::vv-materiaali/pvm (pvm/nyt)}
+                                               {::vv-materiaali/maara amparin-kulutus
+                                                ::vv-materiaali/nimi "Ämpäreitä"
+                                                ::vv-materiaali/urakka-id urakka-id
+                                                ::vv-materiaali/pvm (pvm/nyt)}]
+         ::vv-materiaali/poista-materiaalikirjauksia []}))))
+
+(deftest hairiotilanteen-materiaalin-kulutus
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        ;; pistetään häiriötilanne id atomiin, niin voidaan käsitellä samaa häiriötilannetta
+        ;; materiaalin poisto ja lisäys testeissä
+        hairiotilanne-id (atom nil)
+        materiaalilistaus-fn (fn [materiaalilistaukset nimi]
+                               (first (filter #(and (= urakka-id (::vv-materiaali/urakka-id %))
+                                                    (= nimi (::vv-materiaali/nimi %)))
+                                              materiaalilistaukset)))
+        q-materiaalimaara-fn (fn [q-vastaus nimi]
+                               (apply +
+                                      (map :maara
+                                           (:muutokset (some #(when (= nimi (:nimi %)) %)
+                                                             q-vastaus)))))
+        hairiotilanteen-materiaalit-fn (fn [materiaalit hairiotilanne-id]
+                                         (mapv (fn [materiaali]
+                                                 (transduce
+                                                   (comp
+                                                     ;; otetaan vain yhden häiriötilanteen materiaalit
+                                                     (filter (fn [muutos]
+                                                               (= hairiotilanne-id (:hairiotilanne muutos))))
+                                                     ;; annetaan lisää parametrejä tallennusta varten
+                                                     (map (fn [muutos]
+                                                            (assoc muutos :nimi (:nimi materiaali)
+                                                                          :urakka-id urakka-id)))
+                                                     ;; annetaan niille oikea ns keyword
+                                                     (map (fn [muutos]
+                                                            (namespacefy/namespacefy muutos {:ns :harja.domain.vesivaylat.materiaali}))))
+                                                   conj (:muutokset materiaali)))
+                                               materiaalit))]
+    (testing "Materiaalin tallentuminen häiriötilanne lomakkeelta"
+      (let [naulan-kulutus -10
+            amparin-kulutus -20
+            parametrit (tallennuksen-parametrit {:naulan-kulutus naulan-kulutus :amparin-kulutus amparin-kulutus})
+            saimaan-materiaalit-ennen-tallennusta (hae-saimaan-kanavan-materiaalit)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-hairiotilanne
+                                    +kayttaja-jvh+
+                                    parametrit)
+            naula-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Naulat")
+            ampari-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Ämpäreitä")
+            naula-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Naulat")
+            naula-lkm-jalkeen (::vv-materiaali/maara-nyt naula-materiaali)
+            ampari-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Ämpäreitä")
+            ampari-lkm-jalkeen (::vv-materiaali/maara-nyt ampari-materiaali)]
+        (is (= naula-lkm-ennen (+ naula-lkm-jalkeen (Math/abs naulan-kulutus))))
+        (is (= ampari-lkm-ennen (+ ampari-lkm-jalkeen (Math/abs amparin-kulutus))))))
+
+    (testing "Materiaalin muokkaaminen häiriötilanne lomakkeelta"
+      (let [saimaan-materiaalit-ennen-tallennusta (hae-saimaan-kanavan-materiaalit)
+            tallennetut-hairiotilanteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :hae-hairiotilanteet
+                                                        +kayttaja-jvh+
+                                                        {::hairiotilanne/urakka-id urakka-id})
+            naulan-kulutus -8
+            amparin-kulutus -15
+            _ (reset! hairiotilanne-id (->> saimaan-materiaalit-ennen-tallennusta
+                                            (some #(when (= (:nimi %) "Naulat") %))
+                                            :muutokset
+                                            (filter :hairiotilanne)
+                                            first
+                                            :hairiotilanne))
+            hairiotilanteen-materiaalit (hairiotilanteen-materiaalit-fn saimaan-materiaalit-ennen-tallennusta @hairiotilanne-id)
+            muokkausparametrit (->
+                                 ;; ihan sama mitkä määrät annetaan materiaalille, sillä ne vaihdetaan kohta
+                                 (tallennuksen-parametrit {})
+                                 ;; annetaan hairiotilanne id, niin tulee päivitys eikä luoda uutta
+                                 (assoc-in
+                                   [::hairiotilanne/hairiotilanne ::hairiotilanne/id]
+                                   @hairiotilanne-id)
+                                 ;; annetaan häiriötilanteen materiaalit (voi olla useampi matsku testidatassa
+                                 ;; kuin vain yksi setti nauloja ja yksi setti ämpäreitä)
+                                 (assoc ::vv-materiaali/materiaalikirjaukset hairiotilanteen-materiaalit)
+                                 ;; Lähetetään vain yhdet ämpäri- ja naulakirjaukset
+                                 (update ::vv-materiaali/materiaalikirjaukset (fn [materiaalit]
+                                                                                (flatten (map #(get % 0)
+                                                                                              materiaalit))))
+                                 ;; Annetaan kirjauksille halutut arvot
+                                 (update ::vv-materiaali/materiaalikirjaukset (fn [materiaalit]
+                                                                                (mapv #(assoc % ::vv-materiaali/maara
+                                                                                                (case (::vv-materiaali/nimi %)
+                                                                                                  "Naulat" naulan-kulutus
+                                                                                                  "Ämpäreitä" amparin-kulutus))
+                                                                                      materiaalit))))
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-hairiotilanne
+                                    +kayttaja-jvh+
+                                    muokkausparametrit)
+            naula-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Naulat")
+            ampari-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Ämpäreitä")
+            naula-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Naulat")
+            naula-lkm-jalkeen (::vv-materiaali/maara-nyt naula-materiaali)
+            ampari-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Ämpäreitä")
+            ampari-lkm-jalkeen (::vv-materiaali/maara-nyt ampari-materiaali)]
+        (is (= naula-lkm-ennen (- naula-lkm-jalkeen 2)))
+        (is (= ampari-lkm-ennen (- ampari-lkm-jalkeen 5)))))
+
+    (testing "Materiaalin poistaminen häiriötilanne lomakkeelta"
+      (let [saimaan-materiaalit-ennen-tallennusta (hae-saimaan-kanavan-materiaalit)
+            tallennetut-hairiotilanteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :hae-hairiotilanteet
+                                                        +kayttaja-jvh+
+                                                        {::hairiotilanne/urakka-id urakka-id})
+            hairiotilanteen-materiaalit (hairiotilanteen-materiaalit-fn saimaan-materiaalit-ennen-tallennusta @hairiotilanne-id)
+            muokkausparametrit (->
+                                 ;; ihan sama mitkä määrät annetaan materiaalille, sillä ne vaihdetaan kohta
+                                 (tallennuksen-parametrit {})
+                                 ;; annetaan hairiotilanne id, niin tulee päivitys eikä luoda uutta
+                                 (assoc-in
+                                   [::hairiotilanne/hairiotilanne ::hairiotilanne/id]
+                                   @hairiotilanne-id)
+                                 ;; ei anneta mitään tallennettavaa
+                                 (assoc ::vv-materiaali/materiaalikirjaukset [])
+                                 ;; Poistetaan häiriötilanteen kaikki ämpärin käytön kirjaukset
+                                 (assoc ::vv-materiaali/poista-materiaalikirjauksia (flatten (mapv (fn [materiaalikirjaukset]
+                                                                                                     (mapv #(if (= "Ämpäreitä" (::vv-materiaali/nimi %))
+                                                                                                              (select-keys % #{::vv-materiaali/urakka-id
+                                                                                                                               ::vv-materiaali/id})
+                                                                                                              [])
+                                                                                                           materiaalikirjaukset))
+                                                                                                   hairiotilanteen-materiaalit))))
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-hairiotilanne
+                                    +kayttaja-jvh+
+                                    muokkausparametrit)
+            naula-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Naulat")
+            ampari-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Ämpäreitä")
+            naula-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Naulat")
+            naula-lkm-jalkeen (::vv-materiaali/maara-nyt naula-materiaali)]
+        (is (empty? (filter ::vv-materiaali/hairiotilanne (::vv-materiaali/muutokset ampari-materiaali))))
+        (is (= naula-lkm-ennen naula-lkm-jalkeen))))))
+
 
 (deftest hairiotilanteen-tallennus
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
@@ -215,177 +381,8 @@
                                                    parametrit)))))
 
 (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
-  (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        parametrit (tallennuksen-parametrit nil nil nil nil syy)]
-    =======
-    (defn tallennuksen-parametrit [{:keys [naulan-kulutus amparin-kulutus]}]
-      (let [naulan-kulutus (or naulan-kulutus 0)
-            amparin-kulutus (or amparin-kulutus 0)
-            urakka-id (hae-saimaan-kanavaurakan-id)
-            sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-            kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id)]
-        {::hairiotilanne/hairiotilanne {::hairiotilanne/sopimus-id sopimus-id
-                                        ::hairiotilanne/kohde-id kohde-id
-                                        ::hairiotilanne/paikallinen-kaytto? true
-                                        ::hairiotilanne/vikaluokka :sahkotekninen_vika
-                                        ::hairiotilanne/korjaustoimenpide "Vähennetään sähköä"
-                                        ::hairiotilanne/korjauksen-tila :kesken
-                                        ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 17)
-                                        ::hairiotilanne/urakka-id urakka-id
-                                        ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
-                                        ::hairiotilanne/huviliikenne-lkm 1
-                                        ::hairiotilanne/korjausaika-h 1
-                                        ::hairiotilanne/syy "hairiotilanteen-tallennus-testi"
-                                        ::hairiotilanne/odotusaika-h 4
-                                        ::hairiotilanne/ammattiliikenne-lkm 2}
-         ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}
-         ::vv-materiaali/materiaalikirjaukset [{::vv-materiaali/maara naulan-kulutus
-                                                ::vv-materiaali/nimi "Naulat"
-                                                ::vv-materiaali/urakka-id urakka-id
-                                                ::vv-materiaali/pvm (pvm/nyt)}
-                                               {::vv-materiaali/maara amparin-kulutus
-                                                ::vv-materiaali/nimi "Ämpäreitä"
-                                                ::vv-materiaali/urakka-id urakka-id
-                                                ::vv-materiaali/pvm (pvm/nyt)}]
-         ::vv-materiaali/poista-materiaalikirjauksia []}))
-
-    (deftest hairiotilanteen-materiaalin-kulutus
-      (let [urakka-id (hae-saimaan-kanavaurakan-id)
-            ;; pistetään häiriötilanne id atomiin, niin voidaan käsitellä samaa häiriötilannetta
-            ;; materiaalin poisto ja lisäys testeissä
-            hairiotilanne-id (atom nil)
-            materiaalilistaus-fn (fn [materiaalilistaukset nimi]
-                                   (first (filter #(and (= urakka-id (::vv-materiaali/urakka-id %))
-                                                        (= nimi (::vv-materiaali/nimi %)))
-                                                  materiaalilistaukset)))
-            q-materiaalimaara-fn (fn [q-vastaus nimi]
-                                   (apply +
-                                          (map :maara
-                                               (:muutokset (some #(when (= nimi (:nimi %)) %)
-                                                                 q-vastaus)))))
-            hairiotilanteen-materiaalit-fn (fn [materiaalit hairiotilanne-id]
-                                             (mapv (fn [materiaali]
-                                                     (transduce
-                                                       (comp
-                                                         ;; otetaan vain yhden häiriötilanteen materiaalit
-                                                         (filter (fn [muutos]
-                                                                   (= hairiotilanne-id (:hairiotilanne muutos))))
-                                                         ;; annetaan lisää parametrejä tallennusta varten
-                                                         (map (fn [muutos]
-                                                                (assoc muutos :nimi (:nimi materiaali)
-                                                                              :urakka-id urakka-id)))
-                                                         ;; annetaan niille oikea ns keyword
-                                                         (map (fn [muutos]
-                                                                (namespacefy/namespacefy muutos {:ns :harja.domain.vesivaylat.materiaali}))))
-                                                       conj (:muutokset materiaali)))
-                                                   materiaalit))]
-        (testing "Materiaalin tallentuminen häiriötilanne lomakkeelta"
-          (let [naulan-kulutus -10
-                amparin-kulutus -20
-                parametrit (tallennuksen-parametrit {:naulan-kulutus naulan-kulutus :amparin-kulutus amparin-kulutus})
-                saimaan-materiaalit-ennen-tallennusta (hae-saimaan-kanavan-materiaalit)
-                vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :tallenna-hairiotilanne
-                                        +kayttaja-jvh+
-                                        parametrit)
-                naula-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Naulat")
-                ampari-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Ämpäreitä")
-                naula-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Naulat")
-                naula-lkm-jalkeen (::vv-materiaali/maara-nyt naula-materiaali)
-                ampari-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Ämpäreitä")
-                ampari-lkm-jalkeen (::vv-materiaali/maara-nyt ampari-materiaali)]
-            (is (= naula-lkm-ennen (+ naula-lkm-jalkeen (Math/abs naulan-kulutus))))
-            (is (= ampari-lkm-ennen (+ ampari-lkm-jalkeen (Math/abs amparin-kulutus))))))
-
-        (testing "Materiaalin muokkaaminen häiriötilanne lomakkeelta"
-          (let [saimaan-materiaalit-ennen-tallennusta (hae-saimaan-kanavan-materiaalit)
-                tallennetut-hairiotilanteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                            :hae-hairiotilanteet
-                                                            +kayttaja-jvh+
-                                                            {::hairiotilanne/urakka-id urakka-id})
-                naulan-kulutus -8
-                amparin-kulutus -15
-                _ (reset! hairiotilanne-id (->> saimaan-materiaalit-ennen-tallennusta
-                                                (some #(when (= (:nimi %) "Naulat") %))
-                                                :muutokset
-                                                (filter :hairiotilanne)
-                                                first
-                                                :hairiotilanne))
-                hairiotilanteen-materiaalit (hairiotilanteen-materiaalit-fn saimaan-materiaalit-ennen-tallennusta @hairiotilanne-id)
-                muokkausparametrit (->
-                                     ;; ihan sama mitkä määrät annetaan materiaalille, sillä ne vaihdetaan kohta
-                                     (tallennuksen-parametrit {})
-                                     ;; annetaan hairiotilanne id, niin tulee päivitys eikä luoda uutta
-                                     (assoc-in
-                                       [::hairiotilanne/hairiotilanne ::hairiotilanne/id]
-                                       @hairiotilanne-id)
-                                     ;; annetaan häiriötilanteen materiaalit (voi olla useampi matsku testidatassa
-                                     ;; kuin vain yksi setti nauloja ja yksi setti ämpäreitä)
-                                     (assoc ::vv-materiaali/materiaalikirjaukset hairiotilanteen-materiaalit)
-                                     ;; Lähetetään vain yhdet ämpäri- ja naulakirjaukset
-                                     (update ::vv-materiaali/materiaalikirjaukset (fn [materiaalit]
-                                                                                    (flatten (map #(get % 0)
-                                                                                                  materiaalit))))
-                                     ;; Annetaan kirjauksille halutut arvot
-                                     (update ::vv-materiaali/materiaalikirjaukset (fn [materiaalit]
-                                                                                    (mapv #(assoc % ::vv-materiaali/maara
-                                                                                                    (case (::vv-materiaali/nimi %)
-                                                                                                      "Naulat" naulan-kulutus
-                                                                                                      "Ämpäreitä" amparin-kulutus))
-                                                                                          materiaalit))))
-                vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :tallenna-hairiotilanne
-                                        +kayttaja-jvh+
-                                        muokkausparametrit)
-                naula-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Naulat")
-                ampari-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Ämpäreitä")
-                naula-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Naulat")
-                naula-lkm-jalkeen (::vv-materiaali/maara-nyt naula-materiaali)
-                ampari-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Ämpäreitä")
-                ampari-lkm-jalkeen (::vv-materiaali/maara-nyt ampari-materiaali)]
-            (is (= naula-lkm-ennen (- naula-lkm-jalkeen 2)))
-            (is (= ampari-lkm-ennen (- ampari-lkm-jalkeen 5)))))
-
-        (testing "Materiaalin poistaminen häiriötilanne lomakkeelta"
-          (let [saimaan-materiaalit-ennen-tallennusta (hae-saimaan-kanavan-materiaalit)
-                tallennetut-hairiotilanteet (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                            :hae-hairiotilanteet
-                                                            +kayttaja-jvh+
-                                                            {::hairiotilanne/urakka-id urakka-id})
-                hairiotilanteen-materiaalit (hairiotilanteen-materiaalit-fn saimaan-materiaalit-ennen-tallennusta @hairiotilanne-id)
-                muokkausparametrit (->
-                                     ;; ihan sama mitkä määrät annetaan materiaalille, sillä ne vaihdetaan kohta
-                                     (tallennuksen-parametrit {})
-                                     ;; annetaan hairiotilanne id, niin tulee päivitys eikä luoda uutta
-                                     (assoc-in
-                                       [::hairiotilanne/hairiotilanne ::hairiotilanne/id]
-                                       @hairiotilanne-id)
-                                     ;; ei anneta mitään tallennettavaa
-                                     (assoc ::vv-materiaali/materiaalikirjaukset [])
-                                     ;; Poistetaan häiriötilanteen kaikki ämpärin käytön kirjaukset
-                                     (assoc ::vv-materiaali/poista-materiaalikirjauksia (flatten (mapv (fn [materiaalikirjaukset]
-                                                                                                         (mapv #(if (= "Ämpäreitä" (::vv-materiaali/nimi %))
-                                                                                                                  (select-keys % #{::vv-materiaali/urakka-id
-                                                                                                                                   ::vv-materiaali/id})
-                                                                                                                  [])
-                                                                                                               materiaalikirjaukset))
-                                                                                                       hairiotilanteen-materiaalit))))
-                vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :tallenna-hairiotilanne
-                                        +kayttaja-jvh+
-                                        muokkausparametrit)
-                naula-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Naulat")
-                ampari-materiaali (materiaalilistaus-fn (:materiaalilistaukset vastaus) "Ämpäreitä")
-                naula-lkm-ennen (q-materiaalimaara-fn saimaan-materiaalit-ennen-tallennusta "Naulat")
-                naula-lkm-jalkeen (::vv-materiaali/maara-nyt naula-materiaali)]
-            (is (empty? (filter ::vv-materiaali/hairiotilanne (::vv-materiaali/muutokset ampari-materiaali))))
-            (is (= naula-lkm-ennen naula-lkm-jalkeen))))))
-
-    (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
-      (let [parametrit (tallennuksen-parametrit {})]
-        >>>>>>> develop
-
-        (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :tallenna-hairiotilanne
-                                               +kayttaja-ulle+
-                                               parametrit)))))
+  (let [parametrit (tallennuksen-parametrit {})]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-hairiotilanne
+                                           +kayttaja-ulle+
+                                           parametrit)))))
