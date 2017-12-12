@@ -127,12 +127,14 @@
       :otsikko "Varaosat"}
      [{:otsikko "Varaosa"
        :nimi :varaosa
+       :leveys 1
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :valinta
        :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
        :valinnat materiaalit}
       {:otsikko "Käytettävä määrä"
        :nimi :maara
+       :leveys 1
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :positiivinen-numero
        :kokonaisluku? true}]
@@ -233,7 +235,7 @@
       :pakollinen? true
       :uusi-rivi? true
       :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
-      :valinta-arvo :arvo ;; TODO ALEMPI LÖYTYY DOMAINISTA
+      :valinta-arvo :arvo
       :valinnat [{:arvo :sahkotekninen_vika
                   :nimi "Sähkötekninen vika"}
                  {:arvo :konetekninen_vika
