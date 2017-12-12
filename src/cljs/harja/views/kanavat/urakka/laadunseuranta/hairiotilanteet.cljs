@@ -255,7 +255,6 @@
       :uusi-rivi? true
       :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
       :muokattava? (constantly false)}]))
->>>>>>> develop
 
 (defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
                                             tallennus-kaynnissa?
