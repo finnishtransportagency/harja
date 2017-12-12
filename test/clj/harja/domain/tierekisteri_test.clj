@@ -360,7 +360,7 @@
 
 (deftest korjaa-paakohteen-alikohteet
 
-  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
            {:tr-numero 1
             :tr-alkuosa 3
             :tr-alkuetaisyys 100
@@ -403,7 +403,7 @@
            :tr-loppuosa 5
            :tr-loppuetaisyys 200}]))
 
-  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
            {:tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
@@ -439,7 +439,7 @@
            :tr-loppuosa 5
            :tr-loppuetaisyys 200}]))
 
-  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
            {:tr-alkuosa 3
             :tr-alkuetaisyys 100
             :tr-loppuosa 5
@@ -455,7 +455,7 @@
            :tr-loppuosa 5
            :tr-loppuetaisyys 200}]))
 
-  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
            {:tr-numero 1
             :tr-alkuosa 3
             :tr-alkuetaisyys 100
@@ -474,7 +474,7 @@
            :tr-loppuosa 5
            :tr-loppuetaisyys 200}]))
 
-  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
            {:tr-numero 1
             :tr-alkuosa 2
             :tr-alkuetaisyys 1
@@ -490,11 +490,11 @@
            :tr-numero 1
            :tr-alkuosa 2
            :tr-alkuetaisyys 1
-           :tr-loppuosa 3
+           :tr-loppuosa 2
            :tr-loppuetaisyys 1}])
       "Pistemäinen kohde osataan korjata")
 
-  (is (= (tierekisteri/korjaa-paakohteen-alikohteet
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
            {:tr-numero 1
             :tr-alkuosa 2
             :tr-alkuetaisyys 1

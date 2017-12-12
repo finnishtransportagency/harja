@@ -286,40 +286,59 @@
                                (>= (:tr-alkuetaisyys tr-vali2) (:tr-loppuetaisyys tr-vali1)))))]
     (boolean (not ei-leikkaa?))))
 
-(defn korjaa-paakohteen-alikohteet
+(defn pistemainen? [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}]
+  (or (and (number? tr-alkuosa)
+           (number? tr-alkuetaisyys)
+           (nil? tr-loppuosa)
+           (nil? tr-loppuetaisyys))
+      (and (number? tr-alkuosa)
+           (number? tr-alkuetaisyys)
+           (number? tr-loppuosa)
+           (number? tr-loppuetaisyys)
+           (= tr-loppuosa tr-alkuosa)
+           (= tr-loppuetaisyys tr-alkuetaisyys))))
+
+(defn alikohteet-tayttamaan-kohde
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
-   Palauttaa korjatut kohteet.
-
-   Muokkaus tehdään seuraavasti:
-   - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
-   - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
-     pääkohteen loppuun.
-
-   Olettaa, että pääkohde alikohteineen on samalla tiellä."
+   Palauttaa korjatut kohteet. Olettaa, että pääkohde alikohteineen on samalla tiellä."
   ([paakohde alikohteet]
-   (assert (not (empty? (filter #(tr-vali-leikkaa-tr-valin? paakohde %)
-                         (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet))))
-           (str"Ainakin yhden alikohteen tulee leikata pääkohde, muutan korjaus ei ole mahdollista.
-            Saatu pääkohde: " paakohde " ja osat: " alikohteet))
+   (cond
+     (empty? alikohteet)
+     []
 
-   (let [paakohde (tr-osoite-kasvusuuntaan paakohde)
-         alikohteet (map tr-osoite-kasvusuuntaan alikohteet)
-         alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
-         leikkaavat-alikohteet (filter #(tr-vali-leikkaa-tr-valin? paakohde %) alikohteet-jarjestyksessa)
-         ensimmainen-alikohde (first leikkaavat-alikohteet)
-         viimeinen-alikohde (last leikkaavat-alikohteet)
-         ensimmainen-alikohde-venytettyna (assoc ensimmainen-alikohde
-                                            :tr-alkuosa (:tr-alkuosa paakohde)
-                                            :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
-         viimeinen-alikohde-venytettyna (assoc viimeinen-alikohde
-                                          :tr-loppuosa (:tr-loppuosa paakohde)
-                                          :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
-         valiin-jaavat-aikohteet (or (butlast (rest leikkaavat-alikohteet)) [])]
+     (pistemainen? paakohde)
+     ;; Tunkataan ensimmäinen alikohde pistemäiseksi.
+     ;; Mikäli alikohteita on ollut useita, niin muiden tiedot häviää.
+     ;; Tälle ei oikein voi mitään, mikäli pätkäkohde muokataan pistemäiseksi
+     [(assoc (first alikohteet)
+       :tr-alkuosa (:tr-alkuosa paakohde)
+       :tr-alkuetaisyys (:tr-alkuetaisyys paakohde)
+       :tr-loppuosa (:tr-loppuosa paakohde)
+       :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))]
 
-    (if (= ensimmainen-alikohde viimeinen-alikohde)
-      ;; Jos leikkaavia alikoihteita on vain yksi, palautetaan se venytettynä kattamaan koko pääkohde
-      [(assoc ensimmainen-alikohde-venytettyna
-         :tr-loppuosa (:tr-loppuosa viimeinen-alikohde-venytettyna)
-         :tr-loppuetaisyys (:tr-loppuetaisyys viimeinen-alikohde-venytettyna))]
-      ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
-      (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna])))))
+     ;;  Muokkaus tehdään seuraavasti:
+     ;; - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
+     ;; - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
+     ;; pääkohteen loppuun.
+     :default
+     (let [paakohde (tr-osoite-kasvusuuntaan paakohde)
+           alikohteet (map tr-osoite-kasvusuuntaan alikohteet)
+           alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
+           leikkaavat-alikohteet (filter #(tr-vali-leikkaa-tr-valin? paakohde %) alikohteet-jarjestyksessa)
+           ensimmainen-alikohde (first leikkaavat-alikohteet)
+           viimeinen-alikohde (last leikkaavat-alikohteet)
+           ensimmainen-alikohde-venytettyna (assoc ensimmainen-alikohde
+                                              :tr-alkuosa (:tr-alkuosa paakohde)
+                                              :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
+           viimeinen-alikohde-venytettyna (assoc viimeinen-alikohde
+                                            :tr-loppuosa (:tr-loppuosa paakohde)
+                                            :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
+           valiin-jaavat-aikohteet (or (butlast (rest leikkaavat-alikohteet)) [])]
+
+       (if (= ensimmainen-alikohde viimeinen-alikohde)
+         ;; Jos leikkaavia alikoihteita on vain yksi, palautetaan se venytettynä kattamaan koko pääkohde
+         [(assoc ensimmainen-alikohde-venytettyna
+            :tr-loppuosa (:tr-loppuosa viimeinen-alikohde-venytettyna)
+            :tr-loppuetaisyys (:tr-loppuetaisyys viimeinen-alikohde-venytettyna))]
+         ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
+         (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))

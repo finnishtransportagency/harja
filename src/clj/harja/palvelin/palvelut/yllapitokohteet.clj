@@ -414,7 +414,7 @@
         (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :yllapitokohde-id id})
-              korjatut-kohdeosat (tierekisteri/korjaa-paakohteen-alikohteet kohde kohdeosat)]
+              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kohde kohde kohdeosat)]
           (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
                                                :sopimus-id sopimus-id
                                                :yllapitokohde-id id
