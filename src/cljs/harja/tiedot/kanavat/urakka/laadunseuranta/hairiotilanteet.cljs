@@ -10,11 +10,13 @@
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
+            [harja.ui.lomake :as lomake]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.navigaatio :as navigaatio]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -40,8 +42,11 @@
 (defrecord AsetaHairiotilanteenTiedot [hairiotilanne])
 (defrecord TallennaHairiotilanne [hairiotilanne])
 (defrecord PoistaHairiotilanne [hairiotilanne])
-(defrecord HairiotilanneTallennettu [hairiotilanteet])
+(defrecord HairiotilanneTallennettu [tallennuksen-vastaus])
 (defrecord HairiotilanteenTallentaminenEpaonnistui [])
+(defrecord MuokkaaMateriaaleja [materiaalit])
+(defrecord LisaaMateriaali [])
+(defrecord LisaaVirhe [virhe])
 
 
 (def valinnat
@@ -56,17 +61,21 @@
     {::hairiotilanne/sopimus-id (:paasopimus @navigaatio/valittu-urakka)
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
-                                ::kayttaja/sukunimi (:sukunimi kayttaja)}}))
+                                ::kayttaja/sukunimi (:sukunimi kayttaja)}
+     ;; aika kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
+     ;; tulee punainen virhemerkintä
+     :aika (pvm/map->Aika {:tunnit 0})}))
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
-  (let [hairiotilanne (-> hairiotilanne
+  (let [paivamaara (:paivamaara hairiotilanne)
+        aika (:aika hairiotilanne)
+        hairiotilanne (-> hairiotilanne
                           (select-keys [::hairiotilanne/id
                                         ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
                                         ::hairiotilanne/vikaluokka
                                         ::hairiotilanne/korjaustoimenpide
                                         ::hairiotilanne/korjauksen-tila
-                                        ::hairiotilanne/pvm
                                         ::hairiotilanne/huviliikenne-lkm
                                         ::hairiotilanne/korjausaika-h
                                         ::hairiotilanne/syy
@@ -75,8 +84,59 @@
                                         ::muokkaustiedot/poistettu?])
                           (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
                                  ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
-                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])))]
+                                 ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+                                 ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
     hairiotilanne))
+
+(defn tallennettava-materiaali [hairiotilanne]
+  (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
+        muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
+        hairiotilanne-id (::hairiotilanne/id hairiotilanne)
+        paivamaara (or (::hairiotilanne/havaintoaika hairiotilanne)
+                       (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
+                                                (:aika hairiotilanne)))
+        kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
+    (transduce
+      (comp
+        ;; Poistetaan muokkaamattomat materiaalit (muuten backin kantaan viennissä jää muokattu timestamp)
+        (remove (fn [materiaalikirjaus]
+                  (some #(= materiaalikirjaus %)
+                        muokkaamattomat-materiaali-kirjaukset)))
+        ;; poistetaan mapista poistetuksi merkatut rivit
+        (remove :poistettu)
+        ;; Poistetaan tyhjäksi jätetyt rivit
+        (remove #(empty? (dissoc % :jarjestysnumero)))
+        ;; Lisätään käytetty määrä lähetettävään mappiin ja
+        ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
+        (map #(assoc-in % [:varaosa ::materiaalit/maara] (- (:maara %))))
+        ;; Käsitellään pelkästään lähetettävää mappia
+        (map :varaosa)
+        ;; Lisätään lisätieto ja materiaalin pvm, koska se on required field. Materiaalia
+        ;; muokatessa kumminkin ei vaihdeta pvm:ää
+        (map #(assoc % ::materiaalit/pvm (or (::materiaalit/pvm %) (pvm/nyt))
+                       ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
+                                                    " kohteessa " kohteen-nimi)))
+        ;; Otetaan joitain vv_materiaalilistaus tietoja pois (muuten tulee herjaa palvelin päässä)
+        (map #(dissoc %
+                      ::materiaalit/maara-nyt
+                      ::materiaalit/halytysraja
+                      ::materiaalit/muutokset
+                      ::materiaalit/alkuperainen-maara)))
+      conj materiaali-kirjaukset)))
+
+(defn poistettava-materiaali [hairiotilanne]
+  (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)]
+    (transduce
+      (comp
+        ;; poistetaan mapista poistetuksi merkatut uudet rivit
+        (remove #(and (:poistettu %)
+                      (:jarjestysnumero %)))
+        ;; Käsitellään pelkästään poistetuksi merkattuja
+        (filter :poistettu)
+        ;; Käsitellään kannasta materiaalin poistaminen
+        (map (fn [{varaosa :varaosa}]
+               (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id}))))
+      conj materiaali-kirjaukset)))
 
 (defn hairiotilanteiden-hakuparametrit [valinnat]
   {::hairiotilanne/urakka-id (get-in valinnat [:urakka :id])
@@ -152,25 +212,28 @@
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
-
     (if (:tallennus-kaynnissa? app)
       app
-      (let [hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
+      (let [tal-hairiotilanne (tallennettava-hairiotilanne hairiotilanne)
+            tal-materiaalit (tallennettava-materiaali hairiotilanne)
+            pois-materiaalit (poistettava-materiaali hairiotilanne)
             parametrit (hairiotilanteiden-hakuparametrit valinnat)]
         (-> app
             (tuck-apurit/post! :tallenna-hairiotilanne
-                               {::hairiotilanne/hairiotilanne hairiotilanne
+                               {::hairiotilanne/hairiotilanne tal-hairiotilanne
+                                ::materiaalit/materiaalikirjaukset tal-materiaalit
+                                ::materiaalit/poista-materiaalikirjauksia pois-materiaalit
                                 ::hairiotilanne/hae-hairiotilanteet-kysely parametrit}
                                {:onnistui ->HairiotilanneTallennettu
                                 :epaonnistui ->HairiotilanteenTallentaminenEpaonnistui})
-            (assoc :tallennus-kaynnissa? true))))
-
-    (assoc app :tallennus-kaynnissa? true))
+            (assoc :tallennus-kaynnissa? true)))))
 
   PoistaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} app]
     (let [tallennus! (tuck/send-async! ->TallennaHairiotilanne)]
-      (go (tallennus! (assoc hairiotilanne ::muokkaustiedot/poistettu? true)))
+      (go (tallennus! (assoc hairiotilanne ::muokkaustiedot/poistettu? true
+                                           ::materiaalit/materiaalit (map #(assoc % :poistettu true)
+                                                                          (::materiaalit/materiaalit hairiotilanne)))))
       app))
 
   MateriaalitHaettu
@@ -184,10 +247,13 @@
     (assoc app :materiaalien-haku-kaynnissa? false))
 
   HairiotilanneTallennettu
-  (process-event [{hairiotilanteet :hairiotilanteet} app]
-    (assoc app :tallennus-kaynnissa? false
-               :valittu-hairiotilanne nil
-               :hairiotilanteet hairiotilanteet))
+  (process-event [{tallennuksen-vastaus :tallennuksen-vastaus} app]
+    (let [{hairiotilanteet :hairiotilanteet
+           materiaalilistaukset :materiaalilistaukset} tallennuksen-vastaus]
+      (assoc app :tallennus-kaynnissa? false
+                 :valittu-hairiotilanne nil
+                 :hairiotilanteet hairiotilanteet
+                 :materiaalit materiaalilistaukset)))
 
   HairiotilanteenTallentaminenEpaonnistui
   (process-event [_ app]
@@ -195,6 +261,53 @@
     (assoc app :tallennus-kaynnissa? false))
 
   ValitseHairiotilanne
-  (process-event [{hairiotilanne :hairiotilanne} app]
-    (assoc app :valittu-hairiotilanne hairiotilanne)))
+  (process-event [{hairiotilanne :hairiotilanne} {:keys [materiaalit] :as app}]
+    ;;hairiotilanteiden mukana voisi kannasta tuoda myös häiriötilanteiden materiaalit
+    ;;mutta ne täytyisi joka tapauksessa formatoida varaosat gridille sopivaan muotoon,
+    ;;niin sama formatoida jo haetuista materiaalilistauksista.
+    (let [materiaali-kirjaukset (mapcat (fn [materiaalilistaus]
+                                          (transduce
+                                            (comp
+                                              ;; Filtteröidään ensin hairiotilanteelle kuuluvat
+                                              ;; materiaalikirjaukset
+                                              (filter #(= (::hairiotilanne/id hairiotilanne)
+                                                          (::materiaalit/hairiotilanne %)))
+                                              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
+                                              ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
+                                              (map #(identity {:maara (- (::materiaalit/maara %))
+                                                               :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+                                                                         ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+                                                                         ::materiaalit/pvm (::materiaalit/pvm %)
+                                                                         ::materiaalit/id (::materiaalit/id %)}})))
+                                            conj (::materiaalit/muutokset materiaalilistaus)))
+                                        materiaalit)
+          paivamaaran-aika (pvm/DateTime->Aika (::hairiotilanne/havaintoaika hairiotilanne))
+          keskenerainen (str (:tunnit paivamaaran-aika) ":"
+                             (:minuutit paivamaaran-aika))]
+      (-> app
+          (assoc :valittu-hairiotilanne hairiotilanne)
+          (assoc-in [:valittu-hairiotilanne :paivamaara] (::hairiotilanne/havaintoaika hairiotilanne))
+          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika (merge paivamaaran-aika {:keskenerainen keskenerainen})))
+          (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset)
+          (assoc-in [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit] materiaali-kirjaukset))))
+
+  MuokkaaMateriaaleja
+  (process-event [{materiaalit :materiaalit} app]
+    (if (:valittu-hairiotilanne app)
+      (update app :valittu-hairiotilanne #(assoc % ::materiaalit/materiaalit materiaalit))
+      app))
+
+  LisaaMateriaali
+  (process-event [_ app]
+    ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
+    ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
+    (update-in app
+               [:valittu-hairiotilanne ::materiaalit/materiaalit]
+               #(let [vanha-id (apply max (map :jarjestysnumero %))
+                      uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
+                  (conj (vec %) {:jarjestysnumero uusi-id}))))
+
+  LisaaVirhe
+  (process-event [{virhe :virhe} app]
+    (assoc-in app [:valittu-hairiotilanne ::lomake/virheet] virhe)))
 

@@ -3,7 +3,9 @@
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet :as tiedot]
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.kayttaja :as kayttaja]
-            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
+            [harja.domain.vesivaylat.materiaali :as materiaali]
+            [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.pvm :as pvm]))
 
 (deftest NakymaAvattu
   (vaadi-async-kutsut
@@ -55,13 +57,64 @@
   (is (= {:valittu-hairiotilanne {::hairiotilanne/sopimus-id nil
                                   ::hairiotilanne/kuittaaja {::kayttaja/id nil
                                                              ::kayttaja/etunimi nil
-                                                             ::kayttaja/sukunimi nil}}}
+                                                             ::kayttaja/sukunimi nil}
+                                  :aika (pvm/map->Aika {:tunnit 0})}}
 
          (e! (tiedot/->LisaaHairiotilanne)))))
 
 (deftest ValitseHairiotilanne
-  (let [hairiotilanne {:hairio :tilanne}]
-    (is (= hairiotilanne (:valittu-hairiotilanne (e! (tiedot/->ValitseHairiotilanne hairiotilanne)))))))
+  (let [state {:materiaalit '({::materiaali/urakka-id 1
+                               ::materiaali/muutokset [{::materiaali/maara 1000
+                                                        ::materiaali/id 4}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/id 5}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                        ::materiaali/id 13
+                                                        ::materiaali/hairiotilanne 2}
+                                                       {::materiaali/maara -1
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
+                                                        ::materiaali/id 16
+                                                        ::materiaali/hairiotilanne 3}]
+                               ::materiaali/nimi "Naulat"}
+                               {::materiaali/urakka-id 1
+                                ::materiaali/muutokset [{::materiaali/maara 500
+                                                         ::materiaali/id 8}
+                                                        {::materiaali/maara -12
+                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                         ::materiaali/id 12
+                                                         ::materiaali/hairiotilanne 2}]
+                                ::materiaali/nimi "Ämpäreitä"})}
+        kysely {::hairiotilanne/id 2
+                ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 10)}
+        vastaus {:materiaalit (:materiaalit state)
+                 :valittu-hairiotilanne {::hairiotilanne/id 2
+                                         ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 10)
+                                         :paivamaara (pvm/luo-pvm 2017 11 10)
+                                         :aika (pvm/map->Aika (merge (pvm/DateTime->Aika (pvm/luo-pvm 2017 11 10))
+                                                                     {:keskenerainen "0:0"}))
+                                         ::materiaali/materiaalit (seq [{:maara 3
+                                                                         :varaosa {::materiaali/nimi "Naulat"
+                                                                                   ::materiaali/urakka-id 1
+                                                                                   ::materiaali/pvm nil
+                                                                                   ::materiaali/id 13}}
+                                                                        {:maara 12
+                                                                         :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                   ::materiaali/urakka-id 1
+                                                                                   ::materiaali/pvm nil
+                                                                                   ::materiaali/id 12}}])
+                                         ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
+                                                                                         :varaosa {::materiaali/nimi "Naulat"
+                                                                                                   ::materiaali/urakka-id 1
+                                                                                                   ::materiaali/pvm nil
+                                                                                                   ::materiaali/id 13}}
+                                                                                        {:maara 12
+                                                                                         :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                                   ::materiaali/urakka-id 1
+                                                                                                   ::materiaali/pvm nil
+                                                                                                   ::materiaali/id 12}}])}}]
+
+    (is (= (:valittu-hairiotilanne vastaus) (:valittu-hairiotilanne (e! (tiedot/->ValitseHairiotilanne kysely) state))))))
 
 (deftest MateriaalitHaettu
   (let [haetut [{:materiaali 1}]
@@ -83,7 +136,9 @@
   (vaadi-async-kutsut
     #{tiedot/->HairiotilanneTallennettu
       tiedot/->HairiotilanteenTallentaminenEpaonnistui}
-    (let [{tallennus-kaynnissa? :tallennus-kaynnissa?} (e! (tiedot/->TallennaHairiotilanne {:foo "bar"}))]
+    (let [hairiotilanne {:paivamaara (pvm/luo-pvm 2017 11 10)
+                         :aika (pvm/->Aika 0 0 0)}
+          {tallennus-kaynnissa? :tallennus-kaynnissa?} (e! (tiedot/->TallennaHairiotilanne hairiotilanne))]
       (is tallennus-kaynnissa?))))
 
 (deftest PoistaHairiotilanne
@@ -92,13 +147,22 @@
     (e! (tiedot/->PoistaHairiotilanne {:hairio :tilanne}))))
 
 (deftest HairiotilanneTallennettu
-  (let [haetut [{:hairio :tilanne}]
+  (let [haetut {:hairiotilanteet :tilanne
+                :materiaalilistaukset :listaukset}
         {:keys [tallennus-kaynnissa?
                 valittu-hairiotilanne
-                hairiotilanteet]} (e! (tiedot/->HairiotilanneTallennettu haetut))]
+                hairiotilanteet
+                materiaalit]} (e! (tiedot/->HairiotilanneTallennettu haetut))]
     (is (false? tallennus-kaynnissa?))
     (is (nil? valittu-hairiotilanne))
-    (is (= hairiotilanteet haetut))))
+    (is (= hairiotilanteet (:hairiotilanteet haetut)))
+    (is (= materiaalit (:materiaalilistaukset haetut)))))
 
 (deftest HairiotilanteenTallentaminenEpaonnistui
   (is (false? (:tallennus-kaynnissa? (e! (tiedot/->HairiotilanteenTallentaminenEpaonnistui))))))
+
+(deftest MuokkaaMateriaaleja
+  (is (= {:valittu-hairiotilanne {::materiaali/materiaalit [{:materiaali 1}]}}
+         (e! (tiedot/->MuokkaaMateriaaleja [{:materiaali 1}]) {:valittu-hairiotilanne {}})))
+  (is (= {}
+         (e! (tiedot/->MuokkaaMateriaaleja [{:materiaali 1}])))))

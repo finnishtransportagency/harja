@@ -31,3 +31,4 @@ ON CONFLICT (turvalaitenro)
       vaylat        = :vaylat :: INTEGER [],
       arvot         = :arvot :: JSONB,
       poistettu     = FALSE;
+
