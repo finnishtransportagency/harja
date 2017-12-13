@@ -435,16 +435,16 @@
     (doseq [suunta suunnat]
       (doseq [kohteelle-id (hae-seuraavat-kohteet db kohteelta-id suunta)]
         (doseq [alus (filter (comp (partial sama-suunta? suunta) ::lt-alus/suunta) alukset)]
-          (when-not (ketjutus-olemassa? db alus)
-            (specql/insert! db
-                            ::ketjutus/liikennetapahtuman-ketjutus
-                            {::ketjutus/kohteelle-id kohteelle-id
-                             ::ketjutus/kohteelta-id kohteelta-id
-                             ::ketjutus/alus-id (::lt-alus/id alus)
-                             ::ketjutus/tapahtumasta-id (::lt/id tapahtuma)
+          (specql/upsert! db
+                          ::ketjutus/liikennetapahtuman-ketjutus
+                          #{::ketjutus/alus-id}
+                          {::ketjutus/kohteelle-id kohteelle-id
+                           ::ketjutus/kohteelta-id kohteelta-id
+                           ::ketjutus/alus-id (::lt-alus/id alus)
+                           ::ketjutus/tapahtumasta-id (::lt/id tapahtuma)
 
-                             ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
-                             ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)})))))))
+                           ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
+                           ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)}))))))
 
 (defn poista-toiminto! [db user toiminto]
   (specql/update! db
