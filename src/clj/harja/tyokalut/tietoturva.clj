@@ -2,6 +2,9 @@
   (:require [specql.core :refer [fetch]]
             [specql.core :as specql]))
 
+;; Usein nämä linkkitarkistukset on tehty käsin eri palveluissa queryttämällä eri tauluja.
+;; Jatkossa voisi kuitenkin käyttää aina tätä geneeristä apuria.
+
 (defn vaadi-linkki-id [vaadittu-linkki-id taulu linkitys-sarake]
   (assert vaadittu-linkki-id (str "Linkki-id puuttuu tarkistettaessa taulun " taulu " linkkiä " linkitys-sarake)))
 
