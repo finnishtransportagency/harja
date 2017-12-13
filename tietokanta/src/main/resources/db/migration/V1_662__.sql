@@ -29,7 +29,7 @@ CREATE TABLE kanava
   kanavakokonaisuus VARCHAR,
   kanava_pituus     VARCHAR,
   kanava_leveys     VARCHAR,
-  lahtopaikka       VARCHAR,
+  lahtopaikka       VARCHAR, -- alku loppu nää on paikkakuntia
   kohdepaikka       VARCHAR, --Todo uudelleennimeä
   omistaja          VARCHAR,
   geometria         GEOMETRY,
