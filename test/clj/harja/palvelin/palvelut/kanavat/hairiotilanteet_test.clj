@@ -143,11 +143,12 @@
                                            +kayttaja-ulle+
                                            args)))))
 
-(defn tallennuksen-parametrit [{:keys [id urakka-id kohde-id kohdeosa-id syy naulan-kulutus amparin-kulutus]}]
+(defn tallennuksen-argumentit [{:keys [id urakka-id kohde-id kohdeosa-id syy naulan-kulutus amparin-kulutus]}]
   (let [naulan-kulutus (or naulan-kulutus 0)
         amparin-kulutus (or amparin-kulutus 0)
         urakka-id (or urakka-id (hae-saimaan-kanavaurakan-id))
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+        syy (or syy "")
         kohde-id (or kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id))
         kohteenosa-id kohdeosa-id]
     {::hairiotilanne/hairiotilanne (merge
@@ -159,7 +160,7 @@
                                       ::hairiotilanne/vikaluokka :sahkotekninen_vika
                                       ::hairiotilanne/korjaustoimenpide "Vähennetään sähköä"
                                       ::hairiotilanne/korjauksen-tila :kesken
-                                      ::hairiotilanne/pvm (pvm/luo-pvm 2017 11 17)
+                                      ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 17)
                                       ::hairiotilanne/urakka-id urakka-id
                                       ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
                                       ::hairiotilanne/huviliikenne-lkm 1
@@ -175,11 +176,12 @@
                                             ::vv-materiaali/nimi "Ämpäreitä"
                                             ::vv-materiaali/urakka-id urakka-id
                                             ::vv-materiaali/pvm (pvm/nyt)}]
+     ::vv-materiaali/poista-materiaalikirjauksia []
      ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}}))
 
 (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        parametrit (tallennuksen-parametrit {:syy syy})]
+        parametrit (tallennuksen-argumentit {:syy syy})]
     (defn tallennuksen-parametrit [{:keys [naulan-kulutus amparin-kulutus]}]
       (let [naulan-kulutus (or naulan-kulutus 0)
             amparin-kulutus (or amparin-kulutus 0)
@@ -244,7 +246,7 @@
     (testing "Materiaalin tallentuminen häiriötilanne lomakkeelta"
       (let [naulan-kulutus -10
             amparin-kulutus -20
-            parametrit (tallennuksen-parametrit {:naulan-kulutus naulan-kulutus :amparin-kulutus amparin-kulutus})
+            parametrit (tallennuksen-argumentit {:naulan-kulutus naulan-kulutus :amparin-kulutus amparin-kulutus})
             saimaan-materiaalit-ennen-tallennusta (hae-saimaan-kanavan-materiaalit)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-hairiotilanne
@@ -276,7 +278,7 @@
             hairiotilanteen-materiaalit (hairiotilanteen-materiaalit-fn saimaan-materiaalit-ennen-tallennusta @hairiotilanne-id)
             muokkausparametrit (->
                                  ;; ihan sama mitkä määrät annetaan materiaalille, sillä ne vaihdetaan kohta
-                                 (tallennuksen-parametrit {})
+                                 (tallennuksen-argumentit {})
                                  ;; annetaan hairiotilanne id, niin tulee päivitys eikä luoda uutta
                                  (assoc-in
                                    [::hairiotilanne/hairiotilanne ::hairiotilanne/id]
@@ -317,7 +319,7 @@
             hairiotilanteen-materiaalit (hairiotilanteen-materiaalit-fn saimaan-materiaalit-ennen-tallennusta @hairiotilanne-id)
             muokkausparametrit (->
                                  ;; ihan sama mitkä määrät annetaan materiaalille, sillä ne vaihdetaan kohta
-                                 (tallennuksen-parametrit {})
+                                 (tallennuksen-argumentit {})
                                  ;; annetaan hairiotilanne id, niin tulee päivitys eikä luoda uutta
                                  (assoc-in
                                    [::hairiotilanne/hairiotilanne ::hairiotilanne/id]
@@ -346,7 +348,7 @@
 
 (deftest hairiotilanteen-tallennus
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        parametrit (tallennuksen-parametrit {:syy syy})
+        parametrit (tallennuksen-argumentit {:syy syy})
         maara-ennen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-hairiotilanne
@@ -360,7 +362,7 @@
   (let [paivitettava-id (ffirst (q "SELECT id FROM kan_hairio LIMIT 1"))
         syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         oulun-urakka-2014 (hae-oulun-alueurakan-2014-2019-id)
-        parametrit (tallennuksen-parametrit {:id paivitettava-id
+        parametrit (tallennuksen-argumentit {:id paivitettava-id
                                              :syy syy
                                              :urakka-id oulun-urakka-2014})]
 
@@ -373,7 +375,7 @@
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
         urakka-id (hae-saimaan-kanavaurakan-id)
         kohde-id 66666
-        parametrit (tallennuksen-parametrit {:kohde-id kohde-id
+        parametrit (tallennuksen-argumentit {:kohde-id kohde-id
                                              :syy syy
                                              :urakka-id urakka-id})]
 
@@ -387,7 +389,7 @@
         urakka-id (hae-saimaan-kanavaurakan-id)
         kohde-id (ffirst (q (str "SELECT \"kohde-id\" FROM kan_kohde_urakka WHERE \"urakka-id\" = " urakka-id ";")))
         kohdeosa-id (ffirst (q (str "SELECT id FROM kan_kohteenosa WHERE \"kohde-id\" != " kohde-id ";")))
-        parametrit (tallennuksen-parametrit {:kohde-id kohde-id
+        parametrit (tallennuksen-argumentit {:kohde-id kohde-id
                                              :kohdeosa-id kohdeosa-id
                                              :syy syy
                                              :urakka-id urakka-id})]
@@ -398,7 +400,7 @@
                                                    parametrit)))))
 
 (deftest hairiotilanteiden-tallennus-ilman-oikeuksia
-  (let [parametrit (tallennuksen-parametrit {})]
+  (let [parametrit (tallennuksen-argumentit {})]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :tallenna-hairiotilanne
                                            +kayttaja-ulle+
