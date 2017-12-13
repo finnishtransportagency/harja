@@ -86,6 +86,10 @@
                         :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
                         :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
+                        :kanavien-shapefile "file://shp/Vesivaylien_turvalaitteet/Kanavat.shp"
+                        :kanavien-osoite "https://ava.liikennevirasto.fi/harja/Kanavat.shz"
+                        :kanavien-tuontikohde "./shp/Vesivaylien_turvalaitteet/Kanavat.shz"
+
                         }
 
 

@@ -65,4 +65,4 @@ ON CONFLICT (turvalaitenro)
       vaylat               = :vaylat :: INTEGER [],
       geometria            = :geometria :: GEOMETRY,
       muokattu             = current_timestamp,
-      muokkaaja            = :muokkaaja
+      muokkaaja            = :muokkaaja;

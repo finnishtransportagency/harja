@@ -20,7 +20,8 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavat :as kanavat])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
            (java.sql Timestamp)
@@ -301,6 +302,22 @@
     :turvalaitteiden-shapefile
     turvalaitteet/vie-turvalaitteet-kantaan))
 
+(def tee-kanavien-paivitystehtava
+  (maarittele-paivitystehtava
+    "kanavat"
+    :kanavien-osoite
+    :kanavien-tuontikohde
+    :kanavien-shapefile
+    kanavat/vie-kanavat-kantaan))
+
+(def tee-kanavien-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "kanavat"
+    :kanavien-osoite
+    :kanavien-tuontikohde
+    :kanavien-shapefile
+    kanavat/vie-kanavat-kantaan))
+
 
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
@@ -329,8 +346,11 @@
       :siltojen-palvelusopimusten-hakutehtava (tee-siltojen-palvelusopimusten-paivitystehtava this asetukset)
       :siltojen-palvelusopimusten-paivitystehtava (tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava this asetukset)
       :turvalaitteiden-hakutehtava (tee-turvalaitteiden-paivitystehtava this asetukset)
-      :turvalaitteiden-paivitystehtava (tee-turvalaitteiden-paikallinen-paivitystehtava this asetukset)))
+      :turvalaitteiden-paivitystehtava (tee-turvalaitteiden-paikallinen-paivitystehtava this asetukset)
+      :kanavien-hakutehtava (tee-kanavien-paivitystehtava this asetukset)
+      :kanavien-paivitystehtava (tee-kanavien-paikallinen-paivitystehtava this asetukset)))
 
+  ;;todo: miks tässä ei oo kaikki mukana?
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
                      :tieverkon-paivitystehtava

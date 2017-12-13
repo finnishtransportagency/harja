@@ -109,7 +109,10 @@
                                            (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str
                                            (s/optional-key :turvalaitteiden-shapefile) s/Str
                                            (s/optional-key :turvalaitteiden-osoite) s/Str
-                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str}
+                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str
+                                           (s/optional-key :kanavien-shapefile) s/Str
+                                           (s/optional-key :kanavien-osoite) s/Str
+                                           (s/optional-key :kanavien-tuontikohde) s/Str}
 
 
 
