@@ -4,6 +4,7 @@
             [specql.op :as op]
             [harja.pvm :as pvm]
             [harja.id :as id]
+            [taoensso.timbre :as log]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -56,8 +57,12 @@
     (let [kanavatoimenpide (assoc hairiotilanne
                              ::muokkaustiedot/muokattu (pvm/nyt)
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::hairiotilanne/hairiotilanne kanavatoimenpide {::hairiotilanne/id (::hairiotilanne/id kanavatoimenpide)}))
+      (update! db ::hairiotilanne/hairiotilanne kanavatoimenpide {::hairiotilanne/id (::hairiotilanne/id kanavatoimenpide)})
+      ;; (log/debug "päivitetään, palautetaan id-tieto")
+      (first (fetch db ::hairiotilanne/hairiotilanne #{::hairiotilanne/id} {::hairiotilanne/id (::hairiotilanne/id kanavatoimenpide)})))
     (let [kanavatoimenpide (assoc hairiotilanne
                              ::muokkaustiedot/luotu (pvm/nyt)
-                             ::muokkaustiedot/luoja-id kayttaja-id)]
-      (insert! db ::hairiotilanne/hairiotilanne kanavatoimenpide))))
+                             ::muokkaustiedot/luoja-id kayttaja-id)
+          lisatty-rivi (insert! db ::hairiotilanne/hairiotilanne kanavatoimenpide)]
+      ;; (log/debug "lisätty rivi: " (pr-str lisatty-rivi))
+      lisatty-rivi)))
