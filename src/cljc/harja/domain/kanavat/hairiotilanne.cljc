@@ -90,9 +90,8 @@
 (def kuittaajan-tiedot
   #{[::kuittaaja kayttaja/perustiedot]})
 
-(def kohteenosan-tiedot #{[::kohteenosa kohteenosa/perustiedot]})
-
 (def kohteen-tiedot #{[::kohde (set/union kohde/perustiedot)]})
+(def kohteenosan-tiedot #{[::kohteenosa (set/union kohteenosa/perustiedot)]})
 
 ;; Palvelut
 

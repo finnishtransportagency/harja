@@ -18,7 +18,8 @@
            hairiotilanne/viittaus-idt
            hairiotilanne/muokkaustiedot
            hairiotilanne/kuittaajan-tiedot
-           hairiotilanne/kohteen-tiedot)
+           hairiotilanne/kohteen-tiedot
+           hairiotilanne/kohteenosan-tiedot)
          hakuehdot))
 
 (defn hae-sopimuksen-hairiotilanteet-aikavalilta [db hakuehdot]
