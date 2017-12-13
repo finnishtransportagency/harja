@@ -84,8 +84,7 @@
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
                                         ::muokkaustiedot/poistettu?])
-                          (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
-                                 ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
+                          (assoc ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
                                  ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])
                                  ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]

@@ -59,6 +59,7 @@
                           ::muokkaustiedot/muokkaaja-id kayttaja-id)]
       (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)}))
     (let [hairiotilanne (assoc hairiotilanne
+                          ::hairiotilanne/kuittaaja-id kayttaja-id
                           ::muokkaustiedot/luotu (pvm/nyt)
                           ::muokkaustiedot/luoja-id kayttaja-id)]
       (insert! db ::hairiotilanne/hairiotilanne hairiotilanne))))
