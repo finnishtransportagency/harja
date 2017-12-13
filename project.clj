@@ -5,7 +5,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta 1.9.946 aiheuttaa ongelman: eventtype.js is not a relative path
+                 [org.clojure/clojurescript "1.9.946"]
 
                  ;;;;;;; Yleiset ;;;;;;;
 
@@ -164,7 +164,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"]
+  :plugins [[lein-cljsbuild "1.1.7"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
