@@ -42,7 +42,7 @@
 
 (deftest PaivitaValinnat
   (vaadi-async-kutsut
-    #{tiedot/->HaeToimenpiteet}
+    #{tiedot/->HaeToimenpiteet tiedot/->HaeMateriaalit}
     (is (= {:valinnat {:foo :bar}}
            (e! (tiedot/->PaivitaValinnat {:foo :bar}))))))
 
