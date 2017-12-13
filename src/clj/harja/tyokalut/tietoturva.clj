@@ -3,7 +3,7 @@
             [specql.core :as specql]))
 
 ;; Usein nämä linkkitarkistukset on tehty käsin eri palveluissa queryttämällä eri tauluja.
-;; Jatkossa voisi kuitenkin käyttää aina tätä geneeristä apuria.
+;; Jatkossa voisi kuitenkin käyttää aina näitä geneerisiä apureita.
 
 (defn vaadi-linkki-id [vaadittu-linkki-id taulu linkitys-sarake]
   (assert vaadittu-linkki-id (str "Linkki-id puuttuu tarkistettaessa taulun " taulu " linkkiä " linkitys-sarake)))
