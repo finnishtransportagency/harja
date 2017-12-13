@@ -45,8 +45,9 @@
                                           (ikonit/livicon-chevron-up)
                                           (ikonit/livicon-chevron-down))}]
                                (when-not nayta-kaikki?
-                                 (str "Materiaalin käyttörivejä on vielä lisäksi "
-                                                        (- rivien-maara 5) " kappaletta."))]]
+                                 [:span {:style {:margin-left "0.5em"}}
+                                  (str "Materiaalin käyttörivejä on vielä lisäksi "
+                                       (- rivien-maara 5) " kappaletta.")])]]
                              {:key (str "info-rivi-" nimi)})
         taulukko-rivit (for*
                          [{::m/keys [id pvm maara lisatieto] :as rivi} rivit-jarjestyksessa]
