@@ -90,7 +90,7 @@
                  [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
-                 [cljsjs/openlayers "4.4.1-1"]
+                 [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
                  [org.apache.poi/poi "3.16"] ; TODO Voisi päivittää, mutta 3.17 aiheutti ongelman: Unable to find static field: RETURN_NULL_AND_BLAN
