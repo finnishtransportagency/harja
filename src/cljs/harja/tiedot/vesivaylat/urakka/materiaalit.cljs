@@ -86,7 +86,10 @@
 
   MuutaAlkuperainenMaara
   (process-event [{tiedot :tiedot} app]
-    (let [uudet-alkuperaiset-maarat (:uudet-alkuperaiset-maarat tiedot)
+    (let [uudet-alkuperaiset-maarat (map #(-> %
+                                             (assoc ::m/id (get-in % [::m/muutokset 0 ::m/id]))
+                                             (dissoc ::m/muutokset))
+                                         (:uudet-alkuperaiset-maarat tiedot))
           urakka-id (:urakka-id tiedot)
           chan (:chan tiedot)
           onnistui! (tuck/send-async! ->ListausHaettu)

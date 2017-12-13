@@ -223,7 +223,7 @@
                            (e! (tiedot/->MuutaAlkuperainenMaara
                                  {:urakka-id (:urakka-id app)
                                   :uudet-alkuperaiset-maarat (map
-                                                               #(select-keys % [::m/nimi ::m/alkuperainen-maara])
+                                                               #(select-keys % [::m/alkuperainen-maara ::m/muutokset])
                                                                sisalto)
                                   :chan ch}))
                            ch)))
