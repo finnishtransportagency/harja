@@ -139,19 +139,16 @@
      :leveys 1}
     {:otsikko "Alusten lkm"
      :nimi ::lt-alus/lkm
-     :muokattava? lt-alus/tayta-lukumaara?
      :oletusarvo 1
      :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
      :tyyppi :positiivinen-numero
      :leveys 1}
     {:otsikko "Matkustajia"
      :nimi ::lt-alus/matkustajalkm
-     :muokattava? lt-alus/tayta-matkustajamaara?
      :tyyppi :positiivinen-numero
      :leveys 1}
     {:otsikko "Nippuluku"
      :nimi ::lt-alus/nippulkm
-     :muokattava? lt-alus/tayta-nippuluku?
      :tyyppi :positiivinen-numero
      :leveys 1}]
    (r/wrap
