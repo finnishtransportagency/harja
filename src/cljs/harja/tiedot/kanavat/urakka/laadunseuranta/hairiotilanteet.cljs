@@ -63,7 +63,7 @@
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
-     ;; aika kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
+     ;; aika-kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
      ;; tulee punainen virhemerkintä
      :aika (pvm/map->Aika {:tunnit 0})}))
 
