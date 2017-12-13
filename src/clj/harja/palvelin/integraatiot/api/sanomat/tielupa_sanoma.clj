@@ -63,7 +63,7 @@
    ::tielupa/tienpitoviranomainen-puhelinnumero (:puhelinnumero tienpitoviraonomainen)
    ::tielupa/tienpitoviranomainen-sahkopostiosoite (:sahkopostiosoite tienpitoviraonomainen)
    ::tielupa/tienpitoviranomainen-lupapaallikko (:lupapaallikko tienpitoviraonomainen)
-   ::tielupa/tienpitoviranomainen-kasittelija (::kasittelija tienpitoviraonomainen)})
+   ::tielupa/tienpitoviranomainen-kasittelija (:kasittelija tienpitoviraonomainen)})
 
 (defn valmistumisilmoitus [valmistumisilmoitus]
   {::tielupa/valmistumisilmoitus (:valmistumisilmoitus valmistumisilmoitus)
@@ -105,10 +105,10 @@
    ::tielupa/liittymalupa-muut-kulkuyhteydet (:muut-kulkuyhteydet liittymalupa)
    ::tielupa/liittymalupa-valmistumisen-takaraja (json-tyokalut/aika-string->java-sql-date (:valmistumisen-takaraja liittymalupa))
    ::tielupa/liittymalupa-kyla (:kyla liittymalupa)
-   ::tielupa/liittymalupa-liittymaohje-liittymakaari (:liittymakaari liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-liittymakaari (nil-turvallinen-bigdec (:liittymakaari liittymaohje))
    ::tielupa/liittymalupa-liittymaohje-leveys-metreissa (:leveys-metreissa liittymaohje)
    ::tielupa/liittymalupa-liittymaohje-rumpu (:rumpu liittymaohje)
-   ::tielupa/liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa (:rummun-halkaisija-millimetreissa liittymaohje)
+   ::tielupa/liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa (nil-turvallinen-bigdec (:rummun-halkaisija-millimetreissa liittymaohje))
    ::tielupa/liittymalupa-liittymaohje-rummun-etaisyys-metreissa (:rummun-etaisyys-metreissa liittymaohje)
    ::tielupa/liittymalupa-liittymaohje-odotustila-metreissa (:odotustila-metreissa liittymaohje)
    ::tielupa/liittymalupa-liittymaohje-nakemapisteen-etaisyys (:nakemapisteen-etaisyys liittymaohje)
@@ -160,9 +160,9 @@
 (defn suoja-aluerakentamislupa [suoja-aluerakentamislupa]
   {::tielupa/suoja-aluerakentamislupa-rakennettava-asia (:rakennettava-asia suoja-aluerakentamislupa)
    ::tielupa/suoja-aluerakentamislupa-lisatiedot (:lisatiedot suoja-aluerakentamislupa)
-   ::tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan (:esitetty-etaisyys-tien-keskilinjaan suoja-aluerakentamislupa)
-   ::tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta (:vahimmaisetaisyys-tien-keskilinjasta suoja-aluerakentamislupa)
-   ::tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys (:suoja-alueen-leveys suoja-aluerakentamislupa)
+   ::tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan (nil-turvallinen-bigdec (:esitetty-etaisyys-tien-keskilinjaan suoja-aluerakentamislupa))
+   ::tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta (nil-turvallinen-bigdec (:vahimmaisetaisyys-tien-keskilinjasta suoja-aluerakentamislupa))
+   ::tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys (nil-turvallinen-bigdec (:suoja-alueen-leveys suoja-aluerakentamislupa))
    ::tielupa/suoja-aluerakentamislupa-sijoitus (:sijoitus suoja-aluerakentamislupa)
    ::tielupa/suoja-aluerakentamislupa-kiinteisto-rn (:kiinteisto-rn suoja-aluerakentamislupa)})
 
@@ -195,7 +195,7 @@
    ::tielupa/tyolupa-viimeistely-oltava (json-tyokalut/aika-string->java-sql-date (:viimeistely-oltava tyolupa))
    ::tielupa/tyolupa-ohjeet-tyon-suorittamiseen (:ohjeet-tyon-suorittamiseen tyolupa)
    ::tielupa/tyolupa-los-puuttuu (:los-puuttuu tyolupa)
-   ::tielupa/tyolupa-ilmoitus-tieliikennekeskukseen (:ilmoitus-tielii/pprkennekeskukseen tyolupa)
+   ::tielupa/tyolupa-ilmoitus-tieliikennekeskukseen (:ilmoitus-tieliikennekeskukseen tyolupa)
    ::tielupa/tyolupa-tilapainen-nopeusrajoitus (:tilapainen-nopeusrajoitus tyolupa)
    ::tielupa/tyolupa-los-lisatiedot (:los-lisatiedot tyolupa)
    ::tielupa/tyolupa-tieliikennekusksen-sahkopostiosoite (:tieliikennekusksen-sahkopostiosoite tyolupa)})
