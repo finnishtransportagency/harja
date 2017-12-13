@@ -355,7 +355,7 @@
                                 +kayttaja-jvh+
                                 parametrit)
         maara-jalkeen (ffirst (q "SELECT COUNT(*) FROM kan_hairio"))]
-    (is (some #(= syy (::hairiotilanne/syy %)) vastaus))
+    (is (some #(= syy (::hairiotilanne/syy %)) (:hairiotilanteet vastaus)))
     (is (+ maara-ennen 1) maara-jalkeen)))
 
 (deftest hairiotilanteen-tallennus-vaaraan-urakkaan
