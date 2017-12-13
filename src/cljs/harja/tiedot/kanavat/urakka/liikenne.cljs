@@ -73,6 +73,7 @@
 (defrecord TapahtumaaMuokattu [tapahtuma])
 (defrecord MuokkaaAluksia [alukset virheita?])
 (defrecord VaihdaSuuntaa [alus])
+(defrecord AsetaSuunnat [suunta])
 (defrecord TallennaLiikennetapahtuma [tapahtuma])
 (defrecord TapahtumaTallennettu [tulos])
 (defrecord TapahtumaEiTallennettu [virhe])
@@ -429,6 +430,14 @@
                 (update t ::lt/alukset
                         (fn [alukset]
                           (map #(if (sama-alusrivi? uusi %) uusi %) alukset)))))))
+
+  AsetaSuunnat
+  (process-event [{suunta :suunta} app]
+    (-> app
+        (assoc-in [:valittu-liikennetapahtuma :valittu-suunta] suunta)
+        (update-in [:valittu-liikennetapahtuma ::lt/alukset]
+                (fn [alukset]
+                  (map #(assoc % ::lt-alus/suunta suunta) alukset)))))
 
   TallennaLiikennetapahtuma
   (process-event [{t :tapahtuma} {:keys [tallennus-kaynnissa?] :as app}]

@@ -298,7 +298,9 @@
                         :tyyppi :radio-group
                         :pakollinen? true
                         :vaihtoehdot lt/suunta-vaihtoehdot
-                        :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)}]))))]
+                        :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)
+                        :aseta (fn [rivi arvo]
+                                 (:valittu-liikennetapahtuma (e! (tiedot/->AsetaSuunnat arvo))))}]))))]
         (when (tiedot/nayta-edelliset-alukset? app)
           (for* [[suunta tiedot] (dissoc edelliset :tama)]
             (when (tiedot/nayta-suunnan-ketjutukset? app suunta tiedot)
