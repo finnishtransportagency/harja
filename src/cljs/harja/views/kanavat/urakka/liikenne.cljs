@@ -47,7 +47,7 @@
         :tasaa :keskita
         :komponentti (fn [alus]
                        [napit/yleinen-toissijainen
-                        "Kuittaa"
+                        "Siirrä"
                         #(e! (tiedot/->SiirraTapahtumaan alus))
                         {:ikoni (ikonit/livicon-arrow-bottom)}])
         :leveys 1}
@@ -95,7 +95,7 @@
         :leveys 1}]
       kuitattavat]
      [napit/yleinen-toissijainen
-      "Kuittaa kaikki tapahtumaan"
+      "Siirrä kaikki tapahtumaan"
       #(e! (tiedot/->SiirraKaikkiTapahtumaan kuitattavat))
       {:ikoni (ikonit/livicon-arrow-bottom)
        :disabled (empty? kuitattavat)}]]))
@@ -166,7 +166,7 @@
      [napit/takaisin "Takaisin" #(e! (tiedot/->ValitseTapahtuma nil))]
      [lomake/lomake
       {:otsikko (if uusi-tapahtuma?
-                  "Luo uusi liikennetapahtuma"
+                  "Liikennetapahtuman kirjaus"
                   "Muokkaa liikennetapahtumaa")
        :muokkaa! #(e! (tiedot/->TapahtumaaMuokattu (lomake/ilman-lomaketietoja %)))
        :voi-muokata? (oikeudet/urakat-kanavat-liikenne)
@@ -303,13 +303,13 @@
           (for* [[suunta tiedot] (dissoc edelliset :tama)]
             (when (tiedot/nayta-suunnan-ketjutukset? app suunta tiedot)
               (lomake/rivi
-                {:otsikko (str "Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) ")")
+                {:otsikko (str "Saapuva liikenne - Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) ")")
                  :tyyppi :komponentti
                  :palstoja 3
                  :nimi :edelliset-alukset
                  :komponentti (fn [_] [edelliset-grid e! app tiedot])}))))
         [(when (tiedot/nayta-liikennegrid? app)
-           {:otsikko "Liikenne "
+           {:otsikko (str "Liikenne - " (get-in valittu-liikennetapahtuma [::lt/kohde ::kohde/nimi]))
             :tyyppi :komponentti
             :palstoja 3
             :nimi :muokattavat-tapahtumat
@@ -360,7 +360,7 @@
          :arvo-atom (atomi :niput?)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
-       "Lisää tapahtuma"
+       "Kirjaa liikennetapahtuma"
        #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]))
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?] :as app}
