@@ -43,7 +43,7 @@
    :MAT ["MAT" "- Matkustajalaiva"]
    :PRO ["PRO" "- Proomu"]
    :RAH ["RAH" "- Rahtilaiva"]
-   :SEK ["SEK" "- "]
+   :SEK ["SEK" "- Sekalainen"]
    :ÖLJ ["ÖLJ" "- Öljylaiva"]})
 
 (defn tayta-lukumaara? [alus]
