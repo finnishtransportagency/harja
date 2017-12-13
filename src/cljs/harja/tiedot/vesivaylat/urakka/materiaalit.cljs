@@ -27,6 +27,7 @@
 (defrecord PoistaMateriaalinKirjaus [tiedot])
 (defrecord KirjaaMateriaali [])
 (defrecord PeruMateriaalinKirjaus [])
+(defrecord NaytaKaikkiKirjauksetVaihto [nimi])
 
 (defrecord Virhe [virhe])
 
@@ -138,6 +139,13 @@
                             (dissoc m :tyyppi))
                {:onnistui ->ListausHaettu
                        :epaonnistui ->Virhe})))
+
+  NaytaKaikkiKirjauksetVaihto
+  (process-event [{nimi :nimi} app]
+    (update app :materiaalilistaus (fn [listaus]
+                                    (map #(if (= (::m/nimi %) nimi)
+                                            (update % :nayta-kaikki? not) %)
+                                         listaus))))
 
   Virhe
   (process-event [virhe app]

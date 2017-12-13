@@ -16,12 +16,13 @@
             [harja.ui.yleiset :as yleiset]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.debug :as debug])
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
 
-(defn- materiaaliloki [e! urakka-id rivit]
+(defn- materiaaliloki [e! urakka-id rivit nimi nayta-kaikki?]
   (let [rivit-jarjestyksessa (reverse (sort-by ::m/pvm rivit))
         rivin-voi-poistaa? (fn [rivi]
                              ;; Ensimmäistä luontiajan mukaista kirjausta käytetään määrittämään
@@ -32,36 +33,60 @@
                              (or (and (= rivi (last rivit-jarjestyksessa))
                                       (= (count rivit) 1))
                                  ;; Muut kirjaukset saa poistaa aina
-                                 (not= rivi (last rivit-jarjestyksessa))))]
+                                 (not= rivi (last rivit-jarjestyksessa))))
+        rivien-maara (count rivit)
+        info-rivi (with-meta [:tr
+                              [:td {:colSpan "4"}
+                               [napit/nappi ""
+                                #(e! (tiedot/->NaytaKaikkiKirjauksetVaihto nimi))
+                                {:ikoninappi? true
+                                 :luokka "klikattava"
+                                 :ikoni (if nayta-kaikki?
+                                          (ikonit/livicon-chevron-up)
+                                          (ikonit/livicon-chevron-down))}]
+                               (when-not nayta-kaikki?
+                                 (str "Materiaalin käyttörivejä on vielä lisäksi "
+                                                        (- rivien-maara 5) " kappaletta."))]]
+                             {:key (str "info-rivi-" nimi)})
+        taulukko-rivit (for*
+                         [{::m/keys [id pvm maara lisatieto] :as rivi} rivit-jarjestyksessa]
+                         [:tr
+                          [:td {:width "15%"} (pvm/pvm pvm)]
+                          [:td {:width "15%" :class (if (neg? maara)
+                                                      "materiaali-miinus"
+                                                      "materiaali-plus")}
+                           maara " kpl"]
+                          [:td {:width "60%"} lisatieto]
+                          [:td {:width "10%"}
+                           (when (rivin-voi-poistaa? rivi)
+                             [:span.klikattava
+                              {:on-click (fn []
+                                           (varmista-kayttajalta/varmista-kayttajalta
+                                             {:otsikko "Poistetaanko kirjaus?"
+                                              :sisalto [:span
+                                                        (str "Poistetaanko "
+                                                             (pvm/pvm pvm)
+                                                             " kirjattu materiaalinkäyttö: "
+                                                             maara " kpl?")]
+
+                                              :hyvaksy "Poista"
+                                              :toiminto-fn #(e! (tiedot/->PoistaMateriaalinKirjaus {:materiaali-id id
+                                                                                                    :urakka-id urakka-id}))}))}
+                              (ikonit/livicon-trash)])]])
+        taulukko-rivit (if (> rivien-maara 5)
+                         (concat taulukko-rivit [[info-rivi]])
+                         taulukko-rivit)
+        alku (take 5 taulukko-rivit)
+        keski (butlast (drop 5 taulukko-rivit))
+        loppu (last taulukko-rivit)]
     [:div.vv-materiaaliloki
      [:h3 "Muutokset"]
      [:table
       [:tbody
-       (for*
-         [{::m/keys [id pvm maara lisatieto] :as rivi} rivit-jarjestyksessa]
-         [:tr
-          [:td {:width "15%"} (pvm/pvm pvm)]
-          [:td {:width "15%" :class (if (neg? maara)
-                                      "materiaali-miinus"
-                                      "materiaali-plus")}
-           maara " kpl"]
-          [:td {:width "60%"} lisatieto]
-          [:td {:width "10%"}
-           (when (rivin-voi-poistaa? rivi)
-             [:span.klikattava
-              {:on-click (fn []
-                           (varmista-kayttajalta/varmista-kayttajalta
-                             {:otsikko "Poistetaanko kirjaus?"
-                              :sisalto [:span
-                                        (str "Poistetaanko "
-                                             (pvm/pvm pvm)
-                                             " kirjattu materiaalinkäyttö: "
-                                             maara " kpl?")]
-
-                              :hyvaksy "Poista"
-                              :toiminto-fn #(e! (tiedot/->PoistaMateriaalinKirjaus {:materiaali-id id
-                                                                                    :urakka-id urakka-id}))}))}
-              (ikonit/livicon-trash)])]])]]]))
+       (cond
+         (and nayta-kaikki? (> rivien-maara 5)) (concat alku keski loppu)
+         (and (not nayta-kaikki?) (> rivien-maara 5)) (concat alku loppu)
+         :else taulukko-rivit)]]]))
 
 (defn- materiaali-lomake [{:keys [muokkaa! tallenna! maara-placeholder]}
                           materiaali materiaalilistaus tallennus-kaynnissa?]
@@ -152,13 +177,13 @@
              [yleiset/tietoja {}
               "Määrä nyt: " maara-nyt
               "Muutos: " (case tyyppi
-                            :- (if kaytettava-maara (- kaytettava-maara) " ")
-                            :+ (or kaytettava-maara " "))
+                           :- (if kaytettava-maara (- kaytettava-maara) " ")
+                           :+ (or kaytettava-maara " "))
               "Määrä jälkeen: " ((case tyyppi
-                                    :- -
-                                    :+ +)
-                                   maara-nyt
-                                   (or kaytettava-maara 0))])]]))]))
+                                   :- -
+                                   :+ +)
+                                  maara-nyt
+                                  (or kaytettava-maara 0))])]]))]))
 
 (defn materiaalit* [e! app]
   (komp/luo
@@ -204,8 +229,8 @@
                            ch)))
            :vetolaatikot (into {}
                                (map (juxt ::m/nimi
-                                          (fn [{muutokset ::m/muutokset}]
-                                            [materiaaliloki e! (:urakka-id app) muutokset])))
+                                          (fn [{muutokset ::m/muutokset nimi ::m/nimi nayta-kaikki? :nayta-kaikki?}]
+                                            [materiaaliloki e! (:urakka-id app) muutokset nimi nayta-kaikki?])))
                                materiaalilistaus)}
           [{:tyyppi :vetolaatikon-tila :leveys 1}
            {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
@@ -216,7 +241,8 @@
              {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
               :komponentti (fn [{nimi ::m/nimi}]
                              [materiaalin-kirjaus e! app nimi])})]
-          materiaalilistaus]]))))
+          materiaalilistaus]
+         [debug/debug app]]))))
 
 (defn materiaalit [ur]
   [tuck/tuck tiedot/app materiaalit*])
