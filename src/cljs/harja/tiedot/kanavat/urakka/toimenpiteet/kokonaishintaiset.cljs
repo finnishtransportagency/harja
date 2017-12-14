@@ -67,6 +67,7 @@
                  :tallennus-kaynnissa? false
                  :haku-kaynnissa? false
                  :toimenpiteiden-siirto-kaynnissa? false
+                 :materiaalien-haku-kaynnissa? false
                  :valitut-toimenpide-idt #{}
                  :toimenpiteet nil}))
 
@@ -248,6 +249,7 @@
 
   HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
+    (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
     (log "HaeMateriaalit " materiaalien-haku-kaynnissa?)
     (when-not materiaalien-haku-kaynnissa?
       (let [urakka-id (:id @navigaatio/valittu-urakka)]
@@ -257,12 +259,13 @@
                                {:onnistui ->MateriaalitHaettu
                                 :epaonnistui ->MateriaalienHakuEpaonnistui})
             (assoc :materiaalien-haku-kaynnissa? true
-                   :materiaalit nil)))))
+                   :urakan-materiaalit nil)))))
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]
+    (log "MateriaalitHaettu, saatiin" (count materiaalit))
     (assoc app
-           :materiaalit materiaalit
+           :urakan-materiaalit materiaalit
            :materiaalien-haku-kaynnissa? false))
 
   MateriaalienHakuEpaonnistui
@@ -271,7 +274,7 @@
     (assoc app :materiaalien-haku-kaynnissa? false))
 
   MuokkaaMateriaaleja
-  (process-event [{materiaalit :materiaalit} app]
+  (process-event [{materiaalit :urakan-materiaalit} app]
     (if (:avattu-toimenpide app)
       (update app :avattu-toimenpide #(assoc % ::materiaalit/materiaalit materiaalit))
       app))

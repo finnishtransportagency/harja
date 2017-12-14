@@ -77,7 +77,8 @@
        " " toiminto "."))
 
 
-(defn varaosataulukko [{:keys [urakan-materiaalit avattu-toimenpide] :as app} muokkaa-materiaaleja-fn]
+(defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn]
+  (assert urakan-materiaalit)
   (let [voi-muokata? true
         avatun-materiaalit (::materiaali/materiaalit avattu-toimenpide)
         virhe-atom (r/wrap (::lomake/virheet avattu-toimenpide)
@@ -118,8 +119,9 @@
      muokatut-atom]))
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
-                                          toimenpideinstanssit tehtavat lisaa-materiaali-fn
+                                          toimenpideinstanssit tehtavat urakan-materiaalit lisaa-materiaali-fn
                                           muokkaa-materiaaleja-fn]}]
+  (assert urakan-materiaalit)
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
         valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
@@ -204,8 +206,7 @@
       :tyyppi :komponentti
       :palstoja 2
       :komponentti (fn [_]
-                     ;; (assert e!)
-                     [varaosataulukko app muokkaa-materiaaleja-fn])
+                     [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn])
       :validoi [#(when-not (empty? (::lomake/virheet %2))
                    "virhe")]}
      {:nimi :lisaa-varaosa
@@ -242,7 +243,8 @@
           :hyvaksy "Poista"
           :toiminto-fn (fn [] (poista-toimenpide-fn toimenpide))})])])
 
-(defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
+(defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide
+                                toimenpideinstanssit tehtavat urakan-materiaalit] :as app}
                         {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
                                 tallenna-lomake-fn poista-toimenpide-fn lisaa-materiaali-fn
                                 muokkaa-materiaaleja-fn]}]
@@ -267,6 +269,7 @@
                                      :huoltokohteet huoltokohteet
                                      :toimenpideinstanssit toimenpideinstanssit
                                      :tehtavat tehtavat
+                                     :urakan-materiaalit urakan-materiaalit
                                      :lisaa-materiaali-fn lisaa-materiaali-fn
                                      :muokkaa-materiaaleja-fn muokkaa-materiaaleja-fn})
         avattu-toimenpide]
