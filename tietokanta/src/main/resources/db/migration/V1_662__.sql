@@ -19,18 +19,18 @@ CREATE TABLE kanava
   sulkumaara        INTEGER,
   putouskorkeus_1   DECIMAL,
   putouskorkeus_2   DECIMAL,
-  ALA_VER_1         DECIMAL,
-  ALA_VER_2         DECIMAL,
-  YLA_VER_1         DECIMAL,
-  YLA_VER_2         DECIMAL,
-  kynnys_1          DECIMAL,
-  kynnys_2          DECIMAL,
+  ala_ver_1         VARCHAR, -- TODO: uudelleennimeä nämä sarakkeet kun järkevämmät nimet on tiedossa
+  ala_ver_2         VARCHAR,
+  yla_ver_1         VARCHAR,
+  yla_ver_2         VARCHAR,
+  kynnys_1          VARCHAR,
+  kynnys_2          VARCHAR,
   vesisto           VARCHAR,
   kanavakokonaisuus VARCHAR,
   kanava_pituus     VARCHAR,
   kanava_leveys     VARCHAR,
-  lahtopaikka       VARCHAR, -- alku loppu nää on paikkakuntia
-  kohdepaikka       VARCHAR, --Todo uudelleennimeä
+  lahtopaikka       VARCHAR,
+  kohdepaikka       VARCHAR,
   omistaja          VARCHAR,
   geometria         GEOMETRY,
   luoja             VARCHAR,
@@ -44,5 +44,3 @@ CREATE UNIQUE INDEX kanavanro_unique_index
 
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'kanavat-haku');
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('ptj', 'kanavat-muutospaivamaaran-haku');
-
--- TODO: muuta noi epäselvät sarakenimet kun

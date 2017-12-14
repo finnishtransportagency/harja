@@ -168,20 +168,12 @@
  :reimari {;:url "https://www.example.com/HarjaWebService"
            ;:kayttajatunnus "reimaritunnus"
            ;:salasana "reimarisalasana"
-           :url "https://oag.liikennevirasto.fi/Reimari/HarjaWebservice"
-           :kayttajatunnus "harja"
-           :salasana "198Harja!"
            ;; :toimenpidehakuvali 60
            ;; :komponenttityyppihakuvali 60
            ;; :turvalaitekomponenttihakuvali 60
            ;; :vikahakuvali 60
-            :turvalaiteryhmahakuaika [10 27 0]
+           ;; :turvalaiteryhmahakuaika [15 57 0]
            }
-
-
- ;reimari_webservice_url=https://oag.liikennevirasto.fi/Reimari/HarjaWebservice
- ;reimari_webservice_kayttaja=harja
- ;reimari_webservice_salasana=198Harja!
 
  :ais-data {:url "https://meri.digitraffic.fi/api/v1/locations/latest"
             :sekunnin-valein 60}

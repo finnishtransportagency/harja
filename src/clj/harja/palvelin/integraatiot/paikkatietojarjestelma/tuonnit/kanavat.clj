@@ -9,13 +9,9 @@
             [clj-time.coerce :as c]))
 
 
-;;TODO: uudelleennimeä epäselvästi nimetyt tiedot ALA_VER_1
-
 (defn vie-kanava-entry [db kanava]
-  (let [kynnys_1_str (:kynnys_1 kanava)
-        kynnys_2_str (:kynnys_2 kanava)
-        kanavanro (:numero kanava)
-        aluenro (:aluenumero kanava)
+  (let [kanavanro (:numero kanava)
+        aluenro (:aluenro kanava)
         nimi (:nimi kanava)
         kanavatyyppi (:kanava_ty kanava)
         aluetyyppi (:alue_ty kanava)
@@ -31,12 +27,12 @@
         sulkumaara (:sulkuja kanava)
         putouskorkeus_1 (:putousk_1 kanava)
         putouskorkeus_2 (:putousk_2 kanava)
-        ALA_VER_1 (:ala_ver1 kanava)
-        ALA_VER_2 (:ala_ver2 kanava)
-        YLA_VER_1 (:yla_ver1 kanava)
-        YLA_VER_2 (:yla_ver2 kanava)
-        kynnys_1 ((if (not= kynnys_1_str "") #(Double/parseDouble (str/replace kynnys_1_str "," "."))))
-        kynnys_2 ((if (not= kynnys_2_str "") #(Double/parseDouble (str/replace kynnys_2_str "," "."))))
+        ala_ver_1 (:ala_ver_1 kanava)
+        ala_ver_2 (:ala_ver_2 kanava)
+        yla_ver_1 (:yla_ver_1 kanava)
+        yla_ver_2 (:yla_ver_2 kanava)
+        kynnys_1 (:kanava_1 kanava)
+        kynnys_2 (:kanava_2 kanava)
         vesisto (:vesisto kanava)
         kanavakokonaisuus (:kanavakok kanava)
         kanava_pituus (:kanava_pit kanava)
@@ -62,10 +58,10 @@
                         :sulkumaara sulkumaara
                         :putouskorkeus_1 putouskorkeus_1
                         :putouskorkeus_2 putouskorkeus_2
-                        :ALA_VER_1 ALA_VER_1
-                        :ALA_VER_2 ALA_VER_2
-                        :YLA_VER_1 YLA_VER_1
-                        :YLA_VER_2 YLA_VER_2
+                        :ala_ver_1 ala_ver_1
+                        :ala_ver_2 ala_ver_2
+                        :yla_ver_1 yla_ver_1
+                        :yla_ver_2 yla_ver_2
                         :kynnys_1 kynnys_1
                         :kynnys_2 kynnys_2
                         :vesisto vesisto
@@ -80,7 +76,6 @@
                         :muokkaaja "Integraatio"}]
 
     (do
-      (println "VIEDÄÄN KANAVA TAULUUN!")
       (q-kanavat/vie-kanavatauluun<! db sql-parametrit)
       )))
 
@@ -91,7 +86,6 @@
       (log/debug (str "Tuodaan kanavaa kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
                                 (doseq [kanava (shapefile/tuo shapefile)]
-                                  (println (str "LÄHDETÄÄN VIEMÄÄN KANAVA TAULUUN!" kanava))
                                   (vie-kanava-entry db kanava)))
       (log/debug "Kanavien tuonti kantaan valmis."))
     (log/debug "Kanavien tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
