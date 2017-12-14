@@ -146,3 +146,9 @@
     (k/post! :tallenna-paallystysilmoitusten-takuupvmt
              {::urakka-domain/id urakka-id
               ::pot/tallennettavat-paallystysilmoitusten-takuupvmt ilmoitukset-joilla-jo-pot})))
+
+(defn avaa-paallystysilmoituksen-lukitus!
+  [{:keys [urakka-id kohde-id tila]}]
+  (k/post! :aseta-paallystysilmoituksen-tila {::urakka-domain/id urakka-id
+                                              ::pot/paallystyskohde-id kohde-id
+                                              ::pot/tila tila}))
