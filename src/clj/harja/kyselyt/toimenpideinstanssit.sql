@@ -88,14 +88,16 @@ FROM toimenpideinstanssi tpi
 WHERE tpi.id NOT IN (SELECT DISTINCT toimenpideinstanssi
                      FROM maksuera
                      WHERE toimenpideinstanssi IS NOT NULL)
-      AND urakka.tyyppi = 'hoito';
+      AND urakka.tyyppi in ('hoito',
+                            'vesivayla-kanavien-hoito',
+                            'vesivayla-kanavien-korjaus');
 
 -- name: onko-urakalla-toimenpide
 SELECT exists(SELECT id
               FROM toimenpideinstanssi
               WHERE urakka = :urakka AND toimenpide = (SELECT id
                                                        FROM toimenpidekoodi
-                                                       WHERE koodi = :toimenpidekoodi))
+                                                       WHERE koodi = :toimenpidekoodi));
 
 -- name: urakan-toimenpideinstanssi-idt
 -- Palauttaa urakan toimenpideinstanssien idt
