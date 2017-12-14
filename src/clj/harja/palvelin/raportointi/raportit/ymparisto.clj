@@ -208,4 +208,5 @@
                  (sort-by first (group-by :luokka luokitellut))))))
 
        materiaalit)]
-     [:teksti "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta."]]))
+     (when-not (empty? materiaalit)
+       [:teksti "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta."])]))
