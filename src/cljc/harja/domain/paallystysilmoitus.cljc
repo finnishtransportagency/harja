@@ -316,3 +316,6 @@
 
 (s/def ::tallenna-paallystysilmoitusten-takuupvmt
   (s/keys :req [::urakka/id ::tallennettavat-paallystysilmoitusten-takuupvmt]))
+
+(s/def ::aseta-paallystysilmoituksen-tila
+  (s/keys :req [::urakka/id ::paallystyskohde-id ::tila]))

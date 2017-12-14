@@ -9,6 +9,7 @@
             [cheshire.core :as cheshire]
             [harja.domain.urakka :as urakka-domain]
             [harja.domain.sopimus :as sopimus-domain]
+            [harja.domain.paallystysilmoitus :as pot-domain]
             [harja.domain.paallystyksen-maksuerat :as paallystyksen-maksuerat-domain]
             [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.pvm :as pvm]
@@ -32,7 +33,10 @@
                                                        [:http-palvelin :db])
                         :tallenna-paallystyskohde (component/using
                                                     (->Paallystys)
-                                                    [:http-palvelin :db])))))
+                                                    [:http-palvelin :db])
+                        :aseta-paallystysilmoituksen-tila (component/using
+                                                            (->Paallystys)
+                                                            [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -653,3 +657,22 @@
                :maksueranumero 5
                :sisalto "Uusi maksuerä"}])
           "Uudet maksuerät ilmestyivät kantaan, vanhat päivitettiin ja payloadissa olemattomiin ei koskettu"))))
+
+(deftest avaa-lukitun-potin-lukitus
+  (let [kohde-id (hae-yllapitokohde-oulun-ohitusramppi)
+        payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
+                 ::pot-domain/paallystyskohde-id kohde-id
+                 ::pot-domain/tila :valmis}
+        tila-ennen-kutsua (keyword (second (first (q (str "SELECT id, tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :aseta-paallystysilmoituksen-tila +kayttaja-jvh+ payload)]
+    (is (= :lukittu tila-ennen-kutsua))
+    (is (= :valmis (:tila vastaus)))))
+
+(deftest avaa-lukitun-potin-lukitus-ei-sallittu-koska-tero-ei-tassa-urakanvalvojana
+  (let [kohde-id (hae-yllapitokohde-oulun-ohitusramppi)
+        payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
+                 ::pot-domain/paallystyskohde-id kohde-id
+                 ::pot-domain/tila :valmis}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :aseta-paallystysilmoituksen-tila +kayttaja-tero+ payload)))))
