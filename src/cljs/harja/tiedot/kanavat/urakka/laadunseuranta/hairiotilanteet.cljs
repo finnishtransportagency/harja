@@ -161,8 +161,7 @@
                                {:onnistui ->MateriaalitHaettu
                                 :epaonnistui ->MateriaalienHakuEpaonnistui})
             (assoc :nakymassa? true
-                   :materiaalien-haku-kaynnissa? true
-                   :materiaalit nil)))))
+                   :materiaalien-haku-kaynnissa? true)))))
 
   NakymaSuljettu
   (process-event [_ app]
@@ -316,5 +315,5 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:valittu-hairiotilanne ::lomake/virheet] virhe)))
+    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe)))
 
