@@ -124,7 +124,7 @@
          [valinnat/urakkatoiminnot {}
           #_[napit/uusi "Lisää kohteen osia"
            (fn [] (log "TODO"))]
-          [napit/tallenna "Tallenna liitokset"
+          [napit/tallenna "Tallenna urakkaliitokset"
            (fn [] (log "TODO"))]]
          [:div.otsikko-ja-valinta-rivi
           [:div.otsikko "Kaikki kohteet:"]
