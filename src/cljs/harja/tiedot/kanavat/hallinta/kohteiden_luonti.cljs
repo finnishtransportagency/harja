@@ -86,14 +86,8 @@
 
 (defn kohderivit [tulos]
   (mapcat
-    (fn [kanava-ja-kohteet]
-      (map
-        (fn [kohde]
-          (-> kohde
-              (assoc ::kok/id (::kok/id kanava-ja-kohteet))
-              (assoc ::kok/nimi (::kok/nimi kanava-ja-kohteet))
-              (assoc :rivin-teksti (str "FIXME"))))
-        (::kok/kohteet kanava-ja-kohteet)))
+    (fn [kohdekokonaisuus]
+      (::kok/kohteet kohdekokonaisuus))
     tulos))
 
 (defn kanavat [tulos]

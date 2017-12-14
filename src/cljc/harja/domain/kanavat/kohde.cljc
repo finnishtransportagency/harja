@@ -76,7 +76,6 @@
     kohde))
 
 (defn fmt-kohteen-nimi
-  "Ottaa mapin, jossa on kohteen tiedot ja ::kohdekokonaisuus avaimen takana kanavan tiedot."
   [kohde]
   (::nimi kohde))
 
@@ -85,15 +84,6 @@
     :rautatiesilta "rautatiesilta"
     :sulku "sulku"}
     tyyppi))
-
-(defn fmt-kohde-ja-osa-nimi
-  [kohde osa]
-  (str
-    (::nimi kohde)
-    (cond
-      (::osa/nimi osa) (str ", " (::osa/nimi osa))
-      (::osa/tyyppi osa) (str ", " (fmt-kohteenosan-tyyppi->str (::osa/tyyppi osa)))
-      :else "")))
 
 (defn fmt-kohteenosan-nimi [osa]
   (str/capitalize (or (::osa/nimi osa) (fmt-kohteenosan-tyyppi->str (::osa/tyyppi osa)))))
