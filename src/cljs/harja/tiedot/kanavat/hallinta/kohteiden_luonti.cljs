@@ -27,7 +27,7 @@
                  :kanavat nil
                  :lomakkeen-tiedot nil
                  :valittu-urakka nil
-                 :uudet-urakkaliitokset []}))
+                 :uudet-urakkaliitokset []})) ; Vector mappeja: {:kohde-id 0 :urakka-id 0 :liitetty? true}
 
 ;; Yleiset
 
@@ -282,8 +282,8 @@
                    liita? :liita?
                    urakka :urakka}
                   app]
-
-    (let [kohde-id (::kohde/id kohde)
+    ;; TODO Jatkossa päivitetään usea liitos kerralla
+    #_(let [kohde-id (::kohde/id kohde)
           urakka-id (::ur/id urakka)]
       (tt/post! :liita-kohde-urakkaan
                 {:kohde-id kohde-id
