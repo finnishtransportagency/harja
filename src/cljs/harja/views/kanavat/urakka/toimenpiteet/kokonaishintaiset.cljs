@@ -22,7 +22,8 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :as yleiset]
             [harja.domain.kanavat.kohde :as kohde]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [taoensso.timbre :as log])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -109,6 +110,7 @@
     (fn [e! app]
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
+
       [:span
        [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet]])))
 
