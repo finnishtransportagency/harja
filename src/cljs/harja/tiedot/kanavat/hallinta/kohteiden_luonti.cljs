@@ -29,28 +29,41 @@
                  :valittu-urakka nil
                  :poistettava-kohde nil}))
 
+;; Yleiset
+
 (defrecord Nakymassa? [nakymassa?])
-(defrecord HaeKohteet [])
-(defrecord KohteetHaettu [tulos])
-(defrecord KohteetEiHaettu [virhe])
-(defrecord AvaaKohdeLomake [])
-(defrecord SuljeKohdeLomake [])
-(defrecord ValitseKanava [kanava])
-(defrecord LisaaKohteita [tiedot])
-(defrecord TallennaKohteet [])
-(defrecord KohteetTallennettu [tulos])
-(defrecord KohteetEiTallennettu [virhe])
+
+;; Grid
+
 (defrecord AloitaUrakoidenHaku [])
 (defrecord UrakatHaettu [urakat])
 (defrecord UrakatEiHaettu [virhe])
+
+(defrecord HaeKohteet [])
+(defrecord KohteetHaettu [tulos])
+(defrecord KohteetEiHaettu [virhe])
+
 (defrecord ValitseUrakka [urakka])
+
 (defrecord LiitaKohdeUrakkaan [kohde liita? urakka])
 (defrecord KohdeLiitetty [tulos kohde urakka])
 (defrecord KohdeEiLiitetty [virhe kohde urakka])
+
 (defrecord AsetaPoistettavaKohde [kohde])
 (defrecord PoistaKohde [kohde])
 (defrecord KohdePoistettu [tulos kohde])
 (defrecord KohdeEiPoistettu [virhe])
+
+;; Lomake
+
+(defrecord AvaaKohdeLomake [])
+(defrecord SuljeKohdeLomake [])
+(defrecord ValitseKanava [kanava])
+(defrecord LisaaKohteita [tiedot])
+
+(defrecord TallennaKohteet [])
+(defrecord KohteetTallennettu [tulos])
+(defrecord KohteetEiTallennettu [virhe])
 
 (defn hae-kanava-urakat! [tulos! fail!]
   (go

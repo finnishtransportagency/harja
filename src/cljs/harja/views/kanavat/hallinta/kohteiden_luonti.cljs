@@ -160,7 +160,8 @@
            :tyhja (if kohteiden-haku-kaynnissa?
                     [ajax-loader "Haetaan kohteita"]
                     "Ei perustettuja kohteita")}
-          [{:otsikko "Kanava, kohde, ja kohteen tyyppi" :nimi :rivin-teksti
+          [{:otsikko "Kanava, kohde, ja kohteen tyyppi"
+            :nimi :rivin-teksti
             :leveys 5}
            {:otsikko "Poista"
             :leveys 1
