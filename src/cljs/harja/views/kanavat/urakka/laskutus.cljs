@@ -13,10 +13,7 @@
             [harja.tiedot.raportit :as raportit]
             [harja.ui.raportti :refer [muodosta-html]]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.ui.upotettu-raportti :as upotettu-raportti]
-            [harja.views.urakka.maksuerat :as maksuerat]
-            [harja.ui.bootstrap :as bs]
-            [harja.domain.oikeudet :as oikeudet])
+            [harja.ui.upotettu-raportti :as upotettu-raportti])
 
   (:require-macros
     [cljs.core.async.macros :refer [go]]
@@ -46,40 +43,20 @@
                 (raportit/suorita-raportti p))))
 
 
-(defn laskutusyhteenveto []
-  [:span.laskutusyhteenveto
-   [valinnat/urakan-hoitokausi-ja-kuukausi ur]
-
-   (when-let [p @laskutuksen-parametrit]
-     [upotettu-raportti/raportin-vientimuodot p])
-
-   (if-let [tiedot @laskutus-tiedot]
-     [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutus-kanavat)]
-     [yleiset/ajax-loader "Raporttia suoritetaan..."])])
-
 (defn laskutus
   []
   (komp/luo
     (komp/lippu laskutus-nakyvissa?)
     (fn []
-      ;; luettava, jotta reaktiot päivittyvät
-      @nav/valittu-urakka
-      @laskutus-tiedot
-      @u/valittu-hoitokauden-kuukausi
+      (let [ur @nav/valittu-urakka
+            tiedot @laskutus-tiedot
+            valittu-aikavali @u/valittu-hoitokauden-kuukausi]
+        [:span.laskutusyhteenveto
+         [valinnat/urakan-hoitokausi-ja-kuukausi ur]
 
-      [:span.laskutus
-       [bs/tabs {:style :tabs :classes "tabs-taso2"
-                 :active (nav/valittu-valilehti-atom :laskutus)}
+         (when-let [p @laskutuksen-parametrit]
+           [upotettu-raportti/raportin-vientimuodot p])
 
-        "Laskutusyhteenveto"
-        :laskutusyhteenveto
-        ^{:key "laskutusyhteenveto"}
-        [laskutusyhteenveto]
-
-        "Maksuerät"
-        :maksuerat
-        ^{:key "maksuerat"}
-        (when (oikeudet/urakat-laskutus-maksuerat (:id @nav/valittu-urakka))
-          [maksuerat/maksuerat-listaus])]]
-
-      )))
+         (if-let [tiedot @laskutus-tiedot]
+           [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutus-kanavat)]
+           [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))
