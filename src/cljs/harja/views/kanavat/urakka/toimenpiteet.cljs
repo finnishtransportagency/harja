@@ -78,7 +78,7 @@
                                           toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-        valitun-kohteen-osat (::kohde/kohteenosat (first (filter #(= (::kohde/id %) valittu-kohde-id) kohteet)))]
+        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
 
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id

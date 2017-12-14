@@ -28,11 +28,11 @@
 (defn- maarita-suunta [komponentti]
   (let [wrapper-node (r/dom-node komponentti)
         komponentti-node (.-firstChild wrapper-node)
-        [x y _ _] (dom/sijainti wrapper-node)
         [_ _ leveys korkeus :as sij] (dom/sijainti komponentti-node)
         viewport-korkeus @dom/korkeus
         etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan komponentti-node)
-        suunta (if (< viewport-korkeus (+ y korkeus))
+        etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan komponentti-node)
+        suunta (if (>= etaisyys-ylareunaan korkeus) ;; Ylös jos riittävästi tilaa, muuten alas (alas voi aina scrollata)
                  (if (< etaisyys-oikeaan-reunaan leveys)
                    :ylos-vasen
                    :ylos-oikea)
@@ -61,7 +61,6 @@
     (komp/luo
       (komp/piirretty paivita-suunta!)
       (komp/dom-kuuntelija js/window
-                           EventType/SCROLL paivita-suunta!
                            EventType/RESIZE paivita-suunta!
                            EventType/KEYUP sulje-esc-napilla!)
       (fn [{:keys [luokka sulje! otsikko] :as optiot} sisalto]

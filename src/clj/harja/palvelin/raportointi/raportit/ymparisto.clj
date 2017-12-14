@@ -207,4 +207,6 @@
                              nil nil]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 
-       materiaalit)]]))
+       materiaalit)]
+     (when-not (empty? materiaalit)
+       [:teksti "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta."])]))
