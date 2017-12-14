@@ -49,6 +49,7 @@
 
 (defn laskutusyhteenveto
   []
+  (log "--->>> PLIM!")
   (komp/luo
     (komp/lippu laskutusyhteenveto-nakyvissa?)
     (fn []
