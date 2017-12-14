@@ -27,7 +27,7 @@
                  :kanavat nil
                  :lomakkeen-tiedot nil
                  :valittu-urakka nil
-                 :poistettava-kohde nil}))
+                 :uudet-urakkaliitokset []}))
 
 ;; Yleiset
 
@@ -310,17 +310,4 @@
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
     (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
     (-> app
-        (lopeta-liittaminen kohde-id urakka-id)))
-
-  KohdePoistettu
-  (process-event [{kohde :kohde} app]
-    (-> app
-        (update :kohderivit poista-kohde kohde)
-        (assoc :poistaminen-kaynnissa? false)
-        (assoc :poistettava-kohde nil)))
-
-  KohdeEiPoistettu
-  (process-event [_ app]
-    (viesti/nayta! "Virhe kohteen poistamisessa!" :danger)
-    (-> app
-        (assoc :poistaminen-kaynnissa? false))))
+        (lopeta-liittaminen kohde-id urakka-id))))
