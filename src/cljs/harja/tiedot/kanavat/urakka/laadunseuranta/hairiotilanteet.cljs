@@ -6,6 +6,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
@@ -62,7 +63,7 @@
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
-     ;; aika kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
+     ;; aika-kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
      ;; tulee punainen virhemerkintä
      :aika (pvm/map->Aika {:tunnit 0})}))
 
@@ -82,9 +83,9 @@
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
                                         ::muokkaustiedot/poistettu?])
-                          (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
-                                 ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
+                          (assoc ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+                                 ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])
                                  ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
     hairiotilanne))
 
@@ -208,7 +209,13 @@
 
   AsetaHairiotilanteenTiedot
   (process-event [{hairiotilanne :hairiotilanne} app]
-    (assoc app :valittu-hairiotilanne hairiotilanne))
+    (let [kohdeosa-vaihtui? (and (some? (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohteenosa]))
+                                 (not= (::hairiotilanne/kohde hairiotilanne)
+                                       (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohde])))
+          hairiotilanne (if kohdeosa-vaihtui?
+                          (assoc hairiotilanne ::hairiotilanne/kohteenosa nil)
+                          hairiotilanne)]
+      (assoc app :valittu-hairiotilanne hairiotilanne)))
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]

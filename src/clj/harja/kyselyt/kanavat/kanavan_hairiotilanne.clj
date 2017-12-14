@@ -18,7 +18,8 @@
            hairiotilanne/viittaus-idt
            hairiotilanne/muokkaustiedot
            hairiotilanne/kuittaajan-tiedot
-           hairiotilanne/kohteen-tiedot)
+           hairiotilanne/kohteen-tiedot
+           hairiotilanne/kohteenosan-tiedot)
          hakuehdot))
 
 (defn hae-sopimuksen-hairiotilanteet-aikavalilta [db hakuehdot]
@@ -53,11 +54,12 @@
 
 (defn tallenna-hairiotilanne [db kayttaja-id hairiotilanne]
   (if (id/id-olemassa? (::hairiotilanne/id hairiotilanne))
-    (let [kanavatoimenpide (assoc hairiotilanne
-                             ::muokkaustiedot/muokattu (pvm/nyt)
-                             ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::hairiotilanne/hairiotilanne kanavatoimenpide {::hairiotilanne/id (::hairiotilanne/id kanavatoimenpide)}))
-    (let [kanavatoimenpide (assoc hairiotilanne
-                             ::muokkaustiedot/luotu (pvm/nyt)
-                             ::muokkaustiedot/luoja-id kayttaja-id)]
-      (insert! db ::hairiotilanne/hairiotilanne kanavatoimenpide))))
+    (let [hairiotilanne (assoc hairiotilanne
+                          ::muokkaustiedot/muokattu (pvm/nyt)
+                          ::muokkaustiedot/muokkaaja-id kayttaja-id)]
+      (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)}))
+    (let [hairiotilanne (assoc hairiotilanne
+                          ::hairiotilanne/kuittaaja-id kayttaja-id
+                          ::muokkaustiedot/luotu (pvm/nyt)
+                          ::muokkaustiedot/luoja-id kayttaja-id)]
+      (insert! db ::hairiotilanne/hairiotilanne hairiotilanne))))
