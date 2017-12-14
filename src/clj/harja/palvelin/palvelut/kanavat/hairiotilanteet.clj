@@ -37,14 +37,7 @@
     (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::hairio/kohteenosa-id hairiotilanne)
                                ::osa/kohde-id (::hairio/kohde-id hairiotilanne)))
 
-  (jdbc/with-db-transaction [db db]
-    (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
-          hairio-id (or hairio-id (::hairio/id hairiotilanne))]
-      (doseq [mk (map #(assoc % ::materiaali/hairiotilanne hairio-id) materiaalikirjaukset)]
-        (m-q/kirjaa-materiaali db kayttaja mk)
-        (materiaali-palvelu/hoida-halytysraja db mk fim email))
-      (doseq [mk materiaalipoistot]
-        (m-q/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
+  (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
 
 (defn tallenna-materiaalikirjaukset [db fim email
                                      {kayttaja-id :id :as kayttaja}
