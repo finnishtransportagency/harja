@@ -30,7 +30,7 @@
   (q/lisaa-kokonaisuudelle-kohteet! db user kohteet)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
-(defn liita-kohde-urakkaan! [db user {:keys [kohde-id urakka-id poistettu?]}]
+(defn liita-kohteet-urakkaan! [db user {:keys [kohde-id urakka-id poistettu?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
   (q/liita-kohde-urakkaan! db user kohde-id urakka-id poistettu?))
 
@@ -72,9 +72,9 @@
        :vastaus-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus})
     (julkaise-palvelu
       http
-      :liita-kohde-urakkaan
+      :liita-kohteet-urakkaan
       (fn [user tiedot]
-        (liita-kohde-urakkaan! db user tiedot))
+        (liita-kohteet-urakkaan! db user tiedot))
       {:kysely-spec ::kok/liita-kohde-urakkaan-kysely})
     ;; Poistamista ei tueta UI:lla tällä hetkellä
     #_(julkaise-palvelu
@@ -98,7 +98,7 @@
       :hae-kohdekokonaisuudet-ja-kohteet
       :hae-urakan-kohteet
       :lisaa-kohdekokonaisuudelle-kohteita
-      :liita-kohde-urakkaan
+      :liita-kohteet-urakkaan
       :poista-kohde
       :hae-kanavien-huoltokohteet)
     this))

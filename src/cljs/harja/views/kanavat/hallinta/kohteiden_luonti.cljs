@@ -117,8 +117,9 @@
                            (e! (tiedot/->ValitseUrakka nil))
                            (e! (tiedot/->SuljeKohdeLomake))))
 
-    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki?
-                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde] :as app}]
+    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki? liittaminen-kaynnissa?
+                    uudet-urakkaliitokset valittu-urakka urakat poistaminen-kaynnissa?
+                    poistettava-kohde] :as app}]
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
@@ -126,7 +127,9 @@
           #_[napit/uusi "Lisää kohteen osia"
              (fn [] (log "TODO"))]
           [napit/tallenna "Tallenna urakkaliitokset"
-           (fn [] (log "TODO"))]]
+           #(e! (tiedot/->PaivitaKohteidenUrakkaliitokset))
+           {:disabled (empty? uudet-urakkaliitokset)
+            :tallennus-kaynnissa? liittaminen-kaynnissa?}]]
          [:div.otsikko-ja-valinta-rivi
           [:div.otsikko "Kaikki kohteet:"]
           [:div.valinta.label-ja-alasveto

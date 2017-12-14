@@ -22,7 +22,7 @@
                  :kohteiden-haku-kaynnissa? false
                  :urakoiden-haku-kaynnissa? false
                  :kohdelomake-auki? false
-                 :liittaminen-kaynnissa {}
+                 :liittaminen-kaynnissa? false
                  :kohderivit nil
                  :kanavat nil
                  :lomakkeen-tiedot nil
@@ -46,7 +46,7 @@
 (defrecord ValitseUrakka [urakka])
 
 (defrecord AsetaKohteenUrakkaliitos [kohde-id urakka-id liitetty?])
-(defrecord PaivitaKohteidenUrakkaliitokset [kohde liita? urakka])
+(defrecord PaivitaKohteidenUrakkaliitokset [])
 (defrecord LiitoksetPaivitetty [tulos kohde urakka])
 (defrecord LiitoksetEiPaivitetty [virhe kohde urakka])
 
@@ -153,15 +153,6 @@
 
                   kohde))
               kohteet))))
-
-(defn kaynnista-liittaminen [app kohde-id urakka-id]
-  (update app :liittaminen-kaynnissa
-          (fn [kohde-ja-urakat]
-            (let [kohde-ja-urakat (or kohde-ja-urakat {})]
-              (if (kohde-ja-urakat kohde-id)
-                (update kohde-ja-urakat kohde-id conj urakka-id)
-
-                (assoc kohde-ja-urakat kohde-id #{urakka-id}))))))
 
 (defn lopeta-liittaminen [app kohde-id urakka-id]
   (update app :liittaminen-kaynnissa
@@ -280,7 +271,6 @@
                    urakka-id :urakka-id
                    liitetty? :liitetty?}
                   app]
-    (log "ASETA " kohde-id urakka-id liitetty?)
     (let [liitokset (:uudet-urakkaliitokset app)]
       (assoc app :uudet-urakkaliitokset
                  (assoc liitokset
@@ -288,33 +278,18 @@
                    liitetty?))))
 
   PaivitaKohteidenUrakkaliitokset
-  (process-event [{kohde :kohde
-                   liita? :liita?
-                   urakka :urakka}
-                  app]
-    ;; TODO Jatkossa päivitetään usea liitos kerralla
-    #_(let [kohde-id (::kohde/id kohde)
-            urakka-id (::ur/id urakka)]
-        (tt/post! :liita-kohde-urakkaan
-                  {:kohde-id kohde-id
-                   :urakka-id urakka-id
-                   :poistettu? (not liita?)}
-                  {:onnistui ->KohdeLiitetty
-                   :onnistui-parametrit [kohde-id urakka-id]
-                   :epaonnistui ->KohdeEiLiitetty
-                   :epaonnistui-parametrit [kohde-id urakka-id]})
-
-        (-> app
-            (lisaa-kohteelle-urakka kohde urakka liita?)
-            (kaynnista-liittaminen kohde-id urakka-id))))
+  (process-event [_ app]
+    (tt/post! :liita-kohteet-urakkaan
+              {:liitokset (:uudet-urakkaliitokset app)}
+              {:onnistui ->LiitoksetPaivitetty
+               :epaonnistui ->LiitoksetEiPaivitetty})
+    (assoc app :liittaminen-kaynnissa? true))
 
   LiitoksetPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
-    (-> app
-        (lopeta-liittaminen kohde-id urakka-id)))
+    (assoc app :liittaminen-kaynnissa? false))
 
   LiitoksetEiPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
-    (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
-    (-> app
-        (lopeta-liittaminen kohde-id urakka-id))))
+    (viesti/nayta! "Virhe kohteiden liittämisessä urakkaan!" :danger)
+    (assoc app :liittaminen-kaynnissa? false)))

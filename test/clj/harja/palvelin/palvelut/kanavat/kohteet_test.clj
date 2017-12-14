@@ -174,7 +174,7 @@
                   :kohde-id kohde-id
                   :poistettu? false}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :liita-kohde-urakkaan
+                                  :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
       (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
@@ -196,7 +196,7 @@
                   :kohde-id kohde-id
                   :poistettu? true}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :liita-kohde-urakkaan
+                                  :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
       (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
@@ -218,7 +218,7 @@
                   :kohde-id kohde-id
                   :poistettu? false}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :liita-kohde-urakkaan
+                                  :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
       (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
