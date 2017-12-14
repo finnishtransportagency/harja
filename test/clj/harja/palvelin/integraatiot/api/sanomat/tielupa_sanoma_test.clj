@@ -204,30 +204,30 @@
               :nykyisen-liittyman-numero 123
               :liittyman-siirto true
               :tilapainen false}
-        odotettu {:harja.domain.tielupa/liittymalupa-kyla "Kiiminki"
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa 1
+        odotettu {:harja.domain.tielupa/liittymalupa-arvioitu-kokonaisliikenne 22
+                  :harja.domain.tielupa/liittymalupa-arvioitu-kuorma-autoliikenne 5
                   :harja.domain.tielupa/liittymalupa-haettu-kayttotarkoitus "lomakiinteistolle-kulku"
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-liittymakaari 12
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-etaisyys-metreissa 4
-                  :harja.domain.tielupa/liittymalupa-nykyisen-liittyman-numero 123
-                  :harja.domain.tielupa/liittymalupa-valmistumisen-takaraja #inst "2017-12-31T22:00:00.000-00:00"
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-odotustila-metreissa 4
-                  :harja.domain.tielupa/liittymalupa-liittyman-siirto true
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-liikennemerkit "Tieviitta"
-                  :harja.domain.tielupa/liittymalupa-tarkoituksen-kuvaus "Kulku kesämökille"
-                  :harja.domain.tielupa/liittymalupa-sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-liittymisnakema nil
-                  :harja.domain.tielupa/liittymalupa-arvioitu-kokonaisliikenne 22
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-lisaohjeet ""
-                  :harja.domain.tielupa/liittymalupa-tilapainen false
-                  :harja.domain.tielupa/liittymalupa-liittymaohje-leveys-metreissa 4
                   :harja.domain.tielupa/liittymalupa-kiinteisto-rn "12344"
-                  :harja.domain.tielupa/liittymalupa-nykyisen-liittyman-paivays #inst "2011-09-22T10:00:00.000-00:00"
-                  :harja.domain.tielupa/liittymalupa-muut-kulkuyhteydet ""
+                  :harja.domain.tielupa/liittymalupa-kyla "Kiiminki"
+                  :harja.domain.tielupa/liittymalupa-liittyman-siirto true
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-leveys-metreissa 4
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-liikennemerkit "Tieviitta"
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-liittymakaari 12M
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-liittymisnakema nil
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-lisaohjeet ""
                   :harja.domain.tielupa/liittymalupa-liittymaohje-nakemapisteen-etaisyys 6
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-odotustila-metreissa 4
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-etaisyys-metreissa 4
+                  :harja.domain.tielupa/liittymalupa-liittymaohje-rummun-halkaisija-millimetreissa 1M
                   :harja.domain.tielupa/liittymalupa-liittymaohje-rumpu true
+                  :harja.domain.tielupa/liittymalupa-muut-kulkuyhteydet ""
                   :harja.domain.tielupa/liittymalupa-myonnetty-kayttotarkoitus "lomakiintiesto"
-                  :harja.domain.tielupa/liittymalupa-arvioitu-kuorma-autoliikenne 5}]
+                  :harja.domain.tielupa/liittymalupa-nykyisen-liittyman-numero 123
+                  :harja.domain.tielupa/liittymalupa-nykyisen-liittyman-paivays #inst "2011-09-22T10:00:00.000-00:00"
+                  :harja.domain.tielupa/liittymalupa-sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+                  :harja.domain.tielupa/liittymalupa-tarkoituksen-kuvaus "Kulku kesämökille"
+                  :harja.domain.tielupa/liittymalupa-tilapainen false
+                  :harja.domain.tielupa/liittymalupa-valmistumisen-takaraja #inst "2017-12-31T22:00:00.000-00:00"}]
     (is (= (tielupa-sanoma/liittymalupa data) odotettu))))
 
 (deftest mainoslupa
@@ -356,13 +356,13 @@
               :suoja-alueen-leveys 4
               :sijoitus "suoja-alue"
               :kiinteisto-rn "12344"}
-        odotettu {:harja.domain.tielupa/suoja-aluerakentamislupa-rakennettava-asia "Aitta"
+        odotettu {:harja.domain.tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan 48M
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-kiinteisto-rn "12344"
                   :harja.domain.tielupa/suoja-aluerakentamislupa-lisatiedot "Komia aiatta"
-                  :harja.domain.tielupa/suoja-aluerakentamislupa-esitetty-etaisyys-tien-keskilinjaan 48
-                  :harja.domain.tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta 48
-                  :harja.domain.tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys 4
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-rakennettava-asia "Aitta"
                   :harja.domain.tielupa/suoja-aluerakentamislupa-sijoitus "suoja-alue"
-                  :harja.domain.tielupa/suoja-aluerakentamislupa-kiinteisto-rn "12344"}]
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-suoja-alueen-leveys 4M
+                  :harja.domain.tielupa/suoja-aluerakentamislupa-vahimmaisetaisyys-tien-keskilinjasta 48M}]
     (is (= (tielupa-sanoma/suoja-aluerakentamislupa data) odotettu))))
 
 (deftest tilapainen-myyntilupa
