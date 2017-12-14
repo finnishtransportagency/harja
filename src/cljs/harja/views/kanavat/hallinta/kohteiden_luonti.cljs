@@ -22,7 +22,8 @@
             [harja.ui.kentat :as kentat]
 
             [harja.domain.urakka :as ur]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -120,6 +121,11 @@
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
+         [valinnat/urakkatoiminnot {}
+          #_[napit/uusi "Lisää kohteen osia"
+           (fn [] (log "TODO"))]
+          [napit/tallenna "Tallenna liitokset"
+           (fn [] (log "TODO"))]]
          [:div.otsikko-ja-valinta-rivi
           [:div.otsikko "Kaikki kohteet:"]
           [:div.valinta.label-ja-alasveto
@@ -143,7 +149,6 @@
               :nimi :kohteen-urakat
               :leveys 6
               :hae tiedot/kohteen-urakat}
-
              {:otsikko (str "Kuuluu urakkaan " (:harja.domain.urakka/nimi valittu-urakka) "?")
               :leveys 6
               :tyyppi :komponentti
