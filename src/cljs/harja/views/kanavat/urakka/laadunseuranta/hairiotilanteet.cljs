@@ -224,11 +224,12 @@
       :uusi-rivi? true
       :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
       :valinnat kohteet}
-     {:otsikko "Kohteen osa"
-      :nimi ::hairiotilanne/kohteenosa
-      :tyyppi :valinta
-      :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
-      :valinnat (or valitun-kohteen-osat [])}
+     (when (::hairiotilanne/kohde valittu-hairiotilanne)
+       {:otsikko "Kohteen osa"
+        :nimi ::hairiotilanne/kohteenosa
+        :tyyppi :valinta
+        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+        :valinnat (or valitun-kohteen-osat [])})
      {:otsikko "Vikaluokka"
       :nimi ::hairiotilanne/vikaluokka
       :tyyppi :valinta
