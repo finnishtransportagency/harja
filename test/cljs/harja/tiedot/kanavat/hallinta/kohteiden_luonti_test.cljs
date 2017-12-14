@@ -207,26 +207,26 @@
 
 (deftest kaynnista-liittaminen
   (is (= {:liittaminen-kaynnissa {1 #{1 2}}}
-         (tiedot/liittaminen-kayntiin
+         (tiedot/kaynnista-liittaminen
            {:liittaminen-kaynnissa {1 #{1}}}
            1
            2)))
 
   (is (= {:liittaminen-kaynnissa {1 #{1}
                                   2 #{2}}}
-         (tiedot/liittaminen-kayntiin
+         (tiedot/kaynnista-liittaminen
            {:liittaminen-kaynnissa {1 #{1}}}
            2
            2)))
 
   (is (= {:liittaminen-kaynnissa {1 #{1 2}}}
-         (tiedot/liittaminen-kayntiin
+         (tiedot/kaynnista-liittaminen
            {:liittaminen-kaynnissa {1 #{1 2}}}
            1
            2)))
 
   (is (= {:liittaminen-kaynnissa {1 #{2}}}
-         (tiedot/liittaminen-kayntiin
+         (tiedot/kaynnista-liittaminen
            {:liittaminen-kaynnissa {}}
            1
            2))))

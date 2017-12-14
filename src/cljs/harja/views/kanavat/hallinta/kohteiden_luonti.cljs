@@ -158,8 +158,8 @@
               :solu-klikattu (fn [rivi]
                                (let [kuuluu-urakkaan? (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)]
                                  (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
-                                                                        (not kuuluu-urakkaan?)
-                                                                        (::urakka/id valittu-urakka)))))
+                                                                        (::urakka/id valittu-urakka)
+                                                                        (not kuuluu-urakkaan?)))))
               :komponentti (fn [rivi]
                              [kentat/tee-kentta
                               {:tyyppi :checkbox}
@@ -167,8 +167,8 @@
                                 (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)
                                 (fn [uusi]
                                   (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
-                                                                         uusi
-                                                                         (::urakka/id valittu-urakka)))))])})]
+                                                                         (::urakka/id valittu-urakka)
+                                                                         uusi))))])})]
           (ryhmittele-kohderivit-kanavalla kohderivit)]]
 
         [luontilomake e! app]))))

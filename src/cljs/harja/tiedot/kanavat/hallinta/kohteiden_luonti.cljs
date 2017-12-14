@@ -154,7 +154,7 @@
                   kohde))
               kohteet))))
 
-(defn liittaminen-kayntiin [app kohde-id urakka-id]
+(defn kaynnista-liittaminen [app kohde-id urakka-id]
   (update app :liittaminen-kaynnissa
           (fn [kohde-ja-urakat]
             (let [kohde-ja-urakat (or kohde-ja-urakat {})]
@@ -280,6 +280,7 @@
                    urakka-id :urakka-id
                    liitetty? :liitetty?}
                   app]
+    (log "ASETA " kohde-id urakka-id liitetty?)
     (let [liitokset (:uudet-urakkaliitokset app)]
       (assoc app :uudet-urakkaliitokset
                  (assoc liitokset
@@ -305,7 +306,7 @@
 
         (-> app
             (lisaa-kohteelle-urakka kohde urakka liita?)
-            (liittaminen-kayntiin kohde-id urakka-id))))
+            (kaynnista-liittaminen kohde-id urakka-id))))
 
   LiitoksetPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
