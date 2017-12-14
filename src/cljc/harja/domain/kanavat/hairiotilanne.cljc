@@ -43,15 +43,6 @@
                                      :harja.domain.kanavat.kohteenosa/kohteenosa
                                      :harja.domain.kanavat.kohteenosa/id)}])
 
-(def kuittaajan-tiedot
-  #{[::kuittaaja
-     #{::kayttaja/id
-       ::kayttaja/etunimi
-       ::kayttaja/sukunimi
-       ::kayttaja/kayttajanimi
-       ::kayttaja/sahkoposti
-       ::kayttaja/puhelin}]})
-
 (def materiaalien-tiedot
   ;; todo: tämä ilmeisesti ei toimi many-to-one suhteessa
   #{[::materiaalit

@@ -164,12 +164,7 @@
 
   NakymaSuljettu
   (process-event [_ app]
-    (-> app
-        (assoc :nakymassa? false)
-        ;; Jos näkymästä lähdetään, niin poistetaan tallentamattomat muokkaukset materiaaligriddiin
-        ;; ja tyhjennetään virheet. Tämä sentakia, että virheet ei toimi oikein, jos vaihtelee näkymää.
-        (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] (get-in app [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit]))
-        (assoc-in [:valittu-hairiotilanne ::lomake/virheet] {})))
+    (assoc app :nakymassa? false))
 
   PaivitaValinnat
   (process-event [{val :valinnat} app]
@@ -313,5 +308,5 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:valittu-hairiotilanne ::lomake/virheet] virhe)))
+    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe)))
 
