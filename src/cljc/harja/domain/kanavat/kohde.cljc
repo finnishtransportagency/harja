@@ -104,3 +104,6 @@
 
 (defn sulku? [osa]
   (= :sulku (::osa/tyyppi osa)))
+
+(defn kohde-idlla [kohteet id]
+  (first (filter #(= (::id %) id) kohteet)))

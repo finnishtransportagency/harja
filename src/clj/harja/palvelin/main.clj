@@ -105,6 +105,7 @@
     [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
+    [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -595,6 +596,9 @@
       :api-urakan-tyotunnit (component/using
                               (api-urakan-tyotunnit/->UrakanTyotunnit)
                               [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :turi])
+      :api-tieluvat (component/using
+                      (api-tieluvat/->Tieluvat)
+                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

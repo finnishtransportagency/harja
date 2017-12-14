@@ -67,7 +67,7 @@
   (m-q/paivita-materiaalin-alkuperainen-maara<!
     db
     {:maara (::m/alkuperainen-maara materiaali)
-     :nimi (::m/nimi materiaali)}))
+     :id (::m/id materiaali)}))
 
 (defn- muuta-materiaalien-alkuperainen-maara [db user tiedot]
   (let [urakka-id (::m/urakka-id tiedot)
@@ -75,8 +75,7 @@
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                     (::m/urakka-id tiedot))
     (doseq [materiaali uudet]
-      (let [materiaali-id (:id (first (m-q/materiaalin-id-nimella db {:nimi (::m/nimi materiaali)})))]
-        (vaadi-materiaali-kuuluu-urakkaan db urakka-id materiaali-id)))
+      (vaadi-materiaali-kuuluu-urakkaan db urakka-id (::m/id materiaali)))
 
     (doseq [materiaali uudet]
       (muuta-materiaalin-alkuperainen-maara db materiaali))

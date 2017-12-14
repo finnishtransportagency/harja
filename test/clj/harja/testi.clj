@@ -233,11 +233,11 @@
         (if vastaus-spec
           (if (post-kutsu? f)
             (fn [user payload]
-             (let [v (f user payload)]
-               (testing (str "Palvelun " nimi " vastaus on validi")
-                 (is (s/valid? vastaus-spec v)
-                     (s/explain-str vastaus-spec v)))
-               v))
+              (let [v (f user payload)]
+                (testing (str "Palvelun " nimi " vastaus on validi")
+                  (is (s/valid? vastaus-spec v)
+                      (s/explain-str vastaus-spec v)))
+                v))
 
             (fn [user]
               (let [v (f user)]
@@ -282,6 +282,36 @@
            :koordinaatti koordinaatti
            :extent (or extent
                        [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+
+(defn materiaali-haun-pg-Array->map
+  [haku]
+  ;; Materiaalien haku näyttää vähän rumalta, koska q funktio
+  ;; käyttää jdbc funktioita suoraan eikä konvertoi PgArrayta nätisti Clojure vektoriksi.
+  ;; Siksipä se muunnos täytyy tehdä itse.
+  (mapv (fn [materiaali-pg-array]
+          (let [materiaali-vector (konv/array->vec materiaali-pg-array 0)
+                muutokset (transduce
+                            ;; Jostain syystä pgobject->map ei tykänny :double :long tai :date tyypeistä
+                            (comp (map #(konv/pgobject->map %
+                                                            :pvm :string
+                                                            :maara :string
+                                                            :lisatieto :string
+                                                            :id :string
+                                                            :hairiotilanne :string))
+                                  ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
+                                  ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
+                                  ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
+                                  (map #(let [tyhja-string->nil (fn [funktio teksti]
+                                                                  (if (= teksti "")
+                                                                    nil (funktio teksti)))]
+                                          (assoc % :pvm (tyhja-string->nil pvm/dateksi (:pvm %))
+                                                   :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
+                                                   :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
+                                                   :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))))))
+                            conj [] (first materiaali-vector))
+                nimi (second materiaali-vector)]
+            {:muutokset muutokset :nimi nimi}))
+        haku))
 
 
 (defn kutsu-http-palvelua
@@ -379,34 +409,15 @@
   (let [haku (q "SELECT muutokset, nimi
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');")
-        ;; Saimaan materiaalien haku näyttää vähän rumalta, koska q funktio
-        ;; käyttää jdbc funktioita suoraan eikä konvertoi PgArrayta nätisti Clojure vektoriksi.
-        ;; Siksipä se muunnos täytyy tehdä itse.
-        saimaan-materiaalit (mapv (fn [materiaali-pg-array]
-                                    (let [materiaali-vector (konv/array->vec materiaali-pg-array 0)
-                                          muutokset (transduce
-                                                      ;; Jostain syystä pgobject->map ei tykänny :double :long tai :date tyypeistä
-                                                      (comp (map #(konv/pgobject->map %
-                                                                                      :pvm :string
-                                                                                      :maara :string
-                                                                                      :lisatieto :string
-                                                                                      :id :string
-                                                                                      :hairiotilanne :string))
-                                                            ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
-                                                            ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
-                                                            ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
-                                                            (map #(let [tyhja-string->nil (fn [funktio teksti]
-                                                                                            (if (= teksti "")
-                                                                                              nil (funktio teksti)))]
-                                                                    (assoc % :pvm (tyhja-string->nil pvm/dateksi (:pvm %))
-                                                                             :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
-                                                                             :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
-                                                                             :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))))))
-                                                      conj [] (first materiaali-vector))
-                                          nimi (second materiaali-vector)]
-                                      {:muutokset muutokset :nimi nimi}))
-                                  haku)]
+        saimaan-materiaalit (materiaali-haun-pg-Array->map haku)]
     saimaan-materiaalit))
+
+(defn hae-helsingin-vesivaylaurakan-materiaalit []
+  (let [haku (q "SELECT muutokset, nimi
+                 FROM vv_materiaalilistaus
+                 WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');")
+        helsingin-materiaalit (materiaali-haun-pg-Array->map haku)]
+    helsingin-materiaalit))
 
 (defn hae-helsingin-vesivaylaurakan-urakoitsija []
   (ffirst (q (str "SELECT urakoitsija
@@ -793,11 +804,16 @@
 
 ;; Sepolla ei ole oikeutta mihinkään. :(
 (def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmalli"
-                      :organisaatio nil
-                      :roolit #{}
-                      :urakkaroolit {}
-                      :organisaatioroolit {}
-                      :organisaation-urakat #{}})
+                       :organisaatio nil
+                       :roolit #{}
+                       :urakkaroolit {}
+                       :organisaatioroolit {}
+                       :organisaation-urakat #{}})
+
+(def +livi-jarjestelma-kayttaja+
+  {:id 14
+   :kayttajanimi "livi"
+   :jarjestelma true})
 
 (def +kayttaja-urakan-vastuuhenkilo+
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)]

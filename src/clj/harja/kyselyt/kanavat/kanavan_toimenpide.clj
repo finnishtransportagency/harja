@@ -10,7 +10,8 @@
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
-            [specql.op :as op]))
+            [specql.op :as op]
+            [taoensso.timbre :as log]))
 
 (defn hae-kanavatoimenpiteet-specql [db hakuehdot]
   (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
