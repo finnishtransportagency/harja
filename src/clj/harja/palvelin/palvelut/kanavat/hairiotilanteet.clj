@@ -3,13 +3,16 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.hairiotilanne :as hairio]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.tyokalut.tietoturva :as tietoturva]
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.domain.muokkaustiedot :as muok]
-            [harja.kyselyt.kanavat.kanavan-hairiotilanne :as q-hairiotilanne]
             [harja.kyselyt.vesivaylat.materiaalit :as m-q]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
-            [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]))
+            [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]
+            [harja.kyselyt.kanavat.kanavan-hairiotilanne :as q-hairiotilanne]))
 
 (defn hae-hairiotilanteet [db kayttaja hakuehdot]
   (let [urakka-id (::hairio/urakka-id hakuehdot)]
@@ -22,8 +25,26 @@
                               {urakka-id ::hairio/urakka-id :as hairiotilanne}]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
+  ;; Häiriötilanne kuuluu urakkaan
+  (tietoturva/vaadi-linkitys db ::hairio/hairiotilanne ::hairio/id (::hairio/id hairiotilanne)
+                             ::hairio/urakka-id urakka-id)
+  ;; Häiriötilanteen kohde kuuluu urakkaan
+  (when (::hairio/kohde-id hairiotilanne)
+    (tietoturva/vaadi-ainakin-yksi-linkitys db ::kohde/kohde<->urakka ::kohde/kohde-id (::hairio/kohde-id hairiotilanne)
+                                            ::kohde/urakka-id urakka-id))
+  ;; Häiriötilanteen kohdeosa kuuluu kohteeseen
+  (when (::hairio/kohteenosa-id hairiotilanne)
+    (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::hairio/kohteenosa-id hairiotilanne)
+                               ::osa/kohde-id (::hairio/kohde-id hairiotilanne)))
+
   (jdbc/with-db-transaction [db db]
-    (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)))
+    (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
+          hairio-id (or hairio-id (::hairio/id hairiotilanne))]
+      (doseq [mk (map #(assoc % ::materiaali/hairiotilanne hairio-id) materiaalikirjaukset)]
+        (m-q/kirjaa-materiaali db kayttaja mk)
+        (materiaali-palvelu/hoida-halytysraja db mk fim email))
+      (doseq [mk materiaalipoistot]
+        (m-q/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
 
 (defn tallenna-materiaalikirjaukset [db fim email
                                      {kayttaja-id :id :as kayttaja}

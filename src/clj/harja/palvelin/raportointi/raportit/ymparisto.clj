@@ -91,21 +91,19 @@
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
         talvisuolan-maxmaaratieto (when (= :urakka konteksti)
                                     (:talvisuolaraja (first (suolasakko-q/hae-urakan-suolasakot db {:urakka urakka-id}))))
-        talvisuolan-toteutunut-maara (when (= :urakka konteksti)
-                                       (some->> materiaalit
-                                                (filter (fn [[materiaali _]]
-                                                          (= "talvisuola" (get-in materiaali [:materiaali :tyyppi])))) ;; vain talvisuolat
-                                                (mapcat second)
-                                                (filter #(nil? (:luokka %))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
-                                                (map :maara)
-                                                (reduce +)))]
+        talvisuolan-toteutunut-maara (some->> materiaalit
+                                              (filter (fn [[materiaali _]]
+                                                        (= "talvisuola" (get-in materiaali [:materiaali :tyyppi])))) ;; vain talvisuolat
+                                              (mapcat second)
+                                              (filter #(nil? (:luokka %))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
+                                              (map :maara)
+                                              (reduce +))]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     (when (= konteksti :urakka)
-       [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
-                     (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
-                     "t")])
+     [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
+                   (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
+                   "t")]
      (when (= konteksti :urakka)
        [:teksti
         (if talvisuolan-maxmaaratieto
@@ -209,4 +207,6 @@
                              nil nil]))))
                  (sort-by first (group-by :luokka luokitellut))))))
 
-       materiaalit)]]))
+       materiaalit)]
+     (when-not (empty? materiaalit)
+       [:teksti "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta."])]))

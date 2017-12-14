@@ -14,10 +14,14 @@
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
-            [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
             [harja.kyselyt.vesivaylat.materiaalit :as q-materiaali]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]
-            [clojure.java.jdbc :as jdbc]))
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
+            [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
+            [clojure.java.jdbc :as jdbc]
+            [harja.tyokalut.tietoturva :as tietoturva]))
 
 (defn- vaadi-rivit-kuuluvat-emoon* [taulu rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
   (let [emo-idt (set (keep rivin-emo-id-avain rivit))]
@@ -145,9 +149,20 @@
                                                     urakka-id ::toimenpide/urakka-id
                                                     :as toimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
+  ;; Toimenpide kuuluu urakkaan
+  (tietoturva/vaadi-linkitys db ::toimenpide/kanava-toimenpide ::toimenpide/id
+                             (::toimenpide/id toimenpide) ::toimenpide/urakka-id urakka-id)
+  ;; Kohde kuuluu urakkaan
+  (when (::toimenpide/kohde-id toimenpide)
+    (tietoturva/vaadi-ainakin-yksi-linkitys db ::kohde/kohde<->urakka ::kohde/kohde-id (::toimenpide/kohde-id toimenpide)
+                                            ::kohde/urakka-id urakka-id))
+  ;; Kohdeosa kuuluu kohteeseen
+  (when (::toimenpide/kohteenosa-id toimenpide)
+    (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::toimenpide/kohteenosa-id toimenpide)
+                               ::osa/kohde-id (::toimenpide/kohde-id toimenpide)))
   (jdbc/with-db-transaction [db db]
-    (let [toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide)]
-      (tallenna-materiaalikirjaukset db fim email user urakka-id toimenpide-map))))
+  (let [toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide)]
+    (tallenna-materiaalikirjaukset db fim email user urakka-id toimenpide-map))))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
