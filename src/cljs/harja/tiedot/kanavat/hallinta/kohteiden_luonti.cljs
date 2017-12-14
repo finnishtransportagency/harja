@@ -171,7 +171,7 @@
   (process-event [_ app]
     (if-not (:kohteiden-haku-kaynnissa? app)
       (-> app
-          (tt/get! :hae-kanavat-ja-kohteet
+          (tt/get! :hae-kohdekokonaisuudet-ja-kohteet
                    {:onnistui ->KohteetHaettu
                     :epaonnistui ->KohteetEiHaettu})
           (assoc :kohteiden-haku-kaynnissa? true))
