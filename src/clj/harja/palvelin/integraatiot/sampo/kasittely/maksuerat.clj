@@ -111,7 +111,7 @@
         (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
 
       (catch Exception e
-        (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
         (merkitse-maksueralle-lahetysvirhe db numero)
         (throw e)))
 
