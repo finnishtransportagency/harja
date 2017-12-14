@@ -122,3 +122,6 @@
 
 (def +urakan-tyotuntien-kirjaus-request+ "api/schemas/urakan-tyotuntien-kirjaus-request.schema.json")
 (def urakan-tyotuntien-kirjaus-request (tee-validaattori "api/schemas/urakan-tyotuntien-kirjaus-request.schema.json"))
+
+(def +tieluvan-kirjaus-request+ "api/schemas/tieluvan-kirjaus-request.schema.json")
+(def tieluvan-kirjaus-request (tee-validaattori "api/schemas/tieluvan-kirjaus-request.schema.json"))

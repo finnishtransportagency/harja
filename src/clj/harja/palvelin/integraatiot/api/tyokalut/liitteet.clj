@@ -3,7 +3,8 @@
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.tarkastukset :as tarkastukset]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
-            [harja.kyselyt.siltatarkastukset :as siltatarkastukset])
+            [harja.kyselyt.siltatarkastukset :as siltatarkastukset]
+            [harja.kyselyt.tielupa :as tielupa])
   (:import (java.util Base64)))
 
 (defn dekoodaa-base64 [data]
@@ -39,3 +40,7 @@
 (defn tallenna-liitteet-siltatarkastuskohteelle [db liitteiden-hallinta kirjaaja urakan-id siltatarkastus-id tarkastuskohde-id liitteet]
   (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
                 #(siltatarkastukset/lisaa-liite-siltatarkastuskohteelle<! db siltatarkastus-id tarkastuskohde-id %)))
+
+(defn tallenna-liitteet-tieluvalle [db liitteiden-hallinta urakan-id tielupa-id kirjaaja liitteet]
+  (luo-liitteet db liitteiden-hallinta urakan-id kirjaaja liitteet
+                #(tielupa/liita-liite-tieluvalle<! db tielupa-id %)))
