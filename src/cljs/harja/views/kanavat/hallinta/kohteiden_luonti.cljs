@@ -154,21 +154,18 @@
               :tyyppi :komponentti
               :tasaa :keskita
               :nimi :valinta
-              :solu-klikattu (fn [rivi] (e! (tiedot/->LiitaKohdeUrakkaan rivi
+              :solu-klikattu (fn [rivi] (e! (tiedot/->PaivitaKohteidenUrakkaliitokset rivi
                                                                          (not (:valittu? rivi))
                                                                          valittu-urakka)))
               :komponentti (fn [rivi]
-                             (if (tiedot/liittaminen-kaynnissa? app rivi)
-                               [ajax-loader-pieni]
-
-                               [kentat/tee-kentta
-                                {:tyyppi :checkbox}
-                                (r/wrap
-                                  (tiedot/kohde-kuuluu-urakkaan? rivi valittu-urakka)
-                                  (fn [uusi]
-                                    (e! (tiedot/->LiitaKohdeUrakkaan rivi
-                                                                     uusi
-                                                                     valittu-urakka))))]))})]
+                             [kentat/tee-kentta
+                              {:tyyppi :checkbox}
+                              (r/wrap
+                                (tiedot/kohde-kuuluu-urakkaan? rivi valittu-urakka)
+                                (fn [uusi]
+                                  (e! (tiedot/->PaivitaKohteidenUrakkaliitokset rivi
+                                                                                uusi
+                                                                                valittu-urakka))))])})]
           (ryhmittele-kohderivit-kanavalla kohderivit)]]
 
         [luontilomake e! app]))))

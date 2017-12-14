@@ -45,9 +45,10 @@
 
 (defrecord ValitseUrakka [urakka])
 
-(defrecord LiitaKohdeUrakkaan [kohde liita? urakka])
-(defrecord KohdeLiitetty [tulos kohde urakka])
-(defrecord KohdeEiLiitetty [virhe kohde urakka])
+(defrecord AsetaKohteenUrakkaliitos [kohde-id urakka-id liitetty?])
+(defrecord PaivitaKohteidenUrakkaliitokset [kohde liita? urakka])
+(defrecord LiitoksetPaivitetty [tulos kohde urakka])
+(defrecord LiitoksetEiPaivitetty [virhe kohde urakka])
 
 ;; Lomake
 
@@ -127,16 +128,11 @@
 
 (defn kohde-kuuluu-urakkaan? [kohde urakka]
   (boolean
+    ;; TODO Tsekkaa kuuluuko uudessa app statessa
     ((into #{} (::kohde/urakat kohde)) urakka)))
 
 (defn poista-kohde [kohteet kohde]
   (into [] (disj (into #{} kohteet) kohde)))
-
-(defn liittaminen-kaynnissa? [app kohde]
-  (boolean
-    (get-in (:liittaminen-kaynnissa app)
-           [(::kohde/id kohde)
-            (::ur/id (:valittu-urakka app))])))
 
 (defn lisaa-kohteelle-urakka [app muokattava-kohde urakka liita?]
   (update app :kohderivit
@@ -277,7 +273,7 @@
   (process-event [{ur :urakka} app]
     (assoc app :valittu-urakka ur))
 
-  LiitaKohdeUrakkaan
+  PaivitaKohteidenUrakkaliitokset
   (process-event [{kohde :kohde
                    liita? :liita?
                    urakka :urakka}
@@ -298,12 +294,12 @@
           (lisaa-kohteelle-urakka kohde urakka liita?)
           (liittaminen-kayntiin kohde-id urakka-id))))
 
-  KohdeLiitetty
+  LiitoksetPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
     (-> app
         (lopeta-liittaminen kohde-id urakka-id)))
 
-  KohdeEiLiitetty
+  LiitoksetEiPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
     (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
     (-> app
