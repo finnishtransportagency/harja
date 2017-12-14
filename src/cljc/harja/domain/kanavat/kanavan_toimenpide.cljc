@@ -143,7 +143,9 @@
                 ::kohde-id
                 ::id
                 ::toimenpidekoodi-id
-                ::muu-toimenpide]))
+                ::muu-toimenpide
+                ::materiaalikirjaukset
+                ::materiaalipoistot]))
 
 (s/def ::tallenna-kanavatoimenpide-kutsu
   (s/keys :req [::hae-kanavatoimenpiteet-kysely

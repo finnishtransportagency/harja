@@ -12,8 +12,11 @@
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
+            [harja.kyselyt.vesivaylat.materiaalit :as q-materiaali]
+            [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]
             [clojure.java.jdbc :as jdbc]))
 
 (defn- vaadi-rivit-kuuluvat-emoon* [taulu rivit rivi-idt rivin-emo-id-avain vaadittu-emo-id]
@@ -120,15 +123,39 @@
         (q-toimenpide/paivita-toimenpiteiden-tyyppi db toimenpide-idt (::toimenpide/tyyppi tiedot))
         toimenpide-idt))))
 
-(defn tallenna-kanavatoimenpide [db user {tyyppi ::toimenpide/tyyppi
-                                          urakka-id ::toimenpide/urakka-id
-                                          :as toimenpide}]
+(defn tallenna-materiaalikirjaukset [db fim email
+                                     {kayttaja-id :id :as kayttaja}
+                                     urakka-id
+                                     {toimenpide-id ::toimenpide/id
+                                      materiaalikirjaukset ::toimenpide/materiaalikirjaukset
+                                      materiaalipoistot ::toimenpide/materiaalipoistot
+                                      :as toimenpide}]
+  (assert (integer? urakka-id) "Materiaalikirjauksia ei voi tallentaa ilman urakka id:tä")
+  (assert (integer? toimenpide-id) (str "Toimenpiteen materiaalikirjausta ei voi tallentaa ilman häiriö-id:tä - " toimenpide-id))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
+  (log/debug "tallenna-materiaalikirjaukset: kirjauksia/poistoja" (count materiaalikirjaukset) (count materiaalipoistot))
+  (doseq [kirjaus-ilman-tpid materiaalikirjaukset
+          :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
+    (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
+    (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
+  (doseq [mk materiaalipoistot]
+    (q-materiaali/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))
+
+(defn tallenna-kanavatoimenpide [db fim email user {tyyppi ::toimenpide/tyyppi
+                                                    urakka-id ::toimenpide/urakka-id
+                                                    :as toimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
-  (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide))
+  (jdbc/with-db-transaction [db db]
+    (let [toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide)]
+      (tallenna-materiaalikirjaukset db fim email user urakka-id toimenpide-map))))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
-  (start [{http :http-palvelin db :db :as this}]
+  (start [{http :http-palvelin
+           db :db
+           fim :fim
+           email :sonja-sahkoposti
+           :as this}]
     (julkaise-palvelu
       http
       :hae-kanavatoimenpiteet
@@ -155,7 +182,7 @@
       :tallenna-kanavatoimenpide
       (fn [user {toimenpide ::toimenpide/tallennettava-kanava-toimenpide
                  hakuehdot ::toimenpide/hae-kanavatoimenpiteet-kysely}]
-        (tallenna-kanavatoimenpide db user toimenpide)
+        (tallenna-kanavatoimenpide db fim email user toimenpide)
         (hae-kanavatoimenpiteet db user hakuehdot))
       {:kysely-spec ::toimenpide/tallenna-kanavatoimenpide-kutsu
        :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})

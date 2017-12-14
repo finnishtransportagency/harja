@@ -17,7 +17,10 @@
         tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %
                                                                                           ::muokkaustiedot/poistettu? false})
         tp-tyot #(fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id %
-                                                                   ::muokkaustiedot/poistettu? false})]
+                                                                   ::muokkaustiedot/poistettu? false})
+        ;; ei tarvita hakua koska front hakee erillisestä palvelusta materiaalit?
+        ;; tp-materiaalit #(fetch db :harja.domain.vesivaylat.materiaali/materiaali )
+        ]
     (for [tp toimenpiteet
           :let [tp-id (::toimenpide/id tp)]]
       (merge tp {::toimenpide/hinnat (tp-hinnat tp-id)
@@ -99,7 +102,8 @@
     (let [kanavatoimenpide (assoc kanavatoimenpide
                              ::muokkaustiedot/muokattu (pvm/nyt)
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+      (when (pos? (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+        {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
     (let [kanavatoimenpide (assoc kanavatoimenpide
                              ::toimenpide/kuittaaja-id kayttaja-id
                              ::muokkaustiedot/luotu (pvm/nyt)

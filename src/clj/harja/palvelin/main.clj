@@ -347,7 +347,7 @@
                     [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :kan-toimenpiteet (component/using
                           (kan-toimenpiteet/->Kanavatoimenpiteet)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
