@@ -27,7 +27,7 @@
                  :kanavat nil
                  :lomakkeen-tiedot nil
                  :valittu-urakka nil
-                 :uudet-urakkaliitokset []})) ; Vector mappeja: {:kohde-id 0 :urakka-id 0 :liitetty? true}
+                 :uudet-urakkaliitokset {}})) ; Key on vector, jossa [kohde-id urakka-id] ja arvo on boolean
 
 ;; Yleiset
 
@@ -126,10 +126,12 @@
 (defn kohteen-urakat [kohde]
   (str/join ", " (sort (map ::ur/nimi (::kohde/urakat kohde)))))
 
-(defn kohde-kuuluu-urakkaan? [kohde urakka]
+(defn kohde-kuuluu-urakkaan? [app kohde urakka]
   (boolean
-    ;; TODO Tsekkaa kuuluuko uudessa app statessa
-    ((into #{} (::kohde/urakat kohde)) urakka)))
+    ;; Kohde kuuluu urakkaan, jos se on siihen merkitty, tai jos se on käyttöliittymässä
+    ;; asetettu (muttei vielä tallennettu)
+    (or ((into #{} (::kohde/urakat kohde)) urakka)
+        (get (:uudet-urakkaliitokset app) [(::kohde/id kohde) (::ur/id urakka)]))))
 
 (defn poista-kohde [kohteet kohde]
   (into [] (disj (into #{} kohteet) kohde)))
@@ -157,9 +159,9 @@
           (fn [kohde-ja-urakat]
             (let [kohde-ja-urakat (or kohde-ja-urakat {})]
               (if (kohde-ja-urakat kohde-id)
-               (update kohde-ja-urakat kohde-id conj urakka-id)
+                (update kohde-ja-urakat kohde-id conj urakka-id)
 
-               (assoc kohde-ja-urakat kohde-id #{urakka-id}))))))
+                (assoc kohde-ja-urakat kohde-id #{urakka-id}))))))
 
 (defn lopeta-liittaminen [app kohde-id urakka-id]
   (update app :liittaminen-kaynnissa
@@ -273,6 +275,17 @@
   (process-event [{ur :urakka} app]
     (assoc app :valittu-urakka ur))
 
+  AsetaKohteenUrakkaliitos
+  (process-event [{kohde-id :kohde-id
+                   urakka-id :urakka-id
+                   liitetty? :liitetty?}
+                  app]
+    (let [liitokset (:uudet-urakkaliitokset app)]
+      (assoc app :uudet-urakkaliitokset
+                 (assoc liitokset
+                   [kohde-id urakka-id]
+                   liitetty?))))
+
   PaivitaKohteidenUrakkaliitokset
   (process-event [{kohde :kohde
                    liita? :liita?
@@ -280,19 +293,19 @@
                   app]
     ;; TODO Jatkossa päivitetään usea liitos kerralla
     #_(let [kohde-id (::kohde/id kohde)
-          urakka-id (::ur/id urakka)]
-      (tt/post! :liita-kohde-urakkaan
-                {:kohde-id kohde-id
-                 :urakka-id urakka-id
-                 :poistettu? (not liita?)}
-                {:onnistui ->KohdeLiitetty
-                 :onnistui-parametrit [kohde-id urakka-id]
-                 :epaonnistui ->KohdeEiLiitetty
-                 :epaonnistui-parametrit [kohde-id urakka-id]})
+            urakka-id (::ur/id urakka)]
+        (tt/post! :liita-kohde-urakkaan
+                  {:kohde-id kohde-id
+                   :urakka-id urakka-id
+                   :poistettu? (not liita?)}
+                  {:onnistui ->KohdeLiitetty
+                   :onnistui-parametrit [kohde-id urakka-id]
+                   :epaonnistui ->KohdeEiLiitetty
+                   :epaonnistui-parametrit [kohde-id urakka-id]})
 
-      (-> app
-          (lisaa-kohteelle-urakka kohde urakka liita?)
-          (liittaminen-kayntiin kohde-id urakka-id))))
+        (-> app
+            (lisaa-kohteelle-urakka kohde urakka liita?)
+            (liittaminen-kayntiin kohde-id urakka-id))))
 
   LiitoksetPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]

@@ -13,6 +13,7 @@
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
 
+            [harja.domain.urakka :as urakka]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
@@ -123,7 +124,7 @@
          [debug/debug app]
          [valinnat/urakkatoiminnot {}
           #_[napit/uusi "Lisää kohteen osia"
-           (fn [] (log "TODO"))]
+             (fn [] (log "TODO"))]
           [napit/tallenna "Tallenna urakkaliitokset"
            (fn [] (log "TODO"))]]
          [:div.otsikko-ja-valinta-rivi
@@ -154,18 +155,20 @@
               :tyyppi :komponentti
               :tasaa :keskita
               :nimi :valinta
-              :solu-klikattu (fn [rivi] (e! (tiedot/->PaivitaKohteidenUrakkaliitokset rivi
-                                                                         (not (:valittu? rivi))
-                                                                         valittu-urakka)))
+              :solu-klikattu (fn [rivi]
+                               (let [kuuluu-urakkaan? (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)]
+                                 (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
+                                                                        (not kuuluu-urakkaan?)
+                                                                        (::urakka/id valittu-urakka)))))
               :komponentti (fn [rivi]
                              [kentat/tee-kentta
                               {:tyyppi :checkbox}
                               (r/wrap
-                                (tiedot/kohde-kuuluu-urakkaan? rivi valittu-urakka)
+                                (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)
                                 (fn [uusi]
-                                  (e! (tiedot/->PaivitaKohteidenUrakkaliitokset rivi
-                                                                                uusi
-                                                                                valittu-urakka))))])})]
+                                  (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
+                                                                         uusi
+                                                                         (::urakka/id valittu-urakka)))))])})]
           (ryhmittele-kohderivit-kanavalla kohderivit)]]
 
         [luontilomake e! app]))))
