@@ -96,6 +96,42 @@
                         (tiedot/muokattavat-kohteet app)])})]
     uudet-tiedot]])
 
+(defn varmistusnappi
+  ([e! kohde] [varmistusnappi e! kohde {}])
+  ([e! kohde opts]
+   [napit/nappi
+    ""
+    #(e! (tiedot/->AsetaPoistettavaKohde kohde))
+    (merge
+      {:ikoninappi? true
+       :luokka "nappi-toissijainen"
+       :ikoni (ikonit/livicon-trash)}
+      opts)]))
+
+(defn poista-tai-takaisin
+  ([e! kohde] [poista-tai-takaisin e! kohde {}])
+  ([e! kohde opts]
+   (let [kohteella-urakoita? (not (nil? (::kohde/urakat kohde)))
+         poistonappi-pois-kaytosta? (or (:disabled opts)
+                                        kohteella-urakoita?)]
+     [:span
+      [:div
+       [napit/takaisin
+        ""
+        #(e! (tiedot/->AsetaPoistettavaKohde nil))
+        (merge
+          {:ikoninappi? true}
+          opts)]
+       [napit/poista
+        ""
+        #(e! (tiedot/->PoistaKohde kohde))
+        (merge
+          {:ikoninappi? true}
+          opts
+          {:disabled poistonappi-pois-kaytosta?})]]
+      (when kohteella-urakoita?
+        [:div.virheviesti-sailio {:style {:word-break "normal"}} (str "Kohdetta ei voi poistaa, koska kohteella on urakoita!")])])))
+
 (defn kohteiden-luonti* [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
@@ -110,6 +146,15 @@
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
+         [:div.otsikko-ja-valinta-rivi
+          [:div.otsikko "Kaikki kohteet:"]
+          [:div.valinta.label-ja-alasveto
+           [:span.alasvedon-otsikko "Kuuluu urakkaan:"]
+           [yleiset/livi-pudotusvalikko
+            {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
+             :valinta valittu-urakka
+             :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
+            (into [nil] urakat)]]]
          [grid/grid
           {:tunniste ::kohde/id
            :tyhja (if kohteiden-haku-kaynnissa?
@@ -118,6 +163,20 @@
           [{:otsikko "Kohde"
             :nimi ::kohde/nimi
             :leveys 5}
+           {:otsikko "Poista"
+            :leveys 1
+            :tyyppi :komponentti
+            :tasaa :keskita
+            :komponentti (fn [kohde]
+                           (cond
+                             (nil? poistettava-kohde)
+                             [varmistusnappi e! kohde]
+
+                             (= poistettava-kohde kohde)
+                             [poista-tai-takaisin e! kohde {:disabled poistaminen-kaynnissa?}]
+
+                             (some? poistettava-kohde)
+                             [varmistusnappi e! kohde {:disabled true}]))}
            (if-not valittu-urakka
              {:otsikko "Urakat"
               :tyyppi :string
@@ -144,15 +203,7 @@
                                   (fn [uusi]
                                     (e! (tiedot/->LiitaKohdeUrakkaan rivi
                                                                      uusi
-                                                                     valittu-urakka))))]))})
-           (grid/rivinvalintasarake
-             ;; TODO Disabloi jos kohteella urakoita -> (::kohde/urakat kohde)
-             {:otsikkovalinta? true
-              :kaikki-valittu?-fn (constantly "TODO")
-              :otsikko-valittu-fn (constantly "TODO")
-              :rivi-valittu?-fn (constantly "TODO")
-              :rivi-valittu-fn (constantly "TODO")
-              :leveys 1})]
+                                                                     valittu-urakka))))]))})]
           (sort-by :rivin-teksti kohderivit)]
          [napit/yleinen-ensisijainen
           "Muokkaa kohteita"

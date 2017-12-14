@@ -26,7 +26,8 @@
                  :kohderivit nil
                  :kanavat nil
                  :lomakkeen-tiedot nil
-                 :valittu-urakka nil}))
+                 :valittu-urakka nil
+                 :poistettava-kohde nil}))
 
 ;; Yleiset
 
@@ -48,6 +49,7 @@
 (defrecord KohdeLiitetty [tulos kohde urakka])
 (defrecord KohdeEiLiitetty [virhe kohde urakka])
 
+(defrecord AsetaPoistettavaKohde [kohde])
 (defrecord PoistaKohde [kohde])
 (defrecord KohdePoistettu [tulos kohde])
 (defrecord KohdeEiPoistettu [virhe])
@@ -305,10 +307,13 @@
     (-> app
         (lopeta-liittaminen kohde-id urakka-id)))
 
+  AsetaPoistettavaKohde
+  (process-event [{kohde :kohde} app]
+    (assoc app :poistettava-kohde kohde))
+
   PoistaKohde
   (process-event [{kohde :kohde} {:keys [poistettava-kohde] :as app}]
-    ;; TODO Poista valitut kun painetaan nappia
-    #_(if (= poistettava-kohde kohde)
+    (if (= poistettava-kohde kohde)
       (do
         (tt/post! :poista-kohde
                   {:kohde-id (::kohde/id kohde)}
