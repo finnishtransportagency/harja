@@ -502,7 +502,7 @@
                                         nayta-ryhmat ryhmittely ryhman-otsikko]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
-  (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
+  (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))]
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
