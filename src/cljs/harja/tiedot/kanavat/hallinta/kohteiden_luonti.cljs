@@ -49,9 +49,6 @@
 (defrecord KohdeLiitetty [tulos kohde urakka])
 (defrecord KohdeEiLiitetty [virhe kohde urakka])
 
-(defrecord KohdePoistettu [tulos kohde])
-(defrecord KohdeEiPoistettu [virhe])
-
 ;; Lomake
 
 (defrecord AvaaKohdeLomake [])
