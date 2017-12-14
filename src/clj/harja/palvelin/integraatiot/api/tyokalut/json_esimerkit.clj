@@ -73,3 +73,14 @@
 (def +urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request+ "api/examples/urakan-yllapitokohteen-tiemerkintatoteuman-kirjaus-request.json")
 
 (def +urakan-tyotuntien-kirjaus-request+ "api/examples/urakan-tyotuntien-kirjaus-request.json")
+
+(def +tieluvan-kirjaus-request+ "api/examples/tieluvan-kirjaus-request.json")
+(def +tieluvan-kirjaus-request-johto-ja-kaapelilupa+ "api/examples/tieluvan-kirjaus-request-johto-ja-kaapelilupa.json")
+(def +tieluvan-kirjaus-request-liittymalupa+ "api/examples/tieluvan-kirjaus-request-liittymalupa.json")
+(def +tieluvan-kirjaus-request-mainoslupa+ "api/examples/tieluvan-kirjaus-request-mainoslupa.json")
+(def +tieluvan-kirjaus-request-opastelupa+ "api/examples/tieluvan-kirjaus-request-opastelupa.json")
+(def +tieluvan-kirjaus-request-suoja-alue-rakentamislupa+ "api/examples/tieluvan-kirjaus-request-suoja-alue-rakentamislupa.json")
+(def +tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely+ "api/examples/tieluvan-kirjaus-request-tilapaisen-liikennemerkkijarjestely.json")
+(def +tieluvan-kirjaus-request-tilapainen-myyntilupa+ "api/examples/tieluvan-kirjaus-request-tilapainen-myyntilupa.json")
+(def +tieluvan-kirjaus-request-tyolupa+ "api/examples/tieluvan-kirjaus-request-tyolupa.json")
+(def +tieluvan-kirjaus-request-vesihuoltolupa+ "api/examples/tieluvan-kirjaus-request-vesihuoltolupa.json")

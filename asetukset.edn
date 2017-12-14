@@ -106,7 +106,7 @@
                         :siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
-                        :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/PTV_Hoitourakat10_2017.shz"
+                        :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/PTV_Hoitourakat10_2016.shz"
                         :urakoiden-tuontikohde "./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
 
                         :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
