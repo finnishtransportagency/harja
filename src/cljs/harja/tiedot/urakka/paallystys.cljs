@@ -151,4 +151,4 @@
   [{:keys [urakka-id kohde-id tila]}]
   (k/post! :aseta-paallystysilmoituksen-tila {::urakka-domain/id urakka-id
                                               ::pot/paallystyskohde-id kohde-id
-                                              ::pot/tila tila}))
+                                              ::pot/paallystysilmoitus-tila tila}))

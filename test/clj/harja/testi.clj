@@ -798,7 +798,7 @@
 (def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
                       :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
                       :roolit #{}
-                      :urakkaroolit {}
+                      :urakkaroolit {5 #("vastuuhenkilo")}
                       :organisaatioroolit {16 #{"Kayttaja"}}
                       :organisaation-urakat #{2 21}})
 
