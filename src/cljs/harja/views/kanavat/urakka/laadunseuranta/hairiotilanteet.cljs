@@ -109,7 +109,7 @@
 
 (defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
-        virhe-atom (r/wrap (::lomake/virheet valittu-hairiotilanne)
+        virhe-atom (r/wrap (:varaosat-taulukon-virheet valittu-hairiotilanne)
                            (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
         sort-fn (fn [materiaalin-kirjaus]
                   (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
@@ -195,9 +195,7 @@
      :tyyppi :komponentti
      :palstoja 2
      :komponentti (fn [_]
-                    [varaosataulukko e! app])
-     :validoi [#(when-not (empty? (::lomake/virheet %2))
-                  "virhe")]}
+                    [varaosataulukko e! app])}
     {:nimi :lisaa-varaosa
      :tyyppi :komponentti
      :uusi-rivi? true
@@ -273,6 +271,7 @@
         {:tallennus-kaynnissa? tallennus-kaynnissa?
          :disabled (or
                      (not oikeus?)
+                     (not (empty? (:varaosat-taulukon-virheet valittu-hairiotilanne)))
                      (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
 
        (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
