@@ -76,7 +76,8 @@
       (fn [user tiedot]
         (liita-kohde-urakkaan! db user tiedot))
       {:kysely-spec ::kok/liita-kohde-urakkaan-kysely})
-    (julkaise-palvelu
+    ;; Poistamista ei tueta UI:lla tällä hetkellä
+    #_(julkaise-palvelu
       http
       :poista-kohde
       (fn [user tiedot]

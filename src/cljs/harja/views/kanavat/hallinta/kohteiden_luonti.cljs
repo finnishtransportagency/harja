@@ -96,41 +96,15 @@
                         (tiedot/muokattavat-kohteet app)])})]
     uudet-tiedot]])
 
-(defn varmistusnappi
-  ([e! kohde] [varmistusnappi e! kohde {}])
-  ([e! kohde opts]
-   [napit/nappi
-    ""
-    #(e! (tiedot/->AsetaPoistettavaKohde kohde))
-    (merge
-      {:ikoninappi? true
-       :luokka "nappi-toissijainen"
-       :ikoni (ikonit/livicon-trash)}
-      opts)]))
-
-(defn poista-tai-takaisin
-  ([e! kohde] [poista-tai-takaisin e! kohde {}])
-  ([e! kohde opts]
-   (let [kohteella-urakoita? (not (nil? (::kohde/urakat kohde)))
-         poistonappi-pois-kaytosta? (or (:disabled opts)
-                                        kohteella-urakoita?)]
-     [:span
-      [:div
-       [napit/takaisin
-        ""
-        #(e! (tiedot/->AsetaPoistettavaKohde nil))
-        (merge
-          {:ikoninappi? true}
-          opts)]
-       [napit/poista
-        ""
-        #(e! (tiedot/->PoistaKohde kohde))
-        (merge
-          {:ikoninappi? true}
-          opts
-          {:disabled poistonappi-pois-kaytosta?})]]
-      (when kohteella-urakoita?
-        [:div.virheviesti-sailio {:style {:word-break "normal"}} (str "Kohdetta ei voi poistaa, koska kohteella on urakoita!")])])))
+(defn- ryhmittele-kohderivit-kanavalla [kohderivit]
+  (let [ryhmat (group-by ::kok/id (sort-by ::kok/nimi kohderivit))]
+    (mapcat
+      (fn [kohdekokonaisuus-id]
+        (let [ryhman-sisalto (get ryhmat kohdekokonaisuus-id)]
+          (concat
+            [(grid/otsikko (::kok/nimi (first ryhman-sisalto)))]
+            (sort-by ::kohde/nimi ryhman-sisalto))))
+      (keys ryhmat))))
 
 (defn kohteiden-luonti* [e! app]
   (komp/luo
@@ -163,20 +137,6 @@
           [{:otsikko "Kohde"
             :nimi ::kohde/nimi
             :leveys 5}
-           {:otsikko "Poista"
-            :leveys 1
-            :tyyppi :komponentti
-            :tasaa :keskita
-            :komponentti (fn [kohde]
-                           (cond
-                             (nil? poistettava-kohde)
-                             [varmistusnappi e! kohde]
-
-                             (= poistettava-kohde kohde)
-                             [poista-tai-takaisin e! kohde {:disabled poistaminen-kaynnissa?}]
-
-                             (some? poistettava-kohde)
-                             [varmistusnappi e! kohde {:disabled true}]))}
            (if-not valittu-urakka
              {:otsikko "Urakat"
               :tyyppi :string
@@ -204,11 +164,7 @@
                                     (e! (tiedot/->LiitaKohdeUrakkaan rivi
                                                                      uusi
                                                                      valittu-urakka))))]))})]
-          (sort-by :rivin-teksti kohderivit)]
-         [napit/yleinen-ensisijainen
-          "Muokkaa kohteita"
-          #(e! (tiedot/->AvaaKohdeLomake))
-          {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat))}]]
+          (ryhmittele-kohderivit-kanavalla kohderivit)]]
 
         [luontilomake e! app]))))
 

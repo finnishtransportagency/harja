@@ -49,8 +49,6 @@
 (defrecord KohdeLiitetty [tulos kohde urakka])
 (defrecord KohdeEiLiitetty [virhe kohde urakka])
 
-(defrecord AsetaPoistettavaKohde [kohde])
-(defrecord PoistaKohde [kohde])
 (defrecord KohdePoistettu [tulos kohde])
 (defrecord KohdeEiPoistettu [virhe])
 
@@ -87,7 +85,14 @@
 (defn kohderivit [tulos]
   (mapcat
     (fn [kohdekokonaisuus]
-      (::kok/kohteet kohdekokonaisuus))
+      (map
+        (fn [kohde]
+          ;; Liitetään kohteelle kohdekokonaisuuden (kanavan) tiedot
+          ;; Tarvitaan mm. ryhmittelyä varten.
+          (-> kohde
+              (assoc ::kok/id (::kok/id kohdekokonaisuus))
+              (assoc ::kok/nimi (::kok/nimi kohdekokonaisuus))))
+        (::kok/kohteet kohdekokonaisuus)))
     tulos))
 
 (defn kanavat [tulos]
@@ -306,25 +311,6 @@
     (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
     (-> app
         (lopeta-liittaminen kohde-id urakka-id)))
-
-  AsetaPoistettavaKohde
-  (process-event [{kohde :kohde} app]
-    (assoc app :poistettava-kohde kohde))
-
-  PoistaKohde
-  (process-event [{kohde :kohde} {:keys [poistettava-kohde] :as app}]
-    (if (= poistettava-kohde kohde)
-      (do
-        (tt/post! :poista-kohde
-                  {:kohde-id (::kohde/id kohde)}
-                  {:onnistui ->KohdePoistettu
-                   :onnistui-parametrit [kohde]
-                   :epaonnistui ->KohdeEiPoistettu})
-
-        (-> app
-            (assoc :poistaminen-kaynnissa? true)))
-
-      app))
 
   KohdePoistettu
   (process-event [{kohde :kohde} app]
