@@ -91,7 +91,9 @@
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
-                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
+                                           :lisaa-materiaali-fn #(e! (tiedot/->LisaaMateriaali))
+                                           :muokkaa-materiaaleja-fn #(e! (tiedot/->MuokkaaMateriaaleja %))}])
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide] :as app} kohteet]
   (let [nakyma-voidaan-nayttaa? (some? kohteet)]
