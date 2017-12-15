@@ -296,7 +296,6 @@
                       [{:otsikko "Suunta"
                         :nimi :valittu-suunta
                         :tyyppi :radio-group
-                        :pakollinen? true
                         :vaihtoehdot lt/suunta-vaihtoehdot
                         :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)
                         :aseta (fn [rivi arvo]
