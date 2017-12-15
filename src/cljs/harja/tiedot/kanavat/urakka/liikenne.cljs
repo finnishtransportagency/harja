@@ -147,7 +147,9 @@
                                                                 "harja.domain.muokkaustiedot"}
                                                                (namespace %)))
                                                     (select-keys alus))))
-                                           alukset)))
+                                           (remove #(and (:poistettu %)
+                                                         (not (id-olemassa? (::lt-alus/id %))))
+                                                   alukset))))
       (update ::lt/toiminnot (fn [toiminnot] (map (fn [toiminto]
                                                     (->
                                                       (->> (keys toiminto)
