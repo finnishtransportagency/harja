@@ -2,7 +2,7 @@
   (:require [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as tiedot]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
-            
+
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.muokkaustiedot :as m]
@@ -26,14 +26,14 @@
            [{::kok/id 1
              ::kok/nimi "Foobar"
              ::kok/kohteet [{::kohde/id 1
-                                ::kohde/tyyppi :sulku}
-                               {::kohde/id 2
-                                ::kohde/tyyppi :silta
-                                ::kohde/nimi "komea silta"}]}
+                             ::kohde/tyyppi :sulku}
+                            {::kohde/id 2
+                             ::kohde/tyyppi :silta
+                             ::kohde/nimi "komea silta"}]}
             {::kok/id 2
              ::kok/nimi "Bazbar"
              ::kok/kohteet [{::kohde/id 3
-                                ::kohde/tyyppi :sulku}]}]))))
+                             ::kohde/tyyppi :sulku}]}]))))
 
 (deftest kanavat
   (is (= [{::kok/id 1
@@ -45,15 +45,15 @@
              ::kok/nimi "Foobar"
              :huahuhue "joo"
              ::kok/kohteet [{::kohde/id 1
-                                ::kohde/tyyppi :sulku}
-                               {::kohde/id 2
-                                ::kohde/tyyppi :silta
-                                ::kohde/nimi "komea silta"}]}
+                             ::kohde/tyyppi :sulku}
+                            {::kohde/id 2
+                             ::kohde/tyyppi :silta
+                             ::kohde/nimi "komea silta"}]}
             {::kok/id 2
              ::kok/nimi "Bazbar"
              :huahuhue "joo"
              ::kok/kohteet [{::kohde/id 3
-                                ::kohde/tyyppi :sulku}]}]))))
+                             ::kohde/tyyppi :sulku}]}]))))
 
 (deftest voi-tallentaa?
   (is (true?
@@ -194,14 +194,14 @@
          (e! (tiedot/->KohteetHaettu [{::kok/id 1
                                        ::kok/nimi "Foobar"
                                        ::kok/kohteet [{::kohde/id 1
-                                                          ::kohde/tyyppi :sulku}
-                                                         {::kohde/id 2
-                                                          ::kohde/tyyppi :silta
-                                                          ::kohde/nimi "komea silta"}]}
+                                                       ::kohde/tyyppi :sulku}
+                                                      {::kohde/id 2
+                                                       ::kohde/tyyppi :silta
+                                                       ::kohde/nimi "komea silta"}]}
                                       {::kok/id 2
                                        ::kok/nimi "Bazbar"
                                        ::kok/kohteet [{::kohde/id 3
-                                                          ::kohde/tyyppi :sulku}]}])))))
+                                                       ::kohde/tyyppi :sulku}]}])))))
 
 (deftest kohteet-ei-haettu
   (is (= {:kohteiden-haku-kaynnissa? false}
@@ -276,14 +276,14 @@
          (e! (tiedot/->KohteetTallennettu [{::kok/id 1
                                             ::kok/nimi "Foobar"
                                             ::kok/kohteet [{::kohde/id 1
-                                                               ::kohde/tyyppi :sulku}
-                                                              {::kohde/id 2
-                                                               ::kohde/tyyppi :silta
-                                                               ::kohde/nimi "komea silta"}]}
+                                                            ::kohde/tyyppi :sulku}
+                                                           {::kohde/id 2
+                                                            ::kohde/tyyppi :silta
+                                                            ::kohde/nimi "komea silta"}]}
                                            {::kok/id 2
                                             ::kok/nimi "Bazbar"
                                             ::kok/kohteet [{::kohde/id 3
-                                                               ::kohde/tyyppi :sulku}]}])))))
+                                                            ::kohde/tyyppi :sulku}]}])))))
 
 (deftest kohteet-ei-tallennettu
   (is (= {:kohteiden-tallennus-kaynnissa? false}
@@ -315,20 +315,20 @@
 (deftest kohteiden-liittaminen-urakkaan
   (vaadi-async-kutsut
     #{tiedot/->LiitoksetPaivitetty tiedot/->LiitoksetEiPaivitetty}
-    (is (= {:uudet-urakkaliitokset {[1 2] true}}
-           (e! (tiedot/->PaivitaKohteidenUrakkaliitokset)
-               {:uudet-urakkaliitokset {[1 2] true}
-                :liittaminen-kaynnissa? true})))))
+    (is (= (e! (tiedot/->PaivitaKohteidenUrakkaliitokset)
+               {:uudet-urakkaliitokset {[1 2] true}})
+           {:uudet-urakkaliitokset {[1 2] true}
+            :liittaminen-kaynnissa? true}))))
 
 (deftest kohde-liitetty
-  (is (= {:liittaminen-kaynnissa? true
-          :uudet-urakkaliitokset {[1 2] true}}
-         (e! (tiedot/->LiitoksetPaivitetty [])
-             {:liittaminen-kaynnissa? false
-              :kohderivit []
-              :uudet-urakkaliitokset {}}))))
+  (is (= (e! (tiedot/->LiitoksetPaivitetty [])
+             {:liittaminen-kaynnissa? true
+              :uudet-urakkaliitokset {[1 2] true}})
+         {:liittaminen-kaynnissa? false
+          :uudet-urakkaliitokset {}
+          :kohderivit []})))
 
 (deftest kohde-ei-liitetty
-  (is (= {:liittaminen-kaynnissa? true}
-         (e! (tiedot/->LiitoksetEiPaivitetty)
-             {:liittaminen-kaynnissa? false}))))
+  (is (= (e! (tiedot/->LiitoksetEiPaivitetty)
+             {:liittaminen-kaynnissa? true})
+         {:liittaminen-kaynnissa? false})))
