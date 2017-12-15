@@ -56,6 +56,7 @@
 (defrecord MateriaalitHaettu [materiaalit])
 (defrecord MateriaalienHakuEpaonnistui [])
 (defrecord LisaaMateriaali [])
+(defrecord LisaaVirhe [virhe])
 
 
 (def tila (atom {:nakymassa? false
@@ -92,7 +93,8 @@
   NakymaAvattu
   (process-event [_ {:keys [huoltokohteiden-haku-kaynnissa?] :as app}]
     (if huoltokohteiden-haku-kaynnissa?
-      (assoc app :nakymassa? true)
+      (assoc app :nakymassa? true
+             )
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
         (-> app
@@ -274,7 +276,7 @@
     (assoc app :materiaalien-haku-kaynnissa? false))
 
   MuokkaaMateriaaleja
-  (process-event [{materiaalit :urakan-materiaalit} app]
+  (process-event [{materiaalit :materiaalit} app]
     (if (:avattu-toimenpide app)
       (update app :avattu-toimenpide #(assoc % ::materiaalit/materiaalit materiaalit))
       app))
@@ -289,4 +291,8 @@
                #(let [vanha-id (apply max (map :jarjestysnumero %))
                       uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
                   (log  )
-                  (conj (vec %) {:jarjestysnumero uusi-id})))))
+                  (conj (vec %) {:jarjestysnumero uusi-id}))))
+
+  LisaaVirhe
+  (process-event [{virhe :virhe} app]
+    (assoc-in app [:avattu-toimenpide :varaosat-taulukon-virheet] virhe)))

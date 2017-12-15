@@ -56,6 +56,16 @@
                      toimenpide)]
     (assoc app :avattu-toimenpide toimenpide)))
 
+(defn listaus->kirjaus [materiaalilistaus]
+  ;; terminologia-kysymys: backilla sanotaan kirjauksiksi tietokantarivin näköisiä mappeja,
+  ;; frontilla sanotaan kirjauksiksi grid-formaatin mappeja ja listauksiksi tietokantarivin näköisiä mappeja?
+  (for [muutos (::materiaalit/muutokset materiaalilistaus)]
+    {:maara (- (::materiaalit/maara muutos))
+     :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+               ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+               ::materiaalit/pvm (::materiaalit/pvm muutos)
+               ::materiaalit/id (::materiaalit/id muutos)}}))
+
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
   ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
@@ -70,7 +80,8 @@
                       ::kanavatoimenpide/toimenpideinstanssi-id
                       ::kanavatoimenpide/toimenpidekoodi-id
                       ::kanavatoimenpide/pvm
-                      ::muokkaustiedot/poistettu?])
+                      ::muokkaustiedot/poistettu?
+                      ::materiaalit/materiaalit])
         (assoc ::kanavatoimenpide/tyyppi tyyppi
                ::kanavatoimenpide/urakka-id (:id urakka)
                ::kanavatoimenpide/kohde-id (get-in toimenpide [::kanavatoimenpide/kohde ::kohde/id])
@@ -78,7 +89,10 @@
                ::kanavatoimenpide/huoltokohde-id (get-in toimenpide [::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/id])
                ::kanavatoimenpide/muu-toimenpide (if (valittu-tehtava-muu? tehtava tehtavat)
                                                      (::kanavatoimenpide/muu-toimenpide toimenpide)
-                                                     nil))
+                                                     nil)
+               ;; ::kanavatoimenpide/materiaalipoistot (talle)
+               ;; ::kanavatoimenpide/materiaalikirjaukset ..
+               )
         (dissoc ::kanavatoimenpide/kuittaaja))))
 
 (defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi
@@ -139,15 +153,3 @@
         paivamaara (::kanavatoimenpide/pvm tp)
         kohteen-nimi (get-in hairiotilanne [::kanavatoimenpide/kohde ::kohde/nimi])]
     (keep yksi-tallennettava-materiaalikirjaus materiaali-kirjaukset)))
-
-
-(defn listaus->kirjaus [materiaalilistaus]
-  (for [muutos (::materiaalit/muutokset materiaalilistaus)]
-    {:maara (- (::materiaalit/maara muutos))
-     :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
-               ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
-               ::materiaalit/pvm (::materiaalit/pvm muutos)
-               ::materiaalit/id (::materiaalit/id muutos)}}))
-
-(defn materiaali-listaukset->materiaali-kirjaukset [m-listaukset]
-  (mapv listaus->kirjaus m-listaukset))

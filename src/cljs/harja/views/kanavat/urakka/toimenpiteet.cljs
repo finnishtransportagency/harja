@@ -77,12 +77,11 @@
        " " toiminto "."))
 
 
-(defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn]
+(defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]
   (assert urakan-materiaalit)
   (let [voi-muokata? true
         avatun-materiaalit (::materiaali/materiaalit avattu-toimenpide)
-        virhe-atom (r/wrap (::lomake/virheet avattu-toimenpide)
-                           (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
+        virhe-atom (r/wrap varaosat-virheet lisaa-virhe-fn)
         vertailuavaimet-jarjestysnumerolla (fn [materiaalin-kirjaus]
                   (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
                            (nil? (:jarjestysnumero materiaalin-kirjaus)))
@@ -120,7 +119,7 @@
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
                                           toimenpideinstanssit tehtavat urakan-materiaalit lisaa-materiaali-fn
-                                          muokkaa-materiaaleja-fn]}]
+                                          muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]}]
   (assert urakan-materiaalit)
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
@@ -206,9 +205,7 @@
       :tyyppi :komponentti
       :palstoja 2
       :komponentti (fn [_]
-                     [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn])
-      :validoi [#(when-not (empty? (::lomake/virheet %2))
-                   "virhe")]}
+                     [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet])}
      {:nimi :lisaa-varaosa
       :tyyppi :komponentti
       :uusi-rivi? true
@@ -233,7 +230,8 @@
     "Tallenna"
     #(tallenna-lomake-fn toimenpide)
     {:tallennus-kaynnissa? tallennus-kaynnissa?
-     :disabled (not (lomake/voi-tallentaa? toimenpide))}]
+     :disabled (or (not (lomake/voi-tallentaa? toimenpide))
+                   (not-empty (:varaosat-taulukon-virheet toimenpide)))}]
    (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
      [napit/poista
       "Poista"
@@ -247,7 +245,7 @@
                                 toimenpideinstanssit tehtavat urakan-materiaalit] :as app}
                         {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
                                 tallenna-lomake-fn poista-toimenpide-fn lisaa-materiaali-fn
-                                muokkaa-materiaaleja-fn]}]
+                                muokkaa-materiaaleja-fn lisaa-virhe-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
         kanavakohteet @kanavaurakka/kanavakohteet
@@ -271,6 +269,8 @@
                                      :tehtavat tehtavat
                                      :urakan-materiaalit urakan-materiaalit
                                      :lisaa-materiaali-fn lisaa-materiaali-fn
-                                     :muokkaa-materiaaleja-fn muokkaa-materiaaleja-fn})
+                                     :muokkaa-materiaaleja-fn muokkaa-materiaaleja-fn
+                                     :lisaa-virhe-fn lisaa-virhe-fn
+                                     :varaosat-virheet (-> app :avattu-toimenpide :varaosat-taulukon-virheet)})
         avattu-toimenpide]
        [ajax-loader "Ladataan..."])]))
