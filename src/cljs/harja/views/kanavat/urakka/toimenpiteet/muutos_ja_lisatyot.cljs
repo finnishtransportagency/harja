@@ -114,10 +114,11 @@
           (if nakyma-voidaan-nayttaa?
             [:div
              [debug app]
-             [suodattimet e! app]
              (if avattu-toimenpide
                [lisatyot-lomake e! app]
-               [taulukko e! app])]
+               [:div
+                [suodattimet e! app]
+                [taulukko e! app]])]
             [ajax-loader "Ladataan..."]))))))
 
 (defc lisatyot []
