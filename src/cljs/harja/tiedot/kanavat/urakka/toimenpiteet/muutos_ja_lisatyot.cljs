@@ -237,7 +237,7 @@
        (every? #(or (some? (::hinta/summa %))
                     (and (some? (::hinta/maara %))
                          (some? (::hinta/yksikkohinta %))
-                         (some? (::hinta/yksikko %))))
+                         (not-empty (::hinta/yksikko %))))
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
        (every? #(not-empty (::hinta/otsikko %))
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
