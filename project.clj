@@ -179,7 +179,7 @@
   ;; Asiakaspuolen cljs buildin tietoja
   :cljsbuild {:builds
               [{:id "dev"
-                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc"]
+                :source-paths ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
                 :figwheel true
                 :compiler {:optimizations :none
                            :source-map true
