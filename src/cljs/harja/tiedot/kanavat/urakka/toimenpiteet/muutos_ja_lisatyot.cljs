@@ -232,6 +232,16 @@
 (defn poista-hintarivi-toimenpiteelta [id app]
   (poista-hintarivi-toimenpiteelta* id ::hinta/id ::hinta/hinnat app))
 
+(defn hinnoittelun-voi-tallentaa? [app]
+  (and (every? #(some? (::tyo/toimenpidekoodi-id %)) (get-in app [:hinnoittele-toimenpide ::tyo/tyot]))
+       (every? #(or (some? (::hinta/summa %))
+                    (and (some? (::hinta/maara %))
+                         (some? (::hinta/yksikkohinta %))
+                         (some? (::hinta/yksikko %))))
+               (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
+       (every? #(not-empty (::hinta/otsikko %))
+               (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
+
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
