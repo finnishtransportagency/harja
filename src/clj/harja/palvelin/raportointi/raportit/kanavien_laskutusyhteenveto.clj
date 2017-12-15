@@ -1,15 +1,8 @@
 (ns harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto
   (:require [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.domain.vesivaylat.toimenpide :as to]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
-            [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [harja.kyselyt.toimenpideinstanssit :as tpi-q]
-            [harja.kyselyt.urakat :as urakat-q]
-            ))
+            [harja.kyselyt.urakat :as urakat-q]))
 
 (defqueries "harja/palvelin/raportointi/raportit/kanavien_laskutusyhteenveto.sql")
 
