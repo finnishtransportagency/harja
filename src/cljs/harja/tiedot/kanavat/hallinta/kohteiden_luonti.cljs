@@ -140,24 +140,6 @@
 (defn poista-kohde [kohteet kohde]
   (into [] (disj (into #{} kohteet) kohde)))
 
-(defn lisaa-kohteelle-urakka [app muokattava-kohde urakka liita?]
-  (update app :kohderivit
-          (fn [kohteet]
-            (map
-              (fn [kohde]
-                (if (= (::kohde/id kohde) (::kohde/id muokattava-kohde))
-                  (if liita?
-                    (update kohde ::kohde/urakat conj urakka)
-
-                    (update kohde ::kohde/urakat
-                            (fn [urakat]
-                              (into
-                                []
-                                (disj (into #{} urakat) urakka)))))
-
-                  kohde))
-              kohteet))))
-
 (defn lopeta-liittaminen [app kohde-id urakka-id]
   (update app :liittaminen-kaynnissa
           (fn [kohde-ja-urakat]

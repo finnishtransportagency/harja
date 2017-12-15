@@ -12,19 +12,16 @@
   (is (= [{::kohde/id 1
            ::kohde/tyyppi :sulku
            ::kok/id 1
-           ::kok/nimi "Foobar"
-           :rivin-teksti "FIXME"}
+           ::kok/nimi "Foobar"}
           {::kohde/id 2
            ::kohde/tyyppi :silta
            ::kohde/nimi "komea silta"
            ::kok/id 1
-           ::kok/nimi "Foobar"
-           :rivin-teksti "FIXME"}
+           ::kok/nimi "Foobar"}
           {::kohde/id 3
            ::kohde/tyyppi :sulku
            ::kok/id 2
-           ::kok/nimi "Bazbar"
-           :rivin-teksti "FIXME"}]
+           ::kok/nimi "Bazbar"}]
          (tiedot/kohderivit
            [{::kok/id 1
              ::kok/nimi "Foobar"
@@ -118,18 +115,37 @@
 (deftest kohteen-kuuluminen-urakkaan
   (is (true?
         (tiedot/kohde-kuuluu-urakkaan?
+          {:uudet-urakkaliitokset {}}
           {::kohde/urakat [{:foo :bar}
+                           {:id 1}]}
+          {:foo :bar})))
+
+  (is (true?
+        (tiedot/kohde-kuuluu-urakkaan?
+          {:uudet-urakkaliitokset {[666 1] true}}
+          {::kohde/id 666
+           ::kohde/urakat [{:foo :bar}
                            {:id 1}]}
           {:foo :bar})))
 
   (is (false?
         (tiedot/kohde-kuuluu-urakkaan?
+          {:uudet-urakkaliitokset {[666 1] false}}
+          {::kohde/id 666
+           ::kohde/urakat [{:foo :bar}
+                           {:id 1}]}
+          {:foo :bar})))
+
+  (is (false?
+        (tiedot/kohde-kuuluu-urakkaan?
+          {:uudet-urakkaliitokset {}}
           {::kohde/urakat [{:foo :bar}
                            {:id 1}]}
           {:foo :baz})))
 
   (is (false?
         (tiedot/kohde-kuuluu-urakkaan?
+          {:uudet-urakkaliitokset {}}
           {::kohde/urakat []}
           {:foo :bar}))))
 
@@ -141,108 +157,6 @@
             {:id 2}
             {:id 3}]
            {:id 2}))))
-
-(deftest liittaminen-kaynnissa?
-  (is (true?
-        (tiedot/liittaminen-kaynnissa?
-          {:liittaminen-kaynnissa {1 #{1 2 3}}
-           :valittu-urakka {::ur/id 3}}
-          {::kohde/id 1})))
-
-  (is (false?
-        (tiedot/liittaminen-kaynnissa?
-          {:liittaminen-kaynnissa {1 #{1 2 3}}
-           :valittu-urakka {::ur/id 4}}
-          {::kohde/id 1})))
-
-  (is (false?
-        (tiedot/liittaminen-kaynnissa?
-          {:liittaminen-kaynnissa {1 #{1 2 3}}
-           :valittu-urakka {::ur/id 3}}
-          {::kohde/id 2})))
-
-  (is (false?
-        (tiedot/liittaminen-kaynnissa?
-          {:liittaminen-kaynnissa {}
-           :valittu-urakka {::ur/id 3}}
-          {::kohde/id 2}))))
-
-(deftest urakan-lisaaminen-kohteeseen
-  (is (= {:kohderivit [{::kohde/id 1
-                        ::kohde/urakat [{:id 1}]}]}
-         (tiedot/lisaa-kohteelle-urakka
-           {:kohderivit [{::kohde/id 1
-                          ::kohde/urakat []}]}
-           {::kohde/id 1}
-           {:id 1}
-           true)))
-
-  (is (= {:kohderivit [{::kohde/id 1
-                        ::kohde/urakat [{:id 1}
-                                        {:id 2}]}]}
-         (tiedot/lisaa-kohteelle-urakka
-           {:kohderivit [{::kohde/id 1
-                          ::kohde/urakat [{:id 1}]}]}
-           {::kohde/id 1}
-           {:id 2}
-           true)))
-
-  (is (= {:kohderivit [{::kohde/id 1
-                        ::kohde/urakat []}]}
-         (tiedot/lisaa-kohteelle-urakka
-           {:kohderivit [{::kohde/id 1
-                          ::kohde/urakat [{:id 1}]}]}
-           {::kohde/id 1}
-           {:id 1}
-           false)))
-
-  (is (= {:kohderivit [{::kohde/id 1
-                        ::kohde/urakat [{:id 1}]}]}
-         (tiedot/lisaa-kohteelle-urakka
-           {:kohderivit [{::kohde/id 1
-                          ::kohde/urakat [{:id 1}]}]}
-           {::kohde/id 2}
-           {:id 1}
-           false))))
-
-(deftest kaynnista-liittaminen
-  (is (= {:liittaminen-kaynnissa {1 #{1 2}}}
-         (tiedot/kaynnista-liittaminen
-           {:liittaminen-kaynnissa {1 #{1}}}
-           1
-           2)))
-
-  (is (= {:liittaminen-kaynnissa {1 #{1}
-                                  2 #{2}}}
-         (tiedot/kaynnista-liittaminen
-           {:liittaminen-kaynnissa {1 #{1}}}
-           2
-           2)))
-
-  (is (= {:liittaminen-kaynnissa {1 #{1 2}}}
-         (tiedot/kaynnista-liittaminen
-           {:liittaminen-kaynnissa {1 #{1 2}}}
-           1
-           2)))
-
-  (is (= {:liittaminen-kaynnissa {1 #{2}}}
-         (tiedot/kaynnista-liittaminen
-           {:liittaminen-kaynnissa {}}
-           1
-           2))))
-
-(deftest lopeta-liittaminen
-  (is (= {:liittaminen-kaynnissa {1 #{1}}}
-         (tiedot/lopeta-liittaminen
-           {:liittaminen-kaynnissa {1 #{1 2}}}
-           1
-           2)))
-
-  (is (= {:liittaminen-kaynnissa {1 #{1}}}
-         (tiedot/lopeta-liittaminen
-           {:liittaminen-kaynnissa {1 #{1}}}
-           1
-           2))))
 
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
@@ -267,19 +181,16 @@
           :kohderivit [{::kohde/id 1
                         ::kohde/tyyppi :sulku
                         ::kok/id 1
-                        ::kok/nimi "Foobar"
-                        :rivin-teksti "FIXME"}
+                        ::kok/nimi "Foobar"}
                        {::kohde/id 2
                         ::kohde/tyyppi :silta
                         ::kohde/nimi "komea silta"
                         ::kok/id 1
-                        ::kok/nimi "Foobar"
-                        :rivin-teksti "FIXME"}
+                        ::kok/nimi "Foobar"}
                        {::kohde/id 3
                         ::kohde/tyyppi :sulku
                         ::kok/id 2
-                        ::kok/nimi "Bazbar"
-                        :rivin-teksti "FIXME"}]}
+                        ::kok/nimi "Bazbar"}]}
          (e! (tiedot/->KohteetHaettu [{::kok/id 1
                                        ::kok/nimi "Foobar"
                                        ::kok/kohteet [{::kohde/id 1
@@ -401,77 +312,23 @@
   (is (= {:valittu-urakka {:foo :bar}}
          (e! (tiedot/->ValitseUrakka {:foo :bar})))))
 
-(deftest kohteen-liittaminen-urakkaan
+(deftest kohteiden-liittaminen-urakkaan
   (vaadi-async-kutsut
-    #{tiedot/->KohdeLiitetty tiedot/->KohdeEiLiitetty}
-    (is (= {:liittaminen-kaynnissa {1 #{1}}
-            :kohderivit [{::kohde/id 1
-                          ::kohde/urakat [{::ur/id 1}]}]}
-           (e! (tiedot/->LiitaKohdeUrakkaan
-                 {::kohde/id 1}
-                 true
-                 {::ur/id 1})
-               {:liittaminen-kaynnissa nil
-                :kohderivit [{::kohde/id 1}]})))))
+    #{tiedot/->LiitoksetPaivitetty tiedot/->LiitoksetEiPaivitetty}
+    (is (= {:uudet-urakkaliitokset {[1 2] true}}
+           (e! (tiedot/->PaivitaKohteidenUrakkaliitokset)
+               {:uudet-urakkaliitokset {[1 2] true}
+                :liittaminen-kaynnissa? true})))))
 
 (deftest kohde-liitetty
-  (is (= {:liittaminen-kaynnissa {1 #{}}
-          :kohderivit [{::kohde/id 1
-                        ::kohde/urakat [{::ur/id 1}]}]}
-         (e! (tiedot/->KohdeLiitetty
-               :turha-tulos
-               1
-               1)
-             {:liittaminen-kaynnissa {1 #{1}}
-              :kohderivit [{::kohde/id 1
-                            ::kohde/urakat [{::ur/id 1}]}]}))))
+  (is (= {:liittaminen-kaynnissa? true
+          :uudet-urakkaliitokset {[1 2] true}}
+         (e! (tiedot/->LiitoksetPaivitetty [])
+             {:liittaminen-kaynnissa? false
+              :kohderivit []
+              :uudet-urakkaliitokset {}}))))
 
 (deftest kohde-ei-liitetty
-  (is (= {:liittaminen-kaynnissa {1 #{}}
-          :kohderivit [{::kohde/id 1
-                        ::kohde/urakat [{::ur/id 1}]}]}
-         (e! (tiedot/->KohdeEiLiitetty
-               :turha-tulos
-               1
-               1)
-             {:liittaminen-kaynnissa {1 #{1}}
-              :kohderivit [{::kohde/id 1
-                            ::kohde/urakat [{::ur/id 1}]}]}))))
-
-(deftest aloita-poistaminen
-  (is (= {:poistettava-kohde 1}
-         (e! (tiedot/->AsetaPoistettavaKohde 1)))))
-
-(deftest poista-kohde
-  (vaadi-async-kutsut
-    #{tiedot/->KohdePoistettu tiedot/->KohdeEiPoistettu}
-    (is (= {:kohderivit [{::kohde/id 1}
-                         {::kohde/id 2}]
-            :poistettava-kohde {::kohde/id 1}
-            :poistaminen-kaynnissa? true}
-           (e! (tiedot/->PoistaKohde {::kohde/id 1})
-               {:kohderivit [{::kohde/id 1}
-                             {::kohde/id 2}]
-                :poistettava-kohde {::kohde/id 1}}))))
-
-  (vaadi-async-kutsut
-    #{}
-    (is (= {:kohderivit [{::kohde/id 1}
-                         {::kohde/id 2}]
-            :poistettava-kohde {::kohde/id 2}}
-           (e! (tiedot/->PoistaKohde {::kohde/id 1})
-               {:kohderivit [{::kohde/id 1}
-                             {::kohde/id 2}]
-                :poistettava-kohde {::kohde/id 2}})))))
-
-(deftest poistettu
-  (is (= {:poistaminen-kaynnissa? false
-          :poistettava-kohde nil
-          :kohderivit []}
-         (e! (tiedot/->KohdePoistettu {} {::kohde/id 1})
-             {:kohderivit [{::kohde/id 1}]
-              :poistaminen-kaynnissa? true}))))
-
-(deftest ei-poistettu
-  (is (= {:poistaminen-kaynnissa? false}
-         (e! (tiedot/->KohdeEiPoistettu {})))))
+  (is (= {:liittaminen-kaynnissa? true}
+         (e! (tiedot/->LiitoksetEiPaivitetty)
+             {:liittaminen-kaynnissa? false}))))
