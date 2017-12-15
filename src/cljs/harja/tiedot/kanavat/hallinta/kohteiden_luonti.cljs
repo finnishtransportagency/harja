@@ -127,11 +127,15 @@
   (str/join ", " (sort (map ::ur/nimi (::kohde/urakat kohde)))))
 
 (defn kohde-kuuluu-urakkaan? [app kohde urakka]
-  (boolean
-    ;; Kohde kuuluu urakkaan, jos se on siihen merkitty, tai jos se on käyttöliittymässä
-    ;; asetettu (muttei vielä tallennettu)
-    (or ((into #{} (::kohde/urakat kohde)) urakka)
-        (get (:uudet-urakkaliitokset app) [(::kohde/id kohde) (::ur/id urakka)]))))
+  (let [kohteella-ui-urakkaliitos? (contains? (:uudet-urakkaliitokset app)
+                                              [(::kohde/id kohde) (::ur/id urakka)])
+        kohteen-ui-urakkaliitos (get (:uudet-urakkaliitokset app) [(::kohde/id kohde) (::ur/id urakka)])]
+    ;; Ensisijaisesti tutkitaan käyttäjän asettamat, tallentamattomat linkit.
+    ;; Sen jälkeen tutkitaan, kuuluuko kohde urakkaan kannan palauttaman datan perusteella
+    (if kohteella-ui-urakkaliitos?
+      kohteen-ui-urakkaliitos
+      (boolean
+       ((into #{} (::kohde/urakat kohde)) urakka)))))
 
 (defn poista-kohde [kohteet kohde]
   (into [] (disj (into #{} kohteet) kohde)))
@@ -163,7 +167,11 @@
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
-    (assoc app :nakymassa? nakymassa?))
+    (let [uudet-urakkaliitokset (if (false? nakymassa?)
+                                  {}
+                                  (:uudet-urakkaliitokset app))]
+      (assoc app :nakymassa? nakymassa?
+                 :uudet-urakkaliitokset uudet-urakkaliitokset)))
 
   HaeKohteet
   (process-event [_ app]
