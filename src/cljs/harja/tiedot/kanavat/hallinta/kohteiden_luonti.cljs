@@ -135,7 +135,7 @@
     (if kohteella-ui-urakkaliitos?
       kohteen-ui-urakkaliitos
       (boolean
-       ((into #{} (::kohde/urakat kohde)) urakka)))))
+        ((set (map ::ur/id (::kohde/urakat kohde))) (::ur/id urakka))))))
 
 (defn poista-kohde [kohteet kohde]
   (into [] (disj (into #{} kohteet) kohde)))

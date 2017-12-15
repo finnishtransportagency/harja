@@ -116,38 +116,34 @@
   (is (true?
         (tiedot/kohde-kuuluu-urakkaan?
           {:uudet-urakkaliitokset {}}
-          {::kohde/urakat [{:foo :bar}
-                           {:id 1}]}
-          {:foo :bar})))
+          {::kohde/urakat [{::ur/id 1}]}
+          {::ur/id 1})))
 
   (is (true?
         (tiedot/kohde-kuuluu-urakkaan?
           {:uudet-urakkaliitokset {[666 1] true}}
           {::kohde/id 666
-           ::kohde/urakat [{:foo :bar}
-                           {:id 1}]}
-          {:foo :bar})))
+           ::kohde/urakat []}
+          {::ur/id 1})))
 
   (is (false?
         (tiedot/kohde-kuuluu-urakkaan?
           {:uudet-urakkaliitokset {[666 1] false}}
           {::kohde/id 666
-           ::kohde/urakat [{:foo :bar}
-                           {:id 1}]}
-          {:foo :bar})))
+           ::kohde/urakat []}
+          {::ur/id 1})))
 
   (is (false?
         (tiedot/kohde-kuuluu-urakkaan?
           {:uudet-urakkaliitokset {}}
-          {::kohde/urakat [{:foo :bar}
-                           {:id 1}]}
-          {:foo :baz})))
+          {::kohde/urakat [{::ur/id 1}]}
+          {::ur/id 2})))
 
   (is (false?
         (tiedot/kohde-kuuluu-urakkaan?
           {:uudet-urakkaliitokset {}}
           {::kohde/urakat []}
-          {:foo :bar}))))
+          {::ur/id 1}))))
 
 (deftest poista-kohde-kohteista
   (is (= [{:id 1}
@@ -250,30 +246,7 @@
            (e! (tiedot/->TallennaKohteet) {:kohteiden-tallennus-kaynnissa? true})))))
 
 (deftest kohteet-tallennettu
-  (is (= {:kohderivit [{::kohde/id 1
-                        ::kohde/tyyppi :sulku
-                        ::kok/id 1
-                        ::kok/nimi "Foobar"
-                        :rivin-teksti "FIXME"}
-                       {::kohde/id 2
-                        ::kohde/tyyppi :silta
-                        ::kohde/nimi "komea silta"
-                        ::kok/id 1
-                        ::kok/nimi "Foobar"
-                        :rivin-teksti "FIXME"}
-                       {::kohde/id 3
-                        ::kohde/tyyppi :sulku
-                        ::kok/id 2
-                        ::kok/nimi "Bazbar"
-                        :rivin-teksti "FIXME"}]
-          :kanavat [{::kok/id 1
-                     ::kok/nimi "Foobar"}
-                    {::kok/id 2
-                     ::kok/nimi "Bazbar"}]
-          :kohdelomake-auki? false
-          :lomakkeen-tiedot nil
-          :kohteiden-tallennus-kaynnissa? false}
-         (e! (tiedot/->KohteetTallennettu [{::kok/id 1
+  (is (= (e! (tiedot/->KohteetTallennettu [{::kok/id 1
                                             ::kok/nimi "Foobar"
                                             ::kok/kohteet [{::kohde/id 1
                                                             ::kohde/tyyppi :sulku}
@@ -283,7 +256,27 @@
                                            {::kok/id 2
                                             ::kok/nimi "Bazbar"
                                             ::kok/kohteet [{::kohde/id 3
-                                                            ::kohde/tyyppi :sulku}]}])))))
+                                                            ::kohde/tyyppi :sulku}]}]))
+         {:kohderivit [{::kohde/id 1
+                        ::kohde/tyyppi :sulku
+                        ::kok/id 1
+                        ::kok/nimi "Foobar"}
+                       {::kohde/id 2
+                        ::kohde/tyyppi :silta
+                        ::kohde/nimi "komea silta"
+                        ::kok/id 1
+                        ::kok/nimi "Foobar"}
+                       {::kohde/id 3
+                        ::kohde/tyyppi :sulku
+                        ::kok/id 2
+                        ::kok/nimi "Bazbar"}]
+          :kanavat [{::kok/id 1
+                     ::kok/nimi "Foobar"}
+                    {::kok/id 2
+                     ::kok/nimi "Bazbar"}]
+          :kohdelomake-auki? false
+          :lomakkeen-tiedot nil
+          :kohteiden-tallennus-kaynnissa? false})))
 
 (deftest kohteet-ei-tallennettu
   (is (= {:kohteiden-tallennus-kaynnissa? false}
