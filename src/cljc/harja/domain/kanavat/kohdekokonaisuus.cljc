@@ -57,10 +57,6 @@
 
 (s/def ::lisaa-kohdekokonaisuudelle-kohteita-vastaus ::hae-kohdekokonaisuudet-ja-kohteet-vastaus)
 
-(s/def ::liita-kohteet-urakkaan-kysely (s/keys :req-un [::urakka-id
-                                                      ::kohde-id
-                                                      ::poistettu?]))
-
 (s/def ::poista-kohde-kysely (s/keys :req-un [::kohde-id]))
 
 (s/def ::hae-urakan-kohteet-kysely (s/keys :req [::ur/id]))

@@ -47,8 +47,8 @@
 
 (defrecord AsetaKohteenUrakkaliitos [kohde-id urakka-id liitetty?])
 (defrecord PaivitaKohteidenUrakkaliitokset [])
-(defrecord LiitoksetPaivitetty [tulos kohde urakka])
-(defrecord LiitoksetEiPaivitetty [virhe kohde urakka])
+(defrecord LiitoksetPaivitetty [tulos])
+(defrecord LiitoksetEiPaivitetty [])
 
 ;; Lomake
 
@@ -286,8 +286,11 @@
     (assoc app :liittaminen-kaynnissa? true))
 
   LiitoksetPaivitetty
-  (process-event [{kohde-id :kohde urakka-id :urakka} app]
-    (assoc app :liittaminen-kaynnissa? false))
+  (process-event [{tulos :tulos} app]
+    (viesti/nayta! "Kohteiden urakkaliitokset tallennettu." :success)
+    (assoc app :liittaminen-kaynnissa? false
+               :uudet-urakkaliitokset {}
+               :kohderivit (kohderivit tulos)))
 
   LiitoksetEiPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]

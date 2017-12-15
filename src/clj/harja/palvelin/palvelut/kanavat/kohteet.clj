@@ -30,9 +30,13 @@
   (q/lisaa-kokonaisuudelle-kohteet! db user kohteet)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
-(defn liita-kohteet-urakkaan! [db user {:keys [kohde-id urakka-id poistettu?]}]
+(defn liita-kohteet-urakkaan! [db user {:keys [liitokset] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-  (q/liita-kohde-urakkaan! db user kohde-id urakka-id poistettu?))
+  (doseq [linkki (keys liitokset)]
+    (let [[kohde-id urakka-id] linkki
+          linkitetty? (get liitokset linkki)]
+      (q/liita-kohde-urakkaan! db user kohde-id urakka-id (not linkitetty?))))
+  (hae-kohdekokonaisuudet-ja-kohteet db user))
 
 (defn poista-kohde! [db user {:keys [kohde-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
@@ -75,7 +79,7 @@
       :liita-kohteet-urakkaan
       (fn [user tiedot]
         (liita-kohteet-urakkaan! db user tiedot))
-      {:kysely-spec ::kok/liita-kohde-urakkaan-kysely})
+      {:vastaus-spec ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus})
     ;; Poistamista ei tueta UI:lla tällä hetkellä
     #_(julkaise-palvelu
       http
