@@ -18,8 +18,8 @@ GROUP BY tpi.id;
 
 -- name: hae-muutos-ja-lisatyot
 SELECT tpi.id as "tpi-id", tpi.nimi as "tpi-nimi",
-  COALESCE(SUM(hinta.summa * (1.0 + (yleiskustannuslisa / 100))), 0) as summat,
-  COALESCE(SUM((hinta.maara * hinta.yksikkohinta)) * (1.0 + (yleiskustannuslisa / 100)), 0) as summat_kan_hinta_yksikkohinnalla,
+  COALESCE(SUM((hinta.summa * (1.0 + (hinta.yleiskustannuslisa / 100)))), 0) as summat,
+  COALESCE(SUM((hinta.maara * hinta.yksikkohinta) * (1.0 + (hinta.yleiskustannuslisa / 100))), 0) as summat_kan_hinta_yksikkohinnalla,
 
   (SELECT COALESCE(sum(tyo.maara * yht.yksikkohinta))
    FROM kan_toimenpide tp

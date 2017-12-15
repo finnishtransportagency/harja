@@ -263,8 +263,8 @@ SELECT
          ktp.poistettu IS NOT TRUE AND
          ktp.toimenpideinstanssi = tpi.id)
   +
-  (SELECT COALESCE(SUM(k_hinta.summa * (1.0 + (yleiskustannuslisa / 100))), 0) +
-          COALESCE(SUM((k_hinta.maara * k_hinta.yksikkohinta) * (1.0 + (yleiskustannuslisa / 100))), 0)
+  (SELECT COALESCE(SUM(k_hinta.summa * (1.0 + (k_hinta.yleiskustannuslisa / 100))), 0) +
+          COALESCE(SUM((k_hinta.maara * k_hinta.yksikkohinta) * (1.0 + (k_hinta.yleiskustannuslisa / 100))), 0)
    FROM kan_toimenpide ktp
      JOIN kan_hinta k_hinta ON k_hinta.toimenpide = ktp.id AND k_hinta.poistettu IS NOT TRUE
    WHERE ktp.toimenpideinstanssi = tpi.id AND
