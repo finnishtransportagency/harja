@@ -126,9 +126,7 @@
          [valinnat/urakkatoiminnot {}
           #_[napit/uusi "Lisää kohteen osia"
              (fn [] (log "TODO"))]
-          [napit/tallenna (if (empty? uudet-urakkaliitokset)
-                            "Tallenna urakkaliitokset"
-                            (str "Tallenna urakkaliitokset (" (count (keys uudet-urakkaliitokset)) " muutosta)"))
+          [napit/tallenna "Tallenna urakkaliitokset"
            #(e! (tiedot/->PaivitaKohteidenUrakkaliitokset))
            {:disabled (empty? uudet-urakkaliitokset)
             :tallennus-kaynnissa? liittaminen-kaynnissa?}]]
