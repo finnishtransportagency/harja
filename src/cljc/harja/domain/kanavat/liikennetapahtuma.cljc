@@ -15,6 +15,7 @@
     [harja.domain.sopimus :as sop]
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kohde :as kohde]
+    [harja.domain.kanavat.kohteenosa :as osa]
     [harja.domain.kanavat.lt-alus :as lt-alus]
     [harja.domain.kanavat.lt-toiminto :as toiminto]
     [harja.domain.kanavat.lt-ketjutus :as ketjutus])
@@ -93,7 +94,7 @@
 (def silta-toimenpide-vaihtoehdot (keys silta-toimenpiteet*))
 
 (defn toimenpide-vaihtoehdot [osa]
-  (if (kohde/sulku? osa)
+  (if (osa/sulku? osa)
     sulku-toimenpide-vaihtoehdot
     silta-toimenpide-vaihtoehdot))
 
