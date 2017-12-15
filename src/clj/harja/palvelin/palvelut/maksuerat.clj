@@ -43,6 +43,7 @@
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
   (let [summat (into {}
                      (map (juxt :tpi_id identity))
+                     ;; todo: haarauta urakkatyypin mukaan
                      (q/hae-teiden-hoidon-urakan-maksuerien-summat db urakka-id))
         maksuerat (into []
                         (comp maksuera-xf
