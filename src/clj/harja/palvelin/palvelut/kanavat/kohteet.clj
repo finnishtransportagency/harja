@@ -80,7 +80,7 @@
       (fn [user tiedot]
         (liita-kohteet-urakkaan! db user tiedot))
       {:vastaus-spec ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus})
-    ;; Poistamista ei tueta UI:lla tällä hetkellä
+    ;; TODO Poistamista ei tueta UI:lla tällä hetkellä
     #_(julkaise-palvelu
       http
       :poista-kohde
