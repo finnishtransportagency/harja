@@ -8,6 +8,7 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<!]]
+    [harja.atom :refer [paivita!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka :as urakka]
@@ -151,4 +152,4 @@
   [{:keys [urakka-id kohde-id tila]}]
   (k/post! :aseta-paallystysilmoituksen-tila {::urakka-domain/id urakka-id
                                               ::pot/paallystyskohde-id kohde-id
-                                              ::pot/paallystysilmoitus-tila tila}))
+                                              ::pot/tila tila}))

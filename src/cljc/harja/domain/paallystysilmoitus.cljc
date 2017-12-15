@@ -298,7 +298,7 @@
   (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
 
 (define-tables
-  ["paallystystila" ::paallystysilmoitus-tila (specql.transform/transform (specql.transform/to-keyword))]
+  ["paallystystila" ::paallystysilmoitus-tilat (specql.transform/transform (specql.transform/to-keyword))]
   ["paallystysilmoitus"
    ::paallystysilmoitus {"kasittelyaika_tekninen_osa" ::kasittelyaika-tekninen-osa
                          "perustelu_tekninen_osa" ::perustelu-tekninen-osa
@@ -318,4 +318,4 @@
   (s/keys :req [::urakka/id ::tallennettavat-paallystysilmoitusten-takuupvmt]))
 
 (s/def ::aseta-paallystysilmoituksen-tila
-  (s/keys :req [::urakka/id ::paallystyskohde-id ::paallystysilmoitus-tila]))
+  (s/keys :req [::urakka/id ::paallystyskohde-id ::tila]))

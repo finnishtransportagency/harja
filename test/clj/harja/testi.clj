@@ -798,9 +798,16 @@
 (def +kayttaja-ulle+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
                       :organisaatio {:id 16 :nimi "Destia Oy" :tyyppi "urakoitsija"}
                       :roolit #{}
-                      :urakkaroolit {5 #("vastuuhenkilo")}
+                      :urakkaroolit {}
                       :organisaatioroolit {16 #{"Kayttaja"}}
                       :organisaation-urakat #{2 21}})
+
+(def +kayttaja-vastuuhlo-muhos+ {:id 3 :kayttajanimi "antero" :etunimi "Antero" :sukunimi "Asfalttimies"
+                                 :organisaatio {:id 21 :nimi "Skanska Asfaltti Oy" :tyyppi "urakoitsija"}
+                                 :roolit #{}
+                                 :urakkaroolit {5 #("vastuuhenkilo")}
+                                 :organisaatioroolit {}
+                                 :organisaation-urakat #{5}})
 
 ;; Sepolla ei ole oikeutta mihinkään. :(
 (def +kayttaja-seppo+ {:id 3 :kayttajanimi "seppo" :etunimi "Seppo" :sukunimi "Taalasmalli"
