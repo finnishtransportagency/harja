@@ -675,6 +675,10 @@
                  ::pot-domain/paallystyskohde-id kohde-id
                  ::pot-domain/tila :valmis}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :aseta-paallystysilmoituksen-tila +kayttaja-tero+ payload)))
+                                           :aseta-paallystysilmoituksen-tila
+                                           +kayttaja-tero+
+                                           payload)))
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :aseta-paallystysilmoituksen-tila +kayttaja-ulle+ payload)))))
+                                           :aseta-paallystysilmoituksen-tila
+                                           +kayttaja-vastuuhlo-muhos+
+                                           payload)))))
