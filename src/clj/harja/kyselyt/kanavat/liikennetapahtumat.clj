@@ -236,7 +236,7 @@
         kohde (hae-kohteen-edellinen-tapahtuma db tiedot)]
     {:ylos ylos
      :alas alas
-     :kohde kohde}))
+     :edellinen kohde}))
 
 (defn- alus-kuuluu-tapahtumaan? [db alus tapahtuma]
   (some?
