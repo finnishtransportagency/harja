@@ -167,6 +167,5 @@
   [toimenpide]
   (let [kohde (::kohde toimenpide)
         kohdeosa (::kohteenosa toimenpide)]
-    (or (::osa/nimi kohdeosa)
-        (::kohde/nimi kohde)
+    (or (kohde/fmt-kohde-ja-osa-nimi kohde kohdeosa)
         "Ei kohdetta")))

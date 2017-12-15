@@ -69,31 +69,19 @@
 
 ;; Domain-funktiot
 
-(defn tyyppi->str [kohde]
-  ({:silta "silta"
-    :sulku "sulku"
-    :sulku-ja-silta "sulku ja silta"}
-    kohde))
-
 (defn fmt-kohteen-nimi
   [kohde]
   (::nimi kohde))
 
-(defn fmt-kohteenosan-tyyppi->str [tyyppi]
-  ({:silta "silta"
-    :rautatiesilta "rautatiesilta"
-    :sulku "sulku"}
-    tyyppi))
+(defn fmt-kohde-ja-osa-nimi
+  [kohde osa]
+  (str
+    (::nimi kohde)
+    (when-let [osa (osa/fmt-kohdeosa osa)]
+      (str ", " osa))))
 
-(defn fmt-kohteenosan-nimi [osa]
-  (str/capitalize (or (::osa/nimi osa) (fmt-kohteenosan-tyyppi->str (::osa/tyyppi osa)))))
-
-(defn silta? [osa]
-  (or (= :silta (::osa/tyyppi osa))
-      (= :rautatiesilta (::osa/tyyppi osa))))
-
-(defn sulku? [osa]
-  (= :sulku (::osa/tyyppi osa)))
+(defn kohde-sisaltaa-sulun? [kohde]
+  (boolean (some osa/sulku? (::kohteenosat kohde))))
 
 (defn kohde-idlla [kohteet id]
   (first (filter #(= (::id %) id) kohteet)))
