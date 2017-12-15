@@ -467,16 +467,19 @@
     []))
 
 (defn- aseta-paallystysilmoituksen-tila
+  "Mahdollistaa päällystysilmoituksen tilan muuttamisen palvelun kautta. Haluaa
+  parametrina urakka-idn, päällystyskohde-id:n sekä uuden tilan. Tällähetkellä tukee
+  vain lukituksen poistamista, mutta nimetty geneerisempänä mahdollisia
+  myöhempiä tarpeita varten."
   [db user {urakka-id ::urakka-domain/id
             kohde-id ::pot-domain/paallystyskohde-id
             tila ::pot-domain/tila}]
   (log/debug "Aseta päällystysilmoituksen lukitus urakka " urakka-id " kohde-id " kohde-id " tila: " tila)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
 
   (jdbc/with-db-transaction [db db]
     (cond
-      ;; Kun lukitus puretaan, teknisen osan hyväksyntä poistetaan ja asetetaan tilaksi valmis
       (= tila :valmis)
       (q/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
 
