@@ -289,19 +289,19 @@
          [kasittely urakka lomakedata-nyt lukittu? muokkaa!]
          [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
-(defn poista-lukitus [urakka {:keys [tila] :as lomakedata-nyt} muokkaa!]
+(defn poista-lukitus [urakka lomakedata-nyt]
   (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
                                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                               (:id urakka))]
+                                               (:id urakka))
+        lahetettava-data {:urakka-id (:id urakka)
+                          :kohde-id (:paallystyskohde-id lomakedata-nyt)
+                          :tila :valmis}]
         [:div
          [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
          [napit/palvelinkutsu-nappi
           "Avaa lukitus"
-          #(let [lahetettava-data {:urakka-id (:id urakka)
-                                   :kohde-id (:paallystyskohde-id lomakedata-nyt)
-                                   :tila :valmis}]
-             (when paatosoikeus?
-               (paallystys/avaa-paallystysilmoituksen-lukitus! lahetettava-data)))
+          #(when paatosoikeus?
+             (paallystys/avaa-paallystysilmoituksen-lukitus! lahetettava-data))
           {:luokka "nappi-kielteinen avaa-lukitus-nappi"
            :id "poista-paallystysilmoituksen-lukitus"
            :disabled (not paatosoikeus?)
@@ -511,7 +511,7 @@
 
          [:h2 "Päällystysilmoitus"]
          (when (= :lukittu (:tila lomakedata-nyt))
-           [poista-lukitus urakka lomakedata-nyt lukittu? kirjoitusoikeus?])
+           [poista-lukitus urakka lomakedata-nyt])
 
          [paallystysilmoitus-perustiedot urakka lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
 
