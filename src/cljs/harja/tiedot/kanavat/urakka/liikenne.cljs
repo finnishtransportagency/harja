@@ -73,6 +73,7 @@
 (defrecord TapahtumaaMuokattu [tapahtuma])
 (defrecord MuokkaaAluksia [alukset virheita?])
 (defrecord VaihdaSuuntaa [alus])
+(defrecord AsetaSuunnat [suunta])
 (defrecord TallennaLiikennetapahtuma [tapahtuma])
 (defrecord TapahtumaTallennettu [tulos])
 (defrecord TapahtumaEiTallennettu [virhe])
@@ -146,7 +147,9 @@
                                                                 "harja.domain.muokkaustiedot"}
                                                                (namespace %)))
                                                     (select-keys alus))))
-                                           alukset)))
+                                           (remove #(and (:poistettu %)
+                                                         (not (id-olemassa? (::lt-alus/id %))))
+                                                   alukset))))
       (update ::lt/toiminnot (fn [toiminnot] (map (fn [toiminto]
                                                     (->
                                                       (->> (keys toiminto)
@@ -182,7 +185,8 @@
                 (remove :poistettu (::lt/alukset t)))
         (or
           (not-empty (remove :poistettu (::lt/alukset t)))
-          (every? #(= :itse (::toiminto/palvelumuoto %)) (::lt/toiminnot t))))))
+          (every? #(or (= :itse (::toiminto/palvelumuoto %))
+                       (= :ei-avausta (::toiminto/toimenpide %))) (::lt/toiminnot t))))))
 
 (defn sama-alusrivi? [a b]
   ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä
@@ -382,9 +386,9 @@
   EdellisetTiedotHaettu
   (process-event [{t :tulos} app]
     (-> app
-        (assoc-in [:edelliset :tama] (:kohde t))
-        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-alaraja] (get-in t [:kohde ::lt/vesipinta-alaraja]))
-        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-ylaraja] (get-in t [:kohde ::lt/vesipinta-ylaraja]))
+        (assoc-in [:edelliset :tama] (:edellinen t))
+        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-alaraja] (get-in t [:edellinen ::lt/vesipinta-alaraja]))
+        (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-ylaraja] (get-in t [:edellinen ::lt/vesipinta-ylaraja]))
         (assoc-in [:edelliset :ylos] (:ylos t))
         (assoc-in [:edelliset :alas] (:alas t))
         (assoc :edellisten-haku-kaynnissa? false)))
@@ -426,6 +430,14 @@
                 (update t ::lt/alukset
                         (fn [alukset]
                           (map #(if (sama-alusrivi? uusi %) uusi %) alukset)))))))
+
+  AsetaSuunnat
+  (process-event [{suunta :suunta} app]
+    (-> app
+        (assoc-in [:valittu-liikennetapahtuma :valittu-suunta] suunta)
+        (update-in [:valittu-liikennetapahtuma ::lt/alukset]
+                (fn [alukset]
+                  (map #(assoc % ::lt-alus/suunta suunta) alukset)))))
 
   TallennaLiikennetapahtuma
   (process-event [{t :tapahtuma} {:keys [tallennus-kaynnissa?] :as app}]
