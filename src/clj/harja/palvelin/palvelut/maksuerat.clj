@@ -5,6 +5,7 @@
             [harja.kyselyt.maksuerat :as q]
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.oikeudet :as oikeudet]))
 
 (def aseta-kustannussuunnitelman-tila-xf
@@ -41,10 +42,12 @@
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
-  (let [summat (into {}
+  (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))
+        summat (into {}
                      (map (juxt :tpi_id identity))
-                     ;; todo: haarauta urakkatyypin mukaan
-                     (q/hae-teiden-hoidon-urakan-maksuerien-summat db urakka-id))
+                     (case urakan-tyyppi
+                       "vesivayla-kanavien-hoito" (q/hae-kanavaurakan-maksuerien-summat db urakka-id)
+                       "hoito"(q/hae-teiden-hoidon-urakan-maksuerien-summat db urakka-id)))
         maksuerat (into []
                         (comp maksuera-xf
                               (map (fn [maksuera]
