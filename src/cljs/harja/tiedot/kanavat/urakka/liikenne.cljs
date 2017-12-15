@@ -227,20 +227,17 @@
                                               ::osa/kohde-id ::toiminto/kohde-id})
                             (assoc ::toiminto/lkm 1)
                             (assoc ::toiminto/palvelumuoto (::osa/oletuspalvelumuoto osa))
-                            (assoc ::toiminto/toimenpide (if (kohde/silta? osa)
+                            (assoc ::toiminto/toimenpide (if (osa/silta? osa)
                                                            :ei-avausta
                                                            :sulutus)))
                         (first (vanhat (::osa/id osa)))))
                     (::kohde/kohteenosat kohde)))))))
 
-(defn kohde-sisaltaa-sulun? [kohde]
-  (boolean (some kohde/sulku? (::kohde/kohteenosat kohde))))
-
 (defn tapahtuman-kohde-sisaltaa-sulun? [tapahtuma]
-  (kohde-sisaltaa-sulun? (::lt/kohde tapahtuma)))
+  (kohde/kohde-sisaltaa-sulun? (::lt/kohde tapahtuma)))
 
 (defn aseta-suunta [rivi kohde]
-  (if (kohde-sisaltaa-sulun? kohde)
+  (if (kohde/kohde-sisaltaa-sulun? kohde)
     (assoc rivi :valittu-suunta nil)
     (assoc rivi :valittu-suunta :molemmat)))
 
