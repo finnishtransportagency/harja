@@ -31,7 +31,8 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
-            [harja.domain.kanavat.kohde :as kohde])
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -248,7 +249,7 @@
           (fn [i osa]
             ^{:key (str "palvelumuoto-" i)}
             (lomake/ryhma
-              {:otsikko (kohde/fmt-kohteenosan-nimi osa)
+              {:otsikko (osa/fmt-kohdeosa osa)
                :rivi? true}
               {:otsikko "Toimenpide"
                :nimi (str i "-toimenpide")
