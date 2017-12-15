@@ -294,5 +294,5 @@
 
   LiitoksetEiPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
-    (viesti/nayta! "Virhe kohteiden liittämisessä urakkaan!" :danger)
+    (viesti/nayta! "Virhe urakkaliitoksien tallennuksessa!" :danger)
     (assoc app :liittaminen-kaynnissa? false)))
