@@ -148,10 +148,6 @@
             (into [(grid/otsikko "Aloittamatta olevat kohteet")]
                   aloittamatta))))
 
-
-
-
-
 (defn- tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
   (tiedot/tallenna-yllapitokohteiden-aikataulu
     {:urakka-id urakka-id
