@@ -163,7 +163,7 @@
   (let [uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))]
     [:div
      [debug app]
-     [napit/takaisin "Takaisin" #(e! (tiedot/->ValitseTapahtuma nil))]
+     [napit/takaisin "Takaisin tapahtumaluetteloon" #(e! (tiedot/->ValitseTapahtuma nil))]
      [lomake/lomake
       {:otsikko (if uusi-tapahtuma?
                   "Liikennetapahtuman kirjaus"
