@@ -170,9 +170,7 @@
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
           _ (is (empty? linkki))
-          params {:urakka-id urakka-id
-                  :kohde-id kohde-id
-                  :poistettu? false}
+          params {:liitokset {[kohde-id urakka-id] true}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
@@ -191,9 +189,7 @@
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
           _ (is (some? linkki))
-          params {:urakka-id urakka-id
-                  :kohde-id kohde-id
-                  :poistettu? true}
+          params {:liitokset {[kohde-id urakka-id] false}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
@@ -212,9 +208,7 @@
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
           _ (is (some? linkki))
-          params {:urakka-id urakka-id
-                  :kohde-id kohde-id
-                  :poistettu? false}
+          params {:liitokset {[kohde-id urakka-id] true}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
