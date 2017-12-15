@@ -290,26 +290,26 @@
          [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
 (defn poista-lukitus [urakka {:keys [tila] :as lomakedata-nyt} muokkaa!]
-  [:div
-   [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
-   [napit/palvelinkutsu-nappi
-    "Avaa lukitus"
-    #(let [lahetettava-data {:urakka-id (:id urakka)
-                             :kohde-id (:paallystyskohde-id lomakedata-nyt)
-                             :tila :valmis}]
-       (paallystys/avaa-paallystysilmoituksen-lukitus! lahetettava-data))
-    {:luokka "nappi-kielteinen avaa-lukitus-nappi"
-     :id "poista-paallystysilmoituksen-lukitus"
-     :disabled (and
-                 kirjoitusoikeus?
-                 (oikeudet/on-muu-oikeus? "päätös"
-                                          oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                          urakka))
-     :ikoni (ikonit/livicon-wrench)
-     :virheviesti "Lukituksen avaaminen epäonnistui"
-     :kun-onnistuu (fn [vastaus]
-                     (swap! paallystys/paallystysilmoitus-lomakedata assoc :tila (:tila vastaus))
-                     (harja.atom/paivita! paallystys/paallystysilmoitukset))}]])
+  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                               (:id urakka))]
+        [:div
+         [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
+         [napit/palvelinkutsu-nappi
+          "Avaa lukitus"
+          #(let [lahetettava-data {:urakka-id (:id urakka)
+                                   :kohde-id (:paallystyskohde-id lomakedata-nyt)
+                                   :tila :valmis}]
+             (when paatosoikeus?
+               (paallystys/avaa-paallystysilmoituksen-lukitus! lahetettava-data)))
+          {:luokka "nappi-kielteinen avaa-lukitus-nappi"
+           :id "poista-paallystysilmoituksen-lukitus"
+           :disabled (not paatosoikeus?)
+           :ikoni (ikonit/livicon-wrench)
+           :virheviesti "Lukituksen avaaminen epäonnistui"
+           :kun-onnistuu (fn [vastaus]
+                           (swap! paallystys/paallystysilmoitus-lomakedata assoc :tila (:tila vastaus))
+                           (harja.atom/paivita! paallystys/paallystysilmoitukset))}]]))
 
 
 (defn paallystysilmoitus-tekninen-osa
