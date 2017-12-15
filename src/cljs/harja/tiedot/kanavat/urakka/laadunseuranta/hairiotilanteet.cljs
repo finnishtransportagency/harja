@@ -316,4 +316,3 @@
   LisaaVirhe
   (process-event [{virhe :virhe} app]
     (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe)))
-
