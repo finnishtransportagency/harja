@@ -466,6 +466,28 @@
                                                       :takuupvm (konv/sql-date (::pot-domain/takuupvm takuupvm))})))
     []))
 
+(defn- aseta-paallystysilmoituksen-tila
+  "Mahdollistaa päällystysilmoituksen tilan muuttamisen palvelun kautta. Haluaa
+  parametrina urakka-idn, päällystyskohde-id:n sekä uuden tilan. Tällähetkellä tukee
+  vain lukituksen poistamista, mutta nimetty geneerisempänä mahdollisia
+  myöhempiä tarpeita varten."
+  [db user {urakka-id ::urakka-domain/id
+            kohde-id ::pot-domain/paallystyskohde-id
+            tila ::pot-domain/tila}]
+  (log/debug "Aseta päällystysilmoituksen lukitus urakka " urakka-id " kohde-id " kohde-id " tila: " tila)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
+  (oikeudet/vaadi-oikeus "päätös" oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+
+  (jdbc/with-db-transaction [db db]
+    (cond
+      (= tila :valmis)
+      (q/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+
+      :else
+      (log/warn "Aseta päällystysilmoituksen tila kutsuttiin odottamattomilla parametreilla kohde-id: " kohde-id " uusi tila: " tila))
+    (hae-urakan-paallystysilmoitus-paallystyskohteella db user {:urakka-id urakka-id
+                                                                :paallystyskohde-id kohde-id})))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -494,6 +516,10 @@
                           (tallenna-urakan-maksuerat db user tiedot))
                         {:kysely-spec ::paallystyksen-maksuerat/tallenna-paallystyksen-maksuerat-kysely
                          :vastaus-spec ::paallystyksen-maksuerat/tallenna-paallystyksen-maksuerat-vastaus})
+      (julkaise-palvelu http :aseta-paallystysilmoituksen-tila
+                        (fn [user tiedot]
+                          (aseta-paallystysilmoituksen-tila db user tiedot))
+                        {:kysely-spec ::pot-domain/aseta-paallystysilmoituksen-tila})
       this))
 
   (stop [this]
@@ -505,5 +531,6 @@
       :tallenna-paallystyskohteet
       :tallenna-paallystysilmoitusten-takuupvmt
       :hae-paallystyksen-maksuerat
-      :tallenna-paallystyksen-maksuerat)
+      :tallenna-paallystyksen-maksuerat
+      :aseta-paallystysilmoituksen-tila)
     this))
