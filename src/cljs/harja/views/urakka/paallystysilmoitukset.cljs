@@ -305,7 +305,7 @@
                  (oikeudet/on-muu-oikeus? "päätös"
                                           oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                           urakka))
-     :ikoni (ikonit/livicon-delete)
+     :ikoni (ikonit/livicon-wrench)
      :virheviesti "Lukituksen avaaminen epäonnistui"
      :kun-onnistuu (fn [vastaus]
                      (swap! paallystys/paallystysilmoitus-lomakedata assoc :tila (:tila vastaus))
