@@ -652,8 +652,8 @@
           :edellisten-haku-kaynnissa? false
           :valittu-liikennetapahtuma {::lt/vesipinta-alaraja 1
                                       ::lt/vesipinta-ylaraja 2}}
-         (e! (tiedot/->EdellisetTiedotHaettu {:kohde {::lt/vesipinta-alaraja 1
-                                                      ::lt/vesipinta-ylaraja 2}
+         (e! (tiedot/->EdellisetTiedotHaettu {:edellinen {::lt/vesipinta-alaraja 1
+                                                          ::lt/vesipinta-ylaraja 2}
                                               :ylos {:foo :bar}
                                               :alas {:baz :baz}})))))
 
