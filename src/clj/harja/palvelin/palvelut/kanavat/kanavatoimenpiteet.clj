@@ -161,8 +161,9 @@
     (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::toimenpide/kohteenosa-id toimenpide)
                                ::osa/kohde-id (::toimenpide/kohde-id toimenpide)))
   (jdbc/with-db-transaction [db db]
-  (let [toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide)]
-    (tallenna-materiaalikirjaukset db fim email user urakka-id toimenpide-map))))
+    (let [toimenpide-ilman-materiaaleja (dissoc toimenpide ::toimenpide/materiaalikirjaukset ::toimenpide/materiaalipoistot)
+          tallennettu-toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide-ilman-materiaaleja)]
+    (tallenna-materiaalikirjaukset db fim email user urakka-id tallennettu-toimenpide-map))))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
