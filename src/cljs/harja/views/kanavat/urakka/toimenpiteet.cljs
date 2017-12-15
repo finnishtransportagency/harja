@@ -107,8 +107,8 @@
        {:otsikko "Huoltokohde"
         :nimi ::kanavan-toimenpide/huoltokohde
         :tyyppi :valinta
-        :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
-                              (str/lower-case nimi))
+        :valinta-nayta #(or (when-let [nimi (kanavan-huoltokohde/fmt-huoltokohde-nimi %)]
+                              nimi)
                             "- Valitse huoltokohde -")
         :valinnat huoltokohteet
         :pakollinen? true})
