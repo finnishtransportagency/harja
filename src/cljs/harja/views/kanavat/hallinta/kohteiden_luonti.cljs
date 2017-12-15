@@ -45,7 +45,7 @@
      :leveys 1
      :nimi ::kohde/tyyppi
      :valinnat #{:silta :sulku :sulku-ja-silta}
-     :valinta-nayta kohde/tyyppi->str
+     :valinta-nayta (constantly "foobar")
      :pakollinen? true
      :validoi [[:ei-tyhja "Anna kohteelle tyyppi"]]}]
    (r/wrap
