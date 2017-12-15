@@ -110,7 +110,7 @@
         :valinta-nayta #(or (when-let [nimi (kanavan-huoltokohde/fmt-huoltokohde-nimi %)]
                               nimi)
                             "- Valitse huoltokohde -")
-        :valinnat huoltokohteet
+        :valinnat (sort-by kanavan-huoltokohde/fmt-huoltokohde-nimi huoltokohteet)
         :pakollinen? true})
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
