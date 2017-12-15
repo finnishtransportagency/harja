@@ -71,15 +71,19 @@
                         ::toiminto/lkm 150}]}))))
 
 (deftest toimenpide-gridiin
-  (is (= "Sillan avaus, Sulutus"
+  (is (= "Sulutus"
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :sulutus}
                                              {::toiminto/toimenpide :avaus}]})))
 
   (is (= "Tyhjennys"
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :tyhjennys}
                                              {::toiminto/toimenpide :ei-avausta}]})))
+  (is (= "Sulutus, Tyhjennys"
+         (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :tyhjennys}
+                                                  {::toiminto/toimenpide :sulutus}
+                                                  {::toiminto/toimenpide :ei-avausta}]})))
 
-  (is (= "Sillan avaus"
+  (is (= ""
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :avaus}]})))
 
   (is (= ""
@@ -128,32 +132,72 @@
           ::lt/sopimus-id 1
           ::lt/alukset [{::m/poistettu? true
                          ::lt-alus/id 1}]
-          ::lt/toiminnot [{::toiminto/id 1}]}
+          ::lt/toiminnot [{::toiminto/id 1
+                           ::toiminto/toimenpide :ei-avausta
+                           ::toiminto/palvelumuoto nil
+                           ::toiminto/lkm nil}
+                          {::toiminto/id 2
+                           ::toiminto/toimenpide :avaus
+                           ::toiminto/palvelumuoto :kauko
+                           ::toiminto/lkm 1}
+                          {::toiminto/id 2
+                           ::toiminto/toimenpide :avaus
+                           ::toiminto/palvelumuoto :itse
+                           ::toiminto/lkm 15}]}
          (tiedot/tallennusparametrit
            {:grid-virheita? false
             ::lt/kuittaaja {::kayttaja/id 1}
             ::lt/kohde {::kohde/id 1}
             ::lt/sopimus {::sop/id 1}
             ::lt/alukset [{:poistettu true
+                           ::m/poistettu? false
                            :id 1
                            :harja.ui.grid/virheet []
                            ::lt-alus/id 1}]
             ::lt/toiminnot [{::toiminto/id 1
-                        ::osa/id 1}]}))))
+                             ::toiminto/toimenpide :ei-avausta
+                             ::toiminto/palvelumuoto :kauko
+                             ::osa/id 1
+                             ::toiminto/lkm 15}
+                            {::toiminto/id 2
+                             ::toiminto/toimenpide :avaus
+                             ::toiminto/palvelumuoto :kauko
+                             ::toiminto/lkm 15
+                             ::osa/id 1}
+                            {::toiminto/id 2
+                             ::toiminto/toimenpide :avaus
+                             ::toiminto/palvelumuoto :itse
+                             ::toiminto/lkm 15
+                             ::osa/id 1}]}))))
 
 (deftest voiko-tallentaa?
   (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
+                                     ::lt/alukset [{:koskematon false
+                                                    ::lt-alus/suunta :ylos
+                                                    ::lt-alus/laji :HUV}]})))
+  (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
+                                     ::lt/alukset []
+                                     ::lt/toiminnot [{::toiminto/palvelumuoto :itse}]})))
+
+  (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
+                                     ::lt/alukset []
+                                     ::lt/toiminnot [{::toiminto/palvelumuoto :itse}
+                                                     {::toiminto/palvelumuoto :kauko}]})))
+  (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset [{:koskematon false
                                                     ::lt-alus/suunta :ylos}]})))
 
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? true
                                      ::lt/alukset [{:koskematon false
-                                                    ::lt-alus/suunta :ylos}]})))
+                                                    ::lt-alus/suunta :ylos
+                                                    ::lt-alus/laji :HUV}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset [{:koskematon true
-                                                    ::lt-alus/suunta :ylos}]})))
+                                                    ::lt-alus/suunta :ylos
+                                                    ::lt-alus/laji :HUV}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
-                                     ::lt/alukset [{:koskematon false}]}))))
+                                     ::lt/alukset [{:koskematon false
+                                                    ::lt-alus/laji :HUV}]}))))
 
 
 (deftest sama-alus?
@@ -241,6 +285,202 @@
                                     ::osa/nimi "Iso silta"
                                     ::osa/oletuspalvelumuoto :kauko}]})))))
 
+(deftest tapahtuma-sisaltaa-sulun?
+  (is (true? (tiedot/tapahtuman-kohde-sisaltaa-sulun? {::lt/kohde {::kohde/kohteenosat [{::osa/tyyppi :sulku}]}})))
+  (is (true? (tiedot/tapahtuman-kohde-sisaltaa-sulun? {::lt/kohde {::kohde/kohteenosat [{::osa/tyyppi :sulku}
+                                                                                        {::osa/tyyppi :sulku}]}})))
+  (is (true? (tiedot/tapahtuman-kohde-sisaltaa-sulun? {::lt/kohde {::kohde/kohteenosat [{::osa/tyyppi :sulku}
+                                                                                        {::osa/tyyppi :silta}]}})))
+
+  (is (false? (tiedot/tapahtuman-kohde-sisaltaa-sulun? {::lt/kohde {::kohde/kohteenosat []}})))
+  (is (false? (tiedot/tapahtuman-kohde-sisaltaa-sulun? {::lt/kohde {::kohde/kohteenosat [{::osa/tyyppi :rautatiesilta}
+                                                                                         {::osa/tyyppi :silta}]}}))))
+
+(deftest aseta-suunta
+  (is (= {:valittu-suunta nil}
+         (tiedot/aseta-suunta {} {::kohde/kohteenosat [{::osa/tyyppi :sulku}
+                                                       {::osa/tyyppi :silta}]})))
+
+  (is (= {:valittu-suunta :molemmat}
+         (tiedot/aseta-suunta {} {::kohde/kohteenosat [{::osa/tyyppi :silta}]}))))
+
+(deftest uusien-alusten-kasittely
+  (is (= [{:foo :bar}]
+         (tiedot/kasittele-uudet-alukset {::lt/id -1} [{:foo :bar}])))
+
+  (is (= [{:foo :bar}
+          {:foo :bar}]
+         (tiedot/kasittele-uudet-alukset {::lt/id 1
+                                          :valittu-suunta :molemmat}
+                                         [{:foo :bar}
+                                          {:foo :bar}])))
+
+  (is (= [{:foo :bar
+           ::lt-alus/suunta :ylos}
+          {:foo :bar
+           ::lt-alus/suunta :ylos}]
+         (tiedot/kasittele-uudet-alukset {::lt/id 1
+                                          :valittu-suunta :ylos}
+                                         [{:foo :bar}
+                                          {:foo :bar}])))
+  (is (= [{:foo :bar
+           ::lt-alus/suunta :alas}
+          {:foo :bar
+           ::lt-alus/suunta :alas}]
+         (tiedot/kasittele-uudet-alukset {::lt/id 1
+                                          :valittu-suunta :alas}
+                                         [{:foo :bar}
+                                          {:foo :bar}]))))
+
+(deftest ketjutuksen-poisto
+  (let [app {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
+                                          {::lt-alus/id 2}
+                                          {::lt-alus/id 3}]}
+                         :alas {:edelliset-alukset [{::lt-alus/id 4}]}}}]
+    (is (= {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
+                                         {::lt-alus/id 2}
+                                         {::lt-alus/id 3}]}
+                        :alas {:edelliset-alukset []}}}
+           (tiedot/poista-ketjutus app 4)))
+
+    (is (= {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
+                                         {::lt-alus/id 2}]}
+                        :alas {:edelliset-alukset [{::lt-alus/id 4}]}}}
+           (tiedot/poista-ketjutus app 3)))))
+
+(deftest nayta-palvelumuoto
+  (is (true? (tiedot/nayta-palvelumuoto? {})))
+  (is (false? (tiedot/nayta-palvelumuoto? {::toiminto/toimenpide :ei-avausta}))))
+
+(deftest nayta-itsepalvelu
+  (is (true? (tiedot/nayta-itsepalvelut? {::toiminto/toimenpide :avaus
+                                          ::toiminto/palvelumuoto :itse})))
+
+  (is (false? (tiedot/nayta-itsepalvelut? {::toiminto/toimenpide :ei-avausta
+                                           ::toiminto/palvelumuoto :itse})))
+  (is (false? (tiedot/nayta-itsepalvelut? {::toiminto/toimenpide :avaus
+                                           ::toiminto/palvelumuoto :kauko}))))
+
+(deftest suuntavalinta-str
+  (is (= "Ylös, 1 lähestyvää alusta"
+         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :ylos)))
+  (is (= "Alas"
+         (tiedot/suuntavalinta-str {:ylos {:edelliset-alukset [{:foo :bar}]}} :alas))))
+
+(deftest nayta-edelliset
+  (is (true? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+                                                                           ::lt/id -1
+                                                                           ::lt/kohde {:foo :bar}}
+                                               :edellisten-haku-kaynnissa? false
+                                               :edelliset {:alas {}}})))
+
+  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+                                                                           ::lt/id -1}
+                                               :edellisten-haku-kaynnissa? false
+                                               :edelliset {:alas {}}})))
+  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+                                                                            ::lt/id -1
+                                                                            ::lt/kohde {:foo :bar}}
+                                                :edellisten-haku-kaynnissa? true
+                                                :edelliset {:alas {}}})))
+  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+                                                                            ::lt/id -1
+                                                                            ::lt/kohde {:foo :bar}}
+                                                :edellisten-haku-kaynnissa? false
+                                                :edelliset {}})))
+  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {::lt/id -1
+                                                                            ::lt/kohde {:foo :bar}}
+                                                :edellisten-haku-kaynnissa? false
+                                                :edelliset {:alas {}}})))
+  (is (false? (tiedot/nayta-edelliset-alukset? {:valittu-liikennetapahtuma {:valittu-suunta :alas
+                                                                            ::lt/id 1
+                                                                            ::lt/kohde {:foo :bar}}
+                                                :edellisten-haku-kaynnissa? false
+                                                :edelliset {:alas {}}}))))
+
+(deftest nayta-ketjutukset
+  (is (true? (tiedot/nayta-suunnan-ketjutukset?
+               {:valittu-liikennetapahtuma {:valittu-suunta :ylos}}
+               :ylos
+               {})))
+  (is (true? (tiedot/nayta-suunnan-ketjutukset?
+               {:valittu-liikennetapahtuma {:valittu-suunta :molemmat}}
+               :ylos
+               {})))
+  (is (false? (tiedot/nayta-suunnan-ketjutukset?
+               {:valittu-liikennetapahtuma {:valittu-suunta :ylos}}
+               :alas
+               {})))
+  (is (false? (tiedot/nayta-suunnan-ketjutukset?
+               {:valittu-liikennetapahtuma {:valittu-suunta :molemmat}}
+               :ylos
+               nil))))
+
+(deftest nayta-liikennegrid
+  (is (true? (tiedot/nayta-liikennegrid? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                      ::lt/id 1}})))
+  (is (true? (tiedot/nayta-liikennegrid? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                      ::lt/id -1
+                                                                      :valittu-suunta :molemmat}})))
+  (is (true? (tiedot/nayta-liikennegrid? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                      ::lt/id -1
+                                                                      :valittu-suunta :ylos}})))
+
+  (is (false? (tiedot/nayta-liikennegrid? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                      ::lt/id -1
+                                                                      :valittu-suunta nil}}))))
+
+(deftest nayta-lisatiedot
+  (is (true? (tiedot/nayta-lisatiedot? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                      ::lt/id 1}})))
+  (is (true? (tiedot/nayta-lisatiedot? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                      ::lt/id -1
+                                                                      :valittu-suunta :molemmat}})))
+  (is (true? (tiedot/nayta-lisatiedot? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                      ::lt/id -1
+                                                                      :valittu-suunta :ylos}})))
+
+  (is (false? (tiedot/nayta-lisatiedot? {:valittu-liikennetapahtuma {::lt/kohde {:foo :bar}
+                                                                       ::lt/id -1
+                                                                       :valittu-suunta nil}}))))
+
+(deftest kuittausta-odottavat
+  (is (= [{::lt-alus/id 2}
+          {::lt-alus/id 3}]
+         (tiedot/kuittausta-odottavat {:siirretyt-alukset #{1}}
+                                      [{::lt-alus/id 1}
+                                       {::lt-alus/id 2}
+                                       {::lt-alus/id 3}]))))
+
+(deftest ketjutuksen-poisto-kaynnissa
+  (is (true? (tiedot/ketjutuksen-poisto-kaynnissa? {:ketjutuksen-poistot #{1}} {::lt-alus/id 1})))
+  (is (false? (tiedot/ketjutuksen-poisto-kaynnissa? {:ketjutuksen-poistot #{3 4 5}} {::lt-alus/id 1}))))
+
+(deftest ketjtuksen-voi-siirtaa
+  (is (true? (tiedot/ketjutuksen-voi-siirtaa-tapahtumasta? {:siirretyt-alukset #{1}} {::lt-alus/id 1})))
+  (is (false? (tiedot/ketjutuksen-voi-siirtaa-tapahtumasta? {:siirretyt-alukset #{1 3 5}} {::lt-alus/id 10}))))
+
+(deftest grid-virheita
+  (is (true? (tiedot/grid-virheita? {1 {:poistettu true
+                                        :harja.ui.grid/virheet [1]}
+                                     2 {:poistettu true
+                                        :harja.ui.grid/virheet []}
+                                     3 {:poistettu false
+                                        :harja.ui.grid/virheet [1]}
+                                     4 {:poistettu false
+                                        :harja.ui.grid/virheet []}})))
+
+  (is (false? (tiedot/grid-virheita? {1 {:poistettu true
+                                        :harja.ui.grid/virheet [1]}
+                                     2 {:poistettu true
+                                        :harja.ui.grid/virheet []}})))
+  (is (false? (tiedot/grid-virheita? {1 {:poistettu true
+                                         :harja.ui.grid/virheet [1]}
+                                      2 {:poistettu true
+                                         :harja.ui.grid/virheet []}
+                                      4 {:poistettu false
+                                         :harja.ui.grid/virheet []}}))))
+
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
   (is (false? (:nakymassa? (e! (tiedot/->Nakymassa? false))))))
@@ -305,11 +545,15 @@
 
 (deftest tapahtuman-valitseminen
   (testing "Tyhjän valitseminen"
-    (is (= {:valittu-liikennetapahtuma nil}
+    (is (= {:valittu-liikennetapahtuma nil
+            :siirretyt-alukset #{}
+            :ketjutuksen-poistot #{}}
            (e! (tiedot/->ValitseTapahtuma nil)))))
 
   (testing "Olemassaolevan tapahtuman valitseminen liittää toimintoihin kohteenosan tiedot"
-    (is (= {:valittu-liikennetapahtuma {::lt/id 1
+    (is (= {:siirretyt-alukset #{}
+            :ketjutuksen-poistot #{}
+            :valittu-liikennetapahtuma {::lt/id 1
                                         ::lt/kohde {::kohde/id 1
                                                     ::kohde/kohteenosat [{::osa/id 1
                                                                           ::osa/tyyppi :silta
@@ -352,7 +596,9 @@
                                                  ::toiminto/toimenpide :sillan-avaus}]}]}))))
 
   (testing "Uuden tapahtuman avaaminen"
-    (is (= {:valittu-liikennetapahtuma {:foo :bar
+    (is (= {:siirretyt-alukset #{}
+            :ketjutuksen-poistot #{}
+            :valittu-liikennetapahtuma {:foo :bar
                                         ::lt/toiminnot []
                                         ::lt/kohde nil}
             :haetut-tapahtumat [{::lt/id 1
@@ -395,8 +641,8 @@
           :edellisten-haku-kaynnissa? false
           :valittu-liikennetapahtuma {::lt/vesipinta-alaraja 1
                                       ::lt/vesipinta-ylaraja 2}}
-         (e! (tiedot/->EdellisetTiedotHaettu {:kohde {::lt/vesipinta-alaraja 1
-                                                      ::lt/vesipinta-ylaraja 2}
+         (e! (tiedot/->EdellisetTiedotHaettu {:edellinen {::lt/vesipinta-alaraja 1
+                                                          ::lt/vesipinta-ylaraja 2}
                                               :ylos {:foo :bar}
                                               :alas {:baz :baz}})))))
 
@@ -503,3 +749,53 @@
 (deftest ei-tallennettu
   (is (= {:tallennus-kaynnissa? false}
          (e! (tiedot/->TapahtumaEiTallennettu {})))))
+
+(deftest siirra-kaikki
+  (is (= {:siirretyt-alukset #{1 2 3}
+          :valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1} {::lt-alus/id 2} {::lt-alus/id 3}]}}
+         (e! (tiedot/->SiirraKaikkiTapahtumaan [{::lt-alus/id 1} {::lt-alus/id 2} {::lt-alus/id 3}])))))
+
+(deftest siirra-tapahtumaan
+  (is (= {:siirretyt-alukset #{1}
+          :valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1}]}}
+         (e! (tiedot/->SiirraTapahtumaan {::lt-alus/id 1})
+             {:valittu-liikennetapahtuma {::lt/alukset []}}))))
+
+(deftest siirra-tapahtumasta
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 2}]}
+          :siirretyt-alukset #{2}}
+         (e! (tiedot/->SiirraTapahtumasta {::lt-alus/id 1})
+             {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1}
+                                                        {::lt-alus/id 2}]}
+              :siirretyt-alukset #{1 2}}))))
+
+(deftest poista-ketjutus
+  (vaadi-async-kutsut
+    #{tiedot/->KetjutusEiPoistettu tiedot/->KetjutusPoistettu}
+    (is (= {:ketjutuksen-poistot #{1 2}}
+           (e! (tiedot/->PoistaKetjutus {::lt-alus/id 1})
+               {:ketjutuksen-poistot #{2}}))))
+
+  (vaadi-async-kutsut
+    #{}
+    (is (= {:ketjutuksen-poistot #{1 2}}
+           (e! (tiedot/->PoistaKetjutus {::lt-alus/id 1})
+               {:ketjutuksen-poistot #{1 2}})))))
+
+(deftest ketjutus-poistettu
+  (is (= {:ketjutuksen-poistot #{}
+          :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 2}]}
+                      :alas {:edelliset-alukset []}}}
+         (e! (tiedot/->KetjutusPoistettu {} 1)
+             {:ketjutuksen-poistot #{1}
+              :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
+                                           {::lt-alus/id 2}]}}}))))
+
+(deftest ketjutus-ei-poistettu
+  (is (= {:ketjutuksen-poistot #{}
+          :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
+                                       {::lt-alus/id 2}]}}}
+         (e! (tiedot/->KetjutusEiPoistettu {} 1)
+             {:ketjutuksen-poistot #{1}
+              :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
+                                           {::lt-alus/id 2}]}}}))))

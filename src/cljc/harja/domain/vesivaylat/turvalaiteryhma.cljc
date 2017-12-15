@@ -9,17 +9,23 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
+
+
 (define-tables
   ["reimari_turvalaiteryhma" ::reimari-turvalaiteryhma])
 
-
 (def turvalaite #{[::turvalaite harja.domain.vesivaylat.turvalaite/perustiedot]})
 
- (def perustiedot
- #{::tunnus
-    ::nimi
-    ::kuvaus
-     ::turvalaitteet})
+(def perustiedot
+  #{:tunnus
+    :nimi
+    :kuvaus
+    :turvalaitteet
+    :luoja
+    :luotu
+    :muokkaaja
+    :muokattu
+})
 
 (s/def ::hae-turvalaiteryhmat-kysely
   (s/keys :req []))

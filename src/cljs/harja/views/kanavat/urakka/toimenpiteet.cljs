@@ -78,8 +78,7 @@
                                           toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-        valitun-kohteen-osat (::kohde/kohteenosat (first (filter #(= (::kohde/id %) valittu-kohde-id) kohteet)))]
-
+        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
@@ -93,24 +92,27 @@
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :pakollinen? true}
-     {:otsikko "Kohde"
-      :nimi ::kanavan-toimenpide/kohde
-      :tyyppi :valinta
-      :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
-      :valinnat kohteet}
-     {:otsikko "Kohteen osa"
-      :nimi ::kanavan-toimenpide/kohteenosa
-      :tyyppi :valinta
-      :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
-      :valinnat (or valitun-kohteen-osat [])}
-     {:otsikko "Huoltokohde"
-      :nimi ::kanavan-toimenpide/huoltokohde
-      :tyyppi :valinta
-      :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
-                            (str/lower-case nimi))
-                          "- Valitse huoltokohde -")
-      :valinnat huoltokohteet
-      :pakollinen? true}
+     (lomake/rivi
+       {:otsikko "Kohde"
+       :nimi ::kanavan-toimenpide/kohde
+       :tyyppi :valinta
+       :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
+       :valinnat kohteet})
+     (when (::kanavan-toimenpide/kohde toimenpide)
+       {:otsikko "Kohteen osa"
+        :nimi ::kanavan-toimenpide/kohteenosa
+        :tyyppi :valinta
+        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+        :valinnat (or valitun-kohteen-osat [])})
+     (when (::kanavan-toimenpide/kohde toimenpide)
+       {:otsikko "Huoltokohde"
+        :nimi ::kanavan-toimenpide/huoltokohde
+        :tyyppi :valinta
+        :valinta-nayta #(or (when-let [nimi (kanavan-huoltokohde/fmt-huoltokohde-nimi %)]
+                              nimi)
+                            "- Valitse huoltokohde -")
+        :valinnat (sort-by kanavan-huoltokohde/fmt-huoltokohde-nimi huoltokohteet)
+        :pakollinen? true})
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true

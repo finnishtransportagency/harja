@@ -106,7 +106,13 @@
                                            (s/optional-key :tekniset-laitteet-urakat-tuontikohde) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-osoite) s/Str
-                                           (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str}
+                                           (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str
+                                           (s/optional-key :turvalaitteiden-shapefile) s/Str
+                                           (s/optional-key :turvalaitteiden-osoite) s/Str
+                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str}
+
+
+
 
    (s/optional-key :yha) {:url s/Str
                           :kayttajatunnus s/Str
