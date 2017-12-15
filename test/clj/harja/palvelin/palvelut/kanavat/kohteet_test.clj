@@ -177,7 +177,6 @@
                                   :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -199,7 +198,6 @@
                                   :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -221,7 +219,6 @@
                                   :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -229,7 +226,8 @@
         (is (= koh kohde-id))
         (is (= poistettu? false))))))
 
-(deftest kohteen-poistaminen
+;; TODO Poistaminen disabloitu toistaiseksi
+#_(deftest kohteen-poistaminen
   (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Iisalmen kanava';"))
         _ (is (some? kohde-id))
         _ (is (false? poistettu?))
