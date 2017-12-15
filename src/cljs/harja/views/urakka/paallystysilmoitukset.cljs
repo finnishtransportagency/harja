@@ -676,6 +676,23 @@
            (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
            (reset! ilmoituslomake nil))]))))
 
+(defn valinnat [urakka]
+  [:div
+   [valinnat/vuosi {}
+    (t/year (:alkupvm urakka))
+    (t/year (:loppupvm urakka))
+    urakka/valittu-urakan-vuosi
+    urakka/valitse-urakan-vuosi!]
+   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+   [u-valinnat/tienumero yllapito-tiedot/tienumero]
+   [yleiset/pudotusvalikko
+    "Järjestä kohteet"
+    {:valinta @yllapito-tiedot/kohdejarjestys
+     :valitse-fn #(reset! yllapito-tiedot/kohdejarjestys %)
+     :format-fn {:tila "Tilan mukaan"
+                 :kohdenumero "Kohdenumeron mukaan"}}
+    [:tila :kohdenumero]]])
+
 (defn paallystysilmoitukset [urakka]
   (komp/luo
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
@@ -686,11 +703,5 @@
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [:div
-          [valinnat/vuosi {}
-           (t/year (:alkupvm urakka))
-           (t/year (:loppupvm urakka))
-           urakka/valittu-urakan-vuosi
-           urakka/valitse-urakan-vuosi!]
-          [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-          [u-valinnat/tienumero yllapito-tiedot/tienumero]
+          [valinnat urakka]
           [ilmoitusluettelo]])])))
