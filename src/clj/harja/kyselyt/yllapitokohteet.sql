@@ -382,7 +382,7 @@ VALUES (:urakka,
   :yllapitokohdetyotyyppi :: YLLAPITOKOHDETYOTYYPPI,
   :vuodet :: INTEGER []);
 
--- name: paivita-yllapitokohde!
+-- name: paivita-yllapitokohde<!
 -- Päivittää ylläpitokohteen
 UPDATE yllapitokohde
 SET

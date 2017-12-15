@@ -210,10 +210,29 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (def +piilota-label+ #{:boolean :tierekisteriosoite})
 
+(defn kentan-input
+  "Määritellään kentän input"
+  [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle] :as s}
+   data muokattava? muokkaa arvo]
+  (let [kentta (if (= tyyppi :komponentti)
+                 [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                 :data data})]
+                 (if muokattava?
+                   (do (have #(contains? % :tyyppi) s)
+                       [tee-kentta (assoc s :lomake? true) arvo])
+                   [:div.form-control-static
+                    (if fmt
+                      (fmt ((or hae #(get % nimi)) data))
+                      (nayta-arvo s arvo))]))]
+    (if yksikko-kentalle
+      [:div.kentta-ja-yksikko
+       kentta
+       [:span.kentan-yksikko yksikko-kentalle]]
+      kentta)))
+
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi hae fmt col-luokka yksikko pakollinen?
-           komponentti] :as s}
+  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen?] :as s}
    data atom-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset]
   (let [arvo (atom-fn s)]
@@ -238,16 +257,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         [:span
          [:span.kentan-label otsikko]
          (when yksikko [:span.kentan-yksikko yksikko])]])
-     (if (= tyyppi :komponentti)
-       [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
-                                       :data data})]
-       (if muokattava?
-         (do (have #(contains? % :tyyppi) s)
-             [tee-kentta (assoc s :lomake? true) arvo])
-         [:div.form-control-static
-          (if fmt
-            (fmt ((or hae #(get % nimi)) data))
-            (nayta-arvo s arvo))]))
+     [kentan-input s data muokattava? muokkaa arvo]
 
      (when (and muokattu?
                 (not (empty? virheet)))
@@ -334,7 +344,7 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
                   funktiolle annetaan validoitu data parametrina. Parametriin on liitetty
-                  avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat
+                  avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat.
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
 
@@ -344,8 +354,9 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
   :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
   :data                 validoitu data
   "
-  [_ _ _]
-  (let [fokus (atom nil)]
+  [{validoi-alussa? :validoi-alussa? muokkaa! :muokkaa!} skeema data]
+  (let [fokus (atom nil)
+        _ (when validoi-alussa? (muokkaa! (validoi data skeema)))]
     (fn [{:keys [otsikko muokkaa! luokka footer footer-fn virheet varoitukset huomautukset
                  voi-muokata? ei-borderia?] :as opts} skeema
          {muokatut ::muokatut

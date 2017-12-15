@@ -8,7 +8,8 @@
     [clojure.future :refer :all]]
         :cljs [[specql.impl.registry]])
 
-    [harja.domain.muokkaustiedot :as m]
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
+    [harja.domain.vesivaylat.materiaali :as materiaali]
     [harja.domain.kanavat.kohde :as kohde]
     [harja.domain.kanavat.kohteenosa :as kohteenosa]
     [harja.domain.urakka :as ur]
@@ -32,7 +33,8 @@
     "kuittaaja" ::kuittaaja-id
     ::kuittaaja (specql.rel/has-one ::kuittaaja-id
                                     :harja.domain.kayttaja/kayttaja
-                                    :harja.domain.kayttaja/id)}
+                                    :harja.domain.kayttaja/id)
+    ::materiaalit (specql.rel/has-many ::id ::materiaali/materiaali ::materiaali/hairiotilanne)}
    harja.domain.muokkaustiedot/muokkaus-ja-poistotiedot
    {::kohde (specql.rel/has-one ::kohde-id
                                 ::kohde/kohde
@@ -41,12 +43,35 @@
                                      :harja.domain.kanavat.kohteenosa/kohteenosa
                                      :harja.domain.kanavat.kohteenosa/id)}])
 
+(def materiaalien-tiedot
+  ;; todo: tämä ilmeisesti ei toimi many-to-one suhteessa
+  #{[::materiaalit
+     #{::materiaali/id
+       ::materiaali/nimi
+       ::materiaali/maara
+       ::materiaali/pvm}]})
+
+(def perustiedot+muokkaustiedot
+  #{::muokkaustiedot/muokattu
+    ::vikaluokka
+    ::muokkaustiedot/poistettu?
+    ::huviliikenne-lkm
+    ::korjaustoimenpide
+    ::paikallinen-kaytto?
+    ::havaintoaika
+    ::korjausaika-h
+    ::odotusaika-h
+    ::syy
+    ::id
+    ::korjauksen-tila
+    ::ammattiliikenne-lkm})
+
 (def perustiedot
   #{::vikaluokka
     ::huviliikenne-lkm
     ::korjaustoimenpide
     ::paikallinen-kaytto?
-    ::pvm
+    ::havaintoaika
     ::korjausaika-h
     ::odotusaika-h
     ::syy
@@ -65,9 +90,8 @@
 (def kuittaajan-tiedot
   #{[::kuittaaja kayttaja/perustiedot]})
 
-(def kohteenosan-tiedot #{[::kohteenosa kohteenosa/perustiedot]})
-
 (def kohteen-tiedot #{[::kohde (set/union kohde/perustiedot)]})
+(def kohteenosan-tiedot #{[::kohteenosa (set/union kohteenosa/perustiedot)]})
 
 ;; Palvelut
 
@@ -86,7 +110,17 @@
 
 (s/def ::tallenna-hairiotilanne-kutsu
   (s/keys :req [::hae-hairiotilanteet-kysely
-                ::hairiotilanne]))
+                ::hairiotilanne
+                ::materiaali/materiaalikirjaukset
+                ::materiaali/poista-materiaalikirjauksia]))
+
+(s/def ::hairiotilanteet (s/coll-of ::hairiotilanne))
+
+(s/def ::materiaalilistaukset (s/coll-of ::materiaali/materiaalilistaus))
+
+(s/def ::tallenna-hairiotilanne-vastaus
+  (s/keys :req-un [::hairiotilanteet
+                   ::materiaalilistaukset]))
 
 ;; Apurit
 

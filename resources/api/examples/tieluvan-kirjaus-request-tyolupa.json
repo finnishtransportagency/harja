@@ -1,0 +1,91 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2016-01-30T12:00:00+02:00"
+  },
+  "tielupa": {
+    "perustiedot": {
+      "tunniste": {
+        "id": 1234
+      },
+      "tyyppi": "tietyolupa",
+      "paatoksen-diaarinumero": "123456789",
+      "saapumispvm": "2017-09-22T12:00:00+02:00",
+      "myontamispvm": "2018-09-22T12:00:00+02:00",
+      "voimassaolon-alkupvm": "2020-09-22T12:00:00+02:00",
+      "voimassaolon-loppupvm": "2020-09-22T12:00:00+02:00",
+      "otsikko": "Lupa tehdä töitä",
+      "katselmus-url": "https://tilu.fi/1234",
+      "ely": "Pohjois-Pohjanmaa",
+      "alueurakka": "Oulun alueurakka",
+      "kunta": "Kiiminki",
+      "kohteen-lahiosoite": "Tie 123",
+      "kohteen-postinumero": "90900",
+      "kohteen-postitoimipaikka": "Kiiminki",
+      "tien-nimi": "Kuusamontie"
+    },
+    "sijainnit": [
+      {
+        "sijainti": {
+          "numero": 20,
+          "aet": 2631,
+          "aosa": 6,
+          "ajorata": 0,
+          "kaista": 1,
+          "puoli:": 0,
+          "sijoitus": "oikea"
+        }
+      }
+    ],
+    "hakija": {
+      "nimi": "Henna Hakija",
+      "postiosoite": "Liitintie 1",
+      "postinumero": "90900",
+      "puhelinnumero": "987-7889087",
+      "sahkopostiosoite": "henna.hakija@example.com",
+      "tyyppi": "kotitalous"
+    },
+    "urakoitsija": {
+      "nimi": "Puulaaki Oy",
+      "yhteyshenkilo": "Yrjänä Yhteyshenkilo",
+      "puhelinnumero": "987-7889087",
+      "sahkopostiosoite": "yrjana.yhteyshenkilo@example.com"
+    },
+    "liikenteenohjauksesta-vastaava": {
+      "nimi": "Liikenneohjaus Oy",
+      "yhteyshenkilo": "Lilli Liikenteenohjaaja",
+      "puhelinnumero": "987-7889087",
+      "sahkopostiosoite": "lilli.liikenteenohjaaja@example.com"
+    },
+    "tienpitoviranomainen": {
+      "yhteyshenkilo": "Teijo Tienpitäjä",
+      "puhelinnumero": "987-7889087",
+      "sahkopostiosoite": "teijo.tienpitaja@example.com"
+    },
+    "valmistumisilmoitus": {
+      "vaaditaan": true,
+      "palautettu": true,
+      "valmistumisilmoitus": "Työt valmistuneet 22.9.2017"
+    },
+    "tyolupa": {
+      "tyon-sisalto": "Töitä",
+      "tyon-saa-aloittaa": "2017-09-22T12:00:00+02:00",
+      "viimeistely-oltava": "2017-10-22T12:00:00+02:00",
+      "ohjeet-tyon-suorittamiseen": "",
+      "los-puuttuu": false,
+      "ilmoitus-tieliikennekeskukseen": true,
+      "tilapainen-nopeusrajoitus": true,
+      "los-lisatiedot": "",
+      "tieliikennekusksen-sahkopostiosoite": ""
+    }
+  }
+}
