@@ -87,7 +87,8 @@
        :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
        :tunniste ::kanavan-toimenpide/id}
       sarakkeet
-      (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
+      (sort-by ::kanavan-toimenpide/pvm >
+               (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]]))
 
 (defn lisatyot* [e! app]
   (let [urakka (get-in app [:valinnat :urakka-id])]

@@ -82,7 +82,8 @@
                           (e! (tiedot/->ValitseToimenpide
                                 {:id (::kanavan-toimenpide/id rivi)
                                  :valittu? uusi-arvo})))})
-    (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
+    (sort-by ::kanavan-toimenpide/pvm >
+             (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
 
 (defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
                                                      tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
