@@ -26,5 +26,6 @@
   (.alert js/window (str "Upsista keikkaa, Harja räsähti! Olemme pahoillamme. Kuulisimme "
                          "mielellämme miten sait vian esiin, joten voisitko lähettää meille "
                          "palautetta? Liitä mukaan alla olevat virheen tekniset tiedot, "
-                         "kuvankaappaus sekä kuvaus siitä mitä olit tekemässä.\n"
+                         "kuvankaappaus sekä kuvaus siitä, mitä olit tekemässä."
+                         "Mikäli ongelma toistuu, yritä ladata Harja uudelleen päivittämällä sivu.\n"
                          (apply str msgs))))
