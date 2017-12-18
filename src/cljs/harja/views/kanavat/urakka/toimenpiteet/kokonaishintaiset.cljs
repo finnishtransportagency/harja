@@ -115,4 +115,4 @@
        [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet]])))
 
 (defc kokonaishintaiset []
-      [tuck tiedot/tila kokonaishintaiset*])
+  [tuck tiedot/tila kokonaishintaiset*])
