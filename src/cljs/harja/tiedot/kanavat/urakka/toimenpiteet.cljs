@@ -162,6 +162,7 @@
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
   ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
+  (log "tallennettava-toimenpide: tehtavat " (pr-str tehtavat))
   (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
                     (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
         materiaalit (::materiaalit/materiaalit toimenpide)]
