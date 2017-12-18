@@ -27,10 +27,10 @@
         sulkumaara (:sulkuja kanava)
         putouskorkeus_1 (:putousk_1 kanava)
         putouskorkeus_2 (:putousk_2 kanava)
-        ala_ver_1 (:ala_ver_1 kanava)
-        ala_ver_2 (:ala_ver_2 kanava)
-        yla_ver_1 (:yla_ver_1 kanava)
-        yla_ver_2 (:yla_ver_2 kanava)
+        alakanavan_alavertaustaso (:ala_ver_1 kanava)
+        alakanavan_ylavertaustaso (:ala_ver_2 kanava)
+        ylakanavan_alavertaustaso (:yla_ver_1 kanava)
+        ylakanavan_ylavertaustaso (:yla_ver_2 kanava)
         kynnys_1 (:kanava_1 kanava)
         kynnys_2 (:kanava_2 kanava)
         vesisto (:vesisto kanava)
@@ -58,10 +58,10 @@
                         :sulkumaara sulkumaara
                         :putouskorkeus_1 putouskorkeus_1
                         :putouskorkeus_2 putouskorkeus_2
-                        :ala_ver_1 ala_ver_1
-                        :ala_ver_2 ala_ver_2
-                        :yla_ver_1 yla_ver_1
-                        :yla_ver_2 yla_ver_2
+                        :alakanavan_alavertaustaso alakanavan_alavertaustaso
+                        :alakanavan_ylavertaustaso alakanavan_ylavertaustaso
+                        :ylakanavan_alavertaustaso ylakanavan_alavertaustaso
+                        :ylakanavan_ylavertaustaso ylakanavan_ylavertaustaso
                         :kynnys_1 kynnys_1
                         :kynnys_2 kynnys_2
                         :vesisto vesisto
