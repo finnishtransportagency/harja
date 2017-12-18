@@ -519,7 +519,7 @@
                    WHERE  nimi = 'Helsingin väyläyksikön pääsopimus'"))))
 
 (defn hae-vayla-hietarasaari []
-  (ffirst (q (str "SELECT vaylanro 
+  (ffirst (q (str "SELECT vaylanro
                    FROM   vv_vayla
                    WHERE  nimi = 'Hietasaaren läntinen rinnakkaisväylä'"))))
 

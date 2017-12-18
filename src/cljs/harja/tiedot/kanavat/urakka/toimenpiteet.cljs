@@ -47,19 +47,39 @@
 (defn tyhjenna-avattu-toimenpide [app]
   (assoc app :avattu-toimenpide nil))
 
+(defn materiaalilistaus->grid [toimenpide listaukset]
+  (mapcat (fn [materiaalilistaus]
+            (transduce
+             (comp
+              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
+              ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
+              (map #(identity {:maara (- (::materiaalit/maara %))
+                               :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+                                         ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+                                         ::materiaalit/pvm (::materiaalit/pvm %)
+                                         ::materiaalit/id (::materiaalit/id %)}})))
+             conj (filter
+                   #(= (::materiaalit/toimenpide %) (::kanavatoimenpide/id toimenpide))
+                   (::materiaalit/muutokset materiaalilistaus))))
+          listaukset))
+
 (defn aseta-lomakkeen-tiedot [app toimenpide]
+  ;; (log "alt: app" (pr-str app) " tp " (pr-str toimenpide))
   (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohteenosa]))
                                (not= (::kanavatoimenpide/kohde toimenpide)
                                      (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohde])))
         toimenpide (if kohdeosa-vaihtui?
                      (assoc toimenpide ::kanavatoimenpide/kohteenosa nil)
                      toimenpide)
-        materiaalit (filterv #(= (::toimenpide/id toimenpide) (::materiaalit/toimenpide %)) (:urakan-materiaalit app))
+        materiaalilistaukset (:urakan-materiaalit app)
         ;; todo: ei toimi ihan näin, urakan-materiaalit on "materiaalilistaus" eli rivi per tyyppi,
         ;;  pitää kaivaa sen muutoksista
-        toimenpide (assoc ::materiaalit/materiaalit materiaalit
-                          ::materiaalit/muokkaamattomat-materiaalit materiaalit)]
 
+        materiaalit (materiaalilistaus->grid toimenpide materiaalilistaukset)
+        toimenpide (assoc toimenpide ::materiaalit/materiaalit materiaalit
+                             ::materiaalit/muokkaamattomat-materiaalit materiaalit)]
+    (log "alt: lopullinen materiaalit:")
+    (cljs.pprint/pprint materiaalit)
     (assoc app :avattu-toimenpide toimenpide)))
 
 
@@ -78,14 +98,13 @@
 ;;                                     [...]
 ;;                                     {::materiaalit/pvm #object[Object 20171128T000000],
 ;;                                      ::materiaalit/maara -3,
+;;                                      ::materiaalit/toimenpide 2,
 ;;                                      ::materiaalit/id 5}
 ;;                                     [...]
 ;;                                     ],
 ;;            ::materiaalit/alkuperainen-maara 1000,
 ;;            ::materiaalit/nimi "Naulat"},
 ;;  :maara 2}
-
-
 
 (defn materiaalikirjaus->tallennettava [grid-rivi]
   (log "mk->t..")
@@ -116,9 +135,9 @@
         varaosa (dissoc (:varaosa m-kirjaus)
                         ::materiaalit/maara-nyt ::materiaalit/halytysraja
                         ::materiaalit/muutokset ::materiaalit/alkuperainen-maara)]
-    (log "muokkaamattomat" (pr-str muokkaamattomat-kirjaukset))
-    (log "m-kirjaus" (pr-str m-kirjaus))
-    (log "yksi-tallennettava: tilat " (pr-str [tyhja? poistettu? (not muokattu?)]))
+    ;; (log "muokkaamattomat" (pr-str muokkaamattomat-kirjaukset))
+    ;; (log "m-kirjaus" (pr-str m-kirjaus))
+    ;; (log "yksi-tallennettava: tilat " (pr-str [tyhja? poistettu? (not muokattu?)]))
     (when-not (or tyhja? poistettu? (not muokattu?))
       ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
       (assoc varaosa
@@ -128,12 +147,15 @@
 (defn tallennettavat-materiaalit [tp]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
         muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
-        _ (assert muokkaamattomat-materiaali-kirjaukset)
+
         tp-id (::kanavatoimenpide/id tp)
         paivamaara (::kanavatoimenpide/pvm tp)
-        kohteen-nimi (get-in hairiotilanne [::kanavatoimenpide/kohde ::kohde/nimi])
+        kohteen-nimi (-> tp ::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
+
         lisatieto (str "Kohteen " kohteen-nimi " materiaali")
         tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
+    (when-not muokkaamattomat-materiaali-kirjaukset
+      (log "muokkaamattomat kirjaukset puuttuu"))
     (log "tallennettavat: " (pr-str  (vec tallennettavat)))
     tallennettavat))
 
