@@ -34,12 +34,9 @@
     :leveys 10
     :hae kanavan-toimenpide/fmt-toimenpiteen-kohde}
    {:otsikko "Huolto\u00ADkohde"
-    :nimi :huoltokohde
+    :nimi ::kanavan-toimenpide/huoltokohde
     :tyyppi :string
-    :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])
-    :fmt #(if %
-            (str/capitalize (str/lower-case %))
-            "")
+    :fmt kanavan-huoltokohde/fmt-huoltokohde-nimi
     :leveys 10}
    {:otsikko "Tehtävä"
     :nimi :toimenpide
