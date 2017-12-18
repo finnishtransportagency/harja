@@ -28,6 +28,7 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.palvelin.palvelut.viestinta :as viestinta]))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -400,21 +401,26 @@
                         (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))))
 
 (defn laheta-paallystysilmoituksesta-sahkoposti? [uusi-tila vanha-tila]
+  (log/debug "WANHA TILA " vanha-tila)
+  (log/debug "UUSI TILA " uusi-tila)
   (and (= uusi-tila :valmis)
        (not= vanha-tila :valmis)))
 
-(defn tarkista-paallystysilmoituksen-sahkopostilahetys [db fim email urakka-id uusi-tila vanha-tila]
+(defn tarkista-paallystysilmoituksen-sahkopostilahetys [db fim email urakka-id paallystyskohde-id uusi-tila vanha-tila]
   (log/debug "TARKISTA MAILI NONI!")
   (when (laheta-paallystysilmoituksesta-sahkoposti? uusi-tila vanha-tila)
     (log/debug "LÄHETÄ MAILI!!")
-    (let [urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+    (let [paallystyskohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
+          urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
           urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)]
       (viestinta/laheta-sposti-fim-kayttajarooleille
         {:fim fim
          :email email
          :urakka-sampoid urakka-sampoid
          :fim-kayttajaroolit #{"tilaajan urakanvalvoja"}
-         :viesti-otsikko "Päällystysilmoitus valmis käsiteltäväksi" ;; TODO Mukaan ainakin kohde, ja urakka?
+         :viesti-otsikko (format "Urakan %s kohteen %s päällystysilmoitus valmis käsiteltäväksi"
+                                 urakka-nimi
+                                 (:nimi paallystyskohde))
          :viesti-body "POTTI-VIESTI!"})))) ;; TODO Body
 
 (defn tallenna-paallystysilmoitus
@@ -463,6 +469,7 @@
 
       (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
       (tarkista-paallystysilmoituksen-sahkopostilahetys db fim email urakka-id
+                                                        paallystyskohde-id
                                                         (:tila tuore-paallystysilmoitus)
                                                         (:tila vanha-paallystysilmoitus))
 
