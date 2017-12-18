@@ -397,10 +397,16 @@
                               (assoc osoite :kohdeosa-id (:id vastaava-kohdeosa)))))
                         (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))))
 
+(defn laheta-paallystysilmoituksesta-sahkoposti? [uusi-tila vanha-tila]
+  (and (= (:valmis uusi-tila))
+       (not= (:valmis vanha-tila))))
+
 (defn tarkista-paallystysilmoituksen-sahkopostilahetys [tuore-paallystysilmoitus vanha-tila]
   (log/debug "TUORE POTTI: " tuore-paallystysilmoitus)
   (log/debug "WANHA TILA: " vanha-tila)
-  )
+
+  (when (laheta-paallystysilmoituksesta-sahkoposti? (:tila tuore-paallystysilmoitus) vanha-tila)
+    (log/debug "LÄHETTELE")))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
