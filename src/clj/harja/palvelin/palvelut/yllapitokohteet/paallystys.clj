@@ -398,12 +398,10 @@
                         (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))))
 
 (defn laheta-paallystysilmoituksesta-sahkoposti? [uusi-tila vanha-tila]
-  (and (= (:valmis uusi-tila))
-       (not= (:valmis vanha-tila))))
+  (and (= uusi-tila :valmis)
+       (not= vanha-tila :valmis)))
 
 (defn tarkista-paallystysilmoituksen-sahkopostilahetys [tuore-paallystysilmoitus vanha-tila]
-  (log/debug "TUORE POTTI: " tuore-paallystysilmoitus)
-  (log/debug "WANHA TILA: " vanha-tila)
 
   (when (laheta-paallystysilmoituksesta-sahkoposti? (:tila tuore-paallystysilmoitus) vanha-tila)
     (log/debug "LÄHETTELE")))
