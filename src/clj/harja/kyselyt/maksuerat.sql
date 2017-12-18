@@ -85,20 +85,44 @@ SELECT
    WHERE emo.id = tpk.emo) AS tuotenumero,
 
   -- Kustannussuunnitelman summa
-  COALESCE(CASE WHEN m.tyyppi = 'kokonaishintainen'
-    THEN (SELECT SUM(kht.summa)
-          FROM kokonaishintainen_tyo kht
-          WHERE kht.toimenpideinstanssi = tpi.id)
-           WHEN m.tyyppi = 'yksikkohintainen'
-             THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
-                   FROM yksikkohintainen_tyo yht
-                   WHERE
-                     yht.urakka = :urakkaid AND
-                     yht.tehtava IN (SELECT id
-                                     FROM toimenpidekoodi
-                                     WHERE emo = tpk.id))
-           ELSE 1
-           END, 0)         AS kustannussuunnitelma_summa
+  COALESCE(
+      CASE
+
+      -- Kokonaishintaiset maksuerät kaikille urakoille
+      WHEN m.tyyppi = 'kokonaishintainen'
+        THEN (SELECT SUM(kht.summa)
+              FROM kokonaishintainen_tyo kht
+              WHERE kht.toimenpideinstanssi = tpi.id)
+
+      -- Yksikköhintaiset muiden kuin kanavaurakoiden
+      WHEN m.tyyppi = 'yksikkohintainen' AND
+           NOT u.tyyppi = 'vesivayla-kanavien-hoito' AND
+           NOT u.tyyppi = 'vesivayla-kanavien-korjaus'
+
+        THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+              FROM yksikkohintainen_tyo yht
+              WHERE
+                yht.urakka = :urakkaid AND
+                yht.tehtava IN (SELECT id
+                                FROM toimenpidekoodi
+                                WHERE emo = tpk.id))
+
+      --  Kanavaurakoiden yksikköhintaiset
+      WHEN m.tyyppi = 'yksikkohintainen' AND
+           (u.tyyppi = 'vesivayla-kanavien-hoito' OR
+            u.tyyppi = 'vesivayla-kanavien-korjaus')
+        THEN
+          (SELECT SUM(yht.arvioitu_kustannus)
+           FROM yksikkohintainen_tyo yht
+           WHERE
+             yht.urakka = :urakkaid AND
+             yht.tehtava IN (SELECT id
+                             FROM toimenpidekoodi
+                             WHERE emo = tpk.id))
+
+      -- Kaikki muut kustannussuunnitelmat
+      ELSE 1
+      END, 0)         AS kustannussuunnitelma_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
