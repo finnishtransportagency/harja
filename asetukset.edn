@@ -65,7 +65,7 @@
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true
-                    ;; :palvelin "solita-service-1.solita.fi"
+                    ;; :palvelin "solita-service-1.solita.fi" ;; Kommentoitu, ettei mene vahinkomaileja (esim. db-singletonin käsittelyssä)
                     :jonot {:sahkoposti-sisaan-jono "Harja.Incoming.Email.InQ"
                             :sahkoposti-ulos-jono "Harja.Send.Email.InQ"
                             :sahkoposti-ulos-kuittausjono "Harja.Send.Email.Status"}}
