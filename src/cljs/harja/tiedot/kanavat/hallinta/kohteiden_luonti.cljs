@@ -22,35 +22,44 @@
                  :kohteiden-haku-kaynnissa? false
                  :urakoiden-haku-kaynnissa? false
                  :kohdelomake-auki? false
-                 :liittaminen-kaynnissa {}
+                 :liittaminen-kaynnissa? false
                  :kohderivit nil
                  :kanavat nil
                  :lomakkeen-tiedot nil
                  :valittu-urakka nil
-                 :poistettava-kohde nil}))
+                 :uudet-urakkaliitokset {}})) ; Key on vector, jossa [kohde-id urakka-id] ja arvo on boolean
+
+;; Yleiset
 
 (defrecord Nakymassa? [nakymassa?])
+
+;; Grid
+
+(defrecord AloitaUrakoidenHaku [])
+(defrecord UrakatHaettu [urakat])
+(defrecord UrakatEiHaettu [virhe])
+
 (defrecord HaeKohteet [])
 (defrecord KohteetHaettu [tulos])
 (defrecord KohteetEiHaettu [virhe])
+
+(defrecord ValitseUrakka [urakka])
+
+(defrecord AsetaKohteenUrakkaliitos [kohde-id urakka-id liitetty?])
+(defrecord PaivitaKohteidenUrakkaliitokset [])
+(defrecord LiitoksetPaivitetty [tulos])
+(defrecord LiitoksetEiPaivitetty [])
+
+;; Lomake
+
 (defrecord AvaaKohdeLomake [])
 (defrecord SuljeKohdeLomake [])
 (defrecord ValitseKanava [kanava])
 (defrecord LisaaKohteita [tiedot])
+
 (defrecord TallennaKohteet [])
 (defrecord KohteetTallennettu [tulos])
 (defrecord KohteetEiTallennettu [virhe])
-(defrecord AloitaUrakoidenHaku [])
-(defrecord UrakatHaettu [urakat])
-(defrecord UrakatEiHaettu [virhe])
-(defrecord ValitseUrakka [urakka])
-(defrecord LiitaKohdeUrakkaan [kohde liita? urakka])
-(defrecord KohdeLiitetty [tulos kohde urakka])
-(defrecord KohdeEiLiitetty [virhe kohde urakka])
-(defrecord AsetaPoistettavaKohde [kohde])
-(defrecord PoistaKohde [kohde])
-(defrecord KohdePoistettu [tulos kohde])
-(defrecord KohdeEiPoistettu [virhe])
 
 (defn hae-kanava-urakat! [tulos! fail!]
   (go
@@ -73,14 +82,15 @@
 
 (defn kohderivit [tulos]
   (mapcat
-    (fn [kanava-ja-kohteet]
+    (fn [kohdekokonaisuus]
       (map
         (fn [kohde]
+          ;; Liitetään kohteelle kohdekokonaisuuden (kanavan) tiedot
+          ;; Tarvitaan mm. ryhmittelyä varten.
           (-> kohde
-              (assoc ::kok/id (::kok/id kanava-ja-kohteet))
-              (assoc ::kok/nimi (::kok/nimi kanava-ja-kohteet))
-              (assoc :rivin-teksti (str "FIXME"))))
-        (::kok/kohteet kanava-ja-kohteet)))
+              (assoc ::kok/id (::kok/id kohdekokonaisuus))
+              (assoc ::kok/nimi (::kok/nimi kohdekokonaisuus))))
+        (::kok/kohteet kohdekokonaisuus)))
     tulos))
 
 (defn kanavat [tulos]
@@ -116,45 +126,19 @@
 (defn kohteen-urakat [kohde]
   (str/join ", " (sort (map ::ur/nimi (::kohde/urakat kohde)))))
 
-(defn kohde-kuuluu-urakkaan? [kohde urakka]
-  (boolean
-    ((into #{} (::kohde/urakat kohde)) urakka)))
+(defn kohde-kuuluu-urakkaan? [app kohde urakka]
+  (let [kohteella-ui-urakkaliitos? (contains? (:uudet-urakkaliitokset app)
+                                              [(::kohde/id kohde) (::ur/id urakka)])
+        kohteen-ui-urakkaliitos (get (:uudet-urakkaliitokset app) [(::kohde/id kohde) (::ur/id urakka)])]
+    ;; Ensisijaisesti tutkitaan käyttäjän asettamat, tallentamattomat linkit.
+    ;; Sen jälkeen tutkitaan, kuuluuko kohde urakkaan kannan palauttaman datan perusteella
+    (if kohteella-ui-urakkaliitos?
+      kohteen-ui-urakkaliitos
+      (boolean
+        ((set (map ::ur/id (::kohde/urakat kohde))) (::ur/id urakka))))))
 
 (defn poista-kohde [kohteet kohde]
   (into [] (disj (into #{} kohteet) kohde)))
-
-(defn liittaminen-kaynnissa? [app kohde]
-  (boolean
-    (get-in (:liittaminen-kaynnissa app)
-           [(::kohde/id kohde)
-            (::ur/id (:valittu-urakka app))])))
-
-(defn lisaa-kohteelle-urakka [app muokattava-kohde urakka liita?]
-  (update app :kohderivit
-          (fn [kohteet]
-            (map
-              (fn [kohde]
-                (if (= (::kohde/id kohde) (::kohde/id muokattava-kohde))
-                  (if liita?
-                    (update kohde ::kohde/urakat conj urakka)
-
-                    (update kohde ::kohde/urakat
-                            (fn [urakat]
-                              (into
-                                []
-                                (disj (into #{} urakat) urakka)))))
-
-                  kohde))
-              kohteet))))
-
-(defn liittaminen-kayntiin [app kohde-id urakka-id]
-  (update app :liittaminen-kaynnissa
-          (fn [kohde-ja-urakat]
-            (let [kohde-ja-urakat (or kohde-ja-urakat {})]
-              (if (kohde-ja-urakat kohde-id)
-               (update kohde-ja-urakat kohde-id conj urakka-id)
-
-               (assoc kohde-ja-urakat kohde-id #{urakka-id}))))))
 
 (defn lopeta-liittaminen [app kohde-id urakka-id]
   (update app :liittaminen-kaynnissa
@@ -165,13 +149,17 @@
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
-    (assoc app :nakymassa? nakymassa?))
+    (let [uudet-urakkaliitokset (if (false? nakymassa?)
+                                  {}
+                                  (:uudet-urakkaliitokset app))]
+      (assoc app :nakymassa? nakymassa?
+                 :uudet-urakkaliitokset uudet-urakkaliitokset)))
 
   HaeKohteet
   (process-event [_ app]
     (if-not (:kohteiden-haku-kaynnissa? app)
       (-> app
-          (tt/get! :hae-kanavat-ja-kohteet
+          (tt/get! :hae-kohdekokonaisuudet-ja-kohteet
                    {:onnistui ->KohteetHaettu
                     :epaonnistui ->KohteetEiHaettu})
           (assoc :kohteiden-haku-kaynnissa? true))
@@ -268,66 +256,33 @@
   (process-event [{ur :urakka} app]
     (assoc app :valittu-urakka ur))
 
-  LiitaKohdeUrakkaan
-  (process-event [{kohde :kohde
-                   liita? :liita?
-                   urakka :urakka}
+  AsetaKohteenUrakkaliitos
+  (process-event [{kohde-id :kohde-id
+                   urakka-id :urakka-id
+                   liitetty? :liitetty?}
                   app]
+    (let [liitokset (:uudet-urakkaliitokset app)]
+      (assoc app :uudet-urakkaliitokset
+                 (assoc liitokset
+                   [kohde-id urakka-id]
+                   liitetty?))))
 
-    (let [kohde-id (::kohde/id kohde)
-          urakka-id (::ur/id urakka)]
-      (tt/post! :liita-kohde-urakkaan
-                {:kohde-id kohde-id
-                 :urakka-id urakka-id
-                 :poistettu? (not liita?)}
-                {:onnistui ->KohdeLiitetty
-                 :onnistui-parametrit [kohde-id urakka-id]
-                 :epaonnistui ->KohdeEiLiitetty
-                 :epaonnistui-parametrit [kohde-id urakka-id]})
-
-      (-> app
-          (lisaa-kohteelle-urakka kohde urakka liita?)
-          (liittaminen-kayntiin kohde-id urakka-id))))
-
-  KohdeLiitetty
-  (process-event [{kohde-id :kohde urakka-id :urakka} app]
-    (-> app
-        (lopeta-liittaminen kohde-id urakka-id)))
-
-  KohdeEiLiitetty
-  (process-event [{kohde-id :kohde urakka-id :urakka} app]
-    (viesti/nayta! "Virhe kohteen liittämisessä urakkaan!" :danger)
-    (-> app
-        (lopeta-liittaminen kohde-id urakka-id)))
-
-  AsetaPoistettavaKohde
-  (process-event [{kohde :kohde} app]
-    (assoc app :poistettava-kohde kohde))
-
-  PoistaKohde
-  (process-event [{kohde :kohde} {:keys [poistettava-kohde] :as app}]
-    (if (= poistettava-kohde kohde)
-      (do
-        (tt/post! :poista-kohde
-                  {:kohde-id (::kohde/id kohde)}
-                  {:onnistui ->KohdePoistettu
-                   :onnistui-parametrit [kohde]
-                   :epaonnistui ->KohdeEiPoistettu})
-
-        (-> app
-            (assoc :poistaminen-kaynnissa? true)))
-
-      app))
-
-  KohdePoistettu
-  (process-event [{kohde :kohde} app]
-    (-> app
-        (update :kohderivit poista-kohde kohde)
-        (assoc :poistaminen-kaynnissa? false)
-        (assoc :poistettava-kohde nil)))
-
-  KohdeEiPoistettu
+  PaivitaKohteidenUrakkaliitokset
   (process-event [_ app]
-    (viesti/nayta! "Virhe kohteen poistamisessa!" :danger)
-    (-> app
-        (assoc :poistaminen-kaynnissa? false))))
+    (tt/post! :liita-kohteet-urakkaan
+              {:liitokset (:uudet-urakkaliitokset app)}
+              {:onnistui ->LiitoksetPaivitetty
+               :epaonnistui ->LiitoksetEiPaivitetty})
+    (assoc app :liittaminen-kaynnissa? true))
+
+  LiitoksetPaivitetty
+  (process-event [{tulos :tulos} app]
+    (viesti/nayta! "Kohteiden urakkaliitokset tallennettu." :success)
+    (assoc app :liittaminen-kaynnissa? false
+               :uudet-urakkaliitokset {}
+               :kohderivit (kohderivit tulos)))
+
+  LiitoksetEiPaivitetty
+  (process-event [{kohde-id :kohde urakka-id :urakka} app]
+    (viesti/nayta! "Virhe urakkaliitoksien tallennuksessa!" :danger)
+    (assoc app :liittaminen-kaynnissa? false)))

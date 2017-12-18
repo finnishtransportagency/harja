@@ -28,7 +28,8 @@
             [harja.ui.debug :as debug]
             [harja.domain.kayttaja :as kayttaja]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -89,9 +90,18 @@
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")
     :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne %))}
-   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/havaintoaika :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
-    {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt kohde/fmt-kohteen-nimi :leveys 10}
+   [{:otsikko "Havaintoaika"
+     :nimi
+     ::hairiotilanne/havaintoaika
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
+     :leveys 4}
+    {:otsikko "Kohde"
+     :nimi :hairiotilanteen-kohde
+     :hae (juxt ::hairiotilanne/kohde ::hairiotilanne/kohteenosa)
+     :tyyppi :string
+     :fmt (fn [[kohde osa]] (kohde/fmt-kohde-ja-osa-nimi kohde osa))
+     :leveys 10}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
      :fmt hairio/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
@@ -108,7 +118,7 @@
 
 (defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
-        virhe-atom (r/wrap (::lomake/virheet valittu-hairiotilanne)
+        virhe-atom (r/wrap (:varaosat-taulukon-virheet valittu-hairiotilanne)
                            (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
         sort-fn (fn [materiaalin-kirjaus]
                   (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
@@ -126,12 +136,14 @@
       :otsikko "Varaosat"}
      [{:otsikko "Varaosa"
        :nimi :varaosa
+       :leveys 1
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :valinta
        :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
        :valinnat materiaalit}
       {:otsikko "Käytettävä määrä"
        :nimi :maara
+       :leveys 1
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :positiivinen-numero
        :kokonaisluku? true}]
@@ -192,9 +204,7 @@
      :tyyppi :komponentti
      :palstoja 2
      :komponentti (fn [_]
-                    [varaosataulukko e! app])
-     :validoi [#(when-not (empty? (::lomake/virheet %2))
-                  "virhe")]}
+                    [varaosataulukko e! app])}
     {:nimi :lisaa-varaosa
      :tyyppi :komponentti
      :uusi-rivi? true
@@ -203,50 +213,55 @@
                      #(e! (tiedot/->LisaaMateriaali))
                      {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))
 
-(defn hairiolomakkeen-kentat [e! app kohteet]
-  [{:otsikko "Päivämäärä"
-    :nimi :paivamaara
-    :pakollinen? true
-    :tyyppi :pvm}
-   {:otsikko "Kellonaika"
-    :nimi :aika
-    :pakollinen? true
-    :tyyppi :aika}
-   {:otsikko "Kohde"
-    :nimi ::hairiotilanne/kohde
-    :tyyppi :valinta
-    :pakollinen? true
-    :uusi-rivi? true
-    :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
-    :valinnat kohteet}
-   {:otsikko "Vikaluokka"
-    :nimi ::hairiotilanne/vikaluokka
-    :tyyppi :valinta
-    :pakollinen? true
-    :uusi-rivi? true
-    :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
-    :valinta-arvo :arvo
-    :valinnat [{:arvo :sahkotekninen_vika
-                :nimi "Sähkötekninen vika"}
-               {:arvo :konetekninen_vika
-                :nimi "Konetekninen vika"}
-               {:arvo :liikennevaurio
-                :nimi "Liikennevaurio"}]}
-   {:otsikko "Häiriön syy"
-    :nimi ::hairiotilanne/syy
-    :palstoja 2
-    :pakollinen? true
-    :tyyppi :text
-    :koko [90 8]
-    :uusi-rivi? true}
-   (odottavan-liikenteen-kentat)
-   (korjauksen-kentat e! app)
-   {:otsikko "Kuittaaja"
-    :nimi ::hairiotilanne/kuittaaja
-    :tyyppi :string
-    :uusi-rivi? true
-    :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
-    :muokattava? (constantly false)}])
+(defn hairiolomakkeen-kentat [e! {:keys [valittu-hairiotilanne] :as app} kohteet]
+  (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
+    [{:otsikko "Havaintoaika"
+      :nimi ::hairiotilanne/havaintoaika
+      :pakollinen? true
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt}
+     {:otsikko "Kohde"
+      :nimi ::hairiotilanne/kohde
+      :tyyppi :valinta
+      :pakollinen? true
+      :uusi-rivi? true
+      :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
+      :valinnat kohteet}
+     (when (::hairiotilanne/kohde valittu-hairiotilanne)
+       {:otsikko "Kohteen osa"
+        :nimi ::hairiotilanne/kohteenosa
+        :tyyppi :valinta
+        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+        :valinnat (or valitun-kohteen-osat [])})
+     {:otsikko "Vikaluokka"
+      :nimi ::hairiotilanne/vikaluokka
+      :tyyppi :valinta
+      :pakollinen? true
+      :uusi-rivi? true
+      :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
+      :valinta-arvo :arvo
+      :valinnat [{:arvo :sahkotekninen_vika
+                  :nimi "Sähkötekninen vika"}
+                 {:arvo :konetekninen_vika
+                  :nimi "Konetekninen vika"}
+                 {:arvo :liikennevaurio
+                  :nimi "Liikennevaurio"}]}
+     {:otsikko "Häiriön syy"
+      :nimi ::hairiotilanne/syy
+      :palstoja 2
+      :pakollinen? true
+      :tyyppi :text
+      :koko [90 8]
+      :uusi-rivi? true}
+     (odottavan-liikenteen-kentat)
+     (korjauksen-kentat e! app)
+     {:otsikko "Kuittaaja"
+      :nimi ::hairiotilanne/kuittaaja
+      :tyyppi :string
+      :uusi-rivi? true
+      :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
+      :muokattava? (constantly false)}]))
 
 (defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
                                             tallennus-kaynnissa?
@@ -262,6 +277,7 @@
         {:tallennus-kaynnissa? tallennus-kaynnissa?
          :disabled (or
                      (not oikeus?)
+                     (not (empty? (:varaosat-taulukon-virheet valittu-hairiotilanne)))
                      (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
 
        (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
@@ -299,7 +315,7 @@
                       #(e! (tiedot/->NakymaSuljettu)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
-      @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
+      @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
       [:div
        [debug/debug app]
        (if valittu-hairiotilanne

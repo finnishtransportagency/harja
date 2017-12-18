@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.29</b>  
-<b>Julkaistu: 3.11.2017</b>
+<b>Nykyinen versio: 1.0.30</b>  
+<b>Julkaistu: 27.11.2017</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.30 Julkaistu: 27.11.2017:
+    - Lisätty uusi rajapinta tielupien kirjaamiselle Harjaan
 - Versionumero: 1.0.29 Julkaistu: 3.11.2017:
     - Tilaajan laadunvalvontakonsulteille lisätty oma tehtävä API:n työkoneseurantaan: tilaajan laadunvalvonta. Nämä havainnot näytetään vain tilaajan käyttäjille. 
 - Versionumero: 1.0.28 Julkaistu: 21.9.2017:

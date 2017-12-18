@@ -33,13 +33,21 @@
     ::kohde-id})
 
 (def fmt-kohdeosa-tyyppi
-  {:sulku "Sulku"
-   :silta "Silta"
-   :rautatiesilta "Rautatiesilta"})
+  {:sulku "sulku"
+   :silta "silta"
+   :rautatiesilta "rautatiesilta"})
 
 
 (defn fmt-kohdeosa
   "Palauttaa kohdeosan nimen tai tyypin formatoituna."
   [kohdeosa]
-  (or (::nimi kohdeosa)
-      (fmt-kohdeosa-tyyppi (::tyyppi kohdeosa))))
+  (when-let [s (or (::nimi kohdeosa)
+                   (fmt-kohdeosa-tyyppi (::tyyppi kohdeosa)))]
+    (str/capitalize s)))
+
+(defn silta? [osa]
+  (or (= :silta (::tyyppi osa))
+      (= :rautatiesilta (::tyyppi osa))))
+
+(defn sulku? [osa]
+  (= :sulku (::tyyppi osa)))

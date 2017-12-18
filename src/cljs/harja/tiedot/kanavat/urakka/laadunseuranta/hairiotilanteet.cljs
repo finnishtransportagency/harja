@@ -6,6 +6,7 @@
             [harja.domain.urakka :as urakka]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
@@ -62,14 +63,10 @@
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
-     ;; aika kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
-     ;; tulee punainen virhemerkintä
-     :aika (pvm/map->Aika {:tunnit 0})}))
+     ::hairiotilanne/havaintoaika (pvm/nyt)}))
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
-  (let [paivamaara (:paivamaara hairiotilanne)
-        aika (:aika hairiotilanne)
-        hairiotilanne (-> hairiotilanne
+  (let [hairiotilanne (-> hairiotilanne
                           (select-keys [::hairiotilanne/id
                                         ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
@@ -81,20 +78,18 @@
                                         ::hairiotilanne/syy
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
-                                        ::muokkaustiedot/poistettu?])
-                          (assoc ::hairiotilanne/kuittaaja-id (get-in hairiotilanne [::hairiotilanne/kuittaaja ::kayttaja/id])
-                                 ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
+                                        ::muokkaustiedot/poistettu?
+                                        ::hairiotilanne/havaintoaika])
+                          (assoc ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
-                                 ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
+                                 ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])))]
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
         muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
-        paivamaara (or (::hairiotilanne/havaintoaika hairiotilanne)
-                       (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
-                                                (:aika hairiotilanne)))
+        paivamaara (::hairiotilanne/havaintoaika hairiotilanne)
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
@@ -160,8 +155,7 @@
                                {:onnistui ->MateriaalitHaettu
                                 :epaonnistui ->MateriaalienHakuEpaonnistui})
             (assoc :nakymassa? true
-                   :materiaalien-haku-kaynnissa? true
-                   :materiaalit nil)))))
+                   :materiaalien-haku-kaynnissa? true)))))
 
   NakymaSuljettu
   (process-event [_ app]
@@ -208,7 +202,13 @@
 
   AsetaHairiotilanteenTiedot
   (process-event [{hairiotilanne :hairiotilanne} app]
-    (assoc app :valittu-hairiotilanne hairiotilanne))
+    (let [kohdeosa-vaihtui? (and (some? (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohteenosa]))
+                                 (not= (::hairiotilanne/kohde hairiotilanne)
+                                       (get-in app [:valittu-hairiotilanne ::hairiotilanne/kohde])))
+          hairiotilanne (if kohdeosa-vaihtui?
+                          (assoc hairiotilanne ::hairiotilanne/kohteenosa nil)
+                          hairiotilanne)]
+      (assoc app :valittu-hairiotilanne hairiotilanne)))
 
   TallennaHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {valinnat :valinnat :as app}]
@@ -280,14 +280,9 @@
                                                                          ::materiaalit/pvm (::materiaalit/pvm %)
                                                                          ::materiaalit/id (::materiaalit/id %)}})))
                                             conj (::materiaalit/muutokset materiaalilistaus)))
-                                        materiaalit)
-          paivamaaran-aika (pvm/DateTime->Aika (::hairiotilanne/havaintoaika hairiotilanne))
-          keskenerainen (str (:tunnit paivamaaran-aika) ":"
-                             (:minuutit paivamaaran-aika))]
+                                        materiaalit)]
       (-> app
           (assoc :valittu-hairiotilanne hairiotilanne)
-          (assoc-in [:valittu-hairiotilanne :paivamaara] (::hairiotilanne/havaintoaika hairiotilanne))
-          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika (merge paivamaaran-aika {:keskenerainen keskenerainen})))
           (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset)
           (assoc-in [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit] materiaali-kirjaukset))))
 
@@ -309,5 +304,5 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:valittu-hairiotilanne ::lomake/virheet] virhe)))
+    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe)))
 

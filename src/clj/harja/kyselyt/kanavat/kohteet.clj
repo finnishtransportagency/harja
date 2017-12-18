@@ -165,12 +165,10 @@
                         (merge
                           (if poistettu?
                             {::m/poistaja-id (:id user)
-                             ::m/muokattu (pvm/nyt)
-                             }
+                             ::m/muokattu (pvm/nyt)}
 
                             {::m/muokkaaja-id (:id user)
-                             ::m/muokattu (pvm/nyt)
-                             })
+                             ::m/muokattu (pvm/nyt)})
                           {::m/poistettu? poistettu?})
                         {::kohde/kohde-id kohde-id
                          ::kohde/urakka-id urakka-id})
@@ -191,4 +189,4 @@
                   {::kohde/id kohde-id}))
 
 (defn hae-huoltokohteet [db]
-  (specql/fetch db ::huoltokohde/huoltokohde huoltokohde/perustiedot {}))
+  (sort-by huoltokohde/fmt-huoltokohde-nimi (specql/fetch db ::huoltokohde/huoltokohde huoltokohde/perustiedot {})))
