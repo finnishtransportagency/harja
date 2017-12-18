@@ -11,6 +11,7 @@
             [harja.pvm :as pvm]
             [cljs.spec.alpha :as s]))
 
+
 (deftest hakuargumenttien-muodostaminen
   (let [aikavali [(pvm/luo-pvm 2017 1 1)
                   (pvm/luo-pvm 2018 1 1)]
@@ -147,6 +148,42 @@
            (e! (tiedot/->ValitutEiSiirretty) app)))))
 
 
+
+(def app-tallennustestille {:urakan-materiaalit (:urakan-materiaalit state)
+                            :avattu-toimenpide {::kanavan-toimenpide/id 2
+                                                ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
+                                                ::materiaali/materiaalit (seq [{:maara 3
+                                                                                :varaosa {::materiaali/nimi "Naulat"
+                                                                                          ::materiaali/urakka-id 1
+                                                                                          ::materiaali/pvm nil
+                                                                                          ::materiaali/id 13}}
+                                                                               {:maara 12
+                                                                                :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                          ::materiaali/urakka-id 1
+                                                                                          ::materiaali/pvm nil
+                                                                                          ::materiaali/id 12}}])
+                                                ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
+                                                                                                :varaosa {::materiaali/nimi "Naulat"
+                                                                                                          ::materiaali/urakka-id 1
+                                                                                                          ::materiaali/pvm nil
+                                                                                                          ::materiaali/id 13}}
+                                                                                               {:maara 12
+                                                                                                :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                                          ::materiaali/urakka-id 1
+                                                                                                          ::materiaali/pvm nil
+                                                                                                          ::materiaali/id 12}}])}})
+
+(def tallennettava-vertailumap {::kanavan-toimenpide/materiaalipoistot {}
+                                ::kanavan-toimenpide/materiaalikirjaukset {}})
+(deftest materiaalit-vs-tallennus
+  (let [app app-tallennustestille
+        tyyppi :kokonaishintainen
+        tehtavat nil
+        ;; app (e! (tiedot/->TallennaToimenpide (:avattu-toimenpide app)))
+        tallennettava-toimenpide (toimenpiteet/tallennettava-toimenpide tehtavat toimenpide (-> app :valinnat :urakka) tyyppi)]
+
+    (tarkista-map-arvot tallennettava-vertailumap tallennettava-toimenpide)
+    ))
 
 (deftest materiaalit-vs-AsetaLomakkeenToimenpiteenTiedot
   (let [state {:urakan-materiaalit '({::materiaali/urakka-id 1
