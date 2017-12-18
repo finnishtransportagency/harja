@@ -77,7 +77,7 @@
                                           toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
+        valitun-kohteen-osat (cons nil (into [] (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))))]
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
@@ -92,15 +92,22 @@
       :pakollinen? true}
      (lomake/rivi
        {:otsikko "Kohde"
-       :nimi ::kanavan-toimenpide/kohde
-       :tyyppi :valinta
-       :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
-       :valinnat kohteet})
+        :nimi ::kanavan-toimenpide/kohde
+        :tyyppi :valinta
+        :aseta (fn [rivi arvo]
+                 (if (nil? arvo)
+                   (-> rivi
+                       (assoc ::kanavan-toimenpide/kohteenosa nil)
+                       (assoc ::kanavan-toimenpide/huoltokohde nil)
+                       (assoc ::kanavan-toimenpide/kohde arvo))
+                   (assoc rivi ::kanavan-toimenpide/kohde arvo)))
+        :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
+        :valinnat kohteet})
      (when (::kanavan-toimenpide/kohde toimenpide)
        {:otsikko "Kohteen osa"
         :nimi ::kanavan-toimenpide/kohteenosa
         :tyyppi :valinta
-        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohdeosaa")
         :valinnat (or valitun-kohteen-osat [])})
      (when (::kanavan-toimenpide/kohde toimenpide)
        {:otsikko "Huoltokohde"
@@ -185,7 +192,7 @@
                                 tallenna-lomake-fn poista-toimenpide-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
-        kanavakohteet @kanavaurakka/kanavakohteet
+        kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
         lomake-valmis? (and (not (empty? huoltokohteet))
                             (not (empty? kanavakohteet)))]
     [:div
