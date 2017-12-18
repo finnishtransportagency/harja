@@ -404,8 +404,9 @@
        (not= vanha-tila :valmis)))
 
 (defn tarkista-paallystysilmoituksen-sahkopostilahetys [db fim email urakka-id tuore-paallystysilmoitus vanha-tila]
-
+  (log/debug "TARKISTA MAILI NONI!")
   (when (laheta-paallystysilmoituksesta-sahkoposti? (:tila tuore-paallystysilmoitus) vanha-tila)
+    (log/debug "LÄHETÄ MAILI!!")
     (let [urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
           urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)]
       (viestinta/laheta-sposti-fim-kayttajarooleille
@@ -461,7 +462,7 @@
           tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
 
       (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
-      (tarkista-paallystysilmoituksen-sahkopostilahetys db urakka-id fim email
+      (tarkista-paallystysilmoituksen-sahkopostilahetys db fim email urakka-id
                                                         tuore-paallystysilmoitus
                                                         (:tila vanha-paallystysilmoitus))
 
