@@ -403,9 +403,9 @@
   (and (= uusi-tila :valmis)
        (not= vanha-tila :valmis)))
 
-(defn tarkista-paallystysilmoituksen-sahkopostilahetys [db fim email urakka-id tuore-paallystysilmoitus vanha-tila]
+(defn tarkista-paallystysilmoituksen-sahkopostilahetys [db fim email urakka-id uusi-tila vanha-tila]
   (log/debug "TARKISTA MAILI NONI!")
-  (when (laheta-paallystysilmoituksesta-sahkoposti? (:tila tuore-paallystysilmoitus) vanha-tila)
+  (when (laheta-paallystysilmoituksesta-sahkoposti? uusi-tila vanha-tila)
     (log/debug "LÄHETÄ MAILI!!")
     (let [urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
           urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)]
@@ -414,8 +414,8 @@
          :email email
          :urakka-sampoid urakka-sampoid
          :fim-kayttajaroolit #{"tilaajan urakanvalvoja"}
-         :viesti-otsikko (format "Laatupoikkeamasta tehty selvityspyyntö urakassa %s" urakka-nimi)
-         :viesti-body "POTTI-VIESTI!"}))))
+         :viesti-otsikko "Päällystysilmoitus valmis käsiteltäväksi" ;; TODO Mukaan ainakin kohde, ja urakka?
+         :viesti-body "POTTI-VIESTI!"})))) ;; TODO Body
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
@@ -463,7 +463,7 @@
 
       (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
       (tarkista-paallystysilmoituksen-sahkopostilahetys db fim email urakka-id
-                                                        tuore-paallystysilmoitus
+                                                        (:tila tuore-paallystysilmoitus)
                                                         (:tila vanha-paallystysilmoitus))
 
       ;; Rakennetaan vastaus
