@@ -1,5 +1,15 @@
 [
   {
+    "date": "2017-12-18",
+    "title": "Urakan valvoja voi avata hyväksytyn päälystysilmoituksen",
+    "body": "Tämä ominaisuus on lisätty lähinnä korjauksia varten."
+  },
+  {
+    "date": "2017-12-18",
+    "title": "Päällystysilmoituksen valmistumisesta lähetetään nyt ilmoitus sähköpostiin tilaajan urakanvalvojalle",
+    "body": "Kun urakoitsija painaa, \"valmis tilaajan käsiteltäväksi\" POT-lomakkeella, lähtee siitä ilmoitus tilaajan urakanvalvojalle."
+  },
+  {
     "date": "2017-11-07",
     "title": "Päällystyskohteen takuupäivämäärän voi nyt asettaa usealle kohteelle kerralla",
     "body": "Harja mahdollistaa nyt päällystyskohteen takuupvm:n asettamisen useammalle kohteelle kerralla. Katso <a href=\"https://youtu.be/f2xyQpvJd5k\"> koulutusvideo</a>."
