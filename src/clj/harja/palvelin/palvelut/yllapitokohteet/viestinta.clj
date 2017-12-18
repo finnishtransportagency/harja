@@ -122,8 +122,8 @@
                                 (map :aikataulu-tiemerkinta-loppu yhden-urakan-kohteet))
         eka-kohde (first yhden-urakan-kohteet)
         nakokulma-urakka-nimi (case nakokulma
-                                  :paallystys (:paallystysurakka-nimi eka-kohde)
-                                  :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))
+                                :paallystys (:paallystysurakka-nimi eka-kohde)
+                                :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))
         eka-kohde-osoite {:numero (:tr-numero eka-kohde)
                           :alkuosa (:tr-alkuosa eka-kohde)
                           :alkuetaisyys (:tr-alkuetaisyys eka-kohde)
