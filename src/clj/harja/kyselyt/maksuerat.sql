@@ -107,8 +107,8 @@ SELECT
                                 FROM toimenpidekoodi
                                 WHERE emo = tpk.id))
 
-      --  Kanavaurakoiden yksikköhintaiset
-      WHEN m.tyyppi = 'yksikkohintainen' AND
+      --  Kanavaurakoiden muutos ja lisätyöt
+      WHEN m.tyyppi = 'lisatyo' AND
            (u.tyyppi = 'vesivayla-kanavien-hoito' OR
             u.tyyppi = 'vesivayla-kanavien-korjaus')
         THEN
