@@ -127,7 +127,7 @@
                  [dk.ative/docjure "1.11.0"]
 
                  [com.cemerick/piggieback "0.2.2"]
-                 [figwheel-sidecar "0.5.10"]
+                 [figwheel-sidecar "0.5.14"]
 
                  ;; Performance metriikat
                  [yleisradio/new-reliquary "1.0.0"]
