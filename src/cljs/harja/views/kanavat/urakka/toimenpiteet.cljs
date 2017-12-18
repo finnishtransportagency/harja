@@ -37,7 +37,9 @@
     :nimi :huoltokohde
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])
-    :fmt str/lower-case
+    :fmt #(if %
+            (str/capitalize (str/lower-case %))
+            "")
     :leveys 10}
    {:otsikko "Tehtävä"
     :nimi :toimenpide
