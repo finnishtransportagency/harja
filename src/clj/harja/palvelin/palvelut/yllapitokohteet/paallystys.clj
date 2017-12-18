@@ -406,7 +406,7 @@
   (and (= uusi-tila :valmis)
        (not= vanha-tila :valmis)))
 
-(defn tarkista-paallystysilmoituksen-sahkopostilahetys [db fim email urakka-id paallystyskohde-id uusi-tila vanha-tila]
+(defn laheta-paallystysilmoitussahkoposti-tarvittaessa [db fim email urakka-id paallystyskohde-id uusi-tila vanha-tila]
   (when (laheta-paallystysilmoituksesta-sahkoposti? uusi-tila vanha-tila)
     (let [paallystyskohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
           urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
@@ -475,7 +475,7 @@
           tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
 
       (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
-      (tarkista-paallystysilmoituksen-sahkopostilahetys db fim email urakka-id
+      (laheta-paallystysilmoitussahkoposti-tarvittaessa db fim email urakka-id
                                                         paallystyskohde-id
                                                         (:tila tuore-paallystysilmoitus)
                                                         (:tila vanha-paallystysilmoitus))
