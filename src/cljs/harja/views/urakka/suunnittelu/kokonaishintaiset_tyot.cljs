@@ -445,6 +445,8 @@
               @tyorivit]
 
              [debug/debug @tyorivit]
+             [:div [:span "Valittu hoitokausi"]
+              [debug/debug @u/valittu-hoitokausi]]
 
              (when (nayta-tehtavalista-ja-kustannukset? (:tyyppi @urakka))
                [kokonaishintaiset-tyot-tehtavalista
