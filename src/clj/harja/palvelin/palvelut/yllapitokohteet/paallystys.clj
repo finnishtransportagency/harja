@@ -17,6 +17,8 @@
             [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.kyselyt.urakat :as urakat-q]
+            [hiccup.core :refer [html]]
+            [harja.tyokalut.html :refer [sanitoi]]
             [harja.domain.urakka :as urakka-domain]
             [harja.domain.sopimus :as sopimus-domain]
             [harja.domain.skeema :as skeema]
@@ -401,27 +403,32 @@
                         (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))))
 
 (defn laheta-paallystysilmoituksesta-sahkoposti? [uusi-tila vanha-tila]
-  (log/debug "WANHA TILA " vanha-tila)
-  (log/debug "UUSI TILA " uusi-tila)
   (and (= uusi-tila :valmis)
        (not= vanha-tila :valmis)))
 
 (defn tarkista-paallystysilmoituksen-sahkopostilahetys [db fim email urakka-id paallystyskohde-id uusi-tila vanha-tila]
-  (log/debug "TARKISTA MAILI NONI!")
   (when (laheta-paallystysilmoituksesta-sahkoposti? uusi-tila vanha-tila)
-    (log/debug "LÄHETÄ MAILI!!")
     (let [paallystyskohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
           urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-          urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)]
+          urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)
+          hallintayksikko-id (:id (first (urakat-q/hae-urakan-ely db urakka-id)))
+          viesti (sanitoi (format "Urakan %s kohteen %s päällystysilmoitus valmis käsiteltäväksi"
+                          urakka-nimi
+                          (:nimi paallystyskohde)))
+          url (str "https://extranet.liikennevirasto.fi/harja#urakat/kohdeluettelo-paallystys/paallystysilmoitukset?"
+                   "&hy=" hallintayksikko-id
+                   "&u=" urakka-id)]
       (viestinta/laheta-sposti-fim-kayttajarooleille
         {:fim fim
          :email email
          :urakka-sampoid urakka-sampoid
          :fim-kayttajaroolit #{"tilaajan urakanvalvoja"}
-         :viesti-otsikko (format "Urakan %s kohteen %s päällystysilmoitus valmis käsiteltäväksi"
-                                 urakka-nimi
-                                 (:nimi paallystyskohde))
-         :viesti-body "POTTI-VIESTI!"})))) ;; TODO Body
+         :viesti-otsikko viesti
+         :viesti-body (html
+                        [:div
+                         [:p (str viesti ".")]
+                         [:p "Päällystysilmoitukset Harjassa: "
+                          [:a {:href url} url]]])}))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
