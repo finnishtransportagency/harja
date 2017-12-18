@@ -4,7 +4,7 @@
             [harja.ui.ikonit :as ikonit]))
 
 (def pahoitteluviesti
-  "Hupsista, Harja räsähti! Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. Klikkaa tähän, niin pääset lähettämään virheraportin.")
+  "Hupsista, Harja räsähti! Olemme pahoillamme. Kuulisimme mielellämme miten sait vian esiin. Klikkaa tähän, niin pääset lähettämään virheraportin. Mikäli ongelma toistuu, yritä ladata Harja uudelleen päivittämällä sivu.")
 
 (defn rendaa-virhe [e]
   (let [auki (atom false)
