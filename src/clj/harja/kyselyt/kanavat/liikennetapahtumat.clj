@@ -236,7 +236,7 @@
         kohde (hae-kohteen-edellinen-tapahtuma db tiedot)]
     {:ylos ylos
      :alas alas
-     :kohde kohde}))
+     :edellinen kohde}))
 
 (defn- alus-kuuluu-tapahtumaan? [db alus tapahtuma]
   (some?
@@ -257,8 +257,7 @@
                          (specql/fetch db
                                        ::ketjutus/liikennetapahtuman-ketjutus
                                        #{::ketjutus/tapahtumasta-id}
-                                       {::ketjutus/alus-id alus-id
-                                        ::ketjutus/tapahtumaan-id op/null?})))]
+                                       {::ketjutus/alus-id alus-id})))]
     (boolean
       (when tapahtuma-id
        (not-empty
@@ -268,15 +267,12 @@
                        {::lt/id tapahtuma-id
                         ::lt/urakka-id urakka-id}))))))
 
-(defn vaadi-ketjutus-kuuluu-urakkaan! [db alus-id urakka-id]
-  (assert (ketjutus-kuuluu-urakkaan? db alus-id urakka-id) (str "Aluksen " alus-id " tapahtuma ei kuulu urakkaan " urakka-id)))
-
 (defn poista-ketjutus! [db alus-id urakka-id]
-  (vaadi-ketjutus-kuuluu-urakkaan! db alus-id urakka-id)
-  (specql/delete! db
-                  ::ketjutus/liikennetapahtuman-ketjutus
-                  {::ketjutus/alus-id alus-id
-                   ::ketjutus/tapahtumaan-id op/null?}))
+  (when (ketjutus-kuuluu-urakkaan? db alus-id urakka-id)
+    (specql/delete! db
+                    ::ketjutus/liikennetapahtuman-ketjutus
+                    {::ketjutus/alus-id alus-id
+                     ::ketjutus/tapahtumaan-id op/null?})))
 
 (defn vapauta-ketjutus! [db tapahtuma-id]
   (specql/update! db
@@ -435,16 +431,16 @@
     (doseq [suunta suunnat]
       (doseq [kohteelle-id (hae-seuraavat-kohteet db kohteelta-id suunta)]
         (doseq [alus (filter (comp (partial sama-suunta? suunta) ::lt-alus/suunta) alukset)]
-          (when-not (ketjutus-olemassa? db alus)
-            (specql/insert! db
-                            ::ketjutus/liikennetapahtuman-ketjutus
-                            {::ketjutus/kohteelle-id kohteelle-id
-                             ::ketjutus/kohteelta-id kohteelta-id
-                             ::ketjutus/alus-id (::lt-alus/id alus)
-                             ::ketjutus/tapahtumasta-id (::lt/id tapahtuma)
+          (specql/upsert! db
+                          ::ketjutus/liikennetapahtuman-ketjutus
+                          #{::ketjutus/alus-id}
+                          {::ketjutus/kohteelle-id kohteelle-id
+                           ::ketjutus/kohteelta-id kohteelta-id
+                           ::ketjutus/alus-id (::lt-alus/id alus)
+                           ::ketjutus/tapahtumasta-id (::lt/id tapahtuma)
 
-                             ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
-                             ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)})))))))
+                           ::ketjutus/urakka-id (::lt/urakka-id tapahtuma)
+                           ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)}))))))
 
 (defn poista-toiminto! [db user toiminto]
   (specql/update! db

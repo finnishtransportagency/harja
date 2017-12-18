@@ -54,13 +54,17 @@
          (e! (tiedot/->HairiotilanteetEiHaettu)))))
 
 (deftest LisaaHairiotilanne
-  (is (= {:valittu-hairiotilanne {::hairiotilanne/sopimus-id nil
-                                  ::hairiotilanne/kuittaaja {::kayttaja/id nil
-                                                             ::kayttaja/etunimi nil
-                                                             ::kayttaja/sukunimi nil}
-                                  :aika (pvm/map->Aika {:tunnit 0})}}
+  (let [t (e! (tiedot/->LisaaHairiotilanne))]
 
-         (e! (tiedot/->LisaaHairiotilanne)))))
+    (is (= {::hairiotilanne/sopimus-id nil
+            ::hairiotilanne/kuittaaja {::kayttaja/id nil
+                                       ::kayttaja/etunimi nil
+                                       ::kayttaja/sukunimi nil}}
+           (-> t
+               :valittu-hairiotilanne
+               (dissoc ::hairiotilanne/havaintoaika))))
+
+    (is (some? (get-in t [:valittu-hairiotilanne ::hairiotilanne/havaintoaika])))))
 
 (deftest ValitseHairiotilanne
   (let [state {:materiaalit '({::materiaali/urakka-id 1
@@ -90,9 +94,6 @@
         vastaus {:materiaalit (:materiaalit state)
                  :valittu-hairiotilanne {::hairiotilanne/id 2
                                          ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 10)
-                                         :paivamaara (pvm/luo-pvm 2017 11 10)
-                                         :aika (pvm/map->Aika (merge (pvm/DateTime->Aika (pvm/luo-pvm 2017 11 10))
-                                                                     {:keskenerainen "0:0"}))
                                          ::materiaali/materiaalit (seq [{:maara 3
                                                                          :varaosa {::materiaali/nimi "Naulat"
                                                                                    ::materiaali/urakka-id 1
