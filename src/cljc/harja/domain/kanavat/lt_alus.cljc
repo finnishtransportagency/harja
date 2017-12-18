@@ -43,17 +43,8 @@
    :MAT ["MAT" "- Matkustajalaiva"]
    :PRO ["PRO" "- Proomu"]
    :RAH ["RAH" "- Rahtilaiva"]
-   :SEK ["SEK" "- "]
+   :SEK ["SEK" "- Sekalainen"]
    :ÖLJ ["ÖLJ" "- Öljylaiva"]})
-
-(defn tayta-lukumaara? [alus]
-  (#{:HUV} (::laji alus)))
-
-(defn tayta-nippuluku? [alus]
-  (#{:HIN :LAU} (::laji alus)))
-
-(defn tayta-matkustajamaara? [alus]
-  (#{:HUV :MAT} (::laji alus)))
 
 (def aluslajit (keys aluslajit*))
 

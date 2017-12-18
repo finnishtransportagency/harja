@@ -63,14 +63,10 @@
      ::hairiotilanne/kuittaaja {::kayttaja/id (:id kayttaja)
                                 ::kayttaja/etunimi (:etunimi kayttaja)
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
-     ;; aika-kentällä pitää olla tunti määritetty tai sen kentän alapuolelle
-     ;; tulee punainen virhemerkintä
-     :aika (pvm/map->Aika {:tunnit 0})}))
+     ::hairiotilanne/havaintoaika (pvm/nyt)}))
 
 (defn tallennettava-hairiotilanne [hairiotilanne]
-  (let [paivamaara (:paivamaara hairiotilanne)
-        aika (:aika hairiotilanne)
-        hairiotilanne (-> hairiotilanne
+  (let [hairiotilanne (-> hairiotilanne
                           (select-keys [::hairiotilanne/id
                                         ::hairiotilanne/sopimus-id
                                         ::hairiotilanne/paikallinen-kaytto?
@@ -82,20 +78,18 @@
                                         ::hairiotilanne/syy
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
-                                        ::muokkaustiedot/poistettu?])
+                                        ::muokkaustiedot/poistettu?
+                                        ::hairiotilanne/havaintoaika])
                           (assoc ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
-                                 ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])
-                                 ::hairiotilanne/havaintoaika (pvm/yhdista-pvm-ja-aika paivamaara aika)))]
+                                 ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])))]
     hairiotilanne))
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
         muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
-        paivamaara (or (::hairiotilanne/havaintoaika hairiotilanne)
-                       (pvm/yhdista-pvm-ja-aika (:paivamaara hairiotilanne)
-                                                (:aika hairiotilanne)))
+        paivamaara (::hairiotilanne/havaintoaika hairiotilanne)
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
@@ -286,14 +280,9 @@
                                                                          ::materiaalit/pvm (::materiaalit/pvm %)
                                                                          ::materiaalit/id (::materiaalit/id %)}})))
                                             conj (::materiaalit/muutokset materiaalilistaus)))
-                                        materiaalit)
-          paivamaaran-aika (pvm/DateTime->Aika (::hairiotilanne/havaintoaika hairiotilanne))
-          keskenerainen (str (:tunnit paivamaaran-aika) ":"
-                             (:minuutit paivamaaran-aika))]
+                                        materiaalit)]
       (-> app
           (assoc :valittu-hairiotilanne hairiotilanne)
-          (assoc-in [:valittu-hairiotilanne :paivamaara] (::hairiotilanne/havaintoaika hairiotilanne))
-          (assoc-in [:valittu-hairiotilanne :aika] (pvm/map->Aika (merge paivamaaran-aika {:keskenerainen keskenerainen})))
           (assoc-in [:valittu-hairiotilanne ::materiaalit/materiaalit] materiaali-kirjaukset)
           (assoc-in [:valittu-hairiotilanne ::materiaalit/muokkaamattomat-materiaalit] materiaali-kirjaukset))))
 

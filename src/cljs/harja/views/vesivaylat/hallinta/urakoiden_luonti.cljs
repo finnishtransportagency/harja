@@ -21,7 +21,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -228,9 +229,10 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakat)))
     (fn [e! {:keys [haetut-urakat urakoiden-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää urakka"
+       [valinnat/urakkatoiminnot {}
+        [napit/uusi "Lisää urakka"
         #(e! (tiedot/->UusiUrakka))
-        {:disabled (or (not (oikeudet/hallinta-vesivaylat)) (nil? haetut-urakat))}]
+        {:disabled (or (not (oikeudet/hallinta-vesivaylat)) (nil? haetut-urakat))}]]
        [grid/grid
         {:otsikko (if (and (some? haetut-urakat) urakoiden-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään
