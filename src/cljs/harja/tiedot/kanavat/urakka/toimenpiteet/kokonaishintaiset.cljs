@@ -93,8 +93,7 @@
   NakymaAvattu
   (process-event [_ {:keys [huoltokohteiden-haku-kaynnissa?] :as app}]
     (if huoltokohteiden-haku-kaynnissa?
-      (assoc app :nakymassa? true
-             )
+      (assoc app :nakymassa? true)
       (let [aseta-valinnat! (tuck/send-async! ->PaivitaValinnat (alkuvalinnat))]
         (go (aseta-valinnat!))
         (-> app
@@ -129,10 +128,6 @@
           (not (:haku-kaynnissa? app)))
       (let [argumentit (toimenpiteet/muodosta-kohteiden-hakuargumentit valinnat :kokonaishintainen)]
         (-> app
-            (tuck-apurit/post! :hae-kanavatoimenpiteet
-                               argumentit
-                               {:onnistui ->ToimenpiteetHaettu
-                                :epaonnistui ->ToimenpiteidenHakuEpaonnistui})
             (tuck-apurit/post! :hae-kanavatoimenpiteet
                                argumentit
                                {:onnistui ->ToimenpiteetHaettu
