@@ -219,13 +219,14 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
                                                  :data data})]
                  (if muokattava?
                    (if (and (= :valinta (:tyyppi s))
-                            (= 1 (count (:valinnat s)))
+                            (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data))))
                             (:valitse-ainoa? s))
-                     (do (reset! arvo (first (:valinnat s)))
+                     (do (reset! arvo (if-let [hae (:valinta-arvo s)]
+                                        (hae (first (:valinnat s)))
+                                        (first (:valinnat s))))
                          [:div.form-control-static
-                          (if fmt
-                            (fmt ((or hae #(get % nimi)) data))
-                            (nayta-arvo s arvo))])
+                          ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
+                          (nayta-arvo s arvo)])
 
                      (do (have #(contains? % :tyyppi) s)
                          [tee-kentta (assoc s :lomake? true) arvo]))
