@@ -90,9 +90,18 @@
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")
     :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne %))}
-   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/havaintoaika :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
-    {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt kohde/fmt-kohteen-nimi :leveys 10}
+   [{:otsikko "Havaintoaika"
+     :nimi
+     ::hairiotilanne/havaintoaika
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
+     :leveys 4}
+    {:otsikko "Kohde"
+     :nimi :hairiotilanteen-kohde
+     :hae (juxt ::hairiotilanne/kohde ::hairiotilanne/kohteenosa)
+     :tyyppi :string
+     :fmt (fn [[kohde osa]] (kohde/fmt-kohde-ja-osa-nimi kohde osa))
+     :leveys 10}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
      :fmt hairio/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
@@ -109,7 +118,7 @@
 
 (defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
-        virhe-atom (r/wrap (::lomake/virheet valittu-hairiotilanne)
+        virhe-atom (r/wrap (:varaosat-taulukon-virheet valittu-hairiotilanne)
                            (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
         sort-fn (fn [materiaalin-kirjaus]
                   (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
@@ -195,9 +204,7 @@
      :tyyppi :komponentti
      :palstoja 2
      :komponentti (fn [_]
-                    [varaosataulukko e! app])
-     :validoi [#(when-not (empty? (::lomake/virheet %2))
-                  "virhe")]}
+                    [varaosataulukko e! app])}
     {:nimi :lisaa-varaosa
      :tyyppi :komponentti
      :uusi-rivi? true
@@ -209,14 +216,11 @@
 (defn hairiolomakkeen-kentat [e! {:keys [valittu-hairiotilanne] :as app} kohteet]
   (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
         valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
-    [{:otsikko "Päivämäärä"
-      :nimi :paivamaara
+    [{:otsikko "Havaintoaika"
+      :nimi ::hairiotilanne/havaintoaika
       :pakollinen? true
-      :tyyppi :pvm}
-     {:otsikko "Kellonaika"
-      :nimi :aika
-      :pakollinen? true
-      :tyyppi :aika}
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt}
      {:otsikko "Kohde"
       :nimi ::hairiotilanne/kohde
       :tyyppi :valinta
@@ -273,6 +277,7 @@
         {:tallennus-kaynnissa? tallennus-kaynnissa?
          :disabled (or
                      (not oikeus?)
+                     (not (empty? (:varaosat-taulukon-virheet valittu-hairiotilanne)))
                      (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
 
        (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))

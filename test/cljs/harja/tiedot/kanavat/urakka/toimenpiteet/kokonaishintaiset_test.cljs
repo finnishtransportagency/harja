@@ -65,12 +65,14 @@
          (e! (tiedot/->ToimenpiteidenHakuEpaonnistui)))))
 
 (deftest UusiToimenpide
-  (is (= {:avattu-toimenpide {::kanavan-toimenpide/sopimus-id nil
-                               ::kanavan-toimenpide/kuittaaja
-                               {::kayttaja/id nil
-                                ::kayttaja/etunimi nil
-                                ::kayttaja/sukunimi nil}}}
-         (e! (tiedot/->UusiToimenpide)))))
+  (let [tulos (e! (tiedot/->UusiToimenpide))]
+    (is (= {::kanavan-toimenpide/sopimus-id nil
+            ::kanavan-toimenpide/kuittaaja
+            {::kayttaja/id nil
+             ::kayttaja/etunimi nil
+             ::kayttaja/sukunimi nil}}
+           (-> tulos :avattu-toimenpide (dissoc ::kanavan-toimenpide/pvm))))
+    (is (some? (get-in tulos [:avattu-toimenpide ::kanavan-toimenpide/pvm])))))
 
 (deftest TyhjennaValittuToimenpide
   (is (nil? (:avattu-toimenpide (e! (tiedot/->TyhjennaAvattuToimenpide))))))

@@ -285,17 +285,6 @@
                                     ::osa/nimi "Iso silta"
                                     ::osa/oletuspalvelumuoto :kauko}]})))))
 
-(deftest sisaltaa-sulun?
-  (is (true? (tiedot/kohde-sisaltaa-sulun? {::kohde/kohteenosat [{::osa/tyyppi :sulku}]})))
-  (is (true? (tiedot/kohde-sisaltaa-sulun? {::kohde/kohteenosat [{::osa/tyyppi :sulku}
-                                                                 {::osa/tyyppi :sulku}]})))
-  (is (true? (tiedot/kohde-sisaltaa-sulun? {::kohde/kohteenosat [{::osa/tyyppi :sulku}
-                                                                 {::osa/tyyppi :silta}]})))
-
-  (is (false? (tiedot/kohde-sisaltaa-sulun? {::kohde/kohteenosat []})))
-  (is (false? (tiedot/kohde-sisaltaa-sulun? {::kohde/kohteenosat [{::osa/tyyppi :rautatiesilta}
-                                                                 {::osa/tyyppi :silta}]}))))
-
 (deftest tapahtuma-sisaltaa-sulun?
   (is (true? (tiedot/tapahtuman-kohde-sisaltaa-sulun? {::lt/kohde {::kohde/kohteenosat [{::osa/tyyppi :sulku}]}})))
   (is (true? (tiedot/tapahtuman-kohde-sisaltaa-sulun? {::lt/kohde {::kohde/kohteenosat [{::osa/tyyppi :sulku}
@@ -652,8 +641,8 @@
           :edellisten-haku-kaynnissa? false
           :valittu-liikennetapahtuma {::lt/vesipinta-alaraja 1
                                       ::lt/vesipinta-ylaraja 2}}
-         (e! (tiedot/->EdellisetTiedotHaettu {:kohde {::lt/vesipinta-alaraja 1
-                                                      ::lt/vesipinta-ylaraja 2}
+         (e! (tiedot/->EdellisetTiedotHaettu {:edellinen {::lt/vesipinta-alaraja 1
+                                                          ::lt/vesipinta-ylaraja 2}
                                               :ylos {:foo :bar}
                                               :alas {:baz :baz}})))))
 

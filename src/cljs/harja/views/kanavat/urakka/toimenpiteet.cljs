@@ -34,10 +34,9 @@
     :leveys 10
     :hae kanavan-toimenpide/fmt-toimenpiteen-kohde}
    {:otsikko "Huolto\u00ADkohde"
-    :nimi :huoltokohde
+    :nimi ::kanavan-toimenpide/huoltokohde
     :tyyppi :string
-    :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])
-    :fmt str/lower-case
+    :fmt kanavan-huoltokohde/fmt-huoltokohde-nimi
     :leveys 10}
    {:otsikko "Tehtävä"
     :nimi :toimenpide
@@ -78,13 +77,14 @@
                                           toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
+        valitun-kohteen-osat (cons nil (into [] (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))))]
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
       :valinta-arvo first
       :valinta-nayta second
       :valinnat sopimukset
+      :valitse-ainoa? true
       :pakollinen? true}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
@@ -93,30 +93,38 @@
       :pakollinen? true}
      (lomake/rivi
        {:otsikko "Kohde"
-       :nimi ::kanavan-toimenpide/kohde
-       :tyyppi :valinta
-       :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
-       :valinnat kohteet})
+        :nimi ::kanavan-toimenpide/kohde
+        :tyyppi :valinta
+        :aseta (fn [rivi arvo]
+                 (if (nil? arvo)
+                   (-> rivi
+                       (assoc ::kanavan-toimenpide/kohteenosa nil)
+                       (assoc ::kanavan-toimenpide/huoltokohde nil)
+                       (assoc ::kanavan-toimenpide/kohde arvo))
+                   (assoc rivi ::kanavan-toimenpide/kohde arvo)))
+        :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
+        :valinnat kohteet})
      (when (::kanavan-toimenpide/kohde toimenpide)
        {:otsikko "Kohteen osa"
         :nimi ::kanavan-toimenpide/kohteenosa
         :tyyppi :valinta
-        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohdeosaa")
         :valinnat (or valitun-kohteen-osat [])})
      (when (::kanavan-toimenpide/kohde toimenpide)
        {:otsikko "Huoltokohde"
         :nimi ::kanavan-toimenpide/huoltokohde
         :tyyppi :valinta
-        :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
-                              (str/lower-case nimi))
+        :valinta-nayta #(or (when-let [nimi (kanavan-huoltokohde/fmt-huoltokohde-nimi %)]
+                              nimi)
                             "- Valitse huoltokohde -")
-        :valinnat huoltokohteet
+        :valinnat (sort-by kanavan-huoltokohde/fmt-huoltokohde-nimi huoltokohteet)
         :pakollinen? true})
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
       :tyyppi :valinta
       :uusi-rivi? true
+      :valitse-ainoa? true
       :valinnat toimenpideinstanssit
       :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
       :valinta-arvo :tpi_id
@@ -186,7 +194,7 @@
                                 tallenna-lomake-fn poista-toimenpide-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
-        kanavakohteet @kanavaurakka/kanavakohteet
+        kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
         lomake-valmis? (and (not (empty? huoltokohteet))
                             (not (empty? kanavakohteet)))]
     [:div
