@@ -135,7 +135,7 @@
                                       materiaalipoistot ::toimenpide/materiaalipoistot
                                       :as toimenpide}]
   (assert (integer? urakka-id) "Materiaalikirjauksia ei voi tallentaa ilman urakka id:tä")
-  (assert (integer? toimenpide-id) (str "Toimenpiteen materiaalikirjausta ei voi tallentaa ilman häiriö-id:tä - " toimenpide-id))
+  (assert (integer? toimenpide-id) (str "Toimenpiteen materiaalikirjausta ei voi tallentaa ilman toimenpide-id:tä - " toimenpide-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   (log/debug "tallenna-materiaalikirjaukset: kirjauksia/poistoja" (count materiaalikirjaukset) (count materiaalipoistot))
   (doseq [kirjaus-ilman-tpid materiaalikirjaukset
@@ -149,6 +149,8 @@
                                                     urakka-id ::toimenpide/urakka-id
                                                     :as toimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
+  (log/debug "toimenpide-map: ")
+  (clojure.pprint/pprint toimenpide)
   ;; Toimenpide kuuluu urakkaan
   (tietoturva/vaadi-linkitys db ::toimenpide/kanava-toimenpide ::toimenpide/id
                              (::toimenpide/id toimenpide) ::toimenpide/urakka-id urakka-id)
@@ -163,7 +165,7 @@
   (jdbc/with-db-transaction [db db]
     (let [toimenpide-ilman-materiaaleja (dissoc toimenpide ::toimenpide/materiaalikirjaukset ::toimenpide/materiaalipoistot)
           tallennettu-toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide-ilman-materiaaleja)]
-    (tallenna-materiaalikirjaukset db fim email user urakka-id tallennettu-toimenpide-map))))
+      (tallenna-materiaalikirjaukset db fim email user urakka-id (merge toimenpide tallennettu-toimenpide-map)))))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
@@ -199,9 +201,10 @@
       (fn [user {toimenpide ::toimenpide/tallennettava-kanava-toimenpide
                  hakuehdot ::toimenpide/hae-kanavatoimenpiteet-kysely}]
         (tallenna-kanavatoimenpide db fim email user toimenpide)
-        (hae-kanavatoimenpiteet db user hakuehdot))
+        {:kanavatoimenpiteet (hae-kanavatoimenpiteet db user hakuehdot)
+         :materiaalilistaus (q-materiaali/hae-materiaalilistaus db {::materiaali/urakka-id (::toimenpide/urakka-id toimenpide)})})
       {:kysely-spec ::toimenpide/tallenna-kanavatoimenpide-kutsu
-       :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})
+       :vastaus-spec ::toimenpide/tallenna-kanavatoimenpide-vastaus})
     this)
 
   (stop [this]

@@ -39,7 +39,7 @@
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
 (defrecord TallennaToimenpide [toimenpide])
-(defrecord ToimenpideTallennettu [toimenpiteet])
+(defrecord ToimenpideTallennettu [vastaus])
 (defrecord ToimenpiteidenTallentaminenEpaonnistui [])
 (defrecord PoistaToimenpide [toimenpide])
 ;; Rivien valinta ja niiden toiminnot
@@ -236,8 +236,9 @@
                                            :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
-  (process-event [{toimenpiteet :toimenpiteet} app]
-    (toimenpiteet/toimenpide-tallennettu app toimenpiteet))
+  (process-event [{vastaus :vastaus} app]
+    (log "ToimenpiteetTallennettu: saatiin vastaus " (pr-str vastaus))
+    (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus)))
 
   ToimenpiteidenTallentaminenEpaonnistui
   (process-event [_ app]

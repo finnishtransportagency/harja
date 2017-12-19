@@ -75,8 +75,8 @@
         materiaalit (materiaalilistaus->grid toimenpide materiaalilistaukset)
         toimenpide (assoc toimenpide ::materiaalit/materiaalit materiaalit
                              ::materiaalit/muokkaamattomat-materiaalit materiaalit)]
-    (log "alt: lopullinen materiaalit:")
-    (cljs.pprint/pprint materiaalit)
+    ;; (log "alt: asetetaan materiaalit:")
+    ;; (cljs.pprint/pprint materiaalit)
     (assoc app :avattu-toimenpide toimenpide)))
 
 
@@ -136,7 +136,7 @@
       ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
       (assoc varaosa
              ::materiaalit/maara (- (:maara m-kirjaus))
-             ::materiaalit/lisätieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
+             ::materiaalit/lisatieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
 
 (defn tallennettavat-materiaalit [tp]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
@@ -186,6 +186,7 @@
     app
     (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]) tyyppi)
           hakuehdot (muodosta-kohteiden-hakuargumentit valinnat tyyppi)]
+      (log "tallenna-toimenpide: tallennettava tp " (pr-str toimenpide))
       (-> app
           (tuck-apurit/post! :tallenna-kanavatoimenpide
                              {::kanavatoimenpide/tallennettava-kanava-toimenpide toimenpide
@@ -194,11 +195,14 @@
                               :epaonnistui toimenpide-ei-tallennettu})
           (assoc :tallennus-kaynnissa? true)))))
 
-(defn toimenpide-tallennettu [app toimenpiteet]
+(defn toimenpide-tallennettu [app uudet-toimenpiteet uusi-materiaalilistaus]
   (viesti/nayta! "Toimenpide tallennettu" :success)
+  ;; tässä saatu materiaalilistaus on samassa muodossa kuin :hae-vv-materiaalilistaus -palvelulta tuleva
+
   (assoc app :tallennus-kaynnissa? false
-             :avattu-toimenpide nil
-             :toimenpiteet toimenpiteet))
+         :avattu-toimenpide nil
+         :urakan-materiaalit uusi-materiaalilistaus
+         :toimenpiteet uudet-toimenpiteet))
 
 (defn toimenpide-ei-tallennettu [app]
   (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
