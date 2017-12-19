@@ -72,9 +72,6 @@
                      (assoc toimenpide ::kanavatoimenpide/kohteenosa nil)
                      toimenpide)
         materiaalilistaukset (:urakan-materiaalit app)
-        ;; todo: ei toimi ihan näin, urakan-materiaalit on "materiaalilistaus" eli rivi per tyyppi,
-        ;;  pitää kaivaa sen muutoksista
-
         materiaalit (materiaalilistaus->grid toimenpide materiaalilistaukset)
         toimenpide (assoc toimenpide ::materiaalit/materiaalit materiaalit
                              ::materiaalit/muokkaamattomat-materiaalit materiaalit)]
