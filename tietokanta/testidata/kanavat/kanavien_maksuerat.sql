@@ -67,7 +67,7 @@ VALUES ((SELECT id
         'indeksi');
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero
                                                      FROM maksuera
-                                                     WHERE nimi = 'Väylänhoito : Lisätyöt'));
+                                                     WHERE nimi = 'Väylänhoito : Indeksit'));
 
 --  Väylänhoito : Bonukset
 INSERT INTO maksuera (toimenpideinstanssi,
