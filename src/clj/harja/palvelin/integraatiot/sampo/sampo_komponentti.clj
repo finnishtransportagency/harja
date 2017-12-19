@@ -56,10 +56,7 @@
   Maksueralahetys
   (laheta-maksuera-sampoon [{:keys [sonja db integraatioloki]} numero]
     (let [urakkaid (q-maksuerat/hae-maksueran-urakka db numero)
-          urakan-tyyppi (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakkaid)))
-          summat (case urakan-tyyppi
-                   "vesivayla-kanavien-hoito" (q-maksuerat/hae-kanavaurakan-maksuerien-summat db urakkaid)
-                   "hoito" (q-maksuerat/hae-teiden-hoidon-urakan-maksuerien-summat db urakkaid))
+          summat (q-maksuerat/hae-urakan-maksueran-summat db urakkaid)
           maksueran-lahetys (maksuerat/laheta-maksuera sonja integraatioloki db lahetysjono-ulos numero summat)
           kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-kustannussuunitelma sonja
                                                                                           integraatioloki

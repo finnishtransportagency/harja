@@ -42,12 +42,9 @@
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
-  (let [urakan-tyyppi (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id)))
-        summat (into {}
+  (let [summat (into {}
                      (map (juxt :tpi_id identity))
-                     (case urakan-tyyppi
-                       "vesivayla-kanavien-hoito" (q/hae-kanavaurakan-maksuerien-summat db urakka-id)
-                       "hoito"(q/hae-teiden-hoidon-urakan-maksuerien-summat db urakka-id)))
+                     (q/hae-urakan-maksueran-summat db urakka-id))
         maksuerat (into []
                         (comp maksuera-xf
                               (map (fn [maksuera]
