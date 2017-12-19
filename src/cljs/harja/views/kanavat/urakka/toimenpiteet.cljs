@@ -91,9 +91,6 @@
                             (sort-by vertailuavaimet-jarjestysnumerolla avatun-materiaalit))
                     #(muokkaa-materiaaleja-fn (sort-by vertailuavaimet-jarjestysnumerolla (vals %)))
                     )]
-    (log "varaosataulukko: muokatut sis " (if muokatut (pr-str @muokatut) "nil") )
-    (log "materiaalit sis " (pr-str avatun-materiaalit))
-    (log "avatun avaimet " (pr-str (keys avattu-toimenpide)))
     [grid/muokkaus-grid
      {:voi-muokata? voi-muokata?
       :voi-lisata? false
