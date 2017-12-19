@@ -232,7 +232,6 @@
 
   ToimenpideTallennettu
   (process-event [{vastaus :vastaus} app]
-    (log "ToimenpiteetTallennettu: saatiin vastaus " (pr-str vastaus))
     (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus)))
 
   ToimenpiteidenTallentaminenEpaonnistui
@@ -248,7 +247,6 @@
   HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
     (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
-    (log "HaeMateriaalit " materiaalien-haku-kaynnissa?)
     (when-not materiaalien-haku-kaynnissa?
       (let [urakka-id (:id @navigaatio/valittu-urakka)]
         (-> app
@@ -261,7 +259,6 @@
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]
-    (log "MateriaalitHaettu, saatiin" (count materiaalit))
     (assoc app
            :urakan-materiaalit materiaalit
            :materiaalien-haku-kaynnissa? false))
@@ -274,19 +271,17 @@
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
     (if (:avattu-toimenpide app)
-      (update app :avattu-toimenpide #(assoc % ::materiaalit/materiaalit materiaalit))
+      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit)
       app))
 
   LisaaMateriaali
   (process-event [_ app]
     ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
-    (log "LisaaMateriaali kutsuttu")
     (update-in app
                [:avattu-toimenpide ::materiaalit/materiaalit]
                #(let [vanha-id (apply max (map :jarjestysnumero %))
                       uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
-                  (log  )
                   (conj (vec %) {:jarjestysnumero uusi-id}))))
 
   LisaaVirhe
