@@ -110,12 +110,12 @@
       (is tallennus-kaynnissa?))))
 
 (deftest ToimenpideTallennettu
-  (let [haetut-toimenpiteet [{:foo "bar"}]
+  (let [haetut-toimenpiteet {:kanavatoimenpiteet [{:foo "bar"}]}
         {:keys [tallennus-kaynnissa? avattu-toimenpide toimenpiteet]}
         (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet))]
     (is (false? tallennus-kaynnissa?))
     (is (nil? avattu-toimenpide))
-    (is (= haetut-toimenpiteet toimenpiteet))))
+    (is (= (:kanavatoimenpiteet haetut-toimenpiteet) toimenpiteet))))
 
 (deftest ToimenpiteidenTallentaminenEpaonnistui
   (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteidenTallentaminenEpaonnistui))))))
@@ -201,7 +201,7 @@
                                                                                                           ::materiaali/id 12}}])}})
 
 (def tallennettava-vertailumap {::kanavan-toimenpide/materiaalipoistot '({:harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/id 12})
-                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisätieto "Kohteen  materiaali"})
+                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})
 })
 (deftest materiaalit-vs-tallennus
   (let [app app-tallennustestille
@@ -266,3 +266,8 @@
                                                                                                    ::materiaali/id 12}}])}}]
 
     (tarkista-map-arvot (:avattu-toimenpide vastaus) (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot kysely) state)))))
+
+
+
+({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisätieto "Kohteen  materiaali"})
+({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})

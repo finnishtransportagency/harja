@@ -16,7 +16,7 @@
 
 (deftest PaivitaValinnat
   (vaadi-async-kutsut
-    #{tiedot/->HaeToimenpiteet}
+   #{tiedot/->HaeToimenpiteet tiedot/->HaeMateriaalit}
     (is (= {:valinnat {:urakka {:id 4}}}
            (e! (tiedot/->PaivitaValinnat {:urakka {:id 4}}))))))
 
