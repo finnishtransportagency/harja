@@ -130,6 +130,7 @@
       :valinta-arvo first
       :valinta-nayta second
       :valinnat sopimukset
+      :valitse-ainoa? true
       :pakollinen? true}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
@@ -152,16 +153,17 @@
        {:otsikko "Huoltokohde"
         :nimi ::kanavan-toimenpide/huoltokohde
         :tyyppi :valinta
-        :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
-                              (str/lower-case nimi))
+        :valinta-nayta #(or (when-let [nimi (kanavan-huoltokohde/fmt-huoltokohde-nimi %)]
+                              nimi)
                             "- Valitse huoltokohde -")
-        :valinnat huoltokohteet
+        :valinnat (sort-by kanavan-huoltokohde/fmt-huoltokohde-nimi huoltokohteet)
         :pakollinen? true})
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
       :tyyppi :valinta
       :uusi-rivi? true
+      :valitse-ainoa? true
       :valinnat toimenpideinstanssit
       :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
       :valinta-arvo :tpi_id

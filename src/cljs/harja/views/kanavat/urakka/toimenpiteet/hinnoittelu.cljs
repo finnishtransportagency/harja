@@ -303,7 +303,7 @@
             "Valmis"
             #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
             {:disabled (or
-                         false ;; (not (tiedot/hinnoittelun-voi-tallentaa? app*))
+                         (not (tiedot/hinnoittelun-voi-tallentaa? app*))
                          (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
                          (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset

@@ -101,8 +101,8 @@
     (is (nil? (:alas vastaus)))
 
     (is (and
-          (some? (:kohde vastaus))
-          (number? (get-in vastaus [:kohde ::lt/id]))))))
+          (some? (:edellinen vastaus))
+          (number? (get-in vastaus [:edellinen ::lt/id]))))))
 
 (deftest tapahtuman-tallentaminen
   (testing "Uuden luonti"

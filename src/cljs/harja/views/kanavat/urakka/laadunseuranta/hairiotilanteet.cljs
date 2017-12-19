@@ -90,9 +90,18 @@
              [ajax-loader "Haetaan häiriötilanteita"]
              "Häiriötilanteita ei löytynyt")
     :rivi-klikattu #(e! (tiedot/->ValitseHairiotilanne %))}
-   [{:otsikko "Päivä\u00ADmäärä" :nimi ::hairiotilanne/havaintoaika :tyyppi :pvm :fmt pvm/pvm-opt :leveys 4}
-    {:otsikko "Kohde" :nimi ::hairiotilanne/kohde :tyyppi :string
-     :fmt kohde/fmt-kohteen-nimi :leveys 10}
+   [{:otsikko "Havaintoaika"
+     :nimi
+     ::hairiotilanne/havaintoaika
+     :tyyppi :pvm-aika
+     :fmt pvm/pvm-aika-opt
+     :leveys 4}
+    {:otsikko "Kohde"
+     :nimi :hairiotilanteen-kohde
+     :hae (juxt ::hairiotilanne/kohde ::hairiotilanne/kohteenosa)
+     :tyyppi :string
+     :fmt (fn [[kohde osa]] (kohde/fmt-kohde-ja-osa-nimi kohde osa))
+     :leveys 10}
     {:otsikko "Vika\u00ADluokka" :nimi ::hairiotilanne/vikaluokka :tyyppi :string :leveys 6
      :fmt hairio/fmt-vikaluokka}
     {:otsikko "Syy" :nimi ::hairiotilanne/syy :tyyppi :string :leveys 6}
@@ -207,14 +216,11 @@
 (defn hairiolomakkeen-kentat [e! {:keys [valittu-hairiotilanne] :as app} kohteet]
   (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
         valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
-    [{:otsikko "Päivämäärä"
-      :nimi :paivamaara
+    [{:otsikko "Havaintoaika"
+      :nimi ::hairiotilanne/havaintoaika
       :pakollinen? true
-      :tyyppi :pvm}
-     {:otsikko "Kellonaika"
-      :nimi :aika
-      :pakollinen? true
-      :tyyppi :aika}
+      :tyyppi :pvm-aika
+      :fmt pvm/pvm-aika-opt}
      {:otsikko "Kohde"
       :nimi ::hairiotilanne/kohde
       :tyyppi :valinta
