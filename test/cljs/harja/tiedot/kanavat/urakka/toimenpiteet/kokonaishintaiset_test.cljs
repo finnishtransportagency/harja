@@ -84,8 +84,7 @@
     (let [paluuarvo  (fn)]
       paluuarvo)
     (catch js/Error e
-      (.log js/console (.-stack e))))
-  )
+      (.log js/console (.-stack e)))))
 
 (deftest AsetaToimenpiteenTiedot
   (let [toimenpide {:testi-pieni "Olen vain"}]
