@@ -19,8 +19,56 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
+            [harja.kyselyt.konversio :as konv]
             [namespacefy.core :as namespacefy])
   (:import (java.util UUID)))
+
+(defn materiaali-haun-pg-Array->map
+  [haku]
+  ;; Materiaalien haku näyttää vähän rumalta, koska q funktio
+  ;; käyttää jdbc funktioita suoraan eikä konvertoi PgArrayta nätisti Clojure vektoriksi.
+  ;; Siksipä se muunnos täytyy tehdä itse.
+  (mapv (fn [materiaali-pg-array]
+          (let [materiaali-vector (konv/array->vec materiaali-pg-array 0)
+                muutokset (transduce
+                            ;; Jostain syystä pgobject->map ei tykänny :double :long tai :date tyypeistä
+                            (comp (map #(konv/pgobject->map %
+                                                            :pvm :string
+                                                            :maara :string
+                                                            :lisatieto :string
+                                                            :id :string
+                                                            :hairiotilanne :string
+                                                            :toimenpide :string))
+                                  ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
+                                  ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
+                                  ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
+                                  (map #(let [tyhja-string->nil (fn [funktio teksti]
+                                                                  (if (= teksti "")
+                                                                    nil (funktio teksti)))]
+                                          (assoc % :pvm (tyhja-string->nil pvm/dateksi (:pvm %))
+                                                   :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
+                                                   :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
+                                                   :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))
+                                                   :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))))))
+                            conj [] (first materiaali-vector))
+                nimi (second materiaali-vector)]
+            {:muutokset muutokset :nimi nimi}))
+        haku))
+
+(defn hae-saimaan-kanavan-materiaalit []
+  (let [haku (q "SELECT muutokset, nimi
+                 FROM vv_materiaalilistaus
+                 WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');")
+        saimaan-materiaalit (materiaali-haun-pg-Array->map haku)]
+    saimaan-materiaalit))
+
+(defn hae-helsingin-vesivaylaurakan-materiaalit []
+  (let [haku (q "SELECT muutokset, nimi
+                 FROM vv_materiaalilistaus
+                 WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');")
+        helsingin-materiaalit (materiaali-haun-pg-Array->map haku)]
+    helsingin-materiaalit))
+
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
