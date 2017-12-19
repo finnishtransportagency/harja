@@ -55,16 +55,16 @@
 
 (defn tallenna-hairiotilanne [db kayttaja-id hairiotilanne]
   (if (id/id-olemassa? (::hairiotilanne/id hairiotilanne))
-    (let [kanavatoimenpide (assoc hairiotilanne
+    (let [hairiotilanne (assoc hairiotilanne
                              ::muokkaustiedot/muokattu (pvm/nyt)
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::hairiotilanne/hairiotilanne kanavatoimenpide {::hairiotilanne/id (::hairiotilanne/id kanavatoimenpide)})
+      (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})
       ;; (log/debug "päivitetään, palautetaan id-tieto")
-      (first (fetch db ::hairiotilanne/hairiotilanne #{::hairiotilanne/id} {::hairiotilanne/id (::hairiotilanne/id kanavatoimenpide)})))
-    (let [kanavatoimenpide (assoc hairiotilanne
+      (first (fetch db ::hairiotilanne/hairiotilanne #{::hairiotilanne/id} {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})))
+    (let [hairiotilanne (assoc hairiotilanne
                              ::hairiotilanne/kuittaaja-id kayttaja-id
                              ::muokkaustiedot/luotu (pvm/nyt)
                              ::muokkaustiedot/luoja-id kayttaja-id)
-          lisatty-rivi (insert! db ::hairiotilanne/hairiotilanne kanavatoimenpide)]
+          lisatty-rivi (insert! db ::hairiotilanne/hairiotilanne hairiotilanne)]
       ;; (log/debug "lisätty rivi: " (pr-str lisatty-rivi))
       lisatty-rivi)))
