@@ -13,6 +13,7 @@
             [clojure.string :as str]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
+            [harja.pvm :as pvm]
             [harja.domain.vesivaylat.materiaali :as materiaalit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -29,8 +30,9 @@
 (defn esitaytetty-toimenpidelomake [kayttaja urakka]
   {::kanavatoimenpide/sopimus-id (:paasopimus urakka)
    ::kanavatoimenpide/kuittaaja {::kayttaja/id (:id kayttaja)
-                                   ::kayttaja/etunimi (:etunimi kayttaja)
-                                   ::kayttaja/sukunimi (:sukunimi kayttaja)}})
+                                 ::kayttaja/etunimi (:etunimi kayttaja)
+                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
+   ::kanavatoimenpide/pvm (pvm/nyt)})
 
 (defn uusi-toimenpide [app kayttaja urakka]
   (assoc app :avattu-toimenpide (esitaytetty-toimenpidelomake kayttaja urakka)))

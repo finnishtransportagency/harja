@@ -83,7 +83,8 @@
                           (e! (tiedot/->ValitseToimenpide
                                 {:id (::kanavan-toimenpide/id rivi)
                                  :valittu? uusi-arvo})))})
-    (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
+    (sort-by ::kanavan-toimenpide/pvm >
+             (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
 
 
 
