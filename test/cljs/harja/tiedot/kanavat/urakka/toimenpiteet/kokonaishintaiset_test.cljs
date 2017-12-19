@@ -8,6 +8,7 @@
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.testutils :refer [tarkista-map-arvot]]
+            [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [cljs.spec.alpha :as s]))
 
@@ -149,19 +150,44 @@
 
 
 
-(def app-tallennustestille {:urakan-materiaalit (:urakan-materiaalit state)
+(def app-tallennustestille {:urakan-materiaalit (:urakan-materiaalit '({::materiaali/urakka-id 1
+                               ::materiaali/toimenpide 2
+                               ::materiaali/muutokset [{::materiaali/maara 1000
+                                                        ::materiaali/id 4}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/id 5}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                        ::materiaali/id 13
+                                                        ::materiaali/toimenpide 2}
+                                                       {::materiaali/maara -1
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
+                                                        ::materiaali/id 16
+                                                        ::materiaali/toimenpide 3}]
+                               ::materiaali/nimi "Naulat"}
+                              {::materiaali/urakka-id 1
+                               ::materiaali/toimenpide 2
+                                ::materiaali/muutokset [{::materiaali/maara 500
+                                                         ::materiaali/id 8}
+                                                        {::materiaali/maara -12
+                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                         ::materiaali/id 12
+                                                         ::materiaali/toimenpide 2}]
+                                ::materiaali/nimi "Ämpäreitä"}))
                             :avattu-toimenpide {::kanavan-toimenpide/id 2
                                                 ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
-                                                ::materiaali/materiaalit (seq [{:maara 3
+                                                ::materiaali/materiaalit (seq [{:maara 4
                                                                                 :varaosa {::materiaali/nimi "Naulat"
                                                                                           ::materiaali/urakka-id 1
                                                                                           ::materiaali/pvm nil
                                                                                           ::materiaali/id 13}}
-                                                                               {:maara 12
+                                                                               {:poistettu true
+                                                                                :maara 12
                                                                                 :varaosa {::materiaali/nimi "Ämpäreitä"
                                                                                           ::materiaali/urakka-id 1
                                                                                           ::materiaali/pvm nil
-                                                                                          ::materiaali/id 12}}])
+                                                                                          ::materiaali/id 12}}
+                                                                               ])
                                                 ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
                                                                                                 :varaosa {::materiaali/nimi "Naulat"
                                                                                                           ::materiaali/urakka-id 1
@@ -173,13 +199,15 @@
                                                                                                           ::materiaali/pvm nil
                                                                                                           ::materiaali/id 12}}])}})
 
-(def tallennettava-vertailumap {::kanavan-toimenpide/materiaalipoistot {}
-                                ::kanavan-toimenpide/materiaalikirjaukset {}})
+(def tallennettava-vertailumap {::kanavan-toimenpide/materiaalipoistot '({:harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/id 12})
+                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisätieto "Kohteen  materiaali"})
+})
 (deftest materiaalit-vs-tallennus
   (let [app app-tallennustestille
         tyyppi :kokonaishintainen
         tehtavat nil
         ;; app (e! (tiedot/->TallennaToimenpide (:avattu-toimenpide app)))
+        toimenpide (:avattu-toimenpide app)
         tallennettava-toimenpide (toimenpiteet/tallennettava-toimenpide tehtavat toimenpide (-> app :valinnat :urakka) tyyppi)]
 
     (tarkista-map-arvot tallennettava-vertailumap tallennettava-toimenpide)

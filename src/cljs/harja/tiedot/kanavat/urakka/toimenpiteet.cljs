@@ -129,22 +129,23 @@
 
 (defn yksi-tallennettava-materiaalikirjaus [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
   "Palauttaa tallennettavan mapin kun saadaan annetaan muokattu, ei-tyhjat, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...}"
-  (let [muokattu? (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
+  (let [ei-muokattu? (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
         tyhja? (= [:jarjestysnumero] (keys m-kirjaus))
         poistettu? (:poistettu m-kirjaus)
         varaosa (dissoc (:varaosa m-kirjaus)
                         ::materiaalit/maara-nyt ::materiaalit/halytysraja
                         ::materiaalit/muutokset ::materiaalit/alkuperainen-maara)]
-    ;; (log "muokkaamattomat" (pr-str muokkaamattomat-kirjaukset))
-    ;; (log "m-kirjaus" (pr-str m-kirjaus))
-    ;; (log "yksi-tallennettava: tilat " (pr-str [tyhja? poistettu? (not muokattu?)]))
-    (when-not (or tyhja? poistettu? (not muokattu?))
+    (log "muokkaamattomat" (pr-str muokkaamattomat-kirjaukset))
+    (log "m-kirjaus" (pr-str m-kirjaus))
+    (log "yksi-tallennettava: tilat " (pr-str [tyhja? poistettu? ei-muokattu?]))
+    (when-not (or tyhja? poistettu? ei-muokattu?)
       ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
       (assoc varaosa
              ::materiaalit/maara (- (:maara m-kirjaus))
              ::materiaalit/lisätieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
 
 (defn tallennettavat-materiaalit [tp]
+  (log "tallennettavat-materiaalit: tp avaimet " (pr-str (keys tp)))
   (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
         muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
 
@@ -155,14 +156,15 @@
         lisatieto (str "Kohteen " kohteen-nimi " materiaali")
         tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
     (when-not muokkaamattomat-materiaali-kirjaukset
-      (log "muokkaamattomat kirjaukset puuttuu"))
+      (log "muokkaamattomat kirjaukset puuttuu, ei voida muodostaa tallennustietoja. tp: " (pr-str  tp)))
     (log "tallennettavat: " (pr-str  (vec tallennettavat)))
     tallennettavat))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
   ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
-  (log "tallennettava-toimenpide: tehtavat " (pr-str tehtavat))
+
+  ;; (log "tallennettava-toimenpide: tp avaimet " (pr-str (keys toimenpide)))
   (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
                     (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
         materiaalit (::materiaalit/materiaalit toimenpide)]
