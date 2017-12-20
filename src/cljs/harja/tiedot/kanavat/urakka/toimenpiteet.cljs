@@ -88,9 +88,6 @@
                       (materiaalilistaus->grid toimenpide materiaalilistaukset))
         toimenpide (assoc toimenpide ::materiaalit/materiaalit materiaalit
                           ::materiaalit/muokkaamattomat-materiaalit (filter #(not (:jarjestysnumero %)) materiaalit))]
-    (log "alt: asetetaan materiaalit " (count materiaalit))
-    (log "alt: asetetaan muokkaamattomat " (count (::materiaalit/muokkaamattomat-materiaalit toimenpide)))
-    ;; (cljs.pprint/pprint materiaalit)
     (assoc app :avattu-toimenpide toimenpide)))
 
 
@@ -118,15 +115,12 @@
 ;;  :maara 2}
 
 (defn materiaalikirjaus->tallennettava [grid-rivi]
-  (log "mk->t..")
-
   (for [muutos (::materiaalit/muutokset grid-rivi)]
-    (do (log "mk->t: muutos" (pr-str muutos))
-        {:maara (- (::materiaalit/maara muutos))
-         :varaosa {::materiaalit/nimi (::materiaalit/nimi grid-rivi)
-                   ::materiaalit/urakka-id (::materiaalit/urakka-id grid-rivi)
-                   ::materiaalit/pvm (::materiaalit/pvm muutos)
-                   ::materiaalit/id (::materiaalit/id muutos)}})))
+    {:maara (- (::materiaalit/maara muutos))
+     :varaosa {::materiaalit/nimi (::materiaalit/nimi grid-rivi)
+               ::materiaalit/urakka-id (::materiaalit/urakka-id grid-rivi)
+               ::materiaalit/pvm (::materiaalit/pvm muutos)
+               ::materiaalit/id (::materiaalit/id muutos)}}))
 
 (defn materiaalikirjaus->poistettavat [{:keys [poistettu jarjestysnumero varaosa] :as grid-rivi}]
   ;; poistetaan mapista poistetuksi merkatut uudet rivit
@@ -135,12 +129,11 @@
       (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id}))))
 
 (defn poistettavat-materiaalit [tp]
-  (log "poistettavat" (pr-str (keep materiaalikirjaus->poistettavat (::materiaalit/materiaalit tp))))
   (keep materiaalikirjaus->poistettavat (::materiaalit/materiaalit tp)))
 
 (defn yksi-tallennettava-materiaalikirjaus [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
   "Palauttaa tallennettavan mapin kun saadaan annetaan muokattu, ei-tyhjat, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...}"
-  (let [ei-muokattu? (if (seq muokkaamattomat-kirjaukset)
+  (let [muokkaamaton? (if (seq muokkaamattomat-kirjaukset)
                        (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
                        false)
         tyhja? (= [:jarjestysnumero] (keys m-kirjaus))
@@ -148,15 +141,11 @@
         varaosa (dissoc (:varaosa m-kirjaus)
                         ::materiaalit/maara-nyt ::materiaalit/halytysraja
                         ::materiaalit/muutokset ::materiaalit/alkuperainen-maara)]
-    (when-not tyhja?
-      (log "ei tyhja koska keys " (pr-str (vec (keys m-kirjaus)))))
-    (log "when-not or: " (pr-str  [tyhja? poistettu? ei-muokattu?]))
     ;; jatetaan tallentamatta tyhjat, poistetut, muokkaamattomat.
-
-    (when-not (or tyhja? poistettu? ei-muokattu?)
-      ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
+    (if (or tyhja? poistettu? muokkaamaton?)
+      nil
       (assoc varaosa
-             ::materiaalit/maara (- (:maara m-kirjaus))
+             ::materiaalit/maara (- (:maara m-kirjaus)) ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
              ::materiaalit/lisatieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
 
 (defn tallennettavat-materiaalit [tp]
@@ -169,7 +158,6 @@
 
         lisatieto (str "Kohteen " kohteen-nimi " materiaali")
         tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
-    (log "tallennettavat-materiaalit: pidettiin " (count tallennettavat) " / " (count materiaali-kirjaukset))
     tallennettavat))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
@@ -204,13 +192,10 @@
 
 (defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi
                                        toimenpide-tallennettu toimenpide-ei-tallennettu]}]
-  (log "tallenna-toimenpide: avatun materiaalit " (pr-str (-> app :avattu-toimenpide ::materiaalit/materiaalit)))
-  (log "tallenna-toimenpide: annetun toimepiteen materiaalit " (pr-str (-> toimenpide ::materiaalit/materiaalit)))
   (if (:tallennus-kaynnissa? app)
     app
     (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]) tyyppi)
           hakuehdot (muodosta-kohteiden-hakuargumentit valinnat tyyppi)]
-      (log "tallenna-toimenpide: tallennettava tp " (pr-str toimenpide))
       (-> app
           (tuck-apurit/post! :tallenna-kanavatoimenpide
                              {::kanavatoimenpide/tallennettava-kanava-toimenpide toimenpide
