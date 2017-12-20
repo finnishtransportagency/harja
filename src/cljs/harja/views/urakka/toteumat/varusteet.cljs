@@ -155,6 +155,13 @@
          :tyyppi :komponentti
          :komponentti #(varustekortti-linkki (:data %))}))))
 
+(defn hae-ajoradat [muokattava? varustetoteuma]
+  (if muokattava?
+    (if (:ajoradat varustetoteuma)
+      (:ajoradat varustetoteuma)
+      tierekisteri-varusteet/oletus-ajoradat)
+    tierekisteri-varusteet/kaikki-ajoradat))
+
 (defn varusteen-tunnistetiedot [e! muokattava? varustetoteuma]
   (let [tunniste (or (:tunniste varustetoteuma)
                      (get-in varustetoteuma [:arvot :tunniste]))
@@ -193,14 +200,12 @@
       {:nimi :ajorata
        :otsikko "Ajorata"
        :tyyppi :valinta
-       :valinnat (if muokattava?
-                   (if (:ajoradat varustetoteuma)
-                     (:ajoradat varustetoteuma)
-                     tierekisteri-varusteet/oletus-ajoradat)
-                   tierekisteri-varusteet/kaikki-ajoradat)
+       :valinnat (hae-ajoradat muokattava? varustetoteuma)
        :pakollinen? muokattava?
        :leveys 1
-       :muokattava? (constantly muokattava?)}
+       :muokattava? (constantly muokattava?)
+       :vihje (when (> (count (hae-ajoradat muokattava? varustetoteuma)) 2)
+                "Tarkkaa tietoa sijainnissa olevista ajoradoista ei voitu hakea. Varmista että valitset oikean ajoradan.")}
       (when (tierekisteri-varusteet/tien-puolellinen-tietolaji? tietolaji)
         {:nimi :puoli
          :otsikko "Tien puoli"

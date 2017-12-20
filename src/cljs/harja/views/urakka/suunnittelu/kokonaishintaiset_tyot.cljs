@@ -196,7 +196,7 @@
                                      tyhjat-tyot)))))))
 
 (defn- nayta-tehtavalista-ja-kustannukset? [tyyppi]
-  (not (#{:tiemerkinta :vesivayla-hoito} tyyppi)))
+  (not (#{:tiemerkinta :vesivayla-hoito :vesivayla-kanavien-hoito} tyyppi)))
 
 
 (defn- paivita-kk-arvo-prosentin-mukaan [{:keys [prosentti] :as rivi} vuosisumma]

@@ -51,7 +51,7 @@
   ([db user parametrit]
    (hae-urakan-tarkastukset db user parametrit false 501))
   ([db user {:keys [urakka-id alkupvm loppupvm tienumero tyyppi
-                    havaintoja-sisaltavat? vain-laadunalitukset?]}
+                    havaintoja-sisaltavat? vain-laadunalitukset? tekija]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
    (let [urakoitsija? (roolit/urakoitsija? user)
@@ -67,6 +67,7 @@
                                  :tyyppi (and tyyppi (name tyyppi))
                                  :havaintoja_sisaltavat havaintoja-sisaltavat?
                                  :vain_laadunalitukset vain-laadunalitukset?
+                                 :tekija tekija
                                  :maxrivimaara max-rivimaara})
          tarkastukset (into []
                             (comp tarkastus-xf
@@ -143,7 +144,7 @@
 
 (defn- tarkastusreittien-parametrit
   [user {:keys [havaintoja-sisaltavat? vain-laadunalitukset? tienumero
-                alkupvm loppupvm tyyppi urakka-id valittu] :as parametrit}]
+                alkupvm loppupvm tyyppi urakka-id valittu tekija] :as parametrit}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset
                              user urakka-id)
   {:urakka urakka-id
@@ -153,7 +154,8 @@
    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
    :havaintoja_sisaltavat havaintoja-sisaltavat?
    :vain_laadunalitukset vain-laadunalitukset?
-   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)})
+   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
+   :tekija tekija})
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]
   (let [parametrit (tarkastusreittien-parametrit user parametrit)

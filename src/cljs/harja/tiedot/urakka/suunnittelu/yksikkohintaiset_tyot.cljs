@@ -28,7 +28,7 @@
                                                                 #(-> %
                                                                      (assoc :maara (:maara-kkt-1-9 %))
                                                                      (dissoc :maara-kkt-10-12))))
-                             
+
                              tyot)}]
     (k/post! :tallenna-urakan-yksikkohintaiset-tyot
              hyotykuorma)))

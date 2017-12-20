@@ -13,16 +13,18 @@
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
 
+            [harja.domain.urakka :as urakka]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.kanavat.kanavan-kohde :as kohde]
-            [harja.domain.kanavat.kanava :as kanava]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
 
             [harja.domain.urakka :as ur]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.valinnat :as valinnat])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -31,15 +33,21 @@
 (defn kohteet-grid [e! kanavan-kohteet]
   [grid/muokkaus-grid
    {:tyhja "Lisää kohteita oikeasta yläkulmasta"
-    :tunniste ::kohde/id}
+    :tunniste ::kohde/id
+    :voi-poistaa? (constantly false)
+    :jarjesta-avaimen-mukaan identity
+    :piilota-toiminnot? true
+    :uusi-id (count kanavan-kohteet)}
    [{:otsikko "Kohteen nimi"
      :tyyppi :string
-     :nimi ::kohde/nimi}
+     :nimi ::kohde/nimi
+     :leveys 1}
     {:otsikko "Kohteen tyyppi"
      :tyyppi :valinta
+     :leveys 1
      :nimi ::kohde/tyyppi
      :valinnat #{:silta :sulku :sulku-ja-silta}
-     :valinta-nayta kohde/tyyppi->str
+     :valinta-nayta (constantly "foobar")
      :pakollinen? true
      :validoi [[:ei-tyhja "Anna kohteelle tyyppi"]]}]
    (r/wrap
@@ -47,7 +55,7 @@
            (map-indexed
              (fn [i k] [i k])
              kanavan-kohteet))
-     #(e! (tiedot/->LisaaKohteita (vals %))))])
+     #(e! (tiedot/->LisaaKohteita (sort-by :id (vals %)))))])
 
 (defn luontilomake [e! {tallennus-kaynnissa? :kohteiden-tallennus-kaynnissa?
                         kanavat :kanavat
@@ -58,7 +66,7 @@
    [debug/debug app]
    [napit/takaisin #(e! (tiedot/->SuljeKohdeLomake))]
    [lomake/lomake
-    {:otsikko "Lisää kanavalle kohteita"
+    {:otsikko "Lisää tai muokkaa kanavan kohteita"
      ;; muokkaa! on nykyään pakollinen lomakkeelle, mutta tässä lomakeessa
      ;; tietojen päivittämienn tehdään suoraan riville asetetuilla funktioilla
      :muokkaa! (constantly true)
@@ -73,8 +81,8 @@
     [{:otsikko "Kanava"
       :tyyppi :valinta
       :nimi :kanava
-      :valinnat (sort-by ::kanava/nimi kanavat)
-      :valinta-nayta #(or (::kanava/nimi %) "Valitse kanava")
+      :valinnat (sort-by ::kok/nimi kanavat)
+      :valinta-nayta #(or (::kok/nimi %) "Valitse kanava")
       :aseta (fn [_ arvo]
                ;; kentat/atomina funktiossa katsotaan, onko :aseta ehto annettu
                ;; jos on, oletetaan, että funktio palauttaa lomakkeen käyttämän datan
@@ -83,41 +91,22 @@
        {:otsikko "Kohteet"
         :nimi :kohteet
         :tyyppi :komponentti
-        :palstoja 2
+        :palstoja 3
         :komponentti (fn [_]
                        [kohteet-grid
                         e!
                         (tiedot/muokattavat-kohteet app)])})]
     uudet-tiedot]])
 
-(defn varmistusnappi
-  ([e! kohde] [varmistusnappi e! kohde {}])
-  ([e! kohde opts]
-   [napit/nappi
-    ""
-    #(e! (tiedot/->AsetaPoistettavaKohde kohde))
-    (merge
-      {:ikoninappi? true
-       :luokka "nappi-toissijainen"
-       :ikoni (ikonit/livicon-trash)}
-      opts)]))
-
-(defn poista-tai-takaisin
-  ([e! kohde] [poista-tai-takaisin e! kohde {}])
-  ([e! kohde opts]
-   [:div
-    [napit/takaisin
-     ""
-     #(e! (tiedot/->AsetaPoistettavaKohde nil))
-     (merge
-       {:ikoninappi? true}
-       opts)]
-    [napit/poista
-     ""
-     #(e! (tiedot/->PoistaKohde kohde))
-     (merge
-       {:ikoninappi? true}
-       opts)]]))
+(defn- ryhmittele-kohderivit-kanavalla [kohderivit]
+  (let [ryhmat (group-by ::kok/id (sort-by ::kok/nimi kohderivit))]
+    (mapcat
+      (fn [kohdekokonaisuus-id]
+        (let [ryhman-sisalto (get ryhmat kohdekokonaisuus-id)]
+          (concat
+            [(grid/otsikko (::kok/nimi (first ryhman-sisalto)))]
+            (sort-by ::kohde/nimi ryhman-sisalto))))
+      (keys ryhmat))))
 
 (defn kohteiden-luonti* [e! app]
   (komp/luo
@@ -128,71 +117,62 @@
                            (e! (tiedot/->ValitseUrakka nil))
                            (e! (tiedot/->SuljeKohdeLomake))))
 
-    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki?
-                    valittu-urakka urakat poistaminen-kaynnissa? poistettava-kohde] :as app}]
+    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki? liittaminen-kaynnissa?
+                    uudet-urakkaliitokset valittu-urakka urakat poistaminen-kaynnissa?
+                    poistettava-kohde] :as app}]
       (if-not kohdelomake-auki?
         [:div
          [debug/debug app]
-         [:div.label-ja-alasveto
-          [:span.alasvedon-otsikko "Urakka"]
-          [yleiset/livi-pudotusvalikko
-           {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
-            :valinta valittu-urakka
-            :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
-           (into [nil] urakat)]]
+         [valinnat/urakkatoiminnot {}
+          #_[napit/uusi "Lisää kohteen osia"
+             (fn [] (log "TODO"))]
+          [napit/tallenna "Tallenna urakkaliitokset"
+           #(e! (tiedot/->PaivitaKohteidenUrakkaliitokset))
+           {:disabled (empty? uudet-urakkaliitokset)
+            :tallennus-kaynnissa? liittaminen-kaynnissa?}]]
+         [:div.otsikko-ja-valinta-rivi
+          [:div.otsikko "Kaikki kohteet:"]
+          [:div.valinta.label-ja-alasveto
+           [:span.alasvedon-otsikko "Kuuluu urakkaan:"]
+           [yleiset/livi-pudotusvalikko
+            {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
+             :valinta valittu-urakka
+             :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
+            (into [nil] urakat)]]]
          [grid/grid
           {:tunniste ::kohde/id
            :tyhja (if kohteiden-haku-kaynnissa?
                     [ajax-loader "Haetaan kohteita"]
                     "Ei perustettuja kohteita")}
-          [{:otsikko "Kanava, kohde, ja kohteen tyyppi" :nimi :rivin-teksti
-            :leveys 4}
-           {:otsikko "Poista"
-            :leveys 1
-            :tyyppi :komponentti
-            :tasaa :keskita
-            :komponentti (fn [kohde]
-                           (cond
-                             (nil? poistettava-kohde)
-                             [varmistusnappi e! kohde]
-
-                             (= poistettava-kohde kohde)
-                             [poista-tai-takaisin e! kohde {:disabled poistaminen-kaynnissa?}]
-
-                             (some? poistettava-kohde)
-                             [varmistusnappi e! kohde {:disabled true}]))}
+          [{:otsikko "Kohde"
+            :nimi ::kohde/nimi
+            :leveys 5}
            (if-not valittu-urakka
              {:otsikko "Urakat"
               :tyyppi :string
               :nimi :kohteen-urakat
               :leveys 6
               :hae tiedot/kohteen-urakat}
-
-             {:otsikko "Kuuluu urakkaan?"
+             {:otsikko (str "Kuuluu urakkaan " (:harja.domain.urakka/nimi valittu-urakka) "?")
               :leveys 6
               :tyyppi :komponentti
               :tasaa :keskita
               :nimi :valinta
-              :solu-klikattu (fn [rivi] (e! (tiedot/->LiitaKohdeUrakkaan rivi
-                                                                         (not (:valittu? rivi))
-                                                                         valittu-urakka)))
+              :solu-klikattu (fn [rivi]
+                               (let [kuuluu-urakkaan? (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)]
+                                 (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
+                                                                        (::urakka/id valittu-urakka)
+                                                                        (not kuuluu-urakkaan?)))))
               :komponentti (fn [rivi]
-                             (if (tiedot/liittaminen-kaynnissa? app rivi)
-                               [ajax-loader-pieni]
-
-                               [kentat/tee-kentta
-                                {:tyyppi :checkbox}
-                                (r/wrap
-                                  (tiedot/kohde-kuuluu-urakkaan? rivi valittu-urakka)
-                                  (fn [uusi]
-                                    (e! (tiedot/->LiitaKohdeUrakkaan rivi
-                                                                     uusi
-                                                                     valittu-urakka))))]))})]
-          (sort-by :rivin-teksti kohderivit)]
-         [napit/uusi
-          "Lisää uusi kohde"
-          #(e! (tiedot/->AvaaKohdeLomake))
-          {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat))}]]
+                             [kentat/tee-kentta
+                              {:tyyppi :checkbox}
+                              (r/wrap
+                                (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)
+                                (fn [uusi]
+                                  (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
+                                                                         (::urakka/id valittu-urakka)
+                                                                         uusi))))])})]
+          (ryhmittele-kohderivit-kanavalla kohderivit)]]
 
         [luontilomake e! app]))))
 

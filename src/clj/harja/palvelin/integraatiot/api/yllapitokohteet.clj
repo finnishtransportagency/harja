@@ -133,31 +133,32 @@
                      kohde-id
                      kayttaja))
   (let [urakka-id (Integer/parseInt urakka-id)
-        kohde-id (Integer/parseInt kohde-id)
-        kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
-        kohde (-> (:yllapitokohde data)
-                  (assoc :id kohde-id)
-                  (assoc-in [:sijainti :tie] kohteen-tienumero))
-        muunnettavat-alikohteet (mapv #(-> (:alikohde %)
-                                           (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
-                                           (assoc-in [:sijainti :numero] kohteen-tienumero))
-                                      (:alikohteet kohde))
-        muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
-        karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
-                        (when karttapvm (parametrit/pvm-aika karttapvm)))
-        kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
-        kohteen-sijainti (:sijainti kohde)
-        alikohteet (:alikohteet kohde)]
+        kohde-id (Integer/parseInt kohde-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
-    (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
-    (jdbc/with-db-transaction [db db]
-      (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
-      (kasittely/paivita-alikohteet db kohde alikohteet)
-      (yy/paivita-yllapitourakan-geometria db urakka-id))
-    (tee-kirjausvastauksen-body
-      {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")})))
+    (let [kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
+         kohde (-> (:yllapitokohde data)
+                   (assoc :id kohde-id)
+                   (assoc-in [:sijainti :tie] kohteen-tienumero))
+         muunnettavat-alikohteet (mapv #(-> (:alikohde %)
+                                            (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
+                                            (assoc-in [:sijainti :numero] kohteen-tienumero))
+                                       (:alikohteet kohde))
+         muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
+         karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
+                         (when karttapvm (parametrit/pvm-aika karttapvm)))
+         kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
+         kohteen-sijainti (:sijainti kohde)
+         alikohteet (:alikohteet kohde)]
+
+     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+     (jdbc/with-db-transaction [db db]
+       (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
+       (kasittely/paivita-alikohteet db kohde alikohteet)
+       (yy/paivita-yllapitourakan-geometria db urakka-id))
+     (tee-kirjausvastauksen-body
+       {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
 
 (defn kirjaa-paallystysilmoitus [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"

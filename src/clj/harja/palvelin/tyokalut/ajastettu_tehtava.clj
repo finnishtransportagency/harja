@@ -11,6 +11,10 @@
 (def virhekasittely
   {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
 
+(defn aika-sekuntien-kuluttua [sekunnit]
+  ;; palauttaa ajanhetken 20-40sek kuluttua
+  (t/from-now (t/seconds sekunnit)))
+
 (defn ajasta-paivittain [[tunti minuutti sekuntti] tehtava]
   (when (and tunti minuutti sekuntti)
     (chime-at (periodic-seq
@@ -21,10 +25,14 @@
               tehtava
               virhekasittely)))
 
-(defn ajasta-minuutin-valein [minuutit tehtava]
+(defn ajasta-minuutin-valein [minuutit aloitusviive-sekunteina tehtava]
+  ;; Kutsujien tulee antaa aloitusviive, jotta kaikki esim 60 minuutin välein tehtävät eivät
+  ;; käynnisty yhtä aikaa, sekä siksi että "nyt" alkavien kanssa on satunnaista, käynnistyykö
+  ;; tehtävä heti Harjan käynnistyksessä vai käynnistyykö se ensimmäistä kertaa vasta n
+  ;; minuutin kuluttua Harjan käynnistyksestä.
   (when minuutit
     (chime-at (periodic-seq
-               (.. (t/now)
+               (.. (aika-sekuntien-kuluttua aloitusviive-sekunteina)
                    (withZone (DateTimeZone/forID "Europe/Helsinki")))
                (t/minutes minuutit))
               tehtava

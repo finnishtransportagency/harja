@@ -1,10 +1,13 @@
 (ns harja.palvelin.raportointi.raportit.toimenpideajat
   "Toimenpiteiden ajoittuminen -raportti. Näyttää eri urakoissa tapahtuvien toimenpiteiden jakauman
   eri kellonaikoina."
-  (:require [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+  (:require [harja.palvelin.raportointi.raportit.yleinen
+             :refer [raportin-otsikko] :as yleinen]
             [harja.pvm :as pvm]
             [harja.tyokalut.functor :refer [fmap]]
             [jeesql.core :refer [defqueries]]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [taoensso.timbre :as log]
             [harja.domain.hoitoluokat :as hoitoluokat-domain]))
 
@@ -46,17 +49,26 @@
                     :hoitoluokat     hoitoluokat
                     :urakkatyyppi    (name urakkatyyppi)}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
+        konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :koko-maa)
+        alueen-nimi (case konteksti
+                      :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                      :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                      :koko-maa "KOKO MAA")
+        raportin-nimi "Toimenpiteiden ajoittuminen"
+        raportin-otsikko (raportin-otsikko alueen-nimi raportin-nimi alkupvm loppupvm)
         tehtava-leveys 12
         yhteensa-leveys 5]
     (into
-      [:raportti {:nimi        "Toimenpiteiden ajoittuminen"
+      [:raportti {:nimi raportin-otsikko
                   :orientaatio :landscape}]
       (for [urakka (if urakoittain?
                      (distinct (keep second (keys toimenpideajat)))
                      [:kaikki])
-            :let [otsikko (str "Toimenpiteiden ajoittuminen"
-                               (when-not (= :kaikki urakka)
-                                 (str ": " urakka)))
+            :let [taulukon-otsikko (str (if (= :kaikki urakka)
+                                          alueen-nimi
+                                          urakka))
                   toimenpideajat (if (= :kaikki urakka)
                                    toimenpideajat
                                    (toimenpideajat-urakalle toimenpideajat urakka))
@@ -73,7 +85,8 @@
                   aika-leveys (/ (- 100 tehtava-leveys yhteensa-leveys)
                                  (* 6 (count talvihoitoluokat)))]]
 
-        [:taulukko {:otsikko    otsikko
+
+        [:taulukko {:otsikko    taulukon-otsikko
                     :rivi-ennen (concat
                                   [{:teksti "Hoi\u00ADto\u00ADluok\u00ADka" :sarakkeita 1}]
                                   (map (fn [{nimi :nimi}]

@@ -27,6 +27,7 @@
 (defrecord PoistaMateriaalinKirjaus [tiedot])
 (defrecord KirjaaMateriaali [])
 (defrecord PeruMateriaalinKirjaus [])
+(defrecord NaytaKaikkiKirjauksetVaihto [nimi])
 
 (defrecord Virhe [virhe])
 
@@ -85,7 +86,10 @@
 
   MuutaAlkuperainenMaara
   (process-event [{tiedot :tiedot} app]
-    (let [uudet-alkuperaiset-maarat (:uudet-alkuperaiset-maarat tiedot)
+    (let [uudet-alkuperaiset-maarat (map #(-> %
+                                             (assoc ::m/id (get-in % [::m/muutokset 0 ::m/id]))
+                                             (dissoc ::m/muutokset))
+                                         (:uudet-alkuperaiset-maarat tiedot))
           urakka-id (:urakka-id tiedot)
           chan (:chan tiedot)
           onnistui! (tuck/send-async! ->ListausHaettu)
@@ -138,6 +142,13 @@
                             (dissoc m :tyyppi))
                {:onnistui ->ListausHaettu
                        :epaonnistui ->Virhe})))
+
+  NaytaKaikkiKirjauksetVaihto
+  (process-event [{nimi :nimi} app]
+    (update app :materiaalilistaus (fn [listaus]
+                                    (map #(if (= (::m/nimi %) nimi)
+                                            (update % :nayta-kaikki? not) %)
+                                         listaus))))
 
   Virhe
   (process-event [virhe app]

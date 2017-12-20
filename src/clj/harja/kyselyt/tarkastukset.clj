@@ -33,17 +33,28 @@
   [db user urakka-id {:keys [id lahde aika tr tyyppi tarkastaja sijainti
                              ulkoinen-id havainnot laadunalitus yllapitokohde
                              nayta-urakoitsijalle] :as tarkastus} urakoitsija?]
-  (do
-    (log/debug "Luodaan uusi tarkastus")
-    (luo-tarkastus<! db
-                     lahde
-                     urakka-id (konv/sql-timestamp aika)
-                     (:numero tr) (:alkuosa tr) (:alkuetaisyys tr)
-                     (:loppuosa tr) (:loppuetaisyys tr)
-                     sijainti tarkastaja (name tyyppi) (:id user) ulkoinen-id
-                     havainnot laadunalitus yllapitokohde
-                     (if urakoitsija? true (boolean nayta-urakoitsijalle)))
-    (luodun-tarkastuksen-id db)))
+  (let [params {:lahde lahde
+                :urakka urakka-id
+                :aika (konv/sql-timestamp aika)
+                :tr_numero (:numero tr)
+                :tr_alkuosa (:alkuosa tr)
+                :tr_alkuetaisyys (:alkuetaisyys tr)
+                :tr_loppuosa (:loppuosa tr)
+                :tr_loppuetaisyys (:loppuetaisyys tr)
+                :sijainti sijainti
+                :tarkastaja tarkastaja
+                :tyyppi (name tyyppi)
+                :luoja (:id user)
+                :ulkoinen_id ulkoinen-id
+                :havainnot havainnot
+                :laadunalitus laadunalitus
+                :yllapitokohde yllapitokohde
+                :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))}]
+
+    (do
+     (log/debug "Luodaan uusi tarkastus" tarkastus " jonka params: " params)
+     (luo-tarkastus<! db params)
+     (luodun-tarkastuksen-id db))))
 
 (defn- paivita-tarkastus*
   [db user urakka-id {:keys [id lahde aika tr tyyppi tarkastaja sijainti

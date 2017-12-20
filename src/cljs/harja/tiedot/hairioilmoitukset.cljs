@@ -1,15 +1,9 @@
 (ns harja.tiedot.hairioilmoitukset
-  (:require [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.loki :refer [log tarkkaile!]]
+  (:require [harja.loki :refer [log tarkkaile!]]
 
             [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
             [cljs.core.async :refer [<! >! timeout chan]]
-            [harja.ui.modal :as modal]
-            [goog.dom :as dom]
-            [goog.events :as events]
-            [reagent.core :as reagent]
-            [goog.net.cookies :as cookie]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction]]))
@@ -30,9 +24,9 @@
     (reset! tarkkaile-hairioilmoituksia? true)
     (hae-tuorein-hairioilmoitus!)
     (go-loop []
-      (<! (timeout tarkkailuvali-ms))
-      (hae-tuorein-hairioilmoitus!)
-      (recur))))
+             (<! (timeout tarkkailuvali-ms))
+             (hae-tuorein-hairioilmoitus!)
+             (recur))))
 
 (defn piilota-hairioilmoitus! []
   (reset! nayta-hairioilmoitus? false)

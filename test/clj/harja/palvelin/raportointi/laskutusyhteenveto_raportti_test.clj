@@ -102,16 +102,17 @@
       (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 63.22M))
       (is (=marginaalissa? indeksitarkistukset-akilliset 31.61M))
       (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 17.24M))
-      (is (=marginaalissa? indeksitarkistukset-bonukset 4.39M))
+      (is (=marginaalissa? indeksitarkistukset-bonukset 5.906M))
       (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 24.90M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 43.45M))
-      (is (=marginaalissa? indeksitarkistukset-kaikki 1000.52M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -6759.47M))
+      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 44.96M))
+      (is (=marginaalissa? indeksitarkistukset-kaikki 1002.03))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -6757.96M))
 
       (is (=marginaalissa? kaikki-yhteensa nurkkasumma 155250.20M)))))
 
 (deftest raportin-suoritus-urakalle-toimii-hoitokausi-2016-2017
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (u (str "DELETE FROM indeksi WHERE nimi = 'MAKU 2005' AND kuukausi in (10,11,12) AND vuosi = 2016"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :laskutusyhteenveto
@@ -212,11 +213,11 @@
       (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 126.44M))
       (is (=marginaalissa? indeksitarkistukset-akilliset 63.22M))
       (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 34.48M))
-      (is (=marginaalissa? indeksitarkistukset-bonukset 8.78M))
+      (is (=marginaalissa? indeksitarkistukset-bonukset 0.0M))
       (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 49.81M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 86.9M))
-      (is (=marginaalissa? indeksitarkistukset-kaikki 247.13M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -15433.097M))
+      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 154.02M))
+      (is (=marginaalissa? indeksitarkistukset-kaikki 247.12M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -15441.88M))
 
       (is (=marginaalissa? kaikki-yhteensa nurkkasumma 308586.26M)))))
 
@@ -238,20 +239,22 @@
           yks-hint (arvo-raportin-nnesta-elementista vastaus 0)
           sanktiot (arvo-raportin-nnesta-elementista vastaus 1)
 
-          sanktioiden-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 2)
-          muiden-kuin-kokhint-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 3)
-          kaikki-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 4)
-          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 5)
-          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 6)
+          yks-hint-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 2)
+          sanktioiden-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 3)
+          muiden-kuin-kokhint-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 4)
+          kaikki-indeksitarkistukset (arvo-raportin-nnesta-elementista vastaus 5)
+          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 6)
+          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 7)
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
 
       (is (=marginaalissa? yks-hint 7882.50M))
       (is (=marginaalissa? sanktiot -1900.67M))
+      (is (=marginaalissa? yks-hint-indeksitarkistukset 2310.39M))
       (is (=marginaalissa? sanktioiden-indeksitarkistukset -191.159M))
-      (is (=marginaalissa? muiden-kuin-kokhint-indeksitarkistukset -167.62M))
-      (is (=marginaalissa? kaikki-indeksitarkistukset -167.62M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 5790.67M))
+      (is (=marginaalissa? muiden-kuin-kokhint-indeksitarkistukset 2119.23M))
+      (is (=marginaalissa? kaikki-indeksitarkistukset 2119.23M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 8101.06M))
 
-      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 5790.67M)))))
+      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 8101.06M)))))

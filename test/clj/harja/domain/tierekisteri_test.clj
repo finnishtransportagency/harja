@@ -261,3 +261,245 @@
                  :tr-loppuetaisyys 4815}))
         "Sama väli eri suuntiin on ok")))
 
+(deftest tr-vali-leikkaa-tr-valin?
+  ;; Alikohde ennen pääkohteen alkua
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 100
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 200}
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 50
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 99})))
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 100
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 200}
+                {:tr-alkuosa 1
+                 :tr-alkuetaisyys 50
+                 :tr-loppuosa 2
+                 :tr-loppuetaisyys 300})))
+
+  ;; Alikohde päättyy pääkohteen alkuun
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 100
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 200}
+                {:id 2
+                 :tr-alkuosa 3
+                 :tr-alkuetaisyys 50
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 100})))
+
+  ;; Alikohde pääkohteen sisällä
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 4
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 300})))
+
+  ;; Alikohde pääkohteen sisällä (osoite väärinpäin)
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 4
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 2
+                :tr-loppuetaisyys 300})))
+
+  ;; Alikohde alkaa ennen pääkohteen loppua
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 5
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 6
+                :tr-loppuetaisyys 300})))
+
+  ;; Alikohde alkaa pääkohteen lopusta
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 5
+                :tr-alkuetaisyys 200
+                :tr-loppuosa 6
+                :tr-loppuetaisyys 300})))
+
+  ;; ALikohde alkaa pääkohteen jälkeen
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 100
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 200}
+                {:tr-alkuosa 5
+                 :tr-alkuetaisyys 300
+                 :tr-loppuosa 6
+                 :tr-loppuetaisyys 300})))
+  (is (false? (tierekisteri/tr-vali-leikkaa-tr-valin?
+                {:tr-alkuosa 3
+                 :tr-alkuetaisyys 100
+                 :tr-loppuosa 5
+                 :tr-loppuetaisyys 200}
+                {:tr-alkuosa 6
+                 :tr-alkuetaisyys 300
+                 :tr-loppuosa 6
+                 :tr-loppuetaisyys 600}))))
+
+(deftest korjaa-paakohteen-alikohteet
+
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
+           {:tr-numero 1
+            :tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-numero 1
+             :tr-alkuosa 1
+             :tr-alkuetaisyys 50
+             :tr-loppuosa 3
+             :tr-loppuetaisyys 50}
+            {:id 2
+             :tr-numero 1
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 50
+             :tr-loppuosa 4
+             :tr-loppuetaisyys 200}
+            {:id 3
+             :tr-numero 1
+             :tr-alkuosa 4
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 300}
+            {:id 4
+             :tr-numero 1
+             :tr-alkuosa 5
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 10
+             :tr-loppuetaisyys 0}])
+         [{:id 2
+           :tr-numero 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 4
+           :tr-loppuetaisyys 200}
+          {:id 3
+           :tr-numero 1
+           :tr-alkuosa 4
+           :tr-alkuetaisyys 200
+           :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
+           {:tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 50
+             :tr-loppuosa 3
+             :tr-loppuetaisyys 200}
+            {:id 2
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 4
+             :tr-loppuetaisyys 200}
+            {:id 3
+             :tr-alkuosa 4
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 300}])
+         [{:id 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 3
+           :tr-loppuetaisyys 200}
+          {:id 2
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 200
+           :tr-loppuosa 4
+           :tr-loppuetaisyys 200}
+          {:id 3
+           :tr-alkuosa 4
+           :tr-alkuetaisyys 200
+           :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
+           {:tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 100
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 300}])
+         [{:id 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
+           {:tr-numero 1
+            :tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-numero 1
+             :tr-alkuosa 3
+             :tr-alkuetaisyys 25
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 300}])
+         [{:id 1
+           :tr-numero 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
+           {:tr-numero 1
+            :tr-alkuosa 2
+            :tr-alkuetaisyys 1
+            :tr-loppuosa 2
+            :tr-loppuetaisyys 1}
+           [{:id 1
+             :tr-numero 1
+             :tr-alkuosa 1
+             :tr-alkuetaisyys 1
+             :tr-loppuosa 5
+             :tr-loppuetaisyys 1}])
+         [{:id 1
+           :tr-numero 1
+           :tr-alkuosa 2
+           :tr-alkuetaisyys 1
+           :tr-loppuosa 2
+           :tr-loppuetaisyys 1}])
+      "Pistemäinen kohde osataan korjata")
+
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
+           {:tr-numero 1
+            :tr-alkuosa 2
+            :tr-alkuetaisyys 1
+            :tr-loppuosa 2
+            :tr-loppuetaisyys 1}
+           [])
+         [])
+      "Tyhjä kohdelista osataan käsitellä"))

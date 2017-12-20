@@ -8,7 +8,7 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
 
 (defn poista-vanhat-tyokonesijainnit [db]
-  (log/debug "Poistetaan vanhentuneet työkonehavainnot")
+  ;;(log/debug "Poistetaan vanhentuneet työkonehavainnot")
   (tks/poista-vanhentuneet-havainnot! db))
 
 (defrecord TyokoneenseurantaPuhdistus []
@@ -17,7 +17,7 @@
     (assoc this
       ::poista-ajastus
       (ajastettu-tehtava/ajasta-minuutin-valein
-        15
+        15 34 ;; alkaa pyöriä 34s käynnistyksestä
         (fn [_] (poista-vanhat-tyokonesijainnit (:db this))))))
   (stop [this]
     ((::poista-ajastus this))

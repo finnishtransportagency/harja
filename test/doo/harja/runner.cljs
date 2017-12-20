@@ -53,8 +53,7 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test]
             [harja.tiedot.kanavat.urakka.liikenne-test]
             [harja.tiedot.kanavat.urakka.laskutus-test]
-            [harja.views.urakka.jarjestelma-asetukset-test]
-            ))
+            [harja.views.urakka.jarjestelma-asetukset-test]))
 
 (doo-tests 'harja.pvm-test
            'harja.ui.dom-test
@@ -108,7 +107,6 @@
            'harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
            'harja.tiedot.kanavat.urakka.liikenne-test
-           'harja.tiedot.kanavat.urakka.laskutus-test
            'harja.views.urakka.jarjestelma-asetukset-test
            ;; uusi testi tähän
            )

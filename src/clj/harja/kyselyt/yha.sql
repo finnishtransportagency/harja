@@ -32,7 +32,8 @@ WHERE urakka = :urakka;
 
 -- name: poista-urakan-yllapitokohdeosat!
 UPDATE yllapitokohdeosa
-SET poistettu = TRUE
+SET poistettu = TRUE,
+    muokattu = NOW()
 WHERE yllapitokohde IN (SELECT id
                         FROM yllapitokohde
                         WHERE urakka = :urakka);

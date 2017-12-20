@@ -21,6 +21,9 @@
 (def urakoitsijan-perustiedot
   #{::id ::nimi ::ytunnus})
 
+(defn organisaatio-idlla [id organisaatiot]
+  (first (filter #(= (::id %) id) organisaatiot)))
+
 ;; Haut
 
 (s/def ::vesivaylaurakoitsijat-vastaus

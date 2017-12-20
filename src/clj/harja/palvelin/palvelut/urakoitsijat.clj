@@ -9,6 +9,7 @@
             [harja.domain.organisaatio :as o]
             [namespacefy.core :refer [namespacefy]]
             [harja.kyselyt.urakoitsijat :as q]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.konversio :as konv]))
@@ -126,3 +127,13 @@
          ::o/katuosoite (:katuosoite tallennettu-urakoitsija)
          ::o/postitoimipaikka (:postitoimipaikka tallennettu-urakoitsija)
          ::o/ytunnus (:ytunnus tallennettu-urakoitsija)}))))
+
+(defn vaadi-urakoitsija-kuuluu-urakkaan [db vaitetty-urakoitsija-id vaitetty-urakka-id]
+  (log/debug "Tarkikistetaan, että urakoitsija " vaitetty-urakoitsija-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
+  (assert vaitetty-urakka-id "Urakka id puuttuu!")
+  (when vaitetty-urakoitsija-id
+    (let [urakan-todellinen-urakoitsija (:urakoitsija (first (urakat-q/hae-urakan-urakoitsija db vaitetty-urakka-id)))]
+      (when (and (some? urakan-todellinen-urakoitsija)
+                 (not= urakan-todellinen-urakoitsija vaitetty-urakoitsija-id))
+        (throw (SecurityException. (str "Urakan " vaitetty-urakka-id " urakoitsija ei ole " vaitetty-urakoitsija-id
+                                        " vaan " urakan-todellinen-urakoitsija)))))))

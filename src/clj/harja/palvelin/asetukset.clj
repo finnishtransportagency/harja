@@ -106,7 +106,13 @@
                                            (s/optional-key :tekniset-laitteet-urakat-tuontikohde) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-shapefile) s/Str
                                            (s/optional-key :siltojenpalvelusopimusten-osoite) s/Str
-                                           (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str}
+                                           (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str
+                                           (s/optional-key :turvalaitteiden-shapefile) s/Str
+                                           (s/optional-key :turvalaitteiden-osoite) s/Str
+                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str}
+
+
+
 
    (s/optional-key :yha) {:url s/Str
                           :kayttajatunnus s/Str
@@ -154,7 +160,9 @@
                               (s/optional-key :toimenpidehakuvali) s/Int
                               (s/optional-key :komponenttityyppihakuvali) s/Int
                               (s/optional-key :turvalaitekomponenttihakuvali) s/Int
-                              (s/optional-key :vikahakuvali) s/Int}
+                              (s/optional-key :vikahakuvali) s/Int
+                              (s/optional-key :turvalaiteryhmahakuaika) [s/Num]}
+
 
    (s/optional-key :ais-data) {:url s/Str
                                :sekunnin-valein s/Int}
@@ -175,7 +183,7 @@
                 :salasana ""}
 
    :log {:gelf {:palvelin "gl.solitaservices.fi" :taso :info}}
-   :geometriapaivitykset {:tuontivali 1}
+   :geometriapaivitykset {:tuontivali 100}
    })
 
 (defn yhdista-asetukset [oletukset asetukset]

@@ -8,6 +8,7 @@
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
     [cljs.core.async :refer [<!]]
+    [harja.atom :refer [paivita!]]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka :as urakka]
@@ -141,6 +142,14 @@
    :valinnat pot/+tyomenetelmat-ja-nil+})
 
 (defn tallenna-paallystysilmoitusten-takuupvmt [urakka-id paallystysilmoitukset]
-  (k/post! :tallenna-paallystysilmoitusten-takuupvmt
-           {::urakka-domain/id urakka-id
-            ::pot/tallennettavat-paallystysilmoitusten-takuupvmt paallystysilmoitukset}))
+  (let [ilmoitukset-joilla-jo-pot (keep #(when (:harja.domain.paallystysilmoitus/id %) %)
+                                        paallystysilmoitukset)]
+    (k/post! :tallenna-paallystysilmoitusten-takuupvmt
+             {::urakka-domain/id urakka-id
+              ::pot/tallennettavat-paallystysilmoitusten-takuupvmt ilmoitukset-joilla-jo-pot})))
+
+(defn avaa-paallystysilmoituksen-lukitus!
+  [{:keys [urakka-id kohde-id tila]}]
+  (k/post! :aseta-paallystysilmoituksen-tila {::urakka-domain/id urakka-id
+                                              ::pot/paallystyskohde-id kohde-id
+                                              ::pot/tila tila}))

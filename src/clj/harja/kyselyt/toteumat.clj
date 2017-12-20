@@ -13,9 +13,9 @@
 (defqueries "harja/kyselyt/toteumat.sql"
   {:positional? true})
 
-(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja]
-  (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja luojalla " luoja)
-  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja))))
+(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja urakka-id]
+  (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja luojalla " luoja " sekä urakka id:llä: " urakka-id)
+  (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja urakka-id))))
 
 (defn pisteen-hoitoluokat [db piste]
   (first (hae-pisteen-hoitoluokat db piste)))

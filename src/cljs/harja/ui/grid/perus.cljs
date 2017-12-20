@@ -15,7 +15,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid.protokollat :refer
              [Grid vetolaatikko-auki? sulje-vetolaatikko!
-              muokkauksessa-olevat-gridit
+              muokkauksessa-olevat-gridit seuraava-grid-id
               avaa-vetolaatikko! muokkaa-rivit! otsikko?
               lisaa-rivi! vetolaatikko-rivi vetolaatikon-tila
               aseta-grid +rivimaara-jonka-jalkeen-napit-alaskin+]]
@@ -23,7 +23,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]
@@ -475,15 +476,15 @@
                                   rivit)]
           (mapcat #(keep identity %)
                   (map-indexed
-                   (fn [i rivi]
-                     (if (otsikko? rivi)
-                       [^{:key (str i (:teksti rivi) "//" (tunniste rivi))}
+                    (fn [i rivi]
+                      (if (otsikko? rivi)
+                        [^{:key (str i (:teksti rivi) "//" (tunniste rivi))}
                         [valiotsikko {:colspan colspan :teksti (:teksti rivi)
                                       :otsikko-record rivi
                                       :piilotetut-valiotsikot piilotetut-valiotsikot
                                       :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
-                       (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
+                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)]
                             [^{:key id}
                             [nayttorivi {:ohjaus ohjaus
@@ -548,7 +549,8 @@
   :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :tunniste                             rivin tunnistava kenttä, oletuksena :id
-  :esta-poistaminen?                    funktio, joka palauttaa true tai false. Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
+  :esta-poistaminen?                    funktio, joka ottaa rivin ja palauttaa true tai false.
+                                        Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä.
@@ -601,7 +603,7 @@
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara rivin-infolaatikko
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
-  (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
+  (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -997,7 +999,9 @@
                                 :tunniste tunniste
                                 :validoi-fn validoi-fn})])])))))
 
-(defn otsikkorivin-tiedot [otsikko maara]
+;; Yleisiä apureita gridiin
+
+(defn otsikko-ja-maara [otsikko maara]
   (str otsikko
        " ("
        maara
@@ -1006,7 +1010,7 @@
        ")"))
 
 (defn arvo-ja-nappi
-  "Piirtää arvon ja napin, tai pelkän napin optioista riippuen.
+  "Piirtää arvon ja napin, tai pelkän napin tai pelkän arvon, optioista riippuen.
    Napilla voidaan muokata arvoa tai näyttää lisätietoa arvosta.
 
   Optiot:
@@ -1043,3 +1047,58 @@
 
        :pelkka-arvo
        [:span arvo])]))
+
+(defn rivinvalintasarake
+  "Luo checkbox-sarakkeen, joka on tarkoitettu rivien valitsemiseksi.
+   Sarakkeen otsikko on nappi, jolla voi valita kaikki rivit tai poistaa valinta kaikilta riveiltä.
+
+   Pakolliset optiot:
+   rivi-valittu?-fn         Funktio, joka ottaa rivin, ja kertoo, onko se valittu.
+   rivi-valittu-fn          Funtkio, jota kutsutaan, kun rivi valitaan checkboksista.
+                            Parametrina rivi ja sen uusi valinta-arvo.
+
+   Vapaat optiot:
+   leveys                   Sarakkeen leveys (oletus: 1)
+   otsikkovalinta?          Jos true, otsikkoriviltä on mahdollista valita kaikki rivit tai poistaa
+                            kaikkien valinta. Jos ei anneta, piirretään tekstiksi annettu otsikko
+                            tai 'Valitse'.
+   otsikko                  Otsikkoteksti, mikäli otsikkovalinta ei ole käytössä.
+   kaikki-valittu?-fn       Funktio, joka palautaa true tai false. Kertoo, onko kaikki rivit valittu.
+                            Pakollinen käytettäessä otsikkovalintaa.
+   otsikko-valittu-fn       Funktio, jota kutsutaan, kun otsikossa olevaa checkbox-nappia klikataan.
+                            Parametrina boolean, joka kertoo kaikkien rivien uuden valinta-arvon.
+                            Pakollinen käytettäessä otsikkovalintaa."
+  [{:keys [rivi-valittu?-fn rivi-valittu-fn
+           leveys otsikkovalinta? otsikko kaikki-valittu?-fn otsikko-valittu-fn] :as optiot}]
+  (assert rivi-valittu?-fn)
+  (assert rivi-valittu-fn)
+
+  (when otsikkovalinta?
+    (assert kaikki-valittu?-fn)
+    (assert otsikko-valittu-fn))
+
+  {:otsikko (if otsikkovalinta?
+              [napit/nappi
+               nil
+               #(if (kaikki-valittu?-fn)
+                  (otsikko-valittu-fn false)
+                  (otsikko-valittu-fn true))
+               {:ikoni (if (kaikki-valittu?-fn)
+                         (ikonit/livicon-square)
+                         (ikonit/livicon-check))
+                :ikoninappi? true}]
+              (or otsikko "Valitse"))
+   :nimi :valinta
+   :tyyppi :komponentti
+   :tasaa :keskita
+   :solu-klikattu (fn [rivi]
+                    (rivi-valittu-fn
+                      rivi
+                      (not (rivi-valittu?-fn rivi))))
+   :komponentti (fn [rivi]
+                  (let [rivi-valittu? (rivi-valittu?-fn rivi)]
+                    [kentat/tee-kentta
+                     {:tyyppi :checkbox}
+                     (r/wrap rivi-valittu?
+                             #(rivi-valittu-fn rivi (not rivi-valittu?)))]))
+   :leveys (or leveys 1)})

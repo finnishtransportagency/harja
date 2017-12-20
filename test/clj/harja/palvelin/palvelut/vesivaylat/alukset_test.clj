@@ -38,39 +38,11 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest hae-kaikki-alukset
-  (let [kaikkien-alusten-lkm-kannassa (ffirst (q "SELECT COUNT(*) FROM vv_alus"))
-        args {}
-        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :hae-kaikki-alukset +kayttaja-jvh+
-                              args)]
-
-    (is (s/valid? ::alus/hae-kaikki-alukset-kysely args))
-    (is (s/valid? ::alus/hae-kaikki-alukset-vastaus tulos))
-
-    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
-    (is (= (count tulos) kaikkien-alusten-lkm-kannassa))))
-
-(deftest hae-urakan-alukset
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
-        urakan-alusten-lkm-kannassa (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka WHERE urakka = " urakka-id ";"))
-        args {::urakka/id urakka-id}
-        tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :hae-urakan-alukset +kayttaja-jvh+
-                              args)]
-
-    (is (s/valid? ::alus/hae-urakan-alukset-kysely args))
-    (is (s/valid? ::alus/hae-urakan-alukset-vastaus tulos))
-
-    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
-    (is (= (count tulos) urakan-alusten-lkm-kannassa))))
-
 (deftest hae-urakoitsijan-alukset
-  (let [urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
-        urakoitsijan-urakat (hae-urakoitsijan-urakka-idt urakoitsija-id)
-        urakoitsijan-alusten-lkm-kannassa (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka
-                                                      WHERE urakka IN (" (str/join "," urakoitsijan-urakat) ");"))
-        args {::organisaatio/id urakoitsija-id}
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-urakoitsijan-alukset +kayttaja-jvh+
                               args)]
@@ -78,8 +50,87 @@
     (is (s/valid? ::alus/hae-urakoitsijan-alukset-kysely args))
     (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus tulos))
 
-    (is (some #(= (::alus/nimi %) "Rohmu") tulos))
-    (is (= (count tulos) urakoitsijan-alusten-lkm-kannassa))))
+    (is (some #(= (::alus/nimi %) "Rohmu") tulos))))
+
+(deftest hae-urakoitsijan-alukset-ilman-oikeutta
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-urakoitsijan-alukset +kayttaja-ulle+
+                                           {::alus/urakoitsija-id urakoitsija-id
+                                            ::urakka/id urakka-id})))))
+
+(deftest tallenna-urakoitsijan-alukset
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
+        alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
+        vapaat-alukset (filter (comp not alukset-kaytossa) alus-mmsit)
+        uudet-alukset [{::alus/mmsi (first vapaat-alukset)
+                        ::alus/kaytossa-urakassa? false
+                        ::alus/lisatiedot "Hassu alus"
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Tämä teksti ei tallennu, koska liitetä urakkaan"}
+                       {::alus/mmsi (second vapaat-alukset)
+                        ::alus/kaytossa-urakassa? true
+                        ::alus/lisatiedot "Hieno alus tämäkin"
+                        ::alus/urakan-aluksen-kayton-lisatiedot "Kerrassaan upea alus, otetaan urakkaan heti!"}]
+        urakan-alukset-ennen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-urakoitsijan-alukset +kayttaja-jvh+
+                                args)
+        urakan-alukset-jalkeen (ffirst (q "SELECT COUNT(*) FROM vv_alus_urakka;"))]
+
+
+    (is (s/valid? ::alus/tallenna-urakoitsijan-alukset-kysely args))
+    (is (s/valid? ::alus/hae-urakoitsijan-alukset-vastaus vastaus))
+
+    (is (= (+ urakan-alukset-ennen 1)
+           urakan-alukset-jalkeen)
+        "Aluslinkkejä tuli yksi lisää (vain yksi alus oli merkattu kuuluvaksi urakkaan)")
+
+    (is (not-any? #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Tämä teksti ei tallennu, koska liitetä urakkaan") vastaus))
+    (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
+
+(deftest tallenna-urakoitsijan-alukset-ilman-oikeutta
+  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        uudet-alukset []
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-urakoitsijan-alukset +kayttaja-ulle+
+                                           args)))))
+
+(deftest tallenna-urakoitsijan-alukset-vaaraan-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
+        uudet-alukset []
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-urakoitsijan-alukset +kayttaja-jvh+
+                                           args)))))
+
+(deftest tallenna-eri-urakoitsijan-alukset
+  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+        urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
+        alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus WHERE urakoitsija != " urakoitsija-id ";")))
+        uudet-alukset [{::alus/mmsi (first alus-mmsit)
+                        ::alus/kaytossa-urakassa? true
+                        ::alus/lisatiedot "HAXOROITU ALUS"
+                        ::alus/urakan-aluksen-kayton-lisatiedot "hupsis"}]
+        args {::alus/urakoitsija-id urakoitsija-id
+              ::urakka/id urakka-id
+              ::alus/tallennettavat-alukset uudet-alukset}]
+
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                             :tallenna-urakoitsijan-alukset +kayttaja-jvh+
+                                             args)))))
 
 (deftest hae-alusten-reitit
   (let [args {:alukset nil :alku nil :loppu nil}
@@ -130,10 +181,10 @@
             (and
               (not-empty pisteet)
               (every?
-               (fn [piste]
-                 (and (every? some? (vals piste))
-                      (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
-               pisteet)))
+                (fn [piste]
+                  (and (every? some? (vals piste))
+                       (= #{::alus/aika ::alus/sijainti} (into #{} (keys piste)))))
+                pisteet)))
           (map ::alus/pisteet tulos))))
 
   (let [args {:alukset #{230111580} :alku nil :loppu nil}

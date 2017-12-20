@@ -271,17 +271,11 @@
   </xs:complexType>
 
   <xs:complexType name="HaeTurvalaiteryhmatRequestType">
-    <xs:attribute type="xs:string" name="alkuaika" use="required"/>
-    <xs:attribute type="xs:string" name="loppuaika"/> <!-- Kyselysanoman muodostamishetki jos ei annettu. -->
+    <xs:attribute type="xs:dateTime" name="alkuaika" use="required"/>
+    <xs:attribute type="xs:dateTime" name="loppuaika"/> <!-- Kyselysanoman muodostamishetki jos ei annettu. -->
   </xs:complexType>
 
   <xs:complexType name="HaeTurvalaiteryhmatResponseType">
-    <xs:sequence>
-      <xs:element name="turvalaiteryhma" type="TurvalaiteRyhmaType" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="TurvalaiteRyhmatType">
     <xs:sequence>
       <xs:element name="turvalaiteryhma" type="TurvalaiteRyhmaType" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>

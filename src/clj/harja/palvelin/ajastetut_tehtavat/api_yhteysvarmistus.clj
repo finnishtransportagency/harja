@@ -35,7 +35,7 @@
   (when (and minuutit url)
     (log/debug (format "Varmistetaan API:n yhteys %s minuutin välein." minuutit))
     (ajastettu-tehtava/ajasta-minuutin-valein
-      minuutit
+      minuutit 44 ;; alkaa pyöriä 44 sekunnin kuluttua käynnistyksestä
       (fn [_] (tarkista-api-yhteys db integraatioloki url kayttajatunnus salasana)))))
 
 (defrecord ApiVarmistus [ajovali-minuutteina url kayttajatunnus salasana]

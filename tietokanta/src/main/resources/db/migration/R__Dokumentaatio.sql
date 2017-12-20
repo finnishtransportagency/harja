@@ -144,6 +144,11 @@ E'Vikailmoitukset ovat turvalaitteista löydettyjä vikoja. Viat täytyy korjata
 COMMENT ON TABLE reimari_toimenpide IS
 E'Sisältää Reimarista tuodut toimenpiteiden tiedot. Data on melko raakaa, siksi monet kentät on toteutettu TYPE:llä, eikä esim. linkkeinä muihin tauluihin. reimari-etuliitteelliset sarakkeet sisältävät Reimarista tuotua tietoa, muut kentät on Harjassa luotuja.';
 
+COMMENT ON TABLE reimari_turvalaiteryhma IS
+E'Kuvaa turvalaiteryhmää eli ryhmää turvalaitteita, jotka muodostavat vesiväyläurakka-alueen . Kaikki tiedot tulevat tähän tauluun Reimarista.';
+COMMENT ON COLUMN reimari_turvalaiteryhma."turvalaitteet" IS 'Turvalaiteryhmään kuuluvien turvalaitteiden numerot. Samaa numeroa käytetään turvalaitteen tunnistamiseen myös muualla, esim. vv_turvalaite taulussa.';
+
+
 COMMENT ON TABLE reimari_turvalaitekomponentti IS
 E'Kuvaa turvalaitteeseen liittyvää komponenttia. Kaikki tiedot tulevat tähän tauluun Reimarista.';
 
@@ -177,11 +182,39 @@ E'Vesiväylien tilaajan materiaalin hallinta kerää tilaajan urakoitsijalle my�
 COMMENT ON TABLE toimenpideinstanssi_vesivaylat IS
 E'Taulun tarkoitus on liittää toimenpideinstanssiin vesiväylä -spesifistä tietoa.';
 
-COMMENT ON TABLE kan_kanava IS
-E'Kanava on.. kanava. Kanavalla on nimi ja sijainti, ja se sisältää 0-n kohdetta';
+-- Kanavat
+
+COMMENT ON TABLE kan_kohdekokonaisuus IS
+E'Kohdekokonaisuus on ihmstä varten oleva kategoria. Kohteet kuuluvat kohdekokonaisuuksiin, esim "Iisalmen reitti"';
 
 COMMENT ON TABLE kan_kohde IS
-E'Kohteet ovat kanavalla sijaitsevia siltoja ja sulkuja, joihin kanavaurkoiden työt kohdistuvat.';
+E'Kohteet ovat kanavalla sijaitsevia alueita, joihin urakat kohdistuvat. \n
+  Kohde sisältää kohteenosia, eli siltoja ja sulkuja. Saimaan kanavan kohteilla on järjestys liikennetapahtumien ketjutusta varten.';
 
-COMMENT ON TABLE kanavahuoltokohde IS
+COMMENT ON TABLE kan_kohteenosa IS
+E'Kohteenosat ovat siltoja ja sulkuja, jotka sisältyvät kohteeseen. Toimenpiteet kohdistetaan yleensä kohteenosaan.';
+
+COMMENT ON COLUMN kan_kohteenosa.oletuspalvelumuoto IS 'Palvelumuoto, joka annetaan kohdeosalle oletuksena, kun kirjataan liikennetapahtuma';
+
+COMMENT ON TABLE kan_liikennetapahtuma IS
+E'Kun alus kulkee kohteen läpi, siitä kirjataan liikennetapahtumalle. Aluksista, ja kohteenosilla käytettävistä palvelumuodoista pidetään kirjaa.';
+
+COMMENT ON TABLE kan_liikennetapahtuma_alus IS
+E'Liikennetapahtumaan kirjattava alus.';
+
+COMMENT ON TABLE kan_liikennetapahtuma_toiminto IS
+E'Liikennetapahtumat kohdistetaan koko kohteelle, mutta kohteenosat voivat käyttää eri palvelumuotoja, ja eri toimenpiteitä.';
+
+COMMENT ON TABLE kan_huoltokohde IS
 E'Huoltokohteet ovat asioita, joita kanavasta korjataan. Huoltokohteita ei pidä sekoittaa kohteeseen! Huoltokohde voi olla esim "Hydrauliikka", kun taas kohde on fyysinen sijainti kanavan varrella, esim. silta.';
+
+COMMENT ON TABLE kan_hairio IS
+E'Kuvaa häiriötilannetta. Urakoitsija vastaa hoitourakoissa tapahtuvien häiriötilanteiden tietojen kirjaamisesta.';
+COMMENT ON COLUMN kan_hairio.odotusaika_h IS 'Aika, jonka liikennöivät alukset joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.ammattiliikenne_lkm IS 'Ammattiliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.huviliikenne_lkm IS 'Huviliikennealusten määrä, jotka joutuvat odottamaan häiriön takia';
+COMMENT ON COLUMN kan_hairio.korjaustoimenpide IS 'Vapaamuotoinen toimenpiteen kuvaus, esim. "Kamera resetoitu"';
+COMMENT ON COLUMN kan_hairio.paikallinen_kaytto IS 'Valitaan, onko siirrytty paikallliskäyttöön';
+
+Comment on table kan_toimenpide IS
+E'Kuvaa konkreettiset toimenpiteet joita on tehty tietyn kanavan kohteelle, eli sillalle tai sululle, jotka kohdistuvat taas tietttyyn huoltokohteeseen, kuten esim. hydrauliikkaan. Voivat olla hinnoittelultaan esim. kokonais- tai yksikköhintaisia.'

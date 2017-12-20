@@ -15,7 +15,7 @@
          [clj-time.coerce :as c]])))
 
 (s/def ::id ::spec-apurit/postgres-serial)
-(s/def ::kohdenumero string?)
+(s/def ::kohdenumero (s/nilable string?))
 (s/def ::nimi string?)
 (s/def ::kokonaishinta (s/and number?))
 

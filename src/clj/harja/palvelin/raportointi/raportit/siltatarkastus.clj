@@ -270,7 +270,7 @@
                      (vec (sort-by
                             (cond
                               (and (= konteksti :urakka) (= silta-id :kaikki))
-                              (indeksi 1)
+                              (indeksi 0)
 
                               (and (= konteksti :hallintayksikko))
                               (indeksi 0)

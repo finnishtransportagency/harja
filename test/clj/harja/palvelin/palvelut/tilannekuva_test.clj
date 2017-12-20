@@ -83,7 +83,8 @@
    :tarkastukset {tk/tarkastus-tiesto true
                   tk/tarkastus-talvihoito true
                   tk/tarkastus-soratie true
-                  tk/tarkastus-laatu true}
+                  tk/tarkastus-laatu true
+                  tk/tilaajan-laadunvalvonta true}
    :talvi {tk/auraus-ja-sohjonpoisto true
            tk/suolaus true
            tk/pistehiekoitus true
@@ -459,3 +460,13 @@
         normaali-vastaus (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
 
     (is (= normaali-vastaus hyokkaus-vastaus))))
+
+(deftest hae-tilaajan-laadunvalvonta
+  (let [vastaus-tilaajalle
+        (hae-tk (oulun-2014-urakan-tilaajan-urakanvalvoja) parametrit-laaja-nykytilanne)
+        vastaus-urakoitsijalle
+        (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) parametrit-laaja-nykytilanne)]
+    (is (contains? (get-in vastaus-tilaajalle [:tyokoneet :tehtavat])
+                   #{"tilaajan laadunvalvonta"}))
+    (is (not (contains? (get-in vastaus-urakoitsijalle [:tyokoneet :tehtavat])
+                        #{"tilaajan laadunvalvonta"})))))

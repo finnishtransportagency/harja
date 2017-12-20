@@ -23,7 +23,7 @@
             "nimi": "__SUORITTAJA1_NIMI__",
             "ytunnus": "8765432-1"
           },
-          "sopimusId": 5,
+          "sopimusId": __SOPIMUS_ID__,
           "alkanut": "2016-01-30T12:00:00Z",
           "paattynyt": "2016-01-30T14:00:00Z",
           "toteumatyyppi": "kokonaishintainen",
@@ -161,7 +161,7 @@
             "nimi": "__SUORITTAJA2_NIMI__",
             "ytunnus": "8765432-1"
           },
-          "sopimusId": 5,
+          "sopimusId": __SOPIMUS_ID__,
           "alkanut": "2016-01-30T12:00:00Z",
           "paattynyt": "2016-01-30T14:00:00Z",
           "toteumatyyppi": "kokonaishintainen",

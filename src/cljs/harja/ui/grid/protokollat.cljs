@@ -12,6 +12,7 @@
                    [harja.makrot :refer [fnc]]))
 
 (def muokkauksessa-olevat-gridit (atom #{}))
+(def seuraava-grid-id (atom 0))
 (def gridia-muokataan? (reaction (not (empty? @muokkauksessa-olevat-gridit)))) ;; Tarkoitus on, että vain yhtä gridiä muokataan kerralla
 (def +rivimaara-jonka-jalkeen-napit-alaskin+ 20)
 

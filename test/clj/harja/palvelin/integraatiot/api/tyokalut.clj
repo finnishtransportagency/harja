@@ -51,3 +51,9 @@
           (conj edellinen id))))
     []
     (range maara)))
+
+(defn tasmaa-poikkeus [{:keys [type virheet]} tyyppi koodi viesti]
+  (and
+    (= tyyppi type)
+    (some (fn [virhe] (and (= koodi (:koodi virhe)) (.contains (:viesti virhe) viesti)))
+          virheet)))

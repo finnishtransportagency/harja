@@ -3,10 +3,10 @@
     <kohteet>
         <!--Zero or more repetitions:-->
         <kohde>
-            <yha-id>3</yha-id>
+            <yha-id>666</yha-id>
             <kohdetyyppi>1</kohdetyyppi>
-            <kohdetyotyyppi>paikkaus</kohdetyotyyppi>
-            <nimi>string</nimi>
+            <kohdetyotyyppi>paallystys</kohdetyotyyppi>
+            <nimi>testikohde</nimi>
             <tunnus>A</tunnus>
             <!--Optional:-->
             <yllapitoluokka>1</yllapitoluokka>
@@ -15,28 +15,28 @@
             <!--Optional:-->
             <nykyinen-paallyste>1</nykyinen-paallyste>
             <tierekisteriosoitevali>
-                <karttapaivamaara>2016-01-01</karttapaivamaara>
-                <tienumero>3</tienumero>
-                <aosa>3</aosa>
-                <aet>3</aet>
-                <losa>3</losa>
-                <let>3</let>
-                <ajorata>0</ajorata>
-                <kaista>11</kaista>
+                <karttapaivamaara>2017-12-12</karttapaivamaara>
+                <tienumero>20</tienumero>
+                <aosa>1</aosa>
+                <aet>1</aet>
+                <losa>1</losa>
+                <let>100</let>
+                <ajorata>1</ajorata>
+                <kaista>1</kaista>
             </tierekisteriosoitevali>
             <alikohteet>
                 <!--Zero or more repetitions:-->
                 <alikohde>
                     <yha-id>3</yha-id>
                     <tierekisteriosoitevali>
-                        <karttapaivamaara>2016-01-01</karttapaivamaara>
-                        <tienumero>3</tienumero>
-                        <aosa>3</aosa>
-                        <aet>3</aet>
-                        <losa>3</losa>
-                        <let>3</let>
-                        <ajorata>0</ajorata>
-                        <kaista>11</kaista>
+                        <karttapaivamaara>2017-12-12</karttapaivamaara>
+                        <tienumero>20</tienumero>
+                        <aosa>1</aosa>
+                        <aet>1</aet>
+                        <losa>1</losa>
+                        <let>100</let>
+                        <ajorata>1</ajorata>
+                        <kaista>1</kaista>
                     </tierekisteriosoitevali>
                     <!--Optional:-->
                     <paallystystoimenpide>
@@ -52,5 +52,4 @@
             </alikohteet>
         </kohde>
     </kohteet>
-    <virhe></virhe>
 </urakan-kohdehakuvastaus>

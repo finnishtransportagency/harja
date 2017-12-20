@@ -34,8 +34,10 @@
   [harja.palvelin.raportointi.raportit.indeksitarkistus]
   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
+  [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
-  [harja.domain.urakka :as urakka-domain]))
+  [harja.domain.urakka :as urakka-domain]
+  [clojure.set :as set]))
 
 (def raportit
   [{:nimi :sanktioraportti-yllapito
@@ -108,7 +110,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Turvallisuusraportti"
     :suorita #'harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat/suorita
-    :urakkatyyppi #{:hoito :paallystys :paikkaus :tiemerkinta}}
+    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-kuukausiraportti
     :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -134,7 +136,7 @@
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Laatupoikkeamaraportti"
     :suorita #'harja.palvelin.raportointi.raportit.laatupoikkeama/suorita
-    :urakkatyyppi #{:hoito :paallystys :paikkaus :tiemerkinta}}
+    :urakkatyyppi (set/union #{:hoito :paallystys :paikkaus :tiemerkinta} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-tehtavien-summat
     :parametrit [{:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
@@ -261,7 +263,7 @@
     :konteksti #{"urakka"}
     :kuvaus "Välitavoiteraportti"
     :suorita #'harja.palvelin.raportointi.raportit.valitavoiteraportti/suorita
-    :urakkatyyppi #{:hoito}}
+    :urakkatyyppi (set/union #{:hoito} urakka-domain/vesivayla-urakkatyypit)}
 
    {:nimi :yks-hint-tyot
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -289,7 +291,14 @@
     :konteksti #{"urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
-    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-raporttinakyma}])
+    :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-ilman-kanavia}
+
+   {:nimi :kanavien-laskutusyhteenveto
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti #{"urakka"}
+    :kuvaus "Laskutusyhteenveto"
+    :suorita #'harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto/suorita
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))

@@ -56,14 +56,14 @@ maksimi-linnuntien-etaisyys 200)
              [x2 y2 :as p2] (:coordinates (geo/pg->clj loppu))
              etaisyys (geo/etaisyys p1 p2)]
          (if (or (nil? maksimi-etaisyys) (< etaisyys maksimi-etaisyys))
-           (do (log/warn "Reittitoteuman pisteillä"
+           (do (log/info "Reittitoteuman pisteillä"
                          " (x1:" x1 " y1: " y1
                          " & x2: " x2 " y2: " y2 " )"
                          " ei ole yhteistä tietä. Tehdään linnuntie, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
                {:type :line
                 :points [[x1 y1]
                          [x2 y2]]})
-           (do (log/warn "EI TEHDÄ linnuntietä, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
+           (do (log/info "EI TEHDÄ linnuntietä, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
                nil))))))
 
 (defn hae-reitti

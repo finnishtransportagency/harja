@@ -641,3 +641,7 @@ jatkon."
              containee
              %) container-component)
     containee))
+
+(defn totuus-ikoni [arvo]
+  (when arvo
+    (ikonit/livicon-check)))

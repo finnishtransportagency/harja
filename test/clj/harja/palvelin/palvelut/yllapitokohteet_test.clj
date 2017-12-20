@@ -60,8 +60,8 @@
                               :tr-numero 20
                               :tr-alkuosa 1
                               :tr-alkuetaisyys 1
-                              :tr-loppuosa 1
-                              :tr-loppuetaisyys 1
+                              :tr-loppuosa 2
+                              :tr-loppuetaisyys 2
                               :bitumi_indeksi 123
                               :kaasuindeksi 123})
 
@@ -343,6 +343,38 @@
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
 
+      ;; Jos ylläpitokohteen osoitetta muutetaan, tarkistetaan, että myös alikohteen osoite muuttui
+      ;; Luodaan kohteelle testiä varten kohdeosa
+      (let [yllapitokohde-id (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = '" (:nimi yllapitokohde-testidata)) "';"))
+            _ (u (str "INSERT INTO yllapitokohdeosa (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, yllapitokohde)
+                    VALUES ("
+                      (:tr-numero yllapitokohde-testidata) ","
+                      (:tr-alkuosa yllapitokohde-testidata) ","
+                      (:tr-alkuetaisyys yllapitokohde-testidata) ","
+                      (:tr-loppuosa yllapitokohde-testidata) ","
+                      (:tr-loppuetaisyys yllapitokohde-testidata) ","
+                      yllapitokohde-id ");"))
+            uusi-loppuosa 3
+            uusi-loppuetaisyys 100
+            _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :kohteet [(assoc yllapitokohde-testidata
+                                                                                    :id yllapitokohde-id
+                                                                                    :tr-loppuosa uusi-loppuosa
+                                                                                    :tr-loppuetaisyys uusi-loppuetaisyys)]})
+            kohdeosat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :yllapitokohteen-yllapitokohdeosat
+                                      +kayttaja-jvh+ {:urakka-id urakka-id
+                                                      :sopimus-id sopimus-id
+                                                      :yllapitokohde-id yllapitokohde-id})
+            kohdeosa (first kohdeosat)]
+
+        (is (= (:tr-alkuosa kohdeosa) (:tr-alkuosa yllapitokohde-testidata)))
+        (is (= (:tr-alkuetaisyys kohdeosa) (:tr-alkuetaisyys yllapitokohde-testidata)))
+        (is (= (:tr-loppuosa kohdeosa) uusi-loppuosa))
+        (is (= (:tr-loppuetaisyys kohdeosa) uusi-loppuetaisyys)))
+
       ;; Edelleen jos ylläpitokohde poistetaan, niin myös geometria päivittyy
       (let [lisatty-kohde (kohde-nimella kohteet-kannassa "Testiramppi4564ddf")
             _ (is lisatty-kohde "Lisätty kohde löytyi vastauksesta")
@@ -413,9 +445,17 @@
                                                  :urakan-yllapitokohteet
                                                  +kayttaja-jvh+ {:urakka-id urakka-id
                                                                  :sopimus-id sopimus-id})]
+
       (is (= maara-ennen-testia maara-testin-jalkeen))
-      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-ennen-testia))
-             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa? :muokattu) kohteet-testin-jalkeen)))))))
+      ;; Kohteet ovat kannassa samat kuin aiemmin
+      (is (= (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?
+                                        :kohdeosat
+                                        :muokattu)
+                               kohteet-ennen-testia))
+             (sort-by :id (map #(dissoc % :yllapitokohteen-voi-poistaa?
+                                        :kohdeosat
+                                        :muokattu)
+                               kohteet-testin-jalkeen)))))))
 
 (deftest tallenna-yllapitokohdeosa-kantaan
   (let [yllapitokohde-id (yllapitokohde-id-jolla-on-paallystysilmoitus)]
@@ -451,13 +491,13 @@
                    {:tr-kaista nil
                     :sijainti _
                     :tr-ajorata nil
-                    :tr-loppuosa 2
+                    :tr-numero 20
                     :tr-alkuosa 1
+                    :tr-alkuetaisyys 1
+                    :tr-loppuosa 2
                     :tr-loppuetaisyys 2
                     :nimi "Testiosa123456"
                     :id _
-                    :tr-alkuetaisyys 1
-                    :tr-numero 20
                     :toimenpide "Ei tehdä mitään"}
                    true))
         (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))))))
@@ -832,7 +872,7 @@
       [+testi-fim+ fim-vastaus]
 
       ;; Lisätään kohteelle ensin päällystyksen aikataulutiedot ja suorittava tiemerkintäurakka
-      (let [tiemerkintapvm nil                              ; Tämä tarkoittaa että valmius perutaan
+      (let [tiemerkintapvm nil ; Tämä tarkoittaa että valmius perutaan
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-yllapitokohteiden-aikataulu
                               +kayttaja-jvh+

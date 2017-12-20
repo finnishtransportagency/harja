@@ -19,7 +19,7 @@
           "tunniste": {
             "id": __ID1__
           },
-          "sopimusId": 5,
+          "sopimusId": __SOPIMUS_ID__,
           "suorittaja": {
             "nimi": "__SUORITTAJA1_NIMI__",
             "ytunnus": "8765432-1"
@@ -49,7 +49,7 @@
           "tunniste": {
             "id": __ID2__
           },
-          "sopimusId": 5,
+          "sopimusId": __SOPIMUS_ID__,
           "suorittaja": {
             "nimi": "__SUORITTAJA2_NIMI__",
             "ytunnus": "8765432-1"

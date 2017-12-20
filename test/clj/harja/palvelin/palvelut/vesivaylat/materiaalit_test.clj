@@ -159,11 +159,15 @@
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
         materiaali-nimi "Hiekkasäkki"
         uusi-alkuperainen-maara 48598
+        materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
+        hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
+                                (get-in % [:muutokset 0 :id]))
+                             materiaalilistaukset)
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :muuta-materiaalien-alkuperainen-maara
                           testi/+kayttaja-jvh+
                           {::m/urakka-id urakka-id
-                           :uudet-alkuperaiset-maarat [{::m/nimi materiaali-nimi
+                           :uudet-alkuperaiset-maarat [{::m/id hiekkasakin-id
                                                         ::m/alkuperainen-maara uusi-alkuperainen-maara}]})
         uudet-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-vesivayla-materiaalilistaus
@@ -182,12 +186,16 @@
                                             :uudet-alkuperaiset-maarat []})))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-eri-urakkaan
-  (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)]
+  (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
+        materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
+        hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
+                                (get-in % [:muutokset 0 :id]))
+                             materiaalilistaukset)]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :muuta-materiaalien-alkuperainen-maara
                                                    testi/+kayttaja-jvh+
                                                    {::m/urakka-id urakka-id
-                                                    :uudet-alkuperaiset-maarat [{::m/nimi "Hiekkasäkki"
+                                                    :uudet-alkuperaiset-maarat [{::m/id hiekkasakin-id
                                                                                  ::m/alkuperainen-maara 666}]})))))
 
 ;; Tämä testi toimii lokaalisti ja Circlessä, mutta Jenkinsi:ssä ei mene läpi.

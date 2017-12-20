@@ -9,8 +9,8 @@ WHERE
   ((:urakka :: INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
   AND (:urakka :: INTEGER IS NOT NULL OR
-       (:urakka :: INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
-                                        u.tyyppi = :urakkatyyppi :: urakkatyyppi)))
+       (:urakka :: INTEGER IS NULL AND (TRUE IN (SELECT unnest(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR
+                                        u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))))
   AND (:urakka :: INTEGER IS NOT NULL OR :urakka :: INTEGER IS NULL AND ((alkupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (loppupvm :: DATE BETWEEN :alku AND :loppu)
                                                                          OR (:alku >= alkupvm AND :loppu <= loppupvm)))
@@ -23,9 +23,8 @@ SELECT
   o.nimi         AS "nimi",
   lpad(cast(elynumero as varchar), 2, '0') AS "elynumero"
 FROM organisaatio o
-WHERE elynumero IS NOT NULL
--- Parametrisoidaan tämä kun aletaan tekemään vesiväylille raportteja.
-AND liikennemuoto = 'T'
+WHERE :liikennemuoto::liikennemuoto = liikennemuoto AND
+      tyyppi='hallintayksikko'
 ORDER BY elynumero;
 
 

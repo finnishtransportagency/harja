@@ -106,6 +106,7 @@
     [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
+    [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -141,7 +142,11 @@
     [harja.palvelin.palvelut.vesivaylat.alukset :as vv-alukset]
 
     ;; Kanavat
-    [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+    [harja.palvelin.palvelut.kanavat.kohteet :as kan-kohteet]
+
+    [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
+    [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
+    [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
     )
 
   (:gen-class))
@@ -333,15 +338,24 @@
       :vv-alukset (component/using
                     (vv-alukset/->Alukset)
                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
-      :kan-kanavat (component/using
-                     (kan-kanavat/->Kanavat)
+      :kan-kohteet (component/using
+                     (kan-kohteet/->Kohteet)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-liikennetapahtumat (component/using
+                                (kan-liikennetapahtumat/->Liikennetapahtumat)
+                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-hairio (component/using
+                    (kan-hairio/->Hairiotilanteet)
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+      :kan-toimenpiteet (component/using
+                          (kan-toimenpiteet/->Kanavatoimenpiteet)
+                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -491,12 +505,14 @@
                                toimenpidehakuvali
                                komponenttityyppihakuvali
                                turvalaitekomponenttihakuvali
-                               vikahakuvali]} (:reimari asetukset)]
+                               vikahakuvali
+                               turvalaiteryhmahakuaika]} (:reimari asetukset)]
                    (reimari/->Reimari url kayttajatunnus salasana
                                       toimenpidehakuvali
                                       komponenttityyppihakuvali
                                       turvalaitekomponenttihakuvali
-                                      vikahakuvali))
+                                      vikahakuvali
+                                      turvalaiteryhmahakuaika))
                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :ais-data (component/using
@@ -585,6 +601,9 @@
       :api-urakan-tyotunnit (component/using
                               (api-urakan-tyotunnit/->UrakanTyotunnit)
                               [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :turi])
+      :api-tieluvat (component/using
+                      (api-tieluvat/->Tieluvat)
+                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
@@ -705,7 +724,6 @@
 (defn log-level-info! []
   (log/merge-config!
     {:appenders {:println {:min-level :info}}}))
-
 
 (def figwheel-repl-options
   ;; Nämä ovat Emacsin CIDER ClojureScript repliä varten

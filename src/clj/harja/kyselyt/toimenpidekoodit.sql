@@ -99,3 +99,10 @@ WHERE
 SELECT hinnoittelu
 FROM toimenpidekoodi
 WHERE id = :id;
+
+-- name: hae-tehtavan-id
+SELECT tk4.id
+FROM toimenpidekoodi tk4
+  JOIN toimenpidekoodi tk3 ON tk4.emo=tk3.id
+WHERE tk4.nimi=:nimi AND
+      tk3.koodi=:kolmostason-tehtavan-koodi;

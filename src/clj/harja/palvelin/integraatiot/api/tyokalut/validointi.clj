@@ -7,7 +7,7 @@
     [harja.kyselyt.sopimukset :as q-sopimukset]
     [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
     [harja.kyselyt.tieverkko :as q-tieverkko]
-    [harja.kyselyt.kayttajat :as kayttajat]
+    [harja.kyselyt.kayttajat :as kayttajat-q]
     [harja.kyselyt.tietyomaat :as q-tietyomaat]
     [harja.domain.roolit :as roolit]
     [harja.domain.oikeudet :as oikeudet]
@@ -40,8 +40,8 @@
 
 (defn tarkista-kayttajan-oikeudet-urakkaan [db urakka-id kayttaja]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (when (and (not (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
-             (not (kayttajat/onko-kayttajalla-lisaoikeus-urakkaan? db urakka-id (:id kayttaja))))
+  (when (and (not (kayttajat-q/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+             (not (kayttajat-q/onko-kayttajalla-lisaoikeus-urakkaan? db urakka-id (:id kayttaja))))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia urakkaan: "
@@ -49,7 +49,7 @@
 
 (defn tarkista-onko-kayttaja-organisaatiossa [db ytunnus kayttaja]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (when-not (kayttajat/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja))
+  (when-not (kayttajat-q/onko-kayttaja-organisaatiossa? db ytunnus (:id kayttaja))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (str "Käyttäjällä: " (:kayttajanimi kayttaja) " ei ole oikeuksia organisaatioon: " ytunnus)}]})))
@@ -81,7 +81,7 @@
 (defn tarkista-oikeudet-urakan-paivystajatietoihin [db urakka-id kayttaja]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (when-not (or (roolit/roolissa? kayttaja roolit/liikennepaivystaja)
-                (kayttajat/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
+                (kayttajat-q/onko-kayttaja-urakan-organisaatiossa? db urakka-id (:id kayttaja)))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (format "Käyttäjällä: %s ei ole oikeuksia urakan: %s päivystäjätietoihin."
@@ -175,3 +175,11 @@
         (virheet/heita-poikkeus
           virheet/+viallinen-kutsu+
           [{:koodi virheet/+tuntematon-yllapitokohde+ :viesti viesti}])))))
+
+(defn tarkista-onko-liikenneviraston-jarjestelma [db kayttaja]
+  (when-not (kayttajat-q/liikenneviraston-jarjestelma? db (:kayttajanimi kayttaja))
+    (log/error (format "Kayttajatunnus %s ei ole Liikenneviraston järjestelmä eikä sillä ole oikeutta kutsuttuun resurssiin."
+                       (:kayttajatunnus kayttaja)))
+    (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
+             :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
+                        :viesti "Käyttäjällä ei resurssiin."}]})))
