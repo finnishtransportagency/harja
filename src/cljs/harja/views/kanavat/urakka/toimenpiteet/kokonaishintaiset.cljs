@@ -65,7 +65,7 @@
      :voi-poistaa? false
      :voi-kumota? false
      :piilota-toiminnot? true
-     :rivi-klikattu (fn [rivi] (log "alt: rivi-klikattu") (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
+     :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
      :tyhja (if haku-kaynnissa? [ajax-loader "Haetaan toimenpiteitä"] "Ei toimenpiteitä")
      :jarjesta ::kanavan-toimenpide/pvm
      :tunniste ::kanavan-toimenpide/id}
@@ -91,9 +91,7 @@
 (defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
                                                      tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
-                                           :aseta-toimenpiteen-tiedot-fn #(do
-                                                                            (log "alt-fn kutsuttu")
-                                                                            (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %)))
+                                           :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
                                            :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
                                            :lisaa-materiaali-fn #(e! (tiedot/->LisaaMateriaali))
