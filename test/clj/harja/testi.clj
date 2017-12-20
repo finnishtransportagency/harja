@@ -297,7 +297,8 @@
                                                             :maara :string
                                                             :lisatieto :string
                                                             :id :string
-                                                            :hairiotilanne :string))
+                                                            :hairiotilanne :string
+                                                            :toimenpide :string))
                                   ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
                                   ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
                                   ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
@@ -307,7 +308,8 @@
                                           (assoc % :pvm (tyhja-string->nil pvm/dateksi (:pvm %))
                                                    :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
                                                    :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
-                                                   :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))))))
+                                                   :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))
+                                                   :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))))))
                             conj [] (first materiaali-vector))
                 nimi (second materiaali-vector)]
             {:muutokset muutokset :nimi nimi}))
