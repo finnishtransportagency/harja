@@ -212,14 +212,24 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
 
 (defn kentan-input
   "Määritellään kentän input"
-  [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle] :as s}
+  [{:keys [tyyppi komponentti fmt hae nimi yksikko-kentalle valitse-ainoa?] :as s}
    data muokattava? muokkaa arvo]
   (let [kentta (if (= tyyppi :komponentti)
                  [:div.komponentti (komponentti {:muokkaa-lomaketta (muokkaa s)
                                                  :data data})]
                  (if muokattava?
-                   (do (have #(contains? % :tyyppi) s)
-                       [tee-kentta (assoc s :lomake? true) arvo])
+                   (if (and valitse-ainoa?
+                            (= :valinta tyyppi)
+                            (= 1 (count (or (:valinnat s) ((:valinnat-fn s) data)))))
+                     (do (reset! arvo (if-let [hae (:valinta-arvo s)]
+                                        (hae (first (:valinnat s)))
+                                        (first (:valinnat s))))
+                         [:div.form-control-static
+                          ;; :valinta-kentän nayta-arvo käyttää sisäisesti :valinta-nayta optiota
+                          (nayta-arvo s arvo)])
+
+                     (do (have #(contains? % :tyyppi) s)
+                         [tee-kentta (assoc s :lomake? true) arvo]))
                    [:div.form-control-static
                     (if fmt
                       (fmt ((or hae #(get % nimi)) data))
