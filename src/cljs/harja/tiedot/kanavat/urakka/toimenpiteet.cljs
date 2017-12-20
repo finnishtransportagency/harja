@@ -61,7 +61,8 @@
                                          ::materiaalit/pvm (::materiaalit/pvm %)
                                          ::materiaalit/id (::materiaalit/id %)}})))
              conj (filter
-                   #(= (::materiaalit/toimenpide %) (::kanavatoimenpide/id toimenpide))
+                   #(and (some? (::materiaalit/toimenpide %))
+                         (= (::materiaalit/toimenpide %) (::kanavatoimenpide/id toimenpide)))
                    (::materiaalit/muutokset materiaalilistaus))))
           listaukset))
 
