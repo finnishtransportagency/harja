@@ -123,15 +123,15 @@
 
 (defn- varaost-ja-materiaalit-header
   ([] (varaosat-ja-materiaalit-header {:otsikot? false}))
-  ([{:keys [otsikot?] :as optiot}]
+  ([{:keys [yk-lisa?] :as optiot}]
    [:thead
     [:tr
-     [:th {:style {:width "40%"}} (when otsikot? "Materiaali")]
-     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
-     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
-     [:th {:style {:width "5%"}} ""]
-     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "määrä")]
-     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "foo")]
+     [:th {:style {:width "40%"}} "Työ"]
+     [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
+     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
+     [:th {:style {:width "5%"}} "Yks."]
+     [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
+     [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
 (defn- muu-hinnoittelu-header
@@ -264,7 +264,7 @@
       [:tbody
        (for* [materiaali materiaalit]
              [materiaali-rivi e! materiaali])]]
-     [rivinlisays "Lisää varaosa tai materiaali" #(e! (tiedot/->LisaaMateriaali))]]))
+     [rivinlisays "Lisää varaosa/materiaali" #(e! (tiedot/->LisaaMateriaalinHintarivi))]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
