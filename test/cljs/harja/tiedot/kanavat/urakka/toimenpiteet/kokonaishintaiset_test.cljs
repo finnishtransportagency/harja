@@ -266,8 +266,3 @@
                                                                                                    ::materiaali/id 12}}])}}]
 
     (tarkista-map-arvot (:avattu-toimenpide vastaus) (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot kysely) state)))))
-
-
-
-({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisätieto "Kohteen  materiaali"})
-({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})
