@@ -23,7 +23,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
             [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
             [harja.domain.geometriaaineistot :as ga]))
-  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:use [slingshot.slingshot :only [try+ throw+]]
   (:import (java.net URI)
            (java.sql Timestamp)
            (org.joda.time DateTimeZone)))
