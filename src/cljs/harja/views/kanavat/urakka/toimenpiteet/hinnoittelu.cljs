@@ -120,6 +120,20 @@
      [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
+
+(defn- varaost-ja-materiaalit-header
+  ([] (varaosat-ja-materiaalit-header {:otsikot? false}))
+  ([{:keys [otsikot?] :as optiot}]
+   [:thead
+    [:tr
+     [:th {:style {:width "40%"}} (when otsikot? "Materiaali")]
+     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
+     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
+     [:th {:style {:width "5%"}} ""]
+     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "määrä")]
+     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "foo")]
+     [:th {:style {:width "5%"}} ""]]]))
+
 (defn- muu-hinnoittelu-header
   ([] (muu-hinnoittelu-header {:otsikot? false}))
   ([{:keys [otsikot?] :as optiot}]
@@ -229,18 +243,28 @@
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-    [valiotsikko "Muut työt"]
-    [:table
-     [sopimushintaiset-tyot-header]
-     [:tbody
-      (for* [muu-tyo muut-tyot]
-            [muu-tyo-hinnoittelurivi e! muu-tyo])]]
+     [valiotsikko "Muut työt"]
+     [:table
+      [sopimushintaiset-tyot-header]
+      [:tbody
+       (for* [muu-tyo muut-tyot]
+             [muu-tyo-hinnoittelurivi e! muu-tyo])]]
      ;; kutsuketju rivinlisäyksessä:
      ;; tiedot/->LisaaMuuTyorivi -> lisaa-hintarivi-toimenpiteelle (ryhma "tyo")
      ;; (huom lisaa-hintarivi, ei lisaa-tyorivi, vaikka kyseessä on ui:lla työ)
 
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
+(defn- varaosat-ja-materiaalit [e! app*]
+  (let [materiaalit (tiedot/materiaalit app*)]
+    [:div.hinnoitteluosio.varaosat-ja-materiaaalit-osio
+     [valiotsikko "Varaosat ja materiaalit"]
+     [:table
+      [varaosat-ja-materiaaalit-header]
+      [:tbody
+       (for* [materiaali materiaalit]
+             [materiaali-rivi e! materiaali])]]
+     [rivinlisays "Lisää varaosa tai materiaali" #(e! (tiedot/->LisaaMateriaali))]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
@@ -264,6 +288,7 @@
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
    [muut-tyot e! app*]
+   [varaosat-ja-materiaalit e! app*]
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
