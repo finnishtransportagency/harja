@@ -104,6 +104,8 @@
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
 (defrecord LisaaMuuKulurivi [])
 (defrecord LisaaMuuTyorivi [])
+(defrecord LisaaMateriaalinHintarivi [])
+(defrecord AsetaMateriaalinHintarivilleTiedot [])
 (defrecord PoistaHinnoiteltavaTyorivi [tyo])
 (defrecord PoistaHinnoiteltavaHintarivi [hinta])
 (defrecord TallennaToimenpiteenHinnoittelu [tiedot])
@@ -426,6 +428,24 @@
     (lisaa-hintarivi-toimenpiteelle
       {::hinta/ryhma "tyo"}
       app))
+
+  LisaaMateriaalinHintarivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+     {::hinta/ryhma "materiaaali"}
+     app))
+
+  ;; AsetaMateriaalinHintarivilleTiedot
+  ;; (process-event [{tiedot :tiedot} app]
+  ;;   ;; Tässä asetetaan käyttäjän syöttämä hinta materiaalille.
+  ;;   ;; Voidaan vertailla vain otsikolla koska materiaaleja ei voi uudelleennimetä.
+  ;;   ;; Jos urakasta poistetaan (en tiedä onko mahdollista) ja lisätään uudelleen samanniminen materiaali, niin toimenpiteiden hinnoittelu ei myöskään hajoa.
+
+  ;;   ;; parametrin tiedot sisältäää hinta-id:n tai otsikon, ja avaimen/arvon
+
+  ;;   (update-in app [:hinnoittele-toimenpide ::hinta/hinnat]
+  ;;              #(hinta/paivita-hintajoukon-hinnan-tiedot-otsikolla % tiedot)))
+
 
   PoistaHinnoiteltavaTyorivi
   (process-event [{tyo :tyo} app]

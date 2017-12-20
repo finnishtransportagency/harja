@@ -16,6 +16,7 @@
             [harja.domain.muokkaustiedot :as m]
             ;; [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.kanavat.hinta :as hinta]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.toimenpidekoodi :as tpk]
@@ -44,6 +45,20 @@
                                               arvo-kw uusi})))])
   ([e! hinta arvo-kw kentan-optiot asetus-fn]
    [kentta* e! hinta arvo-kw kentan-optiot asetus-fn]))
+
+(defn- kentta-materiaalille
+  ([e! hinta kentan-optiot]
+   (assert (map?  hinta) (pr-str hinta))
+   [kentta-materiaalille e! hinta kentan-optiot
+    (fn [hinta]
+      (log "kentta-materiaalille: saatiin hinta " (pr-str hinta) )
+      ;; (log "kentta-hinnalle: uusi" (pr-str uusi) "materiaali" (pr-str hinta))
+      (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id (::hinta/id hinta)
+                                              ::hinta/ryhma "materiaali"
+                                              ;;::hinta/otsikko (::materiaali/nimi materiaalivalinta)
+                                              ::hinta/otsikko (::hinta/otsikko hinta)})))])
+  ([e! hinta kentan-optiot asetus-fn]
+   [kentta* e! hinta ::hinta/otsikko kentan-optiot asetus-fn]))
 
 (defn- kentta-tyolle
   ([e! tyo arvo-kw kentan-optiot]
@@ -240,6 +255,27 @@
    [:td.keskita
     [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi hinta))]]])
 
+(def feikki-materiaalivalinnat [{::materiaali/nimi "Ämpäreitä"} {::materiaali/nimi "Nauloja"}])
+
+(defn materiaali-hinnoittelurivi [e! hinta]
+  [:tr
+   [:td [kentta-materiaalille e! hinta
+         {:tyyppi :valinta
+          :valitse-fn #(log "materiaalin valitse-fn: saatiin " (pr-str %))
+          :valinta (fn valitse-hintaa-vastaava-materiaali [materiaali]
+                     (first (filter #(-> % ::materiaali/nimi (= (::hinta/otsikko)))
+                                    feikki-materiaalivalinnat)))}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/yksikkohinta
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/maara
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
+   [:td
+    [kentta-hinnalle e! hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
+   [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen hinta))]
+   [:td.keskita [yleiskustannuslisakentta e! hinta]]
+   [:td.keskita
+    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi hinta))]]])
+
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
@@ -256,14 +292,14 @@
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
 (defn- varaosat-ja-materiaalit [e! app*]
-  (let [materiaalit (tiedot/materiaalit app*)]
+  (let [materiaali-hinnat (tiedot/hintaryhman-tyot app* "materiaali")]
     [:div.hinnoitteluosio.varaosat-ja-materiaaalit-osio
      [valiotsikko "Varaosat ja materiaalit"]
      [:table
       [varaosat-ja-materiaaalit-header]
       [:tbody
-       (for* [materiaali materiaalit]
-             [materiaali-rivi e! materiaali])]]
+       (for* [hinta materiaali-hinnat]
+             [materiaali-rivi e! hinta])]]
      [rivinlisays "Lisää varaosa/materiaali" #(e! (tiedot/->LisaaMateriaalinHintarivi))]]))
 
 (defn- muut-hinnat [e! app*]
