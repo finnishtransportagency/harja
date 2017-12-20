@@ -229,7 +229,7 @@
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-    [valiotsikko "Muut työt (ei indeksilaskentaa)"]
+    [valiotsikko "Muut työt"]
     [:table
      [sopimushintaiset-tyot-header]
      [:tbody
