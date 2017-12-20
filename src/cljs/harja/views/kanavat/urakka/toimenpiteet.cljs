@@ -105,12 +105,14 @@
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :valinta
        :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
-       :valinnat urakan-materiaalit}
+       :valinnat urakan-materiaalit
+       :leveys 1}
       {:otsikko "Käytetty määrä"
        :nimi :maara
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :positiivinen-numero
-       :kokonaisluku? true}]
+       :kokonaisluku? true
+       :leveys 1}]
      muokatut-atom]))
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
