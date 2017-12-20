@@ -22,11 +22,10 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
             [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
-            [harja.domain.geometriaaineistot :as ga]))
-  (:use [slingshot.slingshot :only [try+ throw+]]
+            [harja.domain.geometriaaineistot :as ga])
+  (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
-           (java.sql Timestamp)
-           (org.joda.time DateTimeZone)))
+           (java.sql Timestamp)))
 
 (def virhekasittely
   {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
