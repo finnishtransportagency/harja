@@ -49,6 +49,11 @@
 (defn tyhjenna-avattu-toimenpide [app]
   (assoc app :avattu-toimenpide nil))
 
+
+(defn toimenpiteen-materiaalimuutos? [tp muutos]
+  (when (some? (::materiaalit/toimenpide muutos))
+    (= (::materiaalit/toimenpide muutos) (::kanavatoimenpide/id tp))))
+
 (defn materiaalilistaus->grid [toimenpide listaukset]
   (mapcat (fn [materiaalilistaus]
             (transduce
@@ -61,33 +66,30 @@
                                          ::materiaalit/pvm (::materiaalit/pvm %)
                                          ::materiaalit/id (::materiaalit/id %)}})))
              conj (filter
-                   #(and (some? (::materiaalit/toimenpide %))
-                         (= (::materiaalit/toimenpide %) (::kanavatoimenpide/id toimenpide)))
+                   (partial toimenpiteen-materiaalimuutos? toimenpide)
                    (::materiaalit/muutokset materiaalilistaus))))
           listaukset))
 
 (defn aseta-lomakkeen-tiedot [app toimenpide]
+  (let [vanhat-materiaalit (-> app :avattu-toimenpide ::materiaalit/materiaalit)
 
-  ;; todo:
-  ;; a) avatun toimenpiteen materiaait näytetään sen perusteella,
-  ;; täsmääkö tallennettujen muutos-tietojen toimenpide-id
-  ;; nyk. toimenpide-id:hen.
-  ;; b) tätä funktiota kutsutaan myös uuden toimenpiteen
-  ;; muokkauksen kesken, kun sitä ei ole vielä tallennettu
-  ;; yhteisvakutuksena -> nyt materiaali-grid voi tyhjentyä kun
-  ;; lomaketta muokataan siten että tät funktiota kutsutaan uudestaan.
+        vanha-id (-> app :avattu-toimenpide ::kanavatoimenpide/id)
+        uusi-id (::kanavatoimenpide/id toimenpide)
 
-  (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohteenosa]))
+        kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohteenosa]))
                                (not= (::kanavatoimenpide/kohde toimenpide)
                                      (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohde])))
         toimenpide (if kohdeosa-vaihtui?
                      (assoc toimenpide ::kanavatoimenpide/kohteenosa nil)
                      toimenpide)
         materiaalilistaukset (:urakan-materiaalit app)
-        materiaalit (materiaalilistaus->grid toimenpide materiaalilistaukset)
+        materiaalit (if (= vanha-id uusi-id)
+                      vanhat-materiaalit
+                      (materiaalilistaus->grid toimenpide materiaalilistaukset))
         toimenpide (assoc toimenpide ::materiaalit/materiaalit materiaalit
-                             ::materiaalit/muokkaamattomat-materiaalit materiaalit)]
+                          ::materiaalit/muokkaamattomat-materiaalit (filter #(not (:jarjestysnumero %)) materiaalit))]
     (log "alt: asetetaan materiaalit " (count materiaalit))
+    (log "alt: asetetaan muokkaamattomat " (count (::materiaalit/muokkaamattomat-materiaalit toimenpide)))
     ;; (cljs.pprint/pprint materiaalit)
     (assoc app :avattu-toimenpide toimenpide)))
 
@@ -138,12 +140,19 @@
 
 (defn yksi-tallennettava-materiaalikirjaus [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
   "Palauttaa tallennettavan mapin kun saadaan annetaan muokattu, ei-tyhjat, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...}"
-  (let [ei-muokattu? (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
+  (let [ei-muokattu? (if (seq muokkaamattomat-kirjaukset)
+                       (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
+                       false)
         tyhja? (= [:jarjestysnumero] (keys m-kirjaus))
         poistettu? (:poistettu m-kirjaus)
         varaosa (dissoc (:varaosa m-kirjaus)
                         ::materiaalit/maara-nyt ::materiaalit/halytysraja
                         ::materiaalit/muutokset ::materiaalit/alkuperainen-maara)]
+    (when-not tyhja?
+      (log "ei tyhja koska keys " (pr-str (vec (keys m-kirjaus)))))
+    (log "when-not or: " (pr-str  [tyhja? poistettu? ei-muokattu?]))
+    ;; jatetaan tallentamatta tyhjat, poistetut, muokkaamattomat.
+
     (when-not (or tyhja? poistettu? ei-muokattu?)
       ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
       (assoc varaosa
@@ -160,6 +169,7 @@
 
         lisatieto (str "Kohteen " kohteen-nimi " materiaali")
         tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
+    (log "tallennettavat-materiaalit: pidettiin " (count tallennettavat) " / " (count materiaali-kirjaukset))
     tallennettavat))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
@@ -194,6 +204,8 @@
 
 (defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi
                                        toimenpide-tallennettu toimenpide-ei-tallennettu]}]
+  (log "tallenna-toimenpide: avatun materiaalit " (pr-str (-> app :avattu-toimenpide ::materiaalit/materiaalit)))
+  (log "tallenna-toimenpide: annetun toimepiteen materiaalit " (pr-str (-> toimenpide ::materiaalit/materiaalit)))
   (if (:tallennus-kaynnissa? app)
     app
     (let [toimenpide (tallennettava-toimenpide tehtavat toimenpide (get-in app [:valinnat :urakka]) tyyppi)

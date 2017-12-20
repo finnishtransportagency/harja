@@ -89,8 +89,7 @@
         muokatut-atom (r/wrap
                     (zipmap (range)
                             (sort-by vertailuavaimet-jarjestysnumerolla avatun-materiaalit))
-                    #(muokkaa-materiaaleja-fn (sort-by vertailuavaimet-jarjestysnumerolla (vals %)))
-                    )]
+                    #(muokkaa-materiaaleja-fn (sort-by vertailuavaimet-jarjestysnumerolla (vals %))))]
     [grid/muokkaus-grid
      {:voi-muokata? voi-muokata?
       :voi-lisata? false
