@@ -121,7 +121,7 @@
      [:th {:style {:width "5%"}} ""]]]))
 
 
-(defn- varaost-ja-materiaalit-header
+(defn- varaosat-ja-materiaalit-header
   ([] (varaosat-ja-materiaalit-header {:otsikot? false}))
   ([{:keys [yk-lisa?] :as optiot}]
    [:thead
