@@ -67,7 +67,16 @@
           listaukset))
 
 (defn aseta-lomakkeen-tiedot [app toimenpide]
-  ;; (log "alt: app" (pr-str app) " tp " (pr-str toimenpide))
+
+  ;; todo:
+  ;; a) avatun toimenpiteen materiaait näytetään sen perusteella,
+  ;; täsmääkö tallennettujen muutos-tietojen toimenpide-id
+  ;; nyk. toimenpide-id:hen.
+  ;; b) tätä funktiota kutsutaan myös uuden toimenpiteen
+  ;; muokkauksen kesken, kun sitä ei ole vielä tallennettu
+  ;; yhteisvakutuksena -> nyt materiaali-grid voi tyhjentyä kun
+  ;; lomaketta muokataan siten että tät funktiota kutsutaan uudestaan.
+
   (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohteenosa]))
                                (not= (::kanavatoimenpide/kohde toimenpide)
                                      (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohde])))
@@ -78,7 +87,7 @@
         materiaalit (materiaalilistaus->grid toimenpide materiaalilistaukset)
         toimenpide (assoc toimenpide ::materiaalit/materiaalit materiaalit
                              ::materiaalit/muokkaamattomat-materiaalit materiaalit)]
-    ;; (log "alt: asetetaan materiaalit:")
+    (log "alt: asetetaan materiaalit " (count materiaalit))
     ;; (cljs.pprint/pprint materiaalit)
     (assoc app :avattu-toimenpide toimenpide)))
 
