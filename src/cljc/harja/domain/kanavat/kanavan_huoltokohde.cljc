@@ -16,8 +16,4 @@
   #{::id
     ::nimi})
 
-(defn fmt-huoltokohde-nimi [huoltokohde]
-  (when-let [nimi (::nimi huoltokohde)]
-    (-> nimi str/lower-case str/capitalize)))
-
 (s/def ::hae-huoltokohteet-kysely (s/coll-of ::huoltokohde))
