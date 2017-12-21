@@ -536,19 +536,29 @@
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                             (:id @nav/valittu-urakka))))))))
 
-(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset]
+(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
   (when paallystysilmoitukset
-    (sort-by
-      (juxt (fn [toteuma] (case (:tila toteuma)
-                            :lukittu 0
-                            :valmis 1
-                            :aloitettu 3
-                            4))
-            (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                            :hyvaksytty 0
-                            :hylatty 1
-                            3)))
-      paallystysilmoitukset)))
+    (case jarjestys
+      :kohdenumero
+      (sort-by :kohdenumero paallystysilmoitukset)
+
+      :muokkausaika
+      ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
+      (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
+              (sort-by :kohdenumero (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
+
+      :tila
+      (sort-by
+       (juxt (fn [toteuma] (case (:tila toteuma)
+                             :lukittu 0
+                             :valmis 1
+                             :aloitettu 3
+                             4))
+             (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                             :hyvaksytty 0
+                             :hylatty 1
+                             3)))
+       paallystysilmoitukset))))
 
 (defn- tayta-takuupvm [lahtorivi tama-rivi]
   ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
@@ -644,7 +654,8 @@
       (let [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @u/valittu-sopimusnumero)
             urakan-vuosi @u/valittu-urakan-vuosi
-            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
+            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu
+                                                                  @yllapito-tiedot/kohdejarjestys)]
         [:div
          [:h3 "Päällystysilmoitukset"]
          [paallystysilmoitukset-taulukko urakka-id paallystysilmoitukset]
@@ -676,6 +687,24 @@
            (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
            (reset! ilmoituslomake nil))]))))
 
+(defn valinnat [urakka]
+  [:div
+   [valinnat/vuosi {}
+    (t/year (:alkupvm urakka))
+    (t/year (:loppupvm urakka))
+    urakka/valittu-urakan-vuosi
+    urakka/valitse-urakan-vuosi!]
+   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+   [u-valinnat/tienumero yllapito-tiedot/tienumero]
+   [yleiset/pudotusvalikko
+    "Järjestä kohteet"
+    {:valinta @yllapito-tiedot/kohdejarjestys
+     :valitse-fn #(reset! yllapito-tiedot/kohdejarjestys %)
+     :format-fn {:tila "Tilan mukaan"
+                 :kohdenumero "Kohdenumeron mukaan"
+                 :muokkausaika "Muokkausajan mukaan"}}
+    [:tila :kohdenumero :muokkausaika]]])
+
 (defn paallystysilmoitukset [urakka]
   (komp/luo
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
@@ -686,11 +715,5 @@
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [:div
-          [valinnat/vuosi {}
-           (t/year (:alkupvm urakka))
-           (t/year (:loppupvm urakka))
-           urakka/valittu-urakan-vuosi
-           urakka/valitse-urakan-vuosi!]
-          [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-          [u-valinnat/tienumero yllapito-tiedot/tienumero]
+          [valinnat urakka]
           [ilmoitusluettelo]])])))
