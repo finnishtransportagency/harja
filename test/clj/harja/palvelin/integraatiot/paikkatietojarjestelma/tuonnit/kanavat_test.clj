@@ -5,7 +5,7 @@
 
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
-(def referenssi-kanava-shapefilestä
+(def referenssi-kanava-shapefilesta
   {
    :numero 6666
    :aluenumero 216737
@@ -37,8 +37,7 @@
    :mista "Brusnitchnoe"
    :mihin "Mal. Cvetotchnoe"
    :omistaja "Liikennevirasto"
-   :the_geom "Polygon ((594378.7923042110633105 6745379.7973106112331152, 594416.31681462517008185 6745289.93295709136873484, 594404.13800845539662987 6745285.05637172050774097, 594366.80162501567974687 6745374.78863043710589409, 594378.7923042110633105 6745379.7973106112331152))"
-   })
+   :the_geom "Polygon ((594378.7923042110633105 6745379.7973106112331152, 594416.31681462517008185 6745289.93295709136873484, 594404.13800845539662987 6745285.05637172050774097, 594366.80162501567974687 6745374.78863043710589409, 594378.7923042110633105 6745379.7973106112331152))"})
 
 ;; Testissä ei toistaiseksi tarkisteta mitä meni kantaan, joten tämä ei ole vielä käytössä.
 (def referenssi-kanava-tietokannasta
@@ -77,7 +76,7 @@
 
 
 (t/deftest vie-kanava-tietokantaan
-  (kanava-tuonti/vie-kanava-entry (:db ht/jarjestelma) referenssi-kanava-shapefilestä))
+  (kanava-tuonti/vie-kanava-entry (:db ht/jarjestelma) referenssi-kanava-shapefilesta))
 
 
 

@@ -1,13 +1,8 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
-            [harja.kyselyt.kanavat.kanavat :as q-kanavat]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.string :as str]
-            [clj-time.coerce :as c]))
-
+            [harja.kyselyt.kanavat.kanavat :as q-kanavat]))
 
 (defn vie-kanava-entry [db kanava]
   (let [kanavanro (:numero kanava)
@@ -74,11 +69,8 @@
                         :geometria geometria
                         :luoja "Integraatio"
                         :muokkaaja "Integraatio"}]
-
     (do
-      (q-kanavat/vie-kanavatauluun<! db sql-parametrit)
-      )))
-
+      (q-kanavat/luo-kanava<! db sql-parametrit))))
 
 (defn vie-kanavat-kantaan [db shapefile]
   (if shapefile

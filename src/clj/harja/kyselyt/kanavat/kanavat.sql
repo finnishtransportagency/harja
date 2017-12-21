@@ -1,4 +1,4 @@
--- name: vie-kanavatauluun<!
+-- name: luo-kanava<!
 -- vie entryn kanava-tauluun
 INSERT INTO kanava
 (
