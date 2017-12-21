@@ -12,7 +12,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :as debug]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.ui.valinnat :as valinnat]))
 
 (defn urakan-nimi-ja-pvm [urakat]
   [apply
@@ -84,10 +85,11 @@
     (komp/sisaan #(e! (tiedot/->HaeUrakoitsijat)))
     (fn [e! {:keys [haetut-urakoitsijat urakoitsijoiden-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää urakoitsija"
+       [valinnat/urakkatoiminnot {}
+        [napit/uusi "Lisää urakoitsija"
         #(e! (tiedot/->UusiUrakoitsija))
         {:disabled (or (not (oikeudet/hallinta-vesivaylat))
-                       (nil? haetut-urakoitsijat))}]
+                       (nil? haetut-urakoitsijat))}]]
        [grid/grid
         {:otsikko (if (and (some? haetut-urakoitsijat) urakoitsijoiden-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään

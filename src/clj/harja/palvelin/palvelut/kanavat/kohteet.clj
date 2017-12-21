@@ -20,9 +20,7 @@
 (defn hae-urakan-kohteet [db user tiedot]
   (let [urakka-id (::ur/id tiedot)]
     (assert urakka-id "Ei voida hakea urakan kohteita, urakka-id puuttuu")
-    ;; TODO Tämä on vähän hassu oikeustarkastus, koska pitää vaan varmistaa, että käyttäjällä
-    ;; on oikeus nähdä, mitkä kohteet kuuluvat kyseiseen urakkaan. Tälle ei vaan ole suoraa omaa oikeutta
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kanavakohteet user)
     (q/hae-urakan-kohteet db user urakka-id)))
 
 (defn lisaa-kohdekokonaisuudelle-kohteita [db user kohteet]
@@ -30,9 +28,13 @@
   (q/lisaa-kokonaisuudelle-kohteet! db user kohteet)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
-(defn liita-kohde-urakkaan! [db user {:keys [kohde-id urakka-id poistettu?]}]
+(defn liita-kohteet-urakkaan! [db user {:keys [liitokset] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-  (q/liita-kohde-urakkaan! db user kohde-id urakka-id poistettu?))
+  (doseq [linkki (keys liitokset)]
+    (let [[kohde-id urakka-id] linkki
+          linkitetty? (get liitokset linkki)]
+      (q/liita-kohde-urakkaan! db user kohde-id urakka-id (not linkitetty?))))
+  (hae-kohdekokonaisuudet-ja-kohteet db user))
 
 (defn poista-kohde! [db user {:keys [kohde-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
@@ -72,11 +74,12 @@
        :vastaus-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus})
     (julkaise-palvelu
       http
-      :liita-kohde-urakkaan
+      :liita-kohteet-urakkaan
       (fn [user tiedot]
-        (liita-kohde-urakkaan! db user tiedot))
-      {:kysely-spec ::kok/liita-kohde-urakkaan-kysely})
-    (julkaise-palvelu
+        (liita-kohteet-urakkaan! db user tiedot))
+      {:vastaus-spec ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus})
+    ;; TODO Poistamista ei tueta UI:lla tällä hetkellä
+    #_(julkaise-palvelu
       http
       :poista-kohde
       (fn [user tiedot]
@@ -97,7 +100,7 @@
       :hae-kohdekokonaisuudet-ja-kohteet
       :hae-urakan-kohteet
       :lisaa-kohdekokonaisuudelle-kohteita
-      :liita-kohde-urakkaan
+      :liita-kohteet-urakkaan
       :poista-kohde
       :hae-kanavien-huoltokohteet)
     this))

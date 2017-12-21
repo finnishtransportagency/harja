@@ -170,14 +170,11 @@
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
           _ (is (empty? linkki))
-          params {:urakka-id urakka-id
-                  :kohde-id kohde-id
-                  :poistettu? false}
+          params {:liitokset {[kohde-id urakka-id] true}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :liita-kohde-urakkaan
+                                  :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -192,14 +189,11 @@
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
           _ (is (some? linkki))
-          params {:urakka-id urakka-id
-                  :kohde-id kohde-id
-                  :poistettu? true}
+          params {:liitokset {[kohde-id urakka-id] false}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :liita-kohde-urakkaan
+                                  :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -214,14 +208,11 @@
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
           _ (is (some? linkki))
-          params {:urakka-id urakka-id
-                  :kohde-id kohde-id
-                  :poistettu? false}
+          params {:liitokset {[kohde-id urakka-id] true}}
           vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :liita-kohde-urakkaan
+                                  :liita-kohteet-urakkaan
                                   +kayttaja-jvh+
                                   params)]
-      (is (s/valid? ::kok/liita-kohde-urakkaan-kysely params))
 
       (let [[ur koh poistettu?] (first (q (str "SELECT \"urakka-id\", \"kohde-id\", poistettu FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                                " AND \"urakka-id\" =" urakka-id ";")))]
@@ -229,7 +220,8 @@
         (is (= koh kohde-id))
         (is (= poistettu? false))))))
 
-(deftest kohteen-poistaminen
+;; TODO Poistaminen disabloitu toistaiseksi
+#_(deftest kohteen-poistaminen
   (let [[kohde-id, poistettu?] (first (q "SELECT id, poistettu FROM kan_kohde WHERE nimi = 'Iisalmen kanava';"))
         _ (is (some? kohde-id))
         _ (is (false? poistettu?))

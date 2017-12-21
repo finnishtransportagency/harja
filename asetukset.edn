@@ -65,7 +65,7 @@
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true
-                    ;; :palvelin "solita-service-1.solita.fi"
+                    ;; :palvelin "solita-service-1.solita.fi" ;; Kommentoitu, ettei mene vahinkomaileja (esim. db-singletonin käsittelyssä)
                     :jonot {:sahkoposti-sisaan-jono "Harja.Incoming.Email.InQ"
                             :sahkoposti-ulos-jono "Harja.Send.Email.InQ"
                             :sahkoposti-ulos-kuittausjono "Harja.Send.Email.Status"}}
@@ -105,9 +105,9 @@
                         :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV_silta.shz"
                         :siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
 
-                        :urakoiden-shapefile "file://shp/Hoitourakat/PTV_Hoitourakat10_2016.shx"
-                        :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/PTV_Hoitourakat10_2016.shz"
-                        :urakoiden-tuontikohde "./shp/Hoitourakat/PTV_Hoitourakat10_2016.shz"
+                        :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
+                        :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/[AINEISTO].shz"
+                        :urakoiden-tuontikohde "./shp/Hoitourakat/[AINEISTO].shz"
 
                         :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
                         :ely-alueiden-osoite "https://ava.liikennevirasto.fi/harja/ULKOISET_Elyt_infra.shz"
