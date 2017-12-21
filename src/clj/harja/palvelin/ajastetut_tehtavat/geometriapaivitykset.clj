@@ -359,7 +359,6 @@
       :kanavien-hakutehtava (tee-kanavien-paivitystehtava this asetukset)
       :kanavien-paivitystehtava (tee-kanavien-paikallinen-paivitystehtava this asetukset)))
 
-  ;;todo: miks tässä ei oo kaikki mukana?
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
                      :tieverkon-paivitystehtava
@@ -374,7 +373,19 @@
                      :urakoiden-hakutehtava
                      :urakoiden-paivitystehtava
                      :elyjen-hakutehtava
-                     :elyjen-paivitystehtava]
+                     :elyjen-paivitystehtava
+                     :valaistusurakoiden-hakutehtava
+                     :valaistusurakoiden-paivitystehtava
+                     :paallystyspalvelusopimusten-hakutehtava
+                     :paallystyspalvelusopimusten-paivitystehtava
+                     :tekniset-laitteet-urakoiden-hakutehtava
+                     :tekniset-laitteet-urakoiden-paivitystehtava
+                     :siltojen-palvelusopimusten-hakutehtava
+                     :siltojen-palvelusopimusten-paivitystehtava
+                     :turvalaitteiden-hakutehtava
+                     :turvalaitteiden-paivitystehtava
+                     :kanavien-hakutehtava
+                     :kanavien-paivitystehtava]
             :let [lopeta-fn (get this tehtava)]]
       (when lopeta-fn (lopeta-fn)))
     this))
