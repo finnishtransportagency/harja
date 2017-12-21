@@ -189,4 +189,4 @@
                   {::kohde/id kohde-id}))
 
 (defn hae-huoltokohteet [db]
-  (sort-by huoltokohde/fmt-huoltokohde-nimi (specql/fetch db ::huoltokohde/huoltokohde huoltokohde/perustiedot {})))
+  (sort-by ::huoltokohde/nimi (specql/fetch db ::huoltokohde/huoltokohde huoltokohde/perustiedot {})))
