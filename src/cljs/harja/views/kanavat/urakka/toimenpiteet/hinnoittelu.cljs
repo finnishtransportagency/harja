@@ -133,6 +133,9 @@
      [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
+
+(declare suunnitellut-tyot-paivamaaralle)
+
 (defn- hinnoittelun-yhteenveto [app*]
   (let [suunnitellut-tyot (suunnitellut-tyot-paivamaaralle app* (get-in app* [:hinnoittele-toimenpide ::toimenpide/pvm]))
         tyorivit (remove ::m/poistettu? (get-in app* [:hinnoittele-toimenpide ::tyo/tyot]))
@@ -175,12 +178,12 @@
       [:tbody
        (map-indexed
          (fn [index tyorivi]
-           (let [tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))
-                 tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))
+           (let [tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))
                  toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla tyovalinnat-toimenpiteen-ajalle
                                                                  (::tyo/toimenpidekoodi-id tyorivi))
                  yksikko (:yksikko toimenpidekoodi)
-                 yksikkohinta (:yksikkohinta toimenpidekoodi)]
+                 yksikkohinta (:yksikkohinta toimenpidekoodi)
+                 tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
              ^{:key index}
              [:tr
               [:td

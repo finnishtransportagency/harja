@@ -138,3 +138,53 @@
 (deftest vesivaylaurakan-hoitokausi
   (is (= (pvm/->pvm "1.8.2017") (pvm/vesivaylien-hoitokauden-alkupvm 2017)))
   (is (= (pvm/->pvm "31.7.2018") (pvm/vesivaylien-hoitokauden-loppupvm 2018))))
+
+
+(deftest aikavalit-leikkaavat
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1)
+                                         (t/date-time 2017 12 31)
+                                         (t/date-time 2018 1 1)
+                                         (t/date-time 2018 12 31)))
+      "Toisiaan ei leikkaavat välit tunnistetaan oikein")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1)
+                                        (t/date-time 2017 12 31)
+                                        (t/date-time 2017 12 24)
+                                        (t/date-time 2018 12 31)))
+      "Toisiaan leikkaavat välit tunnisteaan oikein")
+
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                        (t/date-time 2017 12 31 0 0)
+                                        (t/date-time 2017 12 31 1 1)
+                                        (t/date-time 2018 12 31 0 0)))
+      "Kellonaika osataan huomioida oikein limittyvillä väleillä")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         (t/date-time 2018 12 31 0 0)))
+      "Kellonaika osataan huomioida oikein leikkaavilla väleilleä")
+
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         (t/date-time 2018 1 1 1 1)
+                                         nil))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu loppupäivämäärä")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         (t/date-time 2017 12 24 1 1)
+                                         nil))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu loppupäivämäärä")
+
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         nil
+                                         (t/date-time 2018 1 1 1 1)))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu alkupäivämäärä")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                        (t/date-time 2017 12 31 0 0)
+                                        nil
+                                        (t/date-time 2017 12 24 1 1)))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu alkupäivämäärä"))

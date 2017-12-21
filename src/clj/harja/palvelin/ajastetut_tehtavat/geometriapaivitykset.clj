@@ -20,11 +20,12 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
+            [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
+            [harja.domain.geometriaaineistot :as ga])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
-           (java.sql Timestamp)
-           (org.joda.time DateTimeZone)))
+           (java.sql Timestamp)))
 
 (def virhekasittely
   {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
@@ -65,15 +66,22 @@
       (log/warn e (format "Tarkistettaessa paikallista ajoa geometriapäivitykselle: %s tapahtui poikkeus." paivitystunnus))
       false)))
 
+(defn rakenna-osoite [db aineiston-nimi osoite]
+  (let [aineisto (geometria-aineistot/hae-voimassaoleva-geometria-aineisto db aineiston-nimi)]
+    (if (and osoite (.contains osoite "[AINEISTO]") aineisto)
+      (.replace osoite "[AINEISTO]" (::ga/tiedostonimi aineisto))
+      osoite)))
+
 (defn maarittele-paivitystehtava [paivitystunnus
                                   url-avain
                                   tuontikohdepolku-avain
                                   shapefile-avain
                                   paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [url (get asetukset url-avain)
-          tuontikohdepolku (get asetukset tuontikohdepolku-avain)
-          shapefile (get asetukset shapefile-avain)
+    (let [db (:db this)
+          url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
+          tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
+          shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           kayttajatunnus (:kayttajatunnus asetukset)
           salasana (:salasana asetukset)]
       (when (and tuontivali
@@ -91,9 +99,10 @@
 
 (defn maarittele-paikallinen-paivitystehtava [paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [url (get asetukset url-avain)
-          tuontikohdepolku (get asetukset tuontikohdepolku-avain)
-          shapefile (get asetukset shapefile-avain)
+    (let [db (:db this)
+          url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
+          tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
+          shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           db (:db this)]
       (log/debug "Paikallinen päivitystehtävä: " paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys)
       (when (and (not url) (not tuontikohdepolku))

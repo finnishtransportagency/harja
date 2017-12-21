@@ -38,7 +38,7 @@
    {:otsikko "Huolto\u00ADkohde"
     :nimi ::kanavan-toimenpide/huoltokohde
     :tyyppi :string
-    :fmt kanavan-huoltokohde/fmt-huoltokohde-nimi
+    :fmt ::kanavan-huoltokohde/nimi
     :leveys 10}
    {:otsikko "Tehtävä"
     :nimi :toimenpide
@@ -157,10 +157,10 @@
        {:otsikko "Huoltokohde"
         :nimi ::kanavan-toimenpide/huoltokohde
         :tyyppi :valinta
-        :valinta-nayta #(or (when-let [nimi (kanavan-huoltokohde/fmt-huoltokohde-nimi %)]
+        :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
                               nimi)
                             "- Valitse huoltokohde -")
-        :valinnat (sort-by kanavan-huoltokohde/fmt-huoltokohde-nimi huoltokohteet)
+        :valinnat (sort-by ::kanavan-huoltokohde/nimi huoltokohteet)
         :pakollinen? true})
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
