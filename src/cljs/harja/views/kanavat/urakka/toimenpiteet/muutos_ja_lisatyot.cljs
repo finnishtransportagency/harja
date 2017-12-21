@@ -35,7 +35,7 @@
     [:div
      [valinnat/urakkavalinnat {:urakka urakka-map}
       ^{:key "valinnat"}
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
       [valinnat/urakkatoiminnot {:urakka urakka-map}
        [napit/yleinen-ensisijainen
         "Siirrä valitut kokonaishintaisiin"
@@ -87,7 +87,8 @@
        :rivi-klikattu (fn [rivi] (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot rivi)))
        :tunniste ::kanavan-toimenpide/id}
       sarakkeet
-      (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]]))
+      (sort-by ::kanavan-toimenpide/pvm >
+               (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]]))
 
 (defn lisatyot* [e! app]
   (let [urakka (get-in app [:valinnat :urakka-id])]
@@ -114,10 +115,11 @@
           (if nakyma-voidaan-nayttaa?
             [:div
              [debug app]
-             [suodattimet e! app]
              (if avattu-toimenpide
                [lisatyot-lomake e! app]
-               [taulukko e! app])]
+               [:div
+                [suodattimet e! app]
+                [taulukko e! app]])]
             [ajax-loader "Ladataan..."]))))))
 
 (defc lisatyot []
