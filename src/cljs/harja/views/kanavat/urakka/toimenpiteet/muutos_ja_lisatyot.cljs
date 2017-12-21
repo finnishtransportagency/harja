@@ -35,7 +35,7 @@
     [:div
      [valinnat/urakkavalinnat {:urakka urakka-map}
       ^{:key "valinnat"}
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
       [valinnat/urakkatoiminnot {:urakka urakka-map}
        [napit/yleinen-ensisijainen
         "Siirrä valitut kokonaishintaisiin"

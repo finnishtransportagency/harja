@@ -16,7 +16,7 @@
           "required": true
         },
         "organisaatio": {
-          "id": "urn:harja/koordinaattisijainti",
+          "id": "urn:harja/organisaatio",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",

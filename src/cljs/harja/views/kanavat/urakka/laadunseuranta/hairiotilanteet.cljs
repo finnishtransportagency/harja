@@ -74,7 +74,7 @@
         :vain-positiivinen? true}]]
      ^{:key "urakkatoiminnot"}
      [valinnat/urakkatoiminnot {:urakka valittu-urakka}
-      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (:id valittu-urakka))]
+      (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (:id valittu-urakka))]
         ^{:key "lisaysnappi"}
         [napit/uusi "Lisää häiriötilanne"
          #(e! (tiedot/->LisaaHairiotilanne))
@@ -117,7 +117,7 @@
    hairiotilanteet])
 
 (defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
-  (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
+  (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
         virhe-atom (r/wrap (:varaosat-taulukon-virheet valittu-hairiotilanne)
                            (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
         sort-fn (fn [materiaalin-kirjaus]
@@ -211,7 +211,7 @@
      :komponentti (fn [_]
                     [napit/uusi "Lisää varaosa"
                      #(e! (tiedot/->LisaaMateriaali))
-                     {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))
+                     {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))
 
 (defn hairiolomakkeen-kentat [e! {:keys [valittu-hairiotilanne] :as app} kohteet]
   (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
@@ -267,7 +267,7 @@
                                             tallennus-kaynnissa?
                                             valinnat] :as hairio-data}]
   (fn [hairiotilanne]
-    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
+    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
       [:div
        [:div {:style {:width "100%"}}
         [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
@@ -296,7 +296,7 @@
     #(e! (tiedot/->TyhjennaValittuHairiotilanne))]
    [lomake/lomake
     {:otsikko "Uusi häiriötilanne"
-     :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kanavat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
+     :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
      :validoi-alussa? true
      :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
      :footer-fn (hairiolomakkeen-toiminnot e! app)}
