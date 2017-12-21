@@ -1,10 +1,9 @@
 -- Formatoi huoltokohteet paremmin, like an evil!
 UPDATE kan_huoltokohde SET nimi = 'Alakanava' WHERE nimi ILIKE 'Alakanava';
-UPDATE kan_huoltokohde SET nimi = 'Alakanava' WHERE nimi ILIKE 'Alakanava';
 UPDATE kan_huoltokohde SET nimi = 'Alaportti' WHERE nimi ILIKE 'Alaportti';
 UPDATE kan_huoltokohde SET nimi = 'Alasatama' WHERE nimi ILIKE 'Alasatama';
 UPDATE kan_huoltokohde SET nimi = 'Asennonmittauslaitteet' WHERE nimi ILIKE 'Asennonmittauslaitteet';
-UPDATE kan_huoltokohde SET nimi = 'Atk-Verkko' WHERE nimi ILIKE 'Atk-Verkko';
+UPDATE kan_huoltokohde SET nimi = 'Atk-verkko' WHERE nimi ILIKE 'Atk-Verkko';
 UPDATE kan_huoltokohde SET nimi = 'Hydrauliikka' WHERE nimi ILIKE 'Hydrauliikka';
 UPDATE kan_huoltokohde SET nimi = 'Jalka- Ja kaulalaakerit' WHERE nimi ILIKE 'Jalka- Ja Kaulalaakerit';
 UPDATE kan_huoltokohde SET nimi = 'Kuulutuslaitteet' WHERE nimi ILIKE 'Kuulutuslaitteet';
