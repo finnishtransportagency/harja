@@ -263,7 +263,6 @@
         (tulevat-hoitokaudet ur hoitokausi)))
 
 
-
 ;; fixme if you can, man. En saanut kohtuullisessa ajassa tätä generalisoitua
 ;; siistiksi osaksi rivit-tulevillekin-kausille-funktiota
 (defn rivit-tulevillekin-kausille-kok-hint-tyot [ur rivit hoitokausi]
@@ -271,7 +270,8 @@
         (mapcat (fn [[alku loppu]]
                   (map (fn [rivi]
                          ;; maksupvm:n vuotta täytyy päivittää eikä se välttämättä ole sama kuin työn :vuosi
-                         (let [tyon-kalenteri-vuosi (if (<= 10 (:kuukausi rivi) 12)
+                         (let [urakan-aloitus-kk (pvm/kuukausi (:alkupvm ur))
+                               tyon-kalenteri-vuosi (if (<= urakan-aloitus-kk (:kuukausi rivi) 12)
                                                       (pvm/vuosi alku)
                                                       (pvm/vuosi loppu))
                                maksupvmn-vuoden-erotus (if (:maksupvm rivi)
@@ -394,9 +394,9 @@
                sopimus-id (first @valittu-sopimusnumero)
                aikavali @valittu-hoitokausi
                sivu (nav/valittu-valilehti :toteumat)]
-    {:nil-kun-haku-kaynnissa? true}
-    (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
-      (toteumat/hae-urakan-toteutuneet-muut-tyot ur sopimus-id aikavali))))
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and ur sopimus-id aikavali (= :muut-tyot sivu))
+                (toteumat/hae-urakan-toteutuneet-muut-tyot ur sopimus-id aikavali))))
 
 (defonce erilliskustannukset-hoitokaudella
   (reaction<! [ur (:id @nav/valittu-urakka)
