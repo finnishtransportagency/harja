@@ -13,10 +13,10 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tila
-         (atom {:nakymassa? false
-                :geometria-aineistot nil
-                :haku-kaynnissa? false
-                :tallennus-kaynnissa? false}))
+  (atom {:nakymassa? false
+         :geometria-aineistot nil
+         :haku-kaynnissa? false
+         :tallennus-kaynnissa? false}))
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeGeometria-aineistot [])
@@ -60,15 +60,15 @@
   (process-event [{geometria-aineistot :geometria-aineistot ch :paluukanava} app]
     (if-not (:tallennus-kaynnissa? app)
       (-> app
-          (tuck-apurit/palvelukutsu :tallenna-geometria-aineistot
-                                    geometria-aineistot
-                                    {:onnistui ->Geometria-aineistotTallennettu
-                                     :onnistui-parametrit [ch]
-                                     :epaonnistui ->Geometria-ainestojenTallennusEpaonnistui
-                                     :epaonnistui-parametrit [ch]})
+          (tuck-apurit/post! :tallenna-geometria-aineistot
+                             geometria-aineistot
+                             {:onnistui ->Geometria-aineistotTallennettu
+                              :onnistui-parametrit [ch]
+                              :epaonnistui ->Geometria-ainestojenTallennusEpaonnistui
+                              :epaonnistui-parametrit [ch]})
           (assoc :tallennus-kaynnissa? true))
       app))
-  
+
   Geometria-aineistotTallennettu
   (process-event [{geometria-aineistot :geometria-aineistot ch :paluukanava} app]
     (viesti/nayta! [:span "Geometria-aineistot tallennettu"] :success)
