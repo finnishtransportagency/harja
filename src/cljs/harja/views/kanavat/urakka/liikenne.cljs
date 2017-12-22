@@ -353,7 +353,7 @@
                          :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
          :arvo-atom (kohde-atomi ::lt-alus/suunta)}]
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Uittoniput?"
+        {:otsikko "Näytä uittoniput"
          :kentta-params {:tyyppi :checkbox}
          :arvo-atom (kohde-atomi :niput?)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
