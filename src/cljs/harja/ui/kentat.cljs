@@ -403,8 +403,8 @@
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
      (let [vaihtoehdot-palstoissa (partition-all
-                             (Math/ceil (/ (count vaihtoehdot) palstoja))
-                             vaihtoehdot)
+                                    (Math/ceil (/ (count vaihtoehdot) palstoja))
+                                    vaihtoehdot)
            coll-luokka (Math/ceil (/ 12 palstoja))
            checkboxit (doall
                         (for [vaihtoehdot-palsta vaihtoehdot-palstoissa]
