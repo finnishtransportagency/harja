@@ -38,7 +38,7 @@
                             :aikavali nil
                             ::lt/kohde nil
                             ::lt-alus/suunta nil
-                            ::lt-alus/laji nil
+                            ::lt-alus/aluslajit #{}
                             :niput? false}}))
 
 (defn uusi-tapahtuma
@@ -59,7 +59,7 @@
        ::sop/id (first @u/valittu-sopimusnumero)})))
 
 (def valintojen-avaimet
-  [::ur/id ::sop/id :aikavali ::lt/kohde ::lt-alus/suunta ::lt-alus/laji :niput?])
+  [::ur/id ::sop/id :aikavali ::lt/kohde ::lt-alus/suunta ::lt-alus/aluslajit :niput?])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeLiikennetapahtumat [])
@@ -181,7 +181,7 @@
     (and (not (:grid-virheita? t))
         (empty? (filter :koskematon (::lt/alukset t)))
         (every? #(and (some? (::lt-alus/suunta %))
-                      (some? (::lt-alus/laji %)))
+                      (some? (::lt-alus/aluslajit %)))
                 (remove :poistettu (::lt/alukset t)))
         (or
           (not-empty (remove :poistettu (::lt/alukset t)))

@@ -34,6 +34,8 @@
     ::nippulkm
     ::suunta})
 
+(s/def ::aluslajit (s/coll-of ::laji))
+
 (def metatiedot m/muokkauskentat)
 
 (def aluslajit*

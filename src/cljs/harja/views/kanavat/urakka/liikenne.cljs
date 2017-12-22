@@ -344,7 +344,7 @@
          :kentta-params {:tyyppi :checkbox-group
                          :vaihtoehdot lt-alus/aluslajit
                          :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
-         :arvo-atom (aluslaji-atomi ::lt-alus/laji)}]]
+         :arvo-atom (aluslaji-atomi ::lt-alus/aluslajit)}]]
       [:div
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Suunta"
@@ -352,10 +352,6 @@
                          :valinnat (into [nil] lt/suunta-vaihtoehdot)
                          :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
          :arvo-atom (kohde-atomi ::lt-alus/suunta)}]
-       [valinnat/kanava-aluslaji
-        (kohde-atomi ::lt-alus/laji)
-        (into [nil] lt-alus/aluslajit)
-        #(or (lt-alus/aluslaji->koko-str %) "Kaikki")]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Uittoniput?"
          :kentta-params {:tyyppi :checkbox}
