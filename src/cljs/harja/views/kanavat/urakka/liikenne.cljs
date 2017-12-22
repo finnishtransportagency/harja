@@ -338,6 +338,12 @@
            (if-not (empty? nimi)
              nimi
              "Kaikki"))]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Aluslaji"
+         :kentta-params {:tyyppi :checkbox-group
+                         :vaihtoehdot lt-alus/aluslajit
+                         :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
+         :arvo-atom (atomi ::toiminto/toimenpide)}]
        #_[kentat/tee-otsikollinen-kentta
           {:otsikko "Sulun toimenpide"
            :kentta-params {:tyyppi :valinta
