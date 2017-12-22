@@ -98,6 +98,9 @@
                               :epaonnistui-parametrit [poisto?]})
           (assoc :tallennus-kaynnissa? true)))))
 
+(defn poista-valittu-toimenpide [valitut-toimenpide-idt poistettava-id]
+  (set (remove #(= % poistettava-id) valitut-toimenpide-idt)))
+
 (defn toimenpide-tallennettu [app toimenpiteet poisto?]
   (if poisto?
     (viesti/nayta! "Toimenpide poistettu" :success)
