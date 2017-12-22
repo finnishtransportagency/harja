@@ -354,8 +354,9 @@
                          :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
          :arvo-atom (kohde-atomi ::lt-alus/suunta)}]
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Näytä vain uittoniput"
-         :kentta-params {:tyyppi :checkbox}
+        {:otsikko "Uittoniput"
+         :kentta-params {:tyyppi :checkbox
+                         :teksti "Näytä vain uittoniput"}
          :arvo-atom (kohde-atomi :niput?)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
