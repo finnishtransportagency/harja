@@ -58,7 +58,7 @@
 (defn tee-vuosisummat [vuodet summat]
   (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
     (mapv (fn [vuosi]
-            (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
+            (let [summa (or (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0) 0)]
               (rakenna-vuosi vuosi summa)))
           vuodet)))
 
@@ -67,10 +67,15 @@
                        {:alkupvm (first vuosi)
                         :loppupvm (second vuosi)})
                      (pvm/urakan-vuodet (konv/java-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
-                                        (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))]
-    (case (:tyyppi (:maksuera maksueran-tiedot))
+                                        (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))
+        maksueratyyppi (:tyyppi (:maksuera maksueran-tiedot))
+        urakkatyyppi (get-in maksueran-tiedot [:urakka :tyyppi])]
+    (case maksueratyyppi
       "kokonaishintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
+      "lisatyo" (if (contains? #{"vesivayla-kanavien-hoito" "vesivayla-kanavien-korjaus"} urakkatyyppi)
+                  (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
+                  (tee-oletus-vuosisummat vuodet))
       (tee-oletus-vuosisummat vuodet))))
 
 (defn valitse-lkp-tilinumero [numero toimenpidekoodi tuotenumero]
@@ -125,7 +130,6 @@
         (if (lukitse-kustannussuunnitelma db numero)
           (let [jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
                 muodosta-sanoma #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))]
-
             (let [viesti-id (jms-lahettaja muodosta-sanoma nil)]
               (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
               (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))))
