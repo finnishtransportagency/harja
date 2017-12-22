@@ -143,8 +143,9 @@
                           {::lt/alukset (op/and
                                           (when suunta
                                             {::lt-alus/suunta suunta})
-                                          (when-not (empty? aluslajit)
-                                            {::lt-alus/laji (op/in (map name aluslajit))}))}))))
+                                          {::lt-alus/laji (if (empty? aluslajit)
+                                                            (op/in (map name lt-alus/aluslajit))
+                                                            (op/in (map name aluslajit)))})}))))
       tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
