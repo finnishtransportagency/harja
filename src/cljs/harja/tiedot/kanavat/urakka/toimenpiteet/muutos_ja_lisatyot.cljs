@@ -582,3 +582,13 @@
   LisaaVirhe
   (process-event [{virhe :virhe} app]
     (assoc-in app [:avattu-toimenpide :varaosat-taulukon-virheet] virhe)))
+
+(defn hinnat-debug-watch [this vanha-app uusi-app]
+  (let [q #(-> % :hinnoittele-toimenpide ::hinta/hinnat)
+        [hv hu] (mapv q [vanha-app uusi-app])
+        ks (comp set keys)
+        samat-avaimet (clojure.set/intersection (ks hv) (ks hu))
+        muutokset {:vain-hv (clojure.set/difference hv hu)
+                   :vain-hu (clojure.set/difference hu hv)}
+        dlog (fn [& args] (apply log (map pr-str args)))]
+    (dlog "hinnat debug: muutokset" muutokset)))

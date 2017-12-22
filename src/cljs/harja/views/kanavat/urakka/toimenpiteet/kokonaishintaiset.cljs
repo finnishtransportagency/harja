@@ -110,10 +110,13 @@
        [ajax-loader "Ladataan..."])
      [debug/debug app]]))
 
+
+
 (defn kokonaishintaiset* [e! _]
   (komp/luo
-    (komp/watcher tiedot/valinnat (fn [_ _ uusi] (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(e! (tiedot/->NakymaAvattu)) #(e! (tiedot/->NakymaSuljettu)))
+   (komp/watcher tiedot/valinnat (fn [_ _ uusi] (e! (tiedot/->PaivitaValinnat uusi))))
+   (komp/watcher tiedot/tila tiedot/hinnat-debug-watch)
+   (komp/sisaan-ulos #(e! (tiedot/->NakymaAvattu)) #(e! (tiedot/->NakymaSuljettu)))
     (fn [e! app]
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
