@@ -89,7 +89,7 @@
                                                      tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
+                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
                                            :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide] :as app} kohteet]

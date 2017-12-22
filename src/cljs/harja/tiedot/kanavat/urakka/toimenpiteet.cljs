@@ -78,11 +78,11 @@
                ::kanavatoimenpide/kohteenosa-id (get-in toimenpide [::kanavatoimenpide/kohteenosa ::osa/id])
                ::kanavatoimenpide/huoltokohde-id (get-in toimenpide [::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/id])
                ::kanavatoimenpide/muu-toimenpide (if (valittu-tehtava-muu? tehtava tehtavat)
-                                                     (::kanavatoimenpide/muu-toimenpide toimenpide)
-                                                     nil))
+                                                   (::kanavatoimenpide/muu-toimenpide toimenpide)
+                                                   nil))
         (dissoc ::kanavatoimenpide/kuittaaja))))
 
-(defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi
+(defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi poisto?
                                        toimenpide-tallennettu toimenpide-ei-tallennettu]}]
   (if (:tallennus-kaynnissa? app)
     app
@@ -93,17 +93,23 @@
                              {::kanavatoimenpide/tallennettava-kanava-toimenpide toimenpide
                               ::kanavatoimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
                              {:onnistui toimenpide-tallennettu
-                              :epaonnistui toimenpide-ei-tallennettu})
+                              :onnistui-parametrit [poisto?]
+                              :epaonnistui toimenpide-ei-tallennettu
+                              :epaonnistui-parametrit [poisto?]})
           (assoc :tallennus-kaynnissa? true)))))
 
-(defn toimenpide-tallennettu [app toimenpiteet]
-  (viesti/nayta! "Toimenpide tallennettu" :success)
+(defn toimenpide-tallennettu [app toimenpiteet poisto?]
+  (if poisto?
+    (viesti/nayta! "Toimenpide poistettu" :success)
+    (viesti/nayta! "Toimenpide tallennettu" :success))
   (assoc app :tallennus-kaynnissa? false
              :avattu-toimenpide nil
              :toimenpiteet toimenpiteet))
 
-(defn toimenpide-ei-tallennettu [app]
-  (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
+(defn toimenpide-ei-tallennettu [app poisto?]
+  (if poisto?
+    (viesti/nayta! "Toimenpiteiden poisto epäonnistui" :danger)
+    (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger))
   (assoc app :tallennus-kaynnissa? false))
 
 (defn huoltokohteet-haettu [app huoltokohteet]
