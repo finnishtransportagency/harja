@@ -6,7 +6,6 @@
             [harja.pvm :as pvm]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]
             [clj-time.core :as t]])
     #?(:cljs [cljs-time.core :as t]))
   #?(:cljs
