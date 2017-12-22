@@ -94,20 +94,20 @@
 (deftest TallennaToimenpide
   (vaadi-async-kutsut
     #{tiedot/->ToimenpideTallennettu
-      tiedot/->ToimenpiteidenTallentaminenEpaonnistui}
-    (let [{tallennus-kaynnissa? :tallennus-kaynnissa?} (e! (tiedot/->TallennaToimenpide {:foo "bar"}))]
+      tiedot/->ToimenpiteenTallentaminenEpaonnistui}
+    (let [{tallennus-kaynnissa? :tallennus-kaynnissa?} (e! (tiedot/->TallennaToimenpide {:foo "bar"} false))]
       (is tallennus-kaynnissa?))))
 
 (deftest ToimenpideTallennettu
   (let [haetut-toimenpiteet [{:foo "bar"}]
         {:keys [tallennus-kaynnissa? avattu-toimenpide toimenpiteet]}
-        (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet))]
+        (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet false))]
     (is (false? tallennus-kaynnissa?))
     (is (nil? avattu-toimenpide))
     (is (= haetut-toimenpiteet toimenpiteet))))
 
 (deftest ToimenpiteidenTallentaminenEpaonnistui
-  (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteidenTallentaminenEpaonnistui))))))
+  (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteenTallentaminenEpaonnistui nil false))))))
 
 (deftest ValitseToimenpide
   (let [tiedot {:id 1
