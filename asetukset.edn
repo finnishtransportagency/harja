@@ -158,7 +158,12 @@
  ;; :fileyard
  ;; :varuste-api
  ;; :tietyoilmoitusten-lahetys
- :pois-kytketyt-ominaisuudet #{:fileyard :tietyoilmoitusten-lahetys :ais-data}
+ ;; :ais-data
+ ;; :reittitarkistukset
+ :pois-kytketyt-ominaisuudet #{:fileyard
+                               :tietyoilmoitusten-lahetys
+                               :ais-data
+                               :reittitarkistukset}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
