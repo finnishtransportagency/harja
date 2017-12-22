@@ -72,9 +72,9 @@
 (defrecord UusiToimenpide [])
 (defrecord TyhjennaAvattuToimenpide [])
 (defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
-(defrecord TallennaToimenpide [toimenpide])
-(defrecord ToimenpideTallennettu [toimenpiteet])
-(defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+(defrecord TallennaToimenpide [toimenpide poisto?])
+(defrecord ToimenpideTallennettu [toimenpiteet poisto?])
+(defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
@@ -231,6 +231,18 @@
 
 (defn poista-hintarivi-toimenpiteelta [id app]
   (poista-hintarivi-toimenpiteelta* id ::hinta/id ::hinta/hinnat app))
+
+(defn hinnoittelun-voi-tallentaa? [app]
+  (and (every? #(and (some? (::tyo/toimenpidekoodi-id %))
+                     (some? (::tyo/maara %)))
+               (get-in app [:hinnoittele-toimenpide ::tyo/tyot]))
+       (every? #(or (some? (::hinta/summa %))
+                    (and (some? (::hinta/maara %))
+                         (some? (::hinta/yksikkohinta %))
+                         (not-empty (::hinta/yksikko %))))
+               (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
+       (every? #(not-empty (::hinta/otsikko %))
+               (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -454,26 +466,29 @@
     (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide))
 
   TallennaToimenpide
-  (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
+  (process-event [{toimenpide :toimenpide poisto? :poisto?}
+                  {valinnat :valinnat tehtavat :tehtavat :as app}]
     (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
                                            :tehtavat tehtavat
                                            :toimenpide toimenpide
+                                           :poisto? poisto?
                                            :tyyppi :muutos-lisatyo
                                            :toimenpide-tallennettu ->ToimenpideTallennettu
-                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
+                                           :toimenpide-ei-tallennettu ->ToimenpiteenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
-  (process-event [{toimenpiteet :toimenpiteet} app]
-    (toimenpiteet/toimenpide-tallennettu app toimenpiteet))
+  (process-event [{toimenpiteet :toimenpiteet poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-tallennettu app toimenpiteet poisto?))
 
-  ToimenpiteidenTallentaminenEpaonnistui
-  (process-event [_ app]
-    (toimenpiteet/toimenpide-ei-tallennettu app))
+  ToimenpiteenTallentaminenEpaonnistui
+  (process-event [{poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-ei-tallennettu app poisto?))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
-      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
+      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
+                      true))
       app))
 
   HaeHuoltokohteet
