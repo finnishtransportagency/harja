@@ -323,7 +323,8 @@
       valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! app kohteet]
-  (let [atomi (partial tiedot/valinta-wrap e! app)]
+  (let [kohde-atomi (partial tiedot/valinta-wrap e! app)
+        aluslaji-atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
@@ -332,7 +333,7 @@
 
       [:div
        [valinnat/kanava-kohde
-        (atomi ::lt/kohde)
+        (kohde-atomi ::lt/kohde)
         (into [nil] kohteet)
         #(let [nimi (kohde/fmt-kohteen-nimi %)]
            (if-not (empty? nimi)
@@ -343,29 +344,22 @@
          :kentta-params {:tyyppi :checkbox-group
                          :vaihtoehdot lt-alus/aluslajit
                          :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
-         :arvo-atom (atomi ::toiminto/toimenpide)}]
-       #_[kentat/tee-otsikollinen-kentta
-          {:otsikko "Sulun toimenpide"
-           :kentta-params {:tyyppi :valinta
-                           :valinta-nayta #(or (lt/sulku-toimenpide->str %) "Kaikki")
-                           :valinnat (into [nil] lt/sulku-toimenpide-vaihtoehdot)}
-           :arvo-atom (atomi ::toiminto/toimenpide)}]]
-
+         :arvo-atom (aluslaji-atomi ::lt-alus/laji)}]]
       [:div
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Suunta"
          :kentta-params {:tyyppi :valinta
                          :valinnat (into [nil] lt/suunta-vaihtoehdot)
                          :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
-         :arvo-atom (atomi ::lt-alus/suunta)}]
+         :arvo-atom (kohde-atomi ::lt-alus/suunta)}]
        [valinnat/kanava-aluslaji
-        (atomi ::lt-alus/laji)
+        (kohde-atomi ::lt-alus/laji)
         (into [nil] lt-alus/aluslajit)
         #(or (lt-alus/aluslaji->koko-str %) "Kaikki")]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Uittoniput?"
          :kentta-params {:tyyppi :checkbox}
-         :arvo-atom (atomi :niput?)}]]]
+         :arvo-atom (kohde-atomi :niput?)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
        "Kirjaa liikennetapahtuma"
