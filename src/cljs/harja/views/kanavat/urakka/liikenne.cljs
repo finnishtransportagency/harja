@@ -342,6 +342,7 @@
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Aluslaji"
          :kentta-params {:tyyppi :checkbox-group
+                         :palstoja 2
                          :vaihtoehdot lt-alus/aluslajit
                          :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
          :arvo-atom (aluslaji-atomi ::lt-alus/aluslajit)}]]
