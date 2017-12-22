@@ -409,7 +409,8 @@
            checkboxit (doall
                         (for [vaihtoehdot-palsta vaihtoehdot-palstoissa]
                           [:div
-                           [:div {:class (str "col-lg-" coll-luokka)}
+                           [:div (when (> palstoja 1)
+                                   {:class (str "col-lg-" coll-luokka)})
                             (for [v vaihtoehdot-palsta
                                   :let [valittu? (valitut v)]]
                               ^{:key (str "boolean-group-" (name v))}
