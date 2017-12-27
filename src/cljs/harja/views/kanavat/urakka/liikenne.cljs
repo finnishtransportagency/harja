@@ -365,7 +365,7 @@
          :kentta-params {:tyyppi :checkbox-group
                          :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
                          :vaihtoehto-nayta lt/sulku-toimenpide->str}
-         :arvo-atom (toimenpidetyyppi-atomi ::lt/toimenpide)}]]]
+         :arvo-atom (toimenpidetyyppi-atomi ::toiminto/toimenpiteet)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
        "Kirjaa liikennetapahtuma"

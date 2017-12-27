@@ -44,11 +44,10 @@
                  urakat))))
 
 (defn- suodata-liikennetapahtuma-toimenpidetyypillä [tiedot tapahtumat]
-  (filter #(let [toimenpidetyypit (::lt/toimenpide tiedot)]
+  (filter #(let [toimenpidetyypit (::toiminto/toimenpiteet tiedot)]
              (if (empty? toimenpidetyypit)
                true
-               (some (::lt/toimenpide tiedot)
-                     (map ::toiminto/toimenpide (::lt/toiminnot %)))))
+               (some toimenpidetyypit (map ::toiminto/toimenpide (::lt/toiminnot %)))))
           tapahtumat))
 
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]

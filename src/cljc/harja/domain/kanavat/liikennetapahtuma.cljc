@@ -134,7 +134,7 @@
                                                :opt [::kohde
                                                      ::lt-alus/laji
                                                      ::lt-alus/suunta
-                                                     ::toimenpide]
+                                                     ::toiminto/toimenpiteet]
                                                :opt-un [::aikavali ::niput?]))
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req
