@@ -231,4 +231,5 @@
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
                       true))
-      app)))
+      (update app :valitut-toimenpide-idt
+              #(toimenpiteet/poista-valittu-toimenpide % (::kanavan-toimenpide/id toimenpide))))))
