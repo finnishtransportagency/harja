@@ -411,7 +411,7 @@
                         (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
                           [:div
                            [:div (when (> palstoja 1)
-                                   {:class (str "col-lg-" coll-luokka)})
+                                   {:class (str "col-sm-" coll-luokka)})
                             (for [v vaihtoehdot-palsta
                                   :let [valittu? (valitut v)]]
                               ^{:key (str "boolean-group-" (name v))}
