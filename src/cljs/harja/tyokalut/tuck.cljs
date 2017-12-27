@@ -7,7 +7,7 @@
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def palveukutsu-viive (atom {})) ;; Kutsu-tunniste -> timeout-id
+(def palveukutsu-viive (atom {})) ;; Palvelukontekstin tunniste -> palvelukutsu-eventin id
 
 (defn- palvelukutsu*
   [app palvelu argumentit {:keys [onnistui onnistui-parametrit viive tunniste
