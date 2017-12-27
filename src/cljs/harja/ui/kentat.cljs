@@ -40,6 +40,7 @@
             [harja.tyokalut.big :as big]
             [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [harja.tyokalut.ui :refer [for*]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
@@ -407,7 +408,7 @@
                                     vaihtoehdot)
            coll-luokka (Math/ceil (/ 12 palstoja))
            checkboxit (doall
-                        (for [vaihtoehdot-palsta vaihtoehdot-palstoissa]
+                        (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
                           [:div
                            [:div (when (> palstoja 1)
                                    {:class (str "col-lg-" coll-luokka)})
