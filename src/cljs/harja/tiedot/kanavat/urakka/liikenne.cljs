@@ -63,15 +63,18 @@
    ::lt-alus/suunta ::lt-alus/aluslajit :niput?
    ::toiminto/toimenpiteet ::lt-alus/nimi])
 
+;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
+(defrecord PaivitaValinnat [uudet])
+;; Haut
 (defrecord HaeLiikennetapahtumat [])
 (defrecord LiikennetapahtumatHaettu [tulos])
 (defrecord LiikennetapahtumatEiHaettu [virhe])
+;; Lomake
 (defrecord ValitseTapahtuma [tapahtuma])
 (defrecord HaeEdellisetTiedot [tapahtuma])
 (defrecord EdellisetTiedotHaettu [tulos])
 (defrecord EdellisetTiedotEiHaettu [virhe])
-(defrecord PaivitaValinnat [uudet])
 (defrecord TapahtumaaMuokattu [tapahtuma])
 (defrecord MuokkaaAluksia [alukset virheita?])
 (defrecord VaihdaSuuntaa [alus])
