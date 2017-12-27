@@ -43,11 +43,17 @@
                  #(when (= (::ur/id %) urakka-id) %)
                  urakat))))
 
-(defn- hae-liikennetapahtumat* [tapahtumat
-                                urakkatiedot-fn
-                                urakka-id]
+(defn- suodata-liikennetapahtuma-toimenpidetyypillä [tiedot tapahtumat]
+  (filter #(let [toimenpidetyypit (::lt/toimenpide tiedot)]
+             (if (empty? toimenpidetyypit)
+               true
+               (some (::lt/toimenpide tiedot)
+                     (map ::toiminto/toimenpide (::lt/toiminnot %)))))))
+
+(defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]
   (->>
     tapahtumat
+    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
     (map (partial urakat-idlla urakka-id))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))
@@ -118,7 +124,6 @@
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
         aluslajit (::lt-alus/aluslajit tiedot)
         suunta (::lt-alus/suunta tiedot)
-        toimenpidetyypit (::lt/toimenpide tiedot)
         [alku loppu] aikavali]
     (hae-tapahtumien-perustiedot*
       (specql/fetch db
@@ -134,10 +139,6 @@
                     (op/and
                       (when (and alku loppu)
                         {::lt/aika (op/between alku loppu)})
-                      ;; TODO Pitää suodattaa toiminnoista
-                      #_{::lt/toimenpide (if (empty? toimenpidetyypit)
-                                         (op/in (map name lt/toimenpide-vaihtoehdot))
-                                         (op/in (map name toimenpidetyypit)))}
                       (when kohde-id
                         {::lt/kohde-id kohde-id})
                       (op/and
@@ -155,6 +156,7 @@
 
 (defn hae-liikennetapahtumat [db user tiedot]
   (hae-liikennetapahtumat*
+    tiedot
     (->> (hae-tapahtumien-perustiedot db tiedot)
          (hae-tapahtumien-palvelumuodot db)
          (hae-tapahtumien-kohdetiedot db))
