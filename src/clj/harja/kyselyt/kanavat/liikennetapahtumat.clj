@@ -56,9 +56,11 @@
             (let [alus-nimi (::lt-alus/nimi tiedot)]
               (if (empty? alus-nimi) ;; Voi olla nil tai ""
                 true
-                (some #(str/starts-with? (str/lower-case %)
-                                         (str/lower-case alus-nimi))
-                      (map ::lt-alus/nimi (::lt/alukset tapahtuma))))))
+                ;; Pidä tapahtuma, jos sen aluksissa ainakin yksi
+                ;; alkaa annetulla nimellä
+                (not (empty? (lt-alus/suodata-alukset-nimen-alulla
+                               (::lt/alukset tapahtuma)
+                               alus-nimi))))))
           tapahtumat))
 
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]
