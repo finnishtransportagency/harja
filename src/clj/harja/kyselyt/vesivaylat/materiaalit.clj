@@ -22,4 +22,3 @@
   (update! db ::m/materiaali
            (muok/poistotiedot user)
            {::m/id materiaali-id}))
-
