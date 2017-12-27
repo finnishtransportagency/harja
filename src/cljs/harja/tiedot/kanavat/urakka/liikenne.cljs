@@ -61,7 +61,7 @@
 (def valintojen-avaimet
   [::ur/id ::sop/id :aikavali ::lt/kohde
    ::lt-alus/suunta ::lt-alus/aluslajit :niput?
-   ::toiminto/toimenpiteet])
+   ::toiminto/toimenpiteet ::lt-alus/nimi])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeLiikennetapahtumat [])
