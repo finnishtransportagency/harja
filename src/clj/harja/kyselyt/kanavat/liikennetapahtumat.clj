@@ -43,11 +43,17 @@
                  #(when (= (::ur/id %) urakka-id) %)
                  urakat))))
 
-(defn- hae-liikennetapahtumat* [tapahtumat
-                                urakkatiedot-fn
-                                urakka-id]
+(defn- suodata-liikennetapahtuma-toimenpidetyypillä [tiedot tapahtumat]
+  (filter #(let [toimenpidetyypit (::toiminto/toimenpiteet tiedot)]
+             (if (empty? toimenpidetyypit)
+               true
+               (some toimenpidetyypit (map ::toiminto/toimenpide (::lt/toiminnot %)))))
+          tapahtumat))
+
+(defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]
   (->>
     tapahtumat
+    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
     (map (partial urakat-idlla urakka-id))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))
@@ -150,6 +156,7 @@
 
 (defn hae-liikennetapahtumat [db user tiedot]
   (hae-liikennetapahtumat*
+    tiedot
     (->> (hae-tapahtumien-perustiedot db tiedot)
          (hae-tapahtumien-palvelumuodot db)
          (hae-tapahtumien-kohdetiedot db))
@@ -261,12 +268,12 @@
                                        {::ketjutus/alus-id alus-id})))]
     (boolean
       (when tapahtuma-id
-       (not-empty
-         (specql/fetch db
-                       ::lt/liikennetapahtuma
-                       #{::lt/urakka-id ::lt/id}
-                       {::lt/id tapahtuma-id
-                        ::lt/urakka-id urakka-id}))))))
+        (not-empty
+          (specql/fetch db
+                        ::lt/liikennetapahtuma
+                        #{::lt/urakka-id ::lt/id}
+                        {::lt/id tapahtuma-id
+                         ::lt/urakka-id urakka-id}))))))
 
 (defn poista-ketjutus! [db alus-id urakka-id]
   (when (ketjutus-kuuluu-urakkaan? db alus-id urakka-id)
@@ -394,12 +401,12 @@
 (defn hae-seuraavat-kohteet [db kohteelta-id suunta]
   (hae-seuraavat-kohteet*
     (specql/fetch
-     db
-     ::kohde/kohde
-     (if (= suunta :ylos)
-       #{::kohde/ylos-id}
-       #{::kohde/alas-id})
-     {::kohde/id kohteelta-id})))
+      db
+      ::kohde/kohde
+      (if (= suunta :ylos)
+        #{::kohde/ylos-id}
+        #{::kohde/alas-id})
+      {::kohde/id kohteelta-id})))
 
 ;; specql:n insert ei käytä paluuarvoihin transformaatioita, eli kun tallennuksessa
 ;; insertoidaan uusia aluksia, niiden ::suunta on merkkijono. Keywordin ja merkkijonon
