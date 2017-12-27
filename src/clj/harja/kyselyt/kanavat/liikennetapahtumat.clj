@@ -48,7 +48,8 @@
              (if (empty? toimenpidetyypit)
                true
                (some (::lt/toimenpide tiedot)
-                     (map ::toiminto/toimenpide (::lt/toiminnot %)))))))
+                     (map ::toiminto/toimenpide (::lt/toiminnot %)))))
+          tapahtumat))
 
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]
   (->>
