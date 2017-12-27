@@ -324,7 +324,8 @@
 
 (defn valinnat [e! app kohteet]
   (let [kohde-atomi (partial tiedot/valinta-wrap e! app)
-        aluslaji-atomi (partial tiedot/valinta-wrap e! app)]
+        aluslaji-atomi (partial tiedot/valinta-wrap e! app)
+        toimenpidetyyppi-atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
@@ -345,7 +346,8 @@
                          :palstoja 2
                          :vaihtoehdot lt-alus/aluslajit
                          :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
-         :arvo-atom (aluslaji-atomi ::lt-alus/aluslajit)}]]
+         :arvo-atom (aluslaji-atomi ::lt-alus/aluslajit)}]
+       ]
       [:div
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Suunta"
@@ -357,7 +359,13 @@
         {:otsikko "Uittoniput"
          :kentta-params {:tyyppi :checkbox
                          :teksti "Näytä vain uittoniput"}
-         :arvo-atom (kohde-atomi :niput?)}]]]
+         :arvo-atom (kohde-atomi :niput?)}]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Toimenpidetyyppi"
+         :kentta-params {:tyyppi :checkbox-group
+                         :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
+                         :vaihtoehto-nayta lt/sulku-toimenpide->str}
+         :arvo-atom (toimenpidetyyppi-atomi ::toiminto/toimenpiteet)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
        "Kirjaa liikennetapahtuma"
