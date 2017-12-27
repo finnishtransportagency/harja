@@ -374,9 +374,7 @@
                       {:onnistui ->LiikennetapahtumatHaettu
                        :epaonnistui ->LiikennetapahtumatEiHaettu})
             (assoc :liikennetapahtumien-haku-kaynnissa? true))
-
         app)
-
       app))
 
   LiikennetapahtumatHaettu
