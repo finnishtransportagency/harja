@@ -116,7 +116,7 @@
   (let [urakka-id (::ur/id tiedot)
         sopimus-id (::sop/id tiedot)
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
-        aluslaji (::lt-alus/laji tiedot)
+        aluslajit (::lt-alus/aluslajit tiedot)
         suunta (::lt-alus/suunta tiedot)
         [alku loppu] aikavali]
     (hae-tapahtumien-perustiedot*
@@ -139,12 +139,13 @@
                         {::m/poistettu? false
                          ::lt/urakka-id urakka-id
                          ::lt/sopimus-id sopimus-id}
-                        (when (or suunta aluslaji)
+                        (when (or suunta aluslajit)
                           {::lt/alukset (op/and
                                           (when suunta
                                             {::lt-alus/suunta suunta})
-                                          (when aluslaji
-                                            {::lt-alus/laji aluslaji}))}))))
+                                          {::lt-alus/laji (if (empty? aluslajit)
+                                                            (op/in (map name lt-alus/aluslajit))
+                                                            (op/in (map name aluslajit)))})}))))
       tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]

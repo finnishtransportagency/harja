@@ -142,7 +142,9 @@ button > .ajax-loader {
     font-weight: bold;
   }
   .livi-alasveto(@valintakontrollin-leveys);
-  input {
+  input:not([type="checkbox"]) {
+    // Vaaditaan, että label-ja-kenttä elementissä input-itemit ovat aina 100% leveyisiä ja standardikorkeita.
+    // Rajataan pois checkboksit, koska nämä säädöt eivät toimi checkboksien kanssa kovin hyvin.
     height: @valintakontrollin-korkeus;
     width: 100%;
   }

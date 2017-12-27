@@ -40,6 +40,7 @@
             [harja.tyokalut.big :as big]
             [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [harja.tyokalut.ui :refer [for*]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
@@ -379,10 +380,11 @@
 (defmethod tee-kentta :checkbox-group
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
            tyhjenna-kaikki? nayta-rivina? disabloi tasaa
-           muu-vaihtoehto muu-kentta
+           muu-vaihtoehto muu-kentta palstoja
            valitse-fn valittu-fn]} data]
   (assert data)
-  (let [vaihtoehto-nayta (or vaihtoehto-nayta
+  (let [palstoja (or palstoja 1)
+        vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         data-nyt @data
         valitut (if valittu-fn
@@ -401,18 +403,26 @@
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
-     (let [checkboxit (doall
-                        (for [v vaihtoehdot
-                              :let [valittu? (valitut v)]]
-                          ^{:key (str "boolean-group-" (name v))}
-                          [:div.checkbox
-                           [:label
-                            [:input {:type "checkbox" :checked (boolean valittu?)
-                                     :disabled (if disabloi
-                                                 (disabloi valitut v)
-                                                 false)
-                                     :on-change #(swap! data valitse v (not valittu?))}]
-                            (vaihtoehto-nayta v)]]))
+     (let [vaihtoehdot-palstoissa (partition-all
+                                    (Math/ceil (/ (count vaihtoehdot) palstoja))
+                                    vaihtoehdot)
+           coll-luokka (Math/ceil (/ 12 palstoja))
+           checkboxit (doall
+                        (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
+                          [:div
+                           [:div (when (> palstoja 1)
+                                   {:class (str "col-sm-" coll-luokka)})
+                            (for [v vaihtoehdot-palsta
+                                  :let [valittu? (valitut v)]]
+                              ^{:key (str "boolean-group-" (name v))}
+                              [:div.checkbox
+                               [:label
+                                [:input {:type "checkbox" :checked (boolean valittu?)
+                                         :disabled (if disabloi
+                                                     (disabloi valitut v)
+                                                     false)
+                                         :on-change #(swap! data valitse v (not valittu?))}]
+                                (vaihtoehto-nayta v)]])]]))
            muu (when (and muu-vaihtoehto
                           (valitut muu-vaihtoehto))
                  [tee-kentta muu-kentta

@@ -174,7 +174,7 @@
   (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset [{:koskematon false
                                                     ::lt-alus/suunta :ylos
-                                                    ::lt-alus/laji :HUV}]})))
+                                                    ::lt-alus/aluslajit #{:HUV}}]})))
   (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset []
                                      ::lt/toiminnot [{::toiminto/palvelumuoto :itse}]})))
@@ -190,14 +190,14 @@
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? true
                                      ::lt/alukset [{:koskematon false
                                                     ::lt-alus/suunta :ylos
-                                                    ::lt-alus/laji :HUV}]})))
+                                                    ::lt-alus/aluslajit #{:HUV}}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset [{:koskematon true
                                                     ::lt-alus/suunta :ylos
-                                                    ::lt-alus/laji :HUV}]})))
+                                                    ::lt-alus/aluslajit #{:HUV}}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset [{:koskematon false
-                                                    ::lt-alus/laji :HUV}]}))))
+                                                    ::lt-alus/aluslajit #{:HUV}}]}))))
 
 
 (deftest sama-alus?
