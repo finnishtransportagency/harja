@@ -11,8 +11,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.palvelut.vesivaylat.viestinta :as viestinta]
             [clojure.java.jdbc :as jdbc]
-            [clojure.spec.alpha :as s]
-            [namespacefy.core :refer [unnamespacefy]]))
+            [clojure.spec.alpha :as s]))
 
 (defn vaadi-materiaali-kuuluu-urakkaan
   [db urakka-id materiaali-id]
@@ -53,14 +52,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id materiaalikirjaus))
   (jdbc/with-db-transaction [db db]
-    (let [halytysraja-kirjauksessa? (not (nil? (::m/halytysraja materiaalikirjaus)))
-          materiaalin-halytysraja (when-not halytysraja-kirjauksessa?
-                                    (m-q/materiaalin-halytysraja db (unnamespacefy (select-keys materiaalikirjaus [::m/nimi ::m/urakka-id]))))
-          materiaalikirjaus (if (not (empty? materiaalin-halytysraja))
-                              (assoc materiaalikirjaus ::m/halytysraja (:halytysraja (first materiaalin-halytysraja)))
-                              materiaalikirjaus)]
-      (m-q/kirjaa-materiaali db user materiaalikirjaus)
-      (hoida-halytysraja db materiaalikirjaus fim email))))
+    (m-q/kirjaa-materiaali db user materiaalikirjaus)
+    (hoida-halytysraja db materiaalikirjaus fim email)))
 
 (defn- poista-materiaalikirjaus [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
