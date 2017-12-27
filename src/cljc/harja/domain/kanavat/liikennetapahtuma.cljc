@@ -133,7 +133,8 @@
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::kohde
                                                      ::lt-alus/laji
-                                                     ::lt-alus/suunta]
+                                                     ::lt-alus/suunta
+                                                     ::toimenpide]
                                                :opt-un [::aikavali ::niput?]))
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req

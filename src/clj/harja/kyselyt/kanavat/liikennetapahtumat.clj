@@ -118,6 +118,7 @@
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
         aluslajit (::lt-alus/aluslajit tiedot)
         suunta (::lt-alus/suunta tiedot)
+        toimenpidetyyppi (::lt/toimenpide tiedot)
         [alku loppu] aikavali]
     (hae-tapahtumien-perustiedot*
       (specql/fetch db
