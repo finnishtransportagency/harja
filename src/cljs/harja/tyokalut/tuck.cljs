@@ -27,6 +27,7 @@
             (swap! palveukutsu-viive assoc tunniste event-tunniste)
             (<! (timeout viive)))
 
+          ;; Jos viive käytössä:
           ;; Mikäli viiveen jälkeen palvelukutsu-viive atomissa on palvelukutsun
           ;; tunnisteena edelleen sama, tämän eventin generoima merkkijono,
           ;; niin silloin palvelukutsua ei ole yritetty tehdä uudestaan
