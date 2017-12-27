@@ -78,9 +78,21 @@
                                             +kayttaja-jvh+
                                             (merge params {::lt-alus/aluslajit #{:ÖLJ}}))]
         (is (>= (count vastaus-kaikki) 1))
+        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))
+
+    (testing "Toimenpidetyyppi-suodatin toimii"
+      (let [vastaus-kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-liikennetapahtumat
+                                           +kayttaja-jvh+
+                                           (merge params {::toiminto/toimenpiteet #{}}))
+            vastaus-rajattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-liikennetapahtumat
+                                            +kayttaja-jvh+
+                                            (merge params {::toiminto/toimenpiteet #{:sulutus}}))]
+        (is (>= (count vastaus-kaikki) 1))
         (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))))
 
-(deftest edellisten-haku
+(deftest edellisten-tapahtumien-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (hae-kohde-soskua)
