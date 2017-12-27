@@ -118,7 +118,7 @@
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
         aluslajit (::lt-alus/aluslajit tiedot)
         suunta (::lt-alus/suunta tiedot)
-        toimenpidetyyppi (::lt/toimenpide tiedot)
+        toimenpidetyypit (::lt/toimenpide tiedot)
         [alku loppu] aikavali]
     (hae-tapahtumien-perustiedot*
       (specql/fetch db
@@ -134,6 +134,10 @@
                     (op/and
                       (when (and alku loppu)
                         {::lt/aika (op/between alku loppu)})
+                      ;; TODO Pitää suodattaa toiminnoista
+                      #_{::lt/toimenpide (if (empty? toimenpidetyypit)
+                                         (op/in (map name lt/toimenpide-vaihtoehdot))
+                                         (op/in (map name toimenpidetyypit)))}
                       (when kohde-id
                         {::lt/kohde-id kohde-id})
                       (op/and
@@ -262,12 +266,12 @@
                                        {::ketjutus/alus-id alus-id})))]
     (boolean
       (when tapahtuma-id
-       (not-empty
-         (specql/fetch db
-                       ::lt/liikennetapahtuma
-                       #{::lt/urakka-id ::lt/id}
-                       {::lt/id tapahtuma-id
-                        ::lt/urakka-id urakka-id}))))))
+        (not-empty
+          (specql/fetch db
+                        ::lt/liikennetapahtuma
+                        #{::lt/urakka-id ::lt/id}
+                        {::lt/id tapahtuma-id
+                         ::lt/urakka-id urakka-id}))))))
 
 (defn poista-ketjutus! [db alus-id urakka-id]
   (when (ketjutus-kuuluu-urakkaan? db alus-id urakka-id)
@@ -395,12 +399,12 @@
 (defn hae-seuraavat-kohteet [db kohteelta-id suunta]
   (hae-seuraavat-kohteet*
     (specql/fetch
-     db
-     ::kohde/kohde
-     (if (= suunta :ylos)
-       #{::kohde/ylos-id}
-       #{::kohde/alas-id})
-     {::kohde/id kohteelta-id})))
+      db
+      ::kohde/kohde
+      (if (= suunta :ylos)
+        #{::kohde/ylos-id}
+        #{::kohde/alas-id})
+      {::kohde/id kohteelta-id})))
 
 ;; specql:n insert ei käytä paluuarvoihin transformaatioita, eli kun tallennuksessa
 ;; insertoidaan uusia aluksia, niiden ::suunta on merkkijono. Keywordin ja merkkijonon
