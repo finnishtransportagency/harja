@@ -38,6 +38,7 @@
 (deftest liikennetapahtumien-haku
   (is (= [{::lt/kohde {::kohde/id 1 ::kohde/urakat [{::ur/id 1}]}}]
          (#'q/hae-liikennetapahtumat*
+           nil
            [{::lt/kohde {::kohde/id 1}}
             {::lt/kohde {::kohde/id 3}}]
            (constantly [{::kohde/id 1 ::kohde/urakat [{::ur/id 1}
