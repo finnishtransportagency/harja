@@ -98,10 +98,16 @@
     (into {} (filter val (:valinnat app)))))
 
 (defn palvelumuoto->str [tapahtuma]
-  (str/join ", " (into #{} (sort (map lt/fmt-palvelumuoto (filter ::toiminto/palvelumuoto (::lt/toiminnot tapahtuma)))))))
+  (str/join ", "
+            (into #{} (sort (map lt/fmt-palvelumuoto
+                                      (filter ::toiminto/palvelumuoto
+                                              (::lt/toiminnot tapahtuma)))))))
 
 (defn toimenpide->str [tapahtuma]
-  (str/join ", " (into #{} (sort (keep (comp lt/sulku-toimenpide->str ::toiminto/toimenpide) (::lt/toiminnot tapahtuma))))))
+  (str/join ", "
+            (into #{} (sort (keep (comp lt/sulku-toimenpide->str
+                                             ::toiminto/toimenpide)
+                                       (::lt/toiminnot tapahtuma))))))
 
 (defn silta-avattu? [tapahtuma]
   (boolean (some (comp (partial = :avaus) ::toiminto/toimenpide) (::lt/toiminnot tapahtuma))))
