@@ -903,7 +903,7 @@
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
-              tiedot (if sivuta
+              tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu)
                        tiedot)
               ;; TODO Tähän: Jaa rivit sivuille. Otetaan optio :sivuta, jolla jaetaan rivit sivuiksi.
