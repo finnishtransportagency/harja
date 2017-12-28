@@ -372,6 +372,8 @@
         (do
           (tt/post! :hae-liikennetapahtumat
                     params
+                    ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
+                    ;; liikaa requesteja ilman viivettä.
                     {:viive 1000
                      :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
                      :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
