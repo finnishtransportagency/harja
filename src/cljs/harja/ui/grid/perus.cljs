@@ -906,8 +906,6 @@
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu)
                        tiedot)
-              ;; TODO Tähän: Jaa rivit sivuille. Otetaan optio :sivuta, jolla jaetaan rivit sivuiksi.
-              ;; Passataan näyttökäyttöliittymään sivun rivit
               luokat (if @infolaatikko-nakyvissa?
                        (conj luokat "livi-grid-infolaatikolla")
                        luokat)
