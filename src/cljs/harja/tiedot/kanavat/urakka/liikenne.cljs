@@ -68,6 +68,7 @@
 (defrecord PaivitaValinnat [uudet])
 ;; Haut
 (defrecord HaeLiikennetapahtumat [])
+(defrecord HaeLiikennetapahtumatKutsuLahetetty [])
 (defrecord LiikennetapahtumatHaettu [tulos])
 (defrecord LiikennetapahtumatEiHaettu [virhe])
 ;; Lomake
@@ -131,8 +132,8 @@
           (if (empty? alus-nimi-suodatin)
             tapahtuman-alukset
             (lt-alus/suodata-alukset-nimen-alulla
-             tapahtuman-alukset
-             (get-in app [:valinnat ::lt-alus/nimi]))))]
+              tapahtuman-alukset
+              (get-in app [:valinnat ::lt-alus/nimi]))))]
 
     ;; Alustiedot ovat tyhjiä jos rivi on vain itsepalveluiden kirjaamista.
     (if (empty? alustiedot)
@@ -368,14 +369,21 @@
   (process-event [_ app]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
       (if-let [params (hakuparametrit app)]
-        (-> app
-            (tt/post! :hae-liikennetapahtumat
-                      params
-                      {:onnistui ->LiikennetapahtumatHaettu
-                       :epaonnistui ->LiikennetapahtumatEiHaettu})
-            (assoc :liikennetapahtumien-haku-kaynnissa? true))
+        (do
+          (tt/post! :hae-liikennetapahtumat
+                    params
+                    {:viive 1000
+                     :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
+                     :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
+                     :onnistui ->LiikennetapahtumatHaettu
+                     :epaonnistui ->LiikennetapahtumatEiHaettu})
+          app)
         app)
       app))
+
+  HaeLiikennetapahtumatKutsuLahetetty
+  (process-event [_ app]
+    (assoc app :liikennetapahtumien-haku-kaynnissa? true))
 
   LiikennetapahtumatHaettu
   (process-event [{tulos :tulos} app]

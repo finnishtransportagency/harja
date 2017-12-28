@@ -10,13 +10,19 @@
 (def palveukutsu-viive (atom {})) ;; Palvelukontekstin tunniste -> palvelukutsu-eventin id
 
 (defn- palvelukutsu*
+  "Optiot:
+   viive              Aika millisekunteina, jonka verran palvelupyynnön lähetystä
+                      pidätellään. Vaatii kaveriksi myös tunniste-argumentin.
+                      Mikäli odotusaikana saman tunnisteen alla yritetään lähettää
+                      useita pyyntöjä, vain tuorein näistä lähetetään."
   [app palvelu argumentit {:keys [onnistui onnistui-parametrit viive tunniste
-                                  epaonnistui epaonnistui-parametrit]}]
+                                  epaonnistui epaonnistui-parametrit lahetetty]}]
   (assert (or (nil? viive)
               (and viive tunniste))
           "Viive vaatii tunnisteen!")
 
-  (let [onnistui! (when onnistui (apply tuck/send-async! onnistui
+  (let [lahetetty! (when lahetetty (tuck/send-async! lahetetty))
+        onnistui! (when onnistui (apply tuck/send-async! onnistui
                                         onnistui-parametrit))
         epaonnistui! (when epaonnistui (apply tuck/send-async! epaonnistui
                                               epaonnistui-parametrit))]
@@ -38,12 +44,14 @@
           (if (or
                 (not viive)
                 (and viive tunniste (= (tunniste @palveukutsu-viive) event-tunniste)))
-            (let [vastaus (if argumentit
-                            (<! (k/post! palvelu argumentit))
-                            (<! (k/get! palvelu)))]
-              (if (k/virhe? vastaus)
-                (when epaonnistui! (epaonnistui! vastaus))
-                (when onnistui! (onnistui! vastaus))))
+            (do
+              (when lahetetty! (lahetetty!))
+              (let [vastaus (if argumentit
+                              (<! (k/post! palvelu argumentit))
+                              (<! (k/get! palvelu)))]
+                (if (k/virhe? vastaus)
+                  (when epaonnistui! (epaonnistui! vastaus))
+                  (when onnistui! (onnistui! vastaus)))))
             (log "Hylätään palvelukutsu, viiveen aikana on uusi jonossa."))))
       (catch :default e
         (when epaonnistui! (epaonnistui! nil))
