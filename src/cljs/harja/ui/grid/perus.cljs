@@ -825,6 +825,7 @@
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
                                                   (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
+                                            ;; Kasvatetaan max. rendattavien rivien määrää jos viewportissa on tilaa
                                             (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
@@ -948,6 +949,8 @@
                                            :piilotetut-valiotsikot piilotetut-valiotsikot
                                            :skeema skeema :vetolaatikot-auki vetolaatikot-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa})
+                  ;; TODO Tähän: Jaa rivit sivuille. Otetaan optio :sivuta, jolla jaetaan rivit sivuiksi.
+                  ;; Passataan näyttökäyttöliittymään sivun rivit
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                          :tiedot tiedot :colspan colspan :tyhja tyhja
                                          :tunniste tunniste :ohjaus ohjaus
