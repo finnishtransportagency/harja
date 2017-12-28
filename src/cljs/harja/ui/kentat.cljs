@@ -257,37 +257,37 @@
     (komp/luo
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
-       (let [nykyinen-data @data
-             nykyinen-teksti (or @teksti
-                                 (normalisoi-numero (fmt nykyinen-data))
-                                 "")
-             kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-             desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                       (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
-                                                       "})?"))]
-         [:input {:class (when lomake? "form-control")
-                  :type "text"
-                  :placeholder (placeholder kentta data)
-                  :on-focus (:on-focus kentta)
-                  :on-blur #(reset! teksti nil)
-                  :value nykyinen-teksti
-                  :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
-                                    v (if vaadi-ei-negatiivinen?
-                                        (str/replace v #"-" "")
-                                        v)]
-                                (when (or (= v "")
-                                          (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                          (re-matches (if kokonaisluku?
-                                                        kokonaisluku-re-pattern
-                                                        desimaaliluku-re-pattern) v))
-                                  (reset! teksti v)
+        (let [nykyinen-data @data
+              nykyinen-teksti (or @teksti
+                                  (normalisoi-numero (fmt nykyinen-data))
+                                  "")
+              kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+              desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
+                                                        (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
+                                                        "})?"))]
+          [:input {:class (when lomake? "form-control")
+                   :type "text"
+                   :placeholder (placeholder kentta data)
+                   :on-focus (:on-focus kentta)
+                   :on-blur #(reset! teksti nil)
+                   :value nykyinen-teksti
+                   :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
+                                     v (if vaadi-ei-negatiivinen?
+                                         (str/replace v #"-" "")
+                                         v)]
+                                 (when (or (= v "")
+                                           (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                           (re-matches (if kokonaisluku?
+                                                         kokonaisluku-re-pattern
+                                                         desimaaliluku-re-pattern) v))
+                                   (reset! teksti v)
 
-                                  (let [numero (if kokonaisluku?
-                                                 (js/parseInt v)
-                                                 (js/parseFloat (str/replace v #"," ".")))]
-                                    (if (not (js/isNaN numero))
-                                      (reset! data numero)
-                                      (reset! data nil)))))}])))))
+                                   (let [numero (if kokonaisluku?
+                                                  (js/parseInt v)
+                                                  (js/parseFloat (str/replace v #"," ".")))]
+                                     (if (not (js/isNaN numero))
+                                       (reset! data numero)
+                                       (reset! data nil)))))}])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
@@ -407,22 +407,28 @@
                                     (Math/ceil (/ (count vaihtoehdot) palstoja))
                                     vaihtoehdot)
            coll-luokka (Math/ceil (/ 12 palstoja))
+           checkbox (fn [vaihtoehto]
+                      (let [valittu? (valitut vaihtoehto)]
+                        [:div.checkbox
+                         [:label
+                          [:input {:type "checkbox" :checked (boolean valittu?)
+                                   :disabled (if disabloi
+                                               (disabloi valitut vaihtoehto)
+                                               false)
+                                   :on-change #(swap! data valitse vaihtoehto (not valittu?))}]
+                          (vaihtoehto-nayta vaihtoehto)]]))
            checkboxit (doall
-                        (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
-                          [:div
-                           [:div (when (> palstoja 1)
-                                   {:class (str "col-sm-" coll-luokka)})
-                            (for [v vaihtoehdot-palsta
-                                  :let [valittu? (valitut v)]]
-                              ^{:key (str "boolean-group-" (name v))}
-                              [:div.checkbox
-                               [:label
-                                [:input {:type "checkbox" :checked (boolean valittu?)
-                                         :disabled (if disabloi
-                                                     (disabloi valitut v)
-                                                     false)
-                                         :on-change #(swap! data valitse v (not valittu?))}]
-                                (vaihtoehto-nayta v)]])]]))
+                        (for [v vaihtoehdot]
+                          ^{:key (str "boolean-group-" (name v))}
+                          [checkbox v]))
+           checkboxit-palstoissa (doall
+                                   (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
+                                     [:div
+                                      [:div (when (> palstoja 1)
+                                              {:class (str "col-sm-" coll-luokka)})
+                                       (for [v vaihtoehdot-palsta]
+                                         ^{:key (str "boolean-group-" (name v))}
+                                         [checkbox v])]]))
            muu (when (and muu-vaihtoehto
                           (valitut muu-vaihtoehto))
                  [tee-kentta muu-kentta
@@ -438,7 +444,7 @@
             (when muu
               ^{:key "muu"}
               [:td.muu muu])]]]
-         [:span checkboxit
+         [:span checkboxit-palstoissa
           [:span.muu muu]]))]))
 
 
