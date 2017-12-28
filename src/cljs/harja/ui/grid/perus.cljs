@@ -516,16 +516,24 @@
                              (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))]))))
                     rivit-jarjestetty)))))))
 
-(defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi-atom]
+(defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi uusi-nykyinen-sivu-fn]
   (let [sivuja (count (partition-all sivuta kaikki-tiedot))]
     [:nav
-    [:ul.pagination
-     [:li.page-item [:a.page-link.klikattava "Edellinen"]]
-     (for* [sivu (range 1 (inc sivuja))]
-       [:li.page-item (when (= @aktiivinen-indeksi-atom sivu)
-                        {:class "active"})
-        [:a.page-link.klikattava sivu]])
-     [:li.page-item [:a.page-link.klikattava "Seuraava"]]]]))
+     [:ul.pagination
+      [:li.page-item {:on-click #(let [uusi (dec aktiivinen-indeksi)]
+                                   (uusi-nykyinen-sivu-fn (if (>= uusi 0) uusi 0)))}
+       [:a.page-link.klikattava "Edellinen"]]
+
+      (for* [sivu-index (range 0 sivuja)]
+        [:li.page-item (merge
+                         (when (= aktiivinen-indeksi sivu-index)
+                           {:class "active"})
+                         {:on-click #(uusi-nykyinen-sivu-fn sivu-index)})
+         [:a.page-link.klikattava (inc sivu-index)]])
+
+      [:li.page-item {:on-click #(let [uusi (inc aktiivinen-indeksi)]
+                                   (uusi-nykyinen-sivu-fn (if (<= uusi sivuja) uusi sivuja)))}
+       [:a.page-link.klikattava "Seuraava"]]]]))
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
@@ -631,6 +639,8 @@
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         rivien-maara (atom (count tiedot))
         nykyinen-sivu (atom 0) ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
+        vaihda-nykyinen-sivu (fn [uusi-index]
+                               (reset! nykyinen-sivu uusi-index))
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
@@ -920,7 +930,7 @@
               muokattu? (not (empty? @historia))]
           [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                :class (clojure.string/join " " luokat)}
-           (when sivuta [sivutuskontrollit alkup-tiedot sivuta nykyinen-sivu])
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu vaihda-nykyinen-sivu])
            (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
                              :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                              :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
@@ -1017,7 +1027,7 @@
                                 :peruuta peruuta :otsikko otsikko
                                 :tunniste tunniste
                                 :validoi-fn validoi-fn})])
-           (when sivuta [sivutuskontrollit alkup-tiedot sivuta nykyinen-sivu])])))))
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu vaihda-nykyinen-sivu])])))))
 
 ;; Yleisiä apureita gridiin
 
