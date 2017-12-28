@@ -532,6 +532,7 @@
                     ::lt/alukset [{::lt-alus/suunta :ylos
                                    ::lt-alus/nimi "Ronsu"}]}]
     (is (= {:liikennetapahtumien-haku-kaynnissa? false
+            :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
             :haetut-tapahtumat [tapahtuma1 tapahtuma2]
             :tapahtumarivit [tapahtuma1
                              (merge
@@ -541,7 +542,8 @@
            (e! (tiedot/->LiikennetapahtumatHaettu [tapahtuma1 tapahtuma2]))))))
 
 (deftest tapahtumia-ei-haettu
-  (is (= {:liikennetapahtumien-haku-kaynnissa? false}
+  (is (= {:liikennetapahtumien-haku-kaynnissa? false
+          :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false}
          (e! (tiedot/->LiikennetapahtumatEiHaettu {})))))
 
 (deftest tapahtuman-valitseminen
@@ -737,6 +739,7 @@
     (is (= {:tallennus-kaynnissa? false
             :valittu-liikennetapahtuma nil
             :liikennetapahtumien-haku-kaynnissa? false
+            :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
             :haetut-tapahtumat [tapahtuma1 tapahtuma2]
             :tapahtumarivit [tapahtuma1
                              (merge

@@ -943,8 +943,7 @@
                        ;; rivejä per sivu niin suureksi, ettei max-sivumaara ylity.
                        (or (first (filter #(<= (count (partition-all % tiedot)) max-sivumaara)
                                        (range sivuta 9000)))
-                           ;; Tämä on varmaan nyt sitä big dataa...
-                           9000))
+                           9000)) ;; Tämä on varmaan nyt sitä big dataa...
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
                        tiedot)
