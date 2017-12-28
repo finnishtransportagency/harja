@@ -519,8 +519,8 @@
 (defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi uusi-nykyinen-sivu-fn]
   (let [sivuja (count (partition-all sivuta kaikki-tiedot))
         max-sivu-index (dec sivuja)]
-    [:nav
-     [:ul.pagination
+    [:nav.livi-grid-pagination
+     [:ul.pagination.justify-content-end
       [:li.page-item (merge
                        (when (= aktiivinen-indeksi 0)
                          {:class "disabled"})
