@@ -517,7 +517,13 @@
                     rivit-jarjestetty)))))))
 
 (defn- sivutuskontrollit []
-  [:div "Olen sivu!"])
+  [:nav
+   [:ul.pagination
+    [:li.page-item [:a.page-link.klikattava "Edellinen"]]
+    [:li.page-item.active [:a.page-link.klikattava "1"]]
+    [:li.page-item [:a.page-link.klikattava "2"]]
+    [:li.page-item [:a.page-link.klikattava "3"]]
+    [:li.page-item [:a.page-link.klikattava "Seuraava"]]]])
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
