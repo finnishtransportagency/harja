@@ -387,7 +387,7 @@
                 [ajax-loader-pieni "Päivitetään listaa.."]
                 "Liikennetapahtumat")
      :tunniste (juxt ::lt/id ::lt-alus/id)
-     :sivuta 5
+     :sivuta 50
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
      :tyhja (if liikennetapahtumien-haku-kaynnissa?
               [ajax-loader "Haku käynnissä"]
