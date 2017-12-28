@@ -14,7 +14,11 @@
    viive              Aika millisekunteina, jonka verran palvelupyynnön lähetystä
                       pidätellään. Vaatii kaveriksi myös tunniste-argumentin.
                       Mikäli odotusaikana saman tunnisteen alla yritetään lähettää
-                      useita pyyntöjä, vain tuorein näistä lähetetään."
+                      useita pyyntöjä, vain tuorein näistä lähetetään.
+
+   tunniste           Tunnisteen kannattaa olla jokin kontekstia kuvaava avain.
+                      Palvelun nimikin käy, mutta kannattaa kuvata mieluummin konteksti,
+                      sillä samaa palvelua saatetaan kutsua eri kontekstissa."
   [app palvelu argumentit {:keys [onnistui onnistui-parametrit viive tunniste
                                   epaonnistui epaonnistui-parametrit lahetetty]}]
   (assert (or (nil? viive)
