@@ -517,11 +517,15 @@
                     rivit-jarjestetty)))))))
 
 (defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi uusi-nykyinen-sivu-fn]
-  (let [sivuja (count (partition-all sivuta kaikki-tiedot))]
+  (let [sivuja (count (partition-all sivuta kaikki-tiedot))
+        max-sivu-index (dec sivuja)]
     [:nav
      [:ul.pagination
-      [:li.page-item {:on-click #(let [uusi (dec aktiivinen-indeksi)]
-                                   (uusi-nykyinen-sivu-fn (if (>= uusi 0) uusi 0)))}
+      [:li.page-item (merge
+                       (when (= aktiivinen-indeksi 0)
+                         {:class "disabled"})
+                       {:on-click #(let [uusi-index (dec aktiivinen-indeksi)]
+                                     (uusi-nykyinen-sivu-fn (if (>= uusi-index 0) uusi-index 0)))})
        [:a.page-link.klikattava "Edellinen"]]
 
       (for* [sivu-index (range 0 sivuja)]
@@ -531,8 +535,11 @@
                          {:on-click #(uusi-nykyinen-sivu-fn sivu-index)})
          [:a.page-link.klikattava (inc sivu-index)]])
 
-      [:li.page-item {:on-click #(let [uusi (inc aktiivinen-indeksi)]
-                                   (uusi-nykyinen-sivu-fn (if (<= uusi sivuja) uusi sivuja)))}
+      [:li.page-item (merge
+                       (when (= aktiivinen-indeksi max-sivu-index)
+                         {:class "disabled"})
+                       {:on-click #(let [uusi-index (inc aktiivinen-indeksi)]
+                                     (uusi-nykyinen-sivu-fn (if (<= uusi-index max-sivu-index) uusi-index max-sivu-index)))})
        [:a.page-link.klikattava "Seuraava"]]]]))
 
 (defn grid
