@@ -516,14 +516,16 @@
                              (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))]))))
                     rivit-jarjestetty)))))))
 
-(defn- sivutuskontrollit []
-  [:nav
-   [:ul.pagination
-    [:li.page-item [:a.page-link.klikattava "Edellinen"]]
-    [:li.page-item.active [:a.page-link.klikattava "1"]]
-    [:li.page-item [:a.page-link.klikattava "2"]]
-    [:li.page-item [:a.page-link.klikattava "3"]]
-    [:li.page-item [:a.page-link.klikattava "Seuraava"]]]])
+(defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi-atom]
+  (let [sivuja (count (partition-all sivuta kaikki-tiedot))]
+    [:nav
+    [:ul.pagination
+     [:li.page-item [:a.page-link.klikattava "Edellinen"]]
+     (for* [sivu (range 1 (inc sivuja))]
+       [:li.page-item (when (= @aktiivinen-indeksi-atom sivu)
+                        {:class "active"})
+        [:a.page-link.klikattava sivu]])
+     [:li.page-item [:a.page-link.klikattava "Seuraava"]]]]))
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
@@ -918,7 +920,7 @@
               muokattu? (not (empty? @historia))]
           [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                :class (clojure.string/join " " luokat)}
-           (when sivuta [sivutuskontrollit])
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta nykyinen-sivu])
            (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
                              :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                              :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
@@ -1015,7 +1017,7 @@
                                 :peruuta peruuta :otsikko otsikko
                                 :tunniste tunniste
                                 :validoi-fn validoi-fn})])
-           (when sivuta [sivutuskontrollit])])))))
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta nykyinen-sivu])])))))
 
 ;; Yleisiä apureita gridiin
 
