@@ -61,17 +61,21 @@
 (def valintojen-avaimet
   [::ur/id ::sop/id :aikavali ::lt/kohde
    ::lt-alus/suunta ::lt-alus/aluslajit :niput?
-   ::toiminto/toimenpiteet])
+   ::toiminto/toimenpiteet ::lt-alus/nimi])
 
+;; Yleiset
 (defrecord Nakymassa? [nakymassa?])
+(defrecord PaivitaValinnat [uudet])
+;; Haut
 (defrecord HaeLiikennetapahtumat [])
+(defrecord HaeLiikennetapahtumatKutsuLahetetty [])
 (defrecord LiikennetapahtumatHaettu [tulos])
 (defrecord LiikennetapahtumatEiHaettu [virhe])
+;; Lomake
 (defrecord ValitseTapahtuma [tapahtuma])
 (defrecord HaeEdellisetTiedot [tapahtuma])
 (defrecord EdellisetTiedotHaettu [tulos])
 (defrecord EdellisetTiedotEiHaettu [virhe])
-(defrecord PaivitaValinnat [uudet])
 (defrecord TapahtumaaMuokattu [tapahtuma])
 (defrecord MuokkaaAluksia [alukset virheita?])
 (defrecord VaihdaSuuntaa [alus])
@@ -112,19 +116,30 @@
 (defn silta-avattu? [tapahtuma]
   (boolean (some (comp (partial = :avaus) ::toiminto/toimenpide) (::lt/toiminnot tapahtuma))))
 
-(defn tapahtumarivit [tapahtuma]
-  (let [alustiedot
+(defn tapahtumarivit [app tapahtuma]
+  ;; Tapahtuma voi sisältää useita aluksia
+  ;; Muunnetaan tapahtuvarivit per alus -muotoon.
+  ;; Palvelin suodattaa tapahtumat aluksen nimellä, mutta tässä täytyy
+  ;; vielä erikseen suodattaa alukset per rivi.
+  (let [alus-nimi-suodatin (get-in app [:valinnat ::lt-alus/nimi])
+        tapahtuman-alukset (::lt/alukset tapahtuma)
+        alustiedot
         (map
           (fn [alus]
             (merge
               tapahtuma
               alus))
-          (::lt/alukset tapahtuma))]
+          (if (empty? alus-nimi-suodatin)
+            tapahtuman-alukset
+            (lt-alus/suodata-alukset-nimen-alulla
+              tapahtuman-alukset
+              (get-in app [:valinnat ::lt-alus/nimi]))))]
 
+    ;; Alustiedot ovat tyhjiä jos rivi on vain itsepalveluiden kirjaamista.
     (if (empty? alustiedot)
-      ;; Alustiedot ovat tyhjiä,
-      ;; jos rivi on vain itsepalveluiden kirjaamista.
-      [tapahtuma]
+      ;; Näytetään rivi, mikäli alus-suodatin ei ollut käytössä
+      (when (empty? alus-nimi-suodatin)
+        [tapahtuma])
       alustiedot)))
 
 (defn koko-tapahtuma [rivi {:keys [haetut-tapahtumat]}]
@@ -134,7 +149,7 @@
   (-> app
       (assoc :liikennetapahtumien-haku-kaynnissa? false)
       (assoc :haetut-tapahtumat tulos)
-      (assoc :tapahtumarivit (mapcat tapahtumarivit tulos))))
+      (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))))
 
 (defn tallennusparametrit [t]
   (-> t
@@ -354,16 +369,23 @@
   (process-event [_ app]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
       (if-let [params (hakuparametrit app)]
-        (-> app
-            (tt/post! :hae-liikennetapahtumat
-                      params
-                      {:onnistui ->LiikennetapahtumatHaettu
-                       :epaonnistui ->LiikennetapahtumatEiHaettu})
-            (assoc :liikennetapahtumien-haku-kaynnissa? true))
-
+        (do
+          (tt/post! :hae-liikennetapahtumat
+                    params
+                    ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
+                    ;; liikaa requesteja ilman viivettä.
+                    {:viive 1000
+                     :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
+                     :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
+                     :onnistui ->LiikennetapahtumatHaettu
+                     :epaonnistui ->LiikennetapahtumatEiHaettu})
+          app)
         app)
-
       app))
+
+  HaeLiikennetapahtumatKutsuLahetetty
+  (process-event [_ app]
+    (assoc app :liikennetapahtumien-haku-kaynnissa? true))
 
   LiikennetapahtumatHaettu
   (process-event [{tulos :tulos} app]
