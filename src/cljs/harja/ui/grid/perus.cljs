@@ -518,7 +518,7 @@
 
 (defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi uusi-nykyinen-sivu-fn]
   (let [sivuja (count (partition-all sivuta kaikki-tiedot))
-        max-sivu-index (dec sivuja)]
+        max-sivu-index (max 0 (dec sivuja))]
     [:nav.livi-grid-pagination
      [:ul.pagination.justify-content-end
       [:li.page-item (merge
@@ -818,7 +818,7 @@
         tarkista-sivutus! (fn [uudet-tiedot]
                             (when sivuta
                               (let [sivuja (count (partition-all sivuta uudet-tiedot))
-                                    max-sivu-index (dec sivuja)]
+                                    max-sivu-index (max 0 (dec sivuja))]
 
                                 (when (> @nykyinen-sivu-index max-sivu-index)
                                   (reset! nykyinen-sivu-index max-sivu-index)))))
