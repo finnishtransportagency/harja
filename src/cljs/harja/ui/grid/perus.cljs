@@ -897,6 +897,8 @@
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
+              ;; TODO Tähän: Jaa rivit sivuille. Otetaan optio :sivuta, jolla jaetaan rivit sivuiksi.
+              ;; Passataan näyttökäyttöliittymään sivun rivit
               luokat (if @infolaatikko-nakyvissa?
                        (conj luokat "livi-grid-infolaatikolla")
                        luokat)
@@ -949,8 +951,6 @@
                                            :piilotetut-valiotsikot piilotetut-valiotsikot
                                            :skeema skeema :vetolaatikot-auki vetolaatikot-auki
                                            :tallennus-kaynnissa? tallennus-kaynnissa})
-                  ;; TODO Tähän: Jaa rivit sivuille. Otetaan optio :sivuta, jolla jaetaan rivit sivuiksi.
-                  ;; Passataan näyttökäyttöliittymään sivun rivit
                   (nayttokayttoliittyma {:renderoi-max-rivia renderoi-max-rivia
                                          :tiedot tiedot :colspan colspan :tyhja tyhja
                                          :tunniste tunniste :ohjaus ohjaus
