@@ -516,6 +516,9 @@
                              (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))]))))
                     rivit-jarjestetty)))))))
 
+(defn- sivutuskontrollit []
+  [:div "Olen sivu!"])
+
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
   Jokainen skeeman itemi on mappi, jossa seuraavat avaimet:
@@ -619,6 +622,7 @@
         tunniste (or tunniste :id) ;; Rivin yksilöivä tunniste, optiona annettu tai oletuksena :id
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         rivien-maara (atom (count tiedot))
+        nykyinen-sivu (atom 0) ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
@@ -899,6 +903,9 @@
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
+              tiedot (if sivuta
+                       (nth (partition-all sivuta tiedot) @nykyinen-sivu)
+                       tiedot)
               ;; TODO Tähän: Jaa rivit sivuille. Otetaan optio :sivuta, jolla jaetaan rivit sivuiksi.
               ;; Passataan näyttökäyttöliittymään sivun rivit
               luokat (if @infolaatikko-nakyvissa?
@@ -907,6 +914,7 @@
               muokattu? (not (empty? @historia))]
           [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                :class (clojure.string/join " " luokat)}
+           (when sivuta [sivutuskontrollit])
            (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
                              :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                              :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
@@ -1002,7 +1010,8 @@
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko
                                 :tunniste tunniste
-                                :validoi-fn validoi-fn})])])))))
+                                :validoi-fn validoi-fn})])
+           (when sivuta [sivutuskontrollit])])))))
 
 ;; Yleisiä apureita gridiin
 
