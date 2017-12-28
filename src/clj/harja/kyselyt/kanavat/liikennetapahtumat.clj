@@ -22,7 +22,8 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.lt-ketjutus :as ketjutus]
-            [harja.domain.kanavat.kohde :as kohde]))
+            [harja.domain.kanavat.kohde :as kohde]
+            [clojure.string :as str]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
@@ -50,10 +51,23 @@
                (some toimenpidetyypit (map ::toiminto/toimenpide (::lt/toiminnot %)))))
           tapahtumat))
 
+(defn- suodata-liikennetapahtuma-aluksen-nimella [tiedot tapahtumat]
+  (filter (fn [tapahtuma]
+            (let [alus-nimi (::lt-alus/nimi tiedot)]
+              (if (empty? alus-nimi) ;; Voi olla nil tai ""
+                true
+                ;; Pidä tapahtuma, jos sen aluksissa ainakin yksi
+                ;; alkaa annetulla nimellä
+                (not (empty? (lt-alus/suodata-alukset-nimen-alulla
+                               (::lt/alukset tapahtuma)
+                               alus-nimi))))))
+          tapahtumat))
+
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]
   (->>
     tapahtumat
     (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
+    (suodata-liikennetapahtuma-aluksen-nimella tiedot)
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
     (map (partial urakat-idlla urakka-id))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))

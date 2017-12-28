@@ -325,12 +325,18 @@
 (defn valinnat [e! app kohteet]
   (let [kohde-atomi (partial tiedot/valinta-wrap e! app)
         aluslaji-atomi (partial tiedot/valinta-wrap e! app)
-        toimenpidetyyppi-atomi (partial tiedot/valinta-wrap e! app)]
+        toimenpidetyyppi-atomi (partial tiedot/valinta-wrap e! app)
+        aluksen-nimi-atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
      [valinnat/valintaryhmat-3
-      [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+      [:div
+       [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Aluksen nimi"
+         :kentta-params {:tyyppi :string}
+         :arvo-atom (aluksen-nimi-atomi ::lt-alus/nimi)}]]
 
       [:div
        [valinnat/kanava-kohde

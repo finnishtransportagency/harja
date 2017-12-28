@@ -90,6 +90,18 @@
                                             +kayttaja-jvh+
                                             (merge params {::toiminto/toimenpiteet #{:sulutus}}))]
         (is (>= (count vastaus-kaikki) 1))
+        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))
+
+    (testing "Aluksen nimi -suodatin toimii"
+      (let [vastaus-kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-liikennetapahtumat
+                                           +kayttaja-jvh+
+                                           (merge params {::lt-alus/nimi ""}))
+            vastaus-rajattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-liikennetapahtumat
+                                            +kayttaja-jvh+
+                                            (merge params {::lt-alus/nimi "Antin onni"}))]
+        (is (>= (count vastaus-kaikki) 1))
         (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))))
 
 (deftest edellisten-tapahtumien-haku
