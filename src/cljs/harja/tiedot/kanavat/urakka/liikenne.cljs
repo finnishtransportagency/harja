@@ -191,7 +191,7 @@
     (and (not (:grid-virheita? t))
          (empty? (filter :koskematon (::lt/alukset t)))
          (every? #(and (some? (::lt-alus/suunta %))
-                       (some? (::lt-alus/aluslajit %)))
+                       (some? (::lt-alus/laji %)))
                  (remove :poistettu (::lt/alukset t)))
          (or
            (not-empty (remove :poistettu (::lt/alukset t)))
