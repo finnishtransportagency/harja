@@ -646,6 +646,7 @@
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         rivien-maara (atom (count tiedot))
         nykyinen-sivu-index (atom 0) ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
+        max-sivumaara 20
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
@@ -936,6 +937,14 @@
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
+              sivuta (when sivuta
+                       ;; Lähtökohtaisesti käytetään ulkoa annettua sivutusmäärää (rivejä per sivu).
+                       ;; Mikäli sivumäärä uhkaa kuitenkin tulla liian suureksi, kasvatetaan
+                       ;; rivejä per sivu niin suureksi, ettei max-sivumaara ylity.
+                       (or (first (filter #(<= (count (partition-all % tiedot)) max-sivumaara)
+                                       (range sivuta 9000)))
+                           ;; Tämä on varmaan nyt sitä big dataa...
+                           9000))
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
                        tiedot)
