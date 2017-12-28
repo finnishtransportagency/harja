@@ -645,9 +645,7 @@
         tunniste (or tunniste :id) ;; Rivin yksilöivä tunniste, optiona annettu tai oletuksena :id
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         rivien-maara (atom (count tiedot))
-        nykyinen-sivu (atom 0) ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
-        vaihda-nykyinen-sivu (fn [uusi-index]
-                               (reset! nykyinen-sivu uusi-index))
+        nykyinen-sivu-index (atom 0) ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
@@ -815,6 +813,15 @@
                                                           #{})]
                                                (reset! piilotetut-valiotsikot tila)
                                                (reset! valiotsikoiden-alkutila-maaritelty? true))))
+        vaihda-nykyinen-sivu! (fn [uusi-index]
+                                (reset! nykyinen-sivu-index uusi-index))
+        tarkista-sivutus! (fn [uudet-tiedot]
+                            (when sivuta
+                              (let [sivuja (count (partition-all sivuta uudet-tiedot))
+                                    max-sivu-index (dec sivuja)]
+
+                                (when (> @nykyinen-sivu-index max-sivu-index)
+                                  (reset! nykyinen-sivu-index max-sivu-index)))))
         nollaa-muokkaustiedot! (fn []
                                  (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
@@ -896,6 +903,7 @@
        (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
+         (tarkista-sivutus! tiedot)
          (maarita-valiotsikoiden-alkutila!)
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
@@ -929,7 +937,7 @@
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
-                       (nth (partition-all sivuta tiedot) @nykyinen-sivu)
+                       (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
                        tiedot)
               luokat (if @infolaatikko-nakyvissa?
                        (conj luokat "livi-grid-infolaatikolla")
@@ -937,7 +945,7 @@
               muokattu? (not (empty? @historia))]
           [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                :class (clojure.string/join " " luokat)}
-           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu vaihda-nykyinen-sivu])
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
            (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
                              :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                              :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
@@ -1034,7 +1042,7 @@
                                 :peruuta peruuta :otsikko otsikko
                                 :tunniste tunniste
                                 :validoi-fn validoi-fn})])
-           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu vaihda-nykyinen-sivu])])))))
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
 
 ;; Yleisiä apureita gridiin
 
