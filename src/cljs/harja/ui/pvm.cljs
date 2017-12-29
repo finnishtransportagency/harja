@@ -90,7 +90,10 @@
              naytettava-kk (t/date-time vuosi (inc kk) 1)
              naytettava-kk-paiva? #(pvm/sama-kuukausi? naytettava-kk %)]
          [:table.pvm-valinta {:style (merge
-                                      {:display (if @sijainti-atom "table" "none")}
+                                      {:display (if @sijainti-atom "table" "none")
+                                       ;; Etenkin jos kalenteri avataan ylöspäin, on tärkeää, että korkeus pysyy vakiona
+                                       ;; Muuten otsikkorivi hyppii sen mukaan paljonko kuussa on päiviä.
+                                       :height "200px"}
                                       (case @sijainti-atom
                                         :ylos-oikea {:bottom "100%" :left 0}
                                         :ylos-vasen {:bottom "100%" :right 0}
