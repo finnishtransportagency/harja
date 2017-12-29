@@ -174,7 +174,7 @@
   (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset [{:koskematon false
                                                     ::lt-alus/suunta :ylos
-                                                    ::lt-alus/aluslajit #{:HUV}}]})))
+                                                    ::lt-alus/laji :HUV}]})))
   (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset []
                                      ::lt/toiminnot [{::toiminto/palvelumuoto :itse}]})))
@@ -188,16 +188,16 @@
                                                     ::lt-alus/suunta :ylos}]})))
 
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? true
-                                     ::lt/alukset [{:koskematon false
-                                                    ::lt-alus/suunta :ylos
-                                                    ::lt-alus/aluslajit #{:HUV}}]})))
+                                      ::lt/alukset [{:koskematon false
+                                                     ::lt-alus/suunta :ylos
+                                                     ::lt-alus/laji :HUV}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
-                                     ::lt/alukset [{:koskematon true
-                                                    ::lt-alus/suunta :ylos
-                                                    ::lt-alus/aluslajit #{:HUV}}]})))
+                                      ::lt/alukset [{:koskematon true
+                                                     ::lt-alus/suunta :ylos
+                                                     ::lt-alus/laji :HUV}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
-                                     ::lt/alukset [{:koskematon false
-                                                    ::lt-alus/aluslajit #{:HUV}}]}))))
+                                      ::lt/alukset [{:koskematon false
+                                                     ::lt-alus/laji :HUV}]}))))
 
 
 (deftest sama-alus?
