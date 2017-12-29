@@ -519,28 +519,29 @@
 (defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi uusi-nykyinen-sivu-fn]
   (let [sivuja (count (partition-all sivuta kaikki-tiedot))
         max-sivu-index (max 0 (dec sivuja))]
-    [:nav.livi-grid-pagination
-     [:ul.pagination.justify-content-end
-      [:li.page-item (merge
-                       (when (= aktiivinen-indeksi 0)
-                         {:class "disabled"})
-                       {:on-click #(let [uusi-index (dec aktiivinen-indeksi)]
-                                     (uusi-nykyinen-sivu-fn (if (>= uusi-index 0) uusi-index 0)))})
-       [:a.page-link.klikattava "Edellinen"]]
-
-      (for* [sivu-index (range 0 sivuja)]
+    (when (> sivuja 1)
+      [:nav.livi-grid-pagination
+       [:ul.pagination.justify-content-end
         [:li.page-item (merge
-                         (when (= aktiivinen-indeksi sivu-index)
-                           {:class "active"})
-                         {:on-click #(uusi-nykyinen-sivu-fn sivu-index)})
-         [:a.page-link.klikattava (inc sivu-index)]])
+                         (when (= aktiivinen-indeksi 0)
+                           {:class "disabled"})
+                         {:on-click #(let [uusi-index (dec aktiivinen-indeksi)]
+                                       (uusi-nykyinen-sivu-fn (if (>= uusi-index 0) uusi-index 0)))})
+         [:a.page-link.klikattava "Edellinen"]]
 
-      [:li.page-item (merge
-                       (when (= aktiivinen-indeksi max-sivu-index)
-                         {:class "disabled"})
-                       {:on-click #(let [uusi-index (inc aktiivinen-indeksi)]
-                                     (uusi-nykyinen-sivu-fn (if (<= uusi-index max-sivu-index) uusi-index max-sivu-index)))})
-       [:a.page-link.klikattava "Seuraava"]]]]))
+        (for* [sivu-index (range 0 sivuja)]
+          [:li.page-item (merge
+                           (when (= aktiivinen-indeksi sivu-index)
+                             {:class "active"})
+                           {:on-click #(uusi-nykyinen-sivu-fn sivu-index)})
+           [:a.page-link.klikattava (inc sivu-index)]])
+
+        [:li.page-item (merge
+                         (when (= aktiivinen-indeksi max-sivu-index)
+                           {:class "disabled"})
+                         {:on-click #(let [uusi-index (inc aktiivinen-indeksi)]
+                                       (uusi-nykyinen-sivu-fn (if (<= uusi-index max-sivu-index) uusi-index max-sivu-index)))})
+         [:a.page-link.klikattava "Seuraava"]]]])))
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
@@ -942,7 +943,7 @@
                        ;; Mikäli sivumäärä uhkaa kuitenkin tulla liian suureksi, kasvatetaan
                        ;; rivejä per sivu niin suureksi, ettei max-sivumaara ylity.
                        (or (first (filter #(<= (count (partition-all % tiedot)) max-sivumaara)
-                                       (range sivuta 9000)))
+                                          (range sivuta 9000)))
                            9000)) ;; Tämä on varmaan nyt sitä big dataa...
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
