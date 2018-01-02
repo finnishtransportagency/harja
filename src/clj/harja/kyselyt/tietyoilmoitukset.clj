@@ -9,7 +9,7 @@
             [clojure.spec.alpha :as s]
             [harja.kyselyt.specql :as specql]
             [harja.domain.muokkaustiedot :as m]
-            [clojure.future :refer :all]
+
             [clojure.set :as set]))
 
 (defqueries "harja/kyselyt/tietyoilmoitukset.sql")

@@ -4,7 +4,7 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
     #?@(:clj [
-            [clojure.future :refer :all]])))
+            ])))
 
 ;; Osan tiedot
 (s/def ::osa (s/and pos-int? #(< % 1000)))

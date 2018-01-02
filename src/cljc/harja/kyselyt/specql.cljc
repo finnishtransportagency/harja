@@ -5,7 +5,7 @@
             [clojure.spec.alpha :as s]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
-            [clojure.future :refer :all]]))
+              ]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:clj
@@ -16,8 +16,7 @@
 (define-tables
   ["tr_osoite" ::tr/osoite])
 
-;; TODO ALLA OLEVAT MÄÄRITYKSET PITÄISI TEHDÄ OIKEASTI SPECQL-KIRJASTOON
-;; Kun tehty, voi myös harja.domain.liitteeltä poistaa require tähän ns:ään.
+;; Alla olevia tyyppimäärityksiä ei ole specql:ssä sisäänrakennettuna, -> lisätään ne käsin.
 
 #?(:clj
    (defmethod specql.impl.composite/parse-value :specql.data-types/int4 [_ string]

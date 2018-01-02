@@ -12,8 +12,7 @@
     [harja.domain.kayttaja :as kayttaja]
 
     #?@(:clj  [
-    [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]]
+    [harja.kyselyt.specql-db :refer [define-tables]]]
         :cljs [[specql.impl.registry]])
     [clojure.set :as set]
     [clojure.string :as str])

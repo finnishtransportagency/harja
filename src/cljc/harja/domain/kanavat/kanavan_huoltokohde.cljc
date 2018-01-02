@@ -3,8 +3,7 @@
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     #?@(:clj  [
-    [harja.kyselyt.specql-db :refer [define-tables]]
-    [clojure.future :refer :all]]
+    [harja.kyselyt.specql-db :refer [define-tables]]]
         :cljs [[specql.impl.registry]]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
