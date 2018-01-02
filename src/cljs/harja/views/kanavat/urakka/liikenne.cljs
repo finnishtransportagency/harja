@@ -377,18 +377,20 @@
        "Kirjaa liikennetapahtuma"
        #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]))
 
-(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?] :as app}
+(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
+                                            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
   [:div
    [debug app]
    [valinnat e! app kohteet]
    [grid/grid
-    {:otsikko (if liikennetapahtumien-haku-kaynnissa?
+    {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader-pieni "Päivitetään listaa.."]
                 "Liikennetapahtumat")
      :tunniste (juxt ::lt/id ::lt-alus/id)
+     :sivuta grid/vakiosivutus
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
-     :tyhja (if liikennetapahtumien-haku-kaynnissa?
+     :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
     [{:otsikko "Aika"

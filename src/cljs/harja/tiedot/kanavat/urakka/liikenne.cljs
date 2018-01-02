@@ -30,6 +30,7 @@
 
 (def tila (atom {:nakymassa? false
                  :liikennetapahtumien-haku-kaynnissa? false
+                 :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
                  :tallennus-kaynnissa? false
                  :valittu-liikennetapahtuma nil
                  :tapahtumarivit nil
@@ -148,6 +149,7 @@
 (defn tapahtumat-haettu [app tulos]
   (-> app
       (assoc :liikennetapahtumien-haku-kaynnissa? false)
+      (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
       (assoc :haetut-tapahtumat tulos)
       (assoc :tapahtumarivit (mapcat #(tapahtumarivit app %) tulos))))
 
@@ -206,7 +208,7 @@
     (and (not (:grid-virheita? t))
          (empty? (filter :koskematon (::lt/alukset t)))
          (every? #(and (some? (::lt-alus/suunta %))
-                       (some? (::lt-alus/aluslajit %)))
+                       (some? (::lt-alus/laji %)))
                  (remove :poistettu (::lt/alukset t)))
          (or
            (not-empty (remove :poistettu (::lt/alukset t)))
@@ -369,17 +371,17 @@
   (process-event [_ app]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
       (if-let [params (hakuparametrit app)]
-        (do
-          (tt/post! :hae-liikennetapahtumat
-                    params
-                    ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
-                    ;; liikaa requesteja ilman viivettä.
-                    {:viive 1000
-                     :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
-                     :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
-                     :onnistui ->LiikennetapahtumatHaettu
-                     :epaonnistui ->LiikennetapahtumatEiHaettu})
-          app)
+        (-> app
+            (tt/post! :hae-liikennetapahtumat
+                      params
+                      ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
+                      ;; liikaa requesteja ilman viivettä.
+                      {:viive 1000
+                       :tunniste :hae-liikennetapahtumat-liikenne-nakymaan
+                       :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
+                       :onnistui ->LiikennetapahtumatHaettu
+                       :epaonnistui ->LiikennetapahtumatEiHaettu})
+            (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? true))
         app)
       app))
 
@@ -394,7 +396,8 @@
   LiikennetapahtumatEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
-    (assoc app :liikennetapahtumien-haku-kaynnissa? false))
+    (assoc app :liikennetapahtumien-haku-kaynnissa? false
+               :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false))
 
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
