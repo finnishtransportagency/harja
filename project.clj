@@ -11,7 +11,7 @@
                  [clojure-future-spec "1.9.0-alpha17"]
 
                  [prismatic/schema "1.1.7"]
-                 [org.clojure/core.async "0.3.465"]
+                 [org.clojure/core.async "0.3.443"] ; TODO Voisi päivittää, muttaa ilmoitusten haku ym. testit failaa
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.243"]
                  [com.cognitect/transit-clj "0.8.300"]
