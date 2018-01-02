@@ -149,9 +149,5 @@
         (:id kirjaaja))))
   ;; Päivitä sopimuksen päivän materiaalinkäyttö. Joissain urakoissa (HAR-6489) viestistä voi puuttua
   ;; sopimusId, tällöin kaivetaan sopimukset kannasta ennen cachetaulun päivitystä
-  (if (:sopimusId toteuma)
-    (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus (:sopimusId toteuma)
-                                                           :alkupvm (:alkanut toteuma)})
-    (doseq [sopimus-id (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
-      (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                             :alkupvm (:alkanut toteuma)}))))
+  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus (hae-sopimus-id db urakka-id toteuma)
+                                                         :alkupvm (:alkanut toteuma)}))
