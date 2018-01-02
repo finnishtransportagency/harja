@@ -122,14 +122,57 @@
                ::materiaalit/pvm (::materiaalit/pvm muutos)
                ::materiaalit/id (::materiaalit/id muutos)}}))
 
-(defn materiaalikirjaus->poistettavat [{:keys [poistettu jarjestysnumero varaosa] :as grid-rivi}]
+(defn materiaalikirjaus->poistettavat-1 [{:keys [poistettu jarjestysnumero varaosa] :as grid-rivi}]
   ;; poistetaan mapista poistetuksi merkatut uudet rivit
   (when poistettu
     (when (not jarjestysnumero)
       (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id}))))
 
+
+(defn materiaalikirjaus->poistettavat-2 [nykygrid {:keys [poistettu jarjestysnumero varaosa] :as muokkaamaton-grid-rivi}]
+  ;; poistetaan materiaalit jotka löytyy vain muokkaamattomista materiaaleista
+
+  (let [nykygridin-samannimiset (filter
+                                 #(= (::materiaalit/nimi varaosa) (-> % :varaosa ::materiaalit/nimi))
+                                 nykygrid)]
+    (log "samannimiset:" (pr-str nykygridin-samannimiset))
+    ;; pyydetään backilta poistettavaksi, jos 1) ei loydy saman nimisiä nykygridistä
+    ;;                                     ja 2) jarjestysnumero puuttuu eli on backilta ladattu (vs frontilla tallentamatta lisätty)
+    (when (empty? nykygridin-samannimiset)
+      (log "not jnr:" (pr-str (not jarjestysnumero)))
+      (when (not jarjestysnumero)
+
+        (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))))
+
+(defn testaa-poistettavat-2 []
+  (let [nykygrid  [{:maara 1,
+                    :varaosa
+                    {:harja.domain.vesivaylat.materiaali/urakka-id 31,
+                     :harja.domain.vesivaylat.materiaali/maara-nyt 473,
+                     :harja.domain.vesivaylat.materiaali/alkuperainen-maara 500,
+                     :harja.domain.vesivaylat.materiaali/nimi "Ämpäreitä"}}]
+
+        muokkaamattomat (list {:maara 1,
+                               :varaosa
+                               {:harja.domain.vesivaylat.materiaali/nimi "Naulat",
+                                :harja.domain.vesivaylat.materiaali/urakka-id 31,
+                                :harja.domain.vesivaylat.materiaali/pvm
+                                nil,
+                                :harja.domain.vesivaylat.materiaali/id 15}})])
+  (log "testaa-poistettavat-2:")
+  (cljs.pprint/pprint (vec  (keep (partial materiaalikirjaus->poistettavat-2 nykygrid) muokkaamattomat))))
+
 (defn poistettavat-materiaalit [tp]
-  (keep materiaalikirjaus->poistettavat (::materiaalit/materiaalit tp)))
+  (log "poistettavat-2: sisään materiaalit:")
+  (cljs.pprint/pprint (::materiaalit/materiaalit tp))
+  (log "poistettavat-2: sisään muokkaamattomat materiaalit:")
+  (cljs.pprint/pprint (::materiaalit/muokkaamattomat-materiaalit tp))
+  (log "poistettavat-2: " (pr-str (vec  (keep (partial materiaalikirjaus->poistettavat-2 (::materiaalit/materiaalit tp))
+                                              (::materiaalit/muokkaamattomat-materiaalit tp)))))
+  (concat
+   (keep materiaalikirjaus->poistettavat-1 (::materiaalit/materiaalit tp))
+   (keep (partial materiaalikirjaus->poistettavat-2 (::materiaalit/materiaalit tp))
+         (::materiaalit/muokkaamattomat-materiaalit tp))))
 
 (defn yksi-tallennettava-materiaalikirjaus [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
   "Palauttaa tallennettavan mapin kun saadaan annetaan muokattu, ei-tyhjat, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...}"
@@ -167,6 +210,7 @@
   (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
                     (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
         materiaalit (::materiaalit/materiaalit toimenpide)]
+   (log "poistettavat: " (pr-str (poistettavat-materiaalit toimenpide)))
     (-> toimenpide
         (select-keys [::kanavatoimenpide/id
                       ::kanavatoimenpide/urakka-id

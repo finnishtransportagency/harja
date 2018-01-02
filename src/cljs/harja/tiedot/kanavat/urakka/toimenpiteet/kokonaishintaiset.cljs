@@ -270,8 +270,15 @@
 
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
+
+    ;; urakan materiaaleista lisätyt voidaan tunnistaa muutokset-avaimella
     (if (:avattu-toimenpide app)
-      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit)
+      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
+                (vec
+                 (for [m materiaalit]
+                   (if (-> m :varaosat ::materiaalit/muutokset)
+                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                     m))))
       app))
 
   LisaaMateriaali

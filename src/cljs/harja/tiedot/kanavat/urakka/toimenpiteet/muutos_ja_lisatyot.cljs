@@ -545,7 +545,12 @@
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
     (if (:avattu-toimenpide app)
-      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit)
+      (do     (log "MuokkaaMateriaaleja: materiaalit ennen")
+              (cljs.pprint/pprint (-> app :avattu-toimenpide ::materiaalit/materiaalit))
+              (log "MuokkaaMateriaaleja: materiaalit jälkeen:")
+              (cljs.pprint/pprint materiaalit)
+
+              (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit))
       app))
 
   LisaaMateriaali

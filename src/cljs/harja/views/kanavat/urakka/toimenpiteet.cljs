@@ -77,42 +77,50 @@
 
 
 (defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]
-  (assert urakan-materiaalit)
-  (let [voi-muokata? true
-        avatun-materiaalit (::materiaali/materiaalit avattu-toimenpide)
-        virhe-atom (r/wrap varaosat-virheet lisaa-virhe-fn)
-        vertailuavaimet-jarjestysnumerolla (fn [materiaalin-kirjaus]
-                  (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
-                           (nil? (:jarjestysnumero materiaalin-kirjaus)))
-                    [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
-                    [(:jarjestysnumero materiaalin-kirjaus) nil]))
-        muokatut-atom (r/wrap
-                    (zipmap (range)
-                            (sort-by vertailuavaimet-jarjestysnumerolla avatun-materiaalit))
-                    #(muokkaa-materiaaleja-fn (sort-by vertailuavaimet-jarjestysnumerolla (vals %))))]
-    [grid/muokkaus-grid
-     {:voi-muokata? voi-muokata?
-      :voi-lisata? false
-      :voi-poistaa? (constantly voi-muokata?)
-      :voi-kumota? false
-      :virheet virhe-atom
-      :piilota-toiminnot? false
-      :tyhja "Ei varaosia"
-      :otsikko "Varaosat"}
-     [{:otsikko "Varaosa"
-       :nimi :varaosa
-       :validoi [[:ei-tyhja "Tieto puuttuu"]]
-       :tyyppi :valinta
-       :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
-       :valinnat urakan-materiaalit
-       :leveys 1}
-      {:otsikko "Käytetty määrä"
-       :nimi :maara
-       :validoi [[:ei-tyhja "Tieto puuttuu"]]
-       :tyyppi :positiivinen-numero
-       :kokonaisluku? true
-       :leveys 1}]
-     muokatut-atom]))
+  (when urakan-materiaalit
+    ;; todo: kun valitsimesta muutetaan materiaalityyppiä, näkyy uuden materiaalin nimi mutta vanhan määrä.
+    ;; - (korjattu, oli:  muokkausfunktiolle kuitenkin lähetetään grid-rivi jossa on materiaali-id olemassaolevalle.)
+    ;; - (korjattu, oli:  tietokantaan jää alkuperäistä materiaalia edustava rivi, koska muutettu rivi ei enää koske sitä.
+    ;;   mutta: poistettavat rivit päätellään vertailemalla muokkaamattomiiin materiaaleihin, näistä voidaan päätellä.)
+
+
+    (let [voi-muokata? true
+          avatun-materiaalit (::materiaali/materiaalit avattu-toimenpide)
+          virhe-atom (r/wrap varaosat-virheet lisaa-virhe-fn)
+          vertailuavaimet-jarjestysnumerolla (fn [materiaalin-kirjaus]
+                                               (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
+                                                        (nil? (:jarjestysnumero materiaalin-kirjaus)))
+                                                 [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
+                                                 [(:jarjestysnumero materiaalin-kirjaus) nil]))
+          muokatut-atom (r/wrap
+                         (zipmap (range)
+                                 (sort-by vertailuavaimet-jarjestysnumerolla avatun-materiaalit))
+                         ;; muokkaa-materiaaleja-fn on kok hint tai muutoshintaisen tiedot-ns:n ->MuokkaaMateriaaleja
+                         #(muokkaa-materiaaleja-fn (sort-by vertailuavaimet-jarjestysnumerolla (vals %))))]
+
+      [grid/muokkaus-grid
+       {:voi-muokata? voi-muokata?
+        :voi-lisata? false
+        :voi-poistaa? (constantly voi-muokata?)
+        :voi-kumota? false
+        :virheet virhe-atom
+        :piilota-toiminnot? false
+        :tyhja "Ei varaosia"
+        :otsikko "Varaosat"}
+       [{:otsikko "Varaosa"
+         :nimi :varaosa
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]
+         :tyyppi :valinta
+         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
+         :valinnat urakan-materiaalit
+         :leveys 1}
+        {:otsikko "Käytetty määrä"
+         :nimi :maara
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]
+         :tyyppi :positiivinen-numero
+         :kokonaisluku? true
+         :leveys 1}]
+       muokatut-atom])))
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
                                           toimenpideinstanssit tehtavat urakan-materiaalit lisaa-materiaali-fn
