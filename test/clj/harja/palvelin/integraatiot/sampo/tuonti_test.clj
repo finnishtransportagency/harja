@@ -12,7 +12,8 @@
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :refer [->Sampo]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-sonja]]
-            [harja.tyokalut.xml :as xml]))
+            [harja.tyokalut.xml :as xml]
+            [clj-time.core :as t]))
 
 (def +xsd-polku+ "xsd/sampo/inbound/")
 
@@ -47,31 +48,33 @@
         "Virheitä ei tapahtunut käsittelyssä.")))
 
 (deftest tarkista-viestin-kasittely-ja-kuittaukset
-  (let [viestit (atom [])]
-    (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
-    (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-hoitourakka-sanoma+)
-    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+  (with-redefs [t/now #(t/first-day-of-the-month 2017 2)]
+    (let [viestit (atom [])]
+      (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
+      (sonja/kuuntele (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+      (sonja/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ +testi-hoitourakka-sanoma+)
+      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
-    (tarkista-vastaus (first @viestit)))
+      (tarkista-vastaus (first @viestit)))
 
-  (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
+    (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
 
-  (let [urakan-tpi (ffirst (q "SELECT id
+    (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
                                   AND nimi = 'Päällystyksen yksikköhintaiset työt'"))]
-    (is (nil? urakan-tpi) "Urakalle ei luotu toimenpideinstanssia"))
+      (is (nil? urakan-tpi) "Urakalle ei luotu toimenpideinstanssia"))
 
-  (let [urakan-valitavoitteet (map first (q "SELECT nimi
+    (let [urakan-valitavoitteet (map first (q "SELECT nimi
                                   FROM valitavoite
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')"))]
-    (is (= (count urakan-valitavoitteet) 6))
-    ;; Kertaluontoiset lisättiin kerran
-    (is (= (count (filter #(= "Koko Suomi aurattu" %) urakan-valitavoitteet)) 1))
-    (is (= (count (filter #(= "Kaikkien urakoiden kalusto huollettu" %) urakan-valitavoitteet)) 1))
-    ;; Toistuvat lisättiin jokaiselle urakan jäljellä olevalle vuodelle (ei kuitenkaan 1.1.2016)
-    (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 4))))
+
+      (is (= (count urakan-valitavoitteet) 6))
+      ;; Kertaluontoiset lisättiin kerran
+      (is (= (count (filter #(= "Koko Suomi aurattu" %) urakan-valitavoitteet)) 1))
+      (is (= (count (filter #(= "Kaikkien urakoiden kalusto huollettu" %) urakan-valitavoitteet)) 1))
+      ;; Toistuvat lisättiin jokaiselle urakan jäljellä olevalle vuodelle (huomio testissä feikattu nykyaika)
+      (is (= (count (filter #(= "Koko Suomen liikenneympäristö hoidettu" %) urakan-valitavoitteet)) 4)))))
 
 (deftest tarkista-paallystysurakan-toimenpideinstanssin-luonti
   (let [viestit (atom [])]
