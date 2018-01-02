@@ -287,8 +287,11 @@ yllapitoluokkanimi->numero
 
 (defn- yllapitokohteen-jarjestys
   [kohde]
-  ((juxt #(#?(:clj  Integer.
-              :cljs js/parseInt) (:kohdenumero %))
+  ((juxt #(try (#?(:clj  Integer.
+                   :cljs js/parseInt) (:kohdenumero %))
+               ; jos kohdenumero on nil, niin Integer. ei tykkää
+               (catch Exception e
+                 nil))
          :tie :tr-numero :tienumero
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
