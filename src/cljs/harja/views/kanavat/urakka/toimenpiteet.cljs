@@ -91,8 +91,10 @@
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :pakollinen? true}
-     (lomake/rivi
+     (lomake/ryhma
+       {:otsikko "Kohde/sijainti"}
        {:otsikko "Kohde"
+        :uusi-rivi? true
         :nimi ::kanavan-toimenpide/kohde
         :tyyppi :valinta
         :aseta (fn [rivi arvo]
@@ -103,7 +105,14 @@
                        (assoc ::kanavan-toimenpide/kohde arvo))
                    (assoc rivi ::kanavan-toimenpide/kohde arvo)))
         :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
-        :valinnat kohteet})
+        :valinnat kohteet}
+       {:nimi :sijainti
+        :otsikko "Sijainti"
+        :tyyppi :sijaintivalitsin
+        :paikannus? false
+        :pakollinen? true
+        ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
+        :karttavalinta-tehty-fn #(println "Karttaa kliksuteltu")})
      (when (::kanavan-toimenpide/kohde toimenpide)
        {:otsikko "Kohteen osa"
         :nimi ::kanavan-toimenpide/kohteenosa

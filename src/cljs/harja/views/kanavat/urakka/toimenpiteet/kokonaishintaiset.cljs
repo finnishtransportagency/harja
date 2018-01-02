@@ -17,6 +17,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.views.kartta :as kartta]
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
@@ -113,6 +114,7 @@
       @tiedot/valinnat
 
       [:span
+       [kartta/kartan-paikka]
        [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet]])))
 
 (defc kokonaishintaiset []
