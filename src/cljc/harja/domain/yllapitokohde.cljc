@@ -285,13 +285,19 @@ yllapitoluokkanimi->numero
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
 
+(defn- kohdenumero-str->kohdenumero-map
+  "Palauttaa \"301b\":n muodossa [301 \"b\"]"
+  [kohdenumero]
+  (let [numero (re-find #"\d+" kohdenumero)
+        kirjain (re-find #"\D+" kohdenumero)]
+    [(when numero
+       (#?(:clj  Integer.
+           :cljs js/parseInt) kohdenumero))
+     kirjain]))
+
 (defn- yllapitokohteen-jarjestys
   [kohde]
-  ((juxt #(try (#?(:clj  Integer.
-                   :cljs js/parseInt) (:kohdenumero %))
-               ; jos kohdenumero on nil, niin Integer. ei tykkää
-               (catch Exception e
-                 nil))
+  ((juxt #(kohdenumero-str->kohdenumero-map (:kohdenumero %))
          :tie :tr-numero :tienumero
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
