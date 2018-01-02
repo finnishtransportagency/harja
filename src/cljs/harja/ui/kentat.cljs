@@ -1137,7 +1137,7 @@
   ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
   [{:keys [karttavalinta? paikannus?
            paikannus-onnistui-fn paikannus-epaonnistui-fn
-           karttavalinta-tehty-fn]} data]
+           karttavalinta-tehty-fn poista-valinta-fn]} data]
   (let [karttavalinta? (if (some? karttavalinta?) karttavalinta? true)
         paikannus? (if (some? paikannus?) paikannus? true)
 
@@ -1183,7 +1183,15 @@
                                                  :kun-valmis #(do
                                                                 (lopeta-karttavalinta)
                                                                 (karttavalinta-tehty-fn
-                                                                  {:type :point :coordinates %}))}]))]))))
+                                                                  {:type :point :coordinates %}))}]))
+         (when (and poista-valinta-fn
+                    (not @karttavalinta-kaynnissa?)
+                    (not @paikannus-kaynnissa?)
+                    (not (nil? @data)))
+           [napit/poista
+            "Poista valinta"
+            (fn [e]
+              (poista-valinta-fn @data))])]))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data

@@ -42,6 +42,7 @@
 (defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
 (defrecord ValitseSijainti [sijainti])
+(defrecord PoistaSijainti [sijainti])
 ;; Rivien valinta ja niiden toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
@@ -234,7 +235,12 @@
                       true))
       (update app :valitut-toimenpide-idt
               #(toimenpiteet/poista-valittu-toimenpide % (::kanavan-toimenpide/id toimenpide)))))
+
   ValitseSijainti
   (process-event [{sijainti :sijainti} app]
     (update app :avattu-toimenpide (fn [lomakkeen-tila]
-                                     (assoc lomakkeen-tila ::kanavan-toimenpide/sijainti sijainti)))))
+                                     (assoc lomakkeen-tila ::kanavan-toimenpide/sijainti sijainti))))
+
+  PoistaSijainti
+  (process-event [_ app]
+    (assoc-in app [:avattu-toimenpide ::kanavan-toimenpide/sijainti] nil)))
