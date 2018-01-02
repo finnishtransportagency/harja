@@ -285,7 +285,7 @@ yllapitoluokkanimi->numero
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
 
-(defn- kohdenumero-str->kohdenumero-map
+(defn kohdenumero-str->kohdenumero-vec
   "Palauttaa \"301b\":n muodossa [301 \"b\"]"
   [kohdenumero]
   (let [numero (re-find #"\d+" kohdenumero)
@@ -297,7 +297,7 @@ yllapitoluokkanimi->numero
 
 (defn- yllapitokohteen-jarjestys
   [kohde]
-  ((juxt #(kohdenumero-str->kohdenumero-map (:kohdenumero %))
+  ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
          :tie :tr-numero :tienumero
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
