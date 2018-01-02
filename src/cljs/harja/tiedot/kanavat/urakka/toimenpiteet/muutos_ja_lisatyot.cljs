@@ -27,15 +27,11 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-;; todo:
-;; - testit
-;; - varaosat ja materiaalit
-;; huomioita:
-;; vv-filtterit layout samoin kuin vv-puolella
-;; terminologiaa: vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
-;;                koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
-;;                kan_hinta <-> Hinnoittelu
-;;                kan_hinta.ryhma <-> ?? - ei mitään tekemistä tämän ns:n Hintaryhmien kanssa kuitenkaan
+;; Terminologiaa:
+;; vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
+;; koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
+;; kan_hinta <-> Hinnoittelu
+;; kan_hinta.ryhma <-> ?? - ei mitään tekemistä tämän ns:n Hintaryhmien kanssa kuitenkaan
 
 (def tila (atom {:nakymassa? false
                  :toimenpiteiden-siirto-kaynnissa? false
@@ -489,7 +485,8 @@
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
                       true))
-      app))
+      (update app :valitut-toimenpide-idt
+                 #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
 
   HaeHuoltokohteet
   (process-event [{toimenpide :toimenpide} app]

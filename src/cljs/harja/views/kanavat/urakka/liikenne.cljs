@@ -323,60 +323,74 @@
       valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! app kohteet]
-  (let [atomi (partial tiedot/valinta-wrap e! app)]
+  (let [kohde-atomi (partial tiedot/valinta-wrap e! app)
+        aluslaji-atomi (partial tiedot/valinta-wrap e! app)
+        toimenpidetyyppi-atomi (partial tiedot/valinta-wrap e! app)
+        aluksen-nimi-atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
      [valinnat/valintaryhmat-3
-      [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+      [:div
+       [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Aluksen nimi"
+         :kentta-params {:tyyppi :string}
+         :arvo-atom (aluksen-nimi-atomi ::lt-alus/nimi)}]]
 
       [:div
        [valinnat/kanava-kohde
-        (atomi ::lt/kohde)
+        (kohde-atomi ::lt/kohde)
         (into [nil] kohteet)
         #(let [nimi (kohde/fmt-kohteen-nimi %)]
            (if-not (empty? nimi)
              nimi
              "Kaikki"))]
-       #_[kentat/tee-otsikollinen-kentta
-          {:otsikko "Sulun toimenpide"
-           :kentta-params {:tyyppi :valinta
-                           :valinta-nayta #(or (lt/sulku-toimenpide->str %) "Kaikki")
-                           :valinnat (into [nil] lt/sulku-toimenpide-vaihtoehdot)}
-           :arvo-atom (atomi ::toiminto/toimenpide)}]]
-
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Aluslaji"
+         :kentta-params {:tyyppi :checkbox-group
+                         :palstoja 2
+                         :vaihtoehdot lt-alus/aluslajit
+                         :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
+         :arvo-atom (aluslaji-atomi ::lt-alus/aluslajit)}]
+       ]
       [:div
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Suunta"
          :kentta-params {:tyyppi :valinta
                          :valinnat (into [nil] lt/suunta-vaihtoehdot)
                          :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
-         :arvo-atom (atomi ::lt-alus/suunta)}]
-       [valinnat/kanava-aluslaji
-        (atomi ::lt-alus/laji)
-        (into [nil] lt-alus/aluslajit)
-        #(or (lt-alus/aluslaji->koko-str %) "Kaikki")]
+         :arvo-atom (kohde-atomi ::lt-alus/suunta)}]
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Uittoniput?"
-         :kentta-params {:tyyppi :checkbox}
-         :arvo-atom (atomi :niput?)}]]]
+        {:otsikko "Uittoniput"
+         :kentta-params {:tyyppi :checkbox
+                         :teksti "Näytä vain uittoniput"}
+         :arvo-atom (kohde-atomi :niput?)}]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Toimenpidetyyppi"
+         :kentta-params {:tyyppi :checkbox-group
+                         :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
+                         :vaihtoehto-nayta lt/sulku-toimenpide->str}
+         :arvo-atom (toimenpidetyyppi-atomi ::toiminto/toimenpiteet)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
        "Kirjaa liikennetapahtuma"
        #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]))
 
-(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?] :as app}
+(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
+                                            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
   [:div
    [debug app]
    [valinnat e! app kohteet]
    [grid/grid
-    {:otsikko (if liikennetapahtumien-haku-kaynnissa?
+    {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader-pieni "Päivitetään listaa.."]
                 "Liikennetapahtumat")
      :tunniste (juxt ::lt/id ::lt-alus/id)
+     :sivuta grid/vakiosivutus
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
-     :tyhja (if liikennetapahtumien-haku-kaynnissa?
+     :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
     [{:otsikko "Aika"
