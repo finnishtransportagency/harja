@@ -104,7 +104,7 @@
                                                                               urakat))))
 
 (defn kopioi-valtakunnallinen-toistuva-valitavoite-sopiviin-urakoihin
-  "Luo välitavoitteen annettuihin urakoihin kertaalleen per urakkavuosi
+  "Luo välitavoitteen annettuihin urakoihin kertaalleen per jäljellä oleva urakkavuosi,
   jos urakka on annettua tyyppiä eikä se ole päättynyt.
 
   Ei kopioi välitavoitetta jos takarajaksi muodostuu aika, joka ei ole

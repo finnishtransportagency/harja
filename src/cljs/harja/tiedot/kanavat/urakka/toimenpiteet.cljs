@@ -216,7 +216,7 @@
         (dissoc ::kanavatoimenpide/kuittaaja
                 ::kanavatoimenpide/materiaalit))))
 
-(defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi
+(defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi poisto?
                                        toimenpide-tallennettu toimenpide-ei-tallennettu]}]
   (if (:tallennus-kaynnissa? app)
     app
@@ -227,20 +227,27 @@
                              {::kanavatoimenpide/tallennettava-kanava-toimenpide toimenpide
                               ::kanavatoimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
                              {:onnistui toimenpide-tallennettu
-                              :epaonnistui toimenpide-ei-tallennettu})
+                              :onnistui-parametrit [poisto?]
+                              :epaonnistui toimenpide-ei-tallennettu
+                              :epaonnistui-parametrit [poisto?]})
           (assoc :tallennus-kaynnissa? true)))))
 
-(defn toimenpide-tallennettu [app uudet-toimenpiteet uusi-materiaalilistaus]
-  (viesti/nayta! "Toimenpide tallennettu" :success)
-  ;; tässä saatu materiaalilistaus on samassa muodossa kuin :hae-vv-materiaalilistaus -palvelulta tuleva
+(defn poista-valittu-toimenpide [valitut-toimenpide-idt poistettava-id]
+  (set (remove #(= % poistettava-id) valitut-toimenpide-idt)))
 
+(defn toimenpide-tallennettu [app toimenpiteet poisto?]
+  (if poisto?
+    (viesti/nayta! "Toimenpide poistettu" :success)
+    (viesti/nayta! "Toimenpide tallennettu" :success))
   (assoc app :tallennus-kaynnissa? false
          :avattu-toimenpide nil
          :urakan-materiaalit uusi-materiaalilistaus
          :toimenpiteet uudet-toimenpiteet))
 
-(defn toimenpide-ei-tallennettu [app]
-  (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger)
+(defn toimenpide-ei-tallennettu [app poisto?]
+  (if poisto?
+    (viesti/nayta! "Toimenpiteiden poisto epäonnistui" :danger)
+    (viesti/nayta! "Toimenpiteiden tallentaminen epäonnistui" :danger))
   (assoc app :tallennus-kaynnissa? false))
 
 (defn huoltokohteet-haettu [app huoltokohteet]

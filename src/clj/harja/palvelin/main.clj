@@ -275,7 +275,7 @@
                                [:http-palvelin :db :fim :sonja-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
-                            [:http-palvelin :db])
+                            [:http-palvelin :db :pois-kytketyt-ominaisuudet])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using

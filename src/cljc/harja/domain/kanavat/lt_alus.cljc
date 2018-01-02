@@ -34,22 +34,31 @@
     ::nippulkm
     ::suunta})
 
+(s/def ::aluslajit (s/coll-of ::laji))
+
 (def metatiedot m/muokkauskentat)
 
 (def aluslajit*
-  {:HIN ["HIN" "- Hinaaja"]
-   :HUV ["HUV" "- Huvivene"]
-   :LAU ["LAU" "- Lautta"]
-   :MAT ["MAT" "- Matkustajalaiva"]
-   :PRO ["PRO" "- Proomu"]
-   :RAH ["RAH" "- Rahtilaiva"]
-   :SEK ["SEK" "- Sekalainen"]
-   :ÖLJ ["ÖLJ" "- Öljylaiva"]})
+  {:HIN ["HIN" "Hinaaja"]
+   :HUV ["HUV" "Huvivene"]
+   :LAU ["LAU" "Lautta"]
+   :MAT ["MAT" "Matkustajalaiva"]
+   :PRO ["PRO" "Proomu"]
+   :RAH ["RAH" "Rahtilaiva"]
+   :SEK ["SEK" "Sekalainen"]
+   :ÖLJ ["ÖLJ" "Öljylaiva"]})
 
 (def aluslajit (keys aluslajit*))
 
 (defn aluslaji->koko-str [laji]
-  (when-let [laji (aluslajit* laji)] (apply str laji)))
+  (when-let [laji (aluslajit* laji)]
+    (str (first laji) " - " (second laji))))
 
 (defn aluslaji->laji-str [laji]
   (first (aluslajit* laji)))
+
+(defn suodata-alukset-nimen-alulla [alukset nimi]
+  (filter #(str/starts-with?
+             (str/lower-case (::nimi %))
+             (str/lower-case nimi))
+          alukset))

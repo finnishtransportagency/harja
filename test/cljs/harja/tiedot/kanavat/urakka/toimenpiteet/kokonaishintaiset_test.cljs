@@ -105,20 +105,20 @@
 (deftest TallennaToimenpide
   (vaadi-async-kutsut
     #{tiedot/->ToimenpideTallennettu
-      tiedot/->ToimenpiteidenTallentaminenEpaonnistui}
-    (let [{tallennus-kaynnissa? :tallennus-kaynnissa?} (e! (tiedot/->TallennaToimenpide {:foo "bar"}))]
+      tiedot/->ToimenpiteenTallentaminenEpaonnistui}
+    (let [{tallennus-kaynnissa? :tallennus-kaynnissa?} (e! (tiedot/->TallennaToimenpide {:foo "bar"} false))]
       (is tallennus-kaynnissa?))))
 
 (deftest ToimenpideTallennettu
   (let [haetut-toimenpiteet {:kanavatoimenpiteet [{:foo "bar"}]}
         {:keys [tallennus-kaynnissa? avattu-toimenpide toimenpiteet]}
-        (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet))]
+        (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet false))]
     (is (false? tallennus-kaynnissa?))
     (is (nil? avattu-toimenpide))
     (is (= (:kanavatoimenpiteet haetut-toimenpiteet) toimenpiteet))))
 
 (deftest ToimenpiteidenTallentaminenEpaonnistui
-  (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteidenTallentaminenEpaonnistui))))))
+  (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteenTallentaminenEpaonnistui nil false))))))
 
 (deftest ValitseToimenpide
   (let [tiedot {:id 1
@@ -265,4 +265,14 @@
                                                                                                    ::materiaali/pvm nil
                                                                                                    ::materiaali/id 12}}])}}]
 
-    (tarkista-map-arvot (:avattu-toimenpide vastaus) (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot kysely) state)))))
+    (tarkista-map-arvot (:avattu-toimenpide vastaus) (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot kysely) state)))
+    (let [materiaalit-ennen [{:maara 1
+                              :varaosa {::materiaali/id 12
+                                        ::materiaali/nimi "Naulat"
+                                        ::materiaali/pvm nil
+                                        ::materiaali/urakka-id 1}}]
+          materiaalit-jalkeen [{:maara 1
+                                :varaosa {::materiaali/id 12
+                                          ::materiaali/nimi "Naulat"
+                                          ::materiaali/pvm nil
+                                          ::materiaali/urakka-id 1}}]])))
