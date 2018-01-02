@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "0.7.0-alpha10"]
+                 [specql "0.6-alpha24"] ; TODO Voisi päivittää, mutta vaatii Clojure 1.9
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "18.1"]
