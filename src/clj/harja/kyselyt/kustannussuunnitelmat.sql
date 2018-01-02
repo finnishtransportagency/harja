@@ -56,10 +56,26 @@ FROM maksuera m
 WHERE m.numero = :maksuera
 GROUP BY vuosi;
 
--- name: hae-kustannussuunnitelman-yksikkohintaiset-summat
+-- name: hae-teiden-hoidon-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
   Extract(YEAR FROM yht.alkupvm)                              AS vuosi,
   Sum(COALESCE(yht.maara, 0) * COALESCE(yht.yksikkohinta, 0)) AS summa
+FROM maksuera m
+  JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+  JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+  JOIN yksikkohintainen_tyo yht ON yht.tehtava IN
+                                   (SELECT id
+                                    FROM toimenpidekoodi
+                                    WHERE emo = tpk.id)
+                                   AND
+                                   yht.urakka = tpi.urakka
+WHERE m.numero = :maksuera
+GROUP BY Extract(YEAR FROM yht.alkupvm);
+
+-- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
+SELECT
+  Extract(YEAR FROM yht.alkupvm) AS vuosi,
+  Sum(arvioitu_kustannus)        AS summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
@@ -78,10 +94,18 @@ SELECT exists(SELECT maksuera
               FROM kustannussuunnitelma
               WHERE maksuera = :numero :: BIGINT);
 
---name: tuotenumero-loytyy
+-- name: tuotenumero-loytyy
 SELECT exists(SELECT numero
               FROM maksuera m
                 JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-                JOIN toimenpidekoodi tpk4 ON tpi.toimenpide = tpk4.id
-                JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-              WHERE m.numero = :numero AND tpk3.tuotenumero IS NOT NULL)
+                JOIN toimenpidekoodi tpk3 ON tpi.toimenpide = tpk3.id
+                JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id
+              WHERE m.numero = :numero AND tpk2.tuotenumero IS NOT NULL);
+
+-- name: harja.kyselyt.kustannussuunnitelmat/hae-urakka-maksueranumerolla
+SELECT u.id
+FROM urakka u
+  JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka
+  JOIN maksuera m ON tpi.id = m.toimenpideinstanssi
+WHERE m.numero = :numero;
+

@@ -37,9 +37,9 @@
 (defrecord VirheTapahtui [virhe])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
-(defrecord TallennaToimenpide [toimenpide])
-(defrecord ToimenpideTallennettu [toimenpiteet])
-(defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+(defrecord TallennaToimenpide [toimenpide poisto?])
+(defrecord ToimenpideTallennettu [toimenpiteet poisto?])
+(defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
 ;; Rivien valinta ja niiden toiminnot
 (defrecord ValitseToimenpide [tiedot])
@@ -208,24 +208,28 @@
     (toimenpiteet/huoltokohteet-ei-haettu app))
 
   TallennaToimenpide
-  (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
+  (process-event [{toimenpide :toimenpide poisto? :poisto?}
+                  {valinnat :valinnat tehtavat :tehtavat :as app}]
     (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
                                            :tehtavat tehtavat
                                            :toimenpide toimenpide
                                            :tyyppi :kokonaishintainen
+                                           :poisto? poisto?
                                            :toimenpide-tallennettu ->ToimenpideTallennettu
-                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
+                                           :toimenpide-ei-tallennettu ->ToimenpiteenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
-  (process-event [{toimenpiteet :toimenpiteet} app]
-    (toimenpiteet/toimenpide-tallennettu app toimenpiteet))
+  (process-event [{toimenpiteet :toimenpiteet poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-tallennettu app toimenpiteet poisto?))
 
-  ToimenpiteidenTallentaminenEpaonnistui
-  (process-event [_ app]
-    (toimenpiteet/toimenpide-ei-tallennettu app))
+  ToimenpiteenTallentaminenEpaonnistui
+  (process-event [{poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-ei-tallennettu app poisto?))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
-      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
-      app)))
+      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
+                      true))
+      (update app :valitut-toimenpide-idt
+              #(toimenpiteet/poista-valittu-toimenpide % (::kanavan-toimenpide/id toimenpide))))))
