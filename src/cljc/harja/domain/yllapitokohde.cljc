@@ -287,7 +287,8 @@ yllapitoluokkanimi->numero
 
 (defn- yllapitokohteen-jarjestys
   [kohde]
-  ((juxt :kohdenumero
+  ((juxt #(#?(:clj  Integer.
+              :cljs js/parseInt) (:kohdenumero %))
          :tie :tr-numero :tienumero
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
@@ -304,14 +305,14 @@ yllapitoluokkanimi->numero
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
-                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset                ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
-                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
 (defn yllapitokohde-tekstina
@@ -335,6 +336,6 @@ yllapitoluokkanimi->numero
   (let [viikko-sitten (pvm/paivaa-sitten 7)]
     (map (fn [{:keys [muokattu aikataulu-muokattu] :as rivi}]
            (assoc rivi :lihavoi
-                  (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
-                      (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
+                       (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
+                           (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
          rivit)))
