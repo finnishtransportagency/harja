@@ -28,11 +28,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-;; todo:
-;; - testit
-;; - varaosat ja materiaalit
-;; huomioita:
-;; vv-filtterit layout samoin kuin vv-puolella
 ;; terminologiaa: vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
 ;;                koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
 ;;                kan_hinta <-> Hinnoittelu
@@ -519,7 +514,6 @@
     (toimenpiteet/huoltokohteet-ei-haettu app))  HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
     (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
-    (log "HaeMateriaalit " materiaalien-haku-kaynnissa?)
     (when-not materiaalien-haku-kaynnissa?
       (let [urakka-id (:id @navigaatio/valittu-urakka)]
         (-> app
@@ -532,7 +526,7 @@
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]
-    (log "MateriaalitHaettu, saatiin" (count materiaalit))
+    ;; (log "MateriaalitHaettu, saatiin" (count materiaalit))
     (assoc app
            :urakan-materiaalit materiaalit
            :materiaalien-haku-kaynnissa? false))
@@ -545,19 +539,13 @@
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
     (if (:avattu-toimenpide app)
-      (do     (log "MuokkaaMateriaaleja: materiaalit ennen")
-              (cljs.pprint/pprint (-> app :avattu-toimenpide ::materiaalit/materiaalit))
-              (log "MuokkaaMateriaaleja: materiaalit jälkeen:")
-              (cljs.pprint/pprint materiaalit)
-
-              (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit))
+      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit)
       app))
 
   LisaaMateriaali
   (process-event [_ app]
     ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
-    (log "LisaaMateriaali kutsuttu")
     (update-in app
                [:avattu-toimenpide ::materiaalit/materiaalit]
                #(let [vanha-id (apply max (map :jarjestysnumero %))

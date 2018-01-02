@@ -78,12 +78,6 @@
 
 (defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]
   (when urakan-materiaalit
-    ;; todo: kun valitsimesta muutetaan materiaalityyppiä, näkyy uuden materiaalin nimi mutta vanhan määrä.
-    ;; - (korjattu, oli:  muokkausfunktiolle kuitenkin lähetetään grid-rivi jossa on materiaali-id olemassaolevalle.)
-    ;; - (korjattu, oli:  tietokantaan jää alkuperäistä materiaalia edustava rivi, koska muutettu rivi ei enää koske sitä.
-    ;;   mutta: poistettavat rivit päätellään vertailemalla muokkaamattomiiin materiaaleihin, näistä voidaan päätellä.)
-
-
     (let [voi-muokata? true
           avatun-materiaalit (::materiaali/materiaalit avattu-toimenpide)
           virhe-atom (r/wrap varaosat-virheet lisaa-virhe-fn)

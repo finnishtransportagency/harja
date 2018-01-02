@@ -135,32 +135,14 @@
   (let [nykygridin-samannimiset (filter
                                  #(= (::materiaalit/nimi varaosa) (-> % :varaosa ::materiaalit/nimi))
                                  nykygrid)]
-    (log "samannimiset:" (pr-str nykygridin-samannimiset))
+    ;; (log "samannimiset:" (pr-str nykygridin-samannimiset))
     ;; pyydetään backilta poistettavaksi, jos 1) ei loydy saman nimisiä nykygridistä
     ;;                                     ja 2) jarjestysnumero puuttuu eli on backilta ladattu (vs frontilla tallentamatta lisätty)
     (when (empty? nykygridin-samannimiset)
-      (log "not jnr:" (pr-str (not jarjestysnumero)))
+      ;; (log "not jnr:" (pr-str (not jarjestysnumero)))
       (when (not jarjestysnumero)
 
         (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))))
-
-(defn testaa-poistettavat-2 []
-  (let [nykygrid  [{:maara 1,
-                    :varaosa
-                    {:harja.domain.vesivaylat.materiaali/urakka-id 31,
-                     :harja.domain.vesivaylat.materiaali/maara-nyt 473,
-                     :harja.domain.vesivaylat.materiaali/alkuperainen-maara 500,
-                     :harja.domain.vesivaylat.materiaali/nimi "Ämpäreitä"}}]
-
-        muokkaamattomat (list {:maara 1,
-                               :varaosa
-                               {:harja.domain.vesivaylat.materiaali/nimi "Naulat",
-                                :harja.domain.vesivaylat.materiaali/urakka-id 31,
-                                :harja.domain.vesivaylat.materiaali/pvm
-                                nil,
-                                :harja.domain.vesivaylat.materiaali/id 15}})])
-  (log "testaa-poistettavat-2:")
-  (cljs.pprint/pprint (vec  (keep (partial materiaalikirjaus->poistettavat-2 nykygrid) muokkaamattomat))))
 
 (defn poistettavat-materiaalit [tp]
   (log "poistettavat-2: sisään materiaalit:")
