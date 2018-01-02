@@ -108,3 +108,10 @@ ON CONFLICT (kanavanro)
       geometria                 = :geometria :: GEOMETRY,
       muokattu                  = current_timestamp,
       muokkaaja                 = :muokkaaja;
+
+
+-- name: hae-kanavat
+SELECT * FROM kanava;
+
+-- name: hae-kanava-tunnuksella
+SELECT * FROM kanava WHERE kanavanro = :kanavanumero;

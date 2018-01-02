@@ -66,3 +66,6 @@ ON CONFLICT (turvalaitenro)
       geometria            = :geometria :: GEOMETRY,
       muokattu             = current_timestamp,
       muokkaaja            = :muokkaaja;
+
+-- name: hae-turvalaite-tunnuksella
+SELECT * from vatu_turvalaite WHERE turvalaitenro = :turvalaitenro

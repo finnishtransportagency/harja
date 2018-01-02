@@ -1,5 +1,6 @@
 -- Taulu Vatusta AVA:n kautta Harjaan tuoduille turvalaitteille. Korvaa myöhemmässä refaktoroinnissa vv_turvalaite-taulun
 
+
 CREATE TABLE kanava
 (
   kanavanro                 INTEGER NOT NULL,
@@ -10,15 +11,15 @@ CREATE TABLE kanava
   kiinnitys                 VARCHAR, -- (Liikkuvat pollarit TODO: listaa mahdolliset arvot)
   porttityyppi              VARCHAR, -- (Salpaus + Nosto/Lasku TODO: listaa mahdolliset arvot)
   kayttotapa                VARCHAR, -- (Kaukokäyttö TODO: listaa mahdolliset arvot)
-  sulku_leveys              DECIMAL,
-  sulku_pituus              DECIMAL,
-  alus_leveys               DECIMAL,
-  alus_pituus               DECIMAL,
-  alus_syvyys               DECIMAL,
-  alus_korkeus              DECIMAL,
+  sulku_leveys              NUMERIC (10,2),
+  sulku_pituus              NUMERIC (10,2),
+  alus_leveys               NUMERIC (10,2),
+  alus_pituus               NUMERIC (10,2),
+  alus_syvyys               NUMERIC (10,2),
+  alus_korkeus              NUMERIC (10,2),
   sulkumaara                INTEGER,
-  putouskorkeus_1           DECIMAL,
-  putouskorkeus_2           DECIMAL,
+  putouskorkeus_1           NUMERIC (10,2),
+  putouskorkeus_2           NUMERIC (10,2),
   alakanavan_alavertaustaso VARCHAR,
   alakanavan_ylavertaustaso VARCHAR,
   ylakanavan_ylavertaustaso VARCHAR,
@@ -27,8 +28,8 @@ CREATE TABLE kanava
   kynnys_2                  VARCHAR,
   vesisto                   VARCHAR,
   kanavakokonaisuus         VARCHAR,
-  kanava_pituus             VARCHAR,
-  kanava_leveys             VARCHAR,
+  kanava_pituus             NUMERIC (10,2),
+  kanava_leveys             NUMERIC (10,2),
   lahtopaikka               VARCHAR,
   kohdepaikka               VARCHAR,
   omistaja                  VARCHAR,
