@@ -74,7 +74,7 @@
        " " toiminto "."))
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
-                                          toimenpideinstanssit tehtavat]}]
+                                          toimenpideinstanssit tehtavat karttavalinta-tehty-fn]}]
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
         valitun-kohteen-osat (cons nil (into [] (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))))]
@@ -112,7 +112,7 @@
         :paikannus? false
         :pakollinen? true
         ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
-        :karttavalinta-tehty-fn #(println "Karttaa kliksuteltu")})
+        :karttavalinta-tehty-fn karttavalinta-tehty-fn})
      (when (::kanavan-toimenpide/kohde toimenpide)
        {:otsikko "Kohteen osa"
         :nimi ::kanavan-toimenpide/kohteenosa
@@ -200,7 +200,8 @@
 
 (defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
                         {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
-                                tallenna-lomake-fn poista-toimenpide-fn]}]
+                                tallenna-lomake-fn poista-toimenpide-fn
+                                karttavalinta-tehty-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
         kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
@@ -221,6 +222,7 @@
                                      :kohteet kanavakohteet
                                      :huoltokohteet huoltokohteet
                                      :toimenpideinstanssit toimenpideinstanssit
-                                     :tehtavat tehtavat})
+                                     :tehtavat tehtavat
+                                     :karttavalinta-tehty-fn karttavalinta-tehty-fn})
         avattu-toimenpide]
        [ajax-loader "Ladataan..."])]))
