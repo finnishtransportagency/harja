@@ -487,8 +487,8 @@
                                            :toimenpide-ei-tallennettu ->ToimenpiteenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
-  (process-event [{toimenpiteet :toimenpiteet poisto? :poisto?} app]
-    (toimenpiteet/toimenpide-tallennettu app toimenpiteet poisto?))
+  (process-event [{vastaus :vastaus poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus) poisto?))
 
   ToimenpiteenTallentaminenEpaonnistui
   (process-event [{poisto? :poisto?} app]

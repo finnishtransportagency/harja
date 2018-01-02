@@ -228,7 +228,7 @@
 (defn poista-valittu-toimenpide [valitut-toimenpide-idt poistettava-id]
   (set (remove #(= % poistettava-id) valitut-toimenpide-idt)))
 
-(defn toimenpide-tallennettu [app toimenpiteet poisto?]
+(defn toimenpide-tallennettu [app uudet-toimenpiteet uusi-materiaalilistaus poisto?]
   (if poisto?
     (viesti/nayta! "Toimenpide poistettu" :success)
     (viesti/nayta! "Toimenpide tallennettu" :success))
