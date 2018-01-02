@@ -145,12 +145,6 @@
         (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))))
 
 (defn poistettavat-materiaalit [tp]
-  (log "poistettavat-2: sisään materiaalit:")
-  (cljs.pprint/pprint (::materiaalit/materiaalit tp))
-  (log "poistettavat-2: sisään muokkaamattomat materiaalit:")
-  (cljs.pprint/pprint (::materiaalit/muokkaamattomat-materiaalit tp))
-  (log "poistettavat-2: " (pr-str (vec  (keep (partial materiaalikirjaus->poistettavat-2 (::materiaalit/materiaalit tp))
-                                              (::materiaalit/muokkaamattomat-materiaalit tp)))))
   (concat
    (keep materiaalikirjaus->poistettavat-1 (::materiaalit/materiaalit tp))
    (keep (partial materiaalikirjaus->poistettavat-2 (::materiaalit/materiaalit tp))
@@ -192,7 +186,6 @@
   (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
                     (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
         materiaalit (::materiaalit/materiaalit toimenpide)]
-   (log "poistettavat: " (pr-str (poistettavat-materiaalit toimenpide)))
     (-> toimenpide
         (select-keys [::kanavatoimenpide/id
                       ::kanavatoimenpide/urakka-id
