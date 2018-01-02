@@ -1,6 +1,3 @@
--- Taulu Vatusta AVA:n kautta Harjaan tuoduille turvalaitteille. Korvaa myöhemmässä refaktoroinnissa vv_turvalaite-taulun
-
-
 CREATE TABLE kanava
 (
   kanavanro                 INTEGER NOT NULL,
