@@ -4,11 +4,11 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.660"]
+  :dependencies [[org.clojure/clojure "1.8.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
+                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [clojure-future-spec "1.9.0-alpha17"]
+                 [clojure-future-spec "1.9.0-alpha17"] ; TODO Voisi poistaa, kun Clojure 1.9 päivitys toimii.
 
                  [prismatic/schema "1.1.7"]
                  [org.clojure/core.async "0.3.443"] ; TODO Voisi päivittää, mutta ilmoitusten haku ym. testit failaa
@@ -165,7 +165,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"]
+  :plugins [[lein-cljsbuild "1.1.5"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
