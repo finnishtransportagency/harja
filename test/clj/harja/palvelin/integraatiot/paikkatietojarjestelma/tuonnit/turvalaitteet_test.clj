@@ -1,8 +1,10 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet-test
-  (:require  [harja.testi :as ht]
-             [clojure.test :as t]
-             [harja.domain.vesivaylat.vatu-turvalaite :as turvalaite]
-             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaite-tuonti]))
+  (:require [harja.testi :as ht]
+            [clojure.test :as t]
+            clj-time.core
+            [harja.kyselyt.vesivaylat.vatu-turvalaitteet :as q-vatu-turvalaite]
+            [harja.domain.vesivaylat.vatu-turvalaite :as turvalaite]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaite-tuonti]))
 
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
@@ -21,30 +23,30 @@
    :omistaja "Kerttu Kilpikonna"
    :vanhatlnro 1
    :paavayla "6666"
-   :vaylat "1"
-   :the_geom "POINT (431153.667 7203743.451)"})
-
-
+   :vaylat "666"
+   :the_geom "POINT(431153.667 7203743.451)"})
 
 (def referenssi-turvalaite-tietokannasta
-  {:harja.domain.vesivaylat.vatu-turvalaite/turvalaitenro 6666666
-   :harja.domain.vesivaylat.vatu-turvalaite/nimi "Loistava I"
-   :harja.domain.vesivaylat.vatu-turvalaite/koordinaatit "POINT (431153.667 7203743.451)"
-   :harja.domain.vesivaylat.vatu-turvalaite/sijainti "Nevernever"
-   :harja.domain.vesivaylat.vatu-turvalaite/tyyppi "Sektoriloisto"
-   :harja.domain.vesivaylat.vatu-turvalaite/tarkenne "KIINTEÄ"
-   :harja.domain.vesivaylat.vatu-turvalaite/tila "POISTETTU"
-   :harja.domain.vesivaylat.vatu-turvalaite/vah_pvm "2012-10-29"
-   :harja.domain.vesivaylat.vatu-turvalaite/toimintatila "Poistettu käytöstä"
-   :harja.domain.vesivaylat.vatu-turvalaite/rakenne "Radiomasto"
-   :harja.domain.vesivaylat.vatu-turvalaite/navigointilaji "Ei sovellettavissa"
-   :harja.domain.vesivaylat.vatu-turvalaite/valaistu "K"
-   :harja.domain.vesivaylat.vatu-turvalaite/omistaja "Kerttu Kilpikonna"
-   :harja.domain.vesivaylat.vatu-turvalaite/turvalaitenro_aiempi "1"
-   :harja.domain.vesivaylat.vatu-turvalaite/paavayla "6666"
-   :harja.domain.vesivaylat.vatu-turvalaite/vaylat "1"
-   :harja.domain.vesivaylat.vatu-turvalaite/geometria "POINT (431153.667 7203743.451)"}
-  )
+  {:turvalaitenro 6666666
+   :nimi "Loistava I"
+   :sijainti "Nevernever"
+   :tyyppi "Sektoriloisto"
+   :tarkenne "KIINTEÄ"
+   :tila "POISTETTU"
+   :toimintatila "Poistettu käytöstä"
+   :rakenne "Radiomasto"
+   :navigointilaji "Ei sovellettavissa"
+   :valaistu true
+   :omistaja "Kerttu Kilpikonna"
+   :turvalaitenro_aiempi 1
+   :paavayla "6666"
+   :koordinaatit "POINT(431153.667 7203743.451)"
+   :luoja "Integraatio"})
 
-(t/deftest vie-turvalaite-entry-test
-           (turvalaite-tuonti/vie-turvalaite-entry (:db ht/jarjestelma) referenssi-turvalaite-shapefilestä))
+(t/deftest vie-turvalaite-tietokantaan
+  (turvalaite-tuonti/vie-turvalaite-entry (:db ht/jarjestelma) referenssi-turvalaite-shapefilestä)
+    (let [tallentunut-turvalaite (first(q-vatu-turvalaite/hae-turvalaite-tunnuksella (:db ht/jarjestelma) {:turvalaitenro 6666666}))]
+      (println (str "TURVALAIte"  tallentunut-turvalaite ))
+      (ht/tarkista-map-arvot referenssi-turvalaite-tietokannasta tallentunut-turvalaite)))
+
+

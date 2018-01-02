@@ -4,13 +4,14 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.9.0"]
-                 [org.clojure/clojurescript "1.9.946"]
+  :dependencies [[org.clojure/clojure "1.8.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
+                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
 
                  ;;;;;;; Yleiset ;;;;;;;
+                 [clojure-future-spec "1.9.0-alpha17"] ; TODO Voisi poistaa, kun Clojure 1.9 päivitys toimii.
 
                  [prismatic/schema "1.1.7"]
-                 [org.clojure/core.async "0.3.465"]
+                 [org.clojure/core.async "0.3.443"] ; TODO Voisi päivittää, mutta ilmoitusten haku ym. testit failaa
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.243"]
                  [com.cognitect/transit-clj "0.8.300"]
@@ -48,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "0.7.0-alpha10"]
+                 [specql "0.6-alpha24"] ; TODO Voisi päivittää, mutta vaatii Clojure 1.9
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "18.1"]
@@ -138,7 +139,7 @@
                  [org.clojure/data.codec "0.1.1"]
                  [devcards "0.2.4" :exclusions [cljsjs/react]]
 
-                  ;; Parsi sourcemapit
+                 ;; Parsi sourcemapit
                  [com.atlassian.sourcemap/sourcemap "1.7.6"]
 
                  ;; Arbitrary precision math frontilla
@@ -164,7 +165,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.7"]
+  :plugins [[lein-cljsbuild "1.1.5"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
@@ -316,7 +317,7 @@
                       "doo" "phantom" "test" "once,"
                       "doo" "phantom" "laadunseuranta-test" "once"]
 
-            ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
+            ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
             "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
             "gitlog" ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle

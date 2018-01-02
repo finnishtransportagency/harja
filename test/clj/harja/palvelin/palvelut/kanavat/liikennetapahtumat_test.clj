@@ -54,6 +54,7 @@
     (is (s/valid? ::lt/hae-liikennetapahtumat-kysely params))
     (is (s/valid? ::lt/hae-liikennetapahtumat-vastaus vastaus))
 
+
     (is (true?
           (boolean
             (some
@@ -61,7 +62,49 @@
                 (not-empty (::lt/alukset tapahtuma)))
               vastaus))))))
 
-(deftest edellisten-haku
+(deftest tapahtumien-haku-eri-filttereilla
+  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+        sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+        params {::ur/id urakka-id
+                ::sop/id sopimus-id}]
+
+    (testing "Aluslajit-suodatin toimii"
+      (let [vastaus-kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-liikennetapahtumat
+                                           +kayttaja-jvh+
+                                           (merge params {::lt-alus/aluslajit #{}}))
+            vastaus-rajattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-liikennetapahtumat
+                                            +kayttaja-jvh+
+                                            (merge params {::lt-alus/aluslajit #{:ÖLJ}}))]
+        (is (>= (count vastaus-kaikki) 1))
+        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))
+
+    (testing "Toimenpidetyyppi-suodatin toimii"
+      (let [vastaus-kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-liikennetapahtumat
+                                           +kayttaja-jvh+
+                                           (merge params {::toiminto/toimenpiteet #{}}))
+            vastaus-rajattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-liikennetapahtumat
+                                            +kayttaja-jvh+
+                                            (merge params {::toiminto/toimenpiteet #{:sulutus}}))]
+        (is (>= (count vastaus-kaikki) 1))
+        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))
+
+    (testing "Aluksen nimi -suodatin toimii"
+      (let [vastaus-kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-liikennetapahtumat
+                                           +kayttaja-jvh+
+                                           (merge params {::lt-alus/nimi ""}))
+            vastaus-rajattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-liikennetapahtumat
+                                            +kayttaja-jvh+
+                                            (merge params {::lt-alus/nimi "Antin onni"}))]
+        (is (>= (count vastaus-kaikki) 1))
+        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))))
+
+(deftest edellisten-tapahtumien-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (hae-kohde-soskua)
@@ -313,10 +356,10 @@
           kohde-id (hae-kohde-kansola)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR FOOBAR';")))
           _ (is (some? tapahtuma-id))
-          toiminto-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_toiminto WHERE \"liikennetapahtuma-id\"="tapahtuma-id ";")))
+          toiminto-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_toiminto WHERE \"liikennetapahtuma-id\"=" tapahtuma-id ";")))
           hakuparametrit {::ur/id urakka-id
                           ::sop/id sopimus-id}
-          laiva-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_alus WHERE nimi = 'HUPILAIVA' AND \"liikennetapahtuma-id\"="tapahtuma-id ";")))
+          laiva-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_alus WHERE nimi = 'HUPILAIVA' AND \"liikennetapahtuma-id\"=" tapahtuma-id ";")))
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-liikennetapahtumat
                                  +kayttaja-jvh+
@@ -352,14 +395,14 @@
   (testing "Alukset ja ketjutukset poistettiin, käytetyt ketjutukset vapautettiin"
     (let [[tapahtuma-id poistettu?] (first (q (str "SELECT id, poistettu FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR FOOBAR';")))
           _ (is (true? poistettu?) "Tapahtumaa ei poistettu!")
-          hupilaivat (q (str "SELECT poistettu FROM kan_liikennetapahtuma_alus WHERE nimi = 'HUPILAIVA' AND \"liikennetapahtuma-id\"="tapahtuma-id ";"))]
+          hupilaivat (q (str "SELECT poistettu FROM kan_liikennetapahtuma_alus WHERE nimi = 'HUPILAIVA' AND \"liikennetapahtuma-id\"=" tapahtuma-id ";"))]
       (is (= (count hupilaivat) 1) "Testejä on muutettu, ja tapahtumasta löytyy monta alusta nimellä HUPILAIVA..")
       (is (true? (ffirst hupilaivat)) "Hupilaivaa ei poistettu")
 
       (is (empty? (q (str "SELECT * FROM kan_liikennetapahtuma_ketjutus WHERE \"tapahtumasta-id\"=" tapahtuma-id)))
           "Tapahtuman ketjutuksia ei poistettu, kun tapahtuma poistettiin")
 
-      (let [toiminnot (q (str "SELECT poistettu FROM kan_liikennetapahtuma_toiminto WHERE \"liikennetapahtuma-id\"="tapahtuma-id ";"))]
+      (let [toiminnot (q (str "SELECT poistettu FROM kan_liikennetapahtuma_toiminto WHERE \"liikennetapahtuma-id\"=" tapahtuma-id ";"))]
         (is (= 1 (count toiminnot)))
         (is (every? true? (first toiminnot)) "Tapahtuman toimintoja ei poistettu")))
 

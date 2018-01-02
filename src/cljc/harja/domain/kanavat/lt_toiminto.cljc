@@ -48,3 +48,5 @@
   #{[::kohteenosa kohteenosa/perustiedot]})
 
 (def metatiedot m/muokkauskentat)
+
+(s/def ::toimenpiteet (s/coll-of #{:sulutus :tyhjennys :avaus :ei-avausta}))
