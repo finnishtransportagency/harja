@@ -20,7 +20,7 @@
             [harja.math :as math]))
 
 (def +sallittu-aikaero-ilman-katkaisua-s+ 180)
-(def +sallittu-etaisyys-ilman-katkaisua-m+ 500)
+(def +sallittu-etaisyys-ilman-katkaisua-m+ 1000)
 
 (defn- seuraava-mittausarvo-sama? [nykyinen-reittimerkinta
                                    seuraava-reittimerkinta
