@@ -16,9 +16,11 @@
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.math :as math]))
 
-(def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
+(def +sallittu-aikaero-ilman-katkaisua-s+ 180)
+(def +sallittu-etaisyys-ilman-katkaisua-m+ 1300)
 
 (defn- seuraava-mittausarvo-sama? [nykyinen-reittimerkinta
                                    seuraava-reittimerkinta
@@ -61,7 +63,13 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
-
+        etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
+                                                                    (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
+                                                seuraava-piste (:sijainti seuraava-reittimerkinta)]
+                                            (if (and edellinen-piste seuraava-piste)
+                                              (<= (math/pisteiden-etaisyys edellinen-piste seuraava-piste)
+                                                  +sallittu-etaisyys-ilman-katkaisua-m+)
+                                              true))
         ei-ajallista-gappia? (let [aikaleima-nykyinen-merkinta (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
                                    aikaleima-seuraava-merkinta (c/from-sql-time (:aikaleima seuraava-reittimerkinta))]
                                (if (or
@@ -73,7 +81,7 @@
                                  true
                                  (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
                                                                aikaleima-seuraava-merkinta))
-                                     +kahden-pisteen-valinen-sallittu-aikaero-s+)))
+                                     +sallittu-aikaero-ilman-katkaisua-s+)))
         jatkuvat-mittausarvot-samat? (boolean (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
@@ -85,6 +93,7 @@
     (when-not ei-ajallista-gappia? (log/debug (:sijainti seuraava-reittimerkinta) "Ajallinen gäppi pisteiden välillä, " (c/from-sql-time (:aikaleima nykyinen-reittimerkinta)) " ja " (c/from-sql-time (:aikaleima seuraava-reittimerkinta)) ", katkaistaan reitti"))
     (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
     (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
+    (when-not etaisyys-edelliseen-kohtuullinen? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste liian kaukanan edellisestä, katkaistaan reitti"))
 
     (boolean
       (and
@@ -104,7 +113,10 @@
         ;; reittimerkintä
         jatkuvat-mittausarvot-samat?
         ;; Seuraava piste ei aiheuta ympärikääntymistä. Jos aiheuttaa, reitti tulee katkaista.
-        seuraavassa-pisteessa-ei-kaannyta-ympari?))))
+        seuraavassa-pisteessa-ei-kaannyta-ympari?
+        ;; Reittimerkintöjä pitäisi kertyä tiheästi ja tasaisin väliajoin. On kuitenkin mahdollista, että
+        ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti.
+        etaisyys-edelliseen-kohtuullinen?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
