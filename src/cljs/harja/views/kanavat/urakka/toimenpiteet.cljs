@@ -31,7 +31,7 @@
    {:otsikko "Kohde"
     :nimi :kohde
     :tyyppi :string
-    :leveys 10
+    :leveys 8
     :hae kanavan-toimenpide/fmt-toimenpiteen-kohde}
    {:otsikko "Huolto\u00ADkohde"
     :nimi ::kanavan-toimenpide/huoltokohde
@@ -42,15 +42,15 @@
     :nimi :toimenpide
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])
-    :leveys 15}
-   {:otsikko "Lisä\u00ADtieto"
-    :nimi ::kanavan-toimenpide/lisatieto
-    :tyyppi :string
     :leveys 10}
    {:otsikko "Muu toimen\u00ADpide"
     :nimi ::kanavan-toimenpide/muu-toimenpide
     :tyyppi :string
     :leveys 10}
+   {:otsikko "Lisä\u00ADtieto"
+    :nimi ::kanavan-toimenpide/lisatieto
+    :tyyppi :string
+    :leveys 13}
    {:otsikko "Suorit\u00ADtaja"
     :nimi ::kanavan-toimenpide/suorittaja
     :tyyppi :string
@@ -66,7 +66,7 @@
       :otsikko-valittu-fn otsikko-valittu-fn
       :rivi-valittu?-fn rivi-valittu?-fn
       :rivi-valittu-fn rivi-valittu-fn
-      :leveys 5})])
+      :leveys 3})])
 
 (defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
   (str toimenpiteiden-lkm " "
