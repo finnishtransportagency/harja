@@ -249,3 +249,77 @@
                                                            (.replace "__SUORITTAJA_NIMI__" "Tienharjaajat Oy")))]
 
     (is (= 200 (:status toinen-vastaus-lisays)))))
+
+(deftest paivita-reittitoteuma-monesti-hoitoluokittaiset-summat-paivitetaan-oikein
+  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        hoitoluokittaiset-ennen-kutsuja (ffirst (q (str "SELECT count(*) FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka)))
+        _ (println "hoitoluokittaiset-ennen-kutsuja " hoitoluokittaiset-ennen-kutsuja)
+        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                    slurp
+                                                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                                    (.replace "__ID__" (str ulkoinen-id))
+                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
+        hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
+        sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))
+        _ (println "hoitoluokittaiset-eka-kutsun-jalkeen " hoitoluokittaiset-eka-kutsun-jalkeen)
+        _ (println "sopimuksen-mat-kaytto-eka-kutsun-jalkeen " sopimuksen-mat-kaytto-eka-kutsun-jalkeen)
+        vastaus-toka-kutsuun (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                                      (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                          slurp
+                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                                          (.replace "__ID__" (str ulkoinen-id))
+                                                          (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
+        hoitoluokittaiset-toka-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
+        sopimuksen-mat-kaytto-toka-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
+    (println "hoitoluokittaiset-eka-kutsun-jalkeen " hoitoluokittaiset-eka-kutsun-jalkeen)
+    (println "hoitoluokittaiset-toka-kutsun-jalkeen " hoitoluokittaiset-toka-kutsun-jalkeen)
+    _ (println "sopimuksen-mat-kaytto-toka-kutsun-jalkeen " sopimuksen-mat-kaytto-toka-kutsun-jalkeen)
+    (is (= 200 (:status vastaus-lisays)))
+    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
+
+      ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
+      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                                      (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                          slurp
+                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                                          (.replace "__ID__" (str ulkoinen-id))
+                                                          (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))
+            hoitoluokittaiset-kolmannen-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
+            sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
+        (println "hoitoluokittaiset-kolmannen-kutsun-jalkeen " hoitoluokittaiset-kolmannen-kutsun-jalkeen)
+        (is (= 200 (:status vastaus-paivitys)))
+        (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
+                                                               (columns ::rp/toteuman-reittipisteet)
+                                                               {::rp/toteuma-id toteuma-id}))
+              _ (println "reittipisteet " reittipisteet)
+              toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
+              toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
+              toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
+                                                    JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
+                                                    WHERE toteuma = " toteuma-id)))]
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+          (is (= (count reittipisteet) 3))
+          (is (= (count toteuma-tehtava-idt) 2))
+          (is (= (count toteuma-materiaali-idt) 1))
+          (is (= toteuman-materiaali "Talvisuolaliuos NaCl"))
+
+          (doseq [reittipiste reittipisteet]
+            (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
+                  reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
+                  reitti-hoitoluokka (::rp/soratiehoitoluokka reittipiste)]
+              (is (= (count reitti-tehtava-idt) 2))
+              (is (= (count reitti-materiaali-idt) 1))
+              (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
+
+          (poista-reittitoteuma toteuma-id ulkoinen-id))
+        (is (= hoitoluokittaiset-eka-kutsun-jalkeen
+               hoitoluokittaiset-toka-kutsun-jalkeen
+               hoitoluokittaiset-kolmannen-kutsun-jalkeen))
+        (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen
+               sopimuksen-mat-kaytto-toka-kutsun-jalkeen
+               sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen))))))
