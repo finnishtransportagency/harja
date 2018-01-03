@@ -4,7 +4,6 @@
             [harja-laadunseuranta.tiedot.sovellus :as s]
             [cljs-time.local :as lt]
             [cljs-time.coerce :as tc]
-            [harja-laadunseuranta.tiedot.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.reitintallennus :as reitintallennus]
             [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
