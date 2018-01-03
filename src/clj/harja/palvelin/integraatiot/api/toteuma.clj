@@ -129,7 +129,7 @@
       nil
       nil)))
 
-(defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id]
+(defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit")
   (q-toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
@@ -147,5 +147,7 @@
         materiaalikoodi-id
         (get-in materiaali [:maara :maara])
         (:id kirjaaja))))
-  ;; Päivitä sopimuksen päivän materiaalinkäyttö
-  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db (:sopimusId toteuma) (:alkanut toteuma)))
+  ;; Päivitä sopimuksen päivän materiaalinkäyttö. Joissain urakoissa (HAR-6489) viestistä voi puuttua
+  ;; sopimusId, tällöin kaivetaan sopimukset kannasta ennen cachetaulun päivitystä
+  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus (hae-sopimus-id db urakka-id toteuma)
+                                                         :alkupvm (:alkanut toteuma)}))
