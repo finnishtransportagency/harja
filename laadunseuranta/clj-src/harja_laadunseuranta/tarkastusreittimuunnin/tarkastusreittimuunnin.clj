@@ -115,11 +115,10 @@
         seuraavassa-pisteessa-ei-kaannyta-ympari?
         ;; Reittimerkintöjä pitäisi kertyä tiheästi ja tasaisin väliajoin. On kuitenkin mahdollista, että
         ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti
-        ;; Tällä esteään mm. tilanne, jossa kaksi harvaa pistettä osuu kevyen liikenteen väylällä eri osille,
-        ;; jotka ovat kaukana toisistaan (kevyen liikenteen tien osat eivät välttämättä muodosta yhtenäistä,
-        ;; jatkuvaa tietä, vaan osat saattavat olla maantieteellisesti kaukana toisistaan). Tällaisessa tilanteessa
-        ;; olisi väärin olettaa, että pisteet ovat osaa samaa tietä, koska vaikka tienumero on sama, tie ei ole
-        ;; yhtenäinen jatkumo.
+        ;; Tällä esteään mm. tilanne, jossa kaksi harvaa pistettä osuu kevyen liikenteen väylällä samalla tienumerolle,
+        ;; mutta eri osille, jotka ovat kaukana toisistaan (kevyen liikenteen tien osat eivät välttämättä muodosta yhtenäistä,
+        ;; jatkuvaa tietä, vaan osat saattavat olla maantieteellisesti kaukana toisistaan). Mikäli kahden pisteen etäisyys
+        ;; on suuri, emme voi olla varma, muodostavatko tieosat edelleen yhtenäisen jatkumon, vaikka tienumero olisikin sama.
         etaisyys-edelliseen-kohtuullinen?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
