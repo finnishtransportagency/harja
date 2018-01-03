@@ -146,28 +146,3 @@
                                                                                                           ::materiaali/urakka-id 1
                                                                                                           ::materiaali/pvm nil
                                                                                                           ::materiaali/id 12}}])}})
-
-(deftest materiaalin-hinnoittelu
-
-  (let [app app-materiaalien-hinnoittelutestille
-        uusi-app (e! (tiedot/->PaivitaHinnoittelu))]))
-
-
-
-(defn testaa-poistettavat-2 []
-  (let [nykygrid  [{:maara 1,
-                    :varaosa
-                    {:harja.domain.vesivaylat.materiaali/urakka-id 31,
-                     :harja.domain.vesivaylat.materiaali/maara-nyt 473,
-                     :harja.domain.vesivaylat.materiaali/alkuperainen-maara 500,
-                     :harja.domain.vesivaylat.materiaali/nimi "Ämpäreitä"}}]
-
-        muokkaamattomat (list {:maara 1,
-                               :varaosa
-                               {:harja.domain.vesivaylat.materiaali/nimi "Naulat",
-                                :harja.domain.vesivaylat.materiaali/urakka-id 31,
-                                :harja.domain.vesivaylat.materiaali/pvm
-                                nil,
-                                :harja.domain.vesivaylat.materiaali/id 15}})])
-  (log "testaa-poistettavat-2:")
-  (cljs.pprint/pprint (vec  (keep (partial materiaalikirjaus->poistettavat-2 nykygrid) muokkaamattomat))))
