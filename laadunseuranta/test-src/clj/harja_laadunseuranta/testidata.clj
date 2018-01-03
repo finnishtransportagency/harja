@@ -263,7 +263,7 @@
     :jatkuvat-havainnot [17]
     :kitkamittaus 0.3}
    ;; Mittausvirhe: piste ei osu tielle. Silti osa samaa tarkastusta, joka jatkuu tämän pisteen jälkeenkin.
-   {:id 1 :sijainti [465331 7234690]
+   {:id 1 :sijainti nil
     :jatkuvat-havainnot [17]}
    {:id 2 :sijainti [465321.5999816895 7230676.000024414]
     :jatkuvat-havainnot [17]

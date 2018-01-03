@@ -20,7 +20,7 @@
             [harja.math :as math]))
 
 (def +sallittu-aikaero-ilman-katkaisua-s+ 180)
-(def +sallittu-etaisyys-ilman-katkaisua-m+ 1000)
+(def +sallittu-etaisyys-ilman-katkaisua-m+ 1300)
 
 (defn- seuraava-mittausarvo-sama? [nykyinen-reittimerkinta
                                    seuraava-reittimerkinta
@@ -115,11 +115,7 @@
         ;; Seuraava piste ei aiheuta ympärikääntymistä. Jos aiheuttaa, reitti tulee katkaista.
         seuraavassa-pisteessa-ei-kaannyta-ympari?
         ;; Reittimerkintöjä pitäisi kertyä tiheästi ja tasaisin väliajoin. On kuitenkin mahdollista, että
-        ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti
-        ;; Tällä esteään mm. tilanne, jossa kaksi harvaa pistettä osuu kevyen liikenteen väylällä samalle tienumerolle,
-        ;; mutta eri osille, jotka ovat kaukana toisistaan (kevyen liikenteen tien osat eivät välttämättä muodosta yhtenäistä,
-        ;; jatkuvaa tietä, vaan osat saattavat olla maantieteellisesti kaukana toisistaan). Mikäli kahden pisteen etäisyys
-        ;; on suuri, emme voi olla varma, muodostavatko tieosat edelleen yhtenäisen jatkumon, vaikka tienumero olisikin sama.
+        ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti.
         etaisyys-edelliseen-kohtuullinen?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
