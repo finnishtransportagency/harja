@@ -15,6 +15,7 @@
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
+            [harja.domain.kanavat.kommentti :as kommentti]
             [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
@@ -94,6 +95,9 @@
 (defrecord TallennaToimenpiteenHinnoittelu [tiedot])
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
+(defrecord KommentoiToimenpiteenHinnoittelua [tila kommentti toimenpide-id])
+(defrecord ToimenpiteenKommenttiTallennettu [vastaus])
+(defrecord ToimenpiteenKommenttiEiTallennettu [virhe])
 (defrecord HaeHuoltokohteet [])
 
 ;; Suunnitellut työt
@@ -448,6 +452,41 @@
   (process-event [_ app]
     (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
     (assoc app :toimenpiteen-hinnoittelun-tallennus-kaynnissa? false))
+
+  KommentoiToimenpiteenHinnoittelua
+  (process-event [{tila :tila
+                   kommentti :kommentti
+                   toimenpide-id :toimenpide-id} app]
+    (if-not (:toimenpiteen-kommentin-tallennus-kaynnissa? app)
+      (do (tuck-apurit/post!
+            :tallenna-kanavatoimenpiteen-hinnoittelun-kommentti
+            {::kommentti/toimenpide-id toimenpide-id
+             ::kommentti/tila tila
+             ::kommentti/kommentti kommentti
+             ::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])}
+            {:onnistui ->ToimenpiteenKommenttiTallennettu
+             :epaonnistui ->ToimenpiteenKommenttiEiTallennettu})
+          (assoc app :toimenpiteen-kommentin-tallennus-kaynnissa? true))
+      app))
+
+  ToimenpiteenKommenttiTallennettu
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Hinnoittelu tallennettu!" :success)
+    (let [paivitetyt-toimenpiteet (mapv
+                                    (fn [toimenpide]
+                                      (if (= (::toimenpide/id toimenpide) (::toimenpide/id vastaus))
+                                        vastaus
+                                        toimenpide))
+                                    (:toimenpiteet app))]
+
+      (assoc app :toimenpiteet paivitetyt-toimenpiteet
+                 :toimenpiteen-kommentin-tallennus-kaynnissa? false
+                 :hinnoittele-toimenpide alustettu-toimenpiteen-hinnoittelu)))
+
+  ToimenpiteenKommenttiEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Hinnoittelun tallennus epäonnistui!" :danger)
+    (assoc app :toimenpiteen-kommentin-tallennus-kaynnissa? false))
 
   UusiToimenpide
   (process-event [_ app]

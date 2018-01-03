@@ -24,7 +24,11 @@
             [harja.ui.grid :as grid]
             [harja.ui.debug :as debug]
             [harja.views.kartta :as kartta]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.domain.kanavat.kommentti :as kommentti]
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.varmista-kayttajalta :refer [varmista-kayttajalta]])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -280,11 +284,124 @@
        (tyo/toiden-kokonaishinta nykyiset-tyot
                                  suunnitellut-tyot))))
 
-(defn- hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
-                               ]
+
+(defn hinnoittelunappi [e! app* hinta toimenpide-rivi tila]
+  (let [{:keys [teksti nappi]} (case tila
+                                 (nil :poistettu)
+                                 {:teksti "Hinnoittele"
+                                  :nappi napit/yleinen-ensisijainen}
+
+                                 (:luotu :muokattu)
+                                 {:teksti "Muokkaa"
+                                  :nappi napit/yleinen-toissijainen}
+
+                                 :hyvaksytty
+                                 {:teksti "Tarkastele"
+                                  :nappi napit/hyvaksy}
+
+                                 :hylatty
+                                 {:teksti "Käsittele"
+                                  :nappi napit/peruuta})]
+    [:div.arvo-ja-nappi
+     (when-not (#{nil :poistettu} tila)
+       [:span.arvo-ja-nappi-arvo
+        hinta])
+     [nappi
+      teksti
+      #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
+      {:ikoninappi? false
+       :ikoni (ikonit/livicon-pen)
+       :luokka (str "btn-xs arvo-ja-nappi-nappi")
+       :disabled (or (:id (:infolaatikko-nakyvissa app*))
+                     (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                   oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                   (:id @nav/valittu-urakka))))}]]))
+
+(defn hyvaksy-tai-hylkaa [e! app* hinta toimenpide-rivi]
+  [:div.arvo-ja-nappi
+   [:span.arvo-ja-nappi-arvo
+    hinta]
+   [napit/yleinen-toissijainen
+    "Tarkastele"
+    #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
+    {:ikoninappi? false
+     :ikoni (ikonit/livicon-eye)
+     :luokka (str "btn-xs arvo-ja-nappi-nappi")
+     :disabled (or (:id (:infolaatikko-nakyvissa app*))
+                   (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                 (:id @nav/valittu-urakka))))}]
+   [napit/hyvaksy
+    "Hyväksy"
+    #(e! (tiedot/->KommentoiToimenpiteenHinnoittelua :hyvaksytty "" (::toimenpide/id toimenpide-rivi)))
+    {:luokka (str "btn-xs arvo-ja-nappi-nappi")}]
+   [napit/peruuta
+    "Hylkää"
+    #(e! (tiedot/->KommentoiToimenpiteenHinnoittelua :hylatty "" (::toimenpide/id toimenpide-rivi)))
+    {:luokka (str "btn-xs arvo-ja-nappi-nappi")}]])
+
+(defn tarkastele [e! app* hinta toimenpide-rivi]
+  [:div.arvo-ja-nappi
+   [:span.arvo-ja-nappi-arvo
+    hinta]
+   [napit/yleinen-toissijainen
+    "Tarkastele"
+    #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
+    {:ikoninappi? false
+     :ikoni (ikonit/livicon-eye)
+     :luokka (str "btn-xs arvo-ja-nappi-nappi")
+     :disabled (or (:id (:infolaatikko-nakyvissa app*))
+                   (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                 (:id @nav/valittu-urakka))))}]])
+
+(defn urakoitsijan-footer-napit [e! app* tila]
+  [:footer.vv-toimenpiteen-hinnoittelu-footer
+   [napit/peruuta
+    "Peruuta"
+    #(e! (tiedot/->PeruToimenpiteenHinnoittelu))
+    {:luokka "btn-xs"}]
+   (if (= :hyvaksytty tila)
+     [napit/yleinen-toissijainen
+      "Ylikirjoita"
+      #(varmista-kayttajalta
+         {:otsikko "Palauta hinnoittelu käsittelyyn"
+          :sisalto
+          [:div "Toimenpide on jo hinnoiteltu, ja tilaaja on sen hyväksynyt. Jos tallennat hinnoittelun uudelleen,
+          tilaajan pitää myös hyväksyä hinnoittelu uudelleen. Oletko varma?"]
+          :hyvaksy "Tallenna"
+          :toiminto-fn (fn []
+                         (e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*))))
+          :napit [:takaisin :poista]})]
+
+     [napit/tallenna
+     "Valmis"
+     #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
+     {:luokka "btn-xs"
+      :disabled (or
+                  (not (tiedot/hinnoittelun-voi-tallentaa? app*))
+                  (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                  (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                (:id @nav/valittu-urakka))))}])])
+
+(defn tilaajan-footer-napit [e! app* tila]
+  [:footer.vv-toimenpiteen-hinnoittelu-footer
+   [napit/peruuta
+    "Hylkää"
+    #(e! (tiedot/->KommentoiToimenpiteenHinnoittelua :hylatty "" (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])))
+    {:disabled (= :hylatty tila)
+     :luokka "btn-xs"}]
+   [napit/hyvaksy
+    "Hyväksy"
+    #(e! (tiedot/->KommentoiToimenpiteenHinnoittelua :hyvaksytty "" (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])))
+    {:disabled (= :hyvaksytty tila)
+     :luokka "btn-xs"}]])
+
+(defn hinnoittele-toimenpide [e! app* toimenpide-rivi]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
-        listaus-tunniste :id]
+        tila (kommentti/hinnoittelun-tila (::toimenpide/kommentit toimenpide-rivi))]
 
     [:div
      (if (and hinnoittele-toimenpide-id
@@ -298,34 +415,22 @@
           (if (or (nil? (:suunnitellut-tyot app*)) (true? (:suunniteltujen-toiden-haku-kaynnissa? app*)))
             [ajax-loader "Ladataan..."]
             [toimenpiteen-hinnoittelutaulukko e! app*])
-          [:footer.vv-toimenpiteen-hinnoittelu-footer
-           [napit/peruuta
-            "Peruuta"
-            #(e! (tiedot/->PeruToimenpiteenHinnoittelu))]
-           [napit/tallenna
-            "Valmis"
-            #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
-            {:disabled (or
-                         (not (tiedot/hinnoittelun-voi-tallentaa? app*))
-                         (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
-                         (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                       oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                       (:id @nav/valittu-urakka))))}]]]]]
+          (if (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+            [tilaajan-footer-napit e! app* tila]
+            [urakoitsijan-footer-napit e! app* tila])]]]
 
        ;; Solun sisältö
-       (grid/arvo-ja-nappi
-        {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                       (get-in app* [:valinnat :urakka :id])))
-                        :pelkka-arvo
+       [:div.arvo-ja-nappi-container
+        (let [hinta (fmt/euro-opt (nykyisten-arvo app* toimenpide-rivi valittu-aikavali))]
+          (if (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+            (case tila
+              (nil :poistettu)
+              nil
 
-                        :default
-                        :arvo-ja-nappi)
-         :pelkka-nappi-teksti "Hinnoittele"
-         :pelkka-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
-         :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
-         :nappi-optiot {:disabled (or (listaus-tunniste (:infolaatikko-nakyvissa app*))
-                                      (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                                    oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                                    (:id @nav/valittu-urakka))))}
-         :arvo (fmt/euro-opt (nykyisten-arvo app* toimenpide-rivi valittu-aikavali))
-         :ikoninappi? true}))]))
+              (:luotu :muokattu)
+              [hyvaksy-tai-hylkaa e! app* hinta toimenpide-rivi]
+
+              (:hyvaksytty :hylatty)
+              [tarkastele e! app* hinta toimenpide-rivi])
+
+            [hinnoittelunappi e! app* hinta toimenpide-rivi tila]))])]))
