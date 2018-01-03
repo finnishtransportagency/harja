@@ -14,6 +14,7 @@
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kommentti :as kommentti]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
             [clojure.java.jdbc :as jdbc]
@@ -50,19 +51,35 @@
                                        (filter id/id-olemassa?)
                                        (set))]
       (vaadi-rivit-kuuluvat-emoon db ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id ::hinta/id olemassa-olevat-hinta-idt toimenpide-id)
-      (vaadi-rivit-kuuluvat-emoon db ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id ::tyo/id olemassa-olevat-tyo-idt toimenpide-id))
+      (vaadi-rivit-kuuluvat-emoon db ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id ::tyo/id olemassa-olevat-tyo-idt toimenpide-id)
 
 
-    (jdbc/with-db-transaction [db db]
-      (q-toimenpide/tallenna-toimenpiteen-omat-hinnat!
-        {:db db
-         :user user
-         :hinnat (liita-tpid-mappeihin (::hinta/tallennettavat-hinnat tiedot) ::hinta/toimenpide-id)})
-      (q-toimenpide/tallenna-toimenpiteen-tyot!
-        {:db db
-         :user user
-         :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
-      (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id toimenpide-id})))))
+      (jdbc/with-db-transaction [db db]
+        (q-toimenpide/tallenna-toimenpiteen-omat-hinnat!
+          {:db db
+           :user user
+           :hinnat (liita-tpid-mappeihin (::hinta/tallennettavat-hinnat tiedot) ::hinta/toimenpide-id)})
+        (q-toimenpide/tallenna-toimenpiteen-tyot!
+          {:db db
+           :user user
+           :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
+        (q-toimenpide/lisaa-kommentti! db user (if (and (empty? olemassa-olevat-tyo-idt)
+                                                        (empty? olemassa-olevat-hinta-idt))
+                                                 :luotu
+                                                 :muokattu
+                                                 ) "" toimenpide-id)
+        (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id toimenpide-id}))))))
+
+(defn tallenna-kanavatoimenpiteen-hinnoittelun-kommentti! [db user tiedot]
+  (let [urakka-id (::toimenpide/urakka-id tiedot)]
+    (assert urakka-id "Urakka-id puuttuu!")
+
+    (q-toimenpide/lisaa-kommentti! db user
+                                   (::kommentti/tila tiedot)
+                                   (::kommentti/kommentti tiedot)
+                                   (::kommentti/toimenpide-id tiedot))
+
+    (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id (::kommentti/toimenpide-id tiedot)}))))
 
 (defn- tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
@@ -164,6 +181,13 @@
         (tallenna-kanavatoimenpiteen-hinnoittelu! db user hakuehdot))
       {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-kysely
        :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-vastaus})
+    (julkaise-palvelu
+      http
+      :tallenna-kanavatoimenpiteen-hinnoittelun-kommentti
+      (fn [user hakuehdot]
+        (tallenna-kanavatoimenpiteen-hinnoittelun-kommentti! db user hakuehdot))
+      {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelun-kommentti-kysely
+       :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelun-kommentti-vastaus})
     (julkaise-palvelu
       http
       :tallenna-kanavatoimenpide

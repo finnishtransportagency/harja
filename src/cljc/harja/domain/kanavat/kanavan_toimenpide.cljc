@@ -6,6 +6,7 @@
     [harja.domain.kanavat.kohteenosa :as osa]
     [harja.domain.kanavat.hinta :as hinta]
     [harja.domain.kanavat.tyo :as tyo]
+    [harja.domain.kanavat.kommentti :as kommentti]
     [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
     [harja.domain.toimenpidekoodi :as toimenpidekoodi]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -30,8 +31,15 @@
     "sopimus" ::sopimus-id
     "muu_toimenpide" ::muu-toimenpide
     ;;; ei saatu joineja toimimaan oikein meidän vanhan specql:n kanssa
-    ;; ::hinnat (specql.rel/has-many ::id ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id)
-    ;; ::tyot (specql.rel/has-many ::id ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id)
+    ::hinnat (specql.rel/has-many ::id
+                                  :harja.domain.kanavat.hinta/toimenpiteen-hinta
+                                  :harja.domain.kanavat.hinta/toimenpide-id)
+    ::tyot (specql.rel/has-many ::id
+                                :harja.domain.kanavat.tyo/toimenpiteen-tyo
+                                :harja.domain.kanavat.tyo/toimenpide-id)
+    ::kommentit (specql.rel/has-many ::id
+                                     :harja.domain.kanavat.kommentti/kommentti
+                                     :harja.domain.kanavat.kommentti/toimenpide-id)
     "toimenpideinstanssi" ::toimenpideinstanssi-id
     ::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kohde/kohde
@@ -128,6 +136,16 @@
           :harja.domain.kanavat.tyo/tallennettavat-tyot]))
 
 (s/def ::tallenna-kanavatoimenpiteen-hinnoittelu-vastaus
+  ::kanava-toimenpide)
+
+(s/def ::tallenna-kanavatoimenpiteen-hinnoittelun-kommentti-kysely
+  (s/keys
+    :req [::urakka-id
+          ::kommentti/kommentti
+          ::kommentti/tila
+          ::kommentti/toimenpide-id]))
+
+(s/def ::tallenna-kanavatoimenpiteen-hinnoittelun-kommentti-vastaus
   ::kanava-toimenpide)
 
 (s/def ::tallennettava-kanava-toimenpide
