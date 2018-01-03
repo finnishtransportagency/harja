@@ -201,6 +201,16 @@
     ;; Koko tarkastus on merkitty laadunalitukseksi, koska sellainen löytyi osasta tarkastuspisteitä
     (is (= (-> tarkastukset :reitilliset-tarkastukset first :laadunalitus) true))))
 
+;; -------- Pisteiden etäisyys suuri --------
+
+(deftest tarkastus-jossa-pisteiden-etaisyys-suuri
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi
+                       (lisaa-reittimerkinnoille-mockattu-tieosoite
+                         testidata/tarkastus-jossa-pisteiden-sijainti-eri))]
+    ;; Muunnettu määrällisesti oikein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
 ;; --------Liittyvät havainnot --------
 
 (deftest tarkastus-jossa-liittyva-havainto
@@ -356,7 +366,7 @@
     ;; Jokainen tallennettava tarkastus muodostetaan tieosoitteen osalta tarkalleen oikein
     (tarkista-tallennettujen-tarkastuksien-osoite reitilliset odotetut-tarkastetut-tieosat)))
 
-(deftest ymparikaantyminen-katkaistaan-oikein-vaikka-ollaan-paikallaan
+(deftest ymparikaantyminen-katkaistaan-oikein-vaikka-ollaan-hetki-paikallaan
   (let [db (:db jarjestelma)
         tarkastusajo-id 900
         urakka-id (hae-oulun-alueurakan-2014-2019-id)

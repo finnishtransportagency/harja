@@ -307,24 +307,6 @@
     :jatkuvat-havainnot []
     :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}])
 
-(def tarkastus-jossa-ajallinen-aukko
-  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/now))}
-   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))}
-   ;; GPS-signaali katkeaa tässä joksikin aikaa
-   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
-   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
-   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}])
-
 (def tarkastus-jossa-ajallinen-aukko-ja-sitten-tyhja-tie
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
     :jatkuvat-havainnot []
@@ -419,19 +401,6 @@
    {:id 3 :sijainti [455519.19997024536 7227720.400009155]
     :jatkuvat-havainnot []}
    {:id 4 :sijainti [455555.19997024536 7227594.400009155]
-    :jatkuvat-havainnot []}])
-
-
-(def tarkastus-jossa-kaannytaan-ympari
-  [{:id 0 :sijainti [454881.19997024536 7227586.400009155]
-    :jatkuvat-havainnot []}
-   {:id 1 :sijainti [455041.19997024536 7227634.400009155]
-    :jatkuvat-havainnot []}
-   {:id 2 :sijainti [455165.19997024536 7227666.400009155]
-    :jatkuvat-havainnot []}
-   {:id 3 :sijainti [455041.19997024536 7227634.400009155]
-    :jatkuvat-havainnot []}
-   {:id 4 :sijainti [454881.19997024536 7227586.400009155]
     :jatkuvat-havainnot []}])
 
 (def tarkastus-jossa-pistemainen-havainto
@@ -660,3 +629,16 @@
     :liittyy-merkintaan 1
     :kuvaus "Tässä on nyt jotain mätää"
     :kuva 1}])
+
+
+(def tarkastus-jossa-pisteiden-sijainti-eri
+  [;; Ajetaan tietä 20 pohjoiseen
+   {:id 0 :sijainti [446405 7224577]}
+   {:id 1 :sijainti [446533 7224624]}
+   {:id 2 :sijainti [446636 7224654]}
+   {:id 3 :sijainti [446763 7224696]}
+   ;; Seuraavat merkinnät ovat huomattavan paljon kauempana kuin edellinen, joskin edelleen samalla tiellä.
+   ;; Reitin tulisi katketa kerran tässä kohtaa
+   {:id 4 :sijainti [454620 7227506]}
+   {:id 5 :sijainti [454699 7227528]}
+   {:id 6 :sijainti [454768 7227546]}])

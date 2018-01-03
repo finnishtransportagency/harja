@@ -42,7 +42,6 @@
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
    toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
-  (log/debug "SEURAAVA MERKINTÄ: " seuraava-reittimerkinta)
   (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
                                               (:jatkuvat-havainnot seuraava-reittimerkinta))
         sama-tie-jatkuu? (boolean (or
@@ -64,11 +63,13 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
-        etaisyys-edelliseen-kohtuullinen? (<= (math/pisteiden-etaisyys
-                                                (or (:sijainti nykyinen-reittimerkinta)
-                                                    (last (:sijainnit nykyinen-reittimerkinta)))
-                                                (:sijainti seuraava-reittimerkinta))
-                                              +kahden-pisteen-valinen-sallittu-etaisyys-m+)
+        etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
+                                                                    (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
+                                                seuraava-piste (:sijainti seuraava-reittimerkinta)]
+                                            (if (and edellinen-piste seuraava-piste)
+                                              (<= (math/pisteiden-etaisyys edellinen-piste seuraava-piste)
+                                                  +kahden-pisteen-valinen-sallittu-etaisyys-m+)
+                                              true))
         ei-ajallista-gappia? (let [aikaleima-nykyinen-merkinta (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
                                    aikaleima-seuraava-merkinta (c/from-sql-time (:aikaleima seuraava-reittimerkinta))]
                                (if (or
