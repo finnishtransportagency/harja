@@ -116,7 +116,9 @@
         ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti
         ;; Tällä esteään mm. tilanne, jossa kaksi harvaa pistettä osuu kevyen liikenteen väylällä eri osille,
         ;; jotka ovat kaukana toisistaan (kevyen liikenteen tien osat eivät välttämättä muodosta yhtenäistä,
-        ;; jatkuvaa tietä, vaan osat saattavat olla maantieteellisesti kaukana toisistaan).
+        ;; jatkuvaa tietä, vaan osat saattavat olla maantieteellisesti kaukana toisistaan). Tällaisessa tilanteessa
+        ;; olisi väärin olettaa, että pisteet ovat osaa samaa tietä, koska vaikka tienumero on sama, tie ei ole
+        ;; yhtenäinen jatkumo.
         etaisyys-edelliseen-kohtuullinen?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
