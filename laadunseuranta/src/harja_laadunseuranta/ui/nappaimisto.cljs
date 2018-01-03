@@ -1,7 +1,7 @@
 (ns harja-laadunseuranta.ui.nappaimisto
   (:require [reagent.core :as reagent :refer [atom]]
             [cljs-time.local :as l]
-            [harja-laadunseuranta.tiedot.math :as math]
+            [harja.math :as math]
             [harja-laadunseuranta.tiedot.fmt :as fmt]
             [harja-laadunseuranta.tiedot.nappaimisto
              :refer [numeronappain-painettu! nykyisen-syotto-osan-max-merkkimaara-saavutettu?
