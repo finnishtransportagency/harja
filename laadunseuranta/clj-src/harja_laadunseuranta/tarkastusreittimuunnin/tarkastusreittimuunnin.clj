@@ -19,8 +19,8 @@
             [harja.domain.roolit :as roolit]
             [harja.math :as math]))
 
-(def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
-(def +kahden-pisteen-valinen-sallittu-etaisyys-m+ 300)
+(def +sallittu-aikaero-ilman-katkaisua-s+ 180)
+(def +sallittu-etaisyys-ilman-katkaisua-m+ 500)
 
 (defn- seuraava-mittausarvo-sama? [nykyinen-reittimerkinta
                                    seuraava-reittimerkinta
@@ -68,7 +68,7 @@
                                                 seuraava-piste (:sijainti seuraava-reittimerkinta)]
                                             (if (and edellinen-piste seuraava-piste)
                                               (<= (math/pisteiden-etaisyys edellinen-piste seuraava-piste)
-                                                  +kahden-pisteen-valinen-sallittu-etaisyys-m+)
+                                                  +sallittu-etaisyys-ilman-katkaisua-m+)
                                               true))
         ei-ajallista-gappia? (let [aikaleima-nykyinen-merkinta (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
                                    aikaleima-seuraava-merkinta (c/from-sql-time (:aikaleima seuraava-reittimerkinta))]
@@ -81,7 +81,7 @@
                                  true
                                  (<= (t/in-seconds (t/interval aikaleima-nykyinen-merkinta
                                                                aikaleima-seuraava-merkinta))
-                                     +kahden-pisteen-valinen-sallittu-aikaero-s+)))
+                                     +sallittu-aikaero-ilman-katkaisua-s+)))
         jatkuvat-mittausarvot-samat? (boolean (and (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :soratie-tasaisuus)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :kiinteys)
                                                    (seuraava-mittausarvo-sama? nykyinen-reittimerkinta seuraava-reittimerkinta :polyavyys)
