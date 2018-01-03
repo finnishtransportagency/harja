@@ -16,9 +16,11 @@
             [clojure.string :as str]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.domain.roolit :as roolit]))
+            [harja.domain.roolit :as roolit]
+            [harja.math :as math]))
 
 (def +kahden-pisteen-valinen-sallittu-aikaero-s+ 180)
+(def +kahden-pisteen-valinen-sallittu-etaisyys-m+ 300)
 
 (defn- seuraava-mittausarvo-sama? [nykyinen-reittimerkinta
                                    seuraava-reittimerkinta
@@ -40,6 +42,7 @@
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
    toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
   [nykyinen-reittimerkinta seuraava-reittimerkinta]
+  (log/debug "SEURAAVA MERKINTÄ: " seuraava-reittimerkinta)
   (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
                                               (:jatkuvat-havainnot seuraava-reittimerkinta))
         sama-tie-jatkuu? (boolean (or
@@ -61,7 +64,11 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
-
+        etaisyys-edelliseen-kohtuullinen? (<= (math/pisteiden-etaisyys
+                                                (or (:sijainti nykyinen-reittimerkinta)
+                                                    (last (:sijainnit nykyinen-reittimerkinta)))
+                                                (:sijainti seuraava-reittimerkinta))
+                                              +kahden-pisteen-valinen-sallittu-etaisyys-m+)
         ei-ajallista-gappia? (let [aikaleima-nykyinen-merkinta (c/from-sql-time (:aikaleima nykyinen-reittimerkinta))
                                    aikaleima-seuraava-merkinta (c/from-sql-time (:aikaleima seuraava-reittimerkinta))]
                                (if (or
@@ -104,7 +111,13 @@
         ;; reittimerkintä
         jatkuvat-mittausarvot-samat?
         ;; Seuraava piste ei aiheuta ympärikääntymistä. Jos aiheuttaa, reitti tulee katkaista.
-        seuraavassa-pisteessa-ei-kaannyta-ympari?))))
+        seuraavassa-pisteessa-ei-kaannyta-ympari?
+        ;; Reittimerkintöjä pitäisi kertyä tiheästi ja tasaisin väliajoin. On kuitenkin mahdollista, että
+        ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti
+        ;; Tällä esteään mm. tilanne, jossa kaksi harvaa pistettä osuu kevyen liikenteen väylällä eri osille,
+        ;; jotka ovat kaukana toisistaan (kevyen liikenteen tien osat eivät välttämättä muodosta yhtenäistä,
+        ;; jatkuvaa tietä, vaan osat saattavat olla maantieteellisesti kaukana toisistaan).
+        etaisyys-edelliseen-kohtuullinen?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
