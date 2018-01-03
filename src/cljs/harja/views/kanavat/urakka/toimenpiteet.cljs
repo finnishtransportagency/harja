@@ -74,8 +74,7 @@
        " " toiminto "."))
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
-                                          toimenpideinstanssit tehtavat karttavalinta-tehty-fn
-                                          poista-valinta-fn]}]
+                                          toimenpideinstanssit tehtavat]}]
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
         valitun-kohteen-osat (cons nil (into [] (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))))]
@@ -94,9 +93,18 @@
       :pakollinen? true}
      (lomake/ryhma
        {:otsikko "Kohde/sijainti"}
+       (when (nil? (::kanavan-toimenpide/kohde toimenpide))
+         {:nimi ::kanavan-toimenpide/sijainti
+          :otsikko "Sijainti"
+          :uusi-rivi? true
+          :tyyppi :sijaintivalitsin
+          :paikannus? false
+          :pakollinen? true
+          :poista-valinta? true
+          ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
+          :karttavalinta-tehty-fn :kayta-lomakkeen-atomia})
        (when (nil? (::kanavan-toimenpide/sijainti toimenpide))
          {:otsikko "Kohde"
-          :uusi-rivi? true
           :nimi ::kanavan-toimenpide/kohde
           :tyyppi :valinta
           :aseta (fn [rivi arvo]
@@ -107,16 +115,7 @@
                          (assoc ::kanavan-toimenpide/kohde arvo))
                      (assoc rivi ::kanavan-toimenpide/kohde arvo)))
           :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
-          :valinnat kohteet})
-       (when (nil? (::kanavan-toimenpide/kohde toimenpide))
-         {:nimi ::kanavan-toimenpide/sijainti
-          :otsikko "Sijainti"
-          :tyyppi :sijaintivalitsin
-          :paikannus? false
-          :pakollinen? true
-          :poista-valinta-fn poista-valinta-fn
-          ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
-          :karttavalinta-tehty-fn karttavalinta-tehty-fn}))
+          :valinnat kohteet}))
      (when (::kanavan-toimenpide/kohde toimenpide)
        {:otsikko "Kohteen osa"
         :nimi ::kanavan-toimenpide/kohteenosa
@@ -204,8 +203,7 @@
 
 (defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
                         {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
-                                tallenna-lomake-fn poista-toimenpide-fn
-                                karttavalinta-tehty-fn poista-valinta-fn]}]
+                                tallenna-lomake-fn poista-toimenpide-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
         kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
@@ -226,8 +224,6 @@
                                      :kohteet kanavakohteet
                                      :huoltokohteet huoltokohteet
                                      :toimenpideinstanssit toimenpideinstanssit
-                                     :tehtavat tehtavat
-                                     :karttavalinta-tehty-fn karttavalinta-tehty-fn
-                                     :poista-valinta-fn poista-valinta-fn})
+                                     :tehtavat tehtavat})
         avattu-toimenpide]
        [ajax-loader "Ladataan..."])]))

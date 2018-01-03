@@ -1137,7 +1137,7 @@
   ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
   [{:keys [karttavalinta? paikannus?
            paikannus-onnistui-fn paikannus-epaonnistui-fn
-           karttavalinta-tehty-fn poista-valinta-fn]} data]
+           karttavalinta-tehty-fn poista-valinta?]} data]
   (let [karttavalinta? (if (some? karttavalinta?) karttavalinta? true)
         paikannus? (if (some? paikannus?) paikannus? true)
 
@@ -1160,7 +1160,7 @@
                       (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
                       (karttatasot/taso-paalle! :sijaintivalitsin)))
       (komp/ulos #(karttatasot/taso-pois! :sijaintivalitsin))
-      (fn [_ _]
+      (fn [_ data]
         [:div
          (when paikannus?
            [napit/yleinen-ensisijainen
@@ -1182,16 +1182,19 @@
              [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
                                                  :kun-valmis #(do
                                                                 (lopeta-karttavalinta)
-                                                                (karttavalinta-tehty-fn
-                                                                  {:type :point :coordinates %}))}]))
-         (when (and poista-valinta-fn
+                                                                (if (= :kayta-lomakkeen-atomia karttavalinta-tehty-fn)
+                                                                  (reset! data {:type :point :coordinates %})
+                                                                  (karttavalinta-tehty-fn
+                                                                    {:type :point :coordinates %})))}]))
+         (when (and poista-valinta?
                     (not @karttavalinta-kaynnissa?)
                     (not @paikannus-kaynnissa?)
                     (not (nil? @data)))
            [napit/poista
             "Poista valinta"
             (fn [e]
-              (poista-valinta-fn @data))])]))))
+              (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
+              (reset! data nil))])]))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
