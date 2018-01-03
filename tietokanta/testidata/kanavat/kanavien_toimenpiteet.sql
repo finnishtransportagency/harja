@@ -308,4 +308,7 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   VALUES ('2016-08-01', '2017-07-31', 1, 'h', 41, tyonjohto_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto);
   INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja) VALUES ((SELECT MAX(id) FROM kan_toimenpide),
     tyonjohto_tpk_id, 3, kayttaja_id_jvh);
+
+  INSERT INTO kan_toimenpide_kommentti (tila, aika, "kayttaja-id", "toimenpide-id") VALUES (
+    'luotu', NOW(), kayttaja_id_jvh, (SELECT MAX(id) FROM kan_toimenpide));
 END $$;
