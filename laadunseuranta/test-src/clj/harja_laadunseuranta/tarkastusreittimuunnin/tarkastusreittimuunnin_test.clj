@@ -207,8 +207,8 @@
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi
                        (lisaa-reittimerkinnoille-mockattu-tieosoite
                          testidata/tarkastus-jossa-pisteiden-sijainti-eri))]
-    ;; Muunnettu määrällisesti oikein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 1))
+    ;; Muunnettu määrällisesti oikein (reitti katkeaa kerran, muodostuu kaksi tarkastusta)
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 ;; --------Liittyvät havainnot --------
