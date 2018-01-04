@@ -342,3 +342,13 @@
             :tr-loppuetaisyys (:tr-loppuetaisyys viimeinen-alikohde-venytettyna))]
          ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
          (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
+
+(defn- tieosilla-maantieteellinen-jatkumo?
+  "Palauttaa true, mikäli kahdella tieosalla on maantieteellinen jatkumo.
+   Käytännössä tämä tarkoittaa sitä, että tieosien viivat ovat hyvin lähellä tosiaan.
+
+   Vaatii, että molemmat geometriat ovat olemassa."
+  [tiegeometria1 tiegeometria2]
+  (assert (and tiegeometria1 tiegeometria2) (str "Tiegeometria tyhjä, sain: " tiegeometria1 tiegeometria2))
+  )
+
