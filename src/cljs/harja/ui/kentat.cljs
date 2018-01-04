@@ -1162,7 +1162,9 @@
                                             (go (let [piste (<! (k/post! :hae-piste-kartalle koordinaatit))]
                                                   (if (k/virhe? piste)
                                                     (reset! data {:virhe "Pisteen haku epäonnistui"})
-                                                    (do (reset! data piste)
+                                                    (do (if (= :kayta-lomakkeen-atomia karttavalinta-tehty-fn)
+                                                          (reset! data piste)
+                                                          (karttavalinta-tehty-fn piste))
                                                         (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti piste}))))))))
               paikannus-epaonnistui-fn (or paikannus-epaonnistui-fn
                                            (fn [virhe]
@@ -1178,7 +1180,8 @@
               aloita-karttavalinta (fn []
                                      (reset! karttavalinta-kaynnissa? true))]
           [:div
-           (when paikannus?
+           (when (and paikannus?
+                      (geo/geolokaatio-tuettu?))
              [napit/yleinen-ensisijainen
               "Paikanna"
               #(when-not @paikannus-kaynnissa?

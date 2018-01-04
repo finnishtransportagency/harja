@@ -17,7 +17,6 @@
             [harja.ui.lomake :as lomake]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.geo :as geo]
             [reagent.core :as r]))
 
 (defn valittu-tehtava [toimenpide]
@@ -100,13 +99,11 @@
           :otsikko "Sijainti"
           :uusi-rivi? true
           :tyyppi :sijaintivalitsin
-          :paikannus? (geo/geolokaatio-tuettu?)
           ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
           ;; haun aikana
           :paikannus-kaynnissa?-atom (r/wrap nil
                                              (fn [_]
                                                (paikannus-kaynnissa-fn)))
-          :pakollinen? true
           :poista-valinta? true
           :karttavalinta-tehty-fn :kayta-lomakkeen-atomia})
        (when (and (nil? (::kanavan-toimenpide/sijainti toimenpide))
