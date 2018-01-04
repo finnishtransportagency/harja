@@ -104,7 +104,7 @@
     (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
     (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
     (when-not etaisyys-edelliseen-kohtuullinen? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste liian kaukanan edellisestä, katkaistaan reitti"))
-    (when-not tieosissa-yhtenainen-jatkumo? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava tieosa ei muodosta jatkumoa."))
+    (when-not tieosissa-yhtenainen-jatkumo? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava tieosa ei muodosta jatkumoa kun siirrytään " (tierekisteri/tierekisteriosoite-tekstina (:tr-osoite nykyinen-reittimerkinta)) " --> " (tierekisteri/tierekisteriosoite-tekstina (:tr-osoite seuraava-reittimerkinta))))
 
     (boolean
       (and
