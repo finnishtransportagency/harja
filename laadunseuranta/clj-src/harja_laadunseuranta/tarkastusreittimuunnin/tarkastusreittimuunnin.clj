@@ -64,6 +64,10 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
+        ;; TODO Erota kahdeksi:
+        ;; - Tutki maantieteellinen jatkumo joka tapauksessa?
+        ;; - Osalooginen jatkumo, jos väliin ei jää osia. Tai jos jää, niin näitä osia ei ole olemassa.
+        ;; Jos osat ovat olemassa, eivät kaiketi voi olla osa jatkumoa.
         tieosissa-jatkumo? (let [edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
                                  seuraava-osoite (:tr-osoite seuraava-reittimerkinta)]
                              ;; Tämä päättely vaatii, että merkinnöille on saatu haettua TR-osoite ja osan geometria.
