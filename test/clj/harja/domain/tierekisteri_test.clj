@@ -505,54 +505,55 @@
       "Tyhjä kohdelista osataan käsitellä"))
 
 (deftest tieosilla-maantieteellinen-jatkumo?
-  (testing "Line-käsittely toimii" (let [tie1-geo {:type :line
-                                                   :points [[1 2] [2 2] [200 200] [3 4]]}
-                                         tie2-geo {:type :line
-                                                   :points [[2 2]]}]
-                                     (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo)))
+  (testing "Line-käsittely toimii"
+    (let [tie1-geo {:type :line
+                    :points [[1 2] [2 2] [200 200] [3 4]]}
+          tie2-geo {:type :line
+                    :points [[2 2]]}]
+      (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo)))
 
-           (let [tie1-geo {:type :line
-                           :points [[1 2] [2 2] [200 200] [3 4]]}
-                 tie2-geo {:type :line
-                           :points [[9000 2000]]}]
-             (is (not (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo))))
+    (let [tie1-geo {:type :line
+                    :points [[1 2] [2 2] [200 200] [3 4]]}
+          tie2-geo {:type :line
+                    :points [[9000 2000]]}]
+      (is (not (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo))))
 
-           (let [tie1-geo {:type :line
-                           :points [[1 2] [2 2] [200 200] [3 4]]}
-                 tie2-geo {:type :line
-                           :points [[2 2] [201 201]]}]
-             (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo))))
+    (let [tie1-geo {:type :line
+                    :points [[1 2] [2 2] [200 200] [3 4]]}
+          tie2-geo {:type :line
+                    :points [[2 2] [201 201]]}]
+      (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo))))
 
   (testing "Multi-line käsittely toimii"
-           (let [tie1-geo {:type :multiline
-                           :lines [{:type :line
-                                    :points [[1 2] [2 2] [200 200] [3 4]]}
-                                   {:type :line
-                                    :points [[9000 2000]]}]}
-                 tie2-geo {:type :line
-                           :points [[2 2]]}]
-             (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo)))
+    (let [tie1-geo {:type :multiline
+                    :lines [{:type :line
+                             :points [[1 2] [2 2] [200 200] [3 4]]}
+                            {:type :line
+                             :points [[9000 2000]]}]}
+          tie2-geo {:type :line
+                    :points [[2 2]]}]
+      (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo)))
 
-           (let [tie1-geo {:type :multiline
-                           :lines [{:type :line
-                                    :points [[1 2] [2 2] [200 200] [3 4]]}
-                                   {:type :line
-                                    :points [[9000 2000]]}]}
-                 tie2-geo {:type :multiline
-                           :lines [{:type :line
-                                    :points [[3 4] [200 200]]}
-                                   {:type :line
-                                    :points [[50000 20000]]}]}]
-             (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo)))
+    (let [tie1-geo {:type :multiline
+                    :lines [{:type :line
+                             :points [[1 2] [2 2] [200 200] [3 4]]}
+                            {:type :line
+                             :points [[9000 2000]]}]}
+          tie2-geo {:type :multiline
+                    :lines [{:type :line
+                             :points [[3 4] [200 200]]}
+                            {:type :line
+                             :points [[50000 20000]]}]}]
+      (is (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo)))
 
-           (let [tie1-geo {:type :multiline
-                           :lines [{:type :line
-                                    :points [[1 2] [2 2] [200 200] [3 4]]}
-                                   {:type :line
-                                    :points [[9000 2000]]}]}
-                 tie2-geo {:type :multiline
-                           :lines [{:type :line
-                                    :points [[50000 20000] [70000 80000]]}
-                                   {:type :line
-                                    :points [[40000 22000]]}]}]
-             (is (not (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo))))))
+    (let [tie1-geo {:type :multiline
+                    :lines [{:type :line
+                             :points [[1 2] [2 2] [200 200] [3 4]]}
+                            {:type :line
+                             :points [[9000 2000]]}]}
+          tie2-geo {:type :multiline
+                    :lines [{:type :line
+                             :points [[50000 20000] [70000 80000]]}
+                            {:type :line
+                             :points [[40000 22000]]}]}]
+      (is (not (tierekisteri/tieosilla-maantieteellinen-jatkumo? tie1-geo tie2-geo))))))
