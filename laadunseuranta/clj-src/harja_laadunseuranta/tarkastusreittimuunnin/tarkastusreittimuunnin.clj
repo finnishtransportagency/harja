@@ -67,12 +67,14 @@
         tieosissa-yhtenainen-jatkumo? (let [edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
                                             seuraava-osoite (:tr-osoite seuraava-reittimerkinta)
                                             edellinen-geometria (:geometria edellinen-osoite)
-                                            seuraava-geometria (:geometria seuraava-osoite)]
-                                        (if (and edellinen-geometria seuraava-geometria)
-                                          (tierekisteri/tieosilla-maantieteellinen-jatkumo?
-                                            edellinen-geometria
-                                            seuraava-geometria)
-                                          true)) ;; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
+                                            seuraava-geometria (:geometria seuraava-osoite)
+                                            looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:losa edellinen-osoite))) 1)
+                                            maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
+                                                                      (tierekisteri/tieosilla-maantieteellinen-jatkumo?
+                                                                        edellinen-geometria
+                                                                        seuraava-geometria)
+                                                                      true)] ;; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
+                                        (and looginen-osajatko? maantieteellinen-jatko?))
         etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
                                                                     (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
                                                 seuraava-piste (:sijainti seuraava-reittimerkinta)]
@@ -129,12 +131,13 @@
         ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti.
         etaisyys-edelliseen-kohtuullinen?
         ;; Normaalisti tienumeron osat muodostavat maantieteellisen jatkumon, eli osista muodostuu tie,
-        ;; jonka osat muodostavat yhtenäisen jatkumon alusta loppuun.
-        ;; Aina näin ei kuitenkaan ole. Tieltä saattaa esim. puuttua kohdeosia kokonaan. Tämä ei ole vielä
-        ;; varsinainen ongelma, mikäli olemassa olevat osat muodostavat yhtenäisen jatkumon.
-        ;; Kuitenkin ainakin kevyen liikenteen väylät (esim. tie nro 70012) saattavat sisältää osia, jotka ovat
-        ;; maantieteellisest täysin irrallaan toisistaan. Seuraavan kohdeosan tulee siis olla
-        ;; maantieteellisesti osa edellistä.
+        ;; jonka osat muodostavat yhtenäisen maantieteellisen jatkumon alusta loppuun.
+        ;; Aina näin ei kuitenkaan ole. Tieltä saattaa esim. puuttua kohdeosia kokonaan. Lisäksi
+        ;; ainakin kevyen liikenteen väylät (esim. tie nro 70012) saattavat sisältää osia, jotka ovat
+        ;; maantieteellisest täysin irrallaan toisistaan.
+        ;; Jotta ajettu reitti on yhtenäinen, tulee seuraavan osan olla maantieteellisesti jatkoa seuraavalle,
+        ;; eikä väliin saa jäädä ajamattomia osia. Jos näin ei ole, on turvallista katkaista reitti.
+        ;; Väliin jäävät osat saattavat olla jossain ihan muualla, tai sitten niitä ei ole olemassakaan.
         tieosissa-yhtenainen-jatkumo?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
