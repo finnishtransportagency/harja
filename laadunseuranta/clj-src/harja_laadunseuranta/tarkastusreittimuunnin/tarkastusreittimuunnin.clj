@@ -66,7 +66,7 @@
                                     ))
         tieosissa-jatkumo? (let [edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
                                  seuraava-osoite (:tr-osoite seuraava-reittimerkinta)]
-                             ;; Tämä päättely vaatii, että merkinnöille on saatu haettua TR-osoite
+                             ;; Tämä päättely vaatii, että merkinnöille on saatu haettua TR-osoite ja osan geometria.
                              ;; Jos näin ei ole, ei tiedetä missä käyttäjä on ajanut.
                              ;; Oletetaan reitin olleen yhtenäinen kunnes varmuudella toisin tiedetään.
                              (if (and edellinen-osoite seuraava-osoite)
