@@ -32,7 +32,9 @@
       (fn []
         (tieverkon-tuonti/vie-tieverkko-kantaan
           testitietokanta
-          "file:///Users/mikkoro/Desktop/Tieverkko-testi/Tieosoiteverkko.shp")))))
+          "file:///Users/mikkoro/Desktop/Tieverkko-testi/Tieosoiteverkko.shp"))
+      nil
+      nil)))
 
 (defn aja-pohjavesialueen-paivitys
   "REPL-testiajofunktio"
