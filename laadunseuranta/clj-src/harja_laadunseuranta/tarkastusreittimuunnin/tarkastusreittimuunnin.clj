@@ -10,6 +10,7 @@
             [harja-laadunseuranta.kyselyt :as q]
             [harja-laadunseuranta.utils :as utils]
             [harja.kyselyt.tarkastukset :as tark-q]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja-laadunseuranta.tarkastusreittimuunnin.ramppianalyysi :as ramppianalyysi]
             [harja-laadunseuranta.tarkastusreittimuunnin.ymparikaantyminen :as ymparikaantyminen]
             [harja-laadunseuranta.tarkastusreittimuunnin.virheelliset-tiet :as virheelliset-tiet]
@@ -42,7 +43,7 @@
 (defn- tarkastus-jatkuu?
   "Ottaa reittimerkinnän ja järjestyksesä seuraavan reittimerkinnän ja kertoo muodostavatko ne loogisen jatkumon,
    toisin sanoen tulkitaanko seuraavan pisteen olevan osa samaa tarkastusta vai ei."
-  [nykyinen-reittimerkinta seuraava-reittimerkinta]
+  [db nykyinen-reittimerkinta seuraava-reittimerkinta]
   (let [jatkuvat-havainnot-pysyvat-samana? (= (:jatkuvat-havainnot nykyinen-reittimerkinta)
                                               (:jatkuvat-havainnot seuraava-reittimerkinta))
         sama-tie-jatkuu? (boolean (or
@@ -64,26 +65,38 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
-        ;; TODO Erota kahdeksi:
-        ;; - Tutki maantieteellinen jatkumo joka tapauksessa?
-        ;; - Osalooginen jatkumo, jos väliin ei jää osia. Tai jos jää, niin näitä osia ei ole olemassa.
-        ;; Jos osat ovat olemassa, eivät kaiketi voi olla osa jatkumoa.
-        tieosissa-jatkumo? (let [edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
-                                 seuraava-osoite (:tr-osoite seuraava-reittimerkinta)]
-                             ;; Tämä päättely vaatii, että merkinnöille on saatu haettua TR-osoite ja osan geometria.
-                             ;; Jos näin ei ole, ei tiedetä missä käyttäjä on ajanut.
-                             ;; Oletetaan reitin olleen yhtenäinen kunnes varmuudella toisin tiedetään.
-                             (if (and edellinen-osoite seuraava-osoite)
-                               (let [looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
-                                     edellinen-geometria (:geometria edellinen-osoite)
-                                     seuraava-geometria (:geometria seuraava-osoite)
-                                     maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
-                                                               (tierekisteri/tieosilla-maantieteellinen-jatkumo?
-                                                                 edellinen-geometria
-                                                                 seuraava-geometria)
-                                                               true)] ; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
-                                 (and looginen-osajatko? maantieteellinen-jatko?))
-                               true)) ; Eipä voida tietää. Ollaan taas optimistisia
+        tieosissa-jatkumo? (if sama-tie-jatkuu?
+                             (let [;; Tämä päättely vaatii, että merkinnöille on saatu haettua TR-osoite ja osan geometria.
+                                   ;; Jos näin ei ole, ei tiedetä missä käyttäjä on ajanut.
+                                   ;; Tämä menee siis falseksi vain silloin jos varmasti tiedetään, ettei jatkumoa ole.
+                                   edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
+                                   seuraava-osoite (:tr-osoite seuraava-reittimerkinta)
+                                   edellinen-geometria (:geometria edellinen-osoite)
+                                   seuraava-geometria (:geometria seuraava-osoite)
+                                   maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
+                                                             (tierekisteri/tieosilla-maantieteellinen-jatkumo?
+                                                               edellinen-geometria
+                                                               seuraava-geometria)
+                                                             true)
+                                   valissa-osia? (if (and edellinen-osoite seuraava-osoite)
+                                                   (> (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
+                                                   false)
+                                   looginen-osajatko? (if valissa-osia?
+                                                        ;; Seuraava osa ei jatku loogisesti seuraavasta, vaan väliin jää osanumeroita.
+                                                        ;; Tarkistetaan näiden osien tilanne. Mikäli niitä ei ole olemassa, asia on ok.
+                                                        ;; Mikäli osat ovat olemassa, niiden tulisi muodostaa looginen jatkumo
+                                                        ;; nykyiseen osaan. Tämän tarkistaminen on kuitenkin melko työlästä, joten teemme oletuksen,
+                                                        ;; että osat eivät ole maantieteellisesti osa samaa tietä eikä reitti ei ole yhtenevä.
+                                                        ;; Käytännössä ainoa tilanne, jolloin tämä päättely on virheellinen, on se kun ajetaan
+                                                        ;; kovalla nopeudella tosi lyhyen osan yli eikä ko. osaan tallennu merkintää.
+                                                        ;; Tätä ei pitäisi tapahtua kovin usein ja niin lyhyitä osia on myös suhteellisen harvassa.
+                                                        (not (tr-haku/osavali-olemassa? db
+                                                                                        (:tie nykyinen-reittimerkinta)
+                                                                                        (:aosa nykyinen-reittimerkinta)
+                                                                                        (:aosa seuraava-reittimerkinta)))
+                                                        true)]
+                               (and maantieteellinen-jatko? looginen-osajatko?))
+                             false)
         etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
                                                                     (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
                                                 seuraava-piste (:sijainti seuraava-reittimerkinta)]
@@ -145,8 +158,7 @@
         ;; ainakin kevyen liikenteen väylät (esim. tie nro 70012) saattavat sisältää osia, jotka ovat
         ;; maantieteellisest täysin irrallaan toisistaan.
         ;; Jotta ajettu reitti on yhtenäinen, tulee seuraavan osan olla maantieteellisesti jatkoa seuraavalle,
-        ;; eikä väliin saa jäädä ajamattomia osia. Jos näin ei ole, on turvallista katkaista reitti.
-        ;; Väliin jäävät osat saattavat olla jossain ihan muualla, tai sitten niitä ei ole olemassakaan.
+        ;; eikä väliin saa jäädä sellaisia osia, jotka sijaitsevat jossain muualla.
         tieosissa-jatkumo?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
@@ -327,13 +339,13 @@
 
 (defn- yhdista-jatkuvat-reittimerkinnat
   "Ottaa joukon reittimerkintöjä ja yhdistää ne yhdeksi loogiseksi jatkumoksi."
-  [reittimerkinnat]
+  [db reittimerkinnat]
   (reduce
     (fn [reittimerkinnat seuraava-merkinta]
       (if (empty? reittimerkinnat)
         (conj reittimerkinnat seuraava-merkinta)
         (let [viimeisin-yhdistetty-reittimerkinta (last reittimerkinnat)]
-          (if (tarkastus-jatkuu? viimeisin-yhdistetty-reittimerkinta seuraava-merkinta)
+          (if (tarkastus-jatkuu? db viimeisin-yhdistetty-reittimerkinta seuraava-merkinta)
             ;; Sama tarkastus jatkuu, ota seuraavan mittauksen tiedot
             ;; ja lisää ne viimeisimpään reittimerkintään
             (assoc reittimerkinnat
@@ -373,11 +385,11 @@
 
 (defn- reittimerkinnat-reitillisiksi-tarkastuksiksi
   "Käy annetut reittimerkinnät läpi ja muodostaa niistä reitilliset tarkastukset"
-  [reittimerkinnat]
+  [db reittimerkinnat]
   (let [jatkuvat-reittimerkinnat (filter #(and (not (pistemainen-havainto? %))
                                                (not (toiseen-merkintaan-liittyva-merkinta? %)))
                                          reittimerkinnat)
-        yhdistetyt-reittimerkinnat (yhdista-jatkuvat-reittimerkinnat jatkuvat-reittimerkinnat)]
+        yhdistetyt-reittimerkinnat (yhdista-jatkuvat-reittimerkinnat db jatkuvat-reittimerkinnat)]
     (mapv reittimerkinta-tarkastukseksi yhdistetyt-reittimerkinnat)))
 
 (defn- reittimerkinnat-pistemaisiksi-tarkastuksiksi
@@ -450,13 +462,14 @@
                                               tilanteet, joissa muutama yksittäinen piste osuu eri tielle esim. siltojen
                                               ja risteysten kohdalla.
                                               Oletus: true."
-  ([tr-osoitteelliset-reittimerkinnat]
-   (reittimerkinnat-tarkastuksiksi tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true
-                                                                      :analysoi-ymparikaantymiset? true
-                                                                      :analysoi-virheelliset-tiet? true}))
-  ([tr-osoitteelliset-reittimerkinnat optiot]
+  ([db tr-osoitteelliset-reittimerkinnat]
+   (reittimerkinnat-tarkastuksiksi db tr-osoitteelliset-reittimerkinnat {:analysoi-rampit? true
+                                                                         :analysoi-ymparikaantymiset? true
+                                                                         :analysoi-virheelliset-tiet? true}))
+  ([db tr-osoitteelliset-reittimerkinnat optiot]
    (let [kasiteltavat-merkinnat (valmistele-merkinnat-kasittelyyn tr-osoitteelliset-reittimerkinnat optiot)
          tarkastukset {:reitilliset-tarkastukset (reittimerkinnat-reitillisiksi-tarkastuksiksi
+                                                   db
                                                    kasiteltavat-merkinnat)
                        :pistemaiset-tarkastukset (reittimerkinnat-pistemaisiksi-tarkastuksiksi
                                                    kasiteltavat-merkinnat)}
