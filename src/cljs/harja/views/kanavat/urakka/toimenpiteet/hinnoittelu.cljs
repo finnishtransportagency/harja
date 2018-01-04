@@ -280,32 +280,38 @@
 
 
 (defn hinnoittelunappi [e! app* hinta toimenpide-rivi tila]
-  (let [{:keys [teksti nappi]} (case tila
-                                 (nil :poistettu)
-                                 {:teksti "Hinnoittele"
-                                  :nappi napit/yleinen-ensisijainen}
+  (let [{:keys [teksti
+                luokka
+                ikoni]} (case tila
+                          (nil :poistettu)
+                          {:teksti "Hinnoittele"
+                           :luokka "nappi-ensisijainen"
+                           :ikoni (ikonit/livicon-pen)}
 
-                                 (:luotu :muokattu)
-                                 {:teksti "Muokkaa"
-                                  :nappi napit/yleinen-toissijainen}
+                          (:luotu :muokattu)
+                          {:teksti "Muokkaa"
+                           :luokka "nappi-toissijainen"
+                           :ikoni (ikonit/livicon-pen)}
 
-                                 :hyvaksytty
-                                 {:teksti "Tarkastele"
-                                  :nappi napit/hyvaksy}
+                          :hyvaksytty
+                          {:teksti "Tarkastele"
+                           :luokka "nappi-myonteinen"
+                           :ikoni (ikonit/livicon-eye)}
 
-                                 :hylatty
-                                 {:teksti "Käsittele"
-                                  :nappi napit/peruuta})]
+                          :hylatty
+                          {:teksti "Käsittele"
+                           :luokka "nappi-kielteinen"
+                           :ikoni (ikonit/livicon-pen)})]
     [:div.arvo-ja-nappi
      (when-not (#{nil :poistettu} tila)
        [:span.arvo-ja-nappi-arvo
         hinta])
-     [nappi
+     [napit/nappi
       teksti
       #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
       {:ikoninappi? false
-       :ikoni (ikonit/livicon-pen)
-       :luokka (str "btn-xs arvo-ja-nappi-nappi")
+       :ikoni ikoni
+       :luokka (str "btn-xs arvo-ja-nappi-nappi " luokka)
        :disabled (or (:id (:infolaatikko-nakyvissa app*))
                      (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                    oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
@@ -362,11 +368,12 @@
          {:otsikko "Palauta hinnoittelu käsittelyyn"
           :sisalto
           [:div "Toimenpide on jo hinnoiteltu, ja tilaaja on sen hyväksynyt. Jos tallennat hinnoittelun uudelleen,
-          tilaajan pitää myös hyväksyä hinnoittelu uudelleen. Oletko varma?"]
-          :hyvaksy "Tallenna"
+          tilaajan pitää myös hyväksyä hinnoittelu uudelleen. Ylikirjoitetaanko hinnoittelu?"]
           :toiminto-fn (fn []
                          (e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*))))
-          :napit [:takaisin :poista]})]
+          :hyvaksy "Kyllä, ylikirjoita hinnoittelu"})
+      {:luokka "btn-xs"
+       :ikoni (ikonit/livicon-pen)}]
 
      [napit/tallenna
      "Valmis"
