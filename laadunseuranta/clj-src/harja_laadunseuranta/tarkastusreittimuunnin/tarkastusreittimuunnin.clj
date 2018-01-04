@@ -68,7 +68,7 @@
                                             seuraava-osoite (:tr-osoite seuraava-reittimerkinta)
                                             edellinen-geometria (:geometria edellinen-osoite)
                                             seuraava-geometria (:geometria seuraava-osoite)
-                                            looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:losa edellinen-osoite))) 1)
+                                            looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
                                             maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
                                                                       (tierekisteri/tieosilla-maantieteellinen-jatkumo?
                                                                         edellinen-geometria
