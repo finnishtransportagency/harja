@@ -65,16 +65,18 @@
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
         tieosissa-yhtenainen-jatkumo? (let [edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
-                                            seuraava-osoite (:tr-osoite seuraava-reittimerkinta)
-                                            edellinen-geometria (:geometria edellinen-osoite)
-                                            seuraava-geometria (:geometria seuraava-osoite)
-                                            looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
-                                            maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
-                                                                      (tierekisteri/tieosilla-maantieteellinen-jatkumo?
-                                                                        edellinen-geometria
-                                                                        seuraava-geometria)
-                                                                      true)] ;; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
-                                        (and looginen-osajatko? maantieteellinen-jatko?))
+                                            seuraava-osoite (:tr-osoite seuraava-reittimerkinta)]
+                                        (if (and edellinen-osoite seuraava-osoite)
+                                          (let [edellinen-geometria (:geometria edellinen-osoite)
+                                                seuraava-geometria (:geometria seuraava-osoite)
+                                                looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
+                                                maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
+                                                                          (tierekisteri/tieosilla-maantieteellinen-jatkumo?
+                                                                            edellinen-geometria
+                                                                            seuraava-geometria)
+                                                                          true)] ; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
+                                            (and looginen-osajatko? maantieteellinen-jatko?))
+                                          true)) ; Eipä voida tietää. Ollaan taas optimistisia
         etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
                                                                     (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
                                                 seuraava-piste (:sijainti seuraava-reittimerkinta)]
