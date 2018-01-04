@@ -11,7 +11,6 @@
 
 (defn kirjaa-materiaali [db user materiaalikirjaus]
   "Kirjaa materiaalin käytön tai lisäyksen"
-  (clojure.pprint/pprint materiaalikirjaus)
   (if (::m/id materiaalikirjaus)
     (update! db ::m/materiaali
              (muok/lisaa-muokkaustiedot materiaalikirjaus ::m/id user)
