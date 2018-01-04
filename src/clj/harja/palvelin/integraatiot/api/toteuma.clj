@@ -146,8 +146,4 @@
         toteuma-id
         materiaalikoodi-id
         (get-in materiaali [:maara :maara])
-        (:id kirjaaja))))
-  ;; Päivitä sopimuksen päivän materiaalinkäyttö. Joissain urakoissa (HAR-6489) viestistä voi puuttua
-  ;; sopimusId, tällöin kaivetaan sopimukset kannasta ennen cachetaulun päivitystä
-  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus (hae-sopimus-id db urakka-id toteuma)
-                                                         :alkupvm (:alkanut toteuma)}))
+        (:id kirjaaja)))))
