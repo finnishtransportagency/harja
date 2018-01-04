@@ -11,7 +11,6 @@
 
 (defn kirjaa-materiaali [db user materiaalikirjaus]
   "Kirjaa materiaalin käytön tai lisäyksen"
-  (println "lisätään/päivitetään materiaalikirjaus:")
   (clojure.pprint/pprint materiaalikirjaus)
   (if (::m/id materiaalikirjaus)
     (update! db ::m/materiaali
@@ -21,7 +20,6 @@
              (muok/lisaa-muokkaustiedot materiaalikirjaus ::m/id user))))
 
 (defn poista-materiaalikirjaus [db user materiaali-id]
-  (println "poistetaan materiaalikirjaus:" materiaali-id)
   (update! db ::m/materiaali
            (muok/poistotiedot user)
            {::m/id materiaali-id}))
