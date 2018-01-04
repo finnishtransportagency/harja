@@ -64,19 +64,19 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
-        tieosissa-yhtenainen-jatkumo? (let [edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
-                                            seuraava-osoite (:tr-osoite seuraava-reittimerkinta)]
-                                        (if (and edellinen-osoite seuraava-osoite)
-                                          (let [edellinen-geometria (:geometria edellinen-osoite)
-                                                seuraava-geometria (:geometria seuraava-osoite)
-                                                looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
-                                                maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
-                                                                          (tierekisteri/tieosilla-maantieteellinen-jatkumo?
-                                                                            edellinen-geometria
-                                                                            seuraava-geometria)
-                                                                          true)] ; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
-                                            (and looginen-osajatko? maantieteellinen-jatko?))
-                                          true)) ; Eipä voida tietää. Ollaan taas optimistisia
+        tieosissa-jatkumo? (let [edellinen-osoite (:tr-osoite nykyinen-reittimerkinta)
+                                 seuraava-osoite (:tr-osoite seuraava-reittimerkinta)]
+                             (if (and edellinen-osoite seuraava-osoite)
+                               (let [edellinen-geometria (:geometria edellinen-osoite)
+                                     seuraava-geometria (:geometria seuraava-osoite)
+                                     looginen-osajatko? (<= (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
+                                     maantieteellinen-jatko? (if (and edellinen-geometria seuraava-geometria)
+                                                               (tierekisteri/tieosilla-maantieteellinen-jatkumo?
+                                                                 edellinen-geometria
+                                                                 seuraava-geometria)
+                                                               true)] ; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
+                                 (and looginen-osajatko? maantieteellinen-jatko?))
+                               true)) ; Eipä voida tietää. Ollaan taas optimistisia
         etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
                                                                     (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
                                                 seuraava-piste (:sijainti seuraava-reittimerkinta)]
@@ -108,7 +108,7 @@
     (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
     (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
     (when-not etaisyys-edelliseen-kohtuullinen? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste liian kaukanan edellisestä, katkaistaan reitti"))
-    (when-not tieosissa-yhtenainen-jatkumo? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava tieosa ei muodosta jatkumoa kun siirrytään " (tierekisteri/tierekisteriosoite-tekstina (:tr-osoite nykyinen-reittimerkinta)) " --> " (tierekisteri/tierekisteriosoite-tekstina (:tr-osoite seuraava-reittimerkinta))))
+    (when-not tieosissa-jatkumo? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava tieosa ei muodosta jatkumoa kun siirrytään " (tierekisteri/tierekisteriosoite-tekstina (:tr-osoite nykyinen-reittimerkinta)) " --> " (tierekisteri/tierekisteriosoite-tekstina (:tr-osoite seuraava-reittimerkinta))))
 
     (boolean
       (and
@@ -140,7 +140,7 @@
         ;; Jotta ajettu reitti on yhtenäinen, tulee seuraavan osan olla maantieteellisesti jatkoa seuraavalle,
         ;; eikä väliin saa jäädä ajamattomia osia. Jos näin ei ole, on turvallista katkaista reitti.
         ;; Väliin jäävät osat saattavat olla jossain ihan muualla, tai sitten niitä ei ole olemassakaan.
-        tieosissa-yhtenainen-jatkumo?))))
+        tieosissa-jatkumo?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
