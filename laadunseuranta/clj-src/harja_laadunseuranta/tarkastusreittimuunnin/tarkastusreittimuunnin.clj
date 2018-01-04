@@ -63,6 +63,7 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
+        tieosissa-yhtenainen-jatkumo? true
         etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
                                                                     (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
                                                 seuraava-piste (:sijainti seuraava-reittimerkinta)]
@@ -94,6 +95,7 @@
     (when-not jatkuvat-mittausarvot-samat? (log/debug (:sijainti seuraava-reittimerkinta) "Jatkuvat mittausarvot muuttuivat, katkaistaan reitti"))
     (when-not seuraavassa-pisteessa-ei-kaannyta-ympari? (log/debug (:sijainti seuraava-reittimerkinta) "Ympärikääntyminen havaittu, katkaistaan reitti"))
     (when-not etaisyys-edelliseen-kohtuullinen? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava piste liian kaukanan edellisestä, katkaistaan reitti"))
+    (when-not tieosissa-yhtenainen-jatkumo? (log/debug (:sijainti seuraava-reittimerkinta) "Seuraava tieosa ei muodosta jatkumoa."))
 
     (boolean
       (and
@@ -116,7 +118,15 @@
         seuraavassa-pisteessa-ei-kaannyta-ympari?
         ;; Reittimerkintöjä pitäisi kertyä tiheästi ja tasaisin väliajoin. On kuitenkin mahdollista, että
         ;; merkintöjä tulee harvemmin. Jos kahden pisteen välinen etäisyys kasvaa liian suureksi, katkaistaan reitti.
-        etaisyys-edelliseen-kohtuullinen?))))
+        etaisyys-edelliseen-kohtuullinen?
+        ;; Normaalisti tienumeron osat muodostavat maantieteellisen jatkumon, eli osista muodostuu tie,
+        ;; jonka osat muodostavat yhtenäisen jatkumon alusta loppuun.
+        ;; Aina näin ei kuitenkaan ole. Tieltä saattaa esim. puuttua kohdeosia kokonaan. Tämä ei ole vielä
+        ;; varsinainen ongelma, mikäli olemassa olevat osat muodostavat yhtenäisen jatkumon.
+        ;; Kuitenkin ainakin kevyen liikenteen väylät (esim. tie nro 70012) saattavat sisältää osia, jotka ovat
+        ;; maantieteellisest täysin irrallaan toisistaan. Seuraavan kohdeosan tulee siis olla
+        ;; maantieteellisesti osa edellistä.
+        tieosissa-yhtenainen-jatkumo?))))
 
 (defn- yhdista-reittimerkinnan-kaikki-havainnot
   "Yhdistää reittimerkinnän pistemäiset havainnot ja jatkuvat havainnot."
