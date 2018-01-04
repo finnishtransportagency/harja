@@ -8,6 +8,7 @@
             [harja.domain.kanavat.tyo :as tyo]
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
+            [harja.geo :as geo]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
@@ -96,16 +97,19 @@
                     {::muokkaustiedot/poistettu? (op/not= true)})))
 
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
-  (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
-    (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::muokkaustiedot/muokattu (pvm/nyt)
-                             ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
-    (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::toimenpide/kuittaaja-id kayttaja-id
-                             ::muokkaustiedot/luotu (pvm/nyt)
-                             ::muokkaustiedot/luoja-id kayttaja-id)]
-      (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))
+  (let [kanavatoimenpide (if (::toimenpide/sijainti kanavatoimenpide)
+                           (update kanavatoimenpide ::toimenpide/sijainti #(geo/geometry (geo/clj->pg %)))
+                           kanavatoimenpide)]
+    (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
+      (let [kanavatoimenpide (assoc kanavatoimenpide
+                               ::muokkaustiedot/muokattu (pvm/nyt)
+                               ::muokkaustiedot/muokkaaja-id kayttaja-id)]
+        (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+      (let [kanavatoimenpide (assoc kanavatoimenpide
+                               ::toimenpide/kuittaaja-id kayttaja-id
+                               ::muokkaustiedot/luotu (pvm/nyt)
+                               ::muokkaustiedot/luoja-id kayttaja-id)]
+        (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide)))))
 
 (defn hae-toimenpiteiden-tehtavan-hinnoittelu [db toimenpide-idt]
   (fetch db

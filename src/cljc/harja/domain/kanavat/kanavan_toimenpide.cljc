@@ -143,7 +143,8 @@
                 ::kohde-id
                 ::id
                 ::toimenpidekoodi-id
-                ::muu-toimenpide]))
+                ::muu-toimenpide
+                ::sijainti]))
 
 (s/def ::tallenna-kanavatoimenpide-kutsu
   (s/keys :req [::hae-kanavatoimenpiteet-kysely
