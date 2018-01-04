@@ -64,13 +64,13 @@
                                     ;; mutta seuraavassa on. Tässä tilanteessa reitti katkaistaan ja uusi alkaa
                                     ;; siitä pisteestä, jossa tieosoite on.
                                     ))
-        tieosissa-yhtenainen-jatkumo? (let [edellinen-geometria (:geometria nykyinen-reittimerkinta)
-                                            seuraava-geometria (:geometria seuraava-reittimerkinta)]
+        tieosissa-yhtenainen-jatkumo? (let [edellinen-geometria (get-in nykyinen-reittimerkinta [:tr-osoite :geometria])
+                                            seuraava-geometria (get-in seuraava-reittimerkinta [:tr-osoite :geometria])]
                                         (if (and edellinen-geometria seuraava-geometria)
                                           (tierekisteri/tieosilla-maantieteellinen-jatkumo?
-                                           edellinen-geometria
-                                           seuraava-geometria)
-                                          true))  ;; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
+                                            edellinen-geometria
+                                            seuraava-geometria)
+                                          true)) ;; Eipä voida tietää. Ollaan optimistisia, muuten katkeaa joka pisteellä
         etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
                                                                     (:sijainti (last (:sijainnit nykyinen-reittimerkinta))))
                                                 seuraava-piste (:sijainti seuraava-reittimerkinta)]
