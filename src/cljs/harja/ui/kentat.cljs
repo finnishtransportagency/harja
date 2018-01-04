@@ -1157,7 +1157,9 @@
 
     (komp/luo
       (komp/sisaan #(do
-                      (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
+                      (if (nil? @data)
+                        (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
+                        (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti @data}))
                       (karttatasot/taso-paalle! :sijaintivalitsin)))
       (komp/ulos #(karttatasot/taso-pois! :sijaintivalitsin))
       (fn [_ data]
