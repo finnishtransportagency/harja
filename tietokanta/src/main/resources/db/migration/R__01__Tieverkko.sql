@@ -267,7 +267,7 @@ DECLARE
   rivit laheinen_osoiterivi[];
 BEGIN
   rivit := ARRAY[]::laheinen_osoiterivi[];
-  FOR r IN SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d
+  FOR r IN SELECT tie,osa,ajorata,geom,ST_Distance(piste, geom) as d, ST_LineMerge(geom)
            FROM tr_osan_ajorata
            WHERE geom IS NOT NULL AND
                  ST_Intersects(piste, envelope)
@@ -275,7 +275,7 @@ BEGIN
   LOOP
     IF r.d <= tarkkuus THEN
       kohta := laske_tr_osan_kohta(r.geom, piste);
-      lr := (r.tie, r.osa, kohta.etaisyys, r.ajorata, r.d);
+      lr := (r.tie, r.osa, kohta.etaisyys, r.ajorata, r.d, ST_LineMerge(r.geom));
       rivit := rivit || lr;
     END IF;
   END LOOP;
