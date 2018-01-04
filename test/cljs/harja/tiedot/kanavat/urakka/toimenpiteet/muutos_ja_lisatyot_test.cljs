@@ -6,6 +6,7 @@
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.loki :refer [log]]
+            [harja.pvm :as pvm]
             [clojure.test :refer-macros [deftest is testing]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]))
 
