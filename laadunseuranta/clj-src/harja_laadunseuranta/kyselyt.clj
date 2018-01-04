@@ -28,7 +28,8 @@
      :aet (Integer/parseInt et)
      :ajorata (Integer/parseInt ajr)
      :etaisyys-gps-pisteesta (Float/parseFloat d)
-     :geometria (geo/pg->clj (PGgeometry. geom))}))
+     :geometria (when geom ;; Pitäisi olla aina olemassa, mutta tulee toimia ilmankin
+                  (geo/pg->clj (PGgeometry. geom)))}))
 
 (defn- kasittele-kantamerkinta [db merkinta]
   (let [jatkuvat-vakiohavaintoidt (into #{} (map :id (hae-jatkuvat-vakiohavainto-idt db)))
