@@ -16,7 +16,9 @@
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.geo :as geo]
+            [reagent.core :as r]))
 
 (defn valittu-tehtava [toimenpide]
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
@@ -74,7 +76,7 @@
        " " toiminto "."))
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
-                                          toimenpideinstanssit tehtavat]}]
+                                          toimenpideinstanssit tehtavat paikannus-kaynnissa-fn]}]
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
         valitun-kohteen-osat (cons nil (into [] (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))))]
@@ -92,18 +94,23 @@
       :fmt pvm/pvm-opt
       :pakollinen? true}
      (lomake/ryhma
-       {:otsikko "Kohde/sijainti"}
+       {:otsikko "Sijainti tai kohde"}
        (when (nil? (::kanavan-toimenpide/kohde toimenpide))
          {:nimi ::kanavan-toimenpide/sijainti
           :otsikko "Sijainti"
           :uusi-rivi? true
           :tyyppi :sijaintivalitsin
-          :paikannus? false
+          :paikannus? (geo/geolokaatio-tuettu?)
+          ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
+          ;; haun aikana
+          :paikannus-kaynnissa?-atom (r/wrap nil
+                                             (fn [_]
+                                               (paikannus-kaynnissa-fn)))
           :pakollinen? true
           :poista-valinta? true
-          ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten ei toimine tässäkään
           :karttavalinta-tehty-fn :kayta-lomakkeen-atomia})
-       (when (nil? (::kanavan-toimenpide/sijainti toimenpide))
+       (when (and (nil? (::kanavan-toimenpide/sijainti toimenpide))
+                 (not (:paikannus-kaynnissa? toimenpide)))
          {:otsikko "Kohde"
           :nimi ::kanavan-toimenpide/kohde
           :tyyppi :valinta
@@ -203,7 +210,8 @@
 
 (defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
                         {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
-                                tallenna-lomake-fn poista-toimenpide-fn]}]
+                                tallenna-lomake-fn poista-toimenpide-fn
+                                paikannus-kaynnissa-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
         kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
@@ -224,6 +232,7 @@
                                      :kohteet kanavakohteet
                                      :huoltokohteet huoltokohteet
                                      :toimenpideinstanssit toimenpideinstanssit
-                                     :tehtavat tehtavat})
+                                     :tehtavat tehtavat
+                                     :paikannus-kaynnissa-fn paikannus-kaynnissa-fn})
         avattu-toimenpide]
        [ajax-loader "Ladataan..."])]))
