@@ -9,7 +9,10 @@
        100.0)
     0.0))
 
-;; TODO APureista kulma-funktio tänne
+(defn- avg [arvot]
+  (if (empty? arvot)
+    0
+    (/ (reduce + 0 arvot) (count arvot))))
 
 (defn ms->sec
   "Muuntaa millisekunnit sekunneiksi"
