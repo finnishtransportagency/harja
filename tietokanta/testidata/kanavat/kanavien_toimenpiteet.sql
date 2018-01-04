@@ -13,6 +13,22 @@ DECLARE
   testitoimenpide_171112_id INTEGER;
   muutosaskare_tpk_id INTEGER;
 BEGIN
+
+  INSERT INTO toimenpidekoodi (nimi, taso, luotu, yksikko, suoritettavatehtava, hinnoittelu, emo)
+  VALUES ('Henkilöstö: muutosaskare', 4, now(), 'h', NULL,
+          '{yksikkohintainen}', (SELECT id FROM toimenpidekoodi WHERE koodi='24104'));
+  muutosaskare_tpk_id := (SELECT MAX(id) from toimenpidekoodi);
+
+  INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus, luoja)
+  VALUES ('2016-08-01', '2017-07-31', 'h', 41, muutosaskare_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto, kayttaja_id_jvh),
+    ('2017-08-01', '2018-07-31', 'h', 41, muutosaskare_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto, kayttaja_id_jvh);
+
+  INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
+  VALUES ('2017-08-01', '2018-07-31', 1, 'h', 45, tyonjohto_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto);
+
+  INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
+  VALUES ('2016-08-01', '2017-07-31', 1, 'h', 41, tyonjohto_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto);
+
 INSERT INTO kan_toimenpide
 (tyyppi,
  urakka,
@@ -227,7 +243,7 @@ INSERT INTO kan_toimenpide
 VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   urakka_id_saimaan_kanava,
   sopimus_id_saimaan_paahuolto,
-  '2017-01-12',
+  '2017-12-12',
   kohde_id_palli,
   NULL,
   huoltokohde_id_asennonmittauslaitteet,
@@ -235,13 +251,29 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
   'Testitoimenpide',
   'Sari Saimaankanavanrakentaja',
   kayttaja_id_jvh,
-  '2017-01-07',
+  '2017-01-12',
   kayttaja_id_jvh,
-  '2017-01-07',
+  '2017-01-12',
   kayttaja_id_jvh,
   FALSE,
   NULL,
   tpk_id_saimaan_kok_hint_tp);
+
+  INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja)
+  VALUES ((SELECT MAX(id) FROM kan_toimenpide),
+          muutosaskare_tpk_id, 10, kayttaja_id_jvh);
+
+  INSERT INTO kan_hinta (toimenpide, otsikko, yksikko, yksikkohinta, maara, luoja, ryhma)
+  VALUES ((SELECT MAX(id) FROM kan_toimenpide), 'Automies ja konevuokra', 'h', 30, 2, kayttaja_id_jvh, 'tyo');
+
+  INSERT INTO kan_hinta (toimenpide, otsikko, summa, luoja, ryhma)
+  VALUES ((SELECT MAX(id) FROM kan_toimenpide), 'Korjaushomma', 150, kayttaja_id_jvh, 'muu');
+
+  INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja) VALUES ((SELECT MAX(id) FROM kan_toimenpide),
+                                                                               tyonjohto_tpk_id, 3, kayttaja_id_jvh);
+
+  INSERT INTO kan_toimenpide_kommentti (tila, aika, "kayttaja-id", "toimenpide-id") VALUES (
+    'luotu', NOW() - INTERVAL '15 minutes', kayttaja_id_jvh, (SELECT MAX(id) FROM kan_toimenpide));
 
   INSERT INTO kan_toimenpide
   (tyyppi,
@@ -281,17 +313,6 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
           NULL,
           tpk_id_saimaan_kok_hint_tp);
   testitoimenpide_171112_id := (SELECT MAX(id) FROM kan_toimenpide);
-  INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja)
-  VALUES ((SELECT MAX(id) FROM kan_toimenpide WHERE tyyppi = 'kokonaishintainen'),
-      toimenpidekoodi_id_vv_laaja_yksiloimaton, 4, kayttaja_id_jvh);
-
-  INSERT INTO toimenpidekoodi (nimi, taso, luotu, yksikko, suoritettavatehtava, hinnoittelu, emo)
-    VALUES ('Henkilöstö: muutosaskare', 4, now(), 'h', NULL,
-    '{yksikkohintainen}', (SELECT id FROM toimenpidekoodi WHERE koodi='24104'));
-  muutosaskare_tpk_id := (SELECT MAX(id) from toimenpidekoodi);
-  INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus, luoja)
-  VALUES ('2016-08-01', '2017-07-31', 'h', 41, muutosaskare_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto, kayttaja_id_jvh),
-         ('2017-08-01', '2018-07-31', 'h', 41, muutosaskare_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto, kayttaja_id_jvh);
 
   INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja)
   VALUES (testitoimenpide_171112_id,
@@ -302,13 +323,13 @@ VALUES ('muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI,
 
   INSERT INTO kan_hinta (toimenpide, otsikko, summa, luoja, ryhma)
   VALUES (testitoimenpide_171112_id, 'Muuta könttäsummasälää', 400, kayttaja_id_jvh, 'muu');
-  INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
-  VALUES ('2017-08-01', '2018-07-31', 1, 'h', 45, tyonjohto_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto);
-  INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus)
-  VALUES ('2016-08-01', '2017-07-31', 1, 'h', 41, tyonjohto_tpk_id, urakka_id_saimaan_kanava, sopimus_id_saimaan_paahuolto);
+
   INSERT INTO kan_tyo (toimenpide, "toimenpidekoodi-id", maara, luoja) VALUES ((SELECT MAX(id) FROM kan_toimenpide),
     tyonjohto_tpk_id, 3, kayttaja_id_jvh);
 
   INSERT INTO kan_toimenpide_kommentti (tila, aika, "kayttaja-id", "toimenpide-id") VALUES (
-    'luotu', NOW(), kayttaja_id_jvh, (SELECT MAX(id) FROM kan_toimenpide));
+    'luotu', NOW() - INTERVAL '15 minutes', kayttaja_id_jvh, (SELECT MAX(id) FROM kan_toimenpide));
+
+  INSERT INTO kan_toimenpide_kommentti (tila, aika, "kayttaja-id", "toimenpide-id") VALUES (
+    'hyvaksytty', NOW() - INTERVAL '5 minutes', kayttaja_id_jvh, (SELECT MAX(id) FROM kan_toimenpide));
 END $$;
