@@ -38,7 +38,7 @@
                  [http-kit "2.2.0"]
                  [compojure "1.5.2"] ; TODO Voisi päivittää, mutta 1.6.0 aiheuttaa kaatumisen kaikille GET-pyynnöille
                  [javax.servlet/servlet-api "2.5"]
-                 [hiccup "2.0.0-alpha1"]
+                 [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.6.5"]
 
@@ -58,7 +58,7 @@
                  [org.geotools/gt-swing "18.1"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
-                 [org.clojure/data.zip "0.1.2"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varustetestit failasi
+                 [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varustetestit failasi
 
                  ;; Match
                  [org.clojure/core.match "0.3.0-alpha4"]
