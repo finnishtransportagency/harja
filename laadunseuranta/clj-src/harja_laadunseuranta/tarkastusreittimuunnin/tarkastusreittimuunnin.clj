@@ -91,9 +91,9 @@
                                                         ;; kovalla nopeudella tosi lyhyen osan yli eikä ko. osaan tallennu merkintää.
                                                         ;; Tätä ei pitäisi tapahtua kovin usein ja niin lyhyitä osia on myös suhteellisen harvassa.
                                                         (not (tr-haku/osavali-olemassa? db
-                                                                                        (:tie nykyinen-reittimerkinta)
-                                                                                        (:aosa nykyinen-reittimerkinta)
-                                                                                        (:aosa seuraava-reittimerkinta)))
+                                                                                        (:tie edellinen-osoite)
+                                                                                        (:aosa edellinen-osoite)
+                                                                                        (:aosa seuraava-osoite)))
                                                         true)]
                                (and maantieteellinen-jatko? looginen-osajatko?))
                              false)
