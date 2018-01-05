@@ -630,7 +630,6 @@
     :kuvaus "Tässä on nyt jotain mätää"
     :kuva 1}])
 
-
 (def tarkastus-jossa-pisteiden-sijainti-eri
   [;; Ajetaan tietä 20 pohjoiseen
    {:id 0 :sijainti [446405 7224577]}
@@ -642,3 +641,17 @@
    {:id 4 :sijainti [454620 7227506]}
    {:id 5 :sijainti [454699 7227528]}
    {:id 6 :sijainti [454768 7227546]}])
+
+(def tarkastus-jossa-iso-osamuutos
+  "Ajetaan kevyen liikenteen väylää 70012 ja tulee iso osamuutos"
+  [;; Noin osat 441, 442, 443
+   {:id 0 :sijainti [427949 6761002]}
+   {:id 0 :sijainti [427950 6761002]}
+   {:id 0 :sijainti [427951 6761002]}
+   ;; Siirrytään osalle 491, joka on suuresta numerosta huolimatta maantieteellisesti hyvin lähellä edellistä.
+   ;; Vaikka tienumero on sama, niin osahyppy on niin suuri, että reitin pitää katketa tästä.
+   ;; Muuten tarkastukselle muodostuu virheellinen TR-osoite, joka alkaa osalta 441 ja päättyy osalle 491.
+   ;; Väliin jäisi runsaasti osia, jotka ovat jossain ihan muualla.
+   {:id 0 :sijainti [427974 6761011]}
+   {:id 0 :sijainti [427989 6761012]}
+   {:id 0 :sijainti [428006 6761010]}])

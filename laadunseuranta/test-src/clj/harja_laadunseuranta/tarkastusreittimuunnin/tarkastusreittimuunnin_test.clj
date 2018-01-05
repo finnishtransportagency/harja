@@ -343,6 +343,16 @@
     (is (= (-> tarkastukset :reitilliset-tarkastukset second :soratiemittaus :sivukaltevuus) nil))
     (is (== (-> tarkastukset :reitilliset-tarkastukset last :soratiemittaus :sivukaltevuus) 3))))
 
+;; -------- Ajaminen osalta toiselle, kun väliin jää osia jotka ovat maantieteellisesti eri paikassa --------
+
+(deftest soratie-sivukaltevuus-laskettu-oikein
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (luo-testitietokanta)
+                                                     (lisaa-reittimerkinnoille-mockattu-tieosoite
+                                                       testidata/tarkastus-jossa-iso-osamuutos))]
+    ;; Munnetaan määrällisesti okein
+    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
 ;; -------- Ympärikääntyminen --------
 
 (deftest ymparikaantyminen-katkaistaan-oikein
