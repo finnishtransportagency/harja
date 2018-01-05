@@ -55,7 +55,15 @@
    [455041.19997024536 7227634.400009155] {:tie 20, :aosa 7, :aet 8452}
    [455165.19997024536 7227666.400009155] {:tie 20, :aosa 7, :aet 8580}
    [455041.19997024536 7227634.400009156] {:tie 20, :aosa 7, :aet 8453}
-   [454881.19997024536 7227586.400009157] {:tie 20, :aosa 7, :aet 8284}})
+   [454881.19997024536 7227586.400009157] {:tie 20, :aosa 7, :aet 8284}
+
+   ;; tarkastus, jossa ajetaan kevyen liikenteen väylää 70012 ja tulee iso osahyppy
+   [427949 6761002] {:tie 70012, :aosa 443, :aet 38}
+   [427950 6761002] {:tie 70012, :aosa 443, :aet 38}
+   [427951 6761002] {:tie 70012, :aosa 443, :aet 39}
+   [427974 6761011] {:tie 70012, :aosa 491, :aet 219}
+   [427989 6761012] {:tie 70012, :aosa 491, :aet 234}
+   [428006 6761010] {:tie 70012, :aosa 491, :aet 250}})
 
 (def tarkastukset-joissa-jatkuvat-havainnot-muuttuu
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
@@ -646,12 +654,12 @@
   "Ajetaan kevyen liikenteen väylää 70012 ja tulee iso osamuutos"
   [;; Noin osat 441, 442, 443
    {:id 0 :sijainti [427949 6761002]}
-   {:id 0 :sijainti [427950 6761002]}
-   {:id 0 :sijainti [427951 6761002]}
+   {:id 1 :sijainti [427950 6761002]}
+   {:id 2 :sijainti [427951 6761002]}
    ;; Siirrytään osalle 491, joka on suuresta numerosta huolimatta maantieteellisesti hyvin lähellä edellistä.
    ;; Vaikka tienumero on sama, niin osahyppy on niin suuri, että reitin pitää katketa tästä.
    ;; Muuten tarkastukselle muodostuu virheellinen TR-osoite, joka alkaa osalta 441 ja päättyy osalle 491.
    ;; Väliin jäisi runsaasti osia, jotka ovat jossain ihan muualla.
-   {:id 0 :sijainti [427974 6761011]}
-   {:id 0 :sijainti [427989 6761012]}
-   {:id 0 :sijainti [428006 6761010]}])
+   {:id 3 :sijainti [427974 6761011]}
+   {:id 4 :sijainti [427989 6761012]}
+   {:id 5 :sijainti [428006 6761010]}])
