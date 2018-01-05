@@ -81,20 +81,21 @@
                                    valissa-osia? (if (and edellinen-osoite seuraava-osoite)
                                                    (> (Math/abs (- (:aosa edellinen-osoite) (:aosa seuraava-osoite))) 1)
                                                    false)
-                                   looginen-osajatko? (if valissa-osia?
-                                                        ;; Seuraava osa ei jatku loogisesti seuraavasta, vaan väliin jää osanumeroita.
-                                                        ;; Tarkistetaan näiden osien tilanne. Mikäli niitä ei ole olemassa, asia on ok.
-                                                        ;; Mikäli osat ovat olemassa, niiden tulisi muodostaa looginen jatkumo
-                                                        ;; nykyiseen osaan. Tämän tarkistaminen on kuitenkin melko työlästä, joten teemme oletuksen,
-                                                        ;; että osat eivät ole maantieteellisesti osa samaa tietä eikä reitti ei ole yhtenevä.
-                                                        ;; Käytännössä ainoa tilanne, jolloin tämä päättely on virheellinen, on se kun ajetaan
-                                                        ;; kovalla nopeudella tosi lyhyen osan yli eikä ko. osaan tallennu merkintää.
-                                                        ;; Tätä ei pitäisi tapahtua kovin usein ja niin lyhyitä osia on myös suhteellisen harvassa.
-                                                        (not (tr-haku/osavali-olemassa? db
-                                                                                        (:tie edellinen-osoite)
-                                                                                        (:aosa edellinen-osoite)
-                                                                                        (:aosa seuraava-osoite)))
-                                                        true)]
+                                   looginen-osajatko?
+                                   (if valissa-osia?
+                                     ;; Seuraava osa ei jatku loogisesti seuraavasta, vaan väliin jää osanumeroita.
+                                     ;; Tarkistetaan näiden osien tilanne. Mikäli niitä ei ole olemassa, asia on ok.
+                                     ;; Mikäli osat ovat olemassa, niiden tulisi muodostaa maantieteellinen jatkumo
+                                     ;; nykyiseen osaan. Tämän tarkistaminen on kuitenkin melko työlästä, joten teemme oletuksen,
+                                     ;; että osat eivät ole maantieteellisesti osa samaa tietä eikä reitti ei ole yhtenevä.
+                                     ;; Käytännössä ainoa tilanne, jolloin tämä päättely on virheellinen, on se kun ajetaan
+                                     ;; kovalla nopeudella tosi lyhyen osan yli eikä ko. osaan tallennu merkintää.
+                                     ;; Tätä ei pitäisi tapahtua kovin usein ja niin lyhyitä osia on myös suhteellisen harvassa.
+                                     (not (tr-haku/osavali-olemassa? db
+                                                                     (:tie edellinen-osoite)
+                                                                     (:aosa edellinen-osoite)
+                                                                     (:aosa seuraava-osoite)))
+                                     true)]
                                (and maantieteellinen-jatko? looginen-osajatko?))
                              false)
         etaisyys-edelliseen-kohtuullinen? (let [edellinen-piste (or (:sijainti nykyinen-reittimerkinta)
