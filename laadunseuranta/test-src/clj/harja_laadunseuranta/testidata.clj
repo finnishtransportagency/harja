@@ -57,6 +57,12 @@
    [455041.19997024536 7227634.400009156] {:tie 20, :aosa 7, :aet 8453}
    [454881.19997024536 7227586.400009157] {:tie 20, :aosa 7, :aet 8284}
 
+   ;; Tarkastus, jossa ajetaan tiellä 20 osalta 1 osalle 3 (osaa 2 ei ole olemassa)
+   [430569 7212525] {:tie 20, :aosa 1, :aet 3671}
+   [430599 7212541] {:tie 20, :aosa 1, :aet 3705}
+   [430665 7212590] {:tie 20, :aosa 3, :aet 18}
+   [430702 7212607] {:tie 20, :aosa 3, :aet 58}
+
    ;; Tarkastus, jossa ajetaan kevyen liikenteen väylää 70012 ja tulee iso osahyppy.
    ;; Väliin jäävät osat sijaitsevat maantieteellisesti jossain muualla.
    [427949 6761002] {:tie 70012, :aosa 443, :aet 38}
@@ -664,3 +670,12 @@
    {:id 3 :sijainti [427974 6761011]}
    {:id 4 :sijainti [427989 6761012]}
    {:id 5 :sijainti [428006 6761010]}])
+
+(def tarkastus-jossa-valiin-jaa-olematon-osa
+  "Ajetaan tietä 20 osalta 1 osalle 3 (osaa 2 ei ole olemassa, joten muodostuu yksi tarkastus)"
+  [;; Osa 1
+   {:id 0 :sijainti [430569 7212525]}
+   {:id 1 :sijainti [430599 7212541]}
+   ;; Osa 3 (edellistä osaa ei ole, tarkastus saa jatkua)
+   {:id 2 :sijainti [430665 7212590]}
+   {:id 3 :sijainti [430702 7212607]}])

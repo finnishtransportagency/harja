@@ -359,6 +359,16 @@
 
     (tarkista-tallennettujen-tarkastuksien-osoite reitilliset odotetut-tarkasteut-tieosat)))
 
+(deftest osan-vaihto-toimii-oikein
+  (let [tarkastukset (reittimerkinnat-tarkastuksiksi (luo-testitietokanta)
+                                                     (lisaa-reittimerkinnoille-mockattu-tieosoite
+                                                       testidata/tarkastus-jossa-valiin-jaa-olematon-osa))
+        reitilliset (:reitilliset-tarkastukset tarkastukset)]
+
+    ;; Munnetaan määrällisesti oikein
+    (is (= (count reitilliset) 1))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+
 ;; -------- Ympärikääntyminen --------
 
 (deftest ymparikaantyminen-katkaistaan-oikein
