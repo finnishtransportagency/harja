@@ -87,7 +87,7 @@
                                      ;; Tarkistetaan näiden osien tilanne. Mikäli niitä ei ole olemassa, asia on ok.
                                      ;; Mikäli osat ovat olemassa, niiden tulisi muodostaa maantieteellinen jatkumo
                                      ;; nykyiseen osaan. Tämän tarkistaminen on kuitenkin melko työlästä, joten teemme oletuksen,
-                                     ;; että osat eivät ole maantieteellisesti osa samaa tietä eikä reitti ei ole yhtenevä.
+                                     ;; että osat eivät ole maantieteellisesti osa samaa tietä eikä reitti ole yhtenevä.
                                      ;; Käytännössä ainoa tilanne, jolloin tämä päättely on virheellinen, on se kun ajetaan
                                      ;; kovalla nopeudella tosi lyhyen osan yli eikä ko. osaan tallennu merkintää.
                                      ;; Tätä ei pitäisi tapahtua kovin usein ja niin lyhyitä osia on myös suhteellisen harvassa.
