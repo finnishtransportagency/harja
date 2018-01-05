@@ -4,8 +4,8 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.8.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
-                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
+  :dependencies [[org.clojure/clojure "1.9.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
+                 [org.clojure/clojurescript "1.9.946"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-alpha17"] ; TODO Voisi poistaa, kun Clojure 1.9 päivitys toimii.
@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "0.6-alpha24"] ; TODO Voisi päivittää, mutta vaatii Clojure 1.9
+                 [specql "0.7.0-alpha12"] ; TODO Voisi päivittää, mutta vaatii Clojure 1.9
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "18.1"]
