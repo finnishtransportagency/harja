@@ -36,7 +36,7 @@
     [:div
      [valinnat/urakkavalinnat {:urakka urakka-map}
       ^{:key "valinnat"}
-      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka]
+      [urakka-valinnat/urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide urakka-map]
       [valinnat/urakkatoiminnot {:urakka urakka-map}
        [napit/yleinen-ensisijainen
         "Siirrä valitut kokonaishintaisiin"
@@ -53,7 +53,7 @@
                            :as app}]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
+                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
                                            :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
                                            :lisaa-materiaali-fn #(e! (tiedot/->LisaaMateriaali))
                                            :muokkaa-materiaaleja-fn #(e! (tiedot/->MuokkaaMateriaaleja %))

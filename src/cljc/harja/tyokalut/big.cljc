@@ -1,7 +1,7 @@
 (ns harja.tyokalut.big
   "Työkaluja abitrary precision desimaalilukujen laskentaan.
   Valitettavasti java.math.BigDecimal on transit kerroksessa muunnettu JS numeroksi, koska yleensä
-  ei tarvita big decimal laskenta.
+  ei tarvita big decimal laskentaa.
 
   Tämän takia on wrapper record ja molemmilla puolilla toteutettu operaatiot bigdec
   käsittelyyn.

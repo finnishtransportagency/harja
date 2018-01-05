@@ -22,7 +22,8 @@
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
             [harja.domain.kanavat.lt-ketjutus :as ketjutus]
-            [harja.domain.kanavat.kohde :as kohde]))
+            [harja.domain.kanavat.kohde :as kohde]
+            [clojure.string :as str]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
   (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
@@ -43,11 +44,30 @@
                  #(when (= (::ur/id %) urakka-id) %)
                  urakat))))
 
-(defn- hae-liikennetapahtumat* [tapahtumat
-                                urakkatiedot-fn
-                                urakka-id]
+(defn- suodata-liikennetapahtuma-toimenpidetyypillä [tiedot tapahtumat]
+  (filter #(let [toimenpidetyypit (::toiminto/toimenpiteet tiedot)]
+             (if (empty? toimenpidetyypit)
+               true
+               (some toimenpidetyypit (map ::toiminto/toimenpide (::lt/toiminnot %)))))
+          tapahtumat))
+
+(defn- suodata-liikennetapahtuma-aluksen-nimella [tiedot tapahtumat]
+  (filter (fn [tapahtuma]
+            (let [alus-nimi (::lt-alus/nimi tiedot)]
+              (if (empty? alus-nimi) ;; Voi olla nil tai ""
+                true
+                ;; Pidä tapahtuma, jos sen aluksissa ainakin yksi
+                ;; alkaa annetulla nimellä
+                (not (empty? (lt-alus/suodata-alukset-nimen-alulla
+                               (::lt/alukset tapahtuma)
+                               alus-nimi))))))
+          tapahtumat))
+
+(defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]
   (->>
     tapahtumat
+    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
+    (suodata-liikennetapahtuma-aluksen-nimella tiedot)
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
     (map (partial urakat-idlla urakka-id))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))
@@ -116,7 +136,7 @@
   (let [urakka-id (::ur/id tiedot)
         sopimus-id (::sop/id tiedot)
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
-        aluslaji (::lt-alus/laji tiedot)
+        aluslajit (::lt-alus/aluslajit tiedot)
         suunta (::lt-alus/suunta tiedot)
         [alku loppu] aikavali]
     (hae-tapahtumien-perustiedot*
@@ -139,16 +159,18 @@
                         {::m/poistettu? false
                          ::lt/urakka-id urakka-id
                          ::lt/sopimus-id sopimus-id}
-                        (when (or suunta aluslaji)
+                        (when (or suunta aluslajit)
                           {::lt/alukset (op/and
                                           (when suunta
                                             {::lt-alus/suunta suunta})
-                                          (when aluslaji
-                                            {::lt-alus/laji aluslaji}))}))))
+                                          {::lt-alus/laji (if (empty? aluslajit)
+                                                            (op/in (map name lt-alus/aluslajit))
+                                                            (op/in (map name aluslajit)))})}))))
       tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
   (hae-liikennetapahtumat*
+    tiedot
     (->> (hae-tapahtumien-perustiedot db tiedot)
          (hae-tapahtumien-palvelumuodot db)
          (hae-tapahtumien-kohdetiedot db))
@@ -260,12 +282,12 @@
                                        {::ketjutus/alus-id alus-id})))]
     (boolean
       (when tapahtuma-id
-       (not-empty
-         (specql/fetch db
-                       ::lt/liikennetapahtuma
-                       #{::lt/urakka-id ::lt/id}
-                       {::lt/id tapahtuma-id
-                        ::lt/urakka-id urakka-id}))))))
+        (not-empty
+          (specql/fetch db
+                        ::lt/liikennetapahtuma
+                        #{::lt/urakka-id ::lt/id}
+                        {::lt/id tapahtuma-id
+                         ::lt/urakka-id urakka-id}))))))
 
 (defn poista-ketjutus! [db alus-id urakka-id]
   (when (ketjutus-kuuluu-urakkaan? db alus-id urakka-id)
@@ -393,12 +415,12 @@
 (defn hae-seuraavat-kohteet [db kohteelta-id suunta]
   (hae-seuraavat-kohteet*
     (specql/fetch
-     db
-     ::kohde/kohde
-     (if (= suunta :ylos)
-       #{::kohde/ylos-id}
-       #{::kohde/alas-id})
-     {::kohde/id kohteelta-id})))
+      db
+      ::kohde/kohde
+      (if (= suunta :ylos)
+        #{::kohde/ylos-id}
+        #{::kohde/alas-id})
+      {::kohde/id kohteelta-id})))
 
 ;; specql:n insert ei käytä paluuarvoihin transformaatioita, eli kun tallennuksessa
 ;; insertoidaan uusia aluksia, niiden ::suunta on merkkijono. Keywordin ja merkkijonon

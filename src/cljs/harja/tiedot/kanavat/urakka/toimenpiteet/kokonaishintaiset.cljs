@@ -38,9 +38,9 @@
 (defrecord VirheTapahtui [virhe])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
-(defrecord TallennaToimenpide [toimenpide])
-(defrecord ToimenpideTallennettu [vastaus])
-(defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+(defrecord TallennaToimenpide [toimenpide poisto?])
+(defrecord ToimenpideTallennettu [vastaus poisto?])
+(defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
 ;; Rivien valinta ja niiden toiminnot
 (defrecord ValitseToimenpide [tiedot])
@@ -222,27 +222,31 @@
     (toimenpiteet/huoltokohteet-ei-haettu app))
 
   TallennaToimenpide
-  (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
+  (process-event [{toimenpide :toimenpide poisto? :poisto?}
+                  {valinnat :valinnat tehtavat :tehtavat :as app}]
     (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
                                            :tehtavat tehtavat
                                            :toimenpide toimenpide
                                            :tyyppi :kokonaishintainen
+                                           :poisto? poisto?
                                            :toimenpide-tallennettu ->ToimenpideTallennettu
-                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
+                                           :toimenpide-ei-tallennettu ->ToimenpiteenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
-  (process-event [{vastaus :vastaus} app]
-    (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus)))
+  (process-event [{vastaus :vastaus poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus) poisto?))
 
-  ToimenpiteidenTallentaminenEpaonnistui
-  (process-event [_ app]
-    (toimenpiteet/toimenpide-ei-tallennettu app))
+  ToimenpiteenTallentaminenEpaonnistui
+  (process-event [{poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-ei-tallennettu app poisto?))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
-      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
-      app))
+      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
+                      true))
+      (update app :valitut-toimenpide-idt
+              #(toimenpiteet/poista-valittu-toimenpide % (::kanavan-toimenpide/id toimenpide)))))
 
   HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
@@ -270,8 +274,15 @@
 
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
+
+    ;; urakan materiaaleista lisätyt voidaan tunnistaa muutokset-avaimella
     (if (:avattu-toimenpide app)
-      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit)
+      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
+                (vec
+                 (for [m materiaalit]
+                   (if (-> m :varaosat ::materiaalit/muutokset)
+                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                     m))))
       app))
 
   LisaaMateriaali

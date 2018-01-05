@@ -28,11 +28,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-;; todo:
-;; - testit
-;; - varaosat ja materiaalit
-;; huomioita:
-;; vv-filtterit layout samoin kuin vv-puolella
 ;; terminologiaa: vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
 ;;                koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
 ;;                kan_hinta <-> Hinnoittelu
@@ -74,9 +69,9 @@
 (defrecord UusiToimenpide [])
 (defrecord TyhjennaAvattuToimenpide [])
 (defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
-(defrecord TallennaToimenpide [toimenpide])
-(defrecord ToimenpideTallennettu [vastaus])
-(defrecord ToimenpiteidenTallentaminenEpaonnistui [])
+(defrecord TallennaToimenpide [toimenpide poisto?])
+(defrecord ToimenpideTallennettu [vastaus poisto?])
+(defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
@@ -501,27 +496,31 @@
     (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide))
 
   TallennaToimenpide
-  (process-event [{toimenpide :toimenpide} {valinnat :valinnat tehtavat :tehtavat :as app}]
+  (process-event [{toimenpide :toimenpide poisto? :poisto?}
+                  {valinnat :valinnat tehtavat :tehtavat :as app}]
     (toimenpiteet/tallenna-toimenpide app {:valinnat valinnat
                                            :tehtavat tehtavat
                                            :toimenpide toimenpide
+                                           :poisto? poisto?
                                            :tyyppi :muutos-lisatyo
                                            :toimenpide-tallennettu ->ToimenpideTallennettu
-                                           :toimenpide-ei-tallennettu ->ToimenpiteidenTallentaminenEpaonnistui}))
+                                           :toimenpide-ei-tallennettu ->ToimenpiteenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
-  (process-event [{vastaus :vastaus} app]
-    (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus)))
+  (process-event [{vastaus :vastaus poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus) poisto?))
 
-  ToimenpiteidenTallentaminenEpaonnistui
-  (process-event [_ app]
-    (toimenpiteet/toimenpide-ei-tallennettu app))
+  ToimenpiteenTallentaminenEpaonnistui
+  (process-event [{poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-ei-tallennettu app poisto?))
 
   PoistaToimenpide
   (process-event [{toimenpide :toimenpide} app]
     (let [tallennus! (tuck/send-async! ->TallennaToimenpide)]
-      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)))
-      app))
+      (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
+                      true))
+      (update app :valitut-toimenpide-idt
+                 #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
 
   HaeHuoltokohteet
   (process-event [{toimenpide :toimenpide} app]
@@ -539,7 +538,6 @@
     (toimenpiteet/huoltokohteet-ei-haettu app))  HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
     (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
-    (log "HaeMateriaalit " materiaalien-haku-kaynnissa?)
     (when-not materiaalien-haku-kaynnissa?
       (let [urakka-id (:id @navigaatio/valittu-urakka)]
         (-> app
@@ -552,7 +550,7 @@
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]
-    (log "MateriaalitHaettu, saatiin" (count materiaalit))
+    ;; (log "MateriaalitHaettu, saatiin" (count materiaalit))
     (assoc app
            :urakan-materiaalit materiaalit
            :materiaalien-haku-kaynnissa? false))
@@ -564,15 +562,20 @@
 
   MuokkaaMateriaaleja
   (process-event [{materiaalit :materiaalit} app]
+    ;; urakan materiaaleista lisätyt voidaan tunnistaa muutokset-avaimella
     (if (:avattu-toimenpide app)
-      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit] materiaalit)
+      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
+                (vec
+                 (for [m materiaalit]
+                   (if (-> m :varaosat ::materiaalit/muutokset)
+                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                     m))))
       app))
 
   LisaaMateriaali
   (process-event [_ app]
     ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
     ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
-    (log "LisaaMateriaali kutsuttu")
     (update-in app
                [:avattu-toimenpide ::materiaalit/materiaalit]
                #(let [vanha-id (apply max (map :jarjestysnumero %))
