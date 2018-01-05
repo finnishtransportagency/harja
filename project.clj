@@ -311,7 +311,7 @@
                         "cljsbuild" "once" "laadunseuranta-min,"
 
                         "uberjar," "doc"]
-            "test" ["do" "clean,"
+            "testit" ["do" "clean,"
                       "deps,"
                       "test,"
                       "doo" "phantom" "test" "once,"
