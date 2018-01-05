@@ -348,9 +348,11 @@
 (deftest soratie-sivukaltevuus-laskettu-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi (luo-testitietokanta)
                                                      (lisaa-reittimerkinnoille-mockattu-tieosoite
-                                                       testidata/tarkastus-jossa-iso-osamuutos))]
+                                                       testidata/tarkastus-jossa-iso-osamuutos))
+        reitilliset (:reitilliset-tarkastukset tarkastukset)]
+
     ;; Munnetaan määrällisesti okein
-    (is (= (count (:reitilliset-tarkastukset tarkastukset)) 3))
+    (is (= (count reitilliset) 2))
     (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
 
 ;; -------- Ympärikääntyminen --------
