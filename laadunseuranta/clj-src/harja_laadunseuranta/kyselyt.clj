@@ -49,8 +49,6 @@
                           :pistemainen-havainto (suodata-pistemainen-havainto havainnot jatkuvat-vakiohavaintoidt))
           (dissoc merkinta :havainnot))))
 
-;; TODO Käytä geometriaa tutkimaan onko tiet yhtenäisiä. Jos ei ole, katkaise reitti
-
 (defn hae-reitin-merkinnat-tieosoitteilla
   "Hakee reittimerkinnät ja niiden projisoidun tieverkon osoitteet.
    Jokaisella merkinnällä on tieto sijainnin lähimmistä TR-osoitteista
