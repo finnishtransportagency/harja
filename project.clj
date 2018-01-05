@@ -150,7 +150,7 @@
                                   [org.clojure/test.check "0.9.0"]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.1.0"]]
+                             [test2junit "1.3.3"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
