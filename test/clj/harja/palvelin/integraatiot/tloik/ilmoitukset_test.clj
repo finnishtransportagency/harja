@@ -124,7 +124,7 @@
                                                        kayttaja portti))]
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
-      (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
+      (odota-ehdon-tayttymista #(realized? viestit) "Kuittaus on vastaanotettu." 100000)
 
       (let [xml (first @viestit)
             data (xml/lue xml)]
