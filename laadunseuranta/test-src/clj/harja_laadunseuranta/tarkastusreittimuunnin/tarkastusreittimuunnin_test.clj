@@ -345,7 +345,7 @@
 
 ;; -------- Ajaminen osalta toiselle, kun väliin jää osia jotka ovat maantieteellisesti eri paikassa --------
 
-(deftest soratie-sivukaltevuus-laskettu-oikein
+(deftest osan-vaihto-toimii-oikein
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi (luo-testitietokanta)
                                                      (lisaa-reittimerkinnoille-mockattu-tieosoite
                                                        testidata/tarkastus-jossa-iso-osamuutos))
