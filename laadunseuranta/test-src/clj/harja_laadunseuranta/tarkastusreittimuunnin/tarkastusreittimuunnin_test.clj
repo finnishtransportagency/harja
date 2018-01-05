@@ -349,11 +349,15 @@
   (let [tarkastukset (reittimerkinnat-tarkastuksiksi (luo-testitietokanta)
                                                      (lisaa-reittimerkinnoille-mockattu-tieosoite
                                                        testidata/tarkastus-jossa-iso-osamuutos))
-        reitilliset (:reitilliset-tarkastukset tarkastukset)]
+        reitilliset (:reitilliset-tarkastukset tarkastukset)
+        odotetut-tarkasteut-tieosat [{:tie 70012, :aosa 443, :aet 38 :losa 443 :let 39}
+                                     {:tie 70012, :aosa 491, :aet 219 :losa 491 :let 250}]]
 
-    ;; Munnetaan määrällisesti okein
+    ;; Munnetaan määrällisesti oikein
     (is (= (count reitilliset) 2))
-    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))))
+    (is (= (count (:pistemaiset-tarkastukset tarkastukset)) 0))
+
+    (tarkista-tallennettujen-tarkastuksien-osoite reitilliset odotetut-tarkasteut-tieosat)))
 
 ;; -------- Ympärikääntyminen --------
 
