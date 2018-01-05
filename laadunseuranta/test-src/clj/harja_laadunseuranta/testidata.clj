@@ -22,7 +22,7 @@
    :kuva 2})
 
 (def mockattu-tierekisteri
-  {; tarkastus samalla tiellä samaan suuntaan
+  {;; Tarkastus samalla tiellä samaan suuntaan
    [464681.5999816895 7230492.000024414] {:tie 20, :aosa 10, :aet 3921}
    [465321.5999816895 7230676.000024414] {:tie 20, :aosa 10, :aet 4587}
    [465641.5999816895 7230780.000024414] {:tie 20, :aosa 10, :aet 4924}
@@ -33,7 +33,7 @@
    [467545.5999816895 7231332.000024414] {:tie 20, :aosa 11, :aet 6906}
    [467753.5999816895 7231404.000024414] {:tie 20, :aosa 11, :aet 7126}
 
-   ; toinen tarkastus, niin ikään samalla tiellä samaan suuntaan
+   ;; Toinen tarkastus, niin ikään samalla tiellä samaan suuntaan
    [468064.79999084474 7231495.200001526] {:tie 20, :aosa 11, :aet 237}
    [468256.79999084474 7231555.200001526] {:tie 20, :aosa 11, :aet 438}
    [468568.79999084474 7231643.200001526] {:tie 20, :aosa 11, :aet 762}
@@ -43,21 +43,22 @@
    [469300.79999084474 7231931.200001526] {:tie 20, :aosa 11, :aet 1551}
    [469492.79999084474 7232011.200001526] {:tie 20, :aosa 11, :aet 1759}
 
-   ;; tarkastus, jossa ajetaan risteykseen ja tie vaihtuu
+   ;; Tarkastus, jossa ajetaan risteykseen ja tie vaihtuu
    [455421.19997024536 7227742.400009155] {:tie 20, :aosa 7, :aet 8847}
    [455493.19997024536 7227764.400009155] {:tie 20, :aosa 7, :aet 8923}
    [455505.19997024536 7227760.400009155] {:tie 20, :aosa 7, :aet 8933}
    [455519.19997024536 7227720.400009155] {:tie 8341, :aosa 4, :aet 2597}
    [455555.19997024536 7227594.400009155] {:tie 8341, :aosa 4, :aet 2466}
 
-   ;; tarkastus, jossa käännytään ympäri
+   ;; Tarkastus, jossa käännytään ympäri
    [454881.19997024536 7227586.400009155] {:tie 20, :aosa 7, :aet 8285}
    [455041.19997024536 7227634.400009155] {:tie 20, :aosa 7, :aet 8452}
    [455165.19997024536 7227666.400009155] {:tie 20, :aosa 7, :aet 8580}
    [455041.19997024536 7227634.400009156] {:tie 20, :aosa 7, :aet 8453}
    [454881.19997024536 7227586.400009157] {:tie 20, :aosa 7, :aet 8284}
 
-   ;; tarkastus, jossa ajetaan kevyen liikenteen väylää 70012 ja tulee iso osahyppy
+   ;; Tarkastus, jossa ajetaan kevyen liikenteen väylää 70012 ja tulee iso osahyppy.
+   ;; Väliin jäävät osat sijaitsevat maantieteellisesti jossain muualla.
    [427949 6761002] {:tie 70012, :aosa 443, :aet 38}
    [427950 6761002] {:tie 70012, :aosa 443, :aet 38}
    [427951 6761002] {:tie 70012, :aosa 443, :aet 39}
