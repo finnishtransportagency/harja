@@ -87,18 +87,21 @@ FROM ilmoitus i
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE i.id IN
-      (SELECT id FROM ilmoitus x WHERE
-        (x.urakka IS NULL
+      (SELECT x.id
+       FROM ilmoitus x
+         LEFT JOIN urakka u2 ON x.urakka = u2.id
+       WHERE
+         (x.urakka IS NULL
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
 
-          u.urakkanro IS NOT NULL AND
+         u2.urakkanro IS NOT NULL AND
 
-        -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
-        ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-         (:loppu_annettu IS FALSE AND x.ilmoitettu  >= :alku) OR
-         (:alku_annettu IS FALSE AND x.ilmoitettu  <= :loppu) OR
-         (x.ilmoitettu  BETWEEN :alku AND :loppu)));
+         -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
+         ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
+          (:loppu_annettu IS FALSE AND x.ilmoitettu >= :alku) OR
+          (:alku_annettu IS FALSE AND x.ilmoitettu <= :loppu) OR
+          (x.ilmoitettu BETWEEN :alku AND :loppu)));
 
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
