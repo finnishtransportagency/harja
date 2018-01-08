@@ -22,3 +22,9 @@
   (update! db ::m/materiaali
            (muok/poistotiedot user)
            {::m/id materiaali-id}))
+
+(defn poista-toimenpiteen-kaikki-materiaalikirjaukset [db user toimenpide-id]
+  (update! db ::m/materiaali
+           (muok/poistotiedot user)
+           {::m/toimenpide toimenpide-id
+            ::muok/poistettu? false}))

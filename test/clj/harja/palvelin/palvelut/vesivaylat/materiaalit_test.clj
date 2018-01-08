@@ -3,6 +3,7 @@
             [clojure.test :as t :refer [deftest is]]
             [harja.testi :refer [jarjestelma kutsu-palvelua q-map] :as testi]
             [com.stuartsierra.component :as component]
+            [harja.kyselyt.vesivaylat.materiaalit :as vvm-q]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [clojure.test.check :as tc]
@@ -198,6 +199,14 @@
                                                     :uudet-alkuperaiset-maarat [{::m/id hiekkasakin-id
                                                                                  ::m/alkuperainen-maara 666}]})))))
 
+
+(deftest toimenpiteen-materiaalien-poisto
+  (let [toimenpide-id (first (first (testi/q "select max(toimenpide) from vv_materiaali where poistettu = false")))
+        poistettuja (vvm-q/poista-toimenpiteen-kaikki-materiaalikirjaukset (:db jarjestelma) testi/+kayttaja-jvh+ toimenpide-id)
+        rivi-lkm (first (first (testi/q (str "select count(*) from vv_materiaali where poistettu = false and toimenpide = " toimenpide-id))))]
+    (is (pos? toimenpide-id))
+    (is (pos? poistettuja))
+    (is (= 0 rivi-lkm))))
 
 (deftest materiaalin-halytysrajan-alitus
  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)

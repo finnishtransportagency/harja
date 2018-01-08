@@ -13,6 +13,7 @@
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.vesivaylat.materiaali :as materiaali]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
             [harja.kyselyt.vesivaylat.materiaalit :as q-materiaali]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]
@@ -133,17 +134,22 @@
                                      {toimenpide-id ::toimenpide/id
                                       materiaalikirjaukset ::toimenpide/materiaalikirjaukset
                                       materiaalipoistot ::toimenpide/materiaalipoistot
+                                      toimenpide-poistettu? ::muokkaustiedot/poistettu?
                                       :as toimenpide}]
   (assert (integer? urakka-id) "Materiaalikirjauksia ei voi tallentaa ilman urakka id:tä")
   (assert (integer? toimenpide-id) (str "Toimenpiteen materiaalikirjausta ei voi tallentaa ilman toimenpide-id:tä - " toimenpide-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   (log/debug "tallenna-materiaalikirjaukset: kirjauksia/poistoja" (count materiaalikirjaukset) (count materiaalipoistot))
-  (doseq [kirjaus-ilman-tpid materiaalikirjaukset
-          :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
-    (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
-    (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
-  (doseq [mk materiaalipoistot]
-    (q-materiaali/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))
+  (if toimenpide-poistettu?
+    (q-materiaali/poista-toimenpiteen-kaikki-materiaalikirjaukset db kayttaja toimenpide-id)
+    ;; else
+    (do
+      (doseq [kirjaus-ilman-tpid materiaalikirjaukset
+              :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
+        (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
+        (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
+      (doseq [mk materiaalipoistot]
+        (q-materiaali/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
 
 (defn tallenna-kanavatoimenpide [db fim email user {tyyppi ::toimenpide/tyyppi
                                                     urakka-id ::toimenpide/urakka-id
@@ -165,6 +171,8 @@
   (jdbc/with-db-transaction [db db]
     (let [toimenpide-ilman-materiaaleja (dissoc toimenpide ::toimenpide/materiaalikirjaukset ::toimenpide/materiaalipoistot)
           tallennettu-toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide-ilman-materiaaleja)]
+      #_(when (::muokkaustiedot/poistettu? toimenpide)
+        (poista-toimenpiteen-materiaalikirjaukset db user urakka-id toimenpide))
       (tallenna-materiaalikirjaukset db fim email user urakka-id (merge toimenpide tallennettu-toimenpide-map)))))
 
 (defrecord Kanavatoimenpiteet []
