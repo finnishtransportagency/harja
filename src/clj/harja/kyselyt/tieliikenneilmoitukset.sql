@@ -289,7 +289,7 @@ SELECT
   lahettaja_sahkoposti
 FROM ilmoitus
 WHERE urakka = :urakka AND
-      (muokattu > :aika OR luotu > :aika)
+      (muokattu > :aika OR luotu > :aika);
 
 
 -- name: hae-id-ilmoitus-idlla
