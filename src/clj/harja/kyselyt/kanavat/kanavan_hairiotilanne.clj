@@ -59,12 +59,10 @@
                              ::muokkaustiedot/muokattu (pvm/nyt)
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
       (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})
-      ;; (log/debug "päivitetään, palautetaan id-tieto")
       (first (fetch db ::hairiotilanne/hairiotilanne #{::hairiotilanne/id} {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})))
     (let [hairiotilanne (assoc hairiotilanne
                              ::hairiotilanne/kuittaaja-id kayttaja-id
                              ::muokkaustiedot/luotu (pvm/nyt)
                              ::muokkaustiedot/luoja-id kayttaja-id)
           lisatty-rivi (insert! db ::hairiotilanne/hairiotilanne hairiotilanne)]
-      ;; (log/debug "lisätty rivi: " (pr-str lisatty-rivi))
       lisatty-rivi)))
