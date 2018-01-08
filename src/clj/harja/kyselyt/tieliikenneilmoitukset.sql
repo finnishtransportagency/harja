@@ -101,7 +101,8 @@ WHERE i.id IN
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
           (:loppu_annettu IS FALSE AND x.ilmoitettu >= :alku) OR
           (:alku_annettu IS FALSE AND x.ilmoitettu <= :loppu) OR
-          (x.ilmoitettu BETWEEN :alku AND :loppu)));
+          (x.ilmoitettu BETWEEN :alku AND :loppu)))
+ORDER by u.nimi;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
