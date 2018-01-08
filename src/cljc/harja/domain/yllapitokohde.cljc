@@ -288,12 +288,13 @@ yllapitoluokkanimi->numero
 (defn kohdenumero-str->kohdenumero-vec
   "Palauttaa \"301b\":n muodossa [301 \"b\"]"
   [kohdenumero]
-  (let [numero (re-find #"\d+" kohdenumero)
-        kirjain (re-find #"\D+" kohdenumero)]
-    [(when numero
-       (#?(:clj  Integer.
-           :cljs js/parseInt) kohdenumero))
-     kirjain]))
+  (when kohdenumero
+    (let [numero (re-find #"\d+" kohdenumero)
+          kirjain (re-find #"\D+" kohdenumero)]
+      [(when numero
+         (#?(:clj  Integer.
+             :cljs js/parseInt) kohdenumero))
+       kirjain])))
 
 (defn- yllapitokohteen-jarjestys
   [kohde]
