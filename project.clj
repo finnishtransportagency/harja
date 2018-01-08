@@ -4,16 +4,16 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.8.0"]
-                 [org.clojure/clojurescript "1.9.660"]
+  :dependencies [[org.clojure/clojure "1.8.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
+                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
 
                  ;;;;;;; Yleiset ;;;;;;;
-                 [clojure-future-spec "1.9.0-alpha17"]
+                 [clojure-future-spec "1.9.0-alpha17"] ; TODO Voisi poistaa, kun Clojure 1.9 päivitys toimii.
 
-                 [prismatic/schema "1.1.6"]
-                 [org.clojure/core.async "0.3.443"]
+                 [prismatic/schema "1.1.7"]
+                 [org.clojure/core.async "0.3.443"] ; TODO Voisi päivittää, mutta ilmoitusten haku ym. testit failaa
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
-                 [com.cognitect/transit-cljs "0.8.239"]
+                 [com.cognitect/transit-cljs "0.8.243"]
                  [com.cognitect/transit-clj "0.8.300"]
 
                  [cljsjs/exif "2.1.1-1"]
@@ -32,30 +32,30 @@
                  [org.clojure/java.jmx "0.3.4"]
 
                  ;; JSON encode/decode
-                 [cheshire "5.7.0"]
+                 [cheshire "5.8.0"]
 
                  ;; HTTP palvelin ja reititys
                  [http-kit "2.2.0"]
-                 [compojure "1.5.2"]
+                 [compojure "1.5.2"] ; TODO Voisi päivittää, mutta 1.6.0 aiheuttaa kaatumisen kaikille GET-pyynnöille
                  [javax.servlet/servlet-api "2.5"]
                  [hiccup "1.0.5"]
 
                  [org.clojure/core.cache "0.6.5"]
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
-                 [org.postgresql/postgresql "9.4.1212"]
+                 [org.postgresql/postgresql "42.1.4"]
                  ;;[org.postgresql/postgresql "9.3-1102-jdbc41"]
                  [webjure/postgis-jdbc "2.1.7"]
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
-                 [webjure/jeesql "0.4.6"]
-                 [specql "0.6-alpha24"]
+                 [webjure/jeesql "0.4.7"]
+                 [specql "0.6-alpha24"] ; TODO Voisi päivittää, mutta vaatii Clojure 1.9
 
                  ;; GeoTools
-                 [org.geotools/gt-shapefile "16.1"]
-                 [org.geotools/gt-process-raster "16.1"]
-                 [org.geotools/gt-epsg-wkt "16.1"] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "16.1"] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "18.1"]
+                 [org.geotools/gt-process-raster "18.1"]
+                 [org.geotools/gt-epsg-wkt "18.1"] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "18.1"] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"] ; TODO Voisi päivittää, mutta uudempi 0.1.2 aiheutti parsintaongelmia ja varustetestit failasi
@@ -69,7 +69,7 @@
                  [com.draines/postal "2.0.2"]
 
                  [javax.jms/jms-api "1.1-rev-1"]
-                 [org.apache.activemq/activemq-client "5.14.3"]
+                 [org.apache.activemq/activemq-client "5.15.2"]
 
                  ;; Fileyard  liitetiedostojen tallennus
                  [fileyard "0.2"]
@@ -78,29 +78,29 @@
                  [spyscope "0.1.6"]
                  ;[spellhouse/clairvoyant "0.0-48-gf5e59d3"]
 
-                 [cljs-ajax "0.6.0"]
-                 [figwheel "0.5.10"]
+                 [cljs-ajax "0.7.3"]
+                 [figwheel "0.5.14"]
 
                  [reagent "0.7.0" :exclusions [[cljsjs/react :classifier "*"]]]
-                 [cljsjs/react-with-addons "15.6.1-0"]
-                 [cljsjs/react-dom "15.6.1-0" :exclusions [cljsjs/react]]
+                 [cljsjs/react-with-addons "15.6.1-0"] ; TODO Voisi päivittää, mutta tämä ja react-dom aiheuttaa ongelman: Undefined nameToPath for react
+                 [cljsjs/react-dom "15.4.2-2" :exclusions [cljsjs/react]]
 
                  [alandipert/storage-atom "2.0.1"]
 
-                 [clj-time "0.13.0"]
-                 [com.andrewmcveigh/cljs-time "0.5.0"]
+                 [clj-time "0.14.2"]
+                 [com.andrewmcveigh/cljs-time "0.5.2"]
 
                  ;; Kuvataso error tulee ol.source.Image inheritistä, jos päivittää neloseen
-                 [cljsjs/openlayers "3.15.1"]
+                 [cljsjs/openlayers "3.15.1"] ; TODO Voisi päivittää, mutta laadunseurannan buildi hajoaa (4.4.1-1) puuttuviin requireihin
 
                  ;; Microsoft dokumenttimuotojen tuki
-                 [org.apache.poi/poi "3.16"]
+                 [org.apache.poi/poi "3.16"] ; TODO Voisi päivittää, mutta 3.17 aiheutti ongelman: Unable to find static field: RETURN_NULL_AND_BLAN
                  [org.apache.poi/poi-scratchpad "3.16"] ;; .ppt varten
                  [org.apache.poi/poi-ooxml "3.16"] ;; .xlsx tiedoston lukua varten
                  [org.clojure/data.json "0.2.6"]
 
                  ;; Chime -ajastuskirjasto
-                 [jarohen/chime "0.2.0"]
+                 [jarohen/chime "0.2.2"]
 
                  ;; Pikkukuvien muodostamiseen
                  [net.coobird/thumbnailator "0.4.8"]
@@ -118,13 +118,13 @@
                  [http-kit.fake "0.2.2"]
 
                  ;; Apache ANT core
-                 [org.apache.ant/ant "1.10.0"]
+                 [org.apache.ant/ant "1.10.1"]
 
                  ;; Clojure(Script) assertointi
-                 [com.taoensso/truss "1.3.6"]
+                 [com.taoensso/truss "1.5.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
-                 [dk.ative/docjure "1.11.0"]
+                 [dk.ative/docjure "1.11.0"] ; TODO Voisi päivittää, mutta 1.12.0 aiheutti ongelman: Unable to find static field: ALIGN_RIGHT in interface org.apache.poi.ss.usermodel.CellStyle, compiling:(harja/palvelin/raportointi/excel.clj:156:44)
 
                  [com.cemerick/piggieback "0.2.2"]
                  [figwheel-sidecar "0.5.14"]
@@ -133,14 +133,14 @@
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.4.1"]
+                 [webjure/tuck "0.4.1"] ; TODO Voisi päivittää, mutta 0.4.3:n kanssa tietyöilmoitukset-näkymä ei enää hae mitään kun tullaan sinne etusivun kautta
 
                  ;; Laadunseurantatyökalua varten
-                 [org.clojure/data.codec "0.1.0"]
-                 [devcards "0.2.2" :exclusions [cljsjs/react]]
+                 [org.clojure/data.codec "0.1.1"]
+                 [devcards "0.2.4" :exclusions [cljsjs/react]]
 
-                  ;; Parsi sourcemapit
-                 [com.atlassian.sourcemap/sourcemap "1.7.5"]
+                 ;; Parsi sourcemapit
+                 [com.atlassian.sourcemap/sourcemap "1.7.6"]
 
                  ;; Arbitrary precision math frontilla
                  [cljsjs/big "3.1.3-1"]]
@@ -148,7 +148,7 @@
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]
-                                  [org.apache.pdfbox/pdfbox "2.0.6"]]
+                                  [org.apache.pdfbox/pdfbox "2.0.8"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.1.0"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
@@ -156,8 +156,8 @@
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
                    }
              :test {:dependencies [[clj-webdriver "0.7.2"]
-                                   [org.seleniumhq.selenium/selenium-java "3.0.1"]
-                                   [org.seleniumhq.selenium/selenium-firefox-driver "3.0.1"]]}}
+                                   [org.seleniumhq.selenium/selenium-java "3.8.1"]
+                                   [org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
@@ -165,7 +165,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"]
+  :plugins [[lein-cljsbuild "1.1.5"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
@@ -173,7 +173,7 @@
             [jonase/eastwood "0.2.4"]
             [lein-auto "0.1.2"]
             [lein-pdo "0.1.1"]
-            [lein-doo "0.1.7"]]
+            [lein-doo "0.1.8"]]
 
 
   ;; Asiakaspuolen cljs buildin tietoja
@@ -317,7 +317,7 @@
                       "doo" "phantom" "test" "once,"
                       "doo" "phantom" "laadunseuranta-test" "once"]
 
-            ;; työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
+            ;; Työkaluja, joita devaamisessa ja asiakkaalta saadun datan hieromisessa oikeaan muotoon, tarvitaan
             "elyt" ["run" "-m" "harja.tyokalut.elyt"] ;; ELY rajojen SHP file => hallintayksikkö SQL inserteiksi
             "sampo" ["run" "-m" "harja.tyokalut.sampo"] ;; SAMPO tuotelista XLS file => toimenpidekoodi SQL inserteiksi
             "gitlog" ["run" "-m" "harja.tyokalut.gitlog"] ;; tekee gitlogin resources alle
