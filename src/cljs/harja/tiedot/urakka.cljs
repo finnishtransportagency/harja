@@ -1,5 +1,5 @@
 (ns harja.tiedot.urakka
-  "Tämä nimiavaruus hallinnoi urakan usealle toiminnolle yhteisiä tietoja"
+  "Tämä nimiavaruus hallinnoi urakan usealle toiminnolle yhteisiä tietoja."
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as time]
             [cljs-time.coerce :as tc]
