@@ -231,16 +231,21 @@
                                              (= (apurit/raporttisolun-arvo tpp) 0)
                                              (= (apurit/raporttisolun-arvo tur) 1)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
+                                      (fn [[alue tpp tur urk & _ ]]
+                                        (and (= alue "Muhoksen päällystysurakka")
+                                             (= (apurit/raporttisolun-arvo tpp) 0)
+                                             (= (apurit/raporttisolun-arvo tur) 1)
+                                             (= (apurit/raporttisolun-arvo urk) 0)))
                                       (fn [{[alue tpp tur urk & _] :rivi}]
                                         (and (= alue "Pohjois-Pohjanmaa yhteensä")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 4)
+                                             (= (apurit/raporttisolun-arvo tur) 5)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
 
                                       (fn [[alue tpp tur urk & _ ]]
                                         (and (= alue "KOKO MAA")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 6)
+                                             (= (apurit/raporttisolun-arvo tur) 7)
                                              (= (apurit/raporttisolun-arvo urk) 0)))))))
 
 
