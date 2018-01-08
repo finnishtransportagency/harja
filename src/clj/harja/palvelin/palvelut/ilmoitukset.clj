@@ -243,7 +243,8 @@
         (into []
               ilmoitus-xf
               (q/hae-ilmoitukset-raportille db
-                                            {:urakat urakat
+                                            {:urakat_annettu (boolean urakat)
+                                             :urakat urakat
                                              :alku_annettu (hakuehto-annettu? aikavali-alku)
                                              :loppu_annettu (hakuehto-annettu? aikavali-loppu)
                                              :alku aikavali-alku

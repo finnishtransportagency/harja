@@ -89,8 +89,8 @@ FROM ilmoitus i
 WHERE i.id IN
       (SELECT id FROM ilmoitus x WHERE
         (x.urakka IS NULL
-         OR :urakat::INTEGER[] IS NULL
-         OR x.urakka IN (:urakat)) AND
+          OR :urakat_annettu IS FALSE
+          OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
 
         -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
         ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
