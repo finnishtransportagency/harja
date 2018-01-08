@@ -293,7 +293,7 @@ yllapitoluokkanimi->numero
           kirjain (re-find #"\D+" kohdenumero)]
       [(when numero
          (#?(:clj  Integer.
-             :cljs js/parseInt) kohdenumero))
+             :cljs js/parseInt) numero))
        kirjain])))
 
 (defn- yllapitokohteen-jarjestys
