@@ -203,7 +203,8 @@
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
-                :notify-command ["./run-karma.sh"]}
+                ;:notify-command ["./run-karma.sh"]
+                }
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
                {:id "prod"
