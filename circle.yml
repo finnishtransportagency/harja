@@ -17,5 +17,6 @@ dependencies:
 test:
   override:
     - lein test
+    - lein do clean, compile, cljsbuild once dev
     - lein doo phantom test once
     - lein doo phantom laadunseuranta-test once
