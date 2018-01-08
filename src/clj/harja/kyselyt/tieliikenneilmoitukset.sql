@@ -88,7 +88,9 @@ FROM ilmoitus i
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE i.id IN
       (SELECT id FROM ilmoitus x WHERE
-        (x.urakka IS NULL OR x.urakka IN (:urakat)) AND
+        (x.urakka IS NULL
+         OR :urakat::INTEGER[] IS NULL
+         OR x.urakka IN (:urakat)) AND
 
         -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
         ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
