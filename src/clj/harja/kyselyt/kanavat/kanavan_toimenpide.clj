@@ -100,11 +100,9 @@
   (let [id? (id-olemassa? (::toimenpide/id kanavatoimenpide))
         kanavatoimenpide (cond-> kanavatoimenpide
                                  (::toimenpide/sijainti kanavatoimenpide) (update ::toimenpide/sijainti #(geo/geometry (geo/clj->pg %)))
-                                 id? (assoc kanavatoimenpide
-                                            ::muokkaustiedot/muokattu (pvm/nyt)
+                                 id? (assoc ::muokkaustiedot/muokattu (pvm/nyt)
                                             ::muokkaustiedot/muokkaaja-id kayttaja-id)
-                                 (not id?) (assoc kanavatoimenpide
-                                                  ::toimenpide/kuittaaja-id kayttaja-id
+                                 (not id?) (assoc ::toimenpide/kuittaaja-id kayttaja-id
                                                   ::muokkaustiedot/luotu (pvm/nyt)
                                                   ::muokkaustiedot/luoja-id kayttaja-id))]
     (if id?
