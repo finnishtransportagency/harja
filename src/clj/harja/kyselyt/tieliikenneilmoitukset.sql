@@ -92,6 +92,8 @@ WHERE i.id IN
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
 
+          u.urakkanro IS NOT NULL AND
+
         -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
         ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
          (:loppu_annettu IS FALSE AND x.ilmoitettu  >= :alku) OR
