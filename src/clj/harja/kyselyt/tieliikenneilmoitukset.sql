@@ -72,6 +72,7 @@ WHERE i.id IN
       (:ilmoittaja-puhelin::TEXT IS NULL OR
        x.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
 
+      ORDER BY i.ilmoitettu DESC
       LIMIT :max-maara::INTEGER)
 ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
 
