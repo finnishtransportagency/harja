@@ -28,7 +28,8 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-;; terminologiaa: vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
+;; Hinnoittelun (hinnoitteluleijuke) terminologiaa:
+;; vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
 ;;                koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
 ;;                kan_hinta <-> Hinnoittelu
 ;;                kan_hinta.ryhma <-> ?? - ei mitään tekemistä tämän ns:n Hintaryhmien kanssa kuitenkaan
