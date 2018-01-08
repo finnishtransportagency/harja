@@ -33,8 +33,8 @@
   (jdbc/with-db-transaction [db db]
     (let [materiaalilistaukset (m-q/hae-materiaalilistaus db (select-keys materiaalikirjaus [::m/urakka-id]))
           materiaalin-tiedot (some #(when (= (::m/nimi %) (::m/nimi materiaalikirjaus))
-                                     %)
-                                  materiaalilistaukset)
+                                      %)
+                                   materiaalilistaukset)
           halytysraja-ylitetty? (and (::m/halytysraja materiaalin-tiedot)
                                      (< (::m/maara-nyt materiaalin-tiedot) (::m/halytysraja materiaalin-tiedot)))]
       (when halytysraja-ylitetty?
@@ -52,16 +52,16 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id materiaalikirjaus))
   (jdbc/with-db-transaction [db db]
-                            (m-q/kirjaa-materiaali db user materiaalikirjaus)
-                            (hoida-halytysraja db materiaalikirjaus fim email)))
+    (m-q/kirjaa-materiaali db user materiaalikirjaus)
+    (hoida-halytysraja db materiaalikirjaus fim email)))
 
 (defn- poista-materiaalikirjaus [db user tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                   (::m/urakka-id tiedot))
   (jdbc/with-db-transaction [db db]
-                            (vaadi-materiaali-kuuluu-urakkaan db (::m/urakka-id tiedot) (::m/id tiedot))
-                            (m-q/poista-materiaalikirjaus db user (::m/id tiedot))
-                            (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
+    (vaadi-materiaali-kuuluu-urakkaan db (::m/urakka-id tiedot) (::m/id tiedot))
+    (m-q/poista-materiaalikirjaus db user (::m/id tiedot))
+    (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
 
 (defn- muuta-materiaalin-alkuperainen-maara [db materiaali]
   (m-q/paivita-materiaalin-alkuperainen-maara<!
@@ -84,9 +84,9 @@
 
 (defrecord Materiaalit []
   component/Lifecycle
-  (start [{db    :db
-           http  :http-palvelin
-           fim   :fim
+  (start [{db :db
+           http :http-palvelin
+           fim :fim
            email :sonja-sahkoposti :as this}]
     (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalilistaus
                                     (fn [user haku]
