@@ -214,8 +214,8 @@
                                              (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
                                           ilmoitukset)
                        ilmoitukset)]
-     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
-     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
+     (log/debug "Löydettiin ilmoitukset: " (mapv :id ilmoitukset))
+     (log/debug "Jokaisella on kuittauksia " (mapv #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
      ilmoitukset)))
 
 (defn hae-ilmoitukset-raportille
