@@ -48,4 +48,4 @@
                              :urakoitsija nil :urakkatyyppi :hoito
                              :alkupvm alkupvm :loppupvm loppupvm})]
     (is (not (empty? ilmoitukset)))
-    (is (= (count ilmoitukset) 6))))
+    (is (= (count ilmoitukset) 7))))

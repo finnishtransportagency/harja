@@ -153,7 +153,7 @@
               []
               (concat
                 (apply concat
-                       ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppistem ilmoitusten määrä
+                       ;; Tehdään rivi jokaiselle urakalle, ja näytetään niiden erityyppisten ilmoitusten määrä
                        (for [[hy ilmoitukset] (sort-by #(:elynumero (first %)) ilmoitukset-hyn-mukaan)]
                          (concat
                            (when (or urakoittain? (= :urakka konteksti))
