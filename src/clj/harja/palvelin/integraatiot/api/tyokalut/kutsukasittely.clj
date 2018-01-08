@@ -12,7 +12,8 @@
             [harja.kyselyt.kayttajat :as kayttajat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)
@@ -57,7 +58,9 @@
                                             (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja))]
       (if avainpolku-liitteet
         (cheshire/encode body-ilman-liittteiden-sisaltoa)
-        body))
+        (if (> (count body) 10000)
+          (str/join (take 10000 body))
+          body)))
     (catch Exception e
       (log/debug "Ei voida poistaa liitteitä bodystä: " (.getMessage e))
       body)))
@@ -144,7 +147,9 @@
        {:status status}))))
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
-  (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu)))
+  (if (> (count kutsu) 10000)
+    (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON:n 10000 ensimmäistä merkkiä: %s. " resurssi virheet (pr-str (str/join (take 10000 kutsu)))))
+    (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu))))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (tee-viallinen-kutsu-virhevastaus virheet))
 

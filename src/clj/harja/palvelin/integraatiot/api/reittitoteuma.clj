@@ -56,10 +56,10 @@ maksimi-linnuntien-etaisyys 200)
              [x2 y2 :as p2] (:coordinates (geo/pg->clj loppu))
              etaisyys (geo/etaisyys p1 p2)]
          (if (or (nil? maksimi-etaisyys) (< etaisyys maksimi-etaisyys))
-           (do (log/info "Reittitoteuman pisteillä"
-                         " (x1:" x1 " y1: " y1
-                         " & x2: " x2 " y2: " y2 " )"
-                         " ei ole yhteistä tietä. Tehdään linnuntie, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
+           (do (log/debug "Reittitoteuman pisteillä"
+                          " (x1:" x1 " y1: " y1
+                          " & x2: " x2 " y2: " y2 " )"
+                          " ei ole yhteistä tietä. Tehdään linnuntie, etäisyys: " etaisyys ", max: " maksimi-etaisyys)
                {:type :line
                 :points [[x1 y1]
                          [x2 y2]]})
@@ -150,7 +150,7 @@ maksimi-linnuntien-etaisyys 200)
         (log/debug "Aloitetaan toteuman tehtävien tallennus")
         (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
         (log/debug "Aloitetaan toteuman materiaalien tallennus")
-        (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id)
+        (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id urakka-id)
         (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
         (poista-toteuman-reitti db toteuma-id)
         (log/debug "Aloitetaan reitin tallennus")

@@ -30,7 +30,7 @@
              (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (def odotettu-ilmoitus
   {"ilmoitettu" "2015-09-29T14:49:45Z"
@@ -139,7 +139,7 @@
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
     (sonja/kuuntele (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
 
-    (odota-ehdon-tayttymista #(not (nil? @vastaus)) "Saatiin vastaus ilmoitushakuun." 10000)
+    (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 10000)
     (is (= 200 (:status @vastaus)))
 
     (let [vastausdata (cheshire/decode (:body @vastaus))
