@@ -1,4 +1,4 @@
-(ns harja.palvelin.tyokalut.koordinaatit
+(ns harja.palvelin.tyokalut.koordinaatit-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]))

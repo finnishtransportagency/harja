@@ -96,15 +96,17 @@
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide] :as app} kohteet]
   (let [nakyma-voidaan-nayttaa? (some? kohteet)]
-    [:div
-     (if nakyma-voidaan-nayttaa?
-       (if avattu-toimenpide
-         [kokonaishintainen-toimenpidelomake e! app]
-         [:div
-          [hakuehdot e! app kohteet]
-          [kokonaishintaiset-toimenpiteet-taulukko e! app]])
-       [ajax-loader "Ladataan..."])
-     [debug/debug app]]))
+    (if nakyma-voidaan-nayttaa?
+      [:span
+       [kartta/kartan-paikka]
+       [:div
+        (if avattu-toimenpide
+          [kokonaishintainen-toimenpidelomake e! app]
+          [:div
+           [hakuehdot e! app kohteet]
+           [kokonaishintaiset-toimenpiteet-taulukko e! app]])
+        [debug/debug app]]]
+      [ajax-loader "Ladataan..."])))
 
 (defn kokonaishintaiset* [e! _]
   (komp/luo
@@ -114,9 +116,7 @@
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
 
-      [:span
-       [kartta/kartan-paikka]
-       [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet]])))
+      [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

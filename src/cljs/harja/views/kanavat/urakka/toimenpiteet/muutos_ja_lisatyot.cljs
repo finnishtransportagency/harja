@@ -24,7 +24,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.debug :as debug]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
-            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka])
+            [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
+            [harja.views.kartta :as kartta])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -113,13 +114,15 @@
         (let [kohteet @kanavaurakka/kanavakohteet
               nakyma-voidaan-nayttaa? (some? kohteet)]
           (if nakyma-voidaan-nayttaa?
-            [:div
-             [debug app]
-             (if avattu-toimenpide
-               [lisatyot-lomake e! app]
-               [:div
-                [suodattimet e! app]
-                [taulukko e! app]])]
+            [:span
+             [kartta/kartan-paikka]
+             [:div
+              (if avattu-toimenpide
+                [lisatyot-lomake e! app]
+                [:div
+                 [suodattimet e! app]
+                 [taulukko e! app]])
+              [debug app]]]
             [ajax-loader "Ladataan..."]))))))
 
 (defc lisatyot []
