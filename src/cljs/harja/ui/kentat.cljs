@@ -1135,16 +1135,20 @@
 (defmethod tee-kentta :sijaintivalitsin
   ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.
   ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
-  [{:keys [karttavalinta? paikannus?
+  [{:keys [karttavalinta? paikannus? paikannus-kaynnissa?-atom
            paikannus-onnistui-fn paikannus-epaonnistui-fn
-           karttavalinta-tehty-fn poista-valinta?
-           paikannus-kaynnissa?-atom]} data]
+           karttavalinta-tehty-fn poista-valinta?]} data]
   (let [karttavalinta? (if (some? karttavalinta?) karttavalinta? true)
         paikannus? (if (some? paikannus?) paikannus? true)
 
-        paikannus-kaynnissa? (or paikannus-kaynnissa?-atom (atom false))
+        paikannus-kaynnissa? (atom false)
 
         karttavalinta-kaynnissa? (atom false)]
+    (when paikannus-kaynnissa?
+      (add-watch paikannus-kaynnissa?
+                 :paikannus?
+                 (fn [avain ref vanha uusi]
+                   (reset! paikannus-kaynnissa?-atom uusi))))
 
     (komp/luo
       (komp/sisaan #(do

@@ -101,7 +101,7 @@
           :tyyppi :sijaintivalitsin
           ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
           ;; haun aikana
-          :paikannus-kaynnissa?-atom (r/wrap nil
+          :paikannus-kaynnissa?-atom (r/wrap (:paikannus-kaynnissa? toimenpide)
                                              (fn [_]
                                                (paikannus-kaynnissa-fn)))
           :poista-valinta? true
