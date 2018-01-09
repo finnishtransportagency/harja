@@ -155,4 +155,5 @@
 (deftest toimenpiteen-materiaalit-haku
   (let [toimenpide-id 2
         vastaus [{:nimi "Naulat" :maara 6} {:nimi "Ämpäreitä" :maara 12}]]
-    (is (= vastaus (tiedot/toimenpiteen-materiaalit app-materiaalin-hinnoittelutestille)))))
+    (is (= vastaus (tiedot/toimenpiteen-materiaalit {:toimenpide-id toimenpide-id
+                                                     :materiaalit (::materiaali/muutokset app-materiaalin-hinnoittelutestille)})))))

@@ -147,17 +147,18 @@
 
 (defn toimenpiteen-materiaalit
   "Palauttaa hinnoiteltavan rivin materiaalit."
-  [app]
-  (let [toimenpide-id (get-in app [:hinnoittele-toimenpide ::toimenpide/id])
-        materiaalin-kaytto (fn [materiaali]
+  [{toimenpide-id :toimenpide-id materiaalit :materiaalit}]
+  (assert (integer? toimenpide-id) "toimenpide-id pitää olla int")
+  (let [materiaalin-kaytto (fn [materiaali]
                              (apply + (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
                                                (- (::materiaalit/maara %)))
                                             (::materiaalit/muutokset materiaali))))]
     (keep (fn [materiaali]
             (when-let [maara (materiaalin-kaytto materiaali)]
               {:nimi (::materiaalit/nimi materiaali)
-               :maara maara}))
-          (:urakan-materiaalit app))))
+               :maara maara
+               :yksikko "kpl"}))
+          materiaalit)))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
@@ -385,12 +386,14 @@
     (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
           hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
+          materiaalit (or (toimenpiteen-materiaalit {:toimenpide-id toimenpide-id :materiaalit (:urakan-materiaalit app)}) [])
           urakka-id (get-in app [:valinnat :urakka :id])]
       (if urakka-id
         (assoc app :hinnoittele-toimenpide
                    {::toimenpide/id toimenpide-id
                     ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
                     ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
+                    :materiaalit materiaalit
                     ::tyo/tyot tyot
                     :urakka urakka-id})
         (do

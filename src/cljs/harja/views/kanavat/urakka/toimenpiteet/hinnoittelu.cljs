@@ -45,6 +45,12 @@
   ([e! hinta arvo-kw kentan-optiot asetus-fn]
    [kentta* e! hinta arvo-kw kentan-optiot asetus-fn]))
 
+(defn- kentta-materiaalille
+  ([e! materiaali arvo-kw kentan-optiot]
+   [kentta-materiaalille e! materiaali arvo-kw kentan-optiot #(println "asetus")])
+  ([e! materiaali arvo-kw kentan-optiot asetus-fn]
+   [kentta* e! materiaali arvo-kw kentan-optiot asetus-fn]))
+
 (defn- kentta-tyolle
   ([e! tyo arvo-kw kentan-optiot]
    [kentta-tyolle e! tyo arvo-kw kentan-optiot
@@ -133,6 +139,17 @@
      [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
+(defn- materiaalit-header
+  []
+  [:thead
+   [:tr
+    [:th {:style {:width "40%"}} "Materiaali"]
+    [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
+    [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
+    [:th {:style {:width "5%"}} "Yks."]
+    [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
+    [:th.tasaa-oikealle {:style {:width "10%"}}]
+    [:th {:style {:width "5%"}} ""]]])
 
 (declare suunnitellut-tyot-paivamaaralle)
 
@@ -247,18 +264,28 @@
 (defn- materiaali-hinnoittelurivi
   [e! materiaali]
   [:tr
-   [:td "Tyhyjää täynnä"]])
+   [:td [kentta-materiaalille e! materiaali :nimi {:tyyppi :string}]]
+   [:td.tasaa-oikealle [kentta-materiaalille e! materiaali :yksikko-hinta
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
+   [:td.tasaa-oikealle [kentta-materiaalille e! materiaali :maara
+                        {:tyyppi :string}]]
+   [:td
+    [kentta-materiaalille e! materiaali :yksikko {:tyyppi :string :pituus-min 1}]]
+   [:td "Yhteensä"]
+   [:td.keskita ""]
+   [:td.keskita
+    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali))]]])
 
 (defn- materiaalit [e! app*]
-  (let [materiaalit (tiedot/toimenpiteen-materiaalit app*)]
+  (let [materiaalit (get-in app* [:hinnoittele-toimenpide :materiaalit])]
     [:div.hinnoitteluosio
      [valiotsikko "Varaosat ja materiaalit"]
      [:table
-      [sopimushintaiset-tyot-header {:yk-lisa? false}]
+      [materiaalit-header]
       [:tbody
        (for* [materiaali materiaalit]
          [materiaali-hinnoittelurivi e! materiaali])]]
-     [rivinlisays "Lisää materiaalirivi" #(println "Lisää rivi")]]))
+     [rivinlisays "Lisää materiaalirivi" #(println "Lisää materiaalilivi")]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
@@ -296,7 +323,7 @@
        (tyo/toiden-kokonaishinta nykyiset-tyot
                                  suunnitellut-tyot))))
 
-(defn- hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
+(defn hinnoittele-toimenpide [e! app* toimenpide-rivi ;; listaus-tunniste
                                ]
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::toimenpide/id])
         valittu-aikavali (get-in app* [:valinnat :aikavali])
