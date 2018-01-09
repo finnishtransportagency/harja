@@ -16,6 +16,7 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -85,12 +86,17 @@
     (sort-by ::kanavan-toimenpide/pvm >
              (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
 
+
+
 (defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
                                                      tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
-                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
+                                           :lisaa-materiaali-fn #(e! (tiedot/->LisaaMateriaali))
+                                           :muokkaa-materiaaleja-fn #(e! (tiedot/->MuokkaaMateriaaleja %))
+                                           :lisaa-virhe-fn #(e! (tiedot/->LisaaVirhe %))}])
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide] :as app} kohteet]
   (let [nakyma-voidaan-nayttaa? (some? kohteet)]
