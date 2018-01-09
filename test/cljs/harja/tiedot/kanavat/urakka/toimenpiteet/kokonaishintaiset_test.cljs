@@ -150,10 +150,11 @@
            (e! (tiedot/->ValitutEiSiirretty) app)))))
 
 (deftest PaikannusKytketty
-  (is (= {:avattu-toimenpide {:paikannus-kaynnissa? true}}
-         (e! (tiedot/->KytkePaikannusKaynnissa) nil)))
-  (is (= {:avattu-toimenpide {:paikannus-kaynnissa? false}}
-         (e! (tiedot/->KytkePaikannusKaynnissa) true))))
+  (let [app {:avattu-toimenpide {:paikannus-kaynnissa? nil}}]
+    (is (= {:avattu-toimenpide {:paikannus-kaynnissa? true}}
+           (e! (tiedot/->KytkePaikannusKaynnissa) app)))
+    (is (= {:avattu-toimenpide {:paikannus-kaynnissa? false}}
+           (e! (tiedot/->KytkePaikannusKaynnissa) (assoc-in app [:avattu-toimenpide :paikannus-kaynnissa?] true))))))
 
 (def app-tallennustestille {:urakan-materiaalit (:urakan-materiaalit '({::materiaali/urakka-id 1
                                ::materiaali/toimenpide 2
