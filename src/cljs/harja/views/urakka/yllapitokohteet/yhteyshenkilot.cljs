@@ -9,7 +9,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.urakka :as u]
             [harja.ui.viesti :as viesti]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
@@ -48,7 +49,7 @@
 
   (modal/nayta!
     {:otsikko (str "Kohteen "
-                   (u/urakkatyyppi->otsikko urakkatyyppi)
+                   (str/lower-case (u/urakkatyyppi->otsikko urakkatyyppi))
                    "urakan yhteyshenkilöt")
      :footer [:span
               [:button.nappi-toissijainen {:type "button"
