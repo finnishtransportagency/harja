@@ -168,16 +168,19 @@
              ::materiaalit/lisatieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
 
 (defn tallennettavat-materiaalit [tp]
-  (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
-        muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
+  (if (::muokkaustiedot/poistettu? tp)
+    []
+    ;; else
+    (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
+          muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
 
-        tp-id (::kanavatoimenpide/id tp)
-        paivamaara (::kanavatoimenpide/pvm tp)
-        kohteen-nimi (-> tp ::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
+          tp-id (::kanavatoimenpide/id tp)
+          paivamaara (::kanavatoimenpide/pvm tp)
+          kohteen-nimi (-> tp ::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
 
-        lisatieto (str "Kohteen " kohteen-nimi " materiaali")
-        tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
-    tallennettavat))
+          lisatieto (str "Kohteen " kohteen-nimi " materiaali")
+          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
+      tallennettavat)))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
   ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
