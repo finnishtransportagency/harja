@@ -112,7 +112,11 @@
                                                        {::materiaali/maara -1
                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
                                                         ::materiaali/id 16
-                                                        ::materiaali/toimenpide 3}]
+                                                        ::materiaali/toimenpide 3}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                        ::materiaali/id 13
+                                                        ::materiaali/toimenpide 2}]
                                ::materiaali/nimi "Naulat"}
                               {::materiaali/urakka-id 1
                                ::materiaali/toimenpide 2
@@ -147,3 +151,8 @@
                                                                                                           ::materiaali/urakka-id 1
                                                                                                           ::materiaali/pvm nil
                                                                                                           ::materiaali/id 12}}])}})
+
+(deftest toimenpiteen-materiaalit-haku
+  (let [toimenpide-id 2
+        vastaus [{:nimi "Naulat" :maara 6} {:nimi "Ämpäreitä" :maara 12}]]
+    (is (= vastaus (tiedot/toimenpiteen-materiaalit app-materiaalin-hinnoittelutestille)))))

@@ -147,8 +147,8 @@
 
 (defn toimenpiteen-materiaalit
   "Palauttaa hinnoiteltavan rivin materiaalit."
-  []
-  (let [toimenpide-id (get-in @tila [:hinnoittele-toimenpide ::toimenpide/id])
+  [app]
+  (let [toimenpide-id (get-in app [:hinnoittele-toimenpide ::toimenpide/id])
         materiaalin-kaytto (fn [materiaali]
                              (apply + (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
                                                (- (::materiaalit/maara %)))
@@ -157,7 +157,7 @@
             (when-let [maara (materiaalin-kaytto materiaali)]
               {:nimi (::materiaalit/nimi materiaali)
                :maara maara}))
-          (:urakan-materiaalit @tila))))
+          (:urakan-materiaalit app))))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
