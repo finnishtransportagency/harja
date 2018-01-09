@@ -129,15 +129,17 @@
                            loppupvm)
         hoitokaudella-tahan-asti-opt (if kyseessa-kk-vali? " hoitokaudella " "")
         raportin-nimi "Ilmoitusraportti"
+        raportin-alue (case konteksti
+                        :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                        :koko-maa "KOKO MAA")
         raportin-tiedot (str
-                          (case konteksti
-                           :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                           :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                           :koko-maa "KOKO MAA")
-                          ", "
-                          (or (when-let [tyyppi-otsikko (u/urakkatyyppi->otsikko urakkatyyppi)]
-                                (str/lower-case tyyppi-otsikko))
-                              "kaikki urakkatyypit"))
+                          raportin-alue
+                          (when (not= konteksti :urakka)
+                            (str ", "
+                                 (or (when-let [tyyppi-otsikko (u/urakkatyyppi->otsikko urakkatyyppi)]
+                                   (str/lower-case tyyppi-otsikko))
+                                 "kaikki urakkatyypit"))))
         otsikko (raportin-otsikko
                   raportin-tiedot
                   raportin-nimi alkupvm loppupvm)
@@ -192,7 +194,7 @@
                   (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
                         tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
                         urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
-                    [(concat [raportin-tiedot]
+                    [(concat [raportin-alue]
                              [tpp-yht tur-yht urk-yht])])))))]
 
      (ilmoitukset-asiakaspalauteluokittain db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm)
