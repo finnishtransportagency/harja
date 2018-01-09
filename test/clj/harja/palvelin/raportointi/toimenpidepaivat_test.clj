@@ -48,7 +48,7 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
                                               :hoitoluokat #{0 1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Toimenpidepäivät aikavälillä 01.10.2005 - 01.10.2006 (365 päivää)")]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Monenako päivänä toimenpidettä on tehty aikavälillä")
@@ -109,7 +109,7 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
                                               :hoitoluokat #{0 1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Toimenpidepäivät aikavälillä 01.10.2005 - 01.10.2006 (365 päivää)")]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Monenako päivänä toimenpidettä on tehty aikavälillä")
@@ -169,7 +169,7 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 1 1))
                                               :loppupvm (c/to-date (t/local-date 2006 12 31))
                                               :hoitoluokat #{0 1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Toimenpidepäivät aikavälillä 01.01.2005 - 31.12.2006 (729 päivää)")]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Monenako päivänä toimenpidettä on tehty aikavälillä")

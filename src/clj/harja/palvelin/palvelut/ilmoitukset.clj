@@ -236,15 +236,27 @@
                      nil)
         debug-viesti (str "Haetaan ilmoituksia raportille: "
                           (viesti urakat "urakoista" "ilman urakoita")
+                          (viesti urakat "urakoista" "ilman urakoita")
                           (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                           (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa"))
         _ (log/debug debug-viesti)
+        _ (log/debug "HAKU PARAMS: " {:urakat_annettu (boolean urakat)
+                                      :urakat urakat
+                                      :urakkatyyppi_annettu (some? urakkatyyppi)
+                                      :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                      :alku_annettu (hakuehto-annettu? aikavali-alku)
+                                      :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                      :alku aikavali-alku
+                                      :loppu aikavali-loppu})
         ilmoitukset
         (into []
               ilmoitus-xf
               (q/hae-ilmoitukset-raportille db
                                             {:urakat_annettu (boolean urakat)
                                              :urakat urakat
+                                             :urakkatyyppi_annettu (and (some? urakkatyyppi)
+                                                                        (not= urakkatyyppi :kaikki))
+                                             :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                              :alku_annettu (hakuehto-annettu? aikavali-alku)
                                              :loppu_annettu (hakuehto-annettu? aikavali-loppu)
                                              :alku aikavali-alku

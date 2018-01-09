@@ -49,7 +49,7 @@
                                  :urakka-id @oulun-alueurakan-2014-2019-id
                                  :parametrit {:alkupvm   (pvm/->pvm "1.8.2015")
                                               :loppupvm (pvm/->pvm "31.8.2015")
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Kaikki yhteensä")
         laskutusyhteenveto (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
                                           (:db jarjestelma)
@@ -92,7 +92,7 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 12 31))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti KOKO MAA 01.01.2014 - 31.12.2015")
 

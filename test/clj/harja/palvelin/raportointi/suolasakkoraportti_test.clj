@@ -157,7 +157,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [elementit (apurit/tarkista-raportti vastaus "Suolasakkoraportti")
           taulukko (apurit/taulukko-otsikolla
@@ -188,7 +188,7 @@
                                  :konteksti  "koko maa"
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [elementit (apurit/tarkista-raportti vastaus "Suolasakkoraportti")
           taulukko (apurit/taulukko-otsikolla
