@@ -1007,7 +1007,8 @@
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :yllapitokohteen-urakan-yhteyshenkilot
                                     +kayttaja-jvh+
-                                    {:yllapitokohde-id leppajarven-ramppi-id})]
+                                    {:yllapitokohde-id leppajarven-ramppi-id
+                                     :urakkatyyppi :paallystys})]
 
         (is (= vastaus
                {:fim-kayttajat [{:kayttajatunnus "A000001"
@@ -1075,4 +1076,5 @@
         (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :yllapitokohteen-urakan-yhteyshenkilot
                                                +kayttaja-ulle+
-                                               {:yllapitokohde-id leppajarven-ramppi-id})))))))
+                                               {:yllapitokohde-id leppajarven-ramppi-id
+                                                :urakkatyyppi :paallystys})))))))

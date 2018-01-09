@@ -323,6 +323,16 @@
                                  :sama-hallintayksikko "Hallintayksikön tiemerkintäurakat"
                                  :eri-hallintayksikko "Muut tiemerkintäurakat")
               :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
+           (when (= (:nakyma optiot) :paallystys)
+             {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
+              :leveys 4 :nimi :tiemerkinta-yhteystiedot
+              :tyyppi :komponentti
+              :komponentti (fn [rivi]
+                             (grid/arvo-ja-nappi
+                               {:arvo-ja-nappi-napin-teksti (ikonit/user)
+                                :arvo-ja-nappi-toiminto-fn
+                                #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal! (:id rivi) :tiemerkinta)
+                                :arvo (:paallystysurakka rivi)}))})
            (when (= (:nakyma optiot) :tiemerkinta)
              {:otsikko "Pääl\u00ADlys\u00ADtys\u00ADurak\u00ADka"
               :leveys 13 :nimi :paallystysurakka
@@ -331,7 +341,7 @@
                              (grid/arvo-ja-nappi
                                {:arvo-ja-nappi-napin-teksti (ikonit/user)
                                 :arvo-ja-nappi-toiminto-fn
-                                #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal! (:id rivi))
+                                #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal! (:id rivi) :paallystys)
                                 :arvo (:paallystysurakka rivi)}))})
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :fmt yllapito-pvm-fmt
