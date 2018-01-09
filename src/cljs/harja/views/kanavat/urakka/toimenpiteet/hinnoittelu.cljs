@@ -244,6 +244,21 @@
 
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
+(defn- materiaali-hinnoittelurivi
+  [e! materiaali]
+  [:tr
+   [:td "Tyhyjää täynnä"]])
+
+(defn- materiaalit [e! app*]
+  (let [materiaalit []]
+    [:div.hinnoitteluosio
+     [valiotsikko "Varaosat ja materiaalit"]
+     [:table
+      [sopimushintaiset-tyot-header {:yk-lisa? false}]
+      [:tbody
+       (for* [materiaali materiaalit]
+         [materiaali-hinnoittelurivi e! materiaali])]]
+     [rivinlisays "Lisää materiaalirivi" #(println "Lisää rivi")]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
@@ -267,6 +282,7 @@
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
    [muut-tyot e! app*]
+   [materiaalit e! app*]
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
