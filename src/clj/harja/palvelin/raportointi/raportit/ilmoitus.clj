@@ -82,7 +82,7 @@
       {:leveys 2 :otsikko "Yhteensä"}]
      rivit]))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id urakkatyyppi
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
