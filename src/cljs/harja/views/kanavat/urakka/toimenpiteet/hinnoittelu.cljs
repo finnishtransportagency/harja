@@ -250,7 +250,7 @@
    [:td "Tyhyjää täynnä"]])
 
 (defn- materiaalit [e! app*]
-  (let [materiaalit []]
+  (let [materiaalit (tiedot/toimenpiteen-materiaalit)]
     [:div.hinnoitteluosio
      [valiotsikko "Varaosat ja materiaalit"]
      [:table

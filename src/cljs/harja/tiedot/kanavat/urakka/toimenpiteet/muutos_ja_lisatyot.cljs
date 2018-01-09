@@ -105,6 +105,7 @@
 (defrecord ToimenpiteenHinnoitteluTallennettu [vastaus])
 (defrecord ToimenpiteenHinnoitteluEiTallennettu [virhe])
 (defrecord HaeHuoltokohteet [])
+(defrecord HinnoiteltavanToimenpiteenMateriaalit [])
 
 ;; Suunnitellut työt
 (defrecord TyhjennaSuunnitellutTyot [])
@@ -144,6 +145,19 @@
 (defn hinta-otsikolla [hinnat otsikkokriteeri]
   (etsi-eka-map hinnat ::hinta/otsikko otsikkokriteeri))
 
+(defn toimenpiteen-materiaalit
+  "Palauttaa hinnoiteltavan rivin materiaalit."
+  []
+  (let [toimenpide-id (get-in @tila [:hinnoittele-toimenpide ::toimenpide/id])
+        materiaalin-kaytto (fn [materiaali]
+                             (apply + (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
+                                               (- (::materiaalit/maara %)))
+                                            (::materiaalit/muutokset materiaali))))]
+    (keep (fn [materiaali]
+            (when-let [maara (materiaalin-kaytto materiaali)]
+              {:nimi (::materiaalit/nimi materiaali)
+               :maara maara}))
+          (:urakan-materiaalit @tila))))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
@@ -500,7 +514,7 @@
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
                       true))
       (update app :valitut-toimenpide-idt
-                 #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
+              #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
 
   HaeHuoltokohteet
   (process-event [{toimenpide :toimenpide} app]
@@ -534,8 +548,8 @@
   (process-event [{materiaalit :materiaalit} app]
     ;; (log "MateriaalitHaettu, saatiin" (count materiaalit))
     (assoc app
-           :urakan-materiaalit materiaalit
-           :materiaalien-haku-kaynnissa? false))
+      :urakan-materiaalit materiaalit
+      :materiaalien-haku-kaynnissa? false))
 
   MateriaalienHakuEpaonnistui
   (process-event [_ app]
@@ -548,10 +562,10 @@
     (if (:avattu-toimenpide app)
       (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
                 (vec
-                 (for [m materiaalit]
-                   (if (-> m :varaosat ::materiaalit/muutokset)
-                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
-                     m))))
+                  (for [m materiaalit]
+                    (if (-> m :varaosat ::materiaalit/muutokset)
+                      (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                      m))))
       app))
 
   LisaaMateriaali
