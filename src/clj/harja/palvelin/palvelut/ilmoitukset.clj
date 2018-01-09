@@ -8,6 +8,7 @@
             [harja.kyselyt.tieliikenneilmoitukset :as q]
             [harja.domain.tieliikenneilmoitukset :as ilmoitukset-domain]
             [harja.palvelin.palvelut.urakat :as urakat]
+            [harja.kyselyt.urakat :as ur-q]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [clj-time.core :as t]
             [harja.pvm :as pvm]
@@ -214,8 +215,8 @@
                                              (not (sisaltaa-aloituskuittauksen-aikavalilla? % (t/hours 1))))
                                           ilmoitukset)
                        ilmoitukset)]
-     (log/debug "Löydettiin ilmoitukset: " (map :id ilmoitukset))
-     (log/debug "Jokaisella on kuittauksia " (map #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
+     (log/debug "Löydettiin ilmoitukset: " (mapv :id ilmoitukset))
+     (log/debug "Jokaisella on kuittauksia " (mapv #(count (:kuittaukset %)) ilmoitukset) "kappaletta")
      ilmoitukset)))
 
 (defn hae-ilmoitukset-raportille
@@ -225,29 +226,29 @@
                         (konv/sql-timestamp (first aikavali)))
         aikavali-loppu (when (second aikavali)
                          (konv/sql-timestamp (second aikavali)))
-        urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
-                 db user (fn [urakka-id kayttaja]
-                           (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
-                                                urakka-id
-                                                kayttaja))
-                 urakka urakoitsija urakkatyyppi hallintayksikko
-                 (first aikavali) (second aikavali))
+        urakat (cond urakka
+                     [urakka]
+
+                     hallintayksikko
+                     (map :id (ur-q/hae-hallintayksikon-urakat db hallintayksikko))
+
+                     :default ;; Kaikki urakat
+                     nil)
         debug-viesti (str "Haetaan ilmoituksia raportille: "
                           (viesti urakat "urakoista" "ilman urakoita")
                           (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
                           (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa"))
         _ (log/debug debug-viesti)
         ilmoitukset
-        (if-not (empty? urakat)
-          (into []
-                ilmoitus-xf
-                (q/hae-ilmoitukset-raportille db
-                                              {:urakat urakat
-                                               :alku_annettu (hakuehto-annettu? aikavali-alku)
-                                               :loppu_annettu (hakuehto-annettu? aikavali-loppu)
-                                               :alku aikavali-alku
-                                               :loppu aikavali-loppu}))
-          [])]
+        (into []
+              ilmoitus-xf
+              (q/hae-ilmoitukset-raportille db
+                                            {:urakat_annettu (boolean urakat)
+                                             :urakat urakat
+                                             :alku_annettu (hakuehto-annettu? aikavali-alku)
+                                             :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                             :alku aikavali-alku
+                                             :loppu aikavali-loppu}))]
     ilmoitukset))
 
 (defn hae-ilmoitus [db user id]
