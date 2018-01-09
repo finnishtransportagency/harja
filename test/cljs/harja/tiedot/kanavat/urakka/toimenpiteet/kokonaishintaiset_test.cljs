@@ -137,3 +137,9 @@
             :toimenpiteet (sequence [{::kanavan-toimenpide/id 1}])
             :valitut-toimenpide-idt #{1}}
            (e! (tiedot/->ValitutEiSiirretty) app)))))
+
+(deftest PaikannusKytketty
+  (is (= {:avattu-toimenpide {:paikannus-kaynnissa? true}}
+         (e! (tiedot/->KytkePaikannusKaynnissa) nil)))
+  (is (= {:avattu-toimenpide {:paikannus-kaynnissa? false}}
+         (e! (tiedot/->KytkePaikannusKaynnissa) true))))
