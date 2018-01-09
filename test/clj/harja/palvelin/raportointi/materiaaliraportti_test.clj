@@ -73,7 +73,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Materiaaliraportti")
@@ -95,7 +95,7 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "KOKO MAA, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Materiaaliraportti")

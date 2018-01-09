@@ -72,7 +72,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi "hoito"}})]
+                                                      :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [otsikko "Pohjois-Pohjanmaa, Muutos- ja lisätöiden raportti ajalta 01.10.2014 - 30.09.2015, Kaikki toimenpiteet"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)
@@ -92,7 +92,7 @@
                                  :konteksti          "koko maa"
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi "hoito"
+                                                      :urakkatyyppi :hoito
                                                       :urakoittain? true}})
         nurkkasumman-teksti (last (last vastaus))]
     (is (vector? vastaus))
@@ -118,7 +118,7 @@
                                  :konteksti          "koko maa"
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 9 30))
-                                                      :urakkatyyppi "hoito"
+                                                      :urakkatyyppi :hoito
                                                       :urakoittain? false}})
         nurkkasumman-teksti (last (last vastaus))]
     (is (vector? vastaus))
