@@ -155,8 +155,8 @@
                                                     urakka-id ::toimenpide/urakka-id
                                                     :as toimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
-  (log/debug "toimenpide-map: ")
-  (clojure.pprint/pprint toimenpide)
+  (log/debug "toimenpide-map: " (with-out-str
+                                  (clojure.pprint/pprint toimenpide)))
   ;; Toimenpide kuuluu urakkaan
   (tietoturva/vaadi-linkitys db ::toimenpide/kanava-toimenpide ::toimenpide/id
                              (::toimenpide/id toimenpide) ::toimenpide/urakka-id urakka-id)
