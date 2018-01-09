@@ -59,10 +59,6 @@
               (when @ajossa
                 (with-open [stmt (.createStatement @connection)
                             rs (.executeQuery stmt "SELECT 1")]
-                  (log/debug "pitäisi ottaa argumentteja:" (count (.getParameters get-notifications)))
-                  (when (= 1 (count (.getParameters get-notifications)))
-                    (log/debug "nimi:" (.getName (first (seq (.getParameters get-notifications)))))
-                    (log/debug "tyyppi:"  (first (seq (.getParameterTypes get-notifications)))))
                   (doseq [^PGNotification notification (seq (.rawConnectionOperation @connection
                                                                                      get-notifications
                                                                                      C3P0ProxyConnection/RAW_CONNECTION
