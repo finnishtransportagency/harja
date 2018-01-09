@@ -258,7 +258,8 @@
         sopimukset (:sopimukset urakka)
         kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
         lomake-valmis? (and (not (empty? huoltokohteet))
-                            (not (empty? kanavakohteet)))]
+                            (not (empty? kanavakohteet))
+                            (not (nil? urakan-materiaalit)))]
     [:div
      [napit/takaisin "Takaisin toimenpideluetteloon" tyhjenna-fn]
      (if lomake-valmis?
