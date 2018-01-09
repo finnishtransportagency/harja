@@ -38,8 +38,14 @@
                    (.setUser kayttaja)
                    (.setPassword salasana)
                    (.setMaxPoolSize (or yhteyspoolin-koko 16))
+
                    ;; ylimääräiset yhteydet suljetaan puolen tunnin inaktiivisuuden jälkeen
                    (.setMaxIdleTimeExcessConnections (* 30 60))
                    ;; yhteyden pisin inaktiivisuusaika 3 tuntia
-                   (.setMaxIdleTime (* 3 60 60)))
+                   (.setMaxIdleTime (* 3 60 60))
+
+                   ;; Testataan yhteyden status ennen connection poolista poimintaa,
+                   ;; jotta selvitään tietokannan uudleleenkäynnistyksestä ilman poikkeuksia sovellukselle
+                   (.setPreferredTestQuery "SELECT 1")
+                   (.setTestConnectionOnCheckout true))
                  kehitysmoodi)))
