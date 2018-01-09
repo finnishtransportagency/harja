@@ -8,3 +8,12 @@ SELECT sampoid,
        nimi
 FROM urakka
 WHERE id = :id;
+
+-- name: materiaalin-halytysraja
+SELECT halytysraja
+FROM vv_materiaali
+WHERE nimi = :nimi AND
+      "urakka-id" = :urakka-id AND
+      halytysraja IS NOT NULL
+LIMIT 1;
+

@@ -138,7 +138,7 @@
                                       (fn [[alue tpp tur urk & _ ]]
                                         (and (= alue "Pohjois-Pohjanmaa")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 4)
+                                             (= (apurit/raporttisolun-arvo tur) 5)
                                              (= (apurit/raporttisolun-arvo urk) 0)))))))
 
 (deftest ilmoitusraportti-koko-maa
@@ -170,12 +170,12 @@
                                       (fn [{[alue tpp tur urk & _] :rivi}]
                                         (and (= alue "Pohjois-Pohjanmaa yhteensä")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 4)
+                                             (= (apurit/raporttisolun-arvo tur) 5)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
                                       (fn [[alue tpp tur urk & _ ]]
                                         (and (= alue "KOKO MAA")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 6)
+                                             (= (apurit/raporttisolun-arvo tur) 7)
                                              (= (apurit/raporttisolun-arvo urk) 0)))))))
 
 (deftest ilmoitusraportti-koko-maa-urakoittain
@@ -204,12 +204,12 @@
                                       (fn [{otsikko :otsikko}]
                                         (= otsikko "01 Uusimaa"))
                                       (fn [[alue tpp tur urk & _ ]]
-                                        (and (= alue "Vantaan alueurakka 2009-2019")
+                                        (and (= alue "Espoon alueurakka 2014-2019")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
                                              (= (apurit/raporttisolun-arvo tur) 1)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
                                       (fn [[alue tpp tur urk & _ ]]
-                                        (and (= alue "Espoon alueurakka 2014-2019")
+                                        (and (= alue "Vantaan alueurakka 2009-2019")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
                                              (= (apurit/raporttisolun-arvo tur) 1)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
@@ -222,25 +222,30 @@
                                       (fn [{otsikko :otsikko}]
                                         (= otsikko "12 Pohjois-Pohjanmaa"))
                                       (fn [[alue tpp tur urk & _ ]]
-                                        (and (= alue "Oulun alueurakka 2014-2019")
-                                             (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 3)
-                                             (= (apurit/raporttisolun-arvo urk) 0)))
-                                      (fn [[alue tpp tur urk & _ ]]
                                         (and (= alue "Kajaanin alueurakka 2014-2019")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
                                              (= (apurit/raporttisolun-arvo tur) 1)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
+                                      (fn [[alue tpp tur urk & _ ]]
+                                        (and (= alue "Muhoksen päällystysurakka")
+                                             (= (apurit/raporttisolun-arvo tpp) 0)
+                                             (= (apurit/raporttisolun-arvo tur) 1)
+                                             (= (apurit/raporttisolun-arvo urk) 0)))
+                                      (fn [[alue tpp tur urk & _ ]]
+                                        (and (= alue "Oulun alueurakka 2014-2019")
+                                             (= (apurit/raporttisolun-arvo tpp) 0)
+                                             (= (apurit/raporttisolun-arvo tur) 3)
+                                             (= (apurit/raporttisolun-arvo urk) 0)))
                                       (fn [{[alue tpp tur urk & _] :rivi}]
                                         (and (= alue "Pohjois-Pohjanmaa yhteensä")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 4)
+                                             (= (apurit/raporttisolun-arvo tur) 5)
                                              (= (apurit/raporttisolun-arvo urk) 0)))
 
                                       (fn [[alue tpp tur urk & _ ]]
                                         (and (= alue "KOKO MAA")
                                              (= (apurit/raporttisolun-arvo tpp) 0)
-                                             (= (apurit/raporttisolun-arvo tur) 6)
+                                             (= (apurit/raporttisolun-arvo tur) 7)
                                              (= (apurit/raporttisolun-arvo urk) 0)))))))
 
 
@@ -265,4 +270,4 @@
       (apurit/tarkista-pylvaat-data
         pylvaat
         [["2016/10" []] ["2016/11" []] ["2016/12" []] ["2017/01" [nil 5 nil]] ["2017/02" []]
-         ["2017/03" []] ["2017/04" []] ["2017/05" []] ["2017/06" []] ["2017/07" []] ["2017/08" [nil 1 nil]] ["2017/09" []]]))))
+         ["2017/03" []] ["2017/04" []] ["2017/05" []] ["2017/06" [nil 1 nil]] ["2017/07" []] ["2017/08" [nil 1 nil]] ["2017/09" []]]))))
