@@ -135,7 +135,9 @@
                            :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
                            :koko-maa "KOKO MAA")
                           ", "
-                          (or (u/urakkatyyppi->otsikko urakkatyyppi) "kaikki urakkatyypit"))
+                          (or (when-let [tyyppi-otsikko (u/urakkatyyppi->otsikko urakkatyyppi)]
+                                (str/lower-case tyyppi-otsikko))
+                              "kaikki urakkatyypit"))
         otsikko (raportin-otsikko
                   raportin-tiedot
                   raportin-nimi alkupvm loppupvm)
