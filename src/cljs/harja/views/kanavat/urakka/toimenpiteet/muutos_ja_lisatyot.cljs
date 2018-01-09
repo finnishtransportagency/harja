@@ -17,6 +17,7 @@
             [harja.ui.modal :as modal]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.ui.valinnat :as valinnat]
@@ -55,7 +56,10 @@
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
                                            :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
-                                           :paikannus-kaynnissa-fn #(e! (tiedot/->KytkePaikannusKaynnissa))}])
+                                           :paikannus-kaynnissa-fn #(e! (tiedot/->KytkePaikannusKaynnissa))
+                                           :lisaa-materiaali-fn #(e! (tiedot/->LisaaMateriaali))
+                                           :muokkaa-materiaaleja-fn #(e! (tiedot/->MuokkaaMateriaaleja %))
+                                           :lisaa-virhe-fn #(e! (tiedot/->LisaaVirhe %))}])
 
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   (let [hinta-sarake {:otsikko "Hinta"
@@ -105,8 +109,7 @@
                                   :aikavali @u/valittu-aikavali
                                   :toimenpide @u/valittu-toimenpideinstanssi}))
                            (e! (tiedot/->HaeSuunnitellutTyot))
-                           (e! (tiedot/->HaeHuoltokohteet))
-                           (log "kutsuttiin HaeSuunnitellutTyot"))
+                           (e! (tiedot/->HaeHuoltokohteet)))
                         #(do
                            (e! (tiedot/->Nakymassa? false))))
 

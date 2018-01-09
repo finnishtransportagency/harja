@@ -106,7 +106,8 @@
                                                   ::muokkaustiedot/luotu (pvm/nyt)
                                                   ::muokkaustiedot/luoja-id kayttaja-id))]
     (if id?
-      (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)})
+      (when (pos? (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+        {::toimenpide/id (::toimenpide/id kanavatoimenpide)})
       (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))
 
 (defn hae-toimenpiteiden-tehtavan-hinnoittelu [db toimenpide-idt]

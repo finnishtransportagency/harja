@@ -6,8 +6,12 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
+            [harja.testutils :refer [tarkista-map-arvot]]
+            [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [cljs.spec.alpha :as s]))
+
 
 (deftest hakuargumenttien-muodostaminen
   (let [aikavali [(pvm/luo-pvm 2017 1 1)
@@ -42,7 +46,7 @@
 
 (deftest PaivitaValinnat
   (vaadi-async-kutsut
-    #{tiedot/->HaeToimenpiteet}
+    #{tiedot/->HaeToimenpiteet tiedot/->HaeMateriaalit}
     (is (= {:valinnat {:foo :bar}}
            (e! (tiedot/->PaivitaValinnat {:foo :bar}))))))
 
@@ -77,9 +81,16 @@
 (deftest TyhjennaValittuToimenpide
   (is (nil? (:avattu-toimenpide (e! (tiedot/->TyhjennaAvattuToimenpide))))))
 
+(defn kutsu-poikkeuslokituksella [fn]
+  (try
+    (let [paluuarvo  (fn)]
+      paluuarvo)
+    (catch js/Error e
+      (.log js/console (.-stack e)))))
+
 (deftest AsetaToimenpiteenTiedot
   (let [toimenpide {:testi-pieni "Olen vain"}]
-    (is (= toimenpide (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot toimenpide)))))))
+    (tarkista-map-arvot toimenpide (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot toimenpide))))))
 
 (deftest ValinnatHaettuToimenpiteelle
   (let [valinnat {:foo "bar"}]
@@ -99,12 +110,12 @@
       (is tallennus-kaynnissa?))))
 
 (deftest ToimenpideTallennettu
-  (let [haetut-toimenpiteet [{:foo "bar"}]
+  (let [haetut-toimenpiteet {:kanavatoimenpiteet [{:foo "bar"}]}
         {:keys [tallennus-kaynnissa? avattu-toimenpide toimenpiteet]}
         (e! (tiedot/->ToimenpideTallennettu haetut-toimenpiteet false))]
     (is (false? tallennus-kaynnissa?))
     (is (nil? avattu-toimenpide))
-    (is (= haetut-toimenpiteet toimenpiteet))))
+    (is (= (:kanavatoimenpiteet haetut-toimenpiteet) toimenpiteet))))
 
 (deftest ToimenpiteidenTallentaminenEpaonnistui
   (is (false? (:tallennus-kaynnissa? (e! (tiedot/->ToimenpiteenTallentaminenEpaonnistui nil false))))))
@@ -143,3 +154,129 @@
          (e! (tiedot/->KytkePaikannusKaynnissa) nil)))
   (is (= {:avattu-toimenpide {:paikannus-kaynnissa? false}}
          (e! (tiedot/->KytkePaikannusKaynnissa) true))))
+
+(def app-tallennustestille {:urakan-materiaalit (:urakan-materiaalit '({::materiaali/urakka-id 1
+                               ::materiaali/toimenpide 2
+                               ::materiaali/muutokset [{::materiaali/maara 1000
+                                                        ::materiaali/id 4}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/id 5}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                        ::materiaali/id 13
+                                                        ::materiaali/toimenpide 2}
+                                                       {::materiaali/maara -1
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
+                                                        ::materiaali/id 16
+                                                        ::materiaali/toimenpide 3}]
+                               ::materiaali/nimi "Naulat"}
+                              {::materiaali/urakka-id 1
+                               ::materiaali/toimenpide 2
+                                ::materiaali/muutokset [{::materiaali/maara 500
+                                                         ::materiaali/id 8}
+                                                        {::materiaali/maara -12
+                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                         ::materiaali/id 12
+                                                         ::materiaali/toimenpide 2}]
+                                ::materiaali/nimi "Ämpäreitä"}))
+                            :avattu-toimenpide {::kanavan-toimenpide/id 2
+                                                ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
+                                                ::materiaali/materiaalit (seq [{:maara 4
+                                                                                :varaosa {::materiaali/nimi "Naulat"
+                                                                                          ::materiaali/urakka-id 1
+                                                                                          ::materiaali/pvm nil
+                                                                                          ::materiaali/id 13}}
+                                                                               {:poistettu true
+                                                                                :maara 12
+                                                                                :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                          ::materiaali/urakka-id 1
+                                                                                          ::materiaali/pvm nil
+                                                                                          ::materiaali/id 12}}
+                                                                               ])
+                                                ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
+                                                                                                :varaosa {::materiaali/nimi "Naulat"
+                                                                                                          ::materiaali/urakka-id 1
+                                                                                                          ::materiaali/pvm nil
+                                                                                                          ::materiaali/id 13}}
+                                                                                               {:maara 12
+                                                                                                :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                                          ::materiaali/urakka-id 1
+                                                                                                          ::materiaali/pvm nil
+                                                                                                          ::materiaali/id 12}}])}})
+
+(def tallennettava-vertailumap {::kanavan-toimenpide/materiaalipoistot '({:harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/id 12})
+                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})
+})
+(deftest materiaalit-vs-tallennus
+  (let [app app-tallennustestille
+        tyyppi :kokonaishintainen
+        tehtavat nil
+        ;; app (e! (tiedot/->TallennaToimenpide (:avattu-toimenpide app)))
+        toimenpide (:avattu-toimenpide app)
+        tallennettava-toimenpide (toimenpiteet/tallennettava-toimenpide tehtavat toimenpide (-> app :valinnat :urakka) tyyppi)]
+
+    (tarkista-map-arvot tallennettava-vertailumap tallennettava-toimenpide)
+    ))
+
+(deftest materiaalit-vs-AsetaLomakkeenToimenpiteenTiedot
+  (let [state {:urakan-materiaalit '({::materiaali/urakka-id 1
+                               ::materiaali/toimenpide 2
+                               ::materiaali/muutokset [{::materiaali/maara 1000
+                                                        ::materiaali/id 4}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/id 5}
+                                                       {::materiaali/maara -3
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                        ::materiaali/id 13
+                                                        ::materiaali/toimenpide 2}
+                                                       {::materiaali/maara -1
+                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
+                                                        ::materiaali/id 16
+                                                        ::materiaali/toimenpide 3}]
+                               ::materiaali/nimi "Naulat"}
+                              {::materiaali/urakka-id 1
+                               ::materiaali/toimenpide 2
+                                ::materiaali/muutokset [{::materiaali/maara 500
+                                                         ::materiaali/id 8}
+                                                        {::materiaali/maara -12
+                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                         ::materiaali/id 12
+                                                         ::materiaali/toimenpide 2}]
+                                ::materiaali/nimi "Ämpäreitä"})}
+        kysely {::kanavan-toimenpide/id 2
+                ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)}
+        vastaus {:urakan-materiaalit (:urakan-materiaalit state)
+                 :avattu-toimenpide {::kanavan-toimenpide/id 2
+                                         ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
+                                         ::materiaali/materiaalit (seq [{:maara 3
+                                                                         :varaosa {::materiaali/nimi "Naulat"
+                                                                                   ::materiaali/urakka-id 1
+                                                                                   ::materiaali/pvm nil
+                                                                                   ::materiaali/id 13}}
+                                                                        {:maara 12
+                                                                         :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                   ::materiaali/urakka-id 1
+                                                                                   ::materiaali/pvm nil
+                                                                                   ::materiaali/id 12}}])
+                                         ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
+                                                                                         :varaosa {::materiaali/nimi "Naulat"
+                                                                                                   ::materiaali/urakka-id 1
+                                                                                                   ::materiaali/pvm nil
+                                                                                                   ::materiaali/id 13}}
+                                                                                        {:maara 12
+                                                                                         :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                                   ::materiaali/urakka-id 1
+                                                                                                   ::materiaali/pvm nil
+                                                                                                   ::materiaali/id 12}}])}}]
+
+    (tarkista-map-arvot (:avattu-toimenpide vastaus) (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot kysely) state)))
+    (let [materiaalit-ennen [{:maara 1
+                              :varaosa {::materiaali/id 12
+                                        ::materiaali/nimi "Naulat"
+                                        ::materiaali/pvm nil
+                                        ::materiaali/urakka-id 1}}]
+          materiaalit-jalkeen [{:maara 1
+                                :varaosa {::materiaali/id 12
+                                          ::materiaali/nimi "Naulat"
+                                          ::materiaali/pvm nil
+                                          ::materiaali/urakka-id 1}}]])))
