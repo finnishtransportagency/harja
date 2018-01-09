@@ -123,7 +123,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi nil}})
+                                              :urakkatyyppi :kaikki}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
@@ -150,7 +150,7 @@
                                  :hallintayksikko-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi nil}})
+                                              :urakkatyyppi :kaikki}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
@@ -187,7 +187,7 @@
                                  :hallintayksikko-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi nil
+                                              :urakkatyyppi :kaikki
                                               :urakoittain? true}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
@@ -269,7 +269,7 @@
                                  :hallintayksikko-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi nil
+                                              :urakkatyyppi :kaikki
                                               :urakoittain? true}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
