@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.kayttajatiedot
-  "Palvelu, jolla voi hakea perustietoja Harjan käyttäjistä"
+  "Palvelu, jolla voi hakea perustietoja Harjan käyttäjistä."
   (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.kayttajat :as q]
