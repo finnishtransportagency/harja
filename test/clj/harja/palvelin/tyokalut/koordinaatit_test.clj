@@ -1,7 +1,8 @@
 (ns harja.palvelin.tyokalut.koordinaatit-test
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
-            [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]))
+            [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
+            [com.stuartsierra.component :as component]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
