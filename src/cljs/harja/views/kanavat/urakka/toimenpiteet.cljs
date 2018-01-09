@@ -66,7 +66,7 @@
       :otsikko-valittu-fn otsikko-valittu-fn
       :rivi-valittu?-fn rivi-valittu?-fn
       :rivi-valittu-fn rivi-valittu-fn
-      :leveys 3})])
+      :leveys 5})])
 
 (defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
   (str toimenpiteiden-lkm " "
