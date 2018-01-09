@@ -515,7 +515,9 @@
 
   HuoltokohteidenHakuEpaonnistui
   (process-event [_ app]
-    (toimenpiteet/huoltokohteet-ei-haettu app))  HaeMateriaalit
+    (toimenpiteet/huoltokohteet-ei-haettu app))
+
+  HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
     (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
     (when-not materiaalien-haku-kaynnissa?

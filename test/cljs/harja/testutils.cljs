@@ -90,12 +90,6 @@
                odotettu-arvo ", saatu: "
                saatu-arvo))
 
-      ;; (instance? java.util.Date odotettu-arvo)
-      ;; (is (=ts odotettu-arvo saatu-arvo)
-      ;;     (str "Odotettu date arvo pvm-avaimelle " k " ei ole millisekunteina sama, odotettu: "
-      ;;          odotettu-arvo " (" (type odotettu-arvo) "), saatu: "
-      ;;          saatu-arvo " (" (type saatu-arvo) ")"))
-
       :default
       (is (= odotettu-arvo saatu-arvo)
           (str "Saatu arvo avaimelle " k " ei täsmää, odotettu: " odotettu-arvo

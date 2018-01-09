@@ -124,9 +124,8 @@
 
 (defn materiaalikirjaus->poistettavat-1 [{:keys [poistettu jarjestysnumero varaosa] :as grid-rivi}]
   ;; poistetaan mapista poistetuksi merkatut uudet rivit
-  (when poistettu
-    (when (not jarjestysnumero)
-      (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id}))))
+  (when (and poistettu (not jarjestysnumero))
+    (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))
 
 
 (defn materiaalikirjaus->poistettavat-2 [nykygrid {:keys [poistettu jarjestysnumero varaosa] :as muokkaamaton-grid-rivi}]
@@ -150,8 +149,10 @@
    (keep (partial materiaalikirjaus->poistettavat-2 (::materiaalit/materiaalit tp))
          (::materiaalit/muokkaamattomat-materiaalit tp))))
 
-(defn yksi-tallennettava-materiaalikirjaus [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
-  "Palauttaa tallennettavan mapin kun saadaan annetaan muokattu, ei-tyhjat, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...}"
+(defn yksi-tallennettava-materiaalikirjaus
+  "Palauttaa tallennettavan mapin kun m-kirjaus on muokattu, ei-tyhja, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...} - muutoin nil"
+  [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
+
   (let [muokkaamaton? (if (seq muokkaamattomat-kirjaukset)
                        (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
                        false)
