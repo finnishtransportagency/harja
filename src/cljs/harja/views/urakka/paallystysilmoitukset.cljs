@@ -14,6 +14,7 @@
 
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paallystys :as paallystys]
@@ -540,12 +541,13 @@
   (when paallystysilmoitukset
     (case jarjestys
       :kohdenumero
-      (sort-by :kohdenumero paallystysilmoitukset)
+      (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)) paallystysilmoitukset)
 
       :muokkausaika
       ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
       (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
-              (sort-by :kohdenumero (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
+              (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+                       (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
 
       :tila
       (sort-by
