@@ -50,8 +50,11 @@
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "kysely") summat))))
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) nil) summat))))]))
 
-(defn ilmoitukset-asiakaspalauteluokittain [db urakka-id hallintayksikko-id alkupvm loppupvm]
-  (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
+(defn ilmoitukset-asiakaspalauteluokittain [db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm]
+  (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id
+                                                                   (when urakkatyyppi (name urakkatyyppi))
+                                                                   hallintayksikko-id
+                                                                   alkupvm loppupvm)
         ilman-kokonaismaaria (filter #(not-empty (:nimi %)) data)
         rivit (mapv (fn [[nimi summat]]
                       (into [nimi] (kasittele-summat summat)))
@@ -66,12 +69,13 @@
        #(asiakaspalauteluokkien-jarjestys (str/lower-case (first %)))
        rivit)]))
 
-(defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id hallintayksikko-id alkupvm loppupvm]
+(defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm]
   (let [{:keys [toimenpiteita-aiheuttaneet
                 ei-toimenpiteita-aiheuttaneet
                 yhteensa]} (first (ilmoitukset/hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
                                             db
                                             urakka-id
+                                            (when urakkatyyppi (name urakkatyyppi))
                                             hallintayksikko-id
                                             alkupvm
                                             loppupvm))
@@ -84,7 +88,8 @@
 
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakkatyyppi
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
-  (let [konteksti (cond urakka-id :urakka
+  (let [urakkatyyppi (when (not= urakkatyyppi :kaikki) urakkatyyppi) ; :kaikki = nil, ei rajata kyselyissä urakkatyypillä
+        konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
@@ -184,9 +189,8 @@
                     [(concat [alueen-nimi]
                              [tpp-yht tur-yht urk-yht])])))))]
 
-     (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
-
-     (ilmoitukset-toimenpiteiden-mukaan db urakka-id hallintayksikko-id alkupvm loppupvm)
+     (ilmoitukset-asiakaspalauteluokittain db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm)
+     (ilmoitukset-toimenpiteiden-mukaan db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm)
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)
