@@ -54,7 +54,8 @@
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
-                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
+                                           :paikannus-kaynnissa-fn #(e! (tiedot/->KytkePaikannusKaynnissa))}])
 
 (defn taulukko [e! {:keys [toimenpiteiden-haku-kaynnissa? toimenpiteet] :as app}]
   (let [hinta-sarake {:otsikko "Hinta"
