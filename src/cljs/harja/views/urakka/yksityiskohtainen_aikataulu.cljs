@@ -3,37 +3,39 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt]]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.urakka.aikataulu :as tiedot]
-            [harja.ui.grid :as grid]
-            [cljs.core.async :refer [<!]]
-            [harja.tiedot.urakka :as u]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.pvm :as pvm]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.modal :as modal]
-            [harja.ui.yleiset :refer [vihje]]
-            [harja.ui.lomake :as lomake]
-            [cljs-time.core :as t]
-            [harja.ui.napit :as napit]
-            [harja.tiedot.istunto :as istunto]
-            [harja.domain.paallystysilmoitus :as pot]
-            [harja.ui.yleiset :as yleiset]
-            [harja.tyokalut.functor :refer [fmap]]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.ikonit :as ikonit]
-            [harja.tiedot.urakka.siirtymat :as siirtymat]
-            [harja.views.urakka.valinnat :as valinnat]
-            [harja.ui.aikajana :as aikajana]
-            [harja.domain.aikataulu :as aikataulu]
-            [harja.ui.upotettu-raportti :as upotettu-raportti]
-            [harja.tiedot.raportit :as raportit]
-            [harja.ui.kentat :as kentat]
-            [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
-            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
+            [harja.tiedot.urakka.yksityiskohtainen-aikataulu :as tiedot]
+            [harja.ui.grid :as grid])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defn yksityiskohtainen-aikataulu [rivi]
-  [:div (pr-str "Sisältö tähän TODO " rivi)])
+  (let [yksityiskohtainen-aikataulu (:yksityiskohtainen-aikataulu rivi)]
+    [:div
+     [grid/grid
+      {:otsikko "Kohteen yksityiskohtainen aikataulu"
+       :tyhja "Ei aikataulua"
+       :tallenna tiedot/tallenna-aikataulu}
+      [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+        :pituus-max 128 :muokattava? voi-muokata-paallystys?}
+       {:otsikko "Koh\u00ADteen nimi" :leveys 9 :nimi :nimi :tyyppi :string :pituus-max 128
+        :muokattava? voi-muokata-paallystys?}
+       {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
+        :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
+        :muokattava? (constantly false)}
+       {:otsikko "Ajo\u00ADrata"
+        :nimi :tr-ajorata
+        :muokattava? (constantly false)
+        :tyyppi :string :tasaa :oikea
+        :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
+        :leveys 3}
+       {:otsikko "Kais\u00ADta"
+        :muokattava? (constantly false)
+        :nimi :tr-kaista
+        :tyyppi :string
+        :tasaa :oikea
+        :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
+        :leveys 3}
+       {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
+        :tyyppi :positiivinen-numero
+        :tasaa :oikea
+        :muokattava? (constantly false)}]]]))
