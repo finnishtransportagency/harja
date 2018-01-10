@@ -21,8 +21,9 @@
           :leveys 10
           :nimi :kohdenumero
           :tyyppi :valinta
+          :validoi [[:ei-tyhja "Anna toimenpiode"]]
           :valinnat ypk/tarkan-aikataulun-toimenpiteet
-          :valinta-nayta #(if % ypk/tarkan-aikataulun-toimenpiide-fmt "- valitse -")
+          :valinta-nayta #(if % (ypk/tarkan-aikataulun-toimenpiide-fmt %) "- valitse -")
           :pituus-max 128}
          {:otsikko "Kuvaus"
           :leveys 10
@@ -32,9 +33,11 @@
          {:otsikko "Alku"
           :leveys 5
           :nimi :alku
-          :tyyppi :pvm}
+          :tyyppi :pvm
+          :validoi [[:ei-tyhja "Anna alku"]]}
          {:otsikko "Loppu"
           :leveys 5
           :nimi :loppu
-          :tyyppi :pvm}]
+          :tyyppi :pvm
+          :validoi [[:ei-tyhja "Anna loppu"]]}]
         @yksityiskohtainen-aikataulu]])))
