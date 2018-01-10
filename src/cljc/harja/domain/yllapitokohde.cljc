@@ -349,3 +349,10 @@ yllapitoluokkanimi->numero
                        (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
                            (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
          rivit)))
+
+(def tarkan-aikataulun-toimenpiteet [:ojankaivuu :rp_tyot :rumpujen_vaihto :muu])
+(def tarkan-aikataulun-toimenpiide-fmt
+  {:ojankaivuu "Ojankaivuu"
+   :rp_tyot "RP-työt"
+   :rumpujen_vaihto "Rumpujen vaihto"
+   :muu "Muu"})
