@@ -73,14 +73,15 @@
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
-     (goog.date.DateTime.
-       (.getYear dt)
-       (.getMonth dt)
-       (.getDate dt)
-       tunnit
-       minuutit
-       sekunnit
-       millisekunnit)
+     (when dt
+       (goog.date.DateTime.
+        (.getYear dt)
+        (.getMonth dt)
+        (.getDate dt)
+        tunnit
+        minuutit
+        sekunnit
+        millisekunnit))
 
      :clj
      (cond (instance? java.util.Date dt)
@@ -210,10 +211,23 @@
            (= (millisekunteina eka) (millisekunteina toka))))
      false)))
 
-(defn jalkeen? [eka toka]
-  (if (and eka toka)
-    (t/after? eka toka)
-    false))
+#?(:cljs
+   (defn jalkeen? [eka toka]
+     (if (and eka toka)
+       (t/after? eka toka)
+       false))
+
+   :clj
+   (defn jalkeen? [eka toka]
+     (if (and eka toka)
+       (cond
+         (or (instance? java.util.Date eka)
+             (instance? java.util.Date toka))
+         (.after eka toka)
+         (or (joda-time? eka)
+             (joda-time? toka))
+         (t/after? eka toka))
+       false)))
 
 (defn sama-tai-jalkeen?
   "Tarkistaa, onko ensimmäisenä annettu pvm sama tai toisena annettun pvm:n jälkeen.
@@ -500,6 +514,21 @@
   "Palauttaa annetun DateTime päivän."
   [pvm]
   (t/day (d pvm)))
+
+(defn tunti
+  "Palauttaa annetun DateTime kuukauden"
+  [pvm]
+  (t/hour (d pvm)))
+
+(defn minuutti
+  "Palauttaa annetun DateTime kuukauden"
+  [pvm]
+  (t/minute (d pvm)))
+
+(defn sekuntti
+  "Palauttaa annetun DateTime kuukauden"
+  [pvm]
+  (t/second (d pvm)))
 
 (defn paivamaaran-hoitokausi
   "Palauttaa hoitokauden [alku loppu], johon annettu pvm kuuluu"
@@ -818,3 +847,41 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 (defn vuodet-valissa [alku loppu]
   (range (vuosi alku) (inc (vuosi loppu))))
+
+(defn aikavalit-leikkaavat? [ensimmainen-alku ensimmainen-loppu toinen-alku toinen-loppu]
+  (boolean (or
+             (and
+               (not (nil? toinen-alku))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (valissa? toinen-alku ensimmainen-alku ensimmainen-loppu false))
+             (and
+               (not (nil? toinen-loppu))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (valissa? toinen-loppu ensimmainen-alku ensimmainen-loppu false))
+             (and
+               (not (nil? ensimmainen-alku))
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (valissa? ensimmainen-alku toinen-alku toinen-loppu false))
+             (and
+               (not (nil? ensimmainen-loppu))
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (valissa? ensimmainen-loppu toinen-alku toinen-loppu false)))))
+
+#?(:cljs
+   (defn yhdista-pvm-ja-aika
+     "Yhdistaa DateTime ja Aika tyypit yhdeksi DateTime:ksi"
+     [pvm aika]
+     (let [t (:tunnit aika)
+           min (:minuutit aika)
+           s (:sekunnit aika)]
+       (aikana pvm t min s 0))))
+
+#?(:cljs
+   (defn DateTime->Aika
+     "Annettunna DateTime, palauttaa Aika tyyppin, joka vastaa annetun DateTime:n aikaa"
+     [pvm]
+     (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))))

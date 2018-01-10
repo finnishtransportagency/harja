@@ -58,7 +58,7 @@
 (defn tee-vuosisummat [vuodet summat]
   (let [summat (into {} (map (juxt #(int (:vuosi %)) :summa)) summat)]
     (mapv (fn [vuosi]
-            (let [summa (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0)]
+            (let [summa (or (get summat (time/year (coerce/from-date (:loppupvm vuosi))) 0) 0)]
               (rakenna-vuosi vuosi summa)))
           vuodet)))
 
@@ -67,10 +67,15 @@
                        {:alkupvm (first vuosi)
                         :loppupvm (second vuosi)})
                      (pvm/urakan-vuodet (konv/java-date (:alkupvm (:toimenpideinstanssi maksueran-tiedot)))
-                                        (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))]
-    (case (:tyyppi (:maksuera maksueran-tiedot))
+                                        (konv/java-date (:loppupvm (:toimenpideinstanssi maksueran-tiedot)))))
+        maksueratyyppi (:tyyppi (:maksuera maksueran-tiedot))
+        urakkatyyppi (get-in maksueran-tiedot [:urakka :tyyppi])]
+    (case maksueratyyppi
       "kokonaishintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-kokonaishintaiset-summat db numero))
       "yksikkohintainen" (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
+      "lisatyo" (if (contains? #{"vesivayla-kanavien-hoito" "vesivayla-kanavien-korjaus"} urakkatyyppi)
+                  (tee-vuosisummat vuodet (kustannussuunnitelmat/hae-kustannussuunnitelman-yksikkohintaiset-summat db numero))
+                  (tee-oletus-vuosisummat vuodet))
       (tee-oletus-vuosisummat vuodet))))
 
 (defn valitse-lkp-tilinumero [numero toimenpidekoodi tuotenumero]
@@ -79,7 +84,6 @@
     ; Hoitotuotteet 110 - 150, 536
     (if (nil? tuotenumero)
       (let [viesti (format "Tuotenumero on tyhjä. LPK-tilinnumeroa ei voi päätellä. Kustannussuunnitelman lähetys epäonnistui (numero %s)." numero)]
-        #_(log/warn viesti)
         (throw+ {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa
                  :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
                             :viesti viesti}]}))
@@ -111,22 +115,28 @@
 (defn tee-kustannusuunnitelma-jms-lahettaja [sonja integraatioloki db jono]
   (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "kustannussuunnitelma-lahetys") sonja jono))
 
+(defn voi-lahettaa? [db numero]
+  (if (kustannussuunnitelmat/tuotenumero-loytyy? db numero)
+    true
+    (do
+      (log/warn (format "Kustannussuunnitelmaa (numero: %s) ei voida lähettää Sampoon. Tuotenumero puuttuu." numero))
+      false)))
+
 (defn laheta-kustannussuunitelma [sonja integraatioloki db lahetysjono-ulos numero]
   (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
   (if (kustannussuunnitelmat/onko-olemassa? db numero)
-    (try+
-      (if (lukitse-kustannussuunnitelma db numero)
-        (let [jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
-              muodosta-sanoma #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))]
-
-          (let [viesti-id (jms-lahettaja muodosta-sanoma nil)]
-            (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
-            (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))))
-        (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
-      (catch Object e
-        (when-not (every? #(= :lpk-tilinnumeroa-ei-voi-paatella (:koodi %)) (:virheet e))
-          (log/warn e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e)))
-        (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)))
+    (when (voi-lahettaa? db numero)
+      (try+
+        (if (lukitse-kustannussuunnitelma db numero)
+          (let [jms-lahettaja (tee-kustannusuunnitelma-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
+                muodosta-sanoma #(kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))]
+            (let [viesti-id (jms-lahettaja muodosta-sanoma nil)]
+              (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
+              (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))))
+          (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
+        (catch Object e
+          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+          (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)
       (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+

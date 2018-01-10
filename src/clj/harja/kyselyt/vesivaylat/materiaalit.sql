@@ -1,21 +1,19 @@
 -- name: paivita-materiaalin-alkuperainen-maara<!
 UPDATE vv_materiaali
 SET maara = :maara
-WHERE id = (SELECT id
-            FROM vv_materiaali
-            WHERE nimi = :nimi
-                  AND poistettu IS NOT TRUE
-            ORDER BY luotu
-            LIMIT 1);
-
--- name: materiaalin-id-nimella
-SELECT id
-FROM vv_materiaali
-WHERE nimi = :nimi
-LIMIT 1;
+WHERE id = :id;
 
 -- name: urakan-tiedot-sahkopostin-lahetysta-varten
 SELECT sampoid,
        nimi
 FROM urakka
 WHERE id = :id;
+
+-- name: materiaalin-halytysraja
+SELECT halytysraja
+FROM vv_materiaali
+WHERE nimi = :nimi AND
+      "urakka-id" = :urakka-id AND
+      halytysraja IS NOT NULL
+LIMIT 1;
+

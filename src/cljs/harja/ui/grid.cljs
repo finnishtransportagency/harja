@@ -17,12 +17,14 @@
 (def poista-idt protokollat/poista-idt)
 (def poista-poistetut protokollat/poista-poistetut)
 (def muokkaa-rivit! protokollat/muokkaa-rivit!)
+(def vakiosivutus 250)
 
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)
-(def otsikkorivin-tiedot perus/otsikkorivin-tiedot)
+(def otsikko-ja-maara perus/otsikko-ja-maara)
 
 ;; UI
 
 (def grid perus/grid)
 (def muokkaus-grid muokkaus/muokkaus-grid)
 (def arvo-ja-nappi perus/arvo-ja-nappi)
+(def rivinvalintasarake perus/rivinvalintasarake)

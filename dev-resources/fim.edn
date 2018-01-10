@@ -82,6 +82,16 @@
                 :sahkoposti     "sinunmailisi@solita.fi"
                 :puhelin        "0123456789"
                 :roolit         "vv-HAR-124_Tilaajan_Urakanvalvoja"
-                :organisaatio   "foo"
+                :organisaatio   "organisaatio"
                 :poistettu      false}]
+ ;; Saimaan kanava
+ "kanava-HAR-123" [{:tunniste       133
+                    :kayttajatunnus "LXV"
+                    :etunimi        "Jarno"
+                    :sukunimi       "Ely TM"
+                    :sahkoposti     "sinunmailisi@solita.fi"
+                    :puhelin        "0123456789"
+                    :roolit         "kanava-HAR-123_Tilaajan_Urakanvalvoja"
+                    :organisaatio   "organisaatio"
+                    :poistettu      false}]
  }

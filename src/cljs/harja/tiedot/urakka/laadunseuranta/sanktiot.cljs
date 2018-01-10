@@ -47,6 +47,17 @@
                                       :alku (first hoitokausi)
                                       :loppu (second hoitokausi)}))))
 
+(defn hae-sanktion-liitteet!
+  "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
+  perusteella."
+  [urakka-id laatupoikkeama-id sanktio-atom]
+  (log "hae-sanktion-liitteet!  " (pr-str urakka-id ) " laatupoikkeama-id " (pr-str laatupoikkeama-id))
+  (go (let [vastaus (<! (k/post! :hae-sanktion-liitteet {:urakka-id urakka-id
+                                                         :laatupoikkeama-id laatupoikkeama-id}))]
+        (if (k/virhe? vastaus)
+          :virhe
+          (swap! sanktio-atom (fn [] (assoc-in @sanktio-atom [:laatupoikkeama :liitteet] vastaus)))))))
+
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
   {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)

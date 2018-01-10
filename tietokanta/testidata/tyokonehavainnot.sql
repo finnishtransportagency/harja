@@ -46,3 +46,31 @@ INSERT INTO tyokonehavainto (tyokoneid, jarjestelma, organisaatio, viestitunnist
 VALUES (673, 'Aurausjannut Oy', (SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy'), 108323,
              '2016-11-30 11:22:30', '2016-11-30 11:22:37', 'ajoneuvo', St_Point(480031.745918236, 7188116.027609303)::POINT, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
              191, '{auraus ja sohjonpoisto}');
+
+INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti, suunta,
+urakkaid, tehtavat) VALUES (
+  'Urakoitsijan järjestelmä 1',
+  (SELECT id FROM organisaatio WHERE nimi='NCC Roads Oy'),
+  123,
+  current_timestamp,
+  41000,
+  'tarkastajan-auto',
+  ST_MakePoint(428024,7210433)::POINT,
+  45,
+  (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+  ARRAY['tilaajan laadunvalvonta']::suoritettavatehtava[]
+);
+
+INSERT INTO tyokonehavainto (jarjestelma, organisaatio, viestitunniste, lahetysaika, tyokoneid, tyokonetyyppi, sijainti, suunta,
+urakkaid, tehtavat) VALUES (
+  'Urakoitsijan järjestelmä 1',
+  (SELECT id FROM organisaatio WHERE nimi='NCC Roads Oy'),
+  123,
+  current_timestamp,
+  41000,
+  'tarkastajan-auto',
+  ST_MakePoint(428871,7209925)::POINT,
+  45,
+  (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+  ARRAY['tilaajan laadunvalvonta']::suoritettavatehtava[]
+);

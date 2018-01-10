@@ -16,6 +16,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.checkbox :as checkbox]
+            [harja.domain.urakka :as u]
             [harja.domain.tilannekuva :as tk]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta :as kartta-tiedot]
@@ -168,19 +169,11 @@
 
 (def tilannekuvan-alueet ely/elynumerot-jarjestyksessa)
 
-(def urakkatyypin-otsikot {:hoito "Hoito"
-                           :paallystys "Päällystys"
-                           :valaistus "Valaistus"
-                           :paikkaus "Paikkaus"
-                           :tiemerkinta "Tiemerkintä"
-                           #_#_:siltakorjaus "Siltakorjaus"
-                           #_#_(keyword "tekniset laitteet") "Tekniset laitteet"})
-
 (defn- tyypin-aluesuodattimet [tyyppi]
   (komp/luo
     (fn [tyyppi]
       [asetuskokoelma
-       (urakkatyypin-otsikot tyyppi)
+       (u/urakkatyyppi->otsikko tyyppi)
        {:salli-piilotus? true
         :auki-atomi? (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
         :luokka "taustavari-taso2 ylaraja"
@@ -293,6 +286,11 @@ suodatinryhmat
   (let [resize-kuuntelija (fn [this _]
                             (aseta-hallintapaneelin-max-korkeus (r/dom-node this)))]
     (komp/luo
+      (komp/sisaan (fn [this]
+                     (when-not (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                       (let [tilaajan-laadunvalvonta-avain (some #(when (= "tilaajan laadunvalvonta" (:nimi %)) %)
+                                                                 (keys (:tarkastukset @tiedot/suodattimet)))]
+                         (swap! tiedot/suodattimet update :tarkastukset dissoc tilaajan-laadunvalvonta-avain)))))
       (komp/piirretty (fn [this] (aseta-hallintapaneelin-max-korkeus (r/dom-node this))))
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE resize-kuuntelija)

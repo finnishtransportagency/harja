@@ -20,8 +20,7 @@
     "ryhma" ::r-tyhma}]
   ["vv_vaylatyyppi" ::vaylatyyppi (specql.transform/transform (specql.transform/to-keyword))]
   ["vv_vayla" ::vayla
-   harja.domain.muokkaustiedot/poistettu?-sarake
-     #_{::turvalaitteet (specql.rel/has-many ::id :harja.domain.vesivaylat.turvalaite/turvalaite :harja.domain.vesivaylat.turvalaite/vayla-id)}])
+   harja.domain.muokkaustiedot/poistettu?-sarake])
 
 (def tyypit (s/describe ::tyyppi))
 
@@ -39,13 +38,8 @@
     ;; Formatoidaan sinne päin
     (str/capitalize (name tyyppi))))
 
-(defn vaylan-nimi-idlla [vaylat vayla-id]
-  (::nimi (first (filter
-                   #(= (::id %) vayla-id)
-                   vaylat))))
-
 (def perustiedot
-  #{::id
+  #{::vaylanro
     ::nimi
     ::tyyppi})
 
@@ -66,4 +60,4 @@
   (s/keys :op-un [::hakuteksti ::vaylatyyppi]))
 
 (s/def ::hae-vaylat-vastaus
-  (s/coll-of (s/keys :req [::id ::nimi ::tyyppi])))
+  (s/coll-of (s/keys :req [::vaylanro ::nimi ::tyyppi])))

@@ -16,9 +16,9 @@ INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikenneviras
 -- Luodaan sopimuksia urakoille, kaikilla urakoilla on oltava ainakin yksi sopimus
 \i testidata/sopimukset.sql
 
+-- Vesiväylien ja kanavien urakat
 \i testidata/vesivaylat/vesivaylien_urakat.sql
-
-
+\i testidata/kanavat/kanavien_urakat.sql
 
 -- Liitä käyttäjät urakoihin
 \i testidata/kayttajaroolit.sql
@@ -138,12 +138,21 @@ SELECT paivita_pohjavesialueet();
 
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
--- Vesiväylät
+-- Vesiväylät & kanavat
 
 \i testidata/vesivaylat/vaylat_ja_turvalaitteet.sql
+\i testidata/vesivaylat/vesivaylien_turvalaiteryhmat.sql
 \i testidata/vesivaylat/vesivaylien_toimenpiteet.sql
 \i testidata/vesivaylat/vesivaylien_materiaalit.sql
 \i testidata/vesivaylat/kalusto.sql
 
-\i testidata/kanavat/kanavien_urakat.sql
-\i testidata/kanavat/kanavat_ja_kohteet.sql
+\i testidata/kanavat/kohteet.sql
+\i testidata/kanavat/kanavien_toimenpiteet.sql
+\i testidata/kanavat/liikennetapahtumat.sql
+\i testidata/kanavat/hairiotilanteet.sql
+\i testidata/kanavat/kanavien_laskutusyhteenveto.sql
+\i testidata/kanavat/kanavien_materiaalit.sql
+\i testidata/kanavat/kanavien_maksuerat.sql
+
+-- Tieluvat
+\i testidata/tieluvat.sql

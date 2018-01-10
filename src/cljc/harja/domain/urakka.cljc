@@ -5,9 +5,11 @@
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.domain.sopimus :as sopimus]
-            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-                      [clojure.future :refer :all]])
-            #?(:clj [specql.rel :as rel]))
+    #?@(:clj [
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [clojure.future :refer :all]])
+    #?(:clj
+            [specql.rel :as rel]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -42,6 +44,13 @@
     :vesivayla-kanavien-hoito
     :vesivayla-turvalaitteiden-korjaus})
 
+(def urakkatyyppi->otsikko
+  {:hoito "Hoito"
+   :paallystys "Päällystys"
+   :valaistus "Valaistus"
+   :paikkaus "Paikkaus"
+   :tiemerkinta "Tiemerkintä"})
+
 (s/def ::hae-harjassa-luodut-urakat-vastaus
   (s/coll-of (s/and ::urakka
                     (s/keys :req [::hallintayksikko ::urakoitsija ::sopimukset ::hanke]))))
@@ -65,12 +74,20 @@
 (def vesivayla-urakkatyypit #{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus
                               :vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus})
 
+(def vesivayla-urakkatyypit-ilman-kanavia #{:vesivayla-hoito :vesivayla-ruoppaus :vesivayla-turvalaitteiden-korjaus})
+
 (def kanava-urakkatyypit #{:vesivayla-kanavien-hoito :vesivayla-kanavien-korjaus})
 
 (def vesivayla-urakkatyypit-raporttinakyma #{:vesivayla})
 
 (defn vesivaylaurakkatyyppi? [tyyppi]
   (boolean (vesivayla-urakkatyypit tyyppi)))
+
+(defn vesivaylaurakka-ei-kanavatyyppi? [tyyppi]
+  (boolean (vesivayla-urakkatyypit-ilman-kanavia tyyppi)))
+
+(defn vesivaylaurakka-ei-kanava? [urakka]
+  (vesivaylaurakka-ei-kanavatyyppi? (:tyyppi urakka)))
 
 (defn vesivaylaurakka? [urakka]
   (vesivaylaurakkatyyppi? (:tyyppi urakka)))
@@ -80,3 +97,10 @@
 
 (defn kanavaurakka? [urakka]
   (kanavaurakkatyyppi? (:tyyppi urakka)))
+
+(defn urakkatyyppi [urakka]
+  (let [tyyppi (:tyyppi urakka)]
+    (cond
+      (kanavaurakkatyyppi? tyyppi) :kanava
+      (vesivaylaurakkatyyppi? tyyppi) :vv
+      :else :hoito)))

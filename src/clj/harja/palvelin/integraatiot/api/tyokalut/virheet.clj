@@ -26,6 +26,7 @@
 (def +tuntematon-kustannussuunnitelma+ "tuntematon-kustannussuunnitelma")
 (def +tuntematon-maksuera+ "tuntematon-maksuera")
 (def +lukittu-yllapitokohde+ "lukittu-yllapitokohde")
+(def +tuntematon-ely+ "tuntematon-ely")
 
 ;; Virhetyypit
 (def +virheellinen-liite+ "virheellinen-liite")

@@ -15,7 +15,7 @@
          [clj-time.coerce :as c]])))
 
 (s/def ::id ::spec-apurit/postgres-serial)
-(s/def ::kohdenumero string?)
+(s/def ::kohdenumero (s/nilable string?))
 (s/def ::nimi string?)
 (s/def ::kokonaishinta (s/and number?))
 
@@ -285,9 +285,20 @@ yllapitoluokkanimi->numero
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
 
+(defn kohdenumero-str->kohdenumero-vec
+  "Palauttaa \"301b\":n muodossa [301 \"b\"]"
+  [kohdenumero]
+  (when kohdenumero
+    (let [numero (re-find #"\d+" kohdenumero)
+          kirjain (re-find #"\D+" kohdenumero)]
+      [(when numero
+         (#?(:clj  Integer.
+             :cljs js/parseInt) numero))
+       kirjain])))
+
 (defn- yllapitokohteen-jarjestys
   [kohde]
-  ((juxt :kohdenumero
+  ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
          :tie :tr-numero :tienumero
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
@@ -304,14 +315,14 @@ yllapitoluokkanimi->numero
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
-                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset                ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
-                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
 (defn yllapitokohde-tekstina
@@ -335,6 +346,6 @@ yllapitoluokkanimi->numero
   (let [viikko-sitten (pvm/paivaa-sitten 7)]
     (map (fn [{:keys [muokattu aikataulu-muokattu] :as rivi}]
            (assoc rivi :lihavoi
-                  (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
-                      (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
+                       (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
+                           (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
          rivit)))

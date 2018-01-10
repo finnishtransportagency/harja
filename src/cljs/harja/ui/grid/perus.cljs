@@ -15,7 +15,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid.protokollat :refer
              [Grid vetolaatikko-auki? sulje-vetolaatikko!
-              muokkauksessa-olevat-gridit
+              muokkauksessa-olevat-gridit seuraava-grid-id
               avaa-vetolaatikko! muokkaa-rivit! otsikko?
               lisaa-rivi! vetolaatikko-rivi vetolaatikon-tila
               aseta-grid +rivimaara-jonka-jalkeen-napit-alaskin+]]
@@ -23,7 +23,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]
@@ -475,15 +476,15 @@
                                   rivit)]
           (mapcat #(keep identity %)
                   (map-indexed
-                   (fn [i rivi]
-                     (if (otsikko? rivi)
-                       [^{:key (str i (:teksti rivi) "//" (tunniste rivi))}
+                    (fn [i rivi]
+                      (if (otsikko? rivi)
+                        [^{:key (str i (:teksti rivi) "//" (tunniste rivi))}
                         [valiotsikko {:colspan colspan :teksti (:teksti rivi)
                                       :otsikko-record rivi
                                       :piilotetut-valiotsikot piilotetut-valiotsikot
                                       :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
-                       (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
+                        (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)]
                             [^{:key id}
                             [nayttorivi {:ohjaus ohjaus
@@ -514,6 +515,33 @@
                              skeema rivi i]
                              (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))]))))
                     rivit-jarjestetty)))))))
+
+(defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi uusi-nykyinen-sivu-fn]
+  (let [sivuja (count (partition-all sivuta kaikki-tiedot))
+        max-sivu-index (max 0 (dec sivuja))]
+    (when (> sivuja 1)
+      [:nav.livi-grid-pagination
+       [:ul.pagination.justify-content-end
+        [:li.page-item (merge
+                         (when (= aktiivinen-indeksi 0)
+                           {:class "disabled"})
+                         {:on-click #(let [uusi-index (dec aktiivinen-indeksi)]
+                                       (uusi-nykyinen-sivu-fn (if (>= uusi-index 0) uusi-index 0)))})
+         [:a.page-link.klikattava "Edellinen"]]
+
+        (for* [sivu-index (range 0 sivuja)]
+          [:li.page-item (merge
+                           (when (= aktiivinen-indeksi sivu-index)
+                             {:class "active"})
+                           {:on-click #(uusi-nykyinen-sivu-fn sivu-index)})
+           [:a.page-link.klikattava (inc sivu-index)]])
+
+        [:li.page-item (merge
+                         (when (= aktiivinen-indeksi max-sivu-index)
+                           {:class "disabled"})
+                         {:on-click #(let [uusi-index (inc aktiivinen-indeksi)]
+                                       (uusi-nykyinen-sivu-fn (if (<= uusi-index max-sivu-index) uusi-index max-sivu-index)))})
+         [:a.page-link.klikattava "Seuraava"]]]])))
 
 (defn grid
   "Taulukko, jossa tietoa voi tarkastella ja muokata. Skeema on vektori joka sisältää taulukon sarakkeet.
@@ -599,10 +627,12 @@
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara rivin-infolaatikko
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko
            valiotsikoiden-alkutila ei-footer-muokkauspaneelia?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
-  (let [komponentti-id (hash (str opts skeema tiedot (t/now)))
+  (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
+
+  (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
         jarjestys (atom nil) ;; id:t indekseissä (tai otsikko)
         uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -616,6 +646,8 @@
         tunniste (or tunniste :id) ;; Rivin yksilöivä tunniste, optiona annettu tai oletuksena :id
         valittu-rivi (atom nil) ;; Sisältää rivin yksilöivän tunnisteen
         rivien-maara (atom (count tiedot))
+        nykyinen-sivu-index (atom 0) ;; Index nykyiseen näytettävään sivuun, jos käytetään sivutusta
+        max-sivumaara 20
         piilotetut-valiotsikot (atom #{}) ;; Setti väliotsikoita, joiden sisältö on piilossa
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
@@ -783,6 +815,15 @@
                                                           #{})]
                                                (reset! piilotetut-valiotsikot tila)
                                                (reset! valiotsikoiden-alkutila-maaritelty? true))))
+        vaihda-nykyinen-sivu! (fn [uusi-index]
+                                (reset! nykyinen-sivu-index uusi-index))
+        tarkista-sivutus! (fn [uudet-tiedot]
+                            (when sivuta
+                              (let [sivuja (count (partition-all sivuta uudet-tiedot))
+                                    max-sivu-index (max 0 (dec sivuja))]
+
+                                (when (> @nykyinen-sivu-index max-sivu-index)
+                                  (reset! nykyinen-sivu-index max-sivu-index)))))
         nollaa-muokkaustiedot! (fn []
                                  (swap! muokkauksessa-olevat-gridit disj komponentti-id)
                                  (reset! virheet {})
@@ -824,6 +865,7 @@
         maarita-kiinnitetyn-otsikkorivin-leveys (fn [this]
                                                   (reset! kiinnitetyn-otsikkorivin-leveys (dom/elementin-leveys (r/dom-node this))))
         maarita-rendattavien-rivien-maara (fn [this]
+                                            ;; Kasvatetaan max. rendattavien rivien määrää jos viewportissa on tilaa
                                             (when (and (pos? (dom/elementin-etaisyys-viewportin-alareunaan (r/dom-node this)))
                                                        (< @renderoi-max-rivia @rivien-maara))
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
@@ -863,6 +905,7 @@
        (fn [this & [_ _ _ tiedot]]
          ;; jos gridin data vaihtuu, muokkaustila on peruttava, jotta uudet datat tulevat näkyviin
          (nollaa-muokkaustiedot!)
+         (tarkista-sivutus! tiedot)
          (maarita-valiotsikoiden-alkutila!)
          (when muokkaa-aina
            (aloita-muokkaus! tiedot))
@@ -879,7 +922,7 @@
          (nollaa-muokkaustiedot!))}
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
-                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot
+                    muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
                     validoi-fn] :as opts}
             skeema alkup-tiedot]
@@ -895,12 +938,23 @@
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)
+              sivuta (when sivuta
+                       ;; Lähtökohtaisesti käytetään ulkoa annettua sivutusmäärää (rivejä per sivu).
+                       ;; Mikäli sivumäärä uhkaa kuitenkin tulla liian suureksi, kasvatetaan
+                       ;; rivejä per sivu niin suureksi, ettei max-sivumaara ylity.
+                       (or (first (filter #(<= (count (partition-all % tiedot)) max-sivumaara)
+                                          (range sivuta 9000)))
+                           9000)) ;; Tämä on varmaan nyt sitä big dataa...
+              tiedot (if (and sivuta (>= (count tiedot) sivuta))
+                       (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
+                       tiedot)
               luokat (if @infolaatikko-nakyvissa?
                        (conj luokat "livi-grid-infolaatikolla")
                        luokat)
               muokattu? (not (empty? @historia))]
           [:div.panel.panel-default.livi-grid {:id (:id opts)
                                                :class (clojure.string/join " " luokat)}
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
            (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
                              :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                              :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
@@ -996,9 +1050,12 @@
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko
                                 :tunniste tunniste
-                                :validoi-fn validoi-fn})])])))))
+                                :validoi-fn validoi-fn})])
+           (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
 
-(defn otsikkorivin-tiedot [otsikko maara]
+;; Yleisiä apureita gridiin
+
+(defn otsikko-ja-maara [otsikko maara]
   (str otsikko
        " ("
        maara
@@ -1007,7 +1064,7 @@
        ")"))
 
 (defn arvo-ja-nappi
-  "Piirtää arvon ja napin, tai pelkän napin optioista riippuen.
+  "Piirtää arvon ja napin, tai pelkän napin tai pelkän arvon, optioista riippuen.
    Napilla voidaan muokata arvoa tai näyttää lisätietoa arvosta.
 
   Optiot:
@@ -1044,3 +1101,58 @@
 
        :pelkka-arvo
        [:span arvo])]))
+
+(defn rivinvalintasarake
+  "Luo checkbox-sarakkeen, joka on tarkoitettu rivien valitsemiseksi.
+   Sarakkeen otsikko on nappi, jolla voi valita kaikki rivit tai poistaa valinta kaikilta riveiltä.
+
+   Pakolliset optiot:
+   rivi-valittu?-fn         Funktio, joka ottaa rivin, ja kertoo, onko se valittu.
+   rivi-valittu-fn          Funtkio, jota kutsutaan, kun rivi valitaan checkboksista.
+                            Parametrina rivi ja sen uusi valinta-arvo.
+
+   Vapaat optiot:
+   leveys                   Sarakkeen leveys (oletus: 1)
+   otsikkovalinta?          Jos true, otsikkoriviltä on mahdollista valita kaikki rivit tai poistaa
+                            kaikkien valinta. Jos ei anneta, piirretään tekstiksi annettu otsikko
+                            tai 'Valitse'.
+   otsikko                  Otsikkoteksti, mikäli otsikkovalinta ei ole käytössä.
+   kaikki-valittu?-fn       Funktio, joka palautaa true tai false. Kertoo, onko kaikki rivit valittu.
+                            Pakollinen käytettäessä otsikkovalintaa.
+   otsikko-valittu-fn       Funktio, jota kutsutaan, kun otsikossa olevaa checkbox-nappia klikataan.
+                            Parametrina boolean, joka kertoo kaikkien rivien uuden valinta-arvon.
+                            Pakollinen käytettäessä otsikkovalintaa."
+  [{:keys [rivi-valittu?-fn rivi-valittu-fn
+           leveys otsikkovalinta? otsikko kaikki-valittu?-fn otsikko-valittu-fn] :as optiot}]
+  (assert rivi-valittu?-fn)
+  (assert rivi-valittu-fn)
+
+  (when otsikkovalinta?
+    (assert kaikki-valittu?-fn)
+    (assert otsikko-valittu-fn))
+
+  {:otsikko (if otsikkovalinta?
+              [napit/nappi
+               nil
+               #(if (kaikki-valittu?-fn)
+                  (otsikko-valittu-fn false)
+                  (otsikko-valittu-fn true))
+               {:ikoni (if (kaikki-valittu?-fn)
+                         (ikonit/livicon-square)
+                         (ikonit/livicon-check))
+                :ikoninappi? true}]
+              (or otsikko "Valitse"))
+   :nimi :valinta
+   :tyyppi :komponentti
+   :tasaa :keskita
+   :solu-klikattu (fn [rivi]
+                    (rivi-valittu-fn
+                      rivi
+                      (not (rivi-valittu?-fn rivi))))
+   :komponentti (fn [rivi]
+                  (let [rivi-valittu? (rivi-valittu?-fn rivi)]
+                    [kentat/tee-kentta
+                     {:tyyppi :checkbox}
+                     (r/wrap rivi-valittu?
+                             #(rivi-valittu-fn rivi (not rivi-valittu?)))]))
+   :leveys (or leveys 1)})

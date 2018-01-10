@@ -49,7 +49,7 @@
                                  :urakka-id @oulun-alueurakan-2014-2019-id
                                  :parametrit {:alkupvm   (pvm/->pvm "1.8.2015")
                                               :loppupvm (pvm/->pvm "31.8.2015")
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Kaikki yhteensä")
         laskutusyhteenveto (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
                                           (:db jarjestelma)
@@ -61,6 +61,7 @@
 
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti Oulun alueurakka 2014-2019 01.08.2015 - 31.08.2015")
+    (println "vastaus" vastaus)
     (apurit/tarkista-taulukko-rivit
       taulukko
 
@@ -71,13 +72,13 @@
              (=marginaalissa? (apurit/raporttisolun-arvo kokhint) 232.75M)
              (=marginaalissa? (apurit/raporttisolun-arvo ykshint) 51.72M)
              (=marginaalissa? (apurit/raporttisolun-arvo erilliskust) 17.24M)
-             (=marginaalissa? (apurit/raporttisolun-arvo bonus) 4.39)
+             (=marginaalissa? (apurit/raporttisolun-arvo bonus) 5.91M)
              (=marginaalissa? (apurit/raporttisolun-arvo muutos-ja-lisatyot) 34.48M)
              (=marginaalissa? (apurit/raporttisolun-arvo vahinkojen-korjaukset) 17.24M)
              (=marginaalissa? (apurit/raporttisolun-arvo akilliset-hoitotyot) 17.24M)
              (=marginaalissa? (apurit/raporttisolun-arvo sanktiot) -31.03M)
              (=marginaalissa? (apurit/raporttisolun-arvo suolabonus-ja-sakko) -104.52M)
-             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 239.52M)
+             (=marginaalissa? (apurit/raporttisolun-arvo yhteensa) 241.04M)
 
              (=marginaalissa? yhteensa laskutusyhteenveto-indeksien-nurkkasumma)))
       (fn [[yht & _]]
@@ -91,7 +92,7 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 12 31))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Indeksitarkistusraportti KOKO MAA 01.01.2014 - 31.12.2015")
 

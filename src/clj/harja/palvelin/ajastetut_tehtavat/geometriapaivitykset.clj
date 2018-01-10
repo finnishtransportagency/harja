@@ -19,10 +19,17 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.valaistusurakat :as valaistusurakoiden-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.paallystyspalvelusopimukset :as paallystyspalvelusopimusten-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavat :as kanavat]
+            [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
+            [harja.domain.geometriaaineistot :as ga])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.net URI)
            (java.sql Timestamp)))
+
+(def virhekasittely
+  {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
 
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
@@ -38,14 +45,14 @@
                                       kohdetiedoston-polku
                                       paivitys
                                       kayttajatunnus
-                                      salasana))))
+                                      salasana))
+            virhekasittely))
 
 (defn tarvitaanko-paikallinen-paivitys? [db paivitystunnus tiedostourl]
   (try
     (let [polku (if (not tiedostourl) nil (.substring (.getSchemeSpecificPart (URI. tiedostourl)) 2))
           tiedosto (if (not polku) nil (io/file polku))
           tiedoston-muutospvm (if (not tiedosto) nil (coerce/to-sql-time (Timestamp. (.lastModified tiedosto))))]
-      (log/debug (format "Tarvitaanko paikallinen paivitys aineistolle: %s" paivitystunnus))
       (if (and
             (not (nil? tiedosto))
             (.exists tiedosto)
@@ -54,11 +61,17 @@
           (log/debug (format "Tarvitaan ajaa paikallinen geometriapäivitys: %s." paivitystunnus))
           true)
         (do
-          (log/debug (format "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
+          ;; (log/debug (format "Ei tarvita paikallista päivitystä aineistolle: %s" paivitystunnus))
           false)))
     (catch Exception e
       (log/warn e (format "Tarkistettaessa paikallista ajoa geometriapäivitykselle: %s tapahtui poikkeus." paivitystunnus))
       false)))
+
+(defn rakenna-osoite [db aineiston-nimi osoite]
+  (let [aineisto (geometria-aineistot/hae-voimassaoleva-geometria-aineisto db aineiston-nimi)]
+    (if (and osoite (.contains osoite "[AINEISTO]") aineisto)
+      (.replace osoite "[AINEISTO]" (::ga/tiedostonimi aineisto))
+      osoite)))
 
 (defn maarittele-paivitystehtava [paivitystunnus
                                   url-avain
@@ -66,9 +79,10 @@
                                   shapefile-avain
                                   paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [url (get asetukset url-avain)
-          tuontikohdepolku (get asetukset tuontikohdepolku-avain)
-          shapefile (get asetukset shapefile-avain)
+    (let [db (:db this)
+          url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
+          tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
+          shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           kayttajatunnus (:kayttajatunnus asetukset)
           salasana (:salasana asetukset)]
       (when (and tuontivali
@@ -86,9 +100,10 @@
 
 (defn maarittele-paikallinen-paivitystehtava [paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys]
   (fn [this {:keys [tuontivali] :as asetukset}]
-    (let [url (get asetukset url-avain)
-          tuontikohdepolku (get asetukset tuontikohdepolku-avain)
-          shapefile (get asetukset shapefile-avain)
+    (let [db (:db this)
+          url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
+          tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
+          shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           db (:db this)]
       (log/debug "Paikallinen päivitystehtävä: " paivitystunnus url-avain tuontikohdepolku-avain shapefile-avain paivitys)
       (when (and (not url) (not tuontikohdepolku))
@@ -280,6 +295,39 @@
     :siltojenpalvelusopimusten-shapefile
     siltapalvelusopimukset/vie-siltojen-palvelusopimukset-kantaan))
 
+(def tee-turvalaitteiden-paivitystehtava
+  (maarittele-paivitystehtava
+    "turvalaitteet"
+    :turvalaitteiden-osoite
+    :turvalaitteiden-tuontikohde
+    :turvalaitteiden-shapefile
+    turvalaitteet/vie-turvalaitteet-kantaan))
+
+(def tee-turvalaitteiden-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "turvalaitteet"
+    :turvalaitteiden-osoite
+    :turvalaitteiden-tuontikohde
+    :turvalaitteiden-shapefile
+    turvalaitteet/vie-turvalaitteet-kantaan))
+
+(def tee-kanavien-paivitystehtava
+  (maarittele-paivitystehtava
+    "kanavat"
+    :kanavien-osoite
+    :kanavien-tuontikohde
+    :kanavien-shapefile
+    kanavat/vie-kanavat-kantaan))
+
+(def tee-kanavien-paikallinen-paivitystehtava
+  (maarittele-paikallinen-paivitystehtava
+    "kanavat"
+    :kanavien-osoite
+    :kanavien-tuontikohde
+    :kanavien-shapefile
+    kanavat/vie-kanavat-kantaan))
+
+
 (defrecord Geometriapaivitykset [asetukset]
   component/Lifecycle
   (start [this]
@@ -305,7 +353,11 @@
       :tekniset-laitteet-urakoiden-hakutehtava (tee-tekniset-laitteet-urakoiden-paivitystehtava this asetukset)
       :tekniset-laitteet-urakoiden-paivitystehtava (tee-tekniset-laitteet-urakoiden-paikallinen-paivitystehtava this asetukset)
       :siltojen-palvelusopimusten-hakutehtava (tee-siltojen-palvelusopimusten-paivitystehtava this asetukset)
-      :siltojen-palvelusopimusten-paivitystehtava (tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava this asetukset)))
+      :siltojen-palvelusopimusten-paivitystehtava (tee-siltojen-palvelusopimusten-paikallinen-paivitystehtava this asetukset)
+      :turvalaitteiden-hakutehtava (tee-turvalaitteiden-paivitystehtava this asetukset)
+      :turvalaitteiden-paivitystehtava (tee-turvalaitteiden-paikallinen-paivitystehtava this asetukset)
+      :kanavien-hakutehtava (tee-kanavien-paivitystehtava this asetukset)
+      :kanavien-paivitystehtava (tee-kanavien-paikallinen-paivitystehtava this asetukset)))
 
   (stop [this]
     (doseq [tehtava [:tieverkon-hakutehtava
@@ -321,7 +373,19 @@
                      :urakoiden-hakutehtava
                      :urakoiden-paivitystehtava
                      :elyjen-hakutehtava
-                     :elyjen-paivitystehtava]
+                     :elyjen-paivitystehtava
+                     :valaistusurakoiden-hakutehtava
+                     :valaistusurakoiden-paivitystehtava
+                     :paallystyspalvelusopimusten-hakutehtava
+                     :paallystyspalvelusopimusten-paivitystehtava
+                     :tekniset-laitteet-urakoiden-hakutehtava
+                     :tekniset-laitteet-urakoiden-paivitystehtava
+                     :siltojen-palvelusopimusten-hakutehtava
+                     :siltojen-palvelusopimusten-paivitystehtava
+                     :turvalaitteiden-hakutehtava
+                     :turvalaitteiden-paivitystehtava
+                     :kanavien-hakutehtava
+                     :kanavien-paivitystehtava]
             :let [lopeta-fn (get this tehtava)]]
       (when lopeta-fn (lopeta-fn)))
     this))

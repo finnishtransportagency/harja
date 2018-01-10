@@ -129,7 +129,7 @@
     (do
       (log/debug (format "Ajastetaan varustetoteumien uudelleenlähetys %s minuutin välein" aikavali-minuutteina))
       (ajastettu-tehtava/ajasta-minuutin-valein
-        aikavali-minuutteina
+        aikavali-minuutteina 17 ;; aikaväliajastus alkaen 17 sekuntia käynnistyksestä
         (fn [_] (laheta-varustetoteumat this))))
     (fn [])))
 
@@ -199,4 +199,3 @@
   (laheta-varustetoteuma [this varustetoteuma-id]
     (when-not (empty? tierekisteri-api-url)
       (laheta-varustetoteuma-tierekisteriin this varustetoteuma-id))))
-

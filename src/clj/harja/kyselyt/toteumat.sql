@@ -377,7 +377,7 @@ WHERE id IN (:id) AND poistettu IS NOT TRUE;
 SELECT EXISTS(
     SELECT ulkoinen_id
     FROM toteuma
-    WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja);
+    WHERE ulkoinen_id = :ulkoinen_id AND luoja = :luoja AND urakka = :urakka_id);
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset

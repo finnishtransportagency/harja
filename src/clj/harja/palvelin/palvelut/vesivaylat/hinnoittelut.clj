@@ -147,11 +147,11 @@
 
     (julkaise-palvelu
       http
-      :tallenna-toimenpiteelle-hinta
+      :tallenna-vv-toimenpiteen-hinta
       (fn [user tiedot]
         (tallenna-toimenpiteelle-hinta! db user tiedot))
-      {:kysely-spec ::h/tallenna-toimenpiteelle-hinta-kysely
-       :vastaus-spec ::h/tallenna-toimenpiteelle-hinta-vastaus})
+      {:kysely-spec ::h/tallenna-vv-toimenpiteen-hinta-kysely
+       :vastaus-spec ::h/tallenna-vv-toimenpiteen-hinta-vastaus})
 
     this)
 
@@ -163,5 +163,5 @@
       :poista-tyhjat-hinnoittelut
       :liita-toimenpiteet-hinnoitteluun
       :tallenna-hintaryhmalle-hinta
-      :tallenna-toimenpiteelle-hinta)
+      :tallenna-vv-toimenpiteen-hinta)
     this))

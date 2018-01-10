@@ -45,7 +45,7 @@
         ilmoitukset
         (ilmoitusraportti/hae-ilmoitukset-raportille
           db +kayttaja-jvh+ {:hallintayksikko-id  nil :urakka-id nil
-                             :urakoitsija nil :urakkatyyppi :hoito
+                             :urakoitsija nil :urakkatyyppi :kaikki
                              :alkupvm alkupvm :loppupvm loppupvm})]
     (is (not (empty? ilmoitukset)))
-    (is (= (count ilmoitukset) 6))))
+    (is (= (count ilmoitukset) 7))))

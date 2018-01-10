@@ -28,6 +28,9 @@
                           :sulje nil
                           :nakyvissa? false}))
 
+(defn nakyvissa? []
+  (boolean (:nakyvissa? @modal-sisalto)))
+
 (defn piilota! []
   (when (:sulje @modal-sisalto) ((:sulje @modal-sisalto)))
   (swap! modal-sisalto assoc :nakyvissa? false))

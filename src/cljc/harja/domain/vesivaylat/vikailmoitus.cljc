@@ -31,8 +31,7 @@
 
 (def perustiedot
   #{::reimari-id
-    ::reimari-lisatiedot
-    })
+    ::reimari-lisatiedot})
 
 (def kaikki-kentat
   (clojure.set/union perustiedot reimari-kentat viittaukset viittaus-idt))

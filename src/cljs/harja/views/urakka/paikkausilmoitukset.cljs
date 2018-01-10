@@ -24,7 +24,8 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.valinnat :as valinnat]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -159,8 +160,15 @@
 
               toteutuneet-osoitteet
               (r/wrap (zipmap (iterate inc 1) (:osoitteet (:ilmoitustiedot @paikkaus/paikkausilmoitus-lomakedata)))
-                      (fn [uusi-arvo] (reset! paikkaus/paikkausilmoitus-lomakedata
-                                              (assoc-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :osoitteet] (grid/filteroi-uudet-poistetut uusi-arvo)))))
+                      (fn [uusi-arvo]
+                        (reset! paikkaus/paikkausilmoitus-lomakedata
+                                              (assoc-in @paikkaus/paikkausilmoitus-lomakedata [:ilmoitustiedot :osoitteet]
+                                                        ;; Sortataan ensisijaisesti tien mukaan, jos kaikki kohat tielle on annettu. Muuten sortataan id:n mukaan
+                                                        (sort-by #(let [funktio (apply juxt (if (set/subset? #{:tie :aosa :aet :losa :let} (into #{} (keys %)))
+                                                                                              [:tie :aosa :aet :losa :let] ;; Tämä tulee aina ylemmäksi kuin :id vertailu (alla), koska pienempi vecotri saa arvoksi 1 compare funktiolla
+                                                                                              [:id :tie :aosa :aet :losa :let]))]
+                                                                    (funktio %))
+                                                                 (grid/filteroi-uudet-poistetut uusi-arvo))))))
               toteutuneet-maarat
               (r/wrap (zipmap (iterate inc 1) (lisaa-suoritteet-tyhjaan-toteumaan (:toteumat (:ilmoitustiedot @paikkaus/paikkausilmoitus-lomakedata))))
                       (fn [uusi-arvo] (reset! paikkaus/paikkausilmoitus-lomakedata

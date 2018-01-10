@@ -71,6 +71,7 @@
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
+    [harja.palvelin.palvelut.geometria-aineistot :as geometria-aineistot]
     [harja.palvelin.palvelut.status :as status]
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
     [harja.palvelin.palvelut.tienakyma :as tienakyma]
@@ -105,6 +106,7 @@
     [harja.palvelin.integraatiot.api.yhteystiedot :as api-yhteystiedot]
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
+    [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -140,7 +142,11 @@
     [harja.palvelin.palvelut.vesivaylat.alukset :as vv-alukset]
 
     ;; Kanavat
-    [harja.palvelin.palvelut.kanavat.kanavat :as kan-kanavat]
+    [harja.palvelin.palvelut.kanavat.kohteet :as kan-kohteet]
+
+    [harja.palvelin.palvelut.kanavat.liikennetapahtumat :as kan-liikennetapahtumat]
+    [harja.palvelin.palvelut.kanavat.hairiotilanteet :as kan-hairio]
+    [harja.palvelin.palvelut.kanavat.kanavatoimenpiteet :as kan-toimenpiteet]
     )
 
   (:gen-class))
@@ -269,7 +275,7 @@
                                [:http-palvelin :db :fim :sonja-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
-                            [:http-palvelin :db])
+                            [:http-palvelin :db :pois-kytketyt-ominaisuudet])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
@@ -332,15 +338,24 @@
       :vv-alukset (component/using
                     (vv-alukset/->Alukset)
                     [:http-palvelin :db :pois-kytketyt-ominaisuudet])
-      :kan-kanavat (component/using
-                     (kan-kanavat/->Kanavat)
+      :kan-kohteet (component/using
+                     (kan-kohteet/->Kohteet)
                      [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-liikennetapahtumat (component/using
+                                (kan-liikennetapahtumat/->Liikennetapahtumat)
+                                [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+      :kan-hairio (component/using
+                    (kan-hairio/->Hairiotilanteet)
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+      :kan-toimenpiteet (component/using
+                          (kan-toimenpiteet/->Kanavatoimenpiteet)
+                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -490,12 +505,14 @@
                                toimenpidehakuvali
                                komponenttityyppihakuvali
                                turvalaitekomponenttihakuvali
-                               vikahakuvali]} (:reimari asetukset)]
+                               vikahakuvali
+                               turvalaiteryhmahakuaika]} (:reimari asetukset)]
                    (reimari/->Reimari url kayttajatunnus salasana
                                       toimenpidehakuvali
                                       komponenttityyppihakuvali
                                       turvalaitekomponenttihakuvali
-                                      vikahakuvali))
+                                      vikahakuvali
+                                      turvalaiteryhmahakuaika))
                  [:db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       :ais-data (component/using
@@ -511,6 +528,10 @@
       :api-jarjestelmatunnukset (component/using
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
                                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+
+      :geometria-aineistot (component/using
+                             (geometria-aineistot/->Geometria-aineistot)
+                             [:http-palvelin :db])
 
       :organisaatiot (component/using
                        (organisaatiot/->Organisaatiot)
@@ -580,6 +601,9 @@
       :api-urakan-tyotunnit (component/using
                               (api-urakan-tyotunnit/->UrakanTyotunnit)
                               [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :turi])
+      :api-tieluvat (component/using
+                      (api-tieluvat/->Tieluvat)
+                        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
@@ -641,24 +665,7 @@
                                           (component/stop s)
                                           nil))))
 
-(def lokitasoylikirjoitukset
-  [["Virhe muodostaessa JMS viestin sisältöä: clojure.lang.ExceptionInfo: throw+: {:type :virhe-sampo-kustannussuunnitelman-lahetyksessa, :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella" :warn]])
-
-(defn alusta-lokipriorisointi! []
-  ;; tällä voidaan nostaa/laskea log leveliä tietyiltä lokiviesteiltä muuttamatta lokitusta kutusvaa koodia.
-  (let [lokipriorisointi-middleware (fn [{:keys [hostname message args level] :as ap-args}]
-                                      (let [alkup-level level
-                                            viesti (or message (str (first args)) "")
-                                            uusi-level (first (filter
-                                                              some? (for [[alkuosa uusi-taso] lokitasoylikirjoitukset]
-                                                                      (when (clojure.string/starts-with?
-                                                                             (str viesti) (str alkuosa)) uusi-taso) )))]
-                                        (assoc ap-args :level (or uusi-level alkup-level))))]
-    (log/merge-config! {:middleware [lokipriorisointi-middleware]})))
-
-
 (defn -main [& argumentit]
-  (alusta-lokipriorisointi!)
   (kaynnista-jarjestelma (or (first argumentit) "asetukset.edn") true)
   (.addShutdownHook (Runtime/getRuntime) (Thread. sammuta-jarjestelma)))
 

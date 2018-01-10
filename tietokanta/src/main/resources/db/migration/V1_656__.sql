@@ -1,0 +1,3 @@
+ALTER TABLE kan_hinta
+  ALTER COLUMN luoja
+  DROP NOT NULL;

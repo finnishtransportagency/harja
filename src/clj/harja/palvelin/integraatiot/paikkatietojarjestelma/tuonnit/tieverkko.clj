@@ -260,13 +260,13 @@
         (k/tuhoa-tien-osien-ajoradat! db)
         (k/tuhoa-ajoratojen-pituudet! db)
         (shapefile/tuo-ryhmiteltyna
-          shapefile :tie
-          (fn [tien-geometriat]
-            (let [tie (:tie (first tien-geometriat))]
-              (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
-                (vie-tieosa db tie osa geometriat))))))
+         shapefile :tie
+         (fn [tien-geometriat]
+           (let [tie (:tie (first tien-geometriat))]
+             (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
+               (vie-tieosa db tie osa geometriat)))))
 
-      (k/paivita-paloiteltu-tieverkko db)
+        (k/paivita-paloiteltu-tieverkko db))
       (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
     (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 

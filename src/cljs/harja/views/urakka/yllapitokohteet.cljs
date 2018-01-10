@@ -104,6 +104,7 @@
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
             :validoi [[:ei-tyhja "Anna tienumero"]]
+            :kokonaisluku? true
             :muokattava? (or (:muokattava? tie) (constantly true))}
            {:otsikko "Ajo\u00ADrata"
             :nimi (:nimi ajorata)
@@ -132,25 +133,25 @@
             :valinnat pot/+kaistat+
             :leveys (- perusleveys 2)}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea
+            :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
                             alkuosa-ei-lopun-jalkeen]
                            (:validoi aosa))
             :muokattava? (or (:muokattava? aosa) (constantly true))}
            {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea
+            :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
                             alkuetaisyys-ei-lopun-jalkeen]
                            (:validoi aet))
             :muokattava? (or (:muokattava? aet) (constantly true))}
            {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea
+            :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
                             loppuosa-ei-alkua-ennen]
                            (:validoi losa))
             :muokattava? (or (:muokattava? losa) (constantly true))}
            {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
-            :tasaa :oikea
+            :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
                             loppuetaisyys-ei-alkua-ennen]
                            (:validoi let))
@@ -206,15 +207,19 @@
                         (log "sain sijainnin " (clj->js sijainti))
                         (swap! tr-sijainnit-atom assoc osoite sijainti))))))))))))
 
-(defn- yllapitokohdeosat-grid-data [kohde kohdeosat]
-  (if (empty? kohdeosat)
-    {1 (select-keys kohde #{:tr-numero
-                            :tr-alkuosa :tr-alkuetaisyys
-                            :tr-loppuosa :tr-loppuetaisyys
-                            :tr-kaista :tr-ajorata})}
-    (varmista-alku-ja-loppu (zipmap (iterate inc 1)
-                                    kohdeosat)
-                            (tr/nouseva-jarjestys kohde))))
+(defn- yllapitokohdeosat-grid-data [kohde kohdeosat virheet]
+  (let [jarjestys-fn (juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)]
+    (if (empty? kohdeosat)
+      {1 (select-keys kohde #{:tr-numero
+                              :tr-alkuosa :tr-alkuetaisyys
+                              :tr-loppuosa :tr-loppuetaisyys
+                              :tr-kaista :tr-ajorata})}
+      (varmista-alku-ja-loppu (zipmap (iterate inc 1)
+                                      ;; Tässä pitää tehdä sorttaus, koska päällystysilmoituksen "Päällystystoimenpiteen tiedot"
+                                      ;; gridin mukaaminen triggeröi muutoksen lomakedata-nyt atomissa, joka aiheuttaa sen, että
+                                      ;; tässä funktiossa kohdeosat järjesteltäisiin niinkuin map tyyppi sattuu järjestelemään.
+                                      (if (empty? @virheet) (sort-by jarjestys-fn kohdeosat) kohdeosat))
+                              (tr/nouseva-jarjestys kohde)))))
 
 (defn- validoi-kohdeosa-olemassa [osan-pituus {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa} osa]
   (when-let [osa (and osa (js/parseInt osa))]
@@ -316,8 +321,7 @@
       (let [voi-muokata? (if (nil? voi-muokata?)
                            true
                            voi-muokata?)
-
-            kohdeosat-nyt (yllapitokohdeosat-grid-data kohde kohdeosat)
+            kohdeosat-nyt (yllapitokohdeosat-grid-data kohde kohdeosat (:virheet opts))
 
             kohdeosia (count kohdeosat-nyt)
 
@@ -383,11 +387,11 @@
             grid-data (r/wrap kohdeosat-nyt
                               muokkaa-kohdeosat!)
             virheet (:virheet opts)]
-
         [:div
          [grid/muokkaus-grid
           {:ohjaus g
            :id "yllapitokohdeosat"
+           :jarjesta-avaimen-mukaan identity
            :virheet virheet
            :rivinumerot? rivinumerot?
            :voi-muokata? voi-muokata?

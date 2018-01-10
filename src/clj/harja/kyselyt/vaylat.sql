@@ -1,9 +1,4 @@
--- name: poista-vaylat!
-UPDATE vv_vayla
-SET poistettu = TRUE
-WHERE tunniste IS NOT NULL;
-
--- name: luo-vayla<!
+-- name: luo-tai-paivita-vayla<!
 INSERT INTO vv_vayla
 (sijainti,
  tunniste,
@@ -19,7 +14,7 @@ VALUES (ST_GeomFromGeoJSON(:sijainti),
         :tyyppi :: VV_VAYLATYYPPI,
         :arvot :: JSONB,
         FALSE)
-ON CONFLICT (tunniste)
+ON CONFLICT (vaylanro)
   DO UPDATE
     SET
       sijainti  = ST_GeomFromGeoJSON(:sijainti),
@@ -29,4 +24,3 @@ ON CONFLICT (tunniste)
       tyyppi    = :tyyppi :: VV_VAYLATYYPPI,
       arvot     = :arvot :: JSONB,
       poistettu = FALSE;
-

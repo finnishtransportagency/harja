@@ -38,4 +38,5 @@
         @tarkastukset/valittu-aikavali
         @tarkastukset/tienumero @tarkastukset/tarkastustyyppi
         @tarkastukset/havaintoja-sisaltavat?
-        @tarkastukset/vain-laadunalitukset?))))
+        @tarkastukset/vain-laadunalitukset?
+        @tarkastukset/tarkastuksen-tekija))))

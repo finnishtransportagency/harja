@@ -488,7 +488,8 @@
                           @istunto/kayttaja)
         hae-urakoitsijan-alukset (fn [ur]
                                    (reset! urakoitsijan-alukset nil)
-                                   (go (reset! urakoitsijan-alukset
+                                   (go
+                                     (reset! urakoitsijan-alukset
                                                (<! (tiedot/hae-urakoitsijan-alukset
                                                      (:id ur)
                                                      (get-in ur [:urakoitsija :id]))))))]
@@ -608,7 +609,7 @@
            [paallystys-indeksit/paallystysurakan-indeksit ur])
          [urakkaan-liitetyt-kayttajat @kayttajat]
          [yhteyshenkilot ur]
-         (when (urakka-domain/vesivaylaurakka? ur)
+         (when (urakka-domain/vesivaylaurakka-ei-kanava? ur)
            [alukset ur])
          (when (urakka/paivystys-kaytossa? ur)
            [paivystajat/paivystajat ur])

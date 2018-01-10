@@ -19,9 +19,11 @@
 
 (deftest tallenna-kokonaishintainen-pistetoteuma
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                    slurp
+                                                   (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                    (.replace "__ID__" (str ulkoinen-id))
                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
                                                    (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
@@ -36,6 +38,7 @@
       (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                       (-> "test/resurssit/api/pistetoteuma_yksittainen.json"
                                                           slurp
+                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                           (.replace "__ID__" (str ulkoinen-id))
                                                           (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")
                                                           (.replace "__TOTEUMA_TYYPPI__" "kokonaishintainen")))]
@@ -53,9 +56,11 @@
   (let [ulkoiset-idt (tyokalut/hae-usea-vapaa-toteuma-ulkoinen-id 2)
         ulkoinen-id-1 (first ulkoiset-idt)
         ulkoinen-id-2 (second ulkoiset-idt)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/piste"] kayttaja portti
                                                 (-> "test/resurssit/api/pistetoteuma_monta.json"
                                                     slurp
+                                                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
                                                     (.replace "__ID1__" (str ulkoinen-id-1))
                                                     (.replace "__SUORITTAJA1_NIMI__" "Tienpesijät Oy")
                                                     (.replace "__TOTEUMA1_TYYPPI__" "kokonaishintainen")

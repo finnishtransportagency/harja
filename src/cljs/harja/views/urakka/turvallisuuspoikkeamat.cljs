@@ -254,7 +254,8 @@
                                             (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
                                             (reset! tiedot/valittu-turvallisuuspoikkeama nil))
                            :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
-                           :disabled (not (voi-tallentaa? tp @toimenpiteet-virheet))}]
+                           :disabled (and (not (voi-tallentaa? tp @toimenpiteet-virheet))
+                                          (not (:uusi-liite tp)))}]
                          [:div [lomake/nayta-puuttuvat-pakolliset-kentat tp]]
                          [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]])}
           [{:otsikko "Tapahtuman otsikko"
@@ -364,7 +365,6 @@
            {:otsikko "Vaaralliset aineet" :nimi :vaaralliset-aineet :tyyppi :checkbox-group
             :vaihtoehto-nayta turpodomain/turpo-vaaralliset-aineet
             :disabloi vaaralliset-aineet-disablointi-fn
-            :nayta-rivina? true
             :vaihtoehdot #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}}
            {:otsikko "Liitteet" :nimi :liitteet
             :palstoja 2

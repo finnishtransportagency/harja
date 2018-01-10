@@ -4,8 +4,6 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [specql.rel :as rel]
-
-    [harja.domain.vesivaylat.vayla :as v]
     #?@(:clj [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]))

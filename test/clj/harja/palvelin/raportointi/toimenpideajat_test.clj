@@ -48,10 +48,10 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})
-        taulukko (apurit/taulukko-otsikolla vastaus "Toimenpiteiden ajoittuminen")]
+                                              :urakkatyyppi :hoito}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Oulun alueurakka 2014-2019")]
     (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Toimenpiteiden ajoittuminen")
+    (apurit/tarkista-raportti vastaus "Oulun alueurakka 2014-2019, Toimenpiteiden ajoittuminen ajalta 01.10.2014 - 01.10.2015")
 
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
@@ -134,10 +134,10 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})
-        taulukko (apurit/taulukko-otsikolla vastaus "Toimenpiteiden ajoittuminen")]
+                                              :urakkatyyppi :hoito}})
+        taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa")]
     (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Toimenpiteiden ajoittuminen")
+    (apurit/tarkista-raportti vastaus "Pohjois-Pohjanmaa, Toimenpiteiden ajoittuminen ajalta 01.10.2014 - 01.10.2015")
 
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
@@ -217,10 +217,10 @@
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 12 31))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
-                                              :urakkatyyppi "hoito"}})
-        taulukko (apurit/taulukko-otsikolla vastaus "Toimenpiteiden ajoittuminen")]
+                                              :urakkatyyppi :hoito}})
+        taulukko (apurit/taulukko-otsikolla vastaus "KOKO MAA")]
     (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Toimenpiteiden ajoittuminen")
+    (apurit/tarkista-raportti vastaus "KOKO MAA, Toimenpiteiden ajoittuminen ajalta 01.01.2014 - 31.12.2015")
 
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko

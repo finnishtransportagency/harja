@@ -26,9 +26,10 @@
                    :integraatio integraatio
                    :hakuehdot hakuehdot}
                   (when aikavali
-                    {:alkaen      (first aikavali)
+                    {:alkaen (first aikavali)
                      ;; loppupvm halutaan seuraavan päivän 00:00:00 aikaan, jotta valitun loppupäivän tapahtumat näkyvät
-                     :paattyen    (t/plus (second aikavali) (t/days 1))}))))
+                     :paattyen (when (second aikavali)
+                                 (pvm/paivan-alussa (t/plus (second aikavali) (t/days 1))))}))))
 
 (defn hae-integraatiotapahtuman-viestit [tapahtuma-id]
   (k/post! :hae-integraatiotapahtuman-viestit tapahtuma-id))

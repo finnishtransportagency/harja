@@ -14,6 +14,7 @@
 
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paallystys :as paallystys]
@@ -28,6 +29,7 @@
             [harja.domain.tierekisteri :as tierekisteri-domain]
             [harja.ui.napit :as napit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tr]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka :as urakka]
@@ -288,6 +290,29 @@
          [kasittely urakka lomakedata-nyt lukittu? muokkaa!]
          [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
+(defn poista-lukitus [urakka lomakedata-nyt]
+  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                               (:id urakka))
+        lahetettava-data {:urakka-id (:id urakka)
+                          :kohde-id (:paallystyskohde-id lomakedata-nyt)
+                          :tila :valmis}]
+        [:div
+         [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
+         [napit/palvelinkutsu-nappi
+          "Avaa lukitus"
+          #(when paatosoikeus?
+             (paallystys/avaa-paallystysilmoituksen-lukitus! lahetettava-data))
+          {:luokka "nappi-kielteinen avaa-lukitus-nappi"
+           :id "poista-paallystysilmoituksen-lukitus"
+           :disabled (not paatosoikeus?)
+           :ikoni (ikonit/livicon-wrench)
+           :virheviesti "Lukituksen avaaminen epäonnistui"
+           :kun-onnistuu (fn [vastaus]
+                           (swap! paallystys/paallystysilmoitus-lomakedata assoc :tila (:tila vastaus))
+                           (harja.atom/paivita! paallystys/paallystysilmoitukset))}]]))
+
+
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa!]
@@ -296,7 +321,12 @@
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
-            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])]
+            alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
+            yllapitokohde-virheet (wrap-virheet :alikohteet)
+            muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
+            jarjestys-fn #(if (not (nil? (:id %)))
+                            [(:id %) 0 0 0]
+                            ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
         [:fieldset.lomake-osa
          [:h3 "Tekninen osa"]
 
@@ -309,7 +339,7 @@
                                        (assoc-in [:virheet :alikohteet] virheet)))))
            :rivinumerot? true
            :voi-muokata? voi-muokata?
-           :virheet (wrap-virheet :alikohteet)}
+           :virheet yllapitokohde-virheet}
           urakka tierekisteriosoitteet
           (select-keys lomakedata-nyt
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
@@ -321,9 +351,13 @@
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
-           :voi-muokata? voi-muokata?
+           :voi-muokata? muokkaus-mahdollista?
            :virheet (wrap-virheet :paallystystoimenpide)
-           :rivinumerot? true}
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
+           :rivinumerot? true
+           :jarjesta jarjestys-fn}
           [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
            (assoc paallystys/raekoko-grid-skeema :nimi :toimenpide-raekoko :leveys 10)
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
@@ -354,8 +388,12 @@
            :voi-lisata? false
            :voi-kumota? false
            :voi-poistaa? (constantly false)
-           :voi-muokata? voi-muokata?
-           :virheet (wrap-virheet :kiviaines)}
+           :voi-muokata? muokkaus-mahdollista?
+           :virhe-viesti (when (and (not muokkaus-mahdollista?)
+                                    voi-muokata?)
+                           "Tierekisterikohteet taulukko on virheellisessä tilassa")
+           :virheet (wrap-virheet :kiviaines)
+           :jarjesta jarjestys-fn}
           [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
             :leveys 30}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20}
@@ -374,18 +412,24 @@
          (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
+                   :jarjesta jarjestys-fn
                    :voi-muokata? alustatoimet-voi-muokata?
                    :voi-kumota? false
                    :uusi-id (inc (count @alustalle-tehdyt-toimet))
-                   :virheet (wrap-virheet :alustalle-tehdyt-toimet)}
+                   :virheet (wrap-virheet :alustalle-tehdyt-toimet)
+                   :virheet-ylos? true}
                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
-                    :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea}
+                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :kokonaisluku? true}
                    {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false)
                     :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
@@ -467,6 +511,8 @@
            (lomake/lomake-lukittu-huomautus lukko))
 
          [:h2 "Päällystysilmoitus"]
+         (when (= :lukittu (:tila lomakedata-nyt))
+           [poista-lukitus urakka lomakedata-nyt])
 
          [paallystysilmoitus-perustiedot urakka lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
 
@@ -491,25 +537,42 @@
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                             (:id @nav/valittu-urakka))))))))
 
-(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset]
+(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
   (when paallystysilmoitukset
-    (sort-by
-      (juxt (fn [toteuma] (case (:tila toteuma)
-                            :lukittu 0
-                            :valmis 1
-                            :aloitettu 3
-                            4))
-            (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                            :hyvaksytty 0
-                            :hylatty 1
-                            3)))
-      paallystysilmoitukset)))
+    (case jarjestys
+      :kohdenumero
+      (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)) paallystysilmoitukset)
+
+      :muokkausaika
+      ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
+      (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
+              (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+                       (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
+
+      :tila
+      (sort-by
+       (juxt (fn [toteuma] (case (:tila toteuma)
+                             :lukittu 0
+                             :valmis 1
+                             :aloitettu 3
+                             4))
+             (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                             :hyvaksytty 0
+                             :hylatty 1
+                             3)))
+       paallystysilmoitukset))))
+
+(defn- tayta-takuupvm [lahtorivi tama-rivi]
+  ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
+  (if (:id tama-rivi)
+    (assoc tama-rivi :takuupvm (:takuupvm lahtorivi))
+    tama-rivi))
 
 (defn- paallystysilmoitukset-taulukko [urakka-id paallystysilmoitukset]
   [grid/grid
    {:otsikko ""
+    :tunniste :paallystyskohde-id
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
-    :tunniste hash
     :tallenna (fn [rivit]
                 (go (let [paallystysilmoitukset (mapv #(do
                                                          {::pot/id (:id %)
@@ -535,7 +598,8 @@
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
     {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
-     :fmt pvm/pvm-opt}
+     :fmt pvm/pvm-opt :tayta-alas? #(not (nil? %)) :tayta-fn tayta-takuupvm
+     :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
      :komponentti (fn [rivi]
@@ -567,12 +631,13 @@
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
     :tunniste hash}
-   [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-    {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+   [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 12}
+    {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+    {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 45}
     {:otsikko "Edellinen lähetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
-     :leveys 60
+     :leveys 45
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
-    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
+    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 20 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/yha-lahetysnappi
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet
@@ -592,7 +657,8 @@
       (let [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @u/valittu-sopimusnumero)
             urakan-vuosi @u/valittu-urakan-vuosi
-            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
+            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu
+                                                                  @yllapito-tiedot/kohdejarjestys)]
         [:div
          [:h3 "Päällystysilmoitukset"]
          [paallystysilmoitukset-taulukko urakka-id paallystysilmoitukset]
@@ -624,6 +690,24 @@
            (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
            (reset! ilmoituslomake nil))]))))
 
+(defn valinnat [urakka]
+  [:div
+   [valinnat/vuosi {}
+    (t/year (:alkupvm urakka))
+    (t/year (:loppupvm urakka))
+    urakka/valittu-urakan-vuosi
+    urakka/valitse-urakan-vuosi!]
+   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+   [u-valinnat/tienumero yllapito-tiedot/tienumero]
+   [yleiset/pudotusvalikko
+    "Järjestä kohteet"
+    {:valinta @yllapito-tiedot/kohdejarjestys
+     :valitse-fn #(reset! yllapito-tiedot/kohdejarjestys %)
+     :format-fn {:tila "Tilan mukaan"
+                 :kohdenumero "Kohdenumeron mukaan"
+                 :muokkausaika "Muokkausajan mukaan"}}
+    [:tila :kohdenumero :muokkausaika]]])
+
 (defn paallystysilmoitukset [urakka]
   (komp/luo
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
@@ -634,11 +718,5 @@
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [:div
-          [valinnat/vuosi {}
-           (t/year (:alkupvm urakka))
-           (t/year (:loppupvm urakka))
-           urakka/valittu-urakan-vuosi
-           urakka/valitse-urakan-vuosi!]
-          [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-          [u-valinnat/tienumero yllapito-tiedot/tienumero]
+          [valinnat urakka]
           [ilmoitusluettelo]])])))

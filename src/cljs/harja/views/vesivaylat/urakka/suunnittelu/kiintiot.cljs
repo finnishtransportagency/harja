@@ -21,32 +21,26 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
-            [harja.tyokalut.tuck :as tuck-apurit])
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [clojure.string :as str])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn kiintion-toimenpiteet [e! app kiintio]
   [grid/grid
    {:tyhja "Ei liitettyjä toimenpiteitä"
     :tunniste ::to/id}
-   [{:otsikko "Työluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
-    {:otsikko "Toimenpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
-    {:otsikko "Hintatyyppi" :nimi ::to/hintatyyppi :fmt to/hintatyyppi-fmt :leveys 10}
-    {:otsikko "Päivämäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
-    {:otsikko "Turvalaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
-    {:otsikko "Valitse" :nimi :valinta :tyyppi :komponentti :tasaa :keskita
-     :solu-klikattu (fn [rivi]
-                      (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
-                        (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                         :valittu? (not valittu?)}))))
-     :komponentti (fn [rivi]
-                    (let [valittu? (boolean ((:valitut-toimenpide-idt app) (::to/id rivi)))]
-                      [kentat/tee-kentta
-                       {:tyyppi :checkbox}
-                       (r/wrap valittu?
-                               (fn [uusi]
-                                 (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                                  :valittu? uusi}))))]))
-     :leveys 5}]
+   [{:otsikko "Työ\u00ADluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10}
+    {:otsikko "Toimen\u00ADpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10}
+    {:otsikko "Hinta\u00ADtyyppi" :nimi ::to/hintatyyppi :fmt to/hintatyyppi-fmt :leveys 10}
+    {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-opt :leveys 10}
+    {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])}
+    (grid/rivinvalintasarake
+      {:rivi-valittu?-fn (fn [rivi]
+                           (boolean ((:valitut-toimenpide-idt app) (::to/id rivi))))
+       :rivi-valittu-fn (fn [rivi uusi-arvo]
+                          (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                           :valittu? uusi-arvo})))
+       :leveys 5})]
    (::kiintio/toimenpiteet kiintio)])
 
 (defn kiintiot* [e! app]
@@ -96,9 +90,8 @@
                      (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylasuunnittelu-kiintiot
                                                (:id @nav/valittu-urakka))
                      (fn [sisalto]
-                       (tuck-apurit/e-kanavalla! tiedot/->TallennaKiintiot sisalto)))
+                       (tuck-apurit/e-kanavalla! e! tiedot/->TallennaKiintiot sisalto)))
          :tyhja (if kiintioiden-haku-kaynnissa? [ajax-loader "Haetaan kiintiöitä"] "Ei määriteltyjä kiintiöitä")
-         :jarjesta ::kiintio/nimi
          :tunniste ::kiintio/id
          :uusi-rivi (fn [rivi] rivi)
          :vetolaatikot (into {}
@@ -126,7 +119,7 @@
           :kokonaisosan-maara 7
           :leveys 3
           :validoi [[:ei-tyhja "Anna koko"]]}]
-        kiintiot]])))
+        (sort-by (comp str/upper-case ::kiintio/nimi) kiintiot)]])))
 
 (defn kiintiot []
   [tuck/tuck tiedot/tila kiintiot*])

@@ -1,5 +1,5 @@
 (ns harja.ui.kentat
-  "UI input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
+  "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
@@ -40,6 +40,7 @@
             [harja.tyokalut.big :as big]
             [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [harja.tyokalut.ui :refer [for*]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
@@ -246,45 +247,47 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defmethod tee-kentta :numero [kentta data]
+(defmethod tee-kentta :numero [{:keys [oletusarvo] :as kentta} data]
   (let [fmt (or
               (when-let [tarkkuus (:desimaalien-maara kentta)]
                 #(fmt/desimaaliluku-opt % tarkkuus))
               (:fmt kentta) str)
         teksti (atom nil)
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
-    (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
-      (let [nykyinen-data @data
-            nykyinen-teksti (or @teksti
-                                (normalisoi-numero (fmt nykyinen-data))
-                                "")
-            kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-            desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                      (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
-                                                      "})?"))]
-        [:input {:class (when lomake? "form-control")
-                 :type "text"
-                 :placeholder (placeholder kentta data)
-                 :on-focus (:on-focus kentta)
-                 :on-blur #(reset! teksti nil)
-                 :value nykyinen-teksti
-                 :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
-                                   v (if vaadi-ei-negatiivinen?
-                                       (str/replace v #"-" "")
-                                       v)]
-                               (when (or (= v "")
-                                         (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                         (re-matches (if kokonaisluku?
-                                                       kokonaisluku-re-pattern
-                                                       desimaaliluku-re-pattern) v))
-                                 (reset! teksti v)
+    (komp/luo
+      (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
+        (let [nykyinen-data @data
+              nykyinen-teksti (or @teksti
+                                  (normalisoi-numero (fmt nykyinen-data))
+                                  "")
+              kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+              desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
+                                                        (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
+                                                        "})?"))]
+          [:input {:class (when lomake? "form-control")
+                   :type "text"
+                   :placeholder (placeholder kentta data)
+                   :on-focus (:on-focus kentta)
+                   :on-blur #(reset! teksti nil)
+                   :value nykyinen-teksti
+                   :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
+                                     v (if vaadi-ei-negatiivinen?
+                                         (str/replace v #"-" "")
+                                         v)]
+                                 (when (or (= v "")
+                                           (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                           (re-matches (if kokonaisluku?
+                                                         kokonaisluku-re-pattern
+                                                         desimaaliluku-re-pattern) v))
+                                   (reset! teksti v)
 
-                                 (let [numero (if kokonaisluku?
-                                                (js/parseInt v)
-                                                (js/parseFloat (str/replace v #"," ".")))]
-                                   (if (not (js/isNaN numero))
-                                     (reset! data numero)
-                                     (reset! data nil)))))}]))))
+                                   (let [numero (if kokonaisluku?
+                                                  (js/parseInt v)
+                                                  (js/parseFloat (str/replace v #"," ".")))]
+                                     (if (not (js/isNaN numero))
+                                       (reset! data numero)
+                                       (reset! data nil)))))}])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
@@ -377,10 +380,11 @@
 (defmethod tee-kentta :checkbox-group
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
            tyhjenna-kaikki? nayta-rivina? disabloi tasaa
-           muu-vaihtoehto muu-kentta
+           muu-vaihtoehto muu-kentta palstoja
            valitse-fn valittu-fn]} data]
   (assert data)
-  (let [vaihtoehto-nayta (or vaihtoehto-nayta
+  (let [palstoja (or palstoja 1)
+        vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         data-nyt @data
         valitut (if valittu-fn
@@ -399,18 +403,32 @@
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
-     (let [checkboxit (doall
-                        (for [v vaihtoehdot
-                              :let [valittu? (valitut v)]]
+     (let [vaihtoehdot-palstoissa (partition-all
+                                    (Math/ceil (/ (count vaihtoehdot) palstoja))
+                                    vaihtoehdot)
+           coll-luokka (Math/ceil (/ 12 palstoja))
+           checkbox (fn [vaihtoehto]
+                      (let [valittu? (valitut vaihtoehto)]
+                        [:div.checkbox
+                         [:label
+                          [:input {:type "checkbox" :checked (boolean valittu?)
+                                   :disabled (if disabloi
+                                               (disabloi valitut vaihtoehto)
+                                               false)
+                                   :on-change #(swap! data valitse vaihtoehto (not valittu?))}]
+                          (vaihtoehto-nayta vaihtoehto)]]))
+           checkboxit (doall
+                        (for [v vaihtoehdot]
                           ^{:key (str "boolean-group-" (name v))}
-                          [:div.checkbox
-                           [:label
-                            [:input {:type "checkbox" :checked (boolean valittu?)
-                                     :disabled (if disabloi
-                                                 (disabloi valitut v)
-                                                 false)
-                                     :on-change #(swap! data valitse v (not valittu?))}]
-                            (vaihtoehto-nayta v)]]))
+                          [checkbox v]))
+           checkboxit-palstoissa (doall
+                                   (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
+                                     [:div
+                                      [:div (when (> palstoja 1)
+                                              {:class (str "col-sm-" coll-luokka)})
+                                       (for [v vaihtoehdot-palsta]
+                                         ^{:key (str "boolean-group-" (name v))}
+                                         [checkbox v])]]))
            muu (when (and muu-vaihtoehto
                           (valitut muu-vaihtoehto))
                  [tee-kentta muu-kentta
@@ -426,7 +444,7 @@
             (when muu
               ^{:key "muu"}
               [:td.muu muu])]]]
-         [:span checkboxit
+         [:span checkboxit-palstoissa
           [:span.muu muu]]))]))
 
 
@@ -459,17 +477,28 @@
                   [:td checkbox]]]]
                checkbox))])))))
 
-(defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?]} data]
+(defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta nayta-rivina?
+                                            oletusarvo]} data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         valittu (or @data nil)]
+    ;; Jos oletusarvo on annettu, se sisältyy vaihtoehtoihin, ja mitään ei ole valittu,
+    ;; valitaan oletusarvo
+    (when (and (nil? valittu)
+               oletusarvo
+               (some (partial = oletusarvo) vaihtoehdot))
+      (reset! data oletusarvo))
     [:div
      (let [radiobuttonit (doall
                            (for [vaihtoehto vaihtoehdot]
                              ^{:key (str "radio-group-" (name vaihtoehto))}
                              [:div.radio
                               [:label
-                               [:input {:type "radio" :checked (= valittu vaihtoehto)
+                               [:input {:type "radio"
+                                        ;; Samoin asetetaan checkbox valituksi luontivaiheessa,
+                                        ;; jos parametri annettu
+                                        :checked (or (and (nil? valittu) (= vaihtoehto oletusarvo))
+                                                     (= valittu vaihtoehto))
                                         :on-change #(let [valittu? (-> % .-target .-checked)]
                                                       (if valittu?
                                                         (reset! data vaihtoehto)))}]
@@ -489,7 +518,7 @@
                                         nayta-ryhmat ryhmittely ryhman-otsikko]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
-  (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
+  (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))]
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)

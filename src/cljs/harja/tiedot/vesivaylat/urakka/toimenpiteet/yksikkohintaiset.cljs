@@ -43,7 +43,7 @@
                     :sopimus-id nil
                     :aikavali [nil nil]
                     :vaylatyyppi nil
-                    :vayla-id nil
+                    :vaylanro nil
                     :turvalaite-id nil
                     :tyolaji nil
                     :tyoluokka nil
@@ -383,7 +383,7 @@
 
   SuunnitellutTyotHaettu
   (process-event [{vastaus :vastaus} app]
-    (assoc app :suunnitellut-tyot vastaus
+    (assoc app :suunnitellut-tyot (remove (comp nil? :yksikkohinta) vastaus)
                :suunniteltujen-toiden-haku-kaynnissa? false))
 
   SuunnitellutTyotEiHaettu
@@ -583,7 +583,7 @@
   (process-event [{tiedot :tiedot} app]
     (if-not (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app)
       (do (tuck-tyokalut/post!
-            :tallenna-toimenpiteelle-hinta
+            :tallenna-vv-toimenpiteen-hinta
             {::to/urakka-id (get-in app [:valinnat :urakka-id])
              ::to/id (get-in app [:hinnoittele-toimenpide ::to/id])
              ::h/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::h/hinnat])

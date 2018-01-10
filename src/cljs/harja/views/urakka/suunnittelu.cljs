@@ -14,7 +14,8 @@
             [harja.loki :refer [log]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.komponentti :as komp])
+            [harja.ui.komponentti :as komp]
+            [harja.domain.urakka :as ur])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -23,9 +24,9 @@
   (case valilehti
     :materiaalit (and (not= tyyppi :tiemerkinta)
                       (not= tyyppi :paallystys)
-                      (not= tyyppi :vesivayla-hoito))
+                      (not (ur/vesivaylaurakkatyyppi? tyyppi)))
     :suola (= tyyppi :hoito)
-    :muut (not= tyyppi :vesivayla-hoito)
+    :muut (not (ur/vesivaylaurakkatyyppi? tyyppi))
     :kiintiot (= tyyppi :vesivayla-hoito)))
 
 (defn suunnittelu [ur]
