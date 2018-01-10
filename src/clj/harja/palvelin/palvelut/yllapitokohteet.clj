@@ -440,13 +440,17 @@
       (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
       paallystyskohteet)))
 
-(defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id]}]
+(defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id urakkatyyppi]}]
   (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
           (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user)
           (yy/lukuoikeus-paallystys-tai-tiemerkintaurakan-aikatauluun? db user yllapitokohde-id))
-    (let [kohteen-urakka-id (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))
-          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim kohteen-urakka-id)
-          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user kohteen-urakka-id)]
+    (let [urakka-id (case urakkatyyppi
+                      :paallystys (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id
+                                                db {:id yllapitokohde-id})))
+                      :tiemerkinta (:id (first (yllapitokohteet-q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                                                 db {:id yllapitokohde-id}))))
+          fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim urakka-id)
+          yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user urakka-id)]
       {:fim-kayttajat (vec fim-kayttajat)
        :yhteyshenkilot (vec yhteyshenkilot)})
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
