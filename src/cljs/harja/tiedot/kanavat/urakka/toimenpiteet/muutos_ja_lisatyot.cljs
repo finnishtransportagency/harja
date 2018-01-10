@@ -484,7 +484,7 @@
             :tallenna-kanavatoimenpiteen-hinnoittelu
             {::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
              ::toimenpide/id (get-in app [:hinnoittele-toimenpide ::toimenpide/id])
-             ::hinta/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
+             ::hinta/tallennettavat-hinnat (map #(dissoc % :kaytto-merkattu-toimenpiteelle?) (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
              ::tyo/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::tyo/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})

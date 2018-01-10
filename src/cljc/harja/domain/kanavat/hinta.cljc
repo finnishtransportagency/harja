@@ -113,3 +113,9 @@
             (merge hinta tiedot)
             hinta))
         hinnat))
+
+(s/def ::tallennettava-hinta (s/keys :req [::summa ::otsikko ::yleiskustannuslisa ::ryhma]
+                                     :opt [::id ::m/poistettu?]))
+
+(s/def ::tallennettavat-hinnat
+  (s/coll-of ::tallennettava-hinta))
