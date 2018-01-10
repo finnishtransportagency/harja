@@ -192,7 +192,7 @@
      ::hinta/otsikko ""}
     hinta))
 
-(defn- toimenpiteen-hintakentat [hinnat]
+(defn- toimenpiteen-hintakentat [hinnat materiaalien-otsikot]
   (vec (concat
          ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
          (map-indexed (fn [index otsikko]
@@ -203,11 +203,11 @@
                                ::hinta/otsikko otsikko
                                ::hinta/ryhma "muu"}
                               olemassa-oleva-hinta))))
-                      vakiohinnat)
+                      (concat vakiohinnat materiaalien-otsikot))
          ;; Loput kentät ovat käyttäjän itse lisäämiä
          (map
            hintakentta
-           (remove #((set vakiohinnat) (::hinta/otsikko %))
+           (remove #((set (concat vakiohinnat materiaalien-otsikot)) (::hinta/otsikko %))
                    hinnat)))))
 
 (defn- lisaa-hintarivi-toimenpiteelle* [id-avain tyot-tai-hinnat kentta-fn app]
@@ -404,6 +404,7 @@
                                                                          hinnat)))
                                                          (map materiaali->hinta))
                                                        materiaalit)
+          materiaalien-otsikot (map ::hinta/otsikko tallentamattomat-materiaali-hinnat)
           yhdistetyt-hinnat (concat hinnat tallentamattomat-materiaali-hinnat)
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
           urakka-id (get-in app [:valinnat :urakka :id])]
@@ -411,7 +412,7 @@
         (assoc app :hinnoittele-toimenpide
                    {::toimenpide/id toimenpide-id
                     ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
-                    ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat)
+                    ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat materiaalien-otsikot)
                     ::tyo/tyot tyot
                     :urakka urakka-id})
         (do

@@ -255,32 +255,32 @@
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
 (defn- materiaali-hinnoittelurivi
-  [e! materiaali]
+  [e! materiaali-hinta]
   [:tr
-   [:td (if (:kaytto-merkattu-toimenpiteelle? materiaali)
-          (::hinta/otsikko materiaali)
-          [kentta-hinnalle e! materiaali ::hinta/otsikko {:tyyppi :string}])]
-   [:td.tasaa-oikealle [kentta-hinnalle e! materiaali ::hinta/yksikkohinta
+   [:td (if (:kaytto-merkattu-toimenpiteelle? materiaali-hinta)
+          (::hinta/otsikko materiaali-hinta)
+          [kentta-hinnalle e! materiaali-hinta ::hinta/otsikko {:tyyppi :string}])]
+   [:td.tasaa-oikealle [kentta-hinnalle e! materiaali-hinta ::hinta/yksikkohinta
                         {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
-   [:td.tasaa-oikealle (if (:kaytto-merkattu-toimenpiteelle? materiaali)
-                         (::hinta/maara materiaali)
-                         [kentta-hinnalle e! materiaali ::hinta/maara
+   [:td.tasaa-oikealle (if (:kaytto-merkattu-toimenpiteelle? materiaali-hinta)
+                         (::hinta/maara materiaali-hinta)
+                         [kentta-hinnalle e! materiaali-hinta ::hinta/maara
                           {:tyyppi :string}])]
    [:td ""]
-   [:td "Yhteensä"]
-   [:td.keskita ""]
+   [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
+   [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
    [:td.keskita
-    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali))]]])
+    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))]]])
 
 (defn- materiaalit [e! app*]
-  (let [materiaalit (tiedot/materiaalit app*)]
+  (let [materiaali-hinnat (tiedot/materiaalit app*)]
     [:div.hinnoitteluosio
      [valiotsikko "Varaosat ja materiaalit"]
      [:table
       [materiaalit-header]
       [:tbody
-       (for* [materiaali materiaalit]
-         [materiaali-hinnoittelurivi e! materiaali])]]
+       (for* [materiaali-hinta materiaali-hinnat]
+         [materiaali-hinnoittelurivi e! materiaali-hinta])]]
      [rivinlisays "Lisää materiaalirivi" #(e! (tiedot/->LisaaMateriaaliKulurivi))]]))
 
 (defn- muut-hinnat [e! app*]
