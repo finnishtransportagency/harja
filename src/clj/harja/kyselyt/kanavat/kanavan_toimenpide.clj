@@ -106,7 +106,8 @@
     (let [kanavatoimenpide (assoc kanavatoimenpide
                              ::muokkaustiedot/muokattu (pvm/nyt)
                              ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+      (when (pos? (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+        {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
     (let [kanavatoimenpide (assoc kanavatoimenpide
                              ::toimenpide/kuittaaja-id kayttaja-id
                              ::muokkaustiedot/luotu (pvm/nyt)

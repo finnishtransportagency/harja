@@ -14,6 +14,7 @@
 
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paallystys :as paallystys]
@@ -540,12 +541,13 @@
   (when paallystysilmoitukset
     (case jarjestys
       :kohdenumero
-      (sort-by :kohdenumero paallystysilmoitukset)
+      (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)) paallystysilmoitukset)
 
       :muokkausaika
       ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
       (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
-              (sort-by :kohdenumero (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
+              (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+                       (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
 
       :tila
       (sort-by
@@ -629,12 +631,13 @@
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
     :tunniste hash}
-   [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-    {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+   [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 12}
+    {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+    {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 45}
     {:otsikko "Edellinen lähetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
-     :leveys 60
+     :leveys 45
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
-    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
+    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 20 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/yha-lahetysnappi
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet

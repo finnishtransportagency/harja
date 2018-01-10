@@ -13,6 +13,7 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
+            [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kommentti :as kommentti]
@@ -28,17 +29,17 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-;; Terminologiaa:
-;; vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
-;; koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
-;; kan_hinta <-> Hinnoittelu
-;; kan_hinta.ryhma <-> ?? - ei mitään tekemistä tämän ns:n Hintaryhmien kanssa kuitenkaan
+;; terminologiaa: vv_hinnoittelu-taulu <-> tämän ns:n Hintaryhmä
+;;                koko hintatiedot ja kan_hinta <-> tämän ns:n Hinnoittelu (TallennaHinnoittelu jne)
+;;                kan_hinta <-> Hinnoittelu
+;;                kan_hinta.ryhma <-> ?? - ei mitään tekemistä tämän ns:n Hintaryhmien kanssa kuitenkaan
 
 (def tila (atom {:nakymassa? false
                  :toimenpiteiden-siirto-kaynnissa? false
                  :valitut-toimenpide-idt #{}
                  :avattu-toimenpide nil
                  :toimenpiteet nil
+                 :materiaalien-haku-kaynnissa? false
                  :toimenpiteiden-haku-kaynnissa? false
                  :suunniteltujen-toiden-haku-kaynnissa? false
                  :suunnitellut-tyot nil}))
@@ -70,7 +71,7 @@
 (defrecord TyhjennaAvattuToimenpide [])
 (defrecord AsetaLomakkeenToimenpiteenTiedot [toimenpide])
 (defrecord TallennaToimenpide [toimenpide poisto?])
-(defrecord ToimenpideTallennettu [toimenpiteet poisto?])
+(defrecord ToimenpideTallennettu [vastaus poisto?])
 (defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
@@ -81,6 +82,15 @@
 (defrecord SiirraValitut [])
 (defrecord ValitutSiirretty [])
 (defrecord ValitutEiSiirretty [])
+
+;; Materiaalit
+(defrecord HaeMateriaalit [])
+(defrecord MuokkaaMateriaaleja [materiaalit])
+(defrecord MateriaalitHaettu [materiaalit])
+(defrecord MateriaalienHakuEpaonnistui [])
+(defrecord LisaaMateriaali [])
+(defrecord LisaaVirhe [virhe])
+
 ;; Hinnoittelu
 (defrecord AloitaToimenpiteenHinnoittelu [toimenpide-id])
 (defrecord PeruToimenpiteenHinnoittelu [])
@@ -256,9 +266,13 @@
 
   PaivitaValinnat
   (process-event [{valinnat :valinnat} app]
-    (let [haku (tuck/send-async! ->HaeToimenpiteet)]
-      (go (haku valinnat))
-      (assoc app :valinnat valinnat)))
+    (let [uudet-valinnat (merge (:valinnat app)
+                                valinnat)
+          tp-haku (tuck/send-async! ->HaeToimenpiteet)
+          ml-haku (tuck/send-async! ->HaeMateriaalit)]
+      (go (tp-haku uudet-valinnat))
+      (go (ml-haku uudet-valinnat))
+      (assoc app :valinnat uudet-valinnat)))
 
   TyhjennaSuunnitellutTyot
   (process-event [_ app]
@@ -512,8 +526,8 @@
                                            :toimenpide-ei-tallennettu ->ToimenpiteenTallentaminenEpaonnistui}))
 
   ToimenpideTallennettu
-  (process-event [{toimenpiteet :toimenpiteet poisto? :poisto?} app]
-    (toimenpiteet/toimenpide-tallennettu app toimenpiteet poisto?))
+  (process-event [{vastaus :vastaus poisto? :poisto?} app]
+    (toimenpiteet/toimenpide-tallennettu app (:kanavatoimenpiteet vastaus) (:materiaalilistaus vastaus) poisto?))
 
   ToimenpiteenTallentaminenEpaonnistui
   (process-event [{poisto? :poisto?} app]
@@ -540,4 +554,55 @@
 
   HuoltokohteidenHakuEpaonnistui
   (process-event [_ app]
-    (toimenpiteet/huoltokohteet-ei-haettu app)))
+    (toimenpiteet/huoltokohteet-ei-haettu app))
+
+  HaeMateriaalit
+  (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
+    (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
+    (when-not materiaalien-haku-kaynnissa?
+      (let [urakka-id (:id @navigaatio/valittu-urakka)]
+        (-> app
+            (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
+                               {::materiaalit/urakka-id urakka-id}
+                               {:onnistui ->MateriaalitHaettu
+                                :epaonnistui ->MateriaalienHakuEpaonnistui})
+            (assoc :materiaalien-haku-kaynnissa? true
+                   :urakan-materiaalit nil)))))
+
+  MateriaalitHaettu
+  (process-event [{materiaalit :materiaalit} app]
+    ;; (log "MateriaalitHaettu, saatiin" (count materiaalit))
+    (assoc app
+           :urakan-materiaalit materiaalit
+           :materiaalien-haku-kaynnissa? false))
+
+  MateriaalienHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Materiaalien haku epäonnistui" :danger)
+    (assoc app :materiaalien-haku-kaynnissa? false))
+
+  MuokkaaMateriaaleja
+  (process-event [{materiaalit :materiaalit} app]
+    ;; urakan materiaaleista lisätyt voidaan tunnistaa muutokset-avaimella
+    (if (:avattu-toimenpide app)
+      (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
+                (vec
+                 (for [m materiaalit]
+                   (if (-> m :varaosat ::materiaalit/muutokset)
+                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                     m))))
+      app))
+
+  LisaaMateriaali
+  (process-event [_ app]
+    ;; Materiaalien järjestystä varten täytyy käyttää järjestysnumeroa. Nyt ei voida käyttää muokkaus-gridin generoimaa
+    ;; numeroa, koska rivinlisäysnappi ei ole normaali gridin lisäysnappi
+    (update-in app
+               [:avattu-toimenpide ::materiaalit/materiaalit]
+               #(let [vanha-id (apply max (map :jarjestysnumero %))
+                      uusi-id (if (nil? vanha-id) 0 (inc vanha-id))]
+                  (conj (vec %) {:jarjestysnumero uusi-id}))))
+
+  LisaaVirhe
+  (process-event [{virhe :virhe} app]
+    (assoc-in app [:avattu-toimenpide :varaosat-taulukon-virheet] virhe)))

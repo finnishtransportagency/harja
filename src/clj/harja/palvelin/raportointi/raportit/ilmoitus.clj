@@ -9,6 +9,7 @@
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoituspalvelu]
             [harja.pvm :as pvm]
+            [harja.domain.urakka :as u]
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [clojure.string :as str]))
 
@@ -50,8 +51,11 @@
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) "kysely") summat))))
      (nolla-jos-nil (:numero (first (filter #(= (:ilmoitustyyppi %) nil) summat))))]))
 
-(defn ilmoitukset-asiakaspalauteluokittain [db urakka-id hallintayksikko-id alkupvm loppupvm]
-  (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
+(defn ilmoitukset-asiakaspalauteluokittain [db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm]
+  (let [data (ilmoitukset/hae-ilmoitukset-asiakaspalauteluokittain db urakka-id
+                                                                   (when urakkatyyppi (name urakkatyyppi))
+                                                                   hallintayksikko-id
+                                                                   alkupvm loppupvm)
         ilman-kokonaismaaria (filter #(not-empty (:nimi %)) data)
         rivit (mapv (fn [[nimi summat]]
                       (into [nimi] (kasittele-summat summat)))
@@ -66,15 +70,16 @@
        #(asiakaspalauteluokkien-jarjestys (str/lower-case (first %)))
        rivit)]))
 
-(defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id hallintayksikko-id alkupvm loppupvm]
+(defn ilmoitukset-toimenpiteiden-mukaan [db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm]
   (let [{:keys [toimenpiteita-aiheuttaneet
                 ei-toimenpiteita-aiheuttaneet
                 yhteensa]} (first (ilmoitukset/hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
-                                            db
-                                            urakka-id
-                                            hallintayksikko-id
-                                            alkupvm
-                                            loppupvm))
+                                    db
+                                    urakka-id
+                                    (when urakkatyyppi (name urakkatyyppi))
+                                    hallintayksikko-id
+                                    alkupvm
+                                    loppupvm))
         rivit [[toimenpiteita-aiheuttaneet ei-toimenpiteita-aiheuttaneet yhteensa]]]
     [:taulukko {:otsikko "Ilmoitukset aiheutuneiden toimenpiteiden mukaan"}
      [{:leveys 2 :otsikko "Aiheutti toimenpiteita"}
@@ -82,9 +87,10 @@
       {:leveys 2 :otsikko "Yhteensä"}]
      rivit]))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id urakkatyyppi
                                alkupvm loppupvm urakkatyyppi urakoittain?] :as parametrit}]
-  (let [konteksti (cond urakka-id :urakka
+  (let [urakkatyyppi (when (not= urakkatyyppi :kaikki) urakkatyyppi) ; :kaikki = nil, ei rajata kyselyissä urakkatyypillä
+        konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
@@ -109,26 +115,33 @@
         ilmoitukset-kuukausittain-tyyppiryhmiteltyna (reduce-kv (fn [tulos kk ilmot]
                                                                   (assoc tulos kk
                                                                                [(some #(when (= :toimenpidepyynto (second (first %)))
-                                                                                        (second %)) ilmot)
+                                                                                         (second %)) ilmot)
                                                                                 (some #(when (= :tiedoitus (second (first %)))
-                                                                                        (second %)) ilmot)
+                                                                                         (second %)) ilmot)
                                                                                 (some #(when (= :kysely (second (first %)))
-                                                                                        (second %)) ilmot)]))
+                                                                                         (second %)) ilmot)]))
                                                                 {} ilmoitukset-kuukausittain)
         graafin-alkupvm (if kyseessa-kk-vali?
                           hoitokauden-alkupvm
                           alkupvm)
         graafin-loppupvm (if kyseessa-kk-vali?
-                          hoitokauden-loppupvm
-                          loppupvm)
+                           hoitokauden-loppupvm
+                           loppupvm)
         hoitokaudella-tahan-asti-opt (if kyseessa-kk-vali? " hoitokaudella " "")
         raportin-nimi "Ilmoitusraportti"
-        alueen-nimi (case konteksti
-                      :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                      :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
-                      :koko-maa "KOKO MAA")
+        raportin-alue (case konteksti
+                        :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                        :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                        :koko-maa "KOKO MAA")
+        raportin-tiedot (str
+                          raportin-alue
+                          (when (not= konteksti :urakka)
+                            (str ", "
+                                 (or (when-let [tyyppi-otsikko (u/urakkatyyppi->otsikko urakkatyyppi)]
+                                   (str/lower-case tyyppi-otsikko))
+                                 "kaikki urakkatyypit"))))
         otsikko (raportin-otsikko
-                  alueen-nimi
+                  raportin-tiedot
                   raportin-nimi alkupvm loppupvm)
         ilmoitukset-hyn-mukaan (sort-by #(or (:id (first %)) 100000)
                                         (seq (group-by :hallintayksikko
@@ -181,12 +194,11 @@
                   (let [tpp-yht (count (filter #(= :toimenpidepyynto (:ilmoitustyyppi %)) ilmoitukset))
                         tur-yht (count (filter #(= :tiedoitus (:ilmoitustyyppi %)) ilmoitukset))
                         urk-yht (count (filter #(= :kysely (:ilmoitustyyppi %)) ilmoitukset))]
-                    [(concat [alueen-nimi]
+                    [(concat [raportin-alue]
                              [tpp-yht tur-yht urk-yht])])))))]
 
-     (ilmoitukset-asiakaspalauteluokittain db urakka-id hallintayksikko-id alkupvm loppupvm)
-
-     (ilmoitukset-toimenpiteiden-mukaan db urakka-id hallintayksikko-id alkupvm loppupvm)
+     (ilmoitukset-asiakaspalauteluokittain db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm)
+     (ilmoitukset-toimenpiteiden-mukaan db urakka-id urakkatyyppi hallintayksikko-id alkupvm loppupvm)
 
      (when nayta-pylvaat?
        (if-not (empty? ilmoitukset-kuukausittain-tyyppiryhmiteltyna)

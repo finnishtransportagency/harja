@@ -17,7 +17,7 @@ CREATE OR REPLACE VIEW vv_materiaalilistaus AS
            AND m3.nimi = m1.nimi
            AND m3.poistettu IS NOT TRUE) AS "maara-nyt",
     -- Kerätään kaikki muutokset omaan taulukkoon
-    (SELECT array_agg(ROW (l.pvm, l.maara, l.lisatieto, l.id, l.hairiotilanne) :: VV_MATERIAALI_MUUTOS)
+    (SELECT array_agg(ROW (l.pvm, l.maara, l.lisatieto, l.id, l.hairiotilanne, l.toimenpide) :: VV_MATERIAALI_MUUTOS)
      FROM vv_materiaali l
      WHERE l."urakka-id" = m1."urakka-id"
            AND l.poistettu IS NOT TRUE
