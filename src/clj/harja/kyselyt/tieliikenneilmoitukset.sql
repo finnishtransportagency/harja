@@ -95,9 +95,8 @@ WHERE i.id IN
          (x.urakka IS NULL
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
-
-         (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND
-
+         (:urakkatyyppi_annettu IS FALSE OR u2.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+         (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
          -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
           (:loppu_annettu IS FALSE AND x.ilmoitettu >= :alku) OR
@@ -504,7 +503,8 @@ FROM asiakaspalauteluokka apl
   JOIN ilmoitus i
     ON i.selitteet && apl.selitteet AND
        (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
-       (i.urakka IS NULL OR (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND
+       (i.urakka IS NULL OR (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
+       (:urakkatyyppi::urakkatyyppi IS NULL OR (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi) AND
        (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
                                                                FROM urakka
                                                                WHERE hallintayksikko = :hallintayksikko_id)) AND
@@ -525,6 +525,7 @@ FROM
 WHERE
   (:urakka_id :: INTEGER IS NULL OR urakka = :urakka_id) AND
   (ilmoitus.urakka IS NULL OR u.urakkanro IS NOT NULL) AND
+  (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi) AND
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
                                                           WHERE hallintayksikko = :hallintayksikko_id)) AND
