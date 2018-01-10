@@ -7,6 +7,7 @@
 
     [harja.loki :refer [log]]
     [harja.domain.tierekisteri :as tr]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
     [harja.tyokalut.functor :refer [fmap]]
     [clojure.test.check :as tc]
     [clojure.test.check.generators :as gen]
@@ -184,3 +185,8 @@
      (is (= (pituus-yht vanhat-kohdeosat)
             (pituus-yht uudet-kohdeosat))
          "Osan katkaisu ei vaikuta yhteenlaskettuun pituuteen"))))
+
+(deftest paallystyskohteiden-sorttaus
+  (let [kohdenumeroita ["1" "308a" "11" "2" "L12" "300" nil "L11" "308b"]
+        oikea-jarjestys [nil "1" "2" "11" "L11" "L12" "300" "308a" "308b"]]
+    (is (= oikea-jarjestys (sort-by yllapitokohteet-domain/kohdenumero-str->kohdenumero-vec kohdenumeroita)))))

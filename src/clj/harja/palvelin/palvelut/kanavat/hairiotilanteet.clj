@@ -10,6 +10,7 @@
             [harja.domain.muokkaustiedot :as muok]
             [harja.kyselyt.vesivaylat.materiaalit :as m-q]
             [clojure.java.jdbc :as jdbc]
+            [taoensso.timbre :as log]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]
             [harja.kyselyt.kanavat.kanavan-hairiotilanne :as q-hairiotilanne]))
 
@@ -21,9 +22,7 @@
 
 (defn tallenna-hairiotilanne [db fim email
                               {kayttaja-id :id :as kayttaja}
-                              {urakka-id ::hairio/urakka-id :as hairiotilanne}
-                              materiaalikirjaukset
-                              materiaalipoistot]
+                              {urakka-id ::hairio/urakka-id :as hairiotilanne}]
   (assert urakka-id "Häiriötilannetta ei voi tallentaa ilman urakka id:tä")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   ;; Häiriötilanne kuuluu urakkaan
@@ -37,14 +36,25 @@
   (when (::hairio/kohteenosa-id hairiotilanne)
     (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::hairio/kohteenosa-id hairiotilanne)
                                ::osa/kohde-id (::hairio/kohde-id hairiotilanne)))
+
+  (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne))
+
+(defn tallenna-materiaalikirjaukset [db fim email
+                                     {kayttaja-id :id :as kayttaja}
+                                     urakka-id
+                                     hairio-id
+                                     materiaalikirjaukset
+                                     materiaalipoistot]
+  (assert (integer? urakka-id) "Materiaalikirjauksia ei voi tallentaa ilman urakka id:tä")
+  (assert (integer? hairio-id) (str "Häiritötilanteen materiaalikirjausta ei voi tallentaa ilman häiriö-id:tä - " hairio-id))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [{hairio-id ::hairio/id} (q-hairiotilanne/tallenna-hairiotilanne db kayttaja-id hairiotilanne)
-          hairio-id (or hairio-id (::hairio/id hairiotilanne))]
-      (doseq [mk (map #(assoc % ::materiaali/hairiotilanne hairio-id) materiaalikirjaukset)]
-        (m-q/kirjaa-materiaali db kayttaja mk)
-        (materiaali-palvelu/hoida-halytysraja db mk fim email))
-      (doseq [mk materiaalipoistot]
-        (m-q/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
+    (doseq [hairioton-mk materiaalikirjaukset
+            :let [mk-hairiolla (assoc hairioton-mk ::materiaali/hairiotilanne hairio-id)]]
+      (m-q/kirjaa-materiaali db kayttaja mk-hairiolla)
+      (materiaali-palvelu/hoida-halytysraja db mk-hairiolla fim email))
+    (doseq [mk materiaalipoistot]
+      (m-q/poista-materiaalikirjaus db kayttaja (::materiaali/id mk)))))
 
 (defrecord Hairiotilanteet []
   component/Lifecycle
@@ -68,9 +78,15 @@
                      materiaalipoistot ::materiaali/poista-materiaalikirjauksia
                      hakuehdot ::hairio/hae-hairiotilanteet-kysely}]
         (jdbc/with-db-transaction [db db]
-          (tallenna-hairiotilanne db fim email kayttaja hairiotilanne materiaalikirjaukset materiaalipoistot)
-          {:hairiotilanteet (hae-hairiotilanteet db kayttaja hakuehdot)
-           :materiaalilistaukset (m-q/hae-materiaalilistaus db {::materiaali/urakka-id (::hairio/urakka-id hairiotilanne)})}))
+          (let [tallennettu-hairiotilanne (tallenna-hairiotilanne db fim email kayttaja hairiotilanne)]
+            ;; (log/debug "tallennettu-hairiotilanne: "  (pr-str tallennettu-hairiotilanne) "ja id" (::hairio/id tallennettu-hairiotilanne))
+            (when (and tallennettu-hairiotilanne (or materiaalikirjaukset materiaalipoistot))
+              (tallenna-materiaalikirjaukset db fim email kayttaja
+                                             (::hairio/urakka-id hairiotilanne)
+                                             (::hairio/id tallennettu-hairiotilanne)
+                                             materiaalikirjaukset materiaalipoistot))
+            {:hairiotilanteet (hae-hairiotilanteet db kayttaja hakuehdot)
+             :materiaalilistaukset (m-q/hae-materiaalilistaus db {::materiaali/urakka-id (::hairio/urakka-id hairiotilanne)})})))
       {:kysely-spec ::hairio/tallenna-hairiotilanne-kutsu
        :vastaus-spec ::hairio/tallenna-hairiotilanne-vastaus})
     this)

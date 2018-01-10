@@ -648,7 +648,7 @@
      :valinta v-ur-tyyppi
      :class "raportti-alasveto"
      :format-fn :nimi}
-    nav/+urakkatyypit+]])
+    nav/+urakkatyypit-ja-kaikki+]])
 
 (defn ei-raportteja-saatavilla-viesti [urakkatyyppi valittu-urakka]
   (if (and (nil? valittu-urakka)

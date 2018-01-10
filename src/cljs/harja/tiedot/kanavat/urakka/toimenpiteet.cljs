@@ -13,7 +13,8 @@
             [clojure.string :as str]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.domain.vesivaylat.materiaali :as materiaalit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -48,20 +49,147 @@
 (defn tyhjenna-avattu-toimenpide [app]
   (assoc app :avattu-toimenpide nil))
 
+
+(defn toimenpiteen-materiaalimuutos? [tp muutos]
+  (when (some? (::materiaalit/toimenpide muutos))
+    (= (::materiaalit/toimenpide muutos) (::kanavatoimenpide/id tp))))
+
+(defn materiaalilistaus->grid [toimenpide listaukset]
+  (mapcat (fn [materiaalilistaus]
+            (transduce
+             (comp
+              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
+              ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
+              (map #(identity {:maara (- (::materiaalit/maara %))
+                               :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+                                         ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
+                                         ::materiaalit/pvm (::materiaalit/pvm %)
+                                         ::materiaalit/id (::materiaalit/id %)}})))
+             conj (filter
+                   (partial toimenpiteen-materiaalimuutos? toimenpide)
+                   (::materiaalit/muutokset materiaalilistaus))))
+          listaukset))
+
 (defn aseta-lomakkeen-tiedot [app toimenpide]
-  (let [kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohteenosa]))
+  (let [vanhat-materiaalit (-> app :avattu-toimenpide ::materiaalit/materiaalit)
+
+        vanha-id (-> app :avattu-toimenpide ::kanavatoimenpide/id)
+        uusi-id (::kanavatoimenpide/id toimenpide)
+
+        kohdeosa-vaihtui? (and (some? (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohteenosa]))
                                (not= (::kanavatoimenpide/kohde toimenpide)
                                      (get-in app [:avattu-toimenpide ::kanavatoimenpide/kohde])))
         toimenpide (if kohdeosa-vaihtui?
                      (assoc toimenpide ::kanavatoimenpide/kohteenosa nil)
-                     toimenpide)]
+                     toimenpide)
+        materiaalilistaukset (:urakan-materiaalit app)
+        materiaalit (if (= vanha-id uusi-id)
+                      vanhat-materiaalit
+                      (materiaalilistaus->grid toimenpide materiaalilistaukset))
+        toimenpide (assoc toimenpide ::materiaalit/materiaalit materiaalit
+                          ::materiaalit/muokkaamattomat-materiaalit (filter #(not (:jarjestysnumero %)) materiaalit))]
     (assoc app :avattu-toimenpide toimenpide)))
+
+
+;; materiaalien tietomallissa backilla:
+;; vv_materiaalilistaus on view, sisältää rivin per materiaali (esim Naulat) ja maara-nyt arvon +muutokset-arrayn.
+;; sisältö tehdään vv_materiaali-taulusta.
+;; vv_materiaali aka materiaalikirjaus on yhtä muutosta esittävä rivi.
+;; front-koodissa taas materiaalikirjauksiksi kutsutaan myös grid-mappeina olevia kirjauksiksi.
+;;
+;; ::materiaalit/materiaalit -avaimen alla oleva map sisaltaa :varaosa avaimen alla listaus-viewin muotoa,
+;; {:jarjestysnumero 0,
+;;  :varaosa {::materiaalit/urakka-id 31,
+;;            ::materiaalit/maara-nyt 964,
+;;            ::materiaalit/halytysraja 200,
+;;            ::materiaalit/muutokset [
+;;                                     [...]
+;;                                     {::materiaalit/pvm #object[Object 20171128T000000],
+;;                                      ::materiaalit/maara -3,
+;;                                      ::materiaalit/toimenpide 2,
+;;                                      ::materiaalit/id 5}
+;;                                     [...]
+;;                                     ],
+;;            ::materiaalit/alkuperainen-maara 1000,
+;;            ::materiaalit/nimi "Naulat"},
+;;  :maara 2}
+
+(defn materiaalikirjaus->tallennettava [grid-rivi]
+  (for [muutos (::materiaalit/muutokset grid-rivi)]
+    {:maara (- (::materiaalit/maara muutos))
+     :varaosa {::materiaalit/nimi (::materiaalit/nimi grid-rivi)
+               ::materiaalit/urakka-id (::materiaalit/urakka-id grid-rivi)
+               ::materiaalit/pvm (::materiaalit/pvm muutos)
+               ::materiaalit/id (::materiaalit/id muutos)}}))
+
+(defn materiaalikirjaus->poistettavat-1 [{:keys [poistettu jarjestysnumero varaosa] :as grid-rivi}]
+  ;; poistetaan mapista poistetuksi merkatut uudet rivit
+  (when (and poistettu (not jarjestysnumero))
+    (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))
+
+
+(defn materiaalikirjaus->poistettavat-2 [nykygrid {:keys [poistettu jarjestysnumero varaosa] :as muokkaamaton-grid-rivi}]
+  ;; poistetaan materiaalit jotka löytyy vain muokkaamattomista materiaaleista
+
+  (let [nykygridin-samannimiset (filter
+                                 #(= (::materiaalit/nimi varaosa) (-> % :varaosa ::materiaalit/nimi))
+                                 nykygrid)]
+    ;; (log "samannimiset:" (pr-str nykygridin-samannimiset))
+    ;; pyydetään backilta poistettavaksi, jos 1) ei loydy saman nimisiä nykygridistä
+    ;;                                     ja 2) jarjestysnumero puuttuu eli on backilta ladattu (vs frontilla tallentamatta lisätty)
+    (when (empty? nykygridin-samannimiset)
+      ;; (log "not jnr:" (pr-str (not jarjestysnumero)))
+      (when (not jarjestysnumero)
+
+        (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))))
+
+(defn poistettavat-materiaalit [tp]
+  (concat
+   (keep materiaalikirjaus->poistettavat-1 (::materiaalit/materiaalit tp))
+   (keep (partial materiaalikirjaus->poistettavat-2 (::materiaalit/materiaalit tp))
+         (::materiaalit/muokkaamattomat-materiaalit tp))))
+
+(defn yksi-tallennettava-materiaalikirjaus
+  "Palauttaa tallennettavan mapin kun m-kirjaus on muokattu, ei-tyhja, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...} - muutoin nil"
+  [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
+
+  (let [muokkaamaton? (if (seq muokkaamattomat-kirjaukset)
+                       (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
+                       false)
+        tyhja? (= [:jarjestysnumero] (keys m-kirjaus))
+        poistettu? (:poistettu m-kirjaus)
+        varaosa (dissoc (:varaosa m-kirjaus)
+                        ::materiaalit/maara-nyt ::materiaalit/halytysraja
+                        ::materiaalit/muutokset ::materiaalit/alkuperainen-maara)]
+    ;; jatetaan tallentamatta tyhjat, poistetut, muokkaamattomat.
+    (if (or tyhja? poistettu? muokkaamaton?)
+      nil
+      (assoc varaosa
+             ::materiaalit/maara (- (:maara m-kirjaus)) ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
+             ::materiaalit/lisatieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
+
+(defn tallennettavat-materiaalit [tp]
+  (if (::muokkaustiedot/poistettu? tp)
+    []
+    ;; else
+    (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
+          muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
+
+          tp-id (::kanavatoimenpide/id tp)
+          paivamaara (::kanavatoimenpide/pvm tp)
+          kohteen-nimi (-> tp ::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
+
+          lisatieto (str "Kohteen " kohteen-nimi " materiaali")
+          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
+      tallennettavat)))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
   ;; Toimenpidekoodi tulee eri muodossa luettaessa uutta tai hae:ttaessa valmis
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
+
   (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
-                    (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
+                    (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
+        materiaalit (::materiaalit/materiaalit toimenpide)]
     (-> toimenpide
         (select-keys [::kanavatoimenpide/id
                       ::kanavatoimenpide/urakka-id
@@ -78,9 +206,12 @@
                ::kanavatoimenpide/kohteenosa-id (get-in toimenpide [::kanavatoimenpide/kohteenosa ::osa/id])
                ::kanavatoimenpide/huoltokohde-id (get-in toimenpide [::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/id])
                ::kanavatoimenpide/muu-toimenpide (if (valittu-tehtava-muu? tehtava tehtavat)
-                                                   (::kanavatoimenpide/muu-toimenpide toimenpide)
-                                                   nil))
-        (dissoc ::kanavatoimenpide/kuittaaja))))
+                                                     (::kanavatoimenpide/muu-toimenpide toimenpide)
+                                                     nil)
+               ::kanavatoimenpide/materiaalipoistot (poistettavat-materiaalit toimenpide)
+               ::kanavatoimenpide/materiaalikirjaukset (tallennettavat-materiaalit toimenpide))
+        (dissoc ::kanavatoimenpide/kuittaaja
+                ::kanavatoimenpide/materiaalit))))
 
 (defn tallenna-toimenpide [app {:keys [toimenpide tehtavat valinnat tyyppi poisto?
                                        toimenpide-tallennettu toimenpide-ei-tallennettu]}]
@@ -101,13 +232,14 @@
 (defn poista-valittu-toimenpide [valitut-toimenpide-idt poistettava-id]
   (set (remove #(= % poistettava-id) valitut-toimenpide-idt)))
 
-(defn toimenpide-tallennettu [app toimenpiteet poisto?]
+(defn toimenpide-tallennettu [app uudet-toimenpiteet uusi-materiaalilistaus poisto?]
   (if poisto?
     (viesti/nayta! "Toimenpide poistettu" :success)
     (viesti/nayta! "Toimenpide tallennettu" :success))
   (assoc app :tallennus-kaynnissa? false
-             :avattu-toimenpide nil
-             :toimenpiteet toimenpiteet))
+         :avattu-toimenpide nil
+         :urakan-materiaalit uusi-materiaalilistaus
+         :toimenpiteet uudet-toimenpiteet))
 
 (defn toimenpide-ei-tallennettu [app poisto?]
   (if poisto?

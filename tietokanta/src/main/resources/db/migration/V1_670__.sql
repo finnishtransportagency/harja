@@ -1,2 +1,3 @@
--- Lisää läheiselle osoiteriville geometria (ks. laheiset_osoitteet_pisteelle)
-ALTER TYPE laheinen_osoiterivi ADD ATTRIBUTE geom GEOMETRY;
+ALTER TABLE vv_materiaali ADD COLUMN toimenpide INTEGER REFERENCES kan_toimenpide (id);
+ALTER TYPE vv_materiaali_muutos ADD ATTRIBUTE toimenpide INTEGER;
+ALTER TABLE vv_materiaali ALTER COLUMN pvm SET DEFAULT NOW();

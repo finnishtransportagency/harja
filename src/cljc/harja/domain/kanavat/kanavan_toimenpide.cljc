@@ -113,6 +113,9 @@
 (s/def ::hae-kanavatoimenpiteet-vastaus
   (s/coll-of ::kanava-toimenpide))
 
+(s/def ::tallenna-kanavatoimenpide-vastaus
+  (s/keys :req-un [::kanavatoimenpiteet ::materiaalilistaus]))
+
 (s/def ::siirra-kanavatoimenpiteet-kysely
   (s/keys
     :req [::urakka-id ::toimenpide-idt ::tyyppi]))
@@ -143,7 +146,9 @@
                 ::kohde-id
                 ::id
                 ::toimenpidekoodi-id
-                ::muu-toimenpide]))
+                ::muu-toimenpide
+                ::materiaalikirjaukset
+                ::materiaalipoistot]))
 
 (s/def ::tallenna-kanavatoimenpide-kutsu
   (s/keys :req [::hae-kanavatoimenpiteet-kysely
