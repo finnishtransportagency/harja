@@ -10,7 +10,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn yksityiskohtainen-aikataulu [rivi]
-  (let [yksityiskohtainen-aikataulu (atom (:yksityiskohtainen-aikataulu rivi))]
+  (let [yksityiskohtainen-aikataulu (atom (or (:yksityiskohtainen-aikataulu rivi) []))]
     (fn [rivi]
       [:div
        [grid/grid
@@ -37,4 +37,4 @@
           :leveys 5
           :nimi :kohdenumero
           :tyyppi :pvm}]
-        yksityiskohtainen-aikataulu]])))
+        @yksityiskohtainen-aikataulu]])))
