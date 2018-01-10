@@ -15,24 +15,26 @@
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
 
-(def yhteyshenkilot (atom nil))
+(def yhteyshenkilot (atom nil)) ; nil = haetaan, vector = tulos, :virhe = epäonnistui
 
 (defn- yhteyshenkilot-view [yhteyshenkilot-atom]
   (fn [yhteyshenkilot-atom]
     (let [{:keys [fim-kayttajat yhteyshenkilot] :as tiedot} @yhteyshenkilot-atom]
       (if tiedot
-        [:div
-         [urakkaan-liitetyt-kayttajat fim-kayttajat]
-         [grid/grid
-          {:otsikko "Yhteyshenkilöt"
-           :tyhja "Ei yhteyshenkilöitä."}
-          [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
-           {:otsikko "Nimi" :nimi :nimi :tyyppi :string
-            :hae #(str (:etunimi %) " " (:sukunimi %))}
-           {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
-           {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
-           {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
-          yhteyshenkilot]]
+        (if (= tiedot :virhe)
+          [:p "Virhe yhteyshenkilöiden haussa."]
+          [:div
+           [urakkaan-liitetyt-kayttajat fim-kayttajat]
+           [grid/grid
+            {:otsikko "Yhteyshenkilöt"
+             :tyhja "Ei yhteyshenkilöitä."}
+            [{:otsikko "Rooli" :nimi :rooli :tyyppi :string}
+             {:otsikko "Nimi" :nimi :nimi :tyyppi :string
+              :hae #(str (:etunimi %) " " (:sukunimi %))}
+             {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin}
+             {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin}
+             {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email}]
+            yhteyshenkilot]])
         [ajax-loader "Haetaan yhteyshenkilöitä..."]))))
 
 (defn nayta-yhteyshenkilot-modal!
@@ -44,7 +46,9 @@
         (let [vastaus (<! (k/post! :yllapitokohteen-urakan-yhteyshenkilot {:yllapitokohde-id yllapitokohde-id
                                                                            :urakkatyyppi urakkatyyppi}))]
           (if (k/virhe? vastaus)
-            (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
+            (do
+              (viesti/nayta! "Virhe haettaessa yhteyshenkilöitä!" :warning)
+              (reset! yhteyshenkilot :virhe))
             (reset! yhteyshenkilot vastaus)))))
 
   (modal/nayta!
