@@ -30,7 +30,7 @@
           :tyyppi :string
           :pituus-max 1024}
          {:otsikko "Alku"
-          :leveys 5X
+          :leveys 5
           :nimi :kohdenumero
           :tyyppi :pvm}
          {:otsikko "Loppu"
