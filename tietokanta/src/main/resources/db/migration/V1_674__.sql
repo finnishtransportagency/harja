@@ -4,6 +4,7 @@ CREATE TYPE yllapitokohteen_aikataulu_toimenpide AS ENUM ('ojankaivuu', 'rp_tyot
 CREATE TABLE yllapitokohteen_yksityiskohtainen_aikataulu (
   id SERIAL PRIMARY KEY,
   yllapitokohde INTEGER REFERENCES yllapitokohde(id) NOT NULL,
+  urakka INTEGER REFERENCES urakka(id) NOT NULL, -- Urakka, jota aikataulu koskee (päällystys/tiemerkintä)
   toimenpide yllapitokohteen_aikataulu_toimenpide NOT NULL,
   kuvaus VARCHAR(1024),
   alku DATE NOT NULL,
