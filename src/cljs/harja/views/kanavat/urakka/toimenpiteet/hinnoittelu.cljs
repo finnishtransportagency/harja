@@ -146,7 +146,7 @@
     [:th {:style {:width "40%"}} "Materiaali"]
     [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
-    [:th {:style {:width "5%"}} "Yks."]
+    [:th {:style {:width "5%"}}]
     [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
     [:th.tasaa-oikealle {:style {:width "10%"}}]
     [:th {:style {:width "5%"}} ""]]])
@@ -272,8 +272,7 @@
                          (:maara materiaali)
                          [kentta-materiaalille e! materiaali :maara
                           {:tyyppi :string}])]
-   [:td
-    [kentta-materiaalille e! materiaali :yksikko {:tyyppi :string :pituus-min 1}]]
+   [:td ""]
    [:td "Yhteensä"]
    [:td.keskita ""]
    [:td.keskita
