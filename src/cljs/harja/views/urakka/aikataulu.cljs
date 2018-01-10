@@ -187,6 +187,14 @@
      [upotettu-raportti/raportin-vientimuodot
       (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
 
+(defn- nayta-yhteystiedot?
+  [rivi nakyma]
+  (case nakyma
+    :paallystys
+    (:suorittava-tiemerkintaurakka rivi)
+
+    true))
+
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -340,7 +348,8 @@
                                (case (:nakyma optiot)
                                  :tiemerkinta :paallystys
                                  :paallystys :tiemerkinta))
-                            {:ikoni (ikonit/user)
+                            {:disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
+                             :ikoni (ikonit/user)
                              :luokka "btn-xs"}])}
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :fmt yllapito-pvm-fmt
