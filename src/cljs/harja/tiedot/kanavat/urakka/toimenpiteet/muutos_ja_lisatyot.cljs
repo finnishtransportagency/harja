@@ -166,7 +166,6 @@
 
 (defn kaytto-merkattu-toimenpiteelle?
   [materiaali-hinta materiaalit]
-                         materiaalit))
   (some (fn [materiaali]
           (= (::materiaalit/nimi materiaali)
              (::hinta/otsikko materiaali-hinta)))
