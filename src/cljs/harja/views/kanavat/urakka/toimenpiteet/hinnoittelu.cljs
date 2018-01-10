@@ -255,14 +255,14 @@
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
 (defn- materiaali-hinnoittelurivi
-  [e! materiaali-hinta]
+  [e! materiaali-hinta materiaalit]
   [:tr
-   [:td (if (:kaytto-merkattu-toimenpiteelle? materiaali-hinta)
+   [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
           (::hinta/otsikko materiaali-hinta)
           [kentta-hinnalle e! materiaali-hinta ::hinta/otsikko {:tyyppi :string}])]
    [:td.tasaa-oikealle [kentta-hinnalle e! materiaali-hinta ::hinta/yksikkohinta
                         {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
-   [:td.tasaa-oikealle (if (:kaytto-merkattu-toimenpiteelle? materiaali-hinta)
+   [:td.tasaa-oikealle (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
                          (::hinta/maara materiaali-hinta)
                          [kentta-hinnalle e! materiaali-hinta ::hinta/maara
                           {:tyyppi :string}])]
@@ -270,7 +270,7 @@
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
    [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
    [:td.keskita
-    (if (:kaytto-merkattu-toimenpiteelle? materiaali-hinta)
+    (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
       ""
       [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))])]])
 
@@ -282,7 +282,7 @@
       [materiaalit-header]
       [:tbody
        (for* [materiaali-hinta materiaali-hinnat]
-         [materiaali-hinnoittelurivi e! materiaali-hinta])]]
+         [materiaali-hinnoittelurivi e! materiaali-hinta (:urakan-materiaalit app*)])]]
      [rivinlisays "Lisää materiaalirivi" #(e! (tiedot/->LisaaMateriaaliKulurivi))]]))
 
 (defn- muut-hinnat [e! app*]

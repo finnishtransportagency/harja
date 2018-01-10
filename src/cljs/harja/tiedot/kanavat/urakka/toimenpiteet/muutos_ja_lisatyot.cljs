@@ -161,9 +161,16 @@
             (let [maara (materiaalin-kaytto materiaali)]
               (when-not (= maara 0)
                 {:nimi (::materiaalit/nimi materiaali)
-                 :maara maara
-                 :kaytto-merkattu-toimenpiteelle? true})))
+                 :maara maara})))
           materiaalit)))
+
+(defn kaytto-merkattu-toimenpiteelle?
+  [materiaali-hinta materiaalit]
+                         materiaalit))
+  (some (fn [materiaali]
+          (= (::materiaalit/nimi materiaali)
+             (::hinta/otsikko materiaali-hinta)))
+        materiaalit))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
@@ -274,12 +281,11 @@
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
 
 (defn materiaali->hinta
-  [{:keys [nimi maara kaytto-merkattu-toimenpiteelle?]}]
+  [{:keys [nimi maara]}]
   {::hinta/otsikko nimi
    ::hinta/ryhma "materiaali"
    ::hinta/maara maara
-   ::hinta/yksikkohinta 0
-   :kaytto-merkattu-toimenpiteelle? kaytto-merkattu-toimenpiteelle?})
+   ::hinta/yksikkohinta 0})
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -484,7 +490,7 @@
             :tallenna-kanavatoimenpiteen-hinnoittelu
             {::toimenpide/urakka-id (get-in app [:valinnat :urakka :id])
              ::toimenpide/id (get-in app [:hinnoittele-toimenpide ::toimenpide/id])
-             ::hinta/tallennettavat-hinnat (map #(dissoc % :kaytto-merkattu-toimenpiteelle?) (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
+             ::hinta/tallennettavat-hinnat (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
              ::tyo/tallennettavat-tyot (get-in app [:hinnoittele-toimenpide ::tyo/tyot])}
             {:onnistui ->ToimenpiteenHinnoitteluTallennettu
              :epaonnistui ->ToimenpiteenHinnoitteluEiTallennettu})
