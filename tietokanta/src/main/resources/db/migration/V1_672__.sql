@@ -1,5 +1,5 @@
 -- Luo taulu ylläpitokohteen yksityiskohtaiselle aikataululle
-CREATE TYPE yllapitokohteen_aikataulu_toimenpide AS ENUM ('ojan_kaivuu', 'rp_tyot', 'rumpujen_vaihto', 'muu');
+CREATE TYPE yllapitokohteen_aikataulu_toimenpide AS ENUM ('ojankaivuu', 'rp_tyot', 'rumpujen_vaihto', 'muu');
 
 CREATE TABLE yllapitokohteen_yksityiskohtainen_aikataulu (
   id SERIAL PRIMARY KEY,
