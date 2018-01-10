@@ -25,6 +25,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
+            [harja.views.urakka.yksityiskohtainen-aikataulu :as yksityiskohtainen-aikataulu]
             [harja.ui.aikajana :as aikajana]
             [harja.domain.aikataulu :as aikataulu]
             [harja.ui.upotettu-raportti :as upotettu-raportti]
@@ -242,8 +243,14 @@
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
                        #(tallenna-aikataulu urakka-id sopimus-id vuosi %)
-                       :ei-mahdollinen)}
-          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+                       :ei-mahdollinen)
+           :vetolaatikot (into {}
+                               (map (juxt :id
+                                          (fn [rivi]
+                                            [yksityiskohtainen-aikataulu/yksityiskohtainen-aikataulu rivi]))
+                               aikataulurivit))}
+          [{:tyyppi :vetolaatikon-tila :leveys 2}
+           {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? voi-muokata-paallystys?}
            {:otsikko "Koh\u00ADteen nimi" :leveys 9 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? voi-muokata-paallystys?}
@@ -283,7 +290,7 @@
             :nimi :yllapitoluokka :leveys 4 :tyyppi :string
             :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? (constantly false)}
-           (when (= (:nakyma optiot) :paallystys)           ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
               :tyyppi :pvm :fmt yllapito-pvm-fmt
               :muokattava? voi-muokata-paallystys?})
