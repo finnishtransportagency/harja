@@ -26,15 +26,15 @@
           :pituus-max 128}
          {:otsikko "Kuvaus"
           :leveys 10
-          :nimi :kohdenumero
+          :nimi :kuvaus
           :tyyppi :string
           :pituus-max 1024}
          {:otsikko "Alku"
           :leveys 5
-          :nimi :kohdenumero
+          :nimi :alku
           :tyyppi :pvm}
          {:otsikko "Loppu"
           :leveys 5
-          :nimi :kohdenumero
+          :nimi :loppu
           :tyyppi :pvm}]
         @yksityiskohtainen-aikataulu]])))
