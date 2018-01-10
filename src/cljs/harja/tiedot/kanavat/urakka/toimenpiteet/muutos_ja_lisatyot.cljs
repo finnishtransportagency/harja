@@ -158,10 +158,11 @@
                                                (- (::materiaalit/maara %)))
                                             (::materiaalit/muutokset materiaali))))]
     (keep (fn [materiaali]
-            (when-let [maara (materiaalin-kaytto materiaali)]
-              {:nimi (::materiaalit/nimi materiaali)
-               :maara maara
-               :kaytto-merkattu-toimenpiteelle? true}))
+            (let [maara (materiaalin-kaytto materiaali)]
+              (when-not (= maara 0)
+                {:nimi (::materiaalit/nimi materiaali)
+                 :maara maara
+                 :kaytto-merkattu-toimenpiteelle? true})))
           materiaalit)))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
@@ -264,7 +265,10 @@
        (every? #(or (some? (::hinta/summa %))
                     (and (some? (::hinta/maara %))
                          (some? (::hinta/yksikkohinta %))
-                         (not-empty (::hinta/yksikko %))))
+                         (not-empty (::hinta/yksikko %)))
+                    (and (some? (::hinta/maara %))
+                         (some? (::hinta/yksikkohinta %))
+                         (= "materiaali" (::hinta/ryhma %))))
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
        (every? #(not-empty (::hinta/otsikko %))
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
@@ -274,6 +278,7 @@
   {::hinta/otsikko nimi
    ::hinta/ryhma "materiaali"
    ::hinta/maara maara
+   ::hinta/yksikkohinta 0
    :kaytto-merkattu-toimenpiteelle? kaytto-merkattu-toimenpiteelle?})
 
 (extend-protocol tuck/Event

@@ -270,7 +270,9 @@
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
    [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
    [:td.keskita
-    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))]]])
+    (if (:kaytto-merkattu-toimenpiteelle? materiaali-hinta)
+      ""
+      [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))])]])
 
 (defn- materiaalit [e! app*]
   (let [materiaali-hinnat (tiedot/materiaalit app*)]
