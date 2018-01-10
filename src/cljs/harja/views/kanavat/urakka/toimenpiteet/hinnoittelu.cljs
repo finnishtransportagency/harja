@@ -45,12 +45,6 @@
   ([e! hinta arvo-kw kentan-optiot asetus-fn]
    [kentta* e! hinta arvo-kw kentan-optiot asetus-fn]))
 
-(defn- kentta-materiaalille
-  ([e! materiaali arvo-kw kentan-optiot]
-   [kentta-materiaalille e! materiaali arvo-kw kentan-optiot #(println "asetus")])
-  ([e! materiaali arvo-kw kentan-optiot asetus-fn]
-   [kentta* e! materiaali arvo-kw kentan-optiot asetus-fn]))
-
 (defn- kentta-tyolle
   ([e! tyo arvo-kw kentan-optiot]
    [kentta-tyolle e! tyo arvo-kw kentan-optiot
@@ -264,13 +258,13 @@
   [e! materiaali]
   [:tr
    [:td (if (:kaytto-merkattu-toimenpiteelle? materiaali)
-          (:nimi materiaali)
-          [kentta-materiaalille e! materiaali :nimi {:tyyppi :string}])]
-   [:td.tasaa-oikealle [kentta-materiaalille e! materiaali :yksikko-hinta
+          (::hinta/otsikko materiaali)
+          [kentta-hinnalle e! materiaali ::hinta/otsikko {:tyyppi :string}])]
+   [:td.tasaa-oikealle [kentta-hinnalle e! materiaali ::hinta/yksikkohinta
                         {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
    [:td.tasaa-oikealle (if (:kaytto-merkattu-toimenpiteelle? materiaali)
-                         (:maara materiaali)
-                         [kentta-materiaalille e! materiaali :maara
+                         (::hinta/maara materiaali)
+                         [kentta-hinnalle e! materiaali ::hinta/maara
                           {:tyyppi :string}])]
    [:td ""]
    [:td "Yhteensä"]
@@ -279,7 +273,7 @@
     [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali))]]])
 
 (defn- materiaalit [e! app*]
-  (let [materiaalit (get-in app* [:hinnoittele-toimenpide :materiaalit])]
+  (let [materiaalit (tiedot/materiaalit app*)]
     [:div.hinnoitteluosio
      [valiotsikko "Varaosat ja materiaalit"]
      [:table
@@ -287,7 +281,7 @@
       [:tbody
        (for* [materiaali materiaalit]
          [materiaali-hinnoittelurivi e! materiaali])]]
-     [rivinlisays "Lisää materiaalirivi" #(println "Lisää materiaalilivi")]]))
+     [rivinlisays "Lisää materiaalirivi" #(e! (tiedot/->LisaaMateriaaliKulurivi))]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]

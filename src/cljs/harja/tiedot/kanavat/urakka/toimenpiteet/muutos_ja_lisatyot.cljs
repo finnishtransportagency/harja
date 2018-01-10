@@ -99,6 +99,7 @@
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
 (defrecord LisaaMuuKulurivi [])
 (defrecord LisaaMuuTyorivi [])
+(defrecord LisaaMateriaaliKulurivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tyo])
 (defrecord PoistaHinnoiteltavaHintarivi [hinta])
 (defrecord TallennaToimenpiteenHinnoittelu [tiedot])
@@ -142,6 +143,9 @@
 (defn muut-hinnat [app]
   (hintaryhman-tyot app "muu"))
 
+(defn materiaalit [app]
+  (hintaryhman-tyot app "materiaali"))
+
 (defn hinta-otsikolla [hinnat otsikkokriteeri]
   (etsi-eka-map hinnat ::hinta/otsikko otsikkokriteeri))
 
@@ -157,7 +161,6 @@
             (when-let [maara (materiaalin-kaytto materiaali)]
               {:nimi (::materiaalit/nimi materiaali)
                :maara maara
-               :yksikko "kpl"
                :kaytto-merkattu-toimenpiteelle? true}))
           materiaalit)))
 
@@ -265,6 +268,13 @@
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
        (every? #(not-empty (::hinta/otsikko %))
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
+
+(defn materiaali->hinta
+  [{:keys [nimi maara kaytto-merkattu-toimenpiteelle?]}]
+  {::hinta/otsikko nimi
+   ::hinta/ryhma "materiaali"
+   ::hinta/maara maara
+   :kaytto-merkattu-toimenpiteelle? kaytto-merkattu-toimenpiteelle?})
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -385,16 +395,23 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
 
     (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
-          hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
-          tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
           materiaalit (or (toimenpiteen-materiaalit {:toimenpide-id toimenpide-id :materiaalit (:urakan-materiaalit app)}) [])
+          hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
+          tallentamattomat-materiaali-hinnat (sequence (comp
+                                                         (remove (fn [materiaali]
+                                                                   (some #(= (:nimi materiaali)
+                                                                             (::hinta/otsikko %))
+                                                                         hinnat)))
+                                                         (map materiaali->hinta))
+                                                       materiaalit)
+          yhdistetyt-hinnat (concat hinnat tallentamattomat-materiaali-hinnat)
+          tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
           urakka-id (get-in app [:valinnat :urakka :id])]
       (if urakka-id
         (assoc app :hinnoittele-toimenpide
                    {::toimenpide/id toimenpide-id
                     ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
-                    ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
-                    :materiaalit materiaalit
+                    ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat)
                     ::tyo/tyot tyot
                     :urakka urakka-id})
         (do
@@ -438,6 +455,12 @@
   (process-event [_ app]
     (lisaa-hintarivi-toimenpiteelle
       {::hinta/ryhma "tyo"}
+      app))
+
+  LisaaMateriaaliKulurivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma "materiaali"}
       app))
 
   PoistaHinnoiteltavaTyorivi
