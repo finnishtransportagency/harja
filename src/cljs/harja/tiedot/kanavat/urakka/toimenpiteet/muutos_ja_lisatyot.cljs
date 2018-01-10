@@ -157,7 +157,8 @@
             (when-let [maara (materiaalin-kaytto materiaali)]
               {:nimi (::materiaalit/nimi materiaali)
                :maara maara
-               :yksikko "kpl"}))
+               :yksikko "kpl"
+               :kaytto-merkattu-toimenpiteelle? true}))
           materiaalit)))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
