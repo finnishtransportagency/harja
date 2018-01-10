@@ -10,6 +10,7 @@
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.leijuke :refer [leijuke]]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.grid :as grid]
             [harja.ui.varmista-kayttajalta :refer [varmista-kayttajalta]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
@@ -341,19 +342,18 @@
     {:luokka (str "btn-xs arvo-ja-nappi-nappi")}]])
 
 (defn tarkastele [e! app* hinta toimenpide-rivi]
-  [:div.arvo-ja-nappi
-   [:span.arvo-ja-nappi-arvo
-    hinta]
-   [napit/yleinen-toissijainen
-    "Tarkastele"
-    #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
-    {:ikoninappi? false
-     :ikoni (ikonit/livicon-eye)
-     :luokka (str "btn-xs arvo-ja-nappi-nappi")
-     :disabled (or (:id (:infolaatikko-nakyvissa app*))
-                   (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                 (:id @nav/valittu-urakka))))}]])
+  (grid/arvo-ja-nappi
+    {:sisalto :arvo-ja-nappi
+     :arvo hinta
+     :arvo-ja-nappi-napin-teksti "Tarkastele"
+     :arvo-ja-nappi-toiminto-fn #(e! (tiedot/->AloitaToimenpiteenHinnoittelu (::toimenpide/id toimenpide-rivi)))
+     :nappi-optiot {:ikoninappi? false
+                    :ikoni (ikonit/livicon-eye)
+                    :luokka (str "btn-xs arvo-ja-nappi-nappi")
+                    :disabled (or (:id (:infolaatikko-nakyvissa app*))
+                                  (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                                oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                                (:id @nav/valittu-urakka))))}}))
 
 (defn urakoitsijan-footer-napit [e! app* tila]
   [:footer.vv-toimenpiteen-hinnoittelu-footer
@@ -416,14 +416,33 @@
           (if (or (nil? (:suunnitellut-tyot app*)) (true? (:suunniteltujen-toiden-haku-kaynnissa? app*)))
             [ajax-loader "Ladataan..."]
             [toimenpiteen-hinnoittelutaulukko e! app*])
-          (if (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+          (cond
+            ;;jvh näkee dialogissa tallenna-napin, rivillä hyväksy/hylkää
+            (roolit/jvh? @istunto/kayttaja)
+            [urakoitsijan-footer-napit e! app* tila]
+
+            (roolit/tilaajan-kayttaja? @istunto/kayttaja)
             [tilaajan-footer-napit e! app* tila]
+
+            :default
             [urakoitsijan-footer-napit e! app* tila])]]]
 
        ;; Solun sisältö
        [:div.arvo-ja-nappi-container
         (let [hinta (fmt/euro-opt (nykyisten-arvo app* toimenpide-rivi valittu-aikavali))]
-          (if (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+          (cond
+            (roolit/jvh? @istunto/kayttaja)
+            (case tila
+              (nil :poistettu)
+              [hinnoittelunappi e! app* hinta toimenpide-rivi tila]
+
+              (:luotu :muokattu)
+              [hyvaksy-tai-hylkaa e! app* hinta toimenpide-rivi]
+
+              (:hyvaksytty :hylatty)
+              [tarkastele e! app* hinta toimenpide-rivi])
+
+            (roolit/tilaajan-kayttaja? @istunto/kayttaja)
             (case tila
               (nil :poistettu)
               nil
@@ -434,4 +453,5 @@
               (:hyvaksytty :hylatty)
               [tarkastele e! app* hinta toimenpide-rivi])
 
+            :default
             [hinnoittelunappi e! app* hinta toimenpide-rivi tila]))])]))
