@@ -12,5 +12,6 @@ CREATE TABLE yllapitokohteen_yksityiskohtainen_aikataulu (
   luoja INTEGER REFERENCES kayttaja(id) NOT NULL,
   luotu TIMESTAMP NOT NULL,
   muokattu TIMESTAMP,
-  muokkaaja INTEGER REFERENCES kayttaja(id)
+  muokkaaja INTEGER REFERENCES kayttaja(id),
+  poistettu BOOLEAN NOT NULL DEFAULT FALSE
 );
