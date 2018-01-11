@@ -75,14 +75,24 @@
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
 (defn- hae-paallystysurakan-aikataulu [{:keys [db urakka-id sopimus-id vuosi]}]
-  (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
-       (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
-                       (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
-                         db (:id %) (:suorittava-tiemerkintaurakka %))))))
+  (let [aikataulu (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
+                       (map konv/alaviiva->rakenne)
+                       (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
+                                       (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
+                                         db (:id %) (:suorittava-tiemerkintaurakka %)))))
+        aikataulu (konv/sarakkeet-vektoriin
+                    aikataulu
+                    {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})]
+    aikataulu))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
-  (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
-                                         :vuosi vuosi}))
+  (let [aikataulu (->> (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
+                                                              :vuosi vuosi})
+                       (map konv/alaviiva->rakenne))]
+    aikataulu (konv/sarakkeet-vektoriin
+                aikataulu
+                {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})
+    aikataulu))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
@@ -512,7 +522,6 @@
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
-
       (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
                         (fn [user tiedot]
                           (hae-yllapitokohteen-urakan-yhteyshenkilot db fim user tiedot)))

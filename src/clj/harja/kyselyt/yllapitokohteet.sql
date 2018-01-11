@@ -530,6 +530,11 @@ SELECT
   ypka.muokattu                    AS "aikataulu-muokattu",
   ypka.muokkaaja                   AS "aikataulu-muokkaaja",
   ypka.valmis_tiemerkintaan        AS "valmis-tiemerkintaan",
+  ypkya.id                         AS "yksityiskohtainenaikataulu_id",
+  ypkya.toimenpide                 AS "yksityiskohtainenaikataulu_toimenpide",
+  ypkya.kuvaus                     AS "yksityiskohtainenaikataulu_kuvaus",
+  ypkya.alku                       AS "yksityiskohtainenaikataulu_alku",
+  ypkya.loppu                      AS "yksityiskohtainenaikataulu_loppu",
   ypk.tr_numero                    AS "tr-numero",
   ypk.tr_alkuosa                   AS "tr-alkuosa",
   ypk.tr_alkuetaisyys              AS "tr-alkuetaisyys",
@@ -542,6 +547,7 @@ SELECT
   tti.id                           AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_yksityiskohtainen_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
   ypk.urakka = :urakka
@@ -581,6 +587,7 @@ SELECT
   paallystysurakka.nimi     AS paallystysurakka
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_yksityiskohtainen_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
   LEFT JOIN urakka paallystysurakka ON ypk.urakka = paallystysurakka.id
 WHERE
