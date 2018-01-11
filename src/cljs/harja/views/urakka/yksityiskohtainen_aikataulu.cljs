@@ -58,19 +58,20 @@
                  [:pvm-kentan-jalkeen :alku "Lopun on oltava alun jälkeen"]]}]
      @yksityiskohtainen-aikataulu]))
 
-(defn yksityiskohtainen-aikataulu [{:keys [rivi vuosi voi-tallentaa? paallystysurakka-id tiemerkintaurakka-id]}]
+(defn yksityiskohtainen-aikataulu [{:keys [rivi vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
+                                           paallystysurakka-id tiemerkintaurakka-id]}]
   (let [yksityiskohtainen-aikataulu (atom (or (:yksityiskohtainen-aikataulu rivi) []))]
     (fn [{:keys [rivi]}]
       [:div
        [kohteen-aikataulutaulukko
         {:aikataulurivi rivi
          :vuosi vuosi
-         :voi-tallentaa? voi-tallentaa?
+         :voi-tallentaa? voi-muokata-paallystys?
          :urakka-id paallystysurakka-id
          :otsikko "Kohteen päällystysurakan yksityiskohtainen aikataulu"}]
        [kohteen-aikataulutaulukko
         {:aikataulurivi rivi
          :vuosi vuosi
-         :voi-tallentaa? voi-tallentaa?
+         :voi-tallentaa? voi-muokata-tiemerkinta?
          :urakka-id paallystysurakka-id
          :otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"}]])))
