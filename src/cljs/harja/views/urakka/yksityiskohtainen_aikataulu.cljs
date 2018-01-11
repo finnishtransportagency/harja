@@ -6,18 +6,28 @@
             [harja.domain.yllapitokohde :as ypk]
             [harja.tiedot.urakka.yksityiskohtainen-aikataulu :as tiedot]
             [harja.ui.grid :as grid]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn yksityiskohtainen-aikataulu [rivi vuosi]
+(defn yksityiskohtainen-aikataulu [{:keys [rivi vuosi voi-tallentaa? urakka-id]}]
   (let [yksityiskohtainen-aikataulu (atom (or (:yksityiskohtainen-aikataulu rivi) []))]
     (fn [rivi]
       [:div
        [grid/grid
         {:otsikko "Kohteen yksityiskohtainen aikataulu"
          :tyhja "Ei aikataulua"
-         :tallenna tiedot/tallenna-aikataulu}
+         :tallenna (if voi-tallentaa?
+                     #(tiedot/tallenna-aikataulu
+                        {:rivit %
+                         :urakka-id urakka-id
+                         :yllapitokohde-id (:id rivi)
+                         :onnistui-fn (fn [vastaus]
+                                        (reset! yksityiskohtainen-aikataulu vastaus))
+                         :epaonnistui-fn (fn []
+                                           (viesti/nayta! "Talennus epäonnistui!" :danger))})
+                     :ei-mahdollinen)}
         [{:otsikko "Toimenpide"
           :leveys 10
           :nimi :toimenpide

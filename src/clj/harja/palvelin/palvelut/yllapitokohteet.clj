@@ -284,7 +284,7 @@
                                    :vuosi vuosi})))
 
 (defn tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
-  [db fim email user {:keys [urakka-id yllapitokohde-id aikataulurivit]}]
+  [db user {:keys [urakka-id yllapitokohde-id aikataulurivit]}]
   (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
@@ -576,7 +576,7 @@
                           (tallenna-yllapitokohteiden-aikataulu db fim email user tiedot)))
       (julkaise-palvelu http :tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
                         (fn [user tiedot]
-                          (tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu db fim email user tiedot)))
+                          (tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu db user tiedot)))
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))

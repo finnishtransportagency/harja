@@ -253,7 +253,11 @@
            :vetolaatikot (into {}
                                (map (juxt :id
                                           (fn [rivi]
-                                            [yksityiskohtainen-aikataulu/yksityiskohtainen-aikataulu rivi vuosi]))
+                                            [yksityiskohtainen-aikataulu/yksityiskohtainen-aikataulu
+                                             {:rivi rivi
+                                              :vuosi vuosi
+                                              :voi-tallentaa? voi-tallentaa?
+                                              :urakka-id urakka-id}]))
                                aikataulurivit))}
           [{:tyyppi :vetolaatikon-tila :leveys 2}
            {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
