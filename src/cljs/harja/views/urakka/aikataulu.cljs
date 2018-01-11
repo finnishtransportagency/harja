@@ -220,9 +220,7 @@
             voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
                                            saa-merkita-valmiiksi?
                                            (:valmis-tiemerkintaan %))
-            aikajana? (:nayta-aikajana? @tiedot/valinnat)
-            yllapito-pvm-fmt (fn [arvo]
-                               (pvm/pvm-opt arvo {:nayta-vuosi-fn #(not= (pvm/vuosi %) vuosi)}))]
+            aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
          (when aikajana?
@@ -300,15 +298,15 @@
             :muokattava? (constantly false)}
            (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
-              :tyyppi :pvm :fmt yllapito-pvm-fmt
+              :tyyppi :pvm :fmt pvm/pvm-ilman-samaa-vuotta
               :muokattava? voi-muokata-paallystys?})
            {:otsikko "Pääl\u00ADlystyk\u00ADsen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-alku
-            :tyyppi :pvm :fmt yllapito-pvm-fmt
+            :tyyppi :pvm :fmt pvm/pvm-ilman-samaa-vuotta
             :muokattava? voi-muokata-paallystys?
             :pvm-tyhjana #(:aikataulu-kohde-alku %)
             :validoi (paallystys-aloitettu-validointi optiot)}
            {:otsikko "Pääl\u00ADlystyk\u00ADsen lope\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-loppu
-            :tyyppi :pvm :fmt yllapito-pvm-fmt
+            :tyyppi :pvm :fmt pvm/pvm-ilman-samaa-vuotta
             :pvm-tyhjana #(:aikataulu-paallystys-alku %)
             :muokattava? voi-muokata-paallystys?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
@@ -359,7 +357,7 @@
                              :ikoni (ikonit/user)
                              :luokka "btn-xs"}])}
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
-            :fmt yllapito-pvm-fmt
+            :fmt pvm/pvm-ilman-samaa-vuotta
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
@@ -375,11 +373,11 @@
                              ;; Jos ei olla päällystyksessä, read only
                              (if-not (= (:nakyma optiot) :paallystys)
                                (if (:valmis-tiemerkintaan rivi)
-                                 [:span (yllapito-pvm-fmt (:valmis-tiemerkintaan rivi))]
+                                 [:span (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi))]
                                  [:span "Ei"])
                                ;; Jos päällystyksessä, sopivilla oikeuksilla saa asettaa tai perua valmiuden
                                (if muokataan?
-                                 [:div (yllapito-pvm-fmt (:valmis-tiemerkintaan rivi))]
+                                 [:div (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi))]
                                  [:div {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
                                                      (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
                                                      :default nil)}
@@ -403,19 +401,19 @@
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
-            :fmt yllapito-pvm-fmt
+            :fmt pvm/pvm-ilman-samaa-vuotta
             :muokattava? (fn [rivi]
                            (and saa-asettaa-valmis-takarajan?
                                 (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Tiemer\u00ADkinnän aloi\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
-            :fmt yllapito-pvm-fmt
+            :fmt pvm/pvm-ilman-samaa-vuotta
             :muokattava? voi-muokata-tiemerkinta?}
            {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
             :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
-            :fmt yllapito-pvm-fmt
+            :fmt pvm/pvm-ilman-samaa-vuotta
             :muokattava? voi-muokata-tiemerkinta?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
@@ -424,7 +422,7 @@
                       [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
                        "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
            {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
-            :fmt yllapito-pvm-fmt
+            :fmt pvm/pvm-ilman-samaa-vuotta
             :muokattava? voi-muokata-paallystys?
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku

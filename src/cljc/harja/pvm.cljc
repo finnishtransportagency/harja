@@ -885,3 +885,6 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      "Annettunna DateTime, palauttaa Aika tyyppin, joka vastaa annetun DateTime:n aikaa"
      [pvm]
      (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))))
+
+(defn pvm-ilman-samaa-vuotta [pvm]
+  (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) vuosi)}))

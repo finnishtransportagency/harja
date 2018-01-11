@@ -82,16 +82,28 @@
                                          db (:id %) (:suorittava-tiemerkintaurakka %)))))
         aikataulu (konv/sarakkeet-vektoriin
                     aikataulu
-                    {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})]
+                    {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})
+        aikataulu (map (fn [rivi]
+                         (assoc rivi :yksityiskohtainen-aikataulu
+                                     (map (fn [tarkka-aikataulu]
+                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
+                                          (:yksityiskohtainen-aikataulu rivi))))
+                       aikataulu)]
     aikataulu))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
   (let [aikataulu (->> (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
                                                               :vuosi vuosi})
-                       (map konv/alaviiva->rakenne))]
-    aikataulu (konv/sarakkeet-vektoriin
-                aikataulu
-                {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})
+                       (map konv/alaviiva->rakenne))
+        aikataulu (konv/sarakkeet-vektoriin
+                    aikataulu
+                    {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})
+        aikataulu (map (fn [rivi]
+                         (assoc rivi :yksityiskohtainen-aikataulu
+                                     (map (fn [tarkka-aikataulu]
+                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
+                                          (:yksityiskohtainen-aikataulu rivi))))
+                       aikataulu)]
     aikataulu))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]

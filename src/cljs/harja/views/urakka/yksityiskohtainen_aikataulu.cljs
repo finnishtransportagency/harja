@@ -5,7 +5,8 @@
             [harja.ui.komponentti :as komp]
             [harja.domain.yllapitokohde :as ypk]
             [harja.tiedot.urakka.yksityiskohtainen-aikataulu :as tiedot]
-            [harja.ui.grid :as grid])
+            [harja.ui.grid :as grid]
+            [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -19,11 +20,12 @@
          :tallenna tiedot/tallenna-aikataulu}
         [{:otsikko "Toimenpide"
           :leveys 10
-          :nimi :kohdenumero
+          :nimi :toimenpide
           :tyyppi :valinta
           :validoi [[:ei-tyhja "Anna toimenpiode"]]
           :valinnat ypk/tarkan-aikataulun-toimenpiteet
           :valinta-nayta #(if % (ypk/tarkan-aikataulun-toimenpiide-fmt %) "- valitse -")
+          :fmt ypk/tarkan-aikataulun-toimenpiide-fmt
           :pituus-max 128}
          {:otsikko "Kuvaus"
           :leveys 10
@@ -33,11 +35,13 @@
          {:otsikko "Alku"
           :leveys 5
           :nimi :alku
+          :fmt pvm/pvm-ilman-samaa-vuotta
           :tyyppi :pvm
           :validoi [[:ei-tyhja "Anna alku"]]}
          {:otsikko "Loppu"
           :leveys 5
           :nimi :loppu
           :tyyppi :pvm
+          :fmt pvm/pvm-ilman-samaa-vuotta
           :validoi [[:ei-tyhja "Anna loppu"]]}]
         @yksityiskohtainen-aikataulu]])))

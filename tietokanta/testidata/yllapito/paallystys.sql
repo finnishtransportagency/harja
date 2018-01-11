@@ -146,6 +146,7 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
 
 INSERT INTO yllapitokohteen_yksityiskohtainen_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'ojankaivuu'::yllapitokohteen_aikataulu_toimenpide, 'Kaivetaan syvä oja ensin', '2017-05-19', '2017-05-20', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
 INSERT INTO yllapitokohteen_yksityiskohtainen_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'muu'::yllapitokohteen_aikataulu_toimenpide, 'Siirretään iso kivi pois alta', '2017-05-22', '2017-05-22', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
+INSERT INTO yllapitokohteen_yksityiskohtainen_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'rp_tyot'::yllapitokohteen_aikataulu_toimenpide, NULL, '2017-05-22', '2017-05-25', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
 
 
 INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
