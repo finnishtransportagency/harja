@@ -34,7 +34,9 @@
             [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.id :as id]
+            [harja.tyokalut.tietoturva :as tietoturva])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -286,18 +288,33 @@
   (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+  ;; Aikataulurivin kuulumista ylläpitokohteeseen ei tarkisteta erikseen, vaan sisältyy UPDATE-kyselyn WHERE-lauseeseen.
 
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden yksityiskohtaiset aikataulutiedot: " aikataulurivit)
 
   (jdbc/with-db-transaction [db db]
     (doseq [rivi aikataulurivit]
-      #_(q/tallenna-yllapitokohteen-yksityiskohtainen-aikataulu!
-        db
-        {:toimenpide nil
-         :kuvaus nil
-         :alku nil
-         :loppu nil
-         :urakka nil})))
+      (if (id/id-olemassa? rivi)
+        (q/paivita-yllapitokohteen-yksityiskohtainen-aikataulu!
+          db
+          {:toimenpide (:toimenpide rivi)
+           :kuvaus (:kuvaus rivi)
+           :alku (:alku rivi)
+           :loppu (:loppu rivi)
+           :muokkaaja (:id user)
+           :poistettu (:poistettu rivi)
+           :id (:id rivi)
+           :yllapitokohde yllapitokohde-id
+           :urakka-id urakka-id})
+        (q/lisaa-yllapitokohteen-yksityiskohtainen-aikataulu!
+          db
+          {:urakka urakka-id
+           :yllapitokohde-id yllapitokohde-id
+           :toimenpide (:toimenpide rivi)
+           :kuvaus (:kuvaus rivi)
+           :alku (:alku rivi)
+           :loppu (:loppu rivi)
+           :luoja (:id user)}))))
 
   (log/debug "Aikataulutiedot tallennettu!")
   ;; TODO Palauta päivitetyt rivit

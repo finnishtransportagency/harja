@@ -768,8 +768,9 @@ SET
   muokkaaja  = :muokkaaja,
   muokattu   = NOW(),
   poistettu  = :poistettu
-WHERE yllapitokohde = :id
-      AND urakka = :urakka;
+WHERE id = :id
+AND yllapitokohde = :yllapitokohde
+AND urakka = :urakka;
 
 -- name: lisaa-yllapitokohteen-yksityiskohtainen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
