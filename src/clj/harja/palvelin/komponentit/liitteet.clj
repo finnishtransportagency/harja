@@ -95,15 +95,13 @@
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko: " (pr-str koko))
   (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
-        lahde (if (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
-                (do  (log/debug "saatiin pdf -> tiedostopesula")
-                     (tiedostopesula/pdfa-muunna-inputstream! tiedostopesula (io/input-stream lahde)))
-                ;; else
-                lahde)]
+        pesula-lahde (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
+                       (do (log/debug "saatiin pdf -> tiedostopesula")
+                           (tiedostopesula/pdfa-muunna-inputstream! tiedostopesula (io/input-stream lahde))))
+        lahde (or pesula-lahde lahde)]
     (if (:hyvaksytty liitetarkistus)
       (do
         (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahde))
-
         (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
               liite (liitteet/tallenna-liite<!
                      db
