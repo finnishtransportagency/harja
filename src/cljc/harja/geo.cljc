@@ -4,9 +4,11 @@
      (:import (org.postgresql.geometric PGpoint PGpolygon)
               (org.postgis PGgeometry MultiPolygon Polygon Point MultiLineString LineString
                            GeometryCollection Geometry MultiPoint)))
-  (:require [clojure.spec.alpha :as s]
-            #?(:cljs
-               [ol.proj :as ol-proj])))
+  (:require
+    [harja.math :as math]
+    [clojure.spec.alpha :as s]
+    #?(:cljs
+       [ol.proj :as ol-proj])))
 
 (s/def ::single-coordinate (s/every number? :min-count 2 :max-count 2))
 (s/def ::multiple-coordinates (s/every ::single-coordinate))
@@ -18,8 +20,8 @@
 (s/def ::points (s/every ::single-coordinate))
 
 (defmulti geometria-spec
-  "Määrittelee geometrian tyypin mukaisen specin"
-  :type)
+          "Määrittelee geometrian tyypin mukaisen specin"
+          :type)
 
 (s/def ::geometria
   (s/multi-spec geometria-spec :type))
@@ -205,15 +207,15 @@
      (let [tulosrivi (gensym)]
        `(map (fn [~tulosrivi]
                (assoc ~tulosrivi
-                      ~@(mapcat (fn [sarake]
-                                  [sarake `(pg->clj (get ~tulosrivi ~sarake))])
-                                sarakkeet)))))))
+                 ~@(mapcat (fn [sarake]
+                             [sarake `(pg->clj (get ~tulosrivi ~sarake))])
+                           sarakkeet)))))))
 
 #?(:clj
    (defn muunna-reitti [{reitti :reitti :as rivi}]
      (if reitti
        (assoc rivi
-              :reitti (pg->clj reitti))
+         :reitti (pg->clj reitti))
        rivi)))
 
 #?(:clj
@@ -235,8 +237,8 @@
      [coordinate]
      (if (vector? coordinate)
        (let [c (org.geotools.geometry.jts.JTS/transform
-                (com.vividsolutions.jts.geom.Coordinate. (first coordinate) (second coordinate))
-                nil euref->wgs84-transform)]
+                 (com.vividsolutions.jts.geom.Coordinate. (first coordinate) (second coordinate))
+                 nil euref->wgs84-transform)]
          [(.y c) (.x c)])
        (org.geotools.geometry.jts.JTS/transform coordinate nil euref->wgs84-transform))))
 
@@ -287,13 +289,13 @@
            maxx ensimmainen-x
            maxy ensimmainen-y
            [[x y] & pisteet] pisteet]
-    (if-not x
-      [minx miny maxx maxy]
-      (recur (min x minx)
-             (min y miny)
-             (max x maxx)
-             (max y maxy)
-             pisteet)))))
+      (if-not x
+        [minx miny maxx maxy]
+        (recur (min x minx)
+               (min y miny)
+               (max x maxx)
+               (max y maxy)
+               pisteet)))))
 
 
 (defn laajenna-extent [[minx miny maxx maxy] d]
@@ -317,10 +319,10 @@
 (defn laajenna-extent-prosentilla
   ([extent] (laajenna-extent-prosentilla extent [0.001 0.001 0.001 0.05]))
   ([extent [vasen alas oikea ylos]]
-    [(kasvata-vasemmalle extent vasen)
-     (kasvata-alaspain extent alas)
-     (kasvata-oikealle extent oikea)
-     (kasvata-ylospain extent ylos)]))
+   [(kasvata-vasemmalle extent vasen)
+    (kasvata-alaspain extent alas)
+    (kasvata-oikealle extent oikea)
+    (kasvata-ylospain extent ylos)]))
 
 (defn extent-keskipiste [[minx miny maxx maxy]]
   (let [width (- maxx minx)
@@ -518,3 +520,11 @@ pisteen [px py]."
   (let [dx (- x2 x1)
         dy (- y2 y1)]
     (Math/atan2 dy dx)))
+
+(defn viivojen-paatepisteet-koskettavat-toisiaan? [viiva1 viiva2 threshold]
+  (boolean
+    (some (fn [sijainti1]
+            (some (fn [sijainti2]
+                    (<= (math/pisteiden-etaisyys sijainti1 sijainti2) threshold))
+                  (:points viiva2)))
+          (:points viiva1))))

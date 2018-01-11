@@ -149,13 +149,14 @@
   (reittimuunnin/tallenna-tarkastukset! tx tarkastukset kayttaja)
   (log/debug "Reittimerkitöjen muunto tarkastuksiksi suoritettu!"))
 
-(defn muunna-tarkastusajon-reittipisteet-tarkastuksiksi [tx tarkastusajo-id]
+(defn muunna-tarkastusajon-reittipisteet-tarkastuksiksi [db tarkastusajo-id]
   (log/debug "Muutetaan reittipisteet tarkastuksiksi")
   (let [merkinnat-tr-osoitteilla (q/hae-reitin-merkinnat-tieosoitteilla
-                                   tx {:tarkastusajo tarkastusajo-id
+                                   db {:tarkastusajo tarkastusajo-id
                                        :laheiset_tiet_threshold 100})
         merkinnat-tr-osoitteilla (lisaa-reittimerkinnoille-lopullinen-tieosoite merkinnat-tr-osoitteilla)
         tarkastukset (reittimuunnin/reittimerkinnat-tarkastuksiksi
+                       db
                        merkinnat-tr-osoitteilla
                        {:analysoi-rampit? true
                         :analysoi-ymparikaantymiset? true
@@ -164,18 +165,18 @@
     tarkastukset))
 
 (defn paata-tarkastusajo! [db tarkastusajo kayttaja]
-  (jdbc/with-db-transaction [tx db]
+  (jdbc/with-db-transaction [db db]
     (let [tarkastusajo-id (-> tarkastusajo :tarkastusajo :id)
           urakka-id (:urakka tarkastusajo)
           _ (oikeudet/vaadi-ls-tyokalun-kirjausoikeus kayttaja urakka-id)
-          ajo-paatetty (:paatetty (first (q/ajo-paatetty tx {:id tarkastusajo-id})))]
+          ajo-paatetty (:paatetty (first (q/ajo-paatetty db {:id tarkastusajo-id})))]
       (if-not ajo-paatetty
         (let [tarkastukset (muunna-tarkastusajon-reittipisteet-tarkastuksiksi
-                             tx
+                             db
                              tarkastusajo-id)
               tarkastukset (lisaa-tarkastuksille-urakka-id tarkastukset urakka-id)]
-          (tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset kayttaja urakka-id)
-          (merkitse-ajo-paattyneeksi! tx tarkastusajo-id kayttaja))
+          (tallenna-muunnetut-tarkastukset-kantaan db tarkastukset kayttaja urakka-id)
+          (merkitse-ajo-paattyneeksi! db tarkastusajo-id kayttaja))
         (log/warn (format "Yritettiin päättää ajo %s, joka on jo päätetty!" tarkastusajo-id))))))
 
 (defn- luo-uusi-tarkastusajo! [db tiedot kayttaja]

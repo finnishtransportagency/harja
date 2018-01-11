@@ -4,7 +4,9 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [clojure.string :as str]
     #?@(:clj [
-            [clojure.future :refer :all]])))
+            [clojure.future :refer :all]])
+            [harja.math :as math]
+            [harja.geo :as geo]))
 
 ;; Osan tiedot
 (s/def ::osa (s/and pos-int? #(< % 1000)))
@@ -311,10 +313,10 @@
      ;; Mikäli alikohteita on ollut useita, niin muiden tiedot häviää.
      ;; Tälle ei oikein voi mitään, mikäli pätkäkohde muokataan pistemäiseksi
      [(assoc (first alikohteet)
-       :tr-alkuosa (:tr-alkuosa paakohde)
-       :tr-alkuetaisyys (:tr-alkuetaisyys paakohde)
-       :tr-loppuosa (:tr-loppuosa paakohde)
-       :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))]
+        :tr-alkuosa (:tr-alkuosa paakohde)
+        :tr-alkuetaisyys (:tr-alkuetaisyys paakohde)
+        :tr-loppuosa (:tr-loppuosa paakohde)
+        :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))]
 
      ;;  Oletuskeissi, jossa pääkohde on reitillinen. Muokkaus tehdään seuraavasti:
      ;; - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
@@ -342,3 +344,26 @@
             :tr-loppuetaisyys (:tr-loppuetaisyys viimeinen-alikohde-venytettyna))]
          ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
          (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
+
+(defn tieosilla-maantieteellinen-jatkumo?
+  "Palauttaa true, mikäli kahdella tieosalla on maantieteellinen jatkumo.
+   Käytännössä tämä tarkoittaa sitä, että tieosien päätepisteet ovat riittävän lähellä toisiaan.
+
+   Annetun geometrian tulee olla linestring tai multiline-string (harja.geo-muodossa)
+
+   Vaatii, että molemmat geometriat ovat olemassa."
+  [tiegeometria1 tiegeometria2]
+  (assert (and tiegeometria1 tiegeometria2) (str "Tiegeometria tyhjä, sain: " tiegeometria1 tiegeometria2))
+  (let [threshold 10
+        viivat (fn [geo]
+                 (case (:type geo)
+                   :line [geo]
+                   :multiline (:lines geo)))
+        geometria1-viivat (viivat tiegeometria1)
+        geometria2-viivat (viivat tiegeometria2)]
+    (boolean
+      (some (fn [geo1-viiva]
+              (some (fn [geo2-viiva]
+                      (geo/viivojen-paatepisteet-koskettavat-toisiaan? geo1-viiva geo2-viiva threshold))
+                    geometria2-viivat))
+            geometria1-viivat))))

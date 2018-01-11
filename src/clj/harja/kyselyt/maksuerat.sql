@@ -271,6 +271,7 @@ SELECT numero,
 
 
 -- name: hae-kanavaurakan-maksuerien-summat
+-- Jos muokkaat tätä, joudut todennäköisesti muokkaamaan myös kanavien_laskutusyhteenveto.sql
 SELECT
   tpi.id as "tpi_id",
 
@@ -282,6 +283,7 @@ SELECT
   -- lisatyo
   (SELECT COALESCE(sum(tyo.maara * yht.yksikkohinta), 0)
    FROM kan_toimenpide ktp
+     JOIN kan_laskutettavat_hinnoittelut laskutettavat ON ktp.id = laskutettavat."toimenpide-id"
      JOIN kan_tyo tyo ON (tyo.toimenpide = ktp.id AND tyo.poistettu IS NOT TRUE)
      JOIN yksikkohintainen_tyo yht ON yht.tehtava = tyo."toimenpidekoodi-id" AND
                                       ktp.pvm BETWEEN yht.alkupvm AND yht.loppupvm
@@ -293,6 +295,7 @@ SELECT
   (SELECT COALESCE(SUM(k_hinta.summa * (1.0 + (k_hinta.yleiskustannuslisa / 100))), 0) +
           COALESCE(SUM((k_hinta.maara * k_hinta.yksikkohinta) * (1.0 + (k_hinta.yleiskustannuslisa / 100))), 0)
    FROM kan_toimenpide ktp
+     JOIN kan_laskutettavat_hinnoittelut laskutettavat ON ktp.id = laskutettavat."toimenpide-id"
      JOIN kan_hinta k_hinta ON k_hinta.toimenpide = ktp.id AND k_hinta.poistettu IS NOT TRUE
    WHERE ktp.toimenpideinstanssi = tpi.id AND
          ktp.poistettu IS NOT TRUE)    AS "lisatyo",
