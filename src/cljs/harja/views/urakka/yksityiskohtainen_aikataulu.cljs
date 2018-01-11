@@ -19,15 +19,14 @@
      {:otsikko otsikko
       :tyhja "Ei aikataulua"
       :tallenna (if voi-tallentaa?
-                  #(do
-                     (tiedot/tallenna-aikataulu
-                       {:rivit %
-                        :urakka-id urakka-id
-                        :yllapitokohde-id (:id aikataulurivi)
-                        :onnistui-fn (fn [vastaus]
-                                       (reset! yksityiskohtainen-aikataulu vastaus))
-                        :epaonnistui-fn (fn []
-                                          (viesti/nayta! "Talennus epäonnistui!" :danger))}))
+                  #(tiedot/tallenna-aikataulu
+                     {:rivit %
+                      :urakka-id urakka-id
+                      :yllapitokohde-id (:id aikataulurivi)
+                      :onnistui-fn (fn [vastaus]
+                                     (reset! yksityiskohtainen-aikataulu vastaus))
+                      :epaonnistui-fn (fn []
+                                        (viesti/nayta! "Talennus epäonnistui!" :danger))})
                   :ei-mahdollinen)}
      [{:otsikko "Toimenpide"
        :leveys 10
