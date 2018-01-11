@@ -123,9 +123,17 @@
     (let [euref-koordinaatit (geo/wgs84->euref wgs84-koordinaatit)]
       (hae-tr-pisteella db euref-koordinaatit))
     (catch Exception e
-      (let[virhe (format "Poikkeus hakiessa tierekisteristeriosoitetta WGS84-koordinaateille %s" wgs84-koordinaatit)]
+      (let [virhe (format "Poikkeus hakiessa tierekisteristeriosoitetta WGS84-koordinaateille %s" wgs84-koordinaatit)]
         (log/error e virhe)
         {:virhe virhe}))))
+
+(defn osavali-olemassa?
+  "Palauttaa true, mikäli tien osien välissä on ainakin yksi osa."
+  [db tie osa1 osa2]
+  (>= (count (tv/tien-osavali db {:tie tie
+                                  :osa1 osa1
+                                  :osa2 osa2}))
+      1))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle

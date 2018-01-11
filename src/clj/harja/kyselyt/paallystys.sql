@@ -7,6 +7,7 @@ SELECT
   pi.tila,
   nimi,
   kohdenumero,
+  yhaid,
   tunnus,
   pi.paatos_tekninen_osa   AS "paatos-tekninen-osa",
   sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",

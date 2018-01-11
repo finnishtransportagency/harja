@@ -286,7 +286,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 1 31))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [otsikko "Pohjois-Pohjanmaa, Soratietarkastusraportti tammikuussa 2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
@@ -316,7 +316,7 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 1 31))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [otsikko "KOKO MAA, Soratietarkastusraportti tammikuussa 2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]

@@ -10,6 +10,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
@@ -78,7 +79,7 @@
                     kohteet
                     (sort-by (case jarjestys
                                :tr tr-domain/tieosoitteen-jarjestys
-                               :kohdenumero :kohdenumero)
+                               :kohdenumero #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)))
                              kohteet)))))))
 
 (defonce tiemerkinnan-suorittavat-urakat

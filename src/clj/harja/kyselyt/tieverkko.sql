@@ -104,3 +104,9 @@ WHERE tie = :tie AND
       ((:aosa::integer IS NULL AND :losa::integer IS NULL)
        OR
        (osa BETWEEN :aosa AND :losa));
+
+-- name: tien-osavali
+SELECT tie, osa
+FROM tr_osan_ajorata
+WHERE tie = :tie AND osa > :osa1 AND osa < :osa2;
+

@@ -4,6 +4,7 @@
             [specql.op :as op]
             [harja.pvm :as pvm]
             [harja.id :as id]
+            [taoensso.timbre :as log]
 
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -55,11 +56,13 @@
 (defn tallenna-hairiotilanne [db kayttaja-id hairiotilanne]
   (if (id/id-olemassa? (::hairiotilanne/id hairiotilanne))
     (let [hairiotilanne (assoc hairiotilanne
-                          ::muokkaustiedot/muokattu (pvm/nyt)
-                          ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)}))
+                             ::muokkaustiedot/muokattu (pvm/nyt)
+                             ::muokkaustiedot/muokkaaja-id kayttaja-id)]
+      (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})
+      (first (fetch db ::hairiotilanne/hairiotilanne #{::hairiotilanne/id} {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})))
     (let [hairiotilanne (assoc hairiotilanne
-                          ::hairiotilanne/kuittaaja-id kayttaja-id
-                          ::muokkaustiedot/luotu (pvm/nyt)
-                          ::muokkaustiedot/luoja-id kayttaja-id)]
-      (insert! db ::hairiotilanne/hairiotilanne hairiotilanne))))
+                             ::hairiotilanne/kuittaaja-id kayttaja-id
+                             ::muokkaustiedot/luotu (pvm/nyt)
+                             ::muokkaustiedot/luoja-id kayttaja-id)
+          lisatty-rivi (insert! db ::hairiotilanne/hairiotilanne hairiotilanne)]
+      lisatty-rivi)))

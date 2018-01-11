@@ -187,6 +187,14 @@
      [upotettu-raportti/raportin-vientimuodot
       (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
 
+(defn- nayta-yhteystiedot?
+  [rivi nakyma]
+  (case nakyma
+    :paallystys
+    (:suorittava-tiemerkintaurakka rivi)
+
+    true))
+
 (defn aikataulu
   [urakka optiot]
   (komp/luo
@@ -283,7 +291,7 @@
             :nimi :yllapitoluokka :leveys 4 :tyyppi :string
             :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? (constantly false)}
-           (when (= (:nakyma optiot) :paallystys)           ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
+           (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
               :tyyppi :pvm :fmt yllapito-pvm-fmt
               :muokattava? voi-muokata-paallystys?})
@@ -325,14 +333,24 @@
               :muokattava? (fn [rivi] (and saa-muokata? (:tiemerkintaurakan-voi-vaihtaa? rivi)))})
            (when (= (:nakyma optiot) :tiemerkinta)
              {:otsikko "Pääl\u00ADlys\u00ADtys\u00ADurak\u00ADka"
-              :leveys 13 :nimi :paallystysurakka
-              :tyyppi :komponentti
-              :komponentti (fn [rivi]
-                             (grid/arvo-ja-nappi
-                               {:arvo-ja-nappi-napin-teksti (ikonit/user)
-                                :arvo-ja-nappi-toiminto-fn
-                                #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal! (:id rivi))
-                                :arvo (:paallystysurakka rivi)}))})
+              :leveys 13
+              :nimi :paallystysurakka
+              :tyyppi :string})
+           {:otsikko "Yh\u00ADte\u00ADys\u00ADtie\u00ADdot"
+            :leveys 4
+            :nimi :yhteystiedot
+            :tasaa :keskita
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           [napit/yleinen-toissijainen ""
+                            #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal!
+                               (:id rivi)
+                               (case (:nakyma optiot)
+                                 :tiemerkinta :paallystys
+                                 :paallystys :tiemerkinta))
+                            {:disabled (not (nayta-yhteystiedot? rivi (:nakyma optiot)))
+                             :ikoni (ikonit/user)
+                             :luokka "btn-xs"}])}
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
             :fmt yllapito-pvm-fmt
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)

@@ -87,14 +87,21 @@ FROM ilmoitus i
   LEFT JOIN urakka u ON i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
 WHERE i.id IN
-      (SELECT id FROM ilmoitus x WHERE
-        (x.urakka IS NULL OR x.urakka IN (:urakat)) AND
-
-        -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
-        ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-         (:loppu_annettu IS FALSE AND x.ilmoitettu  >= :alku) OR
-         (:alku_annettu IS FALSE AND x.ilmoitettu  <= :loppu) OR
-         (x.ilmoitettu  BETWEEN :alku AND :loppu)));
+      (SELECT x.id
+       FROM ilmoitus x
+         LEFT JOIN urakka u2 ON x.urakka = u2.id
+       WHERE
+         (x.urakka IS NULL
+          OR :urakat_annettu IS FALSE
+          OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
+         (:urakkatyyppi_annettu IS FALSE OR u2.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+         (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
+         -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
+         ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
+          (:loppu_annettu IS FALSE AND x.ilmoitettu >= :alku) OR
+          (:alku_annettu IS FALSE AND x.ilmoitettu <= :loppu) OR
+          (x.ilmoitettu BETWEEN :alku AND :loppu)))
+ORDER by u.nimi;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
@@ -282,7 +289,7 @@ SELECT
   lahettaja_sahkoposti
 FROM ilmoitus
 WHERE urakka = :urakka AND
-      (muokattu > :aika OR luotu > :aika)
+      (muokattu > :aika OR luotu > :aika);
 
 
 -- name: hae-id-ilmoitus-idlla
@@ -495,6 +502,8 @@ FROM asiakaspalauteluokka apl
   JOIN ilmoitus i
     ON i.selitteet && apl.selitteet AND
        (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
+       (i.urakka IS NULL OR (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
+       (:urakkatyyppi::urakkatyyppi IS NULL OR (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi) AND
        (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
                                                                FROM urakka
                                                                WHERE hallintayksikko = :hallintayksikko_id)) AND
@@ -511,8 +520,11 @@ SELECT
   count(*)                                              AS "yhteensa"
 FROM
   ilmoitus
+  LEFT JOIN urakka u ON ilmoitus.urakka = u.id
 WHERE
   (:urakka_id :: INTEGER IS NULL OR urakka = :urakka_id) AND
+  (ilmoitus.urakka IS NULL OR u.urakkanro IS NOT NULL) AND
+  (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi) AND
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
                                                           WHERE hallintayksikko = :hallintayksikko_id)) AND

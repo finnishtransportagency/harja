@@ -17,8 +17,8 @@ BEGIN
 			END) as maara
              FROM toteuma t
                   JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-             WHERE date_trunc('day', t.alkanut) = pvm
-               AND t.sopimus = sop
+             WHERE t.alkanut between pvm::date AND pvm::date + '1 days'::interval
+                   AND t.sopimus = sop
              GROUP BY date_trunc('day',t.alkanut), tm.materiaalikoodi
   LOOP
     INSERT

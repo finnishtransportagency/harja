@@ -12,8 +12,14 @@
             [harja.domain.kanavat.kanavan-toimenpide :as toimenpide]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
+            [harja.kyselyt.vesivaylat.materiaalit :as q-materiaali]
+            [harja.palvelin.palvelut.vesivaylat.materiaalit :as materiaali-palvelu]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kommentti :as kommentti]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
             [clojure.java.jdbc :as jdbc]
@@ -50,19 +56,35 @@
                                        (filter id/id-olemassa?)
                                        (set))]
       (vaadi-rivit-kuuluvat-emoon db ::hinta/toimenpiteen-hinta ::hinta/toimenpide-id ::hinta/id olemassa-olevat-hinta-idt toimenpide-id)
-      (vaadi-rivit-kuuluvat-emoon db ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id ::tyo/id olemassa-olevat-tyo-idt toimenpide-id))
+      (vaadi-rivit-kuuluvat-emoon db ::tyo/toimenpiteen-tyo ::tyo/toimenpide-id ::tyo/id olemassa-olevat-tyo-idt toimenpide-id)
 
 
-    (jdbc/with-db-transaction [db db]
-      (q-toimenpide/tallenna-toimenpiteen-omat-hinnat!
-        {:db db
-         :user user
-         :hinnat (liita-tpid-mappeihin (::hinta/tallennettavat-hinnat tiedot) ::hinta/toimenpide-id)})
-      (q-toimenpide/tallenna-toimenpiteen-tyot!
-        {:db db
-         :user user
-         :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
-      (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id toimenpide-id})))))
+      (jdbc/with-db-transaction [db db]
+        (q-toimenpide/tallenna-toimenpiteen-omat-hinnat!
+          {:db db
+           :user user
+           :hinnat (liita-tpid-mappeihin (::hinta/tallennettavat-hinnat tiedot) ::hinta/toimenpide-id)})
+        (q-toimenpide/tallenna-toimenpiteen-tyot!
+          {:db db
+           :user user
+           :tyot (liita-tpid-mappeihin (::tyo/tallennettavat-tyot tiedot) ::tyo/toimenpide-id)})
+        (q-toimenpide/lisaa-kommentti! db user (if (and (empty? olemassa-olevat-tyo-idt)
+                                                        (empty? olemassa-olevat-hinta-idt))
+                                                 :luotu
+                                                 :muokattu
+                                                 ) "" toimenpide-id)
+        (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id toimenpide-id}))))))
+
+(defn tallenna-kanavatoimenpiteen-hinnoittelun-kommentti! [db user tiedot]
+  (let [urakka-id (::toimenpide/urakka-id tiedot)]
+    (assert urakka-id "Urakka-id puuttuu!")
+
+    (q-toimenpide/lisaa-kommentti! db user
+                                   (::kommentti/tila tiedot)
+                                   (::kommentti/kommentti tiedot)
+                                   (::kommentti/toimenpide-id tiedot))
+
+    (first (q-toimenpide/hae-kanavatoimenpiteet-specql db {::toimenpide/id (::kommentti/toimenpide-id tiedot)}))))
 
 (defn- tarkista-kutsu [user urakka-id tyyppi]
   (assert urakka-id "Kanavatoimenpiteellä ei ole urakkaa.")
@@ -123,10 +145,35 @@
         (q-toimenpide/paivita-toimenpiteiden-tyyppi db toimenpide-idt (::toimenpide/tyyppi tiedot))
         toimenpide-idt))))
 
-(defn tallenna-kanavatoimenpide [db user {tyyppi ::toimenpide/tyyppi
-                                          urakka-id ::toimenpide/urakka-id
-                                          :as toimenpide}]
+(defn tallenna-materiaalikirjaukset [db fim email
+                                     {kayttaja-id :id :as kayttaja}
+                                     urakka-id
+                                     {toimenpide-id ::toimenpide/id
+                                      materiaalikirjaukset ::toimenpide/materiaalikirjaukset
+                                      materiaalipoistot ::toimenpide/materiaalipoistot
+                                      toimenpide-poistettu? ::muokkaustiedot/poistettu?
+                                      :as toimenpide}]
+  (assert (integer? urakka-id) "Materiaalikirjauksia ei voi tallentaa ilman urakka id:tä")
+  (assert (integer? toimenpide-id) (str "Toimenpiteen materiaalikirjausta ei voi tallentaa ilman toimenpide-id:tä - " toimenpide-id))
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
+  (log/debug "tallenna-materiaalikirjaukset: kirjauksia/poistoja" (count materiaalikirjaukset) (count materiaalipoistot))
+  (if toimenpide-poistettu?
+    (q-materiaali/poista-toimenpiteen-kaikki-materiaalikirjaukset db kayttaja toimenpide-id)
+    ;; else
+    (do
+      (doseq [kirjaus-ilman-tpid materiaalikirjaukset
+              :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
+        (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
+        (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
+      (doseq [mk materiaalipoistot]
+        (q-materiaali/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
+
+(defn tallenna-kanavatoimenpide [db fim email user {tyyppi ::toimenpide/tyyppi
+                                                    urakka-id ::toimenpide/urakka-id
+                                                    :as toimenpide}]
   (tarkista-kutsu user urakka-id tyyppi)
+  (log/debug "toimenpide-map: " (with-out-str
+                                  (clojure.pprint/pprint toimenpide)))
   ;; Toimenpide kuuluu urakkaan
   (tietoturva/vaadi-linkitys db ::toimenpide/kanava-toimenpide ::toimenpide/id
                              (::toimenpide/id toimenpide) ::toimenpide/urakka-id urakka-id)
@@ -138,11 +185,20 @@
   (when (::toimenpide/kohteenosa-id toimenpide)
     (tietoturva/vaadi-linkitys db ::osa/kohteenosa ::osa/id (::toimenpide/kohteenosa-id toimenpide)
                                ::osa/kohde-id (::toimenpide/kohde-id toimenpide)))
-  (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide))
+  (jdbc/with-db-transaction [db db]
+    (let [toimenpide-ilman-materiaaleja (dissoc toimenpide ::toimenpide/materiaalikirjaukset ::toimenpide/materiaalipoistot)
+          tallennettu-toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide-ilman-materiaaleja)]
+      #_(when (::muokkaustiedot/poistettu? toimenpide)
+        (poista-toimenpiteen-materiaalikirjaukset db user urakka-id toimenpide))
+      (tallenna-materiaalikirjaukset db fim email user urakka-id (merge toimenpide tallennettu-toimenpide-map)))))
 
 (defrecord Kanavatoimenpiteet []
   component/Lifecycle
-  (start [{http :http-palvelin db :db :as this}]
+  (start [{http :http-palvelin
+           db :db
+           fim :fim
+           email :sonja-sahkoposti
+           :as this}]
     (julkaise-palvelu
       http
       :hae-kanavatoimenpiteet
@@ -166,13 +222,21 @@
        :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelu-vastaus})
     (julkaise-palvelu
       http
+      :tallenna-kanavatoimenpiteen-hinnoittelun-kommentti
+      (fn [user hakuehdot]
+        (tallenna-kanavatoimenpiteen-hinnoittelun-kommentti! db user hakuehdot))
+      {:kysely-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelun-kommentti-kysely
+       :vastaus-spec ::toimenpide/tallenna-kanavatoimenpiteen-hinnoittelun-kommentti-vastaus})
+    (julkaise-palvelu
+      http
       :tallenna-kanavatoimenpide
       (fn [user {toimenpide ::toimenpide/tallennettava-kanava-toimenpide
                  hakuehdot ::toimenpide/hae-kanavatoimenpiteet-kysely}]
-        (tallenna-kanavatoimenpide db user toimenpide)
-        (hae-kanavatoimenpiteet db user hakuehdot))
+        (tallenna-kanavatoimenpide db fim email user toimenpide)
+        {:kanavatoimenpiteet (hae-kanavatoimenpiteet db user hakuehdot)
+         :materiaalilistaus (q-materiaali/hae-materiaalilistaus db {::materiaali/urakka-id (::toimenpide/urakka-id toimenpide)})})
       {:kysely-spec ::toimenpide/tallenna-kanavatoimenpide-kutsu
-       :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})
+       :vastaus-spec ::toimenpide/tallenna-kanavatoimenpide-vastaus})
     this)
 
   (stop [this]

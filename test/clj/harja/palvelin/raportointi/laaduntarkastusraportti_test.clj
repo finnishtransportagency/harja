@@ -103,7 +103,7 @@
                                  :hallintayksikko-id (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Uusimaa'")))
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Laaduntarkastusraportti"
@@ -147,7 +147,7 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Laaduntarkastusraportti"

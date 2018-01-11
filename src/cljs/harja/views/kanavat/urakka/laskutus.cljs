@@ -48,7 +48,7 @@
 
 (defn laskutusyhteenveto []
   [:span.laskutusyhteenveto
-   [valinnat/urakan-hoitokausi-ja-kuukausi ur]
+   [valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
 
    (when-let [p @laskutuksen-parametrit]
      [upotettu-raportti/raportin-vientimuodot p])
