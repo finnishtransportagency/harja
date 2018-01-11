@@ -73,5 +73,5 @@
         {:aikataulurivi rivi
          :vuosi vuosi
          :voi-tallentaa? voi-muokata-tiemerkinta?
-         :urakka-id paallystysurakka-id
+         :urakka-id tiemerkintaurakka-id
          :otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"}]])))
