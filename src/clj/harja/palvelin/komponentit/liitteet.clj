@@ -6,6 +6,7 @@
             [harja.domain.liite :as t-liitteet]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+            [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
             [fileyard.client :as fileyard-client]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -89,14 +90,20 @@
     ;; Muuten tallennetaan paikalliseen tietokantaan
     {:liite_oid (tallenna-lob db (io/input-stream lahde)) :fileyard-hash nil}))
 
-(defn- tallenna-liite [db fileyard-client virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
+(defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko: " (pr-str koko))
-  (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})]
+  (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
+        lahde (if (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
+                (do  (log/debug "saatiin pdf -> tiedostopesula")
+                     (tiedostopesula/pdfa-muunna-inputstream! tiedostopesula (io/input-stream lahde)))
+                ;; else
+                lahde)]
     (if (:hyvaksytty liitetarkistus)
       (do
         (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahde))
+
         (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
               liite (liitteet/tallenna-liite<!
                      db
@@ -164,12 +171,12 @@
     this)
 
   LiitteidenHallinta
-  (luo-liite [{db :db virustarkistus :virustarkistus}
+  (luo-liite [{db :db virustarkistus :virustarkistus tiedostopesula :tiedostopesula}
               luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
     (tallenna-liite db
                     (when fileyard-url
                       (fileyard-client/new-client fileyard-url))
-                    virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
+                    tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma))
   (lataa-liite [{db :db} liitteen-id]
     (hae-liite db (fileyard-client/new-client fileyard-url) liitteen-id))
   (lataa-pikkukuva [{db :db} liitteen-id]

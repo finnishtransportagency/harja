@@ -19,7 +19,8 @@
            (net.coobird.thumbnailator.tasks UnsupportedFormatException))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn pdfa-convert! "java.io/file -> png byte-array | nil" [laundry-pdf2pdfa-url pdf-file]
+(defn pdfa-muunna-file! "java.io/file -> png byte-array | nil" [{base-url :base-url} pdf-file]
+  {:pre [(string? base-url) (some? pdf-file)]}
   (try
     (let [request-opts
           {:as :byte-array
@@ -27,23 +28,45 @@
                         :content pdf-file
                         :filename "input.pdf"
                         :mime-type "application/pdf"}]}
-          resp (deref (http/post laundry-pdf2pdfa-url request-opts))]
+          resp (deref (http/post (str base-url "pdf/pdf2pdfa") request-opts))]
       (if (= 200 (:status resp))
         (:body resp)
         (do
-          (log/info "PDF/A conversion failed for " (.getName pdf-file))
-          (log/info "got: " (pr-str resp))
+          (log/info "PDF/A conversion failed for " (when pdf-file (.getName pdf-file)))
+          (log/info "Failure response: " (pr-str resp))
           nil)))
     (catch Exception ex
       (log/error ex)
       nil)))
 
+(defn pdfa-muunna-inputstream! [tp-komponentti pdf-inputstream]
+  (let [temp-file (java.io.File/createTempFile "pesula-tmp" ".pdf")]
+    (try
+      (io/copy pdf-inputstream temp-file)
+      (or (pdfa-muunna-file! tp-komponentti temp-file)
+          (io/input-stream temp-file)) ;; palautetaan alkup. data virheen sattuessa
+      (finally
+        (.delete temp-file)))))
+
 ;; (defonce pdf-resp (atom nil))
 
 (defn test-pdfa-convert [service-url]
   (let [in-file (file "/tmp/pdfa-test.pdf")]
-    (let [resp (pdfa-convert! service-url in-file)]
+    (let [resp (pdfa-muunna-file! service-url in-file)]
       ;; (reset! pdf-resp resp)
       (with-open [out (output-stream "pdfa-test.out.pdf")]
         (log/info "resp type" (type resp))
         (.write out resp)))))
+
+
+
+(defrecord Tiedostopesula [base-url]
+  component/Lifecycle
+  (start [this]
+    this)
+
+  (stop [this]
+    this))
+
+(defn luo-tiedostopesula [{base-url :base-url}]
+  (->Tiedostopesula base-url))
