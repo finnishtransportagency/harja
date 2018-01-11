@@ -257,7 +257,9 @@
                                              {:rivi rivi
                                               :vuosi vuosi
                                               :voi-tallentaa? voi-tallentaa?
-                                              :urakka-id urakka-id}]))
+                                              ;; TODO Tiemerkintänäkymässä id:t luetaan eri tavalla
+                                              :paallystysurakka-id urakka-id
+                                              :tiemerkintaurakka-id (:suorittava-tiemerkintaurakka rivi)}]))
                                aikataulurivit))}
           [{:tyyppi :vetolaatikon-tila :leveys 2}
            {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string

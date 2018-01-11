@@ -41,31 +41,31 @@
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
-                       (let [ajat (concat (keep ::alku ajat)
-                                          (keep ::loppu ajat))
-                             ajat-jarjestyksessa (sort pvm/ennen? ajat)
-                             aikaisin (first ajat-jarjestyksessa)
-                             myohaisin (last ajat-jarjestyksessa)]
-                         (when (and aikaisin myohaisin)
-                           [(t/minus aikaisin (t/days pad))
-                            (t/plus myohaisin (t/days pad))])))
+       (let [ajat (concat (keep ::alku ajat)
+                          (keep ::loppu ajat))
+             ajat-jarjestyksessa (sort pvm/ennen? ajat)
+             aikaisin (first ajat-jarjestyksessa)
+             myohaisin (last ajat-jarjestyksessa)]
+         (when (and aikaisin myohaisin)
+           [(t/minus aikaisin (t/days pad))
+            (t/plus myohaisin (t/days pad))])))
 
 (defn+ kuukaudet
-  "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
-    Palauttaa sekvenssin kuukausia {:alku alkupäivä :loppu loppupäivä :otsikko kk-formatoituna}."
-  [paivat ::paivat] any?
-  (reduce
-    (fn [kuukaudet paiva]
-      (let [viime-kk (last kuukaudet)]
-        (if (or (nil? viime-kk)
-                (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
-          (conj kuukaudet {:alku paiva
-                           :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
-                           :loppu paiva})
-          (update kuukaudet (dec (count kuukaudet))
-                  assoc :loppu paiva))))
-    []
-    paivat))
+       "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
+         Palauttaa sekvenssin kuukausia {:alku alkupäivä :loppu loppupäivä :otsikko kk-formatoituna}."
+       [paivat ::paivat] any?
+       (reduce
+         (fn [kuukaudet paiva]
+           (let [viime-kk (last kuukaudet)]
+             (if (or (nil? viime-kk)
+                     (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
+               (conj kuukaudet {:alku paiva
+                                :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
+                                :loppu paiva})
+               (update kuukaudet (dec (count kuukaudet))
+                       assoc :loppu paiva))))
+         []
+         paivat))
 
 (defn- paivat-ja-viikot
   "Näyttää pystyviivan jokaisen päivän kohdalla ja viikon vaihtuessa maanantain
@@ -298,6 +298,7 @@
 
          (map-indexed
            (fn [i {ajat ::ajat :as rivi}]
+             (println "RIVIT: " (pr-str rivi))
              (let [y (rivin-y i)]
                ^{:key i}
                [:g

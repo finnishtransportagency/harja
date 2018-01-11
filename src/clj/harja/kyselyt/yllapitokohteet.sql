@@ -536,6 +536,7 @@ SELECT
   ypkya.kuvaus                     AS "yksityiskohtainenaikataulu_kuvaus",
   ypkya.alku                       AS "yksityiskohtainenaikataulu_alku",
   ypkya.loppu                      AS "yksityiskohtainenaikataulu_loppu",
+  ypkya.urakka                     AS "yksityiskohtainenaikataulu_urakka-id",
   ypk.tr_numero                    AS "tr-numero",
   ypk.tr_alkuosa                   AS "tr-alkuosa",
   ypk.tr_alkuetaisyys              AS "tr-alkuetaisyys",
@@ -577,6 +578,12 @@ SELECT
   ypka.muokattu             AS "aikataulu-muokattu",
   ypka.muokkaaja            AS "aikataulu-muokkaaja",
   ypka.valmis_tiemerkintaan AS "valmis-tiemerkintaan",
+  ypkya.id                  AS "yksityiskohtainenaikataulu_id",
+  ypkya.toimenpide          AS "yksityiskohtainenaikataulu_toimenpide",
+  ypkya.kuvaus              AS "yksityiskohtainenaikataulu_kuvaus",
+  ypkya.alku                AS "yksityiskohtainenaikataulu_alku",
+  ypkya.loppu               AS "yksityiskohtainenaikataulu_loppu",
+  ypkya.urakka              AS "yksityiskohtainenaikataulu_urakka-id",
   ypk.tr_numero             AS "tr-numero",
   ypk.tr_alkuosa            AS "tr-alkuosa",
   ypk.tr_alkuetaisyys       AS "tr-alkuetaisyys",
@@ -786,7 +793,8 @@ SELECT
   toimenpide AS "toimenpide",
   kuvaus     AS "kuvaus",
   alku       AS "alku",
-  loppu      AS "loppu"
+  loppu      AS "loppu",
+  urakka     AS "urakka-id"
 FROM yllapitokohteen_yksityiskohtainen_aikataulu ypkya
 WHERE yllapitokohde = :yllapitokohde
       AND poistettu IS NOT TRUE;
