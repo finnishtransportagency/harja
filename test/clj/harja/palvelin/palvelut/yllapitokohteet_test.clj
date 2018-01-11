@@ -267,13 +267,20 @@
                                    :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                    :vuosi 2017})
         leppajarven-ramppi (kohde-nimella aikataulu "Leppäjärven ramppi")
+        oulun-ramppi (kohde-nimella aikataulu "Oulun ohitusramppi")
         muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
+
+    (is leppajarven-ramppi)
+    (is oulun-ramppi)
+
     (is (= (count urakan-yllapitokohteet) (count aikataulu))
         "Jokaiselle kohteelle saatiin haettua aikataulu")
     (is (false? (:tiemerkintaurakan-voi-vaihtaa? leppajarven-ramppi))
         "Leppäjärven rampilla on kirjauksia, ei saa vaihtaa suorittavaa tiemerkintäurakkaa")
     (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
-        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")))
+        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
+    (is (= (count (:yksityiskohtainen-aikataulu oulun-ramppi)) 2)
+        "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
   (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
