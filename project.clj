@@ -4,8 +4,8 @@
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Liikenneviraston Harja"
 
-  :dependencies [[org.clojure/clojure "1.8.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
-                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
+  :dependencies [[org.clojure/clojure "1.9.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
+                 [org.clojure/clojurescript "1.9.946"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-alpha17"] ; TODO Voisi poistaa, kun Clojure 1.9 päivitys toimii.
@@ -49,7 +49,7 @@
                  ;;[org.postgis/postgis-jdbc "2.1.4dev"] ;; mvnrepossa vain 1.3.3 versio, piti buildata itse!
                  [com.mchange/c3p0 "0.9.5.2"]
                  [webjure/jeesql "0.4.7"]
-                 [specql "0.6-alpha24"] ; TODO Voisi päivittää, mutta vaatii Clojure 1.9
+                 [specql "0.7.0-alpha12"] ; TODO Voisi päivittää, mutta vaatii Clojure 1.9
 
                  ;; GeoTools
                  [org.geotools/gt-shapefile "18.1"]
@@ -150,7 +150,7 @@
                                   [org.clojure/test.check "0.9.0"]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.1.0"]]
+                             [test2junit "1.3.3"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
@@ -165,7 +165,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
+  :plugins [[lein-cljsbuild "1.1.7"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
@@ -203,7 +203,8 @@
                            :libs ["src/js/kuvataso.js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
-                :notify-command ["./run-karma.sh"]}
+                ;:notify-command ["./run-karma.sh"]
+                }
                ;;:warning-handlers [utils.cljs-warning-handler/handle]}
 
                {:id "prod"
