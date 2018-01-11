@@ -247,7 +247,11 @@
                                           db
                                           {:idt (map :id lahetettavat-kohteet)}))}))))
 
-(defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
+(defn tallenna-yllapitokohteiden-aikataulu
+  "Tallentaa ylläpitokohteiden aikataulun.
+
+   Ei koske yksityiskohtaisen aikataulun tallennusta, sille on oma palvelu."
+  [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
