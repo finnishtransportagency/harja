@@ -54,5 +54,6 @@
           :nimi :loppu
           :tyyppi :pvm
           :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
-          :validoi [[:ei-tyhja "Anna loppu"]]}]
+          :validoi [[:ei-tyhja "Anna loppu"]
+                    [:pvm-kentan-jalkeen :alku "Lopun on oltava alun jälkeen"]]}]
         @yksityiskohtainen-aikataulu]])))
