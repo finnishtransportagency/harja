@@ -758,7 +758,6 @@ WHERE yllapitokohde = :id
            WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
 -- name: paivita-yllapitokohteen-yksityiskohtainen-aikataulu!
--- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohteen_yksityiskohtainen_aikataulu
 SET
   toimenpide = :toimenpide :: YLLAPITOKOHTEEN_AIKATAULU_TOIMENPIDE,
@@ -773,9 +772,19 @@ AND yllapitokohde = :yllapitokohde
 AND urakka = :urakka;
 
 -- name: lisaa-yllapitokohteen-yksityiskohtainen-aikataulu!
--- Tallentaa ylläpitokohteen aikataulun
+-- Tallentaa ylläpitokohteen yksityiskohtaisen aikataulun
 INSERT INTO yllapitokohteen_yksityiskohtainen_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu)
 VALUES (:yllapitokohde, :urakka, :toimenpide :: YLLAPITOKOHTEEN_AIKATAULU_TOIMENPIDE, :kuvaus, :alku, :loppu, :luoja, NOW());
+
+-- name: hae-yllapitokohteen-yksityiskohtainen-aikataulu
+SELECT
+  id         AS "id",
+  toimenpide AS "toimenpide",
+  kuvaus     AS "kuvaus",
+  alku       AS "alku",
+  loppu      AS "loppu"
+FROM yllapitokohteen_yksityiskohtainen_aikataulu ypkya
+WHERE yllapitokohde = :yllapitokohde;
 
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id

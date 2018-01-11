@@ -317,8 +317,8 @@
            :luoja (:id user)}))))
 
   (log/debug "Aikataulutiedot tallennettu!")
-  ;; TODO Palauta päivitetyt rivit
-  )
+  (q/hae-yllapitokohteen-yksityiskohtainen-aikataulu
+    db {:yllapitokohde yllapitokohde-id}))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
