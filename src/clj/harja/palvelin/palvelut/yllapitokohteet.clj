@@ -284,7 +284,7 @@
                                    :vuosi vuosi})))
 
 (defn tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
-  [db user {:keys [urakka-id yllapitokohde-id aikataulurivit]}]
+  [db user {:keys [urakka-id yllapitokohde-id aikataulurivit] :as tiedot}]
   (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
@@ -294,26 +294,26 @@
 
   (jdbc/with-db-transaction [db db]
     (doseq [rivi aikataulurivit]
-      (if (id/id-olemassa? rivi)
+      (if (id/id-olemassa? (:id rivi))
         (q/paivita-yllapitokohteen-yksityiskohtainen-aikataulu!
           db
-          {:toimenpide (:toimenpide rivi)
+          {:toimenpide (name (:toimenpide rivi))
            :kuvaus (:kuvaus rivi)
-           :alku (:alku rivi)
-           :loppu (:loppu rivi)
+           :alku (konv/sql-date (:alku rivi))
+           :loppu (konv/sql-date (:loppu rivi))
            :muokkaaja (:id user)
-           :poistettu (:poistettu rivi)
+           :poistettu (true? (:poistettu rivi))
            :id (:id rivi)
            :yllapitokohde yllapitokohde-id
-           :urakka-id urakka-id})
+           :urakka urakka-id})
         (q/lisaa-yllapitokohteen-yksityiskohtainen-aikataulu!
           db
           {:urakka urakka-id
-           :yllapitokohde-id yllapitokohde-id
-           :toimenpide (:toimenpide rivi)
+           :yllapitokohde yllapitokohde-id
+           :toimenpide (name (:toimenpide rivi))
            :kuvaus (:kuvaus rivi)
-           :alku (:alku rivi)
-           :loppu (:loppu rivi)
+           :alku (konv/sql-date (:alku rivi))
+           :loppu (konv/sql-date (:loppu rivi))
            :luoja (:id user)}))))
 
   (log/debug "Aikataulutiedot tallennettu!")

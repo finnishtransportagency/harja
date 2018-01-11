@@ -13,20 +13,21 @@
 
 (defn yksityiskohtainen-aikataulu [{:keys [rivi vuosi voi-tallentaa? urakka-id]}]
   (let [yksityiskohtainen-aikataulu (atom (or (:yksityiskohtainen-aikataulu rivi) []))]
-    (fn [rivi]
+    (fn [{:keys [rivi]}]
       [:div
        [grid/grid
         {:otsikko "Kohteen yksityiskohtainen aikataulu"
          :tyhja "Ei aikataulua"
          :tallenna (if voi-tallentaa?
-                     #(tiedot/tallenna-aikataulu
+                     #(do
+                        (tiedot/tallenna-aikataulu
                         {:rivit %
                          :urakka-id urakka-id
                          :yllapitokohde-id (:id rivi)
                          :onnistui-fn (fn [vastaus]
                                         (reset! yksityiskohtainen-aikataulu vastaus))
                          :epaonnistui-fn (fn []
-                                           (viesti/nayta! "Talennus epäonnistui!" :danger))})
+                                           (viesti/nayta! "Talennus epäonnistui!" :danger))}))
                      :ei-mahdollinen)}
         [{:otsikko "Toimenpide"
           :leveys 10
