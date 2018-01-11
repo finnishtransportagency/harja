@@ -886,5 +886,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      [pvm]
      (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))))
 
-(defn pvm-ilman-samaa-vuotta [pvm]
-  (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) vuosi)}))
+(defn pvm-ilman-samaa-vuotta
+  "Formatoi annetun pvm:n suomalaisessa muodossa. Jättää vuoden pois, mikäli se on sama kuin annettu.
+   Tällä tavalla voidaan esim. UI:ssa säästää tilaa, kun vuotta ei piirretä silloin kun on ilmeistä, mistä
+   vuodesta on kyse."
+  [pvm sama-vuosi]
+  (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) sama-vuosi)}))

@@ -10,7 +10,7 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn yksityiskohtainen-aikataulu [rivi]
+(defn yksityiskohtainen-aikataulu [rivi vuosi]
   (let [yksityiskohtainen-aikataulu (atom (or (:yksityiskohtainen-aikataulu rivi) []))]
     (fn [rivi]
       [:div
@@ -35,13 +35,13 @@
          {:otsikko "Alku"
           :leveys 5
           :nimi :alku
-          :fmt pvm/pvm-ilman-samaa-vuotta
+          :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
           :tyyppi :pvm
           :validoi [[:ei-tyhja "Anna alku"]]}
          {:otsikko "Loppu"
           :leveys 5
           :nimi :loppu
           :tyyppi :pvm
-          :fmt pvm/pvm-ilman-samaa-vuotta
+          :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
           :validoi [[:ei-tyhja "Anna loppu"]]}]
         @yksityiskohtainen-aikataulu]])))
