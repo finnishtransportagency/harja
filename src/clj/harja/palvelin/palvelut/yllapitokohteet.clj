@@ -251,8 +251,8 @@
   "Tallentaa ylläpitokohteiden aikataulun.
 
    Ei koske yksityiskohtaisen aikataulun tallennusta, sille on oma palvelu."
-  [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
-  (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
+  [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet] :as tiedot}]
+  (assert (and urakka-id sopimus-id kohteet) "anna urakka-id, sopimus-id ja kohteet")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   (let [voi-tallentaa-tiemerkinnan-takarajan?
@@ -280,6 +280,28 @@
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id
                                    :vuosi vuosi})))
+
+(defn tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
+  [db fim email user {:keys [urakka-id yllapitokohde-id aikataulurivit]}]
+  (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
+
+  (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden yksityiskohtaiset aikataulutiedot: " aikataulurivit)
+
+  (jdbc/with-db-transaction [db db]
+    (doseq [rivi aikataulurivit]
+      (q/tallenna-yllapitokohteen-yksityiskohtainen-aikataulu!
+        db
+        {:toimenpide nil
+         :kuvaus nil
+         :alku nil
+         :loppu nil
+         :urakka nil})))
+
+  (log/debug "Aikataulutiedot tallennettu!")
+  ;; TODO Palauta päivitetyt rivit
+  )
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
@@ -535,6 +557,9 @@
       (julkaise-palvelu http :tallenna-yllapitokohteiden-aikataulu
                         (fn [user tiedot]
                           (tallenna-yllapitokohteiden-aikataulu db fim email user tiedot)))
+      (julkaise-palvelu http :tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
+                        (fn [user tiedot]
+                          (tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu db fim email user tiedot)))
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
