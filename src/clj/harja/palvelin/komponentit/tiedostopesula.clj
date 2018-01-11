@@ -19,13 +19,13 @@
            (net.coobird.thumbnailator.tasks UnsupportedFormatException))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn pdfa-convert! "java.io/file -> png byte-array | nil" [pdf-file]
+(defn pdfa-convert! "java.io/file -> png byte-array | nil" [laundry-pdf2pdfa-url pdf-file]
   (try
-    (let [laundry-pdf2pdfa-url "https://laundry.solitacloud.fi/pdf/pdf2pdfa"
-          request-opts
+    (let [request-opts
           {:as :byte-array
            :multipart [{:name "file"
                         :content pdf-file
+                        :filename "input.pdf"
                         :mime-type "application/pdf"}]}
           resp (deref (http/post laundry-pdf2pdfa-url request-opts))]
       (if (= 200 (:status resp))
@@ -38,21 +38,12 @@
       (log/error ex)
       nil)))
 
-(defonce pdf-resp (atom nil))
+;; (defonce pdf-resp (atom nil))
 
-(defn test-pdfa-convert []
+(defn test-pdfa-convert [service-url]
   (let [in-file (file "/tmp/pdfa-test.pdf")]
-    (let [resp (pdfa-convert! in-file)]
-      (reset! pdf-resp resp)
+    (let [resp (pdfa-convert! service-url in-file)]
+      ;; (reset! pdf-resp resp)
       (with-open [out (output-stream "pdfa-test.out.pdf")]
         (log/info "resp type" (type resp))
         (.write out resp)))))
-
-;; (defn test-pdf-preview []
-;;   (with-open [in (input-stream (file "/tmp/pdfa-test.pdf"))]
-;;     (let [pdf-buffer (byte-array (* 10 1024 1024))
-;;           n (.read in pdf-buffer)
-;;           resp (pdfa-convert! pdf-buffer)]
-;;       (reset! pdf-resp resp)
-;;       (with-open [out (output-stream "pdfa-test.out.pdf")]
-;;         (.write out resp)))))
