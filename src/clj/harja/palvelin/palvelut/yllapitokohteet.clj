@@ -317,8 +317,9 @@
            :luoja (:id user)}))))
 
   (log/debug "Aikataulutiedot tallennettu!")
-  (q/hae-yllapitokohteen-yksityiskohtainen-aikataulu
-    db {:yllapitokohde yllapitokohde-id}))
+  (->> (q/hae-yllapitokohteen-yksityiskohtainen-aikataulu
+         db {:yllapitokohde yllapitokohde-id})
+       (map #(konv/string->keyword % :toimenpide))))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
