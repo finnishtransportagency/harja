@@ -291,7 +291,7 @@
 
   (jdbc/with-db-transaction [db db]
     (doseq [rivi aikataulurivit]
-      (q/tallenna-yllapitokohteen-yksityiskohtainen-aikataulu!
+      #_(q/tallenna-yllapitokohteen-yksityiskohtainen-aikataulu!
         db
         {:toimenpide nil
          :kuvaus nil
