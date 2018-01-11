@@ -10,6 +10,8 @@ DECLARE
   indeksinimi TEXT;
   urakkatyyppi TEXT;
 BEGIN
+  -- Urakan käyttämä indeksi asetetaan Urakan Yleiset-välilehdellä ja sieltä se päätyy
+  -- tauluun 'urakka' sarakkeeseen 'indeksi' joka on tyyppiä TEXT
   SELECT indeksi FROM urakka WHERE id = urakka_id INTO indeksinimi;
   SELECT alkupvm FROM urakka WHERE id = urakka_id INTO urakan_alkupvm;
   SELECT tyyppi FROM urakka WHERE id = urakka_id INTO urakkatyyppi;
@@ -21,27 +23,44 @@ BEGIN
     kilpailutusta_edeltava_vuosi := kilpailutusvuosi - 1;
 
     -- Tien hoito:
-      -- ennen vuotta 2017 alkavien urakoiden indeksi MAKU 2005 ja perusluku on urakan kilpailuttamisvuotta
+      -- 1) ennen vuotta 2017 alkavien urakoiden indeksi MAKU 2005 ja perusluku on urakan kilpailuttamisvuotta
       -- ed. joulukuun ja kilp.vuoden tammi- ja helmikuun pistelukujen keskiarvo
-      --  2017 alkavien urakoiden indeksin perusluku on 2016 syys-, loka-, marraskuun
+      -- 2) 2017 alkavien urakoiden indeksin perusluku on 2016 syys-, loka-, marraskuun
       --pistelukujen keskiarvo.
-    -- Vesiväyläurakoissa taas kilpailutusvuoden tammi-, helmi- ja maaliskuun pistelukujen keskiarvo
+    -- Vesiväyläurakoissa (maili Ismo Kohoselta Jarnolle ja Riitalle 11.1.2018 klo 8:50):
+      -- 3) Vuonna 2013 alkaneissa (alkaneet vuoden alusta 1.1.2013 ja päättyvät päättymisvuonna 31.7) urakoissa Kunnossapidon osaindeksi MAKU 2005 = 100
+      -- ja perusluku lasketaan vuoden 2012 touko-, kesä- ja heinäkuun keskiarvosta yhden desimaalin tarkkuudella (132,9).
+      -- 4) Vuonna 2014 – 2016 alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Kunnossapidon osaindeksi MAKU 2005 = 100
+      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
+      -- 5) Vuonna 2017 ja eteenpäin alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Maarakennuskustannukset, kokonaisindeksi MAKU 2010 = 100
+      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
+
     SELECT INTO tulosrivi
       AVG(arvo) AS perusluku,
       count(*)  AS indeksilukujen_lkm
     FROM indeksi
     WHERE nimi = indeksinimi
           AND (CASE
+
+               -- 1)
                WHEN urakkatyyppi = 'hoito' AND urakan_alkupvm < '2017-10-1'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 12) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 1) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 2)
 
+               -- 2)
                WHEN urakkatyyppi = 'hoito' AND urakan_alkupvm > '2017-9-30'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 10) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 11)
 
+               -- 3)
+               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm < '2013-1-2'
+                 THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 5) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 6) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 7)
+
+               -- 4) ja 5)
                WHEN urakkatyyppi = 'vesivayla-hoito'
                  THEN (vuosi = kilpailutusvuosi AND kuukausi = 1) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 2) OR
