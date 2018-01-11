@@ -10,8 +10,6 @@ DECLARE
   indeksinimi TEXT;
   urakkatyyppi TEXT;
 BEGIN
-  -- Urakan käyttämä indeksi asetetaan Urakan Yleiset-välilehdellä ja sieltä se päätyy
-  -- tauluun 'urakka' sarakkeeseen 'indeksi' joka on tyyppiä TEXT
   SELECT indeksi FROM urakka WHERE id = urakka_id INTO indeksinimi;
   SELECT alkupvm FROM urakka WHERE id = urakka_id INTO urakan_alkupvm;
   SELECT tyyppi FROM urakka WHERE id = urakka_id INTO urakkatyyppi;
