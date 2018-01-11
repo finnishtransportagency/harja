@@ -265,10 +265,10 @@
     (fn [ur]
       [:span
        (if (:indeksi ur)
-         (or (str (:indeksi ur)
-                  (when (:indeksilaskennan_perusluku ur)
-                    (str ", perusluku: " (:indeksilaskennan_perusluku ur))))
-             "Ei käytössä"))
+         (str (:indeksi ur)
+              (when (:indeksilaskennan_perusluku ur)
+                (str ", perusluku: " (:indeksilaskennan_perusluku ur))))
+         "Ei käytössä")
        (when (and (:indeksi ur)
                   (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
