@@ -1,0 +1,1 @@
+ALTER TABLE kan_kohteenosa ADD COLUMN sijainti GEOMETRY;

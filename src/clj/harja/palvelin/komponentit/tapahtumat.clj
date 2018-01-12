@@ -26,7 +26,8 @@
 
 (def get-notifications (->> (Class/forName "org.postgresql.jdbc.PgConnection")
                             .getMethods
-                            (filter #(= (.getName %) "getNotifications"))
+                            (filter #(and (= (.getName %) "getNotifications")
+                                          (= 0 (count (.getParameters %)))))
                             first))
 
 (defn- kanava-nimi [kw]

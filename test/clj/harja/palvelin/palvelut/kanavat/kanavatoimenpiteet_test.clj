@@ -47,7 +47,7 @@
                                 +kayttaja-jvh+
                                 hakuargumentit)]
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuargumentit) "Kutsu on validi")
-    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus on validi")
+    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus (hae-kanavatoimenpiteet) on validi")
 
     (is (>= (count vastaus) 1))
     (is (every? ::kanavan-toimenpide/id vastaus))
@@ -237,7 +237,14 @@
                     ::kanavan-toimenpide/kohde-id kohde-id
                     ::kanavan-toimenpide/pvm (pvm/luo-pvm 2017 2 2)
                     ::kanavan-toimenpide/huoltokohde-id huoltokohde
-                    ::kanavan-toimenpide/urakka-id urakka-id}
+                    ::kanavan-toimenpide/urakka-id urakka-id
+                    ::kanavan-toimenpide/materiaalikirjaukset
+                    (list {:harja.domain.vesivaylat.materiaali/urakka-id urakka-id,
+                      :harja.domain.vesivaylat.materiaali/nimi "Ämpäreitä",
+                      :harja.domain.vesivaylat.materiaali/maara
+                      -1,
+                      :harja.domain.vesivaylat.materiaali/lisatieto
+                      "foo"})}
         hakuehdot {::kanavan-toimenpide/urakka-id urakka-id
                    ::kanavan-toimenpide/sopimus-id sopimus-id
                    ::toimenpidekoodi/id kolmostason-toimenpide-id
@@ -251,7 +258,8 @@
                                 :tallenna-kanavatoimenpide
                                 +kayttaja-jvh+
                                 argumentit)]
-    (is (some #(= "tämä on testitoimenpide" (::kanavan-toimenpide/lisatieto %)) vastaus))))
+    (is (some #(= "tämä on testitoimenpide" (::kanavan-toimenpide/lisatieto %)) (:kanavatoimenpiteet vastaus)))
+    (is (= "foo" (->> vastaus :materiaalilistaus (mapcat :harja.domain.vesivaylat.materiaali/muutokset) (keep :harja.domain.vesivaylat.materiaali/lisatieto) first)))))
 
 (deftest toimenpiteen-tallentaminen-ilman-oikeutta
   (let [urakka-id (hae-saimaan-kanavaurakan-id)

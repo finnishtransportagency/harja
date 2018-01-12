@@ -5,9 +5,11 @@
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.domain.sopimus :as sopimus]
-            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]
-                      [clojure.future :refer :all]])
-            #?(:clj [specql.rel :as rel]))
+    #?@(:clj [
+            [harja.kyselyt.specql-db :refer [define-tables]]
+            [clojure.future :refer :all]])
+    #?(:clj
+            [specql.rel :as rel]))
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -41,6 +43,13 @@
     :tiemerkinta
     :vesivayla-kanavien-hoito
     :vesivayla-turvalaitteiden-korjaus})
+
+(def urakkatyyppi->otsikko
+  {:hoito "Hoito"
+   :paallystys "Päällystys"
+   :valaistus "Valaistus"
+   :paikkaus "Paikkaus"
+   :tiemerkinta "Tiemerkintä"})
 
 (s/def ::hae-harjassa-luodut-urakat-vastaus
   (s/coll-of (s/and ::urakka

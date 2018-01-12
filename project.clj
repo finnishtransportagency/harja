@@ -133,7 +133,7 @@
                  [yleisradio/new-reliquary "1.0.0"]
 
                  ;; Tuck UI apuri
-                 [webjure/tuck "0.4.3"]
+                 [webjure/tuck "0.4.1"] ; TODO Voisi päivittää, mutta 0.4.3:n kanssa tietyöilmoitukset-näkymä ei enää hae mitään kun tullaan sinne etusivun kautta
 
                  ;; Laadunseurantatyökalua varten
                  [org.clojure/data.codec "0.1.1"]
