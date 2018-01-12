@@ -10,6 +10,12 @@
    :tiemerkinta {::aikajana/vari "#DECB03"}
    :muu {::aikajana/vari "#03a9de"}})
 
+(def yksityiskohtainen-aikataulujana-tyylit
+  {:rp_tyot {::aikajana/vari "#0384ac"}
+   :ojankaivuu {::aikajana/vari "#0390bd"}
+   :rumpujen_vaihto {::aikajana/vari "#039bcc"}
+   :oletus {::aikajana/vari "#03a9de"}})
+
 (defn- aikajana-teksti [nimi alkupvm loppupvm]
   (str nimi ": "
        (cond
@@ -64,7 +70,8 @@
            ;; Ylläpitokohteen yksityiskohtainen aikataulu
            (map
              (fn [{:keys [toimenpide kuvaus alku loppu]}]
-               (merge (aikataulujana-tyylit :muu)
+               (merge (or (yksityiskohtainen-aikataulujana-tyylit toimenpide)
+                          (yksityiskohtainen-aikataulujana-tyylit :oletus))
                       {::aikajana/alku alku
                        ::aikajana/loppu loppu
                        ::aikajana/teksti (aikajana-teksti
