@@ -1,26 +1,26 @@
 -- name: hae-ilmoitukset
 SELECT
-  i.id,
-  i.urakka,
-  i.tunniste,
+  ulompi_i.id,
+  ulompi_i.urakka,
+  ulompi_i.tunniste,
   u.nimi as urakkanimi,
-  i.ilmoitusid,
-  i.ilmoitettu,
-  i.valitetty,
-  i.yhteydenottopyynto,
-  i.otsikko,
-  i.lisatieto,
-  i.ilmoitustyyppi,
-  i.selitteet,
-  i.urakkatyyppi,
-  i.tila,
-  i.sijainti,
-  i.tr_numero,
-  i.tr_alkuosa,
-  i.tr_loppuosa,
-  i.tr_alkuetaisyys,
-  i.tr_loppuetaisyys,
-  i."aiheutti-toimenpiteita",
+  ulompi_i.ilmoitusid,
+  ulompi_i.ilmoitettu,
+  ulompi_i.valitetty,
+  ulompi_i.yhteydenottopyynto,
+  ulompi_i.otsikko,
+  ulompi_i.lisatieto,
+  ulompi_i.ilmoitustyyppi,
+  ulompi_i.selitteet,
+  ulompi_i.urakkatyyppi,
+  ulompi_i.tila,
+  ulompi_i.sijainti,
+  ulompi_i.tr_numero,
+  ulompi_i.tr_alkuosa,
+  ulompi_i.tr_loppuosa,
+  ulompi_i.tr_alkuetaisyys,
+  ulompi_i.tr_loppuetaisyys,
+  ulompi_i."aiheutti-toimenpiteita",
   it.id                                                              AS kuittaus_id,
   it.kuitattu                                                        AS kuittaus_kuitattu,
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
@@ -28,52 +28,52 @@ SELECT
   it.kuittaaja_henkilo_sukunimi                                      AS kuittaus_kuittaaja_sukunimi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi
-FROM ilmoitus i
-  LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
-  LEFT JOIN urakka u ON i.urakka = u.id
+FROM ilmoitus ulompi_i
+  LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = ulompi_i.id
+  LEFT JOIN urakka u ON ulompi_i.urakka = u.id
   LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
-WHERE i.id IN
-      (SELECT id FROM ilmoitus x WHERE
+WHERE ulompi_i.id IN
+      (SELECT id FROM ilmoitus sisempi_i WHERE
        -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
-      (x.urakka IS NULL OR x.urakka IN (:urakat)) AND
+      (sisempi_i.urakka IS NULL OR sisempi_i.urakka IN (:urakat)) AND
 
       -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
       ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-       (:loppu_annettu IS FALSE AND x.ilmoitettu  >= :alku) OR
-       (:alku_annettu IS FALSE AND x.ilmoitettu  <= :loppu) OR
-       (x.ilmoitettu  BETWEEN :alku AND :loppu)) AND
+       (:loppu_annettu IS FALSE AND sisempi_i.ilmoitettu  >= :alku) OR
+       (:alku_annettu IS FALSE AND sisempi_i.ilmoitettu  <= :loppu) OR
+       (sisempi_i.ilmoitettu  BETWEEN :alku AND :loppu)) AND
 
       -- Tarkista ilmoituksen tilat
-      ((:kuittaamattomat IS TRUE AND x.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
-       (:vastaanotetut IS TRUE AND x.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
-       (:aloitetut IS TRUE AND x.tila = 'aloitettu' :: ilmoituksen_tila) OR
-       (:lopetetut IS TRUE AND x.tila = 'lopetettu' :: ilmoituksen_tila)) AND
+      ((:kuittaamattomat IS TRUE AND sisempi_i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
+       (:vastaanotetut IS TRUE AND sisempi_i.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
+       (:aloitetut IS TRUE AND sisempi_i.tila = 'aloitettu' :: ilmoituksen_tila) OR
+       (:lopetetut IS TRUE AND sisempi_i.tila = 'lopetettu' :: ilmoituksen_tila)) AND
 
       -- Tarkasta ilmoituksen tyypit
-      (:tyypit_annettu IS FALSE OR x.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
+      (:tyypit_annettu IS FALSE OR sisempi_i.ilmoitustyyppi :: TEXT IN (:tyypit)) AND
 
       -- Tarkasta vapaatekstihakuehto
-      (:teksti_annettu IS FALSE OR (x.otsikko LIKE :teksti OR x.paikankuvaus LIKE :teksti OR x.lisatieto LIKE :teksti)) AND
+      (:teksti_annettu IS FALSE OR (sisempi_i.otsikko LIKE :teksti OR sisempi_i.paikankuvaus LIKE :teksti OR sisempi_i.lisatieto LIKE :teksti)) AND
 
       -- Tarkasta selitehakuehto
-      (:selite_annettu IS FALSE OR (x.selitteet @> ARRAY [:selite :: TEXT])) AND
+      (:selite_annettu IS FALSE OR (sisempi_i.selitteet @> ARRAY [:selite :: TEXT])) AND
 
       -- Rajaa tienumerolla
       (:tr-numero::INTEGER IS NULL OR tr_numero = :tr-numero) AND
 
       -- Rajaa tunnisteella
-      (:tunniste_annettu IS FALSE OR (x.tunniste ILIKE :tunniste)) AND
+      (:tunniste_annettu IS FALSE OR (sisempi_i.tunniste ILIKE :tunniste)) AND
 
       -- Rajaa ilmoittajan nimellä
       (:ilmoittaja-nimi::TEXT IS NULL OR
-       CONCAT(x.ilmoittaja_etunimi,' ',x.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
+       CONCAT(sisempi_i.ilmoittaja_etunimi,' ',sisempi_i.ilmoittaja_sukunimi) ILIKE :ilmoittaja-nimi) AND
 
       -- Rajaa ilmoittajan puhelinnumerolla
       (:ilmoittaja-puhelin::TEXT IS NULL OR
-       x.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
-       ORDER BY x.ilmoitettu DESC
+       sisempi_i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
+       ORDER BY sisempi_i.ilmoitettu DESC
       LIMIT :max-maara::INTEGER)
-ORDER BY i.ilmoitettu DESC, it.kuitattu DESC;
+ORDER BY ulompi_i.ilmoitettu DESC, it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-raportille
 SELECT
