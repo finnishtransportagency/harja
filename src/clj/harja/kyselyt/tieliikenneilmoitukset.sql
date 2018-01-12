@@ -1,4 +1,5 @@
 -- name: hae-ilmoitukset
+-- Tässä on tuplaselect, koska halutaan tehdä LIMIT pelkästään ilmoituksille, ei saa koskea ilmoitustoimenpiteitä.
 SELECT
   ulompi_i.id,
   ulompi_i.urakka,
