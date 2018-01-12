@@ -1,12 +1,12 @@
-(ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavat-test
+(ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavasulut-test
   (:require [harja.testi :as ht]
             [clojure.test :as t]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavat :as kanava-tuonti]
-            [harja.kyselyt.kanavat.kanavat :as q-kanavat]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavasulut :as kanavasulku-tuonti]
+            [harja.kyselyt.kanavat.kanavasulut :as q-kanavasulut]))
 
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
-(def referenssi-kanava-shapefilesta
+(def referenssi-kanavasulku-shapefilesta
   {
    :numero 6666
    :aluenro 216737
@@ -40,7 +40,7 @@
    :omistaja "Liikennevirasto"
    :the_geom "POLYGON((594378.7923042110633105 6745379.7973106112331152, 594416.31681462517008185 6745289.93295709136873484, 594404.13800845539662987 6745285.05637172050774097, 594366.80162501567974687 6745374.78863043710589409, 594378.7923042110633105 6745379.7973106112331152))"})
 
-(def referenssi-kanava-tietokannasta
+(def referenssi-kanavasulku-tietokannasta
   {:kanavanro 6666
    :aluenro 216737
    :nimi "Iskrovka (Särkijärvi)"
@@ -75,7 +75,7 @@
 
 
 (t/deftest vie-kanava-tietokantaan
-    (kanava-tuonti/vie-kanava-entry (:db ht/jarjestelma) referenssi-kanava-shapefilesta)
-    (let [tallentunut-kanava  (first(q-kanavat/hae-kanava-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))]
-      (ht/tarkista-map-arvot referenssi-kanava-tietokannasta tallentunut-kanava)))
+    (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) referenssi-kanavasulku-shapefilesta)
+    (let [tallentunut-kanava  (first(q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))]
+      (ht/tarkista-map-arvot referenssi-kanavasulku-tietokannasta tallentunut-kanava)))
 

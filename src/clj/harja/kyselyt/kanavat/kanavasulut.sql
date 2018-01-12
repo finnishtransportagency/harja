@@ -1,6 +1,6 @@
--- name: luo-kanava<!
--- vie entryn kanava-tauluun
-INSERT INTO kanava
+-- name: luo-kanavasulku<!
+-- vie entryn kan_sulku-tauluun, kanavasulku on osa kanavakokonaisuutta
+INSERT INTO kan_sulku
 (
   kanavanro,
   aluenro,
@@ -110,8 +110,8 @@ ON CONFLICT (kanavanro)
       muokkaaja                 = :muokkaaja;
 
 
--- name: hae-kanavat
-SELECT * FROM kanava;
+-- name: hae-kanavasulut
+SELECT * FROM kan_sulku;
 
--- name: hae-kanava-tunnuksella
-SELECT * FROM kanava WHERE kanavanro = :kanavanumero;
+-- name: hae-kanavasulku-tunnuksella
+SELECT * FROM kan_sulku WHERE kanavanro = :kanavanumero;
