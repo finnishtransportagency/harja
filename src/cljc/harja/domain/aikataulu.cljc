@@ -78,8 +78,8 @@
                                            (if (and (= toimenpide :muu) kuvaus)
                                              kuvaus
                                              (ypk/tarkan-aikataulun-toimenpiide-fmt toimenpide))
-                                           aikataulu-kohde-alku
-                                           aikataulu-kohde-valmis)}))
+                                           alku
+                                           loppu)}))
              (:yksityiskohtainen-aikataulu rivi))))}))
 
 (defn raahauksessa-paivitetyt-aikataulurivit
