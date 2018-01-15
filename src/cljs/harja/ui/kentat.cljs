@@ -514,7 +514,7 @@
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus jos-tyhja
-                                        jos-tyhja-fn
+                                        jos-tyhja-fn disabled?
                                         nayta-ryhmat ryhmittely ryhman-otsikko]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
@@ -535,7 +535,8 @@
                           :on-focus on-focus
                           :format-fn (if (empty? valinnat)
                                        (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                                       (or (and valinta-nayta #(valinta-nayta % true)) str))}
+                                       (or (and valinta-nayta #(valinta-nayta % true)) str))
+                          :disabled disabled?}
      valinnat]))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
@@ -1137,7 +1138,7 @@
   ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
   [{:keys [karttavalinta? paikannus? paikannus-kaynnissa?-atom
            paikannus-onnistui-fn paikannus-epaonnistui-fn
-           karttavalinta-tehty-fn poista-valinta?]} data]
+           karttavalinta-tehty-fn poista-valinta? disabled?]} data]
   (let [karttavalinta? (if (some? karttavalinta?) karttavalinta? true)
         paikannus? (if (some? paikannus?) paikannus? true)
 
@@ -1157,7 +1158,7 @@
                         (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti @data}))
                       (karttatasot/taso-paalle! :sijaintivalitsin)))
       (komp/ulos #(karttatasot/taso-pois! :sijaintivalitsin))
-      (fn [_ data]
+      (fn [{disabled? :disabled?} data]
         (let [paikannus-onnistui-fn (or paikannus-onnistui-fn
                                         (fn [sijainti]
                                           (let [coords (.-coords sijainti)
@@ -1190,7 +1191,7 @@
               "Paikanna"
               #(when-not @paikannus-kaynnissa?
                  (aloita-paikannus))
-              {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+              {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa? disabled?)
                :ikoni (ikonit/screenshot)
                :tallennus-kaynnissa? @paikannus-kaynnissa?}])
 
@@ -1200,7 +1201,7 @@
                 "Valitse kartalta"
                 #(when-not @karttavalinta-kaynnissa?
                    (aloita-karttavalinta))
-                {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
+                {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa? disabled?)
                  :ikoni (ikonit/map-marker)}]
                [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
                                                    :kun-valmis #(do
@@ -1218,7 +1219,8 @@
               "Poista valinta"
               (fn [e]
                 (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
-                (reset! data nil))])])))))
+                (reset! data nil))
+              {:disabled disabled?}])])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data
