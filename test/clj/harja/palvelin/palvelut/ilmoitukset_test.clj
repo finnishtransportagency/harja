@@ -316,7 +316,7 @@
     ;; patologisella kyselyllä, kuten tuotantoon eksynyt HAR-7003 tämä räjähtää yli 3s kestäväksi.
     ;; Pyritään pitämään silti kestovaatimus tiukempana, niin että mahdolliset vähemmän katastrofaalisetkin
     ;; perffihuonontumiset jäisivät kiinni. Toivottavasti ei ole kovin ajoympäristöherkkä tämä kesto.
-    (is (< palvelukutsun-kesto-ms 250) "Ilmoituksien haku kestää liian kauan")
+    (is (< palvelukutsun-kesto-ms 800) "Ilmoituksien haku kestää liian kauan")
 
     (doseq [i ilmoitukset-palvelusta]
       (is (#{:toimenpidepyynto :tiedoitus :kysely}
