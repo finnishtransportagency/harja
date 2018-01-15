@@ -305,7 +305,6 @@
 
          (map-indexed
            (fn [i {ajat ::ajat :as rivi}]
-             (println "RIVIT: " (pr-str rivi))
              (let [y (rivin-y i)]
                ^{:key i}
                [:g
