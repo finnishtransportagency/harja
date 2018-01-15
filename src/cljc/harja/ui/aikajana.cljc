@@ -130,7 +130,9 @@
               :stroke "gray"}]])])
 
 (defn- tooltip* [{:keys [x y text] :as tooltip}]
-  (let [kirjaimen-leveys 5.3 ; Riittävän lähellä totuutta oleva vakio, jotta saadaan leveys sopivaksi
+  ;; Lasketaan laatikon tarvitsema leveys kirjainten leveyden mukaan -> päästään noin suurin piirtein oikeaan tulokseen
+  ;; Toinen, tarkempi tapa, olisi renderöidä teksti ensin näkymättömänä ja ottaa piirretyn elementin todellinen leveys.
+  (let [kirjaimen-leveys 5.3
         leveys (* (count text) kirjaimen-leveys)]
     (when tooltip
       [:g
