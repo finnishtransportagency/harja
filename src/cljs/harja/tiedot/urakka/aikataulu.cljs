@@ -68,7 +68,7 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
 
-(def aikataulurivit-suodatettu
+(def aikataulurivit-suodatettu-jarjestetty
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   kohdenumero @yllapito-tiedot/kohdenumero
                   aikataulurivit @aikataulurivit
