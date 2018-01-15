@@ -569,6 +569,7 @@ SELECT
   ypk.nimi,
   ypk.urakka,
   ypk.sopimus,
+  ypka.kohde_alku           AS "aikataulu-kohde-alku",
   ypka.paallystys_alku      AS "aikataulu-paallystys-alku",
   ypka.paallystys_loppu     AS "aikataulu-paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
