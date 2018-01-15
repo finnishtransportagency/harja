@@ -68,9 +68,9 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "Pohjois-Pohjanmaa, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -93,9 +93,9 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "KOKO MAA, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
+    (let [otsikko "KOKO MAA, hoito, Ilmoitusraportti ajalta 01.10.2014 - 01.10.2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -123,11 +123,11 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :kaikki}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [otsikko "Pohjois-Pohjanmaa, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [otsikko "Pohjois-Pohjanmaa, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -150,11 +150,11 @@
                                  :hallintayksikko-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :kaikki}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [otsikko "KOKO MAA, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Alue"}
@@ -187,12 +187,12 @@
                                  :hallintayksikko-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi "hoito"
+                                              :urakkatyyppi :kaikki
                                               :urakoittain? true}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))
     (is (= pylvasgraafin-viimeinen-elementti ["2017/09" []]))
-    (let [tyyppilajit-otsikko "KOKO MAA, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
+    (let [tyyppilajit-otsikko "KOKO MAA, kaikki urakkatyypit, Ilmoitusraportti ajalta 01.10.2016 - 30.09.2017"
           toimenpiteet-otsikko "Ilmoitukset aiheutuneiden toimenpiteiden mukaan"
           tyyppilajit-taulukko (apurit/taulukko-otsikolla vastaus tyyppilajit-otsikko)
           toimenpiteet-taulukko (apurit/taulukko-otsikolla vastaus toimenpiteet-otsikko)]
@@ -269,7 +269,7 @@
                                  :hallintayksikko-id nil
                                  :parametrit {:alkupvm (pvm/->pvm "1.10.2016")
                                               :loppupvm (pvm/->pvm "30.09.2017")
-                                              :urakkatyyppi "hoito"
+                                              :urakkatyyppi :kaikki
                                               :urakoittain? true}})
         pylvasgraafin-viimeinen-elementti (last (last (last vastaus)))]
     (is (vector? vastaus))

@@ -6,23 +6,29 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
+            [harja.domain.kanavat.kommentti :as kommentti]
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.set :as set]))
 
 (defn hae-kanavatoimenpiteet-specql [db hakuehdot]
   (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
         tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %
                                                                                           ::muokkaustiedot/poistettu? false})
         tp-tyot #(fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id %
-                                                                   ::muokkaustiedot/poistettu? false})]
+                                                                   ::muokkaustiedot/poistettu? false})
+        kommentit #(fetch db ::kommentti/toimenpiteen-kommentti
+                          (set/union kommentti/perustiedot kommentti/kayttajan-tiedot)
+                          {::kommentti/toimenpide-id %})]
     (for [tp toimenpiteet
           :let [tp-id (::toimenpide/id tp)]]
       (merge tp {::toimenpide/hinnat (tp-hinnat tp-id)
-                 ::toimenpide/tyot (tp-tyot tp-id)}))))
+                 ::toimenpide/tyot (tp-tyot tp-id)
+                 ::toimenpide/kommentit (kommentit tp-id)}))))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
@@ -119,3 +125,12 @@
   (update! db ::toimenpide/kanava-toimenpide
            {::toimenpide/toimenpidekoodi-id tehtava-id}
            {::toimenpide/id (op/in paivitettavat-tehtava-idt)}))
+
+(defn lisaa-kommentti! [db user tila kommentti toimenpide-id]
+  (insert! db
+           ::kommentti/toimenpiteen-kommentti
+           {::kommentti/aika (pvm/nyt)
+            ::kommentti/kommentti kommentti
+            ::kommentti/tila tila
+            ::kommentti/kayttaja-id (:id user)
+            ::kommentti/toimenpide-id toimenpide-id}))

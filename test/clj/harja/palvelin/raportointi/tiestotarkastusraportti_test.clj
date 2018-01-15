@@ -121,7 +121,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Tiestötarkastusraportti"
@@ -196,7 +196,7 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 12 31))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi "Tiestötarkastusraportti"

@@ -120,6 +120,7 @@ SELECT
   u.sopimustyyppi,
   u.indeksi,
   u.urakkanro,
+  (SELECT * FROM indeksilaskennan_perusluku(u.id)) as indeksilaskennan_perusluku,
   hal.id                      AS hallintayksikko_id,
   hal.nimi                    AS hallintayksikko_nimi,
   hal.lyhenne                 AS hallintayksikko_lyhenne,
