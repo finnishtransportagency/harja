@@ -586,6 +586,27 @@
                                 :yllapitokohde-id 1
                                 :aikataulurivit []}))))
 
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-yllapitokohteiden-tarkka-aikataulu
+                                 +kayttaja-jvh+
+                                 {:urakka-id urakka-id
+                                  :yllapitokohde-id yllapitokohde-id
+                                  :aikataulurivit []}))))
+
+  ;; Leppäjärven suorittavan tiemerkintäurakan aikataulua saapi muokata
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+    (is (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tallenna-yllapitokohteiden-tarkka-aikataulu
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :yllapitokohde-id yllapitokohde-id
+                         :aikataulurivit []}))))
+
 (deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
