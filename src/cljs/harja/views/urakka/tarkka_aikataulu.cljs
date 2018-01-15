@@ -59,18 +59,17 @@
                  [:pvm-kentan-jalkeen :alku "Lopun on oltava alun jälkeen"]]}]
      tarkka-aikataulu]))
 
-(defn tarkka-aikataulu [{:keys [rivi vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?
-                                paallystysurakka-id tiemerkintaurakka-id]}]
+(defn tarkka-aikataulu [{:keys [rivi vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta? urakka-id]}]
   [:div
    [kohteen-aikataulutaulukko
     {:otsikko "Kohteen päällystysurakan yksityiskohtainen aikataulu"
      :aikataulurivi rivi
      :vuosi vuosi
      :voi-tallentaa? voi-muokata-paallystys?
-     :urakka-id paallystysurakka-id}]
+     :urakka-id urakka-id}]
    [kohteen-aikataulutaulukko
     {:otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"
      :aikataulurivi rivi
      :vuosi vuosi
      :voi-tallentaa? voi-muokata-tiemerkinta?
-     :urakka-id tiemerkintaurakka-id}]])
+     :urakka-id urakka-id}]])
