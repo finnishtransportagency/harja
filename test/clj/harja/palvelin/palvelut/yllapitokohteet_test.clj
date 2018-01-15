@@ -558,11 +558,10 @@
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        vuosi 2017
         aikataulu-toimenpide :ojankaivuu
         aikataulu-kuvaus "Kaivetaan iso monttu!"
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                tallenna-yllapitokohteiden-tarkka-aikataulu
+                                :tallenna-yllapitokohteiden-tarkka-aikataulu
                                 +kayttaja-jvh+
                                 {:urakka-id urakka-id
                                  :yllapitokohde-id yllapitokohde-id
@@ -572,12 +571,21 @@
                                                    :loppu (pvm/->pvm "15.4.2017")}]})]
 
 
-        ;; Vastauksena päivitetty tarkka aikataulu
-        (is (= (count vastaus) 1))
-        (let [aikataulurivit (first vastaus)]
+    ;; Vastauksena päivitetty tarkka aikataulu
+    (is (= (count vastaus) 1))
+    (let [aikataulurivit (first vastaus)]
 
-          (= (:toimenpide vastaus) aikataulu-toimenpide)
-          (= (:kuvaus vastaus) aikataulu-kuvaus))))
+      (= (:toimenpide vastaus) aikataulu-toimenpide)
+      (= (:kuvaus vastaus) aikataulu-kuvaus))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-yllapitokohteiden-tarkka-aikataulu
+                               +kayttaja-tero+
+                               {:urakka-id 4
+                                :yllapitokohde-id 1
+                                :aikataulurivit []}))))
 
 (deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
