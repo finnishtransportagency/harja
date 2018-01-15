@@ -4,7 +4,8 @@
             [clojure.core.async :refer [thread]]
             [taoensso.timbre :as log])
   (:import [com.mchange.v2.c3p0 C3P0ProxyConnection]
-           [org.postgresql PGNotification]))
+           [org.postgresql PGNotification]
+           [org.postgresql.util PSQLException]))
 
 (defn- aseta-ps-parametrit [ps parametrit]
   (loop [i 1
@@ -49,21 +50,25 @@
 (defrecord Tapahtumat [connection kuuntelijat ajossa]
   component/Lifecycle
   (start [this]
-    (reset! connection (.getConnection (:datasource (:db this))))
     (reset! kuuntelijat {})
     (reset! ajossa true)
     (thread (loop []
               (when @ajossa
-                (with-open [stmt (.createStatement @connection)
-                            rs (.executeQuery stmt "SELECT 1")]
-                  (doseq [^PGNotification notification (seq (.rawConnectionOperation @connection
-                                                                                     get-notifications
-                                                                                     C3P0ProxyConnection/RAW_CONNECTION
-                                                                                     (into-array Object [])))]
-                    (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
-                    (doseq [kasittelija (get @kuuntelijat (.getName notification))]
-                      ;; Käsittelijä ei sitten saa blockata
-                      (kasittelija (.getParameter notification)))))
+                (try
+                  (let [connection (.getConnection (:datasource (:db this)))]
+                    (with-open [stmt (.createStatement connection)
+                                rs (.executeQuery stmt "SELECT 1")]
+                      (doseq [^PGNotification notification (seq (.rawConnectionOperation @connection
+                                                                                         get-notifications
+                                                                                         C3P0ProxyConnection/RAW_CONNECTION
+                                                                                         (into-array Object [])))]
+                        (log/info "TAPAHTUI" (.getName notification) " => " (.getParameter notification))
+                        (doseq [kasittelija (get @kuuntelijat (.getName notification))]
+                          ;; Käsittelijä ei sitten saa blockata
+                          (kasittelija (.getParameter notification))))))
+                  (catch PSQLException ex
+                    (log/warn "Tapahtumat-kuuntelijassa poikkeus, errorcode" (.getErrorCode ex))
+                    (log/warn "poikkeus: " ex)))
 
                 (Thread/sleep 150)
                 (recur))))
