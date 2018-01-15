@@ -46,9 +46,6 @@
 (defprotocol Julkaise
   (julkaise! [this kanava payload]))
 
-(defprotocol Kuuroudu
-  (kuuroudu! [this kanava]))
-
 (defrecord Tapahtumat [connection kuuntelijat ajossa]
   component/Lifecycle
   (start [this]
@@ -78,11 +75,6 @@
           (map first @kuuntelijat))
     (.close @connection)
     this)
-
-  Kuuroudu
-  (kuuroudu! [this kanava]
-    (swap! kuuntelijat #(dissoc % kanava))
-    (u @connection (str "UNLISTEN " kanava ";")))
 
   Kuuntele
   (kuuntele! [_ kanava callback]
