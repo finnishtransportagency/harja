@@ -182,14 +182,17 @@ BEGIN
   THEN
     INSERT INTO kan_kohde ("kohdekokonaisuus-id", nimi, luotu, luoja)
     VALUES (kohdekokonaisuus, new."nimi", current_timestamp, integraatiokayttaja);
-    kohde := (SELECT id FROM kan_kohde WHERE nimi = new."nimi");
+    kohde := (SELECT id
+              FROM kan_kohde
+              WHERE nimi = new."nimi"
+              LIMIT 1); -- Aineistossa voi tulla sama kanavasulku monta kertaa. Se saattaa aiheuttaa tässä kohtaa virheen.
   ELSE
     IF (kohde_kayttajan_luoma = FALSE AND kohde_kayttajan_muokkaama = FALSE)
     THEN
       UPDATE kan_kohde
       SET
-        nimi               = new."nimi",
-        integraatio        = current_timestamp
+        nimi        = new."nimi",
+        integraatio = current_timestamp
       WHERE id = kohde;
     END IF;
   END IF;
