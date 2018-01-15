@@ -279,7 +279,7 @@
         "Leppäjärven rampilla on kirjauksia, ei saa vaihtaa suorittavaa tiemerkintäurakkaa")
     (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
         "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
-    (is (= (count (:yksityiskohtainen-aikataulu oulun-ramppi)) 2)
+    (is (= (count (:tarkka-aikataulu oulun-ramppi)) 2)
         "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
