@@ -29,16 +29,14 @@ CREATE UNIQUE INDEX siltanro_unique_index
   ON kan_silta (siltanro);
 
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('trex', 'kanavasillat-haku');
+INSERT INTO geometriapaivitys (nimi) VALUES ('kanavat') ON CONFLICT DO NOTHING;
+INSERT INTO geometriapaivitys (nimi) VALUES ('kanavasillat') ON CONFLICT DO NOTHING;;
 
 -- Muutetaan kanavataulun nimi vastaamaan kokonaisuutta
 -- Rakenne muuten sama
 
--- Taulun nimi muutettu ennen käyttöönottoa. Sisältö tuodaan integraatiolla uudelleen.
+-- Taulun nimi muutettu ennen käyttöönottoa. Sisältö tuodaan integraatiolla.
 DROP TABLE kanava;
-
--- Integraatiot on uudelleennimettys
---UPDATE integraatio set nimi = 'kanavasulut-haku' WHERE nimi = 'kanavat-haku';
--- UPDATE integraatio set nimi = 'kanavasulut-muutospaivamaaran-haku' WHERE nimi = 'kanavat-muutospaivamaaran-haku';
 
 CREATE TABLE kan_sulku
 (
@@ -116,52 +114,51 @@ ON CONFLICT (kayttajanimi)
 
 -- P R O S E D U U R I T   K O H D E T A U L U J E N    P Ä I V I T T Ä M I S E E N
 
-
-
-CREATE OR REPLACE FUNCTION lisaa_tai_paivita_kanavasulku_kohdetietoihin()
-  RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION lisaa_tai_paivita_kanavasulku_kohdetietoihin ()
+RETURNS trigger AS $$
 
 -- Triggerifunktio päivittää integraation kautta saadut kanavasulkutiedot (kan_sulku) käyttöliittymän käyttämiin
 -- kohdetauluihin: kan_kohdekokonaisuus, kan_kohde, kan_kohteenosa.
+-- Käyttäjän tekemiä muutoksia kohdetauluihin ei ylikirjoiteta (paitsi oletuskäyttötapa ja geometria).
 
-DECLARE   integraatiokayttaja INTEGER;
-
-  DECLARE kohteen_osa               INTEGER;
-  DECLARE kohde               INTEGER;
-  DECLARE kohdekokonaisuus INTEGER;
-  DECLARE kohteen_osa_kayttajan_muokkaama     BOOLEAN;
-  DECLARE kohde_kayttajan_muokkaama     BOOLEAN;
-  DECLARE kohdekokonaisuus_kayttajan_muokkaama     BOOLEAN;
-  DECLARE kohteen_osa_kayttajan_luoma     BOOLEAN;
-  DECLARE kohde_kayttajan_luoma     BOOLEAN;
+DECLARE integraatiokayttaja                  INTEGER;
+  DECLARE kohteen_osa                          INTEGER;
+  DECLARE kohde                                INTEGER;
+  DECLARE kohdekokonaisuus                     INTEGER;
+  DECLARE kohteen_osa_kayttajan_muokkaama      BOOLEAN;
+  DECLARE kohde_kayttajan_muokkaama            BOOLEAN;
+  DECLARE kohdekokonaisuus_kayttajan_muokkaama BOOLEAN;
+  DECLARE kohteen_osa_kayttajan_luoma          BOOLEAN;
+  DECLARE kohde_kayttajan_luoma                BOOLEAN;
   DECLARE kohdekokonaisuus_kayttajan_luoma     BOOLEAN;
-  DECLARE oletuskaytotapa TEXT;
+  DECLARE oletuskaytotapa                      TEXT;
 
 BEGIN
 
-  -- Selvitetään integraatiokäyttäjän id tallennuksia luoja-kenttään tallennusta varten.
-  SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio' INTO integraatiokayttaja;
+  -- Selvitetään integraatiokäyttäjän id luoja-kenttään tallennusta varten.
+  -- Integraatiokäyttäjä on luotu migraatiossa, jos sitä ei aiemmin ole ollut.
+  integraatiokayttaja := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
 
-  -- Selvitetään löytyykö sulkuun liittyvä kohteen osa, kohde ja kohdekokonaisuus jo sovelluksen tauluista
-  SELECT id, "kohde-id" from kan_kohteenosa where lahdetunnus = new."kanavanro" INTO kohteen_osa, kohde;
-  SELECT id from kan_kohdekokonaisuus WHERE id = (select "kohdekokonaisuus-id" from kan_kohde where id = kohde) into kohdekokonaisuus;
+  -- Selvitetään löytyykö sulkuun liittyvä kohteen osa, kohde ja kohdekokonaisuus kannasta. Lähtökohtana on kanavasulkuaineistossa saatu kanavanumero (lähdetunnus)
+  kohteen_osa := (SELECT id from kan_kohteenosa where lahdetunnus = new."kanavanro");
+  kohde := (SELECT "kohde-id" from kan_kohteenosa where lahdetunnus = new."kanavanro");
+  kohdekokonaisuus := (SELECT id from kan_kohdekokonaisuus WHERE id = (select "kohdekokonaisuus-id" from kan_kohde where id = kohde));
 
-  -- Jos kohdekokonaisuutta ei vielä löytynyt, selvitetään löytyykö se nimen perusteella
+  -- Jos kohdekokonaisuutta ei vielä löytynyt, selvitetään löytyykö se nimen perusteella.
   IF (kohdekokonaisuus ISNULL)
   THEN
-    SELECT id from kan_kohdekokonaisuus WHERE nimi = new."kanavakokonaisuus" into kohdekokonaisuus;
+    kohdekokonaisuus := (SELECT id from kan_kohdekokonaisuus WHERE nimi = new."kanavakokonaisuus");
   END IF;
 
   -- Selvitetään onko käyttäjä muokannut kohteen osaa, kohdetta tai kohdekokonaisuutta.
   -- Käyttäjän muutosten päälle ei päivitetä integraation kautta tulleita nimitietoja tai kohdelinkityksiä.
-  SELECT EXISTS(SELECT muokkaaja FROM kan_kohteenosa WHERE id = kohteen_osa AND muokkaaja != null) INTO kohteen_osa_kayttajan_muokkaama;
-  SELECT EXISTS(SELECT muokkaaja FROM kan_kohde WHERE id = kohde AND muokkaaja != null) INTO kohde_kayttajan_muokkaama;
-  SELECT EXISTS(SELECT muokkaaja FROM kan_kohdekokonaisuus WHERE id = kohdekokonaisuus AND muokkaaja != null) INTO kohdekokonaisuus_kayttajan_muokkaama;
+  kohteen_osa_kayttajan_muokkaama :=  (SELECT EXISTS(SELECT muokkaaja FROM kan_kohteenosa WHERE id = kohteen_osa AND muokkaaja != integraatiokayttaja));
+  kohde_kayttajan_muokkaama := (SELECT EXISTS(SELECT muokkaaja FROM kan_kohde WHERE id = kohde AND muokkaaja != integraatiokayttaja));
+  kohdekokonaisuus_kayttajan_muokkaama := (SELECT EXISTS(SELECT muokkaaja FROM kan_kohdekokonaisuus WHERE id = kohdekokonaisuus AND muokkaaja != integraatiokayttaja));
 
-  SELECT EXISTS(SELECT luoja FROM kan_kohteenosa WHERE id = kohteen_osa AND luoja != integraatiokayttaja) INTO kohteen_osa_kayttajan_luoma;
-  SELECT EXISTS(SELECT luoja FROM kan_kohde WHERE id = kohde AND luoja != integraatiokayttaja) INTO kohde_kayttajan_luoma;
-  SELECT EXISTS(SELECT luoja FROM kan_kohdekokonaisuus WHERE id = kohdekokonaisuus AND luoja != integraatiokayttaja) INTO kohdekokonaisuus_kayttajan_luoma;
-
+  kohteen_osa_kayttajan_luoma := (SELECT EXISTS(SELECT luoja FROM kan_kohteenosa WHERE id = kohteen_osa AND luoja != integraatiokayttaja));
+  kohde_kayttajan_luoma := (SELECT EXISTS(SELECT luoja FROM kan_kohde WHERE id = kohde AND luoja != integraatiokayttaja));
+  kohdekokonaisuus_kayttajan_luoma := (SELECT EXISTS(SELECT luoja FROM kan_kohdekokonaisuus WHERE id = kohdekokonaisuus AND luoja != integraatiokayttaja));
 
   -- K O H D E K O K O N A I S U U S
   -- Jos kohdekokonaisuutta ei ole sovelluksen taulussa, se luodaan.
@@ -170,7 +167,7 @@ BEGIN
   IF (kohdekokonaisuus ISNULL)
   THEN
     INSERT INTO kan_kohdekokonaisuus (nimi, luotu, luoja) VALUES (new."kanavakokonaisuus", current_timestamp, integraatiokayttaja);
-    SELECT id FROM kan_kohdekokonaisuus WHERE nimi = new."kanavakokonaisuus" INTO kohdekokonaisuus;
+    kohdekokonaisuus := (SELECT id FROM kan_kohdekokonaisuus WHERE nimi = new."kanavakokonaisuus");
   ELSE
     IF (kohdekokonaisuus_kayttajan_luoma = false AND kohdekokonaisuus_kayttajan_muokkaama = false)
     THEN
@@ -185,7 +182,7 @@ BEGIN
   THEN
     INSERT INTO kan_kohde ("kohdekokonaisuus-id", nimi, luotu, luoja)
     VALUES (kohdekokonaisuus, new."nimi", current_timestamp, integraatiokayttaja);
-    SELECT id FROM kan_kohde WHERE nimi = new."nimi" INTO kohde;
+    kohde := (SELECT id FROM kan_kohde WHERE nimi = new."nimi");
   ELSE
     IF (kohde_kayttajan_luoma = FALSE AND kohde_kayttajan_muokkaama = FALSE)
     THEN
@@ -204,21 +201,19 @@ BEGIN
 
   -- Selvitä tallennettava oletuskäyttötapa
   IF (new."kayttotapa"= 'Itsepalvelu') THEN oletuskaytotapa = 'itse'; END IF;
-  IF (new."kayttotapa"= 'Kaukokäyttö') THEN oletuskaytotapa = 'itse'; END IF;
-  IF (new."kayttotapa"= 'Paikalliskäyttö') THEN oletuskaytotapa = 'itse'; END IF;
+  IF (new."kayttotapa"= 'Kaukokäyttö') THEN oletuskaytotapa = 'kauko'; END IF;
+  IF (new."kayttotapa"= 'Paikalliskäyttö') THEN oletuskaytotapa = 'paikallis'; END IF;
   IF (oletuskaytotapa ISNULL) THEN oletuskaytotapa = 'muu'; END IF;
 
-
   IF (kohteen_osa ISNULL) THEN
-    INSERT INTO kan_kohteenosa (tyyppi, nimi, "kohde-id", oletuspalvelumuoto, luoja, luotu, sijainti, lahdetunnus)
+    INSERT INTO kan_kohteenosa (tyyppi, "kohde-id", oletuspalvelumuoto, luoja, luotu, sijainti, lahdetunnus)
     VALUES
-      ('sulku' ::KOHTEENOSA_TYYPPI, new."nimi", kohde, oletuskaytotapa ::LIIKENNETAPAHTUMA_PALVELUMUOTO, integraatiokayttaja, current_timestamp, new."geometria", new."kanavanro");
+      ('sulku' ::KOHTEENOSA_TYYPPI, kohde, oletuskaytotapa ::LIIKENNETAPAHTUMA_PALVELUMUOTO, integraatiokayttaja, current_timestamp, new."geometria", new."kanavanro");
   ELSE
     IF (kohdekokonaisuus_kayttajan_luoma = FALSE AND kohdekokonaisuus_kayttajan_muokkaama = FALSE)
     THEN
       UPDATE kan_kohteenosa
       SET
-        nimi               = new."nimi",
         "kohde-id"         = kohde,
         oletuspalvelumuoto = oletuskaytotapa ::LIIKENNETAPAHTUMA_PALVELUMUOTO,
         sijainti           = new."geometria" :: GEOMETRY,
@@ -239,16 +234,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
 CREATE OR REPLACE FUNCTION lisaa_tai_paivita_kanavasilta_kohdetietoihin()
   RETURNS TRIGGER AS $$
 DECLARE kayttaja INTEGER;
 
 BEGIN
 
-  SELECT muokkaaja
+  kayttaja := (SELECT muokkaaja
   FROM kan_kohteenosa
-  WHERE lahdetunnus = new."siltanro"
-  INTO kayttaja;
+  WHERE lahdetunnus = new."siltanro");
 
   IF (COUNT(kayttaja) > 0)
   THEN

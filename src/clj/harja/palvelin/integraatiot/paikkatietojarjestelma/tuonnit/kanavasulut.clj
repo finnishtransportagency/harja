@@ -5,7 +5,6 @@
             [harja.kyselyt.kanavat.kanavasulut :as q-kanavasulut]))
 
 (defn vie-kanavasulku-entry [db kanavasulku]
-  (println "VIEDÄÄN KANAVASULKU!!!")
   (let [kanavanro (:numero kanavasulku)
         aluenro (:aluenro kanavasulku)
         nimi (:nimi kanavasulku)
@@ -74,8 +73,7 @@
       (q-kanavasulut/luo-kanavasulku<! db sql-parametrit))))
 
 (defn vie-kanavasulut-kantaan [db shapefile]
-  (println "VIEDÄÄN KAIKKI KANAVAT!!!")
-
+  (log/debug (str "vie-kanavasulut-kantaan TIEDOSTO: " shapefile))
   (if shapefile
     (do
       (log/debug (str "Tuodaan kanavasulut kantaan tiedostosta " shapefile))
