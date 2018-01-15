@@ -63,14 +63,14 @@
                                 paallystysurakka-id tiemerkintaurakka-id]}]
   [:div
    [kohteen-aikataulutaulukko
-    {:aikataulurivi rivi
+    {:otsikko "Kohteen päällystysurakan yksityiskohtainen aikataulu"
+     :aikataulurivi rivi
      :vuosi vuosi
      :voi-tallentaa? voi-muokata-paallystys?
-     :urakka-id paallystysurakka-id
-     :otsikko "Kohteen päällystysurakan yksityiskohtainen aikataulu"}]
+     :urakka-id paallystysurakka-id}]
    [kohteen-aikataulutaulukko
-    {:aikataulurivi rivi
+    {:otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"
+     :aikataulurivi rivi
      :vuosi vuosi
      :voi-tallentaa? voi-muokata-tiemerkinta?
-     :urakka-id tiemerkintaurakka-id
-     :otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"}]])
+     :urakka-id tiemerkintaurakka-id}]])

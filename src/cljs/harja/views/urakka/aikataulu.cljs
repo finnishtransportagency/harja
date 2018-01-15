@@ -268,7 +268,7 @@
                                              {:rivi rivi
                                               :vuosi vuosi
                                               :voi-muokata-paallystys? voi-muokata-paallystys?
-                                              :voi-muokata-tiemerkinta voi-muokata-tiemerkinta?
+                                              :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
                                               ;; TODO Tiemerkintänäkymässä id:t luetaan eri tavalla
                                               :paallystysurakka-id urakka-id
                                               :tiemerkintaurakka-id (:suorittava-tiemerkintaurakka rivi)}]))
