@@ -267,6 +267,7 @@
                                             [tarkka-aikataulu/tarkka-aikataulu
                                              {:rivi rivi
                                               :vuosi vuosi
+                                              :nakyma (:nakyma optiot)
                                               :voi-muokata-paallystys? (voi-muokata-paallystys?)
                                               :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta?)
                                               :urakka-id urakka-id}]))

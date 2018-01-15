@@ -13,63 +13,72 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn- kohteen-aikataulutaulukko [{:keys [aikataulurivi vuosi voi-tallentaa? otsikko urakka-id]}]
-  (let [tarkka-aikataulu (or (filter #(= (:urakka-id %) urakka-id)
-                                     (:tarkka-aikataulu aikataulurivi))
-                             [])]
-    [grid/grid
-     {:otsikko otsikko
-      :tyhja "Ei aikataulua"
-      :tallenna (if voi-tallentaa?
-                  #(tiedot/tallenna-aikataulu
-                     {:rivit %
-                      :urakka-id urakka-id
-                      :yllapitokohde-id (:id aikataulurivi)
-                      :onnistui-fn (fn [vastaus]
-                                     (reset! aikataulu-tiedot/tarkka-aikataulu-paivitetty (t/now)))
-                      :epaonnistui-fn (fn []
-                                        (viesti/nayta! "Talennus epäonnistui!" :danger))})
-                  :ei-mahdollinen)}
-     [{:otsikko "Toimenpide"
-       :leveys 10
-       :nimi :toimenpide
-       :tyyppi :valinta
-       :validoi [[:ei-tyhja "Anna toimenpiode"]]
-       :valinnat ypk/tarkan-aikataulun-toimenpiteet
-       :valinta-nayta #(if % (ypk/tarkan-aikataulun-toimenpiide-fmt %) "- valitse -")
-       :fmt ypk/tarkan-aikataulun-toimenpiide-fmt
-       :pituus-max 128}
-      {:otsikko "Kuvaus"
-       :leveys 10
-       :nimi :kuvaus
-       :tyyppi :string
-       :pituus-max 1024}
-      {:otsikko "Alku"
-       :leveys 5
-       :nimi :alku
-       :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
-       :tyyppi :pvm
-       :validoi [[:ei-tyhja "Anna alku"]]}
-      {:otsikko "Loppu"
-       :leveys 5
-       :nimi :loppu
-       :tyyppi :pvm
-       :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
-       :validoi [[:ei-tyhja "Anna loppu"]
-                 [:pvm-kentan-jalkeen :alku "Lopun on oltava alun jälkeen"]]}]
-     tarkka-aikataulu]))
+(defn- kohteen-aikataulutaulukko [{:keys [yllapitokohde-id aikataulurivit vuosi voi-tallentaa? otsikko urakka-id]}]
+  [grid/grid
+   {:otsikko otsikko
+    :tyhja "Ei aikataulua"
+    :tallenna (if voi-tallentaa?
+                #(tiedot/tallenna-aikataulu
+                   {:rivit %
+                    :urakka-id urakka-id
+                    :yllapitokohde-id yllapitokohde-id
+                    :onnistui-fn (fn [vastaus]
+                                   (reset! aikataulu-tiedot/tarkka-aikataulu-paivitetty (t/now)))
+                    :epaonnistui-fn (fn []
+                                      (viesti/nayta! "Talennus epäonnistui!" :danger))})
+                :ei-mahdollinen)}
+   [{:otsikko "Toimenpide"
+     :leveys 10
+     :nimi :toimenpide
+     :tyyppi :valinta
+     :validoi [[:ei-tyhja "Anna toimenpiode"]]
+     :valinnat ypk/tarkan-aikataulun-toimenpiteet
+     :valinta-nayta #(if % (ypk/tarkan-aikataulun-toimenpiide-fmt %) "- valitse -")
+     :fmt ypk/tarkan-aikataulun-toimenpiide-fmt
+     :pituus-max 128}
+    {:otsikko "Kuvaus"
+     :leveys 10
+     :nimi :kuvaus
+     :tyyppi :string
+     :pituus-max 1024}
+    {:otsikko "Alku"
+     :leveys 5
+     :nimi :alku
+     :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
+     :tyyppi :pvm
+     :validoi [[:ei-tyhja "Anna alku"]]}
+    {:otsikko "Loppu"
+     :leveys 5
+     :nimi :loppu
+     :tyyppi :pvm
+     :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
+     :validoi [[:ei-tyhja "Anna loppu"]
+               [:pvm-kentan-jalkeen :alku "Lopun on oltava alun jälkeen"]]}]
+   aikataulurivit])
 
-(defn tarkka-aikataulu [{:keys [rivi vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta? urakka-id]}]
-  [:div
-   [kohteen-aikataulutaulukko
-    {:otsikko "Kohteen päällystysurakan yksityiskohtainen aikataulu"
-     :aikataulurivi rivi
-     :vuosi vuosi
-     :voi-tallentaa? voi-muokata-paallystys?
-     :urakka-id urakka-id}]
-   [kohteen-aikataulutaulukko
-    {:otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"
-     :aikataulurivi rivi
-     :vuosi vuosi
-     :voi-tallentaa? voi-muokata-tiemerkinta?
-     :urakka-id urakka-id}]])
+(defn tarkka-aikataulu [{:keys [rivi vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta? nakyma urakka-id]}]
+  ;; Teknisesti tämä toimii niin, että näkymän mukaan asetetaan samaan urakkaan kuuluvat tarkat aikataulurivit
+  ;; joko päällystys- tai tiemerkintätaulukkoon. Muut rivit näytetään toisessa taulukossa. Tämä toimii, sillä
+  ;; tarkkoja aikatauluja voi luoda ainoastaan päällystys tai tiemerkintä tyyppisestä urakasta.
+  (let [tarkka-aikataulu (:tarkka-aikataulu rivi)]
+    [:div
+     [kohteen-aikataulutaulukko
+      {:otsikko "Kohteen päällystysurakan yksityiskohtainen aikataulu"
+       :yllapitokohde-id (:id rivi)
+       :aikataulurivit (filter #(or (and (= nakyma :paallystys) (= (:urakka-id %) urakka-id))
+                                    (and (not= nakyma :paallystys) (not= (:urakka-id %) urakka-id)))
+                               (:tarkka-aikataulu rivi))
+       :vuosi vuosi
+       :voi-tallentaa? voi-muokata-paallystys?
+       :nakyma nakyma
+       :urakka-id urakka-id}]
+     [kohteen-aikataulutaulukko
+      {:otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"
+       :yllapitokohde-id (:id rivi)
+       :aikataulurivit (filter #(or (and (= nakyma :tiemerkinta) (= (:urakka-id %) urakka-id))
+                                    (and (not= nakyma :tiemerkinta) (not= (:urakka-id %) urakka-id)))
+                               (:tarkka-aikataulu rivi))
+       :vuosi vuosi
+       :voi-tallentaa? voi-muokata-tiemerkinta?
+       :nakyma nakyma
+       :urakka-id urakka-id}]]))
