@@ -224,11 +224,11 @@
                                           (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
                                         aikataulurivit)
 
-            voi-muokata-paallystys? #(and (= (:nakyma optiot) :paallystys)
-                                          saa-muokata?)
-            voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
-                                           saa-merkita-valmiiksi?
-                                           (:valmis-tiemerkintaan %))
+            voi-muokata-paallystys? #(boolean (and (= (:nakyma optiot) :paallystys)
+                                                   saa-muokata?))
+            voi-muokata-tiemerkinta? (fn [rivi] (boolean (and (= (:nakyma optiot) :tiemerkinta)
+                                                              saa-merkita-valmiiksi?
+                                                              (:valmis-tiemerkintaan rivi))))
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
@@ -269,7 +269,7 @@
                                               :vuosi vuosi
                                               :nakyma (:nakyma optiot)
                                               :voi-muokata-paallystys? (voi-muokata-paallystys?)
-                                              :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta?)
+                                              :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
                                               :urakka-id urakka-id}]))
                                     aikataulurivit))}
           [{:tyyppi :vetolaatikon-tila :leveys 2}
