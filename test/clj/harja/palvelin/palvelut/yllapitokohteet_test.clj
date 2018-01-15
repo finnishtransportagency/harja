@@ -573,10 +573,9 @@
 
     ;; Vastauksena päivitetty tarkka aikataulu
     (is (= (count vastaus) 1))
-    (let [aikataulurivit (first vastaus)]
-
-      (= (:toimenpide vastaus) aikataulu-toimenpide)
-      (= (:kuvaus vastaus) aikataulu-kuvaus))))
+    (let [aikataulurivi (first vastaus)]
+      (is (= (:toimenpide aikataulurivi) aikataulu-toimenpide))
+      (is (= (:kuvaus aikataulurivi) aikataulu-kuvaus)))))
 
 (deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
   (is (thrown? Exception
