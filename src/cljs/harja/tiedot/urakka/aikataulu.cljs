@@ -28,10 +28,12 @@
   (local-storage/local-storage-atom
    :aikataulu-valinnat
    {:nayta-aikajana? true
+    :nayta-tarkka-aikana? false
     :jarjestys :aika}
    nil))
 
 (defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
+(defonce nayta-tarkka-aikajana? (r/cursor valinnat [:nayta-tarkka-aikana?]))
 
 (defn toggle-nayta-aikajana! []
   (swap! valinnat update :nayta-aikajana? not))

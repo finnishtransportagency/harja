@@ -168,14 +168,6 @@
      [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
      [valinnat/tienumero yllapito-tiedot/tienumero]
 
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Aikajana"
-       :kentta-params {:tyyppi :toggle
-                       :paalle-teksti "Näytä aikajana"
-                       :pois-teksti "Piilota aikajana"
-                       :toggle! tiedot/toggle-nayta-aikajana!}
-       :arvo-atom tiedot/nayta-aikajana?}]
-
      [yleiset/pudotusvalikko
       "Järjestä kohteet"
       {:valinta jarjestys
@@ -185,8 +177,25 @@
                    :tr "Tieosoitteen mukaan"}}
       [:aika :kohdenumero :tr]]
 
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Aikajana"
+       :luokka "label-ja-kentta-puolikas"
+       :kentta-params {:tyyppi :toggle
+                       :paalle-teksti "Näytä aikajana"
+                       :pois-teksti "Piilota aikajana"
+                       :toggle! tiedot/toggle-nayta-aikajana!}
+       :arvo-atom tiedot/nayta-aikajana?}]
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Aikajanan asetukset"
+       :luokka "label-ja-kentta-puolikas"
+       :kentta-params {:tyyppi :checkbox
+                       :teksti "Näytä tarkka aikataulu"}
+       :arvo-atom tiedot/nayta-tarkka-aikajana?}]
+
      [upotettu-raportti/raportin-vientimuodot
-      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
+      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu
+                                          {:jarjestys jarjestys
+                                           :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})]]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
@@ -235,7 +244,9 @@
                         ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
                         ;; eikä niinkään paluuarvosta.
                         (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-            (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
+            (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
+                                                   :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                                   :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
                  aikataulurivit)])
          [grid/grid
           {:otsikko [:span
@@ -261,7 +272,7 @@
                                               ;; TODO Tiemerkintänäkymässä id:t luetaan eri tavalla
                                               :paallystysurakka-id urakka-id
                                               :tiemerkintaurakka-id (:suorittava-tiemerkintaurakka rivi)}]))
-                               aikataulurivit))}
+                                    aikataulurivit))}
           [{:tyyppi :vetolaatikon-tila :leveys 2}
            {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? voi-muokata-paallystys?}

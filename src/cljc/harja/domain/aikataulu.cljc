@@ -28,59 +28,63 @@
 (defn aikataulurivi-jana
   "Muuntaa aikataulurivin aikajankomponentin rivimuotoon."
   ([rivi]
-   (aikataulurivi-jana (constantly false) (constantly false) rivi))
-  ([voi-muokata-paallystys? voi-muokata-tiemerkinta?
-    {:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
+   (aikataulurivi-jana rivi {}))
+  ([{:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
             aikataulu-paallystys-alku aikataulu-paallystys-loppu
             aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu
-            nimi id kohdenumero] :as rivi}]
-   {::aikajana/otsikko (str kohdenumero " - " nimi)
-    ::aikajana/ajat
-    ;; Ylläpitokohteen "perusaikataulu"
-    (vec (concat
-           (into []
-                 (remove nil?)
-                 [(when (or aikataulu-kohde-alku aikataulu-kohde-valmis)
-                    (merge (aikataulujana-tyylit :kohde)
-                           {::aikajana/drag (when (voi-muokata-paallystys? rivi)
-                                              [id :kohde])
-                            ::aikajana/alku aikataulu-kohde-alku
-                            ::aikajana/loppu aikataulu-kohde-valmis
-                            ::aikajana/teksti (aikajana-teksti "Koko kohde"
-                                                               aikataulu-kohde-alku
-                                                               aikataulu-kohde-valmis)}))
-                  (when (or aikataulu-paallystys-alku aikataulu-paallystys-loppu)
-                    (merge (aikataulujana-tyylit :paallystys)
-                           {::aikajana/drag (when (voi-muokata-paallystys? rivi)
-                                              [id :paallystys])
-                            ::aikajana/alku aikataulu-paallystys-alku
-                            ::aikajana/loppu aikataulu-paallystys-loppu
-                            ::aikajana/teksti (aikajana-teksti "Päällystys"
-                                                               aikataulu-paallystys-alku
-                                                               aikataulu-paallystys-loppu)}))
-                  (when (or aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu)
-                    (merge (aikataulujana-tyylit :tiemerkinta)
-                           {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
-                                              [id :tiemerkinta])
-                            ::aikajana/alku aikataulu-tiemerkinta-alku
-                            ::aikajana/loppu aikataulu-tiemerkinta-loppu
-                            ::aikajana/teksti (aikajana-teksti "Tiemerkintä"
-                                                               aikataulu-tiemerkinta-alku
-                                                               aikataulu-tiemerkinta-loppu)}))])
-           ;; Ylläpitokohteen yksityiskohtainen aikataulu
-           (map
-             (fn [{:keys [toimenpide kuvaus alku loppu]}]
-               (merge (or (yksityiskohtainen-aikataulujana-tyylit toimenpide)
-                          (yksityiskohtainen-aikataulujana-tyylit :oletus))
-                      {::aikajana/alku alku
-                       ::aikajana/loppu loppu
-                       ::aikajana/teksti (aikajana-teksti
-                                           (if (and (= toimenpide :muu) kuvaus)
-                                             kuvaus
-                                             (ypk/tarkan-aikataulun-toimenpiide-fmt toimenpide))
-                                           alku
-                                           loppu)}))
-             (:yksityiskohtainen-aikataulu rivi))))}))
+            nimi id kohdenumero] :as rivi}
+    {:keys [voi-muokata-paallystys? voi-muokata-tiemerkinta?
+            nayta-tarkka-aikajana?] :as tiedot}]
+   (let [voi-muokata-paallystys? (or voi-muokata-paallystys? (constantly false))
+         voi-muokata-tiemerkinta? (or voi-muokata-tiemerkinta? (constantly false))]
+     {::aikajana/otsikko (str kohdenumero " - " nimi)
+      ::aikajana/ajat
+      ;; Ylläpitokohteen "perusaikataulu"
+      (vec (concat
+             (into []
+                   (remove nil?)
+                   [(when (or aikataulu-kohde-alku aikataulu-kohde-valmis)
+                      (merge (aikataulujana-tyylit :kohde)
+                             {::aikajana/drag (when (voi-muokata-paallystys? rivi)
+                                                [id :kohde])
+                              ::aikajana/alku aikataulu-kohde-alku
+                              ::aikajana/loppu aikataulu-kohde-valmis
+                              ::aikajana/teksti (aikajana-teksti "Koko kohde"
+                                                                 aikataulu-kohde-alku
+                                                                 aikataulu-kohde-valmis)}))
+                    (when (or aikataulu-paallystys-alku aikataulu-paallystys-loppu)
+                      (merge (aikataulujana-tyylit :paallystys)
+                             {::aikajana/drag (when (voi-muokata-paallystys? rivi)
+                                                [id :paallystys])
+                              ::aikajana/alku aikataulu-paallystys-alku
+                              ::aikajana/loppu aikataulu-paallystys-loppu
+                              ::aikajana/teksti (aikajana-teksti "Päällystys"
+                                                                 aikataulu-paallystys-alku
+                                                                 aikataulu-paallystys-loppu)}))
+                    (when (or aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu)
+                      (merge (aikataulujana-tyylit :tiemerkinta)
+                             {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
+                                                [id :tiemerkinta])
+                              ::aikajana/alku aikataulu-tiemerkinta-alku
+                              ::aikajana/loppu aikataulu-tiemerkinta-loppu
+                              ::aikajana/teksti (aikajana-teksti "Tiemerkintä"
+                                                                 aikataulu-tiemerkinta-alku
+                                                                 aikataulu-tiemerkinta-loppu)}))])
+             ;; Ylläpitokohteen yksityiskohtainen aikataulu
+             (when nayta-tarkka-aikajana?
+               (map
+                 (fn [{:keys [toimenpide kuvaus alku loppu]}]
+                   (merge (or (yksityiskohtainen-aikataulujana-tyylit toimenpide)
+                              (yksityiskohtainen-aikataulujana-tyylit :oletus))
+                          {::aikajana/alku alku
+                           ::aikajana/loppu loppu
+                           ::aikajana/teksti (aikajana-teksti
+                                               (if (and (= toimenpide :muu) kuvaus)
+                                                 kuvaus
+                                                 (ypk/tarkan-aikataulun-toimenpiide-fmt toimenpide))
+                                               alku
+                                               loppu)}))
+                 (:yksityiskohtainen-aikataulu rivi)))))})))
 
 (defn raahauksessa-paivitetyt-aikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
