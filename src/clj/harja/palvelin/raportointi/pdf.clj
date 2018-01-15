@@ -156,26 +156,26 @@
                        sarake (nth sarakkeet i)
                        fmt (formatoija-fmt-mukaan (:fmt sarake))
                        naytettava-arvo (or
-                                        (cond
-                                          (raportti-domain/raporttielementti? arvo-datassa)
-                                          (muodosta-pdf
-                                           (if (raportti-domain/formatoi-solu? arvo-datassa)
-                                             (raportti-domain/raporttielementti-formatterilla
-                                              arvo-datassa formatoija-fmt-mukaan (:fmt sarake))
-                                             arvo-datassa))
+                                         (cond
+                                           (raportti-domain/raporttielementti? arvo-datassa)
+                                           (muodosta-pdf
+                                             (if (raportti-domain/formatoi-solu? arvo-datassa)
+                                               (raportti-domain/raporttielementti-formatterilla
+                                                 arvo-datassa formatoija-fmt-mukaan (:fmt sarake))
+                                               arvo-datassa))
 
-                                          :else (fmt arvo-datassa))
-                                        "")]]
+                                           :else (fmt arvo-datassa))
+                                         "")]]
              [:fo:table-cell (merge
-                              (border-tyyli sarake)
-                              {:padding "1mm"
-                               :font-weight "normal"
-                               :text-align (if (oikealle-tasattavat-kentat i)
-                                             "right"
-                                             (tasaus (:tasaa sarake)))}
-                              yhteenveto?
-                              korosta?
-                              lihavoi?)
+                               (border-tyyli sarake)
+                               {:padding "1mm"
+                                :font-weight "normal"
+                                :text-align (if (oikealle-tasattavat-kentat i)
+                                              "right"
+                                              (tasaus (:tasaa sarake)))}
+                               yhteenveto?
+                               korosta?
+                               lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
               [:fo:block (if (string? naytettava-arvo)
@@ -334,7 +334,8 @@
   (let [aikajana (aikajana/aikajana (merge {:leveys (case *orientaatio*
                                                       :portrait 750
                                                       :landscape 1000)}
-                                           optiot) rivit)]
+                                           optiot)
+                                    rivit)]
     [:fo:block
      (when aikajana
        [:fo:instream-foreign-object {:content-width (case *orientaatio*
