@@ -279,7 +279,7 @@
         "Leppäjärven rampilla on kirjauksia, ei saa vaihtaa suorittavaa tiemerkintäurakkaa")
     (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
         "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
-    (is (= (count (:tarkka-aikataulu oulun-ramppi)) 2)
+    (is (= (count (:yksityiskohtainen-aikataulu oulun-ramppi)) 2)
         "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
@@ -553,6 +553,31 @@
     ;; Tiemerkinnän aikatauluun ei koskettu
     (is (= (pvm/->pvm "22.5.2017") (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
     (is (= (pvm/->pvm "23.5.2017") (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        vuosi 2017
+        aikataulu-toimenpide :ojankaivuu
+        aikataulu-kuvaus "Kaivetaan iso monttu!"
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                tallenna-yllapitokohteiden-tarkka-aikataulu
+                                +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :yllapitokohde-id yllapitokohde-id
+                                 :aikataulurivit [{:toimenpide aikataulu-toimenpide
+                                                   :kuvaus aikataulu-kuvaus
+                                                   :alku (pvm/->pvm "15.4.2017")
+                                                   :loppu (pvm/->pvm "15.4.2017")}]})]
+
+
+        ;; Vastauksena päivitetty tarkka aikataulu
+        (is (= (count vastaus) 1))
+        (let [aikataulurivit (first vastaus)]
+
+          (= (:toimenpide vastaus) aikataulu-toimenpide)
+          (= (:kuvaus vastaus) aikataulu-kuvaus))))
 
 (deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
