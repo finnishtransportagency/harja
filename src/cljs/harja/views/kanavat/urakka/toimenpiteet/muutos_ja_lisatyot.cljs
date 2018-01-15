@@ -26,7 +26,8 @@
             [harja.ui.debug :as debug]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.domain.kanavat.kommentti :as kommentti])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -65,7 +66,13 @@
   (let [hinta-sarake {:otsikko "Hinta"
                       :nimi :hinta
                       :tyyppi :komponentti
+                      :leveys 30
                       :komponentti (fn [rivi] [hinnoittelu-ui/hinnoittele-toimenpide e! app rivi])}
+        tila-sarake {:otsikko "Tila"
+                     :nimi ::kanavan-toimenpide/kommentit
+                     :tyyppi :string
+                     :fmt kommentti/hinnoittelun-tila->str
+                     :leveys 7}
         toimenpidesarakkeet (toimenpide-view/toimenpidesarakkeet
                               e! app
                               {:kaikki-valittu?-fn #(= (count (:toimenpiteet app))
@@ -82,7 +89,7 @@
                                                          :valittu? uusi-arvo})))})
         toimenpidesarakkeet-ilman-valinta-saraketta (subvec toimenpidesarakkeet 0 (dec (count toimenpidesarakkeet)))
         valinta-sarake (last toimenpidesarakkeet)
-        sarakkeet (concat toimenpidesarakkeet-ilman-valinta-saraketta [hinta-sarake] [valinta-sarake])]
+        sarakkeet (concat toimenpidesarakkeet-ilman-valinta-saraketta [hinta-sarake] [tila-sarake] [valinta-sarake])]
     [:div
      [toimenpiteet-view/ei-yksiloity-vihje]
      [grid/grid

@@ -112,7 +112,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2016 9 30))
-                                                      :urakkatyyppi "hoito"}})]
+                                                      :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [otsikko "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
@@ -143,7 +143,7 @@
                                  :konteksti  "koko maa"
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm     (c/to-date (t/local-date 2016 9 30))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [otsikko "KOKO MAA, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
@@ -170,7 +170,7 @@
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         param {:alkupvm (c/to-date (t/local-date 2014 10 1))
                :loppupvm (c/to-date (t/local-date 2015 9 30))
-               :urakkatyyppi "hoito"}
+               :urakkatyyppi :hoito}
         ymparisto (apurit/taulukko-otsikolla
                     (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :suorita-raportti

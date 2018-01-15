@@ -94,7 +94,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2005 10 10))
                                                       :loppupvm     (c/to-date (t/local-date 2010 10 10))
-                                                      :urakkatyyppi "hoito"}})]
+                                                      :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt tehtävittäin"
@@ -131,7 +131,7 @@
                                  :konteksti  "koko maa"
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2005 10 10))
                                               :loppupvm     (c/to-date (t/local-date 2010 10 10))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt tehtävittäin"

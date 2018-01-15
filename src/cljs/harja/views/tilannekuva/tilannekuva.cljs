@@ -16,6 +16,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.checkbox :as checkbox]
+            [harja.domain.urakka :as u]
             [harja.domain.tilannekuva :as tk]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta :as kartta-tiedot]
@@ -168,19 +169,11 @@
 
 (def tilannekuvan-alueet ely/elynumerot-jarjestyksessa)
 
-(def urakkatyypin-otsikot {:hoito "Hoito"
-                           :paallystys "Päällystys"
-                           :valaistus "Valaistus"
-                           :paikkaus "Paikkaus"
-                           :tiemerkinta "Tiemerkintä"
-                           #_#_:siltakorjaus "Siltakorjaus"
-                           #_#_(keyword "tekniset laitteet") "Tekniset laitteet"})
-
 (defn- tyypin-aluesuodattimet [tyyppi]
   (komp/luo
     (fn [tyyppi]
       [asetuskokoelma
-       (urakkatyypin-otsikot tyyppi)
+       (u/urakkatyyppi->otsikko tyyppi)
        {:salli-piilotus? true
         :auki-atomi? (paneelin-tila-atomi! (keyword (str (name tyyppi) "-aluesuodatin")) false)
         :luokka "taustavari-taso2 ylaraja"
@@ -344,7 +337,8 @@ suodatinryhmat
   {:paallystys
    {:toiminto (fn [yllapitokohdeosa]
                 (yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal!
-                  (:yllapitokohde-id yllapitokohdeosa)))
+                  (:yllapitokohde-id yllapitokohdeosa)
+                  :paallystys))
     :teksti "Näytä yhteyshenkilöt"}
 
    :varustetoteuma

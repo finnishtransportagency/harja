@@ -49,7 +49,7 @@
                                  :urakka-id (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 9 30))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt kuukausittain"
@@ -170,7 +170,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 9 30))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt kuukausittain"
@@ -289,7 +289,7 @@
                                  :konteksti "koko maa"
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 9 30))
-                                              :urakkatyyppi "hoito"}})]
+                                              :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (is (= vastaus [:raportti
                     {:nimi        "Yksikköhintaiset työt kuukausittain"
