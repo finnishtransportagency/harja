@@ -10,7 +10,7 @@
    :tiemerkinta {::aikajana/vari "#DECB03"}
    :muu {::aikajana/vari "#03a9de"}})
 
-(def yksityiskohtainen-aikataulujana-tyylit
+(def tarkka-aikataulujana-tyylit
   {:rp_tyot {::aikajana/vari "#0384ac"}
    :ojankaivuu {::aikajana/vari "#0390bd"}
    :rumpujen_vaihto {::aikajana/vari "#039bcc"}
@@ -74,8 +74,8 @@
              (when nayta-tarkka-aikajana?
                (map
                  (fn [{:keys [toimenpide kuvaus alku loppu]}]
-                   (merge (or (yksityiskohtainen-aikataulujana-tyylit toimenpide)
-                              (yksityiskohtainen-aikataulujana-tyylit :oletus))
+                   (merge (or (tarkka-aikataulujana-tyylit toimenpide)
+                              (tarkka-aikataulujana-tyylit :oletus))
                           {::aikajana/alku alku
                            ::aikajana/loppu loppu
                            ::aikajana/teksti (aikajana-teksti
@@ -84,7 +84,7 @@
                                                  (ypk/tarkan-aikataulun-toimenpiide-fmt toimenpide))
                                                alku
                                                loppu)}))
-                 (:yksityiskohtainen-aikataulu rivi)))))})))
+                 (:tarkka-aikataulu rivi)))))})))
 
 (defn raahauksessa-paivitetyt-aikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"

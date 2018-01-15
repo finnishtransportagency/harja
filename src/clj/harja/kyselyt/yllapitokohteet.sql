@@ -531,12 +531,12 @@ SELECT
   ypka.muokattu                    AS "aikataulu-muokattu",
   ypka.muokkaaja                   AS "aikataulu-muokkaaja",
   ypka.valmis_tiemerkintaan        AS "valmis-tiemerkintaan",
-  ypkya.id                         AS "yksityiskohtainenaikataulu_id",
-  ypkya.toimenpide                 AS "yksityiskohtainenaikataulu_toimenpide",
-  ypkya.kuvaus                     AS "yksityiskohtainenaikataulu_kuvaus",
-  ypkya.alku                       AS "yksityiskohtainenaikataulu_alku",
-  ypkya.loppu                      AS "yksityiskohtainenaikataulu_loppu",
-  ypkya.urakka                     AS "yksityiskohtainenaikataulu_urakka-id",
+  ypkya.id                         AS "tarkkaaikataulu_id",
+  ypkya.toimenpide                 AS "tarkkaaikataulu_toimenpide",
+  ypkya.kuvaus                     AS "tarkkaaikataulu_kuvaus",
+  ypkya.alku                       AS "tarkkaaikataulu_alku",
+  ypkya.loppu                      AS "tarkkaaikataulu_loppu",
+  ypkya.urakka                     AS "tarkkaaikataulu_urakka-id",
   ypk.tr_numero                    AS "tr-numero",
   ypk.tr_alkuosa                   AS "tr-alkuosa",
   ypk.tr_alkuetaisyys              AS "tr-alkuetaisyys",
@@ -549,8 +549,8 @@ SELECT
   tti.id                           AS "tietyoilmoitus-id"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN yllapitokohteen_yksityiskohtainen_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
-                                                                 AND ypkya.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_tarkka_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
+                                                      AND ypkya.poistettu IS NOT TRUE
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
 WHERE
   ypk.urakka = :urakka
@@ -578,12 +578,12 @@ SELECT
   ypka.muokattu             AS "aikataulu-muokattu",
   ypka.muokkaaja            AS "aikataulu-muokkaaja",
   ypka.valmis_tiemerkintaan AS "valmis-tiemerkintaan",
-  ypkya.id                  AS "yksityiskohtainenaikataulu_id",
-  ypkya.toimenpide          AS "yksityiskohtainenaikataulu_toimenpide",
-  ypkya.kuvaus              AS "yksityiskohtainenaikataulu_kuvaus",
-  ypkya.alku                AS "yksityiskohtainenaikataulu_alku",
-  ypkya.loppu               AS "yksityiskohtainenaikataulu_loppu",
-  ypkya.urakka              AS "yksityiskohtainenaikataulu_urakka-id",
+  ypkya.id                  AS "tarkkaaikataulu_id",
+  ypkya.toimenpide          AS "tarkkaaikataulu_toimenpide",
+  ypkya.kuvaus              AS "tarkkaaikataulu_kuvaus",
+  ypkya.alku                AS "tarkkaaikataulu_alku",
+  ypkya.loppu               AS "tarkkaaikataulu_loppu",
+  ypkya.urakka              AS "tarkkaaikataulu_urakka-id",
   ypk.tr_numero             AS "tr-numero",
   ypk.tr_alkuosa            AS "tr-alkuosa",
   ypk.tr_alkuetaisyys       AS "tr-alkuetaisyys",
@@ -596,8 +596,8 @@ SELECT
   paallystysurakka.nimi     AS paallystysurakka
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-  LEFT JOIN yllapitokohteen_yksityiskohtainen_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
-                                                                 AND ypkya.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_tarkka_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
+                                                      AND ypkya.poistettu IS NOT TRUE
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
   LEFT JOIN urakka paallystysurakka ON ypk.urakka = paallystysurakka.id
 WHERE
@@ -767,8 +767,8 @@ WHERE yllapitokohde = :id
            FROM yllapitokohde
            WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
--- name: paivita-yllapitokohteen-yksityiskohtainen-aikataulu!
-UPDATE yllapitokohteen_yksityiskohtainen_aikataulu
+-- name: paivita-yllapitokohteen-tarkka-aikataulu!
+UPDATE yllapitokohteen_tarkka_aikataulu
 SET
   toimenpide = :toimenpide :: YLLAPITOKOHTEEN_AIKATAULU_TOIMENPIDE,
   kuvaus     = :kuvaus,
@@ -781,13 +781,13 @@ WHERE id = :id
       AND yllapitokohde = :yllapitokohde
       AND urakka = :urakka;
 
--- name: lisaa-yllapitokohteen-yksityiskohtainen-aikataulu!
+-- name: lisaa-yllapitokohteen-tarkka-aikataulu!
 -- Tallentaa ylläpitokohteen yksityiskohtaisen aikataulun
-INSERT INTO yllapitokohteen_yksityiskohtainen_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu)
+INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu)
 VALUES
   (:yllapitokohde, :urakka, :toimenpide :: YLLAPITOKOHTEEN_AIKATAULU_TOIMENPIDE, :kuvaus, :alku, :loppu, :luoja, NOW());
 
--- name: hae-yllapitokohteen-yksityiskohtainen-aikataulu
+-- name: hae-yllapitokohteen-tarkka-aikataulu
 SELECT
   id         AS "id",
   toimenpide AS "toimenpide",
@@ -795,7 +795,7 @@ SELECT
   alku       AS "alku",
   loppu      AS "loppu",
   urakka     AS "urakka-id"
-FROM yllapitokohteen_yksityiskohtainen_aikataulu ypkya
+FROM yllapitokohteen_tarkka_aikataulu ypkya
 WHERE yllapitokohde = :yllapitokohde
       AND poistettu IS NOT TRUE;
 

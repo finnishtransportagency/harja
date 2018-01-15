@@ -84,12 +84,12 @@
                                          db (:id %) (:suorittava-tiemerkintaurakka %)))))
         aikataulu (konv/sarakkeet-vektoriin
                     aikataulu
-                    {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})
+                    {:tarkkaaikataulu :tarkka-aikataulu})
         aikataulu (map (fn [rivi]
-                         (assoc rivi :yksityiskohtainen-aikataulu
+                         (assoc rivi :tarkka-aikataulu
                                      (map (fn [tarkka-aikataulu]
                                             (konv/string->keyword tarkka-aikataulu :toimenpide))
-                                          (:yksityiskohtainen-aikataulu rivi))))
+                                          (:tarkka-aikataulu rivi))))
                        aikataulu)]
     aikataulu))
 
@@ -99,12 +99,12 @@
                        (map konv/alaviiva->rakenne))
         aikataulu (konv/sarakkeet-vektoriin
                     aikataulu
-                    {:yksityiskohtainenaikataulu :yksityiskohtainen-aikataulu})
+                    {:tarkkaaikataulu :tarkka-aikataulu})
         aikataulu (map (fn [rivi]
-                         (assoc rivi :yksityiskohtainen-aikataulu
+                         (assoc rivi :tarkka-aikataulu
                                      (map (fn [tarkka-aikataulu]
                                             (konv/string->keyword tarkka-aikataulu :toimenpide))
-                                          (:yksityiskohtainen-aikataulu rivi))))
+                                          (:tarkka-aikataulu rivi))))
                        aikataulu)]
     aikataulu))
 
@@ -283,7 +283,7 @@
                                    :sopimus-id sopimus-id
                                    :vuosi vuosi})))
 
-(defn tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
+(defn tallenna-yllapitokohteiden-tarkka-aikataulu
   [db user {:keys [urakka-id yllapitokohde-id aikataulurivit] :as tiedot}]
   (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
@@ -295,7 +295,7 @@
   (jdbc/with-db-transaction [db db]
     (doseq [rivi aikataulurivit]
       (if (id/id-olemassa? (:id rivi))
-        (q/paivita-yllapitokohteen-yksityiskohtainen-aikataulu!
+        (q/paivita-yllapitokohteen-tarkka-aikataulu!
           db
           {:toimenpide (name (:toimenpide rivi))
            :kuvaus (:kuvaus rivi)
@@ -306,7 +306,7 @@
            :id (:id rivi)
            :yllapitokohde yllapitokohde-id
            :urakka urakka-id})
-        (q/lisaa-yllapitokohteen-yksityiskohtainen-aikataulu!
+        (q/lisaa-yllapitokohteen-tarkka-aikataulu!
           db
           {:urakka urakka-id
            :yllapitokohde yllapitokohde-id
@@ -317,7 +317,7 @@
            :luoja (:id user)}))))
 
   (log/debug "Aikataulutiedot tallennettu!")
-  (->> (q/hae-yllapitokohteen-yksityiskohtainen-aikataulu
+  (->> (q/hae-yllapitokohteen-tarkka-aikataulu
          db {:yllapitokohde yllapitokohde-id})
        (map #(konv/string->keyword % :toimenpide))))
 
@@ -575,9 +575,9 @@
       (julkaise-palvelu http :tallenna-yllapitokohteiden-aikataulu
                         (fn [user tiedot]
                           (tallenna-yllapitokohteiden-aikataulu db fim email user tiedot)))
-      (julkaise-palvelu http :tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
+      (julkaise-palvelu http :tallenna-yllapitokohteiden-tarkka-aikataulu
                         (fn [user tiedot]
-                          (tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu db user tiedot)))
+                          (tallenna-yllapitokohteiden-tarkka-aikataulu db user tiedot)))
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))

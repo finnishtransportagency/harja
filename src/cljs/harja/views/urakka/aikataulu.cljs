@@ -25,7 +25,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
-            [harja.views.urakka.yksityiskohtainen-aikataulu :as yksityiskohtainen-aikataulu]
+            [harja.views.urakka.tarkka-aikataulu :as tarkka-aikataulu]
             [harja.ui.aikajana :as aikajana]
             [harja.domain.aikataulu :as aikataulu]
             [harja.ui.upotettu-raportti :as upotettu-raportti]
@@ -264,7 +264,7 @@
            :vetolaatikot (into {}
                                (map (juxt :id
                                           (fn [rivi]
-                                            [yksityiskohtainen-aikataulu/yksityiskohtainen-aikataulu
+                                            [tarkka-aikataulu/tarkka-aikataulu
                                              {:rivi rivi
                                               :vuosi vuosi
                                               :voi-muokata-paallystys? voi-muokata-paallystys?

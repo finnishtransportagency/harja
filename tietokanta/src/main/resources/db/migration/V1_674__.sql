@@ -1,7 +1,7 @@
 -- Luo taulu ylläpitokohteen yksityiskohtaiselle aikataululle
 CREATE TYPE yllapitokohteen_aikataulu_toimenpide AS ENUM ('ojankaivuu', 'rp_tyot', 'rumpujen_vaihto', 'muu');
 
-CREATE TABLE yllapitokohteen_yksityiskohtainen_aikataulu (
+CREATE TABLE yllapitokohteen_tarkka_aikataulu (
   id SERIAL PRIMARY KEY,
   yllapitokohde INTEGER REFERENCES yllapitokohde(id) NOT NULL,
   urakka INTEGER REFERENCES urakka(id) NOT NULL, -- Urakka, jota aikataulu koskee (päällystys/tiemerkintä)

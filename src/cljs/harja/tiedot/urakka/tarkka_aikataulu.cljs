@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.yksityiskohtainen-aikataulu
+(ns harja.tiedot.urakka.tarkka-aikataulu
   "Ylläpidon urakoiden yksityiskohtainen aikataulu"
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt]]
@@ -9,7 +9,7 @@
 
 (defn tallenna-aikataulu [{:keys [rivit urakka-id yllapitokohde-id onnistui-fn epaonnistui-fn]}]
   (go
-    (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-yksityiskohtainen-aikataulu
+    (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-tarkka-aikataulu
                                {:urakka-id urakka-id
                                 :yllapitokohde-id yllapitokohde-id
                                 :aikataulurivit rivit}))]
