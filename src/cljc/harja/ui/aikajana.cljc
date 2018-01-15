@@ -152,10 +152,6 @@
           :hide-tooltip! #(reset! tooltip nil)
 
           :drag @drag
-          :drag-stop! #(when-let [d @drag]
-                         (go
-                           (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
-                           (reset! drag nil)))
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
                          (reset! drag
@@ -187,6 +183,10 @@
                                                         (pvm/jalkeen? paiva (::alku drag))))
                                              (assoc drag avain (x->paiva x))
                                              drag)))))))))
+          :drag-stop! #(when-let [d @drag]
+                         (go
+                           (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
+                           (reset! drag nil)))
           :leveys (* 0.95 @dom/leveys)}]])))
 
 #?(:clj
