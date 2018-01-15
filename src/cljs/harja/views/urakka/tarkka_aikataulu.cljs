@@ -63,7 +63,7 @@
   (let [tarkka-aikataulu (:tarkka-aikataulu rivi)]
     [:div
      [kohteen-aikataulutaulukko
-      {:otsikko "Kohteen päällystysurakan yksityiskohtainen aikataulu"
+      {:otsikko "Kohteen päällystysurakan tarkka aikataulu"
        :yllapitokohde-id (:id rivi)
        :aikataulurivit (filter #(or (and (= nakyma :paallystys) (= (:urakka-id %) urakka-id))
                                     (and (not= nakyma :paallystys) (not= (:urakka-id %) urakka-id)))
@@ -73,7 +73,7 @@
        :nakyma nakyma
        :urakka-id urakka-id}]
      [kohteen-aikataulutaulukko
-      {:otsikko "Kohteen tiemerkintäurakan yksityiskohtainen aikataulu"
+      {:otsikko "Kohteen tiemerkintäurakan tarkka aikataulu"
        :yllapitokohde-id (:id rivi)
        :aikataulurivit (filter #(or (and (= nakyma :tiemerkinta) (= (:urakka-id %) urakka-id))
                                     (and (not= nakyma :tiemerkinta) (not= (:urakka-id %) urakka-id)))
