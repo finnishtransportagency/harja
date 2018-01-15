@@ -130,16 +130,21 @@
               :stroke "gray"}]])])
 
 (defn- tooltip* [{:keys [x y text] :as tooltip}]
-  (when tooltip
-    [:g
-     [:rect {:x (- x 110) :y (- y 14) :width 220 :height 26
-             :rx 10 :ry 10
-             :style {:fill "black"}}]
-     [:text {:x x :y (+ y 4)
-             :font-size 10
-             :style {:fill "white"}
-             :text-anchor "middle"}
-      text]]))
+  (let [kirjaimen-leveys 5.3 ; Riittävän lähellä totuutta oleva vakio, jotta saadaan leveys sopivaksi
+        leveys (* (count text) kirjaimen-leveys)]
+    (when tooltip
+      [:g
+       [:rect {:x (- x (/ leveys 2))
+               :y (- y 14)
+               :width (* (count text) kirjaimen-leveys)
+               :height 26
+               :rx 10 :ry 10
+               :style {:fill "black"}}]
+       [:text {:x x :y (+ y 4)
+               :font-size 10
+               :style {:fill "white"}
+               :text-anchor "middle"}
+        text]])))
 
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
