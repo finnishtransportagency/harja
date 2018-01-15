@@ -15,19 +15,23 @@
             [taoensso.timbre :as log]
             [clojure.set :as set]))
 
+(defn hae-toimenpiteen-hinnat [db toimenpide-id]
+  (fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id toimenpide-id
+                                                                         ::muokkaustiedot/poistettu? false}))
+
+(defn hae-toimenpiteen-tyot [db toimenpide-id]
+  (fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id toimenpide-id
+                                                    ::muokkaustiedot/poistettu? false}))
+
 (defn hae-kanavatoimenpiteet-specql [db hakuehdot]
   (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
-        tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %
-                                                                                          ::muokkaustiedot/poistettu? false})
-        tp-tyot #(fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id %
-                                                                   ::muokkaustiedot/poistettu? false})
         kommentit #(fetch db ::kommentti/toimenpiteen-kommentti
                           (set/union kommentti/perustiedot kommentti/kayttajan-tiedot)
                           {::kommentti/toimenpide-id %})]
     (for [tp toimenpiteet
           :let [tp-id (::toimenpide/id tp)]]
-      (merge tp {::toimenpide/hinnat (tp-hinnat tp-id)
-                 ::toimenpide/tyot (tp-tyot tp-id)
+      (merge tp {::toimenpide/hinnat (hae-toimenpiteen-hinnat db tp-id)
+                 ::toimenpide/tyot (hae-toimenpiteen-tyot db tp-id)
                  ::toimenpide/kommentit (kommentit tp-id)}))))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
