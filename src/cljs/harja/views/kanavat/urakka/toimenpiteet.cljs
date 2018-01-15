@@ -139,47 +139,47 @@
       :pakollinen? true}
      (lomake/ryhma
        {:otsikko "Sijainti tai kohde"}
-       (when (nil? (::kanavan-toimenpide/kohde toimenpide))
-         {:nimi ::kanavan-toimenpide/sijainti
-          :otsikko "Sijainti"
-          :uusi-rivi? true
-          :tyyppi :sijaintivalitsin
-          ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
-          ;; haun aikana
-          :paikannus-kaynnissa?-atom (r/wrap (:paikannus-kaynnissa? toimenpide)
-                                             (fn [_]
-                                               (paikannus-kaynnissa-fn)))
-          :poista-valinta? true
-          :karttavalinta-tehty-fn :kayta-lomakkeen-atomia})
-       (when (and (nil? (::kanavan-toimenpide/sijainti toimenpide))
-                 (not (:paikannus-kaynnissa? toimenpide)))
-         {:otsikko "Kohde"
-          :nimi ::kanavan-toimenpide/kohde
+       {:nimi ::kanavan-toimenpide/sijainti
+        :otsikko "Sijainti"
+        :uusi-rivi? true
+        :tyyppi :sijaintivalitsin
+        :disabled? (not (nil? (::kanavan-toimenpide/kohde toimenpide)))
+        ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
+        ;; haun aikana
+        :paikannus-kaynnissa?-atom (r/wrap (:paikannus-kaynnissa? toimenpide)
+                                           (fn [_]
+                                             (paikannus-kaynnissa-fn)))
+        :poista-valinta? true
+        :karttavalinta-tehty-fn :kayta-lomakkeen-atomia}
+       {:otsikko "Kohde"
+        :nimi ::kanavan-toimenpide/kohde
+        :tyyppi :valinta
+        :disabled? (or (not (nil? (::kanavan-toimenpide/sijainti toimenpide)))
+                       (:paikannus-kaynnissa? toimenpide))
+        :aseta (fn [rivi arvo]
+                 (if (nil? arvo)
+                   (-> rivi
+                       (assoc ::kanavan-toimenpide/kohteenosa nil)
+                       (assoc ::kanavan-toimenpide/huoltokohde nil)
+                       (assoc ::kanavan-toimenpide/kohde arvo))
+                   (assoc rivi ::kanavan-toimenpide/kohde arvo)))
+        :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
+        :valinnat kohteet})
+     (when (::kanavan-toimenpide/kohde toimenpide)
+       (lomake/rivi
+         {:otsikko "Kohteen osa"
+          :nimi ::kanavan-toimenpide/kohteenosa
           :tyyppi :valinta
-          :aseta (fn [rivi arvo]
-                   (if (nil? arvo)
-                     (-> rivi
-                         (assoc ::kanavan-toimenpide/kohteenosa nil)
-                         (assoc ::kanavan-toimenpide/huoltokohde nil)
-                         (assoc ::kanavan-toimenpide/kohde arvo))
-                     (assoc rivi ::kanavan-toimenpide/kohde arvo)))
-          :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
-          :valinnat kohteet}))
-     (when (::kanavan-toimenpide/kohde toimenpide)
-       {:otsikko "Kohteen osa"
-        :nimi ::kanavan-toimenpide/kohteenosa
-        :tyyppi :valinta
-        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohdeosaa")
-        :valinnat (or valitun-kohteen-osat [])})
-     (when (::kanavan-toimenpide/kohde toimenpide)
-       {:otsikko "Huoltokohde"
-        :nimi ::kanavan-toimenpide/huoltokohde
-        :tyyppi :valinta
-        :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
-                              nimi)
-                            "- Valitse huoltokohde -")
-        :valinnat (sort-by ::kanavan-huoltokohde/nimi huoltokohteet)
-        :pakollinen? true})
+          :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohdeosaa")
+          :valinnat (or valitun-kohteen-osat [])}
+         {:otsikko "Huoltokohde"
+          :nimi ::kanavan-toimenpide/huoltokohde
+          :tyyppi :valinta
+          :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
+                                nimi)
+                              "- Valitse huoltokohde -")
+          :valinnat (sort-by ::kanavan-huoltokohde/nimi huoltokohteet)
+          :pakollinen? true}))
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
