@@ -25,6 +25,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
+            [harja.views.urakka.tarkka-aikataulu :as tarkka-aikataulu]
             [harja.ui.aikajana :as aikajana]
             [harja.domain.aikataulu :as aikataulu]
             [harja.ui.upotettu-raportti :as upotettu-raportti]
@@ -167,14 +168,6 @@
      [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
      [valinnat/tienumero yllapito-tiedot/tienumero]
 
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Aikajana"
-       :kentta-params {:tyyppi :toggle
-                       :paalle-teksti "Näytä aikajana"
-                       :pois-teksti "Piilota aikajana"
-                       :toggle! tiedot/toggle-nayta-aikajana!}
-       :arvo-atom tiedot/nayta-aikajana?}]
-
      [yleiset/pudotusvalikko
       "Järjestä kohteet"
       {:valinta jarjestys
@@ -184,8 +177,25 @@
                    :tr "Tieosoitteen mukaan"}}
       [:aika :kohdenumero :tr]]
 
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Aikajana"
+       :luokka "label-ja-kentta-puolikas"
+       :kentta-params {:tyyppi :toggle
+                       :paalle-teksti "Näytä aikajana"
+                       :pois-teksti "Piilota aikajana"
+                       :toggle! tiedot/toggle-nayta-aikajana!}
+       :arvo-atom tiedot/nayta-aikajana?}]
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Aikajanan asetukset"
+       :luokka "label-ja-kentta-puolikas"
+       :kentta-params {:tyyppi :checkbox
+                       :teksti "Näytä tarkka aikataulu"}
+       :arvo-atom tiedot/nayta-tarkka-aikajana?}]
+
      [upotettu-raportti/raportin-vientimuodot
-      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu {:jarjestys jarjestys})]]))
+      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu
+                                          {:jarjestys jarjestys
+                                           :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})]]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
@@ -202,7 +212,7 @@
     (fn [urakka optiot]
       (let [{urakka-id :id :as ur} @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)
-            aikataulurivit @tiedot/aikataulurivit-suodatettu
+            aikataulurivit @tiedot/aikataulurivit-suodatettu-jarjestetty
             urakkatyyppi (:tyyppi urakka)
             vuosi @u/valittu-urakan-vuosi
             {:keys [voi-tallentaa? saa-muokata?
@@ -214,14 +224,12 @@
                                           (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
                                         aikataulurivit)
 
-            voi-muokata-paallystys? #(and (= (:nakyma optiot) :paallystys)
-                                          saa-muokata?)
-            voi-muokata-tiemerkinta? #(and (= (:nakyma optiot) :tiemerkinta)
-                                           saa-merkita-valmiiksi?
-                                           (:valmis-tiemerkintaan %))
-            aikajana? (:nayta-aikajana? @tiedot/valinnat)
-            yllapito-pvm-fmt (fn [arvo]
-                               (pvm/pvm-opt arvo {:nayta-vuosi-fn #(not= (pvm/vuosi %) vuosi)}))]
+            voi-muokata-paallystys? #(boolean (and (= (:nakyma optiot) :paallystys)
+                                                   saa-muokata?))
+            voi-muokata-tiemerkinta? (fn [rivi] (boolean (and (= (:nakyma optiot) :tiemerkinta)
+                                                              saa-merkita-valmiiksi?
+                                                              (:valmis-tiemerkintaan rivi))))
+            aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
          (when aikajana?
@@ -230,13 +238,15 @@
                         (tallenna-aikataulu
                           urakka-id sopimus-id vuosi
                           (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
-                        ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla
-                        ;; , joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
+                        ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
+                        ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
                         ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
-                        ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu saamaan sivuvaikutus (virheviestin näyttäminen)
+                        ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
                         ;; eikä niinkään paluuarvosta.
                         (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-            (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
+            (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
+                                                   :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                                   :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
                  aikataulurivit)])
          [grid/grid
           {:otsikko [:span
@@ -250,8 +260,20 @@
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
                        #(tallenna-aikataulu urakka-id sopimus-id vuosi %)
-                       :ei-mahdollinen)}
-          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+                       :ei-mahdollinen)
+           :vetolaatikot (into {}
+                               (map (juxt :id
+                                          (fn [rivi]
+                                            [tarkka-aikataulu/tarkka-aikataulu
+                                             {:rivi rivi
+                                              :vuosi vuosi
+                                              :nakyma (:nakyma optiot)
+                                              :voi-muokata-paallystys? (voi-muokata-paallystys?)
+                                              :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
+                                              :urakka-id urakka-id}]))
+                                    aikataulurivit))}
+          [{:tyyppi :vetolaatikon-tila :leveys 2}
+           {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? voi-muokata-paallystys?}
            {:otsikko "Koh\u00ADteen nimi" :leveys 9 :nimi :nimi :tyyppi :string :pituus-max 128
             :muokattava? voi-muokata-paallystys?}
@@ -293,15 +315,15 @@
             :muokattava? (constantly false)}
            (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
              {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
-              :tyyppi :pvm :fmt yllapito-pvm-fmt
+              :tyyppi :pvm :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
               :muokattava? voi-muokata-paallystys?})
            {:otsikko "Pääl\u00ADlystyk\u00ADsen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-alku
-            :tyyppi :pvm :fmt yllapito-pvm-fmt
+            :tyyppi :pvm :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
             :muokattava? voi-muokata-paallystys?
             :pvm-tyhjana #(:aikataulu-kohde-alku %)
             :validoi (paallystys-aloitettu-validointi optiot)}
            {:otsikko "Pääl\u00ADlystyk\u00ADsen lope\u00ADtus" :leveys 8 :nimi :aikataulu-paallystys-loppu
-            :tyyppi :pvm :fmt yllapito-pvm-fmt
+            :tyyppi :pvm :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
             :pvm-tyhjana #(:aikataulu-paallystys-alku %)
             :muokattava? voi-muokata-paallystys?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-paallystys-alku
@@ -352,7 +374,7 @@
                              :ikoni (ikonit/user)
                              :luokka "btn-xs"}])}
            {:otsikko "Val\u00ADmis tie\u00ADmerkin\u00ADtään" :leveys 10
-            :fmt yllapito-pvm-fmt
+            :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :nimi :valmis-tiemerkintaan :tyyppi :komponentti :muokattava? (constantly saa-muokata?)
             :komponentti (fn [rivi {:keys [muokataan?]}]
@@ -368,11 +390,11 @@
                              ;; Jos ei olla päällystyksessä, read only
                              (if-not (= (:nakyma optiot) :paallystys)
                                (if (:valmis-tiemerkintaan rivi)
-                                 [:span (yllapito-pvm-fmt (:valmis-tiemerkintaan rivi))]
+                                 [:span (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi) vuosi)]
                                  [:span "Ei"])
                                ;; Jos päällystyksessä, sopivilla oikeuksilla saa asettaa tai perua valmiuden
                                (if muokataan?
-                                 [:div (yllapito-pvm-fmt (:valmis-tiemerkintaan rivi))]
+                                 [:div (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi) vuosi)]
                                  [:div {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
                                                      (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
                                                      :default nil)}
@@ -396,19 +418,19 @@
            {:otsikko "Tie\u00ADmerkin\u00ADtä val\u00ADmis vii\u00ADmeis\u00ADtään"
             :leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :tyyppi :pvm
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
-            :fmt yllapito-pvm-fmt
+            :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
             :muokattava? (fn [rivi]
                            (and saa-asettaa-valmis-takarajan?
                                 (:valmis-tiemerkintaan rivi)))}
            {:otsikko "Tiemer\u00ADkinnän aloi\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
-            :fmt yllapito-pvm-fmt
+            :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
             :muokattava? voi-muokata-tiemerkinta?}
            {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus"
             :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
             :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
-            :fmt yllapito-pvm-fmt
+            :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
             :muokattava? voi-muokata-tiemerkinta?
             :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                        "Tiemerkintää ei ole merkitty aloitetuksi."]
@@ -417,7 +439,7 @@
                       [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
                        "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
            {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
-            :fmt yllapito-pvm-fmt
+            :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
             :muokattava? voi-muokata-paallystys?
             :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
             :validoi [[:pvm-kentan-jalkeen :aikataulu-kohde-alku
