@@ -23,7 +23,9 @@
 
             [harja.domain.urakka :as ur]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.valinnat :as valinnat])
+            [harja.ui.valinnat :as valinnat]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
+            [clojure.string :as str])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -149,15 +151,21 @@
                :rivi-klikattu #(e! (tiedot/->ValitseKohde %))}
               [{:otsikko "Kohde"
                 :nimi ::kohde/nimi
-                :leveys 5}
+                :leveys 3}
+               {:otsikko "Kohteenosat"
+                :tyyppi :string
+                :nimi :kohteenosat
+                :leveys 6
+                :hae (fn [kohde]
+                       (str/join ", " (map kohteenosa/fmt-kohdeosa (::kohde/kohteenosat kohde))))}
                (if-not valittu-urakka
                  {:otsikko "Urakat"
                   :tyyppi :string
                   :nimi :kohteen-urakat
-                  :leveys 6
+                  :leveys 12
                   :hae tiedot/kohteen-urakat}
                  {:otsikko (str "Kuuluu urakkaan " (:harja.domain.urakka/nimi valittu-urakka) "?")
-                  :leveys 6
+                  :leveys 12
                   :tyyppi :komponentti
                   :tasaa :keskita
                   :nimi :valinta
