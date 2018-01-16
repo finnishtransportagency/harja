@@ -267,13 +267,20 @@
                                    :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                    :vuosi 2017})
         leppajarven-ramppi (kohde-nimella aikataulu "Leppäjärven ramppi")
+        oulun-ramppi (kohde-nimella aikataulu "Oulun ohitusramppi")
         muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
+
+    (is leppajarven-ramppi)
+    (is oulun-ramppi)
+
     (is (= (count urakan-yllapitokohteet) (count aikataulu))
         "Jokaiselle kohteelle saatiin haettua aikataulu")
     (is (false? (:tiemerkintaurakan-voi-vaihtaa? leppajarven-ramppi))
         "Leppäjärven rampilla on kirjauksia, ei saa vaihtaa suorittavaa tiemerkintäurakkaa")
     (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
-        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")))
+        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
+    (is (= (count (:tarkka-aikataulu oulun-ramppi)) 2)
+        "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
   (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -546,6 +553,59 @@
     ;; Tiemerkinnän aikatauluun ei koskettu
     (is (= (pvm/->pvm "22.5.2017") (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
     (is (= (pvm/->pvm "23.5.2017") (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        aikataulu-toimenpide :ojankaivuu
+        aikataulu-kuvaus "Kaivetaan iso monttu!"
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-yllapitokohteiden-tarkka-aikataulu
+                                +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :yllapitokohde-id yllapitokohde-id
+                                 :aikataulurivit [{:toimenpide aikataulu-toimenpide
+                                                   :kuvaus aikataulu-kuvaus
+                                                   :alku (pvm/->pvm "15.4.2017")
+                                                   :loppu (pvm/->pvm "15.4.2017")}]})]
+
+
+    ;; Vastauksena päivitetty tarkka aikataulu
+    (is (= (count vastaus) 1))
+    (let [aikataulurivi (first vastaus)]
+      (is (= (:toimenpide aikataulurivi) aikataulu-toimenpide))
+      (is (= (:kuvaus aikataulurivi) aikataulu-kuvaus)))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-yllapitokohteiden-tarkka-aikataulu
+                               +kayttaja-tero+
+                               {:urakka-id 4
+                                :yllapitokohde-id 1
+                                :aikataulurivit []}))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu-vaaraan-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-yllapitokohteiden-tarkka-aikataulu
+                                 +kayttaja-jvh+
+                                 {:urakka-id urakka-id
+                                  :yllapitokohde-id yllapitokohde-id
+                                  :aikataulurivit []}))))
+
+  ;; Leppäjärven suorittavan tiemerkintäurakan aikataulua saapi muokata
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+    (is (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tallenna-yllapitokohteiden-tarkka-aikataulu
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :yllapitokohde-id yllapitokohde-id
+                         :aikataulurivit []}))))
 
 (deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1007,7 +1067,8 @@
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :yllapitokohteen-urakan-yhteyshenkilot
                                     +kayttaja-jvh+
-                                    {:yllapitokohde-id leppajarven-ramppi-id})]
+                                    {:yllapitokohde-id leppajarven-ramppi-id
+                                     :urakkatyyppi :paallystys})]
 
         (is (= vastaus
                {:fim-kayttajat [{:kayttajatunnus "A000001"
@@ -1075,4 +1136,5 @@
         (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :yllapitokohteen-urakan-yhteyshenkilot
                                                +kayttaja-ulle+
-                                               {:yllapitokohde-id leppajarven-ramppi-id})))))))
+                                               {:yllapitokohde-id leppajarven-ramppi-id
+                                                :urakkatyyppi :paallystys})))))))
