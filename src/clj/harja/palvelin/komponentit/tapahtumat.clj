@@ -48,6 +48,8 @@
       (.replace ">" "")))
 
 (defn- uusi-tietokantayhteys! [db ajossa connection kuuntelijat]
+  ;; Luotetaan siihen, että tätä ajaa vain yksi säie, start-funktion (thread (loop ... )) -blokki,
+  ;; joten tätä ei yritetä tehdä yhtä aikaa useasta suunnasta/säikeestä.
   (reset! ajossa false)
   (log/info "Uudelleenalustetaan tietokannan kuunteluyhteys")
   (try
