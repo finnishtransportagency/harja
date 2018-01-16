@@ -41,31 +41,31 @@
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
-                       (let [ajat (concat (keep ::alku ajat)
-                                          (keep ::loppu ajat))
-                             ajat-jarjestyksessa (sort pvm/ennen? ajat)
-                             aikaisin (first ajat-jarjestyksessa)
-                             myohaisin (last ajat-jarjestyksessa)]
-                         (when (and aikaisin myohaisin)
-                           [(t/minus aikaisin (t/days pad))
-                            (t/plus myohaisin (t/days pad))])))
+       (let [ajat (concat (keep ::alku ajat)
+                          (keep ::loppu ajat))
+             ajat-jarjestyksessa (sort pvm/ennen? ajat)
+             aikaisin (first ajat-jarjestyksessa)
+             myohaisin (last ajat-jarjestyksessa)]
+         (when (and aikaisin myohaisin)
+           [(t/minus aikaisin (t/days pad))
+            (t/plus myohaisin (t/days pad))])))
 
 (defn+ kuukaudet
-  "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
-    Palauttaa sekvenssin kuukausia {:alku alkupäivä :loppu loppupäivä :otsikko kk-formatoituna}."
-  [paivat ::paivat] any?
-  (reduce
-    (fn [kuukaudet paiva]
-      (let [viime-kk (last kuukaudet)]
-        (if (or (nil? viime-kk)
-                (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
-          (conj kuukaudet {:alku paiva
-                           :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
-                           :loppu paiva})
-          (update kuukaudet (dec (count kuukaudet))
-                  assoc :loppu paiva))))
-    []
-    paivat))
+       "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
+         Palauttaa sekvenssin kuukausia {:alku alkupäivä :loppu loppupäivä :otsikko kk-formatoituna}."
+       [paivat ::paivat] any?
+       (reduce
+         (fn [kuukaudet paiva]
+           (let [viime-kk (last kuukaudet)]
+             (if (or (nil? viime-kk)
+                     (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
+               (conj kuukaudet {:alku paiva
+                                :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
+                                :loppu paiva})
+               (update kuukaudet (dec (count kuukaudet))
+                       assoc :loppu paiva))))
+         []
+         paivat))
 
 (defn- paivat-ja-viikot
   "Näyttää pystyviivan jokaisen päivän kohdalla ja viikon vaihtuessa maanantain
@@ -130,16 +130,23 @@
               :stroke "gray"}]])])
 
 (defn- tooltip* [{:keys [x y text] :as tooltip}]
-  (when tooltip
-    [:g
-     [:rect {:x (- x 110) :y (- y 14) :width 220 :height 26
-             :rx 10 :ry 10
-             :style {:fill "black"}}]
-     [:text {:x x :y (+ y 4)
-             :font-size 10
-             :style {:fill "white"}
-             :text-anchor "middle"}
-      text]]))
+  ;; Lasketaan laatikon tarvitsema leveys kirjainten leveyden mukaan -> päästään noin suurin piirtein oikeaan tulokseen
+  ;; Toinen, tarkempi tapa, olisi renderöidä teksti ensin näkymättömänä ja ottaa piirretyn elementin todellinen leveys.
+  (let [kirjaimen-leveys 5.3
+        leveys (* (count text) kirjaimen-leveys)]
+    (when tooltip
+      [:g
+       [:rect {:x (- x (/ leveys 2))
+               :y (- y 14)
+               :width (* (count text) kirjaimen-leveys)
+               :height 26
+               :rx 10 :ry 10
+               :style {:fill "black"}}]
+       [:text {:x x :y (+ y 4)
+               :font-size 10
+               :style {:fill "white"}
+               :text-anchor "middle"}
+        text]])))
 
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
