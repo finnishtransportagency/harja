@@ -21,8 +21,12 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (deftest kuuntelu-perustapaus []
-  (let [saatiin (atom false)]
-    (sut/kuuntele! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" (fn kuuntele-callback [viesti] (reset! saatiin true) (println "viesti saatu:" viesti)))
-    (sut/julkaise! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" "foo")
-    (Thread/sleep 1500)
-    (is (= @saatiin true))))
+  (let [saatiin (atom nil)]
+    (testing "Perustapaus" (sut/kuuntele! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" (fn kuuntele-callback [viesti] (reset! saatiin true) (println "viesti saatu:" viesti)))
+             (sut/julkaise! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" "foo")
+             (is (odota-arvo saatiin)))
+    (testing "Toipuminen kantayhteyden katkosta"
+      (reset! saatiin nil)
+      (pudota-ja-luo-testitietokanta-templatesta)
+      (sut/julkaise! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" "foo")
+      (is (odota-arvo saatiin)))))
