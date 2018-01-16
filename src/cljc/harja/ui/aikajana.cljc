@@ -327,6 +327,7 @@
                          ;; Piirä yksittäinen aikajana
                          (when (pos? jana-leveys)
                            [:g [:rect {:x x :y y
+                                       :style {:cursor "move"}
                                        :width jana-leveys
                                        :height korkeus
                                        :fill (or vari "white")
