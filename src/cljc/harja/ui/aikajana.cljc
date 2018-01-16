@@ -38,34 +38,36 @@
 
 (s/def ::paivat (s/every ::date))
 
+(s/def ::drag vector?) ;; [id :kohde], missä jälkimmäinen: :kohde, :paallystys, :tiemerkinta
+
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
-                       (let [ajat (concat (keep ::alku ajat)
-                                          (keep ::loppu ajat))
-                             ajat-jarjestyksessa (sort pvm/ennen? ajat)
-                             aikaisin (first ajat-jarjestyksessa)
-                             myohaisin (last ajat-jarjestyksessa)]
-                         (when (and aikaisin myohaisin)
-                           [(t/minus aikaisin (t/days pad))
-                            (t/plus myohaisin (t/days pad))])))
+       (let [ajat (concat (keep ::alku ajat)
+                          (keep ::loppu ajat))
+             ajat-jarjestyksessa (sort pvm/ennen? ajat)
+             aikaisin (first ajat-jarjestyksessa)
+             myohaisin (last ajat-jarjestyksessa)]
+         (when (and aikaisin myohaisin)
+           [(t/minus aikaisin (t/days pad))
+            (t/plus myohaisin (t/days pad))])))
 
 (defn+ kuukaudet
-  "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
-    Palauttaa sekvenssin kuukausia {:alku alkupäivä :loppu loppupäivä :otsikko kk-formatoituna}."
-  [paivat ::paivat] any?
-  (reduce
-    (fn [kuukaudet paiva]
-      (let [viime-kk (last kuukaudet)]
-        (if (or (nil? viime-kk)
-                (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
-          (conj kuukaudet {:alku paiva
-                           :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
-                           :loppu paiva})
-          (update kuukaudet (dec (count kuukaudet))
-                  assoc :loppu paiva))))
-    []
-    paivat))
+       "Ottaa sekvenssin järjestyksessä olevia päiviä ja palauttaa ne kuukausiin jaettuna.
+         Palauttaa sekvenssin kuukausia {:alku alkupäivä :loppu loppupäivä :otsikko kk-formatoituna}."
+       [paivat ::paivat] any?
+       (reduce
+         (fn [kuukaudet paiva]
+           (let [viime-kk (last kuukaudet)]
+             (if (or (nil? viime-kk)
+                     (not (pvm/sama-kuukausi? (:alku viime-kk) paiva)))
+               (conj kuukaudet {:alku paiva
+                                :otsikko (pvm/koko-kuukausi-ja-vuosi paiva)
+                                :loppu paiva})
+               (update kuukaudet (dec (count kuukaudet))
+                       assoc :loppu paiva))))
+         []
+         paivat))
 
 (defn- paivat-ja-viikot
   "Näyttää pystyviivan jokaisen päivän kohdalla ja viikon vaihtuessa maanantain
@@ -144,13 +146,14 @@
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
-                  drag (r/atom nil)]
+                  move (r/atom nil) ;; Move tarkoittaa koko palkin siirtämistä (alku ja loppu kasvaa tai vähenee saman verran)
+                  drag (r/atom nil)] ;; Drag tarkoittaa alun tai lopun venytystä
        [:div.aikajana
         [komponentti rivit optiot
          {:tooltip @tooltip
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
-
+          :move @move
           :drag @drag
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
@@ -326,20 +329,22 @@
                        (if alku-ja-loppu?
                          ;; Piirä yksittäinen aikajana
                          (when (pos? jana-leveys)
-                           [:g [:rect {:x x :y y
-                                       :style {:cursor "move"}
-                                       :width jana-leveys
-                                       :height korkeus
-                                       :fill (or vari "white")
-                                       ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                                       ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                                       :fill-opacity (if vari 1.0 0.0)
-                                       :stroke reuna
-                                       :rx 3 :ry 3
-                                       :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
-                                                                       :y (hover-y y)
-                                                                       :text teksti})
-                                       :on-mouse-out hide-tooltip!}]
+                           [:g [:rect (merge
+                                        (when voi-raahata?
+                                          {:style {:cursor "move"}})
+                                        {:x x :y y
+                                         :width jana-leveys
+                                         :height korkeus
+                                         :fill (or vari "white")
+                                         ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                                         ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                                         :fill-opacity (if vari 1.0 0.0)
+                                         :stroke reuna
+                                         :rx 3 :ry 3
+                                         :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
+                                                                         :y (hover-y y)
+                                                                         :text teksti})
+                                         :on-mouse-out hide-tooltip!})]
                             ;; kahvat draggaamiseen
                             (when voi-raahata?
                               [:rect {:x (- x 3) :y y :width 7 :height korkeus
