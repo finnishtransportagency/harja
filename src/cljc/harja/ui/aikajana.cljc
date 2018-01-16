@@ -154,6 +154,9 @@
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
           :move @move
+          :move-start! (fn [e jana]
+                         (.preventDefault e)
+                         (reset! move (select-keys jana #{::alku ::loppu ::drag})))
           :drag @drag
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
@@ -238,8 +241,9 @@
                :on-mouse-out hide-tooltip!}]])))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
+                                       move-start!
                                        drag drag-start! drag-move! drag-stop!
-                                       leveys]}]
+                                       leveys drag-start!]}]
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
         rivin-korkeus 20
@@ -312,8 +316,8 @@
                   (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
                           teksti ::teksti :as jana}]
                     (let [alku-ja-loppu? (and alku loppu)
-                          [alku loppu] (if (and drag (= (::drag drag)
-                                                        (::drag jana)))
+                          ;; Alku ja loppu otetaan raahauksesta, tai jos ei raahata niin janan tiedoista
+                          [alku loppu] (if (and drag (= (::drag drag) (::drag jana)))
                                          [(::alku drag) (::loppu drag)]
                                          [alku loppu])
                           ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
@@ -331,7 +335,8 @@
                          (when (pos? jana-leveys)
                            [:g [:rect (merge
                                         (when voi-raahata?
-                                          {:style {:cursor "move"}})
+                                          {:style {:cursor "move"}
+                                           :on-mouse-down #(move-start! % jana)})
                                         {:x x :y y
                                          :width jana-leveys
                                          :height korkeus
