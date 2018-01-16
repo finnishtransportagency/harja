@@ -31,7 +31,8 @@
             [harja.tiedot.raportit :as raportit]
             [harja.ui.kentat :as kentat]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
-            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
+            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -225,19 +226,25 @@
         [:div.aikataulu
          [valinnat ur]
          (when aikajana?
-           [aikajana/aikajana
-            {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
-                        (tallenna-aikataulu
-                          urakka-id sopimus-id vuosi
-                          (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
-                        ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla
-                        ;; , joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
-                        ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
-                        ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu saamaan sivuvaikutus (virheviestin näyttäminen)
-                        ;; eikä niinkään paluuarvosta.
-                        (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-            (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
-                 aikataulurivit)])
+           [:div
+            [:div
+             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
+              {:otsikko "Visuaalisen muokkauksen ohje"}
+              [:div
+               [:p "Tulossa!"]]]]
+            [aikajana/aikajana
+             {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
+                         (tallenna-aikataulu
+                           urakka-id sopimus-id vuosi
+                           (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
+                         ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla
+                         ;; , joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
+                         ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
+                         ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu saamaan sivuvaikutus (virheviestin näyttäminen)
+                         ;; eikä niinkään paluuarvosta.
+                         (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
+             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
+                  aikataulurivit)]])
          [grid/grid
           {:otsikko [:span
                      "Kohteiden aikataulu"
