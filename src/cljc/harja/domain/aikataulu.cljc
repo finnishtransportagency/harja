@@ -81,7 +81,7 @@
                            ::aikajana/teksti (aikajana-teksti
                                                (if (and (= toimenpide :muu) kuvaus)
                                                  kuvaus
-                                                 (ypk/tarkan-aikataulun-toimenpiide-fmt toimenpide))
+                                                 (ypk/tarkan-aikataulun-toimenpide-fmt toimenpide))
                                                alku
                                                loppu)}))
                  (:tarkka-aikataulu rivi)))))})))

@@ -351,7 +351,7 @@ yllapitoluokkanimi->numero
          rivit)))
 
 (def tarkan-aikataulun-toimenpiteet [:ojankaivuu :rp_tyot :rumpujen_vaihto :muu])
-(def tarkan-aikataulun-toimenpiide-fmt
+(def tarkan-aikataulun-toimenpide-fmt
   {:ojankaivuu "Ojankaivuu"
    :rp_tyot "RP-työt"
    :rumpujen_vaihto "Rumpujen vaihto"

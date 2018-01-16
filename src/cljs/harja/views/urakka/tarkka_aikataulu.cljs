@@ -33,8 +33,8 @@
      :tyyppi :valinta
      :validoi [[:ei-tyhja "Anna toimenpiode"]]
      :valinnat ypk/tarkan-aikataulun-toimenpiteet
-     :valinta-nayta #(if % (ypk/tarkan-aikataulun-toimenpiide-fmt %) "- valitse -")
-     :fmt ypk/tarkan-aikataulun-toimenpiide-fmt
+     :valinta-nayta #(if % (ypk/tarkan-aikataulun-toimenpide-fmt %) "- valitse -")
+     :fmt ypk/tarkan-aikataulun-toimenpide-fmt
      :pituus-max 128}
     {:otsikko "Kuvaus"
      :leveys 10
