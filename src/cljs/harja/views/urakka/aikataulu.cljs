@@ -32,7 +32,8 @@
             [harja.tiedot.raportit :as raportit]
             [harja.ui.kentat :as kentat]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
-            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
+            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
