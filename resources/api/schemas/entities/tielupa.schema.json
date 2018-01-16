@@ -329,7 +329,8 @@
                       "Jakokaappi",
                       "Telekaapeli",
                       "Kaukolämpöjohto",
-                      "Maakaasuputki"
+                      "Maakaasuputki",
+                      "Sähkömaakaapeli"
                     ]
                   },
                   "asennustyyppi": {
@@ -341,7 +342,11 @@
                       "Tien alitus",
                       "Silta",
                       "Tiealueen ulkopuolella",
-                      "Suojaputki"
+                      "Suojaputki",
+                      "Jatkos nykyisestä kaapelista",
+                      "Ilmajohto tiealueen ulkopuolelle",
+                      "Uusi asiakasliittymä",
+                      "Nykyiseen putkitukseen asentaminen"
                     ]
                   },
                   "kommentit": {
@@ -466,7 +471,7 @@
             },
             "leveys-metreissa": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/leveys-metreissa",
-              "type": "integer"
+              "type": "number"
             },
             "rumpu": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rumpu",
@@ -478,19 +483,19 @@
             },
             "rummun-etaisyys-metreissa": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-etaisyys-metreissa",
-              "type": "integer"
+              "type": "number"
             },
             "odotustila-metreissa": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/odotustila-metreissa",
-              "type": "integer"
+              "type": "number"
             },
             "nakemapisteen-etaisyys": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/nakemapisteen-etaisyys",
-              "type": "integer"
+              "type": "number"
             },
             "liittymisnakema": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liittymisnakema",
-              "type": "integer"
+              "type": "number"
             },
             "liikennemerkit": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liikennemerkit",
@@ -939,7 +944,11 @@
                     "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/asennustyyppi",
                     "required": true,
                     "enum": [
-                      ""
+                      "Tien varressa",
+                      "Tien alitus",
+                      "Silta",
+                      "Tiealueen ulkopuolella",
+                      "Muu asennus"
                     ]
                   },
                   "kommentit": {
