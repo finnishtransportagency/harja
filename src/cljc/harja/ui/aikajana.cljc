@@ -338,7 +338,7 @@
                             (drag-stop!))
           :on-mouse-move #(do
                             (when drag-move!
-                                (drag-move! alku-x hover-y x->paiva))
+                              (drag-move! alku-x hover-y x->paiva))
                             (when move-process!
                               (move-process! alku-x hover-y x->paiva)))
           :style {:cursor (when drag "ew-resize")}}
