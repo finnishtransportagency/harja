@@ -138,7 +138,3 @@
 
 (defn luo-tapahtumat []
   (->Tapahtumat (atom nil) (atom nil) (atom false)))
-
-#_(defn testaa []
-  (kuuntele! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" (fn kuuntele-callback [viesti] (log/debug "kuuntele-callback: saatiin viesti" viesti)))
-  (julkaise! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" "foo"))
