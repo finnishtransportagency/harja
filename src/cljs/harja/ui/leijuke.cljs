@@ -2,12 +2,14 @@
   "Yleinen leijuke -komponentti. Leijuke on muun sisällön päälle tuleva absoluuttisesti
   positioitu pieni elementti, esim. lyhyt lomake."
   (:require [reagent.core :as r]
+            [reagent.core :refer [atom] :as r]
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [harja.fmt :as fmt]
             [goog.events.EventType :as EventType]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.ui.ikonit :as ikonit]))
 
 
 (def avautumissuunta-tyyli
@@ -81,3 +83,27 @@
              [:h4 otsikko]]
             [:div.leijuke-sisalto
              sisalto]]])))))
+
+(defn vihjeleijuke [optiot leijuke-sisalto]
+  (let [nakyvissa? (atom false)]
+    (fn [optiot leijuke-sisalto]
+      [:div {:class
+             (str "inline-block yleinen-pikkuvihje klikattava")}
+       [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
+        (if @nakyvissa?
+          [leijuke (merge
+                     {:otsikko [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Vihje"]
+                      :sulje! #(reset! nakyvissa? false)}
+                     optiot)
+           [:div {:style {:min-width "300px"}}
+            leijuke-sisalto]]
+          (harja.ui.ikonit/livicon-info-sign))]])))
+
+(defn otsikko-ja-vihjeleijuke [otsikko leijuke-optiot leijuke-sisalto]
+  [:div
+   [:h6 {:style {:display :inline-block}} otsikko]
+   [:span " "]
+   [:span
+    [vihjeleijuke
+     leijuke-optiot
+     leijuke-sisalto]]])
