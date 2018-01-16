@@ -53,7 +53,7 @@ BEGIN
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 11)
 
                -- 3)
-               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm < '2013-1-2'
+               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm < '2013-8-2'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 5) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 6) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 7)
@@ -138,5 +138,30 @@ BEGIN
   -- Jos yhtään indeksilukuja ei ole, kerroin on NULL, jolloin myös
   -- tämä lasku palauttaa NULL.
   RETURN (vertailuluku / perusluku) * summa;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- Urakan oletusindeksin asettaminen
+CREATE OR REPLACE FUNCTION aseta_urakan_oletusindeksi() RETURNS trigger AS $$
+BEGIN
+
+  IF NEW.tyyppi = 'hoito' THEN
+    IF EXTRACT(year FROM NEW.alkupvm) < 2017 THEN
+      NEW.indeksi := 'MAKU 2005';
+    ELSE
+      NEW.indeksi := 'MAKU 2010';
+    END IF;
+
+  ELSEIF NEW.tyyppi = 'vesivayla-hoito' THEN
+    IF EXTRACT(year FROM NEW.alkupvm) < 2017 THEN
+      NEW.indeksi := 'MAKU 2005 kunnossapidon osaindeksi';
+    ELSE
+      NEW.indeksi := 'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi';
+    END IF;
+
+  END IF;
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

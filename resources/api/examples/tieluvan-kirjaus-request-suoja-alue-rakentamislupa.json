@@ -82,7 +82,9 @@
       "esitetty-etaisyys-tien-keskilinjaan": 48,
       "vahimmaisetaisyys-tien-keskilinjasta": 48,
       "suoja-alueen-leveys": 4,
-      "sijoitus": "suoja-alue",
+      "sijoitus": {
+        "suoja-alue": true
+      },
       "kiinteisto-rn": "12344"
     }
   }

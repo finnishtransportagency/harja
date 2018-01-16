@@ -23,15 +23,18 @@
 (defonce modal-data (atom {}))
 
 (defonce aikataulu-nakymassa? (atom false))
+(defonce tarkka-aikataulu-paivitetty (atom nil))
 
 (defonce valinnat
   (local-storage/local-storage-atom
    :aikataulu-valinnat
    {:nayta-aikajana? true
+    :nayta-tarkka-aikana? false
     :jarjestys :aika}
    nil))
 
 (defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
+(defonce nayta-tarkka-aikajana? (r/cursor valinnat [:nayta-tarkka-aikana?]))
 
 (defn toggle-nayta-aikajana! []
   (swap! valinnat update :nayta-aikajana? not))
@@ -61,12 +64,16 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
-               nakymassa? @aikataulu-nakymassa?]
+               nakymassa? @aikataulu-nakymassa?
+               ;; Tarkan aikataulun päivityksen täytyy aiheuttaa kohteiden haku uudelleen.
+               ;; Ihanteellisesti tarkan aikataulun päivitys päivittäisi vain tämän atomin sisällön, mutta
+               ;; tällöin reaktioon pitäisi kirjoittaa käsin, mikä on sekin huono tapa.
+               tarkka-aikataulu-paivitetty @tarkka-aikataulu-paivitetty]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
 
-(def aikataulurivit-suodatettu
+(def aikataulurivit-suodatettu-jarjestetty
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   kohdenumero @yllapito-tiedot/kohdenumero
                   aikataulurivit @aikataulurivit

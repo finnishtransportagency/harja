@@ -1,14 +1,16 @@
 (ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
+            [clojure.set :as set]
+
             [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
+
             [com.stuartsierra.component :as component]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]
-            [clojure.set :as set])
+            [clj-time.coerce :as c])
   (:import (java.util Date)))
 
 (defn jarjestelma-fixture [testit]
@@ -26,7 +28,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
@@ -92,11 +94,11 @@
 
 (deftest hae-ilmoitukset-tyypin-mukaan
   (let [hoito-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
-                                      :urakkatyyppi :hoito))
+                                 :urakkatyyppi :hoito))
         paallystys-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
-                                           :urakkatyyppi :paallystys))
+                                      :urakkatyyppi :paallystys))
         kaikki-ilmoitukset (hae (assoc hae-ilmoitukset-parametrit
-                                       :urakkatyyppi :kaikki))
+                                  :urakkatyyppi :kaikki))
 
         idt #(into #{} (map :id) %)]
 
@@ -150,7 +152,7 @@
     (is (= (+ ilmoituksen-1-kuittaukset-maara-ennen 1) ilmoituksen-1-kuittaukset-maara-jalkeen))
 
     (is aiheutti-toimenpiteita "Lopetuskuittaus toimenpiteiden kanssa merkittiin oikein")
-    
+
     (u "DELETE FROM ilmoitustoimenpide WHERE vapaateksti = 'TESTI123';")))
 
 (deftest tallenna-ilmoitustoimenpide-ilman-oikeuksia
@@ -166,10 +168,10 @@
                      :vapaatesti "TESTI123"
                      :tyyppi :aloitus}]]
     (is (thrown-with-msg? Exception #"EiOikeutta"
-         (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-ilmoitustoimenpiteet
-                                +kayttaja-tero+
-                                parametrit)))))
+                          (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :tallenna-ilmoitustoimenpiteet
+                                          +kayttaja-tero+
+                                          parametrit)))))
 
 (deftest hae-ilmoituksia-tienumerolla
   (let [oletusparametrit {:hallintayksikko nil
@@ -260,8 +262,8 @@
 
 
 (deftest tarkista-aikavalihaut
-  (let [alkuaika  (clj-time.core/date-time 2005 10 10 2)
-        loppuaika  (clj-time.core/date-time 2005 10 10 4)
+  (let [alkuaika (clj-time.core/date-time 2005 10 10 2)
+        loppuaika (clj-time.core/date-time 2005 10 10 4)
         parametrit {:hallintayksikko nil
                     :urakka nil
                     :hoitokausi nil
@@ -287,5 +289,37 @@
 
     (testing "Ilmoituksen haku ilman oikeuksia epäonnistuu"
       (is (thrown-with-msg?
-           Exception #"EiOikeutta"
-           (hae-ilmoitus-kayttajana +kayttaja-ulle+))))))
+            Exception #"EiOikeutta"
+            (hae-ilmoitus-kayttajana +kayttaja-ulle+))))))
+
+(def ilmoituksien-lkm-perffitestissa 10000)
+
+(defn- lisaa-testi-ilmoitus [urakka-id tyyppi tila]
+  (u (str "INSERT INTO ilmoitus (urakka, ilmoitettu, ilmoitustyyppi, tila) VALUES (" urakka-id ",  (select now() - interval '2 days'), '" tyyppi"'::ilmoitustyyppi, '" tila"'::ilmoituksen_tila);")))
+
+(deftest hae-ilmoitukset-ei-ole-liian-hidas
+  (let [urakka-idt (mapv first (q (str "SELECT id FROM urakka;")))]
+
+    (doseq [i (range ilmoituksien-lkm-perffitestissa)]
+      (let [urakka (rand-nth  urakka-idt)
+            tyyppi (rand-nth  ["toimenpidepyynto", "tiedoitus", "kysely"])
+            tila (rand-nth ["kuittaamaton" "vastaanotettu" "aloitettu" "lopetettu"])]
+        (lisaa-testi-ilmoitus urakka tyyppi tila))))
+
+  (let [parametrit hae-ilmoitukset-parametrit
+        ilmoitusten-maara-suoraan-kannasta (ffirst (q
+                                                     (str "SELECT count(*) FROM ilmoitus;")))
+        aika-ennen (pvm/millisekunteina (pvm/nyt))
+        ilmoitukset-palvelusta (hae parametrit)
+        aika-jalkeen (pvm/millisekunteina (pvm/nyt))
+        palvelukutsun-kesto-ms (- aika-jalkeen aika-ennen)]
+    ;; patologisella kyselyllä, kuten tuotantoon eksynyt HAR-7003 tämä räjähtää yli 3s kestäväksi.
+    ;; Pyritään pitämään silti kestovaatimus tiukempana, niin että mahdolliset vähemmän katastrofaalisetkin
+    ;; perffihuonontumiset jäisivät kiinni. Toivottavasti ei ole kovin ajoympäristöherkkä tämä kesto.
+    (is (< palvelukutsun-kesto-ms 800) "Ilmoituksien haku kestää liian kauan")
+
+    (doseq [i ilmoitukset-palvelusta]
+      (is (#{:toimenpidepyynto :tiedoitus :kysely}
+            (:ilmoitustyyppi i)) "ilmoitustyyppi"))
+    (is (= 501 (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä") ;eka sivullinen eli 500+1 palautuu
+    (is (= ilmoitusten-maara-suoraan-kannasta 10040) "Ilmoitusten lukumäärä")))
