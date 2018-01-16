@@ -77,7 +77,8 @@
                   (set/union
                     kok/perustiedot
                     kok/kohteet)
-                  {::kok/kohteet (op/or {::m/poistettu? op/null?}
+                  {::m/poistettu? false
+                   ::kok/kohteet (op/or {::m/poistettu? op/null?}
                                         {::m/poistettu? false})})
     (partial hae-kohteiden-urakkatiedot db user)))
 
@@ -179,6 +180,27 @@
                           {::m/luoja-id (:id user)}
                           {::kohde/kohde-id kohde-id
                            ::kohde/urakka-id urakka-id}))))))
+
+(defn tallenna-kohdekokonaisuudet! [db user kokonaisuudet]
+  (jdbc/with-db-transaction [db db]
+    (doseq [kokonaisuus kokonaisuudet]
+      (if (id-olemassa? (::kok/id kokonaisuus))
+        (specql/update! db
+                        ::kok/kohdekokonaisuus
+                        (merge
+                          (if (::m/poistettu? kokonaisuus)
+                            {::m/poistaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)}
+
+                            {::m/muokkaaja-id (:id user)
+                             ::m/muokattu (pvm/nyt)})
+                          kokonaisuus)
+                        {::kok/id (::kok/id kokonaisuus)})
+
+        (specql/insert! db
+                        ::kok/kohdekokonaisuus
+                        (merge {::m/luoja-id (:id user)}
+                               (dissoc kokonaisuus ::kok/id)))))))
 
 (defn merkitse-kohde-poistetuksi! [db user kohde-id]
   (specql/update! db

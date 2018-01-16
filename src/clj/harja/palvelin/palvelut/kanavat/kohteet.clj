@@ -48,6 +48,11 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
   (q/hae-huoltokohteet db))
 
+(defn tallenna-kohdekokonaisuudet [db user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (q/tallenna-kohdekokonaisuudet! db user tiedot)
+  (hae-kohdekokonaisuudet-ja-kohteet db user))
+
 (defrecord Kohteet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -65,6 +70,13 @@
         (hae-urakan-kohteet db user tiedot))
       {:kysely-spec ::kok/hae-urakan-kohteet-kysely
        :vastaus-spec ::kok/hae-urakan-kohteet-vastaus})
+    (julkaise-palvelu
+      http
+      :tallenna-kohdekokonaisuudet
+      (fn [user kokonaisuudet]
+        (tallenna-kohdekokonaisuudet db user kokonaisuudet))
+      {:kysely-spec ::kok/tallenna-kohdekokonaisuudet-kysely
+       :vastaus-spec ::kok/tallenna-kohdekokonaisuudet-vastaus})
     (julkaise-palvelu
       http
       :lisaa-kohdekokonaisuudelle-kohteita
