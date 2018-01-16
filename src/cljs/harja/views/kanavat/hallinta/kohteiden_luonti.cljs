@@ -11,7 +11,6 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
-            [harja.ui.debug :refer [debug]]
 
             [harja.domain.urakka :as urakka]
             [harja.domain.oikeudet :as oikeudet]
@@ -30,73 +29,50 @@
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
-(defn kohteet-grid [e! kanavan-kohteet]
+(defn kohdekokonaisuudet-grid [e! {:keys [kohdekokonaisuudet] :as app}]
   [grid/muokkaus-grid
-   {:tyhja "Lisää kohteita oikeasta yläkulmasta"
-    :tunniste ::kohde/id
-    :voi-poistaa? (constantly false)
-    :jarjesta-avaimen-mukaan identity
-    :piilota-toiminnot? true
-    :uusi-id (count kanavan-kohteet)}
-   [{:otsikko "Kohteen nimi"
+   {:tyhja "Lisää kokonaisuuksia oikeasta yläkulmasta"
+    :tunniste ::kok/id
+    :voi-poistaa? (fn [kokonaisuus]
+                    (tiedot/kokonaisuuden-voi-poistaa? app kokonaisuus))}
+   [{:otsikko "Nimi"
      :tyyppi :string
-     :nimi ::kohde/nimi
-     :leveys 1}
-    {:otsikko "Kohteen tyyppi"
-     :tyyppi :valinta
+     :nimi ::kok/nimi
+     :leveys 4}
+    {:otsikko "Kohteiden lukumäärä"
+     :tyyppi :numero
+     :nimi :kohteiden-lkm
      :leveys 1
-     :nimi ::kohde/tyyppi
-     :valinnat #{:silta :sulku :sulku-ja-silta}
-     :valinta-nayta (constantly "foobar")
-     :pakollinen? true
-     :validoi [[:ei-tyhja "Anna kohteelle tyyppi"]]}]
+     :muokattava? (constantly false)
+     :hae (partial tiedot/kohteiden-lkm-kokonaisuudessa app)}]
    (r/wrap
-     (into {}
-           (map-indexed
-             (fn [i k] [i k])
-             kanavan-kohteet))
-     #(e! (tiedot/->LisaaKohteita (sort-by :id (vals %)))))])
+     (zipmap (range) kohdekokonaisuudet)
+     #(e! (tiedot/->LisaaKohdekokonaisuuksia (sort-by :id (vals %)))))])
 
-(defn luontilomake [e! {tallennus-kaynnissa? :kohteiden-tallennus-kaynnissa?
-                        kanavat :kanavat
-                        {muokattava-kanava :kanava
-                         :as uudet-tiedot} :lomakkeen-tiedot
-                        :as app}]
+(defn kohdekokonaisuuslomake [e! {tallennus-kaynnissa? :kohdekokonaisuuksien-tallennus-kaynnissa?
+                                  :as app}]
   [:div
    [debug/debug app]
-   [napit/takaisin #(e! (tiedot/->SuljeKohdeLomake))]
+   [napit/takaisin #(e! (tiedot/->SuljeKohdekokonaisuusLomake))]
    [lomake/lomake
-    {:otsikko "Lisää tai muokkaa kanavan kohteita"
+    {:otsikko "Lisää tai muokkaa kohdekokonaisuuksia"
      ;; muokkaa! on nykyään pakollinen lomakkeelle, mutta tässä lomakeessa
      ;; tietojen päivittämienn tehdään suoraan riville asetetuilla funktioilla
      :muokkaa! (constantly true)
-     :footer-fn (fn [kohteet]
+     :footer-fn (fn [app]
                   [napit/tallenna
-                   "Tallenna kohteet"
-                   #(e! (tiedot/->TallennaKohteet))
+                   "Tallenna"
+                   #(e! (tiedot/->TallennaKohdekokonaisuudet (:kohdekokonaisuudet app)))
                    {:tallennus-kaynnissa? tallennus-kaynnissa?
-                    :disabled (or (not (lomake/voi-tallentaa? kohteet))
-                                  (not (tiedot/kohteet-voi-tallentaa? kohteet))
+                    :disabled (or tallennus-kaynnissa?
+                                  (not (lomake/voi-tallentaa? (:kohdekokonaisuudet app)))
+                                  (not (tiedot/kohdekokonaisuudet-voi-tallentaa? (:kohdekokonaisuudet app)))
                                   (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat)))}])}
-    [{:otsikko "Kanava"
-      :tyyppi :valinta
-      :nimi :kanava
-      :valinnat (sort-by ::kok/nimi kanavat)
-      :valinta-nayta #(or (::kok/nimi %) "Valitse kanava")
-      :aseta (fn [_ arvo]
-               ;; kentat/atomina funktiossa katsotaan, onko :aseta ehto annettu
-               ;; jos on, oletetaan, että funktio palauttaa lomakkeen käyttämän datan
-               (:lomakkeen-tiedot (e! (tiedot/->ValitseKanava arvo))))}
-     (when muokattava-kanava
-       {:otsikko "Kohteet"
-        :nimi :kohteet
-        :tyyppi :komponentti
-        :palstoja 3
-        :komponentti (fn [_]
-                       [kohteet-grid
-                        e!
-                        (tiedot/muokattavat-kohteet app)])})]
-    uudet-tiedot]])
+    [{:otsikko "Kohdekokonaisuus"
+      :tyyppi :komponentti
+      :nimi :kohdekokonaisuudet
+      :komponentti (fn [] [kohdekokonaisuudet-grid e! app])}]
+    app]])
 
 (defn- ryhmittele-kohderivit-kanavalla [kohderivit]
   (let [ryhmat (group-by ::kok/id (sort-by ::kok/nimi kohderivit))]
@@ -115,17 +91,16 @@
                            (e! (tiedot/->AloitaUrakoidenHaku)))
                       #(do (e! (tiedot/->Nakymassa? false))
                            (e! (tiedot/->ValitseUrakka nil))
-                           (e! (tiedot/->SuljeKohdeLomake))))
+                           (e! (tiedot/->SuljeKohdekokonaisuusLomake))))
 
-    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdelomake-auki? liittaminen-kaynnissa?
-                    uudet-urakkaliitokset valittu-urakka urakat poistaminen-kaynnissa?
-                    poistettava-kohde] :as app}]
-      (if-not kohdelomake-auki?
+    (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdekokonaisuuslomake-auki? liittaminen-kaynnissa?
+                    uudet-urakkaliitokset valittu-urakka urakat] :as app}]
+      (if-not kohdekokonaisuuslomake-auki?
         [:div
          [debug/debug app]
          [valinnat/urakkatoiminnot {}
-          #_[napit/uusi "Lisää kohteen osia"
-             (fn [] (log "TODO"))]
+          [napit/uusi "Muokkaa kohdekokonaisuuksia"
+             #(e! (tiedot/->AvaaKohdekokonaisuusLomake))]
           [napit/tallenna "Tallenna urakkaliitokset"
            #(e! (tiedot/->PaivitaKohteidenUrakkaliitokset))
            {:disabled (empty? uudet-urakkaliitokset)
@@ -174,7 +149,7 @@
                                                                          uusi))))])})]
           (ryhmittele-kohderivit-kanavalla kohderivit)]]
 
-        [luontilomake e! app]))))
+        [kohdekokonaisuuslomake e! app]))))
 
 (defc kohteiden-luonti []
   [tuck tiedot/tila kohteiden-luonti*])

@@ -40,7 +40,7 @@
            ::kok/nimi "Foobar"}
           {::kok/id 2
            ::kok/nimi "Bazbar"}]
-         (tiedot/kanavat
+         (tiedot/kohdekokonaisuudet
            [{::kok/id 1
              ::kok/nimi "Foobar"
              :huahuhue "joo"

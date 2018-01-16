@@ -21,11 +21,10 @@
 (def tila (atom {:nakymassa? false
                  :kohteiden-haku-kaynnissa? false
                  :urakoiden-haku-kaynnissa? false
-                 :kohdelomake-auki? false
+                 :kohdekokonaisuuslomake-auki? false
                  :liittaminen-kaynnissa? false
                  :kohderivit nil
-                 :kanavat nil
-                 :lomakkeen-tiedot nil
+                 :kohdekokonaisuudet nil
                  :valittu-urakka nil
                  :uudet-urakkaliitokset {}})) ; Key on vector, jossa [kohde-id urakka-id] ja arvo on boolean
 
@@ -52,14 +51,17 @@
 
 ;; Lomake
 
-(defrecord AvaaKohdeLomake [])
-(defrecord SuljeKohdeLomake [])
-(defrecord ValitseKanava [kanava])
-(defrecord LisaaKohteita [tiedot])
+(defrecord AvaaKohdekokonaisuusLomake [])
+(defrecord SuljeKohdekokonaisuusLomake [])
+(defrecord LisaaKohdekokonaisuuksia [tiedot])
 
 (defrecord TallennaKohteet [])
 (defrecord KohteetTallennettu [tulos])
 (defrecord KohteetEiTallennettu [virhe])
+
+(defrecord TallennaKohdekokonaisuudet [kokonaisuudet])
+(defrecord KohdekokonaisuudetTallennettu [tulos])
+(defrecord KohdekokonaisuudetEiTallennettu [virhe])
 
 (defn hae-kanava-urakat! [tulos! fail!]
   (go
@@ -93,8 +95,10 @@
         (::kok/kohteet kohdekokonaisuus)))
     tulos))
 
-(defn kanavat [tulos]
-  (map #(select-keys % #{::kok/id ::kok/nimi}) tulos))
+(defn kohdekokonaisuudet [tulos]
+  (-> (map #(select-keys % #{::kok/id ::kok/nimi}) tulos)
+      set
+      vec))
 
 (defn kohteet-voi-tallentaa? [kohteet]
   (boolean
@@ -104,6 +108,12 @@
            (fn [kohde]
              (and (::kohde/tyyppi kohde)))
            (:kohteet kohteet)))))
+
+(defn kohdekokonaisuudet-voi-tallentaa? [kokonaisuudet]
+  (boolean
+    (and (every? #(not-empty (::kok/nimi %)) (remove #(and (not (id-olemassa? (::kok/id %)))
+                                                           (:poistettu %))
+                                                     kokonaisuudet)))))
 
 (defn muokattavat-kohteet [app]
   (get-in app [:lomakkeen-tiedot :kohteet]))
@@ -146,6 +156,25 @@
             (when (kohde-ja-urakat kohde-id)
               (update kohde-ja-urakat kohde-id disj urakka-id)))))
 
+(defn kohteet-haettu [app tulos]
+  (-> app
+      (assoc :kohderivit (kohderivit tulos))
+      (assoc :kohdekokonaisuudet (kohdekokonaisuudet tulos))))
+
+(defn kohteiden-lkm-kokonaisuudessa [{:keys [kohderivit] :as app} kokonaisuus]
+  (let [kokonaisuus-id (::kok/id kokonaisuus)]
+    (count (filter #(= (::kok/id %) kokonaisuus-id) kohderivit))))
+
+(defn kokonaisuuden-voi-poistaa? [app kokonaisuus]
+  (= 0 (kohteiden-lkm-kokonaisuudessa app kokonaisuus)))
+
+(defn kohdekokonaisuudet-tallennusparametrit [kok]
+  (as-> kok $
+        (remove :koskematon $)
+        (map #(set/rename-keys % {:id ::kok/id
+                                  :poistettu ::m/poistettu?})
+             $)))
+
 (extend-protocol tuck/Event
   Nakymassa?
   (process-event [{nakymassa? :nakymassa?} app]
@@ -169,8 +198,7 @@
   KohteetHaettu
   (process-event [{tulos :tulos} app]
     (-> app
-        (assoc :kohderivit (kohderivit tulos))
-        (assoc :kanavat (kanavat tulos))
+        (kohteet-haettu tulos)
         (assoc :kohteiden-haku-kaynnissa? false)))
 
   KohteetEiHaettu
@@ -179,30 +207,20 @@
     (-> app
         (assoc :kohteiden-haku-kaynnissa? false)))
 
-  AvaaKohdeLomake
+  AvaaKohdekokonaisuusLomake
   (process-event [_ app]
-    (assoc app :kohdelomake-auki? true))
+    (assoc app :kohdekokonaisuuslomake-auki? true))
 
-  SuljeKohdeLomake
+  SuljeKohdekokonaisuusLomake
   (process-event [_ app]
     (-> app
-        (assoc :kohdelomake-auki? false)
-        (assoc :lomakkeen-tiedot nil)))
+        (update :kohdekokonaisuudet #(filter (comp id-olemassa? ::kok/id) %))
+        (update :kohdekokonaisuudet (fn [k] (map #(dissoc % :poistettu) k)))
+        (assoc :kohdekokonaisuuslomake-auki? false)))
 
-  ValitseKanava
-  (process-event [{kanava :kanava} app]
-    (-> app
-        (assoc-in [:lomakkeen-tiedot :kanava] kanava)
-        (assoc-in [:lomakkeen-tiedot :kohteet]
-                  (filter
-                    (fn [kohde]
-                      (= (::kok/id kohde)
-                         (::kok/id kanava)))
-                    (:kohderivit app)))))
-
-  LisaaKohteita
+  LisaaKohdekokonaisuuksia
   (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:lomakkeen-tiedot :kohteet] tiedot))
+    (assoc-in app [:kohdekokonaisuudet] tiedot))
 
   TallennaKohteet
   (process-event [_ {tiedot :lomakkeen-tiedot :as app}]
@@ -221,8 +239,8 @@
   (process-event [{tulos :tulos} app]
     (-> app
         (assoc :kohderivit (kohderivit tulos))
-        (assoc :kanavat (kanavat tulos))
-        (assoc :kohdelomake-auki? false)
+        (assoc :kohdekokonaisuudet (kohdekokonaisuudet tulos))
+        (assoc :kohdekokonaisuuslomake-auki? false)
         (assoc :lomakkeen-tiedot nil)
         (assoc :kohteiden-tallennus-kaynnissa? false)))
 
@@ -231,6 +249,33 @@
     (viesti/nayta! "Kohteiden tallennus epäonnistui!" :danger)
     (-> app
         (assoc :kohteiden-tallennus-kaynnissa? false)))
+
+  TallennaKohdekokonaisuudet
+  (process-event [{kokonaisuudet :kokonaisuudet} app]
+    (if-not (:kohdekokonaisuuksien-tallennus-kaynnissa? app)
+      (-> app
+          (tt/post! :tallenna-kohdekokonaisuudet
+                    (kohdekokonaisuudet-tallennusparametrit kokonaisuudet)
+                    {:onnistui ->KohdekokonaisuudetTallennettu
+                     :epaonnistui ->KohdekokonaisuudetEiTallennettu})
+
+          (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? true))
+
+      app))
+
+  KohdekokonaisuudetTallennettu
+  (process-event [{tulos :tulos} app]
+    (-> app
+        (kohteet-haettu tulos)
+        (assoc :kohdekokonaisuuslomake-auki? false)
+        (assoc :lomakkeen-tiedot nil)
+        (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? false)))
+
+  KohdekokonaisuudetEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Kohteiden tallennus epäonnistui!" :danger)
+    (-> app
+        (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? false)))
 
   AloitaUrakoidenHaku
   (process-event [_ app]
