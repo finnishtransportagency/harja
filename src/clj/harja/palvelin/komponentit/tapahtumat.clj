@@ -97,7 +97,7 @@
                         (kasittelija (.getParameter notification)))))
                   (catch PSQLException ex
                     (log/debug "Tapahtumat-kuuntelijassa poikkeus, errorcode" (.getErrorCode ex))
-                    (log/warn "poikkeus: " ex)
+                    (log/warn "Tietokantayhteydessä poikkeus: " ex)
                     (uusi-tietokantayhteys! (:db this) ajossa connection kuuntelijat)))
 
                 (Thread/sleep 150)
@@ -119,11 +119,6 @@
 
   Kuuntele
   (kuuntele! [this kanava callback]
-    (when (= :vika @ajossa)
-      (log/info "Uudelleenalustetaan tietokannan kuunteluyhteys")
-      (reset! ajossa true)
-      (reset! connection (.getConnection (:datasource (:db this))))
-      (reset! kuuntelijat {}))
     (let [kanava (kanava-nimi kanava)]
       (when-not (get @kuuntelijat kanava)
         ;; LISTEN
