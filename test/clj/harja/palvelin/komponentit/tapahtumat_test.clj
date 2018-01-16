@@ -13,20 +13,29 @@
      (component/start
       (component/system-map
        :db (tietokanta/luo-tietokanta testitietokanta)
-       ;; :http-palvelin (testi-http-palvelin)
-       :klusterin-tapahtumat (sut/luo-tapahtumat)
+       :klusterin-tapahtumat (component/using (sut/luo-tapahtumat) [:db])
        :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])))))
 
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (try (alter-var-root #'jarjestelma component/stop)
+       (catch Exception e (println "saatiin poikkeus komponentin sammutuksessa: " e))))
 
-(deftest kuuntelu-perustapaus []
+(use-fixtures :once jarjestelma-fixture)
+
+(deftest julkaisu-ja-kuuntelu []
+  (testing "tapahtumat-komponentti on luotu onnistuneesti"
+    (is (some? (:klusterin-tapahtumat jarjestelma))))
   (let [saatiin (atom nil)]
-    (testing "Perustapaus" (sut/kuuntele! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" (fn kuuntele-callback [viesti] (reset! saatiin true) (println "viesti saatu:" viesti)))
-             (sut/julkaise! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" "foo")
+    (testing "Perustapaus" (sut/kuuntele! (:klusterin-tapahtumat jarjestelma) "seppo" (fn kuuntele-callback [viesti] (reset! saatiin true) (println "viesti saatu:" viesti)))
+             (sut/julkaise! (:klusterin-tapahtumat jarjestelma) "seppo" "foo")
              (is (odota-arvo saatiin)))
     (testing "Toipuminen kantayhteyden katkosta"
       (reset! saatiin nil)
+
       (pudota-ja-luo-testitietokanta-templatesta)
-      (sut/julkaise! (:klusterin-tapahtumat harja.palvelin.main/harja-jarjestelma) "seppo" "foo")
+      (dotimes [n 5]
+        (try
+          (sut/julkaise! (:klusterin-tapahtumat jarjestelma) "seppo" "foo")
+          (catch Exception e
+            (Thread/sleep 500))))
       (is (odota-arvo saatiin)))))
