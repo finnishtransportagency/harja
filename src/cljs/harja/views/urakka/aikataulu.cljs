@@ -231,7 +231,11 @@
              [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
               {:otsikko "Visuaalisen muokkauksen ohje"}
               [:div
-               [:p "Tulossa!"]]]]
+               [:h6 "Kohteen alun / lopun venytys"]
+               [:figure
+                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"}]
+                [:figcaption
+                 [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]]]
             [aikajana/aikajana
              {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
                          (tallenna-aikataulu
