@@ -17,3 +17,5 @@ CHECK ((((summa IS NOT NULL) OR
           (maara IS NULL)) OR
          ((maara IS NOT NULL) AND
           (summa IS NULL)))));
+
+ALTER TABLE kan_hinta ADD COLUMN "materiaali-id" INTEGER REFERENCES vv_materiaali (id);

@@ -157,16 +157,15 @@
   "Palauttaa hinnoiteltavan rivin materiaalit."
   [{toimenpide-id :toimenpide-id materiaalit :materiaalit}]
   (assert (integer? toimenpide-id) "toimenpide-id pitää olla int")
-  (let [materiaalin-kaytto (fn [materiaali]
-                             (apply + (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
-                                               (- (::materiaalit/maara %)))
-                                            (::materiaalit/muutokset materiaali))))]
-    (keep (fn [materiaali]
-            (let [maara (materiaalin-kaytto materiaali)]
-              (when-not (= maara 0)
-                {:nimi (::materiaalit/nimi materiaali)
-                 :maara maara})))
-          materiaalit)))
+  (flatten
+    (map (fn [materiaali]
+           (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
+                    (cljs.pprint/pprint %)
+                    {:nimi (::materiaalit/nimi materiaali)
+                     :maara (- (::materiaalit/maara %))
+                     :materiaali-id (::materiaalit/id %)})
+                 (::materiaalit/muutokset materiaali)))
+         materiaalit)))
 
 (defn kaytto-merkattu-toimenpiteelle?
   [materiaali-hinta materiaalit]
@@ -203,23 +202,34 @@
      ::hinta/otsikko ""}
     hinta))
 
-(defn- toimenpiteen-hintakentat [hinnat materiaalien-otsikot]
-  (vec (concat
-         ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-         (map-indexed (fn [index otsikko]
-                        (let [olemassa-oleva-hinta (hinta-otsikolla hinnat otsikko)]
-                          (hintakentta
-                            (merge
-                              {::hinta/id (dec (- index))
-                               ::hinta/otsikko otsikko
-                               ::hinta/ryhma "muu"}
-                              olemassa-oleva-hinta))))
-                      (concat vakiohinnat materiaalien-otsikot))
-         ;; Loput kentät ovat käyttäjän itse lisäämiä
-         (map
-           hintakentta
-           (remove #((set (concat vakiohinnat materiaalien-otsikot)) (::hinta/otsikko %))
-                   hinnat)))))
+(defn- toimenpiteen-hintakentat [hinnat]
+  (let [;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
+        vakiokenttien-hinnat (map-indexed (fn [index otsikko]
+                                            (let [olemassa-oleva-hinta (hinta-otsikolla hinnat otsikko)]
+                                              (hintakentta
+                                                (merge
+                                                  {::hinta/id (dec (- index))
+                                                   ::hinta/otsikko otsikko
+                                                   ::hinta/ryhma "muu"}
+                                                  olemassa-oleva-hinta))))
+                                          vakiohinnat)
+        hinnattomien-vakiokenttien-lukumaara (count (filter #(< (::hinta/id %) 0)
+                                                            vakiokenttien-hinnat))
+        ;; Toimenpiteellä käytetyt materiaalit näytetään aina
+        materiaalien-hinnat (reduce (fn [kertynyt hinta]
+                                      (if (= (::hinta/ryhma hinta) "materiaali")
+                                        (conj kertynyt
+                                              (hintakentta
+                                                (merge {::hinta/id (dec (- (+ (count kertynyt) hinnattomien-vakiokenttien-lukumaara)))}
+                                                       hinta)))
+                                        kertynyt))
+                                    [] hinnat)
+        ;; Loput kentät ovat käyttäjän itse lisäämiä
+        loppujen-hinnat (map
+                          hintakentta
+                          (remove #((set (concat vakiohinnat (map ::hinta/otsikko materiaalien-hinnat))) (::hinta/otsikko %))
+                                  hinnat))]
+    (vec (concat vakiokenttien-hinnat materiaalien-hinnat loppujen-hinnat))))
 
 (defn- lisaa-hintarivi-toimenpiteelle* [id-avain tyot-tai-hinnat kentta-fn app]
   (let [jutut (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
@@ -284,11 +294,12 @@
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
 
 (defn materiaali->hinta
-  [{:keys [nimi maara]}]
+  [{:keys [nimi maara materiaali-id]}]
   {::hinta/otsikko nimi
    ::hinta/ryhma "materiaali"
    ::hinta/maara maara
-   ::hinta/yksikkohinta 0})
+   ::hinta/yksikkohinta 0
+   ::hinta/materiaali-id materiaali-id})
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -418,7 +429,6 @@
                                                                          hinnat)))
                                                          (map materiaali->hinta))
                                                        materiaalit)
-          materiaalien-otsikot (map ::hinta/otsikko tallentamattomat-materiaali-hinnat)
           yhdistetyt-hinnat (concat hinnat tallentamattomat-materiaali-hinnat)
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
           urakka-id (get-in app [:valinnat :urakka :id])]
@@ -426,7 +436,7 @@
         (assoc app :hinnoittele-toimenpide
                    {::toimenpide/id toimenpide-id
                     ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
-                    ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat materiaalien-otsikot)
+                    ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat)
                     ::tyo/tyot tyot
                     :urakka urakka-id})
         (do

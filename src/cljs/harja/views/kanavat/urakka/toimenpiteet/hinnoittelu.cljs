@@ -264,7 +264,7 @@
    [:td.tasaa-oikealle (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
                          (::hinta/maara materiaali-hinta)
                          [kentta-hinnalle e! materiaali-hinta ::hinta/maara
-                          {:tyyppi :string}])]
+                          {:tyyppi :positiivinen-numero}])]
    [:td ""]
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
    [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
