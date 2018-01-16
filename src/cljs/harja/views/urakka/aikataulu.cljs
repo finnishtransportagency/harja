@@ -203,7 +203,7 @@
     (fn [urakka optiot]
       (let [{urakka-id :id :as ur} @nav/valittu-urakka
             sopimus-id (first @u/valittu-sopimusnumero)
-            aikataulurivit @tiedot/aikataulurivit-suodatettu
+            aikataulurivit @tiedot/aikataulurivit-suodatettu-jarjestetty
             urakkatyyppi (:tyyppi urakka)
             vuosi @u/valittu-urakan-vuosi
             {:keys [voi-tallentaa? saa-muokata?
