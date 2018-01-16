@@ -315,7 +315,7 @@
                       "20 kV maakaapeli",
                       "45 kV maakaapeli",
                       "110 kV maakaapeli",
-                      "maakaapeli",
+                      "Maakaapeli",
                       "0,4 kV ilmajohto",
                       "0,4 ja 1 kV ilmajohto",
                       "0,4 ja 20 kV ilmajohto",
@@ -323,7 +323,7 @@
                       "20 kV ilmajohto",
                       "45 kV ilmajohto",
                       "110 kV ilmajohto",
-                      "ilmajohto",
+                      "Ilmajohto",
                       "Puistomuuntamo",
                       "Pylväsmuuntamo",
                       "Jakokaappi",
@@ -402,12 +402,14 @@
         "haettu-kayttotarkoitus": {
           "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus",
           "enum": [
-            "maa-ja-metsatalous",
-            "asuinkiinteistolle-kulkeminen",
-            "liike-tai-teollisuuskiinteistölle-kulkeminen",
-            "jalankulku-tai-pyoraliikenne",
-            "lomakiinteistolle-kulku",
-            "muu"
+            "Maa- ja metsätalousajoon",
+            "Asuinkiinteistölle kulkuun",
+            "Liike- tai teollisuuskiinteistölle kulkuun",
+            "Energiapuukuljetuksiin",
+            "Jalankulku- tai pyöräliikenteeseen",
+            "Lomakiinteistölle kulkuun",
+            "Moottorikelkkailuun",
+            "Muu"
           ]
         },
         "liittyman-siirto": {
