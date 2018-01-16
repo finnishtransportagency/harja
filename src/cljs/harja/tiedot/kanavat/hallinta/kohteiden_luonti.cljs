@@ -15,7 +15,8 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as ur]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.grid :as grid])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tila (atom {:nakymassa? false
@@ -27,6 +28,8 @@
                  :kohdekokonaisuudet nil
                  :valittu-urakka nil
                  :uudet-urakkaliitokset {}})) ; Key on vector, jossa [kohde-id urakka-id] ja arvo on boolean
+
+(def uusi-kohde {})
 
 ;; Yleiset
 
@@ -63,6 +66,9 @@
 (defrecord KohdekokonaisuudetTallennettu [tulos])
 (defrecord KohdekokonaisuudetEiTallennettu [virhe])
 
+(defrecord ValitseKohde [kohde])
+(defrecord KohdettaMuokattu [kohde])
+
 (defn hae-kanava-urakat! [tulos! fail!]
   (go
     (let [vastaus (<! (k/post! :hallintayksikot
@@ -90,10 +96,21 @@
           ;; Liitetään kohteelle kohdekokonaisuuden (kanavan) tiedot
           ;; Tarvitaan mm. ryhmittelyä varten.
           (-> kohde
-              (assoc ::kok/id (::kok/id kohdekokonaisuus))
-              (assoc ::kok/nimi (::kok/nimi kohdekokonaisuus))))
+              (assoc-in [::kohde/kohdekokonaisuus ::kok/id] (::kok/id kohdekokonaisuus))
+              (assoc-in [::kohde/kohdekokonaisuus ::kok/nimi] (::kok/nimi kohdekokonaisuus))))
         (::kok/kohteet kohdekokonaisuus)))
     tulos))
+
+(defn ryhmittele-kohderivit-kanavalla [kohderivit]
+  (let [ryhmat (group-by (comp ::kok/id ::kohde/kohdekokonaisuus)
+                         (sort-by (comp ::kok/nimi ::kohde/kohdekokonaisuus) kohderivit))]
+    (mapcat
+      (fn [kohdekokonaisuus-id]
+        (let [ryhman-sisalto (get ryhmat kohdekokonaisuus-id)]
+          (concat
+            [(grid/otsikko (get-in (first ryhman-sisalto) [::kohde/kohdekokonaisuus ::kok/nimi]))]
+            (sort-by ::kohde/nimi ryhman-sisalto))))
+      (keys ryhmat))))
 
 (defn kohdekokonaisuudet [tulos]
   (-> (map #(select-keys % #{::kok/id ::kok/nimi}) tulos)
@@ -330,4 +347,12 @@
   LiitoksetEiPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
     (viesti/nayta! "Virhe urakkaliitoksien tallennuksessa!" :danger)
-    (assoc app :liittaminen-kaynnissa? false)))
+    (assoc app :liittaminen-kaynnissa? false))
+
+  ValitseKohde
+  (process-event [{kohde :kohde} app]
+    (assoc app :valittu-kohde kohde))
+
+  KohdettaMuokattu
+  (process-event [{kohde :kohde} app]
+    (assoc app :valittu-kohde kohde)))
