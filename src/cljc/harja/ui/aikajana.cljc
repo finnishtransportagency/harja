@@ -169,10 +169,10 @@
           :move-process (fn [alku-x hover-y x->paiva]
                           (fn [e]
                             (.preventDefault e)
-                            (when @drag
+                            (when @move
                               (if (zero? (.-buttons e))
                                 ;; Ei nappeja pohjassa, lopeta raahaus
-                                (reset! drag nil)
+                                (reset! move nil)
 
                                 ;; TODO EI TOIMI VIELÄ OIKEIN :(
                                 (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
@@ -183,16 +183,16 @@
                                       paiva (x->paiva x)
                                       tooltip-x (+ alku-x x)
                                       tooltip-y (hover-y y)]
-                                  (swap! drag
-                                         (fn [{avain :avain :as drag}]
+                                  (swap! move
+                                         (fn [{avain :avain :as move}]
                                            (merge
                                              {:x tooltip-x :y tooltip-y}
                                              (if (or (and (= avain ::alku)
-                                                          (pvm/ennen? paiva (::loppu drag)))
+                                                          (pvm/ennen? paiva (::loppu move)))
                                                      (and (= avain ::loppu)
-                                                          (pvm/jalkeen? paiva (::alku drag))))
-                                               (assoc drag avain (x->paiva x))
-                                               drag)))))))))
+                                                          (pvm/jalkeen? paiva (::alku move))))
+                                               (assoc move avain (x->paiva x))
+                                               move)))))))))
           :move-stop! #(when-let [m @move]
                          (go
                            ;; TODO EI TOIMI VIELÄ OIKEIN
