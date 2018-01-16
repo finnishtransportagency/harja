@@ -70,7 +70,7 @@
                    (hae %)
                    (get % nimi))))
 
-(defn suorita [db user {jarjestys :jarjestys :as parametrit}]
+(defn suorita [db user {jarjestys :jarjestys nayta-tarkka-aikajana? :nayta-tarkka-aikajana? :as parametrit}]
   (let [parametrit (parametrit-urakan-tiedoilla db parametrit)
         aikataulu (yllapitokohteet/hae-urakan-aikataulu db user parametrit)
         aikataulu (if (or (nil? jarjestys) (= :aika jarjestys))
@@ -82,7 +82,8 @@
     [:raportti {:nimi "Ylläpidon aikataulu"
                 :orientaatio :landscape}
      [:aikajana {}
-      (map aikataulu/aikataulurivi-jana aikataulu)]
+      (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?})
+           aikataulu)]
      [:taulukko {:otsikko "Kohdeluettelo"}
       (mapv #(dissoc % :fmt :hae) sarakkeet)
 
