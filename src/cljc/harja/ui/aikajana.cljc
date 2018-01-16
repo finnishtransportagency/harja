@@ -187,7 +187,7 @@
                                          (merge
                                            {:x tooltip-x :y tooltip-y}
                                            (cond
-                                             ;; Alku tai loppu, varmistetaan, että on validi
+                                             ;; Alku tai loppu, varmistetaan, että venyy oikeaan suuntaan
                                              (or (and (= avain ::alku)
                                                         (pvm/ennen? paiva (::loppu drag)))
                                                    (and (= avain ::loppu)
