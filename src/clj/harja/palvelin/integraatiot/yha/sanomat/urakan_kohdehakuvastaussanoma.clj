@@ -47,9 +47,9 @@
 
 (defn kasittele-kohdetyyppi [tyyppi]
   (case tyyppi
-    1 "paallyste"
-    2 "kevytliikenne"
-    3 "sora"
+    :1 "paallyste"
+    :2 "kevytliikenne"
+    :3 "sora"
     "paallyste"))
 
 (defn lue-kohteet [data]
