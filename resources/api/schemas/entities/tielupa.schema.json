@@ -315,7 +315,7 @@
                       "20 kV maakaapeli",
                       "45 kV maakaapeli",
                       "110 kV maakaapeli",
-                      "maakaapeli",
+                      "Maakaapeli",
                       "0,4 kV ilmajohto",
                       "0,4 ja 1 kV ilmajohto",
                       "0,4 ja 20 kV ilmajohto",
@@ -323,13 +323,14 @@
                       "20 kV ilmajohto",
                       "45 kV ilmajohto",
                       "110 kV ilmajohto",
-                      "ilmajohto",
+                      "Ilmajohto",
                       "Puistomuuntamo",
                       "Pylväsmuuntamo",
                       "Jakokaappi",
                       "Telekaapeli",
                       "Kaukolämpöjohto",
-                      "Maakaasuputki"
+                      "Maakaasuputki",
+                      "Sähkömaakaapeli"
                     ]
                   },
                   "asennustyyppi": {
@@ -341,7 +342,11 @@
                       "Tien alitus",
                       "Silta",
                       "Tiealueen ulkopuolella",
-                      "Suojaputki"
+                      "Suojaputki",
+                      "Jatkos nykyisestä kaapelista",
+                      "Ilmajohto tiealueen ulkopuolelle",
+                      "Uusi asiakasliittymä",
+                      "Nykyiseen putkitukseen asentaminen"
                     ]
                   },
                   "kommentit": {
@@ -396,14 +401,40 @@
         },
         "haettu-kayttotarkoitus": {
           "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus",
-          "enum": [
-            "maa-ja-metsatalous",
-            "asuinkiinteistolle-kulkeminen",
-            "liike-tai-teollisuuskiinteistölle-kulkeminen",
-            "jalankulku-tai-pyoraliikenne",
-            "lomakiinteistolle-kulku",
-            "muu"
-          ]
+          "properties": {
+            "maa-ja-metsatalousajoon": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/maa-ja-metsatalousajoon",
+              "type": "boolean"
+            },
+            "asuinkiinteistolle-kulkuun": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/asuinkiinteistolle-kulkuun",
+              "type": "boolean"
+            },
+            "liike-tai-teollisuuskiinteistolle-kulkuun": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/liike-tai-teollisuuskiinteistolle-kulkuun",
+              "type": "boolean"
+            },
+            "energiapuukuljetuksiin": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/energiapuukuljetuksiin",
+              "type": "boolean"
+            },
+            "jalankulku-tai-pyoraliikenteeseen": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/jalankulku-tai-pyoraliikenteeseen",
+              "type": "boolean"
+            },
+            "lomakiinteistolle-kulkuun": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/lomakiinteistolle-kulkuun",
+              "type": "boolean"
+            },
+            "moottorikelkkailuun": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/moottorikelkkailuun",
+              "type": "boolean"
+            },
+            "muu": {
+              "id": "urn:harja/tielupa/liittymalupa/haettu-kayttotarkoitus/muu",
+              "type": "boolean"
+            }
+          }
         },
         "liittyman-siirto": {
           "id": "urn:harja/tielupa/liittymalupa/liittyman-siirto",
@@ -466,7 +497,7 @@
             },
             "leveys-metreissa": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/leveys-metreissa",
-              "type": "integer"
+              "type": "number"
             },
             "rumpu": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rumpu",
@@ -478,19 +509,19 @@
             },
             "rummun-etaisyys-metreissa": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/rummun-etaisyys-metreissa",
-              "type": "integer"
+              "type": "number"
             },
             "odotustila-metreissa": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/odotustila-metreissa",
-              "type": "integer"
+              "type": "number"
             },
             "nakemapisteen-etaisyys": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/nakemapisteen-etaisyys",
-              "type": "integer"
+              "type": "number"
             },
             "liittymisnakema": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liittymisnakema",
-              "type": "integer"
+              "type": "number"
             },
             "liikennemerkit": {
               "id": "urn:harja/tielupa/liittymalupa/liittymaohje/liikennemerkit",
@@ -746,10 +777,16 @@
         "sijoitus": {
           "id": "urn:harja/tielupa/suoja-aluerakentamislupa/sijoitus",
           "required": true,
-          "enum": [
-            "suoja-alue",
-            "nakema-alue"
-          ]
+          "properties": {
+            "suoja-alue": {
+              "id": "urn:harja/tielupa/suoja-aluerakentamislupa/sijoitus",
+              "type": "boolean"
+            },
+            "nakema-alue": {
+              "id": "urn:harja/tielupa/suoja-aluerakentamislupa/sijoitus",
+              "type": "boolean"
+            }
+          }
         },
         "kiinteisto-rn": {
           "id": "urn:harja/tielupa/perustiedot/kiinteisto-rn",
@@ -939,7 +976,11 @@
                     "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset/0/johtoasennus/asennustyyppi",
                     "required": true,
                     "enum": [
-                      ""
+                      "Tien varressa",
+                      "Tien alitus",
+                      "Silta",
+                      "Tiealueen ulkopuolella",
+                      "Muu asennus"
                     ]
                   },
                   "kommentit": {
