@@ -586,7 +586,7 @@
                                 :yllapitokohde-id 1
                                 :aikataulurivit []}))))
 
-(deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu-vaaraan-urakkaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
     (is (thrown? SecurityException
