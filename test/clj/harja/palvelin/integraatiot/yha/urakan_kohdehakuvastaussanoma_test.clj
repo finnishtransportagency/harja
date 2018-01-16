@@ -49,5 +49,4 @@
                                             +onnistunut-urakan-kohdehakuvastaus+
                                             "<kohdetyyppi>1</kohdetyyppi>"
                                             "<kohdetyyppi>2</kohdetyyppi>"))]
-
     (is (= "kevytliikenne" (:yllapitokohdetyyppi (first (:kohteet vastaus)))))))
