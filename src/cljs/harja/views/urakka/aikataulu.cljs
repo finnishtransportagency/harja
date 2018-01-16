@@ -241,13 +241,15 @@
                          (tallenna-aikataulu
                            urakka-id sopimus-id vuosi
                            (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
-                         ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla
-                         ;; , joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
+                         ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
+                         ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
                          ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
-                         ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu saamaan sivuvaikutus (virheviestin näyttäminen)
+                         ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
                          ;; eikä niinkään paluuarvosta.
                          (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-             (map #(aikataulu/aikataulurivi-jana voi-muokata-paallystys? voi-muokata-tiemerkinta? %)
+             (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
+                                                    :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                                    :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
                   aikataulurivit)]])
          [grid/grid
           {:otsikko [:span
