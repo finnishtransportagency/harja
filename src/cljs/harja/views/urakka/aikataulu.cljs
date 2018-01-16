@@ -228,7 +228,7 @@
          (when aikajana?
            [:div
             [:div
-             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
+             [leijuke/otsikko-ja-vihjeleijuke "Aikajana" ;; TODO Lisää tähän "vihje" teksti kuukauden ajaksi
               {:otsikko "Visuaalisen muokkauksen ohje"}
               [:div
                [:h6 "Kohteen alun / lopun venytys"]
