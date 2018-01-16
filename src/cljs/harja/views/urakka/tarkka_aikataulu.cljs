@@ -70,7 +70,6 @@
                                (:tarkka-aikataulu rivi))
        :vuosi vuosi
        :voi-tallentaa? voi-muokata-paallystys?
-       :nakyma nakyma
        :urakka-id urakka-id}]
      [kohteen-aikataulutaulukko
       {:otsikko "Kohteen tiemerkintäurakan tarkka aikataulu"
@@ -80,5 +79,4 @@
                                (:tarkka-aikataulu rivi))
        :vuosi vuosi
        :voi-tallentaa? voi-muokata-tiemerkinta?
-       :nakyma nakyma
        :urakka-id urakka-id}]]))
