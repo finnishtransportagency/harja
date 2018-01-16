@@ -161,18 +161,20 @@
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
           :move @move
-          :move-start! (fn [e jana]
+          :move-start! (fn [e jana avain]
                          (.preventDefault e)
-                         (reset! move (select-keys jana #{::alku ::loppu ::drag})))
+                         (reset! move
+                                 (assoc (select-keys jana #{::alku ::loppu ::drag})
+                                   :avain avain)))
           :move-process (fn [alku-x hover-y x->paiva]
                           (fn [e]
                             (.preventDefault e)
-                            (when @move
+                            (when @drag
                               (if (zero? (.-buttons e))
                                 ;; Ei nappeja pohjassa, lopeta raahaus
-                                (reset! move nil)
+                                (reset! drag nil)
 
-                                ;; TODO TÄMÄ EI TOIMI VIELÄ OIKEIN!
+                                ;; TODO EI TOIMI VIELÄ OIKEIN :(
                                 (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
                                       cx (.-clientX e)
                                       cy (.-clientY e)
@@ -191,6 +193,11 @@
                                                           (pvm/jalkeen? paiva (::alku drag))))
                                                (assoc drag avain (x->paiva x))
                                                drag)))))))))
+          :move-stop! #(when-let [m @move]
+                         (go
+                           ;; TODO EI TOIMI VIELÄ OIKEIN
+                           ;; (<! (muuta! (select-keys m #{::drag ::alku ::loppu})))
+                           (reset! move nil)))
           :drag @drag
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
@@ -275,9 +282,9 @@
                :on-mouse-out hide-tooltip!}]])))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
-                                       move-start!
+                                       move move-start! move-process! move-stop!
                                        drag drag-start! drag-move! drag-stop!
-                                       leveys drag-start!]}]
+                                       leveys drag-start!] :as asetukset}]
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
         rivin-korkeus 20
@@ -327,9 +334,13 @@
          {#?@(:clj [:xmlns "http://www.w3.org/2000/svg"])
           :width leveys :height korkeus
           :viewBox (str "0 0 " leveys " " korkeus)
-          :on-mouse-up drag-stop!
-          :on-mouse-move (when drag-move!
-                           (drag-move! alku-x hover-y x->paiva))
+          :on-mouse-up #(do (move-stop!)
+                            (drag-stop!))
+          :on-mouse-move #(do
+                            (when drag-move!
+                                (drag-move! alku-x hover-y x->paiva))
+                            (when move-process!
+                              (move-process! alku-x hover-y x->paiva)))
           :style {:cursor (when drag "ew-resize")}}
 
          #?(:cljs
@@ -350,10 +361,12 @@
                   (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
                           teksti ::teksti :as jana}]
                     (let [alku-ja-loppu? (and alku loppu)
-                          ;; Alku ja loppu otetaan raahauksesta, tai jos ei raahata niin janan tiedoista
-                          [alku loppu] (if (and drag (= (::drag drag) (::drag jana)))
-                                         [(::alku drag) (::loppu drag)]
-                                         [alku loppu])
+                          ;; Alku ja loppu otetaan raahauksesta / siirtämisestä, tai jos
+                          ;; ei olla tekemässä kumpaakaan, niin janan tiedoista
+                          [alku loppu] (cond
+                                         (and drag (= (::drag drag) (::drag jana))) [(::alku drag) (::loppu drag)]
+                                         (and move (= (::drag move) (::drag move))) [(::alku move) (::loppu move)]
+                                         :default [alku loppu])
                           ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
                           x (inc (paiva-x (or alku loppu)))
                           jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
@@ -370,7 +383,9 @@
                            [:g [:rect (merge
                                         (when voi-raahata?
                                           {:style {:cursor "move"}
-                                           :on-mouse-down #(move-start! % jana)})
+                                           ;; TODO Raahaa molempia, ei vain alkua
+                                           ;; TODO Jos raahataan koko kohdetta, raahaa myös päällystystä?
+                                           :on-mouse-down #(move-start! % jana ::alku)})
                                         {:x x :y y
                                          :width jana-leveys
                                          :height korkeus
