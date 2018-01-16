@@ -871,17 +871,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                (not (nil? toinen-loppu))
                (valissa? ensimmainen-loppu toinen-alku toinen-loppu false)))))
 
-#?(:cljs
-   (defn yhdista-pvm-ja-aika
-     "Yhdistaa DateTime ja Aika tyypit yhdeksi DateTime:ksi"
-     [pvm aika]
-     (let [t (:tunnit aika)
-           min (:minuutit aika)
-           s (:sekunnit aika)]
-       (aikana pvm t min s 0))))
-
-#?(:cljs
-   (defn DateTime->Aika
-     "Annettunna DateTime, palauttaa Aika tyyppin, joka vastaa annetun DateTime:n aikaa"
-     [pvm]
-     (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))))
+(defn pvm-ilman-samaa-vuotta
+  "Formatoi annetun pvm:n suomalaisessa muodossa. Jättää vuoden pois, mikäli se on sama kuin annettu.
+   Tällä tavalla voidaan esim. UI:ssa säästää tilaa, kun vuotta ei piirretä silloin kun on ilmeistä, mistä
+   vuodesta on kyse."
+  [pvm sama-vuosi]
+  (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) sama-vuosi)}))
