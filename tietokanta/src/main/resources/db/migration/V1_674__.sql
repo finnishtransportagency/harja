@@ -9,4 +9,3 @@ UPDATE indeksi
 UPDATE urakka
    SET indeksi = 'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi'
  WHERE indeksi = 'MAKU 2010 ylläpidon kokonaisindeksi' and tyyppi = 'vesivayla-hoito';
- 
