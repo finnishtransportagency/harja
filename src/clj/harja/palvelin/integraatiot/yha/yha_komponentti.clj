@@ -74,7 +74,7 @@
       (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
             virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) virheet))
-            virhe-viesti (or (:selite virhe) (str/join ", "(map :selite kama)))]
+            virhe-viesti (or (:selite virhe) (str/join ", "(map :selite virheet)))]
         (if onnistunut?
           (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
           (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
