@@ -101,7 +101,6 @@
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
     (mapv (fn [alikohde]
-
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
               (apply merge ilmoitustiedot alikohde)))
