@@ -65,25 +65,36 @@
   (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
         virheet (:virheet vastaus)
         onnistunut? (empty? virheet)
-        virhe-viesti (muodosta-kohteiden-lahetysvirheet virheet)]
+        virhe-viesti (muodosta-kohteiden-lahetysvirheet virheet)
+        epaonnistuneet (into #{}
+                             ;; Jos on yksikään virhe, jolla ei ole kohde id:tä
+                             ;; katsotaan kaikki kohteet epäonnistuneiksi.
+                             (if (some #(nil? (:kohde-yha-id %)) virheet)
+                               (map #(:yhaid (:kohde %)) kohteet)
+                               (map :kohde-yha-id virheet)))]
+
     (if onnistunut?
       (log/info "Kohteiden lähetys YHA:n onnistui")
-      (log/error (str "Kohteiden lähetys YHA:n epäonnistui: " virhe-viesti)))
-    
+      (log/error (str "Virheitä kohteiden lähetyksessä YHA:n: " virhe-viesti)))
+
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
+            kohteen-lahetys-onnistunut? (not (contains? epaonnistuneet kohde-yha-id))
             virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) virheet))
-            virhe-viesti (or (:selite virhe) (str/join ", "(map :selite virheet)))]
-        (if onnistunut?
+            virhe-viesti (when (not kohteen-lahetys-onnistunut?)
+                           (or (:selite virhe)
+                               (str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
+        
+        (if kohteen-lahetys-onnistunut?
           (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
-          (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
+          (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-viesti))
               (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))
 
         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
           {:lahetetty (pvm/nyt)
-           :onnistunut onnistunut?
+           :onnistunut kohteen-lahetys-onnistunut?
            :lahetysvirhe virhe-viesti
            :kohdeid kohde-id})))
     onnistunut?))
