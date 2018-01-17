@@ -71,7 +71,7 @@
        :vuosi vuosi
        :voi-tallentaa? voi-muokata-paallystys?
        :urakka-id urakka-id}]
-     ;; Asiakkaan edustajan mukaan ei tällä hetkellä ole tarvetta tälle
+     ;; Asiakkaan edustajan mukaan ei tällä hetkellä ole tarvetta tiemerkinnän tarkalle aikataululle.
      ;; Voidaan kuitenkin helposti ottaa käyttöön, mikäli tarve tulee.
      ;; Tarkka aikataulu tallentuu aina urakkakohtaisesti.
      #_[kohteen-aikataulutaulukko
