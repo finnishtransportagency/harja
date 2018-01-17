@@ -193,8 +193,7 @@
                                                    (and (= avain ::loppu)
                                                         (pvm/jalkeen? paiva (::alku drag))))
                                              (assoc drag avain (x->paiva x))
-                                             ;; Siirretään koko palkkia.
-                                             ;; TODO Laske montako päivää liikutaan hiirellä alkupisteestä
+                                             ;; Koko palkki, siirretään alkua ja loppua
                                              (= avain ::palkki)
                                              (assoc drag ::loppu (x->paiva x)) ;; TODO Alku ja loppu
                                              :default drag)))))))))
@@ -254,7 +253,7 @@
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
         rivin-korkeus 20
-        alku-x 150
+        alku-x 150 ; Kuvaa pistettä, josta aikajana alkaa (kohteiden nimien jälkeen)
         alku-y 50
         korkeus (+ alku-y (* (count rivit) rivin-korkeus))
         kaikki-ajat (mapcat ::ajat rivit)
