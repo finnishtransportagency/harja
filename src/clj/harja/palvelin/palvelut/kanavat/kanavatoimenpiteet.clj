@@ -157,36 +157,27 @@
   (assert (integer? toimenpide-id) (str "Toimenpiteen materiaalikirjausta ei voi tallentaa ilman toimenpide-id:tä - " toimenpide-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   (log/debug "tallenna-materiaalikirjaukset: kirjauksia/poistoja" (count materiaalikirjaukset) (count materiaalipoistot))
-  (let [toimenpiteen-hinnat (q-toimenpide/hae-toimenpiteen-hinnat db toimenpide-id)]
-    (if toimenpide-poistettu?
-      (do
-        (q-toimenpide/tallenna-toimenpiteen-omat-hinnat! {:db db
-                                                          :user kayttaja
-                                                          :hinnat (map #(assoc % ::muokkaustiedot/poistettu? true)
-                                                                       toimenpiteen-hinnat)})
-        (q-toimenpide/tallenna-toimenpiteen-tyot! {:db db
-                                                   :user kayttaja
-                                                   :tyot (map #(assoc % ::muokkaustiedot/poistettu? true)
-                                                              (q-toimenpide/hae-toimenpiteen-tyot db toimenpide-id))})
-        (q-materiaali/poista-toimenpiteen-kaikki-materiaalikirjaukset db kayttaja toimenpide-id))
-      ;; else
-      (do
-        (doseq [kirjaus-ilman-tpid materiaalikirjaukset
-                :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
-          (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
-          (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
-        (let [poistettavien-materiaalien-idt (set (map ::materiaali/id materiaalipoistot))
-              poistettavat-hinnat (sequence (comp
-                                              (filter #(and (poistettavien-materiaalien-idt (::hinta/materiaali-id %))
-                                                            (= (::hinta/ryhma %) "materiaali")))
-                                              (map #(assoc % ::muokkaustiedot/poistettu? true)))
-                                            toimenpiteen-hinnat)]
-          (when (not (empty? poistettavat-hinnat))
-            (q-toimenpide/tallenna-toimenpiteen-omat-hinnat! {:db db
-                                                              :user kayttaja
-                                                              :hinnat poistettavat-hinnat})))
-        (doseq [mk materiaalipoistot]
-          (q-materiaali/poista-materiaalikirjaus db kayttaja (::materiaali/id mk)))))))
+  (if toimenpide-poistettu?
+    (q-materiaali/poista-toimenpiteen-kaikki-materiaalikirjaukset db kayttaja toimenpide-id)
+    ;; else
+    (do
+      (doseq [kirjaus-ilman-tpid materiaalikirjaukset
+              :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
+        (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
+        (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
+      (let [poistettavien-materiaalien-idt (set (map ::materiaali/id materiaalipoistot))
+            toimenpiteen-hinnat (q-toimenpide/hae-toimenpiteen-hinnat db toimenpide-id)
+            poistettavat-hinnat (sequence (comp
+                                            (filter #(and (poistettavien-materiaalien-idt (::hinta/materiaali-id %))
+                                                          (= (::hinta/ryhma %) "materiaali")))
+                                            (map #(assoc % ::muokkaustiedot/poistettu? true)))
+                                          toimenpiteen-hinnat)]
+        (when (not (empty? poistettavat-hinnat))
+          (q-toimenpide/tallenna-toimenpiteen-omat-hinnat! {:db db
+                                                            :user kayttaja
+                                                            :hinnat poistettavat-hinnat})))
+      (doseq [mk materiaalipoistot]
+        (q-materiaali/poista-materiaalikirjaus db kayttaja (::materiaali/id mk))))))
 
 (defn tallenna-kanavatoimenpide [db fim email user {tyyppi ::toimenpide/tyyppi
                                                     urakka-id ::toimenpide/urakka-id
@@ -208,8 +199,17 @@
   (jdbc/with-db-transaction [db db]
     (let [toimenpide-ilman-materiaaleja (dissoc toimenpide ::toimenpide/materiaalikirjaukset ::toimenpide/materiaalipoistot)
           tallennettu-toimenpide-map (q-toimenpide/tallenna-toimenpide db (:id user) toimenpide-ilman-materiaaleja)]
-      #_(when (::muokkaustiedot/poistettu? toimenpide)
-          (poista-toimenpiteen-materiaalikirjaukset db user urakka-id toimenpide))
+      ;; Jos kyseessä on muutos- ja lisätyön poisto, niin poistetaan myös sille merkatut hinnat
+      (when (and (::muokkaustiedot/poistettu? toimenpide)
+                 (= (::toimenpide/tyyppi toimenpide) :muutos-lisatyo))
+        (q-toimenpide/tallenna-toimenpiteen-omat-hinnat! {:db db
+                                                          :user user
+                                                          :hinnat (map #(assoc % ::muokkaustiedot/poistettu? true)
+                                                                       (q-toimenpide/hae-toimenpiteen-hinnat db (::toimenpide/id toimenpide)))})
+        (q-toimenpide/tallenna-toimenpiteen-tyot! {:db db
+                                                   :user user
+                                                   :tyot (map #(assoc % ::muokkaustiedot/poistettu? true)
+                                                              (q-toimenpide/hae-toimenpiteen-tyot db (::toimenpide/id toimenpide)))}))
       (tallenna-materiaalikirjaukset db fim email user urakka-id (merge toimenpide tallennettu-toimenpide-map)))))
 
 (defrecord Kanavatoimenpiteet []
