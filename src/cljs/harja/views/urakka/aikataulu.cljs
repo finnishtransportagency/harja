@@ -228,7 +228,7 @@
             voi-muokata-paallystys? #(boolean (and (= (:nakyma optiot) :paallystys)
                                                    saa-muokata?))
             voi-muokata-tiemerkinta? (fn [rivi] (boolean (and (= (:nakyma optiot) :tiemerkinta)
-                                           saa-merkita-valmiiksi?
+                                                              saa-merkita-valmiiksi?
                                                               (:valmis-tiemerkintaan rivi))))
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
@@ -239,11 +239,18 @@
              [leijuke/otsikko-ja-vihjeleijuke "Aikajana" ;; TODO Lisää tähän "vihje" teksti kuukauden ajaksi
               {:otsikko "Visuaalisen muokkauksen ohje"}
               [:div
-               [:h6 "Kohteen alun / lopun venytys"]
-               [:figure
-                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"}]
-                [:figcaption
-                 [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]]]
+               [:div
+                [:h6 "Aikajanan alun / lopun venytys"]
+                [:figure
+                 [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"}]
+                 [:figcaption
+                  [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]
+               [:div
+                [:h6 "Aikajanan siirtäminen"]
+                [:figure
+                 [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"}]
+                 [:figcaption
+                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]]]]
             [aikajana/aikajana
              {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
                          (tallenna-aikataulu
