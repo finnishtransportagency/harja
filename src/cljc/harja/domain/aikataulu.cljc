@@ -35,7 +35,8 @@
             nimi id kohdenumero] :as rivi}
     {:keys [voi-muokata-paallystys? voi-muokata-tiemerkinta?
             nayta-tarkka-aikajana?] :as tiedot}]
-   (let [voi-muokata-paallystys? (or voi-muokata-paallystys? (constantly false))
+   (let [yllapitokohde-id id
+         voi-muokata-paallystys? (or voi-muokata-paallystys? (constantly false))
          voi-muokata-tiemerkinta? (or voi-muokata-tiemerkinta? (constantly false))]
      {::aikajana/otsikko (str kohdenumero " - " nimi)
       ::aikajana/ajat
@@ -46,7 +47,7 @@
                    [(when (or aikataulu-kohde-alku aikataulu-kohde-valmis)
                       (merge (aikataulujana-tyylit :kohde)
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
-                                                [id :kohde])
+                                                [yllapitokohde-id :kohde])
                               ::aikajana/alku aikataulu-kohde-alku
                               ::aikajana/loppu aikataulu-kohde-valmis
                               ::aikajana/teksti (aikajana-teksti "Koko kohde"
@@ -55,7 +56,7 @@
                     (when (or aikataulu-paallystys-alku aikataulu-paallystys-loppu)
                       (merge (aikataulujana-tyylit :paallystys)
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
-                                                [id :paallystys])
+                                                [yllapitokohde-id :paallystys])
                               ::aikajana/alku aikataulu-paallystys-alku
                               ::aikajana/loppu aikataulu-paallystys-loppu
                               ::aikajana/teksti (aikajana-teksti "Päällystys"
@@ -64,7 +65,7 @@
                     (when (or aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu)
                       (merge (aikataulujana-tyylit :tiemerkinta)
                              {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
-                                                [id :tiemerkinta])
+                                                [yllapitokohde-id :tiemerkinta])
                               ::aikajana/alku aikataulu-tiemerkinta-alku
                               ::aikajana/loppu aikataulu-tiemerkinta-loppu
                               ::aikajana/teksti (aikajana-teksti "Tiemerkintä"
@@ -73,10 +74,12 @@
              ;; Ylläpitokohteen yksityiskohtainen aikataulu
              (when nayta-tarkka-aikajana?
                (map
-                 (fn [{:keys [toimenpide kuvaus alku loppu]}]
+                 (fn [{:keys [id toimenpide kuvaus alku loppu] :as drag-tiedot}]
                    (merge (or (tarkka-aikataulujana-tyylit toimenpide)
                               (tarkka-aikataulujana-tyylit :oletus))
-                          {::aikajana/alku alku
+                          {::aikajana/drag (when (voi-muokata-paallystys? rivi) ;; TODO Oikeustarkistus sen mukaan kuuluuko palkki mihin urakkaan
+                                             [yllapitokohde-id :tarkka-aikataulu id])
+                           ::aikajana/alku alku
                            ::aikajana/loppu loppu
                            ::aikajana/teksti (aikajana-teksti
                                                (if (and (= toimenpide :muu) kuvaus)
