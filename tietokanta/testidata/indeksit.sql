@@ -123,15 +123,15 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kunnossapid
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kunnossapidon osaindeksi', 2017, 8, 106.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kunnossapidon osaindeksi', 2017, 9, 106.2);
 
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 1, 103.9);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 2, 105.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 3, 104.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 4, 103.9);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 5, 105.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 6, 104.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 7, 105.9);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 8, 106.2);
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 ylläpidon kokonaisindeksi', 2017, 9, 106.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 1, 103.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 2, 105.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 3, 104.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 4, 103.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 5, 105.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 6, 104.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 7, 105.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 8, 106.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 9, 106.2);
 
 
 INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
