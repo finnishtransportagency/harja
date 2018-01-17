@@ -1,7 +1,6 @@
 (ns harja.kyselyt.vesivaylat.materiaalit
   (:require [jeesql.core :refer [defqueries]]
             [specql.core :refer [fetch insert! update!] :as specql]
-            [specql.op :as op]
             [harja.domain.vesivaylat.materiaali :as m]
             [harja.domain.muokkaustiedot :as muok]
             [namespacefy.core :refer [unnamespacefy]]))
@@ -10,12 +9,6 @@
 
 (defn hae-materiaalilistaus [db hakuehdot]
   (fetch db ::m/materiaalilistaus (specql/columns ::m/materiaalilistaus) hakuehdot))
-
-(defn poiston-jalkeiset-materiaalit [db idt toimenpide-id]
-  (when (and idt (not (empty? idt)))
-    (fetch db ::m/materiaali #{::m/nimi} {::m/id (op/not (op/in idt))
-                                          ::muok/poistettu? false
-                                          ::m/toimenpide toimenpide-id})))
 
 (defn kirjaa-materiaali
   "Kirjaa materiaalin käytön tai lisäyksen"
