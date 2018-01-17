@@ -46,6 +46,8 @@
         toimenpide-id (::toimenpide/id tiedot)
         liita-tpid-mappeihin (fn [mapit k]
                                (mapv #(assoc % k toimenpide-id) mapit))]
+    (log/debug "hinnoittelun tiedot: " (with-out-str
+                                         (clojure.pprint/pprint tiedot)))
     (assert urakka-id "Urakka-id puuttuu!")
     (oikeudet/vaadi-oikeus "hinnoittele-toimenpide" oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id) ;; FIXME
     (vaadi-rivit-kuuluvat-emoon db ::toimenpide/kanava-toimenpide ::toimenpide/urakka-id ::toimenpide/id #{(::toimenpide/id tiedot)} urakka-id)

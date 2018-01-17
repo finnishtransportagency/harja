@@ -119,8 +119,8 @@
             hinta))
         hinnat))
 
-(s/def ::tallennettava-hinta (s/keys :req [::summa ::otsikko ::yleiskustannuslisa ::ryhma]
-                                     :opt [::id ::m/poistettu? ::materiaali-id]))
+(s/def ::tallennettava-hinta (s/keys :req [::otsikko ::yleiskustannuslisa ::ryhma]
+                                     :opt [::summa ::id ::m/poistettu? ::materiaali-id]))
 
 (s/def ::tallennettavat-hinnat
   (s/coll-of ::tallennettava-hinta))
