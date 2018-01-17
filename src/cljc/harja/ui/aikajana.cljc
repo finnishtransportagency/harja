@@ -161,7 +161,7 @@
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
           :drag @drag ;; sis. nykyisen raahaamisen tiedot: :x, :y, ::alku (pvm), ::loppu (pvm),
-                      ;; ::drag [id tyyppi], :avain (:alku/:loppu/:palkki), drag-alku [x y]
+          ;; ::drag [id tyyppi], :avain (:alku/:loppu/:palkki), drag-alku [x y]
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
                          (reset! drag
@@ -180,11 +180,21 @@
                                     cy (.-clientY e)
                                     x (- cx svg-x alku-x) ; Aikajanan sisällä
                                     y (- cy svg-y)
-                                    paiva (x->paiva x)
+                                    alku-pvm (when-let [raahaus-alku-x (first (:drag-alku @drag))]
+                                               (x->paiva raahaus-alku-x))
+                                    nykyinen-pvm (x->paiva x)
+                                    pvm-ero (when (and alku-pvm nykyinen-pvm)
+                                              (if (t/before? alku-pvm nykyinen-pvm)
+                                                (t/in-days (t/interval alku-pvm nykyinen-pvm))
+                                                (t/in-days (t/interval nykyinen-pvm alku-pvm))))
                                     tooltip-x (+ alku-x x)
                                     tooltip-y (hover-y y)]
+
+                                (println "PÄIVÄERO: " (pr-str pvm-ero))
+
                                 (when-not (:drag-alku @drag)
                                   (swap! drag assoc :drag-alku [cx cy]))
+
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
                                          (merge
@@ -192,13 +202,14 @@
                                            (cond
                                              ;; Alku tai loppu, varmistetaan, että venyy oikeaan suuntaan
                                              (or (and (= avain ::alku)
-                                                      (pvm/ennen? paiva (::loppu drag)))
+                                                      (pvm/ennen? nykyinen-pvm (::loppu drag)))
                                                  (and (= avain ::loppu)
-                                                      (pvm/jalkeen? paiva (::alku drag))))
+                                                      (pvm/jalkeen? nykyinen-pvm (::alku drag))))
                                              (assoc drag avain (x->paiva x))
-                                             ;; Koko palkki, siirretään alkua ja loppua
+                                             ;; Koko palkki, siirretään alkua ja loppua eron verran
                                              (= avain ::palkki)
-                                             (assoc drag ::loppu (x->paiva x)) ;; TODO Alku ja loppu
+                                             (assoc drag ::alku (t/plus (::alku drag) (t/in-days pvm-ero))
+                                                         ::loppu (t/plus (::loppu drag) (t/in-days pvm-ero)))
                                              :default drag)))))))))
           :drag-stop! #(when-let [d @drag]
                          (go
