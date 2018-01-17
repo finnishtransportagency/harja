@@ -235,37 +235,36 @@
          [valinnat ur]
          (when aikajana?
            [:div
-            [:div
-             [leijuke/otsikko-ja-vihjeleijuke "Aikajana" ;; TODO Lisää tähän "vihje" teksti kuukauden ajaksi
-              {:otsikko "Visuaalisen muokkauksen ohje"}
+            [leijuke/otsikko-ja-vihjeleijuke "Aikajana" ;; TODO Lisää tähän "vihje" teksti kuukauden ajaksi
+             {:otsikko "Visuaalisen muokkauksen ohje"}
+             [leijuke/multipage-vihjesisalto
               [:div
-               [:div
-                [:h6 "Aikajanan alun / lopun venytys"]
-                [:figure
-                 [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"}]
-                 [:figcaption
-                  [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]
-               [:div
-                [:h6 "Aikajanan siirtäminen"]
-                [:figure
-                 [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"}]
-                 [:figcaption
-                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]]]]
-            [aikajana/aikajana
-             {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
-                         (tallenna-aikataulu
-                           urakka-id sopimus-id vuosi
-                           (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
-                         ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
-                         ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
-                         ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
-                         ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
-                         ;; eikä niinkään paluuarvosta.
-                         (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-             (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
-                                                    :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
-                                                    :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
-                  aikataulurivit)]])
+               [:h6 "Aikajanan alun / lopun venytys"]
+               [:figure
+                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"}]
+                [:figcaption
+                 [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]
+              [:div
+               [:h6 "Aikajanan siirtäminen"]
+               [:figure
+                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"}]
+                [:figcaption
+                 [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]]]
+             [aikajana/aikajana
+              {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
+                          (tallenna-aikataulu
+                            urakka-id sopimus-id vuosi
+                            (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
+                          ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
+                          ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
+                          ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
+                          ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
+                          ;; eikä niinkään paluuarvosta.
+                          (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
+              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
+                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                                     :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
+                   aikataulurivit)]])
          [grid/grid
           {:otsikko [:span
                      "Kohteiden aikataulu"
