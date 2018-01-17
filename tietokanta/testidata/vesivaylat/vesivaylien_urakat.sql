@@ -53,7 +53,7 @@ VALUES
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, sampoid)
 VALUES
   ('Turun väyläyksikön väylänhoito ja -käyttö, Itäinen SL',
-    'MAKU 2010 ylläpidon kokonaisindeksi',
+    'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi',
    '2019-08-01', '2024-07-30',
    (SELECT id FROM organisaatio WHERE nimi = 'Meriväylät'),
    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
