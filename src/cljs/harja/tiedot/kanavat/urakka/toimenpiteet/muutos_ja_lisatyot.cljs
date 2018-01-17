@@ -160,7 +160,6 @@
   (flatten
     (map (fn [materiaali]
            (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
-                    (cljs.pprint/pprint %)
                     {:nimi (::materiaalit/nimi materiaali)
                      :maara (- (::materiaalit/maara %))
                      :materiaali-id (::materiaalit/id %)})
