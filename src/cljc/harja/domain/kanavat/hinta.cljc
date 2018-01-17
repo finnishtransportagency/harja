@@ -39,7 +39,8 @@
     ::yksikkohinta
     ::yksikko
     ::ryhma
-    ::id})
+    ::id
+    ::materiaali-id})
 
 (def viittaus-idt #{})
 

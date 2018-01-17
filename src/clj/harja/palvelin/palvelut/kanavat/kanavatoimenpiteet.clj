@@ -175,11 +175,9 @@
                 :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
           (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
           (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
-        (let [poiston-jalkeiset-materiaalit (set (map ::materiaali/nimi (q-materiaali/poiston-jalkeiset-materiaalit db
-                                                                                                                    (keep ::materiaali/id materiaalipoistot)
-                                                                                                                    toimenpide-id)))
+        (let [poistettavien-materiaalien-idt (set (map ::materiaali/id materiaalipoistot))
               poistettavat-hinnat (sequence (comp
-                                              (filter #(and (not (poiston-jalkeiset-materiaalit (::hinta/otsikko %)))
+                                              (filter #(and (poistettavien-materiaalien-idt (::hinta/materiaali-id %))
                                                             (= (::hinta/ryhma %) "materiaali")))
                                               (map #(assoc % ::muokkaustiedot/poistettu? true)))
                                             toimenpiteen-hinnat)]
