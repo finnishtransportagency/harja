@@ -236,7 +236,9 @@
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
-             {:otsikko "Visuaalisen muokkauksen ohje"}
+             {:otsikko "Visuaalisen muokkauksen ohje"
+              ;; Kuva ei lataudu heti -> korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan min-height
+              :vihje-style {:min-height "280px"}}
              [leijuke/multipage-vihjesisalto
               [:div
                [:h6 "Aikajanan alun / lopun venytys"]
