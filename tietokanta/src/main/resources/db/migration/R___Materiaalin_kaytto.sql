@@ -5,7 +5,6 @@ DECLARE
   rivi RECORD;
   rivi2 RECORD;
   u INTEGER;
-  p RECORD;
 BEGIN
   -- Jos toteuma on luotu tässä transaktiossa, ei käsitellä uudelleen päivitystä
   IF TG_OP = 'UPDATE' AND NEW.luotu = current_timestamp THEN
@@ -80,7 +79,6 @@ CREATE OR REPLACE FUNCTION paivita_materiaalin_kaytto_hoitoluokittain_paivalle(p
 DECLARE
   rivi RECORD;
 BEGIN
-  RAISE WARNING 'paivita_materiaalin_kaytto_hoitoluokittain_paivalle %', pvm_;
   DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE pvm = pvm_;
   FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi,
                      sum(mat.maara) as maara
@@ -91,7 +89,6 @@ BEGIN
                WHERE t.alkanut::date = pvm_
             GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi
   LOOP
-    RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain pvm: %', pvm_;
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
                 (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
          VALUES (pvm_,
