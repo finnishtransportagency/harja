@@ -180,13 +180,13 @@
                                     cy (.-clientY e)
                                     x (- cx svg-x alku-x) ; Aikajanan sisällä
                                     y (- cy svg-y)
-                                    alku-pvm (when-let [raahaus-alku-x (first (:drag-alku @drag))]
+                                    lahto-pvm (when-let [raahaus-alku-x (first (:drag-alku @drag))]
                                                (x->paiva raahaus-alku-x))
-                                    nykyinen-pvm (x->paiva x)
-                                    pvm-ero (when (and alku-pvm nykyinen-pvm)
-                                              (if (t/before? alku-pvm nykyinen-pvm)
-                                                (t/in-days (t/interval alku-pvm nykyinen-pvm))
-                                                (t/in-days (t/interval nykyinen-pvm alku-pvm))))
+                                    nykyinen-x-pvm (x->paiva x)
+                                    pvm-ero (when (and lahto-pvm nykyinen-x-pvm)
+                                              (if (t/before? lahto-pvm nykyinen-x-pvm)
+                                                (t/in-days (t/interval lahto-pvm nykyinen-x-pvm))
+                                                (t/in-days (t/interval nykyinen-x-pvm lahto-pvm))))
                                     tooltip-x (+ alku-x x)
                                     tooltip-y (hover-y y)]
 
@@ -202,9 +202,9 @@
                                            (cond
                                              ;; Alku tai loppu, varmistetaan, että venyy oikeaan suuntaan
                                              (or (and (= avain ::alku)
-                                                      (pvm/ennen? nykyinen-pvm (::loppu drag)))
+                                                      (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
                                                  (and (= avain ::loppu)
-                                                      (pvm/jalkeen? nykyinen-pvm (::alku drag))))
+                                                      (pvm/jalkeen? nykyinen-x-pvm (::alku drag))))
                                              (assoc drag avain (x->paiva x))
                                              ;; Koko palkki, siirretään alkua ja loppua eron verran
                                              (= avain ::palkki)
