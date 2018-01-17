@@ -71,7 +71,10 @@
        :vuosi vuosi
        :voi-tallentaa? voi-muokata-paallystys?
        :urakka-id urakka-id}]
-     [kohteen-aikataulutaulukko
+     ;; Asiakkaan edustajan mukaan ei tällä hetkellä ole tarvetta tälle
+     ;; Voidaan kuitenkin helposti ottaa käyttöön, mikäli tarve tulee.
+     ;; Tarkka aikataulu tallentuu aina urakkakohtaisesti.
+     #_[kohteen-aikataulutaulukko
       {:otsikko "Kohteen tiemerkintäurakan tarkka aikataulu"
        :yllapitokohde-id (:id rivi)
        :aikataulurivit (filter #(or (and (= nakyma :tiemerkinta) (= (:urakka-id %) urakka-id))
