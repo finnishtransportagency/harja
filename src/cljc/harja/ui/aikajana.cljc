@@ -193,7 +193,8 @@
                                                    (and (= avain ::loppu)
                                                         (pvm/jalkeen? paiva (::alku drag))))
                                              (assoc drag avain (x->paiva x))
-                                             ;; Siirretään koko palkkia
+                                             ;; Siirretään koko palkkia.
+                                             ;; TODO Laske montako päivää liikutaan hiirellä alkupisteestä
                                              (= avain ::palkki)
                                              (assoc drag ::loppu (x->paiva x)) ;; TODO Alku ja loppu
                                              :default drag)))))))))
