@@ -9,6 +9,7 @@
             
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.urakka :as ur]))
 
@@ -52,6 +53,9 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
   (q/tallenna-kohdekokonaisuudet! db user tiedot)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
+
+(defn hae-kohteenosat [db _]
+  (q/hae-kohteenosat db))
 
 (defrecord Kohteet []
   component/Lifecycle
@@ -102,7 +106,13 @@
       :hae-kanavien-huoltokohteet
       (fn [user]
         (hae-huoltokohteet db user))
-      {:vastaus-spec ::huoltokohde/hae-huoltokohteet-kysely})
+      {:vastaus-spec ::huoltokohde/hae-huoltokohteet-vastaus})
+    (julkaise-palvelu
+      http
+      :hae-kohteenosat
+      (fn [user]
+        (hae-kohteenosat db user))
+      {:vastaus-spec ::kohteenosa/hae-kohteenosat-vastaus})
 
     this)
 

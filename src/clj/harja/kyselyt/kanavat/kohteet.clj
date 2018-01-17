@@ -70,6 +70,13 @@
                 {::kohde/kohde-id kohde
                  ::m/poistettu? false}))
 
+(defn hae-kohteenosat [db]
+  (specql/fetch db
+                ::osa/kohteenosa
+                (set/union osa/perustiedot
+                           osa/kohteen-tiedot)
+                {::m/poistettu? false}))
+
 (defn hae-kokonaisuudet-ja-kohteet [db user]
   (hae-kokonaisuudet-ja-kohteet*
     (specql/fetch db

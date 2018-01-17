@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
+    [harja.kyselyt.specql :as harja-specql]
     [clojure.set]
     [specql.rel :as rel]
     #?@(:clj  [
@@ -23,14 +24,19 @@
    harja.domain.muokkaustiedot/poistettu?-sarake
    {::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kohde/kohde
-                                :harja.domain.kanavat.kohde/id)}])
+                                :harja.domain.kanavat.kohde/id)}
+   #?(:clj {::sijainti (specql.transform/transform (harja.kyselyt.specql/->Geometry))})])
 
 (def perustiedot
   #{::id
     ::tyyppi
     ::nimi
     ::oletuspalvelumuoto
-    ::kohde-id})
+    ::sijainti})
+
+(def kohteen-tiedot
+  #{[::kohde #{:harja.domain.kanavat.kohde/nimi
+               :harja.domain.kanavat.kohde/id}]})
 
 (def fmt-kohdeosa-tyyppi
   {:sulku "sulku"
@@ -51,3 +57,10 @@
 
 (defn sulku? [osa]
   (= :sulku (::tyyppi osa)))
+
+(s/def ::hae-kohteenosat-vastaus (s/coll-of (s/keys :req [::id
+                                                          ::tyyppi
+                                                          ::sijainti]
+                                                    :opt [::kohde
+                                                          ::nimi
+                                                          ::oletuspalvelumuoto])))
