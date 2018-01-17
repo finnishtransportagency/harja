@@ -24,7 +24,8 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (deftest testaa-pesula
-  (let [tp (:tiedostopesula jarjestelma)]
+  (let [tp (:tiedostopesula jarjestelma)
+        tee-lahde #(io/input-stream (.getBytes "muka-pdf-sisalto"))]
     (is (some? tp))
 
     (let [muunnettu (sut/pdfa-muunna-inputstream! tp (tee-lahde))]
