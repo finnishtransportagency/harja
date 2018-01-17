@@ -99,7 +99,10 @@
                      optiot)
            [:div {:style {:min-width "300px"}}
             leijuke-sisalto]]
-          (harja.ui.ikonit/livicon-info-sign))]])))
+          [:span
+           (harja.ui.ikonit/livicon-info-sign)
+           [:span " "] ;; TODO Anna olla noin kuukausi, sen jälkeen "Vihje" teksti pois (17.2.2018)
+           [:a "Vihje"]])]])))
 
 (defn otsikko-ja-vihjeleijuke [otsikko leijuke-optiot leijuke-sisalto]
   [:div

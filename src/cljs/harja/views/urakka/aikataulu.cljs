@@ -235,7 +235,7 @@
          [valinnat ur]
          (when aikajana?
            [:div
-            [leijuke/otsikko-ja-vihjeleijuke "Aikajana" ;; TODO Lisää tähän "vihje" teksti kuukauden ajaksi
+            [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
              {:otsikko "Visuaalisen muokkauksen ohje"}
              [leijuke/multipage-vihjesisalto
               [:div
