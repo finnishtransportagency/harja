@@ -28,7 +28,7 @@
    [:ajorata (:tr-ajorata osoite)]
    [:kaista (:tr-kaista osoite)]])
 
-(defn tee-alikohde [{:keys [yhaid id tunnus paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
+(defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             tyomenetelma leveys pinta-ala esiintyma km-arvo muotoarvo sideainetyyppi pitoisuus
                             lisaaineet] :as alikohde}]
   [:alikohde
@@ -44,7 +44,9 @@
       (when kokonaismassamaara [:kokonaismassamaara kokonaismassamaara])
       (when rc% [:rc-prosentti rc%])
       (when kuulamylly [:kuulamylly kuulamylly])
-      (when tyomenetelma [:paallystetyomenetelma tyomenetelma])
+      [:paallystetyomenetelma (or tyomenetelma
+                                  ;; 99 = ei tietoa
+                                  99)]
       (when leveys [:leveys leveys])
       (when pinta-ala [:pinta-ala pinta-ala])])
    ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja

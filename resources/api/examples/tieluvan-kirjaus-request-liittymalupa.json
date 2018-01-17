@@ -78,7 +78,9 @@
     },
     "liittymalupa": {
       "myonnetty-kauttotarkoitus": "lomakiintiesto",
-      "haettu-kayttotarkoitus": "lomakiinteistolle-kulku",
+      "haettu-kayttotarkoitus": {
+        "lomakiinteistolle-kulku": true
+      },
       "liittyman-siirto": true,
       "tarkoituksen-kuvaus": "Kulku kesämökille",
       "tilapainen": false,

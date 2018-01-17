@@ -84,7 +84,7 @@
         {
           "johtoasennus": {
             "laite": "Vesijohto",
-            "asennustyyppi": "",
+            "asennustyyppi": "Muu asennus",
             "kommentit": "",
             "sijainti": {
               "numero": 20,

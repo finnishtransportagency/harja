@@ -43,3 +43,10 @@
     (is (= 3 (:yha-id (first (:kohteet vastaus)))))
     (is (= 2 (count (:alikohteet (first (:kohteet vastaus))))))
     (is (= "A" (:tunnus (first (:kohteet vastaus)))))))
+
+(deftest tarkista-kohdetyypin-maaritys
+  (let [vastaus (vastaussanoma/lue-sanoma (.replace
+                                            +onnistunut-urakan-kohdehakuvastaus+
+                                            "<kohdetyyppi>1</kohdetyyppi>"
+                                            "<kohdetyyppi>2</kohdetyyppi>"))]
+    (is (= "kevytliikenne" (:yllapitokohdetyyppi (first (:kohteet vastaus)))))))

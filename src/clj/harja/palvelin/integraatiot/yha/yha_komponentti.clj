@@ -15,7 +15,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as string]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -68,13 +69,12 @@
     (if onnistunut?
       (log/info "Kohteiden lähetys YHA:n onnistui")
       (log/error (str "Kohteiden lähetys YHA:n epäonnistui: " virhe-viesti)))
-
+    
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
-            virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) (:virheet vastaus)))
-            virhe-viesti (:selite virhe)]
-
+            virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) virheet))
+            virhe-viesti (or (:selite virhe) (str/join ", "(map :selite virheet)))]
         (if onnistunut?
           (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
           (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
@@ -101,7 +101,6 @@
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
     (mapv (fn [alikohde]
-
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
               (apply merge ilmoitustiedot alikohde)))
