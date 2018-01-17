@@ -240,21 +240,22 @@
                 [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"}]
                 [:figcaption
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]]]
-             [aikajana/aikajana
-              {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
+            [aikajana/aikajana
+             {:muuta! (fn [drag]
+                        (if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit drag)
                           (tiedot/tallenna-aikajanan-aikataulu
                             urakka-id sopimus-id vuosi
-                            (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
+                            (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag))
                           ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
                           ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
                           ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
                           ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
                           ;; eikä niinkään paluuarvosta.
-                          (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
-                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
-                                                     :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
-                   aikataulurivit)]])
+                          (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger))))}
+             (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
+                                                    :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                                    :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
+                  aikataulurivit)]])
          [grid/grid
           {:otsikko [:span
                      "Kohteiden aikataulu"
