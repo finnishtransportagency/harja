@@ -176,9 +176,9 @@
                               (reset! drag nil)
 
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
-                                    cx (.-clientX e) ; Hiiren nykyinen koordinaatti
+                                    cx (.-clientX e) ; Hiiren nykyinen koordinaatti koko sivulla
                                     cy (.-clientY e)
-                                    x (- cx svg-x alku-x) ; Aikajanan sisällä
+                                    x (- cx svg-x alku-x) ; Hiiren nykyinen koordinatti aikajanan sisällä
                                     y (- cy svg-y)
                                     lahto-pvm (when-let [raahaus-alku-x (first (:drag-alku @drag))]
                                                (x->paiva raahaus-alku-x))
@@ -213,7 +213,8 @@
                                              :default drag)))))))))
           :drag-stop! #(when-let [d @drag]
                          (go
-                           (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
+                           ;; TODO Käytä, mutta testauksen vuoksi nyt pois
+                           #_(<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
                            (reset! drag nil)))
           :leveys (* 0.95 @dom/leveys)}]])))
 
