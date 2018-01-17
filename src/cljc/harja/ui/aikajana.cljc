@@ -208,8 +208,8 @@
                                              (assoc drag avain (x->paiva x))
                                              ;; Koko palkki, siirretään alkua ja loppua eron verran
                                              (= avain ::palkki)
-                                             (assoc drag ::alku (t/plus (::alku drag) (t/in-days pvm-ero))
-                                                         ::loppu (t/plus (::loppu drag) (t/in-days pvm-ero)))
+                                             (assoc drag ::alku (t/plus (::alku drag) (t/days pvm-ero))
+                                                         ::loppu (t/plus (::loppu drag) (t/days pvm-ero)))
                                              :default drag)))))))))
           :drag-stop! #(when-let [d @drag]
                          (go
