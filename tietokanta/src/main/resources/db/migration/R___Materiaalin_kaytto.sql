@@ -3,7 +3,9 @@ CREATE OR REPLACE FUNCTION paivita_urakan_materiaalin_kaytto_hoitoluokittain ()
   RETURNS TRIGGER AS $$
 DECLARE
   rivi RECORD;
+  rivi2 RECORD;
   u INTEGER;
+  p RECORD;
 BEGIN
   -- Jos toteuma on luotu tässä transaktiossa, ei käsitellä uudelleen päivitystä
   IF TG_OP = 'UPDATE' AND NEW.luotu = current_timestamp THEN
@@ -30,16 +32,44 @@ BEGIN
              materiaalikoodi = rivi.materiaalikoodi AND
  	     talvihoitoluokka = rivi.talvihoitoluokka AND
 	     urakka = u;
-    ELSE
-      -- Upsertataan uusi materiaalin määrä
-      INSERT
-        INTO urakan_materiaalin_kaytto_hoitoluokittain
-             (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
-      VALUES (rivi.aika, rivi.materiaalikoodi, rivi.talvihoitoluokka, u, rivi.summa)
-             ON CONFLICT ON CONSTRAINT uniikki_urakan_materiaalin_kaytto_hoitoluokittain DO
-             UPDATE SET maara = urakan_materiaalin_kaytto_hoitoluokittain.maara + EXCLUDED.maara;
     END IF;
   END LOOP;
+
+
+  -- Poista hoitoluokittainen materiaalicache kaikille reittipisteiden pvm:ille tässä urakassa
+    DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain
+    WHERE pvm IN (SELECT DISTINCT (rp.aika::DATE)
+                  FROM toteuman_reittipisteet tr
+                    JOIN LATERAL unnest(tr.reittipisteet) rp ON true
+                    JOIN LATERAL unnest(rp.materiaalit) rm ON true
+                  WHERE tr.toteuma = NEW.id)
+          AND urakka = u;
+
+    -- Päivitä materiaalin käyttö ko. pvm:lle ja urakalle
+    FOR rivi2 IN SELECT t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi,
+                   sum(mat.maara) as maara,
+                   rp.aika::DATE
+                 FROM toteuma t
+                   JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+                   JOIN LATERAL unnest(tr.reittipisteet) rp ON true
+                   JOIN LATERAL unnest(rp.materiaalit) mat ON true
+                 WHERE t.alkanut::date in (SELECT DISTINCT (rp.aika::DATE)
+                                           FROM toteuman_reittipisteet tr
+                                             JOIN LATERAL unnest(tr.reittipisteet) rp ON true
+                                             JOIN LATERAL unnest(rp.materiaalit) rm ON true
+                                           WHERE tr.toteuma = NEW.id)
+                       AND t.urakka = u
+                 GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi, rp.aika
+    LOOP
+      RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain  rivi2: %', rivi2;
+      INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
+      (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
+      VALUES (rivi2.aika,
+              rivi2.materiaalikoodi,
+              COALESCE(rivi2.talvihoitoluokka, 0),
+              rivi2.urakka,
+              rivi2.maara);
+    END LOOP;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -50,6 +80,7 @@ CREATE OR REPLACE FUNCTION paivita_materiaalin_kaytto_hoitoluokittain_paivalle(p
 DECLARE
   rivi RECORD;
 BEGIN
+  RAISE WARNING 'paivita_materiaalin_kaytto_hoitoluokittain_paivalle %', pvm_;
   DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE pvm = pvm_;
   FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi,
                      sum(mat.maara) as maara
@@ -60,6 +91,7 @@ BEGIN
                WHERE t.alkanut::date = pvm_
             GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi
   LOOP
+    RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain pvm: %', pvm_;
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
                 (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
          VALUES (pvm_,
