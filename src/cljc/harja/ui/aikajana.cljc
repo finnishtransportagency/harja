@@ -160,7 +160,8 @@
          {:tooltip @tooltip
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
-          :drag @drag ;; sis. x, y, alku, loppu, drag (vector, jossa id ja palkin tyyppi, avain (alku/loppu/palkki)
+          :drag @drag ;; sis. nykyisen raahaamisen tiedot: :x, :y, ::alku (pvm), ::loppu (pvm),
+                      ;; ::drag [id tyyppi], :avain (:alku/:loppu/:palkki), drag-alku [x y]
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
                          (reset! drag
@@ -182,7 +183,8 @@
                                     paiva (x->paiva x)
                                     tooltip-x (+ alku-x x)
                                     tooltip-y (hover-y y)]
-                                (println "CX " (pr-str cx))
+                                (when-not (:drag-alku @drag)
+                                  (swap! drag assoc :drag-alku [cx cy]))
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
                                          (merge
@@ -190,9 +192,9 @@
                                            (cond
                                              ;; Alku tai loppu, varmistetaan, että venyy oikeaan suuntaan
                                              (or (and (= avain ::alku)
-                                                        (pvm/ennen? paiva (::loppu drag)))
-                                                   (and (= avain ::loppu)
-                                                        (pvm/jalkeen? paiva (::alku drag))))
+                                                      (pvm/ennen? paiva (::loppu drag)))
+                                                 (and (= avain ::loppu)
+                                                      (pvm/jalkeen? paiva (::alku drag))))
                                              (assoc drag avain (x->paiva x))
                                              ;; Koko palkki, siirretään alkua ja loppua
                                              (= avain ::palkki)
