@@ -115,22 +115,22 @@
 
 (defn multipage-vihjesisalto [& sisallot]
   (let [sivu-index (atom 0)
-        seuraava-index-saatavilla (fn [sivu-index sisallot]
+        seuraava-index-saatavilla? (fn [sivu-index sisallot]
                                     (< sivu-index (- (count sisallot) 1)))
         seuraava-index (fn []
-                         (when (seuraava-index-saatavilla @sivu-index sisallot)
+                         (when (seuraava-index-saatavilla? @sivu-index sisallot)
                            (swap! sivu-index inc)))
-        edellinen-index-saatavilla (fn [sivu-index]
+        edellinen-index-saatavilla? (fn [sivu-index]
                                      (> sivu-index 0))
         edellinen-index (fn []
-                          (when (edellinen-index-saatavilla @sivu-index)
+                          (when (edellinen-index-saatavilla? @sivu-index)
                             (swap! sivu-index dec)))
         linkki-elementti (fn [voi-klikata?]
                            (if voi-klikata? :a :span))]
 
     (fn []
-      (let [edellinen-saatavilla (edellinen-index-saatavilla @sivu-index)
-            seuraava-saatavilla (seuraava-index-saatavilla @sivu-index sisallot)]
+      (let [edellinen-saatavilla (edellinen-index-saatavilla? @sivu-index)
+            seuraava-saatavilla (seuraava-index-saatavilla? @sivu-index sisallot)]
         [:div
          [:div (nth sisallot @sivu-index)]
 
