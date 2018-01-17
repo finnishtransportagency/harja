@@ -1,5 +1,10 @@
 [
   {
+    "date": "2018-01-17",
+    "title": "Päällystyskohteiden aikataulunäkymään voi nyt lisätä itse tarkempia työvaiheita",
+    "body": "Päällystyskohteen aikataulutietoon voi nyt kirjata mm. RP-työt, ojankaivuun tai rumpujen vaihdon. Näiden lisäksi voidaan myös vapaatekstinä kirjata muu työvaihe. Näin voidaan seurata mm. päällystämistä edeltäviä työvaiheita entistä tarkemmin. Ominaisuus on käytössä myös tiemerkintäurakoissa."
+  },
+  {
     "date": "2017-12-18",
     "title": "Urakanvalvoja voi avata hyväksytyn päälystysilmoituksen",
     "body": "Tämä ominaisuus on lisätty lähinnä korjauksia varten."
