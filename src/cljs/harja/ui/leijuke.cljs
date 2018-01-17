@@ -97,8 +97,7 @@
                      {:otsikko [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Vihje"]
                       :sulje! #(reset! nakyvissa? false)}
                      optiot)
-           [:div {:style (merge (:vihje-style optiot)
-                                {:min-width "300px"})}
+           [:div {:style {:min-width "300px"}}
             leijuke-sisalto]]
           [:span
            (harja.ui.ikonit/livicon-info-sign)

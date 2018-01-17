@@ -236,20 +236,21 @@
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
-             {:otsikko "Visuaalisen muokkauksen ohje"
-              ;; Kuva ei lataudu heti -> korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan min-height
-              :vihje-style {:min-height "280px"}}
+             {:otsikko "Visuaalisen muokkauksen ohje"}
              [leijuke/multipage-vihjesisalto
               [:div
                [:h6 "Aikajanan alun / lopun venytys"]
                [:figure
-                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"}]
+                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"
+                       ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
+                       :style {:height "200px"}}]
                 [:figcaption
                  [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
               [:div
                [:h6 "Aikajanan siirtäminen"]
                [:figure
-                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"}]
+                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"
+                       :style {:height "200px"}}]
                 [:figcaption
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
              [aikajana/aikajana
