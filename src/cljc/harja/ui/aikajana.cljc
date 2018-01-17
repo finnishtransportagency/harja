@@ -203,7 +203,8 @@
                                          (merge
                                            {:x tooltip-x :y tooltip-y}
                                            (cond
-                                             ;; Alku tai loppu, varmistetaan, että venyy oikeaan suuntaan
+                                             ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
+                                             ;; alku tai loppu vastaamaan raahauspistettä
                                              (or (and (= avain ::alku)
                                                       (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
                                                  (and (= avain ::loppu)
