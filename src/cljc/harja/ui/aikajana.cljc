@@ -180,21 +180,24 @@
                                     cy (.-clientY e)
                                     x (- cx svg-x alku-x) ; Hiiren nykyinen koordinatti aikajanan sisällä
                                     y (- cy svg-y)
-                                    lahto-pvm (when-let [raahaus-alku-x (first (:drag-alku @drag))]
-                                               (x->paiva raahaus-alku-x))
+                                    lahto-x-pvm (when-let [raahaus-alku-x (first (:drag-alku-koordinaatti @drag))]
+                                                (x->paiva raahaus-alku-x))
                                     nykyinen-x-pvm (x->paiva x)
-                                    pvm-ero (when (and lahto-pvm nykyinen-x-pvm)
-                                              (if (t/before? lahto-pvm nykyinen-x-pvm)
-                                                (t/in-days (t/interval lahto-pvm nykyinen-x-pvm))
-                                                (t/in-days (t/interval nykyinen-x-pvm lahto-pvm))))
+                                    pvm-ero (when (and lahto-x-pvm nykyinen-x-pvm)
+                                              (if (t/before? lahto-x-pvm nykyinen-x-pvm)
+                                                (t/in-days (t/interval lahto-x-pvm nykyinen-x-pvm))
+                                                (- (t/in-days (t/interval nykyinen-x-pvm lahto-x-pvm)))))
                                     tooltip-x (+ alku-x x)
                                     tooltip-y (hover-y y)]
 
-                                (println "PÄIVÄERO: " (pr-str pvm-ero))
+                                ;; Otetaan raahauksen alkutilanne ylös
+                                (when-not (:drag-alku-koordinaatti @drag)
+                                  (swap! drag assoc
+                                         :drag-alku-koordinaatti [x y]
+                                         :drag-alku (::alku @drag)
+                                         :drag-loppu (::loppu @drag)))
 
-                                (when-not (:drag-alku @drag)
-                                  (swap! drag assoc :drag-alku [cx cy]))
-
+                                ;; Raahaa palkkia
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
                                          (merge
@@ -208,8 +211,8 @@
                                              (assoc drag avain (x->paiva x))
                                              ;; Koko palkki, siirretään alkua ja loppua eron verran
                                              (= avain ::palkki)
-                                             (assoc drag ::alku (t/plus (::alku drag) (t/days pvm-ero))
-                                                         ::loppu (t/plus (::loppu drag) (t/days pvm-ero)))
+                                             (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
+                                                         ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
                                              :default drag)))))))))
           :drag-stop! #(when-let [d @drag]
                          (go
