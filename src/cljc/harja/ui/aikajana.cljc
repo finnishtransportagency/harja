@@ -217,8 +217,7 @@
                                              :default drag)))))))))
           :drag-stop! #(when-let [d @drag]
                          (go
-                           ;; TODO Käytä, mutta testauksen vuoksi nyt pois
-                           #_(<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
+                           (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
                            (reset! drag nil)))
           :leveys (* 0.95 @dom/leveys)}]])))
 
