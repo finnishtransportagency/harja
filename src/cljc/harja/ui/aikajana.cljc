@@ -177,8 +177,8 @@
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
                                     cx (.-clientX e)
                                     cy (.-clientY e)
-                                    x (- cx svg-x alku-x)
-                                    y (- cy svg-y)
+                                    x (- cx svg-x alku-x) ; Aikajanan sisällä
+                                    y (- cy svg-y) ; Aikajanan sisällä
                                     paiva (x->paiva x)
                                     tooltip-x (+ alku-x x)
                                     tooltip-y (hover-y y)]
