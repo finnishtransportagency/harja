@@ -25,40 +25,83 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
+            [harja.domain.kanavat.liikennetapahtuma :as lt]
             [clojure.string :as str])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
 
-(defn kohdelomake [e! {:keys [valittu-kohde
-                              kohdekokonaisuudet] tallennus-kaynnissa? :kohteiden-tallennus-kaynnissa? :as app}]
-  [:div
-   [debug/debug app]
-   [napit/takaisin #(e! (tiedot/->ValitseKohde nil))]
-   [lomake/lomake
-    {:otsikko (if (id-olemassa? (::kohde/id valittu-kohde))
-                "Muokkaa kohdetta"
-                "Lisää kohde")
-     :muokkaa! #(e! (tiedot/->KohdettaMuokattu (lomake/ilman-lomaketietoja %)))
-     :footer-fn (fn [app]
-                  [napit/tallenna
-                   "Tallenna"
-                   #(e! (tiedot/->TallennaKohdekokonaisuudet (:kohdekokonaisuudet app)))
-                   {:tallennus-kaynnissa? tallennus-kaynnissa?
-                    :disabled (or tallennus-kaynnissa?
-                                  (not (lomake/voi-tallentaa? (:kohdekokonaisuudet app)))
-                                  (not (tiedot/kohdekokonaisuudet-voi-tallentaa? (:kohdekokonaisuudet app)))
-                                  (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat)))}])}
-    [{:otsikko "Kohdekokonaisuus"
-      :tyyppi :valinta
-      :valinnat kohdekokonaisuudet
-      :valinta-nayta ::kok/nimi
-      :nimi ::kohde/kohdekokonaisuus}
-     {:otsikko "Nimi"
-      :tyyppi :string
-      :nimi ::kohde/nimi}]
-    valittu-kohde]])
+(defn kohteenosat-grid [e! {:keys [haetut-kohteenosat
+                                   valittu-kohde
+                                   kohteenosien-haku-kaynnissa?] :as app}]
+  [grid/muokkaus-grid
+   {:tyhja (if kohteenosien-haku-kaynnissa?
+             [ajax-loader-pieni "Päivitetään kohteenosia"]
+             "Lisää kohteeseen osia oikeasta yläkulmasta")
+    :tunniste ::kohteenosa/id
+    :virhe-viesti "Foobar"}
+   [{:otsikko "Osa"
+     :tyyppi :valinta
+     :nimi :foobar
+     :valinnat (or haetut-kohteenosat [])
+     :valinta-nayta kohteenosa/fmt-kohdeosa
+     :hae identity
+     :aseta (fn [rivi arvo]
+              arvo)
+     :leveys 4}
+    {:otsikko "Tyyppi"
+     :tyyppi :string
+     :muokattava? (constantly false)
+     :nimi ::kohteenosa/tyyppi
+     :leveys 2
+     :fmt kohteenosa/fmt-kohdeosa-tyyppi}
+    {:otsikko "Oletuspalvelumuoto"
+     :tyyppi :string
+     :muokattava? (constantly false)
+     :nimi ::kohteenosa/oletuspalvelumuoto
+     :fmt lt/palvelumuoto->str
+     :leveys 2}]
+   (r/wrap
+     (zipmap (range) (::kohde/kohteenosat valittu-kohde))
+     #(e! (tiedot/->MuokkaaKohteenKohteenosia (vals %))))])
+
+(defn kohdelomake [e! app]
+  (komp/luo
+    (komp/sisaan #(e! (tiedot/->HaeKohteenosat)))
+    (fn [e! {:keys [valittu-kohde
+                    kohdekokonaisuudet] tallennus-kaynnissa? :kohteiden-tallennus-kaynnissa? :as app}]
+      [:div
+      [debug/debug app]
+      [napit/takaisin #(e! (tiedot/->ValitseKohde nil))]
+      [lomake/lomake
+       {:otsikko (if (id-olemassa? (::kohde/id valittu-kohde))
+                   "Muokkaa kohdetta"
+                   "Lisää kohde")
+        :muokkaa! #(e! (tiedot/->KohdettaMuokattu (lomake/ilman-lomaketietoja %)))
+        :footer-fn (fn [app]
+                     [napit/tallenna
+                      "Tallenna"
+                      #(e! (tiedot/->TallennaKohdekokonaisuudet (:kohdekokonaisuudet app)))
+                      {:tallennus-kaynnissa? tallennus-kaynnissa?
+                       :disabled (or tallennus-kaynnissa?
+                                     (not (lomake/voi-tallentaa? (:kohdekokonaisuudet app)))
+                                     (not (tiedot/kohdekokonaisuudet-voi-tallentaa? (:kohdekokonaisuudet app)))
+                                     (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat)))}])}
+       [{:otsikko "Kohdekokonaisuus"
+         :tyyppi :valinta
+         :valinnat kohdekokonaisuudet
+         :valinta-nayta ::kok/nimi
+         :nimi ::kohde/kohdekokonaisuus}
+        {:otsikko "Nimi"
+         :tyyppi :string
+         :nimi ::kohde/nimi}
+        {:otsikko "Kohteenosat"
+         :tyyppi :komponentti
+         :nimi :kohteenosat
+         :palstoja 2
+         :komponentti (fn [_] [kohteenosat-grid e! app])}]
+       valittu-kohde]])))
 
 (defn kohdekokonaisuudet-grid [e! {:keys [kohdekokonaisuudet] :as app}]
   [grid/muokkaus-grid
@@ -78,7 +121,7 @@
      :hae (partial tiedot/kohteiden-lkm-kokonaisuudessa app)}]
    (r/wrap
      (zipmap (range) kohdekokonaisuudet)
-     #(e! (tiedot/->LisaaKohdekokonaisuuksia (sort-by :id (vals %)))))])
+     #(e! (tiedot/->LisaaKohdekokonaisuuksia (vals %))))])
 
 (defn kohdekokonaisuuslomake [e! {tallennus-kaynnissa? :kohdekokonaisuuksien-tallennus-kaynnissa?
                                   :as app}]

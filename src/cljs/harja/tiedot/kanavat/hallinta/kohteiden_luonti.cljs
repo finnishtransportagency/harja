@@ -68,6 +68,10 @@
 
 (defrecord ValitseKohde [kohde])
 (defrecord KohdettaMuokattu [kohde])
+(defrecord HaeKohteenosat [])
+(defrecord KohteenosatHaettu [tulos])
+(defrecord KohteenosatEiHaettu [virhe])
+(defrecord MuokkaaKohteenKohteenosia [osat])
 
 (defn hae-kanava-urakat! [tulos! fail!]
   (go
@@ -355,4 +359,32 @@
 
   KohdettaMuokattu
   (process-event [{kohde :kohde} app]
-    (assoc app :valittu-kohde kohde)))
+    (assoc app :valittu-kohde kohde))
+
+  HaeKohteenosat
+  (process-event [_ app]
+    (if-not (:kohteenosien-haku-kaynnissa? app)
+      (-> app
+          (tt/get! :hae-kohteenosat
+                   {:onnistui ->KohteenosatHaettu
+                    :epaonnistui ->KohteenosatEiHaettu})
+
+          (assoc :kohteenosien-haku-kaynnissa? true))
+
+      app))
+
+  KohteenosatHaettu
+  (process-event [{tulos :tulos} app]
+    (-> app
+        (assoc :kohteenosien-haku-kaynnissa? false)
+        (assoc :haetut-kohteenosat tulos)))
+
+  KohteenosatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Kohteenosien haku epäonnistui!" :danger)
+    (-> app
+        (assoc :kohteenosien-haku-kaynnissa? false)))
+
+  MuokkaaKohteenKohteenosia
+  (process-event [{osat :osat} app]
+    (assoc-in app [:valittu-kohde ::kohde/kohteenosat] osat)))
