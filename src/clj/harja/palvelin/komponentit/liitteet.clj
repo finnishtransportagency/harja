@@ -90,17 +90,25 @@
     ;; Muuten tallennetaan paikalliseen tietokantaan
     {:liite_oid (tallenna-lob db (io/input-stream lahde)) :fileyard-hash nil}))
 
+
+(defn- kahdenna-stream [alkuperainen]
+  (let [temp-file (java.io.File/createTempFile "harja-liite-tmp" ".bin")]
+    (.deleteOnExit temp-file)
+    (try
+      (io/copy alkuperainen temp-file)
+      [(io/input-stream temp-file) (io/input-stream temp-file)])))
+
 (defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
   (log/debug "Koko: " (pr-str koko))
   (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
-        alkuperainen-lahde lahde
-        pesula-lahde (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
+        [alkuperainen-lahde pesulan-syote-lahde] (kahdenna-stream lahde)
+        pesty-lahde (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
                        (do (log/info "PDF-tiedosto -> tiedostopesula")
-                           (tiedostopesula/pdfa-muunna-inputstream! tiedostopesula (io/input-stream lahde))))
-        lahde (or pesula-lahde lahde)]
-    (if pesula-lahde
+                           (tiedostopesula/pdfa-muunna-inputstream! tiedostopesula (io/input-stream pesulan-syote-lahde))))
+        lahde (or pesty-lahde alkuperainen-lahde)]
+    (if pesty-lahde
       (log/info "Tallennetaan tiedostopesulassa käsitelty liitetiedosto")
       (log/info "Tallennetaan alkuperäinen liitetiedosto"))
     (if (:hyvaksytty liitetarkistus)

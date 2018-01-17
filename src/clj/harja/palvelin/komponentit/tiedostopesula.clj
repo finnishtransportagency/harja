@@ -19,7 +19,7 @@
            (net.coobird.thumbnailator.tasks UnsupportedFormatException))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn pdfa-muunna-file! "java.io/file -> png byte-array | nil" [{base-url :base-url} pdf-file]
+(defn- pdfa-muunna-file! "java.io/file -> png byte-array | nil" [{base-url :base-url} pdf-file]
   {:pre [(string? base-url) (some? pdf-file)]}
   (try
     (let [request-opts
@@ -32,19 +32,19 @@
       (if (= 200 (:status resp))
         (:body resp)
         (do
-          (log/info "PDF/A conversion failed for " (when pdf-file (.getName pdf-file)))
-          (log/info "Failure response: " (pr-str resp))
+          (log/info "PDF/A muunnos epäonnistui, tiedoston nimi oli: " (when pdf-file (.getName pdf-file)))
+          (log/info "Virhevastasus palvelulta: " (pr-str resp))
           nil)))
     (catch Exception ex
-      (log/error ex)
+      (log/error "Poikkeus tiedostomuuntajan vastausta luettaessa: " ex)
       nil)))
 
 (defn pdfa-muunna-inputstream! [tp-komponentti pdf-inputstream]
   (let [temp-file (java.io.File/createTempFile "pesula-tmp" ".pdf")]
     (try
       (io/copy pdf-inputstream temp-file)
-      (or (pdfa-muunna-file! tp-komponentti temp-file)
-          (io/input-stream temp-file)) ;; palautetaan alkup. data virheen sattuessa
+      (pdfa-muunna-file! tp-komponentti temp-file)
+      ;; palautetaan nil virheen sattuessa
       (finally
         (.delete temp-file)))))
 
