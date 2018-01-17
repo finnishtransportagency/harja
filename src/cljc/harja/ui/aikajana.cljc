@@ -175,13 +175,14 @@
                               (reset! drag nil)
 
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
-                                    cx (.-clientX e)
+                                    cx (.-clientX e) ; Hiiren nykyinen koordinaatti
                                     cy (.-clientY e)
                                     x (- cx svg-x alku-x) ; Aikajanan sisällä
-                                    y (- cy svg-y) ; Aikajanan sisällä
+                                    y (- cy svg-y)
                                     paiva (x->paiva x)
                                     tooltip-x (+ alku-x x)
                                     tooltip-y (hover-y y)]
+                                (println "CX " (pr-str cx))
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
                                          (merge
