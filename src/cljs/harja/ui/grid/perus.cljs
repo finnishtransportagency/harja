@@ -485,7 +485,9 @@
                                       :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?}]]
 
                         (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
-                          (let [id (tunniste rivi)]
+                          (let [id (tunniste rivi)
+                                vetolaatikko-colspan (cond-> (inc (count skeema))
+                                                             piilota-toiminnot? dec)]
                             [^{:key id}
                             [nayttorivi {:ohjaus ohjaus
                                          :vetolaatikot vetolaatikot
@@ -513,7 +515,7 @@
                                          :piilota-toiminnot? piilota-toiminnot?
                                          :nayta-toimintosarake? nayta-toimintosarake?}
                              skeema rivi i]
-                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id (inc (count skeema)))]))))
+                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id vetolaatikko-colspan)]))))
                     rivit-jarjestetty)))))))
 
 (defn- sivutuskontrollit [kaikki-tiedot sivuta aktiivinen-indeksi uusi-nykyinen-sivu-fn]
