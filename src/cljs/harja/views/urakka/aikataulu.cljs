@@ -150,16 +150,6 @@
             (into [(grid/otsikko "Aloittamatta olevat kohteet")]
                   aloittamatta))))
 
-(defn- tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
-  (tiedot/tallenna-yllapitokohteiden-aikataulu
-    {:urakka-id urakka-id
-     :sopimus-id sopimus-id
-     :vuosi vuosi
-     :kohteet kohteet
-     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
-                                     :warning
-                                     viesti/viestin-nayttoaika-lyhyt)}))
-
 (defn valinnat [ur]
   (let [{aikajana? :nayta-aikajana?
          jarjestys :jarjestys
@@ -252,7 +242,7 @@
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti."]]]]]]
              [aikajana/aikajana
               {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
-                          (tallenna-aikataulu
+                          (tiedot/tallenna-aikajanan-aikataulu
                             urakka-id sopimus-id vuosi
                             (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
                           ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
@@ -276,7 +266,7 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tallenna-aikataulu urakka-id sopimus-id vuosi %)
+                       #(tallenna-aikajanan-aikataulu urakka-id sopimus-id vuosi %)
                        :ei-mahdollinen)
            :vetolaatikot (into {}
                                (map (juxt :id

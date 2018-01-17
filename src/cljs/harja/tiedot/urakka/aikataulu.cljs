@@ -14,7 +14,8 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -147,3 +148,13 @@
       (if (k/virhe? vastaus)
         (epaonnistui-fn)
         (reset! aikataulurivit vastaus)))))
+
+(defn- tallenna-aikajanan-aikataulu [urakka-id sopimus-id vuosi kohteet]
+  (tallenna-yllapitokohteiden-aikataulu
+    {:urakka-id urakka-id
+     :sopimus-id sopimus-id
+     :vuosi vuosi
+     :kohteet kohteet
+     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
+                                     :warning
+                                     viesti/viestin-nayttoaika-lyhyt)}))
