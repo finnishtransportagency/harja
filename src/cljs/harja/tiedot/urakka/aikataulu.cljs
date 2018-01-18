@@ -70,7 +70,9 @@
                ;; Tarkan aikataulun päivityksen täytyy aiheuttaa kohteiden haku uudelleen.
                ;; Ihanteellisesti tarkan aikataulun päivitys päivittäisi vain tämän atomin sisällön, mutta
                ;; tällöin reaktioon pitäisi kirjoittaa käsin, mikä on sekin huono tapa.
-               ;; TODO Toisaalta tätä atomia resetoidaan jo muualla, niin ei olisi niin väliä
+               ;; TODO Toisaalta tätä atomia resetoidaan jo muualla, niin ei olisi niin väliä.
+               ;; Lisäksi aiheuttaa pienen flickerin haun ajaksi. Kutsu mieluummin aikataulun hakua ja resetoi tulos
+               ;; tähän käsin?
                tarkka-aikataulu-paivitetty @tarkka-aikataulu-paivitetty
                aikajana-paivitetty @aikajana-paivitetty]
               {:nil-kun-haku-kaynnissa? true}
