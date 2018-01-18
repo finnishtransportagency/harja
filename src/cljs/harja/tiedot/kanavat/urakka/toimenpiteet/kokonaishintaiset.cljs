@@ -42,6 +42,7 @@
 (defrecord ToimenpideTallennettu [vastaus poisto?])
 (defrecord ToimenpiteenTallentaminenEpaonnistui [tulos poisto?])
 (defrecord PoistaToimenpide [toimenpide])
+(defrecord KytkePaikannusKaynnissa [])
 ;; Rivien valinta ja niiden toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
@@ -202,6 +203,9 @@
 
   AsetaLomakkeenToimenpiteenTiedot
   (process-event [{toimenpide :toimenpide} app]
+    (when (contains? (::kanavan-toimenpide/sijainti toimenpide) :virhe)
+      (viesti/nayta! (get-in toimenpide [::kanavan-toimenpide/sijainti :virhe])
+                     :danger))
     (toimenpiteet/aseta-lomakkeen-tiedot app toimenpide))
 
   ValinnatHaettuToimenpiteelle
@@ -247,6 +251,10 @@
                       true))
       (update app :valitut-toimenpide-idt
               #(toimenpiteet/poista-valittu-toimenpide % (::kanavan-toimenpide/id toimenpide)))))
+
+  KytkePaikannusKaynnissa
+  (process-event [_ app]
+    (update-in app [:avattu-toimenpide :paikannus-kaynnissa?] not))
 
   HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
