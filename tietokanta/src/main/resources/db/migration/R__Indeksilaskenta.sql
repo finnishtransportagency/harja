@@ -53,7 +53,7 @@ BEGIN
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 11)
 
                -- 3)
-               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm < '2013-1-2'
+               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm < '2013-8-2'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 5) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 6) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 7)

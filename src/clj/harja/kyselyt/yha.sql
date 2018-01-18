@@ -54,6 +54,7 @@ SELECT
   sijainti,
   yhaid,
   toimenpide,
+  tyomenetelma,
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm

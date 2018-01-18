@@ -34,7 +34,9 @@
             [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.id :as id]
+            [harja.tyokalut.tietoturva :as tietoturva])
   (:use org.httpkit.fake)
   (:import (harja.domain.roolit EiOikeutta)))
 
@@ -75,14 +77,36 @@
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
 (defn- hae-paallystysurakan-aikataulu [{:keys [db urakka-id sopimus-id vuosi]}]
-  (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
-       (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
-                       (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
-                         db (:id %) (:suorittava-tiemerkintaurakka %))))))
+  (let [aikataulu (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
+                       (map konv/alaviiva->rakenne)
+                       (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
+                                       (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
+                                         db (:id %) (:suorittava-tiemerkintaurakka %)))))
+        aikataulu (konv/sarakkeet-vektoriin
+                    aikataulu
+                    {:tarkkaaikataulu :tarkka-aikataulu})
+        aikataulu (map (fn [rivi]
+                         (assoc rivi :tarkka-aikataulu
+                                     (map (fn [tarkka-aikataulu]
+                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
+                                          (:tarkka-aikataulu rivi))))
+                       aikataulu)]
+    aikataulu))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
-  (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
-                                         :vuosi vuosi}))
+  (let [aikataulu (->> (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
+                                                              :vuosi vuosi})
+                       (map konv/alaviiva->rakenne))
+        aikataulu (konv/sarakkeet-vektoriin
+                    aikataulu
+                    {:tarkkaaikataulu :tarkka-aikataulu})
+        aikataulu (map (fn [rivi]
+                         (assoc rivi :tarkka-aikataulu
+                                     (map (fn [tarkka-aikataulu]
+                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
+                                          (:tarkka-aikataulu rivi))))
+                       aikataulu)]
+    aikataulu))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
@@ -225,8 +249,12 @@
                                           db
                                           {:idt (map :id lahetettavat-kohteet)}))}))))
 
-(defn tallenna-yllapitokohteiden-aikataulu [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet]}]
-  (assert (and urakka-id kohteet) "anna urakka-id ja sopimus-id ja kohteet")
+(defn tallenna-yllapitokohteiden-aikataulu
+  "Tallentaa ylläpitokohteiden aikataulun.
+
+   Ei koske yksityiskohtaisen aikataulun tallennusta, sille on oma palvelu."
+  [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet] :as tiedot}]
+  (assert (and urakka-id sopimus-id kohteet) "anna urakka-id, sopimus-id ja kohteet")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   (let [voi-tallentaa-tiemerkinnan-takarajan?
@@ -254,6 +282,44 @@
     (hae-urakan-aikataulu db user {:urakka-id urakka-id
                                    :sopimus-id sopimus-id
                                    :vuosi vuosi})))
+
+(defn tallenna-yllapitokohteiden-tarkka-aikataulu
+  [db user {:keys [urakka-id yllapitokohde-id aikataulurivit] :as tiedot}]
+  (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)
+  ;; Aikataulurivin kuulumista ylläpitokohteeseen ei tarkisteta erikseen, vaan sisältyy UPDATE-kyselyn WHERE-lauseeseen.
+
+  (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden yksityiskohtaiset aikataulutiedot: " aikataulurivit)
+
+  (jdbc/with-db-transaction [db db]
+    (doseq [rivi aikataulurivit]
+      (if (id/id-olemassa? (:id rivi))
+        (q/paivita-yllapitokohteen-tarkka-aikataulu!
+          db
+          {:toimenpide (name (:toimenpide rivi))
+           :kuvaus (:kuvaus rivi)
+           :alku (konv/sql-date (:alku rivi))
+           :loppu (konv/sql-date (:loppu rivi))
+           :muokkaaja (:id user)
+           :poistettu (true? (:poistettu rivi))
+           :id (:id rivi)
+           :yllapitokohde yllapitokohde-id
+           :urakka urakka-id})
+        (q/lisaa-yllapitokohteen-tarkka-aikataulu!
+          db
+          {:urakka urakka-id
+           :yllapitokohde yllapitokohde-id
+           :toimenpide (name (:toimenpide rivi))
+           :kuvaus (:kuvaus rivi)
+           :alku (konv/sql-date (:alku rivi))
+           :loppu (konv/sql-date (:loppu rivi))
+           :luoja (:id user)}))))
+
+  (log/debug "Aikataulutiedot tallennettu!")
+  (->> (q/hae-yllapitokohteen-tarkka-aikataulu
+         db {:yllapitokohde yllapitokohde-id})
+       (map #(konv/string->keyword % :toimenpide))))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
@@ -509,10 +575,12 @@
       (julkaise-palvelu http :tallenna-yllapitokohteiden-aikataulu
                         (fn [user tiedot]
                           (tallenna-yllapitokohteiden-aikataulu db fim email user tiedot)))
+      (julkaise-palvelu http :tallenna-yllapitokohteiden-tarkka-aikataulu
+                        (fn [user tiedot]
+                          (tallenna-yllapitokohteiden-tarkka-aikataulu db user tiedot)))
       (julkaise-palvelu http :merkitse-kohde-valmiiksi-tiemerkintaan
                         (fn [user tiedot]
                           (merkitse-kohde-valmiiksi-tiemerkintaan db fim email user tiedot)))
-
       (julkaise-palvelu http :yllapitokohteen-urakan-yhteyshenkilot
                         (fn [user tiedot]
                           (hae-yllapitokohteen-urakan-yhteyshenkilot db fim user tiedot)))

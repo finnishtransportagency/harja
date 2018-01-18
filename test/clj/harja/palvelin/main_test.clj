@@ -68,7 +68,8 @@
     :kan-hairio
     :kan-toimenpiteet
     :api-tieluvat
-    :koordinaatit})
+    :koordinaatit
+    :tiedostopesula})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))
