@@ -115,7 +115,7 @@
 (defn multipage-vihjesisalto [& sisallot]
   (let [sivu-index (atom 0)
         seuraava-index-saatavilla (fn [sivu-index sisallot]
-                                    (< sivu-index (- (count sisallot) 1)))
+                                    (< sivu-index (dec (count sisallot))))
         seuraava-index (fn []
                          (when (seuraava-index-saatavilla @sivu-index sisallot)
                            (swap! sivu-index inc)))
