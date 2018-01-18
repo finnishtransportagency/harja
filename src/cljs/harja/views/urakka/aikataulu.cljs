@@ -245,6 +245,7 @@
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
             [aikajana/aikajana
              {:muuta! (fn [drag]
+                        ;; TODO Olisiko sittenkin helpompi vaan tehdä ylläpitokohteiden aikataulun palveluun tuki tallentaa myös tarkat aikataulut jos löytyy?
                         (go (let [paivitetty-perusaikataulu (aikataulu/raahauksessa-paivitetyt-perusaikataulurivit aikataulurivit drag)
                                   ;paivitety-tarkka-aikataulu (aikataulu/raahauksessa-paivitetyt-tarkat-aikataulurivit drag)
                                   ]
