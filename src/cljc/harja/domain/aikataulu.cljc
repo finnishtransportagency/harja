@@ -89,7 +89,7 @@
                                                loppu)}))
                  (:tarkka-aikataulu rivi)))))})))
 
-(defn raahauksessa-paivitetyt-aikataulurivit
+(defn raahauksessa-paivitetyt-perusaikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
   [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
   (keep
