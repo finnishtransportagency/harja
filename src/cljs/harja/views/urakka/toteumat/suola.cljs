@@ -45,19 +45,13 @@
                 (suola/hae-materiaalit))))
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
-  (log "--->>>" (pr-str suolan-kaytto))
   [grid/grid
-     {:otsikko "Päivän erittely"
-      :tyhja "Ei päiväkohtaisia erittelyjä"
-      :tunniste :id}
-     [{:otsikko "Aika" :nimi :aika :tyyppi :string :leveys 10}
-      {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10 }
-      {:otsikko "Hoitoluokka" :nimi :hoitoluokka :tyyppi :string :leveys 10}]
-   [{:id 1
-     :aika "12"
-     :maara 3
-     :hoitoluokka "666"}]
-     #_(:reittipisteet suolan-kaytto)])
+   {:otsikko "Päivän erittely"
+    :tyhja "Ei päiväkohtaisia erittelyjä"
+    :tunniste :id}
+   [{:otsikko "Aika" :nimi :aika :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
+    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10}]
+   (map-indexed (fn [i itm] (assoc itm :id i )) (:erittely suolan-kaytto))])
 
 (defn suolatoteumat []
   (komp/luo

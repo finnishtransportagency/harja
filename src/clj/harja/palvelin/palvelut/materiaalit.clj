@@ -13,7 +13,8 @@
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.geo :as geo]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as tc]))
 
 (defn hae-materiaalikoodit [db]
   (oikeudet/ei-oikeustarkistusta!)
@@ -205,7 +206,7 @@
              suolatoteuma
              :erittely
              (map (fn [r]
-                    {:pvm (pvm/dateksi (pvm/iso-8601->aika (first r)))
+                    {:aika (tc/to-sql-time (pvm/iso-8601->aika (first r)))
                      :maara (second r)})
                   (konv/pgarray->vector (:erittely suolatoteuma))))
            suolatoteuma))))
