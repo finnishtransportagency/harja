@@ -76,6 +76,7 @@
 (defrecord PoistaToimenpide [toimenpide])
 (defrecord HuoltokohteetHaettu [huoltokohteet])
 (defrecord HuoltokohteidenHakuEpaonnistui [])
+(defrecord KytkePaikannusKaynnissa [])
 ;; UI-toiminnot
 (defrecord ValitseToimenpide [tiedot])
 (defrecord ValitseToimenpiteet [tiedot])
@@ -555,6 +556,10 @@
   HuoltokohteidenHakuEpaonnistui
   (process-event [_ app]
     (toimenpiteet/huoltokohteet-ei-haettu app))
+
+  KytkePaikannusKaynnissa
+  (process-event [_ app]
+    (update-in app [:avattu-toimenpide :paikannus-kaynnissa?] not))
 
   HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
