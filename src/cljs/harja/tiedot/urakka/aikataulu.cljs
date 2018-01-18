@@ -69,6 +69,7 @@
                ;; Tarkan aikataulun päivityksen täytyy aiheuttaa kohteiden haku uudelleen.
                ;; Ihanteellisesti tarkan aikataulun päivitys päivittäisi vain tämän atomin sisällön, mutta
                ;; tällöin reaktioon pitäisi kirjoittaa käsin, mikä on sekin huono tapa.
+               ;; TODO Toisaalta resetoidaan myös muualla, niin ei olisi niin väliä tällä
                tarkka-aikataulu-paivitetty @tarkka-aikataulu-paivitetty]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
