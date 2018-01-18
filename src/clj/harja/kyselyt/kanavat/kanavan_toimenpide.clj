@@ -9,6 +9,7 @@
             [harja.domain.kanavat.kommentti :as kommentti]
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
+            [harja.geo :as geo]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
@@ -106,16 +107,17 @@
                     {::muokkaustiedot/poistettu? (op/not= true)})))
 
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
-  (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
-    (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::muokkaustiedot/muokattu (pvm/nyt)
-                             ::muokkaustiedot/muokkaaja-id kayttaja-id)]
+  (let [id? (id-olemassa? (::toimenpide/id kanavatoimenpide))
+        kanavatoimenpide (cond-> kanavatoimenpide
+                                 (::toimenpide/sijainti kanavatoimenpide) (update ::toimenpide/sijainti #(geo/geometry (geo/clj->pg %)))
+                                 id? (assoc ::muokkaustiedot/muokattu (pvm/nyt)
+                                            ::muokkaustiedot/muokkaaja-id kayttaja-id)
+                                 (not id?) (assoc ::toimenpide/kuittaaja-id kayttaja-id
+                                                  ::muokkaustiedot/luotu (pvm/nyt)
+                                                  ::muokkaustiedot/luoja-id kayttaja-id))]
+    (if id?
       (when (pos? (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
-        {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
-    (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::toimenpide/kuittaaja-id kayttaja-id
-                             ::muokkaustiedot/luotu (pvm/nyt)
-                             ::muokkaustiedot/luoja-id kayttaja-id)]
+        {::toimenpide/id (::toimenpide/id kanavatoimenpide)})
       (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))
 
 (defn hae-toimenpiteiden-tehtavan-hinnoittelu [db toimenpide-idt]

@@ -32,7 +32,8 @@
             [harja.tiedot.raportit :as raportit]
             [harja.ui.kentat :as kentat]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
-            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
+            [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -233,21 +234,40 @@
         [:div.aikataulu
          [valinnat ur]
          (when aikajana?
-           [aikajana/aikajana
-            {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
-                        (tallenna-aikataulu
-                          urakka-id sopimus-id vuosi
-                          (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
-                        ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
-                        ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
-                        ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
-                        ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
-                        ;; eikä niinkään paluuarvosta.
-                        (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-            (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
-                                                   :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
-                                                   :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
-                 aikataulurivit)])
+           [:div
+            [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
+             {:otsikko "Visuaalisen muokkauksen ohje"}
+             [leijuke/multipage-vihjesisalto
+              [:div
+               [:h6 "Aikajanan alun / lopun venytys"]
+               [:figure
+                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"
+                       ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
+                       :style {:height "200px"}}]
+                [:figcaption
+                 [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
+              [:div
+               [:h6 "Aikajanan siirtäminen"]
+               [:figure
+                [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"
+                       :style {:height "200px"}}]
+                [:figcaption
+                 [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
+             [aikajana/aikajana
+              {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
+                          (tallenna-aikataulu
+                            urakka-id sopimus-id vuosi
+                            (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
+                          ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
+                          ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
+                          ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
+                          ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
+                          ;; eikä niinkään paluuarvosta.
+                          (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
+              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
+                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                                     :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
+                   aikataulurivit)]])
          [grid/grid
           {:otsikko [:span
                      "Kohteiden aikataulu"
