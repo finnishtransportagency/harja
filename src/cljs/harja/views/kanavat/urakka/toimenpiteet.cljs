@@ -225,11 +225,12 @@
       :tyyppi :string
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}
-     {:nimi :varaosat
-      :tyyppi :komponentti
-      :palstoja 2
-      :komponentti (fn [_]
-                     [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet])}
+     (lomake/rivi
+       {:nimi :varaosat
+        :tyyppi :komponentti
+        :palstoja 2
+        :komponentti (fn [_]
+                       [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet])})
      {:nimi :lisaa-varaosa
       :tyyppi :komponentti
       :uusi-rivi? true
