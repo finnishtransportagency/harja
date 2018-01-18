@@ -26,6 +26,7 @@
             [harja.ui.debug :as debug]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
+            [harja.views.kartta :as kartta]
             [harja.domain.kanavat.kommentti :as kommentti])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
@@ -56,6 +57,7 @@
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
                                            :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
                                            :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
+                                           :paikannus-kaynnissa-fn #(e! (tiedot/->KytkePaikannusKaynnissa))
                                            :lisaa-materiaali-fn #(e! (tiedot/->LisaaMateriaali))
                                            :muokkaa-materiaaleja-fn #(e! (tiedot/->MuokkaaMateriaaleja %))
                                            :lisaa-virhe-fn #(e! (tiedot/->LisaaVirhe %))}])
@@ -123,13 +125,15 @@
         (let [kohteet @kanavaurakka/kanavakohteet
               nakyma-voidaan-nayttaa? (some? kohteet)]
           (if nakyma-voidaan-nayttaa?
-            [:div
-             [debug app]
-             (if avattu-toimenpide
-               [lisatyot-lomake e! app]
-               [:div
-                [suodattimet e! app]
-                [taulukko e! app]])]
+            [:span
+             [kartta/kartan-paikka]
+             [:div
+              (if avattu-toimenpide
+                [lisatyot-lomake e! app]
+                [:div
+                 [suodattimet e! app]
+                 [taulukko e! app]])
+              [debug app]]]
             [ajax-loader "Ladataan..."]))))))
 
 (defc lisatyot []

@@ -144,8 +144,11 @@
               :kayttajatunnus "solita-2"
               :salasana #=(slurp "../.harja/labyrintti-salasana")}
 
- ;; ClamAV REST palvelun osoite
+ ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
+
+ ;; Tiedistopesula-palvelun osoite
+ :tiedostopesula {:base-url "http://localhost:31337/"}
 
  :paivystystarkistus {:paivittainen-aika [12 11 00]}
  :reittitarkistus {:paivittainen-aika [00 30 00]}
@@ -165,7 +168,8 @@
  :pois-kytketyt-ominaisuudet #{:fileyard
                                :tietyoilmoitusten-lahetys
                                :ais-data
-                               :reittitarkistukset}
+                               :reittitarkistukset
+                               :tiedostopesula}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 

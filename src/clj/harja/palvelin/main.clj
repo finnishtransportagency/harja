@@ -11,6 +11,7 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+    [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
 
     ;; Integraatiokomponentit
@@ -121,6 +122,7 @@
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
+    [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -185,10 +187,12 @@
 
       :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
 
+      :tiedostopesula (tiedostopesula/luo-tiedostopesula (:tiedostopesula asetukset))
+
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet
                                (get-in asetukset [:liitteet :fileyard-url]))
-                             [:db :virustarkistus :pois-kytketyt-ominaisuudet])
+                             [:db :virustarkistus :tiedostopesula :pois-kytketyt-ominaisuudet])
 
       :kehitysmoodi (component/using
                       (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
@@ -537,6 +541,10 @@
       :organisaatiot (component/using
                        (organisaatiot/->Organisaatiot)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+
+      :koordinaatit (component/using
+                      (koordinaatit/->Koordinaatit)
+                      [:http-palvelin])
 
       ;; Harja API
       :api-urakat (component/using
