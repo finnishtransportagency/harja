@@ -12,7 +12,8 @@
             [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.geo :as geo]
-            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]))
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
+            [harja.pvm :as pvm]))
 
 (defn hae-materiaalikoodit [db]
   (oikeudet/ei-oikeustarkistusta!)
@@ -197,10 +198,24 @@
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
+(def suolatoteuma-xf
+  (map (fn [suolatoteuma]
+         (if (:erittely suolatoteuma)
+           (assoc
+             suolatoteuma
+             :erittely
+             (map (fn [r]
+                    {:pvm (pvm/dateksi (pvm/iso-8601->aika (first r)))
+                     :maara (second r)})
+                  (konv/pgarray->vector (:erittely suolatoteuma))))
+           suolatoteuma))))
+
 (defn hae-suolatoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (into []
-        (map konv/alaviiva->rakenne)
+        (comp
+          suolatoteuma-xf
+          (map konv/alaviiva->rakenne))
         (q/hae-suolatoteumat db {:urakka urakka-id
                                  :sopimus sopimus-id
                                  :alkupvm alkupvm
@@ -240,20 +255,20 @@
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
               (toteumat-q/paivita-toteuma<! db
-                                           {:alkanut (:alkanut toteuma)
-                                            :paattynyt (or (:paattynyt toteuma) (:alkanut toteuma))
-                                            :tyyppi "kokonaishintainen"
-                                            :kayttaja (:id user)
-                                            :suorittaja (:suorittajan-nimi toteuma)
-                                            :ytunnus (:suorittajan-ytunnus toteuma)
-                                            :lisatieto (:lisatieto toteuma)
-                                            :numero nil
-                                            :alkuosa nil
-                                            :alkuetaisyys nil
-                                            :loppuosa nil
-                                            :loppuetaisyys nil
-                                            :id (:tid toteuma)
-                                            :urakka urakka-id})
+                                            {:alkanut (:alkanut toteuma)
+                                             :paattynyt (or (:paattynyt toteuma) (:alkanut toteuma))
+                                             :tyyppi "kokonaishintainen"
+                                             :kayttaja (:id user)
+                                             :suorittaja (:suorittajan-nimi toteuma)
+                                             :ytunnus (:suorittajan-ytunnus toteuma)
+                                             :lisatieto (:lisatieto toteuma)
+                                             :numero nil
+                                             :alkuosa nil
+                                             :alkuetaisyys nil
+                                             :loppuosa nil
+                                             :loppuetaisyys nil
+                                             :id (:tid toteuma)
+                                             :urakka urakka-id})
               (when (:reitti toteuma) (toteumat-q/paivita-toteuman-reitti! db
                                                                            {:reitti (geo/geometry (geo/clj->pg (:reitti toteuma)))
                                                                             :id (:tid toteuma)}))
