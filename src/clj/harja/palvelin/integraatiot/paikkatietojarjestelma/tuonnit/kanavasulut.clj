@@ -73,7 +73,6 @@
       (q-kanavasulut/luo-kanavasulku<! db sql-parametrit))))
 
 (defn vie-kanavasulut-kantaan [db shapefile]
-  (log/debug (str "vie-kanavasulut-kantaan TIEDOSTO: " shapefile))
   (if shapefile
     (do
       (log/debug (str "Tuodaan kanavasulut kantaan tiedostosta " shapefile))

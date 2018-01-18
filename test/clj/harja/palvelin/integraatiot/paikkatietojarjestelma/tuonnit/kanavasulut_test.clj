@@ -79,3 +79,4 @@
     (let [tallentunut-kanava  (first(q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))]
       (ht/tarkista-map-arvot referenssi-kanavasulku-tietokannasta tallentunut-kanava)))
 
+;;TODO: tarkista triggerin toiminta testissä
