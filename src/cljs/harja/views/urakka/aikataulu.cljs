@@ -246,6 +246,8 @@
             [aikajana/aikajana
              {:muuta! (fn [drag]
                         ;; TODO Olisiko sittenkin helpompi vaan tehdä ylläpitokohteiden aikataulun palveluun tuki tallentaa myös tarkat aikataulut jos löytyy?
+                        ;; Tällöin tämä toimisi aika pitkälti samalla tavalla kuin nytkin, vain tarkat aikataulut pitäisi päivittää riville. Paluuarvona suoraan päivitetty data
+                        ;; Myös tarkan aikataulun tallennukseen palauta suoraan aikataulunäkymän data niin vältetään flicker
                         (go (let [paivitetty-perusaikataulu (aikataulu/raahauksessa-paivitetyt-perusaikataulurivit aikataulurivit drag)
                                   ;paivitety-tarkka-aikataulu (aikataulu/raahauksessa-paivitetyt-tarkat-aikataulurivit drag)
                                   ]
