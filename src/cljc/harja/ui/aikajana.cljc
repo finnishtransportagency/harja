@@ -359,8 +359,6 @@
                            [:g [:rect (merge
                                         (when voi-raahata?
                                           {:style {:cursor "move"}
-                                           ;; TODO Raahaa molempia, ei vain alkua
-                                           ;; TODO Jos raahataan koko kohdetta, raahaa myös päällystystä?
                                            :on-mouse-down #(drag-start! % jana ::palkki)})
                                         {:x x :y y
                                          :width jana-leveys
