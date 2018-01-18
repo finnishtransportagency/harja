@@ -121,6 +121,7 @@
     [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as turvalaitteiden-geometriat]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
+    [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -539,6 +540,10 @@
       :organisaatiot (component/using
                        (organisaatiot/->Organisaatiot)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+
+      :koordinaatit (component/using
+                      (koordinaatit/->Koordinaatit)
+                      [:http-palvelin])
 
       ;; Harja API
       :api-urakat (component/using
