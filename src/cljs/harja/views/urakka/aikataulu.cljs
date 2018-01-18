@@ -245,7 +245,7 @@
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
             [aikajana/aikajana
              {:muuta! (fn [drag]
-                        ;; Ratkaisuehdotus:
+                        ;; TODO Ratkaisuehdotus:
                         ;; - Kerää muokatut aikataulurivit sekä tarkennetut aikataulurivit.
                         ;; - Tallenna ensin ylläpitokohteet (vastauksena tallennetut kohteet, älä tallenna mihinkään)
                         ;; - Tallenna sitten tarkat aikataulut (vastauksena tallennetut tarkat aikataulut, älä tallenna mihinkään)
