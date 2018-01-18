@@ -250,15 +250,12 @@
                         ;; - Tallenna ensin ylläpitokohteet (vastauksena tallennetut kohteet, älä tallenna mihinkään)
                         ;; - Tallenna sitten tarkat aikataulut (vastauksena tallennetut tarkat aikataulut, älä tallenna mihinkään)
                         ;; - Lopulta hae tallennetut ylläpitokohteet (saadaan varmasti tuore tila kannasta, ja saadaan molemmat kerralla)
-                        (let [paivitetyt-rivit (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)]
-                          (if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit drag)
-                           (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetyt-rivit)
-                           ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
-                           ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
-                           ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
-                           ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
-                           ;; eikä niinkään paluuarvosta.
-                           (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
+                        (go (let [paivitetyt-rivit (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)]
+                              (if (aikataulu/aikataulu-validi? aikataulurivit drag)
+                                (do
+                                  (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetyt-rivit (constantly nil)))
+                                  (reset! tiedot/aikajana-paivitetty (t/now)))
+                                (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
                                                     :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
@@ -274,7 +271,8 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %)
+                       #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
+                                                   (fn [vastaus] (reset! aikataulurivit vastaus)))
                        :ei-mahdollinen)
            :vetolaatikot (into {}
                                (map (juxt :id

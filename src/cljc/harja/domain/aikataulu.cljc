@@ -99,10 +99,13 @@
               (case (second drag)
                 :kohde [:aikataulu-kohde-alku :aikataulu-kohde-valmis]
                 :paallystys [:aikataulu-paallystys-alku :aikataulu-paallystys-loppu]
-                :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu])]
-          (assoc aikataulurivi
-            alku-avain alku
-            loppu-avain loppu))))
+                :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu]
+                nil)]
+          (if (and alku-avain loppu-avain)
+            (assoc aikataulurivi
+              alku-avain alku
+              loppu-avain loppu)
+            aikataulurivi))))
     aikataulurivit))
 
 (defn aikataulu-validi?

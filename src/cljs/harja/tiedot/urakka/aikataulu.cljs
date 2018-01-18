@@ -25,6 +25,7 @@
 
 (defonce aikataulu-nakymassa? (atom false))
 (defonce tarkka-aikataulu-paivitetty (atom nil))
+(defonce aikajana-paivitetty (atom nil))
 
 (defonce valinnat
   (local-storage/local-storage-atom
@@ -69,8 +70,9 @@
                ;; Tarkan aikataulun päivityksen täytyy aiheuttaa kohteiden haku uudelleen.
                ;; Ihanteellisesti tarkan aikataulun päivitys päivittäisi vain tämän atomin sisällön, mutta
                ;; tällöin reaktioon pitäisi kirjoittaa käsin, mikä on sekin huono tapa.
-               ;; TODO Toisaalta resetoidaan myös muualla, niin ei olisi niin väliä tällä
-               tarkka-aikataulu-paivitetty @tarkka-aikataulu-paivitetty]
+               ;; TODO Toisaalta tätä atomia resetoidaan jo muualla, niin ei olisi niin väliä
+               tarkka-aikataulu-paivitetty @tarkka-aikataulu-paivitetty
+               aikajana-paivitetty @aikajana-paivitetty]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
@@ -139,7 +141,7 @@
             aikataulurivit))
 
 (defn- tallenna-yllapitokohteiden-aikataulu
-  [{:keys [urakka-id sopimus-id vuosi kohteet epaonnistui-fn]}]
+  [{:keys [urakka-id sopimus-id vuosi kohteet onnistui-fn epaonnistui-fn]}]
   (go
     (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
                                {:urakka-id urakka-id
@@ -148,14 +150,15 @@
                                 :kohteet kohteet}))]
       (if (k/virhe? vastaus)
         (epaonnistui-fn)
-        (reset! aikataulurivit vastaus)))))
+        (onnistui-fn vastaus)))))
 
-(defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
+(defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet onnistui-fn]
   (tallenna-yllapitokohteiden-aikataulu
     {:urakka-id urakka-id
      :sopimus-id sopimus-id
      :vuosi vuosi
      :kohteet kohteet
+     :onnistui-fn onnistui-fn
      :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
                                      :warning
                                      viesti/viestin-nayttoaika-lyhyt)}))
