@@ -105,7 +105,7 @@
             loppu-avain loppu))))
     aikataulurivit))
 
-(defn aikataulun-alku-ja-loppu-validi?
+(defn aikataulu-validi?
   "Tarkistaa että aikajanan päällystystoimenpiteen uusi päivämäärävalinta on validi.
   Päällystys ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen."
   [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
@@ -115,14 +115,14 @@
                (and (= id (first drag)) (= :paallystys (second drag)))
                (let [kohde-alku (get aikataulurivi :aikataulu-kohde-alku)
                      kohde-loppu (get aikataulurivi :aikataulu-kohde-valmis)]
-                 (and (pvm/sama-tai-jalkeen? alku kohde-alku)
-                      (pvm/sama-tai-ennen? loppu kohde-loppu)))
+                 (and (or (nil? kohde-alku) (pvm/sama-tai-jalkeen? alku kohde-alku))
+                      (or (nil? kohde-loppu) (pvm/sama-tai-ennen? loppu kohde-loppu))))
 
                (and (= id (first drag)) (= :kohde (second drag)))
                (let [paallystys-alku (get aikataulurivi :aikataulu-paallystys-alku)
-                     paallystys-loppu (get aikataulurivi :aikataulu-paallystys-valmis)]
-                 (and (pvm/sama-tai-jalkeen? paallystys-alku alku)
-                      (pvm/sama-tai-ennen? paallystys-loppu loppu)))
+                     paallystys-loppu (get aikataulurivi :aikataulu-paallystys-loppu)]
+                 (and (or (nil? paallystys-alku) (pvm/sama-tai-jalkeen? paallystys-alku alku))
+                      (or (nil? paallystys-loppu) (pvm/sama-tai-ennen? paallystys-loppu loppu))))
 
                :default
                true))
