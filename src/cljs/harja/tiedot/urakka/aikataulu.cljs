@@ -137,7 +137,7 @@
                                           (pvm/nyt))
             aikataulurivit))
 
-(defn tallenna-yllapitokohteiden-aikataulu
+(defn- tallenna-yllapitokohteiden-aikataulu
   [{:keys [urakka-id sopimus-id vuosi kohteet epaonnistui-fn]}]
   (go
     (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
@@ -149,7 +149,7 @@
         (epaonnistui-fn)
         (reset! aikataulurivit vastaus)))))
 
-(defn- tallenna-aikajanan-aikataulu [urakka-id sopimus-id vuosi kohteet]
+(defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
   (tallenna-yllapitokohteiden-aikataulu
     {:urakka-id urakka-id
      :sopimus-id sopimus-id

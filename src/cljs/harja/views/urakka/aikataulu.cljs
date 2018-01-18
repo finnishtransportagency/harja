@@ -246,7 +246,7 @@
             [aikajana/aikajana
              {:muuta! (fn [drag]
                         (if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit drag)
-                          (tiedot/tallenna-aikajanan-aikataulu
+                          (tiedot/tallenna-aikataulu
                             urakka-id sopimus-id vuosi
                             (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag))
                           ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
@@ -270,7 +270,7 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tallenna-aikajanan-aikataulu urakka-id sopimus-id vuosi %)
+                       #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %)
                        :ei-mahdollinen)
            :vetolaatikot (into {}
                                (map (juxt :id
