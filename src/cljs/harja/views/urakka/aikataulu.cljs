@@ -251,7 +251,7 @@
                               (if (aikataulu/aikataulu-validi? aikataulurivit drag)
                                 (do
                                   (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-perusaikataulu (constantly nil)))
-                                  ;(<! (tiedot/tallenna-tarkka-aikataulu urakka-id sopimus-id vuosi paivitetty-perusaikataulu (constantly nil)))
+                                  ;(<! (tiedot/tallenna-tarkka-aikataulu urakka-id sopimus-id vuosi paivitety-tarkka-aikataulu (constantly nil)))
                                   (reset! tiedot/aikajana-paivitetty (t/now)))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
