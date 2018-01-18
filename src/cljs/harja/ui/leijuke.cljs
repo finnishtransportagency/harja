@@ -89,8 +89,7 @@
 (defn vihjeleijuke [optiot leijuke-sisalto]
   (let [nakyvissa? (atom false)]
     (fn [optiot leijuke-sisalto]
-      [:div {:class
-             (str "inline-block yleinen-pikkuvihje klikattava")}
+      [:div.inline-block.yleinen-pikkuvihje.klikattava
        [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
         (if @nakyvissa?
           [leijuke (merge
