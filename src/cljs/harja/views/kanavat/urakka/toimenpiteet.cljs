@@ -18,7 +18,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [reagent.core :as r]))
 
 (defn valittu-tehtava [toimenpide]
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
@@ -118,7 +119,7 @@
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
                                           toimenpideinstanssit tehtavat urakan-materiaalit lisaa-materiaali-fn
-                                          muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]}]
+                                          muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet paikannus-kaynnissa-fn]}]
   (assert urakan-materiaalit)
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
@@ -136,10 +137,25 @@
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :pakollinen? true}
-     (lomake/rivi
+     (lomake/ryhma
+       {:otsikko "Sijainti tai kohde"}
+       {:nimi ::kanavan-toimenpide/sijainti
+        :otsikko "Sijainti"
+        :uusi-rivi? true
+        :tyyppi :sijaintivalitsin
+        :disabled? (not (nil? (::kanavan-toimenpide/kohde toimenpide)))
+        ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
+        ;; haun aikana
+        :paikannus-kaynnissa?-atom (r/wrap (:paikannus-kaynnissa? toimenpide)
+                                           (fn [_]
+                                             (paikannus-kaynnissa-fn)))
+        :poista-valinta? true
+        :karttavalinta-tehty-fn :kayta-lomakkeen-atomia}
        {:otsikko "Kohde"
         :nimi ::kanavan-toimenpide/kohde
         :tyyppi :valinta
+        :disabled? (or (not (nil? (::kanavan-toimenpide/sijainti toimenpide)))
+                       (:paikannus-kaynnissa? toimenpide))
         :aseta (fn [rivi arvo]
                  (if (nil? arvo)
                    (-> rivi
@@ -150,20 +166,20 @@
         :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
         :valinnat kohteet})
      (when (::kanavan-toimenpide/kohde toimenpide)
-       {:otsikko "Kohteen osa"
-        :nimi ::kanavan-toimenpide/kohteenosa
-        :tyyppi :valinta
-        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohdeosaa")
-        :valinnat (or valitun-kohteen-osat [])})
-     (when (::kanavan-toimenpide/kohde toimenpide)
-       {:otsikko "Huoltokohde"
-        :nimi ::kanavan-toimenpide/huoltokohde
-        :tyyppi :valinta
-        :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
-                              nimi)
-                            "- Valitse huoltokohde -")
-        :valinnat (sort-by ::kanavan-huoltokohde/nimi huoltokohteet)
-        :pakollinen? true})
+       (lomake/rivi
+         {:otsikko "Kohteen osa"
+          :nimi ::kanavan-toimenpide/kohteenosa
+          :tyyppi :valinta
+          :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohdeosaa")
+          :valinnat (or valitun-kohteen-osat [])}
+         {:otsikko "Huoltokohde"
+          :nimi ::kanavan-toimenpide/huoltokohde
+          :tyyppi :valinta
+          :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
+                                nimi)
+                              "- Valitse huoltokohde -")
+          :valinnat (sort-by ::kanavan-huoltokohde/nimi huoltokohteet)
+          :pakollinen? true}))
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
@@ -209,11 +225,12 @@
       :tyyppi :string
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}
-     {:nimi :varaosat
-      :tyyppi :komponentti
-      :palstoja 2
-      :komponentti (fn [_]
-                     [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet])}
+     (lomake/rivi
+       {:nimi :varaosat
+        :tyyppi :komponentti
+        :palstoja 2
+        :komponentti (fn [_]
+                       [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet])})
      {:nimi :lisaa-varaosa
       :tyyppi :komponentti
       :uusi-rivi? true
@@ -253,7 +270,7 @@
                                 toimenpideinstanssit tehtavat urakan-materiaalit] :as app}
                         {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
                                 tallenna-lomake-fn poista-toimenpide-fn lisaa-materiaali-fn
-                                muokkaa-materiaaleja-fn lisaa-virhe-fn]}]
+                                muokkaa-materiaaleja-fn lisaa-virhe-fn paikannus-kaynnissa-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
         kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
@@ -276,6 +293,7 @@
                                      :huoltokohteet huoltokohteet
                                      :toimenpideinstanssit toimenpideinstanssit
                                      :tehtavat tehtavat
+                                     :paikannus-kaynnissa-fn paikannus-kaynnissa-fn
                                      :urakan-materiaalit urakan-materiaalit
                                      :lisaa-materiaali-fn lisaa-materiaali-fn
                                      :muokkaa-materiaaleja-fn muokkaa-materiaaleja-fn
