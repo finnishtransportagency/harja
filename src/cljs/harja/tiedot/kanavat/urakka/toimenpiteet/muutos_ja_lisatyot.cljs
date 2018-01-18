@@ -101,6 +101,7 @@
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
 (defrecord LisaaMuuKulurivi [])
 (defrecord LisaaMuuTyorivi [])
+(defrecord LisaaMateriaaliKulurivi [])
 (defrecord PoistaHinnoiteltavaTyorivi [tyo])
 (defrecord PoistaHinnoiteltavaHintarivi [hinta])
 (defrecord TallennaToimenpiteenHinnoittelu [tiedot])
@@ -110,6 +111,7 @@
 (defrecord ToimenpiteenKommenttiTallennettu [vastaus])
 (defrecord ToimenpiteenKommenttiEiTallennettu [virhe])
 (defrecord HaeHuoltokohteet [])
+(defrecord HinnoiteltavanToimenpiteenMateriaalit [])
 
 ;; Suunnitellut työt
 (defrecord TyhjennaSuunnitellutTyot [])
@@ -146,9 +148,31 @@
 (defn muut-hinnat [app]
   (hintaryhman-tyot app "muu"))
 
+(defn materiaalit [app]
+  (hintaryhman-tyot app "materiaali"))
+
 (defn hinta-otsikolla [hinnat otsikkokriteeri]
   (etsi-eka-map hinnat ::hinta/otsikko otsikkokriteeri))
 
+(defn toimenpiteen-materiaalit
+  "Palauttaa hinnoiteltavan rivin materiaalit."
+  [{toimenpide-id :toimenpide-id materiaalit :materiaalit}]
+  (assert (integer? toimenpide-id) "toimenpide-id pitää olla int")
+  (flatten
+    (map (fn [materiaali]
+           (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
+                    {:nimi (::materiaalit/nimi materiaali)
+                     :maara (- (::materiaalit/maara %))
+                     :materiaali-id (::materiaalit/id %)})
+                 (::materiaalit/muutokset materiaali)))
+         materiaalit)))
+
+(defn kaytto-merkattu-toimenpiteelle?
+  [materiaali-hinta materiaalit]
+  (some (fn [materiaali]
+          (= (::materiaalit/nimi materiaali)
+             (::hinta/otsikko materiaali-hinta)))
+        materiaalit))
 
 ;; Toimenpiteen hinnoittelun yhteydessä tarjottavat vakiokentät (vectori, koska järjestys tärkeä)
 (def vakiohinnat ["Yleiset materiaalit" "Matkakulut" "Muut kulut"])
@@ -179,22 +203,33 @@
     hinta))
 
 (defn- toimenpiteen-hintakentat [hinnat]
-  (vec (concat
-         ;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
-         (map-indexed (fn [index otsikko]
-                        (let [olemassa-oleva-hinta (hinta-otsikolla hinnat otsikko)]
-                          (hintakentta
-                            (merge
-                              {::hinta/id (dec (- index))
-                               ::hinta/otsikko otsikko
-                               ::hinta/ryhma "muu"}
-                              olemassa-oleva-hinta))))
-                      vakiohinnat)
-         ;; Loput kentät ovat käyttäjän itse lisäämiä
-         (map
-           hintakentta
-           (remove #((set vakiohinnat) (::hinta/otsikko %))
-                   hinnat)))))
+  (let [;; Vakiohintakentät näytetään aina riippumatta siitä onko niille annettu hintaa
+        vakiokenttien-hinnat (map-indexed (fn [index otsikko]
+                                            (let [olemassa-oleva-hinta (hinta-otsikolla hinnat otsikko)]
+                                              (hintakentta
+                                                (merge
+                                                  {::hinta/id (dec (- index))
+                                                   ::hinta/otsikko otsikko
+                                                   ::hinta/ryhma "muu"}
+                                                  olemassa-oleva-hinta))))
+                                          vakiohinnat)
+        hinnattomien-vakiokenttien-lukumaara (count (filter #(< (::hinta/id %) 0)
+                                                            vakiokenttien-hinnat))
+        ;; Toimenpiteellä käytetyt materiaalit näytetään aina
+        materiaalien-hinnat (reduce (fn [kertynyt hinta]
+                                      (if (= (::hinta/ryhma hinta) "materiaali")
+                                        (conj kertynyt
+                                              (hintakentta
+                                                (merge {::hinta/id (dec (- (+ (count kertynyt) hinnattomien-vakiokenttien-lukumaara)))}
+                                                       hinta)))
+                                        kertynyt))
+                                    [] hinnat)
+        ;; Loput kentät ovat käyttäjän itse lisäämiä
+        loppujen-hinnat (map
+                          hintakentta
+                          (remove #((set (concat vakiohinnat (map ::hinta/otsikko materiaalien-hinnat))) (::hinta/otsikko %))
+                                  hinnat))]
+    (vec (concat vakiokenttien-hinnat materiaalien-hinnat loppujen-hinnat))))
 
 (defn- lisaa-hintarivi-toimenpiteelle* [id-avain tyot-tai-hinnat kentta-fn app]
   (let [jutut (get-in app [:hinnoittele-toimenpide tyot-tai-hinnat])
@@ -250,10 +285,21 @@
        (every? #(or (some? (::hinta/summa %))
                     (and (some? (::hinta/maara %))
                          (some? (::hinta/yksikkohinta %))
-                         (not-empty (::hinta/yksikko %))))
+                         (not-empty (::hinta/yksikko %)))
+                    (and (some? (::hinta/maara %))
+                         (some? (::hinta/yksikkohinta %))
+                         (= "materiaali" (::hinta/ryhma %))))
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))
        (every? #(not-empty (::hinta/otsikko %))
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
+
+(defn materiaali->hinta
+  [{:keys [nimi maara materiaali-id]}]
+  {::hinta/otsikko nimi
+   ::hinta/ryhma "materiaali"
+   ::hinta/maara maara
+   ::hinta/yksikkohinta 0
+   ::hinta/materiaali-id materiaali-id})
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -374,14 +420,23 @@
   (process-event [{toimenpide-id :toimenpide-id} app]
 
     (let [hinnoiteltava-toimenpide (etsi-eka-map (:toimenpiteet app) ::toimenpide/id toimenpide-id)
+          materiaalit (or (toimenpiteen-materiaalit {:toimenpide-id toimenpide-id :materiaalit (:urakan-materiaalit app)}) [])
           hinnat (or (::toimenpide/hinnat hinnoiteltava-toimenpide) [])
+          tallentamattomat-materiaali-hinnat (sequence (comp
+                                                         (remove (fn [materiaali]
+                                                                   (some #(= (:nimi materiaali)
+                                                                             (::hinta/otsikko %))
+                                                                         hinnat)))
+                                                         (map materiaali->hinta))
+                                                       materiaalit)
+          yhdistetyt-hinnat (concat hinnat tallentamattomat-materiaali-hinnat)
           tyot (or (::toimenpide/tyot hinnoiteltava-toimenpide) [])
           urakka-id (get-in app [:valinnat :urakka :id])]
       (if urakka-id
         (assoc app :hinnoittele-toimenpide
                    {::toimenpide/id toimenpide-id
                     ::toimenpide/pvm (::toimenpide/pvm hinnoiteltava-toimenpide)
-                    ::hinta/hinnat (toimenpiteen-hintakentat hinnat)
+                    ::hinta/hinnat (toimenpiteen-hintakentat yhdistetyt-hinnat)
                     ::tyo/tyot tyot
                     :urakka urakka-id})
         (do
@@ -425,6 +480,12 @@
   (process-event [_ app]
     (lisaa-hintarivi-toimenpiteelle
       {::hinta/ryhma "tyo"}
+      app))
+
+  LisaaMateriaaliKulurivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma "materiaali"}
       app))
 
   PoistaHinnoiteltavaTyorivi
@@ -540,7 +601,7 @@
       (go (tallennus! (assoc toimenpide ::muokkaustiedot/poistettu? true)
                       true))
       (update app :valitut-toimenpide-idt
-                 #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
+              #(toimenpiteet/poista-valittu-toimenpide % (::toimenpide/id toimenpide)))))
 
   HaeHuoltokohteet
   (process-event [{toimenpide :toimenpide} app]
@@ -578,8 +639,8 @@
   (process-event [{materiaalit :materiaalit} app]
     ;; (log "MateriaalitHaettu, saatiin" (count materiaalit))
     (assoc app
-           :urakan-materiaalit materiaalit
-           :materiaalien-haku-kaynnissa? false))
+      :urakan-materiaalit materiaalit
+      :materiaalien-haku-kaynnissa? false))
 
   MateriaalienHakuEpaonnistui
   (process-event [_ app]
@@ -592,10 +653,10 @@
     (if (:avattu-toimenpide app)
       (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
                 (vec
-                 (for [m materiaalit]
-                   (if (-> m :varaosat ::materiaalit/muutokset)
-                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
-                     m))))
+                  (for [m materiaalit]
+                    (if (-> m :varaosat ::materiaalit/muutokset)
+                      (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                      m))))
       app))
 
   LisaaMateriaali
