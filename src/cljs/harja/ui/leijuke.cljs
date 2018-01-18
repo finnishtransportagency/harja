@@ -89,8 +89,7 @@
 (defn vihjeleijuke [optiot leijuke-sisalto]
   (let [nakyvissa? (atom false)]
     (fn [optiot leijuke-sisalto]
-      [:div {:class
-             (str "inline-block yleinen-pikkuvihje klikattava")}
+      [:div.inline-block.yleinen-pikkuvihje.klikattava
        [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
         (if @nakyvissa?
           [leijuke (merge
@@ -115,13 +114,13 @@
 
 (defn multipage-vihjesisalto [& sisallot]
   (let [sivu-index (atom 0)
-        seuraava-index-saatavilla? (fn [sivu-index sisallot]
-                                    (< sivu-index (- (count sisallot) 1)))
+        seuraava-index-saatavilla (fn [sivu-index sisallot]
+                                    (< sivu-index (dec (count sisallot))))
         seuraava-index (fn []
                          (when (seuraava-index-saatavilla? @sivu-index sisallot)
                            (swap! sivu-index inc)))
         edellinen-index-saatavilla? (fn [sivu-index]
-                                     (> sivu-index 0))
+                                      (> sivu-index 0))
         edellinen-index (fn []
                           (when (edellinen-index-saatavilla? @sivu-index)
                             (swap! sivu-index dec)))
