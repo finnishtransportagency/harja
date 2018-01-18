@@ -107,15 +107,23 @@
 
 (defn aikataulun-alku-ja-loppu-validi?
   "Tarkistaa että aikajanan päällystystoimenpiteen uusi päivämäärävalinta on validi.
-  Toimenpide ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen.
-  Ei tarkista tiemerkintään liittyviä rajoituksia."
+  Päällystys ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen."
   [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
   (first (keep
            (fn [{id :id :as aikataulurivi}]
-             (if (and (= id (first drag)) (= :paallystys (second drag)))
+             (cond
+               (and (= id (first drag)) (= :paallystys (second drag)))
                (let [kohde-alku (get aikataulurivi :aikataulu-kohde-alku)
                      kohde-loppu (get aikataulurivi :aikataulu-kohde-valmis)]
                  (and (pvm/sama-tai-jalkeen? alku kohde-alku)
                       (pvm/sama-tai-ennen? loppu kohde-loppu)))
+
+               (and (= id (first drag)) (= :kohde (second drag)))
+               (let [paallystys-alku (get aikataulurivi :aikataulu-paallystys-alku)
+                     paallystys-loppu (get aikataulurivi :aikataulu-paallystys-valmis)]
+                 (and (pvm/sama-tai-jalkeen? paallystys-alku alku)
+                      (pvm/sama-tai-ennen? paallystys-loppu loppu)))
+
+               :default
                true))
            aikataulurivit)))
