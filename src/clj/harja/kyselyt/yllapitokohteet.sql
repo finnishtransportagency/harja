@@ -787,18 +787,6 @@ INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide,
 VALUES
   (:yllapitokohde, :urakka, :toimenpide :: YLLAPITOKOHTEEN_AIKATAULU_TOIMENPIDE, :kuvaus, :alku, :loppu, :luoja, NOW());
 
--- name: hae-yllapitokohteen-tarkka-aikataulu
-SELECT
-  id         AS "id",
-  toimenpide AS "toimenpide",
-  kuvaus     AS "kuvaus",
-  alku       AS "alku",
-  loppu      AS "loppu",
-  urakka     AS "urakka-id"
-FROM yllapitokohteen_tarkka_aikataulu ypkya
-WHERE yllapitokohde = :yllapitokohde
-      AND poistettu IS NOT TRUE;
-
 -- name: hae-yllapitokohteen-urakka-id
 SELECT urakka AS id
 FROM yllapitokohde
