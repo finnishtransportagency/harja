@@ -1,8 +1,12 @@
 (ns harja.domain.hoitoluokat
   "Määrittelee talvihoitoluokat ja soratien hoitoluokat")
 
+(def ei-talvihoitoluokkaa-nimi "Ei tiedossa")
+
 (def ^{:doc "Mahdolliset talvihoitoluokat. Nimi kertoo käyttöliittymässä käytetyn
-nimen. Numero on tierekisterin koodi luokalle."}
+nimen. Numero on tierekisterin koodi luokalle. Jos hoitoluokkaa ei saada geometrioista
+selvitettyä, se asetetaan arvoon 100. Arvolla NULL PSQL upsert ei toimisi, koska UNIQUE
+constrait vertailussa NULL arvot eivät aiheuta koskaan konfliktia."}
   talvihoitoluokat
   [{:nimi "IsE"  :numero 0 :numero-str "0"}
    {:nimi "Is"  :numero 1 :numero-str "1"}
@@ -12,9 +16,9 @@ nimen. Numero on tierekisterin koodi luokalle."}
    {:nimi "II"  :numero 5 :numero-str "5"}
    {:nimi "III" :numero 6 :numero-str "6"}
    {:nimi "K1"  :numero 7 :numero-str "7"}
-   {:nimi "K2"  :numero 8 :numero-str "8"}])
+   {:nimi "K2"  :numero 8 :numero-str "8"}
+   {:nimi ei-talvihoitoluokkaa-nimi :numero 100 :numero-str "100"}])
 
-(def ei-talvihoitoluokkaa-nimi "Ei tiedossa")
 
 (defn haluttujen-hoitoluokkien-nimet-ja-numerot [hoitoluokan-numero-set]
   (conj

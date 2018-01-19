@@ -15,7 +15,7 @@ BEGIN
   FOR rivi IN SELECT SUM(rm.maara) AS summa,
                      rm.materiaalikoodi,
 		     rp.aika::DATE,
-		     COALESCE(rp.talvihoitoluokka, 0) AS talvihoitoluokka
+		     COALESCE(rp.talvihoitoluokka, 100) AS talvihoitoluokka
                 FROM toteuman_reittipisteet tr
 		     JOIN LATERAL unnest(tr.reittipisteet) rp ON true
 		     JOIN LATERAL unnest(rp.materiaalit) rm ON true
@@ -48,7 +48,7 @@ BEGIN
                    JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                    JOIN LATERAL unnest(rp.materiaalit) mat ON true
                  WHERE t.alkanut BETWEEN NEW.alkanut::DATE AND (NEW.paattynyt + interval '1 day')::DATE
-                       AND t.urakka = u
+                       AND t.urakka = u AND t.poistettu IS NOT TRUE
                  GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi, rp.aika
     LOOP
       RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain  rivi2: %', rivi2;
@@ -56,7 +56,7 @@ BEGIN
       (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
       VALUES (rivi2.aika,
               rivi2.materiaalikoodi,
-              rivi2.talvihoitoluokka,
+              COALESCE(rivi2.talvihoitoluokka, 100),
               rivi2.urakka,
               rivi2.summa)
       ON CONFLICT ON CONSTRAINT uniikki_urakan_materiaalin_kaytto_hoitoluokittain DO
