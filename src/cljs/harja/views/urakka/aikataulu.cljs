@@ -225,11 +225,12 @@
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
-         [kumousboksi/kumousboksi {:lahto-x (+ @dom/leveys 10)
-                                   :lahto-y "250px"
-                                   :loppu-x (- @dom/leveys 150)
-                                   :loppu-y "250px"
-                                   :kumoa-fn (fn [] (log "YRITÄ KUMOTA!"))}]
+         (when (:ehdota-kumoamista? @tiedot/kumoustiedot)
+           [kumousboksi/kumousboksi {:lahto-x (+ @dom/leveys 10)
+                                     :lahto-y "250px"
+                                     :loppu-x (- @dom/leveys 150)
+                                     :loppu-y "250px"
+                                     :kumoa-fn (fn [] (log "YRITÄ KUMOTA!"))}])
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
@@ -260,7 +261,10 @@
 
                               (if (aikataulu/aikataulu-validi? paivitetty-aikataulu)
                                 (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
-                                                               (fn [vastaus] (reset! tiedot/aikataulurivit vastaus))))
+                                                               (fn [vastaus]
+                                                                 (reset! tiedot/aikataulurivit vastaus)
+                                                                 (swap! tiedot/kumoustiedot
+                                                                        assoc :ehdota-kumoamista? true))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
                                                     :urakka-id urakka-id

@@ -64,10 +64,12 @@
        :doc "Visuaalisia muokkauksia varten säilötään VAIN MUOKATTUJEN aikataulurivien edellinen tila tähän
        ennen muokkauksen tallentamista. Muokkauksen jälkeen tarjotaan mahdollisuus kumota muutos ja palata edelliseen
        tilaan. Tällöin nämä rivit täytyy lähettää palvelimelle tallennettavaksi."}
-aikataulurivit-edellinen-tila (atom nil))
+kumoustiedot (atom {:ehdota-kumoamista? false
+                    :edellinen-tila nil
+                    :kumoa-sijainti-y 0}))
 
 (defn sailo-muokattujen-aikataulurivien-vanha-tila! [aikataulurivit]
-  (reset! aikataulurivit-edellinen-tila aikataulurivit))
+  (swap! kumoustiedot assoc :edellinne-tila aikataulurivit))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
