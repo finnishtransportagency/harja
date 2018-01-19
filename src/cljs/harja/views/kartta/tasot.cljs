@@ -31,7 +31,8 @@
             [harja.ui.kartta.varit.puhtaat :as varit]
             [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok])
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
+            [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -61,7 +62,8 @@
     :tienakyma-valitut
     :tienakyma-muut
     :kokonaishintaisten-turvalaitteet
-    :yksikkohintaisten-turvalaitteet})
+    :yksikkohintaisten-turvalaitteet
+    :kohteenosat-kohteiden-luonnissa})
 
 (def
   ^{:doc
@@ -122,7 +124,7 @@
   [hals v-hal v-ur sivu valilehti urakat-kartalla]
   (cond
     ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
-    (#{:tilannekuva} sivu)
+    (#{:tilannekuva :hallinta} sivu)
     nil
 
     ;; Ilmoituksissa ei haluta näyttää navigointiin
@@ -224,7 +226,9 @@
    :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
    :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla
    :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
-   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla})
+   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla
+
+   :kohteenosat-kohteiden-luonnissa koht-luonti/kohteenosat-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -284,6 +288,8 @@
        :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
        :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
        :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
+       :kohteenosat-kohteiden-luonnissa (taso :kohteenosat-kohteiden-luonnissa)
+
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -320,6 +326,7 @@
    :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
    :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
    :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
+   :kohteenosat-kohteiden-luonnissa koht-luonti/karttataso-kohteenosat-kohteen-luonnissa
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 

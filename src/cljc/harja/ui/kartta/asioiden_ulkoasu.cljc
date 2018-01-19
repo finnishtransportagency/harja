@@ -435,3 +435,8 @@ tr-ikoni {:img (pinni-ikoni "musta")
       [{:width (+ 2 levein) :color puhtaat/musta}
        {:width (+ 1 levein) :color puhtaat/harmaa}]
       (mapv #(assoc % :dash +tyokoneviivan-dash+) viivat))))
+
+(defn kohteenosa-kohteiden-luonnissa [kohde sama-kohde?]
+  (cond sama-kohde? (pinni-ikoni "vihrea")
+        (some? kohde) (pinni-ikoni "harmaa")
+        :default (pinni-ikoni "sininen")))

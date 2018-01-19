@@ -1,6 +1,6 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
-            #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
+    #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
             [taoensso.timbre :as log]
             [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
@@ -11,7 +11,10 @@
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.tietyoilmoitus :as tietyoilmoitukset]
-            [harja.domain.vesivaylat.turvalaite :as tu]))
+            [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kohde :as kohde]
+            [clojure.set :as set]))
 
 
 (defn- laske-skaala [valittu?]
@@ -589,6 +592,21 @@
      :alue (assoc sijainti
                   :fill true
                   :color vari)}))
+
+(defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]
+  ;; Näyttää toteuman reittipisteet palloina
+  (let [ikoni (ulkoasu/kohteenosa-kohteiden-luonnissa (::osa/kohde osa) osan-kohde-valittu?)]
+    (assoc osa
+      :type :kohteenosa
+      :nimi (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde osa) osa)
+      :selite {:teksti (cond osan-kohde-valittu? "Kohteeseen kuuluva osa"
+                             (nil? (::osa/kohde osa)) "Vapaa osa"
+                             :else "Toiseen kohteeseen kuuluva osa")
+               :img ikoni}
+      :alue (maarittele-feature osa
+                                ;; Ei haluta piirtää valitun kohteen osia isommalla, vain eri värillä
+                                false
+                                ikoni))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
