@@ -572,6 +572,7 @@
 
 
     ;; Vastauksena päivitetty tarkka aikataulu
+    ;; FIXME Palauttaa nyt saman kuin urakan aikataulun haku, korjaa nämä!
     (is (= (count vastaus) 1))
     (let [aikataulurivi (first vastaus)]
       (is (= (:toimenpide aikataulurivi) aikataulu-toimenpide))

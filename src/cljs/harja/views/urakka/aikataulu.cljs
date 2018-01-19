@@ -255,7 +255,7 @@
                                 (do
                                   (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-perusaikataulu (constantly nil)))
                                   ;(<! (tiedot/tallenna-tarkka-aikataulu urakka-id sopimus-id vuosi paivitety-tarkka-aikataulu (constantly nil)))
-                                  (reset! tiedot/aikajana-paivitetty (t/now)))
+                                  )
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
@@ -284,7 +284,8 @@
                                               :nakyma (:nakyma optiot)
                                               :voi-muokata-paallystys? (voi-muokata-paallystys?)
                                               :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
-                                              :urakka-id urakka-id}]))
+                                              :urakka-id urakka-id
+                                              :sopimus-id sopimus-id}]))
                                     aikataulurivit))}
           [{:tyyppi :vetolaatikon-tila :leveys 2}
            {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string

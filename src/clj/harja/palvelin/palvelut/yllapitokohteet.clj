@@ -284,7 +284,7 @@
                                    :vuosi vuosi})))
 
 (defn tallenna-yllapitokohteiden-tarkka-aikataulu
-  [db user {:keys [urakka-id yllapitokohde-id aikataulurivit] :as tiedot}]
+  [db user {:keys [urakka-id sopimus-id vuosi yllapitokohde-id aikataulurivit] :as tiedot}]
   (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)
@@ -317,9 +317,9 @@
            :luoja (:id user)}))))
 
   (log/debug "Aikataulutiedot tallennettu!")
-  (->> (q/hae-yllapitokohteen-tarkka-aikataulu
-         db {:yllapitokohde yllapitokohde-id})
-       (map #(konv/string->keyword % :toimenpide))))
+  (hae-urakan-aikataulu db user {:urakka-id urakka-id
+                                 :sopimus-id sopimus-id
+                                 :vuosi vuosi}))
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa

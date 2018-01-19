@@ -24,8 +24,6 @@
 (defonce modal-data (atom {}))
 
 (defonce aikataulu-nakymassa? (atom false))
-(defonce tarkka-aikataulu-paivitetty (atom nil))
-(defonce aikajana-paivitetty (atom nil))
 
 (defonce valinnat
   (local-storage/local-storage-atom
@@ -66,13 +64,7 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
-               nakymassa? @aikataulu-nakymassa?
-               ;; Tarkan aikataulun päivityksen täytyy aiheuttaa kohteiden haku uudelleen.
-               ;; Ihanteellisesti tarkan aikataulun päivitys päivittäisi vain tämän atomin sisällön, mutta
-               ;; tällöin reaktioon pitäisi kirjoittaa käsin, mikä on sekin huono tapa.
-               ;; TODO Toisaalta tätä atomia resetoidaan jo muualla, niin ei olisi niin väliä.
-               tarkka-aikataulu-paivitetty @tarkka-aikataulu-paivitetty
-               aikajana-paivitetty @aikajana-paivitetty]
+               nakymassa? @aikataulu-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
