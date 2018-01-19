@@ -25,6 +25,17 @@
          loppupvm (str "lopetus " (pvm/pvm loppupvm))
          :default nil)))
 
+(defn- aikataulujanan-paivitysoikeus [{:keys [nakyma urakka-id janan-urakka-id
+                                              voi-muokata-paallystys? voi-muokata-tiemerkinta?]}]
+  (and
+    (some? urakka-id)
+    (some? janan-urakka-id)
+    (= janan-urakka-id urakka-id)
+    (case nakyma
+     :paallystys voi-muokata-paallystys?
+     :tiemerkinta voi-muokata-tiemerkinta?
+     false)))
+
 (defn aikataulurivi-jana
   "Muuntaa aikataulurivin aikajankomponentin rivimuotoon."
   ([rivi]
@@ -34,7 +45,7 @@
             aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu
             nimi id kohdenumero] :as rivi}
     {:keys [voi-muokata-paallystys? voi-muokata-tiemerkinta?
-            nayta-tarkka-aikajana?] :as tiedot}]
+            nayta-tarkka-aikajana? nakyma urakka-id] :as tiedot}]
    (let [yllapitokohde-id id
          voi-muokata-paallystys? (or voi-muokata-paallystys? (constantly false))
          voi-muokata-tiemerkinta? (or voi-muokata-tiemerkinta? (constantly false))]
@@ -74,10 +85,15 @@
              ;; Ylläpitokohteen yksityiskohtainen aikataulu
              (when nayta-tarkka-aikajana?
                (map
-                 (fn [{:keys [id toimenpide kuvaus alku loppu] :as drag-tiedot}]
+                 (fn [{:keys [id toimenpide kuvaus alku loppu] :as tarkka-aikataulu-rivi}]
                    (merge (or (tarkka-aikataulujana-tyylit toimenpide)
                               (tarkka-aikataulujana-tyylit :oletus))
-                          {::aikajana/drag (when (voi-muokata-paallystys? rivi) ;; TODO Oikeustarkistus sen mukaan kuuluuko palkki mihin urakkaan
+                          {::aikajana/drag (when (aikataulujanan-paivitysoikeus
+                                                   {:nakyma nakyma
+                                                    :urakka-id urakka-id
+                                                    :janan-urakka-id (:urakka-id tarkka-aikataulu-rivi)
+                                                    :voi-muokata-paallystys? voi-muokata-paallystys?
+                                                    :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?})
                                              [yllapitokohde-id :tarkka-aikataulu id])
                            ::aikajana/alku alku
                            ::aikajana/loppu loppu

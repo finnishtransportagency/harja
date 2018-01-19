@@ -250,7 +250,9 @@
                                 (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
                                                                (fn [vastaus] (reset! tiedot/aikataulurivit vastaus))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
-             (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
+             (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
+                                                    :urakka-id urakka-id
+                                                    :voi-muokata-paallystys? voi-muokata-paallystys?
                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
                                                     :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
                   aikataulurivit)]])
