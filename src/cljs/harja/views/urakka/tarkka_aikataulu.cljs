@@ -77,7 +77,7 @@
        :sopimus-id sopimus-id
        :urakka-id urakka-id}]
      ;; Asiakkaan edustajan mukaan ei tällä hetkellä ole tarvetta tiemerkinnän tarkalle aikataululle.
-     ;; Voidaan kuitenkin helposti ottaa käyttöön, mikäli tarve tulee.
+     ;; Voidaan kuitenkin helposti ottaa käyttöön, mikäli tarve tulee (riittää tämän osion käyttöönotto)
      ;; Tarkka aikataulu tallentuu aina urakkakohtaisesti.
      #_[kohteen-aikataulutaulukko
       {:otsikko "Kohteen tiemerkintäurakan tarkka aikataulu"
