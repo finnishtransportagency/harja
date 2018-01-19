@@ -71,7 +71,7 @@ kumoustiedot (atom
                 :kumoa-sijainti-y 0}))
 
 (defn sailo-muokattujen-aikataulurivien-vanha-tila! [aikataulurivit]
-  (swap! kumoustiedot assoc :edellinne-tila aikataulurivit))
+  (swap! kumoustiedot assoc :edellinen-tila aikataulurivit))
 
 (defn ehdota-kumoamista! []
   (let [kumoustunniste (gensym "kumoustunniste")
@@ -86,6 +86,18 @@ kumoustiedot (atom
 
 (defn ala-ehdota-kumoamista! []
   (swap! kumoustiedot assoc :ehdota-kumoamista? false))
+
+(declare tallenna-aikataulu)
+(declare aikataulurivit)
+
+(defn kumoa-muutos! [{:keys [urakka-id sopimus-id vuosi]}]
+  (let [edellinen-tila (:edellinen-tila @kumoustiedot)]
+    (when edellinen-tila
+      (tallenna-aikataulu urakka-id sopimus-id vuosi edellinen-tila
+                          (fn [vastaus]
+                            (reset! aikataulurivit vastaus)
+                            (swap! kumoustiedot assoc :edellinen-tila nil)
+                            (ala-ehdota-kumoamista!))))))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

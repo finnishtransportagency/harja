@@ -230,7 +230,9 @@
                                    :piilossa-y "250px"
                                    :nakyvissa-x (- @dom/leveys 150)
                                    :nakyvissa-y "250px"
-                                   :kumoa-fn (fn [] (log "YRITÄ KUMOTA!"))
+                                   :kumoa-fn #(tiedot/kumoa-muutos! {:urakka-id urakka-id
+                                                                     :sopimus-id sopimus-id
+                                                                     :vuosi vuosi})
                                    :sulje-fn tiedot/ala-ehdota-kumoamista!}]
          (when aikajana?
            [:div

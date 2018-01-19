@@ -19,8 +19,11 @@
       (komp/kun-muuttuu (fn [{:keys [nakyvissa?]}]
                           (if nakyvissa?
                             (reset! nyky-sijainti [nakyvissa-x nakyvissa-y])
-                            (reset! nyky-sijainti [piilossa-x piilossa-y]))))
+                            (do
+                              (reset! nyky-sijainti [piilossa-x piilossa-y])
+                              (reset! tila :tallennettu)))))
       (fn [{:keys [lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
+        ;; FIXME Laskenta menee vikaan jos sivun leveys muuttuu
         [:div.kumousboksi {:style {:left (first @nyky-sijainti)
                                    :top (second @nyky-sijainti)}}
          [napit/sulje-ruksi sulje-fn]
