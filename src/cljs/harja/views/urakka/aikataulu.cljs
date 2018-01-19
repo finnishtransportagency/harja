@@ -268,7 +268,7 @@
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
                        #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
-                                                   (fn [vastaus] (reset! aikataulurivit vastaus)))
+                                                   (fn [vastaus] (reset! tiedot/aikataulurivit vastaus)))
                        :ei-mahdollinen)
            :vetolaatikot (into {}
                                (map (juxt :id
