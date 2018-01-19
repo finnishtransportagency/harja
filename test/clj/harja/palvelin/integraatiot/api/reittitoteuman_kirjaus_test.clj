@@ -254,20 +254,17 @@
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
         hoitoluokittaiset-ennen-kutsuja (ffirst (q (str "SELECT count(*) FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka)))
-        vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                                    slurp
-                                                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                    (.replace "__ID__" (str ulkoinen-id))
-                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
+        reittototeumakutsu-joka-tehdaan-monesti (fn [urakka kayttaja portti sopimus-id ulkoinen-id]
+                                                  (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                                                           (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                                                               slurp
+                                                                               (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                                                               (.replace "__ID__" (str ulkoinen-id))
+                                                                               (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))))
+        vastaus-lisays (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
         hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
         sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))
-        vastaus-toka-kutsuun (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                      (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                                          slurp
-                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                          (.replace "__ID__" (str ulkoinen-id))
-                                                          (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
+        vastaus-toka-kutsuun (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
         hoitoluokittaiset-toka-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
         sopimuksen-mat-kaytto-toka-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
     (is (= 200 (:status vastaus-lisays)))
@@ -275,12 +272,7 @@
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
-                                                      (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                                                          slurp
-                                                          (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                          (.replace "__ID__" (str ulkoinen-id))
-                                                          (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))
+      (let [vastaus-paivitys (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
             hoitoluokittaiset-kolmannen-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
             sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
         (is (= 200 (:status vastaus-paivitys)))
@@ -294,7 +286,7 @@
               toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
                                                     JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
                                                     WHERE toteuma = " toteuma-id)))]
-          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
           (is (= (count reittipisteet) 3))
           (is (= (count toteuma-tehtava-idt) 2))
           (is (= (count toteuma-materiaali-idt) 1))

@@ -45,8 +45,8 @@ BEGIN
           AND urakka = u;
 
     -- Päivitä materiaalin käyttö ko. pvm:lle ja urakalle
-    FOR rivi2 IN SELECT t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi,
-                   sum(mat.maara) as maara,
+    FOR rivi2 IN SELECT t.urakka, rp.talvihoitoluokka AS talvihoitoluokka, mat.materiaalikoodi,
+                   sum(mat.maara) as summa,
                    rp.aika::DATE
                  FROM toteuma t
                    JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
@@ -65,9 +65,11 @@ BEGIN
       (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
       VALUES (rivi2.aika,
               rivi2.materiaalikoodi,
-              COALESCE(rivi2.talvihoitoluokka, 0),
+              rivi2.talvihoitoluokka,
               rivi2.urakka,
-              rivi2.maara);
+              rivi2.summa)
+      ON CONFLICT ON CONSTRAINT uniikki_urakan_materiaalin_kaytto_hoitoluokittain DO
+      UPDATE SET maara = urakan_materiaalin_kaytto_hoitoluokittain.maara + EXCLUDED.maara;
     END LOOP;
   RETURN NEW;
 END;
