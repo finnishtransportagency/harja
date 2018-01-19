@@ -60,9 +60,9 @@
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
 
-;; Visuaalisia muokkauksia varten säilötään aikataulurivien edellinen tila tähän
-;; ennen muokkausta. Muokkauksen jälkeen tarjotaan mahdollisuus kumota muutos ja palata edelliseen tilaan.
-;; Tällöin tämä tila täytyy lähettää palvelimelle tallennettavaksi.
+;; Visuaalisia muokkauksia varten säilötään VAIN MUOKATTUJEN aikataulurivien edellinen tila tähän
+;; ennen muokkauksen tallentamista. Muokkauksen jälkeen tarjotaan mahdollisuus kumota muutos ja palata edelliseen tilaan.
+;; Tällöin nämä rivit täytyy lähettää palvelimelle tallennettavaksi.
 (def aikataulurivit-edellinen-tila (atom nil))
 
 (def aikataulurivit
