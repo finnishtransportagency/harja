@@ -256,7 +256,7 @@
 
    Tallentaa ns. 'perusaikataulun' sekä tarkan aikataulun, mikäli sellainen kohteelta löytyy."
   [db fim email user {:keys [urakka-id sopimus-id vuosi kohteet] :as tiedot}]
-  (assert (and urakka-id sopimus-id kohteet) "anna urakka-id, sopimus-id ja kohteet")
+  (assert (and urakka-id sopimus-id kohteet) (str "Anna urakka-id, sopimus-id ja kohteet. Sain: " urakka-id sopimus-id kohteet))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Tallennetaan urakan " urakka-id " ylläpitokohteiden aikataulutiedot: " kohteet)
   (jdbc/with-db-transaction [db db]
@@ -296,7 +296,8 @@
 
 (defn tallenna-yllapitokohteiden-tarkka-aikataulu
   [db user {:keys [urakka-id sopimus-id vuosi yllapitokohde-id aikataulurivit] :as tiedot}]
-  (assert (and urakka-id yllapitokohde-id aikataulurivit) "anna urakka-id, yllapitokohde-idj ja aikataulurivit")
+  (assert (and urakka-id sopimus-id yllapitokohde-id) (str "Anna urakka-id, sopimus-id, yllapitokohde-id."
+  " Sain: " urakka-id "," sopimus-id "," yllapitokohde-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)
   ;; Aikataulurivin kuulumista ylläpitokohteeseen ei tarkisteta erikseen, vaan sisältyy UPDATE-kyselyn WHERE-lauseeseen.
