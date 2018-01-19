@@ -15,7 +15,7 @@ if ! docker images | grep $IMAGE >> /dev/null; then
     echo ""
 fi
 
-docker run -p 5432:5432 --name harjadb -dit $IMAGE 1> /dev/null
+docker run -p 127.0.0.1:5432:5432 --name harjadb -dit $IMAGE 1> /dev/null
 
 echo "Käynnistetään Docker-image" $IMAGE
 echo ""
