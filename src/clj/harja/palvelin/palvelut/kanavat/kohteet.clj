@@ -24,11 +24,6 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kanavakohteet user)
     (q/hae-urakan-kohteet db user urakka-id)))
 
-(defn lisaa-kohdekokonaisuudelle-kohteita [db user kohteet]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-  (q/lisaa-kokonaisuudelle-kohteet! db user kohteet)
-  (hae-kohdekokonaisuudet-ja-kohteet db user))
-
 (defn liita-kohteet-urakkaan! [db user {:keys [liitokset] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
   (doseq [linkki (keys liitokset)]
@@ -57,6 +52,10 @@
 (defn hae-kohteenosat [db _]
   (q/hae-kohteenosat db))
 
+(defn tallenna-kohde! [db user tiedot]
+  (q/tallenna-kohde! db user tiedot)
+  (hae-kohdekokonaisuudet-ja-kohteet db user))
+
 (defrecord Kohteet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -83,24 +82,17 @@
        :vastaus-spec ::kok/tallenna-kohdekokonaisuudet-vastaus})
     (julkaise-palvelu
       http
-      :lisaa-kohdekokonaisuudelle-kohteita
-      (fn [user kohteet]
-        (lisaa-kohdekokonaisuudelle-kohteita db user kohteet))
-      {:kysely-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely
-       :vastaus-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus})
+      :tallenna-kohde
+      (fn [user kokonaisuudet]
+        (tallenna-kohde! db user kokonaisuudet))
+      {:kysely-spec ::kohde/tallenna-kohde-kysely
+       :vastaus-spec ::kohde/tallenna-kohde-vastaus})
     (julkaise-palvelu
       http
       :liita-kohteet-urakkaan
       (fn [user tiedot]
         (liita-kohteet-urakkaan! db user tiedot))
       {:vastaus-spec ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus})
-    ;; TODO Poistamista ei tueta UI:lla tällä hetkellä
-    #_(julkaise-palvelu
-      http
-      :poista-kohde
-      (fn [user tiedot]
-        (poista-kohde! db user tiedot))
-      {:kysely-spec ::kok/poista-kohde-kysely})
     (julkaise-palvelu
       http
       :hae-kanavien-huoltokohteet
