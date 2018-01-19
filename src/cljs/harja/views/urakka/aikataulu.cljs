@@ -263,8 +263,7 @@
                                 (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
                                                                (fn [vastaus]
                                                                  (reset! tiedot/aikataulurivit vastaus)
-                                                                 (swap! tiedot/kumoustiedot
-                                                                        assoc :ehdota-kumoamista? true))))
+                                                                 (tiedot/ehdota-kumoamista!))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
                                                     :urakka-id urakka-id

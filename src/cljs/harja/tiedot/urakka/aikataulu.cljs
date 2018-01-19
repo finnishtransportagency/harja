@@ -71,6 +71,9 @@ kumoustiedot (atom {:ehdota-kumoamista? false
 (defn sailo-muokattujen-aikataulurivien-vanha-tila! [aikataulurivit]
   (swap! kumoustiedot assoc :edellinne-tila aikataulurivit))
 
+(defn ehdota-kumoamista! []
+  (swap! kumoustiedot assoc :ehdota-kumoamista? true))
+
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
