@@ -69,20 +69,18 @@ kumoustiedot (atom
                 :edellinen-tila nil
                 :kumoustunniste nil})) ;; Jotta voidaan autom. piilottaa, jos samaa kumousta ehdotettu liian kauan
 
-(defn sailo-muokattujen-aikataulurivien-vanha-tila! [aikataulurivit]
-  (swap! kumoustiedot assoc :edellinen-tila aikataulurivit))
-
 (defn ala-ehdota-kumoamista! []
   (swap! kumoustiedot assoc
          :ehdota-kumoamista? false
          :edellinen-tila nil
          :kumoustunniste nil))
 
-(defn ehdota-kumoamista! []
+(defn ehdota-kumoamista! [edellinen-tila]
   (let [kumoustunniste (gensym "kumoustunniste")
         ehdotusaika-ms 10000]
     (swap! kumoustiedot assoc
            :ehdota-kumoamista? true
+           :edellinen-tila edellinen-tila
            :kumoustunniste kumoustunniste)
     (go (<! (timeout ehdotusaika-ms))
         ;; Piilota dialogi, jos ollaan edelleen ehdottamassa saman toiminnon kumoamista
