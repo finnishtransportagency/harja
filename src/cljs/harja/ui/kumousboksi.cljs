@@ -12,18 +12,18 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn kumousboksi [{:keys [lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
-  (let [lahto-sijainti [lahto-x lahto-y]
-        piirretty-aika (atom nil)
-        tila (atom :tallennettu)
-        nyky-sijainti (atom [lahto-x lahto-y])]
+(defn kumousboksi [{:keys [nakyvissa? piilossa-x piilossa-y nakyvissa-x nakyvissa-y kumoa-fn sulje-fn]}]
+  (let [tila (atom :tallennettu)
+        nyky-sijainti (atom [piilossa-x piilossa-y])]
     (komp/luo
-      (komp/piirretty #(do (reset! nyky-sijainti [loppu-x loppu-y])
-                           (reset! piirretty-aika (t/now))))
+      (komp/kun-muuttuu (fn [{:keys [nakyvissa?]}]
+                          (if nakyvissa?
+                            (reset! nyky-sijainti [nakyvissa-x nakyvissa-y])
+                            (reset! nyky-sijainti [piilossa-x piilossa-y]))))
       (fn [{:keys [lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
         [:div.kumousboksi {:style {:left (first @nyky-sijainti)
                                    :top (second @nyky-sijainti)}}
-         [napit/sulje-ruksi (constantly nil)]
+         [napit/sulje-ruksi sulje-fn]
          [:p (case @tila
                :tallennettu "Muutos tallennettu!"
                :kumotaan "Kumotaan...")]

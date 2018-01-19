@@ -2,7 +2,7 @@
   "Ylläpidon urakoiden aikataulu"
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
@@ -72,7 +72,13 @@ kumoustiedot (atom {:ehdota-kumoamista? false
   (swap! kumoustiedot assoc :edellinne-tila aikataulurivit))
 
 (defn ehdota-kumoamista! []
-  (swap! kumoustiedot assoc :ehdota-kumoamista? true))
+  (swap! kumoustiedot assoc :ehdota-kumoamista? true)
+  (go (<! (timeout 10000))
+      ;; TODO Piilota vain jos ei olla kumoamassa eikä painettu ruksia
+      (swap! kumoustiedot assoc :ehdota-kumoamista? false)))
+
+(defn ala-ehdota-kumoamista! []
+  (swap! kumoustiedot assoc :ehdota-kumoamista? false))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

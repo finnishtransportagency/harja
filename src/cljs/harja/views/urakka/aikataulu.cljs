@@ -225,12 +225,13 @@
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
-         (when (:ehdota-kumoamista? @tiedot/kumoustiedot)
-           [kumousboksi/kumousboksi {:lahto-x (+ @dom/leveys 10)
-                                     :lahto-y "250px"
-                                     :loppu-x (- @dom/leveys 150)
-                                     :loppu-y "250px"
-                                     :kumoa-fn (fn [] (log "YRITÄ KUMOTA!"))}])
+         [kumousboksi/kumousboksi {:nakyvissa? (:ehdota-kumoamista? @tiedot/kumoustiedot)
+                                   :piilossa-x (+ @dom/leveys 10)
+                                   :piilossa-y "250px"
+                                   :nakyvissa-x (- @dom/leveys 150)
+                                   :nakyvissa-y "250px"
+                                   :kumoa-fn (fn [] (log "YRITÄ KUMOTA!"))
+                                   :sulje-fn tiedot/ala-ehdota-kumoamista!}]
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
