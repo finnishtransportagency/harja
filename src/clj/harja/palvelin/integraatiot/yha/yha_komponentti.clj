@@ -15,7 +15,8 @@
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as string]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
+            [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-urakoiden-haussa+ ::yha-virhe-urakoiden-haussa)
@@ -64,26 +65,36 @@
   (let [vastaus (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
         virheet (:virheet vastaus)
         onnistunut? (empty? virheet)
-        virhe-viesti (muodosta-kohteiden-lahetysvirheet virheet)]
+        virhe-viesti (muodosta-kohteiden-lahetysvirheet virheet)
+        epaonnistuneet (into #{}
+                             ;; Jos on yksikään virhe, jolla ei ole kohde id:tä
+                             ;; katsotaan kaikki kohteet epäonnistuneiksi.
+                             (if (some #(nil? (:kohde-yha-id %)) virheet)
+                               (map #(:yhaid (:kohde %)) kohteet)
+                               (map :kohde-yha-id virheet)))]
+
     (if onnistunut?
       (log/info "Kohteiden lähetys YHA:n onnistui")
-      (log/error (str "Kohteiden lähetys YHA:n epäonnistui: " virhe-viesti)))
+      (log/error (str "Virheitä kohteiden lähetyksessä YHA:n: " virhe-viesti)))
 
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
             kohde-yha-id (:yhaid (:kohde kohde))
-            virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) (:virheet vastaus)))
-            virhe-viesti (:selite virhe)]
-
-        (if onnistunut?
+            kohteen-lahetys-onnistunut? (not (contains? epaonnistuneet kohde-yha-id))
+            virhe (first (filter #(= kohde-yha-id (:kohde-yha-id %)) virheet))
+            virhe-viesti (when (not kohteen-lahetys-onnistunut?)
+                           (or (:selite virhe)
+                               (str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
+        
+        (if kohteen-lahetys-onnistunut?
           (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
-          (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s.\"" kohde-id virhe-viesti))
+          (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-viesti))
               (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))
 
         (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
           db
           {:lahetetty (pvm/nyt)
-           :onnistunut onnistunut?
+           :onnistunut kohteen-lahetys-onnistunut?
            :lahetysvirhe virhe-viesti
            :kohdeid kohde-id})))
     onnistunut?))
@@ -101,7 +112,6 @@
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
         osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
     (mapv (fn [alikohde]
-
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
               (apply merge ilmoitustiedot alikohde)))

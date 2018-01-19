@@ -564,18 +564,22 @@
                                 :tallenna-yllapitokohteiden-tarkka-aikataulu
                                 +kayttaja-jvh+
                                 {:urakka-id urakka-id
+                                 :sopimus-id sopimus-id
+                                 :vuosi 2017
                                  :yllapitokohde-id yllapitokohde-id
                                  :aikataulurivit [{:toimenpide aikataulu-toimenpide
                                                    :kuvaus aikataulu-kuvaus
                                                    :alku (pvm/->pvm "15.4.2017")
                                                    :loppu (pvm/->pvm "15.4.2017")}]})]
 
+    ;; Vastauksena ylläpitokohteet, joista jokaisella on :tarkka-aikataulu (vähintään tyhjä)
+    (is (every? :kohdenumero vastaus))
+    (is (every? :tarkka-aikataulu vastaus))
 
-    ;; Vastauksena päivitetty tarkka aikataulu
-    (is (= (count vastaus) 1))
-    (let [aikataulurivi (first vastaus)]
-      (is (= (:toimenpide aikataulurivi) aikataulu-toimenpide))
-      (is (= (:kuvaus aikataulurivi) aikataulu-kuvaus)))))
+    (let [paivitetty-aikataulurivi (-> (filter #(= (:id %) yllapitokohde-id) vastaus)
+                                       first :tarkka-aikataulu first)]
+      (is (= (:toimenpide paivitetty-aikataulurivi) aikataulu-toimenpide))
+      (is (= (:kuvaus paivitetty-aikataulurivi) aikataulu-kuvaus)))))
 
 (deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
   (is (thrown? Exception
@@ -583,27 +587,34 @@
                                :tallenna-yllapitokohteiden-tarkka-aikataulu
                                +kayttaja-tero+
                                {:urakka-id 4
+                                :sopimus-id 5
                                 :yllapitokohde-id 1
                                 :aikataulurivit []}))))
 
 (deftest tallenna-yllapitokohteen-tarkka-aikataulu-vaaraan-urakkaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2005-2010-paasopimuksen-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
     (is (thrown? SecurityException
                  (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :tallenna-yllapitokohteiden-tarkka-aikataulu
                                  +kayttaja-jvh+
                                  {:urakka-id urakka-id
+                                  :sopimus-id sopimus-id
+                                  :vuosi 2017
                                   :yllapitokohde-id yllapitokohde-id
                                   :aikataulurivit []}))))
 
   ;; Leppäjärven suorittavan tiemerkintäurakan aikataulua saapi muokata
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
     (is (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-yllapitokohteiden-tarkka-aikataulu
                         +kayttaja-jvh+
                         {:urakka-id urakka-id
+                         :sopimus-id sopimus-id
+                         :vuosi 2017
                          :yllapitokohde-id yllapitokohde-id
                          :aikataulurivit []}))))
 

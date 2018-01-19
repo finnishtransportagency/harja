@@ -68,6 +68,7 @@
     :kan-hairio
     :kan-toimenpiteet
     :api-tieluvat
+    :koordinaatit
     :tiedostopesula})
 
 (deftest main-komponentit-loytyy

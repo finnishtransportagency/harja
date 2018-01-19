@@ -199,6 +199,7 @@
                       ::kanavatoimenpide/toimenpideinstanssi-id
                       ::kanavatoimenpide/toimenpidekoodi-id
                       ::kanavatoimenpide/pvm
+                      ::kanavatoimenpide/sijainti
                       ::muokkaustiedot/poistettu?])
         (assoc ::kanavatoimenpide/tyyppi tyyppi
                ::kanavatoimenpide/urakka-id (:id urakka)

@@ -101,7 +101,7 @@
 
 (defn- rivinlisays
   ([otsikko toiminto]
-    [rivinlisays otsikko toiminto {}])
+   [rivinlisays otsikko toiminto {}])
   ([otsikko toiminto optiot]
    [:div.rivinlisays
     [napit/uusi otsikko toiminto optiot]]))
@@ -132,6 +132,17 @@
      [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "YK-lisä")]
      [:th {:style {:width "5%"}} ""]]]))
 
+(defn- materiaalit-header
+  []
+  [:thead
+   [:tr
+    [:th {:style {:width "40%"}} "Materiaali"]
+    [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
+    [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
+    [:th {:style {:width "5%"}}]
+    [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
+    [:th.tasaa-oikealle {:style {:width "10%"}}]
+    [:th {:style {:width "5%"}} ""]]])
 
 (declare suunnitellut-tyot-paivamaaralle)
 
@@ -188,15 +199,14 @@
               [:td
                [yleiset/livi-pudotusvalikko
                 {:valitse-fn #(do
-                                (e! (tiedot/->AsetaTyorivilleTiedot
-                                     {::tyo/id (::tyo/id tyorivi)
-                                      ::tyo/toimenpidekoodi-id (:tehtava %)})))
+                                (e! (tiedot/->AsetaTyorivilleTiedot {::tyo/id (::tyo/id tyorivi)
+                                                                     ::tyo/toimenpidekoodi-id (:tehtava %)})))
                  :format-fn #(if %
                                (:tehtavan_nimi %)
                                "Valitse työ")
                  :class "livi-alasveto-250 inline-block"
                  :valinta (first (filter (fn [suunniteltu-tyo]
-                                           (assert  (pvm/valissa? tp-pvm (:alkupvm suunniteltu-tyo) (:loppupvm suunniteltu-tyo)))
+                                           (assert (pvm/valissa? tp-pvm (:alkupvm suunniteltu-tyo) (:loppupvm suunniteltu-tyo)))
                                            (and (= (::tyo/toimenpidekoodi-id tyorivi)
                                                    (:tehtava suunniteltu-tyo))))
                                          tyovalinnat-toimenpiteen-ajalle))
@@ -231,18 +241,48 @@
 (defn- muut-tyot [e! app*]
   (let [muut-tyot (tiedot/muut-tyot app*)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-    [valiotsikko "Muut työt (ei indeksilaskentaa)"]
-    [:table
-     [sopimushintaiset-tyot-header]
-     [:tbody
-      (for* [muu-tyo muut-tyot]
-            [muu-tyo-hinnoittelurivi e! muu-tyo])]]
+     [valiotsikko "Muut työt (ei indeksilaskentaa)"]
+     [:table
+      [sopimushintaiset-tyot-header]
+      [:tbody
+       (for* [muu-tyo muut-tyot]
+         [muu-tyo-hinnoittelurivi e! muu-tyo])]]
      ;; kutsuketju rivinlisäyksessä:
      ;; tiedot/->LisaaMuuTyorivi -> lisaa-hintarivi-toimenpiteelle (ryhma "tyo")
      ;; (huom lisaa-hintarivi, ei lisaa-tyorivi, vaikka kyseessä on ui:lla työ)
 
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
+(defn- materiaali-hinnoittelurivi
+  [e! materiaali-hinta materiaalit]
+  [:tr
+   [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
+          (::hinta/otsikko materiaali-hinta)
+          [kentta-hinnalle e! materiaali-hinta ::hinta/otsikko {:tyyppi :string}])]
+   [:td.tasaa-oikealle [kentta-hinnalle e! materiaali-hinta ::hinta/yksikkohinta
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
+   [:td.tasaa-oikealle (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
+                         (::hinta/maara materiaali-hinta)
+                         [kentta-hinnalle e! materiaali-hinta ::hinta/maara
+                          {:tyyppi :positiivinen-numero}])]
+   [:td ""]
+   [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
+   [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
+   [:td.keskita
+    (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
+      ""
+      [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi materiaali-hinta))])]])
+
+(defn- materiaalit [e! app*]
+  (let [materiaali-hinnat (tiedot/materiaalit app*)]
+    [:div.hinnoitteluosio
+     [valiotsikko "Varaosat ja materiaalit"]
+     [:table
+      [materiaalit-header]
+      [:tbody
+       (for* [materiaali-hinta materiaali-hinnat]
+         [materiaali-hinnoittelurivi e! materiaali-hinta (:urakan-materiaalit app*)])]]
+     [rivinlisays "Lisää materiaalirivi" #(e! (tiedot/->LisaaMateriaaliKulurivi))]]))
 
 (defn- muut-hinnat [e! app*]
   (let [hinnat (tiedot/muut-hinnat app*)]
@@ -255,7 +295,7 @@
       [muu-hinnoittelu-header]
       [:tbody
        (map-indexed
-        (fn [index hinta]
+         (fn [index hinta]
            ^{:key index}
 
            [vapaa-hinnoittelurivi e! hinta (tiedot/ainoa-otsikon-vakiokentta? hinnat (::hinta/otsikko hinta))])
@@ -266,6 +306,7 @@
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
    [muut-tyot e! app*]
+   [materiaalit e! app*]
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
@@ -406,7 +447,7 @@
 
     [:div
      (if (and hinnoittele-toimenpide-id
-                (= hinnoittele-toimenpide-id (::toimenpide/id toimenpide-rivi)))
+              (= hinnoittele-toimenpide-id (::toimenpide/id toimenpide-rivi)))
        ;; Piirrä leijuke
        [:div
         [leijuke {:otsikko "Hinnoittele toimenpide"
@@ -428,6 +469,7 @@
             [urakoitsijan-footer-napit e! app* tila])]]]
 
        ;; Solun sisältö
+
        [:div.arvo-ja-nappi-container
         (let [hinta (fmt/euro-opt (nykyisten-arvo app* toimenpide-rivi valittu-aikavali))]
           (cond

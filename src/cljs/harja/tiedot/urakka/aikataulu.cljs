@@ -14,7 +14,8 @@
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -23,7 +24,6 @@
 (defonce modal-data (atom {}))
 
 (defonce aikataulu-nakymassa? (atom false))
-(defonce tarkka-aikataulu-paivitetty (atom nil))
 
 (defonce valinnat
   (local-storage/local-storage-atom
@@ -64,11 +64,7 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @u/valittu-sopimusnumero
-               nakymassa? @aikataulu-nakymassa?
-               ;; Tarkan aikataulun päivityksen täytyy aiheuttaa kohteiden haku uudelleen.
-               ;; Ihanteellisesti tarkan aikataulun päivitys päivittäisi vain tämän atomin sisällön, mutta
-               ;; tällöin reaktioon pitäisi kirjoittaa käsin, mikä on sekin huono tapa.
-               tarkka-aikataulu-paivitetty @tarkka-aikataulu-paivitetty]
+               nakymassa? @aikataulu-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
@@ -136,8 +132,8 @@
                                           (pvm/nyt))
             aikataulurivit))
 
-(defn tallenna-yllapitokohteiden-aikataulu
-  [{:keys [urakka-id sopimus-id vuosi kohteet epaonnistui-fn]}]
+(defn- tallenna-yllapitokohteiden-aikataulu
+  [{:keys [urakka-id sopimus-id vuosi kohteet onnistui-fn epaonnistui-fn]}]
   (go
     (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
                                {:urakka-id urakka-id
@@ -146,4 +142,15 @@
                                 :kohteet kohteet}))]
       (if (k/virhe? vastaus)
         (epaonnistui-fn)
-        (reset! aikataulurivit vastaus)))))
+        (onnistui-fn vastaus)))))
+
+(defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet onnistui-fn]
+  (tallenna-yllapitokohteiden-aikataulu
+    {:urakka-id urakka-id
+     :sopimus-id sopimus-id
+     :vuosi vuosi
+     :kohteet kohteet
+     :onnistui-fn onnistui-fn
+     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
+                                     :warning
+                                     viesti/viestin-nayttoaika-lyhyt)}))
