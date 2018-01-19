@@ -4,6 +4,7 @@
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
     [harja.domain.muokkaustiedot :as m]
+    [harja.domain.vesivaylat.materiaali :as vv-materiaali]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]
@@ -14,7 +15,10 @@
 
 (define-tables
   ["kan_hinta" ::toimenpiteen-hinta
-   {"toimenpide" ::toimenpide-id}
+   {"toimenpide" ::toimenpide-id
+    ::materiaali (specql.rel/has-one ::materiaali-id
+                                     ::vv-materiaali/materiaali
+                                     ::vv-materiaali/id)}
    harja.domain.muokkaustiedot/muokkaustiedot
    harja.domain.muokkaustiedot/poistaja-sarake
    harja.domain.muokkaustiedot/poistettu?-sarake
@@ -35,7 +39,8 @@
     ::yksikkohinta
     ::yksikko
     ::ryhma
-    ::id})
+    ::id
+    ::materiaali-id})
 
 (def viittaus-idt #{})
 
@@ -113,3 +118,9 @@
             (merge hinta tiedot)
             hinta))
         hinnat))
+
+(s/def ::tallennettava-hinta (s/keys :req [::otsikko ::yleiskustannuslisa ::ryhma]
+                                     :opt [::summa ::id ::m/poistettu? ::materiaali-id]))
+
+(s/def ::tallennettavat-hinnat
+  (s/coll-of ::tallennettava-hinta))
