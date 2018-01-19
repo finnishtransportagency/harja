@@ -11,7 +11,6 @@ BEGIN
     RETURN NEW;
   END IF;
   --
-  RAISE WARNING 'JARNO päivämäärävälit: % - %', NEW.alkanut, NEW.paattynyt;
   u := NEW.urakka;
   FOR rivi IN SELECT SUM(rm.maara) AS summa,
                      rm.materiaalikoodi,
