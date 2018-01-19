@@ -226,10 +226,8 @@
         [:div.aikataulu
          [valinnat ur]
          [kumousboksi/kumousboksi {:nakyvissa? (:ehdota-kumoamista? @tiedot/kumoustiedot)
-                                   :piilossa-x (+ @dom/leveys 10)
-                                   :piilossa-y "250px"
-                                   :nakyvissa-x (- @dom/leveys 150)
-                                   :nakyvissa-y "250px"
+                                   :nakyvissa-sijainti {:top "250px" :right 0 :bottom "auto" :left "auto"}
+                                   :piilossa-sijainti {:top "250px" :right "-170px" :bottom "auto" :left "auto"}
                                    :kumoa-fn #(tiedot/kumoa-muutos! {:urakka-id urakka-id
                                                                      :sopimus-id sopimus-id
                                                                      :vuosi vuosi})

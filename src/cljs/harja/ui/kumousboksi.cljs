@@ -12,20 +12,21 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn kumousboksi [{:keys [nakyvissa? piilossa-x piilossa-y nakyvissa-x nakyvissa-y kumoa-fn sulje-fn]}]
+(defn kumousboksi [{:keys [nakyvissa? piilossa-sijainti nakyvissa-sijainti kumoa-fn sulje-fn]}]
   (let [tila (atom :tallennettu)
-        nyky-sijainti (atom [piilossa-x piilossa-y])]
+        nyky-sijainti (atom piilossa-sijainti)]
     (komp/luo
       (komp/kun-muuttuu (fn [{:keys [nakyvissa?]}]
                           (if nakyvissa?
-                            (reset! nyky-sijainti [nakyvissa-x nakyvissa-y])
+                            (reset! nyky-sijainti nakyvissa-sijainti)
                             (do
-                              (reset! nyky-sijainti [piilossa-x piilossa-y])
+                              (reset! nyky-sijainti piilossa-sijainti)
                               (reset! tila :tallennettu)))))
       (fn [{:keys [nakyvissa? lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
-        ;; FIXME Laskenta menee vikaan jos sivun leveys muuttuu
-        [:div.kumousboksi {:style {:left (first @nyky-sijainti)
-                                   :top (second @nyky-sijainti)}}
+        [:div.kumousboksi {:style {:left (:left @nyky-sijainti)
+                                   :top (:top @nyky-sijainti)
+                                   :bottom (:bottom @nyky-sijainti)
+                                   :right (:right @nyky-sijainti)}}
          [napit/sulje-ruksi sulje-fn]
          [:p (case @tila
                :tallennettu "Muutos tallennettu!"
