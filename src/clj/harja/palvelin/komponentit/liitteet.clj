@@ -98,23 +98,23 @@
       (io/copy alkuperainen temp-file)
       [(io/input-stream temp-file) (io/input-stream temp-file)])))
 
-(defn lokita-tiedoston-pituus [lokitagi tiedosto]
-  (log/debug "tiedoston pituus slurp /" lokitagi ":" (when tiedosto (count (slurp (io/input-stream tiedosto)))))
-  (log/debug "tiedoston pituus length /" lokitagi ":" (when tiedosto (.length tiedosto))))
-
 (defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
-  (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (pr-str (.length lahdetiedosto)))
+
+  (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
   (log/debug "lahde:" lahdetiedosto)
-  (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko (.length lahdetiedosto)})
-        _ (lokita-tiedoston-pituus "alku" lahdetiedosto)
+  (let [koko (if (instance? java.io.File lahdetiedosto)
+               (.length lahdetiedosto)
+               uskoteltu-koko)
+        liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
         pesty-lahdetiedosto (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
                               (do (log/info "PDF-tiedosto -> tiedostopesula")
                                   (tiedostopesula/pdfa-muunna-file->file! tiedostopesula lahdetiedosto)))
-        _ (lokita-tiedoston-pituus "pesty" pesty-lahdetiedosto)
         tallennettava-lahdetiedosto (or pesty-lahdetiedosto lahdetiedosto)
-        tallennettava-koko (.length tallennettava-lahdetiedosto)]
+        tallennettava-koko (if pesty-lahdetiedosto
+                             (.length tallennettava-lahdetiedosto)
+                             koko)]
     (if pesty-lahdetiedosto
       (log/info "Tallennetaan tiedostopesulassa käsitelty liitetiedosto")
       (log/info "Tallennetaan alkuperäinen liitetiedosto"))
