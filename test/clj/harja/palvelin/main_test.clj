@@ -67,7 +67,9 @@
     :kan-liikennetapahtumat
     :kan-hairio
     :kan-toimenpiteet
-    :api-tieluvat})
+    :api-tieluvat
+    :koordinaatit
+    :tiedostopesula})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

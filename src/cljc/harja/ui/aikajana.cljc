@@ -38,6 +38,8 @@
 
 (s/def ::paivat (s/every ::date))
 
+(s/def ::drag vector?) ;; [id :kohde], missä jälkimmäinen: :kohde, :paallystys, :tiemerkinta
+
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
 (defn+ min-ja-max-aika [ajat ::ajat pad int?] ::min-max
@@ -151,18 +153,15 @@
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
-                  drag (r/atom nil)]
+                  move (r/atom nil) ;; Move tarkoittaa koko palkin siirtämistä (alku ja loppu kasvaa tai vähenee saman verran)
+                  drag (r/atom nil)] ;; Drag tarkoittaa alun tai lopun venytystä
        [:div.aikajana
         [komponentti rivit optiot
          {:tooltip @tooltip
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
-
-          :drag @drag
-          :drag-stop! #(when-let [d @drag]
-                         (go
-                           (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
-                           (reset! drag nil)))
+          :drag @drag ;; sis. nykyisen raahaamisen tiedot: :x, :y, ::alku (pvm), ::loppu (pvm),
+          ;; ::drag [id tyyppi], :avain (:alku/:loppu/:palkki), drag-alku [x y]
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
                          (reset! drag
@@ -177,23 +176,49 @@
                               (reset! drag nil)
 
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
-                                    cx (.-clientX e)
+                                    cx (.-clientX e) ; Hiiren nykyinen koordinaatti koko sivulla
                                     cy (.-clientY e)
-                                    x (- cx svg-x alku-x)
+                                    x (- cx svg-x alku-x) ; Hiiren nykyinen koordinatti aikajanan sisällä
                                     y (- cy svg-y)
-                                    paiva (x->paiva x)
+                                    lahto-x-pvm (when-let [raahaus-alku-x (first (:drag-alku-koordinaatti @drag))]
+                                                (x->paiva raahaus-alku-x))
+                                    nykyinen-x-pvm (x->paiva x)
+                                    pvm-ero (when (and lahto-x-pvm nykyinen-x-pvm)
+                                              (if (t/before? lahto-x-pvm nykyinen-x-pvm)
+                                                (t/in-days (t/interval lahto-x-pvm nykyinen-x-pvm))
+                                                (- (t/in-days (t/interval nykyinen-x-pvm lahto-x-pvm)))))
                                     tooltip-x (+ alku-x x)
                                     tooltip-y (hover-y y)]
+
+                                ;; Otetaan raahauksen alkutilanne ylös
+                                (when-not (:drag-alku-koordinaatti @drag)
+                                  (swap! drag assoc
+                                         :drag-alku-koordinaatti [x y]
+                                         :drag-alku (::alku @drag)
+                                         :drag-loppu (::loppu @drag)))
+
+                                ;; Raahaa palkkia
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
                                          (merge
                                            {:x tooltip-x :y tooltip-y}
-                                           (if (or (and (= avain ::alku)
-                                                        (pvm/ennen? paiva (::loppu drag)))
-                                                   (and (= avain ::loppu)
-                                                        (pvm/jalkeen? paiva (::alku drag))))
+                                           (cond
+                                             ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
+                                             ;; alku tai loppu vastaamaan raahauspistettä
+                                             (or (and (= avain ::alku)
+                                                      (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
+                                                 (and (= avain ::loppu)
+                                                      (pvm/jalkeen? nykyinen-x-pvm (::alku drag))))
                                              (assoc drag avain (x->paiva x))
-                                             drag)))))))))
+                                             ;; Koko palkki, siirretään alkua ja loppua eron verran
+                                             (= avain ::palkki)
+                                             (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
+                                                         ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
+                                             :default drag)))))))))
+          :drag-stop! #(when-let [d @drag]
+                         (go
+                           (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
+                           (reset! drag nil)))
           :leveys (* 0.95 @dom/leveys)}]])))
 
 #?(:clj
@@ -242,12 +267,11 @@
                :on-mouse-out hide-tooltip!}]])))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
-                                       drag drag-start! drag-move! drag-stop!
-                                       leveys]}]
+                                       drag drag-start! drag-move! drag-stop! leveys] :as asetukset}]
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
         rivin-korkeus 20
-        alku-x 150
+        alku-x 150 ; Kuvaa pistettä, josta aikajana alkaa (kohteiden nimien jälkeen)
         alku-y 50
         korkeus (+ alku-y (* (count rivit) rivin-korkeus))
         kaikki-ajat (mapcat ::ajat rivit)
@@ -316,8 +340,7 @@
                   (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
                           teksti ::teksti :as jana}]
                     (let [alku-ja-loppu? (and alku loppu)
-                          [alku loppu] (if (and drag (= (::drag drag)
-                                                        (::drag jana)))
+                          [alku loppu] (if (and drag (= (::drag drag) (::drag jana)))
                                          [(::alku drag) (::loppu drag)]
                                          [alku loppu])
                           ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
@@ -333,19 +356,25 @@
                        (if alku-ja-loppu?
                          ;; Piirä yksittäinen aikajana
                          (when (pos? jana-leveys)
-                           [:g [:rect {:x x :y y
-                                       :width jana-leveys
-                                       :height korkeus
-                                       :fill (or vari "white")
-                                       ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
-                                       ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
-                                       :fill-opacity (if vari 1.0 0.0)
-                                       :stroke reuna
-                                       :rx 3 :ry 3
-                                       :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
-                                                                       :y (hover-y y)
-                                                                       :text teksti})
-                                       :on-mouse-out hide-tooltip!}]
+                           [:g [:rect (merge
+                                        (when voi-raahata?
+                                          {:style {:cursor "move"}
+                                           ;; TODO Raahaa molempia, ei vain alkua
+                                           ;; TODO Jos raahataan koko kohdetta, raahaa myös päällystystä?
+                                           :on-mouse-down #(drag-start! % jana ::palkki)})
+                                        {:x x :y y
+                                         :width jana-leveys
+                                         :height korkeus
+                                         :fill (or vari "white")
+                                         ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
+                                         ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
+                                         :fill-opacity (if vari 1.0 0.0)
+                                         :stroke reuna
+                                         :rx 3 :ry 3
+                                         :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
+                                                                         :y (hover-y y)
+                                                                         :text teksti})
+                                         :on-mouse-out hide-tooltip!})]
                             ;; kahvat draggaamiseen
                             (when voi-raahata?
                               [:rect {:x (- x 3) :y y :width 7 :height korkeus
@@ -396,7 +425,7 @@
 
 (defn aikajana
   "Aikajanakomponentti, joka näyttää gantt-kaavion tyylisen aikajanan.
-  Komponentti sovittaa alku-/loppuajat automaattisesti kaikkien aikojen perusteella ja lisää
+  Komponentti sovittaa alku- ja loppuajat automaattisesti kaikkien aikojen perusteella ja lisää
   alkuun ja loppuun 14 päivää. Komponentti mukautuu selaimen leveyteen ja sen korkeus määräytyy
   rivimäärän perusteella."
   ([rivit] (aikajana {} rivit))
