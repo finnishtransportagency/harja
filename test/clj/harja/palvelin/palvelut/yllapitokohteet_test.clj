@@ -592,22 +592,28 @@
 
 (deftest tallenna-yllapitokohteen-tarkka-aikataulu-vaaraan-urakkaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2005-2010-paasopimuksen-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
     (is (thrown? SecurityException
                  (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :tallenna-yllapitokohteiden-tarkka-aikataulu
                                  +kayttaja-jvh+
                                  {:urakka-id urakka-id
+                                  :sopimus-id sopimus-id
+                                  :vuosi 2017
                                   :yllapitokohde-id yllapitokohde-id
                                   :aikataulurivit []}))))
 
   ;; Leppäjärven suorittavan tiemerkintäurakan aikataulua saapi muokata
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
     (is (kutsu-palvelua (:http-palvelin jarjestelma)
                         :tallenna-yllapitokohteiden-tarkka-aikataulu
                         +kayttaja-jvh+
                         {:urakka-id urakka-id
+                         :sopimus-id sopimus-id
+                         :vuosi 2017
                          :yllapitokohde-id yllapitokohde-id
                          :aikataulurivit []}))))
 
