@@ -67,11 +67,16 @@
 kumoustiedot (atom
                {:ehdota-kumoamista? false
                 :edellinen-tila nil
-                :kumoustunniste nil ;; Jotta voidaan autom. piilottaa, jos samaa kumousta ehdotettu liian kauan
-                :kumoa-sijainti-y 0}))
+                :kumoustunniste nil})) ;; Jotta voidaan autom. piilottaa, jos samaa kumousta ehdotettu liian kauan
 
 (defn sailo-muokattujen-aikataulurivien-vanha-tila! [aikataulurivit]
   (swap! kumoustiedot assoc :edellinen-tila aikataulurivit))
+
+(defn ala-ehdota-kumoamista! []
+  (swap! kumoustiedot assoc
+         :ehdota-kumoamista? false
+         :edellinen-tila nil
+         :kumoustunniste nil))
 
 (defn ehdota-kumoamista! []
   (let [kumoustunniste (gensym "kumoustunniste")
@@ -82,10 +87,7 @@ kumoustiedot (atom
     (go (<! (timeout ehdotusaika-ms))
         ;; Piilota dialogi, jos ollaan edelleen ehdottamassa saman toiminnon kumoamista
         (when (= (:kumoustunniste @kumoustiedot) kumoustunniste)
-          (swap! kumoustiedot assoc :ehdota-kumoamista? false)))))
-
-(defn ala-ehdota-kumoamista! []
-  (swap! kumoustiedot assoc :ehdota-kumoamista? false))
+          (ala-ehdota-kumoamista!)))))
 
 (declare tallenna-aikataulu)
 (declare aikataulurivit)
