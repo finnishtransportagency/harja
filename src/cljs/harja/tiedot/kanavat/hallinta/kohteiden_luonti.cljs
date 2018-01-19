@@ -129,9 +129,15 @@
 
 (defn kohdekokonaisuudet-voi-tallentaa? [kokonaisuudet]
   (boolean
-    (and (every? #(not-empty (::kok/nimi %)) (remove #(and (not (id-olemassa? (::kok/id %)))
-                                                           (:poistettu %))
-                                                     kokonaisuudet)))))
+    (and (every? #(not-empty (::kok/nimi %))
+                 (remove #(and (not (id-olemassa? (::kok/id %)))
+                               (:poistettu %))
+                         kokonaisuudet)))))
+
+(defn kohteen-voi-tallentaa? [kohde]
+  (and (some? (::kohde/kohdekokonaisuus kohde))
+       (not-empty (::kohde/nimi kohde))
+       (not-empty (::kohde/kohteenosat kohde))))
 
 (defn tallennusparametrit-kohde [kohde]
   (-> kohde
@@ -205,7 +211,7 @@
 (defn kohteenosan-infopaneeli-otsikko [app osa]
   (cond
     (= (get-in app [:valittu-kohde ::kohde/id])
-       (get-in osa [::osa/kode ::kohde/id]))
+       (get-in osa [::osa/kohde ::kohde/id]))
     "Irroita"
 
     (some? (get-in osa [::osa/kohde ::kohde/id]))

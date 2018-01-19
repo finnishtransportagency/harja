@@ -42,7 +42,13 @@
              [ajax-loader-pieni "Päivitetään kohteenosia"]
              "Lisää kohteeseen osia oikeasta yläkulmasta")
     :tunniste ::kohteenosa/id
-    :virhe-viesti "Foobar"}
+    :voi-lisata? false
+    :voi-kumota? false
+    :virhe-viesti (let [vaihdetut (filter :vanha-kohde haetut-kohteenosat)]
+                    (when-not (empty? vaihdetut)
+                      (str "Osia siirretty kohteista: " (str/join ", " (map
+                                                                         (comp ::kohde/nimi :vanha-kohde)
+                                                                         vaihdetut)))))}
    [{:otsikko "Osa"
      :tyyppi :string
      :muokattava? (constantly false)
@@ -86,6 +92,7 @@
                       {:tallennus-kaynnissa? tallennus-kaynnissa?
                        :disabled (or tallennus-kaynnissa?
                                      (not (lomake/voi-tallentaa? kohde))
+                                     (not (tiedot/kohteen-voi-tallentaa? kohde))
                                      (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat)))}])}
        [{:otsikko "Kohdekokonaisuus"
          :tyyppi :valinta
