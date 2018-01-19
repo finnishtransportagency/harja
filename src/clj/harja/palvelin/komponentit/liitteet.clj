@@ -105,7 +105,6 @@
 (defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
-  (assert (instance? java.io.File lahdetiedosto)) ;; input-streamit ei käy koska luetaan useasti
   (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (pr-str (.length lahdetiedosto)))
   (log/debug "lahde:" lahdetiedosto)
   (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko (.length lahdetiedosto)})
