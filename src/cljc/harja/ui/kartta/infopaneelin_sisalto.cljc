@@ -44,7 +44,10 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
             [harja.fmt :as fmt]
-            [harja.domain.tierekisteri.varusteet :as varusteet]))
+            [harja.domain.tierekisteri.varusteet :as varusteet]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -600,6 +603,27 @@
                                      " muuta toimenpidettä.")])
                         ]))}]))
      :data turvalaite}))
+
+(defmethod infopaneeli-skeema :kohteenosa [osa]
+  {:tyyppi :kohteenosa
+   :jarjesta-fn (constantly false)
+   :otsikko (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde osa) osa)
+   :tiedot [{:otsikko "Kohde"
+             :tyyppi :string
+             :nimi (kohde/fmt-kohteen-nimi (::osa/kohde osa))}
+            (when (::osa/nimi osa)
+              {:otsikko "Nimi"
+               :tyyppi :string
+               :nimi ::osa/nimi})
+            {:otsikko "Tyyppi"
+             :tyyppi :string
+             :nimi ::osa/tyyppi
+             :fmt osa/fmt-kohdeosa-tyyppi}
+            {:otsikko "Oletuspalvelumuoto"
+             :nimi ::osa/oletuspalvelumuoto
+             :fmt liikenne/palvelumuoto->str
+             :tyyppi :string}]
+   :data osa})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
