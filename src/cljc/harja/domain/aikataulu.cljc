@@ -32,9 +32,9 @@
     (some? janan-urakka-id)
     (= janan-urakka-id urakka-id)
     (case nakyma
-     :paallystys voi-muokata-paallystys?
-     :tiemerkinta voi-muokata-tiemerkinta?
-     false)))
+      :paallystys voi-muokata-paallystys?
+      :tiemerkinta voi-muokata-tiemerkinta?
+      false)))
 
 (defn aikataulurivi-jana
   "Muuntaa aikataulurivin aikajankomponentin rivimuotoon."
@@ -145,24 +145,19 @@
     aikataulurivit))
 
 (defn aikataulu-validi?
-  "Tarkistaa että aikajanan päällystystoimenpiteen uusi päivämäärävalinta on validi.
-  Päällystys ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen."
-  [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
-  (first (keep
-           (fn [{id :id :as aikataulurivi}]
-             (cond
-               (and (= id (first drag)) (= :paallystys (second drag)))
-               (let [kohde-alku (get aikataulurivi :aikataulu-kohde-alku)
-                     kohde-loppu (get aikataulurivi :aikataulu-kohde-valmis)]
-                 (and (or (nil? kohde-alku) (pvm/sama-tai-jalkeen? alku kohde-alku))
-                      (or (nil? kohde-loppu) (pvm/sama-tai-ennen? loppu kohde-loppu))))
+  "Validoi aikataulurivit seuraavasti:
+  - Päällystys ei saa alkaa ennen kohteen aloitusta, eikä loppua kohteen lopetuksen jälkeen."
+  [aikataulurivit]
+  (let [validointitulos
+        (map
+          (fn [{:keys [aikataulu-kohde-alku aikataulu-kohde-valmis
+                       aikataulu-paallystys-alku aikataulu-paallystys-loppu] :as rivi}]
+            (boolean (and (or (nil? aikataulu-kohde-alku)
+                              (nil? aikataulu-paallystys-alku)
+                              (pvm/sama-tai-jalkeen? aikataulu-paallystys-alku aikataulu-kohde-alku))
+                          (or (nil? aikataulu-kohde-valmis)
+                              (nil? aikataulu-paallystys-loppu)
+                              (pvm/sama-tai-ennen? aikataulu-paallystys-loppu aikataulu-kohde-valmis)))))
+          aikataulurivit)]
 
-               (and (= id (first drag)) (= :kohde (second drag)))
-               (let [paallystys-alku (get aikataulurivi :aikataulu-paallystys-alku)
-                     paallystys-loppu (get aikataulurivi :aikataulu-paallystys-loppu)]
-                 (and (or (nil? paallystys-alku) (pvm/sama-tai-jalkeen? paallystys-alku alku))
-                      (or (nil? paallystys-loppu) (pvm/sama-tai-ennen? paallystys-loppu loppu))))
-
-               :default
-               true))
-           aikataulurivit)))
+    (every? true? validointitulos)))
