@@ -20,13 +20,17 @@
 (defn keskita-kartta-alueeseen! [alue]
   (reset! nav/kartan-extent alue))
 
+(defn piilota-infopaneeli! []
+  (reset! nayta-infopaneeli? false)
+  (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki))
+
 (defn kasittele-infopaneelin-linkit!
   "Infopaneelin skeemat saattavat sisältää 'linkkejä', jotka käsitellään
   (tai ei käsitellä) näkymäkohtaisesti. Esimerkiksi toteumanäkymässä voidaan haluta
   mahdollistaa toteuman avaaminen lomakkeeseen infopaneelin kautta.
   Funktio ottaa parametriksi mäpin, jossa avaimet ovat :tyyppejä-kartalla
   (katso harja.ui.kartta.asioiden-tiedot), ja arvot ovat mappejä, jotka
-  sisältävät avaimet :toiminto ja :teksti. :toiminto -avaimen arvo on
+  sisältävät avaimet :toiminto ja :teksti tai :teksti-fn. :toiminto  ja :teksti-fn -avaimen arvo on
   funktio, joka saa parametrinaan valitun asian datan."
   [asetukset]
   (assert (or (nil? asetukset) (map? asetukset)) "Infopaneelin linkkiasetusten pitää olla mäppi tai nil")
