@@ -15,6 +15,7 @@
 (defn kumousboksi [{:keys [lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
   (let [lahto-sijainti [lahto-x lahto-y]
         piirretty-aika (atom nil)
+        tila (atom :tallennettu)
         nyky-sijainti (atom [lahto-x lahto-y])]
     (komp/luo
       (komp/piirretty #(do (reset! nyky-sijainti [loppu-x loppu-y])
@@ -23,5 +24,11 @@
         [:div.kumousboksi {:style {:left (first @nyky-sijainti)
                                    :top (second @nyky-sijainti)}}
          [napit/sulje-ruksi (constantly nil)]
-         [:p "Muutos tallennettu!"]
-         [napit/kumoa "Kumoa" kumoa-fn]]))))
+         [:p (case @tila
+               :tallennettu "Muutos tallennettu!"
+               :kumotaan "Kumotaan...")]
+         [napit/kumoa "Kumoa"
+          (fn []
+            (reset! tila :kumotaan)
+            (kumoa-fn))
+          {:disabled (= @tila :kumotaan)}]]))))
