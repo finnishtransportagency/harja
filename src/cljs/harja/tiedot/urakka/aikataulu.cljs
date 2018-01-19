@@ -61,21 +61,28 @@
                                                     :vuosi vuosi}))
 
 (def ^{:private true
-       :doc "Visuaalisia muokkauksia varten säilötään VAIN MUOKATTUJEN aikataulurivien edellinen tila tähän
+       :doc "Visuaalisia muokkauksia varten säilötään VAIN MUOKATTUJEN aikataulurivien edellinen tila
        ennen muokkauksen tallentamista. Muokkauksen jälkeen tarjotaan mahdollisuus kumota muutos ja palata edelliseen
        tilaan. Tällöin nämä rivit täytyy lähettää palvelimelle tallennettavaksi."}
-kumoustiedot (atom {:ehdota-kumoamista? false
-                    :edellinen-tila nil
-                    :kumoa-sijainti-y 0}))
+kumoustiedot (atom
+               {:ehdota-kumoamista? false
+                :edellinen-tila nil
+                :kumoustunniste nil ;; Jotta voidaan autom. piilottaa, jos samaa kumousta ehdotettu liian kauan
+                :kumoa-sijainti-y 0}))
 
 (defn sailo-muokattujen-aikataulurivien-vanha-tila! [aikataulurivit]
   (swap! kumoustiedot assoc :edellinne-tila aikataulurivit))
 
 (defn ehdota-kumoamista! []
-  (swap! kumoustiedot assoc :ehdota-kumoamista? true)
-  (go (<! (timeout 10000))
-      ;; TODO Piilota vain jos ei olla kumoamassa eikä painettu ruksia
-      (swap! kumoustiedot assoc :ehdota-kumoamista? false)))
+  (let [kumoustunniste (gensym "kumoustunniste")
+        ehdotusaika-ms 10000]
+    (swap! kumoustiedot assoc
+           :ehdota-kumoamista? true
+           :kumoustunniste kumoustunniste)
+    (go (<! (timeout ehdotusaika-ms))
+        ;; Piilota dialogi, jos ollaan edelleen ehdottamassa saman toiminnon kumoamista
+        (when (= (:kumoustunniste @kumoustiedot) kumoustunniste)
+          (swap! kumoustiedot assoc :ehdota-kumoamista? false)))))
 
 (defn ala-ehdota-kumoamista! []
   (swap! kumoustiedot assoc :ehdota-kumoamista? false))
