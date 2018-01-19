@@ -98,34 +98,42 @@
       (io/copy alkuperainen temp-file)
       [(io/input-stream temp-file) (io/input-stream temp-file)])))
 
-(defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
+(defn lokita-tiedoston-pituus [lokitagi tiedosto]
+  (log/debug "tiedoston pituus slurp /" lokitagi ":" (when tiedosto (count (slurp (io/input-stream tiedosto)))))
+  (log/debug "tiedoston pituus length /" lokitagi ":" (when tiedosto (.length tiedosto))))
+
+(defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
-  (log/debug "Koko: " (pr-str koko))
-  (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
-        [alkuperainen-lahde pesulan-syote-lahde] (kahdenna-stream lahde)
-        pesty-lahde (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
-                       (do (log/info "PDF-tiedosto -> tiedostopesula")
-                           (tiedostopesula/pdfa-muunna-inputstream! tiedostopesula (io/input-stream pesulan-syote-lahde))))
-        lahde (or pesty-lahde alkuperainen-lahde)]
-    (if pesty-lahde
+  (assert (instance? java.io.File lahdetiedosto)) ;; input-streamit ei käy koska luetaan useasti
+  (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (pr-str (.length lahdetiedosto)))
+  (log/debug "lahde:" lahdetiedosto)
+  (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko (.length lahdetiedosto)})
+        _ (lokita-tiedoston-pituus "alku" lahdetiedosto)
+        pesty-lahdetiedosto (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
+                              (do (log/info "PDF-tiedosto -> tiedostopesula")
+                                  (tiedostopesula/pdfa-muunna-file->file! tiedostopesula lahdetiedosto)))
+        _ (lokita-tiedoston-pituus "pesty" pesty-lahdetiedosto)
+        tallennettava-lahdetiedosto (or pesty-lahdetiedosto lahdetiedosto)
+        tallennettava-koko (.length tallennettava-lahdetiedosto)]
+    (if pesty-lahdetiedosto
       (log/info "Tallennetaan tiedostopesulassa käsitelty liitetiedosto")
       (log/info "Tallennetaan alkuperäinen liitetiedosto"))
     (if (:hyvaksytty liitetarkistus)
       (do
-        (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream alkuperainen-lahde))
-        (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
+        (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahdetiedosto))
+        (let [pikkukuva (muodosta-pikkukuva (io/input-stream tallennettava-lahdetiedosto))
               liite (liitteet/tallenna-liite<!
                      db
                      (merge {:nimi tiedostonimi
                              :tyyppi tyyppi
-                             :koko koko
+                             :koko tallennettava-koko
                              :pikkukuva pikkukuva
                              :luoja luoja
                              :urakka urakka
                              :kuvaus kuvaus
                              :lahdejarjestelma lahde-jarjestelma}
-                            (tallenna-liitteen-data db fileyard-client lahde)))]
+                            (tallenna-liitteen-data db fileyard-client tallennettava-lahdetiedosto)))]
           (log/debug "Liite tallennettu.")
           liite))
       (do
