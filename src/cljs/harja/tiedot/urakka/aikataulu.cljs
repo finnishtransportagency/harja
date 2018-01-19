@@ -27,11 +27,11 @@
 
 (defonce valinnat
   (local-storage/local-storage-atom
-   :aikataulu-valinnat
-   {:nayta-aikajana? true
-    :nayta-tarkka-aikana? false
-    :jarjestys :aika}
-   nil))
+    :aikataulu-valinnat
+    {:nayta-aikajana? true
+     :nayta-tarkka-aikana? false
+     :jarjestys :aika}
+    nil))
 
 (defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
 (defonce nayta-tarkka-aikajana? (r/cursor valinnat [:nayta-tarkka-aikana?]))
@@ -60,10 +60,14 @@
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
 
-;; Visuaalisia muokkauksia varten säilötään VAIN MUOKATTUJEN aikataulurivien edellinen tila tähän
-;; ennen muokkauksen tallentamista. Muokkauksen jälkeen tarjotaan mahdollisuus kumota muutos ja palata edelliseen tilaan.
-;; Tällöin nämä rivit täytyy lähettää palvelimelle tallennettavaksi.
-(def aikataulurivit-edellinen-tila (atom nil))
+(def ^{:private true
+       :doc "Visuaalisia muokkauksia varten säilötään VAIN MUOKATTUJEN aikataulurivien edellinen tila tähän
+       ennen muokkauksen tallentamista. Muokkauksen jälkeen tarjotaan mahdollisuus kumota muutos ja palata edelliseen
+       tilaan. Tällöin nämä rivit täytyy lähettää palvelimelle tallennettavaksi."}
+aikataulurivit-edellinen-tila (atom nil))
+
+(defn sailo-muokattujen-aikataulurivien-vanha-tila! [aikataulurivit]
+  (reset! aikataulurivit-edellinen-tila aikataulurivit))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

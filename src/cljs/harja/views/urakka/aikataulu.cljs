@@ -245,7 +245,12 @@
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
             [aikajana/aikajana
              {:muuta! (fn [drag]
-                        (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)]
+                        (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
+                                  paivitetyt-aikataulu-idt (set (map :id paivitetty-aikataulu))
+                                  paivitettyjen-vanha-tila (filter #(paivitetyt-aikataulu-idt (:id %)) @tiedot/aikataulurivit)]
+
+                              (tiedot/sailo-muokattujen-aikataulurivien-vanha-tila! paivitettyjen-vanha-tila)
+
                               (if (aikataulu/aikataulu-validi? aikataulurivit drag)
                                 (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
                                                                (fn [vastaus] (reset! tiedot/aikataulurivit vastaus))))
