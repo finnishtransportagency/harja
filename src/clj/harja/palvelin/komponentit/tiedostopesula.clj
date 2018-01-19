@@ -48,7 +48,7 @@
         ;; (log/debug "uudelleen luetussa streamissa merkkejä: " (count (slurp muunnettu-stream)))
         (if muunnettu-stream
           (do (io/copy muunnettu-stream temp-file)
-              (log/debug "saadun tiedoston koko: " (.length pdf-file) "muunnetun tempfilen koko:" (.length temp-file))
+              ;; (log/debug "saadun tiedoston koko: " (.length pdf-file) "muunnetun tempfilen koko:" (.length temp-file))
               temp-file)
           ;; else
           (do (.delete temp-file)
