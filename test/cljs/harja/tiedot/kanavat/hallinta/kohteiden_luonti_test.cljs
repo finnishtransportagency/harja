@@ -93,7 +93,7 @@
            ::kohde/id 2
            ::kohde/kanava-id 1
            ::kohde/tyyppi :sulku}]
-         (tiedot/tallennusparametrit
+         (tiedot/tallennusparametrit-kohde
            {:kanava {::kok/id 1}
             :kohteet [{::kohde/nimi :foo
                        :id 1

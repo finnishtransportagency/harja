@@ -26,7 +26,9 @@
             [harja.ui.valinnat :as valinnat]
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.liikennetapahtuma :as lt]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -42,20 +44,12 @@
     :tunniste ::kohteenosa/id
     :virhe-viesti "Foobar"}
    [{:otsikko "Osa"
-     :tyyppi :valinta
-     :nimi :foobar
-     :valinnat (or haetut-kohteenosat [])
-     :valinta-nayta kohteenosa/fmt-kohdeosa
-     :hae identity
-     :aseta (fn [rivi arvo]
-              arvo)
-     :leveys 4}
-    {:otsikko "Tyyppi"
      :tyyppi :string
      :muokattava? (constantly false)
-     :nimi ::kohteenosa/tyyppi
+     :nimi :kohteenosan-nimi
+     :hae identity
      :leveys 2
-     :fmt kohteenosa/fmt-kohdeosa-tyyppi}
+     :fmt kohteenosa/fmt-kohdeosa}
     {:otsikko "Oletuspalvelumuoto"
      :tyyppi :string
      :muokattava? (constantly false)
@@ -69,8 +63,14 @@
 (defn kohdelomake [e! app]
   (komp/luo
     (komp/sisaan #(e! (tiedot/->HaeKohteenosat)))
+    (komp/sisaan-ulos
+      #(kartta-tiedot/kasittele-infopaneelin-linkit!
+         {:kohteenosa {:toiminto
+                       (fn [osa] (e! (tiedot/->KohteenosaKartallaKlikattu osa)))
+                       :teksti-fn (partial tiedot/kohteenosan-infopaneeli-otsikko app)}})
+      #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (fn [e! {:keys [valittu-kohde
-                    kohdekokonaisuudet] tallennus-kaynnissa? :kohteiden-tallennus-kaynnissa? :as app}]
+                    kohdekokonaisuudet] tallennus-kaynnissa? :kohteen-tallennus-kaynnissa? :as app}]
       [:div
       [debug/debug app]
       [napit/takaisin #(e! (tiedot/->ValitseKohde nil))]
@@ -79,14 +79,13 @@
                    "Muokkaa kohdetta"
                    "Lisää kohde")
         :muokkaa! #(e! (tiedot/->KohdettaMuokattu (lomake/ilman-lomaketietoja %)))
-        :footer-fn (fn [app]
+        :footer-fn (fn [kohde]
                      [napit/tallenna
                       "Tallenna"
-                      #(e! (tiedot/->TallennaKohdekokonaisuudet (:kohdekokonaisuudet app)))
+                      #(e! (tiedot/->TallennaKohde (lomake/ilman-lomaketietoja kohde)))
                       {:tallennus-kaynnissa? tallennus-kaynnissa?
                        :disabled (or tallennus-kaynnissa?
-                                     (not (lomake/voi-tallentaa? (:kohdekokonaisuudet app)))
-                                     (not (tiedot/kohdekokonaisuudet-voi-tallentaa? (:kohdekokonaisuudet app)))
+                                     (not (lomake/voi-tallentaa? kohde))
                                      (not (oikeudet/voi-kirjoittaa? oikeudet/hallinta-vesivaylat)))}])}
        [{:otsikko "Kohdekokonaisuus"
          :tyyppi :valinta
@@ -96,7 +95,7 @@
         {:otsikko "Nimi"
          :tyyppi :string
          :nimi ::kohde/nimi}
-        {:otsikko "Kohteenosat"
+        {:otsikko "Valitse kohteenosat kartalta"
          :tyyppi :komponentti
          :nimi :kohteenosat
          :palstoja 2
@@ -159,74 +158,76 @@
 
     (fn [e! {:keys [kohderivit kohteiden-haku-kaynnissa? kohdekokonaisuuslomake-auki? liittaminen-kaynnissa?
                     uudet-urakkaliitokset valittu-urakka urakat valittu-kohde] :as app}]
-      (cond kohdekokonaisuuslomake-auki?
-            [kohdekokonaisuuslomake e! app]
+      [:div
+       [kartta/kartan-paikka]
+       (cond kohdekokonaisuuslomake-auki?
+             [kohdekokonaisuuslomake e! app]
 
-            valittu-kohde
-            [kohdelomake e! app]
+             valittu-kohde
+             [kohdelomake e! app]
 
-            :else
-            [:div
-             [debug/debug app]
-             [valinnat/urakkatoiminnot {}
-              [napit/uusi "Muokkaa kohdekokonaisuuksia"
-               #(e! (tiedot/->AvaaKohdekokonaisuusLomake))]
-              [napit/uusi "Uusi kohde"
-               #(e! (tiedot/->ValitseKohde tiedot/uusi-kohde))]
-              [napit/tallenna "Tallenna urakkaliitokset"
-               #(e! (tiedot/->PaivitaKohteidenUrakkaliitokset))
-               {:disabled (empty? uudet-urakkaliitokset)
-                :tallennus-kaynnissa? liittaminen-kaynnissa?}]]
-             [:div.otsikko-ja-valinta-rivi
-              [:div.otsikko "Kaikki kohteet:"]
-              [:div.valinta.label-ja-alasveto
-               [:span.alasvedon-otsikko "Kuuluu urakkaan:"]
-               [yleiset/livi-pudotusvalikko
-                {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
-                 :valinta valittu-urakka
-                 :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
-                (into [nil] urakat)]]]
-             [grid/grid
-              {:tunniste ::kohde/id
-               :tyhja (if kohteiden-haku-kaynnissa?
-                        [ajax-loader "Haetaan kohteita"]
-                        "Ei perustettuja kohteita")
-               :rivi-klikattu #(e! (tiedot/->ValitseKohde %))}
-              [{:otsikko "Kohde"
-                :nimi ::kohde/nimi
-                :leveys 3}
-               {:otsikko "Kohteenosat"
-                :tyyppi :string
-                :nimi :kohteenosat
-                :leveys 6
-                :hae (fn [kohde]
-                       (str/join ", " (map kohteenosa/fmt-kohdeosa (::kohde/kohteenosat kohde))))}
-               (if-not valittu-urakka
-                 {:otsikko "Urakat"
-                  :tyyppi :string
-                  :nimi :kohteen-urakat
-                  :leveys 12
-                  :hae tiedot/kohteen-urakat}
-                 {:otsikko (str "Kuuluu urakkaan " (:harja.domain.urakka/nimi valittu-urakka) "?")
-                  :leveys 12
-                  :tyyppi :komponentti
-                  :tasaa :keskita
-                  :nimi :valinta
-                  :solu-klikattu (fn [rivi]
-                                   (let [kuuluu-urakkaan? (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)]
-                                     (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
-                                                                            (::urakka/id valittu-urakka)
-                                                                            (not kuuluu-urakkaan?)))))
-                  :komponentti (fn [rivi]
-                                 [kentat/tee-kentta
-                                  {:tyyppi :checkbox}
-                                  (r/wrap
-                                    (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)
-                                    (fn [uusi]
+             :else
+             [:div
+              [debug/debug app]
+              [valinnat/urakkatoiminnot {}
+               [napit/uusi "Muokkaa kohdekokonaisuuksia"
+                #(e! (tiedot/->AvaaKohdekokonaisuusLomake))]
+               [napit/uusi "Uusi kohde"
+                #(e! (tiedot/->ValitseKohde tiedot/uusi-kohde))]
+               [napit/tallenna "Tallenna urakkaliitokset"
+                #(e! (tiedot/->PaivitaKohteidenUrakkaliitokset))
+                {:disabled (empty? uudet-urakkaliitokset)
+                 :tallennus-kaynnissa? liittaminen-kaynnissa?}]]
+              [:div.otsikko-ja-valinta-rivi
+               [:div.otsikko "Kaikki kohteet:"]
+               [:div.valinta.label-ja-alasveto
+                [:span.alasvedon-otsikko "Kuuluu urakkaan:"]
+                [yleiset/livi-pudotusvalikko
+                 {:valitse-fn #(e! (tiedot/->ValitseUrakka %))
+                  :valinta valittu-urakka
+                  :format-fn #(or (::ur/nimi %) "Kaikki urakat")}
+                 (into [nil] urakat)]]]
+              [grid/grid
+               {:tunniste ::kohde/id
+                :tyhja (if kohteiden-haku-kaynnissa?
+                         [ajax-loader "Haetaan kohteita"]
+                         "Ei perustettuja kohteita")
+                :rivi-klikattu #(e! (tiedot/->ValitseKohde %))}
+               [{:otsikko "Kohde"
+                 :nimi ::kohde/nimi
+                 :leveys 3}
+                {:otsikko "Kohteenosat"
+                 :tyyppi :string
+                 :nimi :kohteenosat
+                 :leveys 6
+                 :hae (fn [kohde]
+                        (str/join ", " (map kohteenosa/fmt-kohdeosa (::kohde/kohteenosat kohde))))}
+                (if-not valittu-urakka
+                  {:otsikko "Urakat"
+                   :tyyppi :string
+                   :nimi :kohteen-urakat
+                   :leveys 12
+                   :hae tiedot/kohteen-urakat}
+                  {:otsikko (str "Kuuluu urakkaan " (:harja.domain.urakka/nimi valittu-urakka) "?")
+                   :leveys 12
+                   :tyyppi :komponentti
+                   :tasaa :keskita
+                   :nimi :valinta
+                   :solu-klikattu (fn [rivi]
+                                    (let [kuuluu-urakkaan? (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)]
                                       (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
                                                                              (::urakka/id valittu-urakka)
-                                                                             uusi))))])})]
-              (tiedot/ryhmittele-kohderivit-kanavalla kohderivit)]]))))
+                                                                             (not kuuluu-urakkaan?)))))
+                   :komponentti (fn [rivi]
+                                  [kentat/tee-kentta
+                                   {:tyyppi :checkbox}
+                                   (r/wrap
+                                     (tiedot/kohde-kuuluu-urakkaan? app rivi valittu-urakka)
+                                     (fn [uusi]
+                                       (e! (tiedot/->AsetaKohteenUrakkaliitos (::kohde/id rivi)
+                                                                              (::urakka/id valittu-urakka)
+                                                                              uusi))))])})]
+               (tiedot/ryhmittele-kohderivit-kanavalla kohderivit grid/otsikko)]])])))
 
 (defc kohteiden-luonti []
   [tuck tiedot/tila kohteiden-luonti*])
