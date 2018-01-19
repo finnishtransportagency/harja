@@ -23,6 +23,8 @@
 
 (defonce suolatoteumissa? (atom false))
 
+(defonce suodatin-valinnat (atom {:suola "Kaikki"}))
+
 (defonce toteumat
          (reaction<! [hae? @suolatoteumissa?
                       ur @nav/valittu-urakka
@@ -40,8 +42,6 @@
                                (<! (suola/hae-toteumat (:id ur) (first sopimus)
                                                        (or kk hk))))))))
 
-(defonce suodatin-valinnat (atom {:suola "Kaikki"}))
-
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
@@ -56,7 +56,15 @@
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
            muokattava? (comp not true? :koneellinen)
            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara @toteumat))))
-           listaus (reverse (sort-by :alkanut @toteumat))]
+           listaus (reverse (sort-by :alkanut
+                                     ;; Näytetään vain valittu suola
+                                     (filter (fn [rivi]
+                                               (or (= (:suola @suodatin-valinnat) "Kaikki")
+                                                   (= (:suola @suodatin-valinnat) (get-in rivi [:materiaali :nimi]))))
+                                             @toteumat)))
+           materiaali-nimet (conj (map #(get-in % [:materiaali :nimi])
+                                       @toteumat)
+                                  "Kaikki")]
        [:div.suolatoteumat
         [kartta/kartan-paikka]
         [:span.valinnat
@@ -66,9 +74,7 @@
                                           :otsikko "Suola"
                                           :valitse-fn #(swap! suodatin-valinnat assoc :suola %)
                                           :lisaa-kaikki? false
-                                          :materiaalit (conj (map #(get-in % [:materiaali :nimi])
-                                                                  listaus)
-                                                             "Kaikki")}]]
+                                          :materiaalit materiaali-nimet}]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"
                     :tallenna (if (oikeudet/voi-kirjoittaa?
