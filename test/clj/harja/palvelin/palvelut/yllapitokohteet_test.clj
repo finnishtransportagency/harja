@@ -587,6 +587,7 @@
                                :tallenna-yllapitokohteiden-tarkka-aikataulu
                                +kayttaja-tero+
                                {:urakka-id 4
+                                :sopimus-id 5
                                 :yllapitokohde-id 1
                                 :aikataulurivit []}))))
 
