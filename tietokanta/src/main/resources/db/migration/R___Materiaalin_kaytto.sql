@@ -11,6 +11,7 @@ BEGIN
     RETURN NEW;
   END IF;
   --
+  RAISE WARNING 'JARNO päivämäärävälit: % - %', NEW.alkanut, NEW.paattynyt;
   u := NEW.urakka;
   FOR rivi IN SELECT SUM(rm.maara) AS summa,
                      rm.materiaalikoodi,
@@ -34,14 +35,9 @@ BEGIN
     END IF;
   END LOOP;
 
-
   -- Poista hoitoluokittainen materiaalicache kaikille reittipisteiden pvm:ille tässä urakassa
     DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain
-    WHERE pvm IN (SELECT DISTINCT (rp.aika::DATE)
-                  FROM toteuman_reittipisteet tr
-                    JOIN LATERAL unnest(tr.reittipisteet) rp ON true
-                    JOIN LATERAL unnest(rp.materiaalit) rm ON true
-                  WHERE tr.toteuma = NEW.id)
+    WHERE pvm BETWEEN NEW.alkanut::DATE AND (NEW.paattynyt + interval '1 day')::DATE
           AND urakka = u;
 
     -- Päivitä materiaalin käyttö ko. pvm:lle ja urakalle
@@ -52,11 +48,7 @@ BEGIN
                    JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
                    JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                    JOIN LATERAL unnest(rp.materiaalit) mat ON true
-                 WHERE t.alkanut::date in (SELECT DISTINCT (rp.aika::DATE)
-                                           FROM toteuman_reittipisteet tr
-                                             JOIN LATERAL unnest(tr.reittipisteet) rp ON true
-                                             JOIN LATERAL unnest(rp.materiaalit) rm ON true
-                                           WHERE tr.toteuma = NEW.id)
+                 WHERE t.alkanut BETWEEN NEW.alkanut::DATE AND (NEW.paattynyt + interval '1 day')::DATE
                        AND t.urakka = u
                  GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi, rp.aika
     LOOP
