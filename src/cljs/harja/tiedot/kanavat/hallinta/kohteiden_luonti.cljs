@@ -197,7 +197,7 @@
 
 (defn kohteiden-lkm-kokonaisuudessa [{:keys [kohderivit] :as app} kokonaisuus]
   (let [kokonaisuus-id (::kok/id kokonaisuus)]
-    (count (filter #(= (::kok/id %) kokonaisuus-id) kohderivit))))
+    (count (filter #(= (get-in % [::kohde/kohdekokonaisuus ::kok/id]) kokonaisuus-id) kohderivit))))
 
 (defn kokonaisuuden-voi-poistaa? [app kokonaisuus]
   (= 0 (kohteiden-lkm-kokonaisuudessa app kokonaisuus)))
