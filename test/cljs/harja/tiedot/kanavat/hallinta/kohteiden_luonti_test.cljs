@@ -55,34 +55,6 @@
              ::kok/kohteet [{::kohde/id 3
                              ::kohde/tyyppi :sulku}]}]))))
 
-(deftest voi-tallentaa?
-  (is (true?
-        (tiedot/kohteet-voi-tallentaa? {:kanava 1
-                                        :kohteet [{::kohde/tyyppi 1}
-                                                  {::kohde/tyyppi 2}]})))
-
-  (is (false?
-        (tiedot/kohteet-voi-tallentaa? {:kanava nil
-                                        :kohteet [{::kohde/tyyppi 1}
-                                                  {::kohde/tyyppi 2}]})))
-
-  (is (false?
-        (tiedot/kohteet-voi-tallentaa? {:kanava 1
-                                        :kohteet []})))
-
-  (is (false?
-        (tiedot/kohteet-voi-tallentaa? {:kanava 1
-                                        :kohteet [{::kohde/tyyppi nil}]})))
-
-  (is (false?
-        (tiedot/kohteet-voi-tallentaa? {:kanava 1
-                                        :kohteet [{::kohde/tyyppi nil}
-                                                  {::kohde/tyyppi true}]}))))
-
-(deftest muokattavat-kohteet
-  (is (= {:foo :bar}
-         (tiedot/muokattavat-kohteet {:lomakkeen-tiedot {:kohteet {:foo :bar}}}))))
-
 (deftest tallennusparametrit
   (is (= [{::kohde/nimi :foo
            ::kohde/id 1
@@ -145,15 +117,6 @@
           {::kohde/urakat []}
           {::ur/id 1}))))
 
-(deftest poista-kohde-kohteista
-  (is (= [{:id 1}
-          {:id 3}]
-         (tiedot/poista-kohde
-           [{:id 1}
-            {:id 2}
-            {:id 3}]
-           {:id 2}))))
-
 (deftest nakymaan-tuleminen
   (is (true? (:nakymassa? (e! (tiedot/->Nakymassa? true)))))
   (is (false? (:nakymassa? (e! (tiedot/->Nakymassa? false))))))
@@ -202,85 +165,6 @@
 (deftest kohteet-ei-haettu
   (is (= {:kohteiden-haku-kaynnissa? false}
          (e! (tiedot/->KohteetEiHaettu {})))))
-
-(deftest avaa-lomake
-  (is (= {:kohdelomake-auki? true}
-         (e! (tiedot/->AvaaKohdeLomake)))))
-
-(deftest sulje-lomake
-  (is (= {:kohdelomake-auki? false
-          :lomakkeen-tiedot nil}
-         (e! (tiedot/->SuljeKohdeLomake)))))
-
-(deftest valitse-kanava
-  (is (= {:lomakkeen-tiedot {:kanava {::kok/id 1}
-                             :kohteet [{::kok/id 1 :id 1}
-                                       {::kok/id 1 :id 3}]}
-          :kohderivit [{::kok/id 1 :id 1}
-                       {::kok/id 2 :id 2}
-                       {::kok/id 1 :id 3}
-                       {::kok/id 3 :id 4}
-                       {::kok/id 2 :id 5}]}
-         (e! (tiedot/->ValitseKanava {::kok/id 1})
-             {:kohderivit [{::kok/id 1 :id 1}
-                           {::kok/id 2 :id 2}
-                           {::kok/id 1 :id 3}
-                           {::kok/id 3 :id 4}
-                           {::kok/id 2 :id 5}]}))))
-
-(deftest kohteiden-lisays
-  (is (= {:lomakkeen-tiedot {:kohteet [{:foo :bar}]
-                             :kanava 1}}
-         (e! (tiedot/->LisaaKohteita [{:foo :bar}])
-             {:lomakkeen-tiedot {:kohteet [{:baz :bar}]
-                                 :kanava 1}}))))
-
-(deftest kohteiden-tallennus
-  (vaadi-async-kutsut
-    #{tiedot/->KohteetTallennettu tiedot/->KohteetEiTallennettu}
-    (is (true? (:kohteiden-tallennus-kaynnissa? (e! (tiedot/->TallennaKohteet))))))
-
-  (vaadi-async-kutsut
-    #{}
-    (is (= {:kohteiden-tallennus-kaynnissa? true}
-           (e! (tiedot/->TallennaKohteet) {:kohteiden-tallennus-kaynnissa? true})))))
-
-(deftest kohteet-tallennettu
-  (is (= (e! (tiedot/->KohteetTallennettu [{::kok/id 1
-                                            ::kok/nimi "Foobar"
-                                            ::kok/kohteet [{::kohde/id 1
-                                                            ::kohde/tyyppi :sulku}
-                                                           {::kohde/id 2
-                                                            ::kohde/tyyppi :silta
-                                                            ::kohde/nimi "komea silta"}]}
-                                           {::kok/id 2
-                                            ::kok/nimi "Bazbar"
-                                            ::kok/kohteet [{::kohde/id 3
-                                                            ::kohde/tyyppi :sulku}]}]))
-         {:kohderivit [{::kohde/id 1
-                        ::kohde/tyyppi :sulku
-                        ::kok/id 1
-                        ::kok/nimi "Foobar"}
-                       {::kohde/id 2
-                        ::kohde/tyyppi :silta
-                        ::kohde/nimi "komea silta"
-                        ::kok/id 1
-                        ::kok/nimi "Foobar"}
-                       {::kohde/id 3
-                        ::kohde/tyyppi :sulku
-                        ::kok/id 2
-                        ::kok/nimi "Bazbar"}]
-          :kanavat [{::kok/id 1
-                     ::kok/nimi "Foobar"}
-                    {::kok/id 2
-                     ::kok/nimi "Bazbar"}]
-          :kohdelomake-auki? false
-          :lomakkeen-tiedot nil
-          :kohteiden-tallennus-kaynnissa? false})))
-
-(deftest kohteet-ei-tallennettu
-  (is (= {:kohteiden-tallennus-kaynnissa? false}
-         (e! (tiedot/->KohteetEiTallennettu {})))))
 
 (deftest aloita-haku
   (vaadi-async-kutsut

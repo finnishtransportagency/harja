@@ -127,23 +127,11 @@
       set
       vec))
 
-(defn kohteet-voi-tallentaa? [kohteet]
-  (boolean
-    (and (:kanava kohteet)
-         (not-empty (:kohteet kohteet))
-         (every?
-           (fn [kohde]
-             (and (::kohde/tyyppi kohde)))
-           (:kohteet kohteet)))))
-
 (defn kohdekokonaisuudet-voi-tallentaa? [kokonaisuudet]
   (boolean
     (and (every? #(not-empty (::kok/nimi %)) (remove #(and (not (id-olemassa? (::kok/id %)))
                                                            (:poistettu %))
                                                      kokonaisuudet)))))
-
-(defn muokattavat-kohteet [app]
-  (get-in app [:lomakkeen-tiedot :kohteet]))
 
 (defn tallennusparametrit-kohde [kohde]
   (-> kohde
@@ -180,15 +168,6 @@
       kohteen-ui-urakkaliitos
       (boolean
         ((set (map ::ur/id (::kohde/urakat kohde))) (::ur/id urakka))))))
-
-(defn poista-kohde [kohteet kohde]
-  (into [] (disj (into #{} kohteet) kohde)))
-
-(defn lopeta-liittaminen [app kohde-id urakka-id]
-  (update app :liittaminen-kaynnissa
-          (fn [kohde-ja-urakat]
-            (when (kohde-ja-urakat kohde-id)
-              (update kohde-ja-urakat kohde-id disj urakka-id)))))
 
 (defn kohteet-haettu [app tulos]
   (-> app
