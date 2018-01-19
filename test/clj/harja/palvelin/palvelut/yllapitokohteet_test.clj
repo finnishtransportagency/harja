@@ -564,19 +564,22 @@
                                 :tallenna-yllapitokohteiden-tarkka-aikataulu
                                 +kayttaja-jvh+
                                 {:urakka-id urakka-id
+                                 :sopimus-id sopimus-id
+                                 :vuosi 2017
                                  :yllapitokohde-id yllapitokohde-id
                                  :aikataulurivit [{:toimenpide aikataulu-toimenpide
                                                    :kuvaus aikataulu-kuvaus
                                                    :alku (pvm/->pvm "15.4.2017")
                                                    :loppu (pvm/->pvm "15.4.2017")}]})]
 
+    ;; Vastauksena ylläpitokohteet, joista jokaisella on :tarkka-aikataulu (vähintään tyhjä)
+    (is (every? :kohdenumero vastaus))
+    (is (every? :tarkka-aikataulu vastaus))
 
-    ;; Vastauksena päivitetty tarkka aikataulu
-    ;; FIXME Palauttaa nyt saman kuin urakan aikataulun haku, korjaa nämä!
-    (is (= (count vastaus) 1))
-    (let [aikataulurivi (first vastaus)]
-      (is (= (:toimenpide aikataulurivi) aikataulu-toimenpide))
-      (is (= (:kuvaus aikataulurivi) aikataulu-kuvaus)))))
+    (let [paivitetty-aikataulurivi (-> (filter #(= (:id %) yllapitokohde-id) vastaus)
+                                       first :tarkka-aikataulu first)]
+      (is (= (:toimenpide paivitetty-aikataulurivi) aikataulu-toimenpide))
+      (is (= (:kuvaus paivitetty-aikataulurivi) aikataulu-kuvaus)))))
 
 (deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
   (is (thrown? Exception
