@@ -245,9 +245,9 @@
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
             [aikajana/aikajana
              {:muuta! (fn [drag]
-                        (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)]
-                              (if (aikataulu/aikataulu-validi? aikataulurivit drag)
-                                (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
+                        (go (let [paivitetyt-rivit (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)]
+                              (if (aikataulu/aikataulu-validi? paivitetyt-rivit)
+                                (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetyt-rivit
                                                                (fn [vastaus] (reset! tiedot/aikataulurivit vastaus))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
