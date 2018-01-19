@@ -23,6 +23,7 @@
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kumousboksi :as kumousboksi]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.tarkka-aikataulu :as tarkka-aikataulu]
@@ -223,6 +224,8 @@
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
+         [kumousboksi/kumousboksi {:sijainti-y "200px"
+                                   :kumoa-fn (fn [] (log "YRITÄ KUMOTA!"))}]
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
