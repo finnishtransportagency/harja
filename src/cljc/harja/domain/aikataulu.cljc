@@ -89,23 +89,43 @@
                                                loppu)}))
                  (:tarkka-aikataulu rivi)))))})))
 
-(defn raahauksessa-paivitetyt-perusaikataulurivit
+(defn- paivita-raahauksen-perusaikataulu
+  "Palauttaa aikataulurivin, jossa perusaikataulun tiedot on päivitetty raahauksen perustelela."
+  [aikataulurivi {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
+  (let [[alku-avain loppu-avain]
+        (case (second drag)
+          :kohde [:aikataulu-kohde-alku :aikataulu-kohde-valmis]
+          :paallystys [:aikataulu-paallystys-alku :aikataulu-paallystys-loppu]
+          :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu]
+          nil)]
+    (if (and alku-avain loppu-avain)
+      (assoc aikataulurivi
+        alku-avain alku
+        loppu-avain loppu)
+      aikataulurivi)))
+
+(defn- paivita-raahauksen-tarkka-aikataulu
+  "Palauttaa aikataulurivin tarkan aikataulun kaikki rivit, päivitettynä raahauksen tiedoilla."
+  [aikataulurivi {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
+  (let [tarkka-aikataulu? (= (second drag) :tarkka-aikataulu)
+        tarkka-aikataulu-id (get drag 2)]
+    (map
+      (fn [tarkka-aikataulurivi]
+        (if (= (:id tarkka-aikataulurivi) tarkka-aikataulu-id)
+          (assoc tarkka-aikataulurivi :alku alku :loppu loppu)
+          tarkka-aikataulurivi))
+      (:tarkka-aikataulu aikataulurivi))))
+
+(defn raahauksessa-paivitetyt-aikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
-  [aikataulurivit {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
+  [aikataulurivit {drag-kohde ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu :as drag}]
   (keep
     (fn [{id :id :as aikataulurivi}]
-      (when (= id (first drag))
-        (let [[alku-avain loppu-avain]
-              (case (second drag)
-                :kohde [:aikataulu-kohde-alku :aikataulu-kohde-valmis]
-                :paallystys [:aikataulu-paallystys-alku :aikataulu-paallystys-loppu]
-                :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu]
-                nil)]
-          (if (and alku-avain loppu-avain)
-            (assoc aikataulurivi
-              alku-avain alku
-              loppu-avain loppu)
-            aikataulurivi))))
+      (when (= id (first drag-kohde))
+        (let [paivitetty-perusaikataulu (paivita-raahauksen-perusaikataulu aikataulurivi drag)
+              paivitetty-tarkka-aikataulu (paivita-raahauksen-tarkka-aikataulu aikataulurivi drag)
+              lopullinen-rivi (assoc paivitetty-perusaikataulu :tarkka-aikataulu paivitetty-tarkka-aikataulu)]
+          lopullinen-rivi)))
     aikataulurivit))
 
 (defn aikataulu-validi?

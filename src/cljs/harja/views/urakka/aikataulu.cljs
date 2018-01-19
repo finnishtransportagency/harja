@@ -245,17 +245,10 @@
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
             [aikajana/aikajana
              {:muuta! (fn [drag]
-                        ;; TODO Olisiko sittenkin helpompi vaan tehdä ylläpitokohteiden aikataulun palveluun tuki tallentaa myös tarkat aikataulut jos löytyy?
-                        ;; Tällöin tämä toimisi aika pitkälti samalla tavalla kuin nytkin, vain tarkat aikataulut pitäisi päivittää riville. Paluuarvona suoraan päivitetty data eli ei tule mitään flickeriäkään erillisen haun ajaksi
-                        ;; Myös tarkan aikataulun tallennukseen palauta suoraan aikataulunäkymän data niin vältetään flicker
-                        (go (let [paivitetty-perusaikataulu (aikataulu/raahauksessa-paivitetyt-perusaikataulurivit aikataulurivit drag)
-                                  ;paivitety-tarkka-aikataulu (aikataulu/raahauksessa-paivitetyt-tarkat-aikataulurivit drag)
-                                  ]
+                        (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)]
                               (if (aikataulu/aikataulu-validi? aikataulurivit drag)
-                                (do
-                                  (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-perusaikataulu (constantly nil)))
-                                  ;(<! (tiedot/tallenna-tarkka-aikataulu urakka-id sopimus-id vuosi paivitety-tarkka-aikataulu (constantly nil)))
-                                  )
+                                (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
+                                                               (fn [vastaus] (reset! tiedot/aikataulurivit vastaus))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?

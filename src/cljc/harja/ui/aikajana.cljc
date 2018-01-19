@@ -38,7 +38,7 @@
 
 (s/def ::paivat (s/every ::date))
 
-(s/def ::drag vector?) ;; [id :kohde], missä jälkimmäinen: :kohde, :paallystys, :tiemerkinta
+(s/def ::drag vector?) ;; [yllapitokohde-id, :tyyppi (:paallystys/:tiemerkinta/:kohde/:tarkka-aikataulu), tarkka-aikataulu-id]
 
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
