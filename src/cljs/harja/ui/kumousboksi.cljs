@@ -22,7 +22,7 @@
                             (do
                               (reset! nyky-sijainti [piilossa-x piilossa-y])
                               (reset! tila :tallennettu)))))
-      (fn [{:keys [lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
+      (fn [{:keys [nakyvissa? lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
         ;; FIXME Laskenta menee vikaan jos sivun leveys muuttuu
         [:div.kumousboksi {:style {:left (first @nyky-sijainti)
                                    :top (second @nyky-sijainti)}}
@@ -34,4 +34,5 @@
           (fn []
             (reset! tila :kumotaan)
             (kumoa-fn))
-          {:disabled (= @tila :kumotaan)}]]))))
+          {:disabled (or (= @tila :kumotaan)
+                         (not nakyvissa?))}]]))))
