@@ -7,13 +7,21 @@
             [harja.fmt :as fmt]
             [goog.events.EventType :as EventType]
             [harja.loki :refer [log]]
-            [harja.ui.ikonit :as ikonit])
+            [harja.ui.ikonit :as ikonit]
+            [cljs-time.core :as t])
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn kumousboksi [{:keys [sijainti-y kumoa-fn]}]
-  [:div.kumousboksi {:style {:right 0
-                             :top sijainti-y}}
-   [napit/sulje-ruksi (constantly nil)]
-   [:p "Muutos tallennettu!"]
-   [napit/kumoa "Kumoa" kumoa-fn]])
+(defn kumousboksi [{:keys [lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
+  (let [lahto-sijainti [lahto-x lahto-y]
+        piirretty-aika (atom nil)
+        nyky-sijainti (atom [lahto-x lahto-y])]
+    (komp/luo
+      (komp/piirretty #(do (reset! nyky-sijainti [loppu-x loppu-y])
+                           (reset! piirretty-aika (t/now))))
+      (fn [{:keys [lahto-x lahto-y loppu-x loppu-y kumoa-fn]}]
+        [:div.kumousboksi {:style {:left (first @nyky-sijainti)
+                                   :top (second @nyky-sijainti)}}
+         [napit/sulje-ruksi (constantly nil)]
+         [:p "Muutos tallennettu!"]
+         [napit/kumoa "Kumoa" kumoa-fn]]))))

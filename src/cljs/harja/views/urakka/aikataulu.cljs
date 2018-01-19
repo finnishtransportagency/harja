@@ -18,11 +18,13 @@
             [harja.tiedot.istunto :as istunto]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kumousboksi :as kumousboksi]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.tarkka-aikataulu :as tarkka-aikataulu]
@@ -223,6 +225,11 @@
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
+         [kumousboksi/kumousboksi {:lahto-x (+ @dom/leveys 10)
+                                   :lahto-y "250px"
+                                   :loppu-x (- @dom/leveys 150)
+                                   :loppu-y "250px"
+                                   :kumoa-fn (fn [] (log "YRITÄ KUMOTA!"))}]
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
@@ -245,9 +252,14 @@
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
             [aikajana/aikajana
              {:muuta! (fn [drag]
-                        (go (let [paivitetyt-rivit (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)]
-                              (if (aikataulu/aikataulu-validi? paivitetyt-rivit)
-                                (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetyt-rivit
+                        (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
+                                  paivitetyt-aikataulu-idt (set (map :id paivitetty-aikataulu))
+                                  paivitettyjen-vanha-tila (filter #(paivitetyt-aikataulu-idt (:id %)) @tiedot/aikataulurivit)]
+
+                              (tiedot/sailo-muokattujen-aikataulurivien-vanha-tila! paivitettyjen-vanha-tila)
+
+                              (if (aikataulu/aikataulu-validi? paivitetty-aikataulu)
+                                (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
                                                                (fn [vastaus] (reset! tiedot/aikataulurivit vastaus))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
