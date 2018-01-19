@@ -7,6 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.valinnat :as ui-valinnat]
             [harja.pvm :as pvm]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -39,6 +40,8 @@
                                (<! (suola/hae-toteumat (:id ur) (first sopimus)
                                                        (or kk hk))))))))
 
+(defonce suodatin-valinnat (atom {:suola "Kaikki"}))
+
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
@@ -58,7 +61,14 @@
         [kartta/kartan-paikka]
         [:span.valinnat
          [urakka-valinnat/urakan-sopimus ur]
-         [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
+         [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]
+         [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @suodatin-valinnat)
+                                          :otsikko "Suola"
+                                          :valitse-fn #(swap! suodatin-valinnat assoc :suola %)
+                                          :lisaa-kaikki? false
+                                          :materiaalit (conj (map #(get-in % [:materiaali :nimi])
+                                                                  listaus)
+                                                             "Kaikki")}]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"
                     :tallenna (if (oikeudet/voi-kirjoittaa?
