@@ -10,6 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
@@ -315,12 +316,15 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               [napit/takaisin "Takaisin laatupoikkeamaluetteloon" #(reset! laatupoikkeamat/valittu-laatupoikkeama-id nil)]
               [lomake/lomake
                {:otsikko "Laatupoikkeaman tiedot"
-                :muokkaa! #(let [uusi-lp
-                                 (if (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
-                                                     (get-in % [:yllapitokohde :id]))
-                                   (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot % yllapitokohteet)
-                                   %)]
-                             (reset! laatupoikkeama uusi-lp))
+                :muokkaa! #(do
+                             (when (contains? (:sijainti %) :virhe)
+                               (viesti/nayta! (get-in % [:sijainti :virhe])
+                                              :danger))
+                             (let [uusi-lp (cond-> %
+                                                   (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
+                                                                   (get-in % [:yllapitokohde :id])) (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot yllapitokohteet)
+                                                   (contains? (:sijainti %) :virhe) (assoc :sijainti nil))]
+                               (reset! laatupoikkeama uusi-lp)))
                 :voi-muokata? @laatupoikkeamat/voi-kirjata?
                 :footer-fn (fn [sisalto]
                              (when voi-kirjoittaa?
@@ -396,9 +400,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                   {:nimi :sijainti
                    :otsikko "Sijainti"
                    :tyyppi :sijaintivalitsin
-                   :paikannus? false
                    :pakollinen? true
-                   ;; FIXME Paikannus olisi kiva, mutta ei toiminut turpoissa, joten tuskin täälläkään
                    :karttavalinta-tehty-fn #(swap! laatupoikkeama assoc :sijainti %)}
                   {:tyyppi :tierekisteriosoite
                    :nimi :tr
