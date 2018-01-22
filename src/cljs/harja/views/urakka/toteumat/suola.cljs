@@ -73,6 +73,7 @@
          [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @suodatin-valinnat)
                                           :otsikko "Suola"
                                           :valitse-fn #(swap! suodatin-valinnat assoc :suola %)
+                                          :lisaa-kaikki? true
                                           :materiaalit materiaali-nimet}]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"

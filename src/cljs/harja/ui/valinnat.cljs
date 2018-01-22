@@ -438,20 +438,16 @@
    :format-fn      Funktio jolle annetaan näytettävä arvo. Jos lista materiaaleista on vaikkapa mappi,
                    niin tämä on yleensä avain. (default: str)
    :materiaalit    Lista materiaaleista.
-   :lisaa-kaikki?  Yritetäänkö lisätä valinta \"kaikki\" materiaaleihin (default: true)"
+   :lisaa-kaikki?  Lisätään valinta \"Kaikki\" materiaaleihin. Materiaalit pitää olla lista stringejä, jotta tämä
+                   toimii (default: false)"
   [{:keys [otsikko format-fn valittu-materiaali materiaalit valitse-fn lisaa-kaikki?]}]
   (assert (or (nil? materiaalit) (sequential? materiaalit)) "Materiaalit pitää olla nil tai lista materiaaleista")
   (let [otsikko (or otsikko "Materiaali")
         format-fn (or format-fn str)
         valitse-fn (or valitse-fn #(reset! valittu-materiaali %))
-        lisaa-kaikki? (if (false? lisaa-kaikki?)
-                        false true)
-        materiaalit (cond
-                      (and (= cljs.core/PersistentArrayMap (type (first materiaalit)))
-                           (:keyword format-fn)
-                           lisaa-kaikki?) (conj materiaalit {format-fn "Kaikki"})
-                      lisaa-kaikki? (conj materiaalit "Kaikki")
-                      :else materiaalit)]
+        materiaalit (if (and lisaa-kaikki? (every? string? materiaalit))
+                      (conj materiaalit "Kaikki")
+                      materiaalit)]
     [:div.label-ja-alasveto
      [:span.alasvedon-otsikko otsikko]
      [livi-pudotusvalikko {:valinta valittu-materiaali
