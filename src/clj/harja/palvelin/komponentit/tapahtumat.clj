@@ -56,11 +56,10 @@
     (catch Exception e
       (log/warn "Vanhan tietokanta yhteyden sulkemisessa tapahtui poikkeus" e)))
   (reset! connection (.getConnection (:datasource db)))
-  (log/debug "saatiin uusi tk-yhteys")
+  (log/debug "Saatiin uusi uusi tietokantayhteys")
   (doseq [kanava (keys @kuuntelijat)]
     (log/debug "Aloitetaan kuuntelu kanavalle: " kanava)
     (u @connection (str "LISTEN " kanava ";")))
-  (log/debug "Asetetaan ajossa päälle")
   (reset! ajossa true))
 
 (defprotocol Kuuntele
