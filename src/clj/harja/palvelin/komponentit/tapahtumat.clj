@@ -53,16 +53,16 @@
   (reset! ajossa false)
   (log/info "Uudelleenalustetaan tietokannan kuunteluyhteys")
   (try
-    (log/debug "yritetään sulkea vanha tk-yhteys")
+    (log/debug "Yritetään sulkea vanha tietokantayhteys")
     (.close @connection)
     (catch Exception e
-      (log/debug "vanhan tk-yhteyden sulku:" e)))
+      (log/warn "Vanhan tietokanta yhteyden sulkemisessa tapahtui poikkeus" e)))
   (reset! connection (.getConnection (:datasource db)))
   (log/debug "saatiin uusi tk-yhteys")
   (doseq [kanava (keys @kuuntelijat)]
-    (log/debug "sanotaan LISTEN kanavalle" kanava)
+    (log/debug "Aloitetaan kuuntelu kanavalle: " kanava)
     (u @connection (str "LISTEN " kanava ";")))
-  (log/debug "palautetaan ajossa -> true")
+  (log/debug "Asetetaan ajossa päälle")
   (reset! ajossa true))
 
 (defprotocol Kuuntele
@@ -97,9 +97,9 @@
                       (doseq [kasittelija (get @kuuntelijat (.getName notification))]
                         ;; Käsittelijä ei sitten saa blockata
                         (kasittelija (.getParameter notification)))))
-                  (catch PSQLException ex
-                    (log/debug "Tapahtumat-kuuntelijassa poikkeus, errorcode" (.getErrorCode ex))
-                    (log/warn "Tietokantayhteydessä poikkeus: " ex)
+                  (catch PSQLException e
+                    (log/debug "Tapahtumat-kuuntelijassa poikkeus, errorcode" (.getErrorCode e))
+                    (log/warn "Tapahtumat-kuuntelijassa tapahtui tietokantapoikkeus: " e)
                     (uusi-tietokantayhteys! (:db this) ajossa connection kuuntelijat)))
 
                 (Thread/sleep 150)
