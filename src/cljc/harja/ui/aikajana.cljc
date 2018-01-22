@@ -252,11 +252,13 @@
                           (when (and (not (.-ctrlKey e))
                                      (empty? @drag))
                             (reset! valitut-palkit #{}))
+
                           ;; Tallenna muutos, jos raahattiin palkkeja
                           (when-not (empty? @drag)
                             (go
                               (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
-                              (reset! drag nil))))
+                              (reset! drag nil)
+                              (reset! valitut-palkit #{}))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
 #?(:clj
@@ -353,6 +355,7 @@
                                        (let [x1 (max alku-x x)
                                              x2 (+ x jana-leveys)]
                                          [x1 (min (- x2 x1) (- leveys alku-x))]))]
+
         [:svg#aikajana
          {#?@(:clj [:xmlns "http://www.w3.org/2000/svg"])
           :width leveys :height korkeus
