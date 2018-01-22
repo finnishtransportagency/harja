@@ -154,6 +154,7 @@
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
                   valitut-palkit (r/atom #{}) ;; Käytössä, jos valitaan erikseen (useita) palkkeja raahattavaksi
+                  drag-kursori (r/atom nil)
                   drag (r/atom [])]
        [:div.aikajana
         [komponentti rivit optiot
@@ -168,7 +169,7 @@
           :drag @drag
           ;; drag-kursori sisältää kursorin tiedot raahauksessa. Mapissa avaimet:
           ;; :tooltip-x, :tooltip-y, :drag-alku-koordinaatti [x, y]
-          :drag-kursori (atom nil)
+          :drag-kursori drag-kursori
           :click-select! (fn [e jana avain]
                            (.preventDefault e)
                            (when (.-ctrlKey e)
@@ -185,7 +186,7 @@
                              ;; Käyttäjä on erikseen valinnut raahattavat janat, lisää ne raahaukseen
                              (reset! drag (set (map #(assoc (select-keys jana #{::alku ::loppu ::drag})
                                                        :avain avain)
-                                                    @valitut-pakit))))))
+                                                    @valitut-palkit))))))
           :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
@@ -217,23 +218,23 @@
                                                         :tooltip-y tooltip-y
                                                         :drag-alku-koordinaatti [x y]}))
 
-                                ;; TODO Raahaa joko valittuja palkkeja tai jos ei ole valittuja, vain yhtä
-                                ;; Raahaa palkkia
-                                (swap! drag
-                                       (fn [{avain :avain :as drag}]
-                                         (cond
-                                           ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
-                                           ;; alku tai loppu vastaamaan raahauspistettä
-                                           (or (and (= avain ::alku)
-                                                    (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
-                                               (and (= avain ::loppu)
-                                                    (pvm/jalkeen? nykyinen-x-pvm (::alku drag))))
-                                           (assoc drag avain (x->paiva x))
-                                           ;; Koko palkki, siirretään alkua ja loppua eron verran
-                                           (= avain ::palkki)
-                                           (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
-                                                       ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
-                                           :default drag))))))))
+                                ;; Raahaa palkkeja
+                                (reset! drag
+                                        (map (fn [{avain :avain :as drag}]
+                                               (cond
+                                                 ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
+                                                 ;; alku tai loppu vastaamaan raahauspistettä
+                                                 (or (and (= avain ::alku)
+                                                          (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
+                                                     (and (= avain ::loppu)
+                                                          (pvm/jalkeen? nykyinen-x-pvm (::alku drag))))
+                                                 (assoc drag avain (x->paiva x))
+                                                 ;; Koko palkki, siirretään alkua ja loppua eron verran
+                                                 (= avain ::palkki)
+                                                 (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
+                                                             ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
+                                                 :default drag))
+                                             @drag)))))))
           :on-mouse-up! (fn [e]
                           ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
                           (when (and (not (.-ctrlKey e))
