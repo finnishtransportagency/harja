@@ -231,8 +231,9 @@
                                                  (assoc drag avain (x->paiva x))
                                                  ;; Koko palkki, siirretään alkua ja loppua eron verran
                                                  (= avain ::palkki)
-                                                 (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
-                                                             ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
+                                                 ;; TODO Täytyy olla tiedossa palkin alkuperäinen alku ja loppu...
+                                                 (assoc drag ::alku (t/plus (::alku drag) (t/days pvm-ero))
+                                                             ::loppu (t/plus (::loppu drag) (t/days pvm-ero)))
                                                  :default drag))
                                              @drag)))))))
           :on-mouse-up! (fn [e]
