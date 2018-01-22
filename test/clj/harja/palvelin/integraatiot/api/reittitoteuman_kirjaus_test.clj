@@ -253,7 +253,6 @@
 (deftest paivita-reittitoteuma-monesti-hoitoluokittaiset-summat-paivitetaan-oikein
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
-        hoitoluokittaiset-ennen-kutsuja (ffirst (q (str "SELECT count(*) FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka)))
         reittototeumakutsu-joka-tehdaan-monesti (fn [urakka kayttaja portti sopimus-id ulkoinen-id]
                                                   (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
                                                                            (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
@@ -264,7 +263,6 @@
         vastaus-lisays (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
         hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
         sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))
-        vastaus-toka-kutsuun (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
         hoitoluokittaiset-toka-kutsun-jalkeen (q (str "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
         sopimuksen-mat-kaytto-toka-kutsun-jalkeen (q (str "SELECT * FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
     (is (= 200 (:status vastaus-lisays)))
