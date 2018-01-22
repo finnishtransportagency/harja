@@ -88,12 +88,17 @@
                  :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
                             :viesti viesti}]}))
 
-      (if (or (and (>= tuotenumero 110) (<= tuotenumero 150)) (= tuotenumero 536) (= tuotenumero 31))
+      (if (or (and (>= tuotenumero 110) (<= tuotenumero 150))
+              (= tuotenumero 536)
+              (= tuotenumero 31)
+              (= tuotenumero 201)
+              (= tuotenumero 301))
         "43020000"
         ; Ostotuotteet: 210, 240-271 ja 310-321
         (if (or (= tuotenumero 21)
                 (= tuotenumero 30)
                 (= tuotenumero 210)
+                (= tuotenumero 302)
                 (and (>= tuotenumero 240) (<= tuotenumero 271))
                 (and (>= tuotenumero 310) (<= tuotenumero 321)))
           "12980010"
