@@ -200,18 +200,6 @@
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
-(def suolatoteuma-xf
-  (map (fn [suolatoteuma]
-         (if (:erittely suolatoteuma)
-           (assoc
-             suolatoteuma
-             :erittely
-             (map (fn [r]
-                    {:aika (tc/to-sql-time (pvm/iso-8601->aika (first r)))
-                     :maara (second r)})
-                  (konv/pgarray->vector (:erittely suolatoteuma))))
-           suolatoteuma))))
-
 (defn hae-suolatoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (let [toteumat (q/hae-suolatoteumat db {:urakka urakka-id
