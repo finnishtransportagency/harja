@@ -233,14 +233,18 @@
                                 (reset! drag
                                         (map (fn [{avain :avain :as drag}]
                                                (cond
-                                                 ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
-                                                 ;; alku tai loppu vastaamaan raahauspistettä
-                                                 ;; TODO Usean raahauksessa ei toimi, vertaa tässäkin monta päivää siirretty kursoria
-                                                 (or (and (= avain ::alku)
-                                                          (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
-                                                     (and (= avain ::loppu)
-                                                          (pvm/jalkeen? nykyinen-x-pvm (::alku drag))))
-                                                 (assoc drag avain (x->paiva x))
+                                                 ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan.
+                                                 ;; Siirretään palkkia muutoksen verran tiettyyn suuntaan
+                                                 ;; (ei voida suoraan asettaa kursorin koordinattia uudeksi aluksi/lopuksi,
+                                                 ;; koska usean raahauksessa ei toimi hyvin)
+                                                 (and (= avain ::alku)
+                                                      (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
+                                                 (assoc drag avain (t/plus (::alkup-alku drag) (t/days pvm-ero)))
+
+                                                 (and (= avain ::loppu)
+                                                      (pvm/jalkeen? nykyinen-x-pvm (::alku drag)))
+                                                 (assoc drag avain (t/plus (::alkup-loppu drag) (t/days pvm-ero)))
+
                                                  ;; Koko palkki, siirretään alkua ja loppua eron verran
                                                  (= avain ::palkki)
                                                  (assoc drag ::alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
