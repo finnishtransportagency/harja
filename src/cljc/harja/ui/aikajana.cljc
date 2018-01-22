@@ -226,7 +226,7 @@
                                 ;; Otetaan raahauksen alkutilanne ylös
                                 (when-not (:drag-alku-koordinaatti @drag-kursori)
                                   (reset! drag-kursori {:tooltip-x tooltip-x
-                                                        :tooltip-y tooltip-y
+                                                        :tooltip-y tooltip-y ;; TODO Mahdollisesti alimman palkin alapuolelle mieluummin?
                                                         :drag-alku-koordinaatti [x y]}))
 
                                 ;; Raahaa palkkeja
