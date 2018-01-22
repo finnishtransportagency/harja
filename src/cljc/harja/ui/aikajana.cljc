@@ -164,7 +164,6 @@
           ;; drag on vector mappeja, joka sisältää raahattavien palkkien tiedot. Mapissa avaimet:
           ;; :x, :y, ::alku (pvm), ::loppu (pvm),
           ;; ::drag [id jana-tyyppi tarkka-aikajana-id], :avain (:alku/:loppu/:palkki), :drag-alku-koordinaatti [x y]
-          ;; :valitut-palkit (setti vectoreita, muoto sama kuin ::drag)
           :drag @drag
           :click-start! (fn [e jana avain drag-start!]
                           (.preventDefault e)
@@ -186,6 +185,7 @@
                               ;; Ei hiiren nappeja pohjassa, lopeta raahaus
                               (reset! drag [])
 
+                              ;; Suoritetaan raahaus
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
                                     cx (.-clientX e) ; Hiiren nykyinen koordinaatti koko sivulla
                                     cy (.-clientY e)
