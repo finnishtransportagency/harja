@@ -136,7 +136,7 @@
   ;; Toinen, tarkempi tapa, olisi renderöidä teksti ensin näkymättömänä ja ottaa piirretyn elementin todellinen leveys.
   (let [kirjaimen-leveys 5.3
         leveys (* (count text) kirjaimen-leveys)]
-    (when tooltip
+    (when (and x y text)
       [:g
        [:rect {:x (- x (/ leveys 2))
                :y (- y 14)
