@@ -163,7 +163,7 @@
           :valitut-palkit valitut-palkit
           ;; drag on vector mappeja, joka sisältää raahattavien palkkien tiedot. Mapissa avaimet:
           ;; ::alku (raahauksen uusi pvm), ::loppu (raahauksen uusi pvm),
-          ;; ::drag, palkki jota raahataan [id jana-tyyppi tarkka-aikajana-id],
+          ;; ::drag, palkin ::drag tiedot: [id jana-tyyppi tarkka-aikajana-id],
           ;; :avain, mitä aikaa raahataan: :alku/:loppu/:palkki)
           :drag @drag
           ;; drag-kursori sisältää kursorin tiedot raahauksessa. Mapissa avaimet:
