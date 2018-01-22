@@ -174,9 +174,11 @@
           :click-select! (fn [e jana avain]
                            (.preventDefault e)
                            (when (.-ctrlKey e)
-                             (if (boolean (@valitut-palkit (::drag jana)))
-                               (reset! valitut-palkit (set (remove #(= % jana) @valitut-palkit)))
-                               (reset! valitut-palkit (conj @valitut-palkit jana)))))
+                             (let [olemassa-oleva-valinta (first (filter #(= (::drag %) (::drag jana))
+                                                                         @valitut-palkit))]
+                               (if olemassa-oleva-valinta
+                                 (reset! valitut-palkit (set (remove #(= % olemassa-oleva-valinta) @valitut-palkit)))
+                                 (reset! valitut-palkit (conj @valitut-palkit jana))))))
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
                          (when-not (.-ctrlKey e)
