@@ -149,8 +149,10 @@
         (when (not (empty? rivin-raahaukset))
           (let [paivitetty-perusaikataulu (paivita-raahauksen-perusaikataulu aikataulurivi rivin-raahaukset)
                 paivitetty-tarkka-aikataulu (paivita-raahauksen-tarkka-aikataulu aikataulurivi rivin-raahaukset)
-                lopullinen-rivi (assoc paivitetty-perusaikataulu :tarkka-aikataulu paivitetty-tarkka-aikataulu)]
-            lopullinen-rivi))))
+                lopullinen-rivi (assoc paivitetty-perusaikataulu :tarkka-aikataulu paivitetty-tarkka-aikataulu)
+                lopullinen-rivi-sisaltaa-muutoksia? (not= lopullinen-rivi aikataulurivi)]
+            (when lopullinen-rivi-sisaltaa-muutoksia?
+              lopullinen-rivi)))))
     aikataulurivit))
 
 (defn aikataulu-validi?

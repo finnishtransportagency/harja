@@ -259,10 +259,11 @@
                                   paivitettyjen-vanha-tila (filter #(paivitetyt-aikataulu-idt (:id %)) @tiedot/aikataulurivit)]
 
                               (if (aikataulu/aikataulu-validi? paivitetty-aikataulu)
-                                (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
-                                                               (fn [vastaus]
-                                                                 (reset! tiedot/aikataulurivit vastaus)
-                                                                 (tiedot/ehdota-kumoamista! paivitettyjen-vanha-tila))))
+                                (when (not (empty? paivitetty-aikataulu)) ; Tallenna ja ehdota kumoamista vain jos muutoksia
+                                  (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
+                                                                 (fn [vastaus]
+                                                                   (reset! tiedot/aikataulurivit vastaus)
+                                                                   (tiedot/ehdota-kumoamista! paivitettyjen-vanha-tila)))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
                                                     :urakka-id urakka-id
