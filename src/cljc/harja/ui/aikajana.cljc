@@ -470,11 +470,15 @@
 
          #?(:cljs
             [tooltip* (if raahataan?
-                        ;; TODO Miten tämä toimii jos on monta?
                         {:x (:tooltip-x @drag-kursori)
                          :y (:tooltip-y @drag-kursori)
-                         :text "TODO" #_(str (pvm/pvm (::alku drag)) " \u2013 "
-                                             (pvm/pvm (::loppu drag)))}
+                         :text (if (= (count drag) 1)
+                                 (str (pvm/pvm (::alku (first drag))) " \u2013 "
+                                      (pvm/pvm (::loppu (first drag))))
+                                 ;; Näytetään valittujen palkkien aikaisin ja viimeisin pvm
+                                 (str "Koko aikaväli: "
+                                      (pvm/pvm (first (sort t/before? (map ::alku drag)))) " \u2013 "
+                                      (pvm/pvm (last (sort t/before? (map ::loppu drag))))))}
                         tooltip)])]))))
 
 (defn aikajana
