@@ -153,8 +153,8 @@
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
-                  valitut-palkit (r/atom #{}) ;; Käytössä, jos valitaan erikseen (useita) palkkeja raahattavaksi
-                  drag-kursori (r/atom nil)
+                  valitut-palkit (r/atom #{}) ;; Käytössä, jos valitaan erikseen (yleensä useita) palkkeja raahattavaksi
+                  drag-kursori (r/atom nil) ; Nykyisen raahauksen kursorin tiedot
                   drag (r/atom [])]
        [:div.aikajana
         [komponentti rivit optiot
@@ -235,6 +235,7 @@
                                                (cond
                                                  ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
                                                  ;; alku tai loppu vastaamaan raahauspistettä
+                                                 ;; TODO Usean raahauksessa ei toimi, vertaa tässäkin monta päivää siirretty kursoria
                                                  (or (and (= avain ::alku)
                                                           (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
                                                      (and (= avain ::loppu)

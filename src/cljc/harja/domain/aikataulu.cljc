@@ -107,44 +107,50 @@
 
 (defn- paivita-raahauksen-perusaikataulu
   "Palauttaa aikataulurivin, jossa perusaikataulun tiedot on päivitetty raahauksen perustelela."
-  [aikataulurivi {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
-  (let [[alku-avain loppu-avain]
-        (case (second drag)
-          :kohde [:aikataulu-kohde-alku :aikataulu-kohde-valmis]
-          :paallystys [:aikataulu-paallystys-alku :aikataulu-paallystys-loppu]
-          :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu]
-          nil)]
-    (if (and alku-avain loppu-avain)
-      (assoc aikataulurivi
-        alku-avain alku
-        loppu-avain loppu)
-      aikataulurivi)))
+  [aikataulurivi rivin-raahaukset]
+  (reduce (fn [aikataulurivi {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
+            (let [[alku-avain loppu-avain]
+                  (case (second drag)
+                    :kohde [:aikataulu-kohde-alku :aikataulu-kohde-valmis]
+                    :paallystys [:aikataulu-paallystys-alku :aikataulu-paallystys-loppu]
+                    :tiemerkinta [:aikataulu-tiemerkinta-alku :aikataulu-tiemerkinta-loppu]
+                    nil)]
+              (if (and alku-avain loppu-avain)
+                (assoc aikataulurivi
+                  alku-avain alku
+                  loppu-avain loppu)
+                aikataulurivi)))
+          aikataulurivi
+          rivin-raahaukset))
 
 (defn- paivita-raahauksen-tarkka-aikataulu
   "Palauttaa aikataulurivin tarkan aikataulun kaikki rivit, päivitettynä raahauksen tiedoilla."
-  [aikataulurivi {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
-  (let [tarkka-aikataulu? (= (second drag) :tarkka-aikataulu)
-        tarkka-aikataulu-id (get drag 2)]
-    (map
-      (fn [tarkka-aikataulurivi]
-        (if (= (:id tarkka-aikataulurivi) tarkka-aikataulu-id)
-          (assoc tarkka-aikataulurivi :alku alku :loppu loppu)
-          tarkka-aikataulurivi))
-      (:tarkka-aikataulu aikataulurivi))))
+  [aikataulurivi rivin-raahaukset]
+  (reduce (fn [aikataulurivi {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
+            (let [tarkka-aikataulu? (= (second drag) :tarkka-aikataulu)
+                  tarkka-aikataulu-id (get drag 2)]
+              (map
+                (fn [tarkka-aikataulurivi]
+                  (if (= (:id tarkka-aikataulurivi) tarkka-aikataulu-id)
+                    (assoc tarkka-aikataulurivi :alku alku :loppu loppu)
+                    tarkka-aikataulurivi))
+                (:tarkka-aikataulu aikataulurivi))))
+          aikataulurivi
+          rivin-raahaukset))
 
 (defn raahauksessa-paivitetyt-aikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
   [aikataulurivit drag]
   (keep
     (fn [{id :id :as aikataulurivi}]
-      (when-let [rivin-drag (first
-                              (filter (fn [{drag-kohde ::aikajana/drag :as drag}]
-                                        (= id (first drag-kohde)))
-                                      drag))]
-        (let [paivitetty-perusaikataulu (paivita-raahauksen-perusaikataulu aikataulurivi rivin-drag)
-              paivitetty-tarkka-aikataulu (paivita-raahauksen-tarkka-aikataulu aikataulurivi rivin-drag)
-              lopullinen-rivi (assoc paivitetty-perusaikataulu :tarkka-aikataulu paivitetty-tarkka-aikataulu)]
-          lopullinen-rivi)))
+      (let [rivin-raahaukset (filter (fn [{drag-kohde ::aikajana/drag :as drag}]
+                                       (= id (first drag-kohde)))
+                                     drag)]
+        (when (not (empty? rivin-raahaukset))
+          (let [paivitetty-perusaikataulu (paivita-raahauksen-perusaikataulu aikataulurivi rivin-raahaukset)
+                paivitetty-tarkka-aikataulu (paivita-raahauksen-tarkka-aikataulu aikataulurivi rivin-raahaukset)
+                lopullinen-rivi (assoc paivitetty-perusaikataulu :tarkka-aikataulu paivitetty-tarkka-aikataulu)]
+            lopullinen-rivi))))
     aikataulurivit))
 
 (defn aikataulu-validi?
