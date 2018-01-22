@@ -154,13 +154,15 @@
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
                   valitut-palkit (atom #{})
-                  drag (r/atom nil)] ;; Drag tarkoittaa alun tai lopun venytystä
+                  drag (r/atom [])]
        [:div.aikajana
         [komponentti rivit optiot
          {:tooltip @tooltip
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
-          ;; drag sisältää nykyisen raahaamisen tiedot: :x, :y, ::alku (pvm), ::loppu (pvm),
+          :valitut-palkit valitut-palkit
+          ;; drag on vector mappeja, joka sisältää raahattavien palkkien tiedot. Mapissa avaimet:
+          ;; :x, :y, ::alku (pvm), ::loppu (pvm),
           ;; ::drag [id jana-tyyppi tarkka-aikajana-id], :avain (:alku/:loppu/:palkki), drag-alku [x y]
           ;; :valitut-palkit (setti vectoreita, muoto sama kuin ::drag)
           :drag @drag
@@ -275,7 +277,7 @@
                                                :text teksti})
                :on-mouse-out hide-tooltip!}]])))
 
-(defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
+(defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip! valitut-palkit
                                        drag click-start! drag-start! drag-move! drag-stop! leveys] :as asetukset}]
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
@@ -300,6 +302,7 @@
     (when (and min-aika max-aika)
       (let [paivat (pvm/paivat-valissa min-aika max-aika)
             paivia (count paivat)
+            raahataan? (not (empty? drag))
             paivan-leveys (/ (- leveys alku-x) paivia)
             rivin-y #(+ alku-y (* rivin-korkeus %))
             hover-y (fn [y]
@@ -334,7 +337,7 @@
           :on-mouse-up drag-stop!
           :on-mouse-move (when drag-move!
                            (drag-move! alku-x hover-y x->paiva))
-          :style {:cursor (when drag "ew-resize")}}
+          :style {:cursor (when raahataan? "ew-resize")}}
 
          #?(:cljs
             [paivat-ja-viikot paiva-x alku-x alku-y korkeus paivat]
@@ -354,11 +357,13 @@
                   (fn [j {alku ::alku loppu ::loppu vari ::vari reuna ::reuna
                           teksti ::teksti :as jana}]
                     (let [alku-ja-loppu? (and alku loppu)
-                          [alku loppu] (if (and drag (= (::drag drag) (::drag jana)))
-                                         [(::alku drag) (::loppu drag)]
+                          taman-janan-raahaus (first (filter #(= (::drag %) (::drag jana)) drag))
+                          [alku loppu] (if (and raahataan? taman-janan-raahaus)
+                                         [(::alku taman-janan-raahaus) (::loppu taman-janan-raahaus)]
                                          [alku loppu])
                           ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
                           x (inc (paiva-x (or alku loppu)))
+                          jana-valittu? (@valitut-palkit (::drag jana))
                           jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
                           [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
                           ;; Vähennä väritetyn korkeutta 2px
@@ -381,7 +386,7 @@
                                          ;; Jos väriä ei ole, piirretään valkoinen mutta opacity 0
                                          ;; (täysin läpinäkyvä), jotta hover kuitenkin toimii
                                          :fill-opacity (if vari 1.0 0.0)
-                                         :stroke reuna
+                                         :stroke (if jana-valittu? "red" reuna)
                                          :rx 3 :ry 3
                                          :on-mouse-over #(show-tooltip! {:x (+ x (/ jana-leveys 2))
                                                                          :y (hover-y y)
@@ -428,7 +433,8 @@
             :clj  (kuukausiotsikot paiva-x korkeus kuukaudet))
 
          #?(:cljs
-            [tooltip* (if drag
+            [tooltip* (if raahataan?
+                        ;; TODO Miten tämä toimii jos on monta?
                         {:x (:x drag)
                          :y (:y drag)
                          :text (str (pvm/pvm (::alku drag)) " \u2013 "
