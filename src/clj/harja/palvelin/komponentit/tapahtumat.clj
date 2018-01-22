@@ -12,8 +12,6 @@
            [org.postgresql PGNotification]
            [org.postgresql.util PSQLException]))
 
-
-
 (defn- aseta-ps-parametrit [ps parametrit]
   (loop [i 1
          [p & parametrit] parametrit]
@@ -115,16 +113,16 @@
     this)
 
   Kuuroudu
-  (kuuroudu! [this kanava]
+  (kuuroudu! [_ kanava]
     (swap! kuuntelijat #(dissoc % kanava))
     (u @connection (str "UNLISTEN " kanava ";")))
 
   Kuuntele
-  (kuuntele! [this kanava callback]
+  (kuuntele! [_ kanava callback]
     (let [kanava (kanava-nimi kanava)]
       (when-not (get @kuuntelijat kanava)
         ;; LISTEN
-        (log/debug "aloitetaan kuuntelu kanavalle" kanava)
+        (log/debug "Aloitetaan kuuntelu kanavalle" kanava)
         (u @connection (str "LISTEN " kanava ";")))
       (swap! kuuntelijat update-in [kanava] conj callback)))
 
