@@ -164,6 +164,7 @@
           :valitut-palkit valitut-palkit
           ;; drag on vector mappeja, joka sisältää raahattavien palkkien tiedot. Mapissa avaimet:
           ;; ::alku (raahauksen uusi pvm), ::loppu (raahauksen uusi pvm),
+          ;; ::alkup-alku (raahauksen alussa ollut alkupvm), ::alkup-loppu (raahauksen alussa ollut loppupvm)
           ;; ::drag, palkin ::drag tiedot: [id jana-tyyppi tarkka-aikajana-id],
           ;; :avain, mitä aikaa raahataan: :alku/:loppu/:palkki)
           :drag @drag
@@ -181,11 +182,19 @@
                          (when-not (.-ctrlKey e)
                            (if (empty? @valitut-palkit)
                              ;; Ei erikseen valittuja palkkeja, raahaa tätä janaa
-                             (reset! drag #{(assoc (select-keys jana #{::alku ::loppu ::drag})
-                                              :avain avain)})
+                             (reset! drag #{{::alku (::alku jana)
+                                             ::loppu (::loppu jana)
+                                             ::drag (::drag jana)
+                                             ::alkup-alku (::alku jana)
+                                             ::alkup-loppu (::loppu jana)
+                                             :avain avain}})
                              ;; Käyttäjä on erikseen valinnut raahattavat janat, lisää ne raahaukseen
-                             (reset! drag (set (map #(assoc (select-keys jana #{::alku ::loppu ::drag})
-                                                       :avain avain)
+                             (reset! drag (set (map #(-> {::alku (::alku jana)
+                                                          ::loppu (::loppu jana)
+                                                          ::drag (::drag jana)
+                                                          ::alkup-alku (::alku jana)
+                                                          ::alkup-loppu (::loppu jana)
+                                                          :avain avain})
                                                     @valitut-palkit))))))
           :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
@@ -231,9 +240,8 @@
                                                  (assoc drag avain (x->paiva x))
                                                  ;; Koko palkki, siirretään alkua ja loppua eron verran
                                                  (= avain ::palkki)
-                                                 ;; TODO Täytyy olla tiedossa palkin alkuperäinen alku ja loppu...
-                                                 (assoc drag ::alku (t/plus (::alku drag) (t/days pvm-ero))
-                                                             ::loppu (t/plus (::loppu drag) (t/days pvm-ero)))
+                                                 (assoc drag ::alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
+                                                             ::loppu (t/plus (::alkup-loppu drag) (t/days pvm-ero)))
                                                  :default drag))
                                              @drag)))))))
           :on-mouse-up! (fn [e]
