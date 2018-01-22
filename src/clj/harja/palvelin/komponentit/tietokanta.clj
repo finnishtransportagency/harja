@@ -45,7 +45,7 @@
                    (.setMaxIdleTime (* 3 60 60))
 
                    ;; Testataan yhteyden status ennen connection poolista poimintaa,
-                   ;; jotta selvitään tietokannan uudleleenkäynnistyksestä ilman poikkeuksia sovellukselle
+                   ;; jotta selvitään tietokannan uudelleenkäynnistyksestä ilman poikkeuksia sovellukselle
                    (.setPreferredTestQuery "SELECT 1")
                    (.setTestConnectionOnCheckout true))
                  kehitysmoodi)))
