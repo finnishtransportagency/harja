@@ -153,7 +153,7 @@
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
-                  valitut-palkit (atom #{})
+                  valitut-palkit (r/atom #{})
                   drag (r/atom [])]
        [:div.aikajana
         [komponentti rivit optiot
@@ -162,25 +162,28 @@
           :hide-tooltip! #(reset! tooltip nil)
           :valitut-palkit valitut-palkit
           ;; drag on vector mappeja, joka sisältää raahattavien palkkien tiedot. Mapissa avaimet:
-          ;; :x, :y, ::alku (pvm), ::loppu (pvm),
-          ;; ::drag [id jana-tyyppi tarkka-aikajana-id], :avain (:alku/:loppu/:palkki), :drag-alku-koordinaatti [x y]
+          ;; :x, :y, ::alku (raahauksen uusi pvm), ::loppu (raahauksen uusi pvm),
+          ;; ::drag, palkki jota raahataan [id jana-tyyppi tarkka-aikajana-id],
+          ;; :avain, mitä aikaa raahataan: :alku/:loppu/:palkki)
+          ;; :drag-alku-koordinaatti [x y]
           :drag @drag
-          :click-start! (fn [e jana avain drag-start!]
-                          (.preventDefault e)
-                          (if (.-ctrlKey e)
-                            (if (boolean (@valitut-palkit (::drag jana)))
-                              (reset! valitut-palkit (set (remove #(= % (::drag jana)) @valitut-palkit)))
-                              (reset! valitut-palkit (conj @valitut-palkit (::drag jana))))
-                            (drag-start! e jana avain)))
+          :click-select! (fn [e jana avain]
+                           (.preventDefault e)
+                           (when (.-ctrlKey e)
+                             (if (boolean (@valitut-palkit (::drag jana)))
+                               (reset! valitut-palkit (set (remove #(= % (::drag jana)) @valitut-palkit)))
+                               (reset! valitut-palkit (conj @valitut-palkit (::drag jana))))))
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
-                         (swap! drag conj
-                                (assoc (select-keys jana #{::alku ::loppu ::drag})
-                                  :avain avain)))
+                         (when-not (.-ctrlKey e)
+                           (swap! drag conj
+                                  (assoc (select-keys jana #{::alku ::loppu ::drag})
+                                    :avain avain))))
           :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
-                          (when (not (empty? @drag))
+                          (when (and (not (.-ctrlKey e))
+                                     (not (empty? @drag)))
                             (if (zero? (.-buttons e))
                               ;; Ei hiiren nappeja pohjassa, lopeta raahaus
                               (reset! drag [])
@@ -226,10 +229,16 @@
                                              (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
                                                          ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
                                              :default drag)))))))))
-          :drag-stop! #(when-let [d @drag]
-                         (go
-                           (<! (muuta! (select-keys d #{::drag ::alku ::loppu})))
-                           (reset! drag nil)))
+          :on-mouse-up! (fn [e]
+                          ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
+                          (when (and (not (.-ctrlKey e))
+                                     (empty? @drag))
+                            (reset! valitut-palkit #{}))
+                          ;; Tallenna muutos, jos raahattiin palkkeja
+                          (when-not (empty? @drag)
+                            (go
+                              (<! (muuta! (select-keys @drag #{::drag ::alku ::loppu})))
+                              (reset! drag nil))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
 #?(:clj
@@ -278,7 +287,7 @@
                :on-mouse-out hide-tooltip!}]])))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip! valitut-palkit
-                                       drag click-start! drag-start! drag-move! drag-stop! leveys] :as asetukset}]
+                                       drag click-select! drag-start! drag-move! on-mouse-up! leveys] :as asetukset}]
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
         rivin-korkeus 20
@@ -302,6 +311,7 @@
     (when (and min-aika max-aika)
       (let [paivat (pvm/paivat-valissa min-aika max-aika)
             paivia (count paivat)
+            valitut-palkit @valitut-palkit
             raahataan? (not (empty? drag))
             paivan-leveys (/ (- leveys alku-x) paivia)
             rivin-y #(+ alku-y (* rivin-korkeus %))
@@ -334,7 +344,7 @@
                              ;; Ctrl+Click käytetään asioiden valitsemiseen, estetään siis oletus-action eli context-menu
                              (.preventDefault e)
                              false)
-          :on-mouse-up drag-stop!
+          :on-mouse-up on-mouse-up!
           :on-mouse-move (when drag-move!
                            (drag-move! alku-x hover-y x->paiva))
           :style {:cursor (when raahataan? "ew-resize")}}
@@ -363,22 +373,27 @@
                                          [alku loppu])
                           ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
                           x (inc (paiva-x (or alku loppu)))
-                          jana-valittu? (@valitut-palkit (::drag jana))
+                          jana-valittu? (valitut-palkit (::drag jana))
                           jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
                           [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
                           ;; Vähennä väritetyn korkeutta 2px
                           y (if vari (inc y) y)
                           korkeus (if vari (- jana-korkeus 2) jana-korkeus)
-                          voi-raahata? (some? (::drag jana))]
+                          voi-raahata? (and (some? (::drag jana))
+                                            ;; Jos palkkeja valittu, sallitaan raahata vain valittuja
+                                            (or (empty? valitut-palkit) jana-valittu?))]
                       ^{:key j}
                       [:g
                        (if alku-ja-loppu?
                          ;; Piirä yksittäinen aikajana
                          (when (pos? jana-leveys)
                            [:g [:rect (merge
-                                        (when voi-raahata?
-                                          {:style {:cursor "move"}
-                                           :on-mouse-down #(click-start! % jana ::palkki drag-start!)})
+                                        {:style (when voi-raahata?
+                                                  {:cursor "move"})
+                                         :on-mouse-down (fn [e]
+                                                          (click-select! e jana ::palkki)
+                                                          (when voi-raahata?
+                                                            (drag-start! e jana ::palkki)))}
                                         {:x x :y y
                                          :width jana-leveys
                                          :height korkeus
