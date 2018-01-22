@@ -471,8 +471,8 @@
          #?(:cljs
             [tooltip* (if raahataan?
                         ;; TODO Miten tämä toimii jos on monta?
-                        {:x (:tooltip-x drag-kursori)
-                         :y (:tooltip-y drag-kursori)
+                        {:x (:tooltip-x @drag-kursori)
+                         :y (:tooltip-y @drag-kursori)
                          :text "TODO" #_(str (pvm/pvm (::alku drag)) " \u2013 "
                                              (pvm/pvm (::loppu drag)))}
                         tooltip)])]))))
