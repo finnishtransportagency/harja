@@ -1,13 +1,11 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
             [harja.kyselyt.vesivaylat.vatu-turvalaitteet :as q-turvalaitteet]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [clj-time.coerce :as c]))
-
 
 (defn vie-turvalaite-entry [db turvalaite]
   (let [pvm_str (:vahv_pvm turvalaite)
@@ -23,7 +21,8 @@
         navigointilaji (:nav_laji turvalaite)
         valaistu (= "K" (:valaistu turvalaite))
         omistaja (:omistaja turvalaite)
-        turvalaitenro_aiempi (int (:vanhatlnro turvalaite))
+        turvalaitenro_aiempi (when (:vanhatlnro turvalaite)
+                               (int (:vanhatlnro turvalaite)))
         paavayla (:paavayla turvalaite)
         vaylat (when (:vaylat turvalaite) (konv/seq->array (map #(Integer. %) (str/split (:vaylat turvalaite) #","))))
         geometria (.toString (:the_geom turvalaite))
@@ -47,9 +46,7 @@
                         :muokkaaja "Integraatio"}]
 
     (do
-      (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit)
-      )))
-
+      (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit))))
 
 (defn vie-turvalaitteet-kantaan [db shapefile]
   (if shapefile
