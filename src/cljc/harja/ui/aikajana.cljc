@@ -182,20 +182,20 @@
                          (when-not (.-ctrlKey e)
                            (if (empty? @valitut-palkit)
                              ;; Ei erikseen valittuja palkkeja, raahaa tätä janaa
-                             (reset! drag #{{::alku (::alku jana)
-                                             ::loppu (::loppu jana)
-                                             ::drag (::drag jana)
-                                             ::alkup-alku (::alku jana)
-                                             ::alkup-loppu (::loppu jana)
-                                             :avain avain}})
+                             (reset! drag [{::alku (::alku jana)
+                                            ::loppu (::loppu jana)
+                                            ::drag (::drag jana)
+                                            ::alkup-alku (::alku jana)
+                                            ::alkup-loppu (::loppu jana)
+                                            :avain avain}])
                              ;; Käyttäjä on erikseen valinnut raahattavat janat, lisää ne raahaukseen
-                             (reset! drag (set (map #(-> {::alku (::alku jana)
-                                                          ::loppu (::loppu jana)
-                                                          ::drag (::drag jana)
-                                                          ::alkup-alku (::alku jana)
-                                                          ::alkup-loppu (::loppu jana)
-                                                          :avain avain})
-                                                    @valitut-palkit))))))
+                             (reset! drag (map #(-> {::alku (::alku %)
+                                                     ::loppu (::loppu %)
+                                                     ::drag (::drag %)
+                                                     ::alkup-alku (::alku %)
+                                                     ::alkup-loppu (::loppu %)
+                                                     :avain avain})
+                                               @valitut-palkit)))))
           :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
@@ -243,7 +243,10 @@
                                                  (assoc drag ::alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
                                                              ::loppu (t/plus (::alkup-loppu drag) (t/days pvm-ero)))
                                                  :default drag))
-                                             @drag)))))))
+                                             @drag))
+
+
+                                )))))
           :on-mouse-up! (fn [e]
                           ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
                           (when (and (not (.-ctrlKey e))
