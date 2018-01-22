@@ -273,66 +273,26 @@ WHERE nimi = :nimi;
 -- name: hae-suolatoteumat
 -- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
 SELECT
-  tmid,
-  tid,
-  materiaali_id,
-  materiaali_nimi,
-  alkanut,
-  maara,
-  lisatieto,
-  koneellinen,
-  erittely
-
-FROM (
-       -- Käsin käyttöliittymän kautta kirjatut suolankäytöt
-       SELECT
-         tm.id   AS tmid,
-         t.id    AS tid,
-         mk.id   AS materiaali_id,
-         mk.nimi AS materiaali_nimi,
-         t.alkanut,
-         tm.maara,
-         t.lisatieto,
-         FALSE   AS koneellinen,
-         NULL    AS erittely
-       FROM toteuma_materiaali tm
-         JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
-         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-         LEFT JOIN kayttaja k ON tm.luoja = k.id
-       WHERE t.urakka = :urakka
-             AND t.sopimus = :sopimus
-             AND tm.poistettu IS NOT TRUE
-             AND k.jarjestelma IS NOT TRUE
-             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
-             AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
-       UNION
-
-       -- API:n kautta kirjatut suolankäytöt. Tässä tapauksessa yksittäisen päivän summat voivat koostua useista määristä.
-       SELECT
-         NULL                                                 AS tmid,
-         NULL                                                 AS tid,
-         mk.id                                                AS materiaali_id,
-         mk.nimi                                              AS materiaali_nimi,
-         date_trunc('day', t.alkanut)                         AS alkanut,
-         SUM(tm.maara)                                        AS maara,
-         string_agg(t.lisatieto, ', ')                        AS lisatieto,
-         TRUE                                                 AS koneellinen,
-         array_agg(ARRAY[tm.luotu ::text ,tm.maara ::text]) AS erittely
-       FROM toteuma_materiaali tm
-         JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-         JOIN toteuma t ON tm.toteuma = t.id
-         JOIN kayttaja k ON tm.luoja = k.id
-       WHERE k.jarjestelma = TRUE
-             AND t.urakka = :urakka
-             AND t.poistettu IS NOT TRUE
-             AND tm.poistettu IS NOT TRUE
-             AND t.sopimus = :sopimus
-             AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
-             AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
-       GROUP BY mk.id, mk.nimi, date_trunc('day', t.alkanut)) toteumat
-WHERE maara IS NOT NULL
-ORDER BY alkanut DESC
-LIMIT 501;
+  tm.id                        AS tmid,
+  t.id                         AS tid,
+  mk.id                        AS materiaali_id,
+  mk.nimi                      AS materiaali_nimi,
+  t.alkanut,
+  t.paattynyt,
+  date_trunc('day', t.alkanut) AS pvm,
+  tm.maara,
+  t.lisatieto,
+  (k.jarjestelma = TRUE)       AS koneellinen,
+  t.reitti
+FROM toteuma_materiaali tm
+  JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
+  JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+  LEFT JOIN kayttaja k ON tm.luoja = k.id
+WHERE t.urakka = :urakka
+      AND t.sopimus = :sopimus
+      AND tm.poistettu IS NOT TRUE
+      AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+      AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI;
 
 -- name: hae-suolamateriaalit
 SELECT *

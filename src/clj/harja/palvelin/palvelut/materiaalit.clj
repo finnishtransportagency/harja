@@ -14,7 +14,8 @@
             [harja.geo :as geo]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.pvm :as pvm]
-            [clj-time.coerce :as tc]))
+            [clj-time.coerce :as tc]
+            [clojure.string :as str]))
 
 (defn hae-materiaalikoodit [db]
   (oikeudet/ei-oikeustarkistusta!)
@@ -213,14 +214,21 @@
 
 (defn hae-suolatoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
-  (into []
-        (comp
-          suolatoteuma-xf
-          (map konv/alaviiva->rakenne))
-        (q/hae-suolatoteumat db {:urakka urakka-id
-                                 :sopimus sopimus-id
-                                 :alkupvm alkupvm
-                                 :loppupvm loppupvm})))
+  (let [toteumat (q/hae-suolatoteumat db {:urakka urakka-id
+                                          :sopimus sopimus-id
+                                          :alkupvm alkupvm
+                                          :loppupvm loppupvm})
+        manuaaliset (filter #(false? (:koneellinen %)) toteumat)
+        ryhmitellyt-koneelliset (group-by #(select-keys % [:materiaali_id :materiaali_nimi :pvm])
+                                          (filter :koneellinen toteumat))
+        koneelliset (map #(let [toteumat (get ryhmitellyt-koneelliset %)]
+                            (assoc % :toteumat toteumat
+                                     :koneellinen true
+                                     :lisatieto (str/join ", " (map :lisatieto toteumat))
+                                     :maara (apply + (map :maara toteumat))))
+                         (keys ryhmitellyt-koneelliset))
+        kaikki (concat manuaaliset koneelliset)]
+    (into [] (map konv/alaviiva->rakenne kaikki))))
 
 (defn hae-suolamateriaalit [db user]
   (oikeudet/ei-oikeustarkistusta!)

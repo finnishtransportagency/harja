@@ -46,12 +46,13 @@
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid
-   {:otsikko "Päivän erittely"
-    :tyhja "Ei päiväkohtaisia erittelyjä"
+   {:otsikko "Päivän toteumat"
+    :tyhja "Ei päivän toteumia"
     :tunniste :id}
-   [{:otsikko "Aika" :nimi :aika :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
+   [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
+    {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10}]
-   (map-indexed (fn [i itm] (assoc itm :id i )) (:erittely suolan-kaytto))])
+   (map-indexed (fn [i itm] (assoc itm :id i)) (:toteumat suolan-kaytto))])
 
 (defn suolatoteumat []
   (komp/luo
@@ -62,7 +63,7 @@
             [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
             muokattava? (comp not true? :koneellinen)
             kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara @toteumat))))
-            listaus (reverse (sort-by :alkanut @toteumat))]
+            listaus (reverse (sort-by :pvm @toteumat))]
         [:div.suolatoteumat
          [kartta/kartan-paikka]
          [:span.valinnat
@@ -95,7 +96,7 @@
             :validoi [[:ei-tyhja "Valitse materiaali"]]
             :valinta-nayta #(or (:nimi %) "- valitse -")
             :valinnat @materiaalit}
-           {:otsikko "Pvm" :nimi :alkanut :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
+           {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
             :validoi [[:ei-tyhja "Anna päivämäärä"]]
             :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
            {:otsikko "Käytetty määrä (t)" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
