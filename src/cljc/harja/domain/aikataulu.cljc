@@ -134,12 +134,15 @@
 
 (defn raahauksessa-paivitetyt-aikataulurivit
   "Palauttaa drag operaation perusteella päivitetyt aikataulurivit tallennusta varten"
-  [aikataulurivit {drag-kohde ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu :as drag}]
+  [aikataulurivit drag]
   (keep
     (fn [{id :id :as aikataulurivi}]
-      (when (= id (first drag-kohde))
-        (let [paivitetty-perusaikataulu (paivita-raahauksen-perusaikataulu aikataulurivi drag)
-              paivitetty-tarkka-aikataulu (paivita-raahauksen-tarkka-aikataulu aikataulurivi drag)
+      (when-let [rivin-drag (first
+                              (filter (fn [{drag-kohde ::aikajana/drag :as drag}]
+                                        (= id (first drag-kohde)))
+                                      drag))]
+        (let [paivitetty-perusaikataulu (paivita-raahauksen-perusaikataulu aikataulurivi rivin-drag)
+              paivitetty-tarkka-aikataulu (paivita-raahauksen-tarkka-aikataulu aikataulurivi rivin-drag)
               lopullinen-rivi (assoc paivitetty-perusaikataulu :tarkka-aikataulu paivitetty-tarkka-aikataulu)]
           lopullinen-rivi)))
     aikataulurivit))

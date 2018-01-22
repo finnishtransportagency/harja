@@ -243,10 +243,7 @@
                                                  (assoc drag ::alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
                                                              ::loppu (t/plus (::alkup-loppu drag) (t/days pvm-ero)))
                                                  :default drag))
-                                             @drag))
-
-
-                                )))))
+                                             @drag)))))))
           :on-mouse-up! (fn [e]
                           ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
                           (when (and (not (.-ctrlKey e))
@@ -255,7 +252,7 @@
                           ;; Tallenna muutos, jos raahattiin palkkeja
                           (when-not (empty? @drag)
                             (go
-                              (<! (muuta! (select-keys @drag #{::drag ::alku ::loppu})))
+                              (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
                               (reset! drag nil))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
