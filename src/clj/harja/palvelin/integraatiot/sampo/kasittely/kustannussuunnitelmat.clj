@@ -78,7 +78,7 @@
                   (tee-oletus-vuosisummat vuodet))
       (tee-oletus-vuosisummat vuodet))))
 
-(defn valitse-lkp-tilinumero [numero toimenpidekoodi tuotenumero]
+(defn valitse-lpk-tilinumero [numero toimenpidekoodi tuotenumero]
   (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
     "43020000"
     ; Hoitotuotteet 110 - 150, 536
@@ -113,7 +113,7 @@
 (defn hae-maksueran-tiedot [db numero]
   (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (maksuerat/hae-lahetettava-maksuera db numero)))
         vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
-        lkp-tilinnumero (valitse-lkp-tilinumero numero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
+        lkp-tilinnumero (valitse-lpk-tilinumero numero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
         maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)]
     maksueran-tiedot))
 
