@@ -206,7 +206,7 @@
                                           :sopimus sopimus-id
                                           :alkupvm alkupvm
                                           :loppupvm loppupvm})
-        manuaaliset (filter #(false? (:koneellinen %)) toteumat)
+        manuaaliset (filter #(not (:koneellinen %)) toteumat)
         ryhmitellyt-koneelliset (group-by #(select-keys % [:materiaali_id :materiaali_nimi :pvm])
                                           (filter :koneellinen toteumat))
         koneelliset (map #(let [toteumat (get ryhmitellyt-koneelliset %)]
