@@ -25,7 +25,7 @@ UNION
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  umkh.talvihoitoluokka AS luokka,
+  COALESCE(umkh.talvihoitoluokka, 100) AS luokka, -- Jos hoitoluokkaa ei ole, asetetaan 100 = Ei tiedossa
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,

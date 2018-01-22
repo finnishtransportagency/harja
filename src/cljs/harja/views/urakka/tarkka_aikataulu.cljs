@@ -13,7 +13,8 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn- kohteen-aikataulutaulukko [{:keys [yllapitokohde-id aikataulurivit vuosi voi-tallentaa? otsikko urakka-id]}]
+(defn- kohteen-aikataulutaulukko [{:keys [yllapitokohde-id aikataulurivit sopimus-id
+                                          vuosi voi-tallentaa? otsikko urakka-id]}]
   [grid/grid
    {:otsikko otsikko
     :tyhja "Ei aikataulua"
@@ -21,9 +22,11 @@
                 #(tiedot/tallenna-aikataulu
                    {:rivit %
                     :urakka-id urakka-id
+                    :sopimus-id sopimus-id
+                    :vuosi vuosi
                     :yllapitokohde-id yllapitokohde-id
                     :onnistui-fn (fn [vastaus]
-                                   (reset! aikataulu-tiedot/tarkka-aikataulu-paivitetty (t/now)))
+                                   (reset! aikataulu-tiedot/aikataulurivit vastaus))
                     :epaonnistui-fn (fn []
                                       (viesti/nayta! "Talennus epäonnistui!" :danger))})
                 :ei-mahdollinen)}
@@ -56,7 +59,8 @@
                [:pvm-kentan-jalkeen :alku "Lopun on oltava alun jälkeen"]]}]
    aikataulurivit])
 
-(defn tarkka-aikataulu [{:keys [rivi vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta? nakyma urakka-id]}]
+(defn tarkka-aikataulu [{:keys [rivi vuosi voi-muokata-paallystys? sopimus-id
+                                voi-muokata-tiemerkinta? nakyma urakka-id]}]
   ;; Teknisesti tämä toimii niin, että näkymän mukaan asetetaan samaan urakkaan kuuluvat tarkat aikataulurivit
   ;; joko päällystys- tai tiemerkintätaulukkoon. Muut rivit näytetään toisessa taulukossa. Tämä toimii, sillä
   ;; tarkkoja aikatauluja voi luoda ainoastaan päällystys tai tiemerkintä tyyppisestä urakasta.
@@ -70,9 +74,10 @@
                                (:tarkka-aikataulu rivi))
        :vuosi vuosi
        :voi-tallentaa? voi-muokata-paallystys?
+       :sopimus-id sopimus-id
        :urakka-id urakka-id}]
      ;; Asiakkaan edustajan mukaan ei tällä hetkellä ole tarvetta tiemerkinnän tarkalle aikataululle.
-     ;; Voidaan kuitenkin helposti ottaa käyttöön, mikäli tarve tulee.
+     ;; Voidaan kuitenkin helposti ottaa käyttöön, mikäli tarve tulee (riittää tämän osion käyttöönotto)
      ;; Tarkka aikataulu tallentuu aina urakkakohtaisesti.
      #_[kohteen-aikataulutaulukko
       {:otsikko "Kohteen tiemerkintäurakan tarkka aikataulu"
@@ -82,4 +87,5 @@
                                (:tarkka-aikataulu rivi))
        :vuosi vuosi
        :voi-tallentaa? voi-muokata-tiemerkinta?
+       :sopimus-id sopimus-id
        :urakka-id urakka-id}]]))
