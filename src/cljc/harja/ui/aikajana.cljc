@@ -175,16 +175,16 @@
                             (drag-start! e jana avain)))
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
-                         (reset! drag
-                                 (assoc (select-keys jana #{::alku ::loppu ::drag})
-                                   :avain avain)))
+                         (swap! drag conj
+                                (assoc (select-keys jana #{::alku ::loppu ::drag})
+                                  :avain avain)))
           :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
-                          (when @drag
+                          (when (not (empty? @drag))
                             (if (zero? (.-buttons e))
-                              ;; Ei nappeja pohjassa, lopeta raahaus
-                              (reset! drag nil)
+                              ;; Ei hiiren nappeja pohjassa, lopeta raahaus
+                              (reset! drag [])
 
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
                                     cx (.-clientX e) ; Hiiren nykyinen koordinaatti koko sivulla
