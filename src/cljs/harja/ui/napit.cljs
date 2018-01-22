@@ -225,6 +225,14 @@
                             optiot
                             {:luokka (str "nappi-ensisijainen" " " luokka)})]))
 
+(defn kumoa
+  ([teksti toiminto] (kumoa teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:ikoni (ikonit/kumoa)
+                             :luokka (str "nappi-toissijainen" " " luokka)})]))
+
 (defn sulje-ruksi
   [sulje!]
   [:button.close {:on-click sulje!
