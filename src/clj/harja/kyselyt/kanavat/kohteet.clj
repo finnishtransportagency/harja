@@ -30,7 +30,7 @@
                                     [kohde-id (filter
                                                 (fn [urakka]
                                                   (oikeudet/voi-lukea?
-                                                    oikeudet/urakat-kanavat-kokonaishintaiset
+                                                    oikeudet/urakat-kanavat-kanavakohteet
                                                     (::ur/id urakka)
                                                     user))
                                                 (map ::kohde/linkin-urakka urakat))]))

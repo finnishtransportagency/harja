@@ -15,7 +15,7 @@
 
 
 (defn hae-kohdekokonaisuudet-ja-kohteet [db user]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-kanavat user)
   (q/hae-kokonaisuudet-ja-kohteet db user))
 
 (defn hae-urakan-kohteet [db user tiedot]
@@ -25,7 +25,7 @@
     (q/hae-urakan-kohteet db user urakka-id)))
 
 (defn liita-kohteet-urakkaan! [db user {:keys [liitokset] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (doseq [linkki (keys liitokset)]
     (let [[kohde-id urakka-id] linkki
           linkitetty? (get liitokset linkki)]
@@ -33,26 +33,28 @@
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
 (defn poista-kohde! [db user {:keys [kohde-id]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (jdbc/with-db-transaction [db db]
                             (let [kohteella-urakoita? (not (empty? (q/hae-kohteen-urakat db kohde-id)))]
                               (if kohteella-urakoita?
                                 {:virhe :kohteella-on-urakoita}
                                 (q/merkitse-kohde-poistetuksi! db user kohde-id)))))
 
-(defn hae-huoltokohteet [db user]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+(defn hae-huoltokohteet [db _]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (q/hae-huoltokohteet db))
 
 (defn tallenna-kohdekokonaisuudet [db user tiedot]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (q/tallenna-kohdekokonaisuudet! db user tiedot)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
-(defn hae-kohteenosat [db _]
+(defn hae-kohteenosat [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-kanavat user)
   (q/hae-kohteenosat db))
 
 (defn tallenna-kohde! [db user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (q/tallenna-kohde! db user tiedot)
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
