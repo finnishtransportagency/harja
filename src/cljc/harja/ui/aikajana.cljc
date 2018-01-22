@@ -213,27 +213,27 @@
 
                                 ;; Otetaan raahauksen alkutilanne ylös
                                 (when-not (:drag-alku-koordinaatti @drag-kursori)
-                                  (swap! drag-kursori assoc :drag-alku-koordinaatti [x y]))
+                                  (reset! drag-kursori {:x tooltip-x
+                                                        :y tooltip-y
+                                                        :drag-alku-koordinaatti [x y]}))
 
                                 ;; TODO Raahaa joko valittuja palkkeja tai jos ei ole valittuja, vain yhtä
                                 ;; Raahaa palkkia
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
-                                         (merge
-                                           {:x tooltip-x :y tooltip-y}
-                                           (cond
-                                             ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
-                                             ;; alku tai loppu vastaamaan raahauspistettä
-                                             (or (and (= avain ::alku)
-                                                      (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
-                                                 (and (= avain ::loppu)
-                                                      (pvm/jalkeen? nykyinen-x-pvm (::alku drag))))
-                                             (assoc drag avain (x->paiva x))
-                                             ;; Koko palkki, siirretään alkua ja loppua eron verran
-                                             (= avain ::palkki)
-                                             (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
-                                                         ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
-                                             :default drag)))))))))
+                                         (cond
+                                           ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan ja asetetaan
+                                           ;; alku tai loppu vastaamaan raahauspistettä
+                                           (or (and (= avain ::alku)
+                                                    (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
+                                               (and (= avain ::loppu)
+                                                    (pvm/jalkeen? nykyinen-x-pvm (::alku drag))))
+                                           (assoc drag avain (x->paiva x))
+                                           ;; Koko palkki, siirretään alkua ja loppua eron verran
+                                           (= avain ::palkki)
+                                           (assoc drag ::alku (t/plus (:drag-alku drag) (t/days pvm-ero))
+                                                       ::loppu (t/plus (:drag-loppu drag) (t/days pvm-ero)))
+                                           :default drag))))))))
           :on-mouse-up! (fn [e]
                           ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
                           (when (and (not (.-ctrlKey e))
