@@ -164,6 +164,7 @@
           ;; ::drag [id tyyppi], :avain (:alku/:loppu/:palkki), drag-alku [x y]
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
+                         (println "CTRL ALHAALLA " (.-ctrlKey e))
                          (reset! drag
                                  (assoc (select-keys jana #{::alku ::loppu ::drag})
                                    :avain avain)))
@@ -181,7 +182,7 @@
                                     x (- cx svg-x alku-x) ; Hiiren nykyinen koordinatti aikajanan sisällä
                                     y (- cy svg-y)
                                     lahto-x-pvm (when-let [raahaus-alku-x (first (:drag-alku-koordinaatti @drag))]
-                                                (x->paiva raahaus-alku-x))
+                                                  (x->paiva raahaus-alku-x))
                                     nykyinen-x-pvm (x->paiva x)
                                     pvm-ero (when (and lahto-x-pvm nykyinen-x-pvm)
                                               (if (t/before? lahto-x-pvm nykyinen-x-pvm)
@@ -317,6 +318,11 @@
          {#?@(:clj [:xmlns "http://www.w3.org/2000/svg"])
           :width leveys :height korkeus
           :viewBox (str "0 0 " leveys " " korkeus)
+          :on-context-menu (fn [e]
+                             ;; Ainakin Mac-koneissa Ctrl+Click = Hiiren kakkospainikkeella klikkaus
+                             ;; Ctrl+Click käytetään asioiden valitsemiseen, estetään siis oletus-action eli context-menu
+                             (.preventDefault e)
+                             false)
           :on-mouse-up drag-stop!
           :on-mouse-move (when drag-move!
                            (drag-move! alku-x hover-y x->paiva))
