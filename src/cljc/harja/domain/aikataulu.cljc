@@ -126,7 +126,7 @@
 (defn- paivita-raahauksen-tarkka-aikataulu
   "Palauttaa aikataulurivin tarkan aikataulun kaikki rivit, päivitettynä raahauksen tiedoilla."
   [aikataulurivi rivin-raahaukset]
-  (reduce (fn [aikataulurivi {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
+  (reduce (fn [tarkka-aikataulu {drag ::aikajana/drag alku ::aikajana/alku loppu ::aikajana/loppu}]
             (let [tarkka-aikataulu? (= (second drag) :tarkka-aikataulu)
                   tarkka-aikataulu-id (get drag 2)]
               (map
@@ -134,8 +134,8 @@
                   (if (= (:id tarkka-aikataulurivi) tarkka-aikataulu-id)
                     (assoc tarkka-aikataulurivi :alku alku :loppu loppu)
                     tarkka-aikataulurivi))
-                (:tarkka-aikataulu aikataulurivi))))
-          aikataulurivi
+                tarkka-aikataulu)))
+          (:tarkka-aikataulu aikataulurivi)
           rivin-raahaukset))
 
 (defn raahauksessa-paivitetyt-aikataulurivit
