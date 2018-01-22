@@ -262,6 +262,7 @@
                             (go
                               (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
                               (reset! drag nil)
+                              (reset! drag-kursori nil)
                               (reset! valitut-palkit #{}))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
