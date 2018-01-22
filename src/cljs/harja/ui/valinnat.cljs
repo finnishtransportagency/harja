@@ -422,3 +422,35 @@
     ryhma3]
    [:div.valintaryhma.col-sm-12.col-md-3
     ryhma4]])
+
+(defn materiaali-valikko
+  "Pudotusvalikko materiaaleille. Ottaa mapin, jolle täytyy antaa parametrit valittu-materiaali ja
+   valitse-fn.
+
+   Pakolliset:
+   :valittu-materiaali   Sisältää valitun materiaalin siinä muodossa, että (format-fn valittu-materiaali)
+                         palauttaa näytettävän arvon.
+   :valitse-fn           Funktio, jota kutsutaan, kun käyttäjä valitsee pudotusvalikosta jonkun arvon. Saa argumentikseen
+                         valitun arvon.
+
+   Muita optioita ovat:
+   :otsikko        Pudostusvalikon otsikko (default: \"Materiaali\")
+   :format-fn      Funktio jolle annetaan näytettävä arvo. Jos lista materiaaleista on vaikkapa mappi,
+                   niin tämä on yleensä avain. (default: str)
+   :materiaalit    Lista materiaaleista.
+   :lisaa-kaikki?  Lisätään valinta \"Kaikki\" materiaaleihin. Materiaalit pitää olla lista stringejä, jotta tämä
+                   toimii (default: false)"
+  [{:keys [otsikko format-fn valittu-materiaali materiaalit valitse-fn lisaa-kaikki?]}]
+  (assert (or (nil? materiaalit) (sequential? materiaalit)) "Materiaalit pitää olla nil tai lista materiaaleista")
+  (let [otsikko (or otsikko "Materiaali")
+        format-fn (or format-fn str)
+        valitse-fn (or valitse-fn #(reset! valittu-materiaali %))
+        materiaalit (if (and lisaa-kaikki? (every? string? materiaalit))
+                      (conj materiaalit "Kaikki")
+                      materiaalit)]
+    [:div.label-ja-alasveto
+     [:span.alasvedon-otsikko otsikko]
+     [livi-pudotusvalikko {:valinta valittu-materiaali
+                           :format-fn format-fn
+                           :valitse-fn valitse-fn}
+      materiaalit]]))

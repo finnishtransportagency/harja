@@ -89,4 +89,4 @@
           (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)
           (log/debug (format "Geometria-aineisto: %s, ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä." paivitystunnus))))
       (catch Exception e
-        (log/error e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus." paivitystunnus))))))
+        (log/warn e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus." paivitystunnus))))))
