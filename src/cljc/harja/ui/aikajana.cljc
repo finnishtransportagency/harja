@@ -153,7 +153,7 @@
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
-                  valitut-palkit (r/atom #{})
+                  valitut-palkit (r/atom #{}) ;; Käytössä, jos valitaan erikseen (useita) palkkeja raahattavaksi
                   drag (r/atom [])]
        [:div.aikajana
         [komponentti rivit optiot
@@ -162,23 +162,30 @@
           :hide-tooltip! #(reset! tooltip nil)
           :valitut-palkit valitut-palkit
           ;; drag on vector mappeja, joka sisältää raahattavien palkkien tiedot. Mapissa avaimet:
-          ;; :x, :y, ::alku (raahauksen uusi pvm), ::loppu (raahauksen uusi pvm),
+          ;; ::alku (raahauksen uusi pvm), ::loppu (raahauksen uusi pvm),
           ;; ::drag, palkki jota raahataan [id jana-tyyppi tarkka-aikajana-id],
           ;; :avain, mitä aikaa raahataan: :alku/:loppu/:palkki)
-          ;; :drag-alku-koordinaatti [x y]
           :drag @drag
+          ;; drag-kursori sisältää kursorin tiedot raahauksessa. Mapissa avaimet:
+          ;; :x, :y, :drag-alku-koordinaatti [x, y]
+          :drag-kursori (atom nil)
           :click-select! (fn [e jana avain]
                            (.preventDefault e)
                            (when (.-ctrlKey e)
                              (if (boolean (@valitut-palkit (::drag jana)))
-                               (reset! valitut-palkit (set (remove #(= % (::drag jana)) @valitut-palkit)))
-                               (reset! valitut-palkit (conj @valitut-palkit (::drag jana))))))
+                               (reset! valitut-palkit (set (remove #(= % jana) @valitut-palkit)))
+                               (reset! valitut-palkit (conj @valitut-palkit jana)))))
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
                          (when-not (.-ctrlKey e)
-                           (swap! drag conj
-                                  (assoc (select-keys jana #{::alku ::loppu ::drag})
-                                    :avain avain))))
+                           (if (empty? @valitut-palkit)
+                             ;; Ei erikseen valittuja palkkeja, raahaa tätä janaa
+                             (reset! drag #{(assoc (select-keys jana #{::alku ::loppu ::drag})
+                                              :avain avain)})
+                             ;; Käyttäjä on erikseen valinnut raahattavat janat, lisää ne raahaukseen
+                             (reset! drag (set (map #(assoc (select-keys jana #{::alku ::loppu ::drag})
+                                                       :avain avain)
+                                                    @valitut-pakit))))))
           :drag-move! (fn [alku-x hover-y x->paiva]
                         (fn [e]
                           (.preventDefault e)
@@ -194,7 +201,7 @@
                                     cy (.-clientY e)
                                     x (- cx svg-x alku-x) ; Hiiren nykyinen koordinatti aikajanan sisällä
                                     y (- cy svg-y)
-                                    lahto-x-pvm (when-let [raahaus-alku-x (first (:drag-alku-koordinaatti @drag))]
+                                    lahto-x-pvm (when-let [raahaus-alku-x (first (:drag-alku-koordinaatti @drag-kursori))]
                                                   (x->paiva raahaus-alku-x))
                                     nykyinen-x-pvm (x->paiva x)
                                     pvm-ero (when (and lahto-x-pvm nykyinen-x-pvm)
@@ -205,12 +212,10 @@
                                     tooltip-y (hover-y y)]
 
                                 ;; Otetaan raahauksen alkutilanne ylös
-                                (when-not (:drag-alku-koordinaatti @drag)
-                                  (swap! drag assoc
-                                         :drag-alku-koordinaatti [x y]
-                                         :drag-alku (::alku @drag)
-                                         :drag-loppu (::loppu @drag)))
+                                (when-not (:drag-alku-koordinaatti @drag-kursori)
+                                  (swap! drag-kursori assoc :drag-alku-koordinaatti [x y]))
 
+                                ;; TODO Raahaa joko valittuja palkkeja tai jos ei ole valittuja, vain yhtä
                                 ;; Raahaa palkkia
                                 (swap! drag
                                        (fn [{avain :avain :as drag}]
@@ -286,7 +291,7 @@
                                                :text teksti})
                :on-mouse-out hide-tooltip!}]])))
 
-(defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip! valitut-palkit
+(defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip! valitut-palkit drag-kursori
                                        drag click-select! drag-start! drag-move! on-mouse-up! leveys] :as asetukset}]
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
@@ -373,7 +378,7 @@
                                          [alku loppu])
                           ;; Jos on alku, x asettuu ensimmäiselle päivälle, muuten viimeiseen päivään
                           x (inc (paiva-x (or alku loppu)))
-                          jana-valittu? (valitut-palkit (::drag jana))
+                          jana-valittu? (valitut-palkit jana)
                           jana-leveys (- (+ paivan-leveys (- (paiva-x loppu) x)) 2)
                           [x jana-leveys] (rajaa-nakyvaan-alueeseen x jana-leveys)
                           ;; Vähennä väritetyn korkeutta 2px
@@ -450,10 +455,10 @@
          #?(:cljs
             [tooltip* (if raahataan?
                         ;; TODO Miten tämä toimii jos on monta?
-                        {:x (:x drag)
-                         :y (:y drag)
-                         :text (str (pvm/pvm (::alku drag)) " \u2013 "
-                                    (pvm/pvm (::loppu drag)))}
+                        {:x (:x drag-kursori)
+                         :y (:y drag-kursori)
+                         :text "TODO" #_(str (pvm/pvm (::alku drag)) " \u2013 "
+                                             (pvm/pvm (::loppu drag)))}
                         tooltip)])]))))
 
 (defn aikajana
