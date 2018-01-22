@@ -18,11 +18,13 @@
             [harja.tiedot.istunto :as istunto]
             [harja.domain.paallystysilmoitus :as pot]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.dom :as dom]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kumousboksi :as kumousboksi]
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.tarkka-aikataulu :as tarkka-aikataulu]
@@ -150,16 +152,6 @@
             (into [(grid/otsikko "Aloittamatta olevat kohteet")]
                   aloittamatta))))
 
-(defn- tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet]
-  (tiedot/tallenna-yllapitokohteiden-aikataulu
-    {:urakka-id urakka-id
-     :sopimus-id sopimus-id
-     :vuosi vuosi
-     :kohteet kohteet
-     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
-                                     :warning
-                                     viesti/viestin-nayttoaika-lyhyt)}))
-
 (defn valinnat [ur]
   (let [{aikajana? :nayta-aikajana?
          jarjestys :jarjestys
@@ -233,6 +225,13 @@
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
+         [kumousboksi/kumousboksi {:nakyvissa? (:ehdota-kumoamista? @tiedot/kumoustiedot)
+                                   :nakyvissa-sijainti {:top "250px" :right 0 :bottom "auto" :left "auto"}
+                                   :piilossa-sijainti {:top "250px" :right "-170px" :bottom "auto" :left "auto"}
+                                   :kumoa-fn #(tiedot/kumoa-muutos! {:urakka-id urakka-id
+                                                                     :sopimus-id sopimus-id
+                                                                     :vuosi vuosi})
+                                   :sulje-fn tiedot/ala-ehdota-kumoamista!}]
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
@@ -253,21 +252,24 @@
                        :style {:height "200px"}}]
                 [:figcaption
                  [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]]]
-             [aikajana/aikajana
-              {:muuta! #(if (aikataulu/aikataulun-alku-ja-loppu-validi? aikataulurivit %)
-                          (tallenna-aikataulu
-                            urakka-id sopimus-id vuosi
-                            (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit %))
-                          ;; Wrapataan go:n sisälle, koska aikajana komponentti lukee muuta! funktion tuloksen <! macrolla,
-                          ;; joka olettaa saavansa channelin arvoksensa. Go block palauttaa channelin.
-                          ;; Tässä keississähän homma toimii vaikka jättäisikin vastauksen laittamatta channeliin (tämä
-                          ;; aiheuttaa errorin), sillä nyt ollaan kiinnostuttu virheviestin näyttämisestä
-                          ;; eikä niinkään paluuarvosta.
-                          (go (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))}
-              (map #(aikataulu/aikataulurivi-jana % {:voi-muokata-paallystys? voi-muokata-paallystys?
-                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
-                                                     :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
-                   aikataulurivit)]])
+            [aikajana/aikajana
+             {:muuta! (fn [drag]
+                        (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
+                                  paivitetyt-aikataulu-idt (set (map :id paivitetty-aikataulu))
+                                  paivitettyjen-vanha-tila (filter #(paivitetyt-aikataulu-idt (:id %)) @tiedot/aikataulurivit)]
+
+                              (if (aikataulu/aikataulu-validi? paivitetty-aikataulu)
+                                (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
+                                                               (fn [vastaus]
+                                                                 (reset! tiedot/aikataulurivit vastaus)
+                                                                 (tiedot/ehdota-kumoamista! paivitettyjen-vanha-tila))))
+                                (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
+             (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
+                                                    :urakka-id urakka-id
+                                                    :voi-muokata-paallystys? voi-muokata-paallystys?
+                                                    :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
+                                                    :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
+                  aikataulurivit)]])
          [grid/grid
           {:otsikko [:span
                      "Kohteiden aikataulu"
@@ -279,7 +281,8 @@
            :tyhja (if (nil? @tiedot/aikataulurivit)
                     [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
            :tallenna (if voi-tallentaa?
-                       #(tallenna-aikataulu urakka-id sopimus-id vuosi %)
+                       #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
+                                                   (fn [vastaus] (reset! tiedot/aikataulurivit vastaus)))
                        :ei-mahdollinen)
            :vetolaatikot (into {}
                                (map (juxt :id
@@ -290,7 +293,8 @@
                                               :nakyma (:nakyma optiot)
                                               :voi-muokata-paallystys? (voi-muokata-paallystys?)
                                               :voi-muokata-tiemerkinta? (voi-muokata-tiemerkinta? rivi)
-                                              :urakka-id urakka-id}]))
+                                              :urakka-id urakka-id
+                                              :sopimus-id sopimus-id}]))
                                     aikataulurivit))}
           [{:tyyppi :vetolaatikon-tila :leveys 2}
            {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
