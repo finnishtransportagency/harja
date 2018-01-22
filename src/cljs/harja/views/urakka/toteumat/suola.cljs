@@ -55,16 +55,16 @@
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
            muokattava? (comp not true? :koneellinen)
-           kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara @toteumat))))
            listaus (reverse (sort-by :alkanut
                                      ;; Näytetään vain valittu suola
-                                     (filter (fn [rivi]
+                                     (filter (fn [{{nimi :nimi} :materiaali}]
                                                (or (= (:suola @suodatin-valinnat) "Kaikki")
-                                                   (= (:suola @suodatin-valinnat) (get-in rivi [:materiaali :nimi]))))
+                                                   (= (:suola @suodatin-valinnat) nimi)))
                                              @toteumat)))
-           materiaali-nimet (conj (map #(get-in % [:materiaali :nimi])
-                                       @toteumat)
-                                  "Kaikki")]
+           materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
+                                              nimi)
+                                           @toteumat))
+           kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))))]
        [:div.suolatoteumat
         [kartta/kartan-paikka]
         [:span.valinnat
@@ -73,7 +73,6 @@
          [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @suodatin-valinnat)
                                           :otsikko "Suola"
                                           :valitse-fn #(swap! suodatin-valinnat assoc :suola %)
-                                          :lisaa-kaikki? false
                                           :materiaalit materiaali-nimet}]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"
