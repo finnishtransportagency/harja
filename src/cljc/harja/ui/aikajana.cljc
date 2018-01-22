@@ -153,18 +153,26 @@
 #?(:cljs
    (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
-                  move (r/atom nil) ;; Move tarkoittaa koko palkin siirtämistä (alku ja loppu kasvaa tai vähenee saman verran)
+                  valitut-palkit (atom #{})
                   drag (r/atom nil)] ;; Drag tarkoittaa alun tai lopun venytystä
        [:div.aikajana
         [komponentti rivit optiot
          {:tooltip @tooltip
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
-          :drag @drag ;; sis. nykyisen raahaamisen tiedot: :x, :y, ::alku (pvm), ::loppu (pvm),
-          ;; ::drag [id tyyppi], :avain (:alku/:loppu/:palkki), drag-alku [x y]
+          ;; drag sisältää nykyisen raahaamisen tiedot: :x, :y, ::alku (pvm), ::loppu (pvm),
+          ;; ::drag [id jana-tyyppi tarkka-aikajana-id], :avain (:alku/:loppu/:palkki), drag-alku [x y]
+          ;; :valitut-palkit (setti vectoreita, muoto sama kuin ::drag)
+          :drag @drag
+          :click-start! (fn [e jana avain drag-start!]
+                          (.preventDefault e)
+                          (if (.-ctrlKey e)
+                            (if (boolean (@valitut-palkit (::drag jana)))
+                              (reset! valitut-palkit (set (remove #(= % (::drag jana)) @valitut-palkit)))
+                              (reset! valitut-palkit (conj @valitut-palkit (::drag jana))))
+                            (drag-start! e jana avain)))
           :drag-start! (fn [e jana avain]
                          (.preventDefault e)
-                         (println "CTRL ALHAALLA " (.-ctrlKey e))
                          (reset! drag
                                  (assoc (select-keys jana #{::alku ::loppu ::drag})
                                    :avain avain)))
@@ -268,7 +276,7 @@
                :on-mouse-out hide-tooltip!}]])))
 
 (defn- aikajana* [rivit optiot {:keys [tooltip show-tooltip! hide-tooltip!
-                                       drag drag-start! drag-move! drag-stop! leveys] :as asetukset}]
+                                       drag click-start! drag-start! drag-move! drag-stop! leveys] :as asetukset}]
   (let [rivit #?(:cljs rivit
                  :clj  (map jodaksi rivit))
         rivin-korkeus 20
@@ -365,7 +373,7 @@
                            [:g [:rect (merge
                                         (when voi-raahata?
                                           {:style {:cursor "move"}
-                                           :on-mouse-down #(drag-start! % jana ::palkki)})
+                                           :on-mouse-down #(click-start! % jana ::palkki drag-start!)})
                                         {:x x :y y
                                          :width jana-leveys
                                          :height korkeus
