@@ -167,7 +167,7 @@
           ;; :avain, mitä aikaa raahataan: :alku/:loppu/:palkki)
           :drag @drag
           ;; drag-kursori sisältää kursorin tiedot raahauksessa. Mapissa avaimet:
-          ;; :x, :y, :drag-alku-koordinaatti [x, y]
+          ;; :tooltip-x, :tooltip-y, :drag-alku-koordinaatti [x, y]
           :drag-kursori (atom nil)
           :click-select! (fn [e jana avain]
                            (.preventDefault e)
@@ -213,8 +213,8 @@
 
                                 ;; Otetaan raahauksen alkutilanne ylös
                                 (when-not (:drag-alku-koordinaatti @drag-kursori)
-                                  (reset! drag-kursori {:x tooltip-x
-                                                        :y tooltip-y
+                                  (reset! drag-kursori {:tooltip-x tooltip-x
+                                                        :tooltip-y tooltip-y
                                                         :drag-alku-koordinaatti [x y]}))
 
                                 ;; TODO Raahaa joko valittuja palkkeja tai jos ei ole valittuja, vain yhtä
@@ -455,8 +455,8 @@
          #?(:cljs
             [tooltip* (if raahataan?
                         ;; TODO Miten tämä toimii jos on monta?
-                        {:x (:x drag-kursori)
-                         :y (:y drag-kursori)
+                        {:x (:tooltip-x drag-kursori)
+                         :y (:tooltip-y drag-kursori)
                          :text "TODO" #_(str (pvm/pvm (::alku drag)) " \u2013 "
                                              (pvm/pvm (::loppu drag)))}
                         tooltip)])]))))
