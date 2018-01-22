@@ -130,14 +130,20 @@
 (defn kohdekokonaisuudet-voi-tallentaa? [kokonaisuudet]
   (boolean
     (and (every? #(not-empty (::kok/nimi %))
-                 (remove #(and (not (id-olemassa? (::kok/id %)))
-                               (:poistettu %))
-                         kokonaisuudet)))))
+                 (remove :poistettu kokonaisuudet)))))
 
 (defn kohteen-voi-tallentaa? [kohde]
-  (and (some? (::kohde/kohdekokonaisuus kohde))
-       (not-empty (::kohde/nimi kohde))
-       (not-empty (::kohde/kohteenosat kohde))))
+  (boolean
+    (and (some? (::kohde/kohdekokonaisuus kohde))
+         (not-empty (::kohde/nimi kohde))
+         (not-empty (::kohde/kohteenosat kohde)))))
+
+(defn kohdekokonaisuudet-tallennusparametrit [kok]
+  (as-> kok $
+        (remove :koskematon $)
+        (map #(set/rename-keys % {:id ::kok/id
+                                  :poistettu ::m/poistettu?})
+             $)))
 
 (defn tallennusparametrit-kohde [kohde]
   (-> kohde
@@ -187,13 +193,6 @@
 (defn kokonaisuuden-voi-poistaa? [app kokonaisuus]
   (= 0 (kohteiden-lkm-kokonaisuudessa app kokonaisuus)))
 
-(defn kohdekokonaisuudet-tallennusparametrit [kok]
-  (as-> kok $
-        (remove :koskematon $)
-        (map #(set/rename-keys % {:id ::kok/id
-                                  :poistettu ::m/poistettu?})
-             $)))
-
 (defonce kohteenosat-kartalla
   (reaction
     (when (:valittu-kohde @tila)
@@ -232,6 +231,25 @@
                                           false
                                           (some? (:valittu-kohde app))))))
 
+  AloitaUrakoidenHaku
+  (process-event [_ app]
+    (hae-kanava-urakat! (tuck/send-async! ->UrakatHaettu)
+                        (tuck/send-async! ->UrakatEiHaettu))
+    (assoc app :urakoiden-haku-kaynnissa? true))
+
+  UrakatHaettu
+  (process-event [{ur :urakat} app]
+    (-> app
+        (assoc :urakoiden-haku-kaynnissa? false)
+        (assoc :urakat (as-> ur $
+                             (map #(select-keys % [:id :nimi]) $)
+                             (namespacefy $ {:ns :harja.domain.urakka})))))
+
+  UrakatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe urakoiden haussa!" :danger)
+    (assoc app :urakoiden-haku-kaynnissa? false))
+
   HaeKohteet
   (process-event [_ app]
     (if-not (:kohteiden-haku-kaynnissa? app)
@@ -254,6 +272,42 @@
     (viesti/nayta! "Kohteiden haku epäonnistui!" :danger)
     (-> app
         (assoc :kohteiden-haku-kaynnissa? false)))
+
+  ValitseUrakka
+  (process-event [{ur :urakka} app]
+    (assoc app :valittu-urakka ur))
+
+  AsetaKohteenUrakkaliitos
+  (process-event [{kohde-id :kohde-id
+                   urakka-id :urakka-id
+                   liitetty? :liitetty?}
+                  app]
+    (let [liitokset (:uudet-urakkaliitokset app)]
+      (assoc app :uudet-urakkaliitokset
+                 (assoc liitokset
+                   [kohde-id urakka-id]
+                   liitetty?))))
+
+  PaivitaKohteidenUrakkaliitokset
+  (process-event [_ app]
+    (tt/post! :liita-kohteet-urakkaan
+              {:liitokset (:uudet-urakkaliitokset app)}
+              {:onnistui ->LiitoksetPaivitetty
+               :epaonnistui ->LiitoksetEiPaivitetty})
+    (assoc app :liittaminen-kaynnissa? true))
+
+  LiitoksetPaivitetty
+  (process-event [{tulos :tulos} app]
+    (viesti/nayta! "Kohteiden urakkaliitokset tallennettu." :success)
+    (assoc app :liittaminen-kaynnissa? false
+               :uudet-urakkaliitokset {}
+               :kohderivit (kohderivit tulos)))
+
+
+  LiitoksetEiPaivitetty
+  (process-event [{kohde-id :kohde urakka-id :urakka} app]
+    (viesti/nayta! "Virhe urakkaliitoksien tallennuksessa!" :danger)
+    (assoc app :liittaminen-kaynnissa? false))
 
   AvaaKohdekokonaisuusLomake
   (process-event [_ app]
@@ -288,7 +342,6 @@
     (-> app
         (kohteet-haettu tulos)
         (assoc :kohdekokonaisuuslomake-auki? false)
-        (assoc :lomakkeen-tiedot nil)
         (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? false)))
 
   KohdekokonaisuudetEiTallennettu
@@ -296,61 +349,6 @@
     (viesti/nayta! "Kohdekokonaisuuksien tallennus epäonnistui!" :danger)
     (-> app
         (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? false)))
-
-  AloitaUrakoidenHaku
-  (process-event [_ app]
-    (hae-kanava-urakat! (tuck/send-async! ->UrakatHaettu)
-                        (tuck/send-async! ->UrakatEiHaettu))
-    (assoc app :urakoiden-haku-kaynnissa? true))
-
-
-  UrakatHaettu
-  (process-event [{ur :urakat} app]
-    (-> app
-        (assoc :urakoiden-haku-kaynnissa? false)
-        (assoc :urakat (as-> ur $
-                             (map #(select-keys % [:id :nimi]) $)
-                             (namespacefy $ {:ns :harja.domain.urakka})))))
-
-  UrakatEiHaettu
-  (process-event [_ app]
-    (viesti/nayta! "Virhe urakoiden haussa!" :danger)
-    (assoc app :urakoiden-haku-kaynnissa? false))
-
-  ValitseUrakka
-  (process-event [{ur :urakka} app]
-    (assoc app :valittu-urakka ur))
-
-  AsetaKohteenUrakkaliitos
-  (process-event [{kohde-id :kohde-id
-                   urakka-id :urakka-id
-                   liitetty? :liitetty?}
-                  app]
-    (let [liitokset (:uudet-urakkaliitokset app)]
-      (assoc app :uudet-urakkaliitokset
-                 (assoc liitokset
-                   [kohde-id urakka-id]
-                   liitetty?))))
-
-  PaivitaKohteidenUrakkaliitokset
-  (process-event [_ app]
-    (tt/post! :liita-kohteet-urakkaan
-              {:liitokset (:uudet-urakkaliitokset app)}
-              {:onnistui ->LiitoksetPaivitetty
-               :epaonnistui ->LiitoksetEiPaivitetty})
-    (assoc app :liittaminen-kaynnissa? true))
-
-  LiitoksetPaivitetty
-  (process-event [{tulos :tulos} app]
-    (viesti/nayta! "Kohteiden urakkaliitokset tallennettu." :success)
-    (assoc app :liittaminen-kaynnissa? false
-               :uudet-urakkaliitokset {}
-               :kohderivit (kohderivit tulos)))
-
-  LiitoksetEiPaivitetty
-  (process-event [{kohde-id :kohde urakka-id :urakka} app]
-    (viesti/nayta! "Virhe urakkaliitoksien tallennuksessa!" :danger)
-    (assoc app :liittaminen-kaynnissa? false))
 
   ValitseKohde
   (process-event [{kohde :kohde} app]
@@ -361,6 +359,32 @@
   KohdettaMuokattu
   (process-event [{kohde :kohde} app]
     (assoc app :valittu-kohde kohde))
+
+  TallennaKohde
+  (process-event [{kohde :kohde} app]
+    (if-not (:kohteen-tallennus-kaynnissa? app)
+      (-> app
+          (tt/post! :tallenna-kohde
+                    (tallennusparametrit-kohde kohde)
+                    {:onnistui ->KohdeTallennettu
+                     :epaonnistui ->KohdeEiTallennettu})
+
+          (assoc :kohteen-tallennus-kaynnissa? true))
+
+      app))
+
+  KohdeTallennettu
+  (process-event [{tulos :tulos} app]
+    (-> app
+        (kohteet-haettu tulos)
+        (assoc :valittu-kohde nil)
+        (assoc :kohteen-tallennus-kaynnissa? false)))
+
+  KohdeEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Kohteen epäonnistui!" :danger)
+    (-> app
+        (assoc :kohteen-tallennus-kaynnissa? false)))
 
   HaeKohteenosat
   (process-event [_ app]
@@ -425,30 +449,4 @@
                             (assoc % ::osa/kohde (:valittu-kohde app)
                                      :vanha-kohde (::osa/kohde osa))
                             %)
-                         haetut-osat))))))
-
-  TallennaKohde
-  (process-event [{kohde :kohde} app]
-    (if-not (:kohteen-tallennus-kaynnissa? app)
-      (-> app
-          (tt/post! :tallenna-kohde
-                    (tallennusparametrit-kohde kohde)
-                    {:onnistui ->KohdeTallennettu
-                     :epaonnistui ->KohdeEiTallennettu})
-
-          (assoc :kohteen-tallennus-kaynnissa? true))
-
-      app))
-
-  KohdeTallennettu
-  (process-event [{tulos :tulos} app]
-    (-> app
-        (kohteet-haettu tulos)
-        (assoc :valittu-kohde nil)
-        (assoc :kohteen-tallennus-kaynnissa? false)))
-
-  KohdeEiTallennettu
-  (process-event [_ app]
-    (viesti/nayta! "Kohteen epäonnistui!" :danger)
-    (-> app
-        (assoc :kohteen-tallennus-kaynnissa? false))))
+                         haetut-osat)))))))
