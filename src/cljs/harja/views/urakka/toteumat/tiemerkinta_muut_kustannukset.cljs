@@ -125,9 +125,7 @@
         :valinnat tiedot/+kustannustyypit+
         :fmt #(kustannustyyppi-fmt %)
         :validoi [[:ei-tyhja "Anna kustannustyyppi"]]}
-       {:otsikko "Hinta" :nimi :hinta :tyyppi :numero :pakollinen? true
-        :validoi [[:ei-negatiivinen-jos-avaimen-arvo
-                   :tyyppi :muu "Valittu hintatyyppi ei voi olla negatiivinen"]]}
+       {:otsikko "Hinta" :nimi :hinta :tyyppi :numero :pakollinen? true}
        {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :valinta
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :fmt :nimi

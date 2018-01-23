@@ -38,7 +38,7 @@
 
 (s/def ::paivat (s/every ::date))
 
-(s/def ::drag vector?) ;; [id :kohde], missä jälkimmäinen: :kohde, :paallystys, :tiemerkinta
+(s/def ::drag vector?) ;; [yllapitokohde-id, :tyyppi (:paallystys/:tiemerkinta/:kohde/:tarkka-aikataulu), tarkka-aikataulu-id]
 
 (s/def ::optiot (s/keys :opt [::alku ::loppu]))
 
@@ -359,8 +359,6 @@
                            [:g [:rect (merge
                                         (when voi-raahata?
                                           {:style {:cursor "move"}
-                                           ;; TODO Raahaa molempia, ei vain alkua
-                                           ;; TODO Jos raahataan koko kohdetta, raahaa myös päällystystä?
                                            :on-mouse-down #(drag-start! % jana ::palkki)})
                                         {:x x :y y
                                          :width jana-leveys
