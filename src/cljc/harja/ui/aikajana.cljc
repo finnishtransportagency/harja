@@ -323,7 +323,7 @@
         kaikki-ajat (mapcat ::ajat rivit)
         alkuajat (sort-by ::alku pvm/ennen? kaikki-ajat)
         loppuajat (sort-by ::loppu pvm/jalkeen? kaikki-ajat)
-
+        valitut-palkit (or valitut-palkit #{})
         ;; Otetaan alku ja loppu aikajanoista (+/- 14 päivää).
         ;; Ylikirjoitetaan optioista otetuilla arvoilla, jos annettu.
         [min-aika max-aika] (min-ja-max-aika kaikki-ajat 14)
