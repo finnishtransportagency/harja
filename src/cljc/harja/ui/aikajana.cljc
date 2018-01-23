@@ -156,6 +156,7 @@
      (r/with-let [tooltip (r/atom nil)
                   valitut-palkit (r/atom #{}) ;; Käytössä, jos valitaan erikseen (yleensä useita) palkkeja raahattavaksi
                   drag-kursori (r/atom nil) ; Nykyisen raahauksen kursorin tiedot
+                  lopetetaan-raahaus? (atom false)
                   drag (r/atom [])]
        [:div.aikajana
         [komponentti rivit optiot
@@ -203,12 +204,9 @@
                         (fn [e]
                           (.preventDefault e)
                           (when (and (not (.-ctrlKey e))
+                                     (not @lopetetaan-raahaus?)
                                      (not (empty? @drag)))
-                            (if (zero? (.-buttons e))
-                              ;; Ei hiiren nappeja pohjassa, lopeta raahaus
-                              (reset! drag [])
-
-                              ;; Suoritetaan raahaus
+                            (when (not (zero? (.-buttons e))) ;; Hiiren nappi edelleen alhaalla
                               (let [[svg-x svg-y _ _] (dom/sijainti (dom/elementti-idlla "aikajana"))
                                     cx (.-clientX e) ; Hiiren nykyinen koordinaatti koko sivulla
                                     cy (.-clientY e)
@@ -261,9 +259,11 @@
                           ;; Tallenna muutos, jos raahattiin palkkeja
                           (when-not (empty? @drag)
                             (go
+                              (reset! lopetetaan-raahaus? true)
                               (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
-                              (reset! drag nil)
+                              (reset! drag [])
                               (reset! drag-kursori nil)
+                              (reset! lopetetaan-raahaus? false)
                               (reset! valitut-palkit #{}))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
