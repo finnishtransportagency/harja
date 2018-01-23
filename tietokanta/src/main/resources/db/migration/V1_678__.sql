@@ -181,7 +181,7 @@ BEGIN
   IF (kohde ISNULL)
   THEN
     INSERT INTO kan_kohde ("kohdekokonaisuus-id", nimi, luotu, luoja, poistettu)
-    VALUES (kohdekokonaisuus, new."nimi", current_timestamp, integraatiokayttaja);
+    VALUES (kohdekokonaisuus, new."nimi", current_timestamp, integraatiokayttaja, new."poistettu");
     kohde := (SELECT id
               FROM kan_kohde
               WHERE nimi = new."nimi");
@@ -218,7 +218,7 @@ BEGIN
     SET
       "kohde-id"         = kohde,
       oletuspalvelumuoto = oletuskaytotapa :: LIIKENNETAPAHTUMA_PALVELUMUOTO,
-      sijainti           = new."geometria" :: GEOMETRY,
+      sijainti           = ST_Centroid(new."geometria") :: GEOMETRY,
       muokattu        = current_timestamp,
       poistettu = new."poistettu",
       muokkaaja = integraatiokayttaja

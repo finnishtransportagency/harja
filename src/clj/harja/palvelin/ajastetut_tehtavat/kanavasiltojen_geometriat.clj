@@ -64,8 +64,9 @@
    :ajorata (kanavasilta-osoite :ajorata)}
   )
 
-;; MUODOSTA TR-OSOITE LAAJENNOS TYYPPINEN JUTTU
-;;tyypitetty array, tallennus p
+;; TODO:
+;; MUODOSTA TR-OSOITE LAAJENNOS TYYPPINEN
+;; tyypitetty array
 
 (defn tallenna-kanavasilta [db kanavasilta]
   ;; Avattavat sillat haetaan TREX:sta.
@@ -78,7 +79,7 @@
         tila (kanavasilta :elinkaaritila)
         pituus (kanavasilta :siltapit)
         rakennetiedot (when (kanavasilta :rakennety) (konv/seq->array (kanavasilta :rakennety)))
-        tieosoitteet (when (kanavasilta :tieosoitteet) (konv/seq->array (map muuta-tr-osoitteiksi (kanavasilta :tieosoitteet))))
+        tieosoitteet nil ;;(when (kanavasilta :tieosoitteet) (konv/seq->array (map muuta-tr-osoitteiksi (kanavasilta :tieosoitteet))))
         sijainti_lev (kanavasilta :sijainti_n)
         sijainti_pit (kanavasilta :sijainti_e)
         avattu (when (kanavasilta :avattuliikenteellepvm) (konv/unix-date->java-date (kanavasilta :avattuliikenteellepvm)))
@@ -103,8 +104,6 @@
                         :luoja "Integraatio"
                         :muokkaaja "Integraatio"
                         :poistettu poistettu}]
-    (println (str kanavasilta))
-    (println (str "PArAMERIRI" sql-parametrit))
     (q-kanavasillat/luo-kanavasilta<! db sql-parametrit)))
 
 
@@ -158,7 +157,7 @@
 
 (defrecord KanavasiltojenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
-  (start [{:keys [integraatioloki db] :as this}]sl
+  (start [{:keys [integraatioloki db] :as this}]
     (log/debug "kanavasiltojen geometriahaku-komponentti käynnistyy")
     (assoc this :kanavasiltojen-geometriahaku
                 (kanavasiltojen-geometriahakutehtava
