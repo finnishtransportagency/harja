@@ -405,21 +405,18 @@
                           ;; Vähennä väritetyn korkeutta 2px
                           y (if vari (inc y) y)
                           korkeus (if vari (- jana-korkeus 2) jana-korkeus)
-                          voi-raahata? (and (some? (::drag jana))
-                                            ;; Jos palkkeja valittu, sallitaan raahata vain valittuja
-                                            (or (empty? valitut-palkit) jana-valittu?))]
+                          voi-raahata? (some? (::drag jana))]
                       ^{:key j}
                       [:g
                        (if alku-ja-loppu?
                          ;; Piirä yksittäinen aikajana
                          (when (pos? jana-leveys)
                            [:g [:rect (merge
-                                        {:style (when voi-raahata?
-                                                  {:cursor "move"})
-                                         :on-mouse-down (fn [e]
-                                                          (click-select! e jana ::palkki)
-                                                          (when voi-raahata?
-                                                            (drag-start! e jana ::palkki)))}
+                                        (when voi-raahata?
+                                          {:style {:cursor "move"}
+                                           :on-mouse-down (fn [e]
+                                                            (click-select! e jana ::palkki)
+                                                            (drag-start! e jana ::palkki))})
                                         {:x x :y y
                                          :width jana-leveys
                                          :height korkeus
