@@ -1,127 +1,70 @@
-(ns harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat-test
-  (:require [clojure.test :refer :all]
-            [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as tg]
-            [harja.testi :refer :all]
+(ns harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat-test
+  (:require [clojure.test :as t]
+            [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasilta-tuonti]
+            [harja.kyselyt.kanavat.kanavasillat :as q-kanavasillat]
+            [harja.testi :as ht]
+            [harja.kyselyt.konversio :as konv]
             [org.httpkit.fake :refer [with-fake-http]]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [taoensso.timbre :as log]))
 
-(def +testiurl+ "http://example.com")
-
-(def +testivastaus+ "{
- \"type\": \"FeatureCollection\",
- \"totalFeatures\": 34967,
- \"features\": [
-   {
-     \"type\": \"Feature\",
-     \"id\": \"turvalaitteet.fid-552e7bd6_15b85715fb3_e36\",
-     \"geometry\": {
-       \"type\": \"Point\",
-       \"coordinates\": [
-         484088.458858226,
-         6696406.72164135
-       ]
-     },
-     \"geometry_name\": \"SHAPE\",
-     \"properties\": {
-       \"TLNUMERO\": 2639,
-       \"OMISTAJA\": \"Liikennevirasto\",
-       \"TILA\": \"VAHVISTETTU\",
-       \"PATA_TYYP\": 63,
-       \"TKLNUMERO\": 56,
-       \"TY_JNR\": 10,
-       \"TOTI_TYYP\": 1,
-       \"PAKO_TYYP\": 5,
-       \"NAVL_TYYP\": 5,
-       \"RAKT_TYYP\": null,
-       \"RAK_VUOSI\": null,
-       \"SUBTYPE\": \"KELLUVA\",
-       \"SIJAINTIS\": \"N. 850 m Koukkusaaren I-puolella.\",
-       \"SIJAINTIR\": \"Ca 850 m O om Krokö.\",
-       \"NIMIS\": \"Koukkusaaren matala\",
-       \"NIMIR\": \"Koukkusaaren matala\",
-       \"MITT_PVM\": null,
-       \"VAHV_PVM\": null,
-       \"PAIV_PVM\": \"2008-08-19Z\",
-       \"VALAISTU\": \"E\",
-       \"FASADIVALO\": 0,
-       \"HUIPPUMERK\": 0,
-       \"TUTKAHEIJ\": 0,
-       \"VAYLAT\": \"5485\",
-       \"IRROTUS_PVM\": \"2017-04-15T23:02:54\"
-     }
-   },
-   {
-     \"type\": \"Feature\",
-     \"id\": \"turvalaitteet.fid-552e7bd6_15b85715fb3_e37\",
-     \"geometry\": {
-       \"type\": \"Point\",
-       \"coordinates\": [
-         541146.009870127,
-         6706001.39829
-       ]
-     },
-     \"geometry_name\": \"SHAPE\",
-     \"properties\": {
-       \"TLNUMERO\": 2672,
-       \"OMISTAJA\": \"Liikennevirasto\",
-       \"TILA\": \"VAHVISTETTU\",
-       \"PATA_TYYP\": 63,
-       \"TKLNUMERO\": 56,
-       \"TY_JNR\": 10,
-       \"TOTI_TYYP\": 1,
-       \"PAKO_TYYP\": 5,
-       \"NAVL_TYYP\": 4,
-       \"RAKT_TYYP\": null,
-       \"RAK_VUOSI\": null,
-       \"SUBTYPE\": \"KELLUVA\",
-       \"SIJAINTIS\": \"Heposaaren I-puolella.\",
-       \"SIJAINTIR\": \"O om Heposaari.\",
-       \"NIMIS\": \"Puuluoto etelä\",
-       \"NIMIR\": \"Puuluoto södra\",
-       \"MITT_PVM\": null,
-       \"VAHV_PVM\": null,
-       \"PAIV_PVM\": \"2014-03-19Z\",
-       \"VALAISTU\": \"E\",
-       \"FASADIVALO\": 0,
-       \"HUIPPUMERK\": 0,
-       \"TUTKAHEIJ\": 0,
-       \"VAYLAT\": \"5945\",
-       \"IRROTUS_PVM\": \"2017-04-15T23:02:54\"
-     }
-   }
- ]} ")
-
-(def jarjestelma-fixture
-  (laajenna-integraatiojarjestelmafixturea nil))
-
-(use-fixtures :once jarjestelma-fixture)
-
-(deftest tarkista-paivitysehdot
-  (let [db (tietokanta/luo-tietokanta testitietokanta)]
-    (u "INSERT INTO geometriapaivitys (nimi) VALUES ('turvalaitteet') ON CONFLICT(nimi) DO NOTHING;")
-
-    (u "UPDATE geometriapaivitys SET viimeisin_paivitys = NULL WHERE nimi = 'turvalaitteet';")
-    (is (tg/paivitys-tarvitaan? db 10) "Päivitys tarvitaan, kun sitä ei ole koskaan tehty")
-
-    (u "UPDATE geometriapaivitys SET viimeisin_paivitys = now() - interval '10' day WHERE nimi = 'turvalaitteet';")
-    (is (tg/paivitys-tarvitaan? db 10) "Päivitys tarvitaan, kun se on viimeksi tehty tarpeeksi kauan sitten") ;
-
-    (u "UPDATE geometriapaivitys SET viimeisin_paivitys = now() - interval '1' day WHERE nimi = 'turvalaitteet';")
-    (is (false? (tg/paivitys-tarvitaan? db 10)) "Päivitystä ei tarvita, kun se on tehty tarpeeksi vasta")))
-
-(deftest turvalaitteiden-haku
-  (with-fake-http [+testiurl+ +testivastaus+]
-    (let [hae-turvalaitteet #(q "SELECT id FROM vv_turvalaite;")]
-      (is (= 11 (count (hae-turvalaitteet))) "Aluksi on vain testidatan turvalaitteet")
-      (tg/paivita-turvalaitteet (:integraatioloki jarjestelma) (:db jarjestelma) +testiurl+)
-      (is (= 13 (count (hae-turvalaitteet))) "Päivityksen jälkeen löytyy +2 turvalaitetta")
-      (is (not
-            (nil?
-              (ffirst (q "SELECT viimeisin_paivitys FROM geometriapaivitys WHERE nimi = 'turvalaitteet';"))))
-          "Geometriapäivitys on lokitettu"))))
+(t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
 
+(def referenssi-kanavasilta
+  {:siltanro 666666
+   :siltanimi "Kuuskanavan silta"
+   :tunnus_prefix "V"
+   :d_kayttotar_koodi ["11"]
+   :elinkaaritila "käytössä"
+   :siltapit 24
+   :rakennety ["Teräksinen läppäsilta, teräskantinen"]
+   :tieosoitteet [{"tie" 712, "osa" 2, "etaisyys" 159}]
+   :sijainti_n 6990108
+   :sijainti_e 332310
+   :avattuliikenteellepvm -1073088000000
+   :muutospvm 1515522968901
+   :trex_oid "1.2.246.578.1.15.1000666"
+   :sivu 1})
 
+
+(t/deftest tarkista-paivitysehdot
+         (ht/u "INSERT INTO geometriapaivitys (nimi) VALUES ('kanavasillat') ON CONFLICT(nimi) DO NOTHING;")
+
+         (ht/u "UPDATE geometriapaivitys SET viimeisin_paivitys = NULL WHERE nimi = 'kanavasillat';")
+         (t/is (kanavasilta-tuonti/paivitys-tarvitaan? (:db ht/jarjestelma) 60) "Päivitys tarvitaan, kun sitä ei ole koskaan tehty")
+
+         (ht/u "UPDATE geometriapaivitys SET viimeisin_paivitys = now() - interval '61' day WHERE nimi = 'kanavasillat';")
+         (t/is (kanavasilta-tuonti/paivitys-tarvitaan? (:db ht/jarjestelma) 60) "Päivitys tarvitaan, kun se on viimeksi tehty tarpeeksi kauan sitten") ;
+
+         (ht/u "UPDATE geometriapaivitys SET viimeisin_paivitys = now() - interval '59' day WHERE nimi = 'kanavasillat';")
+         (t/is (false? (kanavasilta-tuonti/paivitys-tarvitaan? (:db ht/jarjestelma) 60)) "Päivitystä ei tarvita, kun se on tehty tarpeeksi vasta"))
+
+(t/deftest muodosta-sivutettu-url
+         (t/is "http://testi.solita.fi/rajapinta/1.2/hae?sivu=23&tuloksia-per-sivu=1000"
+             (kanavasilta-tuonti/muodosta-sivutettu-url "http://testi.solita.fi/rajapinta/1.2/hae?sivu=%1&tuloksia-per-sivu=1000" 23)))
+
+(t/deftest tallenna-ja-paivita-kanavasilta
+
+         ; Uusi silta
+         (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) referenssi-kanavasilta)
+         (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_silta where siltanro = 666666;")) "Kuuskanavan silta"))
+         (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_kohteenosa where lahdetunnus = 666666;")) "Kuuskanavan silta"))
+         (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_kohteenosa where lahdetunnus = 666666;")) false))
+
+         ; Päivittynyt silta
+         (let [paivitetty-silta (assoc referenssi-kanavasilta :siltanimi "Kuusikko")]
+               (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) paivitetty-silta))
+         (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_silta where siltanro = 666666;")) "Kuusikko"))
+         (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_kohteenosa where lahdetunnus = 666666;")) "Kuusikko"))
+         (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_kohteenosa where lahdetunnus = 666666;")) false))
+
+         ; Poistettu silta
+         (let [poistettu-silta (assoc referenssi-kanavasilta :elinkaaritila "purettu")]
+               (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) poistettu-silta))
+         (t/is (= (ffirst (ht/q "SELECT tila FROM kan_silta where siltanro = 666666;")) "purettu"))
+         (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_silta where siltanro = 666666;")) true))
+         (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_kohteenosa where lahdetunnus = 666666;")) true)))
 
 
 

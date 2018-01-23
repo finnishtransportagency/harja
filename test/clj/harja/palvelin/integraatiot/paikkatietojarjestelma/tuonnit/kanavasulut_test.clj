@@ -71,12 +71,32 @@
    :lahtopaikka "Brusnitchnoe"
    :kohdepaikka "Mal. Cvetotchnoe"
    :omistaja "Liikennevirasto"
-   :luoja "Integraatio"})
-
+   :luoja "Integraatio"
+   :poistettu nil})
 
 (t/deftest vie-kanava-tietokantaan
-    (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) referenssi-kanavasulku-shapefilesta)
-    (let [tallentunut-kanava  (first(q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))]
-      (ht/tarkista-map-arvot referenssi-kanavasulku-tietokannasta tallentunut-kanava)))
 
-;;TODO: tarkista triggerin toiminta testissä
+  ;; Uusi kanava
+  (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) referenssi-kanavasulku-shapefilesta)
+  (let [tallentunut-kanava (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666}))]
+    (ht/tarkista-map-arvot referenssi-kanavasulku-tietokannasta tallentunut-kanava))
+  (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohteenosa where lahdetunnus = 6666;")) 1))
+  (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666);")) 1))
+  (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohdekokonaisuus where id = (select \"kohdekokonaisuus-id\" from kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666));")) 1))
+
+  ;; Päivitetty kanava
+  (let [paivitetty-kanava (assoc referenssi-kanavasulku-shapefilesta :nimi "Iskrovka" :kaytto_ty "Itsepalvelu" :kanavakok "Saimaa")
+        paivitetty-kanava-tietokannasta  (assoc referenssi-kanavasulku-tietokannasta :nimi "Iskrovka" :kayttotapa "Itsepalvelu" :kanavakokonaisuus "Saimaa")]
+    (kanavasulku-tuonti/vie-kanavasulku-entry (:db ht/jarjestelma) paivitetty-kanava)
+    (ht/tarkista-map-arvot paivitetty-kanava-tietokannasta (first (q-kanavasulut/hae-kanavasulku-tunnuksella (:db ht/jarjestelma) {:kanavanumero 6666})) ))
+  (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohteenosa where lahdetunnus = 6666;")) 1))
+  (t/is (= (ffirst(ht/q "SELECT oletuspalvelumuoto FROM kan_kohteenosa where lahdetunnus = 6666;")) "itse"))
+  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666);")) "Iskrovka"))
+  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohdekokonaisuus where id = (select \"kohdekokonaisuus-id\" from kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666));")) "Saimaa"))
+
+  ;; Poistettu kanava
+
+  )
+
+
+

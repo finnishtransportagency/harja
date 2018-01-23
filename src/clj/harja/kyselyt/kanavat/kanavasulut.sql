@@ -115,3 +115,29 @@ SELECT * FROM kan_sulku;
 
 -- name: hae-kanavasulku-tunnuksella
 SELECT * FROM kan_sulku WHERE kanavanro = :kanavanumero;
+
+-- name: hae-kanavasulku-ja-kohde
+SELECT
+ sulku.nimi,
+ sulku.kanavakokonaisuus,
+ sulku.poistettu,
+ osa.nimi,
+ osa.oletuspalvelumuoto,
+ osa.muokkaaja,
+ osa.poistettu,
+ osa.kohde-id,
+ kohde.nimi,
+ kohde.kohdekokonaisuus-id,
+ kohde.poistettu,
+ kanava.nimi,
+ kanava.kanavanro
+ from
+kan_sulku as sulku,
+kan_kohteenosa as osa,
+kan_kohde as kohde,
+kan_kanavakokonaisuus as kanava
+WHERE
+sulku.kanavanro = osa.lahdetunnus AND
+osa.kohde-id = kohde.id AND
+kohde.kohdekokonaisuus-id = kanava.id
+and sulku.kanavanro = :kanavanumero

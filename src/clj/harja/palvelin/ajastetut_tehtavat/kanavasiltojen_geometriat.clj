@@ -41,8 +41,14 @@
                             ;;:teraksinen-ristikkosilta-ajorata-ylhaalla "Teräksinen ristikkosilta, ajorata ylhäällä"
                             })
 
-(def poistetut-siltatilat {:purettu "purettu"
+(def kanavasiltatunnukset {:kanavasilta "KaS"})
+
+(def poistetut-siltatilat {:poistettu "poistettu"
+                           :purettu "purettu"
                            :liikennointi-lopetettu "liikennointi-lopetettu"})
+
+(defn onko-silta-poistettu? [elinkaaritila]
+  (if (= (some #(= elinkaaritila %) (vals poistetut-siltatilat)) nil) false true))
 
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
   (let [viimeisin-paivitys (c/from-sql-time
@@ -51,22 +57,35 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
+(defn muuta-tr-osoitteiksi [kanavasilta-osoite]
+  {:tie (kanavasilta-osoite :tie)
+   :aosa (kanavasilta-osoite :alku)
+   :aet (kanavasilta-osoite :etaisyys)
+   :ajorata (kanavasilta-osoite :ajorata)}
+  )
+
+;; MUODOSTA TR-OSOITE LAAJENNOS TYYPPINEN JUTTU
+;;tyypitetty array, tallennus p
+
 (defn tallenna-kanavasilta [db kanavasilta]
-  ;; TREXin (= taitorakennerekisteri) rajapinnan kuvaus on liitetty tikettiin HAR-6948
+  ;; Avattavat sillat haetaan TREX:sta.
+  ;; TREX:in (= taitorakennerekisteri) rajapinnan kuvaus on liitetty tikettiin HAR-6948.
+
   (let [siltanro (kanavasilta :siltanro)
         nimi (kanavasilta :siltanimi)
         tunnus (kanavasilta :tunnus_prefix)
-        kayttotarkoitus (kanavasilta :d_kayttotar_koodi)
+        kayttotarkoitus (when (kanavasilta :d_kayttotar_koodi) (konv/seq->array (kanavasilta :d_kayttotar_koodi)))
         tila (kanavasilta :elinkaaritila)
         pituus (kanavasilta :siltapit)
         rakennetiedot (when (kanavasilta :rakennety) (konv/seq->array (kanavasilta :rakennety)))
-        tieosoitteet (when (kanavasilta :tieosoitteet) (konv/seq->array (map #((map (str %)) (str %)) (kanavasilta :tieosoitteet))))
+        tieosoitteet (when (kanavasilta :tieosoitteet) (konv/seq->array (map muuta-tr-osoitteiksi (kanavasilta :tieosoitteet))))
         sijainti_lev (kanavasilta :sijainti_n)
         sijainti_pit (kanavasilta :sijainti_e)
-        avattu (kanavasilta :avattuliikenteellepvm)         ;;TODO: format date
-        trex_muutettu (kanavasilta :muutospvm)
+        avattu (when (kanavasilta :avattuliikenteellepvm) (konv/unix-date->java-date (kanavasilta :avattuliikenteellepvm)))
+        trex_muutettu (when (kanavasilta :muutospvm) (konv/unix-date->java-date (kanavasilta :muutospvm)))
         trex_oid (kanavasilta :trex_oid)
         trex_sivu (kanavasilta :sivu)
+        poistettu (onko-silta-poistettu? (kanavasilta :elinkaaritila))
         sql-parametrit {:siltanro siltanro
                         :nimi nimi
                         :tunnus tunnus
@@ -82,8 +101,10 @@
                         :trex_oid trex_oid
                         :trex_sivu trex_sivu
                         :luoja "Integraatio"
-                        :muokkaaja "Integraatio"}]
-    (print-str "SQL " sql-parametrit)
+                        :muokkaaja "Integraatio"
+                        :poistettu poistettu}]
+    (println (str kanavasilta))
+    (println (str "PArAMERIRI" sql-parametrit))
     (q-kanavasillat/luo-kanavasilta<! db sql-parametrit)))
 
 
@@ -103,6 +124,7 @@
 
 (defn muodosta-sivutettu-url [url sivunro]
   (clojure.string/replace url #"%1" (str sivunro)))
+
 
 (defn paivita-kanavasillat [integraatioloki db url]
   (log/debug "Päivitetään kanavasiltojen geometriat")
@@ -134,9 +156,9 @@
         (when (paivitys-tarvitaan? db paivitysvali-paivissa)
           (paivita-kanavasillat integraatioloki db url))))))
 
-(defrecord KanavasiltojenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivisssa]
+(defrecord KanavasiltojenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
-  (start [{:keys [integraatioloki db] :as this}]
+  (start [{:keys [integraatioloki db] :as this}]sl
     (log/debug "kanavasiltojen geometriahaku-komponentti käynnistyy")
     (assoc this :kanavasiltojen-geometriahaku
                 (kanavasiltojen-geometriahakutehtava
