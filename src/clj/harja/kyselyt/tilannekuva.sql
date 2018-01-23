@@ -469,7 +469,7 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
--- name: hae-toteumien-selitteet
+-- name: hae-toteumien-selitteet-vanha
 SELECT
   count(*) AS lukumaara,
   tt.toimenpidekoodi AS toimenpidekoodi,
@@ -485,6 +485,12 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
 GROUP BY tt.toimenpidekoodi;
+
+-- name: hae-toteumien-selitteet
+select 0 as lukumaara,
+       tpk.id as toimenpidekoodi,
+       tpk.nimi as toimenpide
+FROM toimenpidekoodi tpk where id in (:toimenpidekoodit)
 
 -- name: hae-toteumien-asiat
 -- Hakee karttaa klikattaessa toteuma-ajat valituille tehtäville

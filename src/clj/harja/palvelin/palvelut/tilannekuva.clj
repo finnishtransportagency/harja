@@ -371,10 +371,12 @@
   (when-not (empty? urakat)
     (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
       (q/hae-toteumien-selitteet db
-                                 (konv/sql-date alku) (konv/sql-date loppu)
-                                 toimenpidekoodit urakat
-                                 (:xmin alue) (:ymin alue)
-                                 (:xmax alue) (:ymax alue)))))
+                                 {:alku (konv/sql-date alku)
+                                  :loppu (konv/sql-date loppu)
+                                  :toimenpidekoodit toimenpidekoodit
+                                  :urakat urakat
+                                  :xmin (:xmin alue) :ymin (:ymin alue)
+                                  :xmax (:xmax alue) :ymax (:ymax alue)}))))
 
 (defn- hae-varustetoteumat
   [db user {:keys [alue alku loppu varustetoteumat] :as tiedot} urakat]
