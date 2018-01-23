@@ -359,7 +359,14 @@
            :rivinumerot? true
            :jarjesta jarjestys-fn}
           [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
-           (assoc paallystys/raekoko-grid-skeema :nimi :toimenpide-raekoko :leveys 10)
+           (assoc paallystys/raekoko-grid-skeema
+             :nimi :toimenpide-raekoko :leveys 10
+             :tayta-alas? #(do
+                             (log "MIKÄ ON PA")
+                             (not (nil? %)))
+             :tayta-fn (fn [lahtorivi tama-rivi]
+                         (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
+             :tayta-tooltip "Kopioi sama raekoko alla oleville riveille")
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
             :tasaa :oikea :leveys 10}
@@ -599,7 +606,9 @@
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
     {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
-     :fmt pvm/pvm-opt :tayta-alas? #(not (nil? %)) :tayta-fn tayta-takuupvm
+     :fmt pvm/pvm-opt
+     :tayta-alas? #(not (nil? %))
+     :tayta-fn tayta-takuupvm
      :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
