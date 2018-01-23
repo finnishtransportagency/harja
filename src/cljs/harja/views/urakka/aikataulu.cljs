@@ -285,6 +285,8 @@
       :salli-valiotsikoiden-piilotus? true
       :tyhja (if (nil? @tiedot/aikataulurivit)
                [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
+      :ennen-muokkausta (fn []
+                          (kumousboksi/ala-ehdota-kumoamista!))
       :tallenna (if voi-tallentaa?
                   #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
                                               (fn [vastaus] (reset! tiedot/aikataulurivit vastaus)))
