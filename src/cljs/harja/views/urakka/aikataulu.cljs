@@ -286,6 +286,7 @@
       :tyhja (if (nil? @tiedot/aikataulurivit)
                [yleiset/ajax-loader "Haetaan kohteita..."] "Ei kohteita")
       :ennen-muokkausta (fn []
+                          ;; Hankalaa kumota visuaalisia muutoksia, jos gridiä muokataan.
                           (kumousboksi/ala-ehdota-kumoamista!))
       :tallenna (if voi-tallentaa?
                   #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
