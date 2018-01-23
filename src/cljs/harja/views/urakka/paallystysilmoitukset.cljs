@@ -362,7 +362,7 @@
            (assoc paallystys/raekoko-grid-skeema
              :nimi :toimenpide-raekoko :leveys 10
              :tayta-alas? #(do
-                             (log "MIKÄ ON PA")
+                             (log "MIKÄ ON PA " (pr-str %))
                              (not (nil? %)))
              :tayta-fn (fn [lahtorivi tama-rivi]
                          (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
