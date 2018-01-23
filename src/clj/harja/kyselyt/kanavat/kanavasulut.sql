@@ -34,7 +34,8 @@ INSERT INTO kan_sulku
   omistaja,
   geometria,
   luotu,
-  luoja
+  luoja,
+  poistettu
 )
 VALUES
   (
@@ -70,7 +71,8 @@ VALUES
     :omistaja,
     ST_GeomFromText(:geometria) :: GEOMETRY,
     current_timestamp,
-    :luoja
+    :luoja,
+    :poistettu
   )
 ON CONFLICT (kanavanro)
   DO UPDATE
@@ -107,8 +109,12 @@ ON CONFLICT (kanavanro)
       omistaja                  = :omistaja,
       geometria                 = :geometria :: GEOMETRY,
       muokattu                  = current_timestamp,
-      muokkaaja                 = :muokkaaja;
+      muokkaaja                 = :muokkaaja,
+      poistettu                 = :poistettu;
 
+
+-- name: merkitse-kanavasulut-poistetuksi<!
+UPDATE kan_sulku set poistettu = true, muokattu = current_timestamp, muokkaaja = :muokkaaja;
 
 -- name: hae-kanavasulut
 SELECT * FROM kan_sulku;

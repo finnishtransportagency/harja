@@ -4,6 +4,10 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
             [harja.kyselyt.kanavat.kanavasulut :as q-kanavasulut]))
 
+
+(defn merkitse-kanavasulut-poistetuksi [db]
+  (q-kanavasulut/merkitse-kanavasulut-poistetuksi<! db {:muokkaaja "Integraatio"}))
+
 (defn vie-kanavasulku-entry [db kanavasulku]
   (let [kanavanro (:numero kanavasulku)
         aluenro (:aluenro kanavasulku)
@@ -68,7 +72,8 @@
                         :omistaja omistaja
                         :geometria geometria
                         :luoja "Integraatio"
-                        :muokkaaja "Integraatio"}]
+                        :muokkaaja "Integraatio"
+                        :poistettu false}]
     (do
       (q-kanavasulut/luo-kanavasulku<! db sql-parametrit))))
 
@@ -77,6 +82,7 @@
     (do
       (log/debug (str "Tuodaan kanavasulut kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
+                                (merkitse-kanavasulut-poistetuksi db) ;; poistetut kanavat ovat poistuneet aineistosta
                                 (doseq [kanavasulku (shapefile/tuo shapefile)]
                                   (vie-kanavasulku-entry db kanavasulku)))
       (log/debug "Kanavasulkujen tuonti kantaan valmis."))

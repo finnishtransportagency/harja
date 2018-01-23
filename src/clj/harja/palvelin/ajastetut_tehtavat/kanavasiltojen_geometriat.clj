@@ -57,12 +57,30 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
-(defn muuta-tr-osoitteiksi [kanavasilta-osoite]
-  {:tie (kanavasilta-osoite :tie)
-   :aosa (kanavasilta-osoite :alku)
-   :aet (kanavasilta-osoite :etaisyys)
-   :ajorata (kanavasilta-osoite :ajorata)}
-  )
+;;[{"tie" 712, "osa" 2, "etaisyys" 159, "ajorata" "0"}]
+;;["'(20,1,1,,,) '::tr_osoite" "'(20,2,2,,,) '::tr_osoite"]
+;
+;(defn muunna [kanavasilta-osoite]
+;  (map (fn [[k v]]
+;         [(keyword k) v])
+;       (into [] kanavasilta-osoite)))
+;
+;(defn muunna-tallennettavaan-muotoon [kanavasilta-osoite]
+;  (let [tr-osoite (muunna kanavasilta-osoite)]
+;    (str "'(" (:tie tr-osoite) "," (:osa tr-osoite) "," (:etaisyys tr-osoite) ",,," (:ajorata tr-osoite) ",,,,) ::TR_OSOITE_LAAJENNETTU")))
+;
+;(defn muuta-tr-osoitteiksi [kanavasilta-osoite]
+;  {:tie (kanavasilta-osoite :tie)
+;   :aosa (kanavasilta-osoite :alku)
+;   :aet (kanavasilta-osoite :etaisyys)
+;   :losa
+;   :let
+;   :ajorata (kanavasilta-osoite :ajorata)
+;   :kaista
+;   :puoli
+;   :karttapvm
+;   :geometria}
+;  )
 
 ;; TODO:
 ;; MUODOSTA TR-OSOITE LAAJENNOS TYYPPINEN
@@ -79,7 +97,7 @@
         tila (kanavasilta :elinkaaritila)
         pituus (kanavasilta :siltapit)
         rakennetiedot (when (kanavasilta :rakennety) (konv/seq->array (kanavasilta :rakennety)))
-        tieosoitteet nil ;;(when (kanavasilta :tieosoitteet) (konv/seq->array (map muuta-tr-osoitteiksi (kanavasilta :tieosoitteet))))
+        tieosoitteet nil                                    ;;(when (kanavasilta :tieosoitteet) (konv/seq->array (map muuta-tr-osoitteiksi (kanavasilta :tieosoitteet))))
         sijainti_lev (kanavasilta :sijainti_n)
         sijainti_pit (kanavasilta :sijainti_e)
         avattu (when (kanavasilta :avattuliikenteellepvm) (konv/unix-date->java-date (kanavasilta :avattuliikenteellepvm)))
