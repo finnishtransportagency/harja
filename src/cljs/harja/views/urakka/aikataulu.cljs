@@ -225,13 +225,16 @@
             aikajana? (:nayta-aikajana? @tiedot/valinnat)]
         [:div.aikataulu
          [valinnat ur]
-         [kumousboksi/kumousboksi {:nakyvissa? (:ehdota-kumoamista? @tiedot/kumoustiedot)
+         [kumousboksi/kumousboksi {:nakyvissa? (kumousboksi/ehdotetaan-kumamomista?)
                                    :nakyvissa-sijainti {:top "250px" :right 0 :bottom "auto" :left "auto"}
                                    :piilossa-sijainti {:top "250px" :right "-170px" :bottom "auto" :left "auto"}
-                                   :kumoa-fn #(tiedot/kumoa-muutos! {:urakka-id urakka-id
-                                                                     :sopimus-id sopimus-id
-                                                                     :vuosi vuosi})
-                                   :sulje-fn tiedot/ala-ehdota-kumoamista!}]
+                                   :kumoa-fn #(kumousboksi/kumoa-muutos! (fn [edellinen-tila kumottu-fn]
+                                                                           (tiedot/tallenna-aikataulu
+                                                                             urakka-id sopimus-id vuosi edellinen-tila
+                                                                             (fn [vastaus]
+                                                                               (reset! tiedot/aikataulurivit vastaus)
+                                                                               (kumottu-fn)))))
+                                   :sulje-fn kumousboksi/ala-ehdota-kumoamista!}]
          (when aikajana?
            [:div
             [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
@@ -278,7 +281,7 @@
                                   (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
                                                                  (fn [vastaus]
                                                                    (reset! tiedot/aikataulurivit vastaus)
-                                                                   (tiedot/ehdota-kumoamista! paivitettyjen-vanha-tila)))))
+                                                                   (kumousboksi/ehdota-kumoamista! paivitettyjen-vanha-tila)))))
                                 (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
              (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
                                                     :urakka-id urakka-id
