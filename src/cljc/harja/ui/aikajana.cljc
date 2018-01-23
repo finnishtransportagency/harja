@@ -162,7 +162,7 @@
          {:tooltip @tooltip
           :show-tooltip! #(reset! tooltip %)
           :hide-tooltip! #(reset! tooltip nil)
-          :valitut-palkit valitut-palkit
+          :valitut-palkit @valitut-palkit
           ;; drag on vector mappeja, joka sisältää raahattavien palkkien tiedot. Mapissa avaimet:
           ;; ::alku (raahauksen uusi pvm), ::loppu (raahauksen uusi pvm),
           ;; ::alkup-alku (raahauksen alussa ollut alkupvm), ::alkup-loppu (raahauksen alussa ollut loppupvm)
@@ -337,7 +337,6 @@
     (when (and min-aika max-aika)
       (let [paivat (pvm/paivat-valissa min-aika max-aika)
             paivia (count paivat)
-            valitut-palkit @valitut-palkit
             raahataan? (not (empty? drag))
             paivan-leveys (/ (- leveys alku-x) paivia)
             rivin-y #(+ alku-y (* rivin-korkeus %))
