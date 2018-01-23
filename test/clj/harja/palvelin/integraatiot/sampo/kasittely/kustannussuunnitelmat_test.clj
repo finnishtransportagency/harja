@@ -69,7 +69,7 @@
       "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
   (is (= "43020000" (valitse-lpk-tilinumero 1 nil 201)))
   (is (= "43020000" (valitse-lpk-tilinumero 1 nil 301)))
-  (is (= "12980010" (valitse-lpk-tilinumero 1 nil 302))
+  (is (= "12980010" (valitse-lpk-tilinumero 1 nil 302)))
   (is (= "12980010" (valitse-lpk-tilinumero 1 nil 30))
       "Oikea LKP-tilinnumero valittu tuotenumeroon perusteella")
   (is (= "12980010" (valitse-lpk-tilinumero 1 nil 242))
