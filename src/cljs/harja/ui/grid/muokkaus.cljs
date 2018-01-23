@@ -20,7 +20,8 @@
              [Grid aseta-grid vetolaatikko-rivi lisaa-rivi!
               vetolaatikko-rivi vetolaatikon-tila]]
             [harja.ui.ikonit :as ikonit]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.ui.grid.yleiset :as grid-yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
@@ -86,6 +87,17 @@
                              :fokus (= nykyinen-fokus [i nimi])
                              :aina true))
                   (virheen-ohje kentan-virheet))
+
+                ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
+                (when-let [tayta-alas (:tayta-alas? s)]
+                  (grid-yleiset/tayta-alas-nappi {:fokus fokus
+                                                  ;; TODO Mistä tämä?
+                                                  ;:fokus-id fokus-id
+                                                  :arvo arvo :tayta-alas tayta-alas
+                                                  ;; TODO Mistä tämä?
+                                                  ;:tulevat-rivit tulevat-rivit
+                                                  :hae hae
+                                                  :s s :ohjaus ohjaus :rivi rivi}))
 
                 (if (= tyyppi :komponentti)
                   (komponentti rivi {:index i
