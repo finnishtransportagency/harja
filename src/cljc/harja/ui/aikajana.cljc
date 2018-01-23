@@ -143,7 +143,8 @@
                :width (* (count text) kirjaimen-leveys)
                :height 26
                :rx 10 :ry 10
-               :style {:fill "black"}}]
+               :style {:fill "black"
+                       :opacity "0.55"}}]
        [:text {:x x :y (+ y 4)
                :font-size 10
                :style {:fill "white"}
@@ -226,7 +227,7 @@
                                 ;; Otetaan raahauksen alkutilanne ylös
                                 (when-not (:drag-alku-koordinaatti @drag-kursori)
                                   (reset! drag-kursori {:tooltip-x tooltip-x
-                                                        :tooltip-y tooltip-y ;; TODO Mahdollisesti alimman palkin alapuolelle mieluummin?
+                                                        :tooltip-y tooltip-y
                                                         :drag-alku-koordinaatti [x y]}))
 
                                 ;; Raahaa palkkeja
