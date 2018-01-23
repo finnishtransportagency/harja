@@ -233,24 +233,24 @@
                                 ;; Raahaa palkkeja
                                 (reset! drag
                                         (map (fn [{avain :avain :as drag}]
-                                               (cond
-                                                 ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan.
-                                                 ;; Siirretään palkkia muutoksen verran tiettyyn suuntaan
-                                                 ;; (ei voida suoraan asettaa kursorin koordinattia uudeksi aluksi/lopuksi,
-                                                 ;; koska usean raahauksessa ei toimi hyvin)
-                                                 (and (= avain ::alku)
-                                                      (pvm/ennen? nykyinen-x-pvm (::loppu drag)))
-                                                 (assoc drag avain (t/plus (::alkup-alku drag) (t/days pvm-ero)))
+                                               (let [uusi-alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
+                                                     uusi-loppu (t/plus (::alkup-loppu drag) (t/days pvm-ero))]
+                                                 (cond
+                                                   ;; Alku tai loppu. Varmistetaan, että venyy oikeaan suuntaan
+                                                   ;; ja on aina validi.
+                                                   ;; Siirretään palkkia muutoksen verran tiettyyn suuntaan
+                                                   ;; (ei voida suoraan asettaa kursorin koordinattia uudeksi aluksi/lopuksi,
+                                                   ;; koska usean raahauksessa ei toimi hyvin)
+                                                   (and (= avain ::alku) (pvm/sama-tai-ennen? uusi-alku (::loppu drag)))
+                                                   (assoc drag avain uusi-alku)
 
-                                                 (and (= avain ::loppu)
-                                                      (pvm/jalkeen? nykyinen-x-pvm (::alku drag)))
-                                                 (assoc drag avain (t/plus (::alkup-loppu drag) (t/days pvm-ero)))
+                                                   (and (= avain ::loppu) (pvm/sama-tai-jalkeen? uusi-loppu (::alku drag)))
+                                                   (assoc drag avain uusi-loppu)
 
-                                                 ;; Koko palkki, siirretään alkua ja loppua eron verran
-                                                 (= avain ::palkki)
-                                                 (assoc drag ::alku (t/plus (::alkup-alku drag) (t/days pvm-ero))
-                                                             ::loppu (t/plus (::alkup-loppu drag) (t/days pvm-ero)))
-                                                 :default drag))
+                                                   ;; Koko palkki, siirretään alkua ja loppua eron verran
+                                                   (= avain ::palkki)
+                                                   (assoc drag ::alku uusi-alku ::loppu uusi-loppu)
+                                                   :default drag)))
                                              @drag)))))))
           :on-mouse-up! (fn [e]
                           ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
