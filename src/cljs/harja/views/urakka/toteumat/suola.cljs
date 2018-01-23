@@ -7,6 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.valinnat :as ui-valinnat]
             [harja.pvm :as pvm]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -21,6 +22,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce suolatoteumissa? (atom false))
+
+(defonce suodatin-valinnat (atom {:suola "Kaikki"}))
 
 (defonce toteumat
          (reaction<! [hae? @suolatoteumissa?
@@ -52,13 +55,26 @@
      (let [ur @nav/valittu-urakka
            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
            muokattava? (comp not true? :koneellinen)
-           kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara @toteumat))))
-           listaus (reverse (sort-by :alkanut @toteumat))]
+           listaus (reverse (sort-by :alkanut
+                                     ;; Näytetään vain valittu suola
+                                     (filter (fn [{{nimi :nimi} :materiaali}]
+                                               (or (= (:suola @suodatin-valinnat) "Kaikki")
+                                                   (= (:suola @suodatin-valinnat) nimi)))
+                                             @toteumat)))
+           materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
+                                              nimi)
+                                           @toteumat))
+           kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))))]
        [:div.suolatoteumat
         [kartta/kartan-paikka]
         [:span.valinnat
          [urakka-valinnat/urakan-sopimus ur]
-         [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]]
+         [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]
+         [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @suodatin-valinnat)
+                                          :otsikko "Suola"
+                                          :valitse-fn #(swap! suodatin-valinnat assoc :suola %)
+                                          :lisaa-kaikki? true
+                                          :materiaalit materiaali-nimet}]]
 
         [grid/grid {:otsikko "Talvisuolan käyttö"
                     :tallenna (if (oikeudet/voi-kirjoittaa?
