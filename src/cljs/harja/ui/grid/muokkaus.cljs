@@ -276,25 +276,6 @@
                                      (dissoc virheet rivin-id)
                                      virheet)))))
 
-                      (muokkaa-rivit! [this funktio args]
-                        (let [vanhat-tiedot @muokatut
-                              vanhat-virheet @virheet
-                              uudet-tiedot
-                              (swap! muokatut
-                                     (fn [muokatut]
-                                       (update-in muokatut [id]
-                                                  (fn [rivi]
-                                                    (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) args)]
-                                                      (when uusi-rivi
-                                                        (if virheet-dataan?
-                                                          (assoc uusi-rivi
-                                                            :harja.ui.grid/virheet (validointi/validoi-rivi
-                                                                                     (assoc muokatut id uusi-rivi)
-                                                                                     uusi-rivi
-                                                                                     skeema))
-                                                          uusi-rivi)))))))]))
-
-
                       (vetolaatikko-auki? [_ id]
                         (@vetolaatikot-auki id))
                       (avaa-vetolaatikko! [_ id]
