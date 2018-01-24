@@ -372,7 +372,14 @@
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero 0 100]]}
-           (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30)
+           (assoc paallystys/tyomenetelma-grid-skeema
+             :nimi :toimenpide-tyomenetelma
+             :leveys 30
+             :tayta-alas? #(not (nil? %))
+             :tayta-fn (fn [lahtorivi tama-rivi]
+                         (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma lahtorivi)))
+             :tayta-sijainti :ylos
+             :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille")
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
