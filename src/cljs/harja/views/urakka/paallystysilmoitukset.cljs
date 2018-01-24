@@ -364,6 +364,7 @@
              :tayta-alas? #(not (nil? %))
              :tayta-fn (fn [lahtorivi tama-rivi]
                          (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
+             :tayta-sijainti :ylos
              :tayta-tooltip "Kopioi sama raekoko alla oleville riveille")
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
