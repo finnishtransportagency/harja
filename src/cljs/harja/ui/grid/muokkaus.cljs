@@ -76,7 +76,7 @@
                         (get rivi nimi))
                  tasaus-luokka (y/tasaus-luokka tasaa)
                  kentan-virheet (get rivin-virheet nimi)
-                 fokus-id [id nimi]]
+                 fokus-id [i nimi]]
              (if (or (nil? muokattava?) (muokattava? rivi i))
                ^{:key (str j nimi)}
                [:td {:class (str "muokattava "
