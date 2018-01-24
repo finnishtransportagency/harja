@@ -364,12 +364,19 @@
                                             (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
                                 :tayta-sijainti :ylos
                                 :tayta-tooltip "Kopioi sama raekoko alla oleville riveille")
-                              (assoc paallystys-tiedot/tyomenetelma-grid-skeema :leveys tyomenetelma-leveys)
+                              (assoc paallystys-tiedot/tyomenetelma-grid-skeema
+                                :leveys tyomenetelma-leveys
+                                :tayta-alas? #(not (nil? %))
+                                :tayta-fn (fn [lahtorivi tama-rivi]
+                                            (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
+                                :tayta-sijainti :ylos
+                                :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille")
                               {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
                                :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
                                :tayta-alas? #(not (nil? %))
                                :tayta-fn (fn [lahtorivi tama-rivi]
                                            (assoc tama-rivi :massamaara (:massamaara lahtorivi)))
+                               :tayta-sijainti :ylos
                                :tayta-tooltip "Kopioi sama massamäärä alla oleville riveille"}
                               {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
                                :leveys toimenpide-leveys}])))
