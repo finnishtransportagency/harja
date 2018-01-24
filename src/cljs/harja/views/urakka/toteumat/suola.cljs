@@ -57,10 +57,11 @@
     (let [valittu-turvallisuuspoikkeama-id (:id @valittu-suolatoteuma)]
       (when @karttataso-suolatoteumat
         (kartalla-esitettavaan-muotoon
-          @haetut-turvallisuuspoikkeamat
+          @toteumat
           #(= valittu-turvallisuuspoikkeama-id (:id %))
-          (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
-                (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
+          (comp
+            (apply concat (map #(:toteumat %) @toteumat ))
+            (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid
@@ -74,32 +75,32 @@
 
 (defn suolatoteumat []
   (komp/luo
-   (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet
-               tiedot-urakka/aseta-kuluva-kk-jos-hoitokaudella?)
-   (fn []
-     (let [ur @nav/valittu-urakka
-           [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
-           muokattava? (comp not true? :koneellinen)
-           listaus (reverse (sort-by :pvm
-                                     ;; Näytetään vain valittu suola
-                                     (filter (fn [{{nimi :nimi} :materiaali}]
-                                               (or (= (:suola @suodatin-valinnat) "Kaikki")
-                                                   (= (:suola @suodatin-valinnat) nimi)))
-                                             @toteumat)))
-           materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
-                                              nimi)
-                                           @toteumat))
-           kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))))]
-       [:div.suolatoteumat
-        [kartta/kartan-paikka]
-        [:span.valinnat
-         [urakka-valinnat/urakan-sopimus ur]
-         [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]
-         [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @suodatin-valinnat)
-                                          :otsikko "Suola"
-                                          :valitse-fn #(swap! suodatin-valinnat assoc :suola %)
-                                          :lisaa-kaikki? true
-                                          :materiaalit materiaali-nimet}]]
+    (komp/lippu suolatoteumissa? pohjavesialueet/karttataso-pohjavesialueet
+                tiedot-urakka/aseta-kuluva-kk-jos-hoitokaudella?)
+    (fn []
+      (let [ur @nav/valittu-urakka
+            [sopimus-id _] @tiedot-urakka/valittu-sopimusnumero
+            muokattava? (comp not true? :koneellinen)
+            listaus (reverse (sort-by :pvm
+                                      ;; Näytetään vain valittu suola
+                                      (filter (fn [{{nimi :nimi} :materiaali}]
+                                                (or (= (:suola @suodatin-valinnat) "Kaikki")
+                                                    (= (:suola @suodatin-valinnat) nimi)))
+                                              @toteumat)))
+            materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
+                                               nimi)
+                                            @toteumat))
+            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))))]
+        [:div.suolatoteumat
+         [kartta/kartan-paikka]
+         [:span.valinnat
+          [urakka-valinnat/urakan-sopimus ur]
+          [urakka-valinnat/urakan-hoitokausi-ja-kuukausi ur]
+          [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @suodatin-valinnat)
+                                           :otsikko "Suola"
+                                           :valitse-fn #(swap! suodatin-valinnat assoc :suola %)
+                                           :lisaa-kaikki? true
+                                           :materiaalit materiaali-nimet}]]
 
          [grid/grid {:otsikko "Talvisuolan käyttö"
                      :tallenna (if (oikeudet/voi-kirjoittaa?
