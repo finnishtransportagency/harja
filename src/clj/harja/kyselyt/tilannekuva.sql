@@ -461,6 +461,7 @@ SELECT
   tpk.nimi                    AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
+                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu)
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
@@ -469,28 +470,21 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
       ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
--- name: hae-toteumien-selitteet-vanha
+-- name: hae-toteumien-selitteet
 SELECT
-  count(*) AS lukumaara,
   tt.toimenpidekoodi AS toimenpidekoodi,
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
+                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu)
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
-      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
-GROUP BY tt.toimenpidekoodi;
-
--- name: hae-toteumien-selitteet
-select 0 as lukumaara,
-       tpk.id as toimenpidekoodi,
-       tpk.nimi as toimenpide
-FROM toimenpidekoodi tpk where id in (:toimenpidekoodit)
+      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
 -- name: hae-toteumien-asiat
 -- Hakee karttaa klikattaessa toteuma-ajat valituille tehtäville
@@ -636,3 +630,22 @@ SELECT t.id,
  WHERE t.urakka IN (:urakat)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
         (t.paattynyt BETWEEN :alku AND :loppu))
+
+
+-- name: urakat-joihin-oikeus
+-- Hakee organisaation "omat" urakat, joko urakat joissa annettu hallintayksikko on tilaaja
+-- tai urakat joissa annettu urakoitsija on urakoitsijana.
+-- TODO? erillisoikeudet urakoihin UNION:lla mukaan. Rooli-excelissäkin tähän liittyvä oikeus.
+SELECT
+  u.id
+FROM urakka u
+  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+WHERE urk.id = :organisaatio
+      OR hal.id = :organisaatio;
+
+-- name: hae-valittujen-urakoiden-viimeisin-toteuma
+-- single?: true
+SELECT max(id)
+  FROM toteuma
+ WHERE urakka in (:urakat);

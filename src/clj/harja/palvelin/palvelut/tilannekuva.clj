@@ -105,10 +105,11 @@
 
 (defn- rajaa-urakat-hakuoikeudella [db user hakuargumentit]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user hakuargumentit)
-                                  (mapcat :urakat)
-                                  (map :id)
-                                  (set))
+  (let [kayttajan-urakka-idt (if (roolit/tilaajan-kayttaja? user)
+                               (constantly true)
+                               ; fixme. hanskaa keissi jossa urakoitsija saa nähdä kaikkien urakkatyyppien tiedot omien urakoiden elyissä
+                               (set (map :id (q/urakat-joihin-oikeus
+                                               db {:organisaatio (get-in user [:organisaatio :id])}))))
         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
         oikeudelliset-urakat (set (filter kayttajan-urakka-idt (:urakat hakuargumentit)))]
     oikeudelliset-urakat))
@@ -370,13 +371,14 @@
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
   (when-not (empty? urakat)
     (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-      (q/hae-toteumien-selitteet db
-                                 {:alku (konv/sql-date alku)
-                                  :loppu (konv/sql-date loppu)
-                                  :toimenpidekoodit toimenpidekoodit
-                                  :urakat urakat
-                                  :xmin (:xmin alue) :ymin (:ymin alue)
-                                  :xmax (:xmax alue) :ymax (:ymax alue)}))))
+      {:viimeisin-toteuma (q/hae-valittujen-urakoiden-viimeisin-toteuma db {:urakat urakat})
+       :selitteet (q/hae-toteumien-selitteet db
+                                             {:alku (konv/sql-date alku)
+                                              :loppu (konv/sql-date loppu)
+                                              :toimenpidekoodit toimenpidekoodit
+                                              :urakat urakat
+                                              :xmin (:xmin alue) :ymin (:ymin alue)
+                                              :xmax (:xmax alue) :ymax (:ymax alue)})})))
 
 (defn- hae-varustetoteumat
   [db user {:keys [alue alku loppu varustetoteumat] :as tiedot} urakat]
