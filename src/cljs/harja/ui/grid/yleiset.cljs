@@ -57,21 +57,21 @@
                    true
                    rivit)))))))
 
-(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo tulevat-rivit hae s ohjaus rivi]}]
+(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo tulevat-rivit hae sarake ohjaus rivi]}]
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
 
              ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
              (not (empty? tulevat-rivit))
              (every? str/blank? (map hae tulevat-rivit)))
-    [:div {:class (if (= :oikea (:tasaa s))
+    [:div {:class (if (= :oikea (:tasaa sarake))
                     "pull-left"
                     "pull-right")}
      [:div {:style {:position "absolute" :display "inline-block"}}
-      [:button {:class (str "nappi-toissijainen nappi-tayta" (when (:kelluta-tayta-nappi s) " kelluta-tayta-nappi"))
-                :title (:tayta-tooltip s)
+      [:button {:class (str "nappi-toissijainen nappi-tayta" (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
+                :title (:tayta-tooltip sarake)
                 :style {:position "absolute"
-                        :left (when (= :oikea (:tasaa s)) 0)
-                        :right (when-not (= :oikea (:tasaa s)) "100%")}
-                :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [s rivi (:tayta-fn s)])}
+                        :left (when (= :oikea (:tasaa sarake)) 0)
+                        :right (when-not (= :oikea (:tasaa sarake)) "100%")}
+                :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])}
        (ikonit/livicon-arrow-down) " Täytä"]]]))

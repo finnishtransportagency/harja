@@ -66,11 +66,11 @@
    (doall
      (map-indexed
        (fn [j {:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
-                      komponentti] :as s}]
+                      komponentti] :as sarake}]
          (if (= :vetolaatikon-tila tyyppi)
            ^{:key (str "vetolaatikontila" id)}
            [vetolaatikon-tila ohjaus vetolaatikot id]
-           (let [s (assoc s :rivi rivi)
+           (let [sarake (assoc sarake :rivi rivi)
                  hae (or hae #(get % nimi))
                  arvo (hae rivi)
                  tasaus-luokka (y/tasaus-luokka tasaa)
@@ -89,19 +89,19 @@
                   (virheen-ohje kentan-virheet))
 
                 ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
-                (when-let [tayta-alas (:tayta-alas? s)]
+                (when-let [tayta-alas (:tayta-alas? sarake)]
                   (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
                                                   :fokus-id fokus-id
                                                   :arvo arvo :tayta-alas tayta-alas
                                                   :tulevat-rivit tulevat-rivit
                                                   :hae hae
-                                                  :s s :ohjaus ohjaus :rivi rivi}))
+                                                  :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
                 (if (= tyyppi :komponentti)
                   (komponentti rivi {:index i
                                      :muokataan? true})
                   (if voi-muokata?
-                    [tee-kentta (assoc s :on-focus #(reset! fokus [i nimi]))
+                    [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
                      (r/wrap
                        arvo
                        (fn [uusi]
@@ -111,7 +111,7 @@
                                           (aseta rivi uusi)))
                            (muokkaa! muokatut-atom virheet skeema
                                      id assoc nimi uusi))))]
-                    [nayta-arvo (assoc s :index i :muokataan? false)
+                    [nayta-arvo (assoc sarake :index i :muokataan? false)
                      (vain-luku-atomina arvo)]))]
 
                ^{:key (str j nimi)}
@@ -256,6 +256,7 @@
                       (hae-muokkaustila [_]
                         @muokatut)
                       (aseta-muokkaustila! [_ uusi-muokkaustila]
+                        (log "ASETA MUOKKAUSTILA: " (pr-str uusi-muokkaustila))
                         (let [vanhat-tiedot @muokatut
                               vanhat-virheet @virheet]
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
@@ -274,6 +275,24 @@
                                    (if (empty? (get virheet rivin-id))
                                      (dissoc virheet rivin-id)
                                      virheet)))))
+
+                      (muokkaa-rivit! [this funktio args]
+                        (let [vanhat-tiedot @muokatut
+                              vanhat-virheet @virheet
+                              uudet-tiedot
+                              (swap! muokatut
+                                     (fn [muokatut]
+                                       (update-in muokatut [id]
+                                                  (fn [rivi]
+                                                    (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) args)]
+                                                      (when uusi-rivi
+                                                        (if virheet-dataan?
+                                                          (assoc uusi-rivi
+                                                            :harja.ui.grid/virheet (validointi/validoi-rivi
+                                                                                     (assoc muokatut id uusi-rivi)
+                                                                                     uusi-rivi
+                                                                                     skeema))
+                                                          uusi-rivi)))))))]))
 
 
                       (vetolaatikko-auki? [_ id]

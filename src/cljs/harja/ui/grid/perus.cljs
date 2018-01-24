@@ -37,12 +37,12 @@
                              voi-muokata-rivia?]}
                      skeema rivi index]
   [:tr.muokataan {:class luokka}
-   (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti] :as s} skeema]
+   (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti] :as sarake} skeema]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
               [vetolaatikon-tila ohjaus vetolaatikot id]
 
-              (let [s (assoc s :rivi rivi)
+              (let [sarake (assoc sarake :rivi rivi)
                     hae (or hae #(get % nimi))
                     arvo (hae rivi)
                     kentan-virheet (get rivin-virheet nimi)
@@ -68,19 +68,19 @@
                      (not (empty? kentan-huomautukset)) (virheen-ohje kentan-huomautukset :huomautus))
 
                    ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
-                   (when-let [tayta-alas (:tayta-alas? s)]
+                   (when-let [tayta-alas (:tayta-alas? sarake)]
                      (grid-yleiset/tayta-alas-nappi {:fokus fokus :fokus-id fokus-id
                                                      :arvo arvo :tayta-alas tayta-alas
                                                      :tulevat-rivit tulevat-rivit :hae hae
-                                                     :s s :ohjaus ohjaus :rivi rivi}))
+                                                     :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
                    (if (= tyyppi :komponentti)
                      (komponentti rivi {:index index
                                         :muokataan? true})
-                     [tee-kentta (assoc s
+                     [tee-kentta (assoc sarake
                                    :focus (= fokus fokus-id)
                                    :on-focus #(aseta-fokus! fokus-id)
-                                   :pituus-max (:pituus-max s))
+                                   :pituus-max (:pituus-max sarake))
                       (r/wrap
                         arvo
                         (fn [uusi]
