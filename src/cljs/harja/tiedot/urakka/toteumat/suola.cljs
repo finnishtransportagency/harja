@@ -8,8 +8,6 @@
             [harja.atom :refer-macros [reaction<!]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-
-
 (defonce lampotilojen-hallinnassa? (atom false))
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]

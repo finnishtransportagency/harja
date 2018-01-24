@@ -16,7 +16,8 @@
             [cljs.core.async :refer [<! >!]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -46,6 +47,20 @@
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
                 (suola/hae-materiaalit))))
+
+(defonce valittu-suolatoteuma (atom nil))
+
+(def karttataso-suolatoteumat (atom false))
+
+(defonce suolatoteumat-kartalla
+  (reaction
+    (let [valittu-turvallisuuspoikkeama-id (:id @valittu-suolatoteuma)]
+      (when @karttataso-suolatoteumat
+        (kartalla-esitettavaan-muotoon
+          @haetut-turvallisuuspoikkeamat
+          #(= valittu-turvallisuuspoikkeama-id (:id %))
+          (comp (keep #(and (:sijainti %) %)) ;; vain ne, joissa on sijainti
+                (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid

@@ -31,7 +31,8 @@
             [harja.ui.kartta.varit.puhtaat :as varit]
             [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok])
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
+            [harja.views.urakka.toteumat.suola :as suolatoteumat])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -61,7 +62,8 @@
     :tienakyma-valitut
     :tienakyma-muut
     :kokonaishintaisten-turvalaitteet
-    :yksikkohintaisten-turvalaitteet})
+    :yksikkohintaisten-turvalaitteet
+    :suolatoteumat})
 
 (def
   ^{:doc
@@ -224,7 +226,8 @@
    :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
    :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla
    :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
-   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla})
+   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla
+   :suolatoteumat suolatoteumat/suolatoteumat-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
