@@ -1,5 +1,10 @@
 [
   {
+    "date": "2018-01-24",
+    "title": "Harjan Tilannekuvaa nyt huomattaasti nopeampi käyttää",
+    "body": "Harjan tilannekuva oli pitkään sietämättömän hidas. Nyt siihen on tehty joitakin parannuksia ja käyttökokemus on sen myötä sujuvampaa. Pahoittelut että tämän korjaaminen kesti näinkin kauan."
+  },
+  {
     "date": "2017-10-25",
     "title": "Integraatiotuelle oma sähköpostiosoite",
     "body": "Jatkossa Harjan integraatiotukipyynnöt voi lähettää osoitteeseen harja-integraatiotuki@solita.fi. Kyseistä osoitetta lukee koko Harjan kehitystiimi ja se on paras kanava saada vastauksia integraatioihin liittyviin asioihin."
