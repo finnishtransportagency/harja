@@ -56,7 +56,7 @@
                      paneelikomponentit))])])
 
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet
-                             nayta-virheet? nykyinen-fokus i voi-muokata? fokus
+                             nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
                              voi-poistaa? toimintonappi-fn]}]
   [:tr.muokataan {:class (str (if (even? (+ i 1))
@@ -94,8 +94,7 @@
                   (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
                                                   :fokus-id fokus-id
                                                   :arvo arvo :tayta-alas tayta-alas
-                                                  ;; TODO Mistä tämä?
-                                                  ;:tulevat-rivit tulevat-rivit
+                                                  :tulevat-rivit tulevat-rivit
                                                   :hae hae
                                                   :s s :ohjaus ohjaus :rivi rivi}))
 
@@ -144,7 +143,9 @@
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
-         colspan (inc (count skeema))]
+         colspan (inc (count skeema))
+         tulevat-rivit (fn [aloitus-idx]
+                         (map #(get muokatut %) (drop (inc aloitus-idx) (keys muokatut))))]
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan} tyhja]]
        (let [kaikki-virheet @virheet
@@ -170,6 +171,7 @@
                                           :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
                                           :nayta-virheet? nayta-virheet? :nykyinen-fokus nykyinen-fokus
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
+                                          :tulevat-rivit (tulevat-rivit i)
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                           :skeema skeema :voi-poistaa? voi-poistaa?

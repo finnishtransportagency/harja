@@ -58,6 +58,7 @@
                    rivit)))))))
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo tulevat-rivit hae s ohjaus rivi]}]
+  (log "TULEVAT RIVIT " (pr-str tulevat-rivit))
   (log "TÄYTÄ ALAS??? "
        (= fokus fokus-id)
        (tayta-alas arvo)
