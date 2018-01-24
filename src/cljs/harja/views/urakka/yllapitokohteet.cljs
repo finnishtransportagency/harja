@@ -351,10 +351,19 @@
                                            (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
                                 {:hae (partial tr/laske-tien-pituus osan-pituus)}])
                              [(assoc paallystys-tiedot/paallyste-grid-skeema :leveys paallyste-leveys)
-                              (assoc paallystys-tiedot/raekoko-grid-skeema :leveys raekoko-leveys)
+                              (assoc paallystys-tiedot/raekoko-grid-skeema
+                                :leveys raekoko-leveys
+                                :tayta-alas? #(not (nil? %))
+                                :tayta-fn (fn [lahtorivi tama-rivi]
+                                            (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
+                                :tayta-tooltip "Kopioi sama raekoko alla oleville riveille")
                               (assoc paallystys-tiedot/tyomenetelma-grid-skeema :leveys tyomenetelma-leveys)
                               {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
-                               :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys}
+                               :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
+                               :tayta-alas? #(not (nil? %))
+                               :tayta-fn (fn [lahtorivi tama-rivi]
+                                           (assoc tama-rivi :massamaara (:massamaara lahtorivi)))
+                               :tayta-tooltip "Kopioi sama massamäärä alla oleville riveille"}
                               {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
                                :leveys toimenpide-leveys}])))
 
@@ -440,10 +449,7 @@
                               (when (= kohdetyyppi :sora)
                                 [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
-
-
           grid-data]]))))
-
 
 (defn- aseta-uudet-kohdeosat [kohteet id kohdeosat]
   (let [kohteet (vec kohteet)
