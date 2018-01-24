@@ -358,7 +358,14 @@
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :rivinumerot? true
            :jarjesta jarjestys-fn}
-          [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
+          [(assoc paallystys/paallyste-grid-skeema
+             :nimi :toimenpide-paallystetyyppi
+             :leveys 30
+             :tayta-alas? #(not (nil? %))
+             :tayta-fn (fn [lahtorivi tama-rivi]
+                         (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi lahtorivi)))
+             :tayta-sijainti :ylos
+             :tayta-tooltip "Kopioi sama toimenpide alla oleville riveille")
            (assoc paallystys/raekoko-grid-skeema
              :nimi :toimenpide-raekoko :leveys 10
              :tayta-alas? #(not (nil? %))
@@ -366,9 +373,15 @@
                          (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
              :tayta-sijainti :ylos
              :tayta-tooltip "Kopioi sama raekoko alla oleville riveille")
-           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
+            :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
-            :tasaa :oikea :leveys 10}
+            :tasaa :oikea :leveys 10
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :massamenekki (:massamenekki lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"}
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
             :validoi [[:rajattu-numero 0 100]]}
