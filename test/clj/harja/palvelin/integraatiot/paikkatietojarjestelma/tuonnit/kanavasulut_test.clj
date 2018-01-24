@@ -72,7 +72,7 @@
    :kohdepaikka "Mal. Cvetotchnoe"
    :omistaja "Liikennevirasto"
    :luoja "Integraatio"
-   :poistettu nil})
+   :poistettu false})
 
 (t/deftest vie-kanava-tietokantaan
 
@@ -92,11 +92,7 @@
   (t/is (= (ffirst(ht/q "SELECT count(id) FROM kan_kohteenosa where lahdetunnus = 6666;")) 1))
   (t/is (= (ffirst(ht/q "SELECT oletuspalvelumuoto FROM kan_kohteenosa where lahdetunnus = 6666;")) "itse"))
   (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666);")) "Iskrovka"))
-  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohdekokonaisuus where id = (select \"kohdekokonaisuus-id\" from kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666));")) "Saimaa"))
-
-  ;; Poistettu kanava
-
-  )
+  (t/is (= (ffirst(ht/q "SELECT nimi FROM kan_kohdekokonaisuus where id = (select \"kohdekokonaisuus-id\" from kan_kohde where id = (select \"kohde-id\" from kan_kohteenosa where lahdetunnus = 6666));")) "Saimaa")))
 
 
 
