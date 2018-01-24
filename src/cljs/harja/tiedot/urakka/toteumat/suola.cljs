@@ -5,10 +5,46 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(declare hae-toteumat)
+
+(defonce toteumat
+  (reaction<! [hae? @suolatoteumissa?
+               ur @nav/valittu-urakka
+               sopimus @tiedot-urakka/valittu-sopimusnumero
+               hk @tiedot-urakka/valittu-hoitokausi
+               kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and hae? ur)
+                (go
+                  (into []
+                        ;; luodaan kaikille id
+                        (map-indexed (fn [i rivi]
+                                       (assoc rivi :id i)))
+
+                        (<! (hae-toteumat (:id ur) (first sopimus)
+                                                (or kk hk))))))))
+
 (defonce lampotilojen-hallinnassa? (atom false))
+
+(defonce valittu-suolatoteuma (atom nil))
+
+(def karttataso-suolatoteumat (atom false))
+
+(defonce suolatoteumat-kartalla
+  (reaction
+    (let [valittu-turvallisuuspoikkeama-id (:id @valittu-suolatoteuma)]
+      (when @karttataso-suolatoteumat
+        (kartalla-esitettavaan-muotoon
+          @toteumat
+          #(= valittu-turvallisuuspoikkeama-id (:id %))
+          (comp
+            (apply concat (map #(:toteumat %) @toteumat ))
+            (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id

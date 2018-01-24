@@ -32,7 +32,7 @@
             [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
-            [harja.views.urakka.toteumat.suola :as suolatoteumat])
+            [harja.tiedot.urakka.toteumat.suola :as suolatoteumat])
   (:require-macros [reagent.ratom :refer [reaction] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 

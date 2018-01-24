@@ -17,7 +17,8 @@
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
+            [harja.tiedot.urakka.toteumat.suola :as tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -26,42 +27,11 @@
 
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
 
-(defonce toteumat
-  (reaction<! [hae? @suolatoteumissa?
-               ur @nav/valittu-urakka
-               sopimus @tiedot-urakka/valittu-sopimusnumero
-               hk @tiedot-urakka/valittu-hoitokausi
-               kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
-              {:nil-kun-haku-kaynnissa? true}
-              (when (and hae? ur)
-                (go
-                  (into []
-                        ;; luodaan kaikille id
-                        (map-indexed (fn [i rivi]
-                                       (assoc rivi :id i)))
-
-                        (<! (suola/hae-toteumat (:id ur) (first sopimus)
-                                                (or kk hk))))))))
-
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
                 (suola/hae-materiaalit))))
 
-(defonce valittu-suolatoteuma (atom nil))
-
-(def karttataso-suolatoteumat (atom false))
-
-(defonce suolatoteumat-kartalla
-  (reaction
-    (let [valittu-turvallisuuspoikkeama-id (:id @valittu-suolatoteuma)]
-      (when @karttataso-suolatoteumat
-        (kartalla-esitettavaan-muotoon
-          @toteumat
-          #(= valittu-turvallisuuspoikkeama-id (:id %))
-          (comp
-            (apply concat (map #(:toteumat %) @toteumat ))
-            (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid
@@ -86,10 +56,10 @@
                                       (filter (fn [{{nimi :nimi} :materiaali}]
                                                 (or (= (:suola @suodatin-valinnat) "Kaikki")
                                                     (= (:suola @suodatin-valinnat) nimi)))
-                                              @toteumat)))
+                                              @tiedot/toteumat)))
             materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
                                                nimi)
-                                            @toteumat))
+                                            @tiedot/toteumat))
             kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))))]
         [:div.suolatoteumat
          [kartta/kartan-paikka]
@@ -112,7 +82,7 @@
                      :tallennus-ei-mahdollinen-tooltip
                      (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                                      oikeudet/urakat-toteumat-suola)
-                     :tyhja (if (nil? @toteumat)
+                     :tyhja (if (nil? @tiedot/toteumat)
                               [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                               "Ei suolatoteumia valitulle aikavälille")
                      :uusi-rivi #(assoc % :alkanut (pvm/nyt))
@@ -121,7 +91,7 @@
                      :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                      :vetolaatikot (into {}
                                          (map (juxt :id (fn [rivi] [suolankayton-paivan-erittely rivi])))
-                                         @toteumat)}
+                                         @tiedot/toteumat)}
           [{:tyyppi :vetolaatikon-tila :leveys "1%"}
            {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
             :tyyppi :valinta
@@ -139,5 +109,5 @@
                     (str (:lisatieto %) " (Koneellisesti raportoitu)"))}]
 
           listaus]
-         (when-not (empty? @toteumat)
+         (when-not (empty? @tiedot/toteumat)
            [:div.bold kaytetty-yhteensa])]))))
