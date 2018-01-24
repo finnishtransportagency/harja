@@ -279,15 +279,7 @@
                       (muokkaa-rivit! [this funktio args]
                         (let [muokatut-idt (keys @muokatut)
                               uudet-rivit (apply funktio (vals @muokatut) args)
-                              uudet-rivit (zipmap muokatut-idt uudet-rivit)
-                              uudet-rivit (if (or jarjesta jarjesta-avaimen-mukaan)
-                                            (if jarjesta
-                                              ;; TODO Pitäisi huomioida myös virheet-ylos kuten itse gridissä?
-                                              (sort-by (comp (juxt jarjesta) second) (seq uudet-rivit))
-                                              (sort-by (comp (juxt jarjesta-avaimen-mukaan) first) (seq uudet-rivit)))
-                                            (seq uudet-rivit))]
-
-
+                              uudet-rivit (zipmap muokatut-idt uudet-rivit)]
                           (reset! muokatut uudet-rivit)))
 
                       (vetolaatikko-auki? [_ id]
