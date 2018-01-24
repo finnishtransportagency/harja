@@ -75,13 +75,13 @@
   #?(:cljs
      (when dt
        (goog.date.DateTime.
-        (.getYear dt)
-        (.getMonth dt)
-        (.getDate dt)
-        tunnit
-        minuutit
-        sekunnit
-        millisekunnit))
+         (.getYear dt)
+         (.getMonth dt)
+         (.getDate dt)
+         tunnit
+         minuutit
+         sekunnit
+         millisekunnit))
 
      :clj
      (cond (instance? java.util.Date dt)
@@ -811,6 +811,16 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD) muotoon."
      [pvm]
      (df/unparse (df/formatter "yyyy-MM-dd") pvm)))
+
+#?(:clj
+   (defn iso-8601->aika
+     "Parsii annetun ISO-8601 (yyyy-MM-dd HH:mm:ss.SSSSSS) formaatissa olevan merkkijonon päivämääräksi."
+     [teksti]
+     (try
+       (df/parse (df/formatter "yyyy-MM-dd HH:mm:ss.SSSSSS") teksti)
+       (catch #?(:cljs js/Error
+                 :clj  Exception) e
+         nil))))
 
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
