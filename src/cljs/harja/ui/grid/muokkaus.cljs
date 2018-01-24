@@ -277,9 +277,21 @@
                                      virheet)))))
 
                       (muokkaa-rivit! [this funktio args]
-                        (let [muokatut-idt (keys @muokatut)
-                              uudet-rivit (apply funktio (vals @muokatut) args)
-                              uudet-rivit (zipmap muokatut-idt uudet-rivit)]
+                        ;; Käytetään annettua funktiota päivittämään data niin, että mapissa olevat avaimet
+                        ;; viittaavat aina samaan päivitettyyn riviin
+                        (let [avain-arvo-parit (map (fn [avain]
+                                                      (-> [avain (get @muokatut avain)]))
+                                                    (keys @muokatut))
+                              arvot (map second avain-arvo-parit)
+                              uudet-rivit (apply funktio arvot args)
+                              uudet-avain-arvo-parit (map-indexed
+                                                       (fn [index pari]
+                                                         (-> [(first pari) (nth uudet-rivit index)]))
+                                                       avain-arvo-parit)
+                              uudet-rivit (reduce (fn [mappi pari]
+                                                    (assoc mappi (first pari) (second pari)))
+                                                  {}
+                                                  uudet-avain-arvo-parit)]
                           (reset! muokatut uudet-rivit)))
 
                       (vetolaatikko-auki? [_ id]
