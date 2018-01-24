@@ -363,7 +363,6 @@
              :nimi :toimenpide-raekoko :leveys 10
              :tayta-alas? #(not (nil? %))
              :tayta-fn (fn [lahtorivi tama-rivi]
-                         (log "[DEBUG]  TÄYTÄ FN JOO")
                          (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
              :tayta-tooltip "Kopioi sama raekoko alla oleville riveille")
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
