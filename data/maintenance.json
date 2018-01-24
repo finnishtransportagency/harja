@@ -1,8 +1,13 @@
 [
   {
+    "date": "2018-01-24",
+    "title": "Päällystys- ja tiemerkinnän aikataulun visuaalinen muokkaus",
+    "body": "Päällystys- ja tiemerkintäurakoiden aikataulunäkymässä on nyt mahdollista muokata aikataulua visuaalisesti siirtämällä ja venyttämällä aikataulun palkkeja. Tämä helpottaa aikataulun muokkaamista ja lisäksi mahdollistaa usean eri kohteen aikataulun muokkaamisen yhdellä kertaa. Visuaaliset muokkaukset voi myös kumota helposti mahdollisen virheen sattuessa. Tarkempia ohjeita visuaalisesta muokkauksesta löytyy näkymässä olevan vihjeen kautta."
+  },
+  {
     "date": "2018-01-17",
     "title": "Päällystyskohteiden aikataulunäkymään voi nyt lisätä itse tarkempia työvaiheita",
-    "body": "Päällystyskohteen aikataulutietoon voi nyt kirjata mm. RP-työt, ojankaivuun tai rumpujen vaihdon. Näiden lisäksi voidaan myös vapaatekstinä kirjata muu työvaihe. Näin voidaan seurata mm. päällystämistä edeltäviä työvaiheita entistä tarkemmin. Ominaisuus on käytössä myös tiemerkintäurakoissa."
+    "body": "Päällystyskohteen aikataulutietoon voi nyt kirjata mm. RP-työt, ojankaivuun tai rumpujen vaihdon. Näiden lisäksi voidaan myös vapaatekstinä kirjata muu työvaihe. Näin voidaan seurata mm. päällystämistä edeltäviä työvaiheita entistä tarkemmin."
   },
   {
     "date": "2017-12-18",
