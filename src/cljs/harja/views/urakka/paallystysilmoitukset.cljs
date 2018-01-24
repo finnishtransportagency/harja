@@ -361,9 +361,7 @@
           [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
            (assoc paallystys/raekoko-grid-skeema
              :nimi :toimenpide-raekoko :leveys 10
-             :tayta-alas? #(do
-                             (log "[DEBUG]  MIKÄ ON PA " (pr-str %))
-                             (not (nil? %)))
+             :tayta-alas? #(not (nil? %))
              :tayta-fn (fn [lahtorivi tama-rivi]
                          (log "[DEBUG]  TÄYTÄ FN JOO")
                          (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))

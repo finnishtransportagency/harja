@@ -75,7 +75,8 @@
                         (hae rivi)
                         (get rivi nimi))
                  tasaus-luokka (y/tasaus-luokka tasaa)
-                 kentan-virheet (get rivin-virheet nimi)]
+                 kentan-virheet (get rivin-virheet nimi)
+                 fokus-id [id nimi]]
              (if (or (nil? muokattava?) (muokattava? rivi i))
                ^{:key (str j nimi)}
                [:td {:class (str "muokattava "
@@ -90,9 +91,8 @@
 
                 ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
                 (when-let [tayta-alas (:tayta-alas? s)]
-                  (grid-yleiset/tayta-alas-nappi {:fokus fokus
-                                                  ;; TODO Mistä tämä?
-                                                  ;:fokus-id fokus-id
+                  (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
+                                                  :fokus-id fokus-id
                                                   :arvo arvo :tayta-alas tayta-alas
                                                   ;; TODO Mistä tämä?
                                                   ;:tulevat-rivit tulevat-rivit

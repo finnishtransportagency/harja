@@ -58,7 +58,12 @@
                    rivit)))))))
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo tulevat-rivit hae s ohjaus rivi]}]
-  (log "TÄYTÄ ALAS!")
+  (log "TÄYTÄ ALAS FOKUS " (pr-str fokus) " JA FOKUS-ID " (pr-str fokus-id))
+  (log "TÄYTÄ ALAS??? "
+       (= fokus fokus-id) ;; TODO Aina false muokkausgridissä
+       (tayta-alas arvo)
+       (not (empty? tulevat-rivit)) ;; TODO Aina false muokkausgridissä
+       (every? str/blank? (map hae tulevat-rivit)))
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
 
@@ -66,7 +71,7 @@
              (not (empty? tulevat-rivit))
              (every? str/blank? (map hae tulevat-rivit)))
 
-    (log "TÄYTÄ ALAS!")
+    (log "TÄYTÄ ALAS!!!")
     [:div {:class (if (= :oikea (:tasaa s))
                     "pull-left"
                     "pull-right")}
