@@ -478,6 +478,13 @@ SELECT
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
+    -- Selitteiden haku oli tuskaisen hidas, ja tässä oli yksi nopeutuskeino.
+    -- taulun alkanut-sarake on indeksoitu, joten tällä hakuehdolla saadaan nopeasti pudotettua
+    -- pois rivit, jotka varmasti eivät osu :alku-:loppu välille.
+    -- OVERLAPS ehto tarvitaan, jotta saadaan esim 0-2h hakuehdolla näkyviin toteumat, jotka ovat
+    -- alkaneet 3h sitten. Tällaiset toteumat menevät myös BETWEEN vertailusta läpi kasvatetun intervallin
+    -- ansiosta. Teoriassa motnta päivää kestävät toteumat voisivat tippua tästä "vahingossa", mutta oikeassa
+    -- maailmassa sellaisia ei ole.
                     AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu)
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
