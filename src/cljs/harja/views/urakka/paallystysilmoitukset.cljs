@@ -384,7 +384,12 @@
             :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"}
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
-            :validoi [[:rajattu-numero 0 100]]}
+            :validoi [[:rajattu-numero 0 100]]
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :rc% (:rc% lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama RC-% alla oleville riveille"}
            (assoc paallystys/tyomenetelma-grid-skeema
              :nimi :toimenpide-tyomenetelma
              :leveys 30
@@ -394,7 +399,12 @@
              :tayta-sijainti :ylos
              :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille")
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
-            :tasaa :oikea}
+            :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :leveys (:leveys lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama leveys alla oleville riveille"}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
             :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10}
            {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
