@@ -255,10 +255,12 @@
 
 (defn- laajenna-tyokone-extent [alue]
   (let [{:keys [xmin xmax ymin ymax]} alue
-        hypotenuusa (geo/alueen-hypotenuusa alue)
-        laajennettu-alue (geo/laajenna-extent [xmin ymin xmax ymax]
-                                              hypotenuusa)]
-    (zipmap [:xmin :ymin :xmax :ymax] laajennettu-alue)))
+        sade (max (* 2 (geo/alueen-hypotenuusa alue)) 10000)
+        [keskipiste-x keskipiste-y] (geo/extent-keskipiste [xmin ymin xmax ymax])
+        params {:keskipiste_x keskipiste-x
+                :keskipiste_y keskipiste-y
+                :sade sade}]
+    params))
 
 (defn- tyokoneiden-toimenpiteet
   "Palauttaa haettavat tehtävä työkonekyselyille"

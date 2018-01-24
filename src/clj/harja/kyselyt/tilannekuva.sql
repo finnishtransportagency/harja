@@ -546,7 +546,7 @@ SELECT
   t.tehtavat,
   MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
-WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
+WHERE ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -567,7 +567,8 @@ SELECT
   t.tyokonetyyppi,
   ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
 FROM tyokonehavainto t
-WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
+WHERE
+  ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
