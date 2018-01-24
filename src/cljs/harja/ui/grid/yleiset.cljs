@@ -61,6 +61,19 @@
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo
                                  tulevat-rivit hae sarake ohjaus rivi]}]
+  (assert (or (nil? (:tayta-alas-toistuvasti? sarake))
+              (and (some? (:tayta-alas? sarake))
+                   (some? (:tayta-alas-toistuvasti? sarake))))
+          "Toistuva täyttö ei toimi yksinään."
+          ;; Lähinnä siksi, että nappien asemointi olisi ollut hankalaa.
+          ;; Tätä tuskin koskaan tarvitaan muutenkaan.
+          )
+
+  (assert (or (nil? (:tayta-alas-toistuvasti? sarake))
+              (and (some? (:tayta-alas? sarake))
+                   (= (:tayta-sijainti sarake) :ylos)))
+          "Toistuva täyttö toimii ainoastaan, kun napit asemoidaan :ylos sijainnilla.")
+
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
 
