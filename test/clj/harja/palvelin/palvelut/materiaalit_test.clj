@@ -6,7 +6,9 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as tc]
+            [clj-time.core :as t]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -19,17 +21,17 @@
                                                 (->Materiaalit)
                                                 [:http-palvelin :db])
                         :hae-urakan-materiaalit (component/using
-                                                (->Materiaalit)
-                                                [:http-palvelin :db])
+                                                  (->Materiaalit)
+                                                  [:http-palvelin :db])
                         :hae-urakan-toteumat-materiaalille (component/using
-                                                (->Materiaalit)
-                                                [:http-palvelin :db])
+                                                             (->Materiaalit)
+                                                             [:http-palvelin :db])
                         :hae-toteuman-materiaalitiedot (component/using
-                                                (->Materiaalit)
-                                                [:http-palvelin :db])
+                                                         (->Materiaalit)
+                                                         [:http-palvelin :db])
                         :hae-urakassa-kaytetyt-materiaalit (component/using
-                                                (->Materiaalit)
-                                                [:http-palvelin :db])
+                                                             (->Materiaalit)
+                                                             [:http-palvelin :db])
 
                         :tallenna-urakan-materiaalit (component/using
                                                        (->Materiaalit)
@@ -80,20 +82,20 @@
            WHERE urakka is not null and materiaalikoodi is not null and sopimus is not null;")]
     ;; TODO: Olettaisin että tämä toimii oikeasti laiskasti, mutta nyt näyttää että ei. Miksi? :(
     (is
-    (some
-      true?
-      (map
-        (fn [[urakka materiaalikoodi sopimus alkanut paattynyt]]
-          (oikeat-sarakkeet-palvelussa?
-            [:id [:materiaali :id] [:materiaali :nimi] [:materiaali :yksikko] [:toteuma :maara]
-             [:toteuma :alkanut] [:toteuma :paattynyt] :tmid [:toteuma :lisatieto] [:toteuma :suorittaja]
-             :sopimus]
-            :hae-urakan-toteumat-materiaalille
-            {:urakka-id urakka
-             :materiaali-id materiaalikoodi
-             :hoitokausi [alkanut paattynyt]
-             :sopimus sopimus}))
-        tunnisteet)))))
+      (some
+        true?
+        (map
+          (fn [[urakka materiaalikoodi sopimus alkanut paattynyt]]
+            (oikeat-sarakkeet-palvelussa?
+              [:id [:materiaali :id] [:materiaali :nimi] [:materiaali :yksikko] [:toteuma :maara]
+               [:toteuma :alkanut] [:toteuma :paattynyt] :tmid [:toteuma :lisatieto] [:toteuma :suorittaja]
+               :sopimus]
+              :hae-urakan-toteumat-materiaalille
+              {:urakka-id urakka
+               :materiaali-id materiaalikoodi
+               :hoitokausi [alkanut paattynyt]
+               :sopimus sopimus}))
+          tunnisteet)))))
 
 (deftest hae-toteuman-materiaalitiedot-sarakkeet
   (let [tunnisteet
@@ -106,23 +108,23 @@
            tm.poistettu is not true
            WHERE urakka is not null;")]
     (is
-     (some
-      (fn [[urakka toteuma]]
-        (oikeat-sarakkeet-palvelussa?
-         [[:toteumamateriaalit 0 :materiaali :nimi] [:toteumamateriaalit 0 :materiaali :yksikko]
-          [:toteumamateriaalit 0 :maara] :alkanut :paattynyt [:toteumamateriaalit 0 :materiaali  :id]
-          :id [:toteumamateriaalit 0 :tmid] :suorittaja :ytunnus :lisatieto]
-         :hae-toteuman-materiaalitiedot
-         {:urakka-id urakka
-          :toteuma-id toteuma}
-         +kayttaja-jvh+
-         false))
-      tunnisteet))))
+      (some
+        (fn [[urakka toteuma]]
+          (oikeat-sarakkeet-palvelussa?
+            [[:toteumamateriaalit 0 :materiaali :nimi] [:toteumamateriaalit 0 :materiaali :yksikko]
+             [:toteumamateriaalit 0 :maara] :alkanut :paattynyt [:toteumamateriaalit 0 :materiaali :id]
+             :id [:toteumamateriaalit 0 :tmid] :suorittaja :ytunnus :lisatieto]
+            :hae-toteuman-materiaalitiedot
+            {:urakka-id urakka
+             :toteuma-id toteuma}
+            +kayttaja-jvh+
+            false))
+        tunnisteet))))
 
 
 
 (deftest tallenna-toteuma-materiaaleja-test
-  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka=" @oulun-alueurakan-2005-2010-id
                                             "AND luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE) LIMIT 1")))
         vanha-maara 12398751
         uusi-maara 12
@@ -132,10 +134,10 @@
                     :urakka-id @oulun-alueurakan-2005-2010-id
                     :sopimus sopimus}
         hae-materiaalitoteumien-maara (fn [id] (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali
-                                                                WHERE poistettu IS NOT TRUE AND toteuma="id))))
+                                                                WHERE poistettu IS NOT TRUE AND toteuma=" id))))
         vanhat-materiaalitoteumat-lukumaara (hae-materiaalitoteumien-maara toteuma_id)
-        hae-tm-idt (fn [] (flatten (q (str"SELECT id FROM toteuma_materiaali WHERE maara="vanha-maara" AND materiaalikoodi=1
-                                           AND poistettu IS NOT TRUE AND toteuma="toteuma_id))))
+        hae-tm-idt (fn [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE maara=" vanha-maara " AND materiaalikoodi=1
+                                           AND poistettu IS NOT TRUE AND toteuma=" toteuma_id))))
 
         tmid (atom nil)]
 
@@ -171,13 +173,13 @@
                                    (assoc :hoitokausi [(pvm/luo-pvm 2005 9 1) (pvm/luo-pvm 2006 8 30)]))))))
 
     (is (= (hae-materiaalitoteumien-maara toteuma_id) (+ 1 vanhat-materiaalitoteumat-lukumaara)))
-    (is (= uusi-maara (int (ffirst (q (str "SELECT maara FROM toteuma_materiaali WHERE id="@tmid)))))
+    (is (= uusi-maara (int (ffirst (q (str "SELECT maara FROM toteuma_materiaali WHERE id=" @tmid)))))
         "Toteumamateriaalin määrän olisi pitänyt päivittyä.")
 
     (u (str "DELETE FROM toteuma_materiaali WHERE id=" @tmid))))
 
 (deftest jarjestelman-luomia-materiaaleja-ei-voi-muokata
-  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka="@oulun-alueurakan-2005-2010-id"
+  (let [[toteuma_id sopimus] (first (q (str "SELECT id, sopimus FROM toteuma WHERE urakka=" @oulun-alueurakan-2005-2010-id "
                                              AND luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS TRUE) LIMIT 1")))
         vanha-maara 12398751
         toteumamateriaalit (atom [{:toteuma toteuma_id :maara vanha-maara :materiaalikoodi 1}
@@ -187,6 +189,115 @@
                     :sopimus sopimus}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :tallenna-toteuma-materiaaleja!
-                              +kayttaja-jvh+
-                              parametrit)))))
+                                                   :tallenna-toteuma-materiaaleja!
+                                                   +kayttaja-jvh+
+                                                   parametrit)))))
+
+(def suolakirjauksen-testipayload
+  {:otsikko {:lahettaja {:jarjestelma "Urakoitsijan järjestelmä"
+                         :organisaatio {:nimi "Urakoitsija"
+                                        :ytunnus "1234567-8"}}
+             :viestintunniste {:id 123}
+             :lahetysaika "2018-01-18T12:00:00+02:00"}
+   :reittitoteuma {:toteuma {:tunniste {:id 123}
+                             :suorittaja {:nimi "Tehotekijät Oy"
+                                          :ytunnus "8765432-1"}
+                             :sopimusId @oulun-alueurakan-2014-2019-paasopimuksen-id
+                             :alkanut "2018-01-18T12:00:00+02:00"
+                             :paattynyt "2018-01-18T12:30:00+02:00"
+                             :toteumatyyppi "kokonaishintainen"
+                             :tehtavat [{:tehtava {:id 1369
+                                                   :maara {:yksikko "km"
+                                                           :maara 123}}}]
+                             :materiaalit [{:materiaali "Talvisuolaliuos NaCl"
+                                            :maara {:yksikko "t"
+                                                    :maara 8}}]}
+                   :reitti [{:reittipiste {:aika "2018-01-18T12:00:00+02:00"
+                                           :koordinaatit {:x 448353
+                                                          :y 7225182}
+                                           :tehtavat [{:tehtava {:id 1369}}]
+                                           :materiaalit [{:materiaali "Talvisuolaliuos NaCl"
+                                                          :maara {:yksikko "t"
+                                                                  :maara 4}}]}}
+                            {:reittipiste {:aika "2018-01-18T12:15:00+02:00"
+                                           :koordinaatit {:x 455574
+                                                          :y 7227716}
+                                           :tehtavat [{:tehtava {:id 1359}}]
+                                           :materiaalit [{:materiaali "Talvisuolaliuos NaCl"
+                                                          :maara {:yksikko "t"
+                                                                  :maara 1}}]}}
+                            {:reittipiste {:aika "2018-01-18T12:30:00+02:00"
+                                           :koordinaatit {:x 459628
+                                                          :y 7223852}
+                                           :tehtavat [{:tehtava {:id 1359}}]
+                                           :materiaalit [{:materiaali "Talvisuolaliuos NaCl"
+                                                          :maara {:yksikko "t"
+                                                                  :maara 3}}]}}]}})
+
+(deftest hae-suolatoteumien-haku
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        testidatasta (kutsu-palvelua
+                       (:http-palvelin jarjestelma)
+                       :hae-suolatoteumat
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id
+                        :alkupvm #inst "2015-02-17T00:00:00.000-00:00"
+                        :loppupvm #inst "2015-02-19T00:00:00.000-00:00"})
+        hae-paivan-materiaalin-kaytto (fn [materiaali-nimi pvm data]
+                                        (filter #(and (= pvm (tc/from-sql-date (:pvm %)))
+                                                      (= materiaali-nimi (get-in % [:materiaali :nimi])))
+                                                data))
+        kirjaa-materiaalitoteuma (fn [alkanut loppunut ulkoinen-id materiaalinimi maara]
+                                   (u "INSERT INTO toteuma (urakka,
+                                                            sopimus,
+                                                            luotu,
+                                                            alkanut,
+                                                            paattynyt,
+                                                            luoja,
+                                                            tyyppi,
+                                                            lahde,
+                                                            ulkoinen_id)
+                                       VALUES ((SELECT id FROM urakka WHERE sampoid = '1242141-OULU2'),
+                                               (SELECT id FROM sopimus WHERE sampoid = '2H16339/01'),
+                                               '" alkanut "',
+                                               '" alkanut "',
+                                               '" loppunut "',
+                                               (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'),
+                                               'kokonaishintainen',
+                                               'harja-api',
+                                               " ulkoinen-id ");")
+                                   (u "INSERT INTO toteuma_materiaali (toteuma,
+                                                                       materiaalikoodi,
+                                                                       maara,
+                                                                       luoja)
+                                       VALUES ((SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id "),
+                                               (SELECT id FROM materiaalikoodi WHERE nimi = '" materiaalinimi "'),
+                                               " maara ",
+                                               (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));"))]
+    (is (= 200M (:maara (first (hae-paivan-materiaalin-kaytto "Natriumformiaatti" (t/date-time 2015 2 18 22) testidatasta))))
+        "Testidatasta haettu määrä vastaa odotettua")
+
+    (is (= 1800M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuolaliuos NaCl" (t/date-time 2015 2 17 22) testidatasta))))
+        "Testidatasta haettu määrä vastaa odotettua")
+
+    (kirjaa-materiaalitoteuma "2018-01-18 12:00:00.000000" "2018-01-18 12:30:00.000000" 12356789 "Talvisuolaliuos NaCl" 10)
+    (kirjaa-materiaalitoteuma "2018-01-18 12:30:00.000000" "2018-01-18 13:00:00.000000" 12356710 "Talvisuolaliuos NaCl" 21)
+    (kirjaa-materiaalitoteuma "2018-01-18 13:00:00.000000" "2018-01-18 13:39:00.000000" 12356711 "Natriumformiaatti" 2)
+    
+    (let [koneellisesti-kirjatut (kutsu-palvelua
+                                   (:http-palvelin jarjestelma)
+                                   :hae-suolatoteumat
+                                   +kayttaja-jvh+
+                                   {:urakka-id urakka-id
+                                    :sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id
+                                    :alkupvm #inst "2018-01-01T00:00:00.000-00:00"
+                                    :loppupvm #inst "2018-02-01T00:00:00.000-00:00"})]
+      (is (= 2 (count koneellisesti-kirjatut)) "Kirjauksia löytyy 2 päivälle.")
+      (let [nacl-kirjaukset (filter #(= "Talvisuolaliuos NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)
+            hcoona-kirjaukset (filter #(= "Natriumformiaatti" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)]
+        (is (= 2 (count (:toteumat (first nacl-kirjaukset)))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
+        (is (= 31M (apply + (map :maara nacl-kirjaukset))) "Määrä on summa kaikista Talvisuolaliuos NaCl kirjauksista")
+
+        (is (= 1 (count (:toteumat (first hcoona-kirjaukset)))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
+        (is (= 2M (apply + (map :maara hcoona-kirjaukset))) "Määrä on summa kaikista Talvisuolaliuos NaCl kirjauksista")))))
