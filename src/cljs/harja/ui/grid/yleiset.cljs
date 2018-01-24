@@ -95,4 +95,16 @@
                     :left (when (= :oikea (:tasaa sarake)) 0)
                     :right (when-not (= :oikea (:tasaa sarake)) "100%")}
                    (when (= napin-sijainti :ylos) {:bottom "100%"}))
-          :ikoni (ikonit/livicon-arrow-down)}]]])))
+          :ikoni (ikonit/livicon-arrow-down)}]
+        (when (:tayta-alas-toistuvasti? sarake)
+          [napit/yleinen-toissijainen "Täytä toistuvasti"
+           ;; TODO Toiminnallisuus ei toimi näin
+           #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
+           {:title "Toista edelliset rivit alla oleville riveille."
+            :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
+            :style {:position "absolute"
+                    :left (when (= :oikea (:tasaa sarake)) 0)
+                    :right (when-not (= :oikea (:tasaa sarake)) "100%")
+                    :bottom "100%"
+                    :transform "translateY(-100%)"}
+            :ikoni (ikonit/livicon-arrow-down)}])]])))

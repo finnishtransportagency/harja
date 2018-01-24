@@ -376,7 +376,7 @@
              :tayta-alas-toistuvasti? #(not (nil? %))
              :tayta-toistuvasti-fn (fn [toistettavat-rivit toisto-index tama-rivi]
                                      ) ;; TODO
-             :tayta-toistuvasti-tooltip "Toista edelliset rivit alla oleville riveille.")
+             )
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
             :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
