@@ -42,20 +42,22 @@
                                      (fn [rivi arvo]
                                        (assoc rivi nimi arvo)))]
                        (fn [_ taytettava]
-                         (aseta taytettava lahtoarvo))))]
-    (loop [uudet-rivit (list)
-           alku false
-           [rivi & rivit] rivit]
-      (if-not rivi
-        uudet-rivit
-        (if (= lahtorivi rivi)
-          (recur (conj uudet-rivit rivi) true rivit)
-          (if-not alku
-            (recur (conj uudet-rivit rivi) false rivit)
-            (recur (conj uudet-rivit
-                         (tayta-fn lahtorivi rivi))
-                   true
-                   rivit)))))))
+                         (aseta taytettava lahtoarvo))))
+        tulos (loop [uudet-rivit (list)
+                     alku false
+                     [rivi & rivit] rivit]
+                (if-not rivi
+                  uudet-rivit
+                  (if (= lahtorivi rivi)
+                    (recur (conj uudet-rivit rivi) true rivit)
+                    (if-not alku
+                      (recur (conj uudet-rivit rivi) false rivit)
+                      (recur (conj uudet-rivit
+                                   (tayta-fn lahtorivi rivi))
+                             true
+                             rivit)))))]
+    ;; Palautetaan rivit alkuperäisessä järjestyksessä
+    (reverse tulos)))
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo tulevat-rivit hae sarake ohjaus rivi]}]
   (when (and (= fokus fokus-id)
