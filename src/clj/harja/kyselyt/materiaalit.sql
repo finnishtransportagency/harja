@@ -17,7 +17,7 @@ SELECT
   urakkatyyppi,
   kohdistettava
 FROM materiaalikoodi
-WHERE materiaalityyppi != 'talvisuola' :: materiaalityyppi;
+WHERE materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI;
 
 -- name: hae-urakan-materiaalit
 -- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
@@ -34,45 +34,49 @@ FROM materiaalin_kaytto mk
   LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
 WHERE mk.urakka = :urakka AND
       mk.poistettu = FALSE AND
-      m.materiaalityyppi != 'talvisuola' :: materiaalityyppi;
+      m.materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI;
 
 -- name: hae-urakassa-kaytetyt-materiaalit
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
 -- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
 -- määrä = suunniteltu määrä. kokonaismäärä = toteutunut määrä
-SELECT mat.* FROM
-  (SELECT m.nimi    AS materiaali_nimi,
-          m.yksikko AS materiaali_yksikko,
-          m.id      AS materiaali_id,
-      (SELECT  SUM(maara)
-         FROM materiaalin_kaytto
-        WHERE materiaali = m.id
-              AND poistettu IS NOT TRUE
-              AND alkupvm :: DATE BETWEEN :alku AND :loppu
-              AND loppupvm :: DATE BETWEEN :alku AND :loppu
-              AND sopimus = :sopimus) AS maara,
-      (SELECT SUM(maara)
-         FROM sopimuksen_kaytetty_materiaali
-        WHERE materiaalikoodi = m.id AND
-              (alkupvm BETWEEN :alku AND :loppu) AND
- 	      sopimus = :sopimus) AS kokonaismaara
+SELECT mat.*
+FROM
+  (SELECT
+     m.nimi                         AS materiaali_nimi,
+     m.yksikko                      AS materiaali_yksikko,
+     m.id                           AS materiaali_id,
+     (SELECT SUM(maara)
+      FROM materiaalin_kaytto
+      WHERE materiaali = m.id
+            AND poistettu IS NOT TRUE
+            AND alkupvm :: DATE BETWEEN :alku AND :loppu
+            AND loppupvm :: DATE BETWEEN :alku AND :loppu
+            AND sopimus = :sopimus) AS maara,
+     (SELECT SUM(maara)
+      FROM sopimuksen_kaytetty_materiaali
+      WHERE materiaalikoodi = m.id AND
+            (alkupvm BETWEEN :alku AND :loppu) AND
+            sopimus = :sopimus)     AS kokonaismaara
    FROM materiaalikoodi m
-  WHERE m.materiaalityyppi != 'talvisuola' :: materiaalityyppi) as mat
+   WHERE m.materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI) AS mat
 WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 
 -- name: paivita-sopimuksen-materiaalin-kaytto
-SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus::integer, :alkupvm::date);
+SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus :: INTEGER, :alkupvm :: DATE);
 
 -- name: paivita-koko-sopimuksen-materiaalin-kaytto
-SELECT paivita_koko_sopimuksen_materiaalin_kaytto(:sopimus::integer);
+SELECT paivita_koko_sopimuksen_materiaalin_kaytto(:sopimus :: INTEGER);
 
 -- name: paivita-sopimuksen-materiaalin-kaytto-toteumapvm
 -- Päivittää sopimuksen materiaalin käytön annetun toteuman alkupäivämäärän
 -- päivälle.
 SELECT paivita_sopimuksen_materiaalin_kaytto(
-       :sopimus::integer,
-       (SELECT alkanut FROM toteuma WHERE id = :toteuma)::date);
+    :sopimus :: INTEGER,
+    (SELECT alkanut
+     FROM toteuma
+     WHERE id = :toteuma) :: DATE);
 
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
@@ -98,8 +102,8 @@ SELECT
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
   JOIN urakka ON urakka.id = (SELECT urakka
-                                   FROM toteuma
-                                   WHERE id = toteuma_materiaali.toteuma)
+                              FROM toteuma
+                              WHERE id = toteuma_materiaali.toteuma)
   JOIN toteuma ON toteuma.id = toteuma
                   AND urakka.id = :urakka
                   AND alkanut :: DATE >= :alku
@@ -124,7 +128,8 @@ FROM toteuma_materiaali
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
   JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
-WHERE urakka.hallintayksikko = :hallintayksikko AND (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
+WHERE urakka.hallintayksikko = :hallintayksikko AND
+      (:urakkatyyppi :: URAKKATYYPPI IS NULL OR urakka.tyyppi = :urakkatyyppi :: URAKKATYYPPI)
 GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_materiaali.id;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
@@ -146,7 +151,7 @@ FROM toteuma_materiaali
                         AND toteuma_materiaali.poistettu IS NOT TRUE
   JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
   JOIN organisaatio o ON urakka.hallintayksikko = o.id
-  WHERE (:urakkatyyppi::urakkatyyppi IS NULL OR urakka.tyyppi = :urakkatyyppi :: urakkatyyppi)
+WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR urakka.tyyppi = :urakkatyyppi :: URAKKATYYPPI)
 GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, o.elynumero, materiaalikoodi.yksikko
 
 -- name: hae-urakan-toteumat-materiaalille
@@ -163,7 +168,7 @@ SELECT
   tm.id              AS tmid,
   t.lisatieto        AS toteuma_lisatieto,
   t.suorittajan_nimi AS toteuma_suorittaja,
-  k.jarjestelma         AS toteuma_jarjestelmanlisaama,
+  k.jarjestelma      AS toteuma_jarjestelmanlisaama,
   t.sopimus
 FROM toteuma_materiaali tm
   INNER JOIN toteuma t
@@ -268,63 +273,31 @@ WHERE nimi = :nimi;
 -- name: hae-suolatoteumat
 -- Hakee annetun aikavälin suolatoteumat jaoteltuna päivän tarkkuudella
 SELECT
-  tmid,
-  tid,
-  materiaali_id,
-  materiaali_nimi,
-  alkanut,
-  maara,
-  lisatieto,
-  koneellinen
-FROM (SELECT
-        tm.id   AS tmid,
-        t.id    AS tid,
-        mk.id   AS materiaali_id,
-        mk.nimi AS materiaali_nimi,
-        t.alkanut,
-        tm.maara,
-        t.lisatieto,
-        FALSE   AS koneellinen
-      FROM toteuma_materiaali tm
-        JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
-        JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-        LEFT JOIN kayttaja k ON tm.luoja = k.id
-      WHERE t.urakka = :urakka
-            AND t.sopimus = :sopimus
-            AND tm.poistettu IS NOT TRUE
-            AND k.jarjestelma IS NOT TRUE
-            AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
-            AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
-      UNION
-      SELECT
-        NULL                         AS tmid,
-        NULL                         AS tid,
-        mk.id                        AS materiaali_id,
-        mk.nimi                      AS materiaali_nimi,
-        date_trunc('day', t.alkanut) AS alkanut,
-        SUM(tm.maara)                AS maara,
-        string_agg(t.lisatieto, ', ') AS lisatieto,
-        TRUE                         AS koneellinen
-      FROM toteuma_materiaali tm
-        JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-        JOIN toteuma t ON tm.toteuma = t.id
-        JOIN kayttaja k ON tm.luoja = k.id
-      WHERE k.jarjestelma = TRUE
-            AND t.urakka = :urakka
-            AND t.poistettu IS NOT TRUE
-            AND tm.poistettu IS NOT TRUE
-            AND t.sopimus = :sopimus
-            AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
-            AND mk.materiaalityyppi = 'talvisuola' :: materiaalityyppi
-      GROUP BY mk.id, mk.nimi, date_trunc('day', t.alkanut)) toteumat
-WHERE maara IS NOT NULL
-ORDER BY alkanut DESC
-LIMIT 501;
+  tm.id                        AS tmid,
+  t.id                         AS tid,
+  mk.id                        AS materiaali_id,
+  mk.nimi                      AS materiaali_nimi,
+  t.alkanut,
+  t.paattynyt,
+  date_trunc('day', t.alkanut) AS pvm,
+  tm.maara,
+  t.lisatieto,
+  (k.jarjestelma = TRUE)       AS koneellinen,
+  t.reitti
+FROM toteuma_materiaali tm
+  JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
+  JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+  LEFT JOIN kayttaja k ON tm.luoja = k.id
+WHERE t.urakka = :urakka
+      AND t.sopimus = :sopimus
+      AND tm.poistettu IS NOT TRUE
+      AND (t.alkanut BETWEEN :alkupvm AND :loppupvm)
+      AND mk.materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI;
 
 -- name: hae-suolamateriaalit
 SELECT *
 FROM materiaalikoodi
-WHERE materiaalityyppi = 'talvisuola' :: materiaalityyppi;
+WHERE materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI;
 
 -- name: hae-kaikki-materiaalit
 SELECT
