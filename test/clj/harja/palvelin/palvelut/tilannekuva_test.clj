@@ -187,10 +187,11 @@
     (is (= (count (:toteumat vastaus)) 0))))
 
 ;; Urakkatyyppi ei vaikuta enää hakutuloksiin
-(deftest urakkatyyppi-filter-toimii
-  (let [parametrit (assoc hakuargumentit-laaja-historia :urakkatyyppi :paallystys)
-        vastaus (hae-tk parametrit)]
-    (is (pos? (count (:selitteet (:toteumat vastaus)))))))
+(deftest urakkatyyppi-ei-vaikuta-hakutuloksiin
+  (let [parametrit-paallystys (assoc hakuargumentit-laaja-historia :urakkatyyppi :paallystys)
+        vastaus (hae-tk hakuargumentit-laaja-historia)
+        vastaus-paallystys (hae-tk parametrit-paallystys)]
+    (is (= vastaus vastaus-paallystys))))
 
 (deftest ala-hae-tarkastuksia
   (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :tarkastukset)
