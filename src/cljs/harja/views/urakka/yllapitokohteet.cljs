@@ -379,7 +379,12 @@
                                :tayta-sijainti :ylos
                                :tayta-tooltip "Kopioi sama massamäärä alla oleville riveille"}
                               {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
-                               :leveys toimenpide-leveys}])))
+                               :leveys toimenpide-leveys
+                               :tayta-alas? #(not (nil? %))
+                               :tayta-fn (fn [lahtorivi tama-rivi]
+                                           (assoc tama-rivi :toimenpide (:toimenpide lahtorivi)))
+                               :tayta-sijainti :ylos
+                               :tayta-tooltip "Kopioi sama selitys alla oleville riveille"}])))
 
             muokkaa-kohdeosat!
             (fn [kohdeosat-uudet]
