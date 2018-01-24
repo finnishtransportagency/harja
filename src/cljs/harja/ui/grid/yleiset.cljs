@@ -70,10 +70,12 @@
                     "pull-left"
                     "pull-right")}
      [:div {:style {:position "absolute" :display "inline-block"}}
-      [:button {:class (str "nappi-toissijainen nappi-tayta" (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
-                :title (:tayta-tooltip sarake)
-                :style {:position "absolute"
-                        :left (when (= :oikea (:tasaa sarake)) 0)
-                        :right (when-not (= :oikea (:tasaa sarake)) "100%")}
-                :on-click #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])}
-       (ikonit/livicon-arrow-down) " Täytä"]]]))
+
+      [napit/yleinen-toissijainen "Täytä"
+       #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
+       {:title (:tayta-tooltip sarake)
+        :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
+        :style {:position "absolute"
+                :left (when (= :oikea (:tasaa sarake)) 0)
+                :right (when-not (= :oikea (:tasaa sarake)) "100%")}
+        :ikoni (ikonit/livicon-arrow-down)}]]]))
