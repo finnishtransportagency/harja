@@ -43,8 +43,7 @@
               [vetolaatikon-tila ohjaus vetolaatikot id]
 
               (let [s (assoc s :rivi rivi)
-                    hae (or hae
-                            #(get % nimi))
+                    hae (or hae #(get % nimi))
                     arvo (hae rivi)
                     kentan-virheet (get rivin-virheet nimi)
                     kentan-varoitukset (get rivin-varoitukset nimi)

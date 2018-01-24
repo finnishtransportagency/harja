@@ -71,9 +71,8 @@
            ^{:key (str "vetolaatikontila" id)}
            [vetolaatikon-tila ohjaus vetolaatikot id]
            (let [s (assoc s :rivi rivi)
-                 arvo (if hae
-                        (hae rivi)
-                        (get rivi nimi))
+                 hae (or hae #(get % nimi))
+                 arvo (hae rivi)
                  tasaus-luokka (y/tasaus-luokka tasaa)
                  kentan-virheet (get rivin-virheet nimi)
                  fokus-id [i nimi]]
@@ -117,9 +116,7 @@
 
                ^{:key (str j nimi)}
                [:td {:class (str "ei-muokattava " tasaus-luokka)}
-                ((or fmt str) (if hae
-                                (hae rivi)
-                                (get rivi nimi)))])))) skeema))
+                ((or fmt str) (hae rivi))])))) skeema))
    (when-not piilota-toiminnot?
      [:td.toiminnot
       (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
