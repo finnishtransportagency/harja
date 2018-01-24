@@ -276,6 +276,12 @@
                                      (dissoc virheet rivin-id)
                                      virheet)))))
 
+                      (muokkaa-rivit! [this funktio args]
+                        (let [muokatut-idt (keys @muokatut)
+                              uudet-rivit (apply funktio (vals @muokatut) args)
+                              uudet-rivit (zipmap muokatut-idt uudet-rivit)]
+                          (reset! muokatut uudet-rivit)))
+
                       (vetolaatikko-auki? [_ id]
                         (@vetolaatikot-auki id))
                       (avaa-vetolaatikko! [_ id]
@@ -295,12 +301,12 @@
                                                (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
                                                  (when uusi-rivi
                                                    (if virheet-dataan?
-                                                    (assoc uusi-rivi
-                                                      :harja.ui.grid/virheet (validointi/validoi-rivi
-                                                                               (assoc muokatut id uusi-rivi)
-                                                                               uusi-rivi
-                                                                               skeema))
-                                                    uusi-rivi)))))))]
+                                                     (assoc uusi-rivi
+                                                       :harja.ui.grid/virheet (validointi/validoi-rivi
+                                                                                (assoc muokatut id uusi-rivi)
+                                                                                uusi-rivi
+                                                                                skeema))
+                                                     uusi-rivi)))))))]
 
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])
