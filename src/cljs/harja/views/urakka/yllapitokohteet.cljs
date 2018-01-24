@@ -350,12 +350,19 @@
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
                                            (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
                                 {:hae (partial tr/laske-tien-pituus osan-pituus)}])
-                             [(assoc paallystys-tiedot/paallyste-grid-skeema :leveys paallyste-leveys)
+                             [(assoc paallystys-tiedot/paallyste-grid-skeema
+                                :leveys paallyste-leveys
+                                :tayta-alas? #(not (nil? %))
+                                :tayta-fn (fn [lahtorivi tama-rivi]
+                                            (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
+                                :tayta-sijainti :ylos
+                                :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille")
                               (assoc paallystys-tiedot/raekoko-grid-skeema
                                 :leveys raekoko-leveys
                                 :tayta-alas? #(not (nil? %))
                                 :tayta-fn (fn [lahtorivi tama-rivi]
                                             (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
+                                :tayta-sijainti :ylos
                                 :tayta-tooltip "Kopioi sama raekoko alla oleville riveille")
                               (assoc paallystys-tiedot/tyomenetelma-grid-skeema :leveys tyomenetelma-leveys)
                               {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
