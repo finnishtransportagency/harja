@@ -32,13 +32,13 @@
 
 (defn tayta-tiedot-alas
   "Täyttää rivin tietoja alaspäin."
-  [rivit s lahtorivi tayta-fn]
+  [rivit sarake lahtorivi tayta-fn]
   (let [tayta-fn (or tayta-fn
 
                      ;; Oletusfunktio kopioi tiedon sellaisenaan
-                     (let [nimi (:nimi s)
-                           lahtoarvo ((or (:hae s) nimi) lahtorivi)
-                           aseta (or (:aseta s)
+                     (let [nimi (:nimi sarake)
+                           lahtoarvo ((or (:hae sarake) nimi) lahtorivi)
+                           aseta (or (:aseta sarake)
                                      (fn [rivi arvo]
                                        (assoc rivi nimi arvo)))]
                        (fn [_ taytettava]
