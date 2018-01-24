@@ -406,16 +406,31 @@
             :tayta-sijainti :ylos
             :tayta-tooltip "Kopioi sama leveys alla oleville riveille"}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
-            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10}
+            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :kokonaismassamaara (:kokonaismassamaara lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama kokonaismassamäärä alla oleville riveille"}
            {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
-            :tasaa :oikea}
+            :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :pinta-ala (:pinta-ala lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama pinta-ala alla oleville riveille"}
            {:otsikko "Kuulamylly"
             :nimi :kuulamylly
             :tyyppi :valinta
             :valinta-arvo :koodi
             :valinta-nayta #(:nimi %)
             :valinnat pot/+kyylamyllyt-ja-nil+
-            :leveys 30}]
+            :leveys 30
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :kuulamylly (:kuulamylly lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"}]
           paallystystoimenpiteet]
 
          [grid/muokkaus-grid
