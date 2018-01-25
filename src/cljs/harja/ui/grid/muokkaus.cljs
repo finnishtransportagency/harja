@@ -75,6 +75,7 @@
                  arvo (hae rivi)
                  tasaus-luokka (y/tasaus-luokka tasaa)
                  kentan-virheet (get rivin-virheet nimi)
+                 tayta-alas (:tayta-alas? sarake)
                  fokus-id [i nimi]]
              (if (or (nil? muokattava?) (muokattava? rivi i))
                ^{:key (str j nimi)}
@@ -88,30 +89,31 @@
                              :aina true))
                   (virheen-ohje kentan-virheet))
 
-                ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
-                (when-let [tayta-alas (:tayta-alas? sarake)]
-                  (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
-                                                  :fokus-id fokus-id
-                                                  :arvo arvo :tayta-alas tayta-alas
-                                                  :rivi-index rivi-index
-                                                  :tulevat-rivit tulevat-rivit
-                                                  :hae hae
-                                                  :sarake sarake :ohjaus ohjaus :rivi rivi}))
-
                 (if (= tyyppi :komponentti)
                   (komponentti rivi {:index i
                                      :muokataan? true})
                   (if voi-muokata?
-                    [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
-                     (r/wrap
-                       arvo
-                       (fn [uusi]
-                         (if aseta
-                           (muokkaa! muokatut-atom virheet skeema
-                                     id (fn [rivi]
-                                          (aseta rivi uusi)))
-                           (muokkaa! muokatut-atom virheet skeema
-                                     id assoc nimi uusi))))]
+                    [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+
+                     (when tayta-alas
+                       (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
+                                                       :fokus-id fokus-id
+                                                       :arvo arvo :tayta-alas tayta-alas
+                                                       :rivi-index rivi-index
+                                                       :tulevat-rivit tulevat-rivit
+                                                       :hae hae
+                                                       :sarake sarake :ohjaus ohjaus :rivi rivi}))
+
+                     [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
+                      (r/wrap
+                        arvo
+                        (fn [uusi]
+                          (if aseta
+                            (muokkaa! muokatut-atom virheet skeema
+                                      id (fn [rivi]
+                                           (aseta rivi uusi)))
+                            (muokkaa! muokatut-atom virheet skeema
+                                      id assoc nimi uusi))))]]
                     [nayta-arvo (assoc sarake :index i :muokataan? false)
                      (vain-luku-atomina arvo)]))]
 

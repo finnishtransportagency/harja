@@ -89,7 +89,7 @@
       [:div {:class (if (= :oikea (:tasaa sarake))
                       "pull-left"
                       "pull-right")}
-       [:div {:style {:position "absolute" :display "flex"}}
+       [:div {:style {:width "100%" :position "absolute" :left 0 :top "-3px" :display "flex"}}
         [napit/yleinen-toissijainen "Täytä"
          #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
          {:title (:tayta-tooltip sarake)
@@ -98,9 +98,9 @@
                    :ylos
                    {:transform "translateY(-100%)"}
                    :sisalla
-                   {:position "absolute"
-                    :left (when (= :oikea (:tasaa sarake)) 0)
-                    :right (when-not (= :oikea (:tasaa sarake)) "100%")})
+                   (merge
+                     {:position "absolute"}
+                     (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
           :ikoni (ikonit/livicon-arrow-down)}]
         (when (and (:tayta-alas-toistuvasti? sarake)
                    (> rivi-index 0)) ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
@@ -112,7 +112,7 @@
                      :ylos
                      {:transform "translateY(-100%)"}
                      :sisalla
-                     {:position "absolute"
-                      :left (when (= :oikea (:tasaa sarake)) 0)
-                      :right (when-not (= :oikea (:tasaa sarake)) "100%")})
+                     (merge
+                       {:position "absolute"}
+                       (if (= :oikea (:tasaa sarake)) {:left 0} {:right 0})))
             :ikoni (ikonit/livicon-arrow-down)}])]])))

@@ -49,6 +49,7 @@
                     kentan-varoitukset (get rivin-varoitukset nimi)
                     kentan-huomautukset (get rivin-huomautukset nimi)
                     tasaus-luokka (y/tasaus-luokka tasaa)
+                    tayta-alas (:tayta-alas? sarake)
                     fokus-id [id nimi]]
 
                 ;; muokattava? -> voiko muokata yksittäistä saraketta
@@ -67,18 +68,19 @@
                      (not (empty? kentan-varoitukset)) (virheen-ohje kentan-varoitukset :varoitus)
                      (not (empty? kentan-huomautukset)) (virheen-ohje kentan-huomautukset :huomautus))
 
-                   ;; Jos skeema tukee kopiointia, näytetään kopioi alas nappi
-                   (when-let [tayta-alas (:tayta-alas? sarake)]
-                     (grid-yleiset/tayta-alas-nappi {:fokus fokus :fokus-id fokus-id
-                                                     :arvo arvo :tayta-alas tayta-alas
-                                                     :rivi-index rivi-index
-                                                     :tulevat-rivit tulevat-rivit :hae hae
-                                                     :sarake sarake :ohjaus ohjaus :rivi rivi}))
-
                    (if (= tyyppi :komponentti)
                      (komponentti rivi {:index index
                                         :muokataan? true})
-                     [tee-kentta (assoc sarake
+                     [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+
+                      (when tayta-alas
+                        (grid-yleiset/tayta-alas-nappi {:fokus fokus :fokus-id fokus-id
+                                                        :arvo arvo :tayta-alas tayta-alas
+                                                        :rivi-index rivi-index
+                                                        :tulevat-rivit tulevat-rivit :hae hae
+                                                        :sarake sarake :ohjaus ohjaus :rivi rivi}))
+
+                      [tee-kentta (assoc sarake
                                    :focus (= fokus fokus-id)
                                    :on-focus #(aseta-fokus! fokus-id)
                                    :pituus-max (:pituus-max sarake))
@@ -88,7 +90,7 @@
                           (if aseta
                             (muokkaa! id (fn [rivi]
                                            (aseta rivi uusi)))
-                            (muokkaa! id assoc nimi uusi))))])]
+                            (muokkaa! id assoc nimi uusi))))]])]
 
                   ^{:key (str nimi)}
                   [:td {:class (str "ei-muokattava " tasaus-luokka)}
