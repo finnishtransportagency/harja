@@ -120,6 +120,7 @@
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as turvalaitteiden-geometriat]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
+    [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
@@ -636,6 +637,15 @@
       (component/using
         (let [asetukset (:vaylat asetukset)]
           (vaylien-geometriat/->VaylienGeometriahaku
+            (:geometria-url asetukset)
+            (:paivittainen-tarkistusaika asetukset)
+            (:paivitysvali-paivissa asetukset)))
+        [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
+
+      :kanavasiltojen-geometriahaku
+      (component/using
+        (let [asetukset (:kanavasillat asetukset)]
+          (kanavasiltojen-geometriat/->KanavasiltojenGeometriahaku
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
