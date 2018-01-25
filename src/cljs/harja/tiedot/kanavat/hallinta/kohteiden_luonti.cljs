@@ -123,9 +123,10 @@
       (keys ryhmat))))
 
 (defn kohdekokonaisuudet [tulos]
-  (-> (map #(select-keys % #{::kok/id ::kok/nimi}) tulos)
-      set
-      vec))
+  (sort-by ::kok/nimi
+           (-> (map #(select-keys % #{::kok/id ::kok/nimi}) tulos)
+               set
+               vec)))
 
 (defn kohdekokonaisuudet-voi-tallentaa? [kokonaisuudet]
   (boolean
