@@ -18,7 +18,8 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as ur]
             [clojure.string :as str]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tiedot.navigaatio :as nav])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -353,6 +354,9 @@
 
   ValitseKohde
   (process-event [{kohde :kohde} app]
+    (if (some? kohde)
+      (nav/vaihda-kartan-koko! :M)
+      (nav/vaihda-kartan-koko! :S))
     (-> app
         (assoc :valittu-kohde kohde)
         (assoc :karttataso-nakyvissa? (if (some? kohde) true false))))

@@ -40,7 +40,7 @@
   [grid/muokkaus-grid
    {:tyhja (if kohteenosien-haku-kaynnissa?
              [ajax-loader-pieni "Päivitetään kohteenosia"]
-             "Lisää kohteeseen osia oikeasta yläkulmasta")
+             "Valitse kohteeseen kuuluvat osat karttaa klikkaamalla")
     :tunniste ::kohteenosa/id
     :voi-lisata? false
     :voi-kumota? false
