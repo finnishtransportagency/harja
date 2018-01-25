@@ -68,7 +68,7 @@
         rivi
         (let [toistettava-rivi (- index (* (int (/ index (inc toista-asti-index)))
                                            (inc toista-asti-index)))]
-          (assoc rivi :arvo (:arvo (nth rivit toistettava-rivi))))))
+          (tayta-fn (nth rivit toistettava-rivi) rivi))))
     rivit))
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo edelliset-rivit

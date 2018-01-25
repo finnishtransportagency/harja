@@ -374,11 +374,8 @@
              :tayta-sijainti :ylos
              :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
              :tayta-alas-toistuvasti? #(not (nil? %))
-             :tayta-toistuvasti-fn (fn [toistettavat-rivit toisto-index tama-rivi]
-                                     (assoc tama-rivi :toimenpide-raekoko
-                                                      (-> toistettavat-rivit
-                                                          (nth toisto-index)
-                                                          :toimenpide-raekoko)))
+             :tayta-toistuvasti-fn (fn [toistettava-rivi tama-rivi]
+                                     (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))
              )
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
             :nimi :massamenekki
