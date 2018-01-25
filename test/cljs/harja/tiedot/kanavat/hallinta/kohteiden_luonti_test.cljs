@@ -193,11 +193,16 @@
                                                {::kok/id 1}))))
 
 (deftest osa-kuuluu-kohteeseen?
-  (is (true? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 1}}
-                                                      {:valittu-kohde {::kohde/id 1}})))
+  (is (true? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 1}
+                                                       ::osa/id 1}
+                                                      {:valittu-kohde {::kohde/id 1
+                                                                       ::kohde/kohteenosat [{::osa/id 1}]}})))
 
-  (is (false? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 2}}
-                                                      {:valittu-kohde {::kohde/id 1}}))))
+  (testing "Tarkastus tehdään osan id:n perusteella, ei osan kohdetiedon perusteella"
+    (is (false? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 1}
+                                                          ::osa/id 2}
+                                                         {:valittu-kohde {::kohde/id 1
+                                                                          ::kohde/kohteenosat [{::osa/id 1}]}})))))
 
 (deftest infopaneeli-otsikko
   (is (= "Irroita"

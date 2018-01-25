@@ -207,7 +207,8 @@
 
 (defn osa-kuuluu-valittuun-kohteeseen? [osa {:keys [valittu-kohde]}]
   (boolean
-    (= (::kohde/id valittu-kohde) (get-in osa [::osa/kohde ::kohde/id]))))
+    ((set (map ::osa/id (::kohde/kohteenosat valittu-kohde)))
+      (::osa/id osa))))
 
 (defn kohteenosan-infopaneeli-otsikko [app osa]
   (cond
@@ -424,7 +425,6 @@
     ;; Täällä olisi ollut hyvä piilottaa infopaneeli, mutta
     ;; harja.tiedot.kartta require aiheutti syklisen riippuvuuden, mitä
     ;; en alkanut ratkomaan
-
     (if (osa-kuuluu-valittuun-kohteeseen? osa app)
       ;; Irrota kohteesta
       (-> app
