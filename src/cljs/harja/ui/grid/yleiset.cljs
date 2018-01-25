@@ -102,7 +102,8 @@
                     :left (when (= :oikea (:tasaa sarake)) 0)
                     :right (when-not (= :oikea (:tasaa sarake)) "100%")})
           :ikoni (ikonit/livicon-arrow-down)}]
-        (when (:tayta-alas-toistuvasti? sarake)
+        (when (and (:tayta-alas-toistuvasti? sarake)
+                   (> rivi-index 0)) ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
           [napit/yleinen-toissijainen "Toista"
            #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)])
            {:title "Toista edelliset rivit alla oleville riveille."
