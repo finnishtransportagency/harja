@@ -4,6 +4,7 @@
             [harja.testutils.shared-testutils :as u]
             [reagent.core :as r]
             [clojure.string :as str]
+            [harja.ui.grid.yleiset :as grid-yleiset]
             [harja.loki :refer [log tarkkaile! error]]
             [cljs-react-test.simulate :as sim]
             [harja.ui.grid :as grid])
@@ -193,7 +194,7 @@
        skeema
        data]
 
-     "Tekstit ovat riveillä oikein"
+      "Tekstit ovat riveillä oikein"
       (is (= "Rich Hickey" (.-value (u/grid-solu "mg1" 0 0))))
       (is (= "Scala" (.-value (u/grid-solu "mg1" 1 1))))
       (is (= "Erlang" (.-value (u/grid-solu "mg1" 2 1))))
@@ -222,3 +223,28 @@
         "Otsikkorivi ei koskaan ole piilotetun otsikon alla")
     (is (false? (g/rivi-piilotetun-otsikon-alla? 5 testirivit #{:B}))
         "Otsikkorivi ei koskaan ole piilotetun otsikon alla")))
+
+(deftest toistaminen
+  (let [lahtorivit [{:arvo 1 :teksti "ABC"}
+                    {:arvo 2 :teksti "ABC"}
+                    {:arvo 3 :teksti "ABC"}
+                    {:arvo nil :teksti "ABC"}
+                    {:arvo nil :teksti "ABC"}
+                    {:arvo nil :teksti "ABC"}
+                    {:arvo nil :teksti "ABC"}
+                    {:arvo nil :teksti "ABC"}]
+        lopputulos [{:arvo 1 :teksti "ABC"}
+                    {:arvo 2 :teksti "ABC"}
+                    {:arvo 3 :teksti "ABC"}
+                    {:arvo 1 :teksti "ABC"}
+                    {:arvo 2 :teksti "ABC"}
+                    {:arvo 3 :teksti "ABC"}
+                    {:arvo 1 :teksti "ABC"}
+                    {:arvo 2 :teksti "ABC"}]]
+
+    (is (= (grid-yleiset/tayta-tiedot-alas-toistuvasti
+             lahtorivit
+             2
+             (fn [lahtorivi tama-rivi]
+               (assoc tama-rivi :arvo (:arvo lahtorivi))))
+           lopputulos))))
