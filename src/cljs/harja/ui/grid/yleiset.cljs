@@ -61,50 +61,46 @@
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo
                                  tulevat-rivit hae sarake ohjaus rivi]}]
-  (assert (or (nil? (:tayta-alas-toistuvasti? sarake))
-              (and (some? (:tayta-alas? sarake))
-                   (some? (:tayta-alas-toistuvasti? sarake))))
-          "Toistuva täyttö ei toimi yksinään."
-          ;; Lähinnä siksi, että nappien asemointi olisi ollut hankalaa.
-          ;; Tätä tuskin koskaan tarvitaan muutenkaan.
-          )
-
-  (assert (or (nil? (:tayta-alas-toistuvasti? sarake))
-              (and (some? (:tayta-alas? sarake))
-                   (= (:tayta-sijainti sarake) :ylos)))
-          "Toistuva täyttö toimii ainoastaan, kun napit asemoidaan :ylos sijainnilla.")
-
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
 
              ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
              (not (empty? tulevat-rivit))
              (every? str/blank? (map hae tulevat-rivit)))
-    (let [napin-sijainti (:tayta-sijainti sarake)]
+    (let [napin-sijainti (cond
+                           ;; Asemoi kutsujan mukaan
+                           (:tayta-sijainti sarake) (:tayta-sijainti sarake)
+                           ;; Useampi kuin yksi nappi, asemoi ylös
+                           (and (:tayta-alas? sarake) (:tayta-alas-toistuvasti?? sarake)) :ylos
+                           ;; Muuten piirretään kentän sisään
+                           :default :sisalla)]
       [:div {:class (if (= :oikea (:tasaa sarake))
                       "pull-left"
                       "pull-right")}
-       [:div {:style {:position "absolute" :display "inline-block"}}
+       [:div {:style {:position "absolute" :display "flex"}}
         [napit/yleinen-toissijainen "Täytä"
          #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
          {:title (:tayta-tooltip sarake)
           :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
-          :style (merge
-                   ;; Oletuksena sijainti on kentän sisällä, mutta voidaan asettaa myös muualle omalla optiolla
+          :style (case napin-sijainti
+                   :ylos
+                   {:transform "translateY(-100%)"}
+                   ;; Oletuksena sijainti on kentän sisällä
+                   :sisalla
                    {:position "absolute"
                     :left (when (= :oikea (:tasaa sarake)) 0)
-                    :right (when-not (= :oikea (:tasaa sarake)) "100%")}
-                   (when (= napin-sijainti :ylos) {:bottom "100%"}))
+                    :right (when-not (= :oikea (:tasaa sarake)) "100%")})
           :ikoni (ikonit/livicon-arrow-down)}]
-        (when (:tayta-alas-toistuvasti? sarake)
-          [napit/yleinen-toissijainen "Täytä toistuvasti"
-           ;; TODO Toiminnallisuus ei toimi näin
-           #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
-           {:title "Toista edelliset rivit alla oleville riveille."
-            :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
-            :style {:position "absolute"
+        [napit/yleinen-toissijainen "Toista"
+         ;; TODO Toiminnallisuus ei toimi näin
+         #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
+         {:title "Toista edelliset rivit alla oleville riveille."
+          :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
+          :style (case napin-sijainti
+                   :ylos
+                   {:transform "translateY(-100%)"}
+                   :sisalla
+                   {:position "absolute"
                     :left (when (= :oikea (:tasaa sarake)) 0)
-                    :right (when-not (= :oikea (:tasaa sarake)) "100%")
-                    :bottom "100%"
-                    :transform "translateY(-100%)"}
-            :ikoni (ikonit/livicon-arrow-down)}])]])))
+                    :right (when-not (= :oikea (:tasaa sarake)) "100%")})
+          :ikoni (ikonit/livicon-arrow-down)}]]])))
