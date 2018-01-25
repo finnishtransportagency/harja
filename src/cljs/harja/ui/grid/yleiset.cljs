@@ -59,8 +59,9 @@
     ;; Palautetaan rivit alkuperäisessä järjestyksessä
     (reverse tulos)))
 
-(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo
+(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo edelliset-rivit
                                  tulevat-rivit hae sarake ohjaus rivi]}]
+  ;; TODO HAE EDELLISET MYÖS PERUS-GRIDISSÄ
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
              (not (nil? arvo))
@@ -83,7 +84,7 @@
          {:title (:tayta-tooltip sarake)
           :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
           :style (case napin-sijainti
-                   :ylos(:tayta-alas? sarake)
+                   :ylos
                    {:transform "translateY(-100%)"}
                    :sisalla
                    {:position "absolute"
@@ -91,8 +92,7 @@
                     :right (when-not (= :oikea (:tasaa sarake)) "100%")})
           :ikoni (ikonit/livicon-arrow-down)}]
         [napit/yleinen-toissijainen "Toista"
-         ;; TODO Toiminnallisuus ei toimi näin
-         #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
+         #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-toistuvasti-fn sarake)])
          {:title "Toista edelliset rivit alla oleville riveille."
           :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
           :style (case napin-sijainti

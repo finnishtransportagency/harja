@@ -55,7 +55,7 @@
                        [komponentti])
                      paneelikomponentit))])])
 
-(defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet
+(defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet edelliset-rivit
                              nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
                              voi-poistaa? toimintonappi-fn]}]
@@ -93,6 +93,7 @@
                   (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
                                                   :fokus-id fokus-id
                                                   :arvo arvo :tayta-alas tayta-alas
+                                                  :edelliset-rivit edelliset-rivit
                                                   :tulevat-rivit tulevat-rivit
                                                   :hae hae
                                                   :sarake sarake :ohjaus ohjaus :rivi rivi}))
@@ -142,7 +143,9 @@
          muokatut @muokatut
          colspan (inc (count skeema))
          tulevat-rivit (fn [aloitus-idx]
-                         (map #(get muokatut %) (drop (inc aloitus-idx) (keys muokatut))))]
+                         (map #(get muokatut %) (drop (inc aloitus-idx) (keys muokatut))))
+         edelliset-rivit (fn [aloitus-idx]
+                           (map #(get muokatut %) (first (split-at (inc aloitus-idx) (keys muokatut)))))]
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan} tyhja]]
        (let [kaikki-virheet @virheet
@@ -168,7 +171,7 @@
                                           :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
                                           :nayta-virheet? nayta-virheet? :nykyinen-fokus nykyinen-fokus
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
-                                          :tulevat-rivit (tulevat-rivit i)
+                                          :tulevat-rivit (tulevat-rivit i) :edelliset-rivit (edelliset-rivit i)
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                           :skeema skeema :voi-poistaa? voi-poistaa?
