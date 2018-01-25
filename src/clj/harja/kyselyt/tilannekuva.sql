@@ -461,6 +461,7 @@ SELECT
   tpk.nimi                    AS tehtava_toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
+                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu)
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
@@ -471,20 +472,26 @@ WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
 
 -- name: hae-toteumien-selitteet
 SELECT
-  count(*) AS lukumaara,
   tt.toimenpidekoodi AS toimenpidekoodi,
   (SELECT nimi
    FROM toimenpidekoodi tpk
    WHERE id = tt.toimenpidekoodi) AS toimenpide
 FROM toteuma_tehtava tt
   JOIN toteuma t ON tt.toteuma = t.id
+    -- Selitteiden haku oli tuskaisen hidas, ja tässä oli yksi nopeutuskeino.
+    -- taulun alkanut-sarake on indeksoitu, joten tällä hakuehdolla saadaan nopeasti pudotettua
+    -- pois rivit, jotka varmasti eivät osu :alku-:loppu välille.
+    -- OVERLAPS ehto tarvitaan, jotta saadaan esim 0-2h hakuehdolla näkyviin toteumat, jotka ovat
+    -- alkaneet 3h sitten. Tällaiset toteumat menevät myös BETWEEN vertailusta läpi kasvatetun intervallin
+    -- ansiosta. Teoriassa motnta päivää kestävät toteumat voisivat tippua tästä "vahingossa", mutta oikeassa
+    -- maailmassa sellaisia ei ole.
+                    AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu)
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
                     AND tt.toimenpidekoodi IN (:toimenpidekoodit)
                     AND tt.poistettu IS NOT TRUE
                     AND t.poistettu IS NOT TRUE
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL) AND
-      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
-GROUP BY tt.toimenpidekoodi;
+      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax));
 
 -- name: hae-toteumien-asiat
 -- Hakee karttaa klikattaessa toteuma-ajat valituille tehtäville
@@ -546,7 +553,7 @@ SELECT
   t.tehtavat,
   MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
-WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
+WHERE ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -567,7 +574,8 @@ SELECT
   t.tyokonetyyppi,
   ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
 FROM tyokonehavainto t
-WHERE ST_Contains(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), sijainti::GEOMETRY) AND
+WHERE
+  ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -630,3 +638,22 @@ SELECT t.id,
  WHERE t.urakka IN (:urakat)
    AND ((t.alkanut BETWEEN :alku AND :loppu) OR
         (t.paattynyt BETWEEN :alku AND :loppu))
+
+
+-- name: urakat-joihin-oikeus
+-- Hakee organisaation "omat" urakat, joko urakat joissa annettu hallintayksikko on tilaaja
+-- tai urakat joissa annettu urakoitsija on urakoitsijana.
+-- TODO? erillisoikeudet urakoihin UNION:lla mukaan. Rooli-excelissäkin tähän liittyvä oikeus.
+SELECT
+  u.id
+FROM urakka u
+  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
+  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+WHERE urk.id = :organisaatio
+      OR hal.id = :organisaatio;
+
+-- name: hae-valittujen-urakoiden-viimeisin-toteuma
+-- single?: true
+SELECT max(id)
+  FROM toteuma
+ WHERE urakka in (:urakat);
