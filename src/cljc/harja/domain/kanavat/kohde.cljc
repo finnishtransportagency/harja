@@ -77,7 +77,7 @@
   [kohde osa]
   (str
     (::nimi kohde)
-    (when-let [osa (osa/fmt-kohdeosa osa)]
+    (when-let [osa (osa/fmt-kohteenosa osa)]
       (str (when (::nimi kohde) ", ") osa))))
 
 (defn kohde-sisaltaa-sulun? [kohde]

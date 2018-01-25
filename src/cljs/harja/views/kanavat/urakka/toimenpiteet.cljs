@@ -170,7 +170,7 @@
          {:otsikko "Kohteenosa"
           :nimi ::kanavan-toimenpide/kohteenosa
           :tyyppi :valinta
-          :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohteenosaa")
+          :valinta-nayta #(or (kohteenosa/fmt-kohteenosa %) "Ei kohteenosaa")
           :valinnat (or valitun-kohteen-osat [])}
          {:otsikko "Huoltokohde"
           :nimi ::kanavan-toimenpide/huoltokohde

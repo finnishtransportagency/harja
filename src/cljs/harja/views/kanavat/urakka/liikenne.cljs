@@ -246,7 +246,7 @@
           (fn [i osa]
             ^{:key (str "palvelumuoto-" i)}
             (lomake/ryhma
-              {:otsikko (osa/fmt-kohdeosa osa)
+              {:otsikko (osa/fmt-kohteenosa osa)
                :rivi? true}
               {:otsikko "Toimenpide"
                :nimi (str i "-toimenpide")

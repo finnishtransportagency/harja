@@ -55,7 +55,7 @@
      :nimi :kohteenosan-nimi
      :hae identity
      :leveys 2
-     :fmt kohteenosa/fmt-kohdeosa}
+     :fmt kohteenosa/fmt-kohteenosa}
     {:otsikko "Oletuspalvelumuoto"
      :tyyppi :string
      :muokattava? (constantly false)
@@ -209,7 +209,7 @@
                  :nimi :kohteenosat
                  :leveys 6
                  :hae (fn [kohde]
-                        (str/join ", " (map kohteenosa/fmt-kohdeosa (::kohde/kohteenosat kohde))))}
+                        (str/join ", " (map kohteenosa/fmt-kohteenosa (::kohde/kohteenosat kohde))))}
                 (if-not valittu-urakka
                   {:otsikko "Urakat"
                    :tyyppi :string
