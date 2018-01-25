@@ -71,7 +71,7 @@
                            ;; Asemoi kutsujan mukaan
                            (:tayta-sijainti sarake) (:tayta-sijainti sarake)
                            ;; Useampi kuin yksi nappi, asemoi ylös
-                           (and (:tayta-alas? sarake) (:tayta-alas-toistuvasti?? sarake)) :ylos
+                           (and (:tayta-alas? sarake) (:tayta-alas-toistuvasti? sarake)) :ylos
                            ;; Muuten piirretään kentän sisään
                            :default :sisalla)]
       [:div {:class (if (= :oikea (:tasaa sarake))
