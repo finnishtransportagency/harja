@@ -44,7 +44,8 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.views.urakka.valinnat :as u-valinnat])
+            [harja.views.urakka.valinnat :as u-valinnat]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -328,7 +329,24 @@
                             [(:id %) 0 0 0]
                             ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
         [:fieldset.lomake-osa
-         [:h3 "Tekninen osa"]
+         [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
+          {:otsikko "Päällystysilmoituksen täytön vihjeet"}
+          [leijuke/multipage-vihjesisalto
+           [:div
+            [:h6 "Arvon kopiointi alaspäin"]
+            [:figure
+             [:img {:src "images/pot_taytto1.gif"
+                    ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
+                    :style {:height "260px"}}]
+             [:figcaption
+              [:p "Voit kopioida kentän arvon alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien on oltava tyhjiä."]]]]
+           [:div
+            [:h6 "Arvojen toistaminen alaspäin"]
+            [:figure
+             [:img {:src "images/pot_taytto2.gif"
+                    :style {:height "260px"}}]
+             [:figcaption
+              [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien on oltava tyhjiä"]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
           {:voi-kumota? false
