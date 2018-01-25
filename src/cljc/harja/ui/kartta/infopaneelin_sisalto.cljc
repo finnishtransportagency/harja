@@ -618,7 +618,7 @@
             {:otsikko "Tyyppi"
              :tyyppi :string
              :nimi ::osa/tyyppi
-             :fmt osa/fmt-kohdeosa-tyyppi}
+             :fmt (string/capitalize osa/fmt-kohdeosa-tyyppi)}
             {:otsikko "Oletuspalvelumuoto"
              :nimi ::osa/oletuspalvelumuoto
              :fmt liikenne/palvelumuoto->str
