@@ -100,6 +100,7 @@
                           [grid/muokkaus-grid
                            {:tyhja "Ei vastaanottajia."
                             :voi-muokata? true
+                            :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
                             :muutos #(log "Muutit jotain!")}
                            [{:otsikko "Sähköpostiosoite"
                              :nimi :sahkoposti
