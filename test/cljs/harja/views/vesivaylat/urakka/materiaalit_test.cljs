@@ -27,7 +27,7 @@
 (deftest materiaalit
   (let [app (r/atom alkutila)
         ensimmainen-rivi #(for [solu (range 1 4)]
-                            (u/text (u/grid-solu "vv-materiaalilistaus" 0 solu)))
+                            (u/text (u/grid-solu "vv-materiaalilistaus" 0 solu ":nth-child(1)")))
         haku (utils/fake-palvelukutsu :hae-vesivayla-materiaalilistaus
                                       (constantly listaus))
         tallennus (utils/fake-palvelukutsu
@@ -51,7 +51,7 @@
      --
      "Avataan vetolaatikko"
      (is (nil? (u/sel1 :.vetolaatikko-auki)))
-     (u/click (u/grid-solu "vv-materiaalilistaus" 0 0))
+     (u/click (u/grid-solu "vv-materiaalilistaus" 0 0 ":nth-child(1)"))
      --
      "Katsotaan, että vetolaatikon muutoslokissa on oikeat rivit"
      (is (u/sel1 :.vetolaatikko-auki))
