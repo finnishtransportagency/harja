@@ -90,6 +90,7 @@
    :kysely "syaani"
    :toimenpidepyynto "punainen"
    :turvallisuuspoikkeama "magenta"
+   :suolatoteuma "harmaa"
 
    ;; tilaa osoittavat värit (sijaint-ikonin sisempi väri)
    :ilmoitus-auki "punainen"
@@ -289,6 +290,16 @@
            "Kiinteä ")
          (::tu/tyyppi turvalaite)))])
 
+
+(defn suolatoteuman-nuoli []
+  [{:paikka [:loppu]
+    :tyyppi :nuoli
+    :img (nuoli-ikoni "musta")}
+   {:paikka [:taitokset]
+    :scale 0.8
+    :tyyppi :nuoli
+    :img (nuoli-ikoni "musta")}])
+
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma tiepuolen-ikonien-varit)))
 
@@ -302,6 +313,18 @@
   [{:color puhtaat/musta
     :width 8}
    {:color puhtaat/oranssi
+    :width 6}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width 4}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width 3}])
+
+(defn suolatoteuman-viiva []
+  [{:color puhtaat/musta
+    :width 8}
+   {:color puhtaat/harmaa
     :width 6}
    {:color puhtaat/musta
     :dash [3 9]

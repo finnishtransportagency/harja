@@ -287,6 +287,7 @@
        :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
        :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
        :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
+       :suolatoteumat (taso :suolatoteumat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -323,6 +324,7 @@
    :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
    :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
    :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
+   :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 

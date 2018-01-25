@@ -283,7 +283,7 @@ SELECT
   tm.maara,
   t.lisatieto,
   (k.jarjestelma = TRUE)       AS koneellinen,
-  t.reitti
+  t.reitti                     AS sijainti
 FROM toteuma_materiaali tm
   JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id

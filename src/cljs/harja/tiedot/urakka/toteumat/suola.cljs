@@ -6,11 +6,22 @@
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<!]]
+            [reagent.ratom :refer [reaction]]
             [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(declare hae-toteumat)
+(declare hae-toteumat hae-materiaalit)
+
+(defonce suolatoteumissa? (atom false))
+
+(defonce suodatin-valinnat (atom {:suola "Kaikki"}))
+
+(defonce materiaalit
+  (reaction<! [hae? @suolatoteumissa?]
+              (when hae?
+                (hae-materiaalit))))
 
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
@@ -27,7 +38,7 @@
                                        (assoc rivi :id i)))
 
                         (<! (hae-toteumat (:id ur) (first sopimus)
-                                                (or kk hk))))))))
+                                          (or kk hk))))))))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
@@ -37,14 +48,11 @@
 
 (defonce suolatoteumat-kartalla
   (reaction
-    (let [valittu-turvallisuuspoikkeama-id (:id @valittu-suolatoteuma)]
-      (when @karttataso-suolatoteumat
-        (kartalla-esitettavaan-muotoon
-          @toteumat
-          #(= valittu-turvallisuuspoikkeama-id (:id %))
-          (comp
-            (apply concat (map #(:toteumat %) @toteumat ))
-            (map #(assoc % :tyyppi-kartalla :turvallisuuspoikkeama))))))))
+    (when @karttataso-suolatoteumat
+      (kartalla-esitettavaan-muotoon
+        (let [yksittaiset-toteumat (apply concat (map #(:toteumat %) @toteumat))]
+          (map #(assoc % :tyyppi-kartalla :suolatoteuma) yksittaiset-toteumat))
+        #(= (:id %) (:id @valittu-suolatoteuma))))))
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
@@ -106,7 +114,7 @@
 
 (defn tallenna-teiden-hoitourakoiden-lampotilat [hoitokausi lampotilat]
   (let [lampotilat (mapv #(assoc % :alkupvm (first hoitokausi)
-                                  :loppupvm (second hoitokausi))
+                                   :loppupvm (second hoitokausi))
                          (vec (vals lampotilat)))]
     (log "tallenna lämpötilat: " (pr-str lampotilat))
     (k/post! :tallenna-teiden-hoitourakoiden-lampotilat {:hoitokausi hoitokausi
