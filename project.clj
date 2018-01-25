@@ -165,7 +165,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
+  :plugins [[lein-cljsbuild "1.1.7"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
@@ -187,7 +187,7 @@
                            ;;:preamble ["reagent/react.js"]
                            :output-to "dev-resources/js/harja.js"
                            :output-dir "dev-resources/js/out"
-                           :libs ["src/js/kuvataso.js"]
+                           :libs ["src/js"]
                            :closure-output-charset "US-ASCII"
                            :recompile-dependents false
                            }}
@@ -200,7 +200,7 @@
                            :pretty-print true
                            :source-map true
                            ;:parallel-build false Failaa randomisti
-                           :libs ["src/js/kuvataso.js"]
+                           :libs ["src/js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
                 :notify-command ["./run-karma.sh"]}
@@ -219,7 +219,7 @@
                            :output-dir "resources/public/js/"
 
                            ;:parallel-build false Failaa randomisti
-                           :libs ["src/js/kuvataso.js"]
+                           :libs ["src/js"]
                            :closure-output-charset "US-ASCII"}}
 
                ;; Laadunseurannan buildit
