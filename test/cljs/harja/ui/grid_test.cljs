@@ -225,30 +225,30 @@
         "Otsikkorivi ei koskaan ole piilotetun otsikon alla")))
 
 (deftest toistaminen
-  (let [lahtorivit [{:arvo 1 :teksti "ABC"}
-                    {:arvo 2 :teksti "ABC"}
-                    {:arvo 3 :teksti "ABC"}
-                    {:arvo nil :teksti "ABC"}
-                    {:arvo nil :teksti "ABC"}
-                    {:arvo nil :teksti "ABC"}
-                    {:arvo nil :teksti "ABC"}
-                    {:arvo nil :teksti "ABC"}]
-        lopputulos-lahtoindeksilla-1 [{:arvo 1 :teksti "ABC"}
-                                      {:arvo 2 :teksti "ABC"}
-                                      {:arvo 1 :teksti "ABC"}
-                                      {:arvo 2 :teksti "ABC"}
-                                      {:arvo 1 :teksti "ABC"}
-                                      {:arvo 2 :teksti "ABC"}
-                                      {:arvo 1 :teksti "ABC"}
-                                      {:arvo 2 :teksti "ABC"}]
-        lopputulos-lahtoindeksilla-2 [{:arvo 1 :teksti "ABC"}
-                                      {:arvo 2 :teksti "ABC"}
-                                      {:arvo 3 :teksti "ABC"}
-                                      {:arvo 1 :teksti "ABC"}
-                                      {:arvo 2 :teksti "ABC"}
-                                      {:arvo 3 :teksti "ABC"}
-                                      {:arvo 1 :teksti "ABC"}
-                                      {:arvo 2 :teksti "ABC"}]]
+  (let [lahtorivit [{:arvo 1 :teksti "ABC1"}
+                    {:arvo 2 :teksti "ABC2"}
+                    {:arvo 3 :teksti "ABC3"}
+                    {:arvo nil :teksti "ABC4"}
+                    {:arvo nil :teksti "ABC5"}
+                    {:arvo nil :teksti "ABC6"}
+                    {:arvo nil :teksti "ABC7"}
+                    {:arvo nil :teksti "ABC8"}]
+        lopputulos-lahtoindeksilla-1 [{:arvo 1 :teksti "ABC1"}
+                                      {:arvo 2 :teksti "ABC2"}
+                                      {:arvo 1 :teksti "ABC3"}
+                                      {:arvo 2 :teksti "ABC4"}
+                                      {:arvo 1 :teksti "ABC5"}
+                                      {:arvo 2 :teksti "ABC6"}
+                                      {:arvo 1 :teksti "ABC7"}
+                                      {:arvo 2 :teksti "ABC8"}]
+        lopputulos-lahtoindeksilla-2 [{:arvo 1 :teksti "ABC1"}
+                                      {:arvo 2 :teksti "ABC2"}
+                                      {:arvo 3 :teksti "ABC3"}
+                                      {:arvo 1 :teksti "ABC4"}
+                                      {:arvo 2 :teksti "ABC5"}
+                                      {:arvo 3 :teksti "ABC6"}
+                                      {:arvo 1 :teksti "ABC7"}
+                                      {:arvo 2 :teksti "ABC8"}]]
 
     (is (= (grid-yleiset/tayta-tiedot-alas-toistuvasti
              lahtorivit
