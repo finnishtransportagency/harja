@@ -89,7 +89,12 @@
       [:div {:class (if (= :oikea (:tasaa sarake))
                       "pull-left"
                       "pull-right")}
-       [:div {:style {:width "100%" :position "absolute" :left 0 :top "-3px" :display "flex"}}
+       [:div {:style {:width "100%"
+                      :position "absolute"
+                      :left 0
+                      :height 0 ; Tärkeä, ettei voida vahingossa focusoida pois kentästä nappeihin
+                      :top "-3px"
+                      :display "flex"}}
         [napit/yleinen-toissijainen "Täytä"
          #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-fn sarake)])
          {:title (:tayta-tooltip sarake)
