@@ -66,12 +66,17 @@
                 (if valmis-tiemerkintaan-lomake?
                   "Merkitse"
                   "Vahvista peruutus")
-                #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
+                #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
                      (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
                        {:kohde-id kohde-id
                         :tiemerkintapvm (:valmis-tiemerkintaan (:lomakedata data))
                         :kopio-itselle? (:kopio-itselle? (:lomakedata data))
                         :saate (:saate (:lomakedata data))
+                        :ylimaaraiset-vastaanottajat (->> (vals (get-in
+                                                                  data
+                                                                  [:lomakedata :ylimaaraiset-vastaanottajat]))
+                                                          (filter (comp not :poistettu))
+                                                          (map :sahkoposti))
                         :urakka-id urakka-id
                         :sopimus-id (first @u/valittu-sopimusnumero)
                         :vuosi vuosi}))
