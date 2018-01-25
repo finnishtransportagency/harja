@@ -34,7 +34,7 @@
 (defn- muokkausrivi [{:keys [ohjaus id muokkaa! luokka rivin-virheet rivin-varoitukset rivin-huomautukset voi-poistaa? esta-poistaminen?
                              esta-poistaminen-tooltip piilota-toiminnot? tallennus-kaynnissa?
                              fokus aseta-fokus! tulevat-rivit vetolaatikot
-                             voi-muokata-rivia?]}
+                             voi-muokata-rivia? rivi-index]}
                      skeema rivi index]
   [:tr.muokataan {:class luokka}
    (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti] :as sarake} skeema]
@@ -71,6 +71,7 @@
                    (when-let [tayta-alas (:tayta-alas? sarake)]
                      (grid-yleiset/tayta-alas-nappi {:fokus fokus :fokus-id fokus-id
                                                      :arvo arvo :tayta-alas tayta-alas
+                                                     :rivi-index rivi-index
                                                      :tulevat-rivit tulevat-rivit :hae hae
                                                      :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
@@ -399,6 +400,7 @@
                                                                  "parillinen"
                                                                  "pariton"))
                                                   :id id
+                                                  :rivi-index i
                                                   :rivin-virheet rivin-virheet
                                                   :rivin-varoitukset rivin-varoitukset
                                                   :rivin-huomautukset rivin-huomautukset

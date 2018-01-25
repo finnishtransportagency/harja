@@ -73,7 +73,6 @@
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo rivi-index
                                  tulevat-rivit hae sarake ohjaus rivi]}]
-  ;; TODO HAE RIVI INDEX MYÖS PERUSGRIDISSÄ
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
              (not (nil? arvo))
