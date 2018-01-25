@@ -98,17 +98,19 @@
          :palstoja 2
          :tyyppi :komponentti
          :komponentti (fn [_]
-                        (let [vastaanottajat (atom nil)]
+                        (let [ylimaaraiset-vastaanottajat (get-in data [:lomakedata :ylimaaraiset-vastaanottajat])]
                           [grid/muokkaus-grid
                            {:tyhja "Ei vastaanottajia."
                             :voi-muokata? true
                             :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                            :muutos #(log "Muutit jotain!")}
+                            :muutos #(do
+                                       (swap! tiedot/modal-data assoc-in [:lomakedata :ylimaaraiset-vastaanottajat]
+                                              (grid/hae-muokkaustila %)))}
                            [{:otsikko "Sähköpostiosoite"
                              :nimi :sahkoposti
                              :tyyppi :string
                              :leveys 1}]
-                           vastaanottajat]))}
+                           (atom ylimaaraiset-vastaanottajat)]))}
         {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
          :koko [90 8]
          :nimi :saate :palstoja 3 :tyyppi :text}
