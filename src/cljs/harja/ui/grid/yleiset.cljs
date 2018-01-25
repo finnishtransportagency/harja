@@ -106,7 +106,7 @@
                    (> rivi-index 0)) ;; Eka rivi voidaan vain täyttää, toistaminen olisi sama asia.
           [napit/yleinen-toissijainen "Toista"
            #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)])
-           {:title "Toista edelliset rivit alla oleville riveille."
+           {:title "Toista tämä ja edelliset rivit alla oleville riveille."
             :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
             :style (case napin-sijainti
                      :ylos
