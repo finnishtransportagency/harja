@@ -145,9 +145,7 @@
          muokatut @muokatut
          colspan (inc (count skeema))
          tulevat-rivit (fn [aloitus-idx]
-                         (map #(get muokatut %) (drop (inc aloitus-idx) (keys muokatut))))
-         edelliset-rivit (fn [aloitus-idx]
-                           (map #(get muokatut %) (first (split-at (inc aloitus-idx) (keys muokatut)))))]
+                         (map #(get muokatut %) (drop (inc aloitus-idx) (keys muokatut))))]
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan} tyhja]]
        (let [kaikki-virheet @virheet
