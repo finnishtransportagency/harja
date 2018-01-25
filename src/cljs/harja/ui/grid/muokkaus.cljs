@@ -261,7 +261,6 @@
                       (hae-muokkaustila [_]
                         @muokatut)
                       (aseta-muokkaustila! [_ uusi-muokkaustila]
-                        (log "ASETA MUOKKAUSTILA: " (pr-str uusi-muokkaustila))
                         (let [vanhat-tiedot @muokatut
                               vanhat-virheet @virheet]
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
