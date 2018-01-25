@@ -92,6 +92,20 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
+        {:otsikko "Ylimääräiset vastaaottajat" :nimi :tehtavat :pakollinen? true
+         :uusi-rivi? true :palstoja 2
+         :tyyppi :komponentti
+         :komponentti (fn [_]
+                        (let [vastaanottajat (atom nil)]
+                          [grid/muokkaus-grid
+                           {:tyhja "Ei vastaanottajia."
+                            :voi-muokata? true
+                            :muutos #(log "Muutit jotain!")}
+                           [{:otsikko "Sähköpostiosoite"
+                             :nimi :sahkoposti
+                             :tyyppi :string
+                             :leveys 1}]
+                           vastaanottajat]))}
         {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
          :koko [90 8]
          :nimi :saate :palstoja 3 :tyyppi :text}
