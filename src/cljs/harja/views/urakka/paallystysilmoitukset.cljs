@@ -346,7 +346,7 @@
              [:img {:src "images/pot_taytto2.gif"
                     :style {:height "260px"}}]
              [:figcaption
-              [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien on oltava tyhjiä"]]]]]]
+              [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien on oltava tyhjiä."]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
           {:voi-kumota? false
