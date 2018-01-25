@@ -85,7 +85,6 @@
           :style (case napin-sijainti
                    :ylos
                    {:transform "translateY(-100%)"}
-                   ;; Oletuksena sijainti on kentän sisällä
                    :sisalla
                    {:position "absolute"
                     :left (when (= :oikea (:tasaa sarake)) 0)
