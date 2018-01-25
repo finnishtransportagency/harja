@@ -72,6 +72,18 @@
     (doseq [paivystaja paivystajat]
       (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
 
+(defn- slack-viesti
+  [kulunut-aika viesti-id]
+  (let [tunnit (-> kulunut-aika (/ 3600) Math/floor int)
+        minuutit (-> kulunut-aika (- (* tunnit 3600)) (/ 60) Math/floor int)
+        sekunnit (-> kulunut-aika (- (* tunnit 3600) (* minuutit 60)) Math/floor int)
+        integraatio-log-url "http://localhost:3000/#hallinta/integraatioloki?"]
+    (log/warn {:fields [{:title "Linkki"
+                         :value (str "<" integraatio-log-url "|Harja integraatio loki>")}]
+               :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
+                                  "Ilmoituksella, jonka viesti id on " viesti-id "|||"
+                                  "Kesti *" tunnit "h " minuutit "min " sekunnit "s* saapua T-LOIK:ista HARJA:n kantaan")})))
+
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
@@ -86,6 +98,9 @@
                                                           db urakka-id ilmoitus)
         uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
         ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
+        kulunut-aika (harja.pvm/date-datetime-aikavali-sekuntteina (:ilmoitettu ilmoitus) (harja.pvm/nyt-suomessa))
+        _ (when (> kulunut-aika 300)
+            (slack-viesti kulunut-aika (:viesti-id ilmoitus)))
         ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
         tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
