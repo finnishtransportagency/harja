@@ -65,15 +65,15 @@
   (map-indexed
     (fn [index rivi]
       (if (<= index toista-asti-index)
-        rivi
+        rivi ; Toistettava rivi palautetaan sellaisenaan
         (let [toistettava-rivi (- index (* (int (/ index (inc toista-asti-index)))
                                            (inc toista-asti-index)))]
           (tayta-fn (nth rivit toistettava-rivi) rivi))))
     rivit))
 
-(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo edelliset-rivit
+(defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo rivi-index
                                  tulevat-rivit hae sarake ohjaus rivi]}]
-  ;; TODO HAE EDELLISET MYÖS PERUS-GRIDISSÄ
+  ;; TODO HAE RIVI INDEX MYÖS PERUSGRIDISSÄ
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
              (not (nil? arvo))
@@ -105,7 +105,7 @@
           :ikoni (ikonit/livicon-arrow-down)}]
         (when (:tayta-alas-toistuvasti? sarake)
           [napit/yleinen-toissijainen "Toista"
-           #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [toista-asti-index (:tayta-fn sarake)])
+           #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [rivi-index (:tayta-fn sarake)])
            {:title "Toista edelliset rivit alla oleville riveille."
             :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
             :style (case napin-sijainti

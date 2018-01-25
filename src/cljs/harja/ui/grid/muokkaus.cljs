@@ -55,7 +55,7 @@
                        [komponentti])
                      paneelikomponentit))])])
 
-(defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet edelliset-rivit
+(defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
                              nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
                              voi-poistaa? toimintonappi-fn]}]
@@ -93,7 +93,7 @@
                   (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
                                                   :fokus-id fokus-id
                                                   :arvo arvo :tayta-alas tayta-alas
-                                                  :edelliset-rivit edelliset-rivit
+                                                  :rivi-index rivi-index
                                                   :tulevat-rivit tulevat-rivit
                                                   :hae hae
                                                   :sarake sarake :ohjaus ohjaus :rivi rivi}))
@@ -171,7 +171,7 @@
                                           :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
                                           :nayta-virheet? nayta-virheet? :nykyinen-fokus nykyinen-fokus
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
-                                          :tulevat-rivit (tulevat-rivit i) :edelliset-rivit (edelliset-rivit i)
+                                          :tulevat-rivit (tulevat-rivit i) :rivi-index i
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                           :skeema skeema :voi-poistaa? voi-poistaa?
@@ -282,19 +282,19 @@
                       (muokkaa-rivit! [this funktio args]
                         ;; Käytetään annettua funktiota päivittämään data niin, että mapissa olevat avaimet
                         ;; viittaavat aina samaan päivitettyyn riviin
-                        (let [avain-arvo-parit (map (fn [avain]
+                        (let [avain-rivi-parit (map (fn [avain]
                                                       (-> [avain (get @muokatut avain)]))
                                                     (keys @muokatut))
-                              arvot (map second avain-arvo-parit)
-                              uudet-rivit (apply funktio arvot args)
-                              uudet-avain-arvo-parit (map-indexed
+                              rivit (map second avain-rivi-parit)
+                              uudet-rivit (apply funktio rivit args)
+                              uudet-avain-rivi-parit (map-indexed
                                                        (fn [index pari]
                                                          (-> [(first pari) (nth uudet-rivit index)]))
-                                                       avain-arvo-parit)
+                                                       avain-rivi-parit)
                               uudet-rivit (reduce (fn [mappi pari]
                                                     (assoc mappi (first pari) (second pari)))
                                                   {}
-                                                  uudet-avain-arvo-parit)]
+                                                  uudet-avain-rivi-parit)]
                           (reset! muokatut uudet-rivit)))
 
                       (vetolaatikko-auki? [_ id]
