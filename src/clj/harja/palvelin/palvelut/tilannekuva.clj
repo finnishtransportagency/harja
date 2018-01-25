@@ -488,10 +488,13 @@
                         oikeudet/tilannekuva-historia)
         kayttajan-urakat-alueittain (->>
                                       (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-                                       db user (fn [urakka-id kayttaja]
-                                                 (oikeudet/voi-lukea? oikeus-nakyma
-                                                                      urakka-id
-                                                                      kayttaja))
+                                       db user
+                                       (if (roolit/tilaajan-kayttaja? user)
+                                         (constantly true)
+                                         (fn [urakka-id kayttaja]
+                                           (oikeudet/voi-lukea? oikeus-nakyma
+                                                                urakka-id
+                                                                kayttaja)))
                                        nil (:urakoitsija tiedot) nil
                                        nil (:alku tiedot) (:loppu tiedot))
                                       (map
@@ -509,20 +512,26 @@
         ;; löydettynä käyttäjän oma urakka. Tämä ajateltiin aluksi bugina, mutta sittemmin sitä pidettiinkin
         ;; ihan hyvänä rajoitteena. Käytännössä tämä rajaa haettavan aikavälin vain sellaiselle välille, jolla
         ;; käyttäjän oma urakka on voimassa.
-        lisaoikeudet (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
-                       user oikeus-nakyma
-                       kayttajan-urakat-alueittain)
-        lisaoikeuksien-urakat-alueittain (->>
-                                           (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-                                            db user (fn [urakka-id kayttaja]
-                                                      (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
-                                            nil (:urakoitsija tiedot) nil
-                                            nil (:alku tiedot) (:loppu tiedot))
-                                           (map
-                                             (fn [alue]
-                                               (update alue :urakat
-                                                       (fn [urakat]
-                                                         (filter :urakkanro urakat))))))
+
+        ;; Tilaajan käyttäjillä on oikeus kaikki urakoihin. Ei tarkastella silloin
+        ;; lisäoikeuksia ollenkaan jotta ollaan nopeampia
+        lisaoikeudet (if (roolit/tilaajan-kayttaja? user)
+                       []
+                       (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
+                        user oikeus-nakyma
+                        kayttajan-urakat-alueittain))
+        lisaoikeuksien-urakat-alueittain (when-not (empty? lisaoikeudet)
+                                           (->>
+                                             (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
+                                               db user (fn [urakka-id kayttaja]
+                                                         (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
+                                               nil (:urakoitsija tiedot) nil
+                                               nil (:alku tiedot) (:loppu tiedot))
+                                             (map
+                                               (fn [alue]
+                                                 (update alue :urakat
+                                                         (fn [urakat]
+                                                           (filter :urakkanro urakat)))))))
         lopulliset-kayttajan-urakat-alueittain (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
                                                  kayttajan-urakat-alueittain
                                                  lisaoikeuksien-urakat-alueittain)]

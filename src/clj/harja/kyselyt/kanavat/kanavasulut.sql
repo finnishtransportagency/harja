@@ -1,6 +1,6 @@
--- name: luo-kanava<!
--- vie entryn kanava-tauluun
-INSERT INTO kanava
+-- name: luo-kanavasulku<!
+-- vie entryn kan_sulku-tauluun, kanavasulku on osa kanavakokonaisuutta
+INSERT INTO kan_sulku
 (
   kanavanro,
   aluenro,
@@ -34,7 +34,8 @@ INSERT INTO kanava
   omistaja,
   geometria,
   luotu,
-  luoja
+  luoja,
+  poistettu
 )
 VALUES
   (
@@ -70,7 +71,8 @@ VALUES
     :omistaja,
     ST_GeomFromText(:geometria) :: GEOMETRY,
     current_timestamp,
-    :luoja
+    :luoja,
+    :poistettu
   )
 ON CONFLICT (kanavanro)
   DO UPDATE
@@ -107,11 +109,41 @@ ON CONFLICT (kanavanro)
       omistaja                  = :omistaja,
       geometria                 = :geometria :: GEOMETRY,
       muokattu                  = current_timestamp,
-      muokkaaja                 = :muokkaaja;
+      muokkaaja                 = :muokkaaja,
+      poistettu                 = :poistettu;
 
 
--- name: hae-kanavat
-SELECT * FROM kanava;
+-- name: merkitse-kanavasulut-poistetuksi<!
+UPDATE kan_sulku set poistettu = true, muokattu = current_timestamp, muokkaaja = :muokkaaja;
 
--- name: hae-kanava-tunnuksella
-SELECT * FROM kanava WHERE kanavanro = :kanavanumero;
+-- name: hae-kanavasulut
+SELECT * FROM kan_sulku;
+
+-- name: hae-kanavasulku-tunnuksella
+SELECT * FROM kan_sulku WHERE kanavanro = :kanavanumero;
+
+-- name: hae-kanavasulku-ja-kohde
+SELECT
+ sulku.nimi,
+ sulku.kanavakokonaisuus,
+ sulku.poistettu,
+ osa.nimi,
+ osa.oletuspalvelumuoto,
+ osa.muokkaaja,
+ osa.poistettu,
+ osa.kohde-id,
+ kohde.nimi,
+ kohde.kohdekokonaisuus-id,
+ kohde.poistettu,
+ kanava.nimi,
+ kanava.kanavanro
+ from
+kan_sulku as sulku,
+kan_kohteenosa as osa,
+kan_kohde as kohde,
+kan_kanavakokonaisuus as kanava
+WHERE
+sulku.kanavanro = osa.lahdetunnus AND
+osa.kohde-id = kohde.id AND
+kohde.kohdekokonaisuus-id = kanava.id
+and sulku.kanavanro = :kanavanumero
