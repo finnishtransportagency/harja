@@ -114,7 +114,8 @@
    {:tyhja "Lisää kokonaisuuksia oikeasta yläkulmasta"
     :tunniste ::kok/id
     :voi-poistaa? (fn [kokonaisuus]
-                    (tiedot/kokonaisuuden-voi-poistaa? app kokonaisuus))}
+                    (tiedot/kokonaisuuden-voi-poistaa? app kokonaisuus))
+    :voi-kumota? false}
    [{:otsikko "Nimi"
      :tyyppi :string
      :nimi ::kok/nimi
