@@ -5,7 +5,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
-                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
+                 [org.clojure/clojurescript "1.9.946"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-alpha17"] ; TODO Voisi poistaa, kun Clojure 1.9 päivitys toimii.
