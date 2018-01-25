@@ -5,7 +5,9 @@
 
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
             [harja.domain.vesivaylat.turvalaite :as tu]
-            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]))
+            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -436,7 +438,8 @@ tr-ikoni {:img (pinni-ikoni "musta")
        {:width (+ 1 levein) :color puhtaat/harmaa}]
       (mapv #(assoc % :dash +tyokoneviivan-dash+) viivat))))
 
-(defn kohteenosa-kohteiden-luonnissa [kohde sama-kohde?]
+(defn kohteenosa-kohteiden-luonnissa [osa sama-kohde?]
   (cond sama-kohde? (pinni-ikoni "vihrea")
-        (some? kohde) (pinni-ikoni "harmaa")
+        (and (some? (::osa/kohde osa))
+             (not (:poistettu osa))) (pinni-ikoni "harmaa")
         :default (pinni-ikoni "sininen")))

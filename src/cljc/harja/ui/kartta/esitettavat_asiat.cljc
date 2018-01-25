@@ -595,7 +595,7 @@
 
 (defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]
   ;; Näyttää toteuman reittipisteet palloina
-  (let [ikoni (ulkoasu/kohteenosa-kohteiden-luonnissa (::osa/kohde osa) osan-kohde-valittu?)]
+  (let [ikoni (ulkoasu/kohteenosa-kohteiden-luonnissa osa osan-kohde-valittu?)]
     (assoc osa
       :type :kohteenosa
       :nimi (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde osa) osa)
