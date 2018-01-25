@@ -92,8 +92,10 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        {:otsikko "Ylimääräiset vastaaottajat" :nimi :tehtavat :pakollinen? true
-         :uusi-rivi? true :palstoja 2
+        {:otsikko "Ylimääräiset vastaaottajat"
+         :nimi :ylimaaraiset-vastaanottajat
+         :uusi-rivi? true
+         :palstoja 2
          :tyyppi :komponentti
          :komponentti (fn [_]
                         (let [vastaanottajat (atom nil)]
