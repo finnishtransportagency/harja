@@ -224,7 +224,7 @@
     (is (false? (g/rivi-piilotetun-otsikon-alla? 5 testirivit #{:B}))
         "Otsikkorivi ei koskaan ole piilotetun otsikon alla")))
 
-(deftest toistaminen
+(deftest tayta-alas-toistaen
   (let [lahtorivit [{:arvo 1 :teksti "ABC1"}
                     {:arvo 2 :teksti "ABC2"}
                     {:arvo 3 :teksti "ABC3"}
