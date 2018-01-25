@@ -233,18 +233,32 @@
                     {:arvo nil :teksti "ABC"}
                     {:arvo nil :teksti "ABC"}
                     {:arvo nil :teksti "ABC"}]
-        lopputulos [{:arvo 1 :teksti "ABC"}
-                    {:arvo 2 :teksti "ABC"}
-                    {:arvo 3 :teksti "ABC"}
-                    {:arvo 1 :teksti "ABC"}
-                    {:arvo 2 :teksti "ABC"}
-                    {:arvo 3 :teksti "ABC"}
-                    {:arvo 1 :teksti "ABC"}
-                    {:arvo 2 :teksti "ABC"}]]
+        lopputulos-lahtoindeksilla-1 [{:arvo 1 :teksti "ABC"}
+                                      {:arvo 2 :teksti "ABC"}
+                                      {:arvo 1 :teksti "ABC"}
+                                      {:arvo 2 :teksti "ABC"}
+                                      {:arvo 1 :teksti "ABC"}
+                                      {:arvo 2 :teksti "ABC"}
+                                      {:arvo 1 :teksti "ABC"}
+                                      {:arvo 2 :teksti "ABC"}]
+        lopputulos-lahtoindeksilla-2 [{:arvo 1 :teksti "ABC"}
+                                      {:arvo 2 :teksti "ABC"}
+                                      {:arvo 3 :teksti "ABC"}
+                                      {:arvo 1 :teksti "ABC"}
+                                      {:arvo 2 :teksti "ABC"}
+                                      {:arvo 3 :teksti "ABC"}
+                                      {:arvo 1 :teksti "ABC"}
+                                      {:arvo 2 :teksti "ABC"}]]
 
+    (is (= (grid-yleiset/tayta-tiedot-alas-toistuvasti
+             lahtorivit
+             1
+             (fn [lahtorivi tama-rivi]
+               (assoc tama-rivi :arvo (:arvo lahtorivi))))
+           lopputulos-lahtoindeksilla-1))
     (is (= (grid-yleiset/tayta-tiedot-alas-toistuvasti
              lahtorivit
              2
              (fn [lahtorivi tama-rivi]
                (assoc tama-rivi :arvo (:arvo lahtorivi))))
-           lopputulos))))
+           lopputulos-lahtoindeksilla-2))))
