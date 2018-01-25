@@ -1,9 +1,10 @@
 (ns harja.palvelin.oikeudet-test
-    (:require [clojure.test :refer :all]
-              [taoensso.timbre :as log]
-              [slingshot.slingshot :refer [try+ throw+]]
-              [harja.domain.oikeudet :as oikeudet]
-              [harja.testi :refer :all]))
+  (:require [clojure.test :refer :all]
+            [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [try+ throw+]]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.testi :refer :all]
+            [harja.domain.roolit :as roolit]))
 
 ;; Järjestelmävastaava
 (def jvh {:roolit #{"Jarjestelmavastaava"}
@@ -99,8 +100,16 @@
              :organisaatio ely
              :organisaation-urakat ely-urakat})
 
+;; Käyttäjä ilman organisaatiota
+(def kayttaja-ilman-organisaatiota
+  {:roolit #{}
+   :urakkaroolit {}
+   :organisaatioroolit {}
+   :organisaatio nil
+   :organisaation-urakat ely-urakat})
 
-
+(deftest kayttaja-ilman-organisaatiota-ei-tulkita-tilaajan-kayttajaksi
+  (is (not (roolit/tilaajan-kayttaja? kayttaja-ilman-organisaatiota))))
 
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
