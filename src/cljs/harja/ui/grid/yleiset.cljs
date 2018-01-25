@@ -31,10 +31,9 @@
                    [harja.tyokalut.ui :refer [for*]]))
 
 (defn tayta-tiedot-alas
-  "Täyttää rivin tietoja alaspäin."
+  "Täyttää rivin tietoja alaspäin käyttäen tayta-fn funktiota."
   [rivit sarake lahtorivi tayta-fn]
   (let [tayta-fn (or tayta-fn
-
                      ;; Oletusfunktio kopioi tiedon sellaisenaan
                      (let [nimi (:nimi sarake)
                            lahtoarvo ((or (:hae sarake) nimi) lahtorivi)
@@ -58,6 +57,19 @@
                              rivit)))))]
     ;; Palautetaan rivit alkuperäisessä järjestyksessä
     (reverse tulos)))
+
+(defn tayta-tiedot-alas-toistuvasti
+  "Täyttää rivin tietoja alaspäin toistuvasti käyttäen tayta-fn funktiota.
+   toista-asti-index osoittaa riviä, josta sama rivi mukaanluettuna käytetään edellisiä rivejä toistona."
+  [rivit toista-asti-index tayta-fn]
+  (map-indexed
+    (fn [index rivi]
+      (if (<= index toista-asti-index)
+        rivi
+        (let [toistettava-rivi (- index (* (int (/ index (inc toista-asti-index)))
+                                           (inc toista-asti-index)))]
+          (assoc rivi :arvo (:arvo (nth rivit toistettava-rivi))))))
+    rivit))
 
 (defn- tayta-alas-nappi [{:keys [fokus tayta-alas fokus-id arvo edelliset-rivit
                                  tulevat-rivit hae sarake ohjaus rivi]}]
@@ -91,15 +103,16 @@
                     :left (when (= :oikea (:tasaa sarake)) 0)
                     :right (when-not (= :oikea (:tasaa sarake)) "100%")})
           :ikoni (ikonit/livicon-arrow-down)}]
-        [napit/yleinen-toissijainen "Toista"
-         #(muokkaa-rivit! ohjaus tayta-tiedot-alas [sarake rivi (:tayta-toistuvasti-fn sarake)])
-         {:title "Toista edelliset rivit alla oleville riveille."
-          :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
-          :style (case napin-sijainti
-                   :ylos
-                   {:transform "translateY(-100%)"}
-                   :sisalla
-                   {:position "absolute"
-                    :left (when (= :oikea (:tasaa sarake)) 0)
-                    :right (when-not (= :oikea (:tasaa sarake)) "100%")})
-          :ikoni (ikonit/livicon-arrow-down)}]]])))
+        (when (:tayta-alas-toistuvasti? sarake)
+          [napit/yleinen-toissijainen "Toista"
+           #(muokkaa-rivit! ohjaus tayta-tiedot-alas-toistuvasti [toista-asti-index (:tayta-fn sarake)])
+           {:title "Toista edelliset rivit alla oleville riveille."
+            :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
+            :style (case napin-sijainti
+                     :ylos
+                     {:transform "translateY(-100%)"}
+                     :sisalla
+                     {:position "absolute"
+                      :left (when (= :oikea (:tasaa sarake)) 0)
+                      :right (when-not (= :oikea (:tasaa sarake)) "100%")})
+            :ikoni (ikonit/livicon-arrow-down)}])]])))
