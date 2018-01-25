@@ -339,14 +339,14 @@
                     ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
                     :style {:height "260px"}}]
              [:figcaption
-              [:p "Voit kopioida kentän arvon alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien on oltava tyhjiä."]]]]
+              [:p "Voit kopioida kentän arvon alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]
            [:div
             [:h6 "Arvojen toistaminen alaspäin"]
             [:figure
              [:img {:src "images/pot_taytto2.gif"
                     :style {:height "260px"}}]
              [:figcaption
-              [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien on oltava tyhjiä."]]]]]]
+              [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
           {:voi-kumota? false
