@@ -63,7 +63,7 @@
                                  tulevat-rivit hae sarake ohjaus rivi]}]
   (when (and (= fokus fokus-id)
              (tayta-alas arvo)
-
+             (not (nil? arvo))
              ;; Sallitaan täyttö, vain jos tulevia rivejä on ja kaikkien niiden arvot ovat tyhjiä
              (not (empty? tulevat-rivit))
              (every? str/blank? (map hae tulevat-rivit)))
@@ -83,7 +83,7 @@
          {:title (:tayta-tooltip sarake)
           :luokka (str "nappi-tayta " (when (:kelluta-tayta-nappi sarake) " kelluta-tayta-nappi"))
           :style (case napin-sijainti
-                   :ylos
+                   :ylos(:tayta-alas? sarake)
                    {:transform "translateY(-100%)"}
                    :sisalla
                    {:position "absolute"
