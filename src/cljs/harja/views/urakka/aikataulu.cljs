@@ -103,9 +103,8 @@
                            {:tyhja "Ei vastaanottajia."
                             :voi-muokata? true
                             :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                            :muutos #(do
-                                       (swap! tiedot/modal-data assoc-in [:lomakedata :ylimaaraiset-vastaanottajat]
-                                              (grid/hae-muokkaustila %)))}
+                            :muutos #(swap! tiedot/modal-data assoc-in [:lomakedata :ylimaaraiset-vastaanottajat]
+                                            (grid/hae-muokkaustila %))}
                            [{:otsikko "Sähköpostiosoite"
                              :nimi :sahkoposti
                              :tyyppi :string
