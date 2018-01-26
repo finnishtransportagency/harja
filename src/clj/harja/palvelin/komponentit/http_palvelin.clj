@@ -305,7 +305,7 @@
                          lopetus-fn kehitysmoodi
                          mittarit]
   component/Lifecycle
-  (start [{metriikka :metriikka :as this}]
+  (start [{metriikka :metriikka db :db :as this}]
     (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (when metriikka
       (metriikka/lisaa-mittari! metriikka "http" mittarit))

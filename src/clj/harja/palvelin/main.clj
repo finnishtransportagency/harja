@@ -176,7 +176,7 @@
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
-                       [:todennus :metriikka])
+                       [:todennus :metriikka :db])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
