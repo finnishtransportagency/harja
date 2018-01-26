@@ -272,15 +272,19 @@
    joten ulkopuolisten ei ole mahdollista laskea CSRF-tokenia random-avaimesta.
 
    Kun käyttäjä lähettää pyynnön palvelimelle, niin tällä funktiolla
-   tarkistetaan, että kekseissä tullut token on sama kuin headereiden random-avaimesta
+   tarkistetaan, että kekseissä tullut token on sama kuin headerissa mukana oleva, random-avaimesta
    muodostettu CSRF-token. Tämä estää sen, ettei käyttäjän selainta voi huijata
    lähettämään pyyntöjä Harjaan ulkopuolisesta lähteestä, sillä pyynnöissä
    tulee aina olla mukana DOMista luettu random avain. Tällä siis
-   todennetaan, että pyyntö tulee oikeasti Harjasta.
+   todennetaan, että pyyntö tulee oikeasti Harjan palvelimen käyttäjälle kopioimalta frontilta.
 
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
   [f anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
+    ;; TODO Tuki usealle CSRF-sessiolle.
+    ;; Tarkista, että kannasta löytyy käyttäjän random avaimella generoitu
+    ;; CSRF-token. Toisin sanoen tunnistetaan, että olemme joskus aiemmin palauttaneet käyttäjälle
+    ;; tämän random avaimen, ja se on edelleen voimassa.
     (if (or (and (some? (headers "x-csrf-token"))
                  (= (index/muodosta-csrf-token (headers "x-csrf-token")
                                                anti-csrf-token-secret-key)
