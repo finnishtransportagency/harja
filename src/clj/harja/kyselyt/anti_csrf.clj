@@ -14,6 +14,7 @@
     db
     {:kayttajanimi kayttajanimi
      :csrf_token csrf-token
+     :nyt (c/to-timestamp (t/now))
      :voimassa (c/to-timestamp (t/plus (t/now)
                                        (t/seconds csrf-voimassa-s)))}))
 

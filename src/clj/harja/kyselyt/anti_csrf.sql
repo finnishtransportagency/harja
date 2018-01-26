@@ -1,8 +1,8 @@
 -- name: luo-csrf-sessio-kayttajanimelle<!
-INSERT INTO kayttaja_anti_csrf_token (kayttaja_id, anti_csrf_token, voimassa)
+INSERT INTO kayttaja_anti_csrf_token (kayttaja_id, anti_csrf_token, voimassa, luotu)
 VALUES ((SELECT id
          FROM kayttaja
-         WHERE kayttajanimi = :kayttajanimi), :csrf_token, :voimassa);
+         WHERE kayttajanimi = :kayttajanimi), :csrf_token, :voimassa, :nyt);
 
 -- name: virkista-kayttajanimen-csrf-sessio-jos-voimassa<!
 UPDATE kayttaja_anti_csrf_token
