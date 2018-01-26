@@ -214,22 +214,21 @@
        (into #{})))
 
 (defn index-kasittelija [db oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
-  (let [uri (:uri req)
-        random-avain (index/tee-random-avain)
-        csrf-token (index/muodosta-csrf-token random-avain
-                                              anti-csrf-token-secret-key)]
-
-    (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi csrf-token)
-
+  (let [uri (:uri req)]
     (when (or (= uri "/")
               (= uri "/index.html"))
       (oikeudet/ei-oikeustarkistusta!)
-      {:status 200
-       :headers {"Content-Type" "text/html"
-                 "Cache-Control" "no-cache, no-store, must-revalidate"
-                 "Pragma" "no-cache"
-                 "Expires" "0"}
-       :body (index/tee-paasivu random-avain kehitysmoodi)})))
+      (let [random-avain (index/tee-random-avain)
+            csrf-token (index/muodosta-csrf-token random-avain
+                                                  anti-csrf-token-secret-key)]
+        (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi csrf-token)
+        {:status 200
+
+         :headers {"Content-Type" "text/html"
+                   "Cache-Control" "no-cache, no-store, must-revalidate"
+                   "Pragma" "no-cache"
+                   "Expires" "0"}
+         :body (index/tee-paasivu random-avain kehitysmoodi)}))))
 
 (defn ls-index-kasittelija [db oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
