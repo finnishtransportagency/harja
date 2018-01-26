@@ -219,7 +219,7 @@
         csrf-token (index/muodosta-csrf-token random-avain
                                               anti-csrf-token-secret-key)]
 
-    (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi random-avain)
+    (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi csrf-token)
 
     (when (or (= uri "/")
               (= uri "/index.html"))
@@ -252,7 +252,7 @@
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
 
-        (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi random-avain)
+        (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi csrf-token)
 
         (do (oikeudet/ei-oikeustarkistusta!)
            {:status 200
@@ -325,7 +325,8 @@
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
                              random-avain (get (:headers req) "x-csrf-token")
-                             _ (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi random-avain)
+                             cstf-token (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key)
+                             _ (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi cstf-token)
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                 (wrap-anti-forgery anti-csrf-token-secret-key))]
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
