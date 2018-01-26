@@ -38,7 +38,9 @@
      :komponentti (fn [rivi]
                     [:div
                      [:button.nappi-toissijainen.nappi-grid
-                      {:on-click #(reset! tiedot/valittu-suolatoteuma rivi)}
+                      {:on-click #(do
+                                    (nav/vaihda-kartan-koko! :L)
+                                    (reset! tiedot/valittu-suolatoteuma rivi))}
                       (ikonit/ikoni-ja-teksti (ikonit/map-marker) "Näytä kartalla")]])}]
    (map-indexed (fn [i itm] (assoc itm :id i)) (:toteumat suolan-kaytto))])
 
