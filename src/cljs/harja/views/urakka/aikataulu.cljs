@@ -97,7 +97,7 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        {:otsikko "Muut vastaaottajat"
+        {:otsikko "Muut vastaanottajat"
          :nimi :muut-vastaanottajat
          :uusi-rivi? true
          :palstoja 2
