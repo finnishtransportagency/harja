@@ -19,7 +19,8 @@
             [harja.domain.urakka :as ur]
             [clojure.string :as str]
             [reagent.core :as r]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -422,9 +423,7 @@
 
   KohteenosaKartallaKlikattu
   (process-event [{osa :osa} app]
-    ;; Täällä olisi ollut hyvä piilottaa infopaneeli, mutta
-    ;; harja.tiedot.kartta require aiheutti syklisen riippuvuuden, mitä
-    ;; en alkanut ratkomaan
+    (paneelin-tila/piilota-infopaneeli!)
     (if (osa-kuuluu-valittuun-kohteeseen? osa app)
       ;; Irrota kohteesta
       (-> app
