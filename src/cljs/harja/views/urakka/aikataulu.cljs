@@ -112,7 +112,7 @@
                                             (grid/hae-muokkaustila %))}
                            [{:otsikko "Sähköpostiosoite"
                              :nimi :sahkoposti
-                             :tyyppi :string
+                             :tyyppi :email
                              :leveys 1}]
                            (atom muut-vastaanottajat)]))}
         {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
