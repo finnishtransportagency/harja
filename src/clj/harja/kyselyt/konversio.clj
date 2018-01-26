@@ -213,6 +213,11 @@
   (when dt
     (java.util.Date. (.getTime dt))))
 
+(defn unix-date->java-date
+  "Luo java.util.Date objektin annetusta unix-timestampista (sekunteja)."
+  [unix-date]
+  (java.util.Date. unix-date))
+
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"
   ([json]
