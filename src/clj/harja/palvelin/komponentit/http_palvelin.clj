@@ -212,7 +212,7 @@
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defn index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
+(defn index-kasittelija [oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
         random-avain (index/tee-random-avain)
         csrf-token (index/muodosta-csrf-token random-avain
@@ -225,13 +225,9 @@
                  "Cache-Control" "no-cache, no-store, must-revalidate"
                  "Pragma" "no-cache"
                  "Expires" "0"}
-       :cookies {"anti-csrf-token" {:value csrf-token
-                                    :http-only true
-                                    :path "/"
-                                    :max-age 36000000}}
        :body (index/tee-paasivu random-avain kehitysmoodi)})))
 
-(defn ls-index-kasittelija [kehitysmoodi anti-csrf-token-secret-key req]
+(defn ls-index-kasittelija [oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
         ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
         oikea-kohde "/harja/laadunseuranta/"]
@@ -257,38 +253,35 @@
                       "Cache-Control" "no-cache, no-store, must-revalidate"
                       "Pragma" "no-cache"
                       "Expires" "0"}
-            :cookies {"anti-csrf-token" {:value csrf-token
-                                         :http-only true
-                                         :path "/"
-                                         :max-age 36000000}}
             :body (index/tee-ls-paasivu random-avain kehitysmoodi)}))
       :default
       nil)))
 
 (defn wrap-anti-forgery
   "Käyttäjälle välitetyllä sivulla on DOMiin tallennettuna generoitu random avain.
-   Keksiin puolestaan on asetettu random-avaimesta muodostettu CSRF-token.
-   CSRF-token muodostetaan Harja-järjestelmän sisäistä salaista avainta hyödyntäen,
-   joten ulkopuolisten ei ole mahdollista laskea CSRF-tokenia random-avaimesta.
+   Kantaan puolestaan on tallennettu random-avaimesta ja Harjan sisäisestä salaisesta avaimesta
+   muodostettu CSRF-token, jolla on voimassaoloaika.
 
-   Kun käyttäjä lähettää pyynnön palvelimelle, niin tällä funktiolla
-   tarkistetaan, että kekseissä tullut token on sama kuin headerissa mukana oleva, random-avaimesta
-   muodostettu CSRF-token. Tämä estää sen, ettei käyttäjän selainta voi huijata
+   Kun käyttäjä lähettää pyynnön Harjan palvelimelle, niin tällä funktiolla
+   tarkistetaan, että headerissa mukana oleva random avain muodostaa yhdessä Harjan salaisen avaimen kansssa
+   kannassa voimassa olevan CSRF-tokenin. Tämä estää sen, ettei käyttäjän selainta voi huijata
    lähettämään pyyntöjä Harjaan ulkopuolisesta lähteestä, sillä pyynnöissä
-   tulee aina olla mukana DOMista luettu random avain. Tällä siis
-   todennetaan, että pyyntö tulee oikeasti Harjan palvelimen käyttäjälle kopioimalta frontilta.
+   tulee aina olla mukana DOMista luettu random avain. Tällä siis todennetaan, että pyyntö
+   tulee oikeasti Harjan palvelimen käyttäjälle kopioimalta frontilta.
 
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
   [f anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
-    ;; TODO Tuki usealle CSRF-sessiolle.
-    ;; Tarkista, että kannasta löytyy käyttäjän random avaimella generoitu
-    ;; CSRF-token. Toisin sanoen tunnistetaan, että olemme joskus aiemmin palauttaneet käyttäjälle
-    ;; tämän random avaimen, ja se on edelleen voimassa.
+
     (if (or (and (some? (headers "x-csrf-token"))
                  (= (index/muodosta-csrf-token (headers "x-csrf-token")
                                                anti-csrf-token-secret-key)
-                    (:value (cookies "anti-csrf-token")))))
+                    ;; TODO Tuki usealle CSRF-sessiolle.
+                    ;; Tarkista, että kannasta löytyy käyttäjän random avaimella generoitu
+                    ;; CSRF-token. Toisin sanoen tunnistetaan, että olemme joskus aiemmin palauttaneet käyttäjälle
+                    ;; tämän random avaimen, ja se on edelleen voimassa.
+                    nil
+                    )))
       (f req)
       (do
         (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
@@ -323,6 +316,7 @@
                        (metriikka/inc! mittarit :aktiiviset_pyynnot)
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
+                             oam-kayttajanimi (get (:headers req) "oam_remote_user")
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                 (wrap-anti-forgery anti-csrf-token-secret-key))]
 
@@ -331,9 +325,11 @@
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
                                           (conj (partial index-kasittelija
+                                                         oam-kayttajanimi
                                                          kehitysmoodi
                                                          anti-csrf-token-secret-key))
                                           (conj (partial ls-index-kasittelija
+                                                         oam-kayttajanimi
                                                          kehitysmoodi
                                                          anti-csrf-token-secret-key))
                                           (conj ui-kasittelija))
