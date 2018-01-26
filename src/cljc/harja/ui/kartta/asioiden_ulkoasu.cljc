@@ -5,7 +5,8 @@
 
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
             [harja.domain.vesivaylat.turvalaite :as tu]
-            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]))
+            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
+            [harja.ui.kartta.varit :as varit]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -291,7 +292,7 @@
          (::tu/tyyppi turvalaite)))])
 
 
-(defn suolatoteuman-nuoli []
+(defn suolatoteuman-nuoli [valittu?]
   [{:paikka [:loppu]
     :tyyppi :nuoli
     :img (nuoli-ikoni "musta")}
@@ -321,17 +322,17 @@
     :dash [3 9]
     :width 3}])
 
-(defn suolatoteuman-viiva []
+(defn suolatoteuman-viiva [valittu?]
   [{:color puhtaat/musta
-    :width 8}
+    :width (if valittu? 16 10)}
    {:color puhtaat/harmaa
-    :width 6}
+    :width (if valittu? 12 8)}
    {:color puhtaat/musta
     :dash [3 9]
-    :width 4}
-   {:color puhtaat/musta
+    :width (if valittu? 8 6)}
+   {:color (if valittu? (varit/rgb 102 217 255) puhtaat/sininen)
     :dash [3 9]
-    :width 3}])
+    :width (if valittu? 6 5)}])
 
 (defn tarkastuksen-ikoni [{:keys [ok? tekija] :as tarkastus} reitti?]
   (cond

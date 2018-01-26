@@ -347,14 +347,13 @@
       :alue alue)))
 
 (defmethod asia-kartalle :suolatoteuma [suolatoteuma valittu?]
-  (let [nuoli (ulkoasu/suolatoteuman-nuoli)
-        viiva (ulkoasu/suolatoteuman-viiva)]
+  (let [viiva (ulkoasu/suolatoteuman-viiva valittu?)]
     (assoc suolatoteuma
       :type :suolatoteuma
       :nimi "Suolatoteuma"
       :selite {:teksti "Suolatoteuma"
                :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)}
-      :alue (maarittele-feature suolatoteuma valittu? nuoli viiva))))
+      :alue (maarittele-feature suolatoteuma false nil viiva))))
 
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
   (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
