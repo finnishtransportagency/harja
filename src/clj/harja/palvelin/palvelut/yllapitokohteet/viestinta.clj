@@ -290,7 +290,7 @@
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
   [{:keys [fim email kohteen-tiedot tiemerkintapvm
-           kopio-itselle? saate kayttaja]}]
+           kopio-itselle? saate kayttaja muut-vastaanottajat]}]
   (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu
     {:fim fim :email email :kohteen-tiedot kohteen-tiedot
      :tiemerkintapvm tiemerkintapvm
