@@ -49,7 +49,7 @@
      (when-let [linkit (tyyppi linkin-kasittelijat)]
        [:div
         (for*
-          [{:keys [teksti ikoni tooltip toiminto] :as linkki}
+          [{:keys [teksti teksti-fn ikoni tooltip toiminto] :as linkki}
            (if (vector? linkit)
              linkit [linkit])
 
@@ -58,8 +58,9 @@
                      ((:when linkki) data))]
           [yleiset/wrap-if tooltip
            [yleiset/tooltip {} :% tooltip]
-           [napit/yleinen-toissijainen teksti #(toiminto data) {:ikoni ikoni
-                                                                :luokka "ip-toiminto btn-xs"}]])])
+           [napit/yleinen-toissijainen (or teksti (teksti-fn data))
+            #(toiminto data) {:ikoni ikoni
+                              :luokka "ip-toiminto btn-xs"}]])])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
                           (fn [kentan-skeema]

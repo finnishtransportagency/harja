@@ -46,6 +46,7 @@
     :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
     :turvalaitteiden-geometriahaku
     :vaylien-geometriahaku
+    :kanavasiltojen-geometriahaku
     :mobiili-laadunseuranta
     :api-urakan-tyotunnit
     :sopimukset

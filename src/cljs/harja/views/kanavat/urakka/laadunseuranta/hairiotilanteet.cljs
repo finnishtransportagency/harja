@@ -232,7 +232,7 @@
        {:otsikko "Kohteen osa"
         :nimi ::hairiotilanne/kohteenosa
         :tyyppi :valinta
-        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
+        :valinta-nayta #(or (kohteenosa/fmt-kohteenosa %) "- Valitse osa -")
         :valinnat (or valitun-kohteen-osat [])})
      {:otsikko "Vikaluokka"
       :nimi ::hairiotilanne/vikaluokka
