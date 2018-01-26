@@ -37,12 +37,18 @@
      :leveys 10
      :komponentti (fn [rivi]
                     [:div
-                     [:button.nappi-toissijainen.nappi-grid
+                     [(if (tiedot/valittu-suolatoteuma? rivi)
+                        :button.nappi-ensisijainen.nappi-grid
+                        :button.nappi-toissijainen.nappi-grid)
                       {:on-click #(do
                                     (nav/vaihda-kartan-koko! :L)
                                     (reset! tiedot/valittu-suolatoteuma rivi))}
                       (ikonit/ikoni-ja-teksti (ikonit/map-marker) "Näytä kartalla")]])}]
-   (map-indexed (fn [i itm] (assoc itm :id i)) (:toteumat suolan-kaytto))])
+   (map-indexed (fn [i toteuma]
+                  (assoc toteuma :id i))
+                (:toteumat suolan-kaytto))])
+
+
 
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa valittu-suolatoteuma]
   [:div.suolatoteumat
@@ -89,11 +95,8 @@
       :hae #(if (muokattava? %)
               (:lisatieto %)
               (str (:lisatieto %) " (Koneellisesti raportoitu)"))}]
+    listaus]
 
-    (map #(if valittu-suolatoteuma
-            (assoc % :korosta-hennosti true)
-            %) listaus)]
-   
    (when-not (empty? @tiedot/toteumat)
      [:div.bold kaytetty-yhteensa])])
 
