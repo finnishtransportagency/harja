@@ -191,7 +191,7 @@
    ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
-  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate ilmoittaja]}]
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate muut-vastaanottajat ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
                 tiemerkintaurakka-nimi pituus]} kohteen-tiedot
@@ -225,6 +225,17 @@
          :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})
+      (doseq [muu-vastaanottaja muut-vastaanottajat]
+        (try
+          (sahkoposti/laheta-viesti!
+            email
+            (sahkoposti/vastausosoite email)
+            muu-vastaanottaja
+            (str "Harja: " viestin-otsikko)
+            viestin-vartalo)
+          (catch Exception e
+            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                               muu-vastaanottaja (pr-str e))))))
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
         (viestinta/laheta-sahkoposti-itselle
           {:email email
@@ -285,4 +296,5 @@
      :tiemerkintapvm tiemerkintapvm
      :kopio-itselle? kopio-itselle?
      :saate saate
+     :muut-vastaanottajat muut-vastaanottajat
      :ilmoittaja kayttaja}))

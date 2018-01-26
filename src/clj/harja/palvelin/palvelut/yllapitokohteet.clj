@@ -161,6 +161,7 @@
              :tiemerkintapvm tiemerkintapvm
              :kopio-itselle? kopio-itselle?
              :saate saate
+             :muut-vastaanottajat muut-vastaanottajat
              :kayttaja user})))
 
       (hae-urakan-aikataulu db user {:urakka-id urakka-id
