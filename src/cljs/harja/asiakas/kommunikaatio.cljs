@@ -100,12 +100,13 @@
                  (do (kasittele-palvelinvirhe palvelu vastaus)
                      (close! chan))
 
-                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
-                 (kysely palvelu metodi parametrit (update opts
-                                                           :yritysten-maara (fnil inc 0)
-                                                           :uudelleenyritys-timeout
-                                                           (let [timeout (:uudelleenyritys-timeout opts)]
-                                                             (+ (or timeout 2000) 2000))))
+                 (and true (contains? #{:post :get} metodi) (< yritysten-maara 5))
+                 (kysely palvelu metodi parametrit (assoc opts
+                                                     :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
+                                                                        (+ (or yritysten-maara 0) 1))
+                                                     :uudelleenyritys-timeout
+                                                     (let [timeout (:uudelleenyritys-timeout opts)]
+                                                       (+ (or timeout 2000) 2000))))
 
                  :default
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
