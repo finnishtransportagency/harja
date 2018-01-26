@@ -221,7 +221,7 @@
       (let [random-avain (index/tee-random-avain)
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
-        (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi csrf-token)
+        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token)
         {:status 200
 
          :headers {"Content-Type" "text/html"
@@ -251,7 +251,7 @@
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
 
-        (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi csrf-token)
+        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token)
 
         (do (oikeudet/ei-oikeustarkistusta!)
             {:status 200
