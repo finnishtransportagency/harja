@@ -44,6 +44,7 @@
     :tunniste ::kohteenosa/id
     :voi-lisata? false
     :voi-kumota? false
+    :piilota-toiminnot? true
     :virhe-viesti (let [vaihdetut (filter :vanha-kohde haetut-kohteenosat)]
                     (when-not (empty? vaihdetut)
                       (str "Osia siirretty kohteista: " (str/join ", " (map
