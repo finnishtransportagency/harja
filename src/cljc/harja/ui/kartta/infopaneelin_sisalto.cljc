@@ -601,6 +601,20 @@
                         ]))}]))
      :data turvalaite}))
 
+
+(defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]
+  {:tyyppi :suolatoteuma
+   :jarjesta-fn (let [fn :alkanut]
+                  (if (fn suolatoteuma)
+                    fn
+                    (constantly false)))
+   :otsikko "Suolatoteuma"
+   :tiedot [{:otsikko "Materiaali" :nimi :materiaali_nimi}
+            {:otsikko "Määrä" :nimi :maara}
+            {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
+            {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}]
+   :data suolatoteuma})
+
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))
             ", palautetaan tyhjä itemille " (pr-str x))
