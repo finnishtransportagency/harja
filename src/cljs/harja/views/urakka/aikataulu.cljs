@@ -72,9 +72,9 @@
                         :tiemerkintapvm (:valmis-tiemerkintaan (:lomakedata data))
                         :kopio-itselle? (:kopio-itselle? (:lomakedata data))
                         :saate (:saate (:lomakedata data))
-                        :ylimaaraiset-vastaanottajat (->> (vals (get-in
+                        :muut-vastaanottajat (->> (vals (get-in
                                                                   data
-                                                                  [:lomakedata :ylimaaraiset-vastaanottajat]))
+                                                                  [:lomakedata :muut-vastaanottajat]))
                                                           (filter (comp not :poistettu))
                                                           (map :sahkoposti))
                         :urakka-id urakka-id
@@ -97,24 +97,24 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        {:otsikko "Ylimääräiset vastaaottajat"
-         :nimi :ylimaaraiset-vastaanottajat
+        {:otsikko "Muut vastaaottajat"
+         :nimi :muut-vastaanottajat
          :uusi-rivi? true
          :palstoja 2
          :tyyppi :komponentti
          :komponentti (fn [_]
-                        (let [ylimaaraiset-vastaanottajat (get-in data [:lomakedata :ylimaaraiset-vastaanottajat])]
+                        (let [muut-vastaanottajat (get-in data [:lomakedata :muut-vastaanottajat])]
                           [grid/muokkaus-grid
                            {:tyhja "Ei vastaanottajia."
                             :voi-muokata? true
                             :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                            :muutos #(swap! tiedot/modal-data assoc-in [:lomakedata :ylimaaraiset-vastaanottajat]
+                            :muutos #(swap! tiedot/modal-data assoc-in [:lomakedata :muut-vastaanottajat]
                                             (grid/hae-muokkaustila %))}
                            [{:otsikko "Sähköpostiosoite"
                              :nimi :sahkoposti
                              :tyyppi :string
                              :leveys 1}]
-                           (atom ylimaaraiset-vastaanottajat)]))}
+                           (atom muut-vastaanottajat)]))}
         {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
          :koko [90 8]
          :nimi :saate :palstoja 3 :tyyppi :text}

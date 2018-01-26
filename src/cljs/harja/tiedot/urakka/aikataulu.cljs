@@ -51,12 +51,12 @@
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm kopio-itselle? saate
-                                                      urakka-id sopimus-id vuosi ylimaaraiset-vastaanottajat]}]
+                                                      urakka-id sopimus-id vuosi muut-vastaanottajat]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
                                                     :kopio-itselle? kopio-itselle?
                                                     :saate saate
-                                                    :ylimaaraiset-vastaanottajat ylimaaraiset-vastaanottajat
+                                                    :muut-vastaanottajat muut-vastaanottajat
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
