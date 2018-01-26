@@ -3,6 +3,7 @@
   päällä/pois flägit ja osaa asettaa ne."
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
@@ -33,7 +34,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
             [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti])
-  (:require-macros [reagent.ratom :refer [reaction] :as ratom]
+  (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
 ;; Kaikki näytettävät karttatasot
@@ -242,6 +243,9 @@
   ([avain] (poista-geometria! avain :nakyman-geometriat))
   ([avain taso]
    (swap! (taso geometrioiden-atomit) dissoc avain)))
+
+(run! (when-not @paneelin-tila/nayta-infopaneeli?
+        (poista-geometria! :klikattu-karttapiste :infopaneelin-merkki)))
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."

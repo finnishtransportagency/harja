@@ -6,23 +6,25 @@
             [harja.views.kartta.tasot :as tasot]
             [harja.loki :refer [log]]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
-            [harja.ui.openlayers :as openlayers])
+            [harja.ui.openlayers :as openlayers]
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction]]))
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
 
-(defonce nayta-infopaneeli? (atom false))
-(defonce infopaneeli-nakyvissa? (reaction (and @nayta-infopaneeli? @nav/kartta-nakyvissa?)))
+(defonce infopaneeli-nakyvissa? (reaction @paneelin-tila/infopaneeli-nakyvissa?))
 (defonce infopaneelin-linkkifunktiot (atom nil))
 
 (defn keskita-kartta-alueeseen! [alue]
   (reset! nav/kartan-extent alue))
 
 (defn piilota-infopaneeli! []
-  (reset! nayta-infopaneeli? false)
-  (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki))
+  (paneelin-tila/piilota-infopaneeli!))
+
+(defn nayta-infopaneeli! []
+  (paneelin-tila/nayta-infopaneeli!))
 
 (defn kasittele-infopaneelin-linkit!
   "Infopaneelin skeemat saattavat sisältää 'linkkejä', jotka käsitellään
