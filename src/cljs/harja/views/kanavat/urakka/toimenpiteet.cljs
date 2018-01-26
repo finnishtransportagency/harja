@@ -167,10 +167,10 @@
         :valinnat kohteet})
      (when (::kanavan-toimenpide/kohde toimenpide)
        (lomake/rivi
-         {:otsikko "Kohteen osa"
+         {:otsikko "Kohteenosa"
           :nimi ::kanavan-toimenpide/kohteenosa
           :tyyppi :valinta
-          :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "Ei kohdeosaa")
+          :valinta-nayta #(or (kohteenosa/fmt-kohteenosa %) "Ei kohteenosaa")
           :valinnat (or valitun-kohteen-osat [])}
          {:otsikko "Huoltokohde"
           :nimi ::kanavan-toimenpide/huoltokohde
