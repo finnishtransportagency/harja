@@ -6,8 +6,7 @@
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohdekokonaisuus :as kok]))
 
-;; Disabloitu toistaiseksi, alkoi failata kun oikeustarkistus korjattiin
-#_(deftest kohteiden-urakkatiedot
+(deftest kohteiden-urakkatiedot
   (is (= [{::kohde/id 1 ::kohde/urakat [{:foo :bar}
                                         {:foo :baz}]}
           {::kohde/id 2 ::kohde/urakat [{:foo :baz}]}
