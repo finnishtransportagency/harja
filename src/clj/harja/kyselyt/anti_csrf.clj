@@ -9,7 +9,11 @@
 
 (def csrf-voimassa-s (* 60 60 24)) ;; 24h
 
-(defn luo-csrf-sessio [db kayttajanimi csrf-token]
+(defn luo-csrf-sessio
+  "Poistaa käyttäjän ei-voimassa olevat CSRF-sessiot ja luo uuden."
+  [db kayttajanimi csrf-token]
+  (poista-kayttajanimen-vanhentuneet-csrf-sessiot! db {:kayttajanimi kayttajanimi
+                                                        :nyt (c/to-timestamp (t/now))})
   (luo-csrf-sessio-kayttajanimelle<!
     db
     {:kayttajanimi kayttajanimi
