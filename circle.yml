@@ -14,7 +14,7 @@ dependencies:
     - echo 'Europe/Helsinki' | sudo tee /etc/timezone
     - sudo dpkg-reconfigure --frontend noninteractive tzdata
     - lein --version
-    - yes | lein upgrade
+    - yes | sudo lein upgrade
     - touch casetest && rm CaSeTeSt || true
 
 test:
