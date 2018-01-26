@@ -213,7 +213,7 @@
        (map #(-> % .getParameterTypes alength))
        (into #{})))
 
-(defn index-kasittelija [oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
+(defn index-kasittelija [db oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
         random-avain (index/tee-random-avain)
         csrf-token (index/muodosta-csrf-token random-avain
@@ -231,7 +231,7 @@
                  "Expires" "0"}
        :body (index/tee-paasivu random-avain kehitysmoodi)})))
 
-(defn ls-index-kasittelija [oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
+(defn ls-index-kasittelija [db oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)
         ;; Tuotantoympäristössä URI tulee aina ilman "/harja" osaa
         oikea-kohde "/harja/laadunseuranta/"]
@@ -326,11 +326,13 @@
                                                 dev-resurssit resurssit) false)
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija
+                                          (conj (partial db
+                                                         index-kasittelija
                                                          oam-kayttajanimi
                                                          kehitysmoodi
                                                          anti-csrf-token-secret-key))
-                                          (conj (partial ls-index-kasittelija
+                                          (conj (partial db
+                                                         ls-index-kasittelija
                                                          oam-kayttajanimi
                                                          kehitysmoodi
                                                          anti-csrf-token-secret-key))
