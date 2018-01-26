@@ -225,7 +225,7 @@
           valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)
           lahetettavat-kohteet (filter #(pvm/sama-tai-jalkeen?
                                           ;; Asiakkaan pyynnöstä toteutettu niin, että maili lähtee vain jos
-                                          ;; loppupvm on nykypäivä tai myöhempi. Tulevaisuuteen suunniteltu
+                                          ;; loppupvm on nykypäivä tai mennyt aika. Tulevaisuuteen suunniteltu
                                           ;; loppupvm ei generoi maililähetystä.
                                           (pvm/joda-timeksi (pvm/nyt))
                                           (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
