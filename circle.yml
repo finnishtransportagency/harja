@@ -13,10 +13,8 @@ dependencies:
     - cd tietokanta; sh devdb_up.sh
     - echo 'Europe/Helsinki' | sudo tee /etc/timezone
     - sudo dpkg-reconfigure --frontend noninteractive tzdata
-    - sudo apt-get -y remove clojure1.6 || true
     - lein --version
     - yes | sudo lein upgrade
-    - sudo lein self-install
     - touch casetest && rm CaSeTeSt || true
 
 test:
