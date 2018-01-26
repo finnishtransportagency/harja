@@ -16,6 +16,7 @@
     ;; Metriikkadatan julkaisu
             [harja.palvelin.komponentit.metriikka :as metriikka]
             [harja.palvelin.index :as index]
+            [harja.kyselyt.anti-csrf :as anti-csrf-q]
             [harja.geo :as geo]
             [harja.transit :as transit]
             [harja.domain.roolit]
@@ -217,6 +218,9 @@
         random-avain (index/tee-random-avain)
         csrf-token (index/muodosta-csrf-token random-avain
                                               anti-csrf-token-secret-key)]
+
+    (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi random-avain)
+
     (when (or (= uri "/")
               (= uri "/index.html"))
       (oikeudet/ei-oikeustarkistusta!)
@@ -247,6 +251,9 @@
       (let [random-avain (index/tee-random-avain)
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
+
+        (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi random-avain)
+
         (do (oikeudet/ei-oikeustarkistusta!)
            {:status 200
             :headers {"Content-Type" "text/html"
@@ -317,9 +324,10 @@
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
+                             random-avain (get (:headers req) "x-csrf-token")
+                             _ (anti-csrf-q/virkista-csrf-sessio db oam-kayttajanimi random-avain)
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                 (wrap-anti-forgery anti-csrf-token-secret-key))]
-
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
                                                 dev-resurssit resurssit) false)
                              (reitita (todennus/todenna-pyynto todennus req)

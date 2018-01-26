@@ -17,8 +17,7 @@
      :voimassa (c/to-timestamp (t/plus (t/now)
                                        (t/seconds csrf-voimassa-s)))}))
 
-
-(defn virkista-csrd-sessio [db kayttajanimi csrf-token]
+(defn virkista-csrf-sessio [db kayttajanimi csrf-token]
   (virkista-kayttajanimen-csrf-sessio-jos-voimassa<!
     db
     {:kayttajanimi kayttajanimi
