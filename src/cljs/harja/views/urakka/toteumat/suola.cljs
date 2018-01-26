@@ -17,7 +17,8 @@
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.fmt :as fmt]
-            [harja.tiedot.urakka.toteumat.suola :as tiedot])
+            [harja.tiedot.urakka.toteumat.suola :as tiedot]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -29,10 +30,19 @@
     :tunniste :id}
    [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
-    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10}]
+    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10}
+    {:otsikko ""
+     :nimi :valitse-kartalla
+     :tyyppi :komponentti
+     :leveys 10
+     :komponentti (fn [rivi]
+                    [:div
+                     [:button.nappi-toissijainen.nappi-grid
+                      {:on-click #(reset! tiedot/valittu-suolatoteuma rivi)}
+                      (ikonit/ikoni-ja-teksti (ikonit/map-marker) "Näytä kartalla")]])}]
    (map-indexed (fn [i itm] (assoc itm :id i)) (:toteumat suolan-kaytto))])
 
-(defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
+(defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa valittu-suolatoteuma]
   [:div.suolatoteumat
    [kartta/kartan-paikka]
    [:span.valinnat
@@ -51,9 +61,7 @@
                            #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
                                   (paivita! toteumat)))
                            :ei-mahdollinen)
-               :tallennus-ei-mahdollinen-tooltip
-               (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                               oikeudet/urakat-toteumat-suola)
+               :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-toteumat-suola)
                :tyhja (if (nil? @tiedot/toteumat)
                         [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                         "Ei suolatoteumia valitulle aikavälille")
@@ -80,7 +88,10 @@
               (:lisatieto %)
               (str (:lisatieto %) " (Koneellisesti raportoitu)"))}]
 
-    listaus]
+    (map #(if valittu-suolatoteuma
+            (assoc % :korosta-hennosti true)
+            %) listaus)]
+   
    (when-not (empty? @tiedot/toteumat)
      [:div.bold kaytetty-yhteensa])])
 
@@ -104,4 +115,10 @@
                                                nimi)
                                             @tiedot/toteumat))
             kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))))]
-        (suolatoteumat-taulukko muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa)))))
+        (suolatoteumat-taulukko muokattava?
+                                urakka
+                                sopimus-id
+                                listaus
+                                materiaali-nimet
+                                kaytetty-yhteensa
+                                @tiedot/valittu-suolatoteuma)))))

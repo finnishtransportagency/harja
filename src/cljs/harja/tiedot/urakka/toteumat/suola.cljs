@@ -25,20 +25,19 @@
 
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
-               ur @nav/valittu-urakka
+               urakka @nav/valittu-urakka
                sopimus @tiedot-urakka/valittu-sopimusnumero
-               hk @tiedot-urakka/valittu-hoitokausi
-               kk @tiedot-urakka/valittu-hoitokauden-kuukausi]
+               hoitokausi @tiedot-urakka/valittu-hoitokausi
+               kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and hae? ur)
+              (when (and hae? urakka)
                 (go
                   (into []
                         ;; luodaan kaikille id
-                        (map-indexed (fn [i rivi]
-                                       (assoc rivi :id i)))
+                        (map-indexed (fn [i rivi] (assoc rivi :id i)))
 
-                        (<! (hae-toteumat (:id ur) (first sopimus)
-                                          (or kk hk))))))))
+                        (<! (hae-toteumat (:id urakka) (first sopimus)
+                                          (or kuukausi hoitokausi))))))))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
@@ -46,13 +45,16 @@
 
 (def karttataso-suolatoteumat (atom false))
 
+(defn valittu-suolatoteuma? [suolatoteuma]
+  (and @valittu-suolatoteuma suolatoteuma (= (:tid suolatoteuma) (:tid @valittu-suolatoteuma))))
+
 (defonce suolatoteumat-kartalla
   (reaction
     (when @karttataso-suolatoteumat
       (kartalla-esitettavaan-muotoon
         (let [yksittaiset-toteumat (apply concat (map #(:toteumat %) @toteumat))]
           (map #(assoc % :tyyppi-kartalla :suolatoteuma) yksittaiset-toteumat))
-        #(= (:id %) (:id @valittu-suolatoteuma))))))
+        #(valittu-suolatoteuma? %)))))
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
