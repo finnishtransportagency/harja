@@ -100,7 +100,7 @@
                  (do (kasittele-palvelinvirhe palvelu vastaus)
                      (close! chan))
 
-                 (and true (contains? #{:post :get} metodi) (< yritysten-maara 5))
+                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
                  (kysely palvelu metodi parametrit (assoc opts
                                                      :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
                                                                         (+ (or yritysten-maara 0) 1))
