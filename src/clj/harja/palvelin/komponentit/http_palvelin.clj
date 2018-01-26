@@ -325,7 +325,7 @@
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
                              random-avain (get (:headers req) "x-csrf-token")
-                             _ (anti-csrf-q/virkista-csrf-sessio db oam-kayttajanimi random-avain)
+                             _ (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi random-avain)
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                 (wrap-anti-forgery anti-csrf-token-secret-key))]
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
