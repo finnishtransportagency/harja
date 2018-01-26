@@ -48,8 +48,6 @@
                   (assoc toteuma :id i))
                 (:toteumat suolan-kaytto))])
 
-
-
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa valittu-suolatoteuma]
   [:div.suolatoteumat
    [kartta/kartan-paikka]
