@@ -22,7 +22,6 @@
 (defn muodosta-csrf-token
   "Käyttää random avainta ja anti-csrf-token-secret-keytä anti-CSRF-tokenin generoimiseen."
   [random-string anti-csrf-token-secret-key]
-  (log/debug "MUODOSTA TOKEN KUN " random-string " JA " anti-csrf-token-secret-key)
   (let [secret-key (SecretKeySpec. (.getBytes
                                      (anti-forgery-seed anti-csrf-token-secret-key)
                                      "UTF-8")
