@@ -326,13 +326,13 @@
                                                 dev-resurssit resurssit) false)
                              (reitita (todennus/todenna-pyynto todennus req)
                                       (-> (mapv :fn todennettavat)
-                                          (conj (partial db
-                                                         index-kasittelija
+                                          (conj (partial index-kasittelija
+                                                         db
                                                          oam-kayttajanimi
                                                          kehitysmoodi
                                                          anti-csrf-token-secret-key))
-                                          (conj (partial db
-                                                         ls-index-kasittelija
+                                          (conj (partial ls-index-kasittelija
+                                                         db
                                                          oam-kayttajanimi
                                                          kehitysmoodi
                                                          anti-csrf-token-secret-key))
