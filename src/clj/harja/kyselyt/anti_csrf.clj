@@ -28,7 +28,7 @@
                                        (t/seconds csrf-voimassa-s)))}))
 
 (defn kayttajan-csrf-token-voimassa? [db kayttajanimi csrf-token]
-  (some? (:id (first (virkista-kayttajanimen-csrf-sessio-jos-voimassa<!
+  (some? (:id (first (hae-kayttajan-voimassaoleva-csrf-token
                        db
                        {:kayttajanimi kayttajanimi
                         :csrf_token csrf-token
