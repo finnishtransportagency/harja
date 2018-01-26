@@ -195,6 +195,11 @@
 (defn kokonaisuuden-voi-poistaa? [app kokonaisuus]
   (= 0 (kohteiden-lkm-kokonaisuudessa app kokonaisuus)))
 
+(defn osa-kuuluu-valittuun-kohteeseen? [osa {:keys [valittu-kohde]}]
+  (boolean
+    ((set (map ::osa/id (remove :poistettu (::kohde/kohteenosat valittu-kohde))))
+      (::osa/id osa))))
+
 (defonce kohteenosat-kartalla
   (reaction
     (when (:valittu-kohde @tila)
@@ -203,12 +208,7 @@
                   (set/rename-keys {::osa/sijainti :sijainti})
                   (assoc :tyyppi-kartalla :kohteenosa))
              (:haetut-kohteenosat @tila))
-        #(= (get-in % [::osa/kohde ::kohde/id]) (get-in @tila [:valittu-kohde ::kohde/id]))))))
-
-(defn osa-kuuluu-valittuun-kohteeseen? [osa {:keys [valittu-kohde]}]
-  (boolean
-    ((set (map ::osa/id (::kohde/kohteenosat valittu-kohde)))
-      (::osa/id osa))))
+        #(osa-kuuluu-valittuun-kohteeseen? % @tila)))))
 
 (defn kohteenosan-infopaneeli-otsikko [app osa]
   (cond
@@ -430,7 +430,10 @@
       (-> app
           (update-in [:valittu-kohde ::kohde/kohteenosat]
                      (fn [kohteen-osat]
-                       (remove #(= (::osa/id %) (::osa/id osa)) kohteen-osat)))
+                       (map #(if (= (::osa/id %) (::osa/id osa))
+                               (assoc % :poistettu true)
+                               %)
+                            kohteen-osat)))
           (update :haetut-kohteenosat
                   (fn [haetut-osat]
                     (map #(if (= (::osa/id %) (::osa/id osa))
