@@ -277,18 +277,11 @@
    tulee oikeasti Harjan palvelimen käyttäjälle kopioimalta frontilta.
 
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
-  [f anti-csrf-token-secret-key]
+  [f db kayttajanimi anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
 
     (if (or (and (some? (headers "x-csrf-token"))
-                 (= (index/muodosta-csrf-token (headers "x-csrf-token")
-                                               anti-csrf-token-secret-key)
-                    ;; TODO Tuki usealle CSRF-sessiolle.
-                    ;; Tarkista, että kannasta löytyy käyttäjän random avaimella generoitu
-                    ;; CSRF-token. Toisin sanoen tunnistetaan, että olemme joskus aiemmin palauttaneet käyttäjälle
-                    ;; tämän random avaimen, ja se on edelleen voimassa.
-                    nil
-                    )))
+                 (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttajanimi (headers "x-csrf-token"))))
       (f req)
       (do
         (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
@@ -328,7 +321,7 @@
                              cstf-token (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key)
                              _ (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi cstf-token)
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                (wrap-anti-forgery anti-csrf-token-secret-key))]
+                                                (wrap-anti-forgery db oam-kayttajanimi anti-csrf-token-secret-key))]
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
                                                 dev-resurssit resurssit) false)
                              (reitita (todennus/todenna-pyynto todennus req)
