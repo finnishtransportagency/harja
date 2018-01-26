@@ -205,7 +205,7 @@
                            :optimizations :none
                            :pretty-print true
                            :source-map true
-                           :parallel-build true ;; Failaa randomisti
+                           :parallel-build false ;; Failaa randomisti
                            :libs ["src/js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
