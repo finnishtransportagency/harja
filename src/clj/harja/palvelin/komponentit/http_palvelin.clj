@@ -255,12 +255,12 @@
         (anti-csrf-q/luo-csrf-sessio db oam-kayttajanimi csrf-token)
 
         (do (oikeudet/ei-oikeustarkistusta!)
-           {:status 200
-            :headers {"Content-Type" "text/html"
-                      "Cache-Control" "no-cache, no-store, must-revalidate"
-                      "Pragma" "no-cache"
-                      "Expires" "0"}
-            :body (index/tee-ls-paasivu random-avain kehitysmoodi)}))
+            {:status 200
+             :headers {"Content-Type" "text/html"
+                       "Cache-Control" "no-cache, no-store, must-revalidate"
+                       "Pragma" "no-cache"
+                       "Expires" "0"}
+             :body (index/tee-ls-paasivu random-avain kehitysmoodi)}))
       :default
       nil)))
 
@@ -277,11 +277,12 @@
    tulee oikeasti Harjan palvelimen käyttäjälle kopioimalta frontilta.
 
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
-  [f db kayttajanimi anti-csrf-token-secret-key]
+  [f db kayttajanimi random-avain csrf-token anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
 
-    (if (or (and (some? (headers "x-csrf-token"))
-                 (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttajanimi (headers "x-csrf-token"))))
+    (if (or (and (some? random-avain)
+                 (some? csrf-token)
+                 (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttajanimi csrf-token)))
       (f req)
       (do
         (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
@@ -321,7 +322,11 @@
                              cstf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
                              _ (when cstf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi cstf-token))
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                (wrap-anti-forgery db oam-kayttajanimi anti-csrf-token-secret-key))]
+                                                (wrap-anti-forgery db
+                                                                   oam-kayttajanimi
+                                                                   random-avain
+                                                                   csrf-token
+                                                                   anti-csrf-token-secret-key))]
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
                                                 dev-resurssit resurssit) false)
                              (reitita (todennus/todenna-pyynto todennus req)
