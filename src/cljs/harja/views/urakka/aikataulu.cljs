@@ -132,7 +132,7 @@
     ;:luokka "merkitse-valmiiksi-tiemerkintaan"
     :nakyvissa? (:nakyvissa? data)
     :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                   (peru-fn))
+                   (when peru-fn (peru-fn)))
     :footer [:div
              ;; Gridin kanssa tätä ei voi perua, sillä maili tullaan lähettämään joka tapauksessa
              ;; gridin tallennuksen yhteydessä.
@@ -140,7 +140,7 @@
              (when-not muutos-taulukosta?
                [napit/peruuta "Peruuta"
                 #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                     (peru-fn))])
+                     (when peru-fn (peru-fn)))])
              [napit/yleinen-ensisijainen
               ;; Olennainen ero: aikajanan kanssa muutos tullaan tallentamaan heti,
               ;; gridin kanssa vasta kun gridi tallennetaan.
