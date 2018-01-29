@@ -438,8 +438,38 @@ tr-ikoni {:img (pinni-ikoni "musta")
        {:width (+ 1 levein) :color puhtaat/harmaa}]
       (mapv #(assoc % :dash +tyokoneviivan-dash+) viivat))))
 
+(def kohteenosa-pinni-varit
+  {#{:sama-kohde :silta}
+   ["turkoosi" (str "Kohteeseen kuuluva " (osa/fmt-kohteenosa-tyyppi :silta))]
+   #{:sama-kohde :rautatiesilta}
+   ["lime" (str "Kohteeseen kuuluva " (osa/fmt-kohteenosa-tyyppi :rautatiesilta))]
+   #{:sama-kohde :sulku}
+   ["vihrea" (str "Kohteeseen kuuluva " (osa/fmt-kohteenosa-tyyppi :sulku))]
+
+   #{:varattu :silta}
+   ["pinkki" (str "Toisen kohteen " (osa/fmt-kohteenosa-tyyppi :silta))]
+   #{:varattu :rautatiesilta}
+   ["punainen" (str "Toisen kohteen " (osa/fmt-kohteenosa-tyyppi :rautatiesilta))]
+   #{:varattu :sulku}
+   ["oranssi" (str "Toisen kohteen " (osa/fmt-kohteenosa-tyyppi :sulku))]
+
+   #{:vapaa :silta}
+   ["syaani" (str "Vapaa " (osa/fmt-kohteenosa-tyyppi :silta))]
+   #{:vapaa :rautatiesilta}
+   ["sininen" (str "Vapaa " (osa/fmt-kohteenosa-tyyppi :rautatiesilta))]
+   #{:vapaa :sulku}
+   ["tummansininen" (str "Vapaa " (osa/fmt-kohteenosa-tyyppi :sulku))]})
+
 (defn kohteenosa-kohteiden-luonnissa [osa sama-kohde?]
-  (cond sama-kohde? (pinni-ikoni "vihrea")
+  (cond sama-kohde?
+        (let [[vari teksti] (kohteenosa-pinni-varit #{:sama-kohde (::osa/tyyppi osa)})]
+          [(pinni-ikoni vari) teksti])
+
         (and (some? (::osa/kohde osa))
-             (not (:poistettu osa))) (pinni-ikoni "harmaa")
-        :default (pinni-ikoni "sininen")))
+             (not (:poistettu osa)))
+        (let [[vari teksti] (kohteenosa-pinni-varit #{:varattu (::osa/tyyppi osa)})]
+          [(pinni-ikoni vari) teksti])
+
+        :default
+        (let [[vari teksti] (kohteenosa-pinni-varit #{:vapaa (::osa/tyyppi osa)})]
+          [(pinni-ikoni vari) teksti])))

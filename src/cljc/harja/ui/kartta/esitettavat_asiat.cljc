@@ -595,13 +595,11 @@
 
 (defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]
   ;; Näyttää toteuman reittipisteet palloina
-  (let [ikoni (ulkoasu/kohteenosa-kohteiden-luonnissa osa osan-kohde-valittu?)]
+  (let [[ikoni teksti] (ulkoasu/kohteenosa-kohteiden-luonnissa osa osan-kohde-valittu?)]
     (assoc osa
       :type :kohteenosa
       :nimi (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde osa) osa)
-      :selite {:teksti (cond osan-kohde-valittu? "Kohteeseen kuuluva osa"
-                             (nil? (::osa/kohde osa)) "Vapaa osa"
-                             :else "Toiseen kohteeseen kuuluva osa")
+      :selite {:teksti teksti
                :img ikoni}
       :alue (maarittele-feature osa
                                 ;; Ei haluta piirtää valitun kohteen osia isommalla, vain eri värillä

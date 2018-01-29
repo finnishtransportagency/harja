@@ -53,9 +53,15 @@
       (str/capitalize
         (str nimi (when (and nimi tyyppi) ", ") tyyppi)))))
 
+(defn maantiesilta? [osa]
+  (= :silta (::tyyppi osa)))
+
+(defn rautatiesilta? [osa]
+  (= :rautatiesilta (::tyyppi osa)))
+
 (defn silta? [osa]
-  (or (= :silta (::tyyppi osa))
-      (= :rautatiesilta (::tyyppi osa))))
+  (or (maantiesilta? osa)
+      (rautatiesilta? osa)))
 
 (defn sulku? [osa]
   (= :sulku (::tyyppi osa)))
