@@ -217,6 +217,10 @@
          :valinnat [[:kaikki "Kaikki"]
                     [:onnistuneet "Onnistuneet"]
                     [:epaonnistuneet "Epäonnistuneet"]]}
+        {:otsikko "Tapahtuman kesto minuuteissa yli"
+         :nimi :tapahtumien-kesto
+         :tyyppi :positiivinen-numero
+         :kokonaisluku? true}
         (lomake/ryhma
           {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
           {:otsikko "Otsikot"
@@ -269,10 +273,18 @@
                        (pvm/pvm-aika-sek (:paattynyt %))
                        "-")}
               {:otsikko "Kesto"
-               :hae (fn [{:keys [alkanut paattynyt]}]
-                      (when (and alkanut paattynyt)
-                        (let [vali (t/interval alkanut paattynyt)]
-                          (str (t/in-seconds vali) "s (" (t/in-millis vali) " ms)"))))
+               :tyyppi :komponentti
+               :komponentti (fn [{:keys [alkanut paattynyt]}]
+                              (when (and alkanut paattynyt)
+                                (let [vali (t/interval alkanut paattynyt)
+                                      kesto-sekunneissa (t/in-seconds vali)
+                                      kesto-millisekunneissa (t/in-millis vali)
+                                      kesto (str kesto-sekunneissa " s (" kesto-millisekunneissa " ms)")]
+                                  (cond
+                                    (< 600 kesto-sekunneissa) [:span.integraatioloki-virhe (ikonit/aika) " " kesto]
+                                    (< 300 kesto-sekunneissa) [:span.integraatioloki-virhe kesto]
+                                    (< 60 kesto-sekunneissa) [:span.integraatioloki-varoitus kesto]
+                                    :elso [:span.integraatioloki-onnistunut kesto]))))
                :leveys 10}
               {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
               {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
