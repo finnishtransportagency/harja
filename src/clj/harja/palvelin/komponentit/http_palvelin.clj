@@ -282,7 +282,7 @@
 
     (if (or (and (some? random-avain)
                  (some? csrf-token)
-                 (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttajanimi csrf-token (time/now))))
+                 (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now))))
       (f req)
       (do
         (log/warn "Virheellinen CSRF-cookie, palautetaan 403")

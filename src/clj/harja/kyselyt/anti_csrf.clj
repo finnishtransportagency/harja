@@ -30,7 +30,7 @@
      :nyt (c/to-timestamp nyt)
      :voimassa (c/to-timestamp (t/plus nyt (t/seconds csrf-voimassa-s)))}))
 
-(defn kayttajan-csrf-token-voimassa? [db kayttajanimi csrf-token nyt]
+(defn kayttajan-csrf-sessio-voimassa? [db kayttajanimi csrf-token nyt]
   (some? (:id (first (hae-kayttajan-voimassaoleva-csrf-token
                        db
                        {:kayttajanimi kayttajanimi

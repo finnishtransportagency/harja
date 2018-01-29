@@ -16,40 +16,40 @@
 
     (testing "Ensimmäisen session luonti"
       (anti-csrf-q/poista-ja-luo-csrf-sessio db kayttaja "token" nyt)
-      (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttaja "token" nyt))))
+      (is (true? (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttaja "token" nyt))))
 
     (testing "Uuden session luonti"
       (anti-csrf-q/poista-ja-luo-csrf-sessio db kayttaja "token2" nyt)
-      (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttaja "token2" nyt)))
-      (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttaja "token" nyt))
+      (is (true? (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttaja "token2" nyt)))
+      (is (true? (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttaja "token" nyt))
           "Edellinen sessio on yhä voimissaan"))
 
     (testing "Session vanhentuminen"
-      (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (false? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                     db kayttaja "token" nyt+vanhentuminen)))
-      (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (false? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                     db kayttaja "token2" nyt+vanhentuminen))))
 
     (testing "Session virkistäminen"
       ;; Aluksi: jonkun muun session virkitys ei virkistä käyttäjän sessiota
       (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "elite_haxor" nyt+vanhentuminen-1)
-      (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (false? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                    db kayttaja "token" nyt+vanhentuminen)))
       ;; Käyttäjän sessioiden virkitystys toimii
       (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "token" nyt+vanhentuminen-1)
       (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "token2" nyt+vanhentuminen-1)
-      (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (true? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                     db kayttaja "token" nyt+vanhentuminen)))
-      (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (true? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                     db kayttaja "token2" nyt+vanhentuminen))))
 
     (testing "Uuden session luonti poistaa vanhentuneet"
       (anti-csrf-q/poista-ja-luo-csrf-sessio db kayttaja "token3" nyt+vanhentuminen*2)
       ;; Vanhentuneet sessiot ei enää voimassa
-      (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (false? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                     db kayttaja "token" nyt+vanhentuminen)))
-      (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (false? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                     db kayttaja "token2" nyt+vanhentuminen)))
       ;; Uusi on voimassa
-      (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+      (is (true? (anti-csrf-q/kayttajan-csrf-sessio-voimassa?
                     db kayttaja "token3" nyt+vanhentuminen))))))
