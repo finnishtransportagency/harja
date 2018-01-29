@@ -84,11 +84,19 @@
 
 (declare kasittele-istunto-vanhentunut)
 
+(def testaa-extranet-virheenkasittelya true)
+
 (defn extranet-virhe? [vastaus]
-  (= 0 (:status vastaus)))
+  (if (and testaa-extranet-virheenkasittelya (> (rand) 0.8))
+    (do
+      (log "tuotetaan feikki extranet-virhe")
+      true)
+    (= 0 (:status vastaus))))
 
 (defn- kysely [palvelu metodi parametrit
                {:keys [transducer paasta-virhe-lapi? chan yritysten-maara uudelleenyritys-timeout] :as opts}]
+  (when (and testaa-extranet-virheenkasittelya yritysten-maara)
+    (log "uudelleenyritys #:" yritysten-maara))
   (let [cb (fn [[_ vastaus]]
              (when (some? vastaus)
                (cond
