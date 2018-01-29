@@ -74,11 +74,13 @@
       (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
 
 (defn- slack-viesti
-  [{:keys [kulunut-aika viesti-id tapahtuma-id]}]
+  [{:keys [kulunut-aika viesti-id tapahtuma-id kehitysmoodi?]}]
   (let [tunnit (-> kulunut-aika (/ 3600) Math/floor int)
         minuutit (-> kulunut-aika (- (* tunnit 3600)) (/ 60) Math/floor int)
         sekunnit (-> kulunut-aika (- (* tunnit 3600) (* minuutit 60)) Math/floor int)
-        integraatio-log-url (str "http://localhost:3000/#hallinta/integraatioloki?tapahtuma-id=" tapahtuma-id
+        url (if kehitysmoodi? "http://localhost:3000/"
+                              "https://extranet.liikennevirasto.fi/harja/")
+        integraatio-log-url (str url "#hallinta/integraatioloki?tapahtuma-id=" tapahtuma-id
                                  "&alkanut=" (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
                                  "&valittu-jarjestelma=tloik&valittu-integraatio=ilmoituksen-kirjaus")]
     (log/warn {:fields [{:title "Linkki"
@@ -90,7 +92,7 @@
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-   ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja]
+   ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?]
   (let [ilmoitus (assoc ilmoitus :urakkanimi (:nimi urakka))
         urakka-id (:id urakka)
         ilmoitus-id (:ilmoitus-id ilmoitus)
@@ -103,7 +105,8 @@
         ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
         kulunut-aika (pvm/date-datetime-aikavali-sekuntteina (:ilmoitettu ilmoitus) (pvm/nyt-suomessa))
         _ (when (> kulunut-aika 300)
-            (slack-viesti {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id}))
+            (slack-viesti {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus)
+                           :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
         ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
         tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
@@ -126,7 +129,7 @@
     (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono jms-lahettaja viesti]
+(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono jms-lahettaja kehitysmoodi? viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
@@ -138,7 +141,7 @@
         (try+
           (if-let [urakka (hae-urakka db ilmoitus)]
             (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-                                ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja)
+                                ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?)
             (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
                                          korrelaatio-id tapahtuma-id))
           (catch Exception e
