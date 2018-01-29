@@ -37,14 +37,11 @@
 (defn kohteenosat-grid [e! {:keys [haetut-kohteenosat
                                    valittu-kohde
                                    kohteenosien-haku-kaynnissa?] :as app}]
-  [grid/muokkaus-grid
+  [grid/grid
    {:tyhja (if kohteenosien-haku-kaynnissa?
              [ajax-loader-pieni "Päivitetään kohteenosia"]
              "Valitse kohteeseen kuuluvat osat karttaa klikkaamalla")
     :tunniste ::kohteenosa/id
-    :voi-lisata? false
-    :voi-kumota? false
-    :piilota-toiminnot? true
     :virhe-viesti (let [vaihdetut (filter :vanha-kohde haetut-kohteenosat)]
                     (when-not (empty? vaihdetut)
                       (str "Osia siirretty kohteista: " (str/join ", " (map
@@ -52,20 +49,16 @@
                                                                          vaihdetut)))))}
    [{:otsikko "Osa"
      :tyyppi :string
-     :muokattava? (constantly false)
      :nimi :kohteenosan-nimi
      :hae identity
      :leveys 2
      :fmt kohteenosa/fmt-kohteenosa}
     {:otsikko "Oletuspalvelumuoto"
      :tyyppi :string
-     :muokattava? (constantly false)
      :nimi ::kohteenosa/oletuspalvelumuoto
      :fmt lt/palvelumuoto->str
      :leveys 2}]
-   (r/wrap
-     (zipmap (range) (::kohde/kohteenosat valittu-kohde))
-     #(e! (tiedot/->MuokkaaKohteenKohteenosia (vals %))))])
+   (::kohde/kohteenosat valittu-kohde)])
 
 (defn kohdelomake [e! app]
   (komp/luo
