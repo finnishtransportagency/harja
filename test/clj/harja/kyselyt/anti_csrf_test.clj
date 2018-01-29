@@ -31,6 +31,11 @@
                     db kayttaja "token2" nyt+vanhentuminen))))
 
     (testing "Session virkistäminen"
+      ;; Aluksi: jonkun muun session virkitys ei virkistä käyttäjän sessiota
+      (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "elite_haxor" nyt+vanhentuminen-1)
+      (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+                   db kayttaja "token" nyt+vanhentuminen)))
+      ;; Käyttäjän sessioiden virkitystys toimii
       (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "token" nyt+vanhentuminen-1)
       (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "token2" nyt+vanhentuminen-1)
       (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa?
