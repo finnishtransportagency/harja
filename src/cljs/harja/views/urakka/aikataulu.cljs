@@ -346,6 +346,7 @@
       {:ennen-muokkausta (fn [valmis! peru!]
                            (reset! tiedot/tiemerkinta-valmis-modal-data
                                    ;; TODO Kokeilu
+                                   ;; TODO Näytä modal vain jos loppua muokattiin
                                    (merge {:kohde-id 1
                                            :kohde-nimi "Testi"
                                            :urakka-id urakka-id
