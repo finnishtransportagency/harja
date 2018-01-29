@@ -141,7 +141,8 @@
                [napit/peruuta "Peruuta"
                 #(swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)])
              [napit/yleinen-ensisijainen
-              ;; Olennainen ero: aikajan kanssa muutos tullaan tallentamaan heti, gridin kanssa vasta kun gridi tallennetaan.
+              ;; Olennainen ero: aikajanan kanssa muutos tullaan tallentamaan heti,
+              ;; gridin kanssa vasta kun gridi tallennetaan.
               (if muutos-taulukosta? "Hyväksy" "Tallenna")
               #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
                    ((:valmis-fn data)))
