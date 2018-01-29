@@ -15,6 +15,7 @@
             [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.urakat :as urakkapalvelu]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+            [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c])
   (:use [slingshot.slingshot :only [try+]])
@@ -73,11 +74,13 @@
       (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
 
 (defn- slack-viesti
-  [kulunut-aika viesti-id]
+  [{:keys [kulunut-aika viesti-id tapahtuma-id]}]
   (let [tunnit (-> kulunut-aika (/ 3600) Math/floor int)
         minuutit (-> kulunut-aika (- (* tunnit 3600)) (/ 60) Math/floor int)
         sekunnit (-> kulunut-aika (- (* tunnit 3600) (* minuutit 60)) Math/floor int)
-        integraatio-log-url "http://localhost:3000/#hallinta/integraatioloki?"]
+        integraatio-log-url (str "http://localhost:3000/#hallinta/integraatioloki?tapahtuma-id=" tapahtuma-id
+                                 "&alkanut=" (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
+                                 "&valittu-jarjestelma=tloik&valittu-integraatio=ilmoituksen-kirjaus")]
     (log/warn {:fields [{:title "Linkki"
                          :value (str "<" integraatio-log-url "|Harja integraatio loki>")}]
                :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
@@ -98,9 +101,9 @@
                                                           db urakka-id ilmoitus)
         uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
         ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
-        kulunut-aika (harja.pvm/date-datetime-aikavali-sekuntteina (:ilmoitettu ilmoitus) (harja.pvm/nyt-suomessa))
+        kulunut-aika (pvm/date-datetime-aikavali-sekuntteina (:ilmoitettu ilmoitus) (pvm/nyt-suomessa))
         _ (when (> kulunut-aika 300)
-            (slack-viesti kulunut-aika (:viesti-id ilmoitus)))
+            (slack-viesti {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id}))
         ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
         tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
     (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)

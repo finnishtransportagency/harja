@@ -246,7 +246,9 @@
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
-                               @tiedot/haetut-tapahtumat))}
+                               @tiedot/haetut-tapahtumat))
+      :vetolaatikot-auki (when @tiedot/tapahtuma-id tiedot/tapahtuma-id)
+      }
 
      (vec
        (keep identity
@@ -289,6 +291,8 @@
   (komp/luo
     (komp/ulos (aloita-tapahtumien-paivitys!))
     (komp/lippu tiedot/nakymassa?)
+    (komp/sisaan #(when @tiedot/tapahtuma-id
+                   (tiedot/hae-tapahtumat!)))
     (fn []
       [:div.integraatioloki
        [tapahtumien-paanakyma]])))
