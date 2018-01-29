@@ -10,8 +10,7 @@
     <xs:element name="urakoiden-hakuvastaus">
         <xs:annotation>
             <xs:documentation>
-                Palauttaa parametreihin sopivien urakoiden otsikkotason tiedot YHA:sta. Urakan kofhteet voidaan hakea
-                myöhemmin käyttäen YHA:n urakka id:tä. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
+                Palauttaa parametreihin sopivien urakoiden otsikkotason tiedot YHA:sta. Urakan kofhteet voidaan hakea myöhemmin käyttäen YHA:n urakka id:tä. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>

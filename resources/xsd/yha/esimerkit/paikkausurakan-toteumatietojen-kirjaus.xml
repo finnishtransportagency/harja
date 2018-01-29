@@ -1,7 +1,7 @@
 <yha:paikkausurakan-toteumatietojen-kirjaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
     <yha:urakat>
 
-        <!-- Sanomassa voi lähettää usean urakan tiedot. -->
+        <!-- Sanomassa voi lähettää usean urakan tiedot. Urakka voi sisältää useita paikkaustoteumia. -->
         <yha:urakka>
 
             <!-- Urakan tunnistetiedot eri järjestelmissä. Harjan ja YHA:n tunnisteet ovat pakollisia. -->
