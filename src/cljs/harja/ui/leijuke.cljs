@@ -103,9 +103,9 @@
            [:span " "] ;; TODO Anna olla noin kuukausi, sen jälkeen "Vihje" teksti pois (17.2.2018)
            [:a "Vihje"]])]])))
 
-(defn otsikko-ja-vihjeleijuke [otsikko leijuke-optiot leijuke-sisalto]
+(defn otsikko-ja-vihjeleijuke [otsikko-taso otsikko leijuke-optiot leijuke-sisalto]
   [:div
-   [:h6 {:style {:display :inline-block}} otsikko]
+   [(keyword (str "h" otsikko-taso)) {:style {:display :inline-block}} otsikko]
    [:span " "]
    [:span
     [vihjeleijuke

@@ -39,7 +39,7 @@
 
 (defn grid-solu
   ([grid-id rivi-nro sarake-nro]
-   (grid-solu grid-id rivi-nro sarake-nro ":nth-child(1)"))
+   (grid-solu grid-id rivi-nro sarake-nro ":nth-child(1) :nth-child(1)"))
   ([grid-id rivi-nro sarake-nro solu-path]
    (sel1 (str "#" grid-id " tbody "
               "tr:nth-child(" (inc rivi-nro) ") "

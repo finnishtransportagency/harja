@@ -31,7 +31,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-jarjestelmatunnukset +kayttaja-jvh+ nil)]
     (is (vector? vastaus))
-    (is (= (count vastaus) 6))))
+    (is (= (count vastaus) 7))))
 
 (deftest jarjestelmatunnuksien-haku-ei-toimi-ilman-oikeuksia
   (try+

@@ -239,9 +239,19 @@
                 :L
                 ;; Ei kartan pakotteita, tehdään sivukohtaisia special caseja
                 ;; tai palautetaan käyttäjän valitsema koko
-                (cond (= sivu :hallinta) :hidden
+                (cond (and
+                        (= sivu :hallinta)
+                        ;; Hallintavälilehdellä ei näytetä karttaa, paitsi jos ollaan kanavaurakoiden kohteiden luonnissa
+                        ;; Tähän tarvitaan molemmat tarkastukset, koska vesiväylä-hallinan valituksi välilehdeksi
+                        ;; voi jäädä kohteiden luonti, vaikka siirryttäisikiin esim integraatiolokiin
+                        (not= (valittu-valilehti :hallinta) :vesivayla-hallinta)
+                        (not= (valittu-valilehti :vesivayla-hallinta) :kanavaurakoiden-kohteiden-luonti))
+                      :hidden
+
                       (= sivu :about) :hidden
+
                       (= sivu :tilannekuva) :XL
+
                       (and (= sivu :urakat)
                            (not v-ur)) :XL
                       :default valittu-koko)))))
