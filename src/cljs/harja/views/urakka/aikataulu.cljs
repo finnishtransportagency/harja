@@ -650,8 +650,5 @@
                           :saa-merkita-valmiiksi? saa-merkita-valmiiksi?
                           :voi-muokata-paallystys? voi-muokata-paallystys?
                           :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}]
-
-         (if (= (:nakyma optiot) :tiemerkinta)
-           [vihje "Tänään tai aiemmin valmistuneista kohteista lähetetään heti sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle. Tulevaisuuteen merkityistä kohteista lähetetään sähköposti valmistumispäivänä."])
          [valmis-tiemerkintaan-modal @tiedot/valmis-tiemerkintaan-modal-data]
          [tiemerkinta-valmis @tiedot/tiemerkinta-valmis-modal-data]]))))
