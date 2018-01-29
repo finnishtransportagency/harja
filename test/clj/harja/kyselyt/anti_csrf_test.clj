@@ -26,28 +26,22 @@
 
     (testing "Session vanhentuminen"
       (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
-                    db kayttaja "token"
-                    nyt+vanhentuminen)))
+                    db kayttaja "token" nyt+vanhentuminen)))
       (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
-                    db kayttaja "token2"
-                    nyt+vanhentuminen))))
+                    db kayttaja "token2" nyt+vanhentuminen))))
 
     (testing "Session virkistäminen"
       (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "token" nyt+vanhentuminen-1)
       (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db kayttaja "token2" nyt+vanhentuminen-1)
       (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa?
-                    db kayttaja "token"
-                    nyt+vanhentuminen)))
+                    db kayttaja "token" nyt+vanhentuminen)))
       (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa?
-                    db kayttaja "token2"
-                    nyt+vanhentuminen))))
+                    db kayttaja "token2" nyt+vanhentuminen))))
 
     (testing "Uuden session luonti poistaa vanhentuneet"
       (anti-csrf-q/poista-ja-luo-csrf-sessio db kayttaja "token3" nyt+vanhentuminen*2)
       ;; Vanhentuneet sessiot ei enää voimassa
       (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
-                    db kayttaja "token"
-                    nyt+vanhentuminen)))
+                    db kayttaja "token" nyt+vanhentuminen)))
       (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
-                    db kayttaja "token2"
-                    nyt+vanhentuminen))))))
+                    db kayttaja "token2" nyt+vanhentuminen))))))
