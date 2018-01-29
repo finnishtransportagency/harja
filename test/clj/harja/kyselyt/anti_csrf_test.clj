@@ -44,4 +44,7 @@
       (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
                     db kayttaja "token" nyt+vanhentuminen)))
       (is (false? (anti-csrf-q/kayttajan-csrf-token-voimassa?
-                    db kayttaja "token2" nyt+vanhentuminen))))))
+                    db kayttaja "token2" nyt+vanhentuminen)))
+      ;; Uusi on voimassa
+      (is (true? (anti-csrf-q/kayttajan-csrf-token-voimassa?
+                    db kayttaja "token3" nyt+vanhentuminen))))))
