@@ -2,7 +2,7 @@
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
             [ajax.core :refer [ajax-request transit-request-format transit-response-format] :as ajax]
-            [cljs.core.async :refer [put! close! chan timeout]]
+            [cljs.core.async :refer [<! >! put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
             [cognitect.transit :as t]
@@ -88,7 +88,7 @@
   (= 0 (:status vastaus)))
 
 (defn- kysely [palvelu metodi parametrit
-               {:keys [transducer paasta-virhe-lapi? chan yritysten-maara] :as opts}]
+               {:keys [transducer paasta-virhe-lapi? chan yritysten-maara uudelleenyritys-timeout] :as opts}]
   (let [cb (fn [[_ vastaus]]
              (when (some? vastaus)
                (cond
@@ -100,8 +100,13 @@
                  (do (kasittele-palvelinvirhe palvelu vastaus)
                      (close! chan))
 
-                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 4))
-                 (kysely palvelu metodi parametrit (update opts :yritysten-maara (fnil inc 0)))
+                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
+                 (kysely palvelu metodi parametrit (assoc opts
+                                                     :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
+                                                                        (+ (or yritysten-maara 0) 1))
+                                                     :uudelleenyritys-timeout
+                                                     (let [timeout (:uudelleenyritys-timeout opts)]
+                                                       (+ (or timeout 2000) 2000))))
 
                  :default
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
@@ -109,6 +114,8 @@
                ;; else
                (close! chan)))]
     (go
+      (when uudelleenyritys-timeout
+        (<! (timeout uudelleenyritys-timeout)))
       (if-let [testipalvelu @testmode]
         (do
           (log "Haetaan testivastaus palvelulle: " palvelu)
