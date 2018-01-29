@@ -125,31 +125,24 @@
 
 (defn tiemerkinta-valmis
   "Modaali, jossa merkitään tiemerkintä valmiiksi.."
-  [data]
-  (let [{kohde-id :kohde-id kohde-nimi :kohde-nimi
-         urakka-id :urakka-id vuosi :vuosi} data
-        valmis-tiemerkintaan-lomake? (= :valmis-tiemerkintaan (:valittu-lomake data))
-        valmis-tallennettavaksi? (if valmis-tiemerkintaan-lomake?
-                                   (some? (:valmis-tiemerkintaan (:lomakedata data)))
+  [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
+           nakyvissa?] :as data}]
+  (let [valmis-tallennettavaksi? (if valmis-tiemerkintaan-lomake?
+                                   (some? (:tiemerkinta-loppu (:lomakedata data)))
                                    true)]
     [modal/modal
      {:otsikko (str "Kohteen " kohde-nimi " tiemerkinnän valmistuminen")
-      :luokka "merkitse-valmiiksi-tiemerkintaan"
+      ;:luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? (:nakyvissa? data)
       :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
                      ((:peru-fn data)))
       :footer [:div
-               [napit/peruuta
-                (if valmis-tiemerkintaan-lomake?
-                  "Peruuta"
-                  "Älä perukaan")
+               [napit/peruuta "Peruuta"
                 #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
                      ((:peru-fn data)))]
 
                [napit/yleinen-ensisijainen
-                (if valmis-tiemerkintaan-lomake?
-                  "Merkitse"
-                  "Vahvista peruutus")
+                "Aseta"
                 #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
                      ((:valmis-fn data)))
                 {:disabled (not valmis-tallennettavaksi?)
@@ -160,15 +153,12 @@
                                  (reset! tiedot/aikataulurivit vastaus)
                                  (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}
      [:div
-      [vihje (if valmis-tiemerkintaan-lomake?
-               "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle."
-               "Kohteen tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle.")]
+      [vihje "Päivämäärän asettamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle."]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-       [(when valmis-tiemerkintaan-lomake?
-          {:otsikko "Tiemerkinnän saa aloittaa"
-           :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
+       [{:otsikko "Tiemerkinnän valmistusmispäivä"
+         :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm}
         {:otsikko "Muut vastaanottajat"
          :nimi :muut-vastaanottajat
          :uusi-rivi? true
@@ -601,12 +591,12 @@
                                   :default :arvo-ja-nappi)
                    :pelkka-nappi-teksti "Aseta pvm"
                    ;; TODO Väärä modali
-                   :pelkka-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data
+                   :pelkka-nappi-toiminto-fn #(reset! tiedot/tiemerkinta-valmis-modal-data
                                                       (merge modalin-params
                                                              {:nakyvissa? true
                                                               :valittu-lomake :aikataulu-tiemerkinta-loppu}))
                    :arvo-ja-nappi-napin-teksti "Vaihda"
-                   :arvo-ja-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data
+                   :arvo-ja-nappi-toiminto-fn #(reset! tiedot/tiemerkinta-valmis-modal-data
                                                        (merge modalin-params
                                                               {:nakyvissa? true
                                                                :valittu-lomake :peru-aikataulu-tiemerkinta-loppu}))
