@@ -19,7 +19,7 @@
     {:kayttajanimi kayttajanimi
      :csrf_token csrf-token
      :nyt (c/to-timestamp (t/now))
-     :voimassa (c/to-timestamp (t/plus (t/now)
+     :voimassa (c/to-timestamp (t/plus nyt
                                        (t/seconds csrf-voimassa-s)))}))
 
 (defn virkista-csrf-sessio-jos-voimassa [db kayttajanimi csrf-token nyt]
