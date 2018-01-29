@@ -41,19 +41,18 @@
 
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
-  [data]
-  (let [{kohde-id :kohde-id kohde-nimi :kohde-nimi
-         urakka-id :urakka-id vuosi :vuosi} data
-        valmis-tiemerkintaan-lomake? (= :valmis-tiemerkintaan (:valittu-lomake data))
+  [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
+           nakyvissa?] :as data}]
+  (let [valmis-tiemerkintaan-lomake? (= :valmis-tiemerkintaan valittu-lomake)
         valmis-tallennettavaksi? (if valmis-tiemerkintaan-lomake?
-                                   (some? (:valmis-tiemerkintaan (:lomakedata data)))
+                                   (some? (:valmis-tiemerkintaan lomakedata))
                                    true)]
     [modal/modal
      {:otsikko (if valmis-tiemerkintaan-lomake?
                  (str "Kohteen " kohde-nimi " merkitseminen valmiiksi tiemerkintään")
                  (str "Kohteen " kohde-nimi " tiemerkintävalmiuden peruminen"))
       :luokka "merkitse-valmiiksi-tiemerkintaan"
-      :nakyvissa? (:nakyvissa? data)
+      :nakyvissa? nakyvissa?
       :sulje-fn #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false)
       :footer [:div
                [napit/peruuta
@@ -69,9 +68,9 @@
                 #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
                      (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
                        {:kohde-id kohde-id
-                        :tiemerkintapvm (:valmis-tiemerkintaan (:lomakedata data))
-                        :kopio-itselle? (:kopio-itselle? (:lomakedata data))
-                        :saate (:saate (:lomakedata data))
+                        :tiemerkintapvm (:valmis-tiemerkintaan lomakedata)
+                        :kopio-itselle? (:kopio-itselle? lomakedata)
+                        :saate (:saate lomakedata)
                         :muut-vastaanottajat (->> (vals (get-in
                                                           data
                                                           [:lomakedata :muut-vastaanottajat]))
