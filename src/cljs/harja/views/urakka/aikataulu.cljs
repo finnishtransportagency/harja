@@ -126,32 +126,33 @@
 (defn tiemerkinta-valmis
   "Modaali, jossa merkitään tiemerkintä valmiiksi.."
   [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
-           nakyvissa? muutos-taulukosta?] :as data}]
+           nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data}]
   [modal/modal
    {:otsikko (str "Kohteen " kohde-nimi " tiemerkinnän valmistuminen")
     ;:luokka "merkitse-valmiiksi-tiemerkintaan"
     :nakyvissa? (:nakyvissa? data)
     :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                   ((:peru-fn data)))
+                   (peru-fn))
     :footer [:div
              ;; Gridin kanssa tätä ei voi perua, sillä maili tullaan lähettämään joka tapauksessa
              ;; gridin tallennuksen yhteydessä.
              ;; Aikajanan kanssa muutosta ei tallenneta, jos perutaan toiminto modalista.
              (when-not muutos-taulukosta?
                [napit/peruuta "Peruuta"
-                #(swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)])
+                #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
+                     (peru-fn))])
              [napit/yleinen-ensisijainen
               ;; Olennainen ero: aikajanan kanssa muutos tullaan tallentamaan heti,
               ;; gridin kanssa vasta kun gridi tallennetaan.
               (if muutos-taulukosta? "Hyväksy" "Tallenna")
-              #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
-                   ((:valmis-fn data)))
+              #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
+                   (valmis-fn))
               {:luokka "nappi-myonteinen"
                :ikoni (ikonit/check)}]]}
    [:div
     [vihje-elementti
      [:span
-      [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuuteen merkityistä kohteista lähetetään sähköposti valmistumispäivänä."]
+      [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
       [:br] [:br]
       [:span
        [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]]
@@ -333,19 +334,18 @@
      [aikajana/aikajana
       {:ennen-muokkausta (fn [valmis! peru!]
                            (reset! tiedot/tiemerkinta-valmis-modal-data
-                                   ;; TODO Kokeilu
-                                   ;; TODO Näytä modal vain jos loppua muokattiin
-                                   (merge {:kohde-id 1
-                                           :kohde-nimi "Testi"
-                                           :urakka-id urakka-id
-                                           :vuosi vuosi
-                                           :paallystys-valmis? true
-                                           :valmis-fn valmis!
-                                           :peru-fn peru!
-                                           :suorittava-urakka-annettu? true
-                                           :lomakedata {:kopio-itselle? true}}
-                                          {:nakyvissa? true
-                                           :valittu-lomake :valmis-tiemerkintaan})))
+                                   ;; TODO Näytä modal vain jos loppua muokattiin ja se on nyt tai ennen
+                                   {:valmis-fn valmis!
+                                    :peru-fn peru!
+                                    :nakyvissa? true
+                                    ;; TODO Tarkista nämä muut
+                                    :kohde-id 1
+                                    :kohde-nimi "Testi"
+                                    :urakka-id urakka-id
+                                    :vuosi vuosi
+                                    :paallystys-valmis? true
+                                    :suorittava-urakka-annettu? true
+                                    :lomakedata {:kopio-itselle? true}}))
        :muuta! (fn [drag]
                  (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
                            paivitetyt-aikataulu-idt (set (map :id paivitetty-aikataulu))
@@ -565,18 +565,18 @@
        :aseta (fn [rivi arvo]
                 (reset! tiedot/tiemerkinta-valmis-modal-data
                         (reset! tiedot/tiemerkinta-valmis-modal-data
-                                ;; TODO Kokeilu
                                 ;; TODO Näytä modal vain jos loppu nyt tai ennen
-                                (merge {:muutos-taulukosta? true
-                                        :kohde-id 1
-                                        :kohde-nimi "Testi"
-                                        :urakka-id urakka-id
-                                        :vuosi vuosi
-                                        :paallystys-valmis? true
-                                        :suorittava-urakka-annettu? true
-                                        :lomakedata {:kopio-itselle? true}}
-                                       {:nakyvissa? true
-                                        :valittu-lomake :valmis-tiemerkintaan})))
+                                {:nakyvissa? true
+                                 :muutos-taulukosta? true
+                                 :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot jonnekin
+                                 ;; TODO Tarkista nämä muut
+                                 :kohde-id 1
+                                 :kohde-nimi "Testi"
+                                 :urakka-id urakka-id
+                                 :vuosi vuosi
+                                 :paallystys-valmis? true
+                                 :suorittava-urakka-annettu? true
+                                 :lomakedata {:kopio-itselle? true}}))
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
