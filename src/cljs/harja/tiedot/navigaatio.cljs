@@ -422,10 +422,6 @@
     (let [uri (Uri/parse url)
           polku (.getPath uri)
           parametrit (.getQueryData uri)]
-      (log "POLKU: " polku)
-      (log "PARAMETRIT: " (pr-str paramterit))
-      (log (.get parametrit "viesti-id"))
-      (log "hy: " (.get parametrit "hy"))
       (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
       (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
       ;; Kun ollaan aloitusikkunassa, katsotaan mikä on käyttäjän perusurakkatyyppi, jotta voidaan näyttää oikean
