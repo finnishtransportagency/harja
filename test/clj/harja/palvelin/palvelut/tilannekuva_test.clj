@@ -393,7 +393,12 @@
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia)
         elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
     (is (>= (count elynumerot) 6)
-        "JVH:n pitäisi nähdä aika monta ELYä")))
+        "JVH:n pitäisi nähdä kaikki ELY:t")))
+
+(deftest hae-urakat-tilannekuvaan-urakanvalvoja
+  (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+    (is (= (count elynumerot) 6)) "Urakanvalvojan pitäisi nähdä kaikki ELY:t"))
 
 (deftest hae-urakat-tilannekuvaan-ei-nay-mitaan
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ hakuargumentit-laaja-historia)

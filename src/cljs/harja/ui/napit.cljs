@@ -108,9 +108,12 @@
    luokka                     Luokka napille (string, erota välilyönnillä jos useita).
    ikoni                      Nappiin piirrettävä ikonikomponentti.
    sticky?                    Jos true, nappi naulataan selaimen yläreunaan scrollatessa alas.
+   title                      Nappiin liitettävä title-teksti (tooltip)
+   style                      Nappiin liitettävä style
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader."
   ([teksti toiminto] (nappi teksti toiminto {}))
-  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? sticky? ikoninappi?] :as optiot}]
+  ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa?
+                            sticky? ikoninappi? title style] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -142,6 +145,8 @@
                        (when ikoninappi? "nappi-ikoni ")
                        luokka)
            :disabled disabled
+           :style style
+           :title title
            :on-click #(do
                         (.preventDefault %)
                         (.stopPropagation %)

@@ -19,46 +19,40 @@
            (net.coobird.thumbnailator.tasks UnsupportedFormatException))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn pdfa-muunna-file! "java.io/file -> png byte-array | nil" [{base-url :base-url} pdf-file]
-  {:pre [(string? base-url) (some? pdf-file)]}
-  (try
-    (let [request-opts
-          {:as :byte-array
-           :multipart [{:name "file"
-                        :content pdf-file
-                        :filename "input.pdf"
-                        :mime-type "application/pdf"}]}
-          resp (deref (http/post (str base-url "pdf/pdf2pdfa") request-opts))]
-      (if (= 200 (:status resp))
-        (:body resp)
-        (do
-          (log/info "PDF/A conversion failed for " (when pdf-file (.getName pdf-file)))
-          (log/info "Failure response: " (pr-str resp))
-          nil)))
-    (catch Exception ex
-      (log/error ex)
-      nil)))
+(defn- pdfa-muunna-file->inputstream! "java.io/file -> java.io/file | nil" [{base-url :base-url} pdf-file]
+  {:pre [(some? pdf-file)]}
+  (when base-url
+    (try
+      (let [request-opts
+            {:as :byte-array
+             :multipart [{:name "file"
+                          :content pdf-file
+                          :filename "input.pdf"
+                          :mime-type "application/pdf"}]}
+            resp (deref (http/post (str base-url "pdf/pdf2pdfa") request-opts))]
+        (if (= 200 (:status resp))
+          (:body resp)
+          (do
+            (log/info "PDF/A muunnos epäonnistui, tiedoston nimi oli: " (when pdf-file (.getName pdf-file)))
+            (log/info "Virhevastasus palvelulta: " (pr-str resp))
+            nil)))
+      (catch Exception ex
+        (log/error "Poikkeus tiedostomuuntajan vastausta luettaessa: " ex)
+        nil))))
 
-(defn pdfa-muunna-inputstream! [tp-komponentti pdf-inputstream]
+(defn pdfa-muunna-file->file! [tp-komponentti pdf-file]
   (let [temp-file (java.io.File/createTempFile "pesula-tmp" ".pdf")]
     (try
-      (io/copy pdf-inputstream temp-file)
-      (or (pdfa-muunna-file! tp-komponentti temp-file)
-          (io/input-stream temp-file)) ;; palautetaan alkup. data virheen sattuessa
-      (finally
-        (.delete temp-file)))))
-
-;; (defonce pdf-resp (atom nil))
-
-(defn test-pdfa-convert [service-url]
-  (let [in-file (file "/tmp/pdfa-test.pdf")]
-    (let [resp (pdfa-muunna-file! service-url in-file)]
-      ;; (reset! pdf-resp resp)
-      (with-open [out (output-stream "pdfa-test.out.pdf")]
-        (log/info "resp type" (type resp))
-        (.write out resp)))))
-
-
+      (let [muunnettu-stream (pdfa-muunna-file->inputstream! tp-komponentti pdf-file)]
+        ;; (log/debug "luetussa streamissa merkkejä: " (count (slurp muunnettu-stream)))
+        ;; (log/debug "uudelleen luetussa streamissa merkkejä: " (count (slurp muunnettu-stream)))
+        (if muunnettu-stream
+          (do (io/copy muunnettu-stream temp-file)
+              ;; (log/debug "saadun tiedoston koko: " (.length pdf-file) "muunnetun tempfilen koko:" (.length temp-file))
+              temp-file)
+          ;; else
+          (do (.delete temp-file)
+              nil))))))
 
 (defrecord Tiedostopesula [base-url]
   component/Lifecycle

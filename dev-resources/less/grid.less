@@ -243,9 +243,15 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       &.muokattava.tasaa-oikealle > input {
         padding: 0 @livi-taulukon-padding 0 0;
       }
+      &.muokattava.tasaa-oikealle > span.grid-kentta-wrapper > input {
+        padding: 0 @livi-taulukon-padding 0 0;
+      }
       padding: @livi-taulukon-padding-muokatessa;
       .livi-taulukon-reunat;
       > input {
+        border: none;
+      }
+      > span.grid-kentta-wrapper input {
         border: none;
       }
       .nappi-alasveto {
