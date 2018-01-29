@@ -458,7 +458,7 @@
                                {:sisalto (cond (not voi-muokata-paallystys?) :pelkka-arvo
                                                (not (:valmis-tiemerkintaan rivi)) :pelkka-nappi
                                                :default :arvo-ja-nappi)
-                                :pelkka-nappi-teksti "Aseta päivä\u00ADmäärä"
+                                :pelkka-nappi-teksti "Aseta pvm"
                                 :pelkka-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
                                                                                             {:nakyvissa? true
                                                                                              :valittu-lomake :valmis-tiemerkintaan}))
@@ -482,17 +482,45 @@
        :pvm-tyhjana #(:aikataulu-paallystys-loppu %)
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :muokattava? voi-muokata-tiemerkinta?}
-      {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus"
-       :leveys 6 :nimi :aikataulu-tiemerkinta-loppu :tyyppi :pvm
-       :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
+      {:otsikko "Tiemer\u00ADkinnän lope\u00ADtus" :leveys 6
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
-       :muokattava? voi-muokata-tiemerkinta?
-       :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
-                  "Tiemerkintää ei ole merkitty aloitetuksi."]
-                 [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
-                  "Valmistuminen ei voi olla ennen aloitusta."]
-                 [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
-                  "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
+       :nimi :aikataulu-tiemerkinta-loppu
+       :tyyppi :komponentti
+       :muokattava? (constantly saa-muokata?)
+       :komponentti (fn [rivi {:keys [muokataan?]}]
+                      (let [tiemerkinta-aloitettu? (some? (:aikataulu-tiemerkinta-alku rivi))
+                            modalin-params {:kohde-id (:id rivi)
+                                            :kohde-nimi (:nimi rivi)
+                                            :urakka-id urakka-id
+                                            :vuosi vuosi
+                                            :paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
+                                            :suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))
+                                            :lomakedata {:kopio-itselle? true}}]
+                        ;; Jos ei olla tiemerkinnässä, read only
+                        (if-not (= (:nakyma optiot) :tiemerkinta)
+                          (if (:aikataulu-tiemerkinta-loppu rivi)
+                            [:span (pvm/pvm-ilman-samaa-vuotta (:aikataulu-tiemerkinta-loppu rivi) vuosi)]
+                            [:span ""])
+                          ;; Jos tiemerkinnässä, sopivilla oikeuksilla saa asettaa
+                          (if muokataan?
+                            [:div (pvm/pvm-ilman-samaa-vuotta (:aikataulu-tiemerkinta-loppu rivi) vuosi)]
+                            [:div {:title (cond (not tiemerkinta-aloitettu?) "Tiemerkintää ei ole aloitettu"
+                                                :default nil)}
+
+                             (grid/arvo-ja-nappi
+                               {:sisalto (cond (not voi-muokata-tiemerkinta?) :pelkka-arvo
+                                               (not (:aikataulu-tiemerkinta-loppu rivi)) :pelkka-nappi
+                                               :default :arvo-ja-nappi)
+                                :pelkka-nappi-teksti "Aseta pvm"
+                                :pelkka-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
+                                                                                            {:nakyvissa? true
+                                                                                             :valittu-lomake :aikataulu-tiemerkinta-loppu}))
+                                :arvo-ja-nappi-napin-teksti "Vaihda"
+                                :arvo-ja-nappi-toiminto-fn #(reset! tiedot/modal-data (merge modalin-params
+                                                                                             {:nakyvissa? true
+                                                                                              :valittu-lomake :peru-aikataulu-tiemerkinta-loppu}))
+                                :nappi-optiot {:disabled (not tiemerkinta-aloitettu?)}
+                                :arvo (pvm/pvm-opt (:aikataulu-tiemerkinta-loppu rivi))})]))))}
       {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :muokattava? voi-muokata-paallystys?
