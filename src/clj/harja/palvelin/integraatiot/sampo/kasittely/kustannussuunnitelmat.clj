@@ -78,7 +78,7 @@
                   (tee-oletus-vuosisummat vuodet))
       (tee-oletus-vuosisummat vuodet))))
 
-(defn valitse-lkp-tilinumero [numero toimenpidekoodi tuotenumero]
+(defn valitse-lpk-tilinumero [numero toimenpidekoodi tuotenumero]
   (if (or (= toimenpidekoodi "20112") (= toimenpidekoodi "20143") (= toimenpidekoodi "20179"))
     "43020000"
     ; Hoitotuotteet 110 - 150, 536
@@ -88,12 +88,17 @@
                  :virheet [{:koodi :lpk-tilinnumeroa-ei-voi-paatella
                             :viesti viesti}]}))
 
-      (if (or (and (>= tuotenumero 110) (<= tuotenumero 150)) (= tuotenumero 536) (= tuotenumero 31))
+      (if (or (and (>= tuotenumero 110) (<= tuotenumero 150))
+              (= tuotenumero 536)
+              (= tuotenumero 31)
+              (= tuotenumero 201)
+              (= tuotenumero 301))
         "43020000"
         ; Ostotuotteet: 210, 240-271 ja 310-321
         (if (or (= tuotenumero 21)
                 (= tuotenumero 30)
                 (= tuotenumero 210)
+                (= tuotenumero 302)
                 (and (>= tuotenumero 240) (<= tuotenumero 271))
                 (and (>= tuotenumero 310) (<= tuotenumero 321)))
           "12980010"
@@ -108,7 +113,7 @@
 (defn hae-maksueran-tiedot [db numero]
   (let [maksueran-tiedot (konversio/alaviiva->rakenne (first (maksuerat/hae-lahetettava-maksuera db numero)))
         vuosittaiset-summat (tee-vuosittaiset-summat db numero maksueran-tiedot)
-        lkp-tilinnumero (valitse-lkp-tilinumero numero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
+        lkp-tilinnumero (valitse-lpk-tilinumero numero (:toimenpidekoodi maksueran-tiedot) (:tuotenumero maksueran-tiedot))
         maksueran-tiedot (assoc maksueran-tiedot :vuosittaiset-summat vuosittaiset-summat :lkp-tilinumero lkp-tilinnumero)]
     maksueran-tiedot))
 
