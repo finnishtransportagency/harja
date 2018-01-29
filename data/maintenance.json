@@ -1,5 +1,10 @@
 [
   {
+    "date": "2018-01-29",
+    "title": "Päällystysilmoituksen täytön helpotus",
+    "body": "Päällystysilmoituksessa on nyt mahdollista helposti täyttää tai toistaa rivin arvo seuraaville riveille. Tämä nopeuttaa päällystysilmoituksen täyttöä silloin kun sama arvo toistuu useilla eri riveillä, sillä arvoa ei tarvitse kirjoittaa käsin uudestaan. Tarkempi ohje täytön / toiston käyttöön löytyy päällystysilmoituksesta olevasta vihjeestä."
+  },
+  {
     "date": "2018-01-24",
     "title": "Päällystys- ja tiemerkintäurakan aikataulun visuaalinen muokkaus",
     "body": "Päällystys- ja tiemerkintäurakoiden aikataulunäkymässä on nyt mahdollista muokata aikataulua visuaalisesti siirtämällä ja venyttämällä aikataulun palkkeja. Tämä helpottaa aikataulun muokkaamista ja mahdollistaa usean eri kohteen aikataulun muokkaamisen yhdellä kertaa. Visuaaliset muokkaukset voi myös kumota helposti mahdollisen virheen sattuessa. Tarkempia ohjeita visuaalisesta muokkauksesta löytyy näkymässä olevan vihjeen kautta."
