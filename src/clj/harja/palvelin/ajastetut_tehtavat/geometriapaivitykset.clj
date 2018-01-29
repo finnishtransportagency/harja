@@ -21,7 +21,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tekniset-laitteet-urakat :as tekniset-laitteet-urakat-tuonti]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.siltapalvelusopimukset :as siltapalvelusopimukset]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaitteet]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavat :as kanavat]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.kanavasulut :as kanavasulut]
             [harja.kyselyt.geometriaaineistot :as geometria-aineistot]
             [harja.domain.geometriaaineistot :as ga])
   (:use [slingshot.slingshot :only [try+ throw+]])
@@ -317,7 +317,7 @@
     :kanavien-osoite
     :kanavien-tuontikohde
     :kanavien-shapefile
-    kanavat/vie-kanavat-kantaan))
+    kanavasulut/vie-kanavasulut-kantaan))
 
 (def tee-kanavien-paikallinen-paivitystehtava
   (maarittele-paikallinen-paivitystehtava
@@ -325,7 +325,7 @@
     :kanavien-osoite
     :kanavien-tuontikohde
     :kanavien-shapefile
-    kanavat/vie-kanavat-kantaan))
+    kanavasulut/vie-kanavasulut-kantaan))
 
 
 (defrecord Geometriapaivitykset [asetukset]

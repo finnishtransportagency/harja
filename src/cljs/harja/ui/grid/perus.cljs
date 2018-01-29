@@ -268,7 +268,7 @@
 
 (defn- muokkauspaneeli [{:keys [nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
-                                muokkaa-aina virheet muokatut tallennus-kaynnissa
+                                muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
                                 peruuta otsikko validoi-fn tunniste]}]
   [:div.panel-heading
@@ -280,6 +280,7 @@
                              {:disabled (or (= :ei-mahdollinen tallenna)
                                             muuta-gridia-muokataan?)
                               :on-click #(do (.preventDefault %)
+                                             (when ennen-muokkausta (ennen-muokkausta))
                                              (aloita-muokkaus! tiedot))}
                              [:span.grid-muokkaa
                               [ikonit/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
@@ -590,6 +591,7 @@
                                         jos tallenna arvo on :ei-mahdollinen, näytetään Muokkaa-nappi himmennettynä
   :tallenna-vain-muokatut               boolean jos päällä, tallennetaan vain muokatut. Oletuksena true
   :peruuta                              funktio jota kutsutaan kun käyttäjä klikkaa Peruuta-nappia muokkausmoodissa
+  :ennen-muokkausta                     Funktio, jota kutsutaan ennen kuin käyttäjä aloittaa muokkauksen
   :rivi-klikattu                        funktio jota kutsutaan kun käyttäjä klikkaa riviä näyttömoodissa (parametrinä rivin tiedot)
   :rivin-infolaatikko                   Funktio, jonka palauttama komponentti näytetään gridin infolaatikossa kun rivi on valittuna.
                                         Funktiota kutsutaan rivin tiedoilla.
@@ -630,7 +632,7 @@
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko
-           valiotsikoiden-alkutila ei-footer-muokkauspaneelia?
+           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
 
@@ -967,7 +969,7 @@
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                              :peruuta peruuta :otsikko otsikko
-                             :tunniste tunniste
+                             :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :validoi-fn validoi-fn})
            [:div.panel-body
             (when @kiinnita-otsikkorivi?
@@ -1051,7 +1053,7 @@
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko
-                                :tunniste tunniste
+                                :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn})])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
 

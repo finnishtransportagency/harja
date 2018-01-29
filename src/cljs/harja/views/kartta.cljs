@@ -495,8 +495,7 @@
 
 (defn kaynnista-infopaneeliin-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa! tasot event asiat-pisteessa)
-  (reset! tiedot/nayta-infopaneeli? true))
-
+  (tiedot/nayta-infopaneeli!))
 
 (defn- piilota-infopaneeli-jos-muuttunut
   "Jos annetut geometriat ovat muuttuneet (pl. näkymän geometriat), piilota infopaneeli."
@@ -506,8 +505,7 @@
     ;; Kun karttatasoissa muuttuu jotain muuta kuin :nakyman-geometriat
     ;; (klikattu piste), piilotetaan infopaneeli ja poistetaan
     ;; klikattu piste näkymän geometrioista.
-    (reset! tiedot/nayta-infopaneeli? false)
-    (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki)))
+    (tiedot/piilota-infopaneeli!)))
 
 (defn- zoomaa-geometrioihin-jos-muuttunut
   "Zoomaa geometrioihin uudelleen, jos ne ovat muuttuneet."
@@ -794,8 +792,7 @@
    [kartan-ohjelaatikko]
    (when @tiedot/infopaneeli-nakyvissa?
      [:div.kartan-infopaneeli
-      [infopaneeli/infopaneeli @asiat-pisteessa #(do (reset! tiedot/nayta-infopaneeli? false)
-                                                     (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki))
+      [infopaneeli/infopaneeli @asiat-pisteessa tiedot/piilota-infopaneeli!
        tiedot/infopaneelin-linkkifunktiot]])
    (when-not @tiedot/infopaneeli-nakyvissa? ;; Peittää selitelaatikon, otetaan pois
      [kartan-ikonien-selitykset])
