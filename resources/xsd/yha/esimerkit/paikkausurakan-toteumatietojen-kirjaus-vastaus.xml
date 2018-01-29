@@ -1,8 +1,0 @@
-<yha:paikkausurakan-toteumatietojen-kirjausvastaus xmlns:yha="http://www.liikennevirasto.fi/xsd/yha">
-  <yha:virheet>
-    <yha:virhe>
-      <yha:yha-id></yha:yha-id>
-      <yha:selite>ERROR. Sisäinen YHA-virhe. Urakkaa ei löytynyt.</yha:selite>
-    </yha:virhe>
-  </yha:virheet>
-</yha:paikkausurakan-toteumatietojen-kirjausvastaus>
