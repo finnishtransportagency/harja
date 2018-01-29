@@ -590,7 +590,6 @@
                                   (not (:aikataulu-tiemerkinta-loppu rivi)) :pelkka-nappi
                                   :default :arvo-ja-nappi)
                    :pelkka-nappi-teksti "Aseta pvm"
-                   ;; TODO Väärä modali
                    :pelkka-nappi-toiminto-fn #(reset! tiedot/tiemerkinta-valmis-modal-data
                                                       (merge modalin-params
                                                              {:nakyvissa? true
