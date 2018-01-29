@@ -10,7 +10,7 @@
     <xs:element name="urakoiden-hakuvastaus">
         <xs:annotation>
             <xs:documentation>
-                Palauttaa parametreihin sopivien urakoiden otsikkotason tiedot YHA:sta. Urakan kofhteet voidaan hakea myöhemmin käyttäen YHA:n urakka id:tä. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
+                Palauttaa parametreihin sopivien urakoiden otsikkotason tiedot YHA:sta. Urakan kohteet voidaan hakea myöhemmin käyttäen YHA:n urakka id:tä. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
@@ -64,8 +64,7 @@
     <xs:element name="urakan-kohdehakuvastaus">
         <xs:annotation>
             <xs:documentation>
-                Palauttaa urakan kohteet alikohteineen YHA:sta. Kohteille voidaan myöhemmin tätä kautta kirjata
-                toteumatietoja. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
+                Palauttaa urakan kohteet alikohteineen YHA:sta. Kohteille voidaan myöhemmin tätä kautta kirjata toteumatietoja. Kutsun epäonnistuessa palautetaan virhe virhe-elementissä.
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
@@ -126,8 +125,7 @@
     <xs:element name="urakan-kohteiden-toteumatietojen-kirjausvastaus">
         <xs:annotation>
             <xs:documentation>
-                Mikäli kutsu onnistuu palautetaan tyhjä dokumentti. Virhetilanteessa virhet ilmoitetaan
-                virhe-elementissä.
+                Mikäli kutsu onnistuu palautetaan tyhjä dokumentti. Virhetilanteessa virhet ilmoitetaan virhe-elementissä.
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>
@@ -176,8 +174,7 @@
                                                 </xs:sequence>
                                             </xs:complexType>
                                         </xs:element>
-                                        <xs:element name="urakkatyyppi" type="paikkausurakkatyyppiEnum" nillable="false"
-                                                    minOccurs="1" maxOccurs="1"></xs:element>
+                                        <xs:element name="urakkatyyppi" type="paikkausurakkatyyppiEnum" nillable="false" minOccurs="1" maxOccurs="1"></xs:element>
                                         <xs:element name="toimenpidetoteumat" nillable="false" minOccurs="1" maxOccurs="unbounded">
                                             <xs:complexType>
                                                 <xs:sequence>
