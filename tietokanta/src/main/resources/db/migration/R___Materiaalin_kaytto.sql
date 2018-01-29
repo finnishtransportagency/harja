@@ -51,7 +51,7 @@ BEGIN
                        AND t.urakka = u AND t.poistettu IS NOT TRUE
                  GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi, rp.aika
     LOOP
-      RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain  rivi2: %', rivi2;
+      -- RAISE NOTICE 'INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain  rivi2: %', rivi2;
       INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
       (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
       VALUES (rivi2.aika,
@@ -104,7 +104,7 @@ BEGIN
     IF pvm > loppu THEN
       EXIT;
     END IF;
-    RAISE NOTICE 'Päivitetään materiaalin käyttö hoitoluokittain: %', pvm;
+    -- RAISE NOTICE 'Päivitetään materiaalin käyttö hoitoluokittain: %', pvm;
     PERFORM paivita_materiaalin_kaytto_hoitoluokittain_paivalle(pvm);
     pvm := pvm + 1;
  END LOOP;
