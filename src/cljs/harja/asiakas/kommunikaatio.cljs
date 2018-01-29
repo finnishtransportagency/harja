@@ -96,7 +96,7 @@
                  (do (kasittele-istunto-vanhentunut) ; Extranet-kirjautuminen vanhentunut
                      (close! chan))
 
-                 (= (:status vastaus) 403) ; Harjan anti-CSRF-sessio vanhentunut
+                 (= (:status vastaus) 403) ; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
                  (do (kasittele-istunto-vanhentunut)
                      (close! chan))
 
