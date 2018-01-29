@@ -141,7 +141,7 @@
                [napit/peruuta "Peruuta"
                 #(swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)])
              [napit/yleinen-ensisijainen
-              "OK"
+              (if muutos-taulukosta? "Hyväksy" "Tallenna")
               #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
                    ((:valmis-fn data)))
               {:luokka "nappi-myonteinen"
@@ -152,11 +152,7 @@
       [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuuteen merkityistä kohteista lähetetään sähköposti valmistumispäivänä."]
       [:br] [:br]
       [:span
-       [:span "Halutessasi voit lisätä viestiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]
-       (when muutos-taulukosta?
-         [:span
-          [:span " "]
-          [:span {:style {:color "red"}} "Sähköposti lähetetään vasta, kun tallennat muutokset taulukosta."]])]]]
+       [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]]
     [lomake/lomake {:otsikko ""
                     :muokkaa! (fn [uusi-data]
                                 (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
