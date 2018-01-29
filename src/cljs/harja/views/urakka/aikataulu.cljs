@@ -66,12 +66,17 @@
                 (if valmis-tiemerkintaan-lomake?
                   "Merkitse"
                   "Vahvista peruutus")
-                #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintää")
+                #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
                      (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
                        {:kohde-id kohde-id
                         :tiemerkintapvm (:valmis-tiemerkintaan (:lomakedata data))
                         :kopio-itselle? (:kopio-itselle? (:lomakedata data))
                         :saate (:saate (:lomakedata data))
+                        :muut-vastaanottajat (->> (vals (get-in
+                                                          data
+                                                          [:lomakedata :muut-vastaanottajat]))
+                                                  (filter (comp not :poistettu))
+                                                  (map :sahkoposti))
                         :urakka-id urakka-id
                         :sopimus-id (first @u/valittu-sopimusnumero)
                         :vuosi vuosi}))
@@ -92,6 +97,24 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
+        {:otsikko "Muut vastaanottajat"
+         :nimi :muut-vastaanottajat
+         :uusi-rivi? true
+         :palstoja 2
+         :tyyppi :komponentti
+         :komponentti (fn [_]
+                        (let [muut-vastaanottajat (get-in data [:lomakedata :muut-vastaanottajat])]
+                          [grid/muokkaus-grid
+                           {:tyhja "Ei vastaanottajia."
+                            :voi-muokata? true
+                            :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
+                            :muutos #(swap! tiedot/modal-data assoc-in [:lomakedata :muut-vastaanottajat]
+                                            (grid/hae-muokkaustila %))}
+                           [{:otsikko "Sähköpostiosoite"
+                             :nimi :sahkoposti
+                             :tyyppi :email
+                             :leveys 1}]
+                           (atom muut-vastaanottajat)]))}
         {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
          :koko [90 8]
          :nimi :saate :palstoja 3 :tyyppi :text}

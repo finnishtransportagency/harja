@@ -90,34 +90,49 @@
     ;; Muuten tallennetaan paikalliseen tietokantaan
     {:liite_oid (tallenna-lob db (io/input-stream lahde)) :fileyard-hash nil}))
 
-(defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahde-jarjestelma]
+
+(defn- kahdenna-stream [alkuperainen]
+  (let [temp-file (java.io.File/createTempFile "harja-liite-tmp" ".bin")]
+    (.deleteOnExit temp-file)
+    (try
+      (io/copy alkuperainen temp-file)
+      [(io/input-stream temp-file) (io/input-stream temp-file)])))
+
+(defn- tallenna-liite [db fileyard-client tiedostopesula virustarkistus luoja urakka tiedostonimi tyyppi uskoteltu-koko lahdetiedosto kuvaus lahde-jarjestelma]
   (log/debug "Vastaanotettu pyyntö tallentaa liite kantaan.")
   (log/debug "Tyyppi: " (pr-str tyyppi))
-  (log/debug "Koko: " (pr-str koko))
-  (let [liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
-        alkuperainen-lahde lahde
-        pesula-lahde (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
-                       (do (log/info "PDF-tiedosto -> tiedostopesula")
-                           (tiedostopesula/pdfa-muunna-inputstream! tiedostopesula (io/input-stream lahde))))
-        lahde (or pesula-lahde lahde)]
-    (if pesula-lahde
+
+  (log/debug "Koko väitetty / havaittu: " (pr-str uskoteltu-koko) (and (instance? java.io.File lahdetiedosto) (.length lahdetiedosto)))
+  (log/debug "lahde:" lahdetiedosto)
+  (let [koko (if (instance? java.io.File lahdetiedosto)
+               (.length lahdetiedosto)
+               uskoteltu-koko)
+        liitetarkistus (t-liitteet/tarkista-liite {:tyyppi tyyppi :koko koko})
+        pesty-lahdetiedosto (when (and (ominaisuus-kaytossa? :tiedostopesula) tiedostopesula (= tyyppi "application/pdf"))
+                              (do (log/info "PDF-tiedosto -> tiedostopesula")
+                                  (tiedostopesula/pdfa-muunna-file->file! tiedostopesula lahdetiedosto)))
+        tallennettava-lahdetiedosto (or pesty-lahdetiedosto lahdetiedosto)
+        tallennettava-koko (if pesty-lahdetiedosto
+                             (.length tallennettava-lahdetiedosto)
+                             koko)]
+    (if pesty-lahdetiedosto
       (log/info "Tallennetaan tiedostopesulassa käsitelty liitetiedosto")
       (log/info "Tallennetaan alkuperäinen liitetiedosto"))
     (if (:hyvaksytty liitetarkistus)
       (do
-        (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream alkuperainen-lahde))
-        (let [pikkukuva (muodosta-pikkukuva (io/input-stream lahde))
+        (virustarkistus/tarkista virustarkistus tiedostonimi (io/input-stream lahdetiedosto))
+        (let [pikkukuva (muodosta-pikkukuva (io/input-stream tallennettava-lahdetiedosto))
               liite (liitteet/tallenna-liite<!
                      db
                      (merge {:nimi tiedostonimi
                              :tyyppi tyyppi
-                             :koko koko
+                             :koko tallennettava-koko
                              :pikkukuva pikkukuva
                              :luoja luoja
                              :urakka urakka
                              :kuvaus kuvaus
                              :lahdejarjestelma lahde-jarjestelma}
-                            (tallenna-liitteen-data db fileyard-client lahde)))]
+                            (tallenna-liitteen-data db fileyard-client tallennettava-lahdetiedosto)))]
           (log/debug "Liite tallennettu.")
           liite))
       (do
