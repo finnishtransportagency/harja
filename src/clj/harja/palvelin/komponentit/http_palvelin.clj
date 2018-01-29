@@ -21,6 +21,7 @@
             [harja.transit :as transit]
             [harja.domain.roolit]
             [harja.domain.oikeudet :as oikeudet]
+            [clj-time.core :as t]
             [harja.fmt :as fmt]
 
             [slingshot.slingshot :refer [try+ throw+]]
@@ -221,7 +222,7 @@
       (let [random-avain (index/tee-random-avain)
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
-        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token)
+        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (t/now))
         {:status 200
 
          :headers {"Content-Type" "text/html"
@@ -251,7 +252,7 @@
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
 
-        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token)
+        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (t/now))
 
         (do (oikeudet/ei-oikeustarkistusta!)
             {:status 200
@@ -281,7 +282,7 @@
 
     (if (or (and (some? random-avain)
                  (some? csrf-token)
-                 (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttajanimi csrf-token)))
+                 (anti-csrf-q/kayttajan-csrf-token-voimassa? db kayttajanimi csrf-token (t/now))))
       (f req)
       (do
         (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
@@ -319,7 +320,7 @@
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
                              random-avain (get (:headers req) "x-csrf-token")
                              csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
-                             _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token))
+                             _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (t/now)))
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                 (wrap-anti-forgery db
                                                                    oam-kayttajanimi

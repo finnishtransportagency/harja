@@ -11,9 +11,9 @@
 
 (defn poista-ja-luo-csrf-sessio
   "Poistaa käyttäjän ei-voimassa olevat CSRF-sessiot ja luo uuden."
-  [db kayttajanimi csrf-token]
+  [db kayttajanimi csrf-token nyt]
   (poista-kayttajanimen-vanhentuneet-csrf-sessiot! db {:kayttajanimi kayttajanimi
-                                                        :nyt (c/to-timestamp (t/now))})
+                                                        :nyt (c/to-timestamp nyt)})
   (luo-csrf-sessio-kayttajanimelle<!
     db
     {:kayttajanimi kayttajanimi
@@ -22,18 +22,17 @@
      :voimassa (c/to-timestamp (t/plus (t/now)
                                        (t/seconds csrf-voimassa-s)))}))
 
-(defn virkista-csrf-sessio-jos-voimassa [db kayttajanimi csrf-token]
+(defn virkista-csrf-sessio-jos-voimassa [db kayttajanimi csrf-token nyt]
   (virkista-kayttajanimen-csrf-sessio-jos-voimassa<!
     db
     {:kayttajanimi kayttajanimi
      :csrf_token csrf-token
-     :nyt (c/to-timestamp (t/now))
-     :voimassa (c/to-timestamp (t/plus (t/now)
-                                       (t/seconds csrf-voimassa-s)))}))
+     :nyt (c/to-timestamp nyt)
+     :voimassa (c/to-timestamp (t/plus nyt (t/seconds csrf-voimassa-s)))}))
 
-(defn kayttajan-csrf-token-voimassa? [db kayttajanimi csrf-token]
+(defn kayttajan-csrf-token-voimassa? [db kayttajanimi csrf-token nyt]
   (some? (:id (first (hae-kayttajan-voimassaoleva-csrf-token
                        db
                        {:kayttajanimi kayttajanimi
                         :csrf_token csrf-token
-                        :nyt (c/to-timestamp (t/now))})))))
+                        :nyt (c/to-timestamp nyt)})))))
