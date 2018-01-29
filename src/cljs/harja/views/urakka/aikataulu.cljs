@@ -236,7 +236,7 @@
                                                                            (reset! tiedot/aikataulurivit vastaus)
                                                                            (kumottu-fn)))))
                                :sulje-fn kumousboksi/ala-ehdota-kumoamista!}]
-     [leijuke/otsikko-ja-vihjeleijuke "Aikajana"
+     [leijuke/otsikko-ja-vihjeleijuke 6 "Aikajana"
       {:otsikko "Visuaalisen muokkauksen ohje"}
       [leijuke/multipage-vihjesisalto
        [:div
