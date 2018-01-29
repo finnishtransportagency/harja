@@ -126,7 +126,7 @@
 (defn tiemerkinta-valmis
   "Modaali, jossa merkitään tiemerkintä valmiiksi.."
   [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
-           nakyvissa?] :as data}]
+           nakyvissa? muutos-taulukosta?] :as data}]
   [modal/modal
    {:otsikko (str "Kohteen " kohde-nimi " tiemerkinnän valmistuminen")
     ;:luokka "merkitse-valmiiksi-tiemerkintaan"
@@ -134,6 +134,12 @@
     :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
                    ((:peru-fn data)))
     :footer [:div
+             ;; Gridin kanssa tätä ei voi perua, sillä maili tullaan lähettämään joka tapauksessa
+             ;; gridin tallennuksen yhteydessä.
+             ;; Aikajanan kanssa muutosta ei tallenneta, jos perutaan toiminto modalista.
+             (when-not muutos-taulukosta?
+               [napit/peruuta "Peruuta"
+                #(swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)])
              [napit/yleinen-ensisijainen
               "OK"
               #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
@@ -143,13 +149,18 @@
    [:div
     [vihje-elementti
      [:span
-      [:span "Päivämäärän asettamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle. Halutessasi voit lisätä viestiin myös ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]
-      [:span " "]
-      [:span {:style {:color "red"}} "Sähköposti lähetetään vasta, kun tallennat muutokset taulukosta."]]]
+      [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuuteen merkityistä kohteista lähetetään sähköposti valmistumispäivänä."]
+      [:br] [:br]
+      [:span
+       [:span "Halutessasi voit lisätä viestiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]
+       (when muutos-taulukosta?
+         [:span
+          [:span " "]
+          [:span {:style {:color "red"}} "Sähköposti lähetetään vasta, kun tallennat muutokset taulukosta."]])]]]
     [lomake/lomake {:otsikko ""
                     :muokkaa! (fn [uusi-data]
                                 (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-     [{:otsikko "Muut vastaanottajat"
+     [{:otsikko "Muut vastaanottajat" ; TODO Pitääkö nämä tallentaa jonnekin silloin kun merkitään tulevaisuuteen ajastettua taskia varten? :(
        :nimi :muut-vastaanottajat
        :uusi-rivi? true
        :palstoja 2
@@ -558,7 +569,8 @@
                         (reset! tiedot/tiemerkinta-valmis-modal-data
                                 ;; TODO Kokeilu
                                 ;; TODO Näytä modal vain jos loppu nyt tai ennen
-                                (merge {:kohde-id 1
+                                (merge {:muutos-taulukosta? true
+                                        :kohde-id 1
                                         :kohde-nimi "Testi"
                                         :urakka-id urakka-id
                                         :vuosi vuosi
