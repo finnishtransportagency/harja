@@ -47,6 +47,7 @@
                       (try+
                         (transit-vastaus ~@body)
                         (catch harja.domain.roolit.EiOikeutta eo#
+                          (log/warn "Palautetaan 403 koska saatiin EiOikeuta-poikkeus:" eo#)
                           (transit-vastaus 403 eo#))
                         (catch Throwable e#
                           (log/warn e# "Virhe async POST palvelussa")
@@ -285,9 +286,11 @@
                                                anti-csrf-token-secret-key)
                     (:value (cookies "anti-csrf-token")))))
       (f req)
-      {:status 403
-       :headers {"Content-Type" "text/html"}
-       :body "Access denied"})))
+      (do
+        (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
+        {:status 403
+         :headers {"Content-Type" "text/html"}
+         :body "Access denied"}))))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
@@ -332,7 +335,9 @@
                                           (conj ui-kasittelija))
                                       true)))
                        (catch [:virhe :todennusvirhe] _
+                         (log/warn "Ei voitu todentaa tunnusta -> palautetaan 403")
                          {:status 403 :body "Todennusvirhe"})
+
                        (finally
                          (metriikka/muuta! mittarit
                                            :aktiiviset_pyynnot dec

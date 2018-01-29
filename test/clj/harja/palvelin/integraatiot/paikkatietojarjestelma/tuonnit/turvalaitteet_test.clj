@@ -46,7 +46,6 @@
 (t/deftest vie-turvalaite-tietokantaan
   (turvalaite-tuonti/vie-turvalaite-entry (:db ht/jarjestelma) referenssi-turvalaite-shapefilestä)
     (let [tallentunut-turvalaite (first(q-vatu-turvalaite/hae-turvalaite-tunnuksella (:db ht/jarjestelma) {:turvalaitenro 6666666}))]
-      (println (str "TURVALAIte"  tallentunut-turvalaite ))
       (ht/tarkista-map-arvot referenssi-turvalaite-tietokannasta tallentunut-turvalaite)))
 
 
