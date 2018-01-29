@@ -159,7 +159,9 @@
     [lomake/lomake {:otsikko ""
                     :muokkaa! (fn [uusi-data]
                                 (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-     [{:otsikko "Muut vastaanottajat" ; TODO Pitääkö nämä tallentaa jonnekin silloin kun merkitään tulevaisuuteen ajastettua taskia varten? :(
+     [{:otsikko "Muut vastaanottajat"
+       ;; TODO Pitääkö nämä tallentaa jonnekin silloin kun merkitään tulevaisuuteen ajastettua taskia varten? :(
+       ;; Ja entä sitten jos tietoa muokataankin? Tallennetaanko kohdekohtaisesti uusin mailitieto?
        :nimi :muut-vastaanottajat
        :uusi-rivi? true
        :palstoja 2
