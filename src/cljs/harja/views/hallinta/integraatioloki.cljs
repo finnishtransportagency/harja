@@ -14,7 +14,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.modal :as modal]
             [harja.ui.dom :as dom]
-            [harja.ui.lomake :as lomake])
+            [harja.ui.lomake :as lomake]
+            [cljs-time.core :as t])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -129,11 +130,11 @@
     [:span.pylvaat
      [:h5 (str "Vastaanotetut pyynnöt " eka-pvm " - " vika-pvm)]
      (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
-           tikit (distinct  [0
-                             (js/Math.round (* .25 lkm-max))
-                             (js/Math.round (* .5 lkm-max))
-                             (js/Math.round (* .75 lkm-max))
-                             lkm-max])
+           tikit (distinct [0
+                            (js/Math.round (* .25 lkm-max))
+                            (js/Math.round (* .5 lkm-max))
+                            (js/Math.round (* .75 lkm-max))
+                            lkm-max])
            nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 10)]
        [vis/bars {:width w
                   :height (min 200 h)
@@ -217,27 +218,26 @@
                     [:onnistuneet "Onnistuneet"]
                     [:epaonnistuneet "Epäonnistuneet"]]}
         (lomake/ryhma
-         {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
-         {:otsikko "Otsikot"
-          :nimi :otsikot
-          :tyyppi :string}
-         {:otsikko "Parametrit"
-          :nimi :parametrit
-          :tyyppi :string}
-         {:otsikko "Viestin sisältö"
-          :nimi :viestin-sisalto
-          :tyyppi :string}
-         )
+          {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
+          {:otsikko "Otsikot"
+           :nimi :otsikot
+           :tyyppi :string}
+          {:otsikko "Parametrit"
+           :nimi :parametrit
+           :tyyppi :string}
+          {:otsikko "Viestin sisältö"
+           :nimi :viestin-sisalto
+           :tyyppi :string})
         (lomake/rivi
-         {:nimi :hae
-          :tyyppi :komponentti
-          :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(tiedot/hae-tapahtumat!)} "Hae"])}
-         {:nimi :tyhjenna
-          :tyyppi :komponentti
-          :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
-                                                                        tiedot/hakuehdot
-                                                                        dissoc :otsikot :parametrit :viestin-sisalto)}
-                                "Tyhjennä"])})]
+          {:nimi :hae
+           :tyyppi :komponentti
+           :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(tiedot/hae-tapahtumat!)} "Hae"])}
+          {:nimi :tyhjenna
+           :tyyppi :komponentti
+           :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
+                                                                          tiedot/hakuehdot
+                                                                          dissoc :otsikot :parametrit :viestin-sisalto)}
+                                 "Tyhjennä"])})]
        @tiedot/hakuehdot])
 
     [grid
@@ -261,9 +261,19 @@
                                (if (:onnistunut %) [:span.integraatioloki-onnistunut (ikonit/thumbs-up) " Onnistunut"]
                                                    [:span.integraatioloki-virhe (ikonit/thumbs-down) " Epäonnistunut"]))}
               {:otsikko "Alkanut" :nimi :alkanut :leveys 15
-               :hae #(if (:alkanut %) (pvm/pvm-aika-sek (:alkanut %)) "-")}
+               :hae #(if (:alkanut %)
+                       (pvm/pvm-aika-sek (:alkanut %))
+                       "-")}
               {:otsikko "Päättynyt" :nimi :paattynyt :leveys 15
-               :hae #(if (:paattynyt %) (pvm/pvm-aika-sek (:paattynyt %)) "-")}
+               :hae #(if (:paattynyt %)
+                       (pvm/pvm-aika-sek (:paattynyt %))
+                       "-")}
+              {:otsikko "Kesto"
+               :hae (fn [{:keys [alkanut paattynyt]}]
+                      (when (and alkanut paattynyt)
+                        (let [vali (t/interval alkanut paattynyt)]
+                          (str (t/in-seconds vali) "s (" (t/in-millis vali) " ms)"))))
+               :leveys 10}
               {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
               {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
 
