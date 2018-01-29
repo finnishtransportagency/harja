@@ -284,7 +284,7 @@
                                     (< 600 kesto-sekunneissa) [:span.integraatioloki-virhe (ikonit/aika) " " kesto]
                                     (< 300 kesto-sekunneissa) [:span.integraatioloki-virhe kesto]
                                     (< 60 kesto-sekunneissa) [:span.integraatioloki-varoitus kesto]
-                                    :elso [:span.integraatioloki-onnistunut kesto]))))
+                                    :else [:span.integraatioloki-onnistunut kesto]))))
                :leveys 10}
               {:otsikko "Ulkoinen id" :nimi :ulkoinenid :leveys 10}
               {:otsikko "Lisätietoja" :nimi :lisatietoja :leveys 30 :tyyppi :komponentti :komponentti (fn [rivi] (nayta-lisatiedot (:lisatietoja rivi)))}]))
