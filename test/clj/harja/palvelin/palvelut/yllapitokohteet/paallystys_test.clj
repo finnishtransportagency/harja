@@ -22,7 +22,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :as paallystys :refer :all]
             [harja.palvelin.palvelut.yllapitokohteet-test :as yllapitokohteet-test]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti])
+            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.tyokalut.xml :as xml])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -712,8 +713,20 @@
                              :paallystyskohde-id paallystyskohde-id
                              :valmis-kasiteltavaksi true)
         sahkoposti-valitetty (atom false)
+        sahkopostin-vastaanottaja (atom nil)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [lahteva-viesti]
+                                                            (reset! sahkopostin-vastaanottaja (->> lahteva-viesti
+                                                                                                   .getText
+                                                                                                   xml/lue
+                                                                                                   first
+                                                                                                   :content
+                                                                                                   (some #(when (= :vastaanottajat (:tag %))
+                                                                                                            (:content %)))
+                                                                                                   first
+                                                                                                   :content
+                                                                                                   first))
+                                                            (reset! sahkoposti-valitetty true)))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -724,7 +737,9 @@
 
     (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
     (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+    (is @sahkopostin-vastaanottaja "ELY_Urakanvalvoja@example.com")
     (reset! sahkoposti-valitetty false)
+    (reset! sahkopostin-vastaanottaja nil)
     (let [;;Hyväksytään ilmoitus ja lähetetään tästä urakan valvojalle sähköposti
           paallystysilmoitus (-> (assoc pot-testidata
                                    :paallystyskohde-id paallystyskohde-id)
@@ -738,4 +753,5 @@
                                         :sopimus-id sopimus-id
                                         :paallystysilmoitus paallystysilmoitus}))
       (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
-      (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin"))))
+      (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+      (is @sahkopostin-vastaanottaja "vastuuhenkilo@example.com"))))
