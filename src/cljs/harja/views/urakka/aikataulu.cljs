@@ -73,10 +73,10 @@
                         :kopio-itselle? (:kopio-itselle? (:lomakedata data))
                         :saate (:saate (:lomakedata data))
                         :muut-vastaanottajat (->> (vals (get-in
-                                                                  data
-                                                                  [:lomakedata :muut-vastaanottajat]))
-                                                          (filter (comp not :poistettu))
-                                                          (map :sahkoposti))
+                                                          data
+                                                          [:lomakedata :muut-vastaanottajat]))
+                                                  (filter (comp not :poistettu))
+                                                  (map :sahkoposti))
                         :urakka-id urakka-id
                         :sopimus-id (first @u/valittu-sopimusnumero)
                         :vuosi vuosi}))
