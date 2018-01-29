@@ -571,7 +571,7 @@
 
     (let [tarkastusten-maara-ennen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           _ (jdbc/with-db-transaction [tx db]
-              (ls-core/tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset {:id 1} urakka-id))
+              (ls-core/tallenna-muunnetut-tarkastukset-kantaan tx tarkastukset +kayttaja-jvh+ urakka-id))
           tarkastusten-maara-jalkeen (ffirst (q "SELECT COUNT(*) FROM tarkastus"))
           tarkastukset-kannassa (q-map "SELECT * FROM tarkastus WHERE tarkastusajo = " tarkastusajo-id ";")]
 
