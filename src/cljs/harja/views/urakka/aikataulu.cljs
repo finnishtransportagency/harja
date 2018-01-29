@@ -162,6 +162,7 @@
      [{:otsikko "Muut vastaanottajat"
        ;; TODO Pitääkö nämä tallentaa jonnekin silloin kun merkitään tulevaisuuteen ajastettua taskia varten? :(
        ;; Ja entä sitten jos tietoa muokataankin? Tallennetaanko kohdekohtaisesti uusin mailitieto?
+       ;; TODO Jos kannassa on jo mailitiedot olemassa, niin hae ne tähän dialogiin?
        :nimi :muut-vastaanottajat
        :uusi-rivi? true
        :palstoja 2
