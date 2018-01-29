@@ -21,7 +21,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
-(defonce modal-data (atom {}))
+(defonce valmis-tiemerkintaan-modal-data (atom {}))
+(defonce tiemerkinta-valmis-modal-data (atom {}))
 
 (defonce aikataulu-nakymassa? (atom false))
 

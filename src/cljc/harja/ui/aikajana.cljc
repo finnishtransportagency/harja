@@ -152,7 +152,7 @@
         text]])))
 
 #?(:cljs
-   (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
+   (defn- aikajana-ui-tila [rivit {:keys [muuta! ennen-muokkausta] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
                   valitut-palkit (r/atom #{}) ;; Käytössä, jos valitaan erikseen (yleensä useita) palkkeja raahattavaksi
                   drag-kursori (r/atom nil) ; Nykyisen raahauksen kursorin tiedot
@@ -251,20 +251,24 @@
                                                    :default drag)))
                                              @drag)))))))
           :on-mouse-up! (fn [e]
-                          ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
-                          (when (and (not (.-ctrlKey e))
-                                     (empty? @drag))
-                            (reset! valitut-palkit #{}))
+                          (let [tallenna-muutos! (fn []
+                                                   (go
+                                                     (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
+                                                     (reset! drag [])
+                                                     (reset! drag-kursori nil)
+                                                     (reset! lopetetaan-raahaus? false)
+                                                     (reset! valitut-palkit #{})))]
+                            ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
+                            (when (and (not (.-ctrlKey e))
+                                       (empty? @drag))
+                              (reset! valitut-palkit #{}))
 
-                          ;; Tallenna muutos, jos raahattiin palkkeja
-                          (when-not (empty? @drag)
-                            (go
+                            ;; Käsittele muutos, jos raahattiin palkkeja
+                            (when-not (empty? @drag)
                               (reset! lopetetaan-raahaus? true)
-                              (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
-                              (reset! drag [])
-                              (reset! drag-kursori nil)
-                              (reset! lopetetaan-raahaus? false)
-                              (reset! valitut-palkit #{}))))
+                              (if ennen-muokkausta
+                                (ennen-muokkausta tallenna-muutos!)
+                                (tallenna-muutos!)))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
 #?(:clj
