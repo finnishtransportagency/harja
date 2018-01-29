@@ -10,24 +10,33 @@
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tt]
             [namespacefy.core :refer [namespacefy]]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
 
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as ur]
-            [clojure.string :as str])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [clojure.string :as str]
+            [reagent.core :as r]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila])
+  (:require-macros [cljs.core.async.macros :refer [go]]
+                   [reagent.ratom :refer [reaction]]))
 
-(def tila (atom {:nakymassa? false
-                 :kohteiden-haku-kaynnissa? false
-                 :urakoiden-haku-kaynnissa? false
-                 :kohdelomake-auki? false
-                 :liittaminen-kaynnissa? false
-                 :kohderivit nil
-                 :kanavat nil
-                 :lomakkeen-tiedot nil
-                 :valittu-urakka nil
-                 :uudet-urakkaliitokset {}})) ; Key on vector, jossa [kohde-id urakka-id] ja arvo on boolean
+(defonce tila (atom {:nakymassa? false
+                     :kohteiden-haku-kaynnissa? false
+                     :urakoiden-haku-kaynnissa? false
+                     :kohdekokonaisuuslomake-auki? false
+                     :liittaminen-kaynnissa? false
+                     :kohderivit nil
+                     :kohdekokonaisuudet nil
+                     :karttataso-nakyvissa? false
+                     :valittu-urakka nil
+                     :uudet-urakkaliitokset {}})) ; Key on vector, jossa [kohde-id urakka-id] ja arvo on boolean
+
+(defonce karttataso-kohteenosat-kohteen-luonnissa (r/cursor tila [:karttataso-nakyvissa?]))
+(def uusi-kohde {})
 
 ;; Yleiset
 
@@ -52,14 +61,25 @@
 
 ;; Lomake
 
-(defrecord AvaaKohdeLomake [])
-(defrecord SuljeKohdeLomake [])
-(defrecord ValitseKanava [kanava])
-(defrecord LisaaKohteita [tiedot])
+(defrecord AvaaKohdekokonaisuusLomake [])
+(defrecord SuljeKohdekokonaisuusLomake [])
+(defrecord LisaaKohdekokonaisuuksia [tiedot])
 
-(defrecord TallennaKohteet [])
-(defrecord KohteetTallennettu [tulos])
-(defrecord KohteetEiTallennettu [virhe])
+(defrecord TallennaKohdekokonaisuudet [kokonaisuudet])
+(defrecord KohdekokonaisuudetTallennettu [tulos])
+(defrecord KohdekokonaisuudetEiTallennettu [virhe])
+
+(defrecord ValitseKohde [kohde])
+(defrecord KohdettaMuokattu [kohde])
+(defrecord TallennaKohde [kohde])
+(defrecord KohdeTallennettu [tulos])
+(defrecord KohdeEiTallennettu [virhe])
+
+(defrecord HaeKohteenosat [])
+(defrecord KohteenosatHaettu [tulos])
+(defrecord KohteenosatEiHaettu [virhe])
+(defrecord MuokkaaKohteenKohteenosia [osat])
+(defrecord KohteenosaKartallaKlikattu [osa])
 
 (defn hae-kanava-urakat! [tulos! fail!]
   (go
@@ -88,40 +108,67 @@
           ;; Liitetään kohteelle kohdekokonaisuuden (kanavan) tiedot
           ;; Tarvitaan mm. ryhmittelyä varten.
           (-> kohde
-              (assoc ::kok/id (::kok/id kohdekokonaisuus))
-              (assoc ::kok/nimi (::kok/nimi kohdekokonaisuus))))
+              (assoc-in [::kohde/kohdekokonaisuus ::kok/id] (::kok/id kohdekokonaisuus))
+              (assoc-in [::kohde/kohdekokonaisuus ::kok/nimi] (::kok/nimi kohdekokonaisuus))))
         (::kok/kohteet kohdekokonaisuus)))
     tulos))
 
-(defn kanavat [tulos]
-  (map #(select-keys % #{::kok/id ::kok/nimi}) tulos))
+(defn ryhmittele-kohderivit-kanavalla [kohderivit otsikko-fn]
+  (let [ryhmat (group-by (comp ::kok/id ::kohde/kohdekokonaisuus)
+                         (sort-by (comp ::kok/nimi ::kohde/kohdekokonaisuus) kohderivit))]
+    (mapcat
+      (fn [kohdekokonaisuus-id]
+        (let [ryhman-sisalto (get ryhmat kohdekokonaisuus-id)]
+          (concat
+            [(otsikko-fn (get-in (first ryhman-sisalto) [::kohde/kohdekokonaisuus ::kok/nimi]))]
+            (sort-by ::kohde/nimi ryhman-sisalto))))
+      (keys ryhmat))))
 
-(defn kohteet-voi-tallentaa? [kohteet]
+(defn kohdekokonaisuudet [tulos]
+  (sort-by ::kok/nimi
+           (-> (map #(select-keys % #{::kok/id ::kok/nimi}) tulos)
+               set
+               vec)))
+
+(defn kohdekokonaisuudet-voi-tallentaa? [kokonaisuudet]
   (boolean
-    (and (:kanava kohteet)
-         (not-empty (:kohteet kohteet))
-         (every?
-           (fn [kohde]
-             (and (::kohde/tyyppi kohde)))
-           (:kohteet kohteet)))))
+    (and (every? #(not-empty (::kok/nimi %))
+                 (remove :poistettu kokonaisuudet)))))
 
-(defn muokattavat-kohteet [app]
-  (get-in app [:lomakkeen-tiedot :kohteet]))
+(defn kohteen-voi-tallentaa? [kohde]
+  (boolean
+    (and (some? (::kohde/kohdekokonaisuus kohde))
+         (not-empty (::kohde/nimi kohde))
+         (not-empty (::kohde/kohteenosat kohde)))))
 
-(defn tallennusparametrit [lomake]
-  (let [kanava-id (get-in lomake [:kanava ::kok/id])
-        params (->> (:kohteet lomake)
-                    (map #(assoc % ::kohde/kanava-id kanava-id))
-                    (map #(set/rename-keys % {:id ::kohde/id
-                                              :poistettu ::m/poistettu?}))
-                    (map #(select-keys
-                            %
-                            [::kohde/nimi
-                             ::kohde/id
-                             ::kohde/kanava-id
-                             ::kohde/tyyppi
-                             ::m/poistettu?])))]
-    params))
+(defn kohdekokonaisuudet-tallennusparametrit [kok]
+  (as-> kok $
+        (remove :koskematon $)
+        (map #(set/rename-keys % {:id ::kok/id
+                                  :poistettu ::m/poistettu?})
+             $)))
+
+(defn tallennusparametrit-kohde [kohde]
+  (-> kohde
+      (assoc ::kohde/kohdekokonaisuus-id (get-in kohde [::kohde/kohdekokonaisuus ::kok/id]))
+      (dissoc ::kohde/kohdekokonaisuus
+              ::kohde/urakat)
+      (update ::kohde/kohteenosat
+              (fn [osat]
+                (map
+                  #(-> %
+                       (set/rename-keys {:poistettu ::m/poistettu?})
+                       (dissoc ::osa/sijainti
+                               ::osa/kohde
+                               :vanha-kohde
+                               ;; kartan tiedot
+                               :sijainti
+                               :type
+                               :nimi
+                               :selite
+                               :alue
+                               :tyyppi-kartalla))
+                  osat)))))
 
 (defn kohteen-urakat [kohde]
   (str/join ", " (sort (map ::ur/nimi (::kohde/urakat kohde)))))
@@ -137,14 +184,44 @@
       (boolean
         ((set (map ::ur/id (::kohde/urakat kohde))) (::ur/id urakka))))))
 
-(defn poista-kohde [kohteet kohde]
-  (into [] (disj (into #{} kohteet) kohde)))
+(defn kohteet-haettu [app tulos]
+  (-> app
+      (assoc :kohderivit (kohderivit tulos))
+      (assoc :kohdekokonaisuudet (kohdekokonaisuudet tulos))))
 
-(defn lopeta-liittaminen [app kohde-id urakka-id]
-  (update app :liittaminen-kaynnissa
-          (fn [kohde-ja-urakat]
-            (when (kohde-ja-urakat kohde-id)
-              (update kohde-ja-urakat kohde-id disj urakka-id)))))
+(defn kohteiden-lkm-kokonaisuudessa [{:keys [kohderivit] :as app} kokonaisuus]
+  (let [kokonaisuus-id (::kok/id kokonaisuus)]
+    (count (filter #(= (get-in % [::kohde/kohdekokonaisuus ::kok/id]) kokonaisuus-id) kohderivit))))
+
+(defn kokonaisuuden-voi-poistaa? [app kokonaisuus]
+  (= 0 (kohteiden-lkm-kokonaisuudessa app kokonaisuus)))
+
+(defn osa-kuuluu-valittuun-kohteeseen? [osa {:keys [valittu-kohde]}]
+  (boolean
+    ((set (map ::osa/id (remove :poistettu (::kohde/kohteenosat valittu-kohde))))
+      (::osa/id osa))))
+
+(defonce kohteenosat-kartalla
+  (reaction
+    (when (:valittu-kohde @tila)
+      (kartalla-esitettavaan-muotoon
+        (map #(-> %
+                  (set/rename-keys {::osa/sijainti :sijainti})
+                  (assoc :tyyppi-kartalla :kohteenosa))
+             (:haetut-kohteenosat @tila))
+        #(osa-kuuluu-valittuun-kohteeseen? % @tila)))))
+
+(defn kohteenosan-infopaneeli-otsikko [app osa]
+  (cond
+    (= (get-in app [:valittu-kohde ::kohde/id])
+       (get-in osa [::osa/kohde ::kohde/id]))
+    "Irroita"
+
+    (some? (get-in osa [::osa/kohde ::kohde/id]))
+    (str "Irroita kohteesta " (get-in osa [::osa/kohde ::kohde/nimi]) " & Liitä")
+
+    :default
+    "Liitä kohteeseen"))
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -153,7 +230,29 @@
                                   {}
                                   (:uudet-urakkaliitokset app))]
       (assoc app :nakymassa? nakymassa?
-                 :uudet-urakkaliitokset uudet-urakkaliitokset)))
+                 :uudet-urakkaliitokset uudet-urakkaliitokset
+                 :karttataso-nakyvissa? (if-not nakymassa?
+                                          false
+                                          (some? (:valittu-kohde app))))))
+
+  AloitaUrakoidenHaku
+  (process-event [_ app]
+    (hae-kanava-urakat! (tuck/send-async! ->UrakatHaettu)
+                        (tuck/send-async! ->UrakatEiHaettu))
+    (assoc app :urakoiden-haku-kaynnissa? true))
+
+  UrakatHaettu
+  (process-event [{ur :urakat} app]
+    (-> app
+        (assoc :urakoiden-haku-kaynnissa? false)
+        (assoc :urakat (as-> ur $
+                             (map #(select-keys % [:id :nimi]) $)
+                             (namespacefy $ {:ns :harja.domain.urakka})))))
+
+  UrakatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe urakoiden haussa!" :danger)
+    (assoc app :urakoiden-haku-kaynnissa? false))
 
   HaeKohteet
   (process-event [_ app]
@@ -169,8 +268,7 @@
   KohteetHaettu
   (process-event [{tulos :tulos} app]
     (-> app
-        (assoc :kohderivit (kohderivit tulos))
-        (assoc :kanavat (kanavat tulos))
+        (kohteet-haettu tulos)
         (assoc :kohteiden-haku-kaynnissa? false)))
 
   KohteetEiHaettu
@@ -178,79 +276,6 @@
     (viesti/nayta! "Kohteiden haku epäonnistui!" :danger)
     (-> app
         (assoc :kohteiden-haku-kaynnissa? false)))
-
-  AvaaKohdeLomake
-  (process-event [_ app]
-    (assoc app :kohdelomake-auki? true))
-
-  SuljeKohdeLomake
-  (process-event [_ app]
-    (-> app
-        (assoc :kohdelomake-auki? false)
-        (assoc :lomakkeen-tiedot nil)))
-
-  ValitseKanava
-  (process-event [{kanava :kanava} app]
-    (-> app
-        (assoc-in [:lomakkeen-tiedot :kanava] kanava)
-        (assoc-in [:lomakkeen-tiedot :kohteet]
-                  (filter
-                    (fn [kohde]
-                      (= (::kok/id kohde)
-                         (::kok/id kanava)))
-                    (:kohderivit app)))))
-
-  LisaaKohteita
-  (process-event [{tiedot :tiedot} app]
-    (assoc-in app [:lomakkeen-tiedot :kohteet] tiedot))
-
-  TallennaKohteet
-  (process-event [_ {tiedot :lomakkeen-tiedot :as app}]
-    (if-not (:kohteiden-tallennus-kaynnissa? app)
-      (-> app
-          (tt/post! :lisaa-kanavalle-kohteita
-                    (tallennusparametrit tiedot)
-                    {:onnistui ->KohteetTallennettu
-                     :epaonnistui ->KohteetEiTallennettu})
-
-          (assoc :kohteiden-tallennus-kaynnissa? true))
-
-      app))
-
-  KohteetTallennettu
-  (process-event [{tulos :tulos} app]
-    (-> app
-        (assoc :kohderivit (kohderivit tulos))
-        (assoc :kanavat (kanavat tulos))
-        (assoc :kohdelomake-auki? false)
-        (assoc :lomakkeen-tiedot nil)
-        (assoc :kohteiden-tallennus-kaynnissa? false)))
-
-  KohteetEiTallennettu
-  (process-event [_ app]
-    (viesti/nayta! "Kohteiden tallennus epäonnistui!" :danger)
-    (-> app
-        (assoc :kohteiden-tallennus-kaynnissa? false)))
-
-  AloitaUrakoidenHaku
-  (process-event [_ app]
-    (hae-kanava-urakat! (tuck/send-async! ->UrakatHaettu)
-                        (tuck/send-async! ->UrakatEiHaettu))
-    (assoc app :urakoiden-haku-kaynnissa? true))
-
-
-  UrakatHaettu
-  (process-event [{ur :urakat} app]
-    (-> app
-        (assoc :urakoiden-haku-kaynnissa? false)
-        (assoc :urakat (as-> ur $
-                             (map #(select-keys % [:id :nimi]) $)
-                             (namespacefy $ {:ns :harja.domain.urakka})))))
-
-  UrakatEiHaettu
-  (process-event [_ app]
-    (viesti/nayta! "Virhe urakoiden haussa!" :danger)
-    (assoc app :urakoiden-haku-kaynnissa? false))
 
   ValitseUrakka
   (process-event [{ur :urakka} app]
@@ -282,7 +307,153 @@
                :uudet-urakkaliitokset {}
                :kohderivit (kohderivit tulos)))
 
+
   LiitoksetEiPaivitetty
   (process-event [{kohde-id :kohde urakka-id :urakka} app]
     (viesti/nayta! "Virhe urakkaliitoksien tallennuksessa!" :danger)
-    (assoc app :liittaminen-kaynnissa? false)))
+    (assoc app :liittaminen-kaynnissa? false))
+
+  AvaaKohdekokonaisuusLomake
+  (process-event [_ app]
+    (assoc app :kohdekokonaisuuslomake-auki? true))
+
+  SuljeKohdekokonaisuusLomake
+  (process-event [_ app]
+    (-> app
+        (update :kohdekokonaisuudet #(filter (comp id-olemassa? ::kok/id) %))
+        (update :kohdekokonaisuudet (fn [k] (map #(dissoc % :poistettu) k)))
+        (assoc :kohdekokonaisuuslomake-auki? false)))
+
+  LisaaKohdekokonaisuuksia
+  (process-event [{tiedot :tiedot} app]
+    (assoc-in app [:kohdekokonaisuudet] tiedot))
+
+  TallennaKohdekokonaisuudet
+  (process-event [{kokonaisuudet :kokonaisuudet} app]
+    (if-not (:kohdekokonaisuuksien-tallennus-kaynnissa? app)
+      (-> app
+          (tt/post! :tallenna-kohdekokonaisuudet
+                    (kohdekokonaisuudet-tallennusparametrit kokonaisuudet)
+                    {:onnistui ->KohdekokonaisuudetTallennettu
+                     :epaonnistui ->KohdekokonaisuudetEiTallennettu})
+
+          (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? true))
+
+      app))
+
+  KohdekokonaisuudetTallennettu
+  (process-event [{tulos :tulos} app]
+    (-> app
+        (kohteet-haettu tulos)
+        (assoc :kohdekokonaisuuslomake-auki? false)
+        (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? false)))
+
+  KohdekokonaisuudetEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Kohdekokonaisuuksien tallennus epäonnistui!" :danger)
+    (-> app
+        (assoc :kohdekokonaisuuksien-tallennus-kaynnissa? false)))
+
+  ValitseKohde
+  (process-event [{kohde :kohde} app]
+    (if (some? kohde)
+      (nav/vaihda-kartan-koko! :M)
+      (nav/vaihda-kartan-koko! :S))
+    (-> app
+        (assoc :valittu-kohde kohde)
+        (assoc :karttataso-nakyvissa? (if (some? kohde) true false))))
+
+  KohdettaMuokattu
+  (process-event [{kohde :kohde} app]
+    (assoc app :valittu-kohde kohde))
+
+  TallennaKohde
+  (process-event [{kohde :kohde} app]
+    (if-not (:kohteen-tallennus-kaynnissa? app)
+      (-> app
+          (tt/post! :tallenna-kohde
+                    (tallennusparametrit-kohde kohde)
+                    {:onnistui ->KohdeTallennettu
+                     :epaonnistui ->KohdeEiTallennettu})
+
+          (assoc :kohteen-tallennus-kaynnissa? true))
+
+      app))
+
+  KohdeTallennettu
+  (process-event [{tulos :tulos} app]
+    (-> app
+        (kohteet-haettu tulos)
+        (assoc :valittu-kohde nil)
+        (assoc :kohteen-tallennus-kaynnissa? false)))
+
+  KohdeEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Kohteen epäonnistui!" :danger)
+    (-> app
+        (assoc :kohteen-tallennus-kaynnissa? false)))
+
+  HaeKohteenosat
+  (process-event [_ app]
+    (if-not (:kohteenosien-haku-kaynnissa? app)
+      (-> app
+          (tt/get! :hae-kohteenosat
+                   {:onnistui ->KohteenosatHaettu
+                    :epaonnistui ->KohteenosatEiHaettu})
+
+          (assoc :kohteenosien-haku-kaynnissa? true))
+
+      app))
+
+  KohteenosatHaettu
+  (process-event [{tulos :tulos} app]
+    (-> app
+        (assoc :kohteenosien-haku-kaynnissa? false)
+        (assoc :haetut-kohteenosat tulos)))
+
+  KohteenosatEiHaettu
+  (process-event [_ app]
+    (viesti/nayta! "Kohteenosien haku epäonnistui!" :danger)
+    (-> app
+        (assoc :kohteenosien-haku-kaynnissa? false)))
+
+  MuokkaaKohteenKohteenosia
+  (process-event [{osat :osat} app]
+    (assoc-in app [:valittu-kohde ::kohde/kohteenosat] osat))
+
+  KohteenosaKartallaKlikattu
+  (process-event [{osa :osa} app]
+    (paneelin-tila/piilota-infopaneeli!)
+    (if (osa-kuuluu-valittuun-kohteeseen? osa app)
+      ;; Irrota kohteesta
+      (-> app
+          (update-in [:valittu-kohde ::kohde/kohteenosat]
+                     (fn [kohteen-osat]
+                       (map #(if (= (::osa/id %) (::osa/id osa))
+                               (assoc % :poistettu true)
+                               %)
+                            kohteen-osat)))
+          (update :haetut-kohteenosat
+                  (fn [haetut-osat]
+                    (map #(if (= (::osa/id %) (::osa/id osa))
+                            ;; Estetään virheklikkaukset - lomakkeella
+                            ;; ollessa osalle tallennetaan :vanha-kohde, eli jos
+                            ;; osa kuului ennen virheellistä liittämistä toiseen kohteeseen,
+                            ;; liitetään se irrottaessa siihen takaisin.
+                            (assoc % ::osa/kohde (:vanha-kohde %))
+                            %)
+                         haetut-osat))))
+
+      ;; Liitä kohteeseen
+      (-> app
+          (update-in [:valittu-kohde ::kohde/kohteenosat]
+                     (fn [kohteen-osat]
+                       (conj kohteen-osat (assoc osa ::osa/kohde (:valittu-kohde app)
+                                                     :vanha-kohde (::osa/kohde osa)))))
+          (update :haetut-kohteenosat
+                  (fn [haetut-osat]
+                    (map #(if (= (::osa/id %) (::osa/id osa))
+                            (assoc % ::osa/kohde (:valittu-kohde app)
+                                     :vanha-kohde (::osa/kohde osa))
+                            %)
+                         haetut-osat)))))))

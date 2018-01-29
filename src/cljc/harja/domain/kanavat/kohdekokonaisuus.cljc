@@ -57,6 +57,12 @@
 
 (s/def ::lisaa-kohdekokonaisuudelle-kohteita-vastaus ::hae-kohdekokonaisuudet-ja-kohteet-vastaus)
 
+(s/def ::tallenna-kohdekokonaisuudet-kysely
+  (s/coll-of (s/keys :req [::nimi]
+                     :opt [::id])))
+
+(s/def ::tallenna-kohdekokonaisuudet-vastaus ::hae-kohdekokonaisuudet-ja-kohteet-vastaus)
+
 (s/def ::poista-kohde-kysely (s/keys :req-un [::kohde-id]))
 
 (s/def ::hae-urakan-kohteet-kysely (s/keys :req [::ur/id]))
