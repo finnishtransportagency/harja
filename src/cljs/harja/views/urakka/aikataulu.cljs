@@ -138,32 +138,21 @@
       :luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? (:nakyvissa? data)
       :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                     ((:valmis-fn data)))
+                     ((:peru-fn data)))
       :footer [:div
                [napit/peruuta
                 (if valmis-tiemerkintaan-lomake?
                   "Peruuta"
                   "Älä perukaan")
-                #(swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)]
+                #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
+                     ((:peru-fn data)))]
 
-               [napit/palvelinkutsu-nappi
+               [napit/yleinen-ensisijainen
                 (if valmis-tiemerkintaan-lomake?
                   "Merkitse"
                   "Vahvista peruutus")
                 #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
-                     (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
-                       {:kohde-id kohde-id
-                        :tiemerkintapvm (:valmis-tiemerkintaan (:lomakedata data))
-                        :kopio-itselle? (:kopio-itselle? (:lomakedata data))
-                        :saate (:saate (:lomakedata data))
-                        :muut-vastaanottajat (->> (vals (get-in
-                                                          data
-                                                          [:lomakedata :muut-vastaanottajat]))
-                                                  (filter (comp not :poistettu))
-                                                  (map :sahkoposti))
-                        :urakka-id urakka-id
-                        :sopimus-id (first @u/valittu-sopimusnumero)
-                        :vuosi vuosi}))
+                     ((:valmis-fn data)))
                 {:disabled (not valmis-tallennettavaksi?)
                  :luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)
@@ -354,7 +343,7 @@
          [:figcaption
           [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Venytä aikajanaa normaalisti alusta tai lopusta, jolloin kaikki aikajanat venyvät samaan suuntaan yhtä paljon."]]]]]]
      [aikajana/aikajana
-      {:ennen-muokkausta (fn [valmis!]
+      {:ennen-muokkausta (fn [valmis! peru!]
                            (reset! tiedot/tiemerkinta-valmis-modal-data
                                    ;; TODO Kokeilu
                                    (merge {:kohde-id 1
@@ -363,6 +352,7 @@
                                            :vuosi vuosi
                                            :paallystys-valmis? true
                                            :valmis-fn valmis!
+                                           :peru-fn peru!
                                            :suorittava-urakka-annettu? true
                                            :lomakedata {:kopio-itselle? true}}
                                           {:nakyvissa? true

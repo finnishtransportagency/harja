@@ -251,13 +251,17 @@
                                                    :default drag)))
                                              @drag)))))))
           :on-mouse-up! (fn [e]
-                          (let [tallenna-muutos! (fn []
+                          (let [tyhjenna-muokkaustila! (fn []
+                                                         (reset! drag [])
+                                                         (reset! drag-kursori nil)
+                                                         (reset! lopetetaan-raahaus? false)
+                                                         (reset! valitut-palkit #{}))
+                                tallenna-muutos! (fn []
                                                    (go
                                                      (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
-                                                     (reset! drag [])
-                                                     (reset! drag-kursori nil)
-                                                     (reset! lopetetaan-raahaus? false)
-                                                     (reset! valitut-palkit #{})))]
+                                                     (tyhjenna-muokkaustila!)))
+                                peru-muutos! (fn []
+                                               (tyhjenna-muokkaustila!))]
                             ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
                             (when (and (not (.-ctrlKey e))
                                        (empty? @drag))
@@ -267,7 +271,7 @@
                             (when-not (empty? @drag)
                               (reset! lopetetaan-raahaus? true)
                               (if ennen-muokkausta
-                                (ennen-muokkausta tallenna-muutos!)
+                                (ennen-muokkausta tallenna-muutos! peru-muutos!)
                                 (tallenna-muutos!)))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
