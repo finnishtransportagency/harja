@@ -87,7 +87,8 @@
      {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna päivämäärä"]]
       :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
-     {:otsikko "Käytetty määrä (t)" :nimi :maara :tyyppi :positiivinen-numero :leveys "15%" :muokattava? muokattava?
+     {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku % 3)
+      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys "15%" :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
      {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
       :hae #(if (muokattava? %)
@@ -117,7 +118,7 @@
             materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
                                                nimi)
                                             @tiedot/toteumat))
-            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))))]
+            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))) "t")]
         (suolatoteumat-taulukko muokattava?
                                 urakka
                                 sopimus-id

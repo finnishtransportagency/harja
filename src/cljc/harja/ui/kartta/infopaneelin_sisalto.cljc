@@ -44,6 +44,7 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]
@@ -631,9 +632,10 @@
                   (if (fn suolatoteuma)
                     fn
                     (constantly false)))
-   :otsikko "Suolatoteuma"
+   :otsikko (str "Suolatoteuma" (when (:alkanut suolatoteuma)
+                                  (str " " (pvm/pvm (:alkanut suolatoteuma)))))
    :tiedot [{:otsikko "Materiaali" :nimi :materiaali_nimi}
-            {:otsikko "Määrä" :nimi :maara}
+            {:otsikko "Määrä (t)" :nimi :maara}
             {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
             {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}]
    :data suolatoteuma})
