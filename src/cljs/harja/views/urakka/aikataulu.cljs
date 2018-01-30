@@ -156,6 +156,7 @@
                  :ikoni (ikonit/check)}]]}
      [:div
       ; TODO Ota yhteisiä paloja molemmista modaleista
+      ; TODO Lisää infonootti siitä, milloin maili oikeasti lähetetään
       [vihje-elementti
        [:span
         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
@@ -189,7 +190,6 @@
         {:teksti "Lähetä sähköpostiini kopio viestistä"
          :nayta-rivina? true :palstoja 3
          :nimi :kopio-itselle? :tyyppi :checkbox}]
-
        lomakedata]]]))
 
 (defn- paallystys-aloitettu-validointi
