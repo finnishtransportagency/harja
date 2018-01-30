@@ -43,7 +43,7 @@
 
 (defonce valitut-toteumat-kartalla
   (reaction<! [toteumat @valitut-toteumat]
-              (hae-toteumien-reitit! toteumat)))
+              (hae-toteumien-reitit! @nav/valittu-urakka toteumat)))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
@@ -74,9 +74,9 @@
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
 
-(defn hae-toteumien-reitit! [toteuma-idt]
+(defn hae-toteumien-reitit! [urakka-id toteuma-idt]
   (when (not (empty? toteuma-idt))
-    (k/post! :hae-toteumien-reitit {:idt toteuma-idt})))
+    (k/post! :hae-toteumien-reitit {:idt toteuma-idt :urakka-id urakka-id})))
 
 (defn tallenna-toteumat [urakka-id sopimus-id rivit]
   (let [tallennettavat (into [] (->> rivit

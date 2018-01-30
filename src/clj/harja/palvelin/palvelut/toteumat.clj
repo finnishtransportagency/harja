@@ -769,9 +769,10 @@
                     :urakoitsija-id (get-in user [:organisaatio :id])}))
         {:tehtava :tehtavat} :id (constantly true)))))
 
-(defn hae-toteumien-reitit [db tiedot]
+(defn hae-toteumien-reitit [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user (:urakka-id tiedot))
   (let [idt (into [] (:idt tiedot))]
-    (toteumat-q/hae-toteumien-reitit db {:idt idt})))
+    (toteumat-q/hae-toteumien-reitit db {:idt idt :urakka-id (:urakka-id tiedot)})))
 
 (defrecord Toteumat []
   component/Lifecycle
@@ -851,8 +852,8 @@
       (fn [user toteuma-id]
         (siirry-toteuma db user toteuma-id))
       :hae-toteumien-reitit
-      (fn [_ tiedot]
-        (hae-toteumien-reitit db tiedot)))
+      (fn [user tiedot]
+        (hae-toteumien-reitit db user tiedot)))
     this)
 
   (stop [this]
