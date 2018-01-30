@@ -10,9 +10,9 @@
     "Talvisuola NaCl, rakeinen" 4
     "Erityisalueet NaCl" 5
     "Erityisalueet NaCl-liuos" 6
-    "Kaliumformiaatti" 7
-    "Natriumformiaatti" 8
-    "Hiekoitushiekan suola" 9
+    "Hiekoitushiekan suola" 7
+    "Kaliumformiaatti" 8
+    "Natriumformiaatti" 9
     "Kesäsuola (pölynsidonta)" 10
     "Kesäsuola (sorateiden kevätkunnostus)" 11
     "Hiekoitushiekka" 12
