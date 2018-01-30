@@ -41,9 +41,10 @@
 
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
-  [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
-           nakyvissa?] :as data}]
-  (let [valmis-tiemerkintaan-lomake? (= :valmis-tiemerkintaan valittu-lomake)
+  []
+  (let [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
+                nakyvissa?] :as data} @tiedot/valmis-tiemerkintaan-modal-data
+        valmis-tiemerkintaan-lomake? (= :valmis-tiemerkintaan valittu-lomake)
         valmis-tallennettavaksi? (if valmis-tiemerkintaan-lomake?
                                    (some? (:valmis-tiemerkintaan lomakedata))
                                    true)]
@@ -102,7 +103,75 @@
          :palstoja 2
          :tyyppi :komponentti
          :komponentti (fn [_]
-                        (let [muut-vastaanottajat (get-in data [:lomakedata :muut-vastaanottajat])]
+                        (let [muut-vastaanottajat (:muut-vastaanottajat lomakedata)]
+                          [grid/muokkaus-grid
+                           {:tyhja "Ei vastaanottajia."
+                            :voi-muokata? true
+                            :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
+                            :muutos #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
+                                            (grid/hae-muokkaustila %))}
+                           [{:otsikko "Sähköpostiosoite"
+                             :nimi :sahkoposti
+                             :tyyppi :email
+                             :leveys 1}]
+                           (atom muut-vastaanottajat)]))}
+        {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
+         :koko [90 8]
+         :nimi :saate :palstoja 3 :tyyppi :text}
+        {:teksti "Lähetä sähköpostiini kopio viestistä"
+         :nayta-rivina? true :palstoja 3
+         :nimi :kopio-itselle? :tyyppi :checkbox}]
+       lomakedata]]]))
+
+(defn tiemerkinta-valmis
+  "Modaali, jossa merkitään tiemerkintä valmiiksi.
+
+   Kohteet on vector mappeja, joilla kohteen :id ja :nimi."
+  []
+  (let [{:keys [kohteet urakka-id vuosi valittu-lomake lomakedata
+                nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data]
+    [modal/modal
+     {:otsikko (if (= (count kohteet) 1)
+                 (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen")
+                 (str "Usean kohteen tiemerkinnän valmistuminen"))
+      ;:luokka "merkitse-valmiiksi-tiemerkintaan"
+      :nakyvissa? nakyvissa?
+      :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
+                     (when peru-fn (peru-fn)))
+      :footer [:div
+               ;; Gridin kanssa tätä ei voi perua, sillä maili tullaan lähettämään joka tapauksessa
+               ;; gridin tallennuksen yhteydessä.
+               ;; Aikajanan kanssa muutosta ei tallenneta, jos perutaan toiminto modalista.
+               (when-not muutos-taulukosta?
+                 [napit/peruuta "Peruuta"
+                  #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
+                       (when peru-fn (peru-fn)))])
+               [napit/yleinen-ensisijainen
+                ;; Olennainen ero: aikajanan kanssa muutos tullaan tallentamaan heti,
+                ;; gridin kanssa vasta kun gridi tallennetaan.
+                (if muutos-taulukosta? "Hyväksy" "Tallenna")
+                #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
+                     (valmis-fn))
+                {:luokka "nappi-myonteinen"
+                 :ikoni (ikonit/check)}]]}
+     [:div
+      ; TODO Ota yhteisiä paloja molemmista modaleista
+      [vihje-elementti
+       [:span
+        [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
+        [:br] [:br]
+        [:span
+         [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]]
+      [lomake/lomake {:otsikko ""
+                      :muokkaa! (fn [uusi-data]
+                                  (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
+       [{:otsikko "Muut vastaanottajat"
+         :nimi :muut-vastaanottajat
+         :uusi-rivi? true
+         :palstoja 2
+         :tyyppi :komponentti
+         :komponentti (fn [_]
+                        (let [muut-vastaanottajat (:muut-vastaanottajat lomakedata)]
                           [grid/muokkaus-grid
                            {:tyhja "Ei vastaanottajia."
                             :voi-muokata? true
@@ -121,74 +190,7 @@
          :nayta-rivina? true :palstoja 3
          :nimi :kopio-itselle? :tyyppi :checkbox}]
 
-       (:lomakedata data)]]]))
-
-(defn tiemerkinta-valmis
-  "Modaali, jossa merkitään tiemerkintä valmiiksi.
-
-   Kohteet on vector mappeja, joilla kohteen :id ja :nimi."
-  [{:keys [kohteet urakka-id  vuosi valittu-lomake lomakedata
-           nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data}]
-  [modal/modal
-   {:otsikko (if (= (count kohteet) 1)
-               (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen")
-               (str "Usean kohteen tiemerkinnän valmistuminen"))
-    ;:luokka "merkitse-valmiiksi-tiemerkintaan"
-    :nakyvissa? (:nakyvissa? data)
-    :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                   (when peru-fn (peru-fn)))
-    :footer [:div
-             ;; Gridin kanssa tätä ei voi perua, sillä maili tullaan lähettämään joka tapauksessa
-             ;; gridin tallennuksen yhteydessä.
-             ;; Aikajanan kanssa muutosta ei tallenneta, jos perutaan toiminto modalista.
-             (when-not muutos-taulukosta?
-               [napit/peruuta "Peruuta"
-                #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                     (when peru-fn (peru-fn)))])
-             [napit/yleinen-ensisijainen
-              ;; Olennainen ero: aikajanan kanssa muutos tullaan tallentamaan heti,
-              ;; gridin kanssa vasta kun gridi tallennetaan.
-              (if muutos-taulukosta? "Hyväksy" "Tallenna")
-              #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                   (valmis-fn))
-              {:luokka "nappi-myonteinen"
-               :ikoni (ikonit/check)}]]}
-   [:div
-    [vihje-elementti
-     [:span
-      [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
-      [:br] [:br]
-      [:span
-       [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]]
-    [lomake/lomake {:otsikko ""
-                    :muokkaa! (fn [uusi-data]
-                                (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-     [{:otsikko "Muut vastaanottajat"
-       :nimi :muut-vastaanottajat
-       :uusi-rivi? true
-       :palstoja 2
-       :tyyppi :komponentti
-       :komponentti (fn [_]
-                      (let [muut-vastaanottajat (get-in data [:lomakedata :muut-vastaanottajat])]
-                        [grid/muokkaus-grid
-                         {:tyhja "Ei vastaanottajia."
-                          :voi-muokata? true
-                          :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                          :muutos #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
-                                          (grid/hae-muokkaustila %))}
-                         [{:otsikko "Sähköpostiosoite"
-                           :nimi :sahkoposti
-                           :tyyppi :email
-                           :leveys 1}]
-                         (atom muut-vastaanottajat)]))}
-      {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
-       :koko [90 8]
-       :nimi :saate :palstoja 3 :tyyppi :text}
-      {:teksti "Lähetä sähköpostiini kopio viestistä"
-       :nayta-rivina? true :palstoja 3
-       :nimi :kopio-itselle? :tyyppi :checkbox}]
-
-     (:lomakedata data)]]])
+       lomakedata]]]))
 
 (defn- paallystys-aloitettu-validointi
   "Validoinnit päällystys aloitettu -kentälle"
@@ -652,5 +654,5 @@
                           :saa-merkita-valmiiksi? saa-merkita-valmiiksi?
                           :voi-muokata-paallystys? voi-muokata-paallystys?
                           :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}]
-         [valmis-tiemerkintaan-modal @tiedot/valmis-tiemerkintaan-modal-data]
-         [tiemerkinta-valmis @tiedot/tiemerkinta-valmis-modal-data]]))))
+         [valmis-tiemerkintaan-modal]
+         [tiemerkinta-valmis]]))))
