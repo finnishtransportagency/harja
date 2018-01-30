@@ -314,7 +314,9 @@ INSERT INTO ilmoitus
  selitteet,
  urakkatyyppi,
  tunniste,
- viestiid)
+ viestiid,
+ vastaanotettu,
+ "ilmoitettu-alunperin")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -328,7 +330,9 @@ VALUES
     :selitteet :: TEXT [],
     :urakkatyyppi :: URAKKATYYPPI,
    :tunniste,
-   :viestiid);
+   :viestiid,
+   :vastaanotettu :: TIMESTAMP
+   :ilmoitettu-alunperin :: TIMESTAMP);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen

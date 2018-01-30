@@ -17,7 +17,8 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [try+]])
   (:import (java.util UUID)))
 
@@ -92,32 +93,35 @@
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
   [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-   ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?]
-  (let [ilmoitus (assoc ilmoitus :urakkanimi (:nimi urakka))
-        urakka-id (:id urakka)
-        ilmoitus-id (:ilmoitus-id ilmoitus)
-        paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
-        kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
-                                           paivystajat nil)
-        ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
-                                                          db urakka-id ilmoitus)
-        uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
-        ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
-        kulunut-aika (pvm/date-datetime-aikavali-sekuntteina (:ilmoitettu ilmoitus) (pvm/nyt-suomessa))
-        _ (when (> kulunut-aika 300)
-            (slack-viesti {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus)
-                           :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
-        ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
-        tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
-    (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
-    (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-      (when (not uudelleen-lahetys?)
-        (laheta-ilmoitus-paivystajille db
-                                      (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
-                                      paivystajat urakka-id ilmoitusasetukset)))
+   ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?
+   vastaanotettu]
+  (jdbc/with-db-transaction [db db]
+    (let [ilmoitus (assoc ilmoitus :urakkanimi (:nimi urakka)
+                                   :vastaanotettu vastaanotettu)
+          urakka-id (:id urakka)
+          ilmoitus-id (:ilmoitus-id ilmoitus)
+          paivystajat (yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat db urakka-id)
+          kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (time/now) "valitetty" urakka
+                                             paivystajat nil)
+          ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
+                                                            db urakka-id ilmoitus)
+          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
+          ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
+          kulunut-aika (pvm/aikavali-sekuntteina (:ilmoitettu ilmoitus) vastaanotettu)
+          _ (when (> kulunut-aika 300)
+              (slack-viesti {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus)
+                             :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
+          ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
+          tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
+      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
+      (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
+        (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
+        (when (not uudelleen-lahetys?)
+          (laheta-ilmoitus-paivystajille db
+                                         (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
+                                         paivystajat urakka-id ilmoitusasetukset)))
 
-    (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil)))
+      (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil))))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id
                                    korrelaatio-id tapahtuma-id]
@@ -131,7 +135,8 @@
 
 (defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono jms-lahettaja kehitysmoodi? viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
-  (let [jms-viesti-id (.getJMSMessageID viesti)
+  (let [vastaanotettu (pvm/nyt)
+        jms-viesti-id (.getJMSMessageID viesti)
         viestin-sisalto (.getText viesti)
         korrelaatio-id (.getJMSCorrelationID viesti)
         tapahtuma-id (lokittaja :saapunut-jms-viesti jms-viesti-id viestin-sisalto kuittausjono)]
@@ -141,7 +146,8 @@
         (try+
           (if-let [urakka (hae-urakka db ilmoitus)]
             (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
-                                ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?)
+                                ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?
+                                vastaanotettu)
             (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
                                          korrelaatio-id tapahtuma-id))
           (catch Exception e
