@@ -62,6 +62,9 @@
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
 
+(def ^{:doc "Tähän säilötään modal-dialogista asetettavat sähköpostin lähetystiedot palvelimelle tallennusta varten."}
+kohteiden-sahkopostitiedot (atom nil))
+
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
@@ -146,12 +149,17 @@
         (epaonnistui-fn)
         (onnistui-fn vastaus)))))
 
+(defn- lisaa-kohteille-sahkopostilahetystiedot [kohteet]
+  (mapv (fn [kohde]
+         (assoc kohde :sahkopostitiedot (get @kohteiden-sahkopostitiedot (:id kohde))))
+       kohteet))
+
 (defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet onnistui-fn]
   (tallenna-yllapitokohteiden-aikataulu
     {:urakka-id urakka-id
      :sopimus-id sopimus-id
      :vuosi vuosi
-     :kohteet kohteet
+     :kohteet (lisaa-kohteille-sahkopostilahetystiedot kohteet)
      :onnistui-fn onnistui-fn
      :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
                                      :warning

@@ -562,8 +562,10 @@
                         {:nakyvissa? true
                          :muutos-taulukosta? true
                          :valmis-fn (fn [lomakedata]
-                                      (log "VALMIS: " (pr-str lomakedata))
-                                      ) ; TODO Tallenna s-postitiedot riville?
+                                      (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
+                                             {:muut-vastaanottajat (map :sahkoposti (vals (:muut-vastaanottajat lomakedata)))
+                                              :saate (:saate lomakedata)
+                                              :kopio-itselle? (:kopio-itselle? lomakedata)}))
                          :kohde-id (:id rivi)
                          :kohde-nimi (:nimi rivi)
                          :kohteet [{:id (:id rivi)
