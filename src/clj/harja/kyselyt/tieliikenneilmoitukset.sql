@@ -331,7 +331,7 @@ VALUES
     :urakkatyyppi :: URAKKATYYPPI,
    :tunniste,
    :viestiid,
-   :vastaanotettu :: TIMESTAMP
+   :vastaanotettu :: TIMESTAMP,
    :ilmoitettu-alunperin :: TIMESTAMP);
 
 -- name: paivita-ilmoitus!
@@ -567,3 +567,8 @@ SELECT exists(SELECT
               FROM ilmoitus
               WHERE ilmoitusid = :ilmoitusid AND
                     viestiid = :viestiid);
+
+-- name: ilmoituksen-alkuperainen-kesto
+SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
+                           FROM ilmoitus
+                           WHERE id = :id));

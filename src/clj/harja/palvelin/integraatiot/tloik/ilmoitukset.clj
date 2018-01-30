@@ -74,12 +74,15 @@
     (doseq [paivystaja paivystajat]
       (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
 
+(defn- ilmoituksen-kesto [sekunnit]
+  (let [tunnit (-> sekunnit (/ 3600) Math/floor int)
+        minuutit (-> sekunnit (- (* tunnit 3600)) (/ 60) Math/floor int)
+        sekunnit (-> sekunnit (- (* tunnit 3600) (* minuutit 60)) Math/floor int)]
+    (str tunnit "h " minuutit "min " sekunnit "s")))
+
 (defn- slack-viesti
   [{:keys [kulunut-aika viesti-id tapahtuma-id kehitysmoodi?]}]
-  (let [tunnit (-> kulunut-aika (/ 3600) Math/floor int)
-        minuutit (-> kulunut-aika (- (* tunnit 3600)) (/ 60) Math/floor int)
-        sekunnit (-> kulunut-aika (- (* tunnit 3600) (* minuutit 60)) Math/floor int)
-        url (if kehitysmoodi? "http://localhost:3000/"
+  (let [url (if kehitysmoodi? "http://localhost:3000/"
                               "https://extranet.liikennevirasto.fi/harja/")
         integraatio-log-url (str url "#hallinta/integraatioloki?tapahtuma-id=" tapahtuma-id
                                  "&alkanut=" (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
@@ -88,7 +91,7 @@
                          :value (str "<" integraatio-log-url "|Harja integraatio loki>")}]
                :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
                                   "Ilmoituksella, jonka viesti id on " viesti-id "|||"
-                                  "Kesti *" tunnit "h " minuutit "min " sekunnit "s* saapua T-LOIK:ista HARJA:n kantaan")})))
+                                  "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
 
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
@@ -111,6 +114,16 @@
           _ (when (> kulunut-aika 300)
               (slack-viesti {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus)
                              :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
+          ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
+                                           (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :date_part))
+          lisatietoja (if uudelleen-lahetys?
+                        (str "Ilmoituksen alkuperäisessä käsittelyssä kesti "
+                             (if (< ilmoituksen-alkuperainen-kesto 1)
+                               "alle 0s"
+                               (ilmoituksen-kesto (Math/floor ilmoituksen-alkuperainen-kesto)))
+                             " ja uudelleen käsittelyssä kesti " (ilmoituksen-kesto kulunut-aika)
+                             " saapua HARJA:an")
+                        (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
           ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
           tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
       (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
@@ -121,7 +134,7 @@
                                          (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
                                          paivystajat urakka-id ilmoitusasetukset)))
 
-      (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true nil))))
+      (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja))))
 
 (defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id
                                    korrelaatio-id tapahtuma-id]
