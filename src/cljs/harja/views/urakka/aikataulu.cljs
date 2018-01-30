@@ -39,6 +39,31 @@
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn modal-muut-vastaanottajat [muut-vastaanottajat tila-atom]
+  {:otsikko "Muut vastaanottajat"
+   :nimi :muut-vastaanottajat
+   :uusi-rivi? true
+   :palstoja 2
+   :tyyppi :komponentti
+   :komponentti (fn [_]
+                  [grid/muokkaus-grid
+                   {:tyhja "Ei vastaanottajia."
+                    :voi-muokata? true
+                    :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
+                    :muutos #(swap! tila-atom assoc-in [:lomakedata :muut-vastaanottajat]
+                                    (grid/hae-muokkaustila %))}
+                   [{:otsikko "Sähköpostiosoite"
+                     :nimi :sahkoposti
+                     :tyyppi :email
+                     :leveys 1}]
+                   (atom muut-vastaanottajat)])})
+(def modal-saateviesti {:otsikko "Vapaaehtoinen saateviesti, joka liitetään sähköpostiin"
+                        :koko [90 8]
+                        :nimi :saate :palstoja 3 :tyyppi :text})
+(def modal-sahkopostikopio {:teksti "Lähetä sähköpostiini kopio viestistä"
+                            :nayta-rivina? true :palstoja 3
+                            :nimi :kopio-itselle? :tyyppi :checkbox})
+
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
   []
@@ -97,30 +122,9 @@
        [(when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        {:otsikko "Muut vastaanottajat"
-         :nimi :muut-vastaanottajat
-         :uusi-rivi? true
-         :palstoja 2
-         :tyyppi :komponentti
-         :komponentti (fn [_]
-                        (let [muut-vastaanottajat (:muut-vastaanottajat lomakedata)]
-                          [grid/muokkaus-grid
-                           {:tyhja "Ei vastaanottajia."
-                            :voi-muokata? true
-                            :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                            :muutos #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
-                                            (grid/hae-muokkaustila %))}
-                           [{:otsikko "Sähköpostiosoite"
-                             :nimi :sahkoposti
-                             :tyyppi :email
-                             :leveys 1}]
-                           (atom muut-vastaanottajat)]))}
-        {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
-         :koko [90 8]
-         :nimi :saate :palstoja 3 :tyyppi :text}
-        {:teksti "Lähetä sähköpostiini kopio viestistä"
-         :nayta-rivina? true :palstoja 3
-         :nimi :kopio-itselle? :tyyppi :checkbox}]
+        (modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/valmis-tiemerkintaan-modal-data)
+        modal-saateviesti
+        modal-sahkopostikopio]
        lomakedata]]]))
 
 (defn tiemerkinta-valmis
@@ -155,7 +159,6 @@
                 {:luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)}]]}
      [:div
-      ; TODO Ota yhteisiä paloja molemmista modaleista
       ; TODO Lisää infonootti siitä, milloin maili oikeasti lähetetään
       [vihje-elementti
        [:span
@@ -166,30 +169,9 @@
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-       [{:otsikko "Muut vastaanottajat"
-         :nimi :muut-vastaanottajat
-         :uusi-rivi? true
-         :palstoja 2
-         :tyyppi :komponentti
-         :komponentti (fn [_]
-                        (let [muut-vastaanottajat (:muut-vastaanottajat lomakedata)]
-                          [grid/muokkaus-grid
-                           {:tyhja "Ei vastaanottajia."
-                            :voi-muokata? true
-                            :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                            :muutos #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc-in [:lomakedata :muut-vastaanottajat]
-                                            (grid/hae-muokkaustila %))}
-                           [{:otsikko "Sähköpostiosoite"
-                             :nimi :sahkoposti
-                             :tyyppi :email
-                             :leveys 1}]
-                           (atom muut-vastaanottajat)]))}
-        {:otsikko "Vapaaehtoinen saateviesti joka liitetään sähköpostiin"
-         :koko [90 8]
-         :nimi :saate :palstoja 3 :tyyppi :text}
-        {:teksti "Lähetä sähköpostiini kopio viestistä"
-         :nayta-rivina? true :palstoja 3
-         :nimi :kopio-itselle? :tyyppi :checkbox}]
+       [(modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/valmis-tiemerkintaan-modal-data)
+        modal-saateviesti
+        modal-sahkopostikopio]
        lomakedata]]]))
 
 (defn- paallystys-aloitettu-validointi
