@@ -23,6 +23,19 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn nayta-tai-piilota-toteuma-kartalla [toteuma]
+  (let [id (:tid toteuma)
+        valittu? (contains? @tiedot/valitut-toteumat id)]
+    (if valittu?
+     (do
+       (nav/vaihda-kartan-koko! :S)
+       (reset! tiedot/valitut-toteumat
+               (into #{} (remove #{id} @tiedot/valitut-toteumat))))
+     (do
+       (nav/vaihda-kartan-koko! :L)
+       (reset! tiedot/valitut-toteumat (conj @tiedot/valitut-toteumat id)))))
+  (reset! tiedot/valittu-suolatoteuma toteuma))
+
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid
    {:otsikko "Päivän toteumat"
@@ -35,20 +48,20 @@
      :nimi :valitse-kartalla
      :tyyppi :komponentti
      :leveys 10
-     :komponentti (fn [rivi]
+     :komponentti (fn [toteuma]
                     [:div
-                     [(if (tiedot/valittu-suolatoteuma? rivi)
-                        :button.nappi-ensisijainen.nappi-grid
-                        :button.nappi-toissijainen.nappi-grid)
-                      {:on-click #(do
-                                    (nav/vaihda-kartan-koko! :L)
-                                    (reset! tiedot/valittu-suolatoteuma rivi))}
-                      (ikonit/ikoni-ja-teksti (ikonit/map-marker) "Näytä kartalla")]])}]
+                     [:button.nappi-ensisijainen.nappi-grid
+                      {:on-click #(nayta-tai-piilota-toteuma-kartalla toteuma)}
+                      (ikonit/ikoni-ja-teksti
+                        (ikonit/map-marker)
+                        (if (contains? @tiedot/valitut-toteumat (:tid toteuma))
+                          "Piilota kartalta"
+                          "Näytä kartalla"))]])}]
    (map-indexed (fn [i toteuma]
                   (assoc toteuma :id i))
                 (:toteumat suolan-kaytto))])
 
-(defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa valittu-suolatoteuma]
+(defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
   [:div.suolatoteumat
    [kartta/kartan-paikka]
    [:span.valinnat
@@ -124,5 +137,4 @@
                                 sopimus-id
                                 listaus
                                 materiaali-nimet
-                                kaytetty-yhteensa
-                                @tiedot/valittu-suolatoteuma)))))
+                                kaytetty-yhteensa)))))

@@ -12,7 +12,7 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(declare hae-toteumat hae-materiaalit)
+(declare hae-toteumat hae-materiaalit hae-toteumien-reitit!)
 
 (defonce suolatoteumissa? (atom false))
 
@@ -39,6 +39,12 @@
                         (<! (hae-toteumat (:id urakka) (first sopimus)
                                           (or kuukausi hoitokausi))))))))
 
+(defonce valitut-toteumat (atom #{}))
+
+(defonce valitut-toteumat-kartalla
+  (reaction<! [toteumat @valitut-toteumat]
+              (hae-toteumien-reitit! toteumat)))
+
 (defonce lampotilojen-hallinnassa? (atom false))
 
 (defonce valittu-suolatoteuma (atom nil))
@@ -48,12 +54,18 @@
 (defn valittu-suolatoteuma? [suolatoteuma]
   (and @valittu-suolatoteuma suolatoteuma (= (:tid suolatoteuma) (:tid @valittu-suolatoteuma))))
 
+(defn hae-toteuman-sijainti [toteuma]
+  (:sijainti (first (filter #(= (:tid toteuma) (:id %)) @valitut-toteumat-kartalla))))
+
 (defonce suolatoteumat-kartalla
   (reaction
     (when @karttataso-suolatoteumat
       (kartalla-esitettavaan-muotoon
-        (let [yksittaiset-toteumat (apply concat (map #(:toteumat %) @toteumat))]
-          (map #(assoc % :tyyppi-kartalla :suolatoteuma) yksittaiset-toteumat))
+        (let [yksittaiset-toteumat (filter
+                                     #(contains? @valitut-toteumat (:tid %))
+                                     (apply concat (map :toteumat @toteumat)))]
+          (map #(assoc % :tyyppi-kartalla :suolatoteuma
+                         :sijainti (hae-toteuman-sijainti %)) yksittaiset-toteumat))
         #(valittu-suolatoteuma? %)))))
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
@@ -61,6 +73,10 @@
                                :sopimus-id sopimus-id
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
+
+(defn hae-toteumien-reitit! [toteuma-idt]
+  (when (not (empty? toteuma-idt))
+    (k/post! :hae-toteumien-reitit {:idt toteuma-idt})))
 
 (defn tallenna-toteumat [urakka-id sopimus-id rivit]
   (let [tallennettavat (into [] (->> rivit
