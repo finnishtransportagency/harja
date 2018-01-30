@@ -160,12 +160,11 @@
                 {:luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)}]]}
      [:div
-      ; TODO Lisää infonootti siitä, milloin maili oikeasti lähetetään
-      (log "VALMISPVM " (pr-str (:valmis-pvm (first kohteet))))
       [vihje-elementti
        [:span
         [:span
          [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
+         ;; TODO Infonootti visuaalisesta muutoksesta (vain silloin kun siirretään yhtä?)
          (if muutos-taulukosta?
            [:span.bold (str " Tämän kohteen sähköposti lähetetään "
                             (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
