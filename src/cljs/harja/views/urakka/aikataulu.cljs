@@ -124,11 +124,15 @@
        (:lomakedata data)]]]))
 
 (defn tiemerkinta-valmis
-  "Modaali, jossa merkitään tiemerkintä valmiiksi."
-  [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
+  "Modaali, jossa merkitään tiemerkintä valmiiksi.
+
+   Kohteet on vector mappeja, joilla kohteen :id ja :nimi."
+  [{:keys [kohteet urakka-id  vuosi valittu-lomake lomakedata
            nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data}]
   [modal/modal
-   {:otsikko (str "Kohteen " kohde-nimi " tiemerkinnän valmistuminen")
+   {:otsikko (if (= (count kohteet) 1)
+               (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen")
+               (str "Usean kohteen tiemerkinnän valmistuminen"))
     ;:luokka "merkitse-valmiiksi-tiemerkintaan"
     :nakyvissa? (:nakyvissa? data)
     :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
@@ -160,8 +164,6 @@
                     :muokkaa! (fn [uusi-data]
                                 (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
      [{:otsikko "Muut vastaanottajat"
-       ;; TODO Tallenna silloin kun merkitään tulevaisuuteen ajastettua taskia varten.
-       ;; TODO Jos kannassa on jo mailitiedot olemassa, niin hae ne tähän dialogiin?
        :nimi :muut-vastaanottajat
        :uusi-rivi? true
        :palstoja 2
@@ -337,10 +339,11 @@
       {:ennen-muokkausta (fn [valmis! peru!]
                            (reset! tiedot/tiemerkinta-valmis-modal-data
                                    ;; TODO Näytä modal vain jos loppua muokattiin ja se on nyt tai ennen
+                                   ;; TODO Wrappaa valmis niin, että tässä lähetetään palvelimelle sähköpostitiedot?
                                    {:valmis-fn valmis!
                                     :peru-fn peru!
                                     :nakyvissa? true
-                                    ; TODO Miten näytetään modal jos raahaat useaa tiemerkintäkohdetta?
+                                    ; TODO Osaa passata useat kohteet sisään
                                     ;:kohde-id (:id rivi)
                                     ;:kohde-nimi (:nimi rivi)
                                     :urakka-id urakka-id
@@ -573,6 +576,8 @@
                                  :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot riville?
                                  :kohde-id (:id rivi)
                                  :kohde-nimi (:nimi rivi)
+                                 :kohteet [{:id (:id rivi)
+                                            :nimi (:nimi rivi)}]
                                  :urakka-id urakka-id
                                  :vuosi vuosi
                                  ;; TODO Tarkista kannasta onko jo olemassa mailitiedot
