@@ -84,6 +84,9 @@
                                                             :loppupvm loppupvm
                                                             :urakkatyyppi urakkatyyppi}))
 
+        ; FIXME Lisää toteumat-vektorin ensimmäiseksi itemi, jossa on kaikki talvisuola. Summataan siihen kaikki
+        ; materiaalin käytöt niiltä materiaaleilta joiden tyyppi on talvisuola
+
         raportin-nimi "Materiaaliraportti"
         otsikko (raportin-otsikko
                   (case konteksti
