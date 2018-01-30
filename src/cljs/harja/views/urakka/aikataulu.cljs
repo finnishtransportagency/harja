@@ -569,19 +569,18 @@
        :aseta (fn [rivi arvo]
                 ;; TODO Tämä saa gridin resetoitumaan :(
                 (reset! tiedot/tiemerkinta-valmis-modal-data
-                        (reset! tiedot/tiemerkinta-valmis-modal-data
-                                ;; TODO Näytä modal vain jos loppu nyt tai ennen
-                                {:nakyvissa? true
-                                 :muutos-taulukosta? true
-                                 :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot riville?
-                                 :kohde-id (:id rivi)
-                                 :kohde-nimi (:nimi rivi)
-                                 :kohteet [{:id (:id rivi)
-                                            :nimi (:nimi rivi)}]
-                                 :urakka-id urakka-id
-                                 :vuosi vuosi
-                                 ;; TODO Tarkista kannasta onko jo olemassa mailitiedot
-                                 :lomakedata {:kopio-itselle? true}}))
+                        ;; TODO Näytä modal vain jos loppu nyt tai ennen
+                        {:nakyvissa? true
+                         :muutos-taulukosta? true
+                         :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot riville?
+                         :kohde-id (:id rivi)
+                         :kohde-nimi (:nimi rivi)
+                         :kohteet [{:id (:id rivi)
+                                    :nimi (:nimi rivi)}]
+                         :urakka-id urakka-id
+                         :vuosi vuosi
+                         ;; TODO Tarkista kannasta onko jo olemassa mailitiedot
+                         :lomakedata {:kopio-itselle? true}})
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
