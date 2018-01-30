@@ -4,9 +4,8 @@
         <!-- Sanomassa voi lähettää usean urakan tiedot. Urakka voi sisältää useita paikkaustoteumia. -->
         <yha:urakka>
 
-            <!-- Urakan tunnistetiedot eri järjestelmissä. Harjan ja YHA:n tunnisteet ovat pakollisia. -->
-            <yha:yha-id>YHA001</yha:yha-id>
-            <yha:harja-id>HARJA777</yha:harja-id>
+            <!-- Urakan tunnistetiedot eri järjestelmissä. Harjan tunniste on pakollinen. -->
+            <yha:harja-id>111777</yha:harja-id>
             <yha:sampo-id>SAMPO008</yha:sampo-id>
 
             <!-- Urakoitisjatiedot. Y-tunnus on pakollinen. -->
@@ -17,18 +16,18 @@
 
             <!-- Urakkatyyppi on pakollinen tieto -->
             <!-- 1 = Hoidon alueurakka 2 = Päällystyksen palvelusopimukset 3 = Päällystysurakat 4 = Paikkausurakat -->
-            <yha:urakkatyyppi>3</yha:urakkatyyppi>
+            <yha:urakkatyyppi>Paikkausurakka</yha:urakkatyyppi>
 
             <!-- K O K O E L M A   T O T E U M I A  -->
-            <yha:toimenpidetoteumat>
+            <yha:paikkaustoteumat>
 
                 <!-- Toteumia voi olla yksi tai useampia.
                 Työmenetelmä on pakollinen tieto, jonka sisällön on vastattava enumeraatiota.
                 Paikkauskohdasta täytyy antaa jotakin informaatiota. (TODO: saako tän määriteltyä skeemassa)
                 Paikkauskohdasta voi antaa niin paljon informaatiota kuin tarvitsee. (TODO: saako tän määriteltyä skeemassa).
                 -->
-                <yha:toteuma>
-                    <yha:harja-id>20202022</yha:harja-id>
+                <yha:paikkaus>
+                    <yha:paikkaustoteuman-harja-id>20202022</yha:paikkaustoteuman-harja-id>
                     <yha:tyomenetelma>22</yha:tyomenetelma>
 
                     <!-- Aloitus- ja lopetuspäivämäärät ovat pakollisia tietoja -->
@@ -47,7 +46,7 @@
                         <yha:kaista>21</yha:kaista>
                     </yha:sijainti>
 
-                    <yha:kohta>
+                    <yha:tienkohta>
                         <!--Zero or more repetitions:-->
                         <yha:reuna>2</yha:reuna>
                         <!--Zero or more repetitions:-->
@@ -57,7 +56,7 @@
                         <yha:ajouravali>2</yha:ajouravali>
                         <!--Zero or more repetitions:-->
                         <yha:keskisauma>1</yha:keskisauma>
-                    </yha:kohta>
+                    </yha:tienkohta>
 
                     <!-- Massatyyppi, massamenekki, raekoko, kuulamyllyluokka ja leveys eivät ole pakollisia.
                     Kuulamyllyluokka on enum, jota käyttää myös päällystystoteuman määrttely.
@@ -94,11 +93,11 @@
                             <yha:sideainepitoisuus>2</yha:sideainepitoisuus>
                         </yha:materiaali>
                     </yha:materiaalit>
-                </yha:toteuma>
+                </yha:paikkaus>
 
                 <!-- Toinen toteuma-->
-                <yha:toteuma>
-                    <yha:harja-id>20202022</yha:harja-id>
+                <yha:paikkaus>
+                    <yha:paikkaustoteuman-harja-id>20202022</yha:paikkaustoteuman-harja-id>
                     <yha:tyomenetelma>31</yha:tyomenetelma>
                     <yha:aloituspaivamaara>2018-01-26</yha:aloituspaivamaara>
                     <yha:lopetuspaivamaara>2018-02-01</yha:lopetuspaivamaara>
@@ -112,10 +111,10 @@
                         <yha:ajorata>1</yha:ajorata>
                         <yha:kaista>21</yha:kaista>
                     </yha:sijainti>
-                    <yha:kohta>
+                    <yha:tienkohta>
                         <yha:reuna>1</yha:reuna>
                         <yha:reuna>2</yha:reuna>
-                    </yha:kohta>
+                    </yha:tienkohta>
                     <yha:massatyyppi>12</yha:massatyyppi>
                     <yha:massamenekki>1</yha:massamenekki>
                     <yha:raekoko>3</yha:raekoko>
@@ -127,11 +126,11 @@
                             <yha:kiviaineksen-muotoarvo>N10</yha:kiviaineksen-muotoarvo>
                         </yha:materiaali>
                     </yha:materiaalit>
-                </yha:toteuma>
+                </yha:paikkaus>
 
                 <!-- Kolmas toteuma -->
-                <yha:toteuma>
-                    <yha:harja-id>20202022</yha:harja-id>
+                <yha:paikkaus>
+                    <yha:paikkaustoteuman-harja-id>10101011</yha:paikkaustoteuman-harja-id>
                     <yha:tyomenetelma>21</yha:tyomenetelma>
                     <yha:aloituspaivamaara>2018-01-26</yha:aloituspaivamaara>
                     <yha:lopetuspaivamaara>2018-02-01</yha:lopetuspaivamaara>
@@ -145,12 +144,12 @@
                         <yha:ajorata>1</yha:ajorata>
                         <yha:kaista>21</yha:kaista>
                     </yha:sijainti>
-                    <yha:kohta>
+                    <yha:tienkohta>
                         <yha:reuna>2</yha:reuna>
                         <yha:ajoura>3</yha:ajoura>
                         <yha:ajouravali>3</yha:ajouravali>
                         <yha:keskisauma>3</yha:keskisauma>
-                    </yha:kohta>
+                    </yha:tienkohta>
                     <yha:massatyyppi>12</yha:massatyyppi>
                     <yha:massamenekki>3</yha:massamenekki>
                     <yha:raekoko>1</yha:raekoko>
@@ -165,8 +164,8 @@
                             <yha:lisa-aineet>Atsovärit</yha:lisa-aineet>
                         </yha:materiaali>
                     </yha:materiaalit>
-                </yha:toteuma>
-            </yha:toimenpidetoteumat>
+                </yha:paikkaus>
+            </yha:paikkaustoteumat>
         </yha:urakka>
     </yha:urakat>
 </yha:paikkausurakan-toteumatietojen-kirjaus>
