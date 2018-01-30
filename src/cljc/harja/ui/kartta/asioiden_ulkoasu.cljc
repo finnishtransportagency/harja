@@ -7,7 +7,8 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
             [harja.domain.kanavat.kohde :as kohde]
-            [harja.domain.kanavat.kohteenosa :as osa]))
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.ui.kartta.varit :as varit]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -92,6 +93,7 @@
    :kysely "syaani"
    :toimenpidepyynto "punainen"
    :turvallisuuspoikkeama "magenta"
+   :suolatoteuma "harmaa"
 
    ;; tilaa osoittavat värit (sijaint-ikonin sisempi väri)
    :ilmoitus-auki "punainen"
@@ -291,6 +293,16 @@
            "Kiinteä ")
          (::tu/tyyppi turvalaite)))])
 
+
+(defn suolatoteuman-nuoli [valittu?]
+  [{:paikka [:loppu]
+    :tyyppi :nuoli
+    :img (nuoli-ikoni "musta")}
+   {:paikka [:taitokset]
+    :scale 0.8
+    :tyyppi :nuoli
+    :img (nuoli-ikoni "musta")}])
+
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma tiepuolen-ikonien-varit)))
 
@@ -311,6 +323,18 @@
    {:color puhtaat/musta
     :dash [3 9]
     :width 3}])
+
+(defn suolatoteuman-viiva [valittu?]
+  [{:color puhtaat/musta
+    :width (if valittu? 16 10)}
+   {:color puhtaat/harmaa
+    :width (if valittu? 12 8)}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width (if valittu? 8 6)}
+   {:color (if valittu? (varit/rgb 102 217 255) puhtaat/sininen)
+    :dash [3 9]
+    :width (if valittu? 6 5)}])
 
 (defn tarkastuksen-ikoni [{:keys [ok? tekija] :as tarkastus} reitti?]
   (cond
