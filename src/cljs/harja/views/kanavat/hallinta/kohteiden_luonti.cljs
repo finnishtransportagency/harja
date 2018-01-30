@@ -58,7 +58,7 @@
      :nimi ::kohteenosa/oletuspalvelumuoto
      :fmt lt/palvelumuoto->str
      :leveys 2}]
-   (::kohde/kohteenosat valittu-kohde)])
+   (remove :poistettu (::kohde/kohteenosat valittu-kohde))])
 
 (defn kohdelomake [e! app]
   (komp/luo
@@ -203,7 +203,7 @@
                  :nimi :kohteenosat
                  :leveys 6
                  :hae (fn [kohde]
-                        (str/join ", " (map kohteenosa/fmt-kohteenosa (::kohde/kohteenosat kohde))))}
+                        (str/join "; " (map kohteenosa/fmt-kohteenosa (::kohde/kohteenosat kohde))))}
                 (if-not valittu-urakka
                   {:otsikko "Urakat"
                    :tyyppi :string
