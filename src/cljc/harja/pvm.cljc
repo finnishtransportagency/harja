@@ -769,19 +769,8 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
 #?(:clj
-   (defn date-datetime-aikavali-sekuntteina [date datetime]
-     "Ottaa java.util.Date:n ja org.joda.time.DateTime:n aikavälin. Lähinnä
-      hyödyllinen, kun ollaan saatu jostain (esim. integraatiokutsussa)
-      java.util.Date objekti, joka on jo Suomen ajassa."
-     (when (and (or (= java.util.Date (type date))
-                    (= java.sql.Date (type date)))
-                (= org.joda.time.DateTime (type datetime)))
-       (let [aika-suomessa-ms (.getMillis (nyt-suomessa))
-             offset-ms (.getOffset (org.joda.time.DateTimeZone/getDefault) aika-suomessa-ms)
-             offset-h (/ offset-ms 3600000)
-             date-ilman-ylimaaraista-offsettia (.minusHours (org.joda.time.DateTime. date) offset-h)]
-         (t/in-seconds (t/interval date-ilman-ylimaaraista-offsettia
-                                   datetime))))))
+   (defn aikavali-sekuntteina [alku loppu]
+     (t/in-seconds (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
 (defn paivia-aikavalien-leikkauskohdassa
   "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
