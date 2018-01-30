@@ -23,18 +23,17 @@
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn nayta-tai-piilota-toteuma-kartalla [toteuma]
-  (let [id (:tid toteuma)
-        valittu? (contains? @tiedot/valitut-toteumat id)]
-    (if valittu?
-     (do
-       (nav/vaihda-kartan-koko! :S)
-       (reset! tiedot/valitut-toteumat
-               (into #{} (remove #{id} @tiedot/valitut-toteumat))))
-     (do
-       (nav/vaihda-kartan-koko! :L)
-       (reset! tiedot/valitut-toteumat (conj @tiedot/valitut-toteumat id)))))
-  (reset! tiedot/valittu-suolatoteuma toteuma))
+(defn nayta-toteumat-kartalla [toteumat]
+  (let [idt (map :tid toteumat)]
+    (nav/vaihda-kartan-koko! :L)
+    (reset! tiedot/valitut-toteumat
+            (into #{} (concat @tiedot/valitut-toteumat idt))))
+  (reset! tiedot/valittu-suolatoteuma (first toteumat)))
+
+(defn piilota-toteumat-kartalla [toteumat]
+  (let [idt (map :tid toteumat)]
+    (reset! tiedot/valitut-toteumat
+            (into #{} (remove (into #{} idt) @tiedot/valitut-toteumat)))))
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid
@@ -45,13 +44,15 @@
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10}
     {:otsikko ""
-     :nimi :valitse-kartalla
+     :nimi :nayta-kartalla
      :tyyppi :komponentti
-     :leveys 10
+     :leveys 7
      :komponentti (fn [toteuma]
                     [:div
                      [:button.nappi-ensisijainen.nappi-grid
-                      {:on-click #(nayta-tai-piilota-toteuma-kartalla toteuma)}
+                      {:on-click #(if (contains? @tiedot/valitut-toteumat (:tid toteuma))
+                                    (piilota-toteumat-kartalla [toteuma])
+                                    (nayta-toteumat-kartalla [toteuma]))}
                       (ikonit/ikoni-ja-teksti
                         (ikonit/map-marker)
                         (if (contains? @tiedot/valitut-toteumat (:tid toteuma))
@@ -103,10 +104,30 @@
      {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku % 3)
       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys "15%" :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
-     {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "50%" :muokattava? muokattava?
+     {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "40%" :muokattava? muokattava?
       :hae #(if (muokattava? %)
               (:lisatieto %)
-              (str (:lisatieto %) " (Koneellisesti raportoitu)"))}]
+              (str (:lisatieto %) " (Koneellisesti raportoitu)"))}
+     {:otsikko ""
+      :nimi :nayta-kartalla
+      :tyyppi :komponentti
+      :leveys "10%"
+      :komponentti (fn [rivi]
+                     (let [toteumat (:toteumat rivi)
+                           valittu? #(some (fn [toteuma]
+                                             (contains? @tiedot/valitut-toteumat (:tid toteuma)))
+                                           toteumat)]
+                       (when (not (empty? toteumat))
+                         [:div
+                          [:button.nappi-ensisijainen.nappi-grid
+                           {:on-click #(if (valittu?)
+                                         (piilota-toteumat-kartalla toteumat)
+                                         (nayta-toteumat-kartalla toteumat))}
+                           (ikonit/ikoni-ja-teksti
+                             (ikonit/map-marker)
+                             (if (valittu?)
+                               "Piilota kartalta"
+                               "Näytä kartalla"))]])))}]
     listaus]
 
    (when-not (empty? @tiedot/toteumat)
