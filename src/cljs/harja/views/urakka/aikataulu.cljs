@@ -124,7 +124,7 @@
        (:lomakedata data)]]]))
 
 (defn tiemerkinta-valmis
-  "Modaali, jossa merkitään tiemerkintä valmiiksi.."
+  "Modaali, jossa merkitään tiemerkintä valmiiksi."
   [{:keys [kohde-id urakka-id kohde-nimi vuosi valittu-lomake lomakedata
            nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data}]
   [modal/modal
@@ -160,8 +160,7 @@
                     :muokkaa! (fn [uusi-data]
                                 (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
      [{:otsikko "Muut vastaanottajat"
-       ;; TODO Pitääkö nämä tallentaa jonnekin silloin kun merkitään tulevaisuuteen ajastettua taskia varten? :(
-       ;; Ja entä sitten jos tietoa muokataankin? Tallennetaanko kohdekohtaisesti uusin mailitieto?
+       ;; TODO Tallenna silloin kun merkitään tulevaisuuteen ajastettua taskia varten.
        ;; TODO Jos kannassa on jo mailitiedot olemassa, niin hae ne tähän dialogiin?
        :nimi :muut-vastaanottajat
        :uusi-rivi? true
@@ -341,13 +340,12 @@
                                    {:valmis-fn valmis!
                                     :peru-fn peru!
                                     :nakyvissa? true
-                                    ;; TODO Tarkista nämä muut
-                                    :kohde-id 1
-                                    :kohde-nimi "Testi"
+                                    ; TODO Miten näytetään modal jos raahaat useaa tiemerkintäkohdetta?
+                                    ;:kohde-id (:id rivi)
+                                    ;:kohde-nimi (:nimi rivi)
                                     :urakka-id urakka-id
                                     :vuosi vuosi
-                                    :paallystys-valmis? true
-                                    :suorittava-urakka-annettu? true
+                                    ; TODO Hae kannasta nykyiset mailitiedot tähän
                                     :lomakedata {:kopio-itselle? true}}))
        :muuta! (fn [drag]
                  (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
@@ -572,14 +570,12 @@
                                 ;; TODO Näytä modal vain jos loppu nyt tai ennen
                                 {:nakyvissa? true
                                  :muutos-taulukosta? true
-                                 :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot jonnekin
-                                 ;; TODO Tarkista nämä muut
-                                 :kohde-id 1
-                                 :kohde-nimi "Testi"
+                                 :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot riville?
+                                 :kohde-id (:id rivi)
+                                 :kohde-nimi (:nimi rivi)
                                  :urakka-id urakka-id
                                  :vuosi vuosi
-                                 :paallystys-valmis? true
-                                 :suorittava-urakka-annettu? true
+                                 ;; TODO Tarkista kannasta onko jo olemassa mailitiedot
                                  :lomakedata {:kopio-itselle? true}}))
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
