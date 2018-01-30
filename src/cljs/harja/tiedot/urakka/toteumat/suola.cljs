@@ -23,21 +23,22 @@
               (when hae?
                 (hae-materiaalit))))
 
+(defonce
+  ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
+  valittu-aikavali (atom nil))
+
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
                urakka @nav/valittu-urakka
-               sopimus @tiedot-urakka/valittu-sopimusnumero
-               hoitokausi @tiedot-urakka/valittu-hoitokausi
-               kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi]
+               aikavali @valittu-aikavali]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and hae? urakka)
+              (when (and hae? urakka aikavali)
                 (go
                   (into []
                         ;; luodaan kaikille id
                         (map-indexed (fn [i rivi] (assoc rivi :id i)))
 
-                        (<! (hae-toteumat (:id urakka) (first sopimus)
-                                          (or kuukausi hoitokausi))))))))
+                        (<! (hae-toteumat (:id urakka) aikavali)))))))
 
 (defonce valitut-toteumat (atom #{}))
 
@@ -68,9 +69,8 @@
                          :sijainti (hae-toteuman-sijainti %)) yksittaiset-toteumat))
         #(valittu-suolatoteuma? %)))))
 
-(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
+(defn hae-toteumat [urakka-id [alkupvm loppupvm]]
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
-                               :sopimus-id sopimus-id
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
 

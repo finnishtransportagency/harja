@@ -66,8 +66,7 @@
   [:div.suolatoteumat
    [kartta/kartan-paikka]
    [:span.valinnat
-    [urakka-valinnat/urakan-sopimus urakka]
-    [urakka-valinnat/urakan-hoitokausi-ja-kuukausi urakka]
+    [urakka-valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali]
     [ui-valinnat/materiaali-valikko {:valittu-materiaali (:suola @tiedot/suodatin-valinnat)
                                      :otsikko "Suola"
                                      :valitse-fn #(swap! tiedot/suodatin-valinnat assoc :suola %)

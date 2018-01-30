@@ -200,10 +200,12 @@
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
-(defn hae-suolatoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
+(defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (log/debug "kutsutaan hae-suolatoteumat: " {:urakka urakka-id
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm})
   (let [toteumat (q/hae-suolatoteumat db {:urakka urakka-id
-                                          :sopimus sopimus-id
                                           :alkupvm alkupvm
                                           :loppupvm loppupvm})
         manuaaliset (filter #(not (:koneellinen %)) toteumat)
@@ -323,6 +325,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-suolatoteumat
                       (fn [user tiedot]
+                        (log/debug "hae-suolatoteumat: tiedot" tiedot)
                         (hae-suolatoteumat (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-suolamateriaalit
