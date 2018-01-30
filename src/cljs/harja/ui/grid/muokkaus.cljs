@@ -20,7 +20,8 @@
              [Grid aseta-grid vetolaatikko-rivi lisaa-rivi!
               vetolaatikko-rivi vetolaatikon-tila]]
             [harja.ui.ikonit :as ikonit]
-            [cljs-time.core :as t])
+            [cljs-time.core :as t]
+            [harja.ui.grid.yleiset :as grid-yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
@@ -54,8 +55,8 @@
                        [komponentti])
                      paneelikomponentit))])])
 
-(defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet
-                             nayta-virheet? nykyinen-fokus i voi-muokata? fokus
+(defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
+                             nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
                              voi-poistaa? toimintonappi-fn]}]
   [:tr.muokataan {:class (str (if (even? (+ i 1))
@@ -65,16 +66,17 @@
    (doall
      (map-indexed
        (fn [j {:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
-                      komponentti] :as s}]
+                      komponentti] :as sarake}]
          (if (= :vetolaatikon-tila tyyppi)
            ^{:key (str "vetolaatikontila" id)}
            [vetolaatikon-tila ohjaus vetolaatikot id]
-           (let [s (assoc s :rivi rivi)
-                 arvo (if hae
-                        (hae rivi)
-                        (get rivi nimi))
+           (let [sarake (assoc sarake :rivi rivi)
+                 hae (or hae #(get % nimi))
+                 arvo (hae rivi)
                  tasaus-luokka (y/tasaus-luokka tasaa)
-                 kentan-virheet (get rivin-virheet nimi)]
+                 kentan-virheet (get rivin-virheet nimi)
+                 tayta-alas (:tayta-alas? sarake)
+                 fokus-id [i nimi]]
              (if (or (nil? muokattava?) (muokattava? rivi i))
                ^{:key (str j nimi)}
                [:td {:class (str "muokattava "
@@ -91,24 +93,33 @@
                   (komponentti rivi {:index i
                                      :muokataan? true})
                   (if voi-muokata?
-                    [tee-kentta (assoc s :on-focus #(reset! fokus [i nimi]))
-                     (r/wrap
-                       arvo
-                       (fn [uusi]
-                         (if aseta
-                           (muokkaa! muokatut-atom virheet skeema
-                                     id (fn [rivi]
-                                          (aseta rivi uusi)))
-                           (muokkaa! muokatut-atom virheet skeema
-                                     id assoc nimi uusi))))]
-                    [nayta-arvo (assoc s :index i :muokataan? false)
+                    [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+
+                     (when tayta-alas
+                       (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
+                                                       :fokus-id fokus-id
+                                                       :arvo arvo :tayta-alas tayta-alas
+                                                       :rivi-index rivi-index
+                                                       :tulevat-rivit tulevat-rivit
+                                                       :hae hae
+                                                       :sarake sarake :ohjaus ohjaus :rivi rivi}))
+
+                     [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
+                      (r/wrap
+                        arvo
+                        (fn [uusi]
+                          (if aseta
+                            (muokkaa! muokatut-atom virheet skeema
+                                      id (fn [rivi]
+                                           (aseta rivi uusi)))
+                            (muokkaa! muokatut-atom virheet skeema
+                                      id assoc nimi uusi))))]]
+                    [nayta-arvo (assoc sarake :index i :muokataan? false)
                      (vain-luku-atomina arvo)]))]
 
                ^{:key (str j nimi)}
                [:td {:class (str "ei-muokattava " tasaus-luokka)}
-                ((or fmt str) (if hae
-                                (hae rivi)
-                                (get rivi nimi)))])))) skeema))
+                ((or fmt str) (hae rivi))])))) skeema))
    (when-not piilota-toiminnot?
      [:td.toiminnot
       (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
@@ -132,7 +143,9 @@
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
-         colspan (inc (count skeema))]
+         colspan (inc (count skeema))
+         tulevat-rivit (fn [aloitus-idx]
+                         (map #(get muokatut %) (drop (inc aloitus-idx) (keys muokatut))))]
      (if (every? :poistettu (vals muokatut))
        [:tr.tyhja [:td {:colSpan colspan} tyhja]]
        (let [kaikki-virheet @virheet
@@ -158,6 +171,7 @@
                                           :vetolaatikot vetolaatikot :id id :rivi rivi :rivin-virheet rivin-virheet
                                           :nayta-virheet? nayta-virheet? :nykyinen-fokus nykyinen-fokus
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
+                                          :tulevat-rivit (tulevat-rivit i) :rivi-index i
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                           :skeema skeema :voi-poistaa? voi-poistaa?
@@ -264,6 +278,23 @@
                                      (dissoc virheet rivin-id)
                                      virheet)))))
 
+                      (muokkaa-rivit! [this funktio args]
+                        ;; Käytetään annettua funktiota päivittämään data niin, että mapissa olevat avaimet
+                        ;; viittaavat aina samaan päivitettyyn riviin
+                        (let [avain-rivi-parit (map (fn [avain]
+                                                      (-> [avain (get @muokatut avain)]))
+                                                    (keys @muokatut))
+                              rivit (map second avain-rivi-parit)
+                              uudet-rivit (apply funktio rivit args)
+                              uudet-avain-rivi-parit (map-indexed
+                                                       (fn [index pari]
+                                                         (-> [(first pari) (nth uudet-rivit index)]))
+                                                       avain-rivi-parit)
+                              uudet-rivit (reduce (fn [mappi pari]
+                                                    (assoc mappi (first pari) (second pari)))
+                                                  {}
+                                                  uudet-avain-rivi-parit)]
+                          (reset! muokatut uudet-rivit)))
 
                       (vetolaatikko-auki? [_ id]
                         (@vetolaatikot-auki id))
@@ -284,12 +315,12 @@
                                                (let [uusi-rivi (apply funktio (dissoc rivi :koskematon) argumentit)]
                                                  (when uusi-rivi
                                                    (if virheet-dataan?
-                                                    (assoc uusi-rivi
-                                                      :harja.ui.grid/virheet (validointi/validoi-rivi
-                                                                               (assoc muokatut id uusi-rivi)
-                                                                               uusi-rivi
-                                                                               skeema))
-                                                    uusi-rivi)))))))]
+                                                     (assoc uusi-rivi
+                                                       :harja.ui.grid/virheet (validointi/validoi-rivi
+                                                                                (assoc muokatut id uusi-rivi)
+                                                                                uusi-rivi
+                                                                                skeema))
+                                                     uusi-rivi)))))))]
 
                      (when-not (= vanhat-tiedot uudet-tiedot)
                        (swap! historia conj [vanhat-tiedot vanhat-virheet])

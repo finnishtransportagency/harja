@@ -1083,7 +1083,7 @@
 
         (is (= vastaus
                {:fim-kayttajat [{:kayttajatunnus "A000001"
-                                 :sahkoposti "erkki.esimerkki@example.com"
+                                 :sahkoposti "ELY_Urakanvalvoja@example.com"
                                  :puhelin ""
                                  :sukunimi "Esimerkki"
                                  :roolit ["ELY urakanvalvoja"]
@@ -1093,7 +1093,7 @@
                                  :tunniste nil
                                  :organisaatio "ELY"}
                                 {:kayttajatunnus "A000002"
-                                 :sahkoposti "eero.esimerkki@example.com"
+                                 :sahkoposti "vastuuhenkilo@example.com"
                                  :puhelin "0400123456789"
                                  :sukunimi "Esimerkki"
                                  :roolit ["Urakan vastuuhenkilö"]
