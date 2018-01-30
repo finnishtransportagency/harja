@@ -218,3 +218,11 @@ COMMENT ON COLUMN kan_hairio.paikallinen_kaytto IS 'Valitaan, onko siirrytty pai
 
 Comment on table kan_toimenpide IS
 E'Kuvaa konkreettiset toimenpiteet joita on tehty tietyn kanavan kohteelle, eli sillalle tai sululle, jotka kohdistuvat taas tietttyyn huoltokohteeseen, kuten esim. hydrauliikkaan. Voivat olla hinnoittelultaan esim. kokonais- tai yksikköhintaisia.'
+
+-- Muut
+
+COMMENT ON TABLE kayttaja_anti_csrf_token IS E'Sisältää käyttäjän anti-CSRF tokenin tiedot. Jokaisella tokenilla on voimassaoloaika, ja niitä voi olla useita per käyttäjä (yksi per selainikkuna/-välilehti). Tarkempi tekninen toteutus dokumentoitu koodiin.';
+
+COMMENT ON TABLE odottava_sahkoposti IS
+E'Sisältää tietoja myöhemmin lähetettävistä sähköpostiviesteistä';
+COMMENT ON COLUMN odottava_sahkoposti.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
