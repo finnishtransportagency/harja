@@ -275,7 +275,7 @@
                                                (SELECT id FROM materiaalikoodi WHERE nimi = '" materiaalinimi "'),
                                                " maara ",
                                                (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));"))]
-    (is (= 200M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuola" (t/date-time 2015 2 18 22) testidatasta))))
+    (is (= 200M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuola NaCl" (t/date-time 2015 2 18 22) testidatasta))))
         "Testidatasta haettu määrä vastaa odotettua")
 
     (is (= 1800M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuolaliuos NaCl" (t/date-time 2015 2 17 22) testidatasta))))
@@ -283,7 +283,7 @@
 
     (kirjaa-materiaalitoteuma "2018-01-18 12:00:00.000000" "2018-01-18 12:30:00.000000" 12356789 "Talvisuolaliuos NaCl" 10)
     (kirjaa-materiaalitoteuma "2018-01-18 12:30:00.000000" "2018-01-18 13:00:00.000000" 12356710 "Talvisuolaliuos NaCl" 21)
-    (kirjaa-materiaalitoteuma "2018-01-18 13:00:00.000000" "2018-01-18 13:39:00.000000" 12356711 "Talvisuola" 2)
+    (kirjaa-materiaalitoteuma "2018-01-18 13:00:00.000000" "2018-01-18 13:39:00.000000" 12356711 "Talvisuola NaCl" 2)
     
     (let [koneellisesti-kirjatut (kutsu-palvelua
                                    (:http-palvelin jarjestelma)
@@ -296,7 +296,7 @@
       (println "koneellisesti" koneellisesti-kirjatut)
       (is (= 2 (count koneellisesti-kirjatut)) "Kirjauksia löytyy 2 päivälle.")
       (let [nacl-kirjaukset (filter #(= "Talvisuolaliuos NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)
-            hcoona-kirjaukset (filter #(= "Talvisuola" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)]
+            hcoona-kirjaukset (filter #(= "Talvisuola NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)]
         (is (= 2 (count (:toteumat (first nacl-kirjaukset)))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
         (is (= 31M (apply + (map :maara nacl-kirjaukset))) "Määrä on summa kaikista Talvisuolaliuos NaCl kirjauksista")
 
