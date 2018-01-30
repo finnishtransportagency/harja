@@ -1,2 +1,0 @@
-ALTER TABLE ilmoitus ADD COLUMN vastaanotettu TIMESTAMP WITH TIME ZONE;
-ALTER TABLE ilmoitus ADD COLUMN "ilmoitettu-alunperin" TIMESTAMP WITH TIME ZONE;
