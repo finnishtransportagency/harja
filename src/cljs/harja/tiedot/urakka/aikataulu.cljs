@@ -62,7 +62,7 @@
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
 
-(def ^{:doc "Tähän säilötään modal-dialogista asetettavat sähköpostin lähetystiedot palvelimelle tallennusta varten."}
+(def ^{:doc "Tähän säilötään modal-dialogista kohteelle asetettavat sähköpostitiedot palvelimelle tallennusta varten."}
 kohteiden-sahkopostitiedot (atom nil))
 
 (def aikataulurivit
