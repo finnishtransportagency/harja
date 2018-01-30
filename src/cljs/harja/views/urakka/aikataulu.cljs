@@ -35,7 +35,8 @@
             [harja.ui.kentat :as kentat]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
-            [harja.ui.leijuke :as leijuke])
+            [harja.ui.leijuke :as leijuke]
+            [harja.fmt :as fmt])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -130,7 +131,7 @@
 (defn tiemerkinta-valmis
   "Modaali, jossa merkitään tiemerkintä valmiiksi.
 
-   Kohteet on vector mappeja, joilla kohteen :id ja :nimi."
+   Kohteet on vector mappeja, joilla kohteen :id, :nimi ja :valmis-pvm"
   []
   (let [{:keys [kohteet urakka-id vuosi valittu-lomake lomakedata
                 nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data]
@@ -160,12 +161,19 @@
                  :ikoni (ikonit/check)}]]}
      [:div
       ; TODO Lisää infonootti siitä, milloin maili oikeasti lähetetään
+      (log "VALMISPVM " (pr-str (:valmis-pvm (first kohteet))))
       [vihje-elementti
        [:span
-        [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
-        [:br] [:br]
         [:span
-         [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]]
+         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
+         (if muutos-taulukosta?
+           [:span.bold (str " Tämän kohteen sähköposti lähetetään "
+                            (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
+                              "heti, kun tallennat muutokset taulukosta"
+                              (str "valmistuspäivämääränä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
+                            ".")])]
+        [:br] [:br]
+        [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
@@ -558,7 +566,8 @@
                          :kohde-id (:id rivi)
                          :kohde-nimi (:nimi rivi)
                          :kohteet [{:id (:id rivi)
-                                    :nimi (:nimi rivi)}]
+                                    :nimi (:nimi rivi)
+                                    :valmis-pvm arvo}]
                          :urakka-id urakka-id
                          :vuosi vuosi
                          ;; TODO Tarkista kannasta onko jo olemassa mailitiedot
