@@ -175,8 +175,8 @@
         [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
-                                  (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-       [(modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/valmis-tiemerkintaan-modal-data)
+                                  (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
+       [(modal-muut-vastaanottajat (:muut-vastaanottajat lomakedata) tiedot/tiemerkinta-valmis-modal-data)
         modal-saateviesti
         modal-sahkopostikopio]
        lomakedata]]]))
