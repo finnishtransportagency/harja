@@ -256,7 +256,7 @@
                                                          (reset! drag-kursori nil)
                                                          (reset! lopetetaan-raahaus? false)
                                                          (reset! valitut-palkit #{}))
-                                tallenna-muutos! (fn []
+                                tallenna-muutos! (fn [_]
                                                    (go
                                                      (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
                                                      (tyhjenna-muokkaustila!)))

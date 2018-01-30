@@ -156,7 +156,7 @@
                 ;; gridin kanssa vasta kun gridi tallennetaan.
                 (if muutos-taulukosta? "Hyväksy" "Tallenna")
                 #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                     (valmis-fn))
+                     (valmis-fn lomakedata))
                 {:luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)}]]}
      [:div
@@ -329,7 +329,7 @@
      [aikajana/aikajana
       {:ennen-muokkausta (fn [valmis! peru!]
                            (reset! tiedot/tiemerkinta-valmis-modal-data
-                                   ;; TODO Näytä modal vain jos loppua muokattiin ja se on nyt tai ennen
+                                   ;; TODO Näytä modal vain jos loppua muokattiin
                                    ;; TODO Wrappaa valmis niin, että tässä lähetetään palvelimelle sähköpostitiedot?
                                    {:valmis-fn valmis!
                                     :peru-fn peru!
@@ -561,7 +561,9 @@
                 (reset! tiedot/tiemerkinta-valmis-modal-data
                         {:nakyvissa? true
                          :muutos-taulukosta? true
-                         :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot riville?
+                         :valmis-fn (fn [lomakedata]
+                                      (log "VALMIS: " (pr-str lomakedata))
+                                      ) ; TODO Tallenna s-postitiedot riville?
                          :kohde-id (:id rivi)
                          :kohde-nimi (:nimi rivi)
                          :kohteet [{:id (:id rivi)
