@@ -569,9 +569,7 @@
        :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :aseta (fn [rivi arvo]
-                ;; TODO Tämä saa gridin resetoitumaan :(
                 (reset! tiedot/tiemerkinta-valmis-modal-data
-                        ;; TODO Näytä modal vain jos loppu nyt tai ennen
                         {:nakyvissa? true
                          :muutos-taulukosta? true
                          :valmis-fn (constantly true) ; TODO Tallenna s-postitiedot riville?
