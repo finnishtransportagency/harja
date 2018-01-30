@@ -4,7 +4,7 @@
   "Asiakkaan suosima järjestys, jossa suolat ovat peräkkäin"
   [materiaali-nimi]
   (case materiaali-nimi
-    "Talvisuola" 1
+    "Talvisuola NaCl" 1
     "Talvisuolaliuos CaCl2" 2
     "Talvisuolaliuos NaCl" 3
     "Talvisuola NaCl, rakeinen" 4
