@@ -1,10 +1,13 @@
--- Lisää taulu, johon tullaan tallentamaan odottavien sähköpostien tietoja (aluksi tiemerkinnän valmistuminen)
-CREATE TYPE ODOTTAVA_SAHKOPOSTI_TYYPPI AS ENUM ('tiemerkinta_valmistunut');
+-- Keskeneräinen ominaisuus jota ei otettu käyttöön. Jos joskus
+-- jatketaan kehitystä, laitetaan repeatable-migraatioon.
 
-CREATE TABLE odottava_sahkoposti (
-  id                 SERIAL PRIMARY KEY,
-  tyyppi             ODOTTAVA_SAHKOPOSTI_TYYPPI NOT NULL,
-  vastaanottajat     TEXT []                    NOT NULL,
-  viesti             TEXT                       NOT NULL,
-  kopio_lahettajalle TEXT -- Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)
-);
+DROP FUNCTION urakkastats_tarkastus() CASCADE;
+DROP TRIGGER tg_urakkastats_ilmoitustoimenpide ON ilmoitustoimenpide;
+DROP FUNCTION urakkastats_ilmoitustoimenpide() CASCADE;
+DROP TRIGGER tg_urakkastats_ilmoitus ON ilmoitus;
+DROP FUNCTION urakkastats_ilmoitus() CASCADE;
+DROP TRIGGER tg_urakkastats_toteuma ON toteuma;
+DROP FUNCTION urakkastats_toteuma() CASCADE;
+DROP TRIGGER tg_urakkastats_tyokonehavainto ON tyokonehavainto;
+DROP FUNCTION urakkastats_tyokonehavainto() CASCADE;
+DROP TABLE urakkastats CASCADE;
