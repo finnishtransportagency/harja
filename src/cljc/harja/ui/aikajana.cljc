@@ -271,7 +271,7 @@
                             (when-not (empty? @drag)
                               (reset! lopetetaan-raahaus? true)
                               (if ennen-muokkausta
-                                (ennen-muokkausta tallenna-muutos! peru-muutos!)
+                                (ennen-muokkausta @drag tallenna-muutos! peru-muutos!)
                                 (tallenna-muutos!)))))
           :leveys (* 0.95 @dom/leveys)}]])))
 

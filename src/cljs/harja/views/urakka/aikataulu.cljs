@@ -327,20 +327,26 @@
          [:figcaption
           [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Venytä aikajanaa normaalisti alusta tai lopusta, jolloin kaikki aikajanat venyvät samaan suuntaan yhtä paljon."]]]]]]
      [aikajana/aikajana
-      {:ennen-muokkausta (fn [valmis! peru!]
-                           (reset! tiedot/tiemerkinta-valmis-modal-data
-                                   ;; TODO Näytä modal vain jos loppua muokattiin
-                                   ;; TODO Wrappaa valmis niin, että tässä lähetetään palvelimelle sähköpostitiedot?
-                                   {:valmis-fn valmis!
-                                    :peru-fn peru!
-                                    :nakyvissa? true
-                                    ; TODO Osaa passata useat kohteet sisään
-                                    ;:kohde-id (:id rivi)
-                                    ;:kohde-nimi (:nimi rivi)
-                                    :urakka-id urakka-id
-                                    :vuosi vuosi
-                                    ; TODO Hae kannasta nykyiset mailitiedot tähän
-                                    :lomakedata {:kopio-itselle? true}}))
+      {:ennen-muokkausta (fn [drag valmis! peru!]
+                           ;; Näytä modal jos tiemerkinnän valmistumispvm:ää muokattiin, muuten tallenna suoraan
+                           ; TODO DRAG SISÄLTÄÄ MONTA
+                           (log "RAAHAUS TIEMERKINTÄ? " (pr-str (= (second (:drag drag)) :tiemerkinta)))
+                           (log "RAAHAUS LOPPU MUUTTUI? " (pr-str (not (pvm/sama-pvm? (::aikajana/loppu drag) (::aikajana/alkup-loppu drag)))))
+                           (if (and (= (second (:drag drag)) :tiemerkinta)
+                                    (not (pvm/sama-pvm? (::aikajana/loppu drag) (::aikajana/alkup-loppu drag))))
+                             (reset! tiedot/tiemerkinta-valmis-modal-data
+                                     ;; TODO Tietojen lähetys palvelimelle, tallennuksen yhteydessä?
+                                     {:valmis-fn valmis!
+                                      :peru-fn peru!
+                                      :nakyvissa? true
+                                      ; TODO Osaa passata useat kohteet sisään, ja passaa vain tiemerkinnät(?)
+                                      ;:kohde-id (:id rivi)
+                                      ;:kohde-nimi (:nimi rivi)
+                                      :urakka-id urakka-id
+                                      :vuosi vuosi
+                                      ; TODO Hae kannasta nykyiset mailitiedot tähän
+                                      :lomakedata {:kopio-itselle? true}})
+                             (valmis!)))
        :muuta! (fn [drag]
                  (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
                            paivitetyt-aikataulu-idt (set (map :id paivitetty-aikataulu))
