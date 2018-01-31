@@ -117,7 +117,7 @@
   nakokulma           :paallystys tai :tiemerkinta, kertoo mistä näkökulmasta valmistumista tarkastellaan,
                       vaikuttaa viestin ulkoasuun.
   urakka-sampo-id     on sen urakan sampo-id, jolle maili on tarkoitus lähettää"
-  [{:keys [fim email yhden-urakan-kohteet ilmoittaja nakokulma urakka-sampo-id]}]
+  [{:keys [fim email yhden-urakan-kohteet ilmoittaja nakokulma urakka-sampo-id sahkopostitiedot]}]
   (let [valmistumispvmt (zipmap (map :id yhden-urakan-kohteet)
                                 (map :aikataulu-tiemerkinta-loppu yhden-urakan-kohteet))
         eka-kohde (first yhden-urakan-kohteet)
@@ -164,7 +164,7 @@
    lähettää urakoitsijalle sähköpostiviestillä ilmoituksen tiemerkityistä kohteista.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
-  [{:keys [fim email kohteiden-tiedot ilmoittaja]}]
+  [{:keys [fim email kohteiden-tiedot ilmoittaja sahkopostitiedot]}]
   (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str (map :id kohteiden-tiedot))))
   (let [paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)
         tiemerkintaurakoiden-kohteet (group-by :tiemerkintaurakka-id kohteiden-tiedot)]
@@ -175,6 +175,7 @@
         {:fim fim :email email
          :yhden-urakan-kohteet urakan-kohteet
          :nakokulma :paallystys
+         :sahkopostitiedot sahkopostitiedot
          :urakka-sampo-id (:paallystysurakka-sampo-id (first urakan-kohteet))
          :ilmoittaja ilmoittaja}))
     ;; Tiemerkintäurakkakohtaiset mailit
@@ -183,6 +184,7 @@
         {:fim fim :email email
          :yhden-urakan-kohteet urakan-kohteet
          :nakokulma :tiemerkinta
+         :sahkopostitiedot sahkopostitiedot
          :urakka-sampo-id (:tiemerkintaurakka-sampo-id (first urakan-kohteet))
          :ilmoittaja ilmoittaja}))))
 
@@ -282,9 +284,10 @@
 
 (defn valita-tieto-tiemerkinnan-valmistumisesta
   "Välittää tiedon annettujen kohteiden tiemerkinnän valmistumisesta.."
-  [{:keys [kayttaja fim email valmistuneet-kohteet]}]
+  [{:keys [kayttaja fim email valmistuneet-kohteet sahkopostitiedot]}]
   (laheta-sposti-tiemerkinta-valmis {:fim fim :email email
                                      :kohteiden-tiedot valmistuneet-kohteet
+                                     :sahkopostitiedot sahkopostitiedot
                                      :ilmoittaja kayttaja}))
 
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan

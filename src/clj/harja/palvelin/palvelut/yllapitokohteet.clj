@@ -246,9 +246,14 @@
              :id (:id kohde)
              :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
 
+      ;; TODO Muut vastaanottajat: Lähetä maili jos kohde valmistunut tänään tai menneisyydessä, muuten pistä kantaan talteen
       (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
         {:kayttaja user :fim fim
          :email email
+         :sahkopostitiedot (map (fn [kohde]
+                                  (assoc (:sahkopostitiedot kohde)
+                                    :id (:id kohde)))
+                                kohteet)
          :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                           db
                                           {:idt (map :id lahetettavat-kohteet)}))}))))
@@ -301,7 +306,7 @@
 (defn tallenna-yllapitokohteiden-tarkka-aikataulu
   [db user {:keys [urakka-id sopimus-id vuosi yllapitokohde-id aikataulurivit] :as tiedot}]
   (assert (and urakka-id sopimus-id yllapitokohde-id) (str "Anna urakka-id, sopimus-id, yllapitokohde-id."
-  " Sain: " urakka-id "," sopimus-id "," yllapitokohde-id))
+                                                           " Sain: " urakka-id "," sopimus-id "," yllapitokohde-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)
   ;; Aikataulurivin kuulumista ylläpitokohteeseen tai urakkaan ei tarkisteta erikseen, vaan sisältyy UPDATE-kyselyn WHERE-lauseeseen.
