@@ -495,7 +495,7 @@
 
 (defn kaynnista-infopaneeliin-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa! tasot event asiat-pisteessa)
-  (reset! tiedot/nayta-infopaneeli? true))
+  (tiedot/nayta-infopaneeli!))
 
 (defn- piilota-infopaneeli-jos-muuttunut
   "Jos annetut geometriat ovat muuttuneet (pl. näkymän geometriat), piilota infopaneeli."

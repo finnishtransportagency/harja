@@ -38,22 +38,30 @@
   #{[::kohde #{:harja.domain.kanavat.kohde/nimi
                :harja.domain.kanavat.kohde/id}]})
 
-(def fmt-kohdeosa-tyyppi
+(def fmt-kohteenosa-tyyppi
   {:sulku "sulku"
    :silta "silta"
    :rautatiesilta "rautatiesilta"})
 
 
-(defn fmt-kohdeosa
-  "Palauttaa kohdeosan nimen tai tyypin formatoituna."
-  [kohdeosa]
-  (when-let [s (or (::nimi kohdeosa)
-                   (fmt-kohdeosa-tyyppi (::tyyppi kohdeosa)))]
-    (str/capitalize s)))
+(defn fmt-kohteenosa
+  "Palauttaa kohteenosan 'nimen', joka on nimettömälle osalle tyyppi, nimetylle osalle nimi, tyyppi."
+  [osa]
+  (let [nimi (::nimi osa)
+        tyyppi (fmt-kohteenosa-tyyppi (::tyyppi osa))]
+    (when (or nimi tyyppi)
+      (str/capitalize
+        (str nimi (when (and nimi tyyppi) ", ") tyyppi)))))
+
+(defn maantiesilta? [osa]
+  (= :silta (::tyyppi osa)))
+
+(defn rautatiesilta? [osa]
+  (= :rautatiesilta (::tyyppi osa)))
 
 (defn silta? [osa]
-  (or (= :silta (::tyyppi osa))
-      (= :rautatiesilta (::tyyppi osa))))
+  (or (maantiesilta? osa)
+      (rautatiesilta? osa)))
 
 (defn sulku? [osa]
   (= :sulku (::tyyppi osa)))

@@ -18,7 +18,9 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as ur]
             [clojure.string :as str]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -112,20 +114,25 @@
     tulos))
 
 (defn ryhmittele-kohderivit-kanavalla [kohderivit otsikko-fn]
-  (let [ryhmat (group-by (comp ::kok/id ::kohde/kohdekokonaisuus)
-                         (sort-by (comp ::kok/nimi ::kohde/kohdekokonaisuus) kohderivit))]
+  (let [ryhmitelty (group-by
+                     (comp ::kok/nimi ::kohde/kohdekokonaisuus)
+                     kohderivit)
+        ryhmat (into
+                 (sorted-map)
+                 ryhmitelty)]
     (mapcat
-      (fn [kohdekokonaisuus-id]
-        (let [ryhman-sisalto (get ryhmat kohdekokonaisuus-id)]
+      (fn [kokonaisuus-nimi]
+        (let [ryhman-sisalto (get ryhmat kokonaisuus-nimi)]
           (concat
-            [(otsikko-fn (get-in (first ryhman-sisalto) [::kohde/kohdekokonaisuus ::kok/nimi]))]
+            [(otsikko-fn kokonaisuus-nimi)]
             (sort-by ::kohde/nimi ryhman-sisalto))))
       (keys ryhmat))))
 
 (defn kohdekokonaisuudet [tulos]
-  (-> (map #(select-keys % #{::kok/id ::kok/nimi}) tulos)
-      set
-      vec))
+  (sort-by ::kok/nimi
+           (-> (map #(select-keys % #{::kok/id ::kok/nimi}) tulos)
+               set
+               vec)))
 
 (defn kohdekokonaisuudet-voi-tallentaa? [kokonaisuudet]
   (boolean
@@ -193,6 +200,11 @@
 (defn kokonaisuuden-voi-poistaa? [app kokonaisuus]
   (= 0 (kohteiden-lkm-kokonaisuudessa app kokonaisuus)))
 
+(defn osa-kuuluu-valittuun-kohteeseen? [osa {:keys [valittu-kohde]}]
+  (boolean
+    ((set (map ::osa/id (remove :poistettu (::kohde/kohteenosat valittu-kohde))))
+      (::osa/id osa))))
+
 (defonce kohteenosat-kartalla
   (reaction
     (when (:valittu-kohde @tila)
@@ -201,16 +213,15 @@
                   (set/rename-keys {::osa/sijainti :sijainti})
                   (assoc :tyyppi-kartalla :kohteenosa))
              (:haetut-kohteenosat @tila))
-        #(= (get-in % [::osa/kohde ::kohde/id]) (get-in @tila [:valittu-kohde ::kohde/id]))))))
-
-(defn osa-kuuluu-valittuun-kohteeseen? [osa {:keys [valittu-kohde]}]
-  (boolean
-    (= (::kohde/id valittu-kohde) (get-in osa [::osa/kohde ::kohde/id]))))
+        #(osa-kuuluu-valittuun-kohteeseen? % @tila)))))
 
 (defn kohteenosan-infopaneeli-otsikko [app osa]
   (cond
-    (= (get-in app [:valittu-kohde ::kohde/id])
-       (get-in osa [::osa/kohde ::kohde/id]))
+    (and
+      (some? (get-in app [:valittu-kohde ::kohde/id]))
+      (some? (get-in osa [::osa/kohde ::kohde/id]))
+      (= (get-in app [:valittu-kohde ::kohde/id])
+         (get-in osa [::osa/kohde ::kohde/id])))
     "Irroita"
 
     (some? (get-in osa [::osa/kohde ::kohde/id]))
@@ -352,6 +363,9 @@
 
   ValitseKohde
   (process-event [{kohde :kohde} app]
+    (if (some? kohde)
+      (nav/vaihda-kartan-koko! :M)
+      (nav/vaihda-kartan-koko! :S))
     (-> app
         (assoc :valittu-kohde kohde)
         (assoc :karttataso-nakyvissa? (if (some? kohde) true false))))
@@ -416,16 +430,16 @@
 
   KohteenosaKartallaKlikattu
   (process-event [{osa :osa} app]
-    ;; Täällä olisi ollut hyvä piilottaa infopaneeli, mutta
-    ;; harja.tiedot.kartta require aiheutti syklisen riippuvuuden, mitä
-    ;; en alkanut ratkomaan
-
+    (paneelin-tila/piilota-infopaneeli!)
     (if (osa-kuuluu-valittuun-kohteeseen? osa app)
       ;; Irrota kohteesta
       (-> app
           (update-in [:valittu-kohde ::kohde/kohteenosat]
                      (fn [kohteen-osat]
-                       (remove #(= (::osa/id %) (::osa/id osa)) kohteen-osat)))
+                       (map #(if (= (::osa/id %) (::osa/id osa))
+                               (assoc % :poistettu true)
+                               %)
+                            kohteen-osat)))
           (update :haetut-kohteenosat
                   (fn [haetut-osat]
                     (map #(if (= (::osa/id %) (::osa/id osa))

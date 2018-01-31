@@ -5,7 +5,10 @@
 
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
             [harja.domain.vesivaylat.turvalaite :as tu]
-            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]))
+            [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.ui.kartta.varit :as varit]))
 
 (def +valitun-skaala+ 1.5)
 (def +normaali-skaala+ 1)
@@ -90,6 +93,7 @@
    :kysely "syaani"
    :toimenpidepyynto "punainen"
    :turvallisuuspoikkeama "magenta"
+   :suolatoteuma "harmaa"
 
    ;; tilaa osoittavat värit (sijaint-ikonin sisempi väri)
    :ilmoitus-auki "punainen"
@@ -289,6 +293,16 @@
            "Kiinteä ")
          (::tu/tyyppi turvalaite)))])
 
+
+(defn suolatoteuman-nuoli [valittu?]
+  [{:paikka [:loppu]
+    :tyyppi :nuoli
+    :img (nuoli-ikoni "musta")}
+   {:paikka [:taitokset]
+    :scale 0.8
+    :tyyppi :nuoli
+    :img (nuoli-ikoni "musta")}])
+
 (defn varustetoteuman-ikoni []
   (pinni-ikoni (:varustetoteuma tiepuolen-ikonien-varit)))
 
@@ -309,6 +323,18 @@
    {:color puhtaat/musta
     :dash [3 9]
     :width 3}])
+
+(defn suolatoteuman-viiva [valittu?]
+  [{:color puhtaat/musta
+    :width (if valittu? 16 10)}
+   {:color puhtaat/harmaa
+    :width (if valittu? 12 8)}
+   {:color puhtaat/musta
+    :dash [3 9]
+    :width (if valittu? 8 6)}
+   {:color (if valittu? (varit/rgb 102 217 255) puhtaat/sininen)
+    :dash [3 9]
+    :width (if valittu? 6 5)}])
 
 (defn tarkastuksen-ikoni [{:keys [ok? tekija] :as tarkastus} reitti?]
   (cond
@@ -436,7 +462,38 @@ tr-ikoni {:img (pinni-ikoni "musta")
        {:width (+ 1 levein) :color puhtaat/harmaa}]
       (mapv #(assoc % :dash +tyokoneviivan-dash+) viivat))))
 
-(defn kohteenosa-kohteiden-luonnissa [kohde sama-kohde?]
-  (cond sama-kohde? (pinni-ikoni "vihrea")
-        (some? kohde) (pinni-ikoni "harmaa")
-        :default (pinni-ikoni "sininen")))
+(def kohteenosa-pinni-varit
+  {#{:sama-kohde :silta}
+   ["turkoosi" (str "Kohteeseen kuuluva " (osa/fmt-kohteenosa-tyyppi :silta))]
+   #{:sama-kohde :rautatiesilta}
+   ["lime" (str "Kohteeseen kuuluva " (osa/fmt-kohteenosa-tyyppi :rautatiesilta))]
+   #{:sama-kohde :sulku}
+   ["vihrea" (str "Kohteeseen kuuluva " (osa/fmt-kohteenosa-tyyppi :sulku))]
+
+   #{:varattu :silta}
+   ["pinkki" (str "Toisen kohteen " (osa/fmt-kohteenosa-tyyppi :silta))]
+   #{:varattu :rautatiesilta}
+   ["punainen" (str "Toisen kohteen " (osa/fmt-kohteenosa-tyyppi :rautatiesilta))]
+   #{:varattu :sulku}
+   ["oranssi" (str "Toisen kohteen " (osa/fmt-kohteenosa-tyyppi :sulku))]
+
+   #{:vapaa :silta}
+   ["syaani" (str "Vapaa " (osa/fmt-kohteenosa-tyyppi :silta))]
+   #{:vapaa :rautatiesilta}
+   ["sininen" (str "Vapaa " (osa/fmt-kohteenosa-tyyppi :rautatiesilta))]
+   #{:vapaa :sulku}
+   ["tummansininen" (str "Vapaa " (osa/fmt-kohteenosa-tyyppi :sulku))]})
+
+(defn kohteenosa-kohteiden-luonnissa [osa sama-kohde?]
+  (cond sama-kohde?
+        (let [[vari teksti] (kohteenosa-pinni-varit #{:sama-kohde (::osa/tyyppi osa)})]
+          [(pinni-ikoni vari) teksti])
+
+        (and (some? (::osa/kohde osa))
+             (not (:poistettu osa)))
+        (let [[vari teksti] (kohteenosa-pinni-varit #{:varattu (::osa/tyyppi osa)})]
+          [(pinni-ikoni vari) teksti])
+
+        :default
+        (let [[vari teksti] (kohteenosa-pinni-varit #{:vapaa (::osa/tyyppi osa)})]
+          [(pinni-ikoni vari) teksti])))

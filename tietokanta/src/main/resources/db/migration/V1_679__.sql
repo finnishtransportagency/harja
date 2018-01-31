@@ -1,1 +1,1 @@
-ALTER TABLE kan_kohteenosa ALTER COLUMN "kohde-id" DROP NOT NULL;
+ALTER TABLE yllapito_muu_toteuma DROP CONSTRAINT ei_negatiivinen_hinta;

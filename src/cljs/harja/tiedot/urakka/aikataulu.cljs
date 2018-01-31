@@ -51,53 +51,15 @@
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm kopio-itselle? saate
-                                                      urakka-id sopimus-id vuosi]}]
+                                                      urakka-id sopimus-id vuosi muut-vastaanottajat]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
                                                     :kopio-itselle? kopio-itselle?
                                                     :saate saate
+                                                    :muut-vastaanottajat muut-vastaanottajat
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
-
-(def ^{:private true
-       :doc "Visuaalisia muokkauksia varten säilötään VAIN MUOKATTUJEN aikataulurivien edellinen tila
-       ennen muokkauksen tallentamista. Muokkauksen jälkeen tarjotaan mahdollisuus kumota muutos ja palata edelliseen
-       tilaan. Tällöin nämä rivit täytyy lähettää palvelimelle tallennettavaksi."}
-kumoustiedot (atom
-               {:ehdota-kumoamista? false
-                :edellinen-tila nil
-                :kumoustunniste nil})) ;; Jotta voidaan autom. piilottaa, jos samaa kumousta ehdotettu liian kauan
-
-(defn ala-ehdota-kumoamista! []
-  (swap! kumoustiedot assoc
-         :ehdota-kumoamista? false
-         :edellinen-tila nil
-         :kumoustunniste nil))
-
-(defn ehdota-kumoamista! [edellinen-tila]
-  (let [kumoustunniste (gensym "kumoustunniste")
-        ehdotusaika-ms 10000]
-    (swap! kumoustiedot assoc
-           :ehdota-kumoamista? true
-           :edellinen-tila edellinen-tila
-           :kumoustunniste kumoustunniste)
-    (go (<! (timeout ehdotusaika-ms))
-        ;; Piilota dialogi, jos ollaan edelleen ehdottamassa saman toiminnon kumoamista
-        (when (= (:kumoustunniste @kumoustiedot) kumoustunniste)
-          (ala-ehdota-kumoamista!)))))
-
-(declare tallenna-aikataulu)
-(declare aikataulurivit)
-
-(defn kumoa-muutos! [{:keys [urakka-id sopimus-id vuosi]}]
-  (let [edellinen-tila (:edellinen-tila @kumoustiedot)]
-    (when edellinen-tila
-      (tallenna-aikataulu urakka-id sopimus-id vuosi edellinen-tila
-                          (fn [vastaus]
-                            (reset! aikataulurivit vastaus)
-                            (swap! kumoustiedot assoc :edellinen-tila nil)
-                            (ala-ehdota-kumoamista!))))))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

@@ -44,6 +44,7 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]
@@ -618,12 +619,26 @@
             {:otsikko "Tyyppi"
              :tyyppi :string
              :nimi ::osa/tyyppi
-             :fmt osa/fmt-kohdeosa-tyyppi}
+             :fmt (comp string/capitalize osa/fmt-kohteenosa-tyyppi)}
             {:otsikko "Oletuspalvelumuoto"
              :nimi ::osa/oletuspalvelumuoto
              :fmt liikenne/palvelumuoto->str
              :tyyppi :string}]
    :data osa})
+
+(defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]
+  {:tyyppi :suolatoteuma
+   :jarjesta-fn (let [fn :alkanut]
+                  (if (fn suolatoteuma)
+                    fn
+                    (constantly false)))
+   :otsikko (str "Suolatoteuma" (when (:alkanut suolatoteuma)
+                                  (str " " (pvm/pvm (:alkanut suolatoteuma)))))
+   :tiedot [{:otsikko "Materiaali" :nimi :materiaali_nimi}
+            {:otsikko "Määrä (t)" :nimi :maara}
+            {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
+            {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}]
+   :data suolatoteuma})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))

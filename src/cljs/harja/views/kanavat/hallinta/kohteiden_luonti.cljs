@@ -37,13 +37,11 @@
 (defn kohteenosat-grid [e! {:keys [haetut-kohteenosat
                                    valittu-kohde
                                    kohteenosien-haku-kaynnissa?] :as app}]
-  [grid/muokkaus-grid
+  [grid/grid
    {:tyhja (if kohteenosien-haku-kaynnissa?
              [ajax-loader-pieni "Päivitetään kohteenosia"]
-             "Lisää kohteeseen osia oikeasta yläkulmasta")
+             "Valitse kohteeseen kuuluvat osat karttaa klikkaamalla")
     :tunniste ::kohteenosa/id
-    :voi-lisata? false
-    :voi-kumota? false
     :virhe-viesti (let [vaihdetut (filter :vanha-kohde haetut-kohteenosat)]
                     (when-not (empty? vaihdetut)
                       (str "Osia siirretty kohteista: " (str/join ", " (map
@@ -51,20 +49,16 @@
                                                                          vaihdetut)))))}
    [{:otsikko "Osa"
      :tyyppi :string
-     :muokattava? (constantly false)
      :nimi :kohteenosan-nimi
      :hae identity
      :leveys 2
-     :fmt kohteenosa/fmt-kohdeosa}
+     :fmt kohteenosa/fmt-kohteenosa}
     {:otsikko "Oletuspalvelumuoto"
      :tyyppi :string
-     :muokattava? (constantly false)
      :nimi ::kohteenosa/oletuspalvelumuoto
      :fmt lt/palvelumuoto->str
      :leveys 2}]
-   (r/wrap
-     (zipmap (range) (::kohde/kohteenosat valittu-kohde))
-     #(e! (tiedot/->MuokkaaKohteenKohteenosia (vals %))))])
+   (remove :poistettu (::kohde/kohteenosat valittu-kohde))])
 
 (defn kohdelomake [e! app]
   (komp/luo
@@ -114,7 +108,8 @@
    {:tyhja "Lisää kokonaisuuksia oikeasta yläkulmasta"
     :tunniste ::kok/id
     :voi-poistaa? (fn [kokonaisuus]
-                    (tiedot/kokonaisuuden-voi-poistaa? app kokonaisuus))}
+                    (tiedot/kokonaisuuden-voi-poistaa? app kokonaisuus))
+    :voi-kumota? false}
    [{:otsikko "Nimi"
      :tyyppi :string
      :nimi ::kok/nimi
@@ -208,7 +203,7 @@
                  :nimi :kohteenosat
                  :leveys 6
                  :hae (fn [kohde]
-                        (str/join ", " (map kohteenosa/fmt-kohdeosa (::kohde/kohteenosat kohde))))}
+                        (str/join "; " (map kohteenosa/fmt-kohteenosa (::kohde/kohteenosat kohde))))}
                 (if-not valittu-urakka
                   {:otsikko "Urakat"
                    :tyyppi :string

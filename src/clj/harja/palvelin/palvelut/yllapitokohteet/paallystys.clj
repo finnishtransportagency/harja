@@ -402,33 +402,48 @@
                               (assoc osoite :kohdeosa-id (:id vastaava-kohdeosa)))))
                         (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))))))
 
-(defn laheta-paallystysilmoituksesta-sahkoposti? [uusi-tila vanha-tila]
+(defn laheta-paallystysilmoituksesta-sahkoposti-urakan-valvojalle?
+  [uusi-tila vanha-tila]
   (and (= uusi-tila :valmis)
        (not= vanha-tila :valmis)))
 
-(defn laheta-paallystysilmoitussahkoposti-tarvittaessa [db fim email urakka-id paallystyskohde-id uusi-tila vanha-tila]
-  (when (laheta-paallystysilmoituksesta-sahkoposti? uusi-tila vanha-tila)
-    (let [paallystyskohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
+(defn laheta-paallystysilmoituksesta-sahkoposti? [{:keys [uusi-tila vanha-tila uusi-paatos vanha-paatos]}]
+  (or
+    ;; viesti urakan valvojalle?
+    (laheta-paallystysilmoituksesta-sahkoposti-urakan-valvojalle? uusi-tila vanha-tila)
+    ;; viesti urakoitsijalle?
+    (not= vanha-paatos uusi-paatos)))
+
+(defn laheta-paallystysilmoitussahkoposti-tarvittaessa [{:keys [db fim email urakka-id paallystyskohde-id uusi-tila
+                                                                vanha-tila uusi-paatos vanha-paatos] :as s-posti-params}]
+  (when (laheta-paallystysilmoituksesta-sahkoposti? s-posti-params)
+    (let [sposti-urakan-valvojalle? (laheta-paallystysilmoituksesta-sahkoposti-urakan-valvojalle? uusi-tila vanha-tila)
+          paallystyskohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
           urakka-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
           urakka-sampoid (urakat-q/hae-urakan-sampo-id db urakka-id)
           hallintayksikko-id (:id (first (urakat-q/hae-urakan-ely db urakka-id)))
-          viesti (sanitoi (format "Urakan %s kohteen %s päällystysilmoitus valmis käsiteltäväksi"
-                          urakka-nimi
-                          (:nimi paallystyskohde)))
+          viesti (sanitoi
+                   (format "Urakan %s kohteen %s päällystysilmoitus %s"
+                           urakka-nimi
+                           (:nimi paallystyskohde)
+                           (if sposti-urakan-valvojalle?
+                             "valmis käsiteltäväksi"
+                             (str "on " (if (= "hylatty" uusi-paatos) "hylätty" "hyväksytty")))))
           url (str "https://extranet.liikennevirasto.fi/harja#urakat/kohdeluettelo-paallystys/paallystysilmoitukset?"
                    "&hy=" hallintayksikko-id
-                   "&u=" urakka-id)]
-      (viestinta/laheta-sposti-fim-kayttajarooleille
-        {:fim fim
-         :email email
-         :urakka-sampoid urakka-sampoid
-         :fim-kayttajaroolit #{"tilaajan urakanvalvoja"}
-         :viesti-otsikko viesti
-         :viesti-body (html
-                        [:div
-                         [:p (str viesti ".")]
-                         [:p "Päällystysilmoitukset Harjassa: "
-                          [:a {:href url} url]]])}))))
+                   "&u=" urakka-id)
+            kayttajaroolit (if sposti-urakan-valvojalle? #{"ely urakanvalvoja"} #{"urakan vastuuhenkilö"})
+          spostin-parametrit {:fim fim
+                              :email email
+                              :urakka-sampoid urakka-sampoid
+                              :fim-kayttajaroolit kayttajaroolit
+                              :viesti-otsikko viesti
+                              :viesti-body (html
+                                             [:div
+                                              [:p (str viesti ".")]
+                                              [:p "Päällystysilmoitukset Harjassa: "
+                                               [:a {:href url} url]]])}]
+      (viestinta/laheta-sposti-fim-kayttajarooleille spostin-parametrit))))
 
 (defn tallenna-paallystysilmoitus
   "Tallentaa päällystysilmoituksen tiedot kantaan.
@@ -452,8 +467,7 @@
                                    (first (into []
                                                 (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
                                                       (map #(konv/string-poluista->keyword %
-                                                                                           [[:paatos :tekninen-osa]
-                                                                                            [:tila]])))
+                                                                                           [[:tila]])))
                                                 (q/hae-paallystysilmoitus-paallystyskohteella
                                                   db
                                                   {:paallystyskohde paallystyskohde-id}))))
@@ -475,10 +489,12 @@
           tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
 
       (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
-      (laheta-paallystysilmoitussahkoposti-tarvittaessa db fim email urakka-id
-                                                        paallystyskohde-id
-                                                        (:tila tuore-paallystysilmoitus)
-                                                        (:tila vanha-paallystysilmoitus))
+      (laheta-paallystysilmoitussahkoposti-tarvittaessa {:db db :fim fim :email email :urakka-id urakka-id
+                                                         :paallystyskohde-id paallystyskohde-id
+                                                         :uusi-tila (:tila tuore-paallystysilmoitus)
+                                                         :vanha-tila (:tila vanha-paallystysilmoitus)
+                                                         :uusi-paatos (:tekninen-osa_paatos tuore-paallystysilmoitus)
+                                                         :vanha-paatos (:tekninen-osa_paatos vanha-paallystysilmoitus)})
 
       ;; Rakennetaan vastaus
       (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id

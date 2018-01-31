@@ -60,10 +60,10 @@
                                                  identity))))
 
 (deftest kohdekokonaisuudet
-  (is (= [{::kok/id 1
-           ::kok/nimi "Foobar"}
-          {::kok/id 2
-           ::kok/nimi "Bazbar"}]
+  (is (= [{::kok/id 2
+           ::kok/nimi "Bazbar"}
+          {::kok/id 1
+           ::kok/nimi "Foobar"}]
          (tiedot/kohdekokonaisuudet
            [{::kok/id 1
              ::kok/nimi "Foobar"
@@ -193,11 +193,16 @@
                                                {::kok/id 1}))))
 
 (deftest osa-kuuluu-kohteeseen?
-  (is (true? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 1}}
-                                                      {:valittu-kohde {::kohde/id 1}})))
+  (is (true? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 1}
+                                                       ::osa/id 1}
+                                                      {:valittu-kohde {::kohde/id 1
+                                                                       ::kohde/kohteenosat [{::osa/id 1}]}})))
 
-  (is (false? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 2}}
-                                                      {:valittu-kohde {::kohde/id 1}}))))
+  (testing "Tarkastus tehdään osan id:n perusteella, ei osan kohdetiedon perusteella"
+    (is (false? (tiedot/osa-kuuluu-valittuun-kohteeseen? {::osa/kohde {::kohde/id 1}
+                                                          ::osa/id 2}
+                                                         {:valittu-kohde {::kohde/id 1
+                                                                          ::kohde/kohteenosat [{::osa/id 1}]}})))))
 
 (deftest infopaneeli-otsikko
   (is (= "Irroita"
@@ -264,10 +269,10 @@
 
 (deftest kohteet-haettu
   (is (= {:kohteiden-haku-kaynnissa? false
-          :kohdekokonaisuudet [{::kok/id 1
-                                ::kok/nimi "Foobar"}
-                               {::kok/id 2
-                                ::kok/nimi "Bazbar"}]
+          :kohdekokonaisuudet [{::kok/id 2
+                                ::kok/nimi "Bazbar"}
+                               {::kok/id 1
+                                ::kok/nimi "Foobar"}]
           :kohderivit [{::kohde/id 1
                         ::kohde/tyyppi :sulku
                         ::kohde/kohdekokonaisuus {::kok/id 1
@@ -460,7 +465,8 @@
 
   (testing "Varatun kohteen irrottaminen"
     (is (= {:valittu-kohde {::kohde/id 2
-                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}]}
+                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}
+                                                 {::osa/id 1 ::osa/kohde {::kohde/id 2} :poistettu true}]}
             :haetut-kohteenosat [{::osa/id 1
                                   ::osa/kohde {::kohde/id 1}
                                   :vanha-kohde {::kohde/id 1}}
@@ -500,7 +506,8 @@
 
   (testing "Kohteen irrottaminen"
     (is (= {:valittu-kohde {::kohde/id 2
-                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}]}
+                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}
+                                                 {::osa/id 1 ::osa/kohde {::kohde/id 2} :poistettu true}]}
             :haetut-kohteenosat [{::osa/id 1 ::osa/kohde nil}
                                  {::osa/id 2 ::osa/kohde {::kohde/id 2}}]}
            (e! (tiedot/->KohteenosaKartallaKlikattu {::osa/id 1 ::osa/kohde {::kohde/id 2}})
