@@ -281,7 +281,7 @@
                 (nil? nykyinen-tiemerkintapvm))))
 
 (defn valita-tieto-tiemerkinnan-valmistumisesta
-  "Välittää tiedon annettujen kohteiden tiemerkinnän valmitumisesta.."
+  "Välittää tiedon annettujen kohteiden tiemerkinnän valmistumisesta.."
   [{:keys [kayttaja fim email valmistuneet-kohteet]}]
   (laheta-sposti-tiemerkinta-valmis {:fim fim :email email
                                      :kohteiden-tiedot valmistuneet-kohteet
