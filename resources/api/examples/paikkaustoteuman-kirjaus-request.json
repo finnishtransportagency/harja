@@ -1,0 +1,65 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2018-01-30T12:00:00Z"
+  },
+  "paikkaustoteumat": [
+    {
+      "paikkaustoteuma": {
+        "tunniste": {
+          "id": 123
+        },
+        "alku": "2018-01-30T12:00:00Z",
+        "loppu": "2018-01-30T18:00:00Z",
+        "sijainti": {
+          "aosa": 1,
+          "aet": 1,
+          "losa": 5,
+          "let": 16,
+          "ajr": 1,
+          "kaista": 1
+        },
+        "tienkohta": {
+          "reunat": [
+            {
+              "reuna": 1
+            }
+          ],
+          "ajourat": [
+            {
+              "ajoura": 2
+            },
+            {
+              "ajoura": 3
+            }
+          ],
+          "ajouravalit": [
+            {
+              "ajouravali": 5
+            },
+            {
+              "ajouravali": 7
+            }
+          ],
+          "keskisaumat": [
+            {
+              "keskisauma": 1
+            },
+            {
+              "keskisauma": 1
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

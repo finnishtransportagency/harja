@@ -50,6 +50,7 @@ schemas:
  - urakan-tyotuntien-kirjaus-request: !include schemas/urakan-tyotuntien-kirjaus-request.schema.json
  - toteuman-poisto-request: !include schemas/toteuman-poisto-request.schema.json
  - tarkastuksen-poisto-request: !include schemas/tarkastuksen-poisto-request.schema.json
+ - paikkaustoteuman-kirjaus-request: !include schemas/paikkaustoteuman-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -939,6 +940,58 @@ documentation:
                   application/json:
                     example: !include examples/virhe-response.json
                     schema: kirjaus-response
+    /paikkaus:
+      is: [secured]
+      description: Paikkaustoteimien sekä niiden hinnoittelujen kirjaus
+      /toteuma:
+        post:
+          is: [secured]
+          description: Uuden paikkauksen kirjaaminen tai vanhan päivittäminen.
+          body:
+            application/json:
+              example: !include examples/paikkaustoteuman-kirjaus-request.json
+              schema: paikkaustoteuman-kirjaus-request
+          responses:
+            200:
+             body:
+               application/json:
+                 example: !include examples/onnistunut-kirjaus-response.json
+                 schema: kirjaus-response
+            400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
+            500:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
+      /hinnoittelu:
+        post:
+          is: [secured]
+          description: Uuden paikkauksen hinnoittelun kirjaaminen tai vanhan päivittäminen paikkauksille.
+          body:
+            application/json:
+              example: !include examples/varusteen-lisays-request.json
+              schema: varusteen-lisays-request
+          responses:
+            200:
+             body:
+               application/json:
+                 example: !include examples/onnistunut-kirjaus-response.json
+                 schema: kirjaus-response
+            400:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
+            500:
+             body:
+               application/json:
+                 example: !include examples/virhe-response.json
+                 schema: virhe-response
+
   /yhteystiedot:
     /{urakkanumero}:
       get:
