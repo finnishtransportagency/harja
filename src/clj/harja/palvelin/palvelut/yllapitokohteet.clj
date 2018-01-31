@@ -231,6 +231,9 @@
                                           (pvm/joda-timeksi (pvm/nyt))
                                           (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
                                        valmistuneet-kohteet)]
+
+      ; TODO Ota lähetettävät kohteet miinus valmistuneet -> saadaan ne joista ei panna mailia. Tallenna näiden muut vastaanottajat kantaan.
+
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
@@ -246,7 +249,6 @@
              :id (:id kohde)
              :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
 
-      ;; TODO Muut vastaanottajat: Lähetä maili jos kohde valmistunut tänään tai menneisyydessä, muuten pistä kantaan talteen
       (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
         {:kayttaja user :fim fim
          :email email
