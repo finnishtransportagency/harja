@@ -49,7 +49,7 @@
      :leveys 7
      :komponentti (fn [toteuma]
                     [:div
-                     [(if (valittu?)
+                     [(if (contains? @tiedot/valitut-toteumat (:tid toteuma))
                         :button.nappi-toissijainen.nappi-grid
                         :button.nappi-ensisijainen.nappi-grid)
                       {:on-click #(if (contains? @tiedot/valitut-toteumat (:tid toteuma))
