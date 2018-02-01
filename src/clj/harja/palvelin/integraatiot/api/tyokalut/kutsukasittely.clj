@@ -17,7 +17,8 @@
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)
-           (java.util.zip GZIPInputStream)))
+           (java.util.zip GZIPInputStream)
+           (org.httpkit BytesInputStream)))
 
 (defn tee-kirjausvastauksen-body
   "Ottaa kirjausvastauksen tiedot (mappi, jossa id, ilmoitukset, varoitukset ja virheet) ja tekee vastauksen bodyn.
@@ -261,12 +262,15 @@
         resurssi))))
 
 (defn- lue-body [request]
-  (if (:body request)
-    (if (= (get-in request [:headers "content-encoding"]) "gzip")
-      (with-open [gzip (GZIPInputStream. (:body request))]
-        (slurp gzip))
-      (slurp (:body request)))
-    nil))
+  (let [body (:body request)]
+    (when body
+      (if (= (get-in request [:headers "content-encoding"]) "gzip")
+        (with-open [gzip (GZIPInputStream. body)]
+          (slurp gzip))
+        (let [merkit (slurp body)]
+          (if (and (empty? merkit) (instance? BytesInputStream body))
+            (slurp (.bytes body)) ;; muuten slurpilta saadaan tyhjä merkkijono kun json on lähettty curlilla -X POST -d @data.json
+            merkit))))))
 
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
