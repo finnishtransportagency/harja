@@ -125,3 +125,6 @@
 
 (def +tieluvan-kirjaus-request+ "api/schemas/tieluvan-kirjaus-request.schema.json")
 (def tieluvan-kirjaus-request (tee-validaattori "api/schemas/tieluvan-kirjaus-request.schema.json"))
+
+(def +paikkaustoteuman-kirjaus-request+ "api/schemas/paikkaustoteuman-kirjaus-request.schema.json")
+(def paikkaustoteuman-kirjaus-request (tee-validaattori +paikkaustoteuman-kirjaus-request+))

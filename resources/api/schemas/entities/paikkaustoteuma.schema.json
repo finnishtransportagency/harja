@@ -12,8 +12,8 @@
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
-    "alku": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/alku",
+    "alkuaika": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/alkuaika",
       "type": [
         "string",
         "null"
@@ -21,8 +21,8 @@
       "format": "date-time",
       "required": true
     },
-    "loppu": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/loppu",
+    "loppuaika": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/loppuaika",
       "type": [
         "string",
         "null"
