@@ -66,7 +66,25 @@
               "keskisauma": 1
             }
           ]
-        }
+        },
+        "tyomenetelma": "massapintaus",
+        "massatyyppi": "asfalttibetoni",
+        "leveys": 10,
+        "massamenekki": 12,
+        "raekoko": 1,
+        "kuulamylly": "AN5",
+        "kivi-ja-sideaineet": [
+          {
+            "kivi-ja-sideaine": {
+              "esiintyma": "testi",
+              "km-arvo": "testi",
+              "muotoarvo": "testi",
+              "sideainetyyppi": "20/30",
+              "pitoisuus": 1.2,
+              "lisa-aineet": "lisäaineet"
+            }
+          }
+        ]
       }
     }
   ]

@@ -40,48 +40,38 @@
     "tienkohta": {
       "$ref": "file:resources/api/schemas/entities/tienkohta.schema.json"
     },
-    "paallystetyyppi": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/paallystetyyppi",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/paallyste.schema.json"
-    },
-    "toimenpide": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/toimenpide",
-      "type": "string"
-    },
-    "raekoko": {
-      "id": "urn:harja/raekoko",
-      "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
-    },
-    "massamenekki": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/massamenekki",
-      "type": "integer"
-    },
-    "rc-prosentti": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/rc-prosentti",
-      "type": "integer"
-    },
     "tyomenetelma": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/tyomenetelma",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/paallystys_tyomenetelma.schema.json"
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tyomenetelma",
+      "required": true,
+      "enum": [
+        "massapintaus",
+        "kuumennuspintaus",
+        "remix-pintaus"
+      ]
+    },
+    "massatyyppi": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/massatyyppi",
+      "required": true,
+      "enum": [
+        "asfalttibetoni",
+        "kivimastiks",
+        "pehmeät ab / bitumi"
+      ]
     },
     "leveys": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/leveys",
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/leveys",
       "type": "number"
     },
-    "kokonaismassamaara": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/kokonaismassamaara",
-      "type": "number"
+    "massamenekki": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/massamenekki",
+      "type": "integer"
     },
-    "pinta-ala": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/pinta-ala",
-      "type": "number"
+    "raekoko": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/raekoko",
+      "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
     },
     "kuulamylly": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/kuulamylly",
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kuulamylly",
       "enum": [
         "AN5",
         "AN7",
@@ -93,33 +83,33 @@
       ]
     },
     "kivi-ja-sideaineet": {
-      "id": "urn:harja/paikkaustoteumat/0/alikohde/0/kivi-ja-sideaineet",
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet",
       "type": "array",
       "maxItems": 100,
       "items": {
-        "id": "urn:harja/paikkaustoteumat/0/alikohde/0/kivi-ja-sideaineet/0",
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "kivi-ja-sideaine": {
-            "id": "urn:harja/paikkaustoteumat/0/alikohde/0/kivi-ja-sideaineet/0",
+            "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0",
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "esiintyma": {
-                "id": "urn:harja/paikkaustoteumat/0/alikohde/kivi-ja-sideaineet/esiintyma",
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/esiintyma",
                 "type": "string"
               },
               "km-arvo": {
-                "id": "urn:harja/paikkaustoteumat/0/alikohde/kivi-ja-sideaineet/km-arvo",
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/km-arvo",
                 "type": "string"
               },
               "muotoarvo": {
-                "id": "urn:harja/paikkaustoteumat/0/alikohde/kivi-ja-sideaineet/muotoarvo",
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/muotoarvo",
                 "type": "string"
               },
               "sideainetyyppi": {
-                "id": "urn:harja/paikkaustoteumat/0/alikohde/kivi-ja-sideaineet/sideainetyyppi",
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/sideainetyyppi",
                 "enum": [
                   "20/30",
                   "35/50",
@@ -146,11 +136,11 @@
                 ]
               },
               "pitoisuus": {
-                "id": "urn:harja/paikkaustoteumat/0/alikohde/kivi-ja-sideaineet/pitoisuus",
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/pitoisuus",
                 "type": "number"
               },
               "lisa-aineet": {
-                "id": "urn:harja/paikkaustoteumat/0/alikohde/kivi-ja-sideaineet/lisa-aineet",
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/lisa-aineet",
                 "type": "string"
               }
             }
