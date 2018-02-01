@@ -57,9 +57,7 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
-;;[{"tie" 712, "osa" 2, "etaisyys" 159, "ajorata" "0"}]
-;;["'(20,1,1,,,) '::tr_osoite" "'(20,2,2,,,) '::tr_osoite"]
-;
+
 (defn muunna-mapiksi [kanavasilta-osoite]
   (map (fn [[k v]]
          [(keyword k) v])
@@ -81,14 +79,10 @@
    :geometria}
   )
 
-;; TODO:
-;; MUODOSTA TR-OSOITE LAAJENNOS TYYPPINEN
-;; tyypitetty array
+;; TODO: MUODOSTA TR-OSOITE LAAJENNOS TYYPPINEN tyypitetty array ja tallenna kan_silta-tauluun.
+;; Avattavat sillat haetaan TREX:sta. TREX:in (= taitorakennerekisteri) rajapinnan kuvaus on liitetty tikettiin HAR-6948.
 
 (defn tallenna-kanavasilta [db kanavasilta]
-  ;; Avattavat sillat haetaan TREX:sta.
-  ;; TREX:in (= taitorakennerekisteri) rajapinnan kuvaus on liitetty tikettiin HAR-6948.
-
   (let [siltanro (kanavasilta :siltanro)
         nimi (kanavasilta :siltanimi)
         tunnus (kanavasilta :tunnus_prefix)
@@ -151,14 +145,14 @@
     "kanavasillat-haku"
     (fn [konteksti]
       (dotimes [num 25]
-        (let [http-asetukset {:metodi :GET :url (muodosta-sivutettu-url url num)}
+        (let [http-asetukset {:metodi :GET :url (muodosta-sivutettu-url url (+ num 1))} ;; indeksi alkaa nollasta, sivunumerot ykkösestä
               {vastaus :body} (try
                                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)
                                 (catch Exception e))]
           (if vastaus
             (let [data (cheshire/decode vastaus keyword)]
               (kasittele-kanavasillat db (suodata-avattavat-sillat data)))
-            (log/debug (str "Kanavasiltoja ei käsitelty, vastausta ei saatu. Sivunumero: " num)))))))
+            (log/debug (str "Kanavasiltoja ei käsitelty, vastausta ei saatu. Sivunumero: " (+ num 1))))))))
   (log/debug "Kanavasiltojen päivitys tehty"))
 
 (defn- kanavasiltojen-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
