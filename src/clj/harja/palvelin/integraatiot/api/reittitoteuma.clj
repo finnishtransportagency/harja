@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json
              :refer [aika-string->java-sql-date aika-string->java-util-date
-                     pvm-string->java-util-date aika-string->java-sql-timestamp]]
+                     pvm-string->joda-date aika-string->java-sql-timestamp]]
             [harja.kyselyt.tieverkko :as tieverkko]
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [clojure.java.jdbc :as jdbc]
@@ -21,7 +21,8 @@
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
             [clojure.string :as str]
             [clojure.core.async :as async]
-            [harja.domain.reittipiste :as rp])
+            [harja.domain.reittipiste :as rp]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def ^{:const true} +yhdistamis-virhe+ :virhe-reitin-yhdistamisessa)
@@ -168,7 +169,7 @@ maksimi-linnuntien-etaisyys 200)
           (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))))))
 
 
-(defn- paivita-sopimuksen-materiaalin-kayton-cache!
+(defn- paivita-materiaalicachet!
   "Päivittää materiaalicachetaulut sopimuksen_materiaalin_kaytto ja urakan_materiaalin_kaytto_hoitoluokittain"
   [db urakka-id data]
   (let [reittitoteumat (if (:reittitoteuma data)
@@ -176,20 +177,24 @@ maksimi-linnuntien-etaisyys 200)
                          (:reittitoteumat data))
         materiaaleja-hyotykuormassa? (some #(get-in % [:reittitoteuma :toteuma :materiaalit])
                                            reittitoteumat)]
+    (assert (integer? urakka-id) "Oltava urakka-id kun päivitetään materiaalicachet.")
     (when materiaaleja-hyotykuormassa?
       (let [urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))
-            eka-toteuman-alkanut-pvm (pvm-string->java-util-date (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut]))
-            vika-toteuman-paattynyt-pvm (pvm-string->java-util-date (get-in (first reittitoteumat) [:reittitoteuma :toteuma :paattynyt]))
-            toteumien-eri-pvmt (set [eka-toteuman-alkanut-pvm vika-toteuman-paattynyt-pvm])
-            eka-toteuman-alkanut-aikaleima (aika-string->java-sql-timestamp (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut]))
-            vika-toteuman-alkanut-aikaleima (aika-string->java-sql-timestamp (get-in (last reittitoteumat) [:reittitoteuma :toteuma :alkanut]))]
+            ensimmainen-toteuma-alkanut-str (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut])
+            viimeinen-toteuma (last reittitoteumat)
+            viimeinen-toteuma-alkanut-str (get-in viimeinen-toteuma [:reittitoteuma :toteuma :alkanut])
+            ensimmainen-toteuman-alkanut-pvm (pvm-string->joda-date ensimmainen-toteuma-alkanut-str)
+            viimeinen-toteuman-paattynyt-pvm (pvm-string->joda-date (get-in viimeinen-toteuma [:reittitoteuma :toteuma :paattynyt]))
+            toteumien-eri-pvmt (pvm/paivat-aikavalissa ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm)]
         (doseq [sopimus-id urakan-sopimus-idt]
           (doseq [pvm toteumien-eri-pvmt]
             (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                   :alkupvm pvm})))
+                                                                   :alkupvm (pvm/dateksi pvm)})))
+
         (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                           :alkupvm eka-toteuman-alkanut-aikaleima
-                                                                           :loppupvm vika-toteuman-alkanut-aikaleima})))))
+                                                                           :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
+                                                                           :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)})))))
+
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
@@ -200,7 +205,7 @@ maksimi-linnuntien-etaisyys 200)
     (tallenna-yksittainen-reittitoteuma db db-replica
                                         urakka-id kirjaaja (:reittitoteuma toteuma)))
 
-  (paivita-sopimuksen-materiaalin-kayton-cache! db urakka-id data))
+  (paivita-materiaalicachet! db urakka-id data))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]
