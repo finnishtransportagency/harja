@@ -282,8 +282,7 @@ SELECT
   date_trunc('day', t.alkanut) AS pvm,
   tm.maara,
   t.lisatieto,
-  (k.jarjestelma = TRUE)       AS koneellinen,
-  t.reitti
+  (k.jarjestelma = TRUE)       AS koneellinen
 FROM toteuma_materiaali tm
   JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
