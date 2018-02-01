@@ -324,17 +324,17 @@
     :dash [3 9]
     :width 3}])
 
-(defn suolatoteuman-viiva [valittu?]
+(defn suolatoteuman-viiva []
   [{:color puhtaat/musta
-    :width (if valittu? 16 10)}
+    :width 10}
    {:color puhtaat/harmaa
-    :width (if valittu? 12 8)}
+    :width 8}
    {:color puhtaat/musta
     :dash [3 9]
-    :width (if valittu? 8 6)}
-   {:color (if valittu? (varit/rgb 102 217 255) puhtaat/sininen)
+    :width 6}
+   {:color puhtaat/sininen
     :dash [3 9]
-    :width (if valittu? 6 5)}])
+    :width 5}])
 
 (defn tarkastuksen-ikoni [{:keys [ok? tekija] :as tarkastus} reitti?]
   (cond
