@@ -51,6 +51,7 @@ schemas:
  - toteuman-poisto-request: !include schemas/toteuman-poisto-request.schema.json
  - tarkastuksen-poisto-request: !include schemas/tarkastuksen-poisto-request.schema.json
  - paikkaustoteuman-kirjaus-request: !include schemas/paikkaustoteuman-kirjaus-request.schema.json
+ - paikkauskustannusten-kirjaus-request: !include schemas/paikkauskustannusten-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -967,14 +968,14 @@ documentation:
                application/json:
                  example: !include examples/virhe-response.json
                  schema: virhe-response
-      /hinnoittelu:
+      /kustannus:
         post:
           is: [secured]
-          description: Uuden paikkauksen hinnoittelun kirjaaminen tai vanhan päivittäminen paikkauksille.
+          description: Uuden paikkauksen kustannusten kirjaaminen tai vanhan päivittäminen paikkauksille.
           body:
             application/json:
-              example: !include examples/varusteen-lisays-request.json
-              schema: varusteen-lisays-request
+              example: !include examples/paikkauskustannusten-kirjaus-request.json
+              schema: paikkauskustannusten-kirjaus-request
           responses:
             200:
              body:
