@@ -18,9 +18,16 @@
         "tunniste": {
           "id": 123
         },
+        "paikkauskohde": {
+          "nimi": "Kuusamontien paikkaus",
+          "tunniste": {
+            "id": 567
+          }
+        },
         "alkuaika": "2018-01-30T12:00:00Z",
         "loppuaika": "2018-01-30T18:00:00Z",
         "sijainti": {
+          "tie" : 20,
           "aosa": 1,
           "aet": 1,
           "losa": 5,

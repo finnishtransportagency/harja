@@ -7,10 +7,27 @@
   "properties": {
     "tunniste": {
       "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tunniste",
-      "type": "object",
+      "required": true,
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
-      "required": true
+      "type": "object",
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+    },
+    "paikkauskohde": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde",
+      "required": true,
+      "additionalProperties": false,
+      "type": "object",
+      "nimi": {
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/lisa-aineet",
+        "type": "string"
+      },
+      "tunniste": {
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tunniste",
+        "required": true,
+        "additionalProperties": false,
+        "type": "object",
+        "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+      }
     },
     "alkuaika": {
       "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/alkuaika",
