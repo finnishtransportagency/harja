@@ -267,10 +267,7 @@
       (if (= (get-in request [:headers "content-encoding"]) "gzip")
         (with-open [gzip (GZIPInputStream. body)]
           (slurp gzip))
-        (let [merkit (slurp body)]
-          (if (and (empty? merkit) (instance? BytesInputStream body))
-            (slurp (.bytes body)) ;; muuten slurpilta saadaan tyhjä merkkijono kun json on lähettty curlilla -X POST -d @data.json
-            merkit))))))
+        (slurp body)))))
 
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
@@ -281,23 +278,26 @@
   käsittelyvirhe."
 
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
-
-  (let [body (lue-body request)
-        tapahtuma-id (when integraatioloki
-                       (lokita-kutsu integraatioloki resurssi request body))
-        parametrit (:params request)
-        vastaus (aja-virhekasittelyn-kanssa
-                  resurssi
-                  body
-                  parametrit
-                  #(let
-                    [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
-                     kutsun-data (lue-kutsu kutsun-skeema request body)
-                     vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                    (tee-vastaus vastauksen-skeema vastauksen-data)))]
-    (when integraatioloki
-      (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
-    vastaus))
+  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    {:status 415
+     :headers {"Content-Type" "text/plain"}
+     :body "Virhe: Saatiin JSON-kutsu lomakedatan content-typellä\n"}
+    (let [body (lue-body request)
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request body))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                   resurssi
+                   body
+                   parametrit
+                   #(let
+                        [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                         kutsun-data (lue-kutsu kutsun-skeema request body)
+                         vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+                      (tee-vastaus vastauksen-skeema vastauksen-data)))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))
 
 (defn kasittele-kutsu-async
   "Käsittelee asynkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
