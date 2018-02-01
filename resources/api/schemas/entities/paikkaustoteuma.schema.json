@@ -52,10 +52,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": true,
-      "$ref": "file:resources/api/schemas/entities/tieosoitevali.schema.json"
-    },
-    "tienkohta": {
-      "$ref": "file:resources/api/schemas/entities/tienkohta.schema.json"
+      "$ref": "file:resources/api/schemas/entities/tieosoitevali-tienkohdilla.schema.json"
     },
     "tyomenetelma": {
       "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tyomenetelma",

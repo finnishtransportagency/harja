@@ -27,50 +27,45 @@
         "alkuaika": "2018-01-30T12:00:00Z",
         "loppuaika": "2018-01-30T18:00:00Z",
         "sijainti": {
-          "tie" : 20,
+          "tie": 20,
           "aosa": 1,
           "aet": 1,
           "losa": 5,
           "let": 16,
           "ajoradat": [
             {
-              "ajorata": 1
-            }
-          ],
-          "kaistat": [
-            {
-              "kaista": 1
-            }
-          ]
-        },
-        "tienkohta": {
-          "reunat": [
-            {
-              "reuna": 1
-            }
-          ],
-          "ajourat": [
-            {
-              "ajoura": 2
-            },
-            {
-              "ajoura": 3
-            }
-          ],
-          "ajouravalit": [
-            {
-              "ajouravali": 5
-            },
-            {
-              "ajouravali": 7
-            }
-          ],
-          "keskisaumat": [
-            {
-              "keskisauma": 1
-            },
-            {
-              "keskisauma": 1
+              "ajorata": 1,
+              "tienkohdat": {
+                "reunat": [
+                  {
+                    "reuna": 1
+                  }
+                ],
+                "ajourat": [
+                  {
+                    "ajoura": 2
+                  },
+                  {
+                    "ajoura": 3
+                  }
+                ],
+                "ajouravalit": [
+                  {
+                    "ajouravali": 5
+                  },
+                  {
+                    "ajouravali": 7
+                  }
+                ],
+                "keskisaumat": [
+                  {
+                    "keskisauma": 1
+                  },
+                  {
+                    "keskisauma": 1
+                  }
+                ]
+              }
             }
           ]
         },

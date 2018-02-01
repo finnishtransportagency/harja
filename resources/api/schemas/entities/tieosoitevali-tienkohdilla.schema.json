@@ -3,7 +3,7 @@
   "id": "urn:harja",
   "type": "object",
   "properties": {
-    "tie" : {
+    "tie": {
       "id": "urn:harja/tieosoitevali-usealla-sijainnilla/tienumero",
       "type": "integer",
       "minimum": 0,
@@ -46,29 +46,17 @@
             "id": "urn:harja/tieosoitevali-usealla-sijainnilla/ajoradat/0/ajorata",
             "type": "integer",
             "minimum": 0
+          },
+          "tienkohdat": {
+            "$ref": "file:resources/api/schemas/entities/tienkohdat.schema.json"
           }
         }
       }
-    },
-    "kaistat": {
-      "id": "urn:harja/tieosoitevali-usealla-sijainnilla/kaistat",
-      "type": "array",
-      "maxItems": 20,
-      "items": {
-        "id": "urn:harja/tieosoitevali-usealla-sijainnilla/kaistat/0",
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "kaista": {
-            "$ref": "file:resources/api/schemas/entities/kaista.schema.json"
-          }
-        }
-      }
-    },
-    "karttapvm": {
-      "id": "urn:harja/sijainti/tie/karttapvm",
-      "type": "string",
-      "format": "date-time"
     }
+  },
+  "karttapvm": {
+    "id": "urn:harja/sijainti/tie/karttapvm",
+    "type": "string",
+    "format": "date-time"
   }
 }
