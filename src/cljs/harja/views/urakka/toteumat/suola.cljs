@@ -107,7 +107,8 @@
      {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "40%" :muokattava? muokattava?
       :hae #(if (muokattava? %)
               (:lisatieto %)
-              (str (:lisatieto %) " (Koneellisesti raportoitu)"))}
+              (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
+                   (count (map :toteumat @tiedot/toteumat)) ")"))}
      {:otsikko ""
       :nimi :nayta-kartalla
       :tyyppi :komponentti
