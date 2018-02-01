@@ -18,11 +18,11 @@
       "additionalProperties": false,
       "type": "object",
       "nimi": {
-        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/lisa-aineet",
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde/nimi",
         "type": "string"
       },
       "tunniste": {
-        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tunniste",
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde/tunniste",
         "required": true,
         "additionalProperties": false,
         "type": "object",

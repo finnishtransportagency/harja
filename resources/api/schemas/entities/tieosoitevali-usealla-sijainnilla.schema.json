@@ -36,7 +36,7 @@
     "ajoradat": {
       "id": "urn:harja/tieosoitevali-usealla-sijainnilla/ajoradat",
       "type": "array",
-      "maxItems": 100,
+      "maxItems": 2,
       "items": {
         "id": "urn:harja/tieosoitevali-usealla-sijainnilla/ajoradat/0",
         "type": "object",
@@ -53,7 +53,7 @@
     "kaistat": {
       "id": "urn:harja/tieosoitevali-usealla-sijainnilla/kaistat",
       "type": "array",
-      "maxItems": 100,
+      "maxItems": 20,
       "items": {
         "id": "urn:harja/tieosoitevali-usealla-sijainnilla/kaistat/0",
         "type": "object",

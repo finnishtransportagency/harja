@@ -1,5 +1,5 @@
 <b>Nykyinen versio: 1.0.31</b>  
-<b>Julkaistu: 01.02.2087</b>
+<b>Julkaistu: 01.02.2018</b>
 
 <b>Versiohistoria:</b>
 - Versionumero: 1.0.31 Julkaistu: 1.2.2018:
