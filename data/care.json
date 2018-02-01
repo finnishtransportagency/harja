@@ -1,5 +1,10 @@
 [
   {
+    "date": "2018-02-01",
+    "title": "Uusi materiaalikoodi Harjaan: Natriumformiaatti",
+    "body": "Nyt voit raportoida Natriumformiaatin käyttöä toteumissa. Formiaatit eivät ole materiaalityypiltään talvisuoloja eli niitä ei lasketa mukaan suolankäytön kokonaismäärään. Materiaalikoodien tiedot palautuvat yhä urakan tietojen mukana (APIssa /urakat/{id}."
+  },
+  {
     "date": "2018-01-30",
     "title": "Suolatoteumien seuranta kartan avulla helpottuu",
     "body": "Urakan Toteumat > Suola -osiossa voi nyt tarkastella kartalla suolatoteumia."
