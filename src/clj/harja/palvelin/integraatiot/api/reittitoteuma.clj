@@ -19,7 +19,8 @@
             [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
             [clojure.string :as str]
             [clojure.core.async :as async]
-            [harja.domain.reittipiste :as rp])
+            [harja.domain.reittipiste :as rp]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def ^{:const true} +yhdistamis-virhe+ :virhe-reitin-yhdistamisessa)
@@ -176,13 +177,14 @@ maksimi-linnuntien-etaisyys 200)
                                            reittitoteumat)]
     (when materiaaleja-hyotykuormassa?
       (let [urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))
-           eka-toteuman-alkanut-pvm (pvm-string->java-util-date (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut]))
-           vika-toteuman-paattynyt-pvm (pvm-string->java-util-date (get-in (last reittitoteumat) [:reittitoteuma :toteuma :paattynyt]))
-           toteumien-eri-pvmt (set [eka-toteuman-alkanut-pvm vika-toteuman-paattynyt-pvm])]
+           ensimmainen-toteuman-alkanut-pvm (pvm-string->java-util-date (get-in (first reittitoteumat) [:reittitoteuma :toteuma :alkanut]))
+           viimeinen-toteuman-paattynyt-pvm (pvm-string->java-util-date (get-in (last reittitoteumat) [:reittitoteuma :toteuma :paattynyt]))
+           toteumien-eri-pvmt (pvm/paivat-aikavalissa (pvm/joda-timeksi ensimmainen-toteuman-alkanut-pvm)
+                                                      (pvm/joda-timeksi viimeinen-toteuman-paattynyt-pvm))]
         (doseq [sopimus-id urakan-sopimus-idt]
           (doseq [pvm toteumien-eri-pvmt]
             (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                   :alkupvm pvm})))))))
+                                                                   :alkupvm (pvm/dateksi pvm)})))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
