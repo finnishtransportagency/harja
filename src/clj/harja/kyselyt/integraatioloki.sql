@@ -90,7 +90,8 @@ WHERE (:jarjestelma :: VARCHAR IS NULL OR i.jarjestelma = :jarjestelma) AND
       (:paattyen :: TIMESTAMP IS NULL OR alkanut <= :paattyen) AND
       (:otsikot :: TEXT IS NULL OR iv.otsikko ILIKE '%' || :otsikot || '%') AND
       (:parametrit :: TEXT IS NULL OR iv.parametrit ILIKE '%' || :parametrit || '%') AND
-      (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%')
+      (:sisalto :: TEXT IS NULL OR iv.sisalto ILIKE '%' || :sisalto || '%') AND
+      (:kesto :: INTEGER IS NULL OR :kesto < EXTRACT(EPOCH FROM (paattynyt - alkanut )))
 ORDER BY it.id DESC, it.alkanut DESC LIMIT :limit;
 
 
