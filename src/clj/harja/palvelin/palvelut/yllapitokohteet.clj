@@ -239,7 +239,7 @@
            :aikataulu_muokkaaja (:id user)
            :id (:id kohde)
            :suorittava_tiemerkintaurakka tiemerkintaurakka-id})
-        (q/tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti
+        (q/tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti<!
           db
           {:yllapitokohde_id (:id kohde)
            :vastaanottajat (konv/seq->array (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))
