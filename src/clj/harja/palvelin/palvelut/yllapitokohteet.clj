@@ -224,13 +224,13 @@
     (let [nykyiset-kohteet-kannassa (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                                db {:idt (map :id kohteet)}))
           valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)
-          lahetettavat-kohteet (filter #(pvm/sama-tai-jalkeen?
-                                          ;; Asiakkaan pyynnöstä toteutettu niin, että maili lähtee vain jos
-                                          ;; loppupvm on nykypäivä tai mennyt aika. Tulevaisuuteen suunniteltu
-                                          ;; loppupvm ei generoi maililähetystä.
-                                          (pvm/joda-timeksi (pvm/nyt))
-                                          (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
-                                       valmistuneet-kohteet)]
+          mailattavat-kohteet (filter #(pvm/sama-tai-jalkeen?
+                                         ;; Asiakkaan pyynnöstä toteutettu niin, että maili lähtee vain jos
+                                         ;; loppupvm on nykypäivä tai mennyt aika. Tulevaisuuteen suunniteltu
+                                         ;; loppupvm ei generoi maililähetystä (ajastettu taski käsittelee ne myöhemmin).
+                                         (pvm/joda-timeksi (pvm/nyt))
+                                         (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
+                                      valmistuneet-kohteet)]
 
       ; TODO Ota lähetettävät kohteet miinus valmistuneet -> saadaan ne joista ei panna mailia. Tallenna näiden muut vastaanottajat kantaan.
 
@@ -252,13 +252,13 @@
       (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
         {:kayttaja user :fim fim
          :email email
-         :sahkopostitiedot (map (fn [kohde]
-                                  (assoc (:sahkopostitiedot kohde)
-                                    :id (:id kohde)))
-                                kohteet)
+         :sahkopostitiedot (map (fn [lahetettava-kohde]
+                                  (assoc (:sahkopostitiedot lahetettava-kohde)
+                                    :id (:id lahetettava-kohde)))
+                                mailattavat-kohteet)
          :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
                                           db
-                                          {:idt (map :id lahetettavat-kohteet)}))}))))
+                                          {:idt (map :id mailattavat-kohteet)}))}))))
 
 (declare tallenna-yllapitokohteiden-tarkka-aikataulu)
 
