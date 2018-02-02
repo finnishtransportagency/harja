@@ -64,6 +64,8 @@
                     tiemerkintaurakka-nimi])
     (log/error "Lähetetään sähköposti tiemerkintäkohteen valmistumisesta puutteellisilla tiedoilla: " tiedot))
 
+  (log/debug "KOHDE VALMIS TIEDOT: " tiedot)
+
   (html
     [:div
      [:p (sanitoi (format "Kohteen %s tiemerkintä on valmistunut %s."
@@ -77,9 +79,11 @@
                                             {:teksti-tie? false})]
                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
                              (when ilmoittaja ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)])
-                             (when-let [saate (:saate muut-vastaanottajat)] ["Saate" saate])])]))
+                             (when-let [saate (:saate muut-vastaanottajat)]
+                               ["Saate" saate])])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
+  (log/debug "KOHTEET VALMIS TIEDOT: " kohteet) ; TODO Saate ei näy
   (html
     [:div
      [:p (if (every? #(pvm/tanaan? %) (vals valmistumispvmt))
@@ -172,12 +176,13 @@
                                                          yhden-urakan-kohteet)))
               vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
 
+          ;; TODO Käytä vastaanottajan-kohteet, mailissa mainitaan vain ne
           (sahkoposti/laheta-viesti!
-              email
-              (sahkoposti/vastausosoite email)
-              muu-vastaanottaja
-              (str "Harja: " viestin-otsikko)
-              viestin-vartalo))
+            email
+            (sahkoposti/vastausosoite email)
+            muu-vastaanottaja
+            (str "Harja: " viestin-otsikko)
+            viestin-vartalo))
         (catch Exception e
           (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
                              muu-vastaanottaja (pr-str e))))))))
