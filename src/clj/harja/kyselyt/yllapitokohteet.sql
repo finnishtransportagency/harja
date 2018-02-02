@@ -754,6 +754,10 @@ FROM yllapitokohde ypk
 WHERE
   ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
 
+-- name: tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti
+INSERT INTO odottava_sahkoposti (yllapitokohde_id, vastaanottajat, viesti, kopio_lahettajalle)
+    VALUES (:yllapitokohde_id, vastaanottajat::TEXT[], viesti, kopio_lahettajalle);
+
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohteen_aikataulu
