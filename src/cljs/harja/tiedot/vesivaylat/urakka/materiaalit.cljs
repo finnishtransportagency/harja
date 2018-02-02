@@ -49,11 +49,11 @@
   (process-event [{urakka :urakka} app]
     (let [u (:id urakka)]
       (post! (assoc app
-                      :urakka-id u
-                      :materiaalilistaus nil)
+                    :urakka-id u
+                    :materiaalilistaus nil)
              :hae-vesivayla-materiaalilistaus {::m/urakka-id u}
              {:onnistui ->ListausHaettu
-                     :epaonnistui ->Virhe})))
+              :epaonnistui ->Virhe})))
 
   ListausHaettu
   (process-event [{tulokset :tulokset} app]

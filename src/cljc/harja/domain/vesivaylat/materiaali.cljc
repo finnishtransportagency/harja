@@ -17,7 +17,7 @@
 (s/def ::materiaalilistauksen-haku (s/keys :req [::urakka-id]))
 (s/def ::materiaalilistauksen-vastaus (s/coll-of ::materiaalilistaus))
 
-(s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::maara ::pvm]
+(s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::maara ::pvm ::yksikko]
                                    :opt [::lisatieto ::halytysraja ::hairiotilanne ::toimenpide]))
 
 (s/def ::materiaalikirjaukset (s/coll-of ::materiaalikirjaus))
