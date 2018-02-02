@@ -569,7 +569,7 @@
                          :muutos-taulukosta? true
                          :valmis-fn (fn [lomakedata]
                                       (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
-                                             {:muut-vastaanottajat (map :sahkoposti (vals (:muut-vastaanottajat lomakedata)))
+                                             {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
                                               :saate (:saate lomakedata)
                                               :kopio-itselle? (:kopio-itselle? lomakedata)}))
                          :kohde-id (:id rivi)
