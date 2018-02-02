@@ -6,7 +6,7 @@ CREATE TABLE odottava_sahkoposti (
   tyyppi             ODOTTAVA_SAHKOPOSTI_TYYPPI            NOT NULL,
   yllapitokohde_id   INTEGER REFERENCES yllapitokohde (id) NOT NULL,
   vastaanottajat     TEXT []                               NOT NULL,
-  viesti             TEXT                                  NOT NULL,
+  viesti             TEXT,
   kopio_lahettajalle BOOLEAN NOT NULL DEFAULT FALSE -- Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)
 );
 
