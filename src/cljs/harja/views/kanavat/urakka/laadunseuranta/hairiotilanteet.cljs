@@ -8,6 +8,7 @@
 
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
+            [harja.ui.grid.protokollat :as grid-protokolla]
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
@@ -116,6 +117,14 @@
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
+(defn- muuta-yksikko-varaosan-muuttuessa
+  [grid-tila predikaatti]
+  (into {} (map (fn [[avain arvo]]
+                  (if (predikaatti arvo)
+                    [avain (assoc arvo :yksikko (-> arvo :varaosa ::materiaali/yksikko))]
+                    [avain arvo]))
+                grid-tila)))
+
 (defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
         virhe-atom (r/wrap (:varaosat-taulukon-virheet valittu-hairiotilanne)
@@ -133,20 +142,34 @@
       :virheet virhe-atom
       :piilota-toiminnot? false
       :tyhja "Ei varaosia"
-      :otsikko "Varaosat"}
+      :otsikko "Varaosat"
+      :muutos (fn [grid-komponentti]
+                ;; Tässä on tarkoituksena laittaa gridissä käsiteltävän rivin
+                ;; :yksikko avaimen alle oikea yksikkö, kun valitaan materiaali varaosa valikosta.
+                (let [grid-tila (grid-protokolla/hae-muokkaustila grid-komponentti)
+                      varaosa-muutettu? #(and (:varaosa %)
+                                             (not= (-> % :varaosa ::materiaali/yksikko)
+                                                   (:yksikko %)))
+                      joku-varaosa-muutettu? (some varaosa-muutettu? (vals grid-tila))]
+                  (when joku-varaosa-muutettu?
+                    (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-varaosan-muuttuessa grid-tila varaosa-muutettu?)))))}
      [{:otsikko "Varaosa"
        :nimi :varaosa
-       :leveys 1
+       :leveys 3
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :valinta
        :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
        :valinnat materiaalit}
       {:otsikko "Käytettävä määrä"
        :nimi :maara
-       :leveys 1
+       :leveys 3
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :positiivinen-numero
-       :kokonaisluku? true}]
+       :kokonaisluku? true}
+      {:otsikko "Yksikkö"
+       :nimi :yksikko
+       :leveys 1
+       :muokattava? (constantly false)}]
      (r/wrap
        (zipmap (range)
                (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
@@ -315,7 +338,7 @@
                       #(e! (tiedot/->NakymaSuljettu)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
-      @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
+      @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
       [:div
        [debug/debug app]
        (if valittu-hairiotilanne

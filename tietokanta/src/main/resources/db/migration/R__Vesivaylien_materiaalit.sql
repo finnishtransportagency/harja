@@ -22,7 +22,8 @@ CREATE OR REPLACE VIEW vv_materiaalilistaus AS
      WHERE l."urakka-id" = m1."urakka-id"
            AND l.poistettu IS NOT TRUE
            AND m1.nimi = l.nimi)         AS muutokset,
-    m1.halytysraja
+    m1.halytysraja,
+    m1.yksikko
   FROM vv_materiaali m1
   WHERE m1.poistettu IS NOT TRUE
   ORDER BY nimi ASC;
