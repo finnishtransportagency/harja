@@ -5,6 +5,7 @@
             [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
+            [harja.palvelin.integraatiot.integraatioloki :as loki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [cheshire.core :as cheshire]
             [clojure.java.jdbc :as jdbc]
@@ -21,6 +22,9 @@
 ;; Kanavakokonaisuuden muodostaa.
 (def geometriapaivitystunnus "kanavasillat")
 
+(def virhekasittely
+  {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
+
 (def avattavat-siltatyypit {
                             :teraksinen-kaantosilta "Teräksinen kääntösilta"
                             :teraksinen-kaantosilta-teraskansi "Teräksinen kääntösilta, teräskantinen"
@@ -29,10 +33,19 @@
                             :teraksinen-lappasilta-terasbetonikansi "Teräksinen läppäsilta, teräsbetonikantinen"
                             :teraksinen-nostosilta "Teräksinen nostosilta"
                             :teraksinen-nostosilta-teraskansi "Teräksinen nostosilta, teräskantinen"
-                            :teraksinen-langer-palkkisilta-teraskansi "Teräksinen langerpalkkisilta,teräskantinen"
                             :terasbetoninen-ponttonisilta "Teräsbetoninen ponttonisilta"
+
+                            ;; testataan
+                            :teraksinen-langer-palkkisilta-teraskansi "Teräksinen langerpalkkisilta, teräskantinen"
+                            :teraksinen-langer-palkkisilta-terasbetonikansi "Teräksinen langerpalkkisilta, teräsbetonikantinen"
+                            :teraksinen-jatkuva-palkkisilta-terasbetonikansi "Teräksinen jatkuva palkkisilta, teräsbetonikantinen"
+                            :teraksinen-palkkisilta-terasbetonikansi-liittorakenne "Teräksinen palkkisilta, teräsbetonikantinen, liittorakenteinen"
+                            :teraksinen-palkkisilta-terasbetonikansi "Teräksinen palkkisilta, teräsbetonikantinen"
+                            :teraksinen-jatkuva-kotelopalkkisilta "Teräksinen jatkuva kotelopalkkisilta"
+                            :teraksinen-ristikkosilta-teraskansi "Teräksinen ristikkosilta,teräskantinen"
+
                             ;;Jotkut avattavat sillat ovat tämän tyyppisiä, mutta näiden perusteella suodattaessa jäljelle jää paljon turhia siltojas
-                            ;;:teraksinen-palkkisilta-terasbetonikansi "Teräksinen palkkisilta, teräsbetonikantinen"
+                            ;;
                             ;;:teraksinen-jatkuva-palkkisilta-terasbetonikansi "Teräksinen jatkuva palkkisilta, teräsbetonikantinen"
                             ;;:teraksinen-jatkuva-kotelopalkkisilta "Teräksinen jatkuva kotelopalkkisilta"
                             ;;:teraksinen-liittorakenteinen-ulokepalkkisilta-terasbetonikansi "Teräksinen ulokepalkkisilta,teräsbetonikantinen,liittorakenteinen"
@@ -40,6 +53,17 @@
                             ;;:teraksinen-levypalkkisilta-ajorata-ylhaalla "Teräksinen levypalkkisilta, ajorata ylhäällä"
                             ;;:teraksinen-ristikkosilta-ajorata-ylhaalla "Teräksinen ristikkosilta, ajorata ylhäällä"
                             })
+
+;; Kovakoodaus. Osa silloista on tyypiltään sellaisia, ettei niitä tunnista avattaviksi. TREX:istä ei saa tarpeisiimme
+(def avattavat-sillat {
+                       :Pohjanlahti 1151
+                       :Kellosalmi 2724
+                       :Itikka 234
+                       :Uimasalmi 1148
+                       :Kaltimokoski 1219
+                       :Kyrönsalmi 2619
+                       :Uimasalmen-rata 2621
+                       })
 
 (def kanavasiltatunnukset {:kanavasilta "KaS"})
 
@@ -64,7 +88,7 @@
        (into [] kanavasilta-osoite)))
 
 (defn muunna-tallennettavaan-muotoon [tr-osoite]
-    (str "'(" (:tie tr-osoite) "," (:osa tr-osoite) "," (:etaisyys tr-osoite) ",,," (:ajorata tr-osoite) ",,,,) ::TR_OSOITE_LAAJENNETTU'"))
+  (str "'(" (:tie tr-osoite) "," (:osa tr-osoite) "," (:etaisyys tr-osoite) ",,," (:ajorata tr-osoite) ",,,,) ::TR_OSOITE_LAAJENNETTU'"))
 
 (defn muuta-tr-osoitteiksi [kanavasilta-osoite]
   {:tie (kanavasilta-osoite :tie)
@@ -90,7 +114,7 @@
         tila (kanavasilta :elinkaaritila)
         pituus (kanavasilta :siltapit)
         rakennetiedot (when (kanavasilta :rakennety) (konv/seq->array (kanavasilta :rakennety)))
-        tieosoitteet nil ;(when (kanavasilta :tieosoitteet) (konv/seq->array (map #((muunna-tallennettavaan-muotoon (muunna-mapiksi %))) (kanavasilta :tieosoitteet)) ))
+        tieosoitteet nil                                    ;(when (kanavasilta :tieosoitteet) (konv/seq->array (map #((muunna-tallennettavaan-muotoon (muunna-mapiksi %))) (kanavasilta :tieosoitteet)) ))
         sijainti_lev (kanavasilta :sijainti_n)
         sijainti_pit (kanavasilta :sijainti_e)
         avattu (when (kanavasilta :avattuliikenteellepvm) (konv/unix-date->java-date (kanavasilta :avattuliikenteellepvm)))
@@ -132,11 +156,19 @@
                         (set (% :rakennety))))
           (vastaus :tulokset)))
 
+(defn suodata-sillat [vastaus]
+  (filter #(not-empty (set/intersection
+                        (set (vals avattavat-sillat))
+                        (set (% :siltanro))))
+          (vastaus :tulokset)))
+
 (defn muodosta-sivutettu-url [url sivunro]
   (clojure.string/replace url #"%1" (str sivunro)))
 
 
 (defn paivita-kanavasillat [integraatioloki db url]
+  "Hakee kanavasillat Taitorakennerekisteristä. Kutsu tehdään 25 kertaa. Yli 24 000 siltaa haetaan sivu kerrallaan.
+   Yhdellä sivulla palautuu 1000 siltaa. Jos yksi kutsu epäonnistuu, koko integraatioajo epäonnistuu, eikä mitään päivitetä. "
   (log/debug "Päivitetään kanavasiltojen geometriat")
   (integraatiotapahtuma/suorita-integraatio
     db
@@ -144,19 +176,18 @@
     "trex"
     "kanavasillat-haku"
     (fn [konteksti]
-      (dotimes [num 25]
+      (dotimes [num 25] ;; kutsutaan rajapintaa 25 kertaa, jotta kaikki sillta tule
         (let [http-asetukset {:metodi :GET :url (muodosta-sivutettu-url url (+ num 1))} ;; indeksi alkaa nollasta, sivunumerot ykkösestä
-              {vastaus :body} (try
-                                (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-                                (catch Exception e))]
+              {vastaus :body}(integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (if vastaus
             (let [data (cheshire/decode vastaus keyword)]
-              (kasittele-kanavasillat db (suodata-avattavat-sillat data)))
-            (log/debug (str "Kanavasiltoja ei käsitelty, vastausta ei saatu. Sivunumero: " (+ num 1))))))))
+              (kasittele-kanavasillat db (conj (suodata-avattavat-sillat data) (suodata-sillat data))))
+            (log/debug (str "Kanavasiltoja ei palautunut. Sivunumero: " (+ num 1))))))))
   (log/debug "Kanavasiltojen päivitys tehty"))
 
+
 (defn- kanavasiltojen-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
-  (log/debug (format "Ajastetaan kanavasiltojen geometrioiden haku tehtäväksi %s päivän välein osoitteesta: %s."
+  (log/debug (format "Ajastetaan kanavasiltojen geometrioiden haku tehtäväksi %s päivän väl ein osoitteesta: %s."
                      paivitysvali-paivissa
                      url))
   (when (and paivittainen-tarkistusaika paivitysvali-paivissa url)
