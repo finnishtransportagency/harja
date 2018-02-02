@@ -155,6 +155,8 @@
                              :ilmoittaja ilmoittaja}))
         muut-vastaanottajat-set (set (mapcat #(get-in % [:muut-vastaanottajat :vastaanottajat]) yhden-urakan-kohteet))]
 
+    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu)
+
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
        :email email
@@ -190,7 +192,6 @@
   (let [paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)
         tiemerkintaurakoiden-kohteet (group-by :tiemerkintaurakka-id kohteiden-tiedot)]
     ;; Päällystysurakkakohtaiset mailit
-    ;; TODO Implementoi kopio itselle -tuki
     (doseq [urakan-kohteet (vals paallystysurakoiden-kohteet)]
       (kasittele-yhden-urakan-tiemerkityt-kohteet
         {:fim fim :email email
