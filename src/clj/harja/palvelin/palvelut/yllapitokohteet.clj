@@ -242,9 +242,9 @@
         (q/tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti
           db
           {:yllapitokohde_id (:id kohde)
-           :vastaanottajat (get-in kohde :sahkopostitiedot :muut-vastaanottajat)
-           :viesti (get-in kohde :sahkopostitiedot :saate)
-           :kopio_lahettajalle (get-in kohde :sahkopostitiedot :kopio_lahettajalle)})
+           :vastaanottajat (konv/seq->array (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))
+           :viesti (get-in kohde [:sahkopostitiedot :saate])
+           :kopio_lahettajalle (get-in kohde [:sahkopostitiedot :kopio_lahettajalle])})
         (when voi-tallentaa-tiemerkinnan-takarajan?
           (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!
             db
