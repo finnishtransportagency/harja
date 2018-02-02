@@ -43,8 +43,9 @@
 (defonce valitut-toteumat (atom #{}))
 
 (defonce valitut-toteumat-kartalla
-  (reaction<! [toteumat @valitut-toteumat]
-              (hae-toteumien-reitit! @nav/valittu-urakka toteumat)))
+  (reaction<! [toteumat @valitut-toteumat @nav/valittu-urakka]
+              (when @nav/valittu-urakka
+                (hae-toteumien-reitit! (:id @nav/valittu-urakka) toteumat))))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
@@ -70,15 +71,18 @@
         #(valittu-suolatoteuma? %)))))
 
 (defn hae-toteumat [urakka-id [alkupvm loppupvm]]
+  {:pre [(int? urakka-id)]}
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
 
 (defn hae-toteumien-reitit! [urakka-id toteuma-idt]
+  {:pre [(int? urakka-id)]}
   (when (not (empty? toteuma-idt))
     (k/post! :hae-toteumien-reitit {:idt toteuma-idt :urakka-id urakka-id})))
 
 (defn tallenna-toteumat [urakka-id sopimus-id rivit]
+  {:pre [(int? urakka-id)]}
   (let [tallennettavat (into [] (->> rivit
                                      (filter (comp not :koskematon))
                                      (map #(assoc % :paattynyt (:alkanut %)))))]
@@ -124,9 +128,11 @@
                 (hae-teiden-hoitourakoiden-lampotilat valittu-hoitokausi))))
 
 (defn hae-urakan-suolasakot-ja-lampotilat [urakka-id]
+  {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-suolasakot-ja-lampotilat urakka-id))
 
 (defn aseta-suolasakon-kaytto [urakka-id kaytossa?]
+  {:pre [(int? urakka-id)]}
   (k/post! :aseta-suolasakon-kaytto {:urakka-id urakka-id
                                      :kaytossa? kaytossa?}))
 

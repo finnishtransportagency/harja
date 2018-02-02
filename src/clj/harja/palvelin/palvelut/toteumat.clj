@@ -782,6 +782,7 @@
            karttakuvat :karttakuvat
            tierekisteri :tierekisteri
            :as this}]
+    (assert (some? db-replica))
     (when karttakuvat
       (karttakuvat/rekisteroi-karttakuvan-lahde!
         karttakuvat :kokonaishintainen-toteuma
