@@ -760,7 +760,8 @@ WHERE
 
 -- name: tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti
 INSERT INTO odottava_sahkoposti (tyyppi, yllapitokohde_id, vastaanottajat, viesti, kopio_lahettajalle)
-    VALUES ('tiemerkinta_valmistunut'::odottava_sahkoposti_tyyppi, :yllapitokohde_id, vastaanottajat::TEXT[], viesti, kopio_lahettajalle);
+    VALUES ('tiemerkinta_valmistunut'::odottava_sahkoposti_tyyppi, :yllapitokohde_id,
+            :vastaanottajat::TEXT[], :viesti, :kopio_lahettajalle);
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
