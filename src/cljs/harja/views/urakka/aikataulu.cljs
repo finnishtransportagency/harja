@@ -335,7 +335,7 @@
                            (if (and (= (second (:drag drag)) :tiemerkinta)
                                     (not (pvm/sama-pvm? (::aikajana/loppu drag) (::aikajana/alkup-loppu drag))))
                              (reset! tiedot/tiemerkinta-valmis-modal-data
-                                     ;; TODO Tietojen lähetys palvelimelle, tallennuksen yhteydessä?
+                                     ;; TODO Osaa yhdistää annetut mailitiedot palvelimen payloadiin myös tässä
                                      {:valmis-fn valmis!
                                       :peru-fn peru!
                                       :nakyvissa? true
