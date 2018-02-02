@@ -724,11 +724,15 @@ SELECT
   pu.sampoid             AS "paallystysurakka-sampo-id",
   tu.id                  AS "tiemerkintaurakka-id",
   tu.nimi                AS "tiemerkintaurakka-nimi",
-  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
+  tu.sampoid             AS "tiemerkintaurakka-sampo-id",
+  os.vastaanottajat      AS sahkopostitiedot_vastaanottajat,
+  os.viesti              AS sahkopostitiedot_viesti,
+  os.kopio_lahettajalle  AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
   LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN odottava_sahkoposti os ON os.yllapitokohde_id = ypk.id
 WHERE ypk.id IN (:idt);
 
 -- name: hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen
@@ -755,8 +759,8 @@ WHERE
   ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
 
 -- name: tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti
-INSERT INTO odottava_sahkoposti (yllapitokohde_id, vastaanottajat, viesti, kopio_lahettajalle)
-    VALUES (:yllapitokohde_id, vastaanottajat::TEXT[], viesti, kopio_lahettajalle);
+INSERT INTO odottava_sahkoposti (tyyppi, yllapitokohde_id, vastaanottajat, viesti, kopio_lahettajalle)
+    VALUES ('tiemerkinta_valmistunut'::odottava_sahkoposti_tyyppi, :yllapitokohde_id, vastaanottajat::TEXT[], viesti, kopio_lahettajalle);
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
