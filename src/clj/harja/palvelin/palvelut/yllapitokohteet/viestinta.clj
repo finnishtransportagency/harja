@@ -118,7 +118,7 @@
   nakokulma           :paallystys tai :tiemerkinta, kertoo mistä näkökulmasta valmistumista tarkastellaan,
                       vaikuttaa viestin ulkoasuun.
   urakka-sampo-id     on sen urakan sampo-id, jolle maili on tarkoitus lähettää"
-  [{:keys [fim email yhden-urakan-kohteet ilmoittaja nakokulma urakka-sampo-id sahkopostitiedot]}]
+  [{:keys [fim email yhden-urakan-kohteet ilmoittaja nakokulma urakka-sampo-id]}]
   (let [valmistumispvmt (zipmap (map :id yhden-urakan-kohteet)
                                 (map :aikataulu-tiemerkinta-loppu yhden-urakan-kohteet))
         eka-kohde (first yhden-urakan-kohteet)
@@ -154,9 +154,7 @@
                                             :tr-loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
                              :tiemerkinta-valmis (get valmistumispvmt (:id eka-kohde))
                              :ilmoittaja ilmoittaja}))
-        muut-vastaanottajat-set (set (mapcat :muut-vastaanottajat sahkopostitiedot))]
-
-    (log/debug "VALAMISTUNNEET KOHTEET: " yhden-urakan-kohteet)
+        muut-vastaanottajat-set (set (mapcat #(get-in % [:muut-vastaanottajat :vastaanottajat]) yhden-urakan-kohteet))]
 
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
@@ -164,7 +162,24 @@
        :urakka-sampoid urakka-sampo-id
        :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
        :viesti-otsikko viestin-otsikko
-       :viesti-body viestin-vartalo})))
+       :viesti-body viestin-vartalo})
+
+    (doseq [muu-vastaanottaja muut-vastaanottajat-set]
+      (try
+        (let [vastaanottajan-kohde-idt (set (map :id
+                                                 (filter #((get-in % [:muut-vastaanottajat :vastaanottajat]) muu-vastaanottaja)
+                                                         yhden-urakan-kohteet)))
+              vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
+
+          #_(sahkoposti/laheta-viesti!
+              email
+              (sahkoposti/vastausosoite email)
+              muu-vastaanottaja
+              (str "Harja: " viestin-otsikko)
+              viestin-vartalo))
+        (catch Exception e
+          (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                             muu-vastaanottaja (pr-str e))))))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Käy kohteet läpi päällystys- sekä tiemerkintäurakkakohtaisesti ja

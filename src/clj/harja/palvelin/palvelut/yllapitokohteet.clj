@@ -240,6 +240,7 @@
            :id (:id kohde)
            :suorittava_tiemerkintaurakka tiemerkintaurakka-id})
         (when-not (empty? (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))
+          ;; TODO Poista vanha rivi ensix!
           (q/tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti<!
             db
             {:yllapitokohde_id (:id kohde)
