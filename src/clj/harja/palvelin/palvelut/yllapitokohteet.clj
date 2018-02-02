@@ -258,7 +258,6 @@
       (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
         {:kayttaja user :fim fim
          :email email
-         ;; TODO Hae vain ne joiden valmistumispvm nyt tai aiemmin
          :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                                           db (map :id mailattavat-kohteet)))}))))
 
