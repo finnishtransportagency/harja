@@ -229,11 +229,7 @@
                                          ;; loppupvm ei generoi maililähetystä (ajastettu taski käsittelee ne myöhemmin).
                                          (pvm/joda-timeksi (pvm/nyt))
                                          (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
-                                      valmistuneet-kohteet)
-          sahkopostitiedot (map (fn [kohde]
-                                  (assoc (:sahkopostitiedot kohde)
-                                    :kohde-id (:id kohde)))
-                                mailattavat-kohteet)]
+                                      valmistuneet-kohteet)]
 
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
@@ -256,6 +252,7 @@
              :id (:id kohde)
              :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
 
+      ;; Poista kannasta välitetyt viestit
       (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
         {:kayttaja user :fim fim
          :email email
