@@ -24,16 +24,11 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn nayta-toteumat-kartalla [toteumat]
-  (let [idt (map :tid toteumat)]
-    (nav/vaihda-kartan-koko! :L)
-    (reset! tiedot/valitut-toteumat
-            (into #{} (concat @tiedot/valitut-toteumat idt))))
-  (reset! tiedot/valittu-suolatoteuma (first toteumat)))
+  (nav/vaihda-kartan-koko! :L)
+  (tiedot/valitse-suolatoteumat toteumat))
 
 (defn piilota-toteumat-kartalla [toteumat]
-  (let [idt (map :tid toteumat)]
-    (reset! tiedot/valitut-toteumat
-            (into #{} (remove (into #{} idt) @tiedot/valitut-toteumat)))))
+  (tiedot/poista-valituista-suolatoteumista toteumat))
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid
@@ -49,15 +44,15 @@
      :leveys 7
      :komponentti (fn [toteuma]
                     [:div
-                     [(if (contains? @tiedot/valitut-toteumat (:tid toteuma))
+                     [(if (tiedot/valittu-suolatoteuma? toteuma)
                         :button.nappi-toissijainen.nappi-grid
                         :button.nappi-ensisijainen.nappi-grid)
-                      {:on-click #(if (contains? @tiedot/valitut-toteumat (:tid toteuma))
+                      {:on-click #(if (tiedot/valittu-suolatoteuma? toteuma)
                                     (piilota-toteumat-kartalla [toteuma])
                                     (nayta-toteumat-kartalla [toteuma]))}
                       (ikonit/ikoni-ja-teksti
                         (ikonit/map-marker)
-                        (if (contains? @tiedot/valitut-toteumat (:tid toteuma))
+                        (if (tiedot/valittu-suolatoteuma? toteuma)
                           "Piilota kartalta"
                           "Näytä kartalla"))]])}]
    (map-indexed (fn [i toteuma]
@@ -110,16 +105,14 @@
       :hae #(if (muokattava? %)
               (:lisatieto %)
               (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
-                   (count (map :toteumat @tiedot/toteumat)) ")"))}
+                   (count (:toteumat %)) ")"))}
      {:otsikko ""
       :nimi :nayta-kartalla
       :tyyppi :komponentti
       :leveys "10%"
       :komponentti (fn [rivi]
                      (let [toteumat (:toteumat rivi)
-                           valittu? #(some (fn [toteuma]
-                                             (contains? @tiedot/valitut-toteumat (:tid toteuma)))
-                                           toteumat)]
+                           valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
                        (when (not (empty? toteumat))
                          [:div
                           [(if (valittu?)
