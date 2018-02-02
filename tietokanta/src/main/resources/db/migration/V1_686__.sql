@@ -7,7 +7,7 @@ CREATE TABLE odottava_sahkoposti (
   yllapitokohde_id   INTEGER REFERENCES yllapitokohde (id) NOT NULL,
   vastaanottajat     TEXT []                               NOT NULL,
   viesti             TEXT                                  NOT NULL,
-  kopio_lahettajalle TEXT -- Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)
+  kopio_lahettajalle BOOLEAN NOT NULL DEFAULT FALSE -- Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)
 );
 
 -- Vain yksi samantyyppinen rivi per ylläpitokohde
