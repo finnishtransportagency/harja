@@ -9,3 +9,6 @@ CREATE TABLE odottava_sahkoposti (
   viesti             TEXT                                  NOT NULL,
   kopio_lahettajalle TEXT -- Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)
 );
+
+-- Vain yksi samantyyppinen rivi per ylläpitokohde
+ALTER TABLE odottava_sahkoposti ADD CONSTRAINT uniikki_yllapitokohde UNIQUE (yllapitokohde_id, tyyppi);
