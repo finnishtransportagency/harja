@@ -202,7 +202,7 @@
             vanha-tiemerkintapvm
             (json/pvm-string->joda-date (:valmis-tiemerkintaan aikataulu)))
       (let [kohteen-tiedot (first (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                    db {:idt [kohde-id]}))
+                                    db [kohde-id]))
             kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
         (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
           {:fim fim :email email :kohteen-tiedot kohteen-tiedot
@@ -223,7 +223,7 @@
                               :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
                                                              (:tiemerkinta-valmis aikataulu))}
         nykyinen-kohde-kannassa (first (into [] (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                                  db {:idt [kohde-id]})))
+                                                  db [kohde-id])))
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
                                [nykyinen-kohde-kannassa]
                                [kohteen-uudet-tiedot])]
@@ -240,8 +240,7 @@
       {:kayttaja kayttaja :fim fim
        :email email
        :valmistuneet-kohteet (into [] (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                        db
-                                        {:idt (map :id valmistuneet-kohteet)}))})
+                                        db (map :id valmistuneet-kohteet)))})
     {}))
 
 (defn- paivita-yllapitokohteen-aikataulu

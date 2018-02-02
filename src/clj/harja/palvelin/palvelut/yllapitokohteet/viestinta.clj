@@ -156,6 +156,8 @@
                              :ilmoittaja ilmoittaja}))
         muut-vastaanottajat-set (set (mapcat :muut-vastaanottajat sahkopostitiedot))]
 
+    (log/debug "VALAMISTUNNEET KOHTEET: " yhden-urakan-kohteet)
+
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
        :email email

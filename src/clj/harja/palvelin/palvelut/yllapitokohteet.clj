@@ -153,7 +153,7 @@
       (when (or (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
                 (viestinta/valita-tieto-peru-valmius-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm))
         (let [kohteen-tiedot (first (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                      db {:idt [kohde-id]}))
+                                      db [kohde-id]))
               kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
           (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
             {:fim fim :email email :kohteen-tiedot kohteen-tiedot
@@ -221,7 +221,7 @@
     (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db tiemerkintaurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
     (let [nykyiset-kohteet-kannassa (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                               db {:idt (map :id kohteet)}))
+                                               db (map :id kohteet)))
           valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)
           mailattavat-kohteet (filter #(pvm/sama-tai-jalkeen?
                                          ;; Asiakkaan pyynnöstä toteutettu niin, että maili lähtee vain jos
@@ -260,8 +260,7 @@
         {:kayttaja user :fim fim
          :email email
          :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                          db
-                                          {:idt (map :id mailattavat-kohteet)}))}))))
+                                          db (map :id mailattavat-kohteet)))}))))
 
 (declare tallenna-yllapitokohteiden-tarkka-aikataulu)
 
