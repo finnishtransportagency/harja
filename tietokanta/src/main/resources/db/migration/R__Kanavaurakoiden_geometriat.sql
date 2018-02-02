@@ -11,8 +11,8 @@ BEGIN
   FROM (SELECT
           linkki."urakka-id"                                             AS id,
           ST_BUFFER(ST_SIMPLIFY(ST_COLLECT(kohde.sijainti), 3000), 3000) AS urakan_alue
-        FROM kan_kohde kohde
-          JOIN kan_kohde_urakka linkki ON kohde.id = linkki."kohde-id"
+        FROM kan_kohde_urakka linkki
+          LEFT JOIN kan_kohde kohde ON linkki."kohde-id" = kohde.id AND kohde.poistettu IS NOT TRUE
         GROUP BY linkki."urakka-id") AS geometriat
   WHERE urakka.id = geometriat.id;
 
@@ -20,7 +20,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION paivita_osien_kohteiden_geometriat() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION paivita_osien_kohteiden_geometriat()
+  RETURNS TRIGGER AS $$
 BEGIN
   UPDATE kan_kohde
   SET
@@ -28,10 +29,14 @@ BEGIN
     muokattu = NOW()
   FROM (SELECT
           kohde.id,
-          ST_BUFFER(ST_SIMPLIFY(ST_COLLECT(osa.sijainti), 3000), 3000) AS kohteen_sijainti
-        FROM kan_kohteenosa osa
-          JOIN kan_kohde kohde ON osa."kohde-id" = kohde.id
-       GROUP BY kohde.id) AS geometriat
+          ST_CENTROID(ST_COLLECT(osa.sijainti)) AS kohteen_sijainti
+        FROM kan_kohde kohde
+          LEFT JOIN kan_kohteenosa osa ON kohde.id = osa."kohde-id"
+                                          AND osa.poistettu IS NOT TRUE
+                                          AND kohde.poistettu IS NOT TRUE
+        WHERE
+          osa.poistettu IS NOT TRUE
+        GROUP BY kohde.id) AS geometriat
   WHERE kan_kohde.id = geometriat.id;
 
   RETURN NEW;
