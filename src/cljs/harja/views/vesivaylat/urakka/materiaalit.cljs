@@ -107,9 +107,11 @@
        :validoi [(fn [nimi]
                    (when (some #(= nimi (::m/nimi %)) materiaalilistaus)
                      "Materiaali on jo käytössä urakassa"))]}
-      {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :placeholder maara-placeholder
-       :palstoja 1 :kokonaisluku? true
-       :pakollinen? true ::lomake/col-luokka "col-lg-6"}
+      (lomake/rivi
+        {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :placeholder maara-placeholder
+         :kokonaisluku? true :pakollinen? true ::lomake/col-luokka "col-lg-6"}
+        {:otsikko "Yksikkö" :nimi ::m/yksikko :tyyppi :string :pakollinen? true
+         ::lomake/col-luokka "col-lg-6"})
       {:otsikko "Hälytysraja" :nimi ::m/halytysraja :tyyppi :numero :palstoja 1
        ::lomake/col-luokka "col-lg-6" :pakollinen? false}
       {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm :palstoja 1 ::lomake/col-luokka "col-lg-6"
@@ -237,6 +239,7 @@
            {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
            {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
            {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
+           {:otsikko "Yksikkö" :nimi ::m/yksikko :tyyppi :string :leveys 10 :muokattava? (constantly false)}
            {:otsikko "Hälytysraja" :nimi ::m/halytysraja :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
            (when voi-kirjata?
              {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
