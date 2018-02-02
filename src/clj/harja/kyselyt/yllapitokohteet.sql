@@ -763,7 +763,7 @@ INSERT INTO odottava_sahkoposti (tyyppi, yllapitokohde_id, vastaanottajat, saate
     VALUES ('tiemerkinta_valmistunut'::odottava_sahkoposti_tyyppi, :yllapitokohde_id,
             :vastaanottajat::TEXT[], :saate, :kopio_lahettajalle);
 
--- name: poista-valmistuneen-tiemerkinnan-odottava-sahkoposti
+-- name: poista-valmistuneen-tiemerkinnan-odottava-sahkoposti!
 DELETE FROM odottava_sahkoposti WHERE yllapitokohde_id = :yllapitokohde_id AND tyyppi = 'tiemerkinta_valmistunut'::odottava_sahkoposti_tyyppi;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
