@@ -304,10 +304,11 @@
 
 (defn valita-tieto-tiemerkinnan-valmistumisesta
   "Välittää tiedon annettujen kohteiden tiemerkinnän valmistumisesta."
-  [{:keys [kayttaja fim email valmistuneet-kohteet]}]
+  [{:keys [db kayttaja fim email valmistuneet-kohteet viestit-lahetetty-fn]}]
   (laheta-sposti-tiemerkinta-valmis {:fim fim :email email
                                      :kohteiden-tiedot valmistuneet-kohteet
-                                     :ilmoittaja kayttaja}))
+                                     :ilmoittaja kayttaja})
+  (q/poista-valmistuneen-tiemerkinnan-odottava-sahkoposti! db {:yllapitokohde_id (map :id valmistuneet-kohteet)}))
 
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
