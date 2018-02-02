@@ -245,7 +245,7 @@
             db
             {:yllapitokohde_id (:id kohde)
              :vastaanottajat (konv/seq->array (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))
-             :viesti (get-in kohde [:sahkopostitiedot :saate])
+             :saate (get-in kohde [:sahkopostitiedot :saate])
              :kopio_lahettajalle (boolean (get-in kohde [:sahkopostitiedot :kopio_lahettajalle]))}))
         (when voi-tallentaa-tiemerkinnan-takarajan?
           (q/tallenna-yllapitokohteen-valmis-viimeistaan-tiemerkintaurakasta!

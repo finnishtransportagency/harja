@@ -58,7 +58,7 @@
                                ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
                                ["Merkitsijän urakka" paallystysurakka-nimi]])])))
 
-(defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite saate
+(defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite muut-vastaanottajat
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (when (some nil? [paallystysurakka-nimi kohde-nimi kohde-osoite tiemerkinta-valmis ilmoittaja
                     tiemerkintaurakka-nimi])
@@ -77,7 +77,7 @@
                                             {:teksti-tie? false})]
                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
                              (when ilmoittaja ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)])
-                             (when saate ["Saate" saate])])]))
+                             (when-let [saate (:saate muut-vastaanottajat)] ["Saate" saate])])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
   (html
@@ -86,7 +86,7 @@
            "Seuraavat kohteet on merkitty tiemerkityiksi tänään:"
            "Seuraaville kohteille on merkitty tiemerkinnän valmistumispäivämäärä:")]
      (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                   tiemerkintaurakka-nimi paallystysurakka-nimi saate] :as kohde} kohteet]
+                   tiemerkintaurakka-nimi paallystysurakka-nimi muut-vastaanottajat] :as kohde} kohteet]
        (do
          (when (some nil? [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                            tiemerkintaurakka-nimi paallystysurakka-nimi])
@@ -102,7 +102,8 @@
                                                        :tr-loppuetaisyys tr-loppuetaisyys}
                                                       {:teksti-tie? false})]
                                        ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
-                                       (when saate ["Saate" saate])])
+                                       (when-let [saate (:saate muut-vastaanottajat)]
+                                         ["Saate" saate])])
           [:br]]))
      [:div
       (when ilmoittaja
@@ -139,10 +140,8 @@
                                       (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
                                   (fmt/pvm-opt (get valmistumispvmt (:id eka-kohde)))))
         viestin-vartalo (if (> (count yhden-urakan-kohteet) 1)
-                          ;; TODO SAATE
                           (viesti-kohteiden-tiemerkinta-valmis yhden-urakan-kohteet valmistumispvmt ilmoittaja)
                           (viesti-kohteen-tiemerkinta-valmis
-                            ;; TODO SAATE
                             {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
                              :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
                              :urakan-nimi (:paallystysurakka-nimi eka-kohde)
@@ -171,7 +170,7 @@
                                                          yhden-urakan-kohteet)))
               vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
 
-          #_(sahkoposti/laheta-viesti!
+          (sahkoposti/laheta-viesti!
               email
               (sahkoposti/vastausosoite email)
               muu-vastaanottaja
