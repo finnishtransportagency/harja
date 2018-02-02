@@ -254,10 +254,11 @@
              :id (:id kohde)
              :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
 
-      ;; Poista kannasta välitetyt viestit
+      ;; TODO Poista kannasta välitetyt viestit
       (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
         {:kayttaja user :fim fim
          :email email
+         ;; TODO Hae vain ne joiden valmistumispvm nyt tai aiemmin
          :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                                           db (map :id mailattavat-kohteet)))}))))
 
