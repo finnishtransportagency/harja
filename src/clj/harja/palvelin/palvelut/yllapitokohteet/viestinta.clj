@@ -163,7 +163,7 @@
                                  :ilmoittaja ilmoittaja}))))
         muut-vastaanottajat-set (set (mapcat #(get-in % [:muut-vastaanottajat :vastaanottajat]) yhden-urakan-kohteet))]
 
-    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu)
+    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?)
 
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
