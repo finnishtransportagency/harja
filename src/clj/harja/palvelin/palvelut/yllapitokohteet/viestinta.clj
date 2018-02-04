@@ -199,7 +199,7 @@
   (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str (map :id kohteiden-tiedot))))
   (let [paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)
         tiemerkintaurakoiden-kohteet (group-by :tiemerkintaurakka-id kohteiden-tiedot)]
-    ;; TODO Muille vastaanottajille menee maili tuplana, yksi kummastakin "näkökulmasta"
+    ;; TODO Muille vastaanottajille menee maili tuplana, yksi kummastakin "näkökulmasta". Pitäisi mennä vain tiemerkinnän näkökulmasta.
     ;; Päällystysurakkakohtaiset mailit
     (doseq [urakan-kohteet (vals paallystysurakoiden-kohteet)]
       (kasittele-yhden-urakan-tiemerkityt-kohteet
