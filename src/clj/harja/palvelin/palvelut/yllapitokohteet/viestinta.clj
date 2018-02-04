@@ -65,8 +65,6 @@
                     tiemerkintaurakka-nimi])
     (log/error "Lähetetään sähköposti tiemerkintäkohteen valmistumisesta puutteellisilla tiedoilla: " tiedot))
 
-  (log/debug "KOHDE VALMIS TIEDOT: " tiedot)
-
   (html
     [:div
      [:p (sanitoi (format "Kohteen %s tiemerkintä on valmistunut %s."
@@ -84,7 +82,6 @@
                                ["Saate" saate])])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
-  (log/debug "KOHTEET VALMIS TIEDOT: " kohteet) ; TODO Saate ei näy
   (html
     [:div
      [:p (if (every? #(pvm/tanaan? %) (vals valmistumispvmt))
@@ -155,6 +152,7 @@
                                  :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
                                  :urakan-nimi (:paallystysurakka-nimi eka-kohde)
                                  :kohde-nimi (:kohde-nimi eka-kohde)
+                                 :muut-vastaanottajat (:muut-vastaanottajat eka-kohde)
                                  :kohde-osoite {:tr-numero (:tr-numero eka-kohde)
                                                 :tr-alkuosa (:tr-alkuosa eka-kohde)
                                                 :tr-alkuetaisyys (:tr-alkuetaisyys eka-kohde)
