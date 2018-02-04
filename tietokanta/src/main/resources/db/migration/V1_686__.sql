@@ -1,14 +1,50 @@
--- Lisää taulu, johon tullaan tallentamaan odottavien sähköpostien tietoja (aluksi tiemerkinnän valmistuminen)
-CREATE TYPE ODOTTAVA_SAHKOPOSTI_TYYPPI AS ENUM ('tiemerkinta_valmistunut');
+DROP TRIGGER IF EXISTS tg_paivita_urakan_materiaalin_kaytto_hoitoluokittain ON toteuma;
 
-CREATE TABLE odottava_sahkoposti (
-  id                 SERIAL PRIMARY KEY,
-  tyyppi             ODOTTAVA_SAHKOPOSTI_TYYPPI            NOT NULL,
-  yllapitokohde_id   INTEGER REFERENCES yllapitokohde (id) NOT NULL,
-  vastaanottajat     TEXT []                               NOT NULL,
-  saate             TEXT,
-  kopio_lahettajalle BOOLEAN NOT NULL DEFAULT FALSE -- Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)
-);
+-- Vähentää toteuman poistetuksi (HUOM! UPDATE, ei DELETE) merkitsevän transaktion lopuksi materiaalit
+CREATE OR REPLACE FUNCTION vahenna_urakan_materiaalin_kayttoa_hoitoluokittain ()
+  RETURNS TRIGGER AS $$
+DECLARE
+  rivi RECORD;
+  u INTEGER;
+BEGIN
+  -- Jos toteuma on luotu tässä transaktiossa, ei käsitellä uudelleen päivitystä
+  IF TG_OP = 'UPDATE' AND NEW.luotu = current_timestamp THEN
+    RETURN NEW;
+  END IF;
+  --
+  u := NEW.urakka;
+  FOR rivi IN SELECT SUM(rm.maara) AS summa,
+                rm.materiaalikoodi,
+                rp.aika::DATE,
+                     COALESCE(rp.talvihoitoluokka, 100) AS talvihoitoluokka
+              FROM toteuman_reittipisteet tr
+                JOIN LATERAL unnest(tr.reittipisteet) rp ON true
+                JOIN LATERAL unnest(rp.materiaalit) rm ON true
+              WHERE tr.toteuma = NEW.id
+              GROUP BY rm.materiaalikoodi, rp.aika::DATE, rp.talvihoitoluokka
+  LOOP
+    IF NEW.poistettu IS TRUE THEN
+      RAISE NOTICE 'poistetaan toteuma, joten vähennettään materiaalia % määrä %', rivi.materiaalikoodi, rivi.summa;
+      -- Toteuma on merkitty poistetuksi, vähennetään määrää
+      UPDATE urakan_materiaalin_kaytto_hoitoluokittain
+      SET maara = maara - rivi.summa
+      WHERE pvm = rivi.aika AND
+            materiaalikoodi = rivi.materiaalikoodi AND
+            talvihoitoluokka = rivi.talvihoitoluokka AND
+            urakka = u;
+    END IF;
+  END LOOP;
 
--- Vain yksi samantyyppinen rivi per ylläpitokohde
-ALTER TABLE odottava_sahkoposti ADD CONSTRAINT uniikki_yllapitokohde UNIQUE (yllapitokohde_id, tyyppi);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Toteuman luontitransaktion lopuksi päivitetään materiaalin käyttö
+CREATE CONSTRAINT TRIGGER tg_vahenna_urakan_materiaalin_kayttoa_hoitoluokittain
+AFTER UPDATE
+  ON toteuma
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+WHEN (NEW.lahde = 'harja-api')
+EXECUTE PROCEDURE vahenna_urakan_materiaalin_kayttoa_hoitoluokittain();
