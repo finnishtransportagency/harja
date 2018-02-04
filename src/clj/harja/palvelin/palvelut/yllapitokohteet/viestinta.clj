@@ -15,7 +15,8 @@
             [harja.tyokalut.html :refer [sanitoi]]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.pvm :as pvm]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.kyselyt.konversio :as konv])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util Date)))
 
@@ -317,7 +318,7 @@
   (laheta-sposti-tiemerkinta-valmis {:fim fim :email email
                                      :kohteiden-tiedot valmistuneet-kohteet
                                      :ilmoittaja kayttaja})
-  (q/poista-valmistuneen-tiemerkinnan-odottava-sahkoposti! db {:yllapitokohde_id (map :id valmistuneet-kohteet)}))
+  (q/poista-valmistuneen-tiemerkinnan-odottava-sahkoposti! db {:yllapitokohde_id (konv/seq->array (map :id valmistuneet-kohteet))}))
 
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
