@@ -164,6 +164,7 @@
         muut-vastaanottajat-set (set (mapcat #(get-in % [:muut-vastaanottajat :vastaanottajat]) yhden-urakan-kohteet))]
 
     ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?)
+    ;; TODO Kopioon esim. "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
 
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
@@ -269,7 +270,7 @@
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
         (viestinta/laheta-sahkoposti-itselle
           {:email email
-           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle ja urakoitsijan vastuuhenkilölle."
+           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle ja rakennuttajakonsultille."
            :sahkoposti (:sahkoposti ilmoittaja)
            :viesti-otsikko viestin-otsikko
            :viesti-body viestin-vartalo})))))
