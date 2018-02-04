@@ -579,7 +579,7 @@
                                     :valmis-pvm arvo}]
                          :urakka-id urakka-id
                          :vuosi vuosi
-                         ;; TODO Tarkista kannasta onko jo olemassa mailitiedot
+                         ;; TODO Tarkista kannasta onko jo olemassa mailitiedot, tai rivillä jos modali avattiin jo kerran
                          :lomakedata {:kopio-itselle? true}})
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
