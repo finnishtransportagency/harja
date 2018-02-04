@@ -124,39 +124,43 @@
                       vaikuttaa viestin ulkoasuun.
   urakka-sampo-id     on sen urakan sampo-id, jolle maili on tarkoitus lähettää"
   [{:keys [fim email yhden-urakan-kohteet ilmoittaja nakokulma urakka-sampo-id]}]
-  (let [valmistumispvmt (zipmap (map :id yhden-urakan-kohteet)
-                                (map :aikataulu-tiemerkinta-loppu yhden-urakan-kohteet))
-        eka-kohde (first yhden-urakan-kohteet)
-        nakokulma-urakka-nimi (case nakokulma
-                                :paallystys (:paallystysurakka-nimi eka-kohde)
-                                :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))
-        eka-kohde-osoite {:numero (:tr-numero eka-kohde)
-                          :alkuosa (:tr-alkuosa eka-kohde)
-                          :alkuetaisyys (:tr-alkuetaisyys eka-kohde)
-                          :loppuosa (:tr-loppuosa eka-kohde)
-                          :loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
-        viestin-otsikko (if (> (count yhden-urakan-kohteet) 1)
-                          (format "Urakan '%s' kohteita merkitty tiemerkityksi"
-                                  nakokulma-urakka-nimi)
-                          (format "Urakan '%s' kohteen '%s' tiemerkintä on merkitty valmistuneeksi %s"
-                                  nakokulma-urakka-nimi
-                                  (or (:kohde-nimi eka-kohde)
-                                      (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
-                                  (fmt/pvm-opt (get valmistumispvmt (:id eka-kohde)))))
-        viestin-vartalo (if (> (count yhden-urakan-kohteet) 1)
-                          (viesti-kohteiden-tiemerkinta-valmis yhden-urakan-kohteet valmistumispvmt ilmoittaja)
-                          (viesti-kohteen-tiemerkinta-valmis
-                            {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
-                             :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
-                             :urakan-nimi (:paallystysurakka-nimi eka-kohde)
-                             :kohde-nimi (:kohde-nimi eka-kohde)
-                             :kohde-osoite {:tr-numero (:tr-numero eka-kohde)
-                                            :tr-alkuosa (:tr-alkuosa eka-kohde)
-                                            :tr-alkuetaisyys (:tr-alkuetaisyys eka-kohde)
-                                            :tr-loppuosa (:tr-loppuosa eka-kohde)
-                                            :tr-loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
-                             :tiemerkinta-valmis (get valmistumispvmt (:id eka-kohde))
-                             :ilmoittaja ilmoittaja}))
+  (let [valmistumispvmt (fn [kohteet]
+                          (zipmap (map :id kohteet)
+                                  (map :aikataulu-tiemerkinta-loppu kohteet)))
+        viestin-otsikko (fn [kohteet]
+                          (let [eka-kohde (first kohteet)
+                                eka-kohde-osoite {:numero (:tr-numero eka-kohde)
+                                                  :alkuosa (:tr-alkuosa eka-kohde)
+                                                  :alkuetaisyys (:tr-alkuetaisyys eka-kohde)
+                                                  :loppuosa (:tr-loppuosa eka-kohde)
+                                                  :loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
+                                nakokulma-urakka-nimi (case nakokulma
+                                                        :paallystys (:paallystysurakka-nimi eka-kohde)
+                                                        :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))]
+                            (if (> (count kohteet) 1)
+                              (format "Urakan '%s' kohteita merkitty tiemerkityksi"
+                                      nakokulma-urakka-nimi)
+                              (format "Urakan '%s' kohteen '%s' tiemerkintä on merkitty valmistuneeksi %s"
+                                      nakokulma-urakka-nimi
+                                      (or (:kohde-nimi eka-kohde)
+                                          (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
+                                      (fmt/pvm-opt (get (valmistumispvmt kohteet) (:id eka-kohde)))))))
+        viestin-vartalo (fn [kohteet]
+                          (let [eka-kohde (first kohteet)]
+                            (if (> (count kohteet) 1)
+                              (viesti-kohteiden-tiemerkinta-valmis kohteet (valmistumispvmt kohteet) ilmoittaja)
+                              (viesti-kohteen-tiemerkinta-valmis
+                                {:paallystysurakka-nimi (:paallystysurakka-nimi eka-kohde)
+                                 :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
+                                 :urakan-nimi (:paallystysurakka-nimi eka-kohde)
+                                 :kohde-nimi (:kohde-nimi eka-kohde)
+                                 :kohde-osoite {:tr-numero (:tr-numero eka-kohde)
+                                                :tr-alkuosa (:tr-alkuosa eka-kohde)
+                                                :tr-alkuetaisyys (:tr-alkuetaisyys eka-kohde)
+                                                :tr-loppuosa (:tr-loppuosa eka-kohde)
+                                                :tr-loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
+                                 :tiemerkinta-valmis (get (valmistumispvmt kohteet) (:id eka-kohde))
+                                 :ilmoittaja ilmoittaja}))))
         muut-vastaanottajat-set (set (mapcat #(get-in % [:muut-vastaanottajat :vastaanottajat]) yhden-urakan-kohteet))]
 
     ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu)
@@ -166,8 +170,8 @@
        :email email
        :urakka-sampoid urakka-sampo-id
        :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
-       :viesti-otsikko viestin-otsikko
-       :viesti-body viestin-vartalo})
+       :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
+       :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
 
     (doseq [muu-vastaanottaja muut-vastaanottajat-set]
       (try
@@ -176,13 +180,12 @@
                                                          yhden-urakan-kohteet)))
               vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
 
-          ;; TODO Käytä vastaanottajan-kohteet, mailissa mainitaan vain ne
           (sahkoposti/laheta-viesti!
             email
             (sahkoposti/vastausosoite email)
             muu-vastaanottaja
-            (str "Harja: " viestin-otsikko)
-            viestin-vartalo))
+            (str "Harja: " (viestin-otsikko vastaanottajan-kohteet))
+            (viestin-vartalo vastaanottajan-kohteet)))
         (catch Exception e
           (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
                              muu-vastaanottaja (pr-str e))))))))
