@@ -228,6 +228,15 @@
 
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
+(defn- materiaalin-yksikko
+  [materiaalit materiaali-hinta]
+  (some #(when (first (filter (fn [materiaali-kirjaus]
+                                (= (::hinta/materiaali-id materiaali-hinta)
+                                   (::materiaali/id materiaali-kirjaus)))
+                              (::materiaali/muutokset %)))
+           (::materiaali/yksikko %))
+        materiaalit))
+
 (defn- materiaali-hinnoittelurivi
   [e! materiaali-hinta materiaalit]
   [:tr
@@ -241,12 +250,7 @@
                          [kentta-hinnalle e! materiaali-hinta ::hinta/maara
                           {:tyyppi :positiivinen-numero}])]
    [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
-          (some #(when (first (keep (fn [materiaali-kirjaus]
-                                      (= (::hinta/materiaali-id materiaali-hinta)
-                                         (::materiaali/id materiaali-kirjaus)))
-                                    (::materiaali/muutokset %)))
-                   (::materiaali/yksikko %))
-                materiaalit)
+          (materiaalin-yksikko materiaalit materiaali-hinta)
           [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
            {:tyyppi :string}])]
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
@@ -400,15 +404,15 @@
        :ikoni (ikonit/livicon-pen)}]
 
      [napit/tallenna
-     "Valmis"
-     #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
-     {:luokka "btn-xs"
-      :disabled (or
-                  (not (tiedot/hinnoittelun-voi-tallentaa? app*))
-                  (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
-                  (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                (:id @nav/valittu-urakka))))}])])
+      "Valmis"
+      #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
+      {:luokka "btn-xs"
+       :disabled (or
+                   (not (tiedot/hinnoittelun-voi-tallentaa? app*))
+                   (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                   (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                 (:id @nav/valittu-urakka))))}])])
 
 (defn tilaajan-footer-napit [e! app* tila]
   [:footer.vv-toimenpiteen-hinnoittelu-footer
