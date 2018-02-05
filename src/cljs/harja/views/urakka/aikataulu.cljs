@@ -582,7 +582,7 @@
                                       :valmis-pvm arvo}]
                            :urakka-id urakka-id
                            :vuosi vuosi
-                           ;; TODO Tarkista kannasta onko jo olemassa mailitiedot lähetettäväksi tulevaisuudessa
+                           ;; TODO Palauta kannasta olemassa mailitiedot kohteille
                            :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
                                         :muut-vastaanottajat (zipmap (iterate inc 1)
                                                                      (map #(-> {:sahkoposti %})
