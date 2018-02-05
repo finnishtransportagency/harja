@@ -146,4 +146,4 @@
                  (reduce + (keep :suolasakko raportin-data))
                  (reduce + (keep :korotus raportin-data))
                  (reduce + (keep :korotettuna raportin-data))])))]
-     [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."]]))
+     [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä. Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön."]]))

@@ -78,6 +78,12 @@ SELECT paivita_sopimuksen_materiaalin_kaytto(
      FROM toteuma
      WHERE id = :toteuma) :: DATE);
 
+--name: paivita-urakan-materiaalin-kaytto-hoitoluokittain
+SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(
+    :urakka::INTEGER,
+    :alkupvm::DATE,
+    :loppupvm::DATE);
+
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
   urakka.nimi             AS "urakka-nimi",
