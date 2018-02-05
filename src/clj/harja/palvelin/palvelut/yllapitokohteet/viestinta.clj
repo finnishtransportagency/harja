@@ -162,10 +162,8 @@
                                  :ilmoittaja ilmoittaja}))))
         muut-vastaanottajat-set (set (mapcat #(get-in % [:sahkopostitiedot :muut-vastaanottajat]) yhden-urakan-kohteet))]
 
-    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?).
-    ;; Kopioon esim. "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
 
-
+    ;; Laitetaan viesti valmistuneista kohteista FIM-käyttäjille.
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
        :email email
@@ -175,6 +173,7 @@
        :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
 
     ;; Muut vastaanottajat voivat periaatteessa olla keitä tahansa. Laitetaan viesti tiemerkinnän näkökulmasta.
+    ;; Laita yksi maili per vastaanottaja ja kerää siihen kaikki ne kohteet, joista tulee informoida ko. osoitetta
     (when (= nakokulma :tiemerkinta)
       (doseq [muu-vastaanottaja muut-vastaanottajat-set]
         (try
@@ -191,7 +190,18 @@
               (viestin-vartalo vastaanottajan-kohteet)))
           (catch Exception e
             (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
-                               muu-vastaanottaja (pr-str e)))))))))
+                               muu-vastaanottaja (pr-str e)))))))
+
+    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?).
+    ;; Kopioon esim. "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
+
+    #_(when (and kopio-itselle? (:sahkoposti ilmoittaja))
+      (viestinta/laheta-sahkoposti-itselle
+        {:email email
+         :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle ja rakennuttajakonsultille."
+         :sahkoposti (:sahkoposti ilmoittaja)
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo}))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Käy kohteet läpi päällystys- sekä tiemerkintäurakkakohtaisesti ja
