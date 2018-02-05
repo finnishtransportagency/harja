@@ -93,9 +93,12 @@
     aikataulu))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
-  (let [aikataulu (->> (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
-                                                              :vuosi vuosi})
-                       (map konv/alaviiva->rakenne))
+  (let [aikataulu (into []
+                        (comp
+                          (map #(konv/array->set % :sahkopostitiedot_vastaanottajat))
+                          (map konv/alaviiva->rakenne))
+                        (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
+                                                               :vuosi vuosi}))
         aikataulu (konv/sarakkeet-vektoriin
                     aikataulu
                     {:tarkkaaikataulu :tarkka-aikataulu})

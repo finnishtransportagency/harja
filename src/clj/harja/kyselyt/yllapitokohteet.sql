@@ -593,13 +593,18 @@ SELECT
   ypk.tr_kaista             AS "tr-kaista",
   ypk.yllapitoluokka,
   tti.id                    AS "tietyoilmoitus-id",
-  paallystysurakka.nimi     AS paallystysurakka
+  paallystysurakka.nimi     AS paallystysurakka,
+  os.vastaanottajat         AS sahkopostitiedot_vastaanottajat,
+  os.saate                  AS sahkopostitiedot_saate,
+  os.kopio_lahettajalle     AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_tarkka_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
-                                                                 AND ypkya.poistettu IS NOT TRUE
+                                                      AND ypkya.poistettu IS NOT TRUE
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
   LEFT JOIN urakka paallystysurakka ON ypk.urakka = paallystysurakka.id
+  LEFT JOIN odottava_sahkoposti os ON os.yllapitokohde_id = ypk.id
+
 WHERE
   ypk.suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(ypk.vuodet) = 0
