@@ -130,14 +130,17 @@
                                  ::m/muutokset
                                  (sort-by ::m/pvm)
                                  first
-                                 ::m/pvm)]
+                                 ::m/pvm)
+        yksikko (->> (filter #(= nimi (::m/nimi %)) listaus)
+                     first
+                     ::m/yksikko)]
     [:div.vv-materiaalin-kirjaus
      [napit/yleinen-ensisijainen "Kirjaa käyttö"
-      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :-))
+      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :- yksikko))
       {:ikoni (ikonit/livicon-minus)
        :luokka "materiaalin-kaytto"}]
      [napit/yleinen-ensisijainen "Kirjaa lisäys"
-      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :+))
+      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :+ yksikko))
       {:ikoni (ikonit/livicon-plus)
        :luokka "materiaalin-lisays"}]
 

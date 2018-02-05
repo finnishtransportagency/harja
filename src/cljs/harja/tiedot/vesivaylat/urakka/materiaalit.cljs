@@ -22,7 +22,7 @@
 (defrecord PeruMateriaalinLisays [])
 (defrecord MuutaAlkuperainenMaara [tiedot])
 
-(defrecord AloitaMateriaalinKirjaus [nimi tyyppi])
+(defrecord AloitaMateriaalinKirjaus [nimi tyyppi yksikko])
 (defrecord PaivitaMateriaalinKirjaus [tiedot])
 (defrecord PoistaMateriaalinKirjaus [tiedot])
 (defrecord KirjaaMateriaali [])
@@ -107,11 +107,12 @@
       (assoc app :tallennus-kaynnissa? true)))
 
   AloitaMateriaalinKirjaus
-  (process-event [{nimi :nimi tyyppi :tyyppi} app]
+  (process-event [{nimi :nimi tyyppi :tyyppi yksikko :yksikko} app]
     (assoc app :kirjaa-materiaali {::m/urakka-id (:urakka-id app)
                                    ::m/nimi nimi
                                    ::m/pvm (pvm/nyt)
-                                   :tyyppi tyyppi}))
+                                   :tyyppi tyyppi
+                                   ::m/yksikko yksikko}))
 
   PaivitaMateriaalinKirjaus
   (process-event [{tiedot :tiedot} app]
