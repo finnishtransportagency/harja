@@ -23,7 +23,8 @@
             [harja.domain.toimenpidekoodi :as tpk]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.domain.vesivaylat.materiaali :as materiaali])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -239,7 +240,15 @@
                          (::hinta/maara materiaali-hinta)
                          [kentta-hinnalle e! materiaali-hinta ::hinta/maara
                           {:tyyppi :positiivinen-numero}])]
-   [:td ""]
+   [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
+          (some #(when (first (keep (fn [materiaali-kirjaus]
+                                      (= (::hinta/materiaali-id materiaali-hinta)
+                                         (::materiaali/id materiaali-kirjaus)))
+                                    (::materiaali/muutokset %)))
+                   (::materiaali/yksikko %))
+                materiaalit)
+          [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
+           {:tyyppi :string}])]
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
    [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
    [:td.keskita
