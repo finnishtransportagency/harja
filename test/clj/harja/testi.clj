@@ -224,6 +224,8 @@
   (as-> palvelu-fn f
         (if kysely-spec
           (fn [user payload]
+            (println "PAYLOAD")
+            (clojure.pprint/pprint payload)
             (testing (str "Palvelun " nimi " kysely on validi")
               (is (s/valid? kysely-spec payload)
                   (s/explain-str kysely-spec payload)))
@@ -408,14 +410,14 @@
               WHERE u.nimi = 'Saimaan kanava' AND kk.nimi = 'Tikkalansaaren sulku';")))
 
 (defn hae-saimaan-kanavan-materiaalit []
-  (let [haku (q "SELECT muutokset, nimi
+  (let [haku (q "SELECT muutokset, nimi, yksikko
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');")
         saimaan-materiaalit (materiaali-haun-pg-Array->map haku)]
     saimaan-materiaalit))
 
 (defn hae-helsingin-vesivaylaurakan-materiaalit []
-  (let [haku (q "SELECT muutokset, nimi
+  (let [haku (q "SELECT muutokset, nimi, yksikko
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');")
         helsingin-materiaalit (materiaali-haun-pg-Array->map haku)]

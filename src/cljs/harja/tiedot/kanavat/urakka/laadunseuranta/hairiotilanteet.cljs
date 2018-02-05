@@ -272,9 +272,10 @@
                                               ;; materiaalikirjaukset
                                               (filter #(= (::hairiotilanne/id hairiotilanne)
                                                           (::materiaalit/hairiotilanne %)))
-                                              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
+                                              ;; Varaosat gridissä on :maara, :yksikko ja :varaosa nimiset sarakkeet. Materiaalin
                                               ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
                                               (map #(identity {:maara (- (::materiaalit/maara %))
+                                                               :yksikko (::materiaalit/yksikko materiaalilistaus)
                                                                :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                                                          ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
                                                                          ::materiaalit/pvm (::materiaalit/pvm %)

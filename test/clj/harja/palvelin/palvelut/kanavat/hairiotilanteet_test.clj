@@ -171,11 +171,13 @@
      ::vv-materiaali/materiaalikirjaukset [{::vv-materiaali/maara naulan-kulutus
                                             ::vv-materiaali/nimi "Naulat"
                                             ::vv-materiaali/urakka-id urakka-id
-                                            ::vv-materiaali/pvm (pvm/nyt)}
+                                            ::vv-materiaali/pvm (pvm/nyt)
+                                            ::vv-materiaali/yksikko "kpl"}
                                            {::vv-materiaali/maara amparin-kulutus
                                             ::vv-materiaali/nimi "Ämpäreitä"
                                             ::vv-materiaali/urakka-id urakka-id
-                                            ::vv-materiaali/pvm (pvm/nyt)}]
+                                            ::vv-materiaali/pvm (pvm/nyt)
+                                            ::vv-materiaali/yksikko "kpl"}]
      ::vv-materiaali/poista-materiaalikirjauksia []
      ::hairiotilanne/hae-hairiotilanteet-kysely {::hairiotilanne/urakka-id urakka-id}}))
 
@@ -206,11 +208,13 @@
          ::vv-materiaali/materiaalikirjaukset [{::vv-materiaali/maara naulan-kulutus
                                                 ::vv-materiaali/nimi "Naulat"
                                                 ::vv-materiaali/urakka-id urakka-id
-                                                ::vv-materiaali/pvm (pvm/nyt)}
+                                                ::vv-materiaali/pvm (pvm/nyt)
+                                                ::vv-materiaali/yksikko "kpl"}
                                                {::vv-materiaali/maara amparin-kulutus
                                                 ::vv-materiaali/nimi "Ämpäreitä"
                                                 ::vv-materiaali/urakka-id urakka-id
-                                                ::vv-materiaali/pvm (pvm/nyt)}]
+                                                ::vv-materiaali/pvm (pvm/nyt)
+                                                ::vv-materiaali/yksikko "kpl"}]
          ::vv-materiaali/poista-materiaalikirjauksia []}))))
 
 (deftest hairiotilanteen-materiaalin-kulutus
@@ -269,6 +273,8 @@
                                                         {::hairiotilanne/urakka-id urakka-id})
             naulan-kulutus -8
             amparin-kulutus -15
+            naulan-ykiskko "kpl"
+            amparin-yksikko "kpl"
             _ (reset! hairiotilanne-id (->> saimaan-materiaalit-ennen-tallennusta
                                             (some #(when (= (:nimi %) "Naulat") %))
                                             :muutokset
@@ -295,7 +301,11 @@
                                                                                 (mapv #(assoc % ::vv-materiaali/maara
                                                                                                 (case (::vv-materiaali/nimi %)
                                                                                                   "Naulat" naulan-kulutus
-                                                                                                  "Ämpäreitä" amparin-kulutus))
+                                                                                                  "Ämpäreitä" amparin-kulutus)
+                                                                                                ::vv-materiaali/yksikko
+                                                                                                (case (::vv-materiaali/nimi %)
+                                                                                                  "Naulat" naulan-ykiskko
+                                                                                                  "Ämpäreitä" amparin-yksikko))
                                                                                       materiaalit))))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-hairiotilanne
