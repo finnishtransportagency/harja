@@ -80,7 +80,8 @@
         sekunnit (-> sekunnit (- (* tunnit 3600) (* minuutit 60)) Math/floor int)]
     (str tunnit "h " minuutit "min " sekunnit "s")))
 
-(defn- slack-viesti
+(defn- laheta-slackiin-ilmoitus-hitaudesta
+
   [{:keys [kulunut-aika viesti-id tapahtuma-id kehitysmoodi?]}]
   (let [url (if kehitysmoodi? "http://localhost:3000/"
                               "https://extranet.liikennevirasto.fi/harja/")
@@ -88,7 +89,7 @@
                                  "&alkanut=" (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
                                  "&valittu-jarjestelma=tloik&valittu-integraatio=ilmoituksen-kirjaus")]
     (log/warn {:fields [{:title "Linkki"
-                         :value (str "<" integraatio-log-url "|Harja integraatio loki>")}]
+                         :value (str "<" integraatio-log-url "|Harja integraatioloki>")}]
                :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
                                   "Ilmoituksella, jonka viesti id on " viesti-id "|||"
                                   "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
@@ -111,9 +112,6 @@
           uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
           kulunut-aika (pvm/aikavali-sekuntteina (:ilmoitettu ilmoitus) vastaanotettu)
-          _ (when (> kulunut-aika 300)
-              (slack-viesti {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus)
-                             :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
                                            (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :date_part))
           lisatietoja (if uudelleen-lahetys?
@@ -126,6 +124,11 @@
                         (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
           ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
           tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
+      ;; Jos ilmoituksen saapumisessa HARJA:an on kestänyt yli 5 min, lähetetään siitä viesti slackiin
+      (when (> kulunut-aika 300)
+        (laheta-slackiin-ilmoitus-hitaudesta
+          {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus)
+           :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
       (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
       (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)

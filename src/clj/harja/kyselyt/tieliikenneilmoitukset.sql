@@ -331,8 +331,8 @@ VALUES
     :urakkatyyppi :: URAKKATYYPPI,
    :tunniste,
    :viestiid,
-   :vastaanotettu :: TIMESTAMP,
-   :ilmoitettu-alunperin :: TIMESTAMP);
+   :vastaanotettu :: TIMESTAMPTZ,
+   :ilmoitettu-alunperin :: TIMESTAMPTZ);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen

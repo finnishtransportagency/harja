@@ -438,7 +438,7 @@
       (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
       (swap! reitit/url-navigaatio
              reitit/tulkitse-polku polku)
-
+      ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
       (when (and (= polku "hallinta/integraatioloki")
                  (.get parametrit "valittu-jarjestelma")
                  (.get parametrit "valittu-integraatio")
