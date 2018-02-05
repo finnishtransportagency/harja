@@ -571,7 +571,6 @@
                       aiemmat-sahkopostitiedot (merge
                                                  (:sahkopostitiedot rivi)
                                                  (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
-                  (log "RIVIT AIEMMAT POSTIT: " (pr-str (:sahkopostitiedot rivi)))
                   (reset! tiedot/tiemerkinta-valmis-modal-data
                           {:nakyvissa? true
                            :muutos-taulukosta? true
