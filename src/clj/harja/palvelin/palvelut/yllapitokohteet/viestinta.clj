@@ -59,7 +59,7 @@
                                ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)]
                                ["Merkitsijän urakka" paallystysurakka-nimi]])])))
 
-(defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite muut-vastaanottajat
+(defn- viesti-kohteen-tiemerkinta-valmis [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite sahkopostitiedot
                                                   tiemerkinta-valmis ilmoittaja tiemerkintaurakka-nimi] :as tiedot}]
   (when (some nil? [paallystysurakka-nimi kohde-nimi kohde-osoite tiemerkinta-valmis ilmoittaja
                     tiemerkintaurakka-nimi])
@@ -78,7 +78,7 @@
                                             {:teksti-tie? false})]
                              ["Tiemerkintä valmistunut" (fmt/pvm tiemerkinta-valmis)]
                              (when ilmoittaja ["Merkitsijä" (formatoi-ilmoittaja ilmoittaja)])
-                             (when-let [saate (:saate muut-vastaanottajat)]
+                             (when-let [saate (:saate sahkopostitiedot)]
                                ["Saate" saate])])]))
 
 (defn- viesti-kohteiden-tiemerkinta-valmis [kohteet valmistumispvmt ilmoittaja]
@@ -88,7 +88,7 @@
            "Seuraavat kohteet on merkitty tiemerkityiksi tänään:"
            "Seuraaville kohteille on merkitty tiemerkinnän valmistumispäivämäärä:")]
      (for [{:keys [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                   tiemerkintaurakka-nimi paallystysurakka-nimi muut-vastaanottajat] :as kohde} kohteet]
+                   tiemerkintaurakka-nimi paallystysurakka-nimi sahkopostitiedot] :as kohde} kohteet]
        (do
          (when (some nil? [id kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                            tiemerkintaurakka-nimi paallystysurakka-nimi])
@@ -104,7 +104,7 @@
                                                        :tr-loppuetaisyys tr-loppuetaisyys}
                                                       {:teksti-tie? false})]
                                        ["Tiemerkintä valmistunut" (fmt/pvm (get valmistumispvmt id))]
-                                       (when-let [saate (:saate muut-vastaanottajat)]
+                                       (when-let [saate (:saate sahkopostitiedot)]
                                          ["Saate" saate])])
           [:br]]))
      [:div
@@ -152,7 +152,7 @@
                                  :tiemerkintaurakka-nimi (:tiemerkintaurakka-nimi eka-kohde)
                                  :urakan-nimi (:paallystysurakka-nimi eka-kohde)
                                  :kohde-nimi (:kohde-nimi eka-kohde)
-                                 :muut-vastaanottajat (:muut-vastaanottajat eka-kohde)
+                                 :sahkopostitiedot (:sahkopostitiedot eka-kohde)
                                  :kohde-osoite {:tr-numero (:tr-numero eka-kohde)
                                                 :tr-alkuosa (:tr-alkuosa eka-kohde)
                                                 :tr-alkuetaisyys (:tr-alkuetaisyys eka-kohde)
@@ -160,7 +160,7 @@
                                                 :tr-loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
                                  :tiemerkinta-valmis (get (valmistumispvmt kohteet) (:id eka-kohde))
                                  :ilmoittaja ilmoittaja}))))
-        muut-vastaanottajat-set (set (mapcat #(get-in % [:muut-vastaanottajat :vastaanottajat]) yhden-urakan-kohteet))]
+        muut-vastaanottajat-set (set (mapcat #(get-in % [:sahkopostitiedot :muut-vastaanottajat]) yhden-urakan-kohteet))]
 
     ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?). Kopioon esim. "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
 
@@ -177,7 +177,7 @@
       (doseq [muu-vastaanottaja muut-vastaanottajat-set]
         (try
           (let [vastaanottajan-kohde-idt (set (map :id
-                                                   (filter #((get-in % [:muut-vastaanottajat :vastaanottajat]) muu-vastaanottaja)
+                                                   (filter #((get-in % [:sahkopostitiedot :muut-vastaanottajat]) muu-vastaanottaja)
                                                            yhden-urakan-kohteet)))
                 vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
 

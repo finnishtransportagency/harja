@@ -95,7 +95,7 @@
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
   (let [aikataulu (into []
                         (comp
-                          (map #(konv/array->set % :sahkopostitiedot_vastaanottajat))
+                          (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
                           (map konv/alaviiva->rakenne))
                         (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
                                                                :vuosi vuosi}))
@@ -163,7 +163,7 @@
              :tiemerkintapvm tiemerkintapvm
              :kopio-itselle? kopio-itselle?
              :saate saate
-             :muut-vastaanottajat muut-vastaanottajat
+             :sahkopostitiedot muut-vastaanottajat
              :kayttaja user})))
 
       (hae-urakan-aikataulu db user {:urakka-id urakka-id
@@ -552,6 +552,7 @@
 (defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika
     (do
+      ;; TODO Tarkista, että tämä toimii edelleen
       (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: " lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         lahetysaika

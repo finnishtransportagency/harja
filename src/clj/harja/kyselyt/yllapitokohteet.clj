@@ -34,8 +34,7 @@
 (defn yllapitokohteiden-tiedot-sahkopostilahetykseen [db kohde-idt]
   (let [tiedot (into []
                      (comp
-                       (map #(konv/array->set % :sahkopostitiedot_vastaanottajat))
-                       (map konv/alaviiva->rakenne)
-                       (map #(set/rename-keys % {:sahkopostitiedot :muut-vastaanottajat})))
+                       (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
+                       (map konv/alaviiva->rakenne))
                      (hae-yllapitokohteiden-tiedot-sahkopostilahetykseen db {:idt kohde-idt}))]
     tiedot))

@@ -594,7 +594,7 @@ SELECT
   ypk.yllapitoluokka,
   tti.id                    AS "tietyoilmoitus-id",
   paallystysurakka.nimi     AS paallystysurakka,
-  os.vastaanottajat         AS sahkopostitiedot_vastaanottajat,
+  os.vastaanottajat         AS "sahkopostitiedot_muut-vastaanottajat",
   os.saate                  AS sahkopostitiedot_saate,
   os.kopio_lahettajalle     AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk
@@ -730,7 +730,7 @@ SELECT
   tu.id                  AS "tiemerkintaurakka-id",
   tu.nimi                AS "tiemerkintaurakka-nimi",
   tu.sampoid             AS "tiemerkintaurakka-sampo-id",
-  os.vastaanottajat      AS sahkopostitiedot_vastaanottajat,
+  os.vastaanottajat      AS "sahkopostitiedot_muut-vastaanottajat",
   os.saate               AS sahkopostitiedot_saate,
   os.kopio_lahettajalle  AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk

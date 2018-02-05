@@ -566,7 +566,12 @@
        :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :aseta (fn [rivi arvo]
-                (let [aiemmat-sahkopostitiedot (get @tiedot/kohteiden-sahkopostitiedot (:id rivi))]
+                (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
+                      ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
+                      aiemmat-sahkopostitiedot (merge
+                                                 (:sahkopostitiedot rivi)
+                                                 (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
+                  (log "RIVIT AIEMMAT POSTIT: " (pr-str (:sahkopostitiedot rivi)))
                   (reset! tiedot/tiemerkinta-valmis-modal-data
                           {:nakyvissa? true
                            :muutos-taulukosta? true
@@ -582,7 +587,7 @@
                                       :valmis-pvm arvo}]
                            :urakka-id urakka-id
                            :vuosi vuosi
-                           ;; TODO Palauta kannasta olemassa mailitiedot kohteille
+
                            :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
                                         :muut-vastaanottajat (zipmap (iterate inc 1)
                                                                      (map #(-> {:sahkoposti %})
