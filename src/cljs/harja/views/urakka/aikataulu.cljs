@@ -390,7 +390,9 @@
                           (kumousboksi/ala-ehdota-kumoamista!))
       :tallenna (if voi-tallentaa?
                   #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
-                                              (fn [vastaus] (reset! tiedot/aikataulurivit vastaus)))
+                                              (fn [vastaus]
+                                                (reset! tiedot/aikataulurivit vastaus)
+                                                (reset! tiedot/kohteiden-sahkopostitiedot nil)))
                   :ei-mahdollinen)
       :vetolaatikot (into {}
                           (map (juxt :id
@@ -564,24 +566,28 @@
        :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :aseta (fn [rivi arvo]
-                (reset! tiedot/tiemerkinta-valmis-modal-data
-                        {:nakyvissa? true
-                         :muutos-taulukosta? true
-                         :valmis-fn (fn [lomakedata]
-                                      (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
-                                             {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
-                                              :saate (:saate lomakedata)
-                                              :kopio-itselle? (:kopio-itselle? lomakedata)}))
-                         :kohde-id (:id rivi)
-                         :kohde-nimi (:nimi rivi)
-                         :kohteet [{:id (:id rivi)
-                                    :nimi (:nimi rivi)
-                                    :valmis-pvm arvo}]
-                         :urakka-id urakka-id
-                         :vuosi vuosi
-                         ;; TODO Tarkista kannasta onko jo olemassa mailitiedot, tai rivillä jos modali avattiin jo kerran
-                         :lomakedata {:kopio-itselle? true}})
-                (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
+                (let [aiemmat-sahkopostitiedot (get @tiedot/kohteiden-sahkopostitiedot (:id rivi))]
+                  (reset! tiedot/tiemerkinta-valmis-modal-data
+                          {:nakyvissa? true
+                           :muutos-taulukosta? true
+                           :valmis-fn (fn [lomakedata]
+                                        (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
+                                               {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                                                :saate (:saate lomakedata)
+                                                :kopio-itselle? (:kopio-itselle? lomakedata)}))
+                           :kohde-id (:id rivi)
+                           :kohde-nimi (:nimi rivi)
+                           :kohteet [{:id (:id rivi)
+                                      :nimi (:nimi rivi)
+                                      :valmis-pvm arvo}]
+                           :urakka-id urakka-id
+                           :vuosi vuosi
+                           ;; TODO Tarkista kannasta onko jo olemassa mailitiedot lähetettäväksi tulevaisuudessa
+                           :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
+                                        ;; TODO Miksi tämä kaatuu?
+                                        ;:muut-vastaanottajat (:muut-vastaanottajat aiemmat-sahkopostitiedot)
+                                        :saate (:saate aiemmat-sahkopostitiedot)}})
+                  (assoc rivi :aikataulu-tiemerkinta-loppu arvo)))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                   "Tiemerkintää ei ole merkitty aloitetuksi."]
