@@ -2,7 +2,7 @@
 -- Kohteenosien (sulkujen ja siltojen) tiedot saadaan integraatiolla (vatusta ja taitorakennerekisteristä)
 -- Kanavaurakoiden geometriat koostetaan kohteiden geometrioista
 
-CREATE OR REPLACE FUNCTION paivita_urakoiden_geometriat() RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION paivita_kanavaurakoiden_geometriat() RETURNS TRIGGER AS $$
 BEGIN
   UPDATE urakka
   SET
@@ -57,5 +57,5 @@ ON kan_kohde_urakka;
 
 CREATE TRIGGER urakkalinkit_muuttuneet_trigger
 AFTER INSERT OR UPDATE ON kan_kohde_urakka
-FOR EACH STATEMENT EXECUTE PROCEDURE paivita_urakoiden_geometriat();
+FOR EACH STATEMENT EXECUTE PROCEDURE paivita_kanavaurakoiden_geometriat();
 
