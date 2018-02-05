@@ -26,7 +26,7 @@
           linkki-id (linkitys-sarake taulu-rivi)]
 
       (when (not= linkki-id vaadittu-linkki-id)
-        (throw (SecurityException. (str "Annettussa taulussa " taulu
+        (throw (SecurityException. (str "Annetussa taulussa " taulu
                                         " oleva rivi id:llä " id-arvo
                                         " ei linkity " linkitys-sarake "=" vaadittu-linkki-id
                                         " vaan " linkitys-sarake "=" linkki-id)))))))
@@ -49,7 +49,7 @@
 
       ;; Linkki-id:t set sisältää vaaditun linkin
       (when-not (linkki-idt vaadittu-linkki-id)
-        (throw (SecurityException. (str "Annettussa taulussa " taulu
+        (throw (SecurityException. (str "Annetussa taulussa " taulu
                                         " oleva rivi id:llä " id-arvo
                                         " ei linkity " linkitys-sarake "=" vaadittu-linkki-id
                                         " vaan " linkitys-sarake "=" linkki-idt)))))))
