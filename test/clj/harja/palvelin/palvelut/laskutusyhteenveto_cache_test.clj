@@ -27,7 +27,7 @@
                                                 [:http-palvelin :db])
                         :toteumat (component/using
                                    (toteumat/->Toteumat)
-                                   [:http-palvelin :db])
+                                   [:http-palvelin :db :db-replica])
                         :muut-tyot (component/using
                                     (muut-tyot/->Muut-tyot)
                                     [:http-palvelin :db]))))))
