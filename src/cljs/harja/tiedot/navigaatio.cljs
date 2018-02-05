@@ -439,7 +439,7 @@
       (swap! reitit/url-navigaatio
              reitit/tulkitse-polku polku))
     (reset! render-lupa-url-kasitelty? true)
-    (log "Render lupa annettu!")
+    (log "Render-lupa annettu!")
     (t/julkaise! {:aihe :url-muuttui :url url})
     (reset! urlia-kasitellaan? false)))
 

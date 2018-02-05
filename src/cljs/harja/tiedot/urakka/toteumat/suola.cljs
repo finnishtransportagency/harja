@@ -23,27 +23,29 @@
               (when hae?
                 (hae-materiaalit))))
 
+(defonce
+  ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
+  valittu-aikavali (atom nil))
+
 (defonce toteumat
   (reaction<! [hae? @suolatoteumissa?
                urakka @nav/valittu-urakka
-               sopimus @tiedot-urakka/valittu-sopimusnumero
-               hoitokausi @tiedot-urakka/valittu-hoitokausi
-               kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi]
+               aikavali @valittu-aikavali]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and hae? urakka)
+              (when (and hae? urakka aikavali)
                 (go
                   (into []
                         ;; luodaan kaikille id
                         (map-indexed (fn [i rivi] (assoc rivi :id i)))
 
-                        (<! (hae-toteumat (:id urakka) (first sopimus)
-                                          (or kuukausi hoitokausi))))))))
+                        (<! (hae-toteumat (:id urakka) aikavali)))))))
 
 (defonce valitut-toteumat (atom #{}))
 
 (defonce valitut-toteumat-kartalla
-  (reaction<! [toteumat @valitut-toteumat]
-              (hae-toteumien-reitit! toteumat)))
+  (reaction<! [toteumat @valitut-toteumat @nav/valittu-urakka]
+              (when @nav/valittu-urakka
+                (hae-toteumien-reitit! (:id @nav/valittu-urakka) toteumat))))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
@@ -68,17 +70,19 @@
                          :sijainti (hae-toteuman-sijainti %)) yksittaiset-toteumat))
         #(valittu-suolatoteuma? %)))))
 
-(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
+(defn hae-toteumat [urakka-id [alkupvm loppupvm]]
+  {:pre [(int? urakka-id)]}
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
-                               :sopimus-id sopimus-id
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
 
-(defn hae-toteumien-reitit! [toteuma-idt]
+(defn hae-toteumien-reitit! [urakka-id toteuma-idt]
+  {:pre [(int? urakka-id)]}
   (when (not (empty? toteuma-idt))
-    (k/post! :hae-toteumien-reitit {:idt toteuma-idt})))
+    (k/post! :hae-toteumien-reitit {:idt toteuma-idt :urakka-id urakka-id})))
 
 (defn tallenna-toteumat [urakka-id sopimus-id rivit]
+  {:pre [(int? urakka-id)]}
   (let [tallennettavat (into [] (->> rivit
                                      (filter (comp not :koskematon))
                                      (map #(assoc % :paattynyt (:alkanut %)))))]
@@ -124,9 +128,11 @@
                 (hae-teiden-hoitourakoiden-lampotilat valittu-hoitokausi))))
 
 (defn hae-urakan-suolasakot-ja-lampotilat [urakka-id]
+  {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-suolasakot-ja-lampotilat urakka-id))
 
 (defn aseta-suolasakon-kaytto [urakka-id kaytossa?]
+  {:pre [(int? urakka-id)]}
   (k/post! :aseta-suolasakon-kaytto {:urakka-id urakka-id
                                      :kaytossa? kaytossa?}))
 
