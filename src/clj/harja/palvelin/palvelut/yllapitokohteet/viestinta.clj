@@ -162,8 +162,7 @@
                                  :ilmoittaja ilmoittaja}))))
         muut-vastaanottajat-set (set (mapcat #(get-in % [:muut-vastaanottajat :vastaanottajat]) yhden-urakan-kohteet))]
 
-    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?)
-    ;; TODO Kopioon esim. "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
+    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?). Kopioon esim. "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
 
     (viestinta/laheta-sposti-fim-kayttajarooleille
       {:fim fim
@@ -173,22 +172,24 @@
        :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
        :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
 
-    (doseq [muu-vastaanottaja muut-vastaanottajat-set]
-      (try
-        (let [vastaanottajan-kohde-idt (set (map :id
-                                                 (filter #((get-in % [:muut-vastaanottajat :vastaanottajat]) muu-vastaanottaja)
-                                                         yhden-urakan-kohteet)))
-              vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
+    ;; Muut vastaanottajat voivat periaatteessa olla keitä tahansa. Laitetaan viesti tiemerkinnän näkökulmasta.
+    (when (= nakokulma :tiemerkinta)
+      (doseq [muu-vastaanottaja muut-vastaanottajat-set]
+        (try
+          (let [vastaanottajan-kohde-idt (set (map :id
+                                                   (filter #((get-in % [:muut-vastaanottajat :vastaanottajat]) muu-vastaanottaja)
+                                                           yhden-urakan-kohteet)))
+                vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
 
-          (sahkoposti/laheta-viesti!
-            email
-            (sahkoposti/vastausosoite email)
-            muu-vastaanottaja
-            (str "Harja: " (viestin-otsikko vastaanottajan-kohteet))
-            (viestin-vartalo vastaanottajan-kohteet)))
-        (catch Exception e
-          (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
-                             muu-vastaanottaja (pr-str e))))))))
+            (sahkoposti/laheta-viesti!
+              email
+              (sahkoposti/vastausosoite email)
+              muu-vastaanottaja
+              (str "Harja: " (viestin-otsikko vastaanottajan-kohteet))
+              (viestin-vartalo vastaanottajan-kohteet)))
+          (catch Exception e
+            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                               muu-vastaanottaja (pr-str e)))))))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Käy kohteet läpi päällystys- sekä tiemerkintäurakkakohtaisesti ja
@@ -199,8 +200,6 @@
   (log/debug (format "Lähetetään sähköposti tiemerkintäkohteiden %s valmistumisesta." (pr-str (map :id kohteiden-tiedot))))
   (let [paallystysurakoiden-kohteet (group-by :paallystysurakka-id kohteiden-tiedot)
         tiemerkintaurakoiden-kohteet (group-by :tiemerkintaurakka-id kohteiden-tiedot)]
-    ;; TODO Muille vastaanottajille menee maili tuplana, yksi kummastakin "näkökulmasta". Pitäisi mennä vain tiemerkinnän näkökulmasta.
-    ;; Päällystysurakkakohtaiset mailit
     (doseq [urakan-kohteet (vals paallystysurakoiden-kohteet)]
       (kasittele-yhden-urakan-tiemerkityt-kohteet
         {:fim fim :email email
