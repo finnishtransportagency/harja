@@ -279,7 +279,8 @@
                                                                :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                                                          ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
                                                                          ::materiaalit/pvm (::materiaalit/pvm %)
-                                                                         ::materiaalit/id (::materiaalit/id %)}})))
+                                                                         ::materiaalit/id (::materiaalit/id %)
+                                                                         ::materiaalit/yksikko (::materiaalit/yksikko materiaalilistaus)}})))
                                             conj (::materiaalit/muutokset materiaalilistaus)))
                                         materiaalit)]
       (-> app

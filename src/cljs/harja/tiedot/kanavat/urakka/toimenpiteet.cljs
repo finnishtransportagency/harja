@@ -58,16 +58,17 @@
   (mapcat (fn [materiaalilistaus]
             (transduce
              (comp
-              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
-              ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
+               (filter (partial toimenpiteen-materiaalimuutos? toimenpide))
+              ;; Varaosat gridissä on :maara, :yksikko ja :varaosa nimiset sarakkeet. Materiaalin
+              ;; nimi, yksikko, urakka-id, pvm ja id tarvitaan tallentamista varten.
               (map #(identity {:maara (- (::materiaalit/maara %))
+                               :yksikko (::materiaalit/yksikko materiaalilistaus)
                                :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                          ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
                                          ::materiaalit/pvm (::materiaalit/pvm %)
-                                         ::materiaalit/id (::materiaalit/id %)}})))
-             conj (filter
-                   (partial toimenpiteen-materiaalimuutos? toimenpide)
-                   (::materiaalit/muutokset materiaalilistaus))))
+                                         ::materiaalit/id (::materiaalit/id %)
+                                         ::materiaalit/yksikko (::materiaalit/yksikko materiaalilistaus)}})))
+             conj (::materiaalit/muutokset materiaalilistaus)))
           listaukset))
 
 (defn aseta-lomakkeen-tiedot [app toimenpide]

@@ -8,7 +8,6 @@
 
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
-            [harja.ui.grid.protokollat :as grid-protokolla]
             [harja.ui.lomake :as lomake]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
@@ -21,6 +20,7 @@
 
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.views.vesivaylat.urakka.materiaalit :as materiaali-view]
             [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
@@ -117,14 +117,6 @@
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
-(defn- muuta-yksikko-varaosan-muuttuessa
-  [grid-tila predikaatti]
-  (into {} (map (fn [[avain arvo]]
-                  (if (predikaatti arvo)
-                    [avain (assoc arvo :yksikko (-> arvo :varaosa ::materiaali/yksikko))]
-                    [avain arvo]))
-                grid-tila)))
-
 (defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
         virhe-atom (r/wrap (:varaosat-taulukon-virheet valittu-hairiotilanne)
@@ -143,16 +135,7 @@
       :piilota-toiminnot? false
       :tyhja "Ei varaosia"
       :otsikko "Varaosat"
-      :muutos (fn [grid-komponentti]
-                ;; Tässä on tarkoituksena laittaa gridissä käsiteltävän rivin
-                ;; :yksikko avaimen alle oikea yksikkö, kun valitaan materiaali varaosa valikosta.
-                (let [grid-tila (grid-protokolla/hae-muokkaustila grid-komponentti)
-                      varaosa-muutettu? #(and (:varaosa %)
-                                             (not= (-> % :varaosa ::materiaali/yksikko)
-                                                   (:yksikko %)))
-                      joku-varaosa-muutettu? (some varaosa-muutettu? (vals grid-tila))]
-                  (when joku-varaosa-muutettu?
-                    (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-varaosan-muuttuessa grid-tila varaosa-muutettu?)))))}
+      :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
      [{:otsikko "Varaosa"
        :nimi :varaosa
        :leveys 3

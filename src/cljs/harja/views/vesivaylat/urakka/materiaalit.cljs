@@ -2,6 +2,7 @@
   (:require [tuck.core :as tuck]
             [cljs.core.async :as async :refer [put! <! chan close!]]
             [harja.ui.grid :as grid]
+            [harja.ui.grid.protokollat :as grid-protokolla]
             [harja.ui.napit :as napit]
             [harja.domain.vesivaylat.materiaali :as m]
             [harja.tiedot.vesivaylat.urakka.materiaalit :as tiedot]
@@ -21,6 +22,25 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn- muuta-yksikko-varaosan-muuttuessa
+  [grid-tila predikaatti]
+  (into {} (map (fn [[avain arvo]]
+                  (if (predikaatti arvo)
+                    [avain (assoc arvo :yksikko (-> arvo :varaosa ::m/yksikko))]
+                    [avain arvo]))
+                grid-tila)))
+
+(defn hoida-varaosataulukon-yksikko
+  [grid-komponentti]
+  ;; Tässä on tarkoituksena laittaa gridissä käsiteltävän rivin
+  ;; :yksikko avaimen alle oikea yksikkö, kun valitaan materiaali varaosa valikosta.
+  (let [grid-tila (grid-protokolla/hae-muokkaustila grid-komponentti)
+        varaosa-muutettu? #(and (:varaosa %)
+                                (not= (-> % :varaosa ::m/yksikko)
+                                      (:yksikko %)))
+        joku-varaosa-muutettu? (some varaosa-muutettu? (vals grid-tila))]
+    (when joku-varaosa-muutettu?
+      (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-varaosan-muuttuessa grid-tila varaosa-muutettu?)))))
 
 (defn- materiaaliloki [e! urakka-id rivit nimi nayta-kaikki?]
   (let [rivit-jarjestyksessa (reverse (sort-by ::m/pvm rivit))
