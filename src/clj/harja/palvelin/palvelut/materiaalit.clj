@@ -214,7 +214,7 @@
                                      :koneellinen true
                                      :lisatieto (str/join
                                                   ", "
-                                                  (filter (fn [s] (not (empty? (str/trim s))))
+                                                  (filter (fn [s] (and s (not (empty? (str/trim s)))))
                                                           (map :lisatieto toteumat)))
                                      :maara (apply + (map :maara toteumat))))
                          (keys ryhmitellyt-koneelliset))
