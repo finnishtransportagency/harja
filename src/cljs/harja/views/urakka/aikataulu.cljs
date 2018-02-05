@@ -584,8 +584,9 @@
                            :vuosi vuosi
                            ;; TODO Tarkista kannasta onko jo olemassa mailitiedot lähetettäväksi tulevaisuudessa
                            :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
-                                        ;; TODO Miksi tämä kaatuu?
-                                        ;:muut-vastaanottajat (:muut-vastaanottajat aiemmat-sahkopostitiedot)
+                                        :muut-vastaanottajat (zipmap (iterate inc 1)
+                                                                     (map #(-> {:sahkoposti %})
+                                                                          (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
                                         :saate (:saate aiemmat-sahkopostitiedot)}})
                   (assoc rivi :aikataulu-tiemerkinta-loppu arvo)))
        :muokattava? voi-muokata-tiemerkinta?
