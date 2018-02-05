@@ -1,0 +1,166 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "required": true,
+  "properties": {
+    "tunniste": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tunniste",
+      "required": true,
+      "additionalProperties": false,
+      "type": "object",
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+    },
+    "paikkauskohde": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde",
+      "required": true,
+      "additionalProperties": false,
+      "type": "object",
+      "nimi": {
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde/nimi",
+        "type": "string"
+      },
+      "tunniste": {
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde/tunniste",
+        "required": true,
+        "additionalProperties": false,
+        "type": "object",
+        "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+      }
+    },
+    "alkuaika": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/alkuaika",
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "required": true
+    },
+    "loppuaika": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/loppuaika",
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "required": true
+    },
+    "sijainti": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/sijainti",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "$ref": "file:resources/api/schemas/entities/tieosoitevali-tienkohdilla.schema.json"
+    },
+    "tyomenetelma": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tyomenetelma",
+      "required": true,
+      "enum": [
+        "massapintaus",
+        "kuumennuspintaus",
+        "remix-pintaus"
+      ]
+    },
+    "massatyyppi": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/massatyyppi",
+      "required": true,
+      "enum": [
+        "asfalttibetoni",
+        "kivimastiks",
+        "pehmeät ab / bitumi"
+      ]
+    },
+    "leveys": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/leveys",
+      "type": "number"
+    },
+    "massamenekki": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/massamenekki",
+      "type": "integer"
+    },
+    "raekoko": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/raekoko",
+      "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
+    },
+    "kuulamylly": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kuulamylly",
+      "enum": [
+        "AN5",
+        "AN7",
+        "N10",
+        "N14",
+        "N19",
+        "N30",
+        "N22"
+      ]
+    },
+    "kivi-ja-sideaineet": {
+      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet",
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "kivi-ja-sideaine": {
+            "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "esiintyma": {
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/esiintyma",
+                "type": "string"
+              },
+              "km-arvo": {
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/km-arvo",
+                "type": "string"
+              },
+              "muotoarvo": {
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/muotoarvo",
+                "type": "string"
+              },
+              "sideainetyyppi": {
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/sideainetyyppi",
+                "enum": [
+                  "20/30",
+                  "35/50",
+                  "50/70",
+                  "70/100",
+                  "100/150",
+                  "160/220",
+                  "250/330",
+                  "330/430",
+                  "500/650",
+                  "650/900",
+                  "V1500",
+                  "V3000",
+                  "KB65",
+                  "KB75",
+                  "KB85",
+                  "BL5",
+                  "BL2K",
+                  "BL2 Bio",
+                  "BE-L",
+                  "BE-SIP",
+                  "BE-SOP",
+                  "BE-PAB"
+                ]
+              },
+              "pitoisuus": {
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/pitoisuus",
+                "type": "number"
+              },
+              "lisa-aineet": {
+                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/lisa-aineet",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
