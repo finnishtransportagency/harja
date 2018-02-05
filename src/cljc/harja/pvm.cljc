@@ -890,3 +890,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    vuodesta on kyse."
   [pvm sama-vuosi]
   (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) sama-vuosi)}))
+
+(defn paivat-aikavalissa [alku loppu]
+  (if (or (t/equal? alku loppu) (t/after? alku loppu))
+    [alku]
+    (sort (into [alku loppu]
+                (map #(t/plus alku (t/days %))
+                     (range 1 (t/in-days (t/interval alku loppu))))))))
