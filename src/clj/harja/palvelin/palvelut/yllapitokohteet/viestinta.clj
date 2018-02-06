@@ -206,7 +206,7 @@
           (viestinta/laheta-sahkoposti-itselle
             {:email email
              :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
-             :sahkoposti "jari.hanhela@solita.fi"
+             :sahkoposti (:sahkoposti ilmoittaja)
              :viesti-otsikko (viestin-otsikko kopio-maili-kohteet)
              :viesti-body (viestin-vartalo kopio-maili-kohteet)}))))))
 
