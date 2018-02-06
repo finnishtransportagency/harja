@@ -37,7 +37,8 @@
     :tunniste :id}
    [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
-    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10}
+    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
+     :fmt #(fmt/desimaaliluku % 3) :desimaalien-maara 3 :leveys 10}
     {:otsikko ""
      :nimi :nayta-kartalla
      :tyyppi :komponentti
@@ -88,20 +89,21 @@
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                :vetolaatikot (into {}
                                    (map (juxt :id (fn [rivi] [suolankayton-paivan-erittely rivi])))
-                                   @tiedot/toteumat)}
+                                   @tiedot/toteumat)
+               :piilota-toiminnot? true}
     [{:tyyppi :vetolaatikon-tila :leveys "1%"}
-     {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
+     {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 15 :muokattava? muokattava?
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse materiaali"]]
       :valinta-nayta #(or (:nimi %) "- valitse -")
       :valinnat @tiedot/materiaalit}
-     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
+     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 15 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna päivämäärä"]]
       :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
      {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku % 3)
-      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys "15%" :muokattava? muokattava?
+      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 15 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
-     {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "40%" :muokattava? muokattava?
+     {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 30 :muokattava? muokattava?
       :hae #(if (muokattava? %)
               (:lisatieto %)
               (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
@@ -109,7 +111,7 @@
      {:otsikko ""
       :nimi :nayta-kartalla
       :tyyppi :komponentti
-      :leveys "10%"
+      :leveys "20"
       :komponentti (fn [rivi]
                      (let [toteumat (:toteumat rivi)
                            valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
