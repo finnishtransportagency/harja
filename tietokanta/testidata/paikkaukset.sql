@@ -53,7 +53,7 @@ INSERT INTO paikkaustoteuma ("luoja-id",
 
 INSERT INTO paikkauksen_materiaalit ("paikkaustoteuma-id",
                                      esiintyma,
-                                     "km-arvo",
+                                     "kuulamylly-arvo",
                                      muotoarvo,
                                      sideainetyyppi,
                                      pitoisuus,
