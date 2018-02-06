@@ -144,6 +144,7 @@
                                           (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
                                       (fmt/pvm-opt (get (valmistumispvmt kohteet) (:id eka-kohde)))))))
         viestin-vartalo (fn [kohteet]
+                          (log/debug "VIESTIN VARTALO: " (vec kohteet))
                           (let [eka-kohde (first kohteet)]
                             (if (> (count kohteet) 1)
                               (viesti-kohteiden-tiemerkinta-valmis kohteet (valmistumispvmt kohteet) ilmoittaja)
@@ -182,26 +183,32 @@
                                                            yhden-urakan-kohteet)))
                 vastaanottajan-kohteet (filter #(vastaanottajan-kohde-idt (:id %)) yhden-urakan-kohteet)]
 
-            (sahkoposti/laheta-viesti!
-              email
-              (sahkoposti/vastausosoite email)
-              muu-vastaanottaja
-              (str "Harja: " (viestin-otsikko vastaanottajan-kohteet))
-              (viestin-vartalo vastaanottajan-kohteet)))
+            (when (not (empty? vastaanottajan-kohteet))
+              (sahkoposti/laheta-viesti!
+                email
+                (sahkoposti/vastausosoite email)
+                muu-vastaanottaja
+                (str "Harja: " (viestin-otsikko vastaanottajan-kohteet))
+                (viestin-vartalo vastaanottajan-kohteet))))
           (catch Exception e
             (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
                                muu-vastaanottaja (pr-str e)))))))
 
-    ;; TODO Implementoi kopio itselle -tuki (mainitaan kohteet, joiden valmistumisesta ilmoitettu, eli kaikki?).
-    ;; Kopioon esim. "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
-
-    #_(when (and kopio-itselle? (:sahkoposti ilmoittaja))
-      (viestinta/laheta-sahkoposti-itselle
-        {:email email
-         :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle ja rakennuttajakonsultille."
-         :sahkoposti (:sahkoposti ilmoittaja)
-         :viesti-otsikko viestin-otsikko
-         :viesti-body viestin-vartalo}))))
+    ;; Mikäli ilmoittaja halusi kopion jonkun kohteen valmistumisen sähköpostin lähetyksestä, tehdään näin:
+    ;; - Kerätään kaikki valmistuneet kohteet, joista halutaan kopio
+    ;; - Laitetaan ilmoittajalle yksi maili, jossa kerrotaan valmistuneet kohteet sekä se, että niistä on informoitu
+    ;; haluttuja käyttäjiä.
+    (when (= nakokulma :tiemerkinta)
+      (let [kopio-maili-kohteet (filter (fn [kohde]
+                                          (get-in kohde [:sahkopostitiedot :kopio-lahettajalle?]))
+                                        yhden-urakan-kohteet)]
+        (when (not (empty? kopio-maili-kohteet))
+          (viestinta/laheta-sahkoposti-itselle
+            {:email email
+             :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
+             :sahkoposti "jari.hanhela@solita.fi"
+             :viesti-otsikko (viestin-otsikko kopio-maili-kohteet)
+             :viesti-body (viestin-vartalo kopio-maili-kohteet)}))))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Käy kohteet läpi päällystys- sekä tiemerkintäurakkakohtaisesti ja
