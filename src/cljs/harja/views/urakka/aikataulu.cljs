@@ -93,25 +93,23 @@
                 (if valmis-tiemerkintaan-lomake?
                   "Merkitse"
                   "Vahvista peruutus")
-                #(do (log "[AIKATAULU] Merkitään kohde valmiiksi tiemerkintään.")
-                     (tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
-                       {:kohde-id kohde-id
-                        :tiemerkintapvm (:valmis-tiemerkintaan lomakedata)
-                        :kopio-itselle? (:kopio-itselle? lomakedata)
-                        :saate (:saate lomakedata)
-                        :muut-vastaanottajat (->> (vals (get-in
-                                                          data
-                                                          [:lomakedata :muut-vastaanottajat]))
-                                                  (filter (comp not :poistettu))
-                                                  (map :sahkoposti))
-                        :urakka-id urakka-id
-                        :sopimus-id (first @u/valittu-sopimusnumero)
-                        :vuosi vuosi}))
+                #(tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
+                   {:kohde-id kohde-id
+                    :tiemerkintapvm (:valmis-tiemerkintaan lomakedata)
+                    :kopio-itselle? (:kopio-itselle? lomakedata)
+                    :saate (:saate lomakedata)
+                    :muut-vastaanottajat (->> (vals (get-in
+                                                      data
+                                                      [:lomakedata :muut-vastaanottajat]))
+                                              (filter (comp not :poistettu))
+                                              (map :sahkoposti))
+                    :urakka-id urakka-id
+                    :sopimus-id (first @u/valittu-sopimusnumero)
+                    :vuosi vuosi})
                 {:disabled (not valmis-tallennettavaksi?)
                  :luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)
                  :kun-onnistuu (fn [vastaus]
-                                 (log "[AIKATAULU] Kohde merkitty valmiiksi tiemerkintää")
                                  (reset! tiedot/aikataulurivit vastaus)
                                  (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}
      [:div
@@ -361,8 +359,8 @@
                                                        true)
                                    :muut-vastaanottajat (zipmap (iterate inc 1)
                                                                 (map #(-> {:sahkoposti %})
-                                                                     (mapcat (fn [jana] (get-in % [::aikajana/sahkopostitiedot :muut-vastaanottajat]))
-                                                                             tiemerkinnan-valmistumiset)))
+                                                                     (set (mapcat (fn [jana] (get-in jana [::aikajana/sahkopostitiedot :muut-vastaanottajat]))
+                                                                                  tiemerkinnan-valmistumiset))))
                                    :saate (str/join ". " (map #(get-in % [::aikajana/sahkopostitiedot :saate])
                                                               tiemerkinnan-valmistumiset))}})
              ;; Ei muokattujen tiemerkintöjen valmistumisia, tallenna suoraan
