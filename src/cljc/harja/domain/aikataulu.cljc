@@ -59,6 +59,7 @@
                       (merge (aikataulujana-tyylit :kohde)
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
                                                 [yllapitokohde-id :kohde])
+                              ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-kohde-alku
                               ::aikajana/loppu aikataulu-kohde-valmis
                               ::aikajana/teksti (aikajana-teksti "Koko kohde"
@@ -68,6 +69,7 @@
                       (merge (aikataulujana-tyylit :paallystys)
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
                                                 [yllapitokohde-id :paallystys])
+                              ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-paallystys-alku
                               ::aikajana/loppu aikataulu-paallystys-loppu
                               ::aikajana/teksti (aikajana-teksti "Päällystys"
@@ -77,6 +79,7 @@
                       (merge (aikataulujana-tyylit :tiemerkinta)
                              {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
                                                 [yllapitokohde-id :tiemerkinta])
+                              ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-tiemerkinta-alku
                               ::aikajana/loppu aikataulu-tiemerkinta-loppu
                               ::aikajana/teksti (aikajana-teksti "Tiemerkintä"
