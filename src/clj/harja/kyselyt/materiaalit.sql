@@ -141,7 +141,6 @@ GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_mate
 -- Saman urakan samat materiaalit summataan yhteen.
 SELECT
   SUM(maara)              AS kokonaismaara,
-  urakka.nimi             AS "urakka-nimi",
   o.nimi                  AS "hallintayksikko-nimi",
   materiaalikoodi.nimi    AS "materiaali-nimi",
   materiaalikoodi.yksikko AS "materiaali-yksikko",
@@ -156,7 +155,7 @@ FROM toteuma_materiaali
   JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
   JOIN organisaatio o ON urakka.hallintayksikko = o.id
 WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR urakka.tyyppi = :urakkatyyppi :: URAKKATYYPPI)
-GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, o.elynumero, materiaalikoodi.yksikko, materiaalikoodi.materiaalityyppi;
+GROUP BY "materiaali-nimi", o.nimi, o.elynumero, materiaalikoodi.yksikko, materiaalikoodi.materiaalityyppi;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali
