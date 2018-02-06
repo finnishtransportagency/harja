@@ -114,13 +114,17 @@
     tulos))
 
 (defn ryhmittele-kohderivit-kanavalla [kohderivit otsikko-fn]
-  (let [ryhmat (group-by (comp ::kok/id ::kohde/kohdekokonaisuus)
-                         (sort-by (comp ::kok/nimi ::kohde/kohdekokonaisuus) kohderivit))]
+  (let [ryhmitelty (group-by
+                     (comp ::kok/nimi ::kohde/kohdekokonaisuus)
+                     kohderivit)
+        ryhmat (into
+                 (sorted-map)
+                 ryhmitelty)]
     (mapcat
-      (fn [kohdekokonaisuus-id]
-        (let [ryhman-sisalto (get ryhmat kohdekokonaisuus-id)]
+      (fn [kokonaisuus-nimi]
+        (let [ryhman-sisalto (get ryhmat kokonaisuus-nimi)]
           (concat
-            [(otsikko-fn (get-in (first ryhman-sisalto) [::kohde/kohdekokonaisuus ::kok/nimi]))]
+            [(otsikko-fn kokonaisuus-nimi)]
             (sort-by ::kohde/nimi ryhman-sisalto))))
       (keys ryhmat))))
 
@@ -213,8 +217,11 @@
 
 (defn kohteenosan-infopaneeli-otsikko [app osa]
   (cond
-    (= (get-in app [:valittu-kohde ::kohde/id])
-       (get-in osa [::osa/kohde ::kohde/id]))
+    (and
+      (some? (get-in app [:valittu-kohde ::kohde/id]))
+      (some? (get-in osa [::osa/kohde ::kohde/id]))
+      (= (get-in app [:valittu-kohde ::kohde/id])
+         (get-in osa [::osa/kohde ::kohde/id])))
     "Irroita"
 
     (some? (get-in osa [::osa/kohde ::kohde/id]))

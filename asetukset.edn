@@ -86,7 +86,7 @@
                         :kayttajatunnus "ava-harja"
                         :salasana #=(slurp "../.harja/ava-salasana")
 
-                        ;:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
+                        :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
                         ;:tieosoiteverkon-osoite "https://ava.liikennevirasto.fi/harja/PTK_tieosoiteverkko.shz"
                         ;:tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
                         ;

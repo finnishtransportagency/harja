@@ -59,11 +59,11 @@
                                                    ::kohde/nimi "Kolmas"}]
                                                  identity))))
 
-#_(deftest kohdekokonaisuudet
-  (is (= [{::kok/id 1
-           ::kok/nimi "Foobar"}
-          {::kok/id 2
-           ::kok/nimi "Bazbar"}]
+(deftest kohdekokonaisuudet
+  (is (= [{::kok/id 2
+           ::kok/nimi "Bazbar"}
+          {::kok/id 1
+           ::kok/nimi "Foobar"}]
          (tiedot/kohdekokonaisuudet
            [{::kok/id 1
              ::kok/nimi "Foobar"
@@ -267,12 +267,12 @@
     (is (= {:kohteiden-haku-kaynnissa? true}
            (e! (tiedot/->HaeKohteet) {:kohteiden-haku-kaynnissa? true})))))
 
-#_(deftest kohteet-haettu
+(deftest kohteet-haettu
   (is (= {:kohteiden-haku-kaynnissa? false
-          :kohdekokonaisuudet [{::kok/id 1
-                                ::kok/nimi "Foobar"}
-                               {::kok/id 2
-                                ::kok/nimi "Bazbar"}]
+          :kohdekokonaisuudet [{::kok/id 2
+                                ::kok/nimi "Bazbar"}
+                               {::kok/id 1
+                                ::kok/nimi "Foobar"}]
           :kohderivit [{::kohde/id 1
                         ::kohde/tyyppi :sulku
                         ::kohde/kohdekokonaisuus {::kok/id 1
@@ -440,7 +440,7 @@
   (is (= {:valittu-kohde {::kohde/kohteenosat [{:id 1}]}}
          (e! (tiedot/->MuokkaaKohteenKohteenosia [{:id 1}])))))
 
-#_(deftest klikkaus-kartalla
+(deftest klikkaus-kartalla
   (testing "Varatun kohteen liittäminen"
     (is (= {:valittu-kohde {::kohde/id 2
                             ::kohde/kohteenosat [{::osa/id 2
@@ -465,7 +465,8 @@
 
   (testing "Varatun kohteen irrottaminen"
     (is (= {:valittu-kohde {::kohde/id 2
-                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}]}
+                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}
+                                                 {::osa/id 1 ::osa/kohde {::kohde/id 2} :poistettu true}]}
             :haetut-kohteenosat [{::osa/id 1
                                   ::osa/kohde {::kohde/id 1}
                                   :vanha-kohde {::kohde/id 1}}
@@ -505,7 +506,8 @@
 
   (testing "Kohteen irrottaminen"
     (is (= {:valittu-kohde {::kohde/id 2
-                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}]}
+                            ::kohde/kohteenosat [{::osa/id 2 ::osa/kohde {::kohde/id 2}}
+                                                 {::osa/id 1 ::osa/kohde {::kohde/id 2} :poistettu true}]}
             :haetut-kohteenosat [{::osa/id 1 ::osa/kohde nil}
                                  {::osa/id 2 ::osa/kohde {::kohde/id 2}}]}
            (e! (tiedot/->KohteenosaKartallaKlikattu {::osa/id 1 ::osa/kohde {::kohde/id 2}})

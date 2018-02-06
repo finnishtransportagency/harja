@@ -33,7 +33,8 @@
             [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
-            [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti])
+            [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti]
+            [harja.tiedot.urakka.toteumat.suola :as suolatoteumat])
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -64,7 +65,8 @@
     :tienakyma-muut
     :kokonaishintaisten-turvalaitteet
     :yksikkohintaisten-turvalaitteet
-    :kohteenosat-kohteiden-luonnissa})
+    :kohteenosat-kohteiden-luonnissa
+    :suolatoteumat})
 
 (def
   ^{:doc
@@ -228,8 +230,8 @@
    :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla
    :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
    :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla
-
-   :kohteenosat-kohteiden-luonnissa koht-luonti/kohteenosat-kartalla})
+   :kohteenosat-kohteiden-luonnissa koht-luonti/kohteenosat-kartalla
+   :suolatoteumat suolatoteumat/suolatoteumat-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -293,7 +295,7 @@
        :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
        :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
        :kohteenosat-kohteiden-luonnissa (taso :kohteenosat-kohteiden-luonnissa)
-
+       :suolatoteumat (taso :suolatoteumat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -331,6 +333,7 @@
    :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
    :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
    :kohteenosat-kohteiden-luonnissa koht-luonti/karttataso-kohteenosat-kohteen-luonnissa
+   :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 

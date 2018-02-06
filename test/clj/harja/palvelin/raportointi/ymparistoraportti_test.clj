@@ -180,9 +180,11 @@
                                      :urakka-id urakka-id
                                      :parametrit param})
                     "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015")
-        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 2))
-        ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 6))
-        ymp-suola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 2))
+
+        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 0))
+        ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 2))
+        ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 7))
+        ymp-suolaliuos-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 2))
         ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 10))
         ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 10))
         materiaali (apurit/taulukko-otsikolla
@@ -195,8 +197,9 @@
                                       :parametrit param})
                      "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 30.09.2015")
         mat-kaytetty-suola (apurit/taulukon-solu materiaali 1 0)
-        mat-kaytetty-natriumformiaatti (apurit/taulukon-solu materiaali 2 0)
-        mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 3 0)
+        mat-kaytetty-talvisuolaliuos (apurit/taulukon-solu materiaali 2 0)
+        mat-kaytetty-natriumformiaatti (apurit/taulukon-solu materiaali 3 0)
+        mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 4 0)
         suola (apurit/taulukko-otsikolla
                 (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
@@ -207,13 +210,13 @@
                                  :parametrit param})
                 "Oulun alueurakka 2014-2019, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")
         suola-kaytetty-suola (apurit/taulukon-solu suola 8 0)]
-    (is (= ymp-kaytetty-suola ymp-suola-yht mat-kaytetty-suola 1800M)
+    (is (= ymp-kaytetty-suolaliuos ymp-suolaliuos-yht mat-kaytetty-talvisuolaliuos 1800M)
         "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Talvisuolaliuos NaCl samalla tavalla")
-    (is (= ymp-kaytetty-natriumformiaatti mat-kaytetty-natriumformiaatti 200M)
+    (is (= ymp-kaytetty-natriumformiaatti mat-kaytetty-natriumformiaatti 2000M)
         "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Natriumformiaatti samalla tavalla")
     (is (= suola-kaytetty-suola
-           (+ ymp-kaytetty-suola ymp-kaytetty-natriumformiaatti)
-           (+ mat-kaytetty-suola mat-kaytetty-natriumformiaatti)
+           (+ ymp-kaytetty-suolaliuos ymp-kaytetty-suola)
+           (+ mat-kaytetty-suola mat-kaytetty-talvisuolaliuos)
            2000M) "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Natriumformiaatti samalla tavalla")
     ;; Testidatasta riippuvia testejä.. vähän huonoja
     (is (= 0.0 ymp-hiekka-totpros) "Ympäristöraportin hiekan toteumaprosentin pitäisi olla nolla, toteumia ei ole")

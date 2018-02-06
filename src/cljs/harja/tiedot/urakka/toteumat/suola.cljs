@@ -5,18 +5,78 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [reagent.ratom :refer [reaction]]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(declare hae-toteumat hae-materiaalit hae-toteumien-reitit!)
 
+(defonce suolatoteumissa? (atom false))
+
+(defonce suodatin-valinnat (atom {:suola "Kaikki"}))
+
+(defonce materiaalit
+  (reaction<! [hae? @suolatoteumissa?]
+              (when hae?
+                (hae-materiaalit))))
+
+(defonce toteumat
+  (reaction<! [hae? @suolatoteumissa?
+               urakka @nav/valittu-urakka
+               sopimus @tiedot-urakka/valittu-sopimusnumero
+               hoitokausi @tiedot-urakka/valittu-hoitokausi
+               kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and hae? urakka)
+                (go
+                  (into []
+                        ;; luodaan kaikille id
+                        (map-indexed (fn [i rivi] (assoc rivi :id i)))
+
+                        (<! (hae-toteumat (:id urakka) (first sopimus)
+                                          (or kuukausi hoitokausi))))))))
+
+(defonce valitut-toteumat (atom #{}))
+
+(defonce valitut-toteumat-kartalla
+  (reaction<! [toteumat @valitut-toteumat]
+              (hae-toteumien-reitit! toteumat)))
 
 (defonce lampotilojen-hallinnassa? (atom false))
+
+(defonce valittu-suolatoteuma (atom nil))
+
+(def karttataso-suolatoteumat (atom false))
+
+(defn valittu-suolatoteuma? [suolatoteuma]
+  (and @valittu-suolatoteuma suolatoteuma (= (:tid suolatoteuma) (:tid @valittu-suolatoteuma))))
+
+(defn hae-toteuman-sijainti [toteuma]
+  (:sijainti (first (filter #(= (:tid toteuma) (:id %)) @valitut-toteumat-kartalla))))
+
+(defonce suolatoteumat-kartalla
+  (reaction
+    (when @karttataso-suolatoteumat
+      (kartalla-esitettavaan-muotoon
+        (let [yksittaiset-toteumat (filter
+                                     #(contains? @valitut-toteumat (:tid %))
+                                     (apply concat (map :toteumat @toteumat)))]
+          (map #(assoc % :tyyppi-kartalla :suolatoteuma
+                         :sijainti (hae-toteuman-sijainti %)) yksittaiset-toteumat))
+        #(valittu-suolatoteuma? %)))))
 
 (defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
                                :sopimus-id sopimus-id
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
+
+(defn hae-toteumien-reitit! [toteuma-idt]
+  (when (not (empty? toteuma-idt))
+    (k/post! :hae-toteumien-reitit {:idt toteuma-idt})))
 
 (defn tallenna-toteumat [urakka-id sopimus-id rivit]
   (let [tallennettavat (into [] (->> rivit
@@ -72,7 +132,7 @@
 
 (defn tallenna-teiden-hoitourakoiden-lampotilat [hoitokausi lampotilat]
   (let [lampotilat (mapv #(assoc % :alkupvm (first hoitokausi)
-                                  :loppupvm (second hoitokausi))
+                                   :loppupvm (second hoitokausi))
                          (vec (vals lampotilat)))]
     (log "tallenna lämpötilat: " (pr-str lampotilat))
     (k/post! :tallenna-teiden-hoitourakoiden-lampotilat {:hoitokausi hoitokausi

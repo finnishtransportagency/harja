@@ -78,6 +78,12 @@ SELECT paivita_sopimuksen_materiaalin_kaytto(
      FROM toteuma
      WHERE id = :toteuma) :: DATE);
 
+--name: paivita-urakan-materiaalin-kaytto-hoitoluokittain
+SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(
+    :urakka::INTEGER,
+    :alkupvm::DATE,
+    :loppupvm::DATE);
+
 -- name: hae-urakan-suunnitellut-materiaalit-raportille
 SELECT DISTINCT
   urakka.nimi             AS "urakka-nimi",
@@ -282,8 +288,7 @@ SELECT
   date_trunc('day', t.alkanut) AS pvm,
   tm.maara,
   t.lisatieto,
-  (k.jarjestelma = TRUE)       AS koneellinen,
-  t.reitti
+  (k.jarjestelma = TRUE)       AS koneellinen
 FROM toteuma_materiaali tm
   JOIN toteuma t ON (tm.toteuma = t.id AND t.poistettu IS NOT TRUE)
   JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id

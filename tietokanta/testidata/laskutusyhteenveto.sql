@@ -51,10 +51,20 @@ INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, 
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
         '2015-02-20 10:23:54+02', '2015-02-19 00:00:00+02', '2015-02-19 02:00:00+02',
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Talvisuola');
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
+VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Talvisuola'), '2015-02-19 10:23:54+02',
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 200);
+
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
+        '2015-02-20 10:23:54+02', '2015-02-19 00:00:00+02', '2015-02-19 02:00:00+02',
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Natriumformiaatti');
+-- Formiaatit eivät ole (enää) talvisuolaa, eli ei saa vaikuttaa suolasakkoon, lisätään siksi tähän paljon sitä.
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Natriumformiaatti'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Natriumformiaatti'), 200);
+        (SELECT id FROM materiaalikoodi WHERE nimi='Natriumformiaatti'), 2000);
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
