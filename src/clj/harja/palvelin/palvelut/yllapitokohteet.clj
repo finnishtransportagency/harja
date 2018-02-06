@@ -562,14 +562,13 @@
           (lukot/yrita-ajaa-lukon-kanssa
             db
             "yllapitokohteiden-sahkoposti"
-            #(let [lahetettavat-kohteet
-                   (q/hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen db)
-                   kohteet-urakoittain (group-by :paallystysurakka-sampo-id lahetettavat-kohteet)]
-               (doseq [urakan-kohteet kohteet-urakoittain]
-                 (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-                   {:fim fim
-                    :email email
-                    :valmistuneet-kohteet (second urakan-kohteet)})))))))
+            #(let [mailattavat-kohteet (q/hae-tanaan-valmistuvien-tiemerkintakohteiden-idt db)]
+               (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+                 {:fim fim
+                  :db db
+                  :email email
+                  :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                                   db (map :id mailattavat-kohteet)))}))))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]

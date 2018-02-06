@@ -740,26 +740,10 @@ FROM yllapitokohde ypk
   LEFT JOIN odottava_sahkoposti os ON os.yllapitokohde_id = ypk.id
 WHERE ypk.id IN (:idt);
 
--- name: hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen
+-- name: hae-tanaan-valmistuvien-tiemerkintakohteiden-idt
 SELECT
-  ypk.id                 AS id,
-  ypk.nimi               AS "kohde-nimi",
-  ypk.tr_numero          AS "tr-numero",
-  ypk.tr_alkuosa         AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa        AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys   AS "tr-loppuetaisyys",
-  ypka.tiemerkinta_loppu AS "aikataulu-tiemerkinta-loppu",
-  pu.id                  AS "paallystysurakka-id",
-  pu.nimi                AS "paallystysurakka-nimi",
-  pu.sampoid             AS "paallystysurakka-sampo-id",
-  tu.id                  AS "tiemerkintaurakka-id",
-  tu.nimi                AS "tiemerkintaurakka-nimi",
-  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
+  ypk.id                 AS id
 FROM yllapitokohde ypk
-  JOIN urakka pu ON ypk.urakka = pu.id
-  LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
-  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
 
