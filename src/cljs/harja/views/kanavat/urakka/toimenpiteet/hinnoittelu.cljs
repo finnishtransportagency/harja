@@ -228,15 +228,6 @@
 
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
-(defn- materiaalin-yksikko
-  [materiaalit materiaali-hinta]
-  (some #(when (first (filter (fn [materiaali-kirjaus]
-                                (= (::hinta/materiaali-id materiaali-hinta)
-                                   (::materiaali/id materiaali-kirjaus)))
-                              (::materiaali/muutokset %)))
-           (::materiaali/yksikko %))
-        materiaalit))
-
 (defn- materiaali-hinnoittelurivi
   [e! materiaali-hinta materiaalit]
   [:tr
@@ -250,7 +241,7 @@
                          [kentta-hinnalle e! materiaali-hinta ::hinta/maara
                           {:tyyppi :positiivinen-numero}])]
    [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
-          (materiaalin-yksikko materiaalit materiaali-hinta)
+          (::hinta/yksikko materiaali-hinta)
           [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
            {:tyyppi :string}])]
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
