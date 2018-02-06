@@ -102,21 +102,19 @@ WHERE urakka = :urakka
 -- Samat materiaalit summataan yhteen.
 SELECT
   SUM(maara)              AS kokonaismaara,
-  urakka.nimi             AS "urakka-nimi",
-  materiaalikoodi.nimi    AS "materiaali-nimi",
-  materiaalikoodi.yksikko AS "materiaali-yksikko"
-FROM toteuma_materiaali
-  LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-  JOIN urakka ON urakka.id = (SELECT urakka
-                              FROM toteuma
-                              WHERE id = toteuma_materiaali.toteuma)
-  JOIN toteuma ON toteuma.id = toteuma
-                  AND urakka.id = :urakka
-                  AND alkanut :: DATE >= :alku
-                  AND alkanut :: DATE <= :loppu
-                  AND toteuma.poistettu IS NOT TRUE
-                  AND toteuma_materiaali.poistettu IS NOT TRUE
-GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko;
+  u.nimi                  AS "urakka-nimi",
+  mk.nimi                 AS "materiaali-nimi",
+  mk.yksikko              AS "materiaali-yksikko",
+  mk.materiaalityyppi
+FROM toteuma t
+  JOIN toteuma_materiaali tm ON t.id = tm.toteuma
+                                AND tm.poistettu IS NOT TRUE
+  LEFT JOIN materiaalikoodi mk ON mk.id = tm.materiaalikoodi
+  JOIN urakka u ON u.id = t.urakka
+  WHERE t.urakka = :urakka
+        AND alkanut BETWEEN :alku AND :loppu
+        AND t.poistettu IS NOT TRUE
+GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
 -- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
@@ -125,18 +123,18 @@ SELECT
   SUM(maara)              AS kokonaismaara,
   urakka.nimi             AS "urakka-nimi",
   materiaalikoodi.nimi    AS "materiaali-nimi",
-  materiaalikoodi.yksikko AS "materiaali-yksikko"
+  materiaalikoodi.yksikko AS "materiaali-yksikko",
+  materiaalikoodi.materiaalityyppi
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
   INNER JOIN toteuma ON toteuma.id = toteuma
-                        AND alkanut :: DATE >= :alku
-                        AND alkanut :: DATE <= :loppu
+                        AND alkanut BETWEEN :alku AND :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
   JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
 WHERE urakka.hallintayksikko = :hallintayksikko AND
       (:urakkatyyppi :: URAKKATYYPPI IS NULL OR urakka.tyyppi = :urakkatyyppi :: URAKKATYYPPI)
-GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_materiaali.id;
+GROUP BY "materiaali-nimi", "urakka-nimi", materiaalikoodi.yksikko, toteuma_materiaali.id, materiaalikoodi.materiaalityyppi;
 
 -- name: hae-koko-maan-toteutuneet-materiaalit-raportille
 -- Palauttaa kaikkien urakoiden materiaalit ja määrät jokaisen omana rivinä.
@@ -147,18 +145,18 @@ SELECT
   o.nimi                  AS "hallintayksikko-nimi",
   materiaalikoodi.nimi    AS "materiaali-nimi",
   materiaalikoodi.yksikko AS "materiaali-yksikko",
+  materiaalikoodi.materiaalityyppi,
   o.elynumero
 FROM toteuma_materiaali
   LEFT JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
   INNER JOIN toteuma ON toteuma.id = toteuma
-                        AND alkanut :: DATE >= :alku
-                        AND alkanut :: DATE <= :loppu
+                        AND alkanut BETWEEN :alku AND :loppu
                         AND toteuma.poistettu IS NOT TRUE
                         AND toteuma_materiaali.poistettu IS NOT TRUE
   JOIN urakka ON (urakka.id = toteuma.urakka AND urakka.urakkanro IS NOT NULL)
   JOIN organisaatio o ON urakka.hallintayksikko = o.id
 WHERE (:urakkatyyppi :: URAKKATYYPPI IS NULL OR urakka.tyyppi = :urakkatyyppi :: URAKKATYYPPI)
-GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, o.elynumero, materiaalikoodi.yksikko
+GROUP BY "materiaali-nimi", "urakka-nimi", o.nimi, o.elynumero, materiaalikoodi.yksikko, materiaalikoodi.materiaalityyppi;
 
 -- name: hae-urakan-toteumat-materiaalille
 -- Hakee kannasta kaikki urakassa olevat materiaalin toteumat. Ei vaadi, että toteuma/materiaali
