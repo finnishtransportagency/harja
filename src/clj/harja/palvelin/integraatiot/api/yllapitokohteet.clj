@@ -204,9 +204,10 @@
       (let [kohteen-tiedot (first (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                                     db [kohde-id]))
             kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
-        ;; TODO Varmista että toimii
         (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
-          {:fim fim :email email :kohteen-tiedot kohteen-tiedot
+          {:fim fim
+           :email email
+           :kohteen-tiedot kohteen-tiedot
            :tiemerkintapvm (json/pvm-string->java-util-date (:valmis-tiemerkintaan aikataulu))
            :kayttaja kayttaja})))
 
@@ -237,9 +238,10 @@
        :muokkaaja (:id kayttaja)
        :id kohde-id})
 
-    ;; TODO Varmista että toimii
     (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-      {:kayttaja kayttaja :fim fim
+      {:kayttaja kayttaja
+       :fim fim
+       :db db
        :email email
        :valmistuneet-kohteet (into [] (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                                         db (map :id valmistuneet-kohteet)))})
