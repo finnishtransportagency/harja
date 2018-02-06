@@ -62,6 +62,7 @@
                               ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-kohde-alku
                               ::aikajana/loppu aikataulu-kohde-valmis
+                              ::aikajana/kohde-nimi (:nimi rivi)
                               ::aikajana/teksti (aikajana-teksti "Koko kohde"
                                                                  aikataulu-kohde-alku
                                                                  aikataulu-kohde-valmis)}))
@@ -72,6 +73,7 @@
                               ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-paallystys-alku
                               ::aikajana/loppu aikataulu-paallystys-loppu
+                              ::aikajana/kohde-nimi (:nimi rivi)
                               ::aikajana/teksti (aikajana-teksti "Päällystys"
                                                                  aikataulu-paallystys-alku
                                                                  aikataulu-paallystys-loppu)}))
@@ -82,6 +84,7 @@
                               ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-tiemerkinta-alku
                               ::aikajana/loppu aikataulu-tiemerkinta-loppu
+                              ::aikajana/kohde-nimi (:nimi rivi)
                               ::aikajana/teksti (aikajana-teksti "Tiemerkintä"
                                                                  aikataulu-tiemerkinta-alku
                                                                  aikataulu-tiemerkinta-loppu)}))])

@@ -336,13 +336,21 @@
                                      {:valmis-fn valmis!
                                       :peru-fn peru!
                                       :nakyvissa? true
-                                      ; TODO Osaa passata useat kohteet sisään, ja passaa vain tiemerkinnät(?)
-                                      ;:kohde-id (:id rivi)
-                                      ;:kohde-nimi (:nimi rivi)
+                                      :kohteet (map (fn [raahaus]
+                                                      (-> {:id (first (::aikajana/drag raahaus))
+                                                           :nimi (::aikajana/kohde-nimi raahaus)
+                                                           :valmis-pvm (::aikajana/loppu raahaus)}))
+                                                    drag)
                                       :urakka-id urakka-id
                                       :vuosi vuosi
-                                      ; TODO Lisää kohteelle mailitiedot drag-tietoihin?
-                                      :lomakedata {:kopio-itselle? true}})
+                                      ; TODO Kohteiden mailitiedot, yhdistä koskemaan kaikkia raahattuja kohteita?
+                                      ;;:lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
+                                      ;;             :muut-vastaanottajat (zipmap (iterate inc 1)
+                                      ;;                                          (map #(-> {:sahkoposti %})
+                                      ;;                                               (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
+                                      ;;             :saate (:saate aiemmat-sahkopostitiedot)}
+                                      ;;
+                                      })
                              (valmis!)))
        :muuta! (fn [drag]
                  (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
@@ -576,8 +584,6 @@
                                                {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
                                                 :saate (:saate lomakedata)
                                                 :kopio-itselle? (:kopio-itselle? lomakedata)}))
-                           :kohde-id (:id rivi)
-                           :kohde-nimi (:nimi rivi)
                            :kohteet [{:id (:id rivi)
                                       :nimi (:nimi rivi)
                                       :valmis-pvm arvo}]
