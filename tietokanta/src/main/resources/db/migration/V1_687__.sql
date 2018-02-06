@@ -9,15 +9,15 @@ CREATE TABLE paikkauskohde (
 
 CREATE TABLE paikkaustoteuma (
   id                 SERIAL PRIMARY KEY,
-  luoja              INTEGER REFERENCES kayttaja (id),
-  luotu              TIMESTAMP DEFAULT NOW(),
-  muokkaaja          INTEGER REFERENCES kayttaja (id),
-  muokattu           TIMESTAMP,
-  poistaja           INTEGER REFERENCES kayttaja (id),
-  poistettu          BOOLEAN                                 NOT NULL DEFAULT FALSE,
+  "luoja-id"     INTEGER REFERENCES kayttaja (id),
+  luotu          TIMESTAMP DEFAULT NOW(),
+  "muokkaaja-id" INTEGER REFERENCES kayttaja (id),
+  muokattu       TIMESTAMP,
+  "poistaja-id"  INTEGER REFERENCES kayttaja (id),
+  poistettu      BOOLEAN                                     NOT NULL  DEFAULT FALSE,
 
-  urakka             INTEGER REFERENCES urakka (id)          NOT NULL,
-  paikkauskohde      INTEGER REFERENCES paikkauskohde (id)   NOT NULL,
+  "urakka-id"    INTEGER REFERENCES urakka (id)          NOT NULL,
+  "paikkauskohde-id" INTEGER REFERENCES paikkauskohde (id)   NOT NULL,
   "ulkoinen-id"      INTEGER                                 NOT NULL,
 
   alkuaika           TIMESTAMP                               NOT NULL,
@@ -33,26 +33,26 @@ CREATE TABLE paikkaustoteuma (
   kuulamylly         TEXT,
 
   CONSTRAINT paikkaustoteuman_uniikki_ulkoinen_id_luoja_urakka
-  UNIQUE ("ulkoinen-id", luoja, urakka)
+  UNIQUE ("ulkoinen-id", "luoja-id", "urakka-id")
 );
 
 CREATE TABLE paikkauksen_tienkohta (
-  id              SERIAL PRIMARY KEY,
-  paikkaustoteuma INTEGER REFERENCES paikkaustoteuma (id),
-  ajorata         INTEGER,
-  reunat          INTEGER [],
-  ajourat         INTEGER [],
-  ajouravalit     INTEGER [],
-  keskisaumat     INTEGER []
+  id                   SERIAL PRIMARY KEY,
+  "paikkaustoteuma-id" INTEGER REFERENCES paikkaustoteuma (id),
+  ajorata              INTEGER,
+  reunat               INTEGER [],
+  ajourat              INTEGER [],
+  ajouravalit          INTEGER [],
+  keskisaumat          INTEGER []
 );
 
 CREATE TABLE paikkauksen_materiaalit (
-  id              SERIAL PRIMARY KEY,
-  paikkaustoteuma INTEGER REFERENCES paikkaustoteuma (id),
-  esiintyma       TEXT,
-  "km-arvo"       TEXT,
-  muotoarvo       TEXT,
-  pitoisuus       DECIMAL,
-  "lisa-aineet"   TEXT
+  id                   SERIAL PRIMARY KEY,
+  "paikkaustoteuma-id" INTEGER REFERENCES paikkaustoteuma (id),
+  esiintyma            TEXT,
+  "km-arvo"            TEXT,
+  muotoarvo            TEXT,
+  pitoisuus            DECIMAL,
+  "lisa-aineet"        TEXT
 );
 
