@@ -554,7 +554,6 @@
 (defn tee-ajastettu-sahkopostin-lahetystehtava [db fim email lahetysaika]
   (if lahetysaika
     (do
-      ;; TODO Tarkista, että tämä toimii edelleen
       (log/debug "Ajastetaan ylläpitokohteiden sähköpostin lähetys ajettavaksi joka päivä kello: " lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         lahetysaika
