@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "paikkauskustannukset": {
+      "id": "urn:harja/paikkauskustannukset",
+      "type": "array",
+      "maxItems": 100,
+      "required": true,
+      "items": {
+        "id": "urn:harja/paikkauskustannukset/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "paikkauskustannus": {
+            "type": "object",
+            "additionalProperaties": false,
+            "required": true,
+            "$ref": "file:resources/api/schemas/entities/paikkauskustannus.schema.json"
+          }
+        }
+      }
+    }
+  }
+}
