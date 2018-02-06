@@ -159,7 +159,7 @@
                                                    {::m/urakka-id urakka-id
                                                     ::m/id poistettava-materiaali-id})))))
 
-(deftest materiaalien-alkuperaisen-maaran-muokkaus
+(deftest materiaalien-maaran-ja-yksikon-muokkaus
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
         materiaali-nimi "Hiekkasäkki"
         uusi-alkuperainen-maara 48598
@@ -167,40 +167,58 @@
         hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
                                 (get-in % [:muutokset 0 :id]))
                              materiaalilistaukset)
+        idt (some #(when (= "Hiekkasäkki" (:nimi %))
+                     (map :id (:muutokset %)))
+                  materiaalilistaukset)
+        yksikko "kg"
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :muuta-materiaalien-alkuperainen-maara
+                          :muuta-materiaalien-alkuperainen-maara-ja-yksikko
                           testi/+kayttaja-jvh+
                           {::m/urakka-id urakka-id
-                           :uudet-alkuperaiset-maarat [{::m/id hiekkasakin-id
-                                                        ::m/alkuperainen-maara uusi-alkuperainen-maara}]})
+                           :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
+                                                                   ::m/idt idt
+                                                                   ::m/alkuperainen-maara uusi-alkuperainen-maara
+                                                                   ::m/yksikko yksikko}]})
         uudet-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-vesivayla-materiaalilistaus
                                           testi/+kayttaja-jvh+
                                           {::m/urakka-id urakka-id})
         hiekkasakki (first (filter #(= (::m/nimi %) materiaali-nimi) uudet-materiaalit))]
 
-    (is (= (::m/alkuperainen-maara hiekkasakki) uusi-alkuperainen-maara))))
+    (is (= (::m/alkuperainen-maara hiekkasakki) uusi-alkuperainen-maara))
+    (is (= (::m/yksikko hiekkasakki) yksikko))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+        uusi-alkuperainen-maara 48598
+        materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
+        hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
+                                (get-in % [:muutokset 0 :id]))
+                             materiaalilistaukset)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :muuta-materiaalien-alkuperainen-maara
+                                           :muuta-materiaalien-alkuperainen-maara-ja-yksikko
                                            testi/+kayttaja-ulle+
                                            {::m/urakka-id urakka-id
-                                            :uudet-alkuperaiset-maarat []})))))
+                                            :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
+                                                                                    ::m/idt [hiekkasakin-id]
+                                                                                    ::m/alkuperainen-maara uusi-alkuperainen-maara}]})))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-eri-urakkaan
   (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
         materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
         hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
                                 (get-in % [:muutokset 0 :id]))
-                             materiaalilistaukset)]
+                             materiaalilistaukset)
+        idt (some #(when (= "Hiekkasäkki" (:nimi %))
+                     (map :id (:muutokset %)))
+                  materiaalilistaukset)]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :muuta-materiaalien-alkuperainen-maara
+                                                   :muuta-materiaalien-alkuperainen-maara-ja-yksikko
                                                    testi/+kayttaja-jvh+
                                                    {::m/urakka-id urakka-id
-                                                    :uudet-alkuperaiset-maarat [{::m/id hiekkasakin-id
-                                                                                 ::m/alkuperainen-maara 666}]})))))
+                                                    :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
+                                                                                            ::m/idt idt
+                                                                                            ::m/alkuperainen-maara 666}]})))))
 
 
 (deftest toimenpiteen-materiaalien-poisto
@@ -212,24 +230,24 @@
     (is (= 0 rivi-lkm))))
 
 (deftest materiaalin-halytysrajan-alitus
- (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
-       materiaali-halytysrajalla (first (q-map "SELECT nimi, maara, halytysraja FROM vv_materiaali WHERE \"urakka-id\"=" urakka-id " AND halytysraja IS NOT NULL ORDER BY nimi, \"urakka-id\""))
-       {nimi :nimi
-        aloitus-maara :maara
-        halytysraja :halytysraja
-        yksikko :yksikko} materiaali-halytysrajalla
-       sahkoposti-valitetty (atom false)
-       fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-helsingin-vesivaylaurakan-kayttajat.xml"))
+  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+        materiaali-halytysrajalla (first (q-map "SELECT nimi, maara, halytysraja FROM vv_materiaali WHERE \"urakka-id\"=" urakka-id " AND halytysraja IS NOT NULL ORDER BY nimi, \"urakka-id\""))
+        {nimi :nimi
+         aloitus-maara :maara
+         halytysraja :halytysraja
+         yksikko :yksikko} materiaali-halytysrajalla
+        sahkoposti-valitetty (atom false)
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-helsingin-vesivaylaurakan-kayttajat.xml"))
 
-       materiaalin-vahennys {::m/urakka-id urakka-id
-                             ::m/nimi      nimi
-                             ::m/maara     (- (- (+ aloitus-maara 1) halytysraja))
-                             ::m/pvm       (pvm/nyt)
-                             ::m/yksikko   yksikko}]
-   (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
-   (with-fake-http
-     [+testi-fim+ fim-vastaus]
-     (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))
+        materiaalin-vahennys {::m/urakka-id urakka-id
+                              ::m/nimi nimi
+                              ::m/maara (- (- (+ aloitus-maara 1) halytysraja))
+                              ::m/pvm (pvm/nyt)
+                              ::m/yksikko yksikko}]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))
 
-   (testi/odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
-   (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
+    (testi/odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
+    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))

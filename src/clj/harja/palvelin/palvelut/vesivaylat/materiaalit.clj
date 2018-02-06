@@ -78,6 +78,12 @@
 (defn- muuta-materiaalien-alkuperainen-maara-ja-yksikko [db user tiedot]
   (let [urakka-id (::m/urakka-id tiedot)
         uudet (:uudet-alkuperaiset-maarat-ja-yksikot tiedot)]
+    (assert (every? #(not (nil? (::m/idt %))) uudet) "Päivitettävien materiaalien idt ei voi olla nil")
+    (assert (every? (fn [uusi]
+                      (some #(= (::m/ensimmainen-kirjaus-id uusi) %)
+                            (::m/idt uusi)))
+                    uudet)
+            "ensimmainen-kirjaus-id täytyy löytyä myös :idt avaimesta")
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-vesivayla-materiaalit user
                                     (::m/urakka-id tiedot))
     (doseq [uusi uudet
