@@ -77,9 +77,11 @@
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
 
-(defn- suodata-olemassaolevat-kohteet [db urakka-id kohteet]
-  (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))]
-    (filterv #(not (yha-idt (:yha-id %))) kohteet)))
+(defn- suodata-olemassaolevat-kohteet [db urakka-id kohteet-yhasta]
+  (let [harjan-kohteiden-yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))
+        yha-kohderivin-yhaid-ei-loydy-harjan-kohteista #(not (harjan-kohteiden-yha-idt (:yha-id %)))]
+    (filterv yha-kohderivin-yhaid-ei-loydy-harjan-kohteista kohteet-yhasta)))
+
 
 (defn- hae-yha-kohteet
   "Hakee kohteet YHA:sta ja palauttaa vain uudet, Harjasta puuttuvat kohteet."
@@ -87,7 +89,7 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Haetaan kohteet yhasta")
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
-        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
+        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl, eka" (first yha-kohteet))
         uudet-kohteet (suodata-olemassaolevat-kohteet db urakka-id yha-kohteet)
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
     uudet-kohteet))
