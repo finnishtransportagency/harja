@@ -19,7 +19,8 @@
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.kyselyt.konversio :as konv])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -740,11 +741,16 @@
             vuosi 2017
             leppajarvi-aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
             leppajarvi-aikataulu-tiemerkinta-loppu (pvm/->pvm "25.5.2060")
+            saate "Kohde valmistui ajallaan"
+            muut-vastaanottajat #{"erkki.petteri@esimerkki.com"}
             kohteet [{:id leppajarven-ramppi-id
+                      :sahkopostitiedot {:kopio-itselle? true
+                                         :muut-vastaanottajat muut-vastaanottajat
+                                         :saate saate}
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
-            odottavat-mailit-ennen-lisaysta (ffirst (q
-                                                      (str "SELECT count(*) FROM odottava_sahkoposti
+            odottavat-mailit-maara-ennen-lisaysta (ffirst (q
+                                                            (str "SELECT count(*) FROM odottava_sahkoposti
                                          WHERE yllapitokohde_id = " 1 ";")))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
@@ -754,15 +760,24 @@
                                      :vuosi vuosi
                                      :kohteet kohteet})
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
-            odottavat-mailit-lisayksen-jalkeen (ffirst (q
-                                                         (str "SELECT count(*) FROM odottava_sahkoposti
-                                         WHERE yllapitokohde_id = " 1 ";")))]
+            odottavat-mailit-lisayksen-jalkeen (q-map
+                                                 (str "SELECT * FROM odottava_sahkoposti
+                                         WHERE yllapitokohde_id = " 1 ";"))
+            odottava-maili (first odottavat-mailit-lisayksen-jalkeen)]
         ;; Muokatut kentät päivittyivät
         (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
-        ;; Leppäjärven tiemerkintä merkittiin valmistuneeksi tulevaisuuteen -> maili ei lähde, vaan menee odotukseen
-        (is (= odottavat-mailit-ennen-lisaysta (dec odottavat-mailit-lisayksen-jalkeen)))
+        ;; Ennen lähetystä kohteella ei ollut yhtään odottavaa mailia
+        (is (zero? odottavat-mailit-maara-ennen-lisaysta))
+
+        ;; Leppäjärven tiemerkintä merkittiin valmistuneeksi tulevaisuuteen -> maili ei lähde, vaan tiedot menevät odotukseen
+        (is (= odottavat-mailit-maara-ennen-lisaysta (dec (count odottavat-mailit-lisayksen-jalkeen))))
+        (is (= (:tyyppi odottava-maili) "tiemerkinta_valmistunut"))
+        (is (= (:yllapitokohde_id odottava-maili) leppajarven-ramppi-id))
+        (is (= (:saate odottava-maili) saate))
+        (is (= (konv/array->set (:vastaanottajat odottava-maili)) muut-vastaanottajat))
+        (is (true? (:kopio_lahettajalle odottava-maili)))
         (<!! (timeout 5000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
