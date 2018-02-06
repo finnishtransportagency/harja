@@ -13,7 +13,8 @@ CREATE TABLE paikkaustoteuma (
   luotu              TIMESTAMP DEFAULT NOW(),
   muokkaaja          INTEGER REFERENCES kayttaja (id),
   muokattu           TIMESTAMP,
-  poistettu          BOOLEAN                                 NOT NULL                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 DEFAULT FALSE,
+  poistaja           INTEGER REFERENCES kayttaja (id),
+  poistettu          BOOLEAN                                 NOT NULL DEFAULT FALSE,
 
   urakka             INTEGER REFERENCES urakka (id)          NOT NULL,
   paikkauskohde      INTEGER REFERENCES paikkauskohde (id)   NOT NULL,
