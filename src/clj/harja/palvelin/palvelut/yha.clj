@@ -78,7 +78,7 @@
     urakat))
 
 (defn- suodata-harjassa-olevat-kohteet [db urakka-id kohteet-yhasta]
-  (let [on-harjassa? (set (map :yha-id (yha-q/hae-harjassa-olevat-kohde-idt db {:annetut-yha-idt (mapv :yha-id kohteet-yhasta)})))]
+  (let [on-harjassa? (set (map :yha-id (yha-q/harjassa-olevat-yha-idt db {:annetut-yha-idt (mapv :yha-id kohteet-yhasta)})))]
     (log/debug "suodatuksen on-harjassa? -joukko oli" on-harjassa?)
     (filterv (fn kohteen-yha-id-ei-ole-harjassa [kohde]
                (not (on-harjassa? (:yha-id kohde))))

@@ -134,7 +134,7 @@ SELECT yhaid
 FROM yhatiedot
 WHERE urakka = :urakkaid;
 
--- name: hae-harjassa-olevat-kohde-idt
+-- name: harjassa-olevat-yha-idt
 SELECT yhaid as "yha-id", TRUE as "loytyy-harjasta" FROM yllapitokohde WHERE yhaid IN (:annetut-yha-idt) AND poistettu IS FALSE;
 
 -- name: merkitse-urakan-yllapitokohteet-paivitetyksi<!
