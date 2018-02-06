@@ -38,7 +38,7 @@
    [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
-     :fmt #(fmt/desimaaliluku % 3) :desimaalien-maara 3 :leveys 10}
+     :fmt #(fmt/desimaaliluku-opt % 3) :desimaalien-maara 3 :leveys 10}
     {:otsikko ""
      :nimi :nayta-kartalla
      :tyyppi :komponentti
@@ -77,7 +77,7 @@
                                oikeudet/urakat-toteumat-suola
                                (:id @nav/valittu-urakka))
                            #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
-                                  (paivita! toteumat)))
+                                  (paivita! tiedot/toteumat)))
                            :ei-mahdollinen)
                :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-toteumat-suola)
                :tyhja (if (nil? @tiedot/toteumat)
@@ -100,7 +100,7 @@
      {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 15 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna päivämäärä"]]
       :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
-     {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku % 3)
+     {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 15 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
      {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 30 :muokattava? muokattava?
@@ -152,7 +152,7 @@
             materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
                                                nimi)
                                             @tiedot/toteumat))
-            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))) "t")]
+            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku-opt (reduce + (keep :maara listaus))) "t")]
         (suolatoteumat-taulukko muokattava?
                                 urakka
                                 sopimus-id
