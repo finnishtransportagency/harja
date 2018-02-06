@@ -328,14 +328,11 @@
           [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Venytä aikajanaa normaalisti alusta tai lopusta, jolloin kaikki aikajanat venyvät samaan suuntaan yhtä paljon."]]]]]]
      [aikajana/aikajana
       {:ennen-muokkausta (fn [drag valmis! peru!]
-                           ;; Näytä modal jos tiemerkinnän valmistumispvm:ää muokattiin, muuten tallenna suoraan
-                           ; TODO DRAG SISÄLTÄÄ MONTA
-                           (log "RAAHAUS TIEMERKINTÄ? " (pr-str (= (second (:drag drag)) :tiemerkinta)))
-                           (log "RAAHAUS LOPPU MUUTTUI? " (pr-str (not (pvm/sama-pvm? (::aikajana/loppu drag) (::aikajana/alkup-loppu drag)))))
-                           (if (and (= (second (:drag drag)) :tiemerkinta)
-                                    (not (pvm/sama-pvm? (::aikajana/loppu drag) (::aikajana/alkup-loppu drag))))
+                           ;; Näytä modal jos raahattujen joukossa oli tiemerkinnän valmistumispvm, muuten tallenna suoraan
+                           (if (some #(and (= (second (::aikajana/drag %)) :tiemerkinta)
+                                           (not (pvm/sama-pvm? (::aikajana/loppu %) (::aikajana/alkup-loppu %))))
+                                     drag)
                              (reset! tiedot/tiemerkinta-valmis-modal-data
-                                     ;; TODO Osaa yhdistää annetut mailitiedot palvelimen payloadiin myös tässä
                                      {:valmis-fn valmis!
                                       :peru-fn peru!
                                       :nakyvissa? true
@@ -344,7 +341,7 @@
                                       ;:kohde-nimi (:nimi rivi)
                                       :urakka-id urakka-id
                                       :vuosi vuosi
-                                      ; TODO Hae kannasta nykyiset mailitiedot tähän
+                                      ; TODO Lisää kohteelle mailitiedot drag-tietoihin?
                                       :lomakedata {:kopio-itselle? true}})
                              (valmis!)))
        :muuta! (fn [drag]
