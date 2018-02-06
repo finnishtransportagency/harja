@@ -245,12 +245,14 @@
            :tallenna (when
                        voi-kirjata?
                        (fn [sisalto]
+                         (println "SISALTO")
+                         (cljs.pprint/pprint sisalto)
                          (let [ch (chan)]
-                           (e! (tiedot/->MuutaAlkuperainenMaara
+                           (e! (tiedot/->MuutaAlkuperainenMaaraJaYksikko
                                  {:urakka-id (:urakka-id app)
-                                  :uudet-alkuperaiset-maarat (map
-                                                               #(select-keys % [::m/alkuperainen-maara ::m/muutokset])
-                                                               sisalto)
+                                  :uudet-alkuperaiset-maarat-ja-yksikot (map
+                                                                          #(select-keys % [::m/alkuperainen-maara ::m/muutokset ::m/yksikko])
+                                                                          sisalto)
                                   :chan ch}))
                            ch)))
            :vetolaatikot (into {}
@@ -262,7 +264,7 @@
            {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
            {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
            {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
-           {:otsikko "Yksikkö" :nimi ::m/yksikko :tyyppi :string :leveys 10 :muokattava? (constantly false)}
+           {:otsikko "Yksikkö" :nimi ::m/yksikko :tyyppi :string :leveys 10}
            {:otsikko "Hälytysraja" :nimi ::m/halytysraja :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
            (when voi-kirjata?
              {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti

@@ -23,7 +23,7 @@
 (s/def ::materiaalikirjaukset (s/coll-of ::materiaalikirjaus))
 
 (s/def ::poista-materiaalikirjaus (s/keys :req [::id ::urakka-id]))
-(s/def ::muuta-materiaalien-alkuperainen-maara (s/keys :req [::urakka-id]
-                                                       :req-un [::uudet-alkuperaiset-maarat]))
+(s/def ::muuta-materiaalien-alkuperainen-maara-ja-yksikko (s/keys :req [::urakka-id]
+                                                                  :req-un [::uudet-alkuperaiset-maarat-ja-yksikot]))
 
 (s/def ::poista-materiaalikirjauksia (s/coll-of ::poista-materiaalikirjaus))

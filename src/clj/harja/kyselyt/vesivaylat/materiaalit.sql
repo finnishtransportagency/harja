@@ -3,6 +3,11 @@ UPDATE vv_materiaali
 SET maara = :maara
 WHERE id = :id;
 
+-- name: paivita-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta<!
+UPDATE vv_materiaali
+SET yksikko = :yksikko
+WHERE id IN (:idt);
+
 -- name: urakan-tiedot-sahkopostin-lahetysta-varten
 SELECT sampoid,
        nimi
