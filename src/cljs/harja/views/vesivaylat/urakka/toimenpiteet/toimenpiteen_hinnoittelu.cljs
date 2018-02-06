@@ -168,6 +168,15 @@
         "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yhteensa tyot-yhteensa
                                            yleiskustannuslisien-osuus))]]]]))
 
+;; (defn- suunniteltu-tyo-voimassa-paivamaaralle? [tp-pvm tyo]
+;;   ;; (log "valissa " (pr-str  tp-pvm) (:alkupvm tyo) (:loppupvm tyo) "->" (pr-str (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo))))
+;;   (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo)))
+
+;; (defn- suunnitellut-tyot-paivamaaralle [app* pvm]
+;;   (filter (partial suunniteltu-tyo-voimassa-paivamaaralle? pvm)
+;;           (:suunnitellut-tyot app*)))
+
+
 (defn- sopimushintaiset-tyot [e! app*]
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
         ei-poistetut-tyot (remove ::m/poistettu? tyot)]
@@ -183,7 +192,9 @@
                                                                  (::tyo/toimenpidekoodi-id tyorivi))
                  yksikko (:yksikko toimenpidekoodi)
                  yksikkohinta (:yksikkohinta toimenpidekoodi)
-                 tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
+                 tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))
+                 ;; tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))
+                 ]
              ^{:key index}
              [:tr
               [:td
@@ -197,6 +208,8 @@
                                  (:tehtavan_nimi %)
                                  "Valitse työ")
                    :class "livi-alasveto-250 inline-block"
+                   ;; XXX meneekö oikein vs urakkavuodet?
+
                    :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
                                                (:tehtava %))
                                            tyovalinnat))
@@ -306,7 +319,9 @@
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
-(defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
+(defn hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
+  ;; Tätä kutsutaan hinta-gridistä solun komponenttina, mutta muuttuu tilanteen mukaan hinnoittelu-leijukkeeksi
+  ;; tai tavalliseksi solun arovksi
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
         toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
@@ -338,8 +353,7 @@
                          (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                        (:id @nav/valittu-urakka))))}]]]]]
-
-       ;; Solun sisältö
+       ;; Piirrä solun sisältö
        (grid/arvo-ja-nappi
          {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                         (get-in app* [:valinnat :urakka-id])))
@@ -357,6 +371,7 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
+          ;; XXX meneekö oikein vs urakkavuodet?
           :arvo (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
                                  (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
                                                            suunnitellut-tyot)))
