@@ -224,8 +224,6 @@
   (as-> palvelu-fn f
         (if kysely-spec
           (fn [user payload]
-            (println "PAYLOAD")
-            (clojure.pprint/pprint payload)
             (testing (str "Palvelun " nimi " kysely on validi")
               (is (s/valid? kysely-spec payload)
                   (s/explain-str kysely-spec payload)))

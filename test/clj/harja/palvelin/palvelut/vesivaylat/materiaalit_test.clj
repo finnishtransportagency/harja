@@ -63,15 +63,17 @@
 
 (def testimateriaali-gen
   (gen/fmap
-    (fn [[nimi maara pvm lisatieto]]
+    (fn [[nimi maara pvm lisatieto yksikko]]
       {::m/urakka-id 1
        ::m/nimi nimi
        ::m/maara maara
        ::m/pvm pvm
-       ::m/lisatieto lisatieto})
+       ::m/lisatieto lisatieto
+       ::m/yksikko yksikko})
     (gen/tuple (gen/elements #{"poiju" "viitta" "akku"})
                (gen/choose -1000 1000)
                pvm-gen
+               gen/string-alphanumeric
                gen/string-alphanumeric)))
 
 (deftest materiaalen-kirjaus-ja-haku
@@ -118,7 +120,8 @@
                                            {::m/urakka-id urakka-id
                                             ::m/nimi "Ulle"
                                             ::m/maara 80000
-                                            ::m/pvm (pvm/nyt)})))))
+                                            ::m/pvm (pvm/nyt)
+                                            ::m/yksikko "kpl"})))))
 
 (deftest materiaalien-poisto
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
@@ -213,14 +216,16 @@
        materiaali-halytysrajalla (first (q-map "SELECT nimi, maara, halytysraja FROM vv_materiaali WHERE \"urakka-id\"=" urakka-id " AND halytysraja IS NOT NULL ORDER BY nimi, \"urakka-id\""))
        {nimi :nimi
         aloitus-maara :maara
-        halytysraja :halytysraja} materiaali-halytysrajalla
+        halytysraja :halytysraja
+        yksikko :yksikko} materiaali-halytysrajalla
        sahkoposti-valitetty (atom false)
        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-helsingin-vesivaylaurakan-kayttajat.xml"))
 
        materiaalin-vahennys {::m/urakka-id urakka-id
                              ::m/nimi      nimi
                              ::m/maara     (- (- (+ aloitus-maara 1) halytysraja))
-                             ::m/pvm       (pvm/nyt)}]
+                             ::m/pvm       (pvm/nyt)
+                             ::m/yksikko   yksikko}]
    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
    (with-fake-http
      [+testi-fim+ fim-vastaus]
