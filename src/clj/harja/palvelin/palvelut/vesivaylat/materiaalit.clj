@@ -63,17 +63,19 @@
     (m-q/poista-materiaalikirjaus db user (::m/id tiedot))
     (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
 
-(defn- muuta-materiaalin-alkuperainen-maara [db materiaali]
+(defn- muuta-materiaalin-alkuperainen-maara [db user materiaali]
   (m-q/paivita-materiaalin-alkuperainen-maara<!
     db
     {:maara (::m/alkuperainen-maara materiaali)
-     :id (::m/ensimmainen-kirjaus-id materiaali)}))
+     :id (::m/ensimmainen-kirjaus-id materiaali)
+     :muokkaaja (:id user)}))
 
-(defn- muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta [db materiaali]
+(defn- muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta [db user materiaali]
   (m-q/paivita-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta<!
     db
     {:yksikko (::m/yksikko materiaali)
-     :idt (::m/idt materiaali)}))
+     :idt (::m/idt materiaali)
+     :muokkaaja (:id user)}))
 
 (defn- muuta-materiaalien-alkuperainen-maara-ja-yksikko [db user tiedot]
   (let [urakka-id (::m/urakka-id tiedot)
@@ -92,8 +94,8 @@
 
     (jdbc/with-db-transaction [db db]
       (doseq [materiaali uudet]
-        (muuta-materiaalin-alkuperainen-maara db materiaali)
-        (muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta db materiaali))
+        (muuta-materiaalin-alkuperainen-maara db user materiaali)
+        (muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta db user materiaali))
 
       (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))))
 
