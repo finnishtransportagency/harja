@@ -77,7 +77,7 @@
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
 
-(defn- suodata-harjassa-olevat-kohteet [db urakka-id kohteet-yhasta]
+(defn- suodata-pois-harjassa-jo-olevat-kohteet [db urakka-id kohteet-yhasta]
   (let [on-harjassa? (set (map :yha-id (yha-q/harjassa-olevat-yha-idt db {:annetut-yha-idt (mapv :yha-id kohteet-yhasta)})))]
     (log/debug "suodatuksen on-harjassa? -joukko oli" on-harjassa?)
     (filterv (fn kohteen-yha-id-ei-ole-harjassa [kohde]
@@ -92,7 +92,7 @@
   (log/debug "Haetaan kohteet yhasta")
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
         _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl, eka" (first yha-kohteet))
-        uudet-kohteet (suodata-harjassa-olevat-kohteet db urakka-id yha-kohteet)
+        uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db urakka-id yha-kohteet)
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
     uudet-kohteet))
 
