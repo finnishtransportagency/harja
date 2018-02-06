@@ -328,29 +328,39 @@
      [aikajana/aikajana
       {:ennen-muokkausta (fn [drag valmis! peru!]
                            ;; Näytä modal jos raahattujen joukossa oli tiemerkinnän valmistumispvm, muuten tallenna suoraan
-                           (if (some #(and (= (second (::aikajana/drag %)) :tiemerkinta)
-                                           (not (pvm/sama-pvm? (::aikajana/loppu %) (::aikajana/alkup-loppu %))))
-                                     drag)
-                             (reset! tiedot/tiemerkinta-valmis-modal-data
-                                     {:valmis-fn valmis!
-                                      :peru-fn peru!
-                                      :nakyvissa? true
-                                      :kohteet (map (fn [raahaus]
-                                                      (-> {:id (first (::aikajana/drag raahaus))
-                                                           :nimi (::aikajana/kohde-nimi raahaus)
-                                                           :valmis-pvm (::aikajana/loppu raahaus)}))
-                                                    drag)
-                                      :urakka-id urakka-id
-                                      :vuosi vuosi
-                                      ; TODO Kohteiden mailitiedot, yhdistä koskemaan kaikkia raahattuja kohteita?
-                                      ;;:lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
-                                      ;;             :muut-vastaanottajat (zipmap (iterate inc 1)
-                                      ;;                                          (map #(-> {:sahkoposti %})
-                                      ;;                                               (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
-                                      ;;             :saate (:saate aiemmat-sahkopostitiedot)}
-                                      ;;
-                                      })
-                             (valmis!)))
+                           (let [tiemerkinnan-valmistumiset (filter #(and (= (second (::aikajana/drag %)) :tiemerkinta)
+                                                                          (not (pvm/sama-pvm? (::aikajana/loppu %) (::aikajana/alkup-loppu %))))
+                                                                    drag)]
+                             (if (not (empty? tiemerkinnan-valmistumiset))
+                               ;; Tehdään muokaus modalin kautta
+                               (reset! tiedot/tiemerkinta-valmis-modal-data
+                                       {:valmis-fn (fn [lomakedata]
+                                                     ;; Lisätään modalissa kirjoitetut mailitiedot kaikille muokatuille kohteille
+                                                     (doseq [kohde-id (map #(first (::aikajana/drag %)) tiemerkinnan-valmistumiset)]
+                                                       (swap! tiedot/kohteiden-sahkopostitiedot assoc kohde-id
+                                                              {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                                                               :saate (:saate lomakedata)
+                                                               :kopio-itselle? (:kopio-itselle? lomakedata)}))
+                                                     (valmis!))
+                                        :peru-fn peru!
+                                        :nakyvissa? true
+                                        :kohteet (map (fn [raahaus]
+                                                        (-> {:id (first (::aikajana/drag raahaus))
+                                                             :nimi (::aikajana/kohde-nimi raahaus)
+                                                             :valmis-pvm (::aikajana/loppu raahaus)}))
+                                                      drag)
+                                        :urakka-id urakka-id
+                                        :vuosi vuosi
+                                        ; TODO Kohteiden mailitiedot, yhdistä koskemaan kaikkia raahattuja kohteita?
+                                        ;;:lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
+                                        ;;             :muut-vastaanottajat (zipmap (iterate inc 1)
+                                        ;;                                          (map #(-> {:sahkoposti %})
+                                        ;;                                               (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
+                                        ;;             :saate (:saate aiemmat-sahkopostitiedot)}
+                                        ;;
+                                        })
+                               ;; Ei muokattujen tiemerkintöjen valmistumisia, tallenna suoraan
+                               (valmis!))))
        :muuta! (fn [drag]
                  (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
                            paivitetyt-aikataulu-idt (set (map :id paivitetty-aikataulu))
