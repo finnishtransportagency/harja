@@ -130,7 +130,7 @@
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
 
 (deftest yllapitokohteen-tila-paatellaan-oikein
-  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)]           ;; 25.5.2017
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)] ;; 25.5.2017
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila {})
            :ei-aloitettu))
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
@@ -727,6 +727,44 @@
         ;; Leppäjärven tiemerkintä oli jo merkitty valmiiksi, mutta sitä päivitettiin -> pitäisi lähteä maili
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
         (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+
+(deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vuosi 2017
+            leppajarvi-aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
+            leppajarvi-aikataulu-tiemerkinta-loppu (pvm/->pvm "25.5.2060")
+            kohteet [{:id leppajarven-ramppi-id
+                      :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
+                      :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
+            odottavat-mailit-ennen-lisaysta (ffirst (q
+                                                      (str "SELECT count(*) FROM odottava_sahkoposti
+                                         WHERE yllapitokohde_id = " 1 ";")))
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteiden-aikataulu
+                                    +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
+                                     :kohteet kohteet})
+            vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
+            odottavat-mailit-lisayksen-jalkeen (ffirst (q
+                                                         (str "SELECT count(*) FROM odottava_sahkoposti
+                                         WHERE yllapitokohde_id = " 1 ";")))]
+        ;; Muokatut kentät päivittyivät
+        (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
+        (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
+
+        ;; Leppäjärven tiemerkintä merkittiin valmistuneeksi tulevaisuuteen -> maili ei lähde, vaan menee odotukseen
+        (is (= odottavat-mailit-ennen-lisaysta (dec odottavat-mailit-lisayksen-jalkeen)))
+        (<!! (timeout 5000))
+        (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
