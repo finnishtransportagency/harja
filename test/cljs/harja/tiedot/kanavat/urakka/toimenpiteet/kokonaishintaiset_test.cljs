@@ -216,7 +216,13 @@
                                                                                                           ::materiaali/id 12}}])}})
 
 (def tallennettava-vertailumap {::kanavan-toimenpide/materiaalipoistot '({:harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/id 12})
-                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})
+                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat"
+                                                                             :harja.domain.vesivaylat.materiaali/urakka-id 1
+                                                                             :harja.domain.vesivaylat.materiaali/pvm nil
+                                                                             :harja.domain.vesivaylat.materiaali/id 13
+                                                                             :harja.domain.vesivaylat.materiaali/maara -4
+                                                                             :harja.domain.vesivaylat.materiaali/yksikko "kpl"
+                                                                             :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})
                                 })
 (deftest materiaalit-vs-tallennus
   (let [app app-tallennustestille
