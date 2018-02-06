@@ -779,7 +779,33 @@
         (is (= (konv/array->set (:vastaanottajat odottava-maili)) muut-vastaanottajat))
         (is (true? (:kopio_lahettajalle odottava-maili)))
         (<!! (timeout 5000))
-        (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
+        (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")
+
+        ;; Päivitä mailitiedot
+        (let [kohteet [{:id leppajarven-ramppi-id
+                        :sahkopostitiedot {:kopio-itselle? false
+                                           :muut-vastaanottajat #{}
+                                           :saate nil}
+                        :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
+                        :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
+              vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-yllapitokohteiden-aikataulu
+                                      +kayttaja-jvh+
+                                      {:urakka-id urakka-id
+                                       :sopimus-id sopimus-id
+                                       :vuosi vuosi
+                                       :kohteet kohteet})
+              odottavat-mailit-paivityksen-jalkeen (q-map
+                                                     (str "SELECT * FROM odottava_sahkoposti
+                                         WHERE yllapitokohde_id = " 1 ";"))
+              odottava-maili (first odottavat-mailit-paivityksen-jalkeen)]
+
+          ;; Sähköpostitiedot päivittyi
+          (is (= (:tyyppi odottava-maili) "tiemerkinta_valmistunut"))
+          (is (= (:yllapitokohde_id odottava-maili) leppajarven-ramppi-id))
+          (is (= (:saate odottava-maili) nil))
+          (is (= (konv/array->set (:vastaanottajat odottava-maili)) #{}))
+          (is (false? (:kopio_lahettajalle odottava-maili))))))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
