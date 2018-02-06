@@ -106,8 +106,18 @@
 
 (deftest hae-yha-urakan-kohteet
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
-
     (with-fake-http [urakan-kohdehaku-test/urakan-kohteet-url +onnistunut-urakan-kohdehakuvastaus+]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-yha-kohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id})]
+        (is (= (count vastaus) 1))
+        (is (every? :yha-id vastaus))))))
+
+
+(deftest hae-yha-urakan-kohteet-kun-osaksi-ennestaan-toiseen-urakkaan-sidottuja
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
+    (u "UPDATE yllapitokohde SET yhaid = 52400, yha_kohdenumero = 111 WHERE nimi = 'Tuomoja';")
+    (with-fake-http [urakan-kohdehaku-test/urakan-kohteet-url +urakan-kohdehakuvastaus-jossa-toisen-urakan-sidottu-kohde+]
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :hae-yha-kohteet +kayttaja-jvh+
                                     {:urakka-id urakka-id})]
