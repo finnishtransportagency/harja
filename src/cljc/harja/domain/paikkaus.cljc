@@ -31,7 +31,6 @@
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
   ["paikkauksen_materiaalit" ::paikkauksen-materiaalit])
 
-
 (def perustiedot
   #{::id
     ::urakka-id
