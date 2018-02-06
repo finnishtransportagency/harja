@@ -350,7 +350,7 @@
       :alue alue)))
 
 (defmethod asia-kartalle :suolatoteuma [suolatoteuma valittu?]
-  (let [viiva (ulkoasu/suolatoteuman-viiva valittu?)]
+  (let [viiva (ulkoasu/suolatoteuman-viiva)]
     (assoc suolatoteuma
       :type :suolatoteuma
       :nimi "Suolatoteuma"
