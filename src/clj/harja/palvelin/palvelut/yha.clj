@@ -91,7 +91,7 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (log/debug "Haetaan kohteet yhasta")
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
-        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl, eka" (first yha-kohteet))
+        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
         uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db urakka-id yha-kohteet)
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
     uudet-kohteet))
