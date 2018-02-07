@@ -25,7 +25,7 @@
 
 
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder
-                         voi-liittaa leveys-col liita-nappi-teksti]} kommentit]
+                         voi-liittaa? leveys-col liita-nappi-teksti]} kommentit]
   [:div.kommentit
    (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}
@@ -47,7 +47,7 @@
          {:on-click #(kommentoi! @uusi-kommentti)
           :disabled (str/blank? (:kommentti @uusi-kommentti))}
          "Tallenna kommentti"])
-      (when voi-liittaa [liitteet/lisaa-liite
-                         (:id @nav/valittu-urakka)
-                         {:liite-ladattu #(swap! uusi-kommentti assoc :liite %)
-                          :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")}])])])
+      (when voi-liittaa? [liitteet/lisaa-liite
+                          (:id @nav/valittu-urakka)
+                          {:liite-ladattu #(swap! uusi-kommentti assoc :liite %)
+                           :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")}])])])

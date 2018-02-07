@@ -443,7 +443,7 @@
             :palstoja 2
             :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                            [kommentit/kommentit {:voi-kommentoida? true
-                                                 :voi-liittaa true
+                                                 :voi-liittaa? true
                                                  :liita-nappi-teksti " Lisää liite kommenttiin"
                                                  :placeholder "Kirjoita kommentti..."
                                                  :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
