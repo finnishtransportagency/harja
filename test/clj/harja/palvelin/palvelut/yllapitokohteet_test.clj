@@ -20,7 +20,9 @@
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
             [clj-time.coerce :as c]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
+            [clojure.string :as str])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -690,8 +692,11 @@
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
-        sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+        sahkoposti-valitetty (atom false)
+        sahkoposti-sisalto (atom nil)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [viesti]
+                                                            (reset! sahkoposti-valitetty true)
+                                                            (reset! sahkoposti-sisalto (sanomat/lue-sahkoposti (.getText viesti)))))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -704,7 +709,11 @@
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
                                                 " AND poistettu IS NOT TRUE;")))
+            saate "Kohteen saateviesti"
             kohteet [{:id leppajarven-ramppi-id
+                      :sahkopostitiedot {:kopio-itselle? false
+                                         :muut-vastaanottajat #{}
+                                         :saate saate}
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -727,7 +736,8 @@
 
         ;; Leppäjärven tiemerkintä oli jo merkitty valmiiksi, mutta sitä päivitettiin -> pitäisi lähteä maili
         (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
+        (is (str/includes? @sahkoposti-sisalto saate))))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
