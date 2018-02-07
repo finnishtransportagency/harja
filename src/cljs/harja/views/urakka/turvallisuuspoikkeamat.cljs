@@ -374,7 +374,9 @@
               [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
                {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
                                          #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
-                :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"}])}
+                :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"
+                :salli-poistaa-lisatty-liite? true
+                :poista-lisatty-liite-fn #(swap! turvallisuuspoikkeama dissoc :uusi-liite)}])}
            (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
                           :uusi-rivi? true}
                          {:otsikko "Etunimi"
