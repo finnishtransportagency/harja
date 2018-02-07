@@ -6,6 +6,10 @@
 
 (def kone (.getHostName (java.net.InetAddress/getLocalHost)))
 
+(defn- rivin-vaihto
+  [teksti]
+  (str/replace teksti #"\|\|\|" "\n"))
+
 
 (defn laheta [webhook-url level msg]
   (let [attachment {:fallback ""
@@ -19,20 +23,24 @@
                     ;; Näytetään viesti kenttänä, jonka otsikkona on taso
                     ;; ja arvona virheviesti
                     :fields (if (map? msg)
-                              (mapv #(assoc % :value (str/replace (:value %) #"\|\|\|" "\n"))
+                              (mapv #(update % :value rivin-vaihto)
                                     (:fields msg))
                               [{:title (str/upper-case (name level))
                                 :value msg}])
-                    :mrkdwn_in ["fields"]}] ;; Slackin attachmentin kentat eli fieldsit ymmärtää slackin markdownia (*, ```, jne.) oikein, kun tämä asetetaan.
+                    ;; Slackin attachmentin kentat eli fieldsit ymmärtää slackin markdownia (*, ```, jne.) oikein, kun tämä asetetaan.
+                    :mrkdwn_in ["fields"]}
+        tekstikentta {:text (rivin-vaihto (:tekstikentta msg))}
+        liitteet {:username kone
+                :attachments
+                [(if (map? msg)
+                   (assoc attachment :text (:text msg))
+                   attachment)]}
+        viesti (merge liitteet tekstikentta)]
     (http/post
      webhook-url
      {:headers {"Content-Type" "application/json"}
       :body (cheshire/encode
-             {:username kone
-              :attachments
-              [(if (map? msg)
-                  (assoc attachment :text (:text msg))
-                  attachment)]})})))
+             viesti)})))
 
 (defn stack-trace-element [ste]
   (str (.getClassName ste) "." (.getMethodName ste) " "
