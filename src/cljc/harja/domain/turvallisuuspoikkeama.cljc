@@ -1,5 +1,22 @@
 (ns harja.domain.turvallisuuspoikkeama
-  (:require [clojure.string :as str]))
+  (:require
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]
+    [clojure.set :as set]
+    #?@(:clj  [
+    [harja.kyselyt.specql-db :refer [define-tables]]
+    [clojure.future :refer :all]]
+        :cljs [[specql.impl.registry]])
+    [harja.domain.urakka :as ur]
+    [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.muokkaustiedot :as muokkaustiedot])
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
+
+(define-tables
+  ["turvallisuuspoikkeama" ::turvallisuuspoikkeama
+   ;; TODO Lisää uudelleennimeämisiä sitä mukaan kun tarvii (-id viittauksille jne.)
+   {"urakka" ::urakka-id}])
 
 (def turpo-tyypit
   {:tyotapaturma "Työtapaturma"

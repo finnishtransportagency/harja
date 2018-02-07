@@ -69,6 +69,7 @@
   [db user {:keys [urakka-id domain liite-id domain-id]}]
   (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
+    ;; TODO Testi tälle
     (oikeustarkistus-fn user urakka-id)
     (tietoturva/vaadi-linkitys db
                                (:domain-taulu domain-tiedot)
