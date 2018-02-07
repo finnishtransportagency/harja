@@ -15,7 +15,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn poista-liite-kannasta
-  [domain domain-id liite-id]
+  [{:keys [domain domain-id liite-id]}]
   (k/post! :poista-liite-linkki {:domain domain
                                  :liite-id liite-id
                                  :domain-id domain-id}))

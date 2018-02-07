@@ -1,4 +1,4 @@
-(ns harja.domain.turvallisuuspoikkeamat
+(ns harja.domain.turvallisuuspoikkeama
   (:require [clojure.string :as str]))
 
 (def turpo-tyypit

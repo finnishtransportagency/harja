@@ -8,8 +8,10 @@
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.domain.liite :as liite-domain]
             [specql.core :as specql]
+            [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset])
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
+            [harja.tyokalut.tietoturva :as tietoturva])
   (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
 
 (defn tallenna-liite
@@ -53,22 +55,31 @@
        :body "Annetulle liittelle ei pikkukuvaa."})))
 
 (def liitteen-poisto-domainin-mukaan
-  {:turvallisuuspoikkeama {:taulu ::liite-domain/turvallisuuspoikkeama<->liite
-                           :domain-sarake ::liite-domain/turvallisuuspoikkeama-id
-                           :liite-sarake ::liite-domain/liite-id
+  {:turvallisuuspoikkeama {:linkkitaulu ::liite-domain/turvallisuuspoikkeama<->liite
+                           :linkkitaulu-domain-id ::liite-domain/turvallisuuspoikkeama-id
+                           :linkkitaulu-liite-id ::liite-domain/liite-id
+                           :domain-taulu ::turpo/turvallisuuspoikkeama
+                           :domain-taulu-id ::turpo/id
+                           :domain-taulu-urakka-id ::turpo/urakka-id
                            :oikeustarkistus (fn [user urakka-id]
                                               (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka-id))}})
 
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."
-  [db user {:keys [domain liite-id domain-id]}]
+  [db user {:keys [urakka-id domain liite-id domain-id]}]
   (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
-    (oikeustarkistus-fn user nil) ; TODO Vastaanota urakka-id ja tarkista, että domain-juttu kuuluu siihen
+    (oikeustarkistus-fn user urakka-id)
+    (tietoturva/vaadi-linkitys db
+                               (:domain-taulu domain-tiedot)
+                               (:domain-taulu-id domain-tiedot)
+                               domain-id
+                               (:domain-taulu-urakka-id domain-tiedot)
+                               urakka-id)
     (specql/delete! db
-                    (:taulu domain-tiedot)
-                    {(:domain-sarake domain-tiedot) domain-id
-                     (:liite-sarake domain-tiedot) liite-id})))
+                    (:linkkitaulu domain-tiedot)
+                    {(:linkkitaulu-domain-id domain-tiedot) domain-id
+                     (:linkkitaulu-liite-id domain-tiedot) liite-id})))
 
 (defrecord Liitteet []
   component/Lifecycle
@@ -85,8 +96,9 @@
                                      (lataa-pikkukuva (:liitteiden-hallinta this) req)))
                       {:ring-kasittelija? true})
     (julkaise-palvelu http-palvelin :poista-liite-linkki
-                      (fn [user {:keys [domain liite-id domain-id]}]
-                        (poista-liite-linkitys db user {:domain domain
+                      (fn [user {:keys [domain liite-id domain-id urakka-id]}]
+                        (poista-liite-linkitys db user {:urakka-id urakka-id
+                                                        :domain domain
                                                         :liite-id liite-id
                                                         :domain-id domain-id})))
     this)

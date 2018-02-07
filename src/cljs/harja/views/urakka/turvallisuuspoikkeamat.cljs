@@ -3,7 +3,7 @@
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
+            [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -380,9 +380,10 @@
                 :poista-tallennettu-liite-fn (fn [liite-id]
                                                (go
                                                  (let [vastaus (<! (liitteet/poista-liite-kannasta
-                                                                     :turvallisuuspoikkeama
-                                                                     (:id @turvallisuuspoikkeama)
-                                                                     liite-id))]
+                                                                     {:urakka-id (:id urakka)
+                                                                      :domain :turvallisuuspoikkeama
+                                                                      :domain-id (:id @turvallisuuspoikkeama)
+                                                                      :liite-id liite-id}))]
                                                    (when-not (k/virhe? vastaus)
                                                      (swap! turvallisuuspoikkeama assoc :liitteet
                                                             (filter (fn [liite]
