@@ -773,6 +773,13 @@
   (let [idt (into [] (:idt tiedot))]
     (toteumat-q/hae-toteumien-reitit db {:idt idt})))
 
+(defn- hae-toteuman-liitteet [db user {:keys [urakka-id toteuma-id oikeus]}]
+  (let [nst-joista-saa-kutsua-toteuman-liitteden-hakua #{'urakat-toteumat-varusteet}] ;; voit lisätä oikeuksia tarpeen mukaan
+    (when (nst-joista-saa-kutsua-toteuman-liitteden-hakua oikeus)
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
+      (oikeudet/vaadi-lukuoikeus (deref (ns-resolve 'harja.domain.oikeudet oikeus)) user urakka-id)
+      (toteumat-q/hae-toteuman-liitteet db toteuma-id))))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -852,7 +859,12 @@
         (siirry-toteuma db user toteuma-id))
       :hae-toteumien-reitit
       (fn [_ tiedot]
-        (hae-toteumien-reitit db tiedot)))
+        (hae-toteumien-reitit db tiedot))
+      :hae-toteuman-liitteet
+      (fn [user {:keys [urakka-id toteuma-id oikeus]}]
+        (hae-toteuman-liitteet db user {:urakka-id urakka-id
+                                        :toteuma-id toteuma-id
+                                        :oikeus oikeus})))
     this)
 
   (stop [this]
@@ -876,5 +888,6 @@
       :hae-toteuman-reitti-ja-tr-osoite
       :siirry-toteuma
       :tallenna-varustetoteuma
-      :hae-toteumien-reitit)
+      :hae-toteumien-reitit
+      :hae-toteuman-liitteet)
     this))

@@ -10,7 +10,9 @@
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset])
   (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
 
-(defn tallenna-liite [liitteet req]
+(defn tallenna-liite
+  "Tallentaa liitteen kantaan, mutta ei linkitä sitä mihinkään domain-asiaan."
+  [liitteet req]
   (let [parametrit (:params req)
         liite (get parametrit "liite")
         urakka (Integer/parseInt (get parametrit "urakka"))]
@@ -48,13 +50,6 @@
       {:status 404
        :body   "Annetulle liittelle ei pikkukuvaa."})))
 
-(defn- hae-toteuman-liitteet [db user {:keys [urakka-id toteuma-id oikeus]}]
-  (let [nst-joista-saa-kutsua-toteuman-liitteden-hakua #{'urakat-toteumat-varusteet}] ;; voit lisätä oikeuksia tarpeen mukaan
-    (when (nst-joista-saa-kutsua-toteuman-liitteden-hakua oikeus)
-      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
-      (oikeudet/vaadi-lukuoikeus (deref (ns-resolve 'harja.domain.oikeudet oikeus)) user urakka-id)
-      (tot-q/hae-toteuman-liitteet db toteuma-id))))
-
 (defrecord Liitteet []
   component/Lifecycle
   (start [{:keys [http-palvelin db] :as this}]
@@ -69,13 +64,8 @@
                       (wrap-params (fn [req]
                                      (lataa-pikkukuva (:liitteiden-hallinta this) req)))
                       {:ring-kasittelija? true})
-    (julkaise-palvelu http-palvelin :hae-toteuman-liitteet
-                      (fn [user {:keys [urakka-id toteuma-id oikeus]}]
-                        (hae-toteuman-liitteet db user {:urakka-id urakka-id
-                                                        :toteuma-id toteuma-id
-                                                        :oikeus oikeus})))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
-    (poista-palvelut http-palvelin :tallenna-liite :lataa-liite :lataa-pikkukuva :hae-toteuman-liitteet)
+    (poista-palvelut http-palvelin :tallenna-liite :lataa-liite :lataa-pikkukuva)
     this))
