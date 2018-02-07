@@ -131,12 +131,11 @@
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
                                            (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :date_part))
           lisatietoja (if uudelleen-lahetys?
-                        (str "Ilmoituksen alkuperäisessä käsittelyssä kesti "
+                        (str "Ilmoituksen päivityksen saapuminen kesti " (ilmoituksen-kesto kulunut-aika)
+                             " - alkuperäisellä kestänyt: "
                              (if (< ilmoituksen-alkuperainen-kesto 1)
                                "alle 0s"
-                               (ilmoituksen-kesto (Math/floor ilmoituksen-alkuperainen-kesto)))
-                             " ja uudelleen käsittelyssä kesti " (ilmoituksen-kesto kulunut-aika)
-                             " saapua HARJA:an")
+                               (ilmoituksen-kesto (Math/floor ilmoituksen-alkuperainen-kesto))))
                         (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
           ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
           tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
