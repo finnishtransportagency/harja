@@ -55,13 +55,16 @@
 (def liitteen-poisto-domainin-mukaan
   {:turvallisuuspoikkeama {:taulu ::liite-domain/turvallisuuspoikkeama<->liite
                            :domain-sarake ::liite-domain/turvallisuuspoikkeama-id
-                           :liite-sarake ::liite-domain/liite-id}})
+                           :liite-sarake ::liite-domain/liite-id
+                           :oikeustarkistus (fn [user urakka-id]
+                                              (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka-id))}})
 
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."
   [db user {:keys [domain liite-id domain-id]}]
-  (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)]
-    ;; TODO Tarkistettava domain-kohtainen kirjoitusoikeus (sama, jolla lomakkeen tms. saa tallentaa)
+  (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)
+        oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
+    (oikeustarkistus-fn user nil) ; TODO Vastaanota urakka-id ja tarkista, että domain-juttu kuuluu siihen
     (specql/delete! db
                     (:taulu domain-tiedot)
                     {(:domain-sarake domain-tiedot) domain-id
