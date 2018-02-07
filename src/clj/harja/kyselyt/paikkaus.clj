@@ -7,7 +7,7 @@
             [harja.id :refer [id-olemassa?]]))
 
 (defqueries "harja/kyselyt/paikkaus.sql"
-  {:positional? true})
+            {:positional? true})
 
 (defn onko-olemassa-paikkausilmioitus? [db yllapitokohde-id]
   (:exists (first (harja.kyselyt.paikkaus/yllapitokohteella-paikkausilmoitus
@@ -17,24 +17,60 @@
 (defn hae-paikkaustoteumat [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaustoteuma
-         paikkaus/perustiedot
+         paikkaus/paikkaustoteuman-perustiedot
          hakuehdot))
 
-(defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id]
+(defn hae-paikkauskohteet [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkauskohde
+         paikkaus/paikkauskohteen-perustiedot
+         hakuehdot))
+
+(defn onko-olemassa-ulkoisella-idlla? [db haku ulkoinen-id]
   (and
     (number? ulkoinen-id)
-    (not (empty? (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id})))))
+    (not (empty? (haku db {::paikkaus/ulkoinen-id ulkoinen-id})))))
 
 (defn hae-urakan-paikkaustoteumat [db urakka-id]
   (first (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id})))
 
+(defn tallenna-paikkauskohde [db kohde]
+  (let [id (::paikkaus/id kohde)
+        ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)]
+    (if (id-olemassa? id)
+      (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
+      (if (onko-olemassa-ulkoisella-idlla? db hae-paikkauskohteet ulkoinen-tunniste)
+        (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/ulkoinen-id ulkoinen-tunniste})
+        (insert! db ::paikkaus/paikkauskohde kohde))
+
+      ;; todo: update ei palauta id:tä tallentuu randomi arvo
+      )))
+
+(defn hae-tai-tee-paikkauskohde [db paikkauskohde]
+  (when-let [ulkoinen-id (::paikkaus/ulkoinen-id paikkauskohde)]
+    (or (::paikkaus/id paikkauskohde)
+        (::paikkaus/id (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id}))
+        (::paikkaus/id (tallenna-paikkauskohde db paikkauskohde)))))
+
 (defn tallenna-paikkaustoteuma [db toteuma]
   (let [id (::paikkaus/id toteuma)
-        ulkoinen-tunniste (::paikkaus/ulkoinen-id toteuma)
+        ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
+        paikkauskohde-id (hae-tai-tee-paikkauskohde db (::paikkaus/paikkauskohde toteuma))
+        materiaalit (::paikkaus/materiaalit toteuma)
+        tienkohdat (::paikkaus/tienkohdat toteuma)
+        toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde paikkauskohde-id)
+                        ::paikkaus/materiaalit
+                        ::paikkaus/tienkohdat
+                        ::paikkaus/paikkauskohde)
         uusi (assoc toteuma ::muokkaustiedot/luotu (pvm/nyt))
         muokattu (assoc toteuma ::muokkaustiedot/muokattu (pvm/nyt))]
+
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkaustoteuma muokattu {::paikkaus/id id})
-      (if (onko-olemassa-ulkoisella-idlla? db ulkoinen-tunniste)
-        (update! db ::paikkaus/paikkaustoteuma muokattu {::paikkaus/ulkoinen-id ulkoinen-tunniste})
-        (insert! db ::paikkaus/paikkaustoteuma uusi)))))
+      (if (onko-olemassa-ulkoisella-idlla? db hae-paikkaustoteumat ulkoinen-id)
+        (update! db ::paikkaus/paikkaustoteuma muokattu {::paikkaus/ulkoinen-id ulkoinen-id})
+        (insert! db ::paikkaus/paikkaustoteuma uusi))))
+  ;; todo: update ei palauta id:tä tallentuu randomi arvo
+
+  ;; tallenna tienkohdat ja materiaalit
+  )

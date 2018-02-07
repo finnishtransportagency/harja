@@ -31,7 +31,12 @@
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
   ["paikkauksen_materiaalit" ::paikkauksen-materiaalit])
 
-(def perustiedot
+(def paikkauskohteen-perustiedot
+  #{::id
+    ::ulkoinen-id
+    ::nimi})
+
+(def paikkaustoteuman-perustiedot
   #{::id
     ::urakka-id
     ::paikkauskohde-id
