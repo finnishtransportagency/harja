@@ -2,13 +2,15 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.urakat :as u]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
+            [clojure.string :as str]))
 
 (defn tuo-urakka [db alueurakkanro geometria paallystyssopimusnro]
   (if paallystyssopimusnro
     (if geometria
       (let [alueurakkanro (str alueurakkanro)
-            paallystyssopimusnro (str (int (Double/parseDouble paallystyssopimusnro)))
+            paallystyssopimusnro (when (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
+                                   (str (int (Double/parseDouble paallystyssopimusnro))))
             geometria (.toString geometria)]
         (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria paallystyssopimusnro))
       (log/warn (format "Palvelusopimusta (paallystyssopimusnro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
