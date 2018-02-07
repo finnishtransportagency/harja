@@ -1,7 +1,7 @@
 (ns harja.domain.paikkaus
   (:require
     [clojure.spec.alpha :as s]
-    [harja.domain.muokkaustiedot :as muokkautiedot]
+    [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.kyselyt.specql :as harja-specql]
 
     #?@(:clj  [
@@ -14,12 +14,17 @@
      (:import (org.postgis PGgeometry))))
 
 (define-tables
-  ["paikkauskohde" ::paikkauskohde]
+  ["paikkauskohde" ::paikkauskohde
+   {"luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu }]
   ["paikkaustoteuma" ::paikkaustoteuma
-   harja.domain.muokkaustiedot/muokkaustiedot
-   harja.domain.muokkaustiedot/poistaja-sarake
-   harja.domain.muokkaustiedot/poistettu?-sarake
-   {::paikkauskohde (specql.rel/has-one ::paikkauskohde-id
+   {"luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu
+    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "poistaja-id" ::muokkaustiedot/poistaja-id
+    "poistettu" ::muokkaustiedot/poistettu?
+    ::paikkauskohde (specql.rel/has-one ::paikkauskohde-id
                                         ::paikkauskohde
                                         ::id)
     ::tienkohdat (specql.rel/has-many ::id

@@ -41,10 +41,8 @@
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-olemassa-ulkoisella-idlla? db hae-paikkauskohteet ulkoinen-tunniste)
         (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/ulkoinen-id ulkoinen-tunniste})
-        (insert! db ::paikkaus/paikkauskohde kohde))
-
-      ;; todo: update ei palauta id:tä tallentuu randomi arvo
-      )))
+        (insert! db ::paikkaus/paikkauskohde kohde)))
+    (first (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-tunniste}))))
 
 (defn hae-tai-tee-paikkauskohde [db paikkauskohde]
   (when-let [ulkoinen-id (::paikkaus/ulkoinen-id paikkauskohde)]
@@ -69,8 +67,11 @@
       (update! db ::paikkaus/paikkaustoteuma muokattu {::paikkaus/id id})
       (if (onko-olemassa-ulkoisella-idlla? db hae-paikkaustoteumat ulkoinen-id)
         (update! db ::paikkaus/paikkaustoteuma muokattu {::paikkaus/ulkoinen-id ulkoinen-id})
-        (insert! db ::paikkaus/paikkaustoteuma uusi))))
-  ;; todo: update ei palauta id:tä tallentuu randomi arvo
+        (insert! db ::paikkaus/paikkaustoteuma uusi)))
 
-  ;; tallenna tienkohdat ja materiaalit
+    (let [kohde-id (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id})])
+
+    ;; tallenna tienkohdat ja materiaalit
+    )
+
   )
