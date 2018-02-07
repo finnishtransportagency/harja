@@ -691,12 +691,12 @@
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
-        sahkoposti-valitetty (atom false)
-        sahkoposti-sisalto (atom nil)]
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-ja-oulun-tiemerkintaurakan-kayttajat.xml"))
+        valitetyt-sahkopostit-lkm (atom 0)
+        sahkopostien-sisallot (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [viesti]
-                                                            (reset! sahkoposti-valitetty true)
-                                                            (reset! sahkoposti-sisalto (sanomat/lue-sahkoposti (.getText viesti)))))
+                                                            (swap! valitetyt-sahkopostit-lkm inc)
+                                                            (swap! sahkopostien-sisallot conj (sanomat/lue-sahkoposti (.getText viesti)))))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -711,7 +711,7 @@
                                                 " AND poistettu IS NOT TRUE;")))
             saate "Kohteen saateviesti"
             kohteet [{:id leppajarven-ramppi-id
-                      :sahkopostitiedot {:kopio-itselle? false
+                      :sahkopostitiedot {:kopio-itselle? true
                                          :muut-vastaanottajat #{}
                                          :saate saate}
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
@@ -735,9 +735,16 @@
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
         ;; Leppäjärven tiemerkintä oli jo merkitty valmiiksi, mutta sitä päivitettiin -> pitäisi lähteä maili
-        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
-        (is (str/includes? @sahkoposti-sisalto saate))))))
+        (odota-ehdon-tayttymista #(= @valitetyt-sahkopostit-lkm 4) "Sähköposti lähetettiin" 5000)
+        (is (= @valitetyt-sahkopostit-lkm 4) "Oikea määrä sähköposteja lähetettiin")
+        ;; Viesti lähti oikeille henkilöille
+        (is (some #(str/includes? % "vastuuhenkilo@example.com") @sahkopostien-sisallot)) ;; Muhoksen urakan vastuuhenkilö
+        (is (some #(str/includes? % "ELY_Urakanvalvoja@example.com") @sahkopostien-sisallot)) ;; Muhoksen urakan urakanvalvoja
+        (is (some #(str/includes? % "erkki.esimerkki@example.com") @sahkopostien-sisallot)) ;; Tiemerkinnän urakan urakanvalvoja
+        (is (some #(str/includes? % "jalmari@example.com") @sahkopostien-sisallot)) ;; Kopio lähettäjälle
+
+        ;; Sähköposteista löytyy oleelliset asiat
+        (is (every? #(str/includes? % saate) @sahkopostien-sisallot))))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
