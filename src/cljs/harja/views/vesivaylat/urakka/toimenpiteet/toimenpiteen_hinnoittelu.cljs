@@ -168,22 +168,23 @@
         "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yhteensa tyot-yhteensa
                                            yleiskustannuslisien-osuus))]]]]))
 
-;; (defn- suunniteltu-tyo-voimassa-paivamaaralle? [tp-pvm tyo]
-;;   ;; (log "valissa " (pr-str  tp-pvm) (:alkupvm tyo) (:loppupvm tyo) "->" (pr-str (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo))))
-;;   (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo)))
+(defn- suunniteltu-tyo-voimassa-paivamaaralle? [tp-pvm tyo]
+  (assert some? tp-pvm)
+  (log "TPH: valissa: " (pr-str  tp-pvm) (:alkupvm tyo) (:loppupvm tyo) "->" (pr-str (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo))))
+  (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo)))
 
-;; (defn- suunnitellut-tyot-paivamaaralle [app* pvm]
-;;   (filter (partial suunniteltu-tyo-voimassa-paivamaaralle? pvm)
-;;           (:suunnitellut-tyot app*)))
+(defn- suunnitellut-tyot-paivamaaralle [app* pvm]
+  (filter (partial suunniteltu-tyo-voimassa-paivamaaralle? pvm)
+          (:suunnitellut-tyot app*)))
 
 
 (defn- sopimushintaiset-tyot [e! app*]
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        tp-pvm (get-in app* [:hinnoittele-toimenpide ::to/pvm])
         ei-poistetut-tyot (remove ::m/poistettu? tyot)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
      [:table
-      ;; TODO Tämä voisi olla käytännöllisempää muuttaa comboboksiksi
       [sopimushintaiset-tyot-header {:yk-lisa? false}]
       [:tbody
        (map-indexed
@@ -193,8 +194,7 @@
                  yksikko (:yksikko toimenpidekoodi)
                  yksikkohinta (:yksikkohinta toimenpidekoodi)
                  tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))
-                 ;; tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))
-                 ]
+                 tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))]
              ^{:key index}
              [:tr
               [:td
@@ -208,11 +208,11 @@
                                  (:tehtavan_nimi %)
                                  "Valitse työ")
                    :class "livi-alasveto-250 inline-block"
-                   ;; XXX meneekö oikein vs urakkavuodet?
-
-                   :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
-                                               (:tehtava %))
-                                           tyovalinnat))
+                   :valinta (first (filter (fn [suunniteltu-tyo]
+                                             (assert (pvm/valissa? tp-pvm (:alkupvm suunniteltu-tyo) (:loppupvm suunniteltu-tyo)))
+                                             (and (= (::tyo/toimenpidekoodi-id tyorivi)
+                                                     (:tehtava suunniteltu-tyo))))
+                                           tyovalinnat-toimenpiteen-ajalle))
                    :disabled false}
                   tyovalinnat])]
               [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
@@ -371,7 +371,7 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
-          ;; XXX meneekö oikein vs urakkavuodet?
+          ;; XXX K: meneekö oikein vs urakkavuodet? v: pitäisi mennä koska käytetään yllä aikavalin-hinnalliset-suunnitellut-tyot
           :arvo (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
                                  (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
                                                            suunnitellut-tyot)))

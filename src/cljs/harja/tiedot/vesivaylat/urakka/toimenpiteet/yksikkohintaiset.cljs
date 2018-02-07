@@ -527,8 +527,10 @@
           toimenpiteen-oma-hinnoittelu (::to/oma-hinnoittelu hinnoiteltava-toimenpide)
           hinnat (or (::h/hinnat toimenpiteen-oma-hinnoittelu) [])
           tyot (or (::h/tyot toimenpiteen-oma-hinnoittelu) [])]
+      (log "ATH: pvm" (pr-str (::to/pvm hinnoiteltava-toimenpide)))
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
+                  ::to/pvm (::to/pvm hinnoiteltava-toimenpide)
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
                   ::h/tyot tyot})))
 
