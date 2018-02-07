@@ -75,10 +75,11 @@
       (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
 
 (defn- ilmoituksen-kesto [sekunnit]
-  (let [tunnit (-> sekunnit (/ 3600) Math/floor int)
-        minuutit (-> sekunnit (- (* tunnit 3600)) (/ 60) Math/floor int)
-        sekunnit (-> sekunnit (- (* tunnit 3600) (* minuutit 60)) Math/floor int)]
-    (str tunnit "h " minuutit "min " sekunnit "s")))
+  (when sekunnit
+    (let [tunnit (-> sekunnit (/ 3600) Math/floor int)
+          minuutit (-> sekunnit (- (* tunnit 3600)) (/ 60) Math/floor int)
+          sekunnit (-> sekunnit (- (* tunnit 3600) (* minuutit 60)) Math/floor int)]
+      (str tunnit "h " minuutit "min " sekunnit "s"))))
 
 (defn- laheta-slackiin-ilmoitus-hitaudesta
 
@@ -93,6 +94,19 @@
                :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
                                   "Ilmoituksella, jonka viesti id on " viesti-id "|||"
                                   "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
+
+(defn- kasittele-ilmoituksessa-kulunut-aika
+  [{:keys [ilmoitettu vastaanotettu viesti-id tapahtuma-id kehitysmoodi?]}]
+  (try (let [kulunut-aika (pvm/aikavali-sekuntteina ilmoitettu vastaanotettu)]
+         ;; Jos ilmoituksen saapumisessa HARJA:an on kestänyt yli 5 min, lähetetään siitä viesti slackiin
+         (when (and kulunut-aika (> kulunut-aika 300))
+           (laheta-slackiin-ilmoitus-hitaudesta
+             {:kulunut-aika kulunut-aika :viesti-id viesti-id
+              :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
+         kulunut-aika)
+       (catch Exception e
+         (log/error e "Ilmoituksen saapumisen keston laskeminen epäonnistui")
+         nil)))
 
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
@@ -111,7 +125,9 @@
                                                             db urakka-id ilmoitus)
           uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
-          kulunut-aika (pvm/aikavali-sekuntteina (:ilmoitettu ilmoitus) vastaanotettu)
+          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:ilmoitettu (:ilmoitettu ilmoitus) :vastaanotettu vastaanotettu
+                                                              :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
+                                                              :kehitysmoodi? kehitysmoodi?})
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
                                            (->> ilmoitus-kanta-id (ilmoitukset-q/ilmoituksen-alkuperainen-kesto db) first :date_part))
           lisatietoja (if uudelleen-lahetys?
@@ -124,11 +140,6 @@
                         (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
           ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
           tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
-      ;; Jos ilmoituksen saapumisessa HARJA:an on kestänyt yli 5 min, lähetetään siitä viesti slackiin
-      (when (> kulunut-aika 300)
-        (laheta-slackiin-ilmoitus-hitaudesta
-          {:kulunut-aika kulunut-aika :viesti-id (:viesti-id ilmoitus)
-           :tapahtuma-id tapahtuma-id :kehitysmoodi? kehitysmoodi?}))
       (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
       (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
