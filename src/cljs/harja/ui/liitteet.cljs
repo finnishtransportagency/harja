@@ -14,6 +14,12 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn poista-liite-kannasta
+  [domain domain-id liite-id]
+  (k/post! :poista-liite-linkki {:domain domain
+                                 :liite-id liite-id
+                                 :domain-id domain-id}))
+
 (defn lyhenna-pitkan-liitteen-nimi [nimi]
   (if (> (count nimi) 20)
     (str (subs nimi 0 20) "...")

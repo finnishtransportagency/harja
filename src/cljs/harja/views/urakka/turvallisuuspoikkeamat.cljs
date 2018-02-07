@@ -24,7 +24,8 @@
             [harja.domain.urakan-tyotunnit :as ut]
             [harja.domain.urakka :as u-domain]
             [harja.ui.viesti :as viesti]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -204,21 +205,21 @@
                          [yleiset/vihje
                           "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman."])}
          (remove
-          nil?
-          (mapcat
-           (fn [n]
-             (let [avain (keyword (str "juurisyy" n))
-                   selite-avain (keyword (str "juurisyy" n "-selite"))]
-               [{:tyyppi :valinta
-                 :uusi-rivi? true
-                 :otsikko (str n ". juurisyy")
-                 :valinnat (into [nil] turpodomain/juurisyyt)
-                 :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
-                 :nimi avain}
-                (when (get turvallisuuspoikkeama avain)
-                  {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
-                   :pituus-max 200})]))
-           (range 1 4)))))
+           nil?
+           (mapcat
+             (fn [n]
+               (let [avain (keyword (str "juurisyy" n))
+                     selite-avain (keyword (str "juurisyy" n "-selite"))]
+                 [{:tyyppi :valinta
+                   :uusi-rivi? true
+                   :otsikko (str n ". juurisyy")
+                   :valinnat (into [nil] turpodomain/juurisyyt)
+                   :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
+                   :nimi avain}
+                  (when (get turvallisuuspoikkeama avain)
+                    {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
+                     :pituus-max 200})]))
+             (range 1 4)))))
 
 (defn turvallisuuspoikkeaman-tiedot [urakka]
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
@@ -375,6 +376,19 @@
                {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
                                          #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
                 :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"
+                :salli-poistaa-tallennettu-liite? true
+                :poista-tallennettu-liite-fn (fn [liite-id]
+                                               (go
+                                                 (let [vastaus (<! (liitteet/poista-liite-kannasta
+                                                                     :turvallisuuspoikkeama
+                                                                     (:id @turvallisuuspoikkeama)
+                                                                     liite-id))]
+                                                   (when-not (k/virhe? vastaus)
+                                                     (swap! turvallisuuspoikkeama assoc :liitteet
+                                                            (filter (fn [liite]
+                                                                      (not= (:id liite) liite-id))
+                                                                    (:liitteet @turvallisuuspoikkeama)))
+                                                     (viesti/nayta! "Liite poistettu!" :success)))))
                 :salli-poistaa-lisatty-liite? true
                 :poista-lisatty-liite-fn #(swap! turvallisuuspoikkeama dissoc :uusi-liite)}])}
            (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
