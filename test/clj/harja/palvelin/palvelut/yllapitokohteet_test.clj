@@ -692,10 +692,8 @@
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-ja-oulun-tiemerkintaurakan-kayttajat.xml"))
-        valitetyt-sahkopostit-lkm (atom 0)
         sahkopostien-sisallot (atom [])]
     (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [viesti]
-                                                            (swap! valitetyt-sahkopostit-lkm inc)
                                                             (swap! sahkopostien-sisallot conj (sanomat/lue-sahkoposti (.getText viesti)))))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
@@ -735,14 +733,16 @@
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
         ;; Leppäjärven tiemerkintä oli jo merkitty valmiiksi, mutta sitä päivitettiin -> pitäisi lähteä maili
-        (odota-ehdon-tayttymista #(= @valitetyt-sahkopostit-lkm 4) "Sähköposti lähetettiin" 5000)
-        (is (= @valitetyt-sahkopostit-lkm 4) "Oikea määrä sähköposteja lähetettiin")
-        ;; Viesti lähti oikeille henkilöille
-        (is (some #(str/includes? % "vastuuhenkilo@example.com") @sahkopostien-sisallot)) ;; Muhoksen urakan vastuuhenkilö
-        (is (some #(str/includes? % "ELY_Urakanvalvoja@example.com") @sahkopostien-sisallot)) ;; Muhoksen urakan urakanvalvoja
-        (is (some #(str/includes? % "erkki.esimerkki@example.com") @sahkopostien-sisallot)) ;; Tiemerkinnän urakan urakanvalvoja
-        (is (some #(str/includes? % "jalmari@example.com") @sahkopostien-sisallot)) ;; Kopio lähettäjälle
-
+        (odota-ehdon-tayttymista #(= (count @sahkopostien-sisallot) 4) "Sähköpostit lähetettiin" 5000)
+        (let [muhoksen-vastuuhenkilo (first (filter #(str/includes? (:vastaanottaja %) "vastuuhenkilo@example.com") @sahkopostien-sisallot))
+              muhoksen-urakanvalvoja (first (filter #(str/includes? (:vastaanottaja %) "ELY_Urakanvalvoja@example.com") @sahkopostien-sisallot))
+              tiemerkinnan-urakanvalvoja (first (filter #(str/includes? (:vastaanottaja %) "erkki.esimerkki@example.com") @sahkopostien-sisallot))
+              ilmoittaja (first (filter #(str/includes? (:vastaanottaja %) "jalmari@example.com") @sahkopostien-sisallot))]
+          ;; Viesti lähti oikeille henkilöille
+          (is muhoksen-vastuuhenkilo)
+          (is muhoksen-urakanvalvoja)
+          (is tiemerkinnan-urakanvalvoja)
+          (is ilmoittaja)) ; Kopio lähettäjälle
         ;; Sähköposteista löytyy oleelliset asiat
         (is (every? #(str/includes? % saate) @sahkopostien-sisallot))))))
 
