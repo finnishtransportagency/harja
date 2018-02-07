@@ -78,7 +78,7 @@
     urakat))
 
 (defn- suodata-pois-harjassa-jo-olevat-kohteet [db kohteet-yhasta]
-  (let [jo-harjassa-olevat (set (map :yha-id (yha-q/harjassa–-olevat-yha-idt
+  (let [jo-harjassa-olevat (set (map :yha-id (yha-q/hae-harjassa-olevat-yha-idt
                                                db
                                                {:annetut-yha-idt (mapv :yha-id kohteet-yhasta)})))]
     (log/debug "Harjassa ovat jo kohteet YHA id:llä " jo-harjassa-olevat)
