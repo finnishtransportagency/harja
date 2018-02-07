@@ -118,11 +118,12 @@
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
     (u "UPDATE yllapitokohde SET yhaid = 52400, yha_kohdenumero = 111 WHERE nimi = 'Tuomoja';")
     (with-fake-http [urakan-kohdehaku-test/urakan-kohteet-url +urakan-kohdehakuvastaus-jossa-toisen-urakan-sidottu-kohde+]
-      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+      (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :hae-yha-kohteet +kayttaja-jvh+
                                     {:urakka-id urakka-id})]
-        (is (= (count vastaus) 1))
-        (is (every? :yha-id vastaus))))))
+        (is (= (count kohteet) 1) "Vain yksi kohde tuodaan uutena, sillä toinen kohteista on jo toisella urakalla.")
+        (is (not-any? #(= 52400 (:yhaid %)) kohteet) "Kohteiden joukossa ei ole jo urakassa olevaa kohdetta.")
+        (is (every? :yha-id kohteet) "Jokaiselle kohteelle löytyy YHA-id.")))))
 
 (deftest yha-kohteiden-haku-ei-palauta-harjassa-jo-olevia-kohteita
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
