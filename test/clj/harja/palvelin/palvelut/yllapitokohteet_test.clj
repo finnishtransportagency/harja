@@ -742,9 +742,18 @@
           (is muhoksen-vastuuhenkilo)
           (is muhoksen-urakanvalvoja)
           (is tiemerkinnan-urakanvalvoja)
-          (is ilmoittaja)) ; Kopio lähettäjälle
+          (is ilmoittaja) ; Kopio lähettäjälle
+          ;; Viestit lähetettiin oikeasta näkökulmasta
+          (is (= (:otsikko muhoksen-vastuuhenkilo) "Harja: Urakan 'Muhoksen päällystysurakka' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          (is (= (:otsikko muhoksen-urakanvalvoja) "Harja: Urakan 'Muhoksen päällystysurakka' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          (is (= (:otsikko tiemerkinnan-urakanvalvoja) "Harja: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2018' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          (is (= (:otsikko ilmoittaja) "Harja-viesti lähetetty: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2018' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          )
         ;; Sähköposteista löytyy oleelliset asiat
-        (is (every? #(str/includes? % saate) @sahkopostien-sisallot))))))
+        (is (every? #(str/includes? % saate) @sahkopostien-sisallot)
+            "Saate löytyy")
+        (is (every? #(str/includes? % "Jalmari Järjestelmävastuuhenkilö (org. Liikennevirasto)") @sahkopostien-sisallot)
+            "Merkitsijä löytyy")))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
