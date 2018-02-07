@@ -17,7 +17,8 @@
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.pvm :as pvm]
-            [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]))
+            [harja.kyselyt.kanavat.kanavan-toimenpide :as q-toimenpide]
+            [taoensso.timbre :as log]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -220,7 +221,8 @@
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kayttaja (ffirst (q "select id from kayttaja limit 1;"))
-        kohde-id (ffirst (q "select id from kan_kohde limit 1;"))
+        ;; Käytetään kohdetta, joka on varmasti liitetty urakkaan
+        kohde-id (ffirst (q "select \"kohde-id\" from kan_kohde_urakka limit 1;"))
         huoltokohde (ffirst (q "select id from kan_huoltokohde limit 1;"))
         kolmostason-toimenpide-id (ffirst (q "select tpk3.id
                                                from toimenpidekoodi tpk1
