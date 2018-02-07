@@ -81,7 +81,7 @@
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :urakkatyyppi :hoito}})
         taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")
-        rivit (last taulukko)
+        rivit (sort-by ffirst (last taulukko))
         formiaatti-vinkki (last vastaus)]
     (is (= (list ["Kajaanin alueurakka 2014-2019" 2000M 0 2000M 0]
                  ["Oulun alueurakka 2014-2019" 2000M 200M 1800M 2000M]
