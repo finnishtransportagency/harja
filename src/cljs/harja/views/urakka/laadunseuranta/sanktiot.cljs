@@ -254,10 +254,26 @@
             :komponentti (fn [_]
                            [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
                             {:uusi-liite-atom (r/wrap (:uusi-liite @tiedot/valittu-sanktio)
-                                                      #(swap! tiedot/valittu-sanktio (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
+                                                      #(swap! tiedot/valittu-sanktio
+                                                              (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
                              :uusi-liite-teksti "Lisää liite sanktioon"
                              :salli-poistaa-lisatty-liite? true
-                             :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))}])})]
+                             :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
+                                                              (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))
+                             :salli-poistaa-tallennettu-liite? true
+                             :poista-tallennettu-liite-fn
+                             (fn [liite-id]
+                               (liitteet/poista-liite-kannasta
+                                 {:urakka-id urakka-id
+                                  :domain :laatupoikkeama
+                                  :domain-id (get-in @tiedot/valittu-sanktio [:laatupoikkeama :id])
+                                  :liite-id liite-id
+                                  :poistettu-fn (fn []
+                                                  (let [liitteet (get-in @muokattu [:laatupoikkeama :uusi-liite])]
+                                                    (swap! tiedot/valittu-sanktio assoc-in [:laatupoikkeama :liitteet]
+                                                           (filter (fn [liite]
+                                                                     (not= (:id liite) liite-id))
+                                                                   liitteet))))}))}])})]
         @muokattu]
        [ajax-loader "Ladataan..."])]))
 
