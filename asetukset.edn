@@ -87,48 +87,48 @@
                         :salasana #=(slurp "../.harja/ava-salasana")
 
                         :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
-                        ;:tieosoiteverkon-osoite "https://ava.liikennevirasto.fi/harja/PTK_tieosoiteverkko.shz"
-                        ;:tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
-                        ;
-                        ;:pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
-                        ;:pohjavesialueen-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl141.shz"
-                        ;:pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/PTV_tl141.shz"
-                        ;
-                        ;:talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/PTV_tl132.shp"
-                        ;:talvihoidon-hoitoluokkien-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl132.shz"
-                        ;:talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
-                        ;
-                        ;:soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/PTV_tl149.shp"
-                        ;:soratien-hoitoluokkien-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl149.shz"
-                        ;:soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
-                        ;
-                        ;:siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
-                        ;:siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV_silta.shz"
-                        ;:siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
-                        ;
-                        ;:urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
-                        ;:urakoiden-osoite "https://ava.liikennevirasto.fi/harja/[AINEISTO].shz"
-                        ;:urakoiden-tuontikohde "./shp/Hoitourakat/[AINEISTO].shz"
-                        ;
-                        ;:ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
-                        ;:ely-alueiden-osoite "https://ava.liikennevirasto.fi/harja/ULKOISET_Elyt_infra.shz"
-                        ;:ely-alueiden-tuontikohde "./shp/ELYt/ULKOISET_Elyt_infra.shz"
-                        ;
-                        ;:valaistusurakoiden-shapefile "file://shp/Valaistusurakat/PTV_tl167.shp"
-                        ;:valaistusurakoiden-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl167.shz"
-                        ;:valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/PTV_tl167.shz"
-                        ;
-                        ;:paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
-                        ;:paallystyspalvelusopimusten-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl151.shz"
-                        ;:paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
-                        ;
-                        ;:tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
-                        ;
-                        ;:siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
-                        ;
-                        ;:turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/Turvalaitteet.shp"
-                        ;:turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
-                        ;:turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
+                        :tieosoiteverkon-osoite "https://ava.liikennevirasto.fi/harja/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+                        
+                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
+                        :pohjavesialueen-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl141.shz"
+                        :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/PTV_tl141.shz"
+                        
+                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/PTV_tl132.shp"
+                        :talvihoidon-hoitoluokkien-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl132.shz"
+                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
+                        
+                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/PTV_tl149.shp"
+                        :soratien-hoitoluokkien-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl149.shz"
+                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
+                        
+                        :siltojen-shapefile "file://shp/Sillat/PTV_silta.shp"
+                        :siltojen-osoite "https://ava.liikennevirasto.fi/harja/PTV_silta.shz"
+                        :siltojen-tuontikohde "./shp/Sillat/PTV_silta.shz"
+                        
+                        :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
+                        :urakoiden-osoite "https://ava.liikennevirasto.fi/harja/[AINEISTO].shz"
+                        :urakoiden-tuontikohde "./shp/Hoitourakat/[AINEISTO].shz"
+                        
+                        :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
+                        :ely-alueiden-osoite "https://ava.liikennevirasto.fi/harja/ULKOISET_Elyt_infra.shz"
+                        :ely-alueiden-tuontikohde "./shp/ELYt/ULKOISET_Elyt_infra.shz"
+                        
+                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/PTV_tl167.shp"
+                        :valaistusurakoiden-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl167.shz"
+                        :valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/PTV_tl167.shz"
+                        
+                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
+                        :paallystyspalvelusopimusten-osoite "https://ava.liikennevirasto.fi/harja/PTV_tl151.shz"
+                        :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
+                        
+                        :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
+                        
+                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
+                        
+                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/Turvalaitteet.shp"
+                        :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
+                        :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
                         ;;kanavasulut
                         :kanavien-shapefile "file://shp/Vesivaylien_kanavat/Kanavat.shp"

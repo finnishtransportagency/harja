@@ -59,7 +59,8 @@
 (defn luo-ilmoitus [db urakka-id urakkatyyppi {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
                                                       valitetty otsikko paikankuvaus lisatieto
                                                       yhteydenottopyynto ilmoittaja lahettaja selitteet
-                                                      sijainti vastaanottaja tunniste viesti-id]}]
+                                                      sijainti vastaanottaja tunniste viesti-id
+                                                      vastaanotettu]}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
                   {:urakka urakka-id
@@ -74,7 +75,9 @@
                    :selitteet (konv/seq->array (map name selitteet))
                    :urakkatyyppi urakkatyyppi
                    :tunniste tunniste
-                   :viestiid viesti-id}))]
+                   :viestiid viesti-id
+                   :vastaanotettu vastaanotettu
+                   :ilmoitettu-alunperin ilmoitettu}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
