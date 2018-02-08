@@ -376,22 +376,21 @@
                {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
                                          #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
                 :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"
-                :salli-poistaa-tallennettu-liite? true
-                :poista-tallennettu-liite-fn (fn [liite-id]
-                                               (go
-                                                 (let [vastaus (<! (liitteet/poista-liite-kannasta
-                                                                     {:urakka-id (:id urakka)
-                                                                      :domain :turvallisuuspoikkeama
-                                                                      :domain-id (:id @turvallisuuspoikkeama)
-                                                                      :liite-id liite-id}))]
-                                                   (when-not (k/virhe? vastaus)
-                                                     (swap! turvallisuuspoikkeama assoc :liitteet
-                                                            (filter (fn [liite]
-                                                                      (not= (:id liite) liite-id))
-                                                                    (:liitteet @turvallisuuspoikkeama)))
-                                                     (viesti/nayta! "Liite poistettu!" :success)))))
                 :salli-poistaa-lisatty-liite? true
-                :poista-lisatty-liite-fn #(swap! turvallisuuspoikkeama dissoc :uusi-liite)}])}
+                :poista-lisatty-liite-fn #(swap! turvallisuuspoikkeama dissoc :uusi-liite)
+                :salli-poistaa-tallennettu-liite? true
+                :poista-tallennettu-liite-fn
+                (fn [liite-id]
+                  (liitteet/poista-liite-kannasta
+                    {:urakka-id (:id urakka)
+                     :domain :turvallisuuspoikkeama
+                     :domain-id (:id @turvallisuuspoikkeama)
+                     :liite-id liite-id
+                     :poistettu-fn (fn []
+                                     (swap! turvallisuuspoikkeama assoc :liitteet
+                                            (filter (fn [liite]
+                                                      (not= (:id liite) liite-id))
+                                                    (:liitteet @turvallisuuspoikkeama))))}))}])}
            (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
                           :uusi-rivi? true}
                          {:otsikko "Etunimi"

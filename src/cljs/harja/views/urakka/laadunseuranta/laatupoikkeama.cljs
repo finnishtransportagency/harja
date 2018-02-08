@@ -432,13 +432,27 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 {:otsikko "Liitteet" :nimi :liitteet
                  :palstoja 2
                  :tyyppi :komponentti
-                 :komponentti (fn [_]
-                                [liitteet/liitteet-ja-lisays urakka-id (:liitteet @laatupoikkeama)
-                                 {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
-                                                           #(swap! laatupoikkeama assoc :uusi-liite %))
-                                  :uusi-liite-teksti "Lisää liite laatupoikkeamaan"
-                                  :salli-poistaa-lisatty-liite? true
-                                  :poista-lisatty-liite-fn #(swap! laatupoikkeama dissoc :uusi-liite)}])}
+                 :komponentti
+                 (fn [_]
+                   [liitteet/liitteet-ja-lisays urakka-id (:liitteet @laatupoikkeama)
+                    {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
+                                              #(swap! laatupoikkeama assoc :uusi-liite %))
+                     :uusi-liite-teksti "Lisää liite laatupoikkeamaan"
+                     :salli-poistaa-lisatty-liite? true
+                     :poista-lisatty-liite-fn #(swap! laatupoikkeama dissoc :uusi-liite)
+                     :salli-poistaa-tallennettu-liite? true
+                     :poista-tallennettu-liite-fn
+                     (fn [liite-id]
+                       (liitteet/poista-liite-kannasta
+                         {:urakka-id urakka-id
+                          :domain :turvallisuuspoikkeama
+                          :domain-id (:id @laatupoikkeama)
+                          :liite-id liite-id
+                          :poistettu-fn (fn []
+                                          (swap! laatupoikkeama assoc :liitteet
+                                                 (filter (fn [liite]
+                                                           (not= (:id liite) liite-id))
+                                                         (:liitteet @laatupoikkeama))))}))}])}
 
                 (when-not uusi?
                   (lomake/ryhma
