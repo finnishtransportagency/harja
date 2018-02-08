@@ -68,4 +68,7 @@
     "liite" ::liite-id}]
   ["laatupoikkeama_liite" ::laatupoikkeama<->liite
    {"laatupoikkeama" ::laatupoikkeama-id
+    "liite" ::liite-id}]
+  ["tarkastus_liite" ::tarkastus<->liite
+   {"tarkastus" ::tarkastus-id
     "liite" ::liite-id}])

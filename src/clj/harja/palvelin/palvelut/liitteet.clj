@@ -10,6 +10,7 @@
             [specql.core :as specql]
             [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
+            [harja.domain.laadunseuranta.tarkastus :as tarkastus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.tyokalut.tietoturva :as tietoturva])
@@ -71,7 +72,15 @@
                     :domain-taulu-id ::lp/id
                     :domain-taulu-urakka-id ::lp/urakka-id
                     :oikeustarkistus (fn [user urakka-id]
-                                       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}})
+                                       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}
+   :tarkastus {:linkkitaulu ::liite-domain/tarkastus<->liite
+               :linkkitaulu-domain-id ::liite-domain/tarkastus-id
+               :linkkitaulu-liite-id ::liite-domain/liite-id
+               :domain-taulu ::tarkastus/tarkastus
+               :domain-taulu-id ::tarkastus/id
+               :domain-taulu-urakka-id ::tarkastus/urakka-id
+               :oikeustarkistus (fn [user urakka-id]
+                                  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))}})
 
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."
