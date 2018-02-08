@@ -65,4 +65,7 @@
     "urakka" ::urakka-id}]
   ["turvallisuuspoikkeama_liite" ::turvallisuuspoikkeama<->liite
    {"turvallisuuspoikkeama" ::turvallisuuspoikkeama-id
+    "liite" ::liite-id}]
+  ["laatupoikkeama_liite" ::laatupoikkeama<->liite
+   {"laatupoikkeama" ::laatupoikkeama-id
     "liite" ::liite-id}])

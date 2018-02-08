@@ -23,16 +23,16 @@
                                  :domain-id domain-id}))
 
 (defn poista-liite-kannasta
-  [{:keys [urakka-id domain domain-id liite-id liite-poistettu-fn]}]
+  [{:keys [urakka-id domain domain-id liite-id poistettu-fn]}]
   (go
     (let [vastaus (<! (poista-liite-kannasta-kysely
                         {:urakka-id urakka-id
-                         :domain :turvallisuuspoikkeama
+                         :domain domain
                          :domain-id domain-id
                          :liite-id liite-id}))]
       (if (k/virhe? vastaus)
         (viesti/nayta! "Liitteen poisto epäonnistui!" :danger)
-        (do (liite-poistettu-fn)
+        (do (poistettu-fn)
             (viesti/nayta! "Liite poistettu!" :success))))))
 
 (defn lyhenna-pitkan-liitteen-nimi [nimi]
