@@ -171,8 +171,6 @@
 
 (defn- suunniteltu-tyo-voimassa-paivamaaralle? [tp-pvm tyo]
   (assert some? tp-pvm)
-  (log "onko pvm" (pr-str  (pvm/pvm? tp-pvm)) )
-  (log "TPH: valissa: " (pr-str  tp-pvm) (:alkupvm tyo) (:loppupvm tyo) "->" (pr-str (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo))))
   (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo)))
 
 (defn- suunnitellut-tyot-paivamaaralle [app* pvm]
