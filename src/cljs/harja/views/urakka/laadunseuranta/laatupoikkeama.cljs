@@ -436,7 +436,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                 [liitteet/liitteet-ja-lisays urakka-id (:liitteet @laatupoikkeama)
                                  {:uusi-liite-atom (r/wrap (:uusi-liite @laatupoikkeama)
                                                            #(swap! laatupoikkeama assoc :uusi-liite %))
-                                  :uusi-liite-teksti "Lisää liite laatupoikkeamaan"}])}
+                                  :uusi-liite-teksti "Lisää liite laatupoikkeamaan"
+                                  :salli-poistaa-lisatty-liite? true
+                                  :poista-lisatty-liite-fn #(swap! laatupoikkeama dissoc :uusi-liite)}])}
 
                 (when-not uusi?
                   (lomake/ryhma
