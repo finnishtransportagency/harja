@@ -3,6 +3,7 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [harja.ui.komponentti :as komp]
+            [clojure.string :as string]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
@@ -170,6 +171,7 @@
 
 (defn- suunniteltu-tyo-voimassa-paivamaaralle? [tp-pvm tyo]
   (assert some? tp-pvm)
+  (log "onko pvm" (pr-str  (pvm/pvm? tp-pvm)) )
   (log "TPH: valissa: " (pr-str  tp-pvm) (:alkupvm tyo) (:loppupvm tyo) "->" (pr-str (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo))))
   (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo)))
 
@@ -177,6 +179,12 @@
   (filter (partial suunniteltu-tyo-voimassa-paivamaaralle? pvm)
           (:suunnitellut-tyot app*)))
 
+
+(defn- suunniteltu-tyo-toimenpidekoodille [tpk suunnitellut-tyot]
+  (first (filter (fn [suunniteltu-tyo]
+                   (and (= (:tehtavan_id tpk)
+                           (:tehtava suunniteltu-tyo))))
+                 suunnitellut-tyot)))
 
 (defn- sopimushintaiset-tyot [e! app*]
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
@@ -192,29 +200,26 @@
            (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
                                                                  (::tyo/toimenpidekoodi-id tyorivi))
                  yksikko (:yksikko toimenpidekoodi)
-                 yksikkohinta (:yksikkohinta toimenpidekoodi)
-                 tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))
-                 tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))]
+                 tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))
+                 suunniteltu-tyo (suunniteltu-tyo-toimenpidekoodille toimenpidekoodi tyovalinnat-toimenpiteen-ajalle)
+                 yksikkohinta (:yksikkohinta suunniteltu-tyo)
+                 tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
              ^{:key index}
              [:tr
               [:td
-               (let [tyovalinnat (sort-by :tehtavan_nimi (:suunnitellut-tyot app*))]
+               (let [tyon-urakkavuosi #(string/join "-" (map pvm/pvm-opt [(:alkupvm %) (:loppupvm %)]))]
                  [yleiset/livi-pudotusvalikko
                   {:valitse-fn #(do
                                   (e! (tiedot/->AsetaTyorivilleTiedot
                                         {::tyo/id (::tyo/id tyorivi)
                                          ::tyo/toimenpidekoodi-id (:tehtava %)})))
                    :format-fn #(if %
-                                 (:tehtavan_nimi %)
+                                 (str (:tehtavan_nimi %) " " (tyon-urakkavuosi %))
                                  "Valitse työ")
                    :class "livi-alasveto-250 inline-block"
-                   :valinta (first (filter (fn [suunniteltu-tyo]
-                                             (assert (pvm/valissa? tp-pvm (:alkupvm suunniteltu-tyo) (:loppupvm suunniteltu-tyo)))
-                                             (and (= (::tyo/toimenpidekoodi-id tyorivi)
-                                                     (:tehtava suunniteltu-tyo))))
-                                           tyovalinnat-toimenpiteen-ajalle))
+                   :valinta suunniteltu-tyo
                    :disabled false}
-                  tyovalinnat])]
+                  tyovalinnat-toimenpiteen-ajalle])]
               [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
               [:td.tasaa-oikealle
                [kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
