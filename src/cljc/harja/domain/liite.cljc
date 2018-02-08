@@ -71,4 +71,7 @@
     "liite" ::liite-id}]
   ["tarkastus_liite" ::tarkastus<->liite
    {"tarkastus" ::tarkastus-id
+    "liite" ::liite-id}]
+  ["toteuma_liite" ::toteuma<->liite
+   {"toteuma" ::toteuma-id
     "liite" ::liite-id}])
