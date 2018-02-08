@@ -29,7 +29,7 @@
   (laheta-kohteet [this urakka-id kohde-idt]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
-  (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (log/debug (format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (urakoiden-hakuvastaus/lue-sanoma sisalto)
         urakat (:urakat vastaus)
         virhe (:virhe vastaus)]
@@ -85,7 +85,7 @@
             virhe-viesti (when (not kohteen-lahetys-onnistunut?)
                            (or (:selite virhe)
                                (str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
-        
+
         (if kohteen-lahetys-onnistunut?
           (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
           (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-viesti))
