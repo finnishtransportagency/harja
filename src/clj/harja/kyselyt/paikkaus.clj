@@ -59,7 +59,7 @@
         ehdot (if (id-olemassa? id)
                 {::paikkaus/id id}
                 {::paikkaus/ulkoinen-id ulkoinen-id
-                 ::paikkaus/luoja-id luoja-id})]
+                 ::muokkaustiedot/luoja-id luoja-id})]
     (update! db ::paikkaus/paikkaustoteuma toteuma ehdot)
     toteuma))
 
