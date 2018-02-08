@@ -1089,53 +1089,57 @@
       (#'pdf-vienti/hiccup->pdf ff fo out)
       (.toByteArray out))))
 
-(defn- valmistuu-aikarajassa? [aikaraja kysely]
-  (go
-    (let [[tulos _] (alts! [(kysely) (timeout aikaraja)])]
-      (if (some? tulos) true false))))
-
-#_(defn valmistuivat-aikarajassa? [kutsut aikaraja]
-  (let [onnistuivat? (<!!
-                       (async/into
-                         []
-                         (async/merge
-                           (map (partial valmistuu-aikarajassa? aikaraja) kutsut))))]
-    (every? true? onnistuivat?)))
+(defn- gatling-kutsu [kutsu]
+  (go (let [tulos (<! (kutsu))]
+        (if (and (some? tulos) (not-empty tulos))
+          true
+          false))))
 
 (defn gatling-onnistuu-ajassa?
-  ([simulaatio kutsut]
-   (gatling-onnistuu-ajassa? simulaatio kutsut {} false))
-  ([simulaatio kutsut opts]
-    (gatling-onnistuu-ajassa? simulaatio kutsut opts false))
-  ([simulaatio kutsut opts aja-raportti?]
-   (assert
-     (every? (comp (partial = 2) count) kutsut)
-     "Kutsut pitää olla vektori, jossa ensimmäinen parametri on kanavan palauttava funktio,
-     ja toinen kutsun aikaraja.")
+  "Ajaa nimetyn gatling-simulaation, ja kertoo, valmistuivatko skenaariot aikarajan sisällä.
 
-   (let [yhteenveto
-          (gatling/run
-            {:name simulaatio
-             :scenarios
-             (keep-indexed
-               (fn [i [kutsu aikaraja]]
-                 {:name (str "Skenaario #" i)
-                  :steps [{:name "Askel 1"
-                           :request (fn [ctx]
-                                      ;; Ei lokiteta debug ja info viestejä
-                                      (log/with-level
-                                        :warn
-                                        (valmistuu-aikarajassa? aikaraja kutsu)))}]})
-               kutsut)}
-            (merge
-              (when (and (false? aja-raportti?)
-                         (false? (ollaanko-jenkinsissa?)))
-                ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
-                ;; eli luodaan oma raportteri, joka ei tee mitään
-                {:reporter {:writer (fn [_ _ _])
-                            :generator (fn [simulation]
-                                         (println "Ran" simulation "without report"))}})
-              (or opts {})))]
-     (log/debug (str "Simulaatio " simulaatio " valmistui: " yhteenveto ". Aikarajat olivat "
-                     (str/join ", " (set (map (comp #(str % "ms") second) kutsut)))))
-     (= 0 (:ko yhteenveto)))))
+  Kiinnostavat optiot ovat:
+  - :timeout-in-ms kuinka pitkään jokainen pyyntö saa maksimissaan kestää
+  - :concurrency montako kyselyä ajetaan rinnakkain. Ota tässä huomioon, voiko kyselyn ajaa monta kertaa samoilla parametreilla
+  - :aja-raportti? Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
+
+  Kutsuja voi antaa niin monta kuin haluaa. Jos kutsuja antaa monta, ne ajetaan rinnakkain.
+  Kutsu on funktio, joka palauttaa KANAVAN.
+
+  Esim:
+  (is (gatling-onnistuu-ajassa?
+        \"Hae jutut\"
+        {:concurrency 10
+        :timeout-in-ms 100}
+        #(go (kutsu-palvelua :hae-jutut +jvh+ {:id 1}))))"
+  [simulaation-nimi {:keys [aja-raportti?] :as opts} & kutsut]
+  ;; Tämä toteutus ohjaa tarkoituksella käyttöä tiettyyn suuntaan.
+  ;; Jos tarvitaan hienojakoisempaa toiminnallisuutta, esim monivaiheisia skenaarioita,
+  ;; joita ajetaan eri painoarvoilla, niin parempi kutsua gatlingia suoraan, tapauskohtaisesti.
+  (let [yhteenveto
+        (gatling/run
+          {:name simulaation-nimi
+           :scenarios
+           (keep-indexed
+             (fn [i kutsu]
+               {:name (str "Skenaario #" i)
+                :steps [{:name "Askel 1"
+                         :request (fn [ctx]
+                                    ;; Ei lokiteta debug ja info viestejä
+                                    (log/with-level
+                                      :warn
+                                      (gatling-kutsu kutsu)))}]})
+             kutsut)}
+          (merge
+            {:timeout-in-ms 10
+             :concurrency 1}
+            (when (and (false? aja-raportti?)
+                       (false? (ollaanko-jenkinsissa?)))
+              ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
+              ;; eli luodaan oma raportteri, joka ei tee mitään
+              {:reporter {:writer (fn [_ _ _])
+                          :generator (fn [simulation]
+                                       (println "Ran" simulation "without report"))}})
+            opts))]
+    (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
+    (= 0 (:ko yhteenveto))))
