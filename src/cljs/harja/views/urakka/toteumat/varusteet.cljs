@@ -256,7 +256,9 @@
                    {:uusi-liite-atom (when muokattava?
                                        (r/wrap (:uusi-liite varustetoteuma)
                                                #(e! (v/->LisaaLiitetiedosto %))))
-                    :uusi-liite-teksti "Lisää liite varustetoteumaan"}])})
+                    :uusi-liite-teksti "Lisää liite varustetoteumaan"
+                    :salli-poistaa-lisatty-liite? true
+                    :poista-lisatty-liite-fn #(e! (v/->PoistaLiitetiedosto %))}])})
 
 (def tietolajien-sisaltojen-kuvaukset-url "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
 

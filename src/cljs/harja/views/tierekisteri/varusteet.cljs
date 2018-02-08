@@ -136,6 +136,8 @@
                         {:uusi-liite-teksti "Lisää liite tarkastukseen"
                          :uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
                                                   #(e! (v/->LisaaLiitetiedosto %)))
+                         :salli-poistaa-lisatty-liite? true
+                         :poista-lisatty-liite-fn #(e! (v/->PoistaLiitetiedosto %))
                          :modaalissa? true}])}]
       tarkastus]]))
 

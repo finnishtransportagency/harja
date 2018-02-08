@@ -46,6 +46,7 @@
 (defrecord MuokkaaVarustetta [varuste])
 
 (defrecord LisaaLiitetiedosto [liite])
+(defrecord PoistaLiitetiedosto [liite])
 
 (defrecord HaeSijainninOsoite [sijainti])
 
