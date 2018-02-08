@@ -328,6 +328,6 @@
 (deftest hae-ilmoitukset-kesto
   (is (gatling-onnistuu-ajassa?
         "Hae ilmoitukset"
-        [[#(go (hae hae-ilmoitukset-parametrit))
-          700]]
-        {:concurrency 100})))
+        {:concurrency 100
+         :timeout-in-ms 1000}
+        #(go (hae hae-ilmoitukset-parametrit)))))
