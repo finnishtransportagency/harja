@@ -396,7 +396,20 @@
                                :poista-lisatty-liite-fn #(swap! muokattu assoc :uudet-liitteet
                                                                 (->> (:uudet-liitteet @muokattu)
                                                                      (filter (fn [liite] (not= (:id liite) %)))
-                                                                     (set)))}])}]
+                                                                     (set)))
+                               :salli-poistaa-tallennettu-liite? true
+                               :poista-tallennettu-liite-fn
+                               (fn [liite-id]
+                                 (liitteet/poista-liite-kannasta
+                                   {:urakka-id urakka-id
+                                    :domain :toteuma
+                                    :domain-id (get-in @muokattu [:toteuma :id])
+                                    :liite-id liite-id
+                                    :poistettu-fn (fn []
+                                                    (swap! muokattu assoc :liitteet
+                                                           (filter (fn [liite]
+                                                                     (not= (:id liite) liite-id))
+                                                                   (:liitteet @muokattu))))}))}])}]
 
             @muokattu]
            (when-not kirjoitusoikeus?
@@ -509,7 +522,7 @@
                                     :teksti "Valitse toteuma"}})
                       #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! muut-tyot/valittu-toteuma)) ;;Palauttaa funktion jolla kuuntelu lopetetaan
-    (fn []
+    (fn [ur]
       [:span
        [kartta/kartan-paikka]
        (if @muut-tyot/valittu-toteuma
