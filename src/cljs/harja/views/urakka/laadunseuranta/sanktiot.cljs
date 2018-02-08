@@ -255,7 +255,9 @@
                            [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
                             {:uusi-liite-atom (r/wrap (:uusi-liite @tiedot/valittu-sanktio)
                                                       #(swap! tiedot/valittu-sanktio (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
-                             :uusi-liite-teksti "Lisää liite sanktioon"}])})]
+                             :uusi-liite-teksti "Lisää liite sanktioon"
+                             :salli-poistaa-lisatty-liite? true
+                             :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))}])})]
         @muokattu]
        [ajax-loader "Ladataan..."])]))
 
