@@ -1090,7 +1090,7 @@
       (.toByteArray out))))
 
 (defn- gatling-kutsu [kutsu]
-  (go (let [tulos (<! (kutsu))]
+  (go (let [tulos (<! (go (kutsu)))]
         (if (and (some? tulos) (not-empty tulos))
           true
           false))))
@@ -1104,14 +1104,13 @@
   - :aja-raportti? Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
 
   Kutsuja voi antaa niin monta kuin haluaa. Jos kutsuja antaa monta, ne ajetaan rinnakkain.
-  Kutsu on funktio, joka palauttaa KANAVAN.
 
   Esim:
   (is (gatling-onnistuu-ajassa?
         \"Hae jutut\"
         {:concurrency 10
         :timeout-in-ms 100}
-        #(go (kutsu-palvelua :hae-jutut +jvh+ {:id 1}))))"
+        #(kutsu-palvelua :hae-jutut +jvh+ {:id 1})))"
   [simulaation-nimi {:keys [aja-raportti?] :as opts} & kutsut]
   ;; Tämä toteutus ohjaa tarkoituksella käyttöä tiettyyn suuntaan.
   ;; Jos tarvitaan hienojakoisempaa toiminnallisuutta, esim monivaiheisia skenaarioita,

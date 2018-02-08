@@ -330,4 +330,4 @@
         "Hae ilmoitukset"
         {:concurrency 100
          :timeout-in-ms 1000}
-        #(go (hae hae-ilmoitukset-parametrit)))))
+        #(hae hae-ilmoitukset-parametrit))))
