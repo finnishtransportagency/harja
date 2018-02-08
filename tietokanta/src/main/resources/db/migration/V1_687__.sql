@@ -57,3 +57,4 @@ CREATE TABLE paikkauksen_materiaalit (
   "lisa-aineet"        TEXT
 );
 
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaustoteuma');
