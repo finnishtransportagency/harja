@@ -461,7 +461,9 @@
                            [liitteet/liitteet-ja-lisays urakka-id (:liitteet tarkastus)
                             {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
                                                       #(swap! tarkastus-atom assoc :uusi-liite %))
-                             :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
+                             :uusi-liite-teksti "Lisää liite tarkastukseen"
+                             :salli-poistaa-lisatty-liite? true
+                             :poista-lisatty-liite-fn #(swap! tarkastus-atom dissoc :uusi-liite)}])})
          (when voi-kirjoittaa?
            {:rivi? true
             :uusi-rivi? true
