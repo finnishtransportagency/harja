@@ -183,7 +183,7 @@
             :leveys 2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         (when-not vesivayla?                               ;; Vesiväylässä lajeina on vain sakko
+         (when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
            {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
             :palstoja 1 :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
