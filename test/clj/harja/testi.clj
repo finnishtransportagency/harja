@@ -2,6 +2,7 @@
   "Harjan testauksen apukoodia."
   (:require
     [clojure.test :refer :all]
+    [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
     [harja.palvelin.komponentit.todennus :as todennus]
@@ -19,7 +20,8 @@
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
-    [harja.pvm :as pvm])
+    [harja.pvm :as pvm]
+    [clj-gatling.core :as gatling])
   (:import (java.util Locale))
   (:import (org.postgresql.util PSQLException)))
 
@@ -1086,3 +1088,54 @@
     (with-open [out (java.io.ByteArrayOutputStream.)]
       (#'pdf-vienti/hiccup->pdf ff fo out)
       (.toByteArray out))))
+
+(defn- valmistuu-aikarajassa? [aikaraja kysely]
+  (go
+    (let [[tulos _] (alts! [(kysely) (timeout aikaraja)])]
+      (if (some? tulos) true false))))
+
+#_(defn valmistuivat-aikarajassa? [kutsut aikaraja]
+  (let [onnistuivat? (<!!
+                       (async/into
+                         []
+                         (async/merge
+                           (map (partial valmistuu-aikarajassa? aikaraja) kutsut))))]
+    (every? true? onnistuivat?)))
+
+(defn gatling-onnistuu-ajassa?
+  ([simulaatio kutsut]
+   (gatling-onnistuu-ajassa? simulaatio kutsut {} false))
+  ([simulaatio kutsut opts]
+    (gatling-onnistuu-ajassa? simulaatio kutsut opts false))
+  ([simulaatio kutsut opts aja-raportti?]
+   (assert
+     (every? (comp (partial = 2) count) kutsut)
+     "Kutsut pitää olla vektori, jossa ensimmäinen parametri on kanavan palauttava funktio,
+     ja toinen kutsun aikaraja.")
+
+   (let [yhteenveto
+          (gatling/run
+            {:name simulaatio
+             :scenarios
+             (keep-indexed
+               (fn [i [kutsu aikaraja]]
+                 {:name (str "Skenaario #" i)
+                  :steps [{:name "Askel 1"
+                           :request (fn [ctx]
+                                      ;; Ei lokiteta debug ja info viestejä
+                                      (log/with-level
+                                        :warn
+                                        (valmistuu-aikarajassa? aikaraja kutsu)))}]})
+               kutsut)}
+            (merge
+              (when (and (false? aja-raportti?)
+                         (false? (ollaanko-jenkinsissa?)))
+                ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
+                ;; eli luodaan oma raportteri, joka ei tee mitään
+                {:reporter {:writer (fn [_ _ _])
+                            :generator (fn [simulation]
+                                         (println "Ran" simulation "without report"))}})
+              (or opts {})))]
+     (log/debug (str "Simulaatio " simulaatio " valmistui: " yhteenveto ". Aikarajat olivat "
+                     (str/join ", " (set (map (comp #(str % "ms") second) kutsut)))))
+     (= 0 (:ko yhteenveto)))))
