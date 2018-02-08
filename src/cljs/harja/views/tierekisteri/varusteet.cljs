@@ -137,7 +137,7 @@
                          :uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
                                                   #(e! (v/->LisaaLiitetiedosto %)))
                          :salli-poistaa-lisatty-liite? true
-                         :poista-lisatty-liite-fn #(e! (v/->PoistaLiitetiedosto %))
+                         :poista-lisatty-liite-fn #(e! (v/->PoistaUusiLiitetiedosto %))
                          :modaalissa? true}])}]
       tarkastus]]))
 

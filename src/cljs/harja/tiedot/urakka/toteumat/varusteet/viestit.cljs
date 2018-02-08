@@ -46,7 +46,8 @@
 (defrecord MuokkaaVarustetta [varuste])
 
 (defrecord LisaaLiitetiedosto [liite])
-(defrecord PoistaLiitetiedosto [liite])
+(defrecord PoistaUusiLiitetiedosto [liite])
+(defrecord PaivitaLiitteet [liitteet])
 
 (defrecord HaeSijainninOsoite [sijainti])
 

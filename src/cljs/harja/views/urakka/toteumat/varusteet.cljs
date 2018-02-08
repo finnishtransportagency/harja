@@ -258,7 +258,7 @@
                                                #(e! (v/->LisaaLiitetiedosto %))))
                     :uusi-liite-teksti "Lisää liite varustetoteumaan"
                     :salli-poistaa-lisatty-liite? true
-                    :poista-lisatty-liite-fn #(e! (v/->PoistaLiitetiedosto %))
+                    :poista-lisatty-liite-fn #(e! (v/->PoistaUusiLiitetiedosto %))
                     :salli-poistaa-tallennettu-liite? true
                     :poista-tallennettu-liite-fn
                     (fn [liite-id]
@@ -268,11 +268,10 @@
                          :domain-id (get-in varustetoteuma [:toteuma :id])
                          :liite-id liite-id
                          :poistettu-fn (fn []
-                                         ;; TODO Poista liite frontista: (:liitteet varustetoteuma)
-                                         #_(swap! laatupoikkeama assoc :liitteet
-                                                (filter (fn [liite]
-                                                          (not= (:id liite) liite-id))
-                                                        (:liitteet @laatupoikkeama))))}))}])})
+                                         (let [uudet-liitteet (filter (fn [liite]
+                                                                        (not= (:id liite) liite-id))
+                                                                      (:liitteet varustetoteuma))]
+                                           (e! (v/->PaivitaLiitteet uudet-liitteet))))}))}])})
 
 (def tietolajien-sisaltojen-kuvaukset-url "http://www.liikennevirasto.fi/documents/20473/244621/Tierekisteri_tietosis%C3%A4ll%C3%B6n_kuvaus_2017/b70fdd1d-fac8-4f07-b0d9-d8343e6c485c")
 
