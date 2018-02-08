@@ -88,7 +88,7 @@
   (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
     ;; TODO Testi tälle
-    ;; TODO Tarkenna oikeustarkistusta: käyttäjä voi poistaa vain itse lisäämänsä liitteen?
+    ;; TODO Tarkenna oikeustarkistusta: käyttäjä voi poistaa vain itse lisäämänsä liitteen? Toisaalta editointiakaan ei ole rajoitettu vain omiin lisäyksiin?
     (oikeustarkistus-fn user urakka-id)
     (tietoturva/vaadi-linkitys db
                                (:domain-taulu domain-tiedot)
