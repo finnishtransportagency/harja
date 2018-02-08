@@ -177,7 +177,7 @@
           :validoi [[:ei-tyhja "Anna perustelu"]]}
 
          (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
-           {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
+           {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
             :hae (comp :muukasittelytapa :paatos :laatupoikkeama)
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :muukasittelytapa] arvo))
             :leveys 2 :tyyppi :string
