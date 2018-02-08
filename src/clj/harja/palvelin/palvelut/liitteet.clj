@@ -88,6 +88,7 @@
   (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
     ;; TODO Testi tälle
+    ;; TODO Tarkenna oikeustarkistusta: käyttäjä voi poistaa vain itse lisäämänsä liitteen?
     (oikeustarkistus-fn user urakka-id)
     (tietoturva/vaadi-linkitys db
                                (:domain-taulu domain-tiedot)
