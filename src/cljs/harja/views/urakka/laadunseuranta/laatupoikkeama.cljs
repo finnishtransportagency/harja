@@ -445,7 +445,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                      (fn [liite-id]
                        (liitteet/poista-liite-kannasta
                          {:urakka-id urakka-id
-                          :domain :turvallisuuspoikkeama
+                          :domain :laatupoikkeama
                           :domain-id (:id @laatupoikkeama)
                           :liite-id liite-id
                           :poistettu-fn (fn []
