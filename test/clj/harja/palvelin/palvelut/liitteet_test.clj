@@ -32,7 +32,7 @@
                                 (ffirst (q "SELECT COUNT(*) FROM laatupoikkeama_liite WHERE laatupoikkeama = " laatupoikkeama-id
                                            " AND liite = " liite-id)))
         random-laatupoikkeama (first (q-map "SELECT id, urakka FROM laatupoikkeama"))
-        _ (u "INSERT INTO liite (tyyppi, nimi, liite_oid) VALUES (\"image/jpeg\", \"testi45435.jpg\", 123")
+        _ (u "INSERT INTO liite (tyyppi, nimi, liite_oid, lahde) VALUES ('image/jpeg', 'testi45435.jpg', '123', 'harja-ui')")
         liite-id (:id (first (q-map "SELECT id FROM liite WHERE nimi = 'testi45435.jpg'")))
         _ (u (str "INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite) VALUES (" (:id random-laatupoikkeama) ", " liite-id ")"))
         liitteet-ennen-testia (laatupoikkeaman-liite (:id random-laatupoikkeama) liite-id)
