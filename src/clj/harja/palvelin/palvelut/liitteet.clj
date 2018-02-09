@@ -61,7 +61,7 @@
       {:status 404
        :body "Annetulle liittelle ei pikkukuvaa."})))
 
-(def liitteen-poisto-domainin-mukaan
+(def domain-tiedot
   {:turvallisuuspoikkeama {:linkkitaulu ::liite-domain/turvallisuuspoikkeama<->liite
                            :linkkitaulu-domain-id ::liite-domain/turvallisuuspoikkeama-id
                            :linkkitaulu-liite-id ::liite-domain/liite-id
@@ -113,7 +113,10 @@
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."
   [db user {:keys [urakka-id domain liite-id domain-id] :as tiedot}]
-  (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)
+  (let [domain-tiedot (case domain
+                        :laatupoikkeama-kommentti-liite (:laatupoikkeama domain-tiedot)
+                        :turvallisuuspoikkeama-kommentti-liite (:turvallisuuspoikkeama domain-tiedot)
+                        (domain domain-tiedot))
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
     ;; TODO Testi tälle
     (oikeustarkistus-fn user urakka-id)
