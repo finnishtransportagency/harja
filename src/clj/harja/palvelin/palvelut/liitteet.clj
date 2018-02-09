@@ -10,6 +10,7 @@
             [harja.domain.liite :as liite-domain]
             [specql.core :as specql]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turpop]
             [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
@@ -104,7 +105,7 @@
         (liitteet-q/poista-laatupoikkeaman-kommentin-liite! db {:liite liite-id
                                                                 :laatupoikkeama domain-id}))
     :turvallisuuspoikkeama-kommentti-liite
-    (do (ls/vaadi-laatupoikkeama-kuuluu-urakkaan db urakka-id domain-id)
+    (do (turpop/vaadi-turvallisuuspoikkeama-kuuluu-urakkaan db urakka-id domain-id)
 
         (liitteet-q/poista-turvallisuuspoikkeaman-kommentin-liite! db {:liite liite-id
                                                                        :turvallisuuspoikkeama domain-id}))))
