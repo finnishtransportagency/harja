@@ -39,8 +39,9 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :poista-liite-linkki +kayttaja-jvh+
                                 {:urakka-id (:urakka random-laatupoikkeama)
-                                 :alku (pvm/luo-pvm (+ 1900 105) 9 1)
-                                 :loppu (pvm/luo-pvm (+ 1900 106) 8 30)})
+                                 :domain :laatupoikkeama
+                                 :liite liite-id
+                                 :domain-id (:id random-laatupoikkeama)})
         liitteet-testin-jalkeen (laatupoikkeaman-liite (:id random-laatupoikkeama) liite-id)]
 
     (is (= liitteet-ennen-testia 1))
