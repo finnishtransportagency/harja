@@ -34,3 +34,27 @@ SELECT id, nimi, liite_oid FROM liite
 -- Merkitsee annetulle liitteelle fileyard hash arvon ja poistaa OID:n
 UPDATE liite SET liite_oid = NULL, "fileyard-hash" = :fileyard-hash
  WHERE id = :id;
+
+-- name: poista-laatupoikkeaman-kommentin-liite!
+UPDATE kommentti
+SET liite = NULL
+WHERE id IN (
+  SELECT id
+  FROM kommentti
+  WHERE liite = :liite
+        AND id IN (SELECT kommentti
+                   FROM laatupoikkeama_kommentti
+                   WHERE laatupoikkeama = :laatupoikkeama)
+  LIMIT 1);
+
+-- name: poista-turvallisuuspoikkeaman-kommentin-liite!
+UPDATE kommentti
+SET liite = NULL
+WHERE id IN (
+  SELECT id
+  FROM kommentti
+  WHERE liite = :liite
+        AND id IN (SELECT kommentti
+                   FROM turvallisuuspoikkeama_kommentti
+                   WHERE turvallisuuspoikkeama = :laatupoikkeama)
+  LIMIT 1);

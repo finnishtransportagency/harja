@@ -4,6 +4,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [ring.middleware.params :refer [wrap-params]]
             [harja.kyselyt.toteumat :as tot-q]
+            [harja.kyselyt.liitteet :as liitteet-q]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.domain.liite :as liite-domain]
@@ -95,17 +96,18 @@
                                 #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))}})
 
 (defn- poista-kommentin-liite-linkitys [db user {:keys [urakka-id domain liite-id domain-id]}]
-  ;; TODO Toteuta: vaadi linkitys ja poista
-  ;; Linkitys menee näin: liite -> kommentti -> domain-subject -> urakka
-
+  ;; Etsitään kommentti, joka kuuluu annettuun domain-asiaan ja jolla on liitteenä liite-id.
+  ;; Sama liite-id voi esiintyä vain yhdellä kommentilla.
   (case domain
-    :laatupoikkeama-kommnentti-liite
+    :laatupoikkeama-kommentti-liite
     (do (ls/vaadi-laatupoikkeama-kuuluu-urakkaan db urakka-id domain-id)
-        ;; TODO Vaadi kommentti kuuluu domain-subjectiin
-        ;; TODO Jos kaikki ok tähän asti, poista liite kommentilta, jonka liite on liite-id
-        )
-    )
-  )
+        (liitteet-q/poista-laatupoikkeaman-kommentin-liite! db {:liite liite-id
+                                                                :laatupoikkeama domain-id}))
+    :turvallisuuspoikkeama-kommentti-liite
+    (do (ls/vaadi-laatupoikkeama-kuuluu-urakkaan db urakka-id domain-id)
+
+        (liitteet-q/poista-turvallisuuspoikkeaman-kommentin-liite! db {:liite liite-id
+                                                                      :laatupoikkeama domain-id}))))
 
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."
@@ -116,7 +118,8 @@
     (oikeustarkistus-fn user urakka-id)
     (case domain
       ;; Kommenttien poisto vaatii oman custom-käsittelyn
-      :laatupoikkeama-kommnentti-liite (poista-kommentin-liite-linkitys db user tiedot)
+      :laatupoikkeama-kommentti-liite (poista-kommentin-liite-linkitys db user tiedot)
+      :turvallisuuspoikkeama-kommentti-liite (poista-kommentin-liite-linkitys db user tiedot)
       ;; Muuten voidaan poistaa geneerisesti käyttäen linkkitaulua ja domainin omaa taulua
       (do (tietoturva/vaadi-linkitys db
                                      (:domain-taulu domain-tiedot)
