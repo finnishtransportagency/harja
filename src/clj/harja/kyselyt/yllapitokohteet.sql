@@ -203,6 +203,7 @@ SELECT
   ypk.yha_kohdenumero                   AS "yha-kohdenumero",
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
+  ypk.vuodet,
   ypka.kohde_alku                       AS "kohde-alkupvm",
   ypka.paallystys_alku                  AS "paallystys-alkupvm",
   ypka.paallystys_loppu                 AS "paallystys-loppupvm",
