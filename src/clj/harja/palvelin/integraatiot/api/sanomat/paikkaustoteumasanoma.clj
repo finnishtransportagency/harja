@@ -1,4 +1,4 @@
-(ns harja.palvelin.integraatiot.api.sanomat.paikkaustoteuma-sanoma
+(ns harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma
   (:require [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]))
