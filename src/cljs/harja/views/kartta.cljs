@@ -54,7 +54,8 @@
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
-            [harja.ui.kartta.ikonit :as kartta-ikonit])
+            [harja.ui.kartta.ikonit :as kartta-ikonit]
+            [harja.ui.kartta-debug :refer [aseta-kartta-debug-sijainti]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -146,6 +147,7 @@
                           ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
                           (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
                             (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
+                            (aseta-kartta-debug-sijainti x (- @dom/korkeus) w h false (-> "kartta-debug" dom/elementti-idlla .-style .-height))
                             (recur nil nil nil w h nil))))
                 paikka-elt (<! (dom/elementti-idlla-odota "kartan-paikka"))
                 [uusi-x uusi-y uusi-w uusi-h] (dom/sijainti paikka-elt)
@@ -160,6 +162,7 @@
               (let [naulattu? (neg? uusi-y)]
                                         ;(log "EKA KERTA")
                 (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
+                (aseta-kartta-debug-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu? (-> "kartta-debug" dom/elementti-idlla .-style .-height))
                 (when (or (not= w uusi-w) (not= h uusi-h))
                   (reagent/next-tick #(openlayers/invalidate-size!)))
                 (recur naulattu?
@@ -169,12 +172,14 @@
               ;; koko pitää asettaa
               (and (not naulattu?) (neg? uusi-y))
               (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
+                  (aseta-kartta-debug-sijainti uusi-x uusi-y uusi-w uusi-h true (-> "kartta-debug" dom/elementti-idlla .-style .-height))
                   (recur true
                          uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
               ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
               (and naulattu? (pos? uusi-y))
               (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
+                  (aseta-kartta-debug-sijainti uusi-x uusi-offset-y uusi-w uusi-h false (-> "kartta-debug" dom/elementti-idlla .-style .-height))
                   (recur false
                          uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 

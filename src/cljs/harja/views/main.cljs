@@ -35,7 +35,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.kartta-debug :refer [kartta-layers]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -214,7 +215,8 @@
                                    :overflow (if @nav/kartta-nakyvissa?
                                                "hidden"
                                                "visible")}}
-    [kartta/kartta]]])
+    [kartta/kartta]]
+   [kartta-layers]])
 
 (defn varoita-jos-vanha-ie []
   (if dom/ei-tuettu-ie?
