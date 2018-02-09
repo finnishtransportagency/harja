@@ -475,7 +475,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                    (:kommentit @laatupoikkeama))]
                                           (liitteet/poista-liite-kannasta
                                             {:urakka-id urakka-id
-                                             :domain :laatupoikkeama-kommnentti-liite
+                                             :domain :laatupoikkeama-kommentti-liite
                                              :domain-id (:id @laatupoikkeama)
                                              :liite-id liite-id
                                              :poistettu-fn (fn []
