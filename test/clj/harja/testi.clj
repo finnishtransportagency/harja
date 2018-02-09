@@ -1090,7 +1090,7 @@
       (.toByteArray out))))
 
 (defn- gatling-kutsu [kutsu]
-  (go (let [tulos (<! (go (kutsu)))]
+  (go (let [tulos (<! (go (log/with-level :warn (kutsu))))]
         (if (and (some? tulos) (not-empty tulos))
           true
           false))))
@@ -1099,9 +1099,12 @@
   "Ajaa nimetyn gatling-simulaation, ja kertoo, valmistuivatko skenaariot aikarajan sisällä.
 
   Kiinnostavat optiot ovat:
-  - :timeout-in-ms kuinka pitkään jokainen pyyntö saa maksimissaan kestää
-  - :concurrency montako kyselyä ajetaan rinnakkain. Ota tässä huomioon, voiko kyselyn ajaa monta kertaa samoilla parametreilla
-  - :aja-raportti? Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
+  - :timeout-in-ms  Kuinka pitkään jokainen pyyntö saa maksimissaan kestää.
+  - :concurrency    Montako kyselyä ajetaan rinnakkain. Oletuksena skenaarioiden lukumäärä.
+                    Käytännössä, jos kyselyn voi ajaa samoilla parametreilla monta kertaa,
+                    anna tämä luku. Jos joudut antamaan monta kyselyä eri parametreilla,
+                    tätä ei ole tarpeen antaa.
+  - :aja-raportti?  Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
 
   Kutsuja voi antaa niin monta kuin haluaa. Jos kutsuja antaa monta, ne ajetaan rinnakkain.
 
@@ -1115,23 +1118,26 @@
   ;; Tämä toteutus ohjaa tarkoituksella käyttöä tiettyyn suuntaan.
   ;; Jos tarvitaan hienojakoisempaa toiminnallisuutta, esim monivaiheisia skenaarioita,
   ;; joita ajetaan eri painoarvoilla, niin parempi kutsua gatlingia suoraan, tapauskohtaisesti.
-  (let [yhteenveto
+  (let [simulaatio {:name simulaation-nimi
+                    :scenarios
+                    (keep-indexed
+                      (fn [i kutsu]
+                        {:name (str "Skenaario #" i)
+                         :steps [{:name "Askel 1"
+                                  :request (fn [ctx]
+                                             ;; Ei tunnu toimivan lokitason laskeminen. Johtuukoha
+                                             ;; async-koodista vai mistä.
+                                             (log/with-level
+                                               :warn
+                                               (gatling-kutsu kutsu)))}]})
+                      kutsut)}
+        yhteenveto
         (gatling/run
-          {:name simulaation-nimi
-           :scenarios
-           (keep-indexed
-             (fn [i kutsu]
-               {:name (str "Skenaario #" i)
-                :steps [{:name "Askel 1"
-                         :request (fn [ctx]
-                                    ;; Ei lokiteta debug ja info viestejä
-                                    (log/with-level
-                                      :warn
-                                      (gatling-kutsu kutsu)))}]})
-             kutsut)}
+          simulaatio
           (merge
             {:timeout-in-ms 10
-             :concurrency 1}
+             :concurrency (count kutsut)
+             :requests (count kutsut)}
             (when (and (false? aja-raportti?)
                        (false? (ollaanko-jenkinsissa?)))
               ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
