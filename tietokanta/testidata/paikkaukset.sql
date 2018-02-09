@@ -1,4 +1,4 @@
-INSERT INTO paikkauskohde (luoja,
+INSERT INTO paikkauskohde ("luoja-id",
                            "ulkoinen-id",
                            nimi)
 VALUES ((SELECT id

@@ -36,21 +36,23 @@
 (defn hae-urakan-paikkaustoteumat [db urakka-id]
   (first (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id})))
 
-(defn tallenna-paikkauskohde [db kohde]
+(defn tallenna-paikkauskohde [db kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
         ulkoinen-tunniste (::paikkaus/ulkoinen-id kohde)]
     (if (id-olemassa? id)
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db ulkoinen-tunniste)
         (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/ulkoinen-id ulkoinen-tunniste})
-        (insert! db ::paikkaus/paikkauskohde kohde)))
+        (insert! db ::paikkaus/paikkauskohde kohde
+                 ;; todo: selvitä miksi luoja-id:n tallennus ei onnistu
+                 #_(assoc kohde ::muokkaustiedot/luoja-id kayttaja-id))))
     (first (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-tunniste}))))
 
-(defn hae-tai-tee-paikkauskohde [db paikkauskohde]
+(defn hae-tai-tee-paikkauskohde [db kayttaja-id paikkauskohde]
   (when-let [ulkoinen-id (::paikkaus/ulkoinen-id paikkauskohde)]
     (or (::paikkaus/id paikkauskohde)
         (::paikkaus/id (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id}))
-        (::paikkaus/id (tallenna-paikkauskohde db paikkauskohde)))))
+        (::paikkaus/id (tallenna-paikkauskohde db kayttaja-id paikkauskohde)))))
 
 (defn- paivita-toteuma [db toteuma]
   (let [id (::paikkaus/id toteuma)
@@ -76,20 +78,23 @@
   (doseq [tienkohta tienkohdat]
     (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaustoteuma-id toteuma-id))))
 
-(defn tallenna-paikkaustoteuma [db toteuma]
+(defn tallenna-paikkaustoteuma [db kayttaja-id toteuma]
   (let [id (::paikkaus/id toteuma)
-        luoja-id (::muokkaustiedot/luoja-id toteuma)
         ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
-        paikkauskohde-id (hae-tai-tee-paikkauskohde db (::paikkaus/paikkauskohde toteuma))
+        paikkauskohde-id (hae-tai-tee-paikkauskohde db kayttaja-id (::paikkaus/paikkauskohde toteuma))
         materiaalit (::paikkaus/materiaalit toteuma)
         tienkohdat (::paikkaus/tienkohdat toteuma)
-        toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id)
+        uusi-toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id
+                                       ::muokkaustiedot/luoja-id kayttaja-id)
                         ::paikkaus/materiaalit
                         ::paikkaus/tienkohdat
                         ::paikkaus/paikkauskohde)
-        id (::paikkaus/id (if (or (id-olemassa? id) (onko-toteuma-olemassa-ulkoisella-idlla? db ulkoinen-id luoja-id))
-                            (paivita-toteuma db (assoc toteuma ::muokkaustiedot/muokattu (pvm/nyt)))
-                            (luo-toteuma db (assoc toteuma ::muokkaustiedot/luotu (pvm/nyt)))))]
+        muokattu-toteuma (assoc uusi-toteuma ::muokkaustiedot/muokkaaja-id kayttaja-id
+                                        ::muokkaustiedot/muokattu (pvm/nyt))
+        paivita? (or (id-olemassa? id) (onko-toteuma-olemassa-ulkoisella-idlla? db ulkoinen-id kayttaja-id))
+        id (::paikkaus/id (if paivita?
+                            (paivita-toteuma db muokattu-toteuma)
+                            (luo-toteuma db uusi-toteuma)))]
 
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))

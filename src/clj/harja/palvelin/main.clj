@@ -90,6 +90,7 @@
     [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
 
     ;; Harja API
+    [harja.palvelin.integraatiot.api.tyojono :as api-tyojono]
     [harja.palvelin.integraatiot.api.urakat :as api-urakat]
     [harja.palvelin.integraatiot.api.laatupoikkeamat :as api-laatupoikkeamat]
     [harja.palvelin.integraatiot.api.paivystajatiedot :as api-paivystajatiedot]
@@ -617,6 +618,9 @@
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+      :api-tyojono (component/using
+                     (api-tyojono/->APITyojono)
+                     [:db :klusterin-tapahtumat :api-paikkaukset])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
