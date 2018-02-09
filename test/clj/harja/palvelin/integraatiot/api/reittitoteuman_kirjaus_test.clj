@@ -26,12 +26,12 @@
   (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
   (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
 
-(deftest yksittainen-kirjaus-ei-kesta-liian-kauan
+(deftest ^:perf yksittainen-kirjaus-ei-kesta-liian-kauan
   (let [sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)]
     (is (apply
          gatling-onnistuu-ajassa?
          "Yksittäinen reittitoteuma"
-         {:timeout-in-ms 2000}
+         {:timeout-in-ms 1500g}
          (take
            10
            (map
