@@ -27,22 +27,32 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(deftest poista-liite-linkitys-test
-  (let [laatupoikkeaman-liite (fn [laatupoikkeama-id liite-id]
-                                (ffirst (q "SELECT COUNT(*) FROM laatupoikkeama_liite WHERE laatupoikkeama = " laatupoikkeama-id
-                                           " AND liite = " liite-id)))
-        random-laatupoikkeama (first (q-map "SELECT id, urakka FROM laatupoikkeama"))
+(defn- linkitystesti [{:keys [domain domain-taulu domain-liite-taulu domain-sarake]}]
+  (let [domain-taulu (or domain-taulu (name domain))
+        domain-liite-taulu (or domain-liite-taulu (str domain-taulu "_liite"))
+        domain-sarake (or domain-sarake domain-taulu)
+        domain-liite (fn [domain-id liite-id]
+                       (ffirst (q "SELECT COUNT(*) FROM " domain-liite-taulu " WHERE " domain-sarake " = " domain-id
+                                  " AND liite = " liite-id)))
+        random-domain-subject (first (q-map "SELECT id, urakka FROM " domain-taulu))
         _ (u "INSERT INTO liite (tyyppi, nimi, liite_oid, lahde) VALUES ('image/jpeg', 'testi45435.jpg', '123', 'harja-ui')")
         liite-id (:id (first (q-map "SELECT id FROM liite WHERE nimi = 'testi45435.jpg'")))
-        _ (u (str "INSERT INTO laatupoikkeama_liite (laatupoikkeama, liite) VALUES (" (:id random-laatupoikkeama) ", " liite-id ")"))
-        liitteet-ennen-testia (laatupoikkeaman-liite (:id random-laatupoikkeama) liite-id)
+        _ (u (str "INSERT INTO " domain-liite-taulu " (" domain-sarake ", liite) VALUES ("
+                  (:id random-domain-subject) ", " liite-id ")"))
+        liitteet-ennen-testia (domain-liite (:id random-domain-subject) liite-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :poista-liite-linkki +kayttaja-jvh+
-                                {:urakka-id (:urakka random-laatupoikkeama)
-                                 :domain :laatupoikkeama
+                                {:urakka-id (:urakka random-domain-subject)
+                                 :domain domain
                                  :liite-id liite-id
-                                 :domain-id (:id random-laatupoikkeama)})
-        liitteet-testin-jalkeen (laatupoikkeaman-liite (:id random-laatupoikkeama) liite-id)]
+                                 :domain-id (:id random-domain-subject)})
+        liitteet-testin-jalkeen (domain-liite (:id random-domain-subject) liite-id)]
 
     (is (= liitteet-ennen-testia 1))
     (is (= liitteet-testin-jalkeen 0))))
+
+(deftest poista-liite-linkitys-test
+  (linkitystesti {:domain :laatupoikkeama})
+  (linkitystesti {:domain :turvallisuuspoikkeama})
+  (linkitystesti {:domain :tarkastus})
+  (linkitystesti {:domain :toteuma}))
