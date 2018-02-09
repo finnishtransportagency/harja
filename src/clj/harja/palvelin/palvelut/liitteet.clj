@@ -95,6 +95,7 @@
 
 (defn- poista-liite-linkitys-kommentilta [db user {:keys [urakka-id domain liite-id domain-id]}]
   ;; TODO Toteuta: vaadi linkitys ja poista
+  ;; Linkitys menee näin: liite -> kommentti -> domain-subject -> urakka
   )
 
 (defn poista-liite-linkitys
