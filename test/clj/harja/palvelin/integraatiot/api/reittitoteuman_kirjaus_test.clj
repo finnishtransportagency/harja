@@ -31,7 +31,7 @@
     (is (apply
          gatling-onnistuu-ajassa?
          "Yksittäinen reittitoteuma"
-         {:timeout-in-ms 1000}
+         {:timeout-in-ms 2000}
          (take
            10
            (map
