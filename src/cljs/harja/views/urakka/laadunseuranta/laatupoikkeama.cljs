@@ -453,19 +453,38 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                  (filter (fn [liite]
                                                            (not= (:id liite) liite-id))
                                                          (:liitteet @laatupoikkeama))))}))}])}
-
                 (when-not uusi?
                   (lomake/ryhma
                     "Kommentit"
                     {:otsikko "" :nimi :uusi-kommentti :tyyppi :komponentti
                      :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                                    [kommentit/kommentit {:voi-kommentoida? true
-                                                          :voi-liittaa? true
-                                                          :salli-poistaa-lisatty-liite? true
-                                                          :liita-nappi-teksti "Lisää liite kommenttiin"
-                                                          :placeholder "Kirjoita kommentti..."
-                                                          :uusi-kommentti (r/wrap (:uusi-kommentti @laatupoikkeama)
-                                                                                  #(muokkaa-lomaketta (assoc data :uusi-kommentti %)))}
+                                    [kommentit/kommentit
+                                     {:voi-kommentoida? true
+                                      :voi-liittaa? true
+                                      :salli-poistaa-lisatty-liite? true
+                                      :salli-poistaa-tallennettu-liite? true
+                                      :poista-tallennettu-liite-fn
+                                      (fn [liite-id]
+                                        (let [liitteen-kommentti (first (filter #(= (get-in % [:liite :id]) liite-id)
+                                                                                (:kommentit @laatupoikkeama)))
+                                              kommentit-ilman-poistettua-liitetta
+                                              (map (fn [kommentti]
+                                                     (if (= (get-in kommentti [:liite :id]) liite-id)
+                                                       (dissoc kommentti :liite)
+                                                       kommentti))
+                                                   (:kommentit @laatupoikkeama))]
+                                          (liitteet/poista-liite-kannasta
+                                            {:urakka-id urakka-id
+                                             :domain :kommnentti-liite
+                                             :domain-id (:id liitteen-kommentti)
+                                             :liite-id liite-id
+                                             :poistettu-fn (fn []
+                                                             (swap! laatupoikkeama assoc :kommentit
+                                                                    kommentit-ilman-poistettua-liitetta))})))
+                                      :liita-nappi-teksti "Lisää liite kommenttiin"
+                                      :placeholder "Kirjoita kommentti..."
+                                      :uusi-kommentti (r/wrap (:uusi-kommentti @laatupoikkeama)
+                                                              #(muokkaa-lomaketta (assoc data :uusi-kommentti %)))}
                                      (:kommentit @laatupoikkeama)])}))
 
                 ;; Päätös
