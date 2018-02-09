@@ -5,5 +5,8 @@
   )
 
 (defn aseta-kartta-debug-sijainti
-  [x y w h h-debug naulattu?]
+  [& args]
+  )
+
+(defn nayta-kartan-debug []
   )
