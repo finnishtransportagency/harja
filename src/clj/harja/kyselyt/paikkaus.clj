@@ -63,7 +63,7 @@
                 {::paikkaus/ulkoinen-id ulkoinen-id
                  ::muokkaustiedot/luoja-id luoja-id})]
     (update! db ::paikkaus/paikkaustoteuma toteuma ehdot)
-    toteuma))
+    (first (hae-paikkaustoteumat db ehdot))))
 
 (defn- luo-toteuma [db toteuma]
   (insert! db ::paikkaus/paikkaustoteuma toteuma))
@@ -95,6 +95,7 @@
         id (::paikkaus/id (if paivita?
                             (paivita-toteuma db muokattu-toteuma)
                             (luo-toteuma db uusi-toteuma)))]
+    (println "--->>> ID" id)
 
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
