@@ -120,7 +120,6 @@
                         :turvallisuuspoikkeama-kommentti-liite (:turvallisuuspoikkeama domain-tiedot)
                         (domain domain-tiedot))
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
-    ;; TODO Testi tälle
     (oikeustarkistus-fn db user urakka-id domain-id)
     (case domain
       ;; Kommenttien poisto vaatii oman custom-käsittelyn
@@ -133,8 +132,6 @@
                                      domain-id
                                      (:domain-taulu-urakka-id domain-tiedot)
                                      urakka-id)
-          (log/debug "POISTELE " (:linkkitaulu domain-tiedot) " JA ARGS: " {(:linkkitaulu-domain-id domain-tiedot) domain-id
-                                                                            (:linkkitaulu-liite-id domain-tiedot) liite-id})
           (specql/delete! db
                           (:linkkitaulu domain-tiedot)
                           {(:linkkitaulu-domain-id domain-tiedot) domain-id
