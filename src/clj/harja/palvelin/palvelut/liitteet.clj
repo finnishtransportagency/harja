@@ -107,7 +107,7 @@
     (do (ls/vaadi-laatupoikkeama-kuuluu-urakkaan db urakka-id domain-id)
 
         (liitteet-q/poista-turvallisuuspoikkeaman-kommentin-liite! db {:liite liite-id
-                                                                      :laatupoikkeama domain-id}))))
+                                                                       :turvallisuuspoikkeama domain-id}))))
 
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."

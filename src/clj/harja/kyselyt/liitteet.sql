@@ -56,5 +56,5 @@ WHERE id IN (
   WHERE liite = :liite
         AND id IN (SELECT kommentti
                    FROM turvallisuuspoikkeama_kommentti
-                   WHERE turvallisuuspoikkeama = :laatupoikkeama)
+                   WHERE turvallisuuspoikkeama = :turvallisuuspoikkeama)
   LIMIT 1);
