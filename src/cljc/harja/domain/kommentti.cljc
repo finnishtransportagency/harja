@@ -16,4 +16,5 @@
 
 (define-tables
   ["kommentti" ::kommentti
-   {"liite" ::liite-id}])
+   {"kommentti" ::kommentti-teksti
+    "liite" ::liite-id}])

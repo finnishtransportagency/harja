@@ -8,6 +8,7 @@
             [harja.palvelin.komponentit.liitteet :as liitteet]
             [harja.domain.liite :as liite-domain]
             [specql.core :as specql]
+            [harja.palvelin.palvelut.laadunseuranta :as ls]
             [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
@@ -93,9 +94,17 @@
                                 ;; TODO YKSIKKÖ VAI KOKONAISHINTAINEN TOTEUMA!?
                                 #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))}})
 
-(defn- poista-liite-linkitys-kommentilta [db user {:keys [urakka-id domain liite-id domain-id]}]
+(defn- poista-kommentin-liite-linkitys [db user {:keys [urakka-id domain liite-id domain-id]}]
   ;; TODO Toteuta: vaadi linkitys ja poista
   ;; Linkitys menee näin: liite -> kommentti -> domain-subject -> urakka
+
+  (case domain
+    :laatupoikkeama-kommnentti-liite
+    (do (ls/vaadi-laatupoikkeama-kuuluu-urakkaan db urakka-id domain-id)
+        ;; TODO Vaadi kommentti kuuluu domain-subjectiin
+        ;; TODO Jos kaikki ok tähän asti, poista liite kommentilta, jonka liite on liite-id
+        )
+    )
   )
 
 (defn poista-liite-linkitys
@@ -105,9 +114,9 @@
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
     ;; TODO Testi tälle
     (oikeustarkistus-fn user urakka-id)
-    (if (= domain :kommentti)
+    (case domain
       ;; Kommenttien poisto vaatii oman custom-käsittelyn
-      (poista-liite-linkitys-kommentilta db user tiedot)
+      :laatupoikkeama-kommnentti-liite (poista-kommentin-liite-linkitys db user tiedot)
       ;; Muuten voidaan poistaa geneerisesti käyttäen linkkitaulua ja domainin omaa taulua
       (do (tietoturva/vaadi-linkitys db
                                      (:domain-taulu domain-tiedot)
