@@ -314,7 +314,9 @@ INSERT INTO ilmoitus
  selitteet,
  urakkatyyppi,
  tunniste,
- viestiid)
+ viestiid,
+ vastaanotettu,
+ "ilmoitettu-alunperin")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -328,7 +330,9 @@ VALUES
     :selitteet :: TEXT [],
     :urakkatyyppi :: URAKKATYYPPI,
    :tunniste,
-   :viestiid);
+   :viestiid,
+   :vastaanotettu :: TIMESTAMPTZ,
+   :ilmoitettu-alunperin :: TIMESTAMPTZ);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -563,3 +567,8 @@ SELECT exists(SELECT
               FROM ilmoitus
               WHERE ilmoitusid = :ilmoitusid AND
                     viestiid = :viestiid);
+
+-- name: ilmoituksen-alkuperainen-kesto
+SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
+                           FROM ilmoitus
+                           WHERE id = :id));

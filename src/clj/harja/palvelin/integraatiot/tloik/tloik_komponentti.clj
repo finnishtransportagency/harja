@@ -35,7 +35,7 @@
 
 (defn tee-ilmoitusviestikuuntelija [{:keys [db sonja klusterin-tapahtumat] :as this}
                                     ilmoitusviestijono ilmoituskuittausjono ilmoitusasetukset
-                                    jms-lahettaja]
+                                    jms-lahettaja kehitysmoodi?]
   (when (and ilmoitusviestijono (not (empty? ilmoituskuittausjono)))
     (log/debug "Käynnistetään T-LOIK:n Sonja viestikuuntelija kuuntelemaan jonoa: " ilmoitusviestijono)
     (sonja/kuuntele
@@ -43,7 +43,7 @@
       (partial ilmoitukset/vastaanota-ilmoitus
                sonja (tee-lokittaja this "ilmoituksen-kirjaus")
                ilmoitusasetukset klusterin-tapahtumat db ilmoituskuittausjono
-               jms-lahettaja))))
+               jms-lahettaja kehitysmoodi?))))
 
 (defn tee-toimenpidekuittauskuuntelija [this toimenpidekuittausjono]
   (when (and toimenpidekuittausjono (not (empty? toimenpidekuittausjono)))
@@ -105,7 +105,7 @@
       (fn [_ viesti-id onnistunut]
         (tietyoilmoitukset/vastaanota-kuittaus (:db this) viesti-id onnistunut)))))
 
-(defrecord Tloik [asetukset]
+(defrecord Tloik [asetukset kehitysmoodi?]
   component/Lifecycle
   (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
     (log/debug "Käynnistetään T-LOIK komponentti")
@@ -123,7 +123,8 @@
                                           ilmoitusviestijono
                                           ilmoituskuittausjono
                                           ilmoitusasetukset
-                                          toimenpide-jms-lahettaja)
+                                          toimenpide-jms-lahettaja
+                                          kehitysmoodi?)
         :sonja-toimenpidekuittauskuuntelija (tee-toimenpidekuittauskuuntelija
                                               this
                                               toimenpidekuittausjono)
