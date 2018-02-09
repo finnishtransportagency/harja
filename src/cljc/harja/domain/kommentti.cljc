@@ -18,3 +18,8 @@
   ["kommentti" ::kommentti
    {"kommentti" ::kommentti-teksti
     "liite" ::liite-id}])
+
+
+(defn liitteen-kommentti [kommentit liite-id]
+  (first (filter #(= (get-in % [:liite :id]) liite-id)
+                 kommentit)))

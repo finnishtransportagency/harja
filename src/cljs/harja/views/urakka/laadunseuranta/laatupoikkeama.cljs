@@ -30,7 +30,8 @@
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
-            [harja.domain.urakka :as u-domain])
+            [harja.domain.urakka :as u-domain]
+            [harja.domain.kommentti :as kommentti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -465,8 +466,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                       :salli-poistaa-tallennettu-liite? true
                                       :poista-tallennettu-liite-fn
                                       (fn [liite-id]
-                                        (let [liitteen-kommentti (first (filter #(= (get-in % [:liite :id]) liite-id)
-                                                                                (:kommentit @laatupoikkeama)))
+                                        (let [liitteen-kommentti (kommentti/liitteen-kommentti
+                                                                   (:kommentit @laatupoikkeama)
+                                                                   liite-id)
                                               kommentit-ilman-poistettua-liitetta
                                               (map (fn [kommentti]
                                                      (if (= (get-in kommentti [:liite :id]) liite-id)

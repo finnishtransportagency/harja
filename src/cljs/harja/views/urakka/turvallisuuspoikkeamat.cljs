@@ -16,6 +16,7 @@
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.kommentti :as kommentti]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
@@ -447,8 +448,9 @@
                                                  :salli-poistaa-tallennettu-liite? true
                                                  :poista-tallennettu-liite-fn
                                                  (fn [liite-id]
-                                                   (let [liitteen-kommentti (first (filter #(= (get-in % [:liite :id]) liite-id)
-                                                                                           (:kommentit @turvallisuuspoikkeama)))
+                                                   (let [liitteen-kommentti (kommentti/liitteen-kommentti
+                                                                              (:kommentit @turvallisuuspoikkeama)
+                                                                              liite-id)
                                                          kommentit-ilman-poistettua-liitetta
                                                          (map (fn [kommentti]
                                                                 (if (= (get-in kommentti [:liite :id]) liite-id)

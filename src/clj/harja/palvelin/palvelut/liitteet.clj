@@ -11,6 +11,7 @@
             [specql.core :as specql]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
             [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turpop]
+            [harja.palvelin.palvelut.toteumat :as toteumap]
             [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
@@ -68,7 +69,7 @@
                            :domain-taulu ::turpo/turvallisuuspoikkeama
                            :domain-taulu-id ::turpo/id
                            :domain-taulu-urakka-id ::turpo/urakka-id
-                           :oikeustarkistus (fn [user urakka-id]
+                           :oikeustarkistus (fn [_ user urakka-id _]
                                               (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka-id))}
    :laatupoikkeama {:linkkitaulu ::liite-domain/laatupoikkeama<->liite
                     :linkkitaulu-domain-id ::liite-domain/laatupoikkeama-id
@@ -76,7 +77,7 @@
                     :domain-taulu ::lp/laatupoikkeama
                     :domain-taulu-id ::lp/id
                     :domain-taulu-urakka-id ::lp/urakka-id
-                    :oikeustarkistus (fn [user urakka-id]
+                    :oikeustarkistus (fn [_ user urakka-id _]
                                        (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}
    :tarkastus {:linkkitaulu ::liite-domain/tarkastus<->liite
                :linkkitaulu-domain-id ::liite-domain/tarkastus-id
@@ -84,7 +85,7 @@
                :domain-taulu ::tarkastus/tarkastus
                :domain-taulu-id ::tarkastus/id
                :domain-taulu-urakka-id ::tarkastus/urakka-id
-               :oikeustarkistus (fn [user urakka-id]
+               :oikeustarkistus (fn [_ user urakka-id _]
                                   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))}
    :toteuma {:linkkitaulu ::liite-domain/toteuma<->liite
              :linkkitaulu-domain-id ::liite-domain/toteuma-id
@@ -92,9 +93,8 @@
              :domain-taulu ::toteuma/toteuma
              :domain-taulu-id ::toteuma/id
              :domain-taulu-urakka-id ::toteuma/urakka-id
-             :oikeustarkistus (fn [user urakka-id]
-                                ;; TODO YKSIKKÖ VAI KOKONAISHINTAINEN TOTEUMA!?
-                                #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))}})
+             :oikeustarkistus (fn [db user urakka-id domain-id]
+                                (toteumap/toteumatyypin-oikeustarkistus db user urakka-id domain-id))}})
 
 (defn- poista-kommentin-liite-linkitys [db user {:keys [urakka-id domain liite-id domain-id]}]
   ;; Etsitään kommentti, joka kuuluu annettuun domain-asiaan ja jolla on liitteenä liite-id.
@@ -119,7 +119,7 @@
                         (domain domain-tiedot))
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
     ;; TODO Testi tälle
-    (oikeustarkistus-fn user urakka-id)
+    (oikeustarkistus-fn db user urakka-id domain-id)
     (case domain
       ;; Kommenttien poisto vaatii oman custom-käsittelyn
       :laatupoikkeama-kommentti-liite (poista-kommentin-liite-linkitys db user tiedot)
