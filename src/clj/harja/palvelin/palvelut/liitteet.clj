@@ -113,6 +113,8 @@
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."
   [db user {:keys [urakka-id domain liite-id domain-id] :as tiedot}]
+  (assert (and db user urakka-id domain liite-id domain-id)
+          (str "Puutteelliset argumentit liitteen poistoon, sain: " db urakka-id tiedot))
   (let [domain-tiedot (case domain
                         :laatupoikkeama-kommentti-liite (:laatupoikkeama domain-tiedot)
                         :turvallisuuspoikkeama-kommentti-liite (:turvallisuuspoikkeama domain-tiedot)
@@ -131,6 +133,8 @@
                                      domain-id
                                      (:domain-taulu-urakka-id domain-tiedot)
                                      urakka-id)
+          (log/debug "POISTELE " (:linkkitaulu domain-tiedot) " JA ARGS: " {(:linkkitaulu-domain-id domain-tiedot) domain-id
+                                                                            (:linkkitaulu-liite-id domain-tiedot) liite-id})
           (specql/delete! db
                           (:linkkitaulu domain-tiedot)
                           {(:linkkitaulu-domain-id domain-tiedot) domain-id
