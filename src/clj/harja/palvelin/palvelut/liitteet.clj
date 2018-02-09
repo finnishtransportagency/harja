@@ -12,6 +12,7 @@
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
             [harja.domain.toteuma :as toteuma]
+            [harja.domain.kommentti :as kommentti]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
             [harja.tyokalut.tietoturva :as tietoturva])
@@ -92,24 +93,32 @@
                                 ;; TODO YKSIKKÖ VAI KOKONAISHINTAINEN TOTEUMA!?
                                 #_(oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id))}})
 
+(defn- poista-liite-linkitys-kommentilta [db user {:keys [urakka-id domain liite-id domain-id]}]
+  ;; TODO Toteuta: vaadi linkitys ja poista
+  )
+
 (defn poista-liite-linkitys
   "Poistaa liitteen linkityksen tietystä domain-asiasta. Liitettä ei näy enää missään, mutta se jää kuitenkin meille talteen."
-  [db user {:keys [urakka-id domain liite-id domain-id]}]
+  [db user {:keys [urakka-id domain liite-id domain-id] :as tiedot}]
   (let [domain-tiedot (domain liitteen-poisto-domainin-mukaan)
         oikeustarkistus-fn (:oikeustarkistus domain-tiedot)]
     ;; TODO Testi tälle
     ;; TODO Tarkenna oikeustarkistusta: käyttäjä voi poistaa vain itse lisäämänsä liitteen? Toisaalta editointiakaan ei ole rajoitettu vain omiin lisäyksiin?
     (oikeustarkistus-fn user urakka-id)
-    (tietoturva/vaadi-linkitys db
-                               (:domain-taulu domain-tiedot)
-                               (:domain-taulu-id domain-tiedot)
-                               domain-id
-                               (:domain-taulu-urakka-id domain-tiedot)
-                               urakka-id)
-    (specql/delete! db
-                    (:linkkitaulu domain-tiedot)
-                    {(:linkkitaulu-domain-id domain-tiedot) domain-id
-                     (:linkkitaulu-liite-id domain-tiedot) liite-id})))
+    (if (= domain :kommentti)
+      ;; Kommenttien poisto vaatii oman custom-käsittelyn
+      (poista-liite-linkitys-kommentilta db user tiedot)
+      ;; Muuten voidaan poistaa geneerisesti käyttäen linkkitaulua ja domainin omaa taulua
+      (do (tietoturva/vaadi-linkitys db
+                                     (:domain-taulu domain-tiedot)
+                                     (:domain-taulu-id domain-tiedot)
+                                     domain-id
+                                     (:domain-taulu-urakka-id domain-tiedot)
+                                     urakka-id)
+          (specql/delete! db
+                          (:linkkitaulu domain-tiedot)
+                          {(:linkkitaulu-domain-id domain-tiedot) domain-id
+                           (:linkkitaulu-liite-id domain-tiedot) liite-id})))))
 
 (defrecord Liitteet []
   component/Lifecycle
