@@ -83,7 +83,7 @@
         paikkauskohde-id (hae-tai-tee-paikkauskohde db (::paikkaus/paikkauskohde toteuma))
         materiaalit (::paikkaus/materiaalit toteuma)
         tienkohdat (::paikkaus/tienkohdat toteuma)
-        toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde paikkauskohde-id)
+        toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id)
                         ::paikkaus/materiaalit
                         ::paikkaus/tienkohdat
                         ::paikkaus/paikkauskohde)

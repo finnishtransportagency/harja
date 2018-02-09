@@ -616,7 +616,7 @@
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
-                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
+                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

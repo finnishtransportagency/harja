@@ -15,8 +15,7 @@
 
 (define-tables
   ["paikkauskohde" ::paikkauskohde
-   {"luoja-id" ::muokkaustiedot/luoja-id
-    "luotu" ::muokkaustiedot/luotu }]
+   {"luoja-id" ::muokkaustiedot/luoja-id}]
   ["paikkaustoteuma" ::paikkaustoteuma
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
