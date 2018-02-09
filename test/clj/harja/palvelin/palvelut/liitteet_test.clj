@@ -40,7 +40,7 @@
                                 :poista-liite-linkki +kayttaja-jvh+
                                 {:urakka-id (:urakka random-laatupoikkeama)
                                  :domain :laatupoikkeama
-                                 :liite liite-id
+                                 :liite-id liite-id
                                  :domain-id (:id random-laatupoikkeama)})
         liitteet-testin-jalkeen (laatupoikkeaman-liite (:id random-laatupoikkeama) liite-id)]
 
