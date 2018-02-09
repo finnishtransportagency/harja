@@ -444,6 +444,25 @@
                            [kommentit/kommentit {:voi-kommentoida? true
                                                  :voi-liittaa? true
                                                  :salli-poistaa-lisatty-liite? true
+                                                 :salli-poistaa-tallennettu-liite? true
+                                                 :poista-tallennettu-liite-fn
+                                                 (fn [liite-id]
+                                                   (let [liitteen-kommentti (first (filter #(= (get-in % [:liite :id]) liite-id)
+                                                                                           (:kommentit @turvallisuuspoikkeama)))
+                                                         kommentit-ilman-poistettua-liitetta
+                                                         (map (fn [kommentti]
+                                                                (if (= (get-in kommentti [:liite :id]) liite-id)
+                                                                  (dissoc kommentti :liite)
+                                                                  kommentti))
+                                                              (:kommentit @turvallisuuspoikkeama))]
+                                                     (liitteet/poista-liite-kannasta
+                                                       {:urakka-id (:id urakka)
+                                                        :domain :turvallisuuspoikkeama-kommentti-liite
+                                                        :domain-id (:id @turvallisuuspoikkeama)
+                                                        :liite-id liite-id
+                                                        :poistettu-fn (fn []
+                                                                        (swap! turvallisuuspoikkeama assoc :kommentit
+                                                                               kommentit-ilman-poistettua-liitetta))})))
                                                  :liita-nappi-teksti "Lisää liite kommenttiin"
                                                  :placeholder "Kirjoita kommentti..."
                                                  :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
