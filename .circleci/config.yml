@@ -71,7 +71,7 @@ jobs:
           at: /tmp/harja
 
       # setup database
-      - run: cd tietokanta && ./devdb_restart.sh
+      - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - restore_cache:
           keys:
