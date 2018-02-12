@@ -42,3 +42,5 @@ RUN rm -R /tmp/src
 
 # Käynnistyskomento
 CMD service postgresql start && /bin/bash
+
+EXPOSE 5432
