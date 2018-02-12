@@ -294,6 +294,12 @@
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
 
+(defn kasiteltava-kutsu [kehitysmoodi kutsu]
+  ;; Jos kehitysmoodi on käytössä ja kutsussa ei ole käyttäjätietoja, käytetään oletus käyttöoikeuksia
+  (if (and kehitysmoodi (empty? (get (:headers kutsu) "oam_remote_user")))
+    (assoc kutsu :headers (conj (:headers kutsu) {"oam_remote_user" "oletus-kaytto-oikeudet"}))
+    kutsu))
+
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          lopetus-fn kehitysmoodi
                          mittarit]
@@ -312,8 +318,7 @@
                (http/run-server
                  (cookies/wrap-cookies
                    (fn [req]
-                     ;; todo: lisää headerit vain, jos ollaan kehitysmoodissa ja jos nykyisistä headereista ei löydy käyttäjää
-                     (let [req (assoc req :headers (conj (:headers req) {"oam_remote_user" "oletus-kaytto-oikeudet"}))]
+                     (let [req (kasiteltava-kutsu kehitysmoodi req)]
                        (try+
                          (metriikka/inc! mittarit :aktiiviset_pyynnot)
                          (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
