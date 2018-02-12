@@ -27,8 +27,8 @@ jobs:
 
       - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
-      # run tests!
-      - run: env TZ=EET lein test
+      # # run tests!
+      # - run: env TZ=EET lein test
 
       - run:
           name: Build Harja jar
