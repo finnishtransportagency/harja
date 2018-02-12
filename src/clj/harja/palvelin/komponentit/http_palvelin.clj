@@ -222,8 +222,7 @@
       (let [random-avain (index/tee-random-avain)
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
-        ;; todo: korjaa anti csrf-session kytkeminen pois
-        ;;(anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (time/now))
+        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (time/now))
         {:status 200
 
          :headers {"Content-Type" "text/html"
@@ -280,24 +279,26 @@
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
   [f db kayttajanimi random-avain csrf-token anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
-
-    (f req)
-    ;; todo: korjaa käsittely kiertämään järkevästi anti csrf avaimen käyttö
-
-    #_(if (or (and (some? random-avain)
-                 (some? csrf-token)
-                 (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now))))
-      (f req)
-      (do
-        (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
-        {:status 403
-         :headers {"Content-Type" "text/html"}
-         :body "Access denied"}))))
+    (if (or (and (some? random-avain)
+                   (some? csrf-token)
+                   (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now))))
+        (f req)
+        (do
+          (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
+          {:status 403
+           :headers {"Content-Type" "text/html"}
+           :body "Access denied"}))))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
+
+(defn kasiteltava-kutsu [kehitysmoodi kutsu]
+  ;; Jos kehitysmoodi on käytössä ja kutsussa ei ole käyttäjätietoja, käytetään oletus käyttöoikeuksia
+  (if (and kehitysmoodi (empty? (get (:headers kutsu) "oam_remote_user")))
+    (assoc kutsu :headers (conj (:headers kutsu) {"oam_remote_user" "oletus-kaytto-oikeudet"}))
+    kutsu))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          lopetus-fn kehitysmoodi
@@ -317,44 +318,45 @@
                (http/run-server
                  (cookies/wrap-cookies
                    (fn [req]
-                     (try+
-                       (metriikka/inc! mittarit :aktiiviset_pyynnot)
-                       (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                             ui-kasittelijat (mapv :fn @kasittelijat)
-                             oam-kayttajanimi (get (:headers req) "oam_remote_user")
-                             random-avain (get (:headers req) "x-csrf-token")
-                             csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
-                             _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
-                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                (wrap-anti-forgery db
-                                                                   oam-kayttajanimi
-                                                                   random-avain
-                                                                   csrf-token
-                                                                   anti-csrf-token-secret-key))]
-                         (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                                dev-resurssit resurssit) false)
-                             (reitita (todennus/todenna-pyynto todennus req)
-                                      (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija
-                                                         db
-                                                         oam-kayttajanimi
-                                                         kehitysmoodi
-                                                         anti-csrf-token-secret-key))
-                                          (conj (partial ls-index-kasittelija
-                                                         db
-                                                         oam-kayttajanimi
-                                                         kehitysmoodi
-                                                         anti-csrf-token-secret-key))
-                                          (conj ui-kasittelija))
-                                      true)))
-                       (catch [:virhe :todennusvirhe] _
-                         (log/warn "Ei voitu todentaa tunnusta -> palautetaan 403")
-                         {:status 403 :body "Todennusvirhe"})
+                     (let [req (kasiteltava-kutsu kehitysmoodi req)]
+                       (try+
+                         (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                         (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                               ui-kasittelijat (mapv :fn @kasittelijat)
+                               oam-kayttajanimi (get (:headers req) "oam_remote_user")
+                               random-avain (get (:headers req) "x-csrf-token")
+                               csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
+                               _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
+                               ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                                  (wrap-anti-forgery db
+                                                                     oam-kayttajanimi
+                                                                     random-avain
+                                                                     csrf-token
+                                                                     anti-csrf-token-secret-key))]
+                           (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                                  dev-resurssit resurssit) false)
+                               (reitita (todennus/todenna-pyynto todennus req)
+                                        (-> (mapv :fn todennettavat)
+                                            (conj (partial index-kasittelija
+                                                           db
+                                                           oam-kayttajanimi
+                                                           kehitysmoodi
+                                                           anti-csrf-token-secret-key))
+                                            (conj (partial ls-index-kasittelija
+                                                           db
+                                                           oam-kayttajanimi
+                                                           kehitysmoodi
+                                                           anti-csrf-token-secret-key))
+                                            (conj ui-kasittelija))
+                                        true)))
+                         (catch [:virhe :todennusvirhe] _
+                           (log/warn "Ei voitu todentaa tunnusta -> palautetaan 403")
+                           {:status 403 :body "Todennusvirhe"})
 
-                       (finally
-                         (metriikka/muuta! mittarit
-                                           :aktiiviset_pyynnot dec
-                                           :pyyntoja_palveltu inc)))))
+                         (finally
+                           (metriikka/muuta! mittarit
+                                             :aktiiviset_pyynnot dec
+                                             :pyyntoja_palveltu inc))))))
 
                  {:port (or (:portti asetukset) asetukset)
                   :thread (or (:threads asetukset) 8)
