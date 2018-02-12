@@ -49,7 +49,7 @@ jobs:
           command: |
             mkdir /tmp/harja
             mv harja/target/harja-0.1-SNAPSHOT-standalone.jar /tmp/harja/harja.jar
-            sed < asetukset.edn > /tmp/harja/asetukset.edn -e 's/:kehitysmoodi true/:kehitysmoodi true\n :sahke-headerit {"oletuskayttaja" {"oam_remote_user" "jvh" "oam_user_first_name" "Jarjestelman" "oam_user_last_name" "Valvoja" "oam_user_email" "jvh@example.com" "oam_groups" "Jarjestelmavastaava" "oam_organization" "Liikennevirasto"}}/'
+            sed < asetukset.edn > /tmp/harja/asetukset.edn -e 's/:kehitysmoodi true/:kehitysmoodi true\n :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "jvh" "oam_user_first_name" "Jarjestelman" "oam_user_last_name" "Valvoja" "oam_user_email" "jvh@example.com" "oam_groups" "Jarjestelmavastaava" "oam_organization" "Liikennevirasto"}}/'
 
       - persist_to_workspace:
           # Must be an absolute path, or relative path from working_directory
@@ -106,7 +106,7 @@ jobs:
       # Note: When running with chrome, it seems we cannot record a video. Only Electron browser can record a video.
       - run:
           name: Run smoke tests for pull request
-          command: $(npm bin)/cypress run --browser chrome --record --spec cypress/integration/smoke/harja_spec.js
+          command: $(npm bin)/cypress run --browser chrome --record --spec cypress/integration/nakymien_avaus_spec.js
 
 workflows:
   version: 2
