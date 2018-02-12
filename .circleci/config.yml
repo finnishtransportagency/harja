@@ -88,8 +88,8 @@ jobs:
             - node_modules
 
       - run:
-        name: generate dummy csrf token
-        command: mkdir /tmp/.harja && echo superrandomstring > /tmp/.harja/anti-csrf-token
+        name: replace slurped secrets
+        command: sed -i -e 's/#=(slurp "[^"]*")/"xxxx"/g' /tmp/harja/ asetukset.edn
 
       - run:
           name: Run Harja app
