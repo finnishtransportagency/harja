@@ -1,6 +1,6 @@
 describe('Päänäkymien avaamiset', function () {
     beforeEach(function () {
-        cy.visit("https://harja-test.solitaservices.fi/#urakat/yleiset?")
+        cy.visit("http://localhost:3000/#urakat/yleiset?")
     })
     
     it("Urakkavalinta listan kautta toimii", function () {
