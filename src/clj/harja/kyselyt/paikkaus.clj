@@ -95,7 +95,5 @@
         id (::paikkaus/id (if paivita?
                             (paivita-toteuma db muokattu-toteuma)
                             (luo-toteuma db uusi-toteuma)))]
-    (println "--->>> ID" id)
-
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
