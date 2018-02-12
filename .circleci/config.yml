@@ -89,7 +89,7 @@ jobs:
 
       - run:
         name: generate dummy csrf token
-        command: mkdir ../.harja && echo superrandomstring > ../.harja/anti-csrf-token
+        command: mkdir /tmp/.harja && echo superrandomstring > /tmp/.harja/anti-csrf-token
 
       - run:
           name: Run Harja app
