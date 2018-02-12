@@ -27,12 +27,10 @@ jobs:
 
       # setup database
       - run:
-          name: Stop any running databases
+          name: Check any running databases
           command: |
-            service postgresql stop
-            service mysql stop
-            service mongod stop
-            while lsof -Pi :5432 -sTCP:LISTEN -t; do sleep 1; service postgresql stop; done
+            pwd
+            lsof -Pi :5432 -sTCP:LISTEN -t
 
       - run: cd tietokanta && sh devdb_migrate.sh
 
