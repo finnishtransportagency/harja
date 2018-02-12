@@ -25,13 +25,6 @@ jobs:
           paths:
             - ~/.m2
 
-      # setup database
-      - run:
-          name: Check any running databases
-          command: |
-            pwd
-            fuser -n tcp -v 5432
-
       - run: cd tietokanta && sh devdb_migrate.sh
 
       # run tests!
