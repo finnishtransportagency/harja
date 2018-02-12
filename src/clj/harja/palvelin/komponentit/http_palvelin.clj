@@ -222,7 +222,8 @@
       (let [random-avain (index/tee-random-avain)
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
-        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (time/now))
+        ;; todo: korjaa anti csrf-session kytkeminen pois
+        ;;(anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (time/now))
         {:status 200
 
          :headers {"Content-Type" "text/html"
@@ -280,7 +281,10 @@
   [f db kayttajanimi random-avain csrf-token anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
 
-    (if (or (and (some? random-avain)
+    (f req)
+    ;; todo: korjaa käsittely kiertämään järkevästi anti csrf avaimen käyttö
+
+    #_(if (or (and (some? random-avain)
                  (some? csrf-token)
                  (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now))))
       (f req)
