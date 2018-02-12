@@ -35,7 +35,8 @@ jobs:
             service mysql stop
             service mongod stop
             while lsof -Pi :5432 -sTCP:LISTEN -t; do sleep 1; service postgresql stop; done
-      - run: cd tietokanta && sh devdb_restart.sh
+
+      - run: cd tietokanta && sh devdb_migrate.sh
 
       # run tests!
       # - run: cd harja && lein test
