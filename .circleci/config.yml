@@ -25,7 +25,7 @@ jobs:
           paths:
             - ~/.m2
 
-      - run: cd tietokanta && sh devdb_migrate.sh
+      - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       # run tests!
       - run: cd harja && lein test
