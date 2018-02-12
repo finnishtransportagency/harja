@@ -28,11 +28,11 @@ jobs:
       - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       # run tests!
-      - run: cd harja && lein test
+      - run: lein test
 
       - run:
           name: Build Harja jar
-          command: cd harja && lein uberjar
+          command: lein uberjar
 
       - run:
           name: Configure build
