@@ -39,7 +39,6 @@ jobs:
           command: |
             mkdir /tmp/harja
             mv target/harja-0.0.1-SNAPSHOT-standalone.jar /tmp/harja/harja.jar
-            cp asetukset.edn cypress.json /tmp/harja/
             sed < asetukset.edn > /tmp/harja/asetukset.edn -e 's/:kehitysmoodi true/:kehitysmoodi true\n :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "jvh" "oam_user_first_name" "Jarjestelman" "oam_user_last_name" "Valvoja" "oam_user_email" "jvh@example.com" "oam_groups" "Jarjestelmavastaava" "oam_organization" "Liikennevirasto"}}/'
 
       - persist_to_workspace:
@@ -48,7 +47,8 @@ jobs:
           # Must be relative path from root
           paths:
             - harja.jar
-            - config.edn
+            - asetukset.edn
+            - cypress.json
 
   e2e-pr:
     docker:
