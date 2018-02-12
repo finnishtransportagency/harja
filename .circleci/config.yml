@@ -38,6 +38,7 @@ jobs:
           name: Configure build
           command: |
             mkdir /tmp/harja
+            cp asetukset.edn cypress.json /tmp/harja/
             mv target/harja-0.0.1-SNAPSHOT-standalone.jar /tmp/harja/harja.jar
 
       - persist_to_workspace:
