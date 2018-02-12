@@ -95,7 +95,7 @@ jobs:
       # Note: When running with chrome, it seems we cannot record a video. Only Electron browser can record a video.
       - run:
           name: Run smoke tests for pull request
-          command: $(npm bin)/cypress run --browser chrome --record --spec cypress/integration/nakymien_avaus_spec.js
+          command: $(npm bin)/cypress run --browser chrome --spec cypress/integration/nakymien_avaus_spec.js
 
 workflows:
   version: 2
