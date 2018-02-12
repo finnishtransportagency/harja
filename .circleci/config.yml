@@ -88,6 +88,10 @@ jobs:
             - node_modules
 
       - run:
+        name: generate dummy csrf token
+        command: mkdir ../.harja && echo superrandomstring > ../.harja/anti-csrf-token
+
+      - run:
           name: Run Harja app
           command: cd /tmp/harja && env TZ=EET java -jar harja.jar
           # background: true
