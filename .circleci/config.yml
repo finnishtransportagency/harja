@@ -30,7 +30,7 @@ jobs:
           name: Check any running databases
           command: |
             pwd
-            lsof -Pi :5432 -sTCP:LISTEN -t
+            fuser -n tcp -v 5432
 
       - run: cd tietokanta && sh devdb_migrate.sh
 
