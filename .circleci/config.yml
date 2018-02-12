@@ -37,7 +37,7 @@ jobs:
       - run: cd tietokanta && sh devdb_migrate.sh
 
       # run tests!
-      # - run: cd harja && lein test
+      - run: cd harja && lein test
 
       - run:
           name: Build Harja jar
