@@ -20,8 +20,6 @@ jobs:
           - v2-dependencies-{{ .Branch }}
           - v2-dependencies-
 
-      - run: cd harja && lein deps
-
       - save_cache:
           key: v2-dependencies-{{ .Branch }}-{{ checksum "harja/project.clj" }}
           paths:
