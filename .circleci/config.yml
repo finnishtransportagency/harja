@@ -88,7 +88,7 @@ jobs:
 
       - run:
           name: replace slurped secrets
-          command: sed -i /tmp/harja/asetukset.edn -e 's/#=(slurp "[^"]*")/"xxxx"/g'
+          command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/#=(slurp "[^"]*")/"xxxx"/g'
 
       - run:
           name: Run Harja app
