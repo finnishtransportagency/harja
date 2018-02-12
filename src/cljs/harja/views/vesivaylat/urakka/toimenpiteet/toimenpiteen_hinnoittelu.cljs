@@ -205,19 +205,18 @@
              ^{:key index}
              [:tr
               [:td
-               (let [tyon-urakkavuosi #(string/join "-" (map pvm/pvm-opt [(:alkupvm %) (:loppupvm %)]))]
-                 [yleiset/livi-pudotusvalikko
-                  {:valitse-fn #(do
-                                  (e! (tiedot/->AsetaTyorivilleTiedot
-                                        {::tyo/id (::tyo/id tyorivi)
-                                         ::tyo/toimenpidekoodi-id (:tehtava %)})))
-                   :format-fn #(if %
-                                 (str (:tehtavan_nimi %) " " (tyon-urakkavuosi %))
-                                 "Valitse työ")
-                   :class "livi-alasveto-250 inline-block"
-                   :valinta suunniteltu-tyo
-                   :disabled false}
-                  tyovalinnat-toimenpiteen-ajalle])]
+               [yleiset/livi-pudotusvalikko
+                {:valitse-fn #(do
+                                (e! (tiedot/->AsetaTyorivilleTiedot
+                                      {::tyo/id (::tyo/id tyorivi)
+                                       ::tyo/toimenpidekoodi-id (:tehtava %)})))
+                 :format-fn #(if %
+                               (:tehtavan_nimi %)
+                               "Valitse työ")
+                 :class "livi-alasveto-250 inline-block"
+                 :valinta suunniteltu-tyo
+                 :disabled false}
+                tyovalinnat-toimenpiteen-ajalle]]
               [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
               [:td.tasaa-oikealle
                [kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
