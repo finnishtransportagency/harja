@@ -9,13 +9,6 @@ jobs:
 
     environment:
       LEIN_ROOT: "true"
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
-      OTE_BASE_URL: "http://localhost:3000"
-      OTE_DB_URL: "jdbc:postgresql://localhost:5432/harjatest"
-      OTE_DB_USERNAME: "harja"
-      OTE_DB_PASSWORD: ""
-      OTE_AUTH_SHARED_SECRET: "test"
 
     steps:
       - checkout
@@ -27,7 +20,7 @@ jobs:
           - v2-dependencies-{{ .Branch }}
           - v2-dependencies-
 
-      - run: cd ote && lein deps
+      - run: cd harja && lein deps
 
       - save_cache:
           key: v2-dependencies-{{ .Branch }}-{{ checksum "harja/project.clj" }}
@@ -35,7 +28,14 @@ jobs:
             - ~/.m2
 
       # setup database
-      - run: cd database && sh circleci_setup.sh
+      - run:
+          name: Stop any running databases
+          command: |
+            service postgresql stop
+            service mysql stop
+            service mongod stop
+            while lsof -Pi :5432 -sTCP:LISTEN -t; do sleep 1; service postgresql stop; done
+      - run: cd tietokanta && sh devdb_restart.sh
 
       # run tests!
       # - run: cd harja && lein test
@@ -70,8 +70,6 @@ jobs:
       ## this enables colors + fixes failing unit tests (they say)
       TERM: "xterm"
       LEIN_ROOT: "true"
-      # Customize the JVM maximum heap limit
-      JVM_OPTS: -Xmx3200m
       CYPRESS_BASE_URL: "http://localhost:3000"
       #DEBUG: "cypress*"
 
