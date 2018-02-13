@@ -295,6 +295,8 @@
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
 
+(def pudota-yhteyksia-randomisti? (atom false))
+
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          lopetus-fn kehitysmoodi
                          mittarit]
@@ -313,44 +315,48 @@
                (http/run-server
                  (cookies/wrap-cookies
                    (fn [req]
-                     (try+
-                       (metriikka/inc! mittarit :aktiiviset_pyynnot)
-                       (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
-                             ui-kasittelijat (mapv :fn @kasittelijat)
-                             oam-kayttajanimi (get (:headers req) "oam_remote_user")
-                             random-avain (get (:headers req) "x-csrf-token")
-                             csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
-                             _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
-                             ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                (wrap-anti-forgery db
-                                                                   oam-kayttajanimi
-                                                                   random-avain
-                                                                   csrf-token
-                                                                   anti-csrf-token-secret-key))]
-                         (or (reitita req (conj (mapv :fn ei-todennettavat)
-                                                dev-resurssit resurssit) false)
-                             (reitita (todennus/todenna-pyynto todennus req)
-                                      (-> (mapv :fn todennettavat)
-                                          (conj (partial index-kasittelija
-                                                         db
-                                                         oam-kayttajanimi
-                                                         kehitysmoodi
-                                                         anti-csrf-token-secret-key))
-                                          (conj (partial ls-index-kasittelija
-                                                         db
-                                                         oam-kayttajanimi
-                                                         kehitysmoodi
-                                                         anti-csrf-token-secret-key))
-                                          (conj ui-kasittelija))
-                                      true)))
-                       (catch [:virhe :todennusvirhe] _
-                         (log/warn "Ei voitu todentaa tunnusta -> palautetaan 403")
-                         {:status 403 :body "Todennusvirhe"})
+                     (if (and
+                           @pudota-yhteyksia-randomisti?
+                           (= (:request-method req) :post)
+                           (= (rand-int 3) 0))
+                       (try+
+                         (metriikka/inc! mittarit :aktiiviset_pyynnot)
+                         (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
+                               ui-kasittelijat (mapv :fn @kasittelijat)
+                               oam-kayttajanimi (get (:headers req) "oam_remote_user")
+                               random-avain (get (:headers req) "x-csrf-token")
+                               csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
+                               _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
+                               ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
+                                                  (wrap-anti-forgery db
+                                                                     oam-kayttajanimi
+                                                                     random-avain
+                                                                     csrf-token
+                                                                     anti-csrf-token-secret-key))]
+                           (or (reitita req (conj (mapv :fn ei-todennettavat)
+                                                  dev-resurssit resurssit) false)
+                               (reitita (todennus/todenna-pyynto todennus req)
+                                        (-> (mapv :fn todennettavat)
+                                            (conj (partial index-kasittelija
+                                                           db
+                                                           oam-kayttajanimi
+                                                           kehitysmoodi
+                                                           anti-csrf-token-secret-key))
+                                            (conj (partial ls-index-kasittelija
+                                                           db
+                                                           oam-kayttajanimi
+                                                           kehitysmoodi
+                                                           anti-csrf-token-secret-key))
+                                            (conj ui-kasittelija))
+                                        true)))
+                         (catch [:virhe :todennusvirhe] _
+                           (log/warn "Ei voitu todentaa tunnusta -> palautetaan 403")
+                           {:status 403 :body "Todennusvirhe"})
 
-                       (finally
-                         (metriikka/muuta! mittarit
-                                           :aktiiviset_pyynnot dec
-                                           :pyyntoja_palveltu inc)))))
+                         (finally
+                           (metriikka/muuta! mittarit
+                                             :aktiiviset_pyynnot dec
+                                             :pyyntoja_palveltu inc))))))
 
                  {:port (or (:portti asetukset) asetukset)
                   :thread (or (:threads asetukset) 8)

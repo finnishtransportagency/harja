@@ -84,62 +84,21 @@
 
 (declare kasittele-istunto-vanhentunut)
 
-(defn extranet-virhe? [vastaus]
-  (= 0 (:status vastaus)))
-
 (defn- kysely [palvelu metodi parametrit
-               {:keys [transducer paasta-virhe-lapi? chan yritysten-maara uudelleenyritys-timeout] :as opts}]
-  (let [cb (fn [[_ vastaus]]
-             (when (some? vastaus)
-               (cond
-                 (= (:status vastaus) 302)
-                 (do (kasittele-istunto-vanhentunut) ; Extranet-kirjautuminen vanhentunut
-                     (close! chan))
-
-                 (= (:status vastaus) 403) ; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
-                 (do (kasittele-istunto-vanhentunut)
-                     (close! chan))
-
-                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (do (kasittele-palvelinvirhe palvelu vastaus)
-                     (close! chan))
-
-                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
-                 (kysely palvelu metodi parametrit (assoc opts
-                                                     :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
-                                                                        (+ (or yritysten-maara 0) 1))
-                                                     :uudelleenyritys-timeout
-                                                     (let [timeout (:uudelleenyritys-timeout opts)]
-                                                       (+ (or timeout 2000) 2000))))
-
-                 :default
-                 (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                     (close! chan)))
-               ;; else
-               (close! chan)))]
+               {:keys [transducer chan] :as opts}]
+  (let [vastauskasittelija (fn [[_ vastaus]]
+                             (when (some? vastaus)
+                               (put! chan (if transducer (into [] transducer vastaus) vastaus)))
+                             (close! chan))]
     (go
-      (when uudelleenyritys-timeout
-        (<! (timeout uudelleenyritys-timeout)))
-      (if-let [testipalvelu @testmode]
-        (do
-          (log "Haetaan testivastaus palvelulle: " palvelu)
-          (if-let [testivastaus-ch (testipalvelu palvelu parametrit)]
-            (if-let [testivastaus (<! testivastaus-ch)]
-              (>! chan testivastaus)
-              (close! chan))
-            (close! chan)))
-        (ajax-request {:uri (str (polku) (name palvelu))
-                       :method metodi
-                       :params parametrit
-                       :headers {"X-CSRF-Token" (<! (csrf-token))}
-                       :format (transit-request-format transit/write-optiot)
-                       :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                                  :raw true})
-                       :handler cb
-
-                       :error-handler (fn [[resp error]]
-                                        (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
-                                        (close! chan))})))
+      (ajax-request {:uri (str (polku) (name palvelu))
+                     :method metodi
+                     :params parametrit
+                     :headers {"X-CSRF-Token" (<! (csrf-token))}
+                     :format (transit-request-format transit/write-optiot)
+                     :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                                :raw true})
+                     :handler vastauskasittelija}))
     chan))
 
 
@@ -334,7 +293,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       gstr/urlEncode))
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
-  (-> 
+  (->
     "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
