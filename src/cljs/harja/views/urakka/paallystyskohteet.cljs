@@ -69,7 +69,7 @@
         validointivirheet-ryhmittain (group-by :validointivirhe (:validointivirheet modal-data))
         kohteet-paallekain-virheet (:kohteet-paallekain validointivirheet-ryhmittain)
         sulje-fn #(swap! paallystys-tiedot/validointivirheet-modal assoc :nakyvissa? false)]
-    [modal/modal {:otsikko "Ongelma kohteiden tallennuksessa"
+    [modal/modal {:otsikko "Kohteiden tallennus epäonnistui!"
                   :nakyvissa? (:nakyvissa? modal-data)
                   :sulje-fn sulje-fn
                   :footer [napit/sulje sulje-fn]}
