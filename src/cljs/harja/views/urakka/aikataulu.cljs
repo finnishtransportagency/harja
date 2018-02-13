@@ -585,31 +585,39 @@
        :pvm-tyhjana #(:aikataulu-tiemerkinta-alku %)
        :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
        :aseta (fn [rivi arvo]
-                (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
-                      ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
-                      aiemmat-sahkopostitiedot (merge
-                                                 (:sahkopostitiedot rivi)
-                                                 (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
-                  (reset! tiedot/tiemerkinta-valmis-modal-data
-                          {:nakyvissa? true
-                           :muutos-taulukosta? true
-                           :valmis-fn (fn [lomakedata]
-                                        (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
-                                               {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
-                                                :saate (:saate lomakedata)
-                                                :kopio-itselle? (:kopio-itselle? lomakedata)}))
-                           :kohteet [{:id (:id rivi)
-                                      :nimi (:nimi rivi)
-                                      :valmis-pvm arvo}]
-                           :urakka-id urakka-id
-                           :vuosi vuosi
+                ;; Näytä dialogi, mikäli arvoa muutetaan
+                ;; HOX: Olisi kiva jos rivin mailitietoja voisi vielä muokata jälkikäteen ja lähettää uuden mailin
+                ;; niin, että valitsee vain saman pvm:n uudelleen ja päivittä dialogin mailitiedot.
+                ;; Tässä on kuitenkin ongelma: palvelin päättelee rivin pvm:n asettamisesta tai muuttamisesta, pitääkö
+                ;; maili lähettää. Näin rivin muiden tietojen muokkaus ei generoi turhaan maililähetystä.
+                ;; Täten saman pvm:n asettaminen uudelleen ei generoi maililähetystä, joten dialogi näyttäminen on turhaa.
+                ;; TODO Tosin on edelleen mahdollista nähdä dialogi jos vaihtaa pvm:n toiseksi ja sitten takaisin vanhaan.
+                (when (not (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu rivi) arvo))
+                  (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
+                        ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
+                        aiemmat-sahkopostitiedot (merge
+                                                   (:sahkopostitiedot rivi)
+                                                   (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
+                    (reset! tiedot/tiemerkinta-valmis-modal-data
+                            {:nakyvissa? true
+                             :muutos-taulukosta? true
+                             :valmis-fn (fn [lomakedata]
+                                          (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
+                                                 {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
+                                                  :saate (:saate lomakedata)
+                                                  :kopio-itselle? (:kopio-itselle? lomakedata)}))
+                             :kohteet [{:id (:id rivi)
+                                        :nimi (:nimi rivi)
+                                        :valmis-pvm arvo}]
+                             :urakka-id urakka-id
+                             :vuosi vuosi
 
-                           :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
-                                        :muut-vastaanottajat (zipmap (iterate inc 1)
-                                                                     (map #(-> {:sahkoposti %})
-                                                                          (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
-                                        :saate (:saate aiemmat-sahkopostitiedot)}})
-                  (assoc rivi :aikataulu-tiemerkinta-loppu arvo)))
+                             :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
+                                          :muut-vastaanottajat (zipmap (iterate inc 1)
+                                                                       (map #(-> {:sahkoposti %})
+                                                                            (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
+                                          :saate (:saate aiemmat-sahkopostitiedot)}})))
+                (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                   "Tiemerkintää ei ole merkitty aloitetuksi."]
