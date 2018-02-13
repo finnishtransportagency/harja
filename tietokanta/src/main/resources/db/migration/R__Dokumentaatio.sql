@@ -226,3 +226,4 @@ COMMENT ON TABLE kayttaja_anti_csrf_token IS E'Sisältää käyttäjän anti-CSR
 COMMENT ON TABLE odottava_sahkoposti IS
 E'Sisältää tietoja myöhemmin lähetettävistä sähköpostiviesteistä';
 COMMENT ON COLUMN odottava_sahkoposti.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
+COMMENT ON COLUMN odottava_sahkoposti.vastaanottajat IS 'Vastaanottajat, joille viesti tulisi ainakin lähettää. Viesti saattaa tyypistä riippuen sisältää myös muita vastaanottajia, joille viesti laitetaan aina (esim. tiemerkinnän valmistuminen ilmoitetaan tietyille FIM-käyttäjille)';
