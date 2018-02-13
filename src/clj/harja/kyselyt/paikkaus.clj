@@ -43,9 +43,7 @@
       (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/id id})
       (if (onko-kohde-olemassa-ulkoisella-idlla? db ulkoinen-tunniste)
         (update! db ::paikkaus/paikkauskohde kohde {::paikkaus/ulkoinen-id ulkoinen-tunniste})
-        (insert! db ::paikkaus/paikkauskohde kohde
-                 ;; todo: selvitä miksi luoja-id:n tallennus ei onnistu
-                 #_(assoc kohde ::muokkaustiedot/luoja-id kayttaja-id))))
+        (insert! db ::paikkaus/paikkauskohde (assoc kohde ::muokkaustiedot/luoja-id kayttaja-id))))
     (first (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-tunniste}))))
 
 (defn hae-tai-tee-paikkauskohde [db kayttaja-id paikkauskohde]
