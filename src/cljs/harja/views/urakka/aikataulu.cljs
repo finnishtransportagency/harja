@@ -399,6 +399,7 @@
                 [yllapitokohteet-view/vasta-muokatut-lihavoitu]]
       :voi-poistaa? (constantly false)
       :voi-lisata? false
+      :voi-kumota? false ; Muuten voisi, mutta tiemerkinnän dialogin tietojen kumous vaatisi oman toteutuksen
       :piilota-toiminnot? true
       :salli-valiotsikoiden-piilotus? true
       :tyhja (if (nil? @tiedot/aikataulurivit)
