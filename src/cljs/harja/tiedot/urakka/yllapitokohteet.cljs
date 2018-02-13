@@ -192,10 +192,11 @@
             (if (k/virhe? vastaus)
               (viesti/nayta! "Kohteiden tallentaminen epännistui" :warning viesti/viestin-nayttoaika-keskipitka)
               (do (log "[YLLÄPITOKOHTEET] Kohteet tallennettu: " (pr-str vastaus))
-                  (viesti/nayta! "Tallennus onnistui. Tarkista myös muokkaamiesi tieosoitteiden alikohteet."
-                                 :success viesti/viestin-nayttoaika-keskipitka)
                   (if (= (:status vastaus) :ok)
-                    (onnistui-fn (:yllapitokohteet vastaus))
+                    (do
+                      (viesti/nayta! "Tallennus onnistui. Tarkista myös muokkaamiesi tieosoitteiden alikohteet."
+                                     :success viesti/viestin-nayttoaika-keskipitka)
+                      (onnistui-fn (:yllapitokohteet vastaus)))
                     (log "VIRHEVASTAUS HAVAITTU!!") ;; TODO Näytä tiedot dialogissa
                     ))))))))
 

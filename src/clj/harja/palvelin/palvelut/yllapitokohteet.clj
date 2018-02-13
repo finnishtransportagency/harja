@@ -507,17 +507,17 @@
     (reduce
       (fn [virheet tallennettava-kohde]
         (let [kohteen-virheet
-              (mapcat (fn [verrattava-kohde]
-                        (when (and (not= (:id tallennettava-kohde) (:id verrattava-kohde))
-                                   (tr/tr-vali-leikkaa-tr-valin? tallennettava-kohde verrattava-kohde))
-                          {:validointivirhe :kohteet-paallekain
-                           :kohteet [(select-keys tallennettava-kohde [:kohdenumero :nimi :urakka
-                                                                       :tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                                                       :tr-loppuosa :tr-loppuetaisyys])
-                                     (select-keys verrattava-kohde [:kohdenumero :nimi :urakka-nimi
-                                                                    :tr-numero :tr-alkuosa :tr-alkuetaisyys
-                                                                    :tr-loppuosa :tr-loppuetaisyys])]}))
-                      saman-vuoden-kohteet)]
+              (remove nil? (map (fn [verrattava-kohde]
+                                  (when (and (not= (:id tallennettava-kohde) (:id verrattava-kohde))
+                                             (tr/tr-vali-leikkaa-tr-valin? tallennettava-kohde verrattava-kohde))
+                                    {:validointivirhe :kohteet-paallekain
+                                     :kohteet [(select-keys tallennettava-kohde [:kohdenumero :nimi :urakka
+                                                                                 :tr-numero :tr-alkuosa :tr-alkuetaisyys
+                                                                                 :tr-loppuosa :tr-loppuetaisyys])
+                                               (select-keys verrattava-kohde [:kohdenumero :nimi :urakka-nimi
+                                                                              :tr-numero :tr-alkuosa :tr-alkuetaisyys
+                                                                              :tr-loppuosa :tr-loppuetaisyys])]}))
+                                saman-vuoden-kohteet))]
           (if (empty? kohteen-virheet)
             virheet
             (concat virheet kohteen-virheet))))
