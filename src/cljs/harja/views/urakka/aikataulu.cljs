@@ -134,9 +134,10 @@
   []
   (let [{:keys [kohteet urakka-id vuosi valittu-lomake lomakedata
                 nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data]
+
     [modal/modal
      {:otsikko (if (= (count kohteet) 1)
-                 (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen")
+                 (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen: " (pvm/pvm (:valmis-pvm (first kohteet))))
                  (str "Usean kohteen tiemerkinnän valmistuminen"))
       ;:luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? nakyvissa?
