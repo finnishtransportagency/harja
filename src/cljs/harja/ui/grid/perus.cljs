@@ -81,16 +81,16 @@
                                                         :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
                       [tee-kentta (assoc sarake
-                                   :focus (= fokus fokus-id)
-                                   :on-focus #(aseta-fokus! fokus-id)
-                                   :pituus-max (:pituus-max sarake))
-                      (r/wrap
-                        arvo
-                        (fn [uusi]
-                          (if aseta
-                            (muokkaa! id (fn [rivi]
-                                           (aseta rivi uusi)))
-                            (muokkaa! id assoc nimi uusi))))]])]
+                                    :focus (= fokus fokus-id)
+                                    :on-focus #(aseta-fokus! fokus-id)
+                                    :pituus-max (:pituus-max sarake))
+                       (r/wrap
+                         arvo
+                         (fn [uusi]
+                           (if aseta
+                             (muokkaa! id (fn [rivi]
+                                            (aseta rivi uusi)))
+                             (muokkaa! id assoc nimi uusi))))]])]
 
                   ^{:key (str nimi)}
                   [:td {:class (str "ei-muokattava " tasaus-luokka)}
@@ -226,7 +226,7 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko validoi-fn tunniste]}]
+                                peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -283,9 +283,12 @@
                              (do (.preventDefault %)
                                  (reset! tallennus-kaynnissa true)
                                  (go
-                                   (when-not (empty? tallennettavat)
-                                     (<! (tallenna tallennettavat)))
-                                   (nollaa-muokkaustiedot!)))))}
+                                   (if (empty? tallennettavat)
+                                     (nollaa-muokkaustiedot!)
+                                     (let [vastaus (<! (tallenna tallennettavat))]
+                                       (if (nollaa-muokkaustiedot-tallennuksen-jalkeen? vastaus)
+                                         (nollaa-muokkaustiedot!)
+                                         (reset! tallennus-kaynnissa false))))))))}
              [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
@@ -541,7 +544,7 @@
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä.
-                                        Funktion pitää palauttaa kanava.
+                                        Funktion pitää palauttaa kanava, mutta sen paluuarvolla ei tehdä mitään.
                                         Jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
   :validoi-fn                           funktio, joka saa koko muokkausdatan ja palauttaa
                                         virheilmoituksen, jos tallennus estetään.
@@ -589,7 +592,7 @@
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko
-           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta
+           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
 
@@ -613,6 +616,9 @@
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
+        nollaa-muokkaustiedot-tallennuksen-jalkeen? (if (some? nollaa-muokkaustiedot-tallennuksen-jalkeen?)
+                                                      nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                                                      (constantly true))
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
                                  tallenna-vain-muokatut)
@@ -926,6 +932,7 @@
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                              :peruuta peruuta :otsikko otsikko
+                             :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :validoi-fn validoi-fn})
            [:div.panel-body
@@ -1010,6 +1017,7 @@
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
                                 :peruuta peruuta :otsikko otsikko
+                                :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn})])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))

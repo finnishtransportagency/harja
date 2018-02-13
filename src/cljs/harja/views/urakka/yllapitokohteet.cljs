@@ -655,6 +655,8 @@
                           [kohteen-vetolaatikko urakka kohteet-atom rivi (:kohdetyyppi optiot)])))
                  @kohteet-atom)
            :tallenna @tallenna
+           :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
+                                                          (= (:status vastaus) :ok))
            :muutos (fn [grid]
                      (hae-osan-pituudet grid osan-pituudet-teille)
                      (validoi-tr-osoite grid tr-sijainnit tr-virheet))
@@ -729,7 +731,7 @@
                                                     "grid-solu-ennustettu")}
                                     (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi))])}]))
           (yllapitokohteet-domain/lihavoi-vasta-muokatut
-           (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom))]
+            (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom))]
          [tr-virheilmoitus tr-virheet]]))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
