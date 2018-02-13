@@ -144,7 +144,6 @@
                                           (tierekisteri/tierekisteriosoite-tekstina eka-kohde-osoite))
                                       (fmt/pvm-opt (get (valmistumispvmt kohteet) (:id eka-kohde)))))))
         viestin-vartalo (fn [kohteet]
-                          (log/debug "VIESTIN VARTALO: " (vec kohteet))
                           (let [eka-kohde (first kohteet)]
                             (if (> (count kohteet) 1)
                               (viesti-kohteiden-tiemerkinta-valmis kohteet (valmistumispvmt kohteet) ilmoittaja)
