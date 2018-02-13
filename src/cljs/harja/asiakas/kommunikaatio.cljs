@@ -84,9 +84,6 @@
 
 (declare kasittele-istunto-vanhentunut)
 
-(defn extranet-virhe? [vastaus]
-  (= 0 (:status vastaus)))
-
 (defn- kysely [palvelu metodi parametrit
                {:keys [transducer chan] :as opts}]
   (let [vastauskasittelija (fn [[_ vastaus]]
