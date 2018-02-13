@@ -26,6 +26,24 @@
   (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id))
   (u (str "DELETE FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
 
+#_(deftest ^:perf yksittainen-kirjaus-ei-kesta-liian-kauan
+  (let [sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)]
+    (is (apply
+         gatling-onnistuu-ajassa?
+         "Yksittäinen reittitoteuma"
+         {:timeout-in-ms 1500}
+         (take
+           10
+           (map
+             (fn [ulkoinen-id]
+               #(api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                                        (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                                            slurp
+                                            (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                            (.replace "__ID__" (str ulkoinen-id))
+                                            (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy"))))
+             (range)))))))
+
 (deftest tallenna-yksittainen-reittitoteuma
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
