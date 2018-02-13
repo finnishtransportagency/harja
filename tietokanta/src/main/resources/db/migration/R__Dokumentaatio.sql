@@ -223,7 +223,7 @@ E'Kuvaa konkreettiset toimenpiteet joita on tehty tietyn kanavan kohteelle, eli 
 
 COMMENT ON TABLE kayttaja_anti_csrf_token IS E'Sisältää käyttäjän anti-CSRF tokenin tiedot. Jokaisella tokenilla on voimassaoloaika, ja niitä voi olla useita per käyttäjä (yksi per selainikkuna/-välilehti). Tarkempi tekninen toteutus dokumentoitu koodiin.';
 
-COMMENT ON TABLE odottava_sahkoposti IS
-E'Sisältää tietoja myöhemmin lähetettävistä sähköpostiviesteistä';
-COMMENT ON COLUMN odottava_sahkoposti.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
-COMMENT ON COLUMN odottava_sahkoposti.vastaanottajat IS 'Vastaanottajat, joille viesti tulisi ainakin lähettää. Viesti saattaa tyypistä riippuen sisältää myös muita vastaanottajia, joille viesti laitetaan aina (esim. tiemerkinnän valmistuminen ilmoitetaan tietyille FIM-käyttäjille)';
+COMMENT ON TABLE yllapitokohteen_sahkopostitiedot IS
+E'Sisältää ylläpitokohteen sähköpostilähetystiedot.';
+COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
+COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.vastaanottajat IS 'Vastaanottajat, joille viesti tulisi ainakin lähettää. Viesti saattaa tyypistä riippuen sisältää myös muita vastaanottajia, joille viesti laitetaan aina (esim. tiemerkinnän valmistuminen ilmoitetaan tietyille FIM-käyttäjille)';

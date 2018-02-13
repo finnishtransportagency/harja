@@ -248,13 +248,12 @@
             {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
              :id (:id kohde)
              :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))
-        ;; Käsittele sähköpostitiedot: käyttäjän kirjoittajat vastaanottajat, selite ja kopio-viesti.
-        ;; Tallennetaan aina kantaan, koska viestinvälitys hakee kohteiden lisätiedot aina samasta taulusta.
-        ;; Tänään tai aiemmin valmistuneista kohteista laitetaan maili heti ja loput jäävät kantaan odottamaan.
-        ;; Käyttäjien kirjoittamien sähköpostien lisäksi lisäksi maili laitetaan aina
-        ;; myös tietyille FIM-rooleille. Näitä osoitteita ei tallenneta, vaan haetaan FIMistä lähetystä varten erikseen.
-        (q/poista-valmistuneen-tiemerkinnan-odottava-sahkoposti! db {:yllapitokohde_id (:id kohde)})
-        (q/tallenna-valmistuneen-tiemerkkinnan-odottava-sahkoposti<!
+        ;; Tallenna käyttäjän kirjoittajamat vastaanottajat, selite ja kopio-viesti.
+        ;; Tietojen on oltava tallessa kannassa, koska viestinvälitys lukee ne aina kannasta.
+        ;; Näin siksi, että toteutus olisi yhtenäinen riippumatta siitä, lähetetäänkö viesti
+        ;; heti, vai myöhemmin.
+        (q/poista-valmistuneen-tiemerkinnan-sahkopostitiedot! db {:yllapitokohde_id (:id kohde)})
+        (q/tallenna-valmistuneen-tiemerkkinnan-sahkopostitiedot<!
           db
           {:yllapitokohde_id (:id kohde)
            :vastaanottajat (konv/seq->array (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))

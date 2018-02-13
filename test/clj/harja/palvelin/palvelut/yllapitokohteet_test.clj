@@ -774,8 +774,8 @@
                                          :saate saate}
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
-            odottavat-mailit-maara-ennen-lisaysta (ffirst (q
-                                                            (str "SELECT count(*) FROM odottava_sahkoposti
+            mailitietojen-maara-ennen-lisaysta (ffirst (q
+                                                         (str "SELECT count(*) FROM yllapitokohteen_sahkopostitiedot
                                          WHERE yllapitokohde_id = " 1 ";")))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-yllapitokohteiden-aikataulu
@@ -785,24 +785,24 @@
                                      :vuosi vuosi
                                      :kohteet kohteet})
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
-            odottavat-mailit-lisayksen-jalkeen (q-map
-                                                 (str "SELECT * FROM odottava_sahkoposti
+            mailitietojen-maara-lisayksen-jalkeen (q-map
+                                                    (str "SELECT * FROM yllapitokohteen_sahkopostitiedot
                                          WHERE yllapitokohde_id = " 1 ";"))
-            odottava-maili (first odottavat-mailit-lisayksen-jalkeen)]
+            mailitiedot (first mailitietojen-maara-lisayksen-jalkeen)]
         ;; Muokatut kentät päivittyivät
         (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
         ;; Ennen lähetystä kohteella ei ollut yhtään odottavaa mailia
-        (is (zero? odottavat-mailit-maara-ennen-lisaysta))
+        (is (zero? mailitietojen-maara-ennen-lisaysta))
 
         ;; Leppäjärven tiemerkintä merkittiin valmistuneeksi tulevaisuuteen -> maili ei lähde, vaan tiedot menevät odotukseen
-        (is (= odottavat-mailit-maara-ennen-lisaysta (dec (count odottavat-mailit-lisayksen-jalkeen))))
-        (is (= (:tyyppi odottava-maili) "tiemerkinta_valmistunut"))
-        (is (= (:yllapitokohde_id odottava-maili) leppajarven-ramppi-id))
-        (is (= (:saate odottava-maili) saate))
-        (is (= (konv/array->set (:vastaanottajat odottava-maili)) muut-vastaanottajat))
-        (is (true? (:kopio_lahettajalle odottava-maili)))
+        (is (= mailitietojen-maara-ennen-lisaysta (dec (count mailitietojen-maara-lisayksen-jalkeen))))
+        (is (= (:tyyppi mailitiedot) "tiemerkinta_valmistunut"))
+        (is (= (:yllapitokohde_id mailitiedot) leppajarven-ramppi-id))
+        (is (= (:saate mailitiedot) saate))
+        (is (= (konv/array->set (:vastaanottajat mailitiedot)) muut-vastaanottajat))
+        (is (true? (:kopio_lahettajalle mailitiedot)))
         (<!! (timeout 5000))
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")
 
@@ -820,17 +820,17 @@
                                        :sopimus-id sopimus-id
                                        :vuosi vuosi
                                        :kohteet kohteet})
-              odottavat-mailit-paivityksen-jalkeen (q-map
-                                                     (str "SELECT * FROM odottava_sahkoposti
+              mailitiedot-paivityksen-jalkeen (q-map
+                                                (str "SELECT * FROM yllapitokohteen_sahkopostitiedot
                                          WHERE yllapitokohde_id = " 1 ";"))
-              odottava-maili (first odottavat-mailit-paivityksen-jalkeen)]
+              mailitiedot (first mailitiedot-paivityksen-jalkeen)]
 
           ;; Sähköpostitiedot päivittyi
-          (is (= (:tyyppi odottava-maili) "tiemerkinta_valmistunut"))
-          (is (= (:yllapitokohde_id odottava-maili) leppajarven-ramppi-id))
-          (is (= (:saate odottava-maili) nil))
-          (is (= (konv/array->set (:vastaanottajat odottava-maili)) #{}))
-          (is (false? (:kopio_lahettajalle odottava-maili))))))))
+          (is (= (:tyyppi mailitiedot) "tiemerkinta_valmistunut"))
+          (is (= (:yllapitokohde_id mailitiedot) leppajarven-ramppi-id))
+          (is (= (:saate mailitiedot) nil))
+          (is (= (konv/array->set (:vastaanottajat mailitiedot)) #{}))
+          (is (false? (:kopio_lahettajalle mailitiedot))))))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
