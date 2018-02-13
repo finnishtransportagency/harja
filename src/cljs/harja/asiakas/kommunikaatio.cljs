@@ -12,7 +12,8 @@
             [clojure.string :as str]
             [cljs-time.core :as time]
             [goog.string :as gstr]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [harja-laadunseuranta.utils :as utils])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defonce ^{:doc
@@ -335,7 +336,9 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
   (->
-    "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+    (if (utils/kehitysymparistossa?)
+      "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+      "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku")
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))
