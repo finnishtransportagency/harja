@@ -301,7 +301,7 @@
 (defn tallenna-yllapitokohteiden-tarkka-aikataulu
   [db user {:keys [urakka-id sopimus-id vuosi yllapitokohde-id aikataulurivit] :as tiedot}]
   (assert (and urakka-id sopimus-id yllapitokohde-id) (str "Anna urakka-id, sopimus-id, yllapitokohde-id."
-  " Sain: " urakka-id "," sopimus-id "," yllapitokohde-id))
+                                                           " Sain: " urakka-id "," sopimus-id "," yllapitokohde-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)
   ;; Aikataulurivin kuulumista ylläpitokohteeseen tai urakkaan ei tarkisteta erikseen, vaan sisältyy UPDATE-kyselyn WHERE-lauseeseen.
@@ -502,25 +502,52 @@
                                                :yllapitokohde-id id
                                                :osat korjatut-kohdeosat})))))
 
+(defn- validoi-tallennettava-yllapitokohteet [db tallennettavat-kohteet vuosi]
+  (let [saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
+    (reduce
+      (fn [virheet tallennettava-kohde]
+        (let [kohteen-virheet
+              (mapcat (fn [verrattava-kohde]
+                        (when (and (not= (:id tallennettava-kohde) (:id verrattava-kohde))
+                                   (tr/tr-vali-leikkaa-tr-valin? tallennettava-kohde verrattava-kohde))
+                          {:validointivirhe :kohteet-paallekain
+                           :kohteet [(select-keys tallennettava-kohde [:kohdenumero :nimi :urakka
+                                                                       :tr-numero :tr-alkuosa :tr-alkuetaisyys
+                                                                       :tr-loppuosa :tr-loppuetaisyys])
+                                     (select-keys verrattava-kohde [:kohdenumero :nimi :urakka-nimi
+                                                                    :tr-numero :tr-alkuosa :tr-alkuetaisyys
+                                                                    :tr-loppuosa :tr-loppuetaisyys])]}))
+                      saman-vuoden-kohteet)]
+          (if (empty? kohteen-virheet)
+            virheet
+            (concat virheet kohteen-virheet))))
+      []
+      tallennettavat-kohteet)))
+
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
-    (doseq [kohde kohteet]
-      (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
-      (if (id-olemassa? (:id kohde))
-        (paivita-yllapitokohde db user urakka-id sopimus-id kohde)
-        (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
+    (let [validointivirheet (validoi-tallennettava-yllapitokohteet db kohteet vuosi)]
+      (if (empty? validointivirheet)
+        (do (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
+            (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
+            (doseq [kohde kohteet]
+              (log/debug (str "Käsitellään saapunut ylläpitokohde: " kohde))
+              (if (id-olemassa? (:id kohde))
+                (paivita-yllapitokohde db user urakka-id sopimus-id kohde)
+                (luo-uusi-yllapitokohde db user urakka-id sopimus-id vuosi kohde)))
 
-    (yy/paivita-yllapitourakan-geometria db urakka-id)
-    (let [paallystyskohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                 :sopimus-id sopimus-id
-                                                                 :vuosi vuosi})]
-      (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str paallystyskohteet))
-      paallystyskohteet)))
+            (yy/paivita-yllapitourakan-geometria db urakka-id)
+            (let [yllapitokohteet (hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+                                                                       :sopimus-id sopimus-id
+                                                                       :vuosi vuosi})]
+              (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohteet: " (pr-str yllapitokohteet))
+              {:status :ok
+               :yllapitokohteet yllapitokohteet}))
+        {:status :validointiongelma
+         :virheet validointivirheet}))))
 
 (defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id urakkatyyppi]}]
   (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)
