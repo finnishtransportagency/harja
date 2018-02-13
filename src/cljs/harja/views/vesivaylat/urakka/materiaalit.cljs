@@ -42,7 +42,7 @@
     (when joku-varaosa-muutettu?
       (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-varaosan-muuttuessa grid-tila varaosa-muutettu?)))))
 
-(defn- materiaaliloki [e! urakka-id rivit nimi nayta-kaikki?]
+(defn- materiaaliloki [e! urakka-id rivit nimi yksikko nayta-kaikki?]
   (let [rivit-jarjestyksessa (reverse (sort-by ::m/pvm rivit))
         rivin-voi-poistaa? (fn [rivi]
                              ;; Ensimmäistä luontiajan mukaista kirjausta käytetään määrittämään
@@ -76,7 +76,7 @@
                           [:td {:width "15%" :class (if (neg? maara)
                                                       "materiaali-miinus"
                                                       "materiaali-plus")}
-                           maara " kpl"]
+                           (str maara " " yksikko)]
                           [:td {:width "60%"} lisatieto]
                           [:td {:width "10%"}
                            (when (rivin-voi-poistaa? rivi)
@@ -257,8 +257,8 @@
                            ch)))
            :vetolaatikot (into {}
                                (map (juxt ::m/nimi
-                                          (fn [{muutokset ::m/muutokset nimi ::m/nimi nayta-kaikki? :nayta-kaikki?}]
-                                            [materiaaliloki e! (:urakka-id app) muutokset nimi nayta-kaikki?])))
+                                          (fn [{muutokset ::m/muutokset nimi ::m/nimi yksikko ::m/yksikko nayta-kaikki? :nayta-kaikki?}]
+                                            [materiaaliloki e! (:urakka-id app) muutokset nimi yksikko nayta-kaikki?])))
                                materiaalilistaus)}
           [{:tyyppi :vetolaatikon-tila :leveys 1}
            {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
