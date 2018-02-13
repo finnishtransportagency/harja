@@ -94,7 +94,7 @@ jobs:
       - run:
           name: Run Harja app
           command: cd /tmp/harja && env TZ=EET java -jar harja.jar
-          # background: true
+          background: true
 
       # Note: When running with chrome, it seems we cannot record a video. Only Electron browser can record a video.
       - run:
