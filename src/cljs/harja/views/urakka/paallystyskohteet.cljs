@@ -20,7 +20,8 @@
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.modal :as modal]
-            [harja.domain.tierekisteri :as tr])
+            [harja.domain.tierekisteri :as tr]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
@@ -63,14 +64,17 @@
                   ", " (tr/tierekisteriosoite-tekstina kohde2 {:teksti-tie? false})
                   ", " (:urakka kohde2))]]))])
 
-(defn validointivirheet-modal [{:keys [validointivirheet] :as vastaus}]
-  ;; TODO Taas tämä modal resetoi gridin tilan...
+(defn validointivirheet-modal [{:keys [validointivirheet] :as modal-data}]
   (let [validointivirheet-ryhmittain (group-by :validointivirhe validointivirheet)
-        kohteet-paallekain-virheet (:kohteet-paallekain validointivirheet-ryhmittain)]
-    (modal/nayta! {:otsikko "Ongelma kohteiden tallennuksessa"}
-                  [:div
-                   (when (not (empty? kohteet-paallekain-virheet))
-                     [validointivirhe-kohteet-pallekkain kohteet-paallekain-virheet])])))
+        kohteet-paallekain-virheet (:kohteet-paallekain validointivirheet-ryhmittain)
+        sulje-fn #(swap! paallystys-tiedot/validointivirheet-modal assoc :nakyvissa? false)]
+    [modal/modal {:otsikko "Ongelma kohteiden tallennuksessa"
+                  :nakyvissa? (:nakyvissa? modal-data)
+                  :sulje-fn sulje-fn
+                  :footer [napit/sulje sulje-fn]}
+     [:div
+      (when (not (empty? kohteet-paallekain-virheet))
+        [validointivirhe-kohteet-pallekkain kohteet-paallekain-virheet])]]))
 
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]
@@ -87,6 +91,8 @@
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
          [valinnat/tienumero yllapito-tiedot/tienumero]
 
+         [validointivirheet-modal @paallystys-tiedot/validointivirheet-modal]
+
          [yllapitokohteet-view/yllapitokohteet
           ur
           paallystys-tiedot/yhan-paallystyskohteet
@@ -98,7 +104,7 @@
              #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
              :paallystys
              #(reset! paallystys-tiedot/yllapitokohteet %)
-             validointivirheet-modal)
+             #(reset! paallystys-tiedot/validointivirheet-modal (assoc % :nakyvissa? true)))
            :kun-onnistuu (fn [_]
                            (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
@@ -113,7 +119,7 @@
              #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
              :paikkaus
              #(reset! paallystys-tiedot/yllapitokohteet %)
-             validointivirheet-modal)}]
+             #(constantly nil))}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
 
          [muut-kustannukset-view/muut-kustannukset ur]
 

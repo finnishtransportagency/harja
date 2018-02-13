@@ -47,7 +47,7 @@
            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id ur))
            :paikkaus
            #(reset! paikkaus/paikkauskohteet %)
-           (contantly nil)) ;; Paikkauskohteissa ei ole validointeja palvelinpäässä
+           (constantly nil)) ;; Paikkauskohteissa ei ole validointeja palvelinpäässä
          :kun-onnistuu (fn [_]
                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
 
