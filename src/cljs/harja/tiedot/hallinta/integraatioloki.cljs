@@ -45,6 +45,8 @@
 (defonce valittu-aikavali (atom nil))
 (defonce hakuehdot (atom {:tapahtumien-tila :kaikki}))
 (defonce nayta-uusimmat-tilassa? (atom true))
+;; Kun seurataan ulkoista integraatiolokiin linkkaavaa urlia - näitä lokitetaan ja linkin voi avata suoraan slackista
+(defonce tapahtuma-id (atom nil))
 
 (defn eilen-tanaan-aikavali []
   [(pvm/aikana (time/yesterday) 0 0 0 0)

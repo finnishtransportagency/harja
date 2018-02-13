@@ -182,8 +182,8 @@
                  :class "livi-alasveto-250 inline-block"
                  :valinta (first (filter (fn [suunniteltu-tyo]
                                            (assert (pvm/valissa? tp-pvm (:alkupvm suunniteltu-tyo) (:loppupvm suunniteltu-tyo)))
-                                           (and (= (::tyo/toimenpidekoodi-id tyorivi)
-                                                   (:tehtava suunniteltu-tyo))))
+                                           (= (::tyo/toimenpidekoodi-id tyorivi)
+                                              (:tehtava suunniteltu-tyo)))
                                          tyovalinnat-toimenpiteen-ajalle))
                  :disabled false}
                 tyovalinnat-toimenpiteen-ajalle]]
