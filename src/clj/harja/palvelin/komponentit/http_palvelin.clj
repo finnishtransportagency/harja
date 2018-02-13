@@ -328,7 +328,7 @@
                                csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
                                _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
                                ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
-                                                  (wrap-anti-forgery db
+                                                  #_(wrap-anti-forgery db
                                                                      oam-kayttajanimi
                                                                      random-avain
                                                                      csrf-token
