@@ -33,33 +33,36 @@
                          :tyomenetelma "massapintaus"
                          :massatyyppi "asfalttibetoni"
                          :tunniste {:id 123}}
-        odotettu {:harja.domain.paikkaus/alkuaika #inst"2018-01-30T12:00:00.000-00:00"
-                  :harja.domain.paikkaus/tyomenetelma "massapintaus"
-                  :harja.domain.paikkaus/materiaalit [{:harja.domain.paikkaus/kuulamylly-arvo "testi"
-                                                       :harja.domain.paikkaus/muotoarvo "testi"
-                                                       :harja.domain.paikkaus/sideainetyyppi "20/30"
-                                                       :harja.domain.paikkaus/pitoisuus 1.2M
-                                                       :harja.domain.paikkaus/esiintyma "testi"
-                                                       :harja.domain.paikkaus/lisa-aineet "lisäaineet"}]
-                  :harja.domain.paikkaus/raekoko 1
-                  :harja.domain.paikkaus/ulkoinen-id 123
-                  :harja.domain.paikkaus/leveys 10M
-                  :harja.domain.paikkaus/urakka-id 666
-                  :harja.domain.paikkaus/tierekisteriosoite {:harja.domain.tierekisteri/tie 20
-                                                             :harja.domain.tierekisteri/aet 1
-                                                             :harja.domain.tierekisteri/let 16
-                                                             :harja.domain.tierekisteri/aosa 1
-                                                             :harja.domain.tierekisteri/losa 5}
-                  :harja.domain.paikkaus/massatyyppi "asfalttibetoni"
-                  :harja.domain.paikkaus/tienkohdat [{:harja.domain.paikkaus/ajourat [2 3]
-                                                      :harja.domain.paikkaus/reunat [1]
-                                                      :harja.domain.paikkaus/ajorata 1
-                                                      :harja.domain.paikkaus/keskisaumat []
-                                                      :harja.domain.paikkaus/ajouravalit [5 7]}]
+        odotettu {:harja.domain.paikkaus/alkuaika #inst "2018-01-30T12:00:00.000-00:00"
                   :harja.domain.paikkaus/kuulamylly "AN5"
+                  :harja.domain.paikkaus/leveys 10M
+                  :harja.domain.paikkaus/loppuaika #inst "2018-01-30T18:00:00.000-00:00"
+                  :harja.domain.paikkaus/massamenekki 12
+                  :harja.domain.paikkaus/massatyyppi "asfalttibetoni"
+                  :harja.domain.paikkaus/materiaalit [{:harja.domain.paikkaus/esiintyma "testi"
+                                                       :harja.domain.paikkaus/kuulamylly-arvo "testi"
+                                                       :harja.domain.paikkaus/lisa-aineet "lisäaineet"
+                                                       :harja.domain.paikkaus/muotoarvo "testi"
+                                                       :harja.domain.paikkaus/pitoisuus 1.2M
+                                                       :harja.domain.paikkaus/sideainetyyppi "20/30"}]
                   :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/nimi "Kuusamontien paikkaus"
                                                         :harja.domain.paikkaus/ulkoinen-id 567}
-                  :harja.domain.paikkaus/loppuaika #inst"2018-01-30T18:00:00.000-00:00"
-                  :harja.domain.paikkaus/massamenekki 12}]
+                  :harja.domain.paikkaus/raekoko 1
+                  :harja.domain.paikkaus/tienkohdat [{:harja.domain.paikkaus/ajorata 1
+                                                      :harja.domain.paikkaus/ajourat [2
+                                                                                      3]
+                                                      :harja.domain.paikkaus/ajouravalit [5
+                                                                                          7]
+                                                      :harja.domain.paikkaus/keskisaumat [1
+                                                                                          1]
+                                                      :harja.domain.paikkaus/reunat [1]}]
+                  :harja.domain.paikkaus/tierekisteriosoite {:harja.domain.tierekisteri/aet 1
+                                                             :harja.domain.tierekisteri/aosa 1
+                                                             :harja.domain.tierekisteri/let 16
+                                                             :harja.domain.tierekisteri/losa 5
+                                                             :harja.domain.tierekisteri/tie 20}
+                  :harja.domain.paikkaus/tyomenetelma "massapintaus"
+                  :harja.domain.paikkaus/ulkoinen-id 123
+                  :harja.domain.paikkaus/urakka-id 666}]
 
     (is (= odotettu (paikkaustoteumasanoma/api->domain 666 paikkaustoteuma)))))
