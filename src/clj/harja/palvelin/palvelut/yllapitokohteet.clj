@@ -230,8 +230,8 @@
                                          ;; Asiakkaan pyynnöstä toteutettu niin, että maili lähtee vain jos
                                          ;; loppupvm on nykypäivä tai mennyt aika. Tulevaisuuteen suunniteltu
                                          ;; loppupvm ei generoi maililähetystä (ajastettu taski käsittelee ne myöhemmin).
-                                         (pvm/joda-timeksi (pvm/nyt))
-                                         (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
+                                         (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi (pvm/nyt)))
+                                         (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %))))
                                       valmistuneet-kohteet)]
 
       (doseq [kohde kohteet]
