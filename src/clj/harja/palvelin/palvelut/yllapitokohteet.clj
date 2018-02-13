@@ -514,7 +514,7 @@
                                      :kohteet [(select-keys tallennettava-kohde [:kohdenumero :nimi :urakka
                                                                                  :tr-numero :tr-alkuosa :tr-alkuetaisyys
                                                                                  :tr-loppuosa :tr-loppuetaisyys])
-                                               (select-keys verrattava-kohde [:kohdenumero :nimi :urakka-nimi
+                                               (select-keys verrattava-kohde [:kohdenumero :nimi :urakka
                                                                               :tr-numero :tr-alkuosa :tr-alkuetaisyys
                                                                               :tr-loppuosa :tr-loppuetaisyys])]}))
                                 saman-vuoden-kohteet))]
@@ -547,7 +547,7 @@
               {:status :ok
                :yllapitokohteet yllapitokohteet}))
         {:status :validointiongelma
-         :virheet validointivirheet}))))
+         :validointivirheet validointivirheet}))))
 
 (defn hae-yllapitokohteen-urakan-yhteyshenkilot [db fim user {:keys [yllapitokohde-id urakkatyyppi]}]
   (if (or (oikeudet/voi-lukea? oikeudet/tilannekuva-nykytilanne nil user)

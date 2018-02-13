@@ -178,7 +178,7 @@
              (zipmap (iterate inc (+ 2 (count avaimet-ennen)))
                      (map #(get kohdeosat %) (rest avaimet-jalkeen)))))))
 
-(defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn]
+(defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn epaonnistui-fn]
   (when (oikeustarkistus-fn)
     (fn [kohteet]
       (go (let [urakka-id (:id @nav/valittu-urakka)
@@ -197,8 +197,7 @@
                       (viesti/nayta! "Tallennus onnistui. Tarkista myös muokkaamiesi tieosoitteiden alikohteet."
                                      :success viesti/viestin-nayttoaika-keskipitka)
                       (onnistui-fn (:yllapitokohteet vastaus)))
-                    (log "VIRHEVASTAUS HAVAITTU!!") ;; TODO Näytä tiedot dialogissa
-                    ))))))))
+                    (epaonnistui-fn vastaus)))))))))
 
 (defn yllapitokohteet-kartalle
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.

@@ -921,8 +921,7 @@ INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
 -- name: hae-yhden-vuoden-yha-kohteet
 SELECT
   ypk.id,
-  u.id             AS "urakka-id",
-  u.nimi           AS "urakka-nimi",
+  u.nimi           AS "urakka",
   ypk.nimi,
   kohdenumero,
   tr_numero        AS "tr-numero",
