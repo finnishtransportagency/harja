@@ -32,7 +32,8 @@ jobs:
 
       - run:
           name: Build Harja jar
-          command: lein do compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
+          # command: lein do compile, cljsbuild once prod, less once, uberjar # järkeilty
+          command: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar # kopioitu traviksesta
 
       - run:
           name: Configure build
