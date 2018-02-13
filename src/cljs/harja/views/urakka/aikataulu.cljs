@@ -162,7 +162,7 @@
       [vihje-elementti
        [:span
         [:span
-         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Tulevaisuudessa valmistuvista kohteista lähetetään sähköposti valmistumispäivänä."]
+         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään valmistumispäivänä."]
          (if muutos-taulukosta?
            [:span.bold (str " Tämän kohteen sähköposti lähetetään "
                             (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
