@@ -51,7 +51,7 @@
 
 (defn- validointivirhe-kohteet-pallekkain [kohteet-paallekain-virheet]
   [:div
-   [:p "Seuraavat saman vuoden kohteet menevät päällekäin:"]
+   [:p "Seuraavat saman vuoden kohteet menevät päällekkäin:"]
    (for* [virhe kohteet-paallekain-virheet]
      (let [kohteet (:kohteet virhe)
            kohde1 (first kohteet)
