@@ -28,7 +28,7 @@
                    ::paikkaus/ajourat (mapv :ajoura (:ajourat tienkohdat))
                    ::paikkaus/ajouravalit (mapv :ajouravali (:ajouravalit tienkohdat))
                    ::paikkaus/reunat (mapv :reuna (:reunat tienkohdat))
-                   ::paikkaus/keskisaumat (mapv :keskisauma (:keskisauamt tienkohdat))))
+                   ::paikkaus/keskisaumat (mapv :keskisauma (:keskisaumat tienkohdat))))
        ajoradat))
 
 (defn api->domain [urakka-id {:keys [paikkauskohde
