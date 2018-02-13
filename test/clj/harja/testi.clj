@@ -21,8 +21,7 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
-    ;[clj-gatling.core :as gatling]
-    )
+    [clj-gatling.core :as gatling])
   (:import (java.util Locale))
   (:import (org.postgresql.util PSQLException)))
 
@@ -1090,13 +1089,13 @@
       (#'pdf-vienti/hiccup->pdf ff fo out)
       (.toByteArray out))))
 
-#_(defn- gatling-kutsu [kutsu]
+(defn- gatling-kutsu [kutsu]
   (go (let [tulos (<! (go (log/with-level :warn (kutsu))))]
         (if (and (some? tulos) (not-empty tulos))
           true
           false))))
 
-#_(defn gatling-onnistuu-ajassa?
+(defn gatling-onnistuu-ajassa?
   "Ajaa nimetyn gatling-simulaation, ja kertoo, valmistuivatko skenaariot aikarajan sisällä.
 
   Kiinnostavat optiot ovat:
