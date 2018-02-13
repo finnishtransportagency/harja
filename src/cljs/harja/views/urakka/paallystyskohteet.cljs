@@ -70,6 +70,7 @@
         kohteet-paallekain-virheet (:kohteet-paallekain validointivirheet-ryhmittain)
         sulje-fn #(swap! paallystys-tiedot/validointivirheet-modal assoc :nakyvissa? false)]
     [modal/modal {:otsikko "Kohteiden tallennus epäonnistui!"
+                  :otsikko-tyyli :virhe
                   :nakyvissa? (:nakyvissa? modal-data)
                   :sulje-fn sulje-fn
                   :footer [napit/sulje sulje-fn]}
