@@ -104,7 +104,7 @@
     (is (tg/paivitys-tarvitaan? db 10) "Päivitys tarvitaan, kun sitä ei ole koskaan tehty")
 
     (u "UPDATE geometriapaivitys SET viimeisin_paivitys = now() - interval '10' day WHERE nimi = 'turvalaitteet';")
-    (is (tg/paivitys-tarvitaan? db 10) "Päivitys tarvitaan, kun se on viimeksi tehty tarpeeksi kauan sitten") ;
+    (is (tg/paivitys-tarvitaan? db 9) "Päivitys tarvitaan, kun se on viimeksi tehty tarpeeksi kauan sitten") ;
 
     (u "UPDATE geometriapaivitys SET viimeisin_paivitys = now() - interval '1' day WHERE nimi = 'turvalaitteet';")
     (is (false? (tg/paivitys-tarvitaan? db 10)) "Päivitystä ei tarvita, kun se on tehty tarpeeksi vasta")))
