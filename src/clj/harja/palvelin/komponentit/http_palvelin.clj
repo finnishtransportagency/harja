@@ -319,6 +319,7 @@
                            @pudota-yhteyksia-randomisti?
                            (= (:request-method req) :post)
                            (= (rand-int 3) 0))
+                       {:status 503 :body ""}
                        (try+
                          (metriikka/inc! mittarit :aktiiviset_pyynnot)
                          (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
