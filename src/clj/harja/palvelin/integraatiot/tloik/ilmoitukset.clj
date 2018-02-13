@@ -89,11 +89,11 @@
         integraatio-log-url (str url "#hallinta/integraatioloki?tapahtuma-id=" tapahtuma-id
                                  "&alkanut=" (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
                                  "&valittu-jarjestelma=tloik&valittu-integraatio=ilmoituksen-kirjaus")]
-    (log/warn {:fields [{:title "Linkki"
-                         :value (str "<" integraatio-log-url "|Harja integraatioloki>")}]
-               :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
-                                  "Ilmoituksella, jonka viesti id on " viesti-id "|||"
-                                  "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
+    (log/error {:fields [{:title "Linkki"
+                          :value (str "<" integraatio-log-url "|Harja integraatioloki>")}]
+                :tekstikentta (str "Ilmoitukset ovat hitaita! :snail: :envelope:|||"
+                                   "Ilmoituksella, jonka viesti id on " viesti-id "|||"
+                                   "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
 
 (defn- kasittele-ilmoituksessa-kulunut-aika
   [{:keys [ilmoitettu vastaanotettu viesti-id tapahtuma-id kehitysmoodi?]}]
