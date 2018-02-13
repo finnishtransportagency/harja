@@ -12,8 +12,7 @@
             [clojure.string :as str]
             [cljs-time.core :as time]
             [goog.string :as gstr]
-            [harja.tyokalut.local-storage :as local-storage]
-            [harja-laadunseuranta.utils :as utils])
+            [harja.tyokalut.local-storage :as local-storage])
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defonce ^{:doc
@@ -26,6 +25,14 @@
     nil))
 
 (def sailyta-max-katkosta 1000)
+
+(defn kehitysymparistossa? []
+  "Tarkistaa ollaanko kehitysympäristössä"
+  (let [host (.-host js/location)]
+    (or (gstr/startsWith host "10.10.")
+        (#{"localhost" "localhost:3000" "localhost:8000" "192.168.43.22:8000"
+           "harja-test.solitaservices.fi"
+           "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"} host))))
 
 (defn- tallenna-yhteyskatkos! [palvelu]
   (when (< (count @yhteyskatkokset) sailyta-max-katkosta)
@@ -345,7 +352,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
   (->
-    (if (utils/kehitysymparistossa?)
+    (if (kehitysymparistossa?)
       "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
       "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku")
     (str/replace "<pvm>" (pvm/pvm alkupvm))
