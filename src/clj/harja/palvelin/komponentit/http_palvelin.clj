@@ -318,7 +318,7 @@
                      (if (and
                            @pudota-yhteyksia-randomisti?
                            (= (:request-method req) :post)
-                           (= (rand-int 3) 0))
+                           (= (rand-int 2) 0))
                        {:status 503 :body ""}
                        (try+
                          (metriikka/inc! mittarit :aktiiviset_pyynnot)
