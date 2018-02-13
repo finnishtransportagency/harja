@@ -330,7 +330,9 @@
                 (nil? nykyinen-tiemerkintapvm))))
 
 (defn valita-tieto-tiemerkinnan-valmistumisesta
-  "Välittää tiedon annettujen kohteiden tiemerkinnän valmistumisesta."
+  "Välittää tiedon annettujen kohteiden tiemerkinnän valmistumisesta.
+
+   Kun käsittely on valmis, poistaa annettujen kohteiden odottavat sähköpostitiedot."
   [{:keys [db kayttaja fim email valmistuneet-kohteet viestit-lahetetty-fn]}]
   (laheta-sposti-tiemerkinta-valmis {:fim fim :email email
                                      :kohteiden-tiedot valmistuneet-kohteet
