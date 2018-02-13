@@ -744,6 +744,7 @@ WHERE ypk.id IN (:idt);
 SELECT
   ypk.id                 AS id
 FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
 
