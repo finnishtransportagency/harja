@@ -51,7 +51,7 @@ INSERT INTO paikkaustoteuma ("luoja-id",
   1,
   '2');
 
-INSERT INTO paikkauksen_materiaalit ("paikkaustoteuma-id",
+INSERT INTO paikkauksen_materiaali ("paikkaustoteuma-id",
                                      esiintyma,
                                      "kuulamylly-arvo",
                                      muotoarvo,

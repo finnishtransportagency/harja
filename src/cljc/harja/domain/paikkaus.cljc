@@ -33,7 +33,7 @@
                                        ::paikkauksen-materiaalit
                                        ::paikkaustoteuma-id)}]
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
-  ["paikkauksen_materiaalit" ::paikkauksen-materiaalit])
+  ["paikkauksen_materiaali" ::paikkauksen-materiaalit])
 
 (def paikkauskohteen-perustiedot
   #{::id

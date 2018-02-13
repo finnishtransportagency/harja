@@ -10,23 +10,13 @@
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as paikkaustoteumasanoma]
-            [harja.kyselyt.api-tyojono :as tyojono-q]
             [harja.kyselyt.paikkaus :as paikkaus-q]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [taoensso.timbre :as log]
-            [cheshire.core :as cheshire]
-            [clojure.walk :as walk])
+            [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defprotocol PaikkausAPI
-  (kirjaa-paikkaustoteuma [this tyojono-id]))
-
-(defn tallenna-paikkaustoteuma [db toteumat]
-  (def uusimmat-paikkaustoteumat (:paikkaustoteumat toteumat))
-  (let [urakka-id (:urakka-id toteumat)
-        kayttaja-id (:luoja-id toteumat)
-        paikkaustoteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkaustoteuma %)) (:paikkaustoteumat toteumat))]
+(defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id toteumat]
+  (let [paikkaustoteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkaustoteuma %))
+                              (:paikkaustoteumat toteumat))]
     (doseq [paikkaustoteuma paikkaustoteumat]
       (paikkaus-q/tallenna-paikkaustoteuma db kayttaja-id paikkaustoteuma))))
 
@@ -34,10 +24,9 @@
   (log/debug (format "Kirjataan uusia paikkaustoteumia: %s kpl urakalle: %s käyttäjän: %s toimesta"
                      (count (:paikkaustoteumat data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
-        luoja-id (:id kayttaja)]
+        kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (tyojono-q/lisaa-tyojonoon<! db {:tapahtuman_nimi "uusi-paikkaustoteuma"
-                                     :sisalto (cheshire/encode (assoc data :urakka-id urakka-id :luoja-id luoja-id))}))
+    (tallenna-paikkaustoteuma db urakka-id kayttaja-id data))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
 (defrecord Paikkaukset []
@@ -59,8 +48,4 @@
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :kirjaa-paikkaus)
-    this)
-
-  PaikkausAPI
-  (kirjaa-paikkaustoteuma [{db :db} tyojono-id]
-    (tallenna-paikkaustoteuma db (walk/keywordize-keys (cheshire/decode (tyojono-q/hae-tapahtuman-sisalto db tyojono-id))))))
+    this))
