@@ -362,7 +362,7 @@
                                                                 (map #(-> {:sahkoposti %})
                                                                      (set (mapcat (fn [jana] (get-in jana [::aikajana/sahkopostitiedot :muut-vastaanottajat]))
                                                                                   tiemerkinnan-valmistumiset))))
-                                   :saate (str/join ". " (map #(get-in % [::aikajana/sahkopostitiedot :saate])
+                                   :saate (str/join " " (map #(get-in % [::aikajana/sahkopostitiedot :saate])
                                                               tiemerkinnan-valmistumiset))}})
              ;; Ei muokattujen tiemerkintöjen valmistumisia, tallenna suoraan
              (valmis!))))
