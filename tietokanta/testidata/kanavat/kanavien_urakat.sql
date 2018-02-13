@@ -17,7 +17,7 @@ VALUES
      FROM hanke
      WHERE nimi = 'Saimaan huolto- ja kunnossapito'),
     'vesivayla-kanavien-hoito',
-    TRUE, NOW(), (SELECT id
+    FALSE, NOW(), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'tero'),
    '089123', 'kanava-HAR-123');
@@ -58,7 +58,7 @@ VALUES
      FROM hanke
      WHERE nimi = 'Joensuun huolto- ja kunnossapito'),
     'vesivayla-kanavien-hoito',
-    TRUE, NOW(), (SELECT id
+    FALSE, NOW(), (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'tero'),
    '089123', 'kanava-HAR-124');

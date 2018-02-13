@@ -8,7 +8,8 @@
 
 (defn- rivin-vaihto
   [teksti]
-  (str/replace teksti #"\|\|\|" "\n"))
+  (when teksti
+    (str/replace teksti #"\|\|\|" "\n")))
 
 
 (defn laheta [webhook-url level msg]
@@ -31,10 +32,10 @@
                     :mrkdwn_in ["fields"]}
         tekstikentta {:text (rivin-vaihto (:tekstikentta msg))}
         liitteet {:username kone
-                :attachments
-                [(if (map? msg)
-                   (assoc attachment :text (:text msg))
-                   attachment)]}
+                  :attachments
+                  [(if (map? msg)
+                     (assoc attachment :text (:text msg))
+                     attachment)]}
         viesti (merge liitteet tekstikentta)]
     (http/post
      webhook-url
