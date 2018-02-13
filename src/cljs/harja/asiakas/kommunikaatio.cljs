@@ -334,16 +334,6 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       transit/clj->transit
       gstr/urlEncode))
 
-(defn varustekortti-url [alkupvm tietolaji tunniste]
-  (->
-    (if (utils/kehitysymparistossa?)
-      "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
-      "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku")
-    (str/replace "<pvm>" (pvm/pvm alkupvm))
-    (str/replace "<tietolaji>" tietolaji)
-    (str/replace "<tunniste>" tunniste)))
-
-
 (defn kehitysymparistossa? []
   "Tarkistaa ollaanko kehitysympäristössä"
   (let [host (.-host js/location)]
@@ -352,3 +342,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
            "harja-test.solitaservices.fi"
            "harja-dev1" "harja-dev2" "harja-dev3" "harja-dev4" "harja-dev5" "harja-dev6"
            "testiextranet.liikennevirasto.fi"} host))))
+
+(defn varustekortti-url [alkupvm tietolaji tunniste]
+  (->
+    (if (utils/kehitysymparistossa?)
+      "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+      "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku")
+    (str/replace "<pvm>" (pvm/pvm alkupvm))
+    (str/replace "<tietolaji>" tietolaji)
+    (str/replace "<tunniste>" tunniste)))
