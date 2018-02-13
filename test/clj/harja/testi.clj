@@ -20,8 +20,7 @@
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
-    [harja.pvm :as pvm]
-    [clj-gatling.core :as gatling])
+    [harja.pvm :as pvm])
   (:import (java.util Locale))
   (:import (org.postgresql.util PSQLException)))
 
@@ -1088,63 +1087,3 @@
     (with-open [out (java.io.ByteArrayOutputStream.)]
       (#'pdf-vienti/hiccup->pdf ff fo out)
       (.toByteArray out))))
-
-(defn- gatling-kutsu [kutsu]
-  (go (let [tulos (<! (go (log/with-level :warn (kutsu))))]
-        (if (and (some? tulos) (not-empty tulos))
-          true
-          false))))
-
-(defn gatling-onnistuu-ajassa?
-  "Ajaa nimetyn gatling-simulaation, ja kertoo, valmistuivatko skenaariot aikarajan sisällä.
-
-  Kiinnostavat optiot ovat:
-  - :timeout-in-ms  Kuinka pitkään jokainen pyyntö saa maksimissaan kestää.
-  - :concurrency    Montako kyselyä ajetaan rinnakkain. Oletuksena skenaarioiden lukumäärä.
-                    Käytännössä, jos kyselyn voi ajaa samoilla parametreilla monta kertaa,
-                    anna tämä luku. Jos joudut antamaan monta kyselyä eri parametreilla,
-                    tätä ei ole tarpeen antaa.
-  - :aja-raportti?  Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
-
-  Kutsuja voi antaa niin monta kuin haluaa. Jos kutsuja antaa monta, ne ajetaan rinnakkain.
-
-  Esim:
-  (is (gatling-onnistuu-ajassa?
-        \"Hae jutut\"
-        {:concurrency 10
-        :timeout-in-ms 100}
-        #(kutsu-palvelua :hae-jutut +jvh+ {:id 1})))"
-  [simulaation-nimi {:keys [aja-raportti?] :as opts} & kutsut]
-  ;; Tämä toteutus ohjaa tarkoituksella käyttöä tiettyyn suuntaan.
-  ;; Jos tarvitaan hienojakoisempaa toiminnallisuutta, esim monivaiheisia skenaarioita,
-  ;; joita ajetaan eri painoarvoilla, niin parempi kutsua gatlingia suoraan, tapauskohtaisesti.
-  (let [simulaatio {:name simulaation-nimi
-                    :scenarios
-                    (keep-indexed
-                      (fn [i kutsu]
-                        {:name (str "Skenaario #" i)
-                         :steps [{:name "Askel 1"
-                                  :request (fn [ctx]
-                                             ;; Ei tunnu toimivan lokitason laskeminen. Johtuukoha
-                                             ;; async-koodista vai mistä.
-                                             (log/with-level
-                                               :warn
-                                               (gatling-kutsu kutsu)))}]})
-                      kutsut)}
-        yhteenveto
-        (gatling/run
-          simulaatio
-          (merge
-            {:timeout-in-ms 10
-             :concurrency (count kutsut)
-             :requests (count kutsut)}
-            (when (and (false? aja-raportti?)
-                       (false? (ollaanko-jenkinsissa?)))
-              ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
-              ;; eli luodaan oma raportteri, joka ei tee mitään
-              {:reporter {:writer (fn [_ _ _])
-                          :generator (fn [simulation]
-                                       (println "Ran" simulation "without report"))}})
-            opts))]
-    (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
-    (= 0 (:ko yhteenveto))))
