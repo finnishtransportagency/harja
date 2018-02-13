@@ -9,42 +9,54 @@
             
             [harja.domain.kanavat.kohdekokonaisuus :as kok]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.urakka :as ur]))
 
 
 (defn hae-kohdekokonaisuudet-ja-kohteet [db user]
-  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-kanavat user)
   (q/hae-kokonaisuudet-ja-kohteet db user))
 
 (defn hae-urakan-kohteet [db user tiedot]
   (let [urakka-id (::ur/id tiedot)]
     (assert urakka-id "Ei voida hakea urakan kohteita, urakka-id puuttuu")
-    ;; TODO Tämä on vähän hassu oikeustarkastus, koska pitää vaan varmistaa, että käyttäjällä
-    ;; on oikeus nähdä, mitkä kohteet kuuluvat kyseiseen urakkaan. Tälle ei vaan ole suoraa omaa oikeutta
-    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kanavakohteet user)
     (q/hae-urakan-kohteet db user urakka-id)))
 
-(defn lisaa-kohdekokonaisuudelle-kohteita [db user kohteet]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-  (q/lisaa-kokonaisuudelle-kohteet! db user kohteet)
+(defn liita-kohteet-urakkaan! [db user {:keys [liitokset] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
+  (doseq [linkki (keys liitokset)]
+    (let [[kohde-id urakka-id] linkki
+          linkitetty? (get liitokset linkki)]
+      (q/liita-kohde-urakkaan! db user kohde-id urakka-id (not linkitetty?))))
   (hae-kohdekokonaisuudet-ja-kohteet db user))
 
-(defn liita-kohde-urakkaan! [db user {:keys [kohde-id urakka-id poistettu?]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-  (q/liita-kohde-urakkaan! db user kohde-id urakka-id poistettu?))
-
 (defn poista-kohde! [db user {:keys [kohde-id]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
   (jdbc/with-db-transaction [db db]
                             (let [kohteella-urakoita? (not (empty? (q/hae-kohteen-urakat db kohde-id)))]
                               (if kohteella-urakoita?
                                 {:virhe :kohteella-on-urakoita}
                                 (q/merkitse-kohde-poistetuksi! db user kohde-id)))))
 
-(defn hae-huoltokohteet [db user]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-kokonaishintaiset user)
+(defn hae-huoltokohteet [db _]
+  (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (q/hae-huoltokohteet db))
+
+(defn tallenna-kohdekokonaisuudet [db user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
+  (q/tallenna-kohdekokonaisuudet! db user tiedot)
+  (hae-kohdekokonaisuudet-ja-kohteet db user))
+
+(defn hae-kohteenosat [db user]
+  (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-kanavat user)
+  (q/hae-kohteenosat db))
+
+(defn tallenna-kohde! [db user tiedot]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-kanavat user)
+  (q/tallenna-kohde! db user tiedot)
+  (hae-kohdekokonaisuudet-ja-kohteet db user))
 
 (defrecord Kohteet []
   component/Lifecycle
@@ -65,29 +77,36 @@
        :vastaus-spec ::kok/hae-urakan-kohteet-vastaus})
     (julkaise-palvelu
       http
-      :lisaa-kohdekokonaisuudelle-kohteita
-      (fn [user kohteet]
-        (lisaa-kohdekokonaisuudelle-kohteita db user kohteet))
-      {:kysely-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-kysely
-       :vastaus-spec ::kok/lisaa-kohdekokonaisuudelle-kohteita-vastaus})
+      :tallenna-kohdekokonaisuudet
+      (fn [user kokonaisuudet]
+        (tallenna-kohdekokonaisuudet db user kokonaisuudet))
+      {:kysely-spec ::kok/tallenna-kohdekokonaisuudet-kysely
+       :vastaus-spec ::kok/tallenna-kohdekokonaisuudet-vastaus})
     (julkaise-palvelu
       http
-      :liita-kohde-urakkaan
-      (fn [user tiedot]
-        (liita-kohde-urakkaan! db user tiedot))
-      {:kysely-spec ::kok/liita-kohde-urakkaan-kysely})
+      :tallenna-kohde
+      (fn [user kokonaisuudet]
+        (tallenna-kohde! db user kokonaisuudet))
+      {:kysely-spec ::kohde/tallenna-kohde-kysely
+       :vastaus-spec ::kohde/tallenna-kohde-vastaus})
     (julkaise-palvelu
       http
-      :poista-kohde
+      :liita-kohteet-urakkaan
       (fn [user tiedot]
-        (poista-kohde! db user tiedot))
-      {:kysely-spec ::kok/poista-kohde-kysely})
+        (liita-kohteet-urakkaan! db user tiedot))
+      {:vastaus-spec ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus})
     (julkaise-palvelu
       http
       :hae-kanavien-huoltokohteet
       (fn [user]
         (hae-huoltokohteet db user))
-      {:vastaus-spec ::huoltokohde/hae-huoltokohteet-kysely})
+      {:vastaus-spec ::huoltokohde/hae-huoltokohteet-vastaus})
+    (julkaise-palvelu
+      http
+      :hae-kohteenosat
+      (fn [user]
+        (hae-kohteenosat db user))
+      {:vastaus-spec ::kohteenosa/hae-kohteenosat-vastaus})
 
     this)
 
@@ -97,7 +116,7 @@
       :hae-kohdekokonaisuudet-ja-kohteet
       :hae-urakan-kohteet
       :lisaa-kohdekokonaisuudelle-kohteita
-      :liita-kohde-urakkaan
+      :liita-kohteet-urakkaan
       :poista-kohde
       :hae-kanavien-huoltokohteet)
     this))

@@ -2,7 +2,7 @@
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
             [ajax.core :refer [ajax-request transit-request-format transit-response-format] :as ajax]
-            [cljs.core.async :refer [put! close! chan timeout]]
+            [cljs.core.async :refer [<! >! put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
             [cognitect.transit :as t]
@@ -51,10 +51,10 @@
   "Yrittää löytää CSRF-tokenin DOMista niin kauan, että se löytyy."
   []
   (go-loop [token (get-csrf-token)]
-           (if token
-             token
-             (do (<! (timeout 100))
-                 (recur (get-csrf-token))))))
+    (if token
+      token
+      (do (<! (timeout 100))
+          (recur (get-csrf-token))))))
 
 (defn virhe?
   "Tarkastaa onko vastaus tyhjä, sisältääkö se :failure, :virhe, tai :error avaimen, tai on EiOikeutta viesti"
@@ -84,22 +84,62 @@
 
 (declare kasittele-istunto-vanhentunut)
 
+(defn extranet-virhe? [vastaus]
+  (= 0 (:status vastaus)))
+
 (defn- kysely [palvelu metodi parametrit
-               {:keys [transducer chan] :as opts}]
-  (let [vastauskasittelija (fn [[_ vastaus]]
-                             (when (some? vastaus)
-                               (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                                   (close! chan))
-                               (close! chan)))]
+               {:keys [transducer paasta-virhe-lapi? chan yritysten-maara uudelleenyritys-timeout] :as opts}]
+  (let [cb (fn [[_ vastaus]]
+             (when (some? vastaus)
+               (cond
+                 (= (:status vastaus) 302)
+                 (do (kasittele-istunto-vanhentunut) ; Extranet-kirjautuminen vanhentunut
+                     (close! chan))
+
+                 (= (:status vastaus) 403) ; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
+                 (do (kasittele-istunto-vanhentunut)
+                     (close! chan))
+
+                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
+                 (do (kasittele-palvelinvirhe palvelu vastaus)
+                     (close! chan))
+
+                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
+                 (kysely palvelu metodi parametrit (assoc opts
+                                                     :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
+                                                                        (+ (or yritysten-maara 0) 1))
+                                                     :uudelleenyritys-timeout
+                                                     (let [timeout (:uudelleenyritys-timeout opts)]
+                                                       (+ (or timeout 2000) 2000))))
+
+                 :default
+                 (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
+                     (close! chan)))
+               ;; else
+               (close! chan)))]
     (go
-      (ajax-request {:uri (str (polku) (name palvelu))
-                     :method metodi
-                     :params parametrit
-                     :headers {"X-CSRF-Token" (<! (csrf-token))}
-                     :format (transit-request-format transit/write-optiot)
-                     :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                                :raw true})
-                     :handler vastauskasittelija}))
+      (when uudelleenyritys-timeout
+        (<! (timeout uudelleenyritys-timeout)))
+      (if-let [testipalvelu @testmode]
+        (do
+          (log "Haetaan testivastaus palvelulle: " palvelu)
+          (if-let [testivastaus-ch (testipalvelu palvelu parametrit)]
+            (if-let [testivastaus (<! testivastaus-ch)]
+              (>! chan testivastaus)
+              (close! chan))
+            (close! chan)))
+        (ajax-request {:uri (str (polku) (name palvelu))
+                       :method metodi
+                       :params parametrit
+                       :headers {"X-CSRF-Token" (<! (csrf-token))}
+                       :format (transit-request-format transit/write-optiot)
+                       :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                                  :raw true})
+                       :handler cb
+
+                       :error-handler (fn [[resp error]]
+                                        (tapahtumat/julkaise! (assoc error :aihe :palvelinvirhe))
+                                        (close! chan))})))
     chan))
 
 
@@ -259,32 +299,32 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (lisaa-kuuntelija-selaimen-verkkotilalle)
     (reset! pingaus-kaynnissa? true)
     (go-loop []
-             (when @yhteys-palautui-hetki-sitten
-               (<! (timeout 3000))
-               (reset! yhteys-palautui-hetki-sitten false))
-             (<! (timeout @nykyinen-pingausvali-millisekunteina))
-             (let [pingauskanava (pingaa-palvelinta)
-                   sallittu-viive (timeout 10000)]
-               (alt!
-                 pingauskanava ([vastaus] (when (= vastaus :pong)
-                                            (kasittele-onnistunut-pingaus)))
-                 sallittu-viive ([_] (kasittele-yhteyskatkos :ping nil)))
-               (recur)))))
+      (when @yhteys-palautui-hetki-sitten
+        (<! (timeout 3000))
+        (reset! yhteys-palautui-hetki-sitten false))
+      (<! (timeout @nykyinen-pingausvali-millisekunteina))
+      (let [pingauskanava (pingaa-palvelinta)
+            sallittu-viive (timeout 10000)]
+        (alt!
+          pingauskanava ([vastaus] (when (= vastaus :pong)
+                                     (kasittele-onnistunut-pingaus)))
+          sallittu-viive ([_] (kasittele-yhteyskatkos :ping nil)))
+        (recur)))))
 
 (defn kaynnista-yhteysvirheiden-raportointi []
   (when-not @yhteysvirheiden-lahetys-kaynnissa?
     (log "Käynnistetään yhteysvirheiden lähetys")
     (reset! yhteysvirheiden-lahetys-kaynnissa? true)
     (go-loop []
-             (when-not (empty? @yhteyskatkokset)
-               (log "Lähetetään yhteysvirheet: " (count @yhteyskatkokset) " kpl.")
-               (let [vastaus (<! (post! :raportoi-yhteyskatkos {:yhteyskatkokset @yhteyskatkokset}))]
-                 (if-not (virhe? vastaus)
-                   (do (log "Yhteyskatkostiedot lähetetty!")
-                       (reset! yhteyskatkokset []))
-                   (log "Yhteysvirheitä ei voitu lähettää. Yritetään kohta uudelleen."))))
-             (<! (timeout 10000))
-             (recur))))
+      (when-not (empty? @yhteyskatkokset)
+        (log "Lähetetään yhteysvirheet: " (count @yhteyskatkokset) " kpl.")
+        (let [vastaus (<! (post! :raportoi-yhteyskatkos {:yhteyskatkokset @yhteyskatkokset}))]
+          (if-not (virhe? vastaus)
+            (do (log "Yhteyskatkostiedot lähetetty!")
+                (reset! yhteyskatkokset []))
+            (log "Yhteysvirheitä ei voitu lähettää. Yritetään kohta uudelleen."))))
+      (<! (timeout 10000))
+      (recur))))
 
 (defn url-parametri
   "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
@@ -294,8 +334,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       gstr/urlEncode))
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
-  (->
-    "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+  (-> 
+    "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))

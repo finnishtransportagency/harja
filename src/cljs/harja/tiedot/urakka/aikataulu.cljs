@@ -2,7 +2,7 @@
   "Ylläpidon urakoiden aikataulu"
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log logt tarkkaile!]]
-            [cljs.core.async :refer [<!]]
+            [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
@@ -10,10 +10,12 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.tierekisteri :as tr-domain]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.tyokalut.local-storage :as local-storage])
+            [harja.tyokalut.local-storage :as local-storage]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -25,12 +27,14 @@
 
 (defonce valinnat
   (local-storage/local-storage-atom
-   :aikataulu-valinnat
-   {:nayta-aikajana? true
-    :jarjestys :aika}
-   nil))
+    :aikataulu-valinnat
+    {:nayta-aikajana? true
+     :nayta-tarkka-aikana? false
+     :jarjestys :aika}
+    nil))
 
 (defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
+(defonce nayta-tarkka-aikajana? (r/cursor valinnat [:nayta-tarkka-aikana?]))
 
 (defn toggle-nayta-aikajana! []
   (swap! valinnat update :nayta-aikajana? not))
@@ -47,11 +51,12 @@
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm kopio-itselle? saate
-                                                      urakka-id sopimus-id vuosi]}]
+                                                      urakka-id sopimus-id vuosi muut-vastaanottajat]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
                                                     :kopio-itselle? kopio-itselle?
                                                     :saate saate
+                                                    :muut-vastaanottajat muut-vastaanottajat
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
@@ -65,7 +70,7 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
 
-(def aikataulurivit-suodatettu
+(def aikataulurivit-suodatettu-jarjestetty
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   kohdenumero @yllapito-tiedot/kohdenumero
                   aikataulurivit @aikataulurivit
@@ -78,7 +83,7 @@
                     kohteet
                     (sort-by (case jarjestys
                                :tr tr-domain/tieosoitteen-jarjestys
-                               :kohdenumero :kohdenumero)
+                               :kohdenumero #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)))
                              kohteet)))))))
 
 (defonce tiemerkinnan-suorittavat-urakat
@@ -128,8 +133,8 @@
                                           (pvm/nyt))
             aikataulurivit))
 
-(defn tallenna-yllapitokohteiden-aikataulu
-  [{:keys [urakka-id sopimus-id vuosi kohteet epaonnistui-fn]}]
+(defn- tallenna-yllapitokohteiden-aikataulu
+  [{:keys [urakka-id sopimus-id vuosi kohteet onnistui-fn epaonnistui-fn]}]
   (go
     (let [vastaus (<! (k/post! :tallenna-yllapitokohteiden-aikataulu
                                {:urakka-id urakka-id
@@ -138,4 +143,15 @@
                                 :kohteet kohteet}))]
       (if (k/virhe? vastaus)
         (epaonnistui-fn)
-        (reset! aikataulurivit vastaus)))))
+        (onnistui-fn vastaus)))))
+
+(defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet onnistui-fn]
+  (tallenna-yllapitokohteiden-aikataulu
+    {:urakka-id urakka-id
+     :sopimus-id sopimus-id
+     :vuosi vuosi
+     :kohteet kohteet
+     :onnistui-fn onnistui-fn
+     :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
+                                     :warning
+                                     viesti/viestin-nayttoaika-lyhyt)}))

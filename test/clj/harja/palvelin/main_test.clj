@@ -38,7 +38,7 @@
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :sonja-jms-yhteysvarmistus :tilannekuva
-    :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset
+    :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
@@ -46,6 +46,7 @@
     :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
     :turvalaitteiden-geometriahaku
     :vaylien-geometriahaku
+    :kanavasiltojen-geometriahaku
     :mobiili-laadunseuranta
     :api-urakan-tyotunnit
     :sopimukset
@@ -67,7 +68,9 @@
     :kan-liikennetapahtumat
     :kan-hairio
     :kan-toimenpiteet
-    :api-tieluvat})
+    :api-tieluvat
+    :koordinaatit
+    :tiedostopesula})
 
 (deftest main-komponentit-loytyy
   (let [jarjestelma (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))

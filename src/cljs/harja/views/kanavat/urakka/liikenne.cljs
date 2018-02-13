@@ -31,7 +31,8 @@
             [harja.domain.kanavat.liikennetapahtuma :as lt]
             [harja.domain.kanavat.lt-alus :as lt-alus]
             [harja.domain.kanavat.lt-toiminto :as toiminto]
-            [harja.domain.kanavat.kohde :as kohde])
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kohteenosa :as osa])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -47,7 +48,7 @@
         :tasaa :keskita
         :komponentti (fn [alus]
                        [napit/yleinen-toissijainen
-                        "Kuittaa"
+                        "Siirrä"
                         #(e! (tiedot/->SiirraTapahtumaan alus))
                         {:ikoni (ikonit/livicon-arrow-bottom)}])
         :leveys 1}
@@ -95,7 +96,7 @@
         :leveys 1}]
       kuitattavat]
      [napit/yleinen-toissijainen
-      "Kuittaa kaikki tapahtumaan"
+      "Siirrä kaikki tapahtumaan"
       #(e! (tiedot/->SiirraKaikkiTapahtumaan kuitattavat))
       {:ikoni (ikonit/livicon-arrow-bottom)
        :disabled (empty? kuitattavat)}]]))
@@ -139,19 +140,16 @@
      :leveys 1}
     {:otsikko "Alusten lkm"
      :nimi ::lt-alus/lkm
-     :muokattava? lt-alus/tayta-lukumaara?
      :oletusarvo 1
      :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
      :tyyppi :positiivinen-numero
      :leveys 1}
     {:otsikko "Matkustajia"
      :nimi ::lt-alus/matkustajalkm
-     :muokattava? lt-alus/tayta-matkustajamaara?
      :tyyppi :positiivinen-numero
      :leveys 1}
     {:otsikko "Nippuluku"
      :nimi ::lt-alus/nippulkm
-     :muokattava? lt-alus/tayta-nippuluku?
      :tyyppi :positiivinen-numero
      :leveys 1}]
    (r/wrap
@@ -166,10 +164,10 @@
   (let [uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))]
     [:div
      [debug app]
-     [napit/takaisin "Takaisin" #(e! (tiedot/->ValitseTapahtuma nil))]
+     [napit/takaisin "Takaisin tapahtumaluetteloon" #(e! (tiedot/->ValitseTapahtuma nil))]
      [lomake/lomake
       {:otsikko (if uusi-tapahtuma?
-                  "Luo uusi liikennetapahtuma"
+                  "Liikennetapahtuman kirjaus"
                   "Muokkaa liikennetapahtumaa")
        :muokkaa! #(e! (tiedot/->TapahtumaaMuokattu (lomake/ilman-lomaketietoja %)))
        :voi-muokata? (oikeudet/urakat-kanavat-liikenne)
@@ -248,7 +246,7 @@
           (fn [i osa]
             ^{:key (str "palvelumuoto-" i)}
             (lomake/ryhma
-              {:otsikko (kohde/fmt-kohteenosan-nimi osa)
+              {:otsikko (osa/fmt-kohteenosa osa)
                :rivi? true}
               {:otsikko "Toimenpide"
                :nimi (str i "-toimenpide")
@@ -299,20 +297,21 @@
                       [{:otsikko "Suunta"
                         :nimi :valittu-suunta
                         :tyyppi :radio-group
-                        :pakollinen? true
                         :vaihtoehdot lt/suunta-vaihtoehdot
-                        :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)}]))))]
+                        :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)
+                        :aseta (fn [rivi arvo]
+                                 (:valittu-liikennetapahtuma (e! (tiedot/->AsetaSuunnat arvo))))}]))))]
         (when (tiedot/nayta-edelliset-alukset? app)
           (for* [[suunta tiedot] (dissoc edelliset :tama)]
             (when (tiedot/nayta-suunnan-ketjutukset? app suunta tiedot)
               (lomake/rivi
-                {:otsikko (str "Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) ")")
+                {:otsikko (str "Saapuva liikenne - Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) ")")
                  :tyyppi :komponentti
                  :palstoja 3
                  :nimi :edelliset-alukset
                  :komponentti (fn [_] [edelliset-grid e! app tiedot])}))))
         [(when (tiedot/nayta-liikennegrid? app)
-           {:otsikko "Liikenne "
+           {:otsikko (str "Liikenne - " (get-in valittu-liikennetapahtuma [::lt/kohde ::kohde/nimi]))
             :tyyppi :komponentti
             :palstoja 3
             :nimi :muokattavat-tapahtumat
@@ -324,60 +323,74 @@
       valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! app kohteet]
-  (let [atomi (partial tiedot/valinta-wrap e! app)]
+  (let [kohde-atomi (partial tiedot/valinta-wrap e! app)
+        aluslaji-atomi (partial tiedot/valinta-wrap e! app)
+        toimenpidetyyppi-atomi (partial tiedot/valinta-wrap e! app)
+        aluksen-nimi-atomi (partial tiedot/valinta-wrap e! app)]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
      [valinnat/valintaryhmat-3
-      [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+      [:div
+       [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Aluksen nimi"
+         :kentta-params {:tyyppi :string}
+         :arvo-atom (aluksen-nimi-atomi ::lt-alus/nimi)}]]
 
       [:div
        [valinnat/kanava-kohde
-        (atomi ::lt/kohde)
+        (kohde-atomi ::lt/kohde)
         (into [nil] kohteet)
         #(let [nimi (kohde/fmt-kohteen-nimi %)]
            (if-not (empty? nimi)
              nimi
              "Kaikki"))]
-       #_[kentat/tee-otsikollinen-kentta
-        {:otsikko "Sulun toimenpide"
-         :kentta-params {:tyyppi :valinta
-                         :valinta-nayta #(or (lt/sulku-toimenpide->str %) "Kaikki")
-                         :valinnat (into [nil] lt/sulku-toimenpide-vaihtoehdot)}
-         :arvo-atom (atomi ::toiminto/toimenpide)}]]
-
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Aluslaji"
+         :kentta-params {:tyyppi :checkbox-group
+                         :palstoja 2
+                         :vaihtoehdot lt-alus/aluslajit
+                         :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
+         :arvo-atom (aluslaji-atomi ::lt-alus/aluslajit)}]
+       ]
       [:div
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Suunta"
          :kentta-params {:tyyppi :valinta
                          :valinnat (into [nil] lt/suunta-vaihtoehdot)
                          :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
-         :arvo-atom (atomi ::lt-alus/suunta)}]
-       [valinnat/kanava-aluslaji
-        (atomi ::lt-alus/laji)
-        (into [nil] lt-alus/aluslajit)
-        #(or (lt-alus/aluslaji->koko-str %) "Kaikki")]
+         :arvo-atom (kohde-atomi ::lt-alus/suunta)}]
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Uittoniput?"
-         :kentta-params {:tyyppi :checkbox}
-         :arvo-atom (atomi :niput?)}]]]
+        {:otsikko "Uittoniput"
+         :kentta-params {:tyyppi :checkbox
+                         :teksti "Näytä vain uittoniput"}
+         :arvo-atom (kohde-atomi :niput?)}]
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Toimenpidetyyppi"
+         :kentta-params {:tyyppi :checkbox-group
+                         :vaihtoehdot lt/sulku-toimenpide-vaihtoehdot
+                         :vaihtoehto-nayta lt/sulku-toimenpide->str}
+         :arvo-atom (toimenpidetyyppi-atomi ::toiminto/toimenpiteet)}]]]
      [valinnat/urakkatoiminnot {:urakka @nav/valittu-urakka}
       [napit/uusi
-       "Lisää tapahtuma"
+       "Kirjaa liikennetapahtuma"
        #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]))
 
-(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?] :as app}
+(defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
+                                            liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
   [:div
    [debug app]
    [valinnat e! app kohteet]
    [grid/grid
-    {:otsikko (if liikennetapahtumien-haku-kaynnissa?
+    {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader-pieni "Päivitetään listaa.."]
                 "Liikennetapahtumat")
      :tunniste (juxt ::lt/id ::lt-alus/id)
+     :sivuta grid/vakiosivutus
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
-     :tyhja (if liikennetapahtumien-haku-kaynnissa?
+     :tyhja (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
     [{:otsikko "Aika"

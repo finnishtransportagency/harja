@@ -22,7 +22,7 @@
    :kuva 2})
 
 (def mockattu-tierekisteri
-  {; tarkastus samalla tiellä samaan suuntaan
+  {;; Tarkastus samalla tiellä samaan suuntaan
    [464681.5999816895 7230492.000024414] {:tie 20, :aosa 10, :aet 3921}
    [465321.5999816895 7230676.000024414] {:tie 20, :aosa 10, :aet 4587}
    [465641.5999816895 7230780.000024414] {:tie 20, :aosa 10, :aet 4924}
@@ -33,7 +33,7 @@
    [467545.5999816895 7231332.000024414] {:tie 20, :aosa 11, :aet 6906}
    [467753.5999816895 7231404.000024414] {:tie 20, :aosa 11, :aet 7126}
 
-   ; toinen tarkastus, niin ikään samalla tiellä samaan suuntaan
+   ;; Toinen tarkastus, niin ikään samalla tiellä samaan suuntaan
    [468064.79999084474 7231495.200001526] {:tie 20, :aosa 11, :aet 237}
    [468256.79999084474 7231555.200001526] {:tie 20, :aosa 11, :aet 438}
    [468568.79999084474 7231643.200001526] {:tie 20, :aosa 11, :aet 762}
@@ -43,19 +43,34 @@
    [469300.79999084474 7231931.200001526] {:tie 20, :aosa 11, :aet 1551}
    [469492.79999084474 7232011.200001526] {:tie 20, :aosa 11, :aet 1759}
 
-   ;; tarkastus, jossa ajetaan risteykseen ja tie vaihtuu
+   ;; Tarkastus, jossa ajetaan risteykseen ja tie vaihtuu
    [455421.19997024536 7227742.400009155] {:tie 20, :aosa 7, :aet 8847}
    [455493.19997024536 7227764.400009155] {:tie 20, :aosa 7, :aet 8923}
    [455505.19997024536 7227760.400009155] {:tie 20, :aosa 7, :aet 8933}
    [455519.19997024536 7227720.400009155] {:tie 8341, :aosa 4, :aet 2597}
    [455555.19997024536 7227594.400009155] {:tie 8341, :aosa 4, :aet 2466}
 
-   ;; tarkastus, jossa käännytään ympäri
+   ;; Tarkastus, jossa käännytään ympäri
    [454881.19997024536 7227586.400009155] {:tie 20, :aosa 7, :aet 8285}
    [455041.19997024536 7227634.400009155] {:tie 20, :aosa 7, :aet 8452}
    [455165.19997024536 7227666.400009155] {:tie 20, :aosa 7, :aet 8580}
    [455041.19997024536 7227634.400009156] {:tie 20, :aosa 7, :aet 8453}
-   [454881.19997024536 7227586.400009157] {:tie 20, :aosa 7, :aet 8284}})
+   [454881.19997024536 7227586.400009157] {:tie 20, :aosa 7, :aet 8284}
+
+   ;; Tarkastus, jossa ajetaan tiellä 20 osalta 1 osalle 3 (osaa 2 ei ole olemassa)
+   [430569 7212525] {:tie 20, :aosa 1, :aet 3671}
+   [430599 7212541] {:tie 20, :aosa 1, :aet 3705}
+   [430665 7212590] {:tie 20, :aosa 3, :aet 18}
+   [430702 7212607] {:tie 20, :aosa 3, :aet 58}
+
+   ;; Tarkastus, jossa ajetaan kevyen liikenteen väylää 70012 ja tulee iso osahyppy.
+   ;; Väliin jäävät osat sijaitsevat maantieteellisesti jossain muualla.
+   [427949 6761002] {:tie 70012, :aosa 443, :aet 38}
+   [427950 6761002] {:tie 70012, :aosa 443, :aet 38}
+   [427951 6761002] {:tie 70012, :aosa 443, :aet 39}
+   [427974 6761011] {:tie 70012, :aosa 491, :aet 219}
+   [427989 6761012] {:tie 70012, :aosa 491, :aet 234}
+   [428006 6761010] {:tie 70012, :aosa 491, :aet 250}})
 
 (def tarkastukset-joissa-jatkuvat-havainnot-muuttuu
   "Tämä tarkastus on ajettu yhteen suuntaan suht. lyhyellä tieosuudella."
@@ -263,7 +278,7 @@
     :jatkuvat-havainnot [17]
     :kitkamittaus 0.3}
    ;; Mittausvirhe: piste ei osu tielle. Silti osa samaa tarkastusta, joka jatkuu tämän pisteen jälkeenkin.
-   {:id 1 :sijainti [465331 7234690]
+   {:id 1 :sijainti nil
     :jatkuvat-havainnot [17]}
    {:id 2 :sijainti [465321.5999816895 7230676.000024414]
     :jatkuvat-havainnot [17]
@@ -288,24 +303,6 @@
    {:id 2 :sijainti nil
     :jatkuvat-havainnot [17]
     :kitkamittaus 0.3}])
-
-(def tarkastus-jossa-ajallinen-aukko
-  [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/now))}
-   {:id 1 :sijainti [465321.5999816895 7230676.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 3)))}
-   ;; GPS-signaali katkeaa tässä joksikin aikaa
-   {:id 2 :sijainti [465641.5999816895 7230780.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 190)))}
-   {:id 3 :sijainti [466089.5999816895 7230916.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 250)))}
-   {:id 4 :sijainti [466409.5999816895 7230996.000024414]
-    :jatkuvat-havainnot []
-    :aikaleima (c/to-timestamp (time/plus (time/now) (time/seconds 290)))}])
 
 (def tarkastus-jossa-ajallinen-aukko
   [{:id 0 :sijainti [464681.5999816895 7230492.000024414]
@@ -419,19 +416,6 @@
    {:id 3 :sijainti [455519.19997024536 7227720.400009155]
     :jatkuvat-havainnot []}
    {:id 4 :sijainti [455555.19997024536 7227594.400009155]
-    :jatkuvat-havainnot []}])
-
-
-(def tarkastus-jossa-kaannytaan-ympari
-  [{:id 0 :sijainti [454881.19997024536 7227586.400009155]
-    :jatkuvat-havainnot []}
-   {:id 1 :sijainti [455041.19997024536 7227634.400009155]
-    :jatkuvat-havainnot []}
-   {:id 2 :sijainti [455165.19997024536 7227666.400009155]
-    :jatkuvat-havainnot []}
-   {:id 3 :sijainti [455041.19997024536 7227634.400009155]
-    :jatkuvat-havainnot []}
-   {:id 4 :sijainti [454881.19997024536 7227586.400009155]
     :jatkuvat-havainnot []}])
 
 (def tarkastus-jossa-pistemainen-havainto
@@ -660,3 +644,38 @@
     :liittyy-merkintaan 1
     :kuvaus "Tässä on nyt jotain mätää"
     :kuva 1}])
+
+(def tarkastus-jossa-pisteiden-sijainti-eri
+  [;; Ajetaan tietä 20 pohjoiseen
+   {:id 0 :sijainti [446405 7224577]}
+   {:id 1 :sijainti [446533 7224624]}
+   {:id 2 :sijainti [446636 7224654]}
+   {:id 3 :sijainti [446763 7224696]}
+   ;; Seuraavat merkinnät ovat huomattavan paljon kauempana kuin edellinen, joskin edelleen samalla tiellä.
+   ;; Reitin tulisi katketa kerran tässä kohtaa
+   {:id 4 :sijainti [454620 7227506]}
+   {:id 5 :sijainti [454699 7227528]}
+   {:id 6 :sijainti [454768 7227546]}])
+
+(def tarkastus-jossa-iso-osamuutos
+  "Ajetaan kevyen liikenteen väylää 70012 ja tulee iso osamuutos"
+  [;; Noin osat 441, 442, 443
+   {:id 0 :sijainti [427949 6761002]}
+   {:id 1 :sijainti [427950 6761002]}
+   {:id 2 :sijainti [427951 6761002]}
+   ;; Siirrytään osalle 491, joka on suuresta numerosta huolimatta maantieteellisesti hyvin lähellä edellistä.
+   ;; Vaikka tienumero on sama, niin osahyppy on niin suuri, että reitin pitää katketa tästä.
+   ;; Muuten tarkastukselle muodostuu virheellinen TR-osoite, joka alkaa osalta 441 ja päättyy osalle 491.
+   ;; Väliin jäisi runsaasti osia, jotka ovat jossain ihan muualla.
+   {:id 3 :sijainti [427974 6761011]}
+   {:id 4 :sijainti [427989 6761012]}
+   {:id 5 :sijainti [428006 6761010]}])
+
+(def tarkastus-jossa-valiin-jaa-olematon-osa
+  "Ajetaan tietä 20 osalta 1 osalle 3 (osaa 2 ei ole olemassa, joten muodostuu yksi tarkastus)"
+  [;; Osa 1
+   {:id 0 :sijainti [430569 7212525]}
+   {:id 1 :sijainti [430599 7212541]}
+   ;; Osa 3 (edellistä osaa ei ole, tarkastus saa jatkua)
+   {:id 2 :sijainti [430665 7212590]}
+   {:id 3 :sijainti [430702 7212607]}])

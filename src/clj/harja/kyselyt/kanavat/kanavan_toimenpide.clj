@@ -6,23 +6,34 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
+            [harja.domain.kanavat.kommentti :as kommentti]
             [harja.id :refer [id-olemassa?]]
             [harja.pvm :as pvm]
+            [harja.geo :as geo]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.set :as set]))
+
+(defn hae-toimenpiteen-hinnat [db toimenpide-id]
+  (fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id toimenpide-id
+                                                                         ::muokkaustiedot/poistettu? false}))
+
+(defn hae-toimenpiteen-tyot [db toimenpide-id]
+  (fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id toimenpide-id
+                                                    ::muokkaustiedot/poistettu? false}))
 
 (defn hae-kanavatoimenpiteet-specql [db hakuehdot]
   (let [toimenpiteet (fetch db ::toimenpide/kanava-toimenpide toimenpide/perustiedot-viittauksineen hakuehdot)
-        tp-hinnat #(fetch db ::hinta/toimenpiteen-hinta hinta/perustiedot-viittauksineen {::hinta/toimenpide-id %
-                                                                                          ::muokkaustiedot/poistettu? false})
-        tp-tyot #(fetch db ::tyo/toimenpiteen-tyo tyo/perustiedot {::tyo/toimenpide-id %
-                                                                   ::muokkaustiedot/poistettu? false})]
+        kommentit #(fetch db ::kommentti/toimenpiteen-kommentti
+                          (set/union kommentti/perustiedot kommentti/kayttajan-tiedot)
+                          {::kommentti/toimenpide-id %})]
     (for [tp toimenpiteet
           :let [tp-id (::toimenpide/id tp)]]
-      (merge tp {::toimenpide/hinnat (tp-hinnat tp-id)
-                 ::toimenpide/tyot (tp-tyot tp-id)}))))
+      (merge tp {::toimenpide/hinnat (hae-toimenpiteen-hinnat db tp-id)
+                 ::toimenpide/tyot (hae-toimenpiteen-tyot db tp-id)
+                 ::toimenpide/kommentit (kommentit tp-id)}))))
 
 (defqueries "harja/kyselyt/kanavat/kanavan_toimenpide.sql")
 
@@ -96,15 +107,17 @@
                     {::muokkaustiedot/poistettu? (op/not= true)})))
 
 (defn tallenna-toimenpide [db kayttaja-id kanavatoimenpide]
-  (if (id-olemassa? (::toimenpide/id kanavatoimenpide))
-    (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::muokkaustiedot/muokattu (pvm/nyt)
-                             ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
-    (let [kanavatoimenpide (assoc kanavatoimenpide
-                             ::toimenpide/kuittaaja-id kayttaja-id
-                             ::muokkaustiedot/luotu (pvm/nyt)
-                             ::muokkaustiedot/luoja-id kayttaja-id)]
+  (let [id? (id-olemassa? (::toimenpide/id kanavatoimenpide))
+        kanavatoimenpide (cond-> kanavatoimenpide
+                                 (::toimenpide/sijainti kanavatoimenpide) (update ::toimenpide/sijainti #(geo/geometry (geo/clj->pg %)))
+                                 id? (assoc ::muokkaustiedot/muokattu (pvm/nyt)
+                                            ::muokkaustiedot/muokkaaja-id kayttaja-id)
+                                 (not id?) (assoc ::toimenpide/kuittaaja-id kayttaja-id
+                                                  ::muokkaustiedot/luotu (pvm/nyt)
+                                                  ::muokkaustiedot/luoja-id kayttaja-id))]
+    (if id?
+      (when (pos? (update! db ::toimenpide/kanava-toimenpide kanavatoimenpide {::toimenpide/id (::toimenpide/id kanavatoimenpide)}))
+        {::toimenpide/id (::toimenpide/id kanavatoimenpide)})
       (insert! db ::toimenpide/kanava-toimenpide kanavatoimenpide))))
 
 (defn hae-toimenpiteiden-tehtavan-hinnoittelu [db toimenpide-idt]
@@ -118,3 +131,12 @@
   (update! db ::toimenpide/kanava-toimenpide
            {::toimenpide/toimenpidekoodi-id tehtava-id}
            {::toimenpide/id (op/in paivitettavat-tehtava-idt)}))
+
+(defn lisaa-kommentti! [db user tila kommentti toimenpide-id]
+  (insert! db
+           ::kommentti/toimenpiteen-kommentti
+           {::kommentti/aika (pvm/nyt)
+            ::kommentti/kommentti kommentti
+            ::kommentti/tila tila
+            ::kommentti/kayttaja-id (:id user)
+            ::kommentti/toimenpide-id toimenpide-id}))

@@ -16,7 +16,9 @@
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
+            [harja.views.kartta :as kartta]
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
@@ -82,26 +84,35 @@
                           (e! (tiedot/->ValitseToimenpide
                                 {:id (::kanavan-toimenpide/id rivi)
                                  :valittu? uusi-arvo})))})
-    (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet)]])
+    (sort-by ::kanavan-toimenpide/pvm >
+             (kanavan-toimenpide/korosta-ei-yksiloidyt toimenpiteet))]])
+
+
 
 (defn kokonaishintainen-toimenpidelomake [e! {:keys [avattu-toimenpide kohteet toimenpideinstanssit
                                                      tehtavat huoltokohteet tallennus-kaynnissa?] :as app}]
   [toimenpiteet-view/toimenpidelomake app {:tyhjenna-fn #(e! (tiedot/->TyhjennaAvattuToimenpide))
                                            :aseta-toimenpiteen-tiedot-fn #(e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot %))
-                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide %))
-                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))}])
+                                           :tallenna-lomake-fn #(e! (tiedot/->TallennaToimenpide % false))
+                                           :poista-toimenpide-fn #(e! (tiedot/->PoistaToimenpide %))
+                                           :paikannus-kaynnissa-fn #(e! (tiedot/->KytkePaikannusKaynnissa))
+                                           :lisaa-materiaali-fn #(e! (tiedot/->LisaaMateriaali))
+                                           :muokkaa-materiaaleja-fn #(e! (tiedot/->MuokkaaMateriaaleja %))
+                                           :lisaa-virhe-fn #(e! (tiedot/->LisaaVirhe %))}])
 
 (defn kokonaishintaiset-nakyma [e! {:keys [avattu-toimenpide] :as app} kohteet]
   (let [nakyma-voidaan-nayttaa? (some? kohteet)]
-    [:div
-     (if nakyma-voidaan-nayttaa?
-       (if avattu-toimenpide
-         [kokonaishintainen-toimenpidelomake e! app]
-         [:div
-          [hakuehdot e! app kohteet]
-          [kokonaishintaiset-toimenpiteet-taulukko e! app]])
-       [ajax-loader "Ladataan..."])
-     [debug/debug app]]))
+    (if nakyma-voidaan-nayttaa?
+      [:span
+       [kartta/kartan-paikka]
+       [:div
+        (if avattu-toimenpide
+          [kokonaishintainen-toimenpidelomake e! app]
+          [:div
+           [hakuehdot e! app kohteet]
+           [kokonaishintaiset-toimenpiteet-taulukko e! app]])
+        [debug/debug app]]]
+      [ajax-loader "Ladataan..."])))
 
 (defn kokonaishintaiset* [e! _]
   (komp/luo
@@ -111,8 +122,7 @@
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat
 
-      [:span
-       [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet]])))
+      [kokonaishintaiset-nakyma e! app @kanavaurakka/kanavakohteet])))
 
 (defc kokonaishintaiset []
       [tuck tiedot/tila kokonaishintaiset*])

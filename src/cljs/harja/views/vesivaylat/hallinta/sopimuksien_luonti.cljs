@@ -11,7 +11,8 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.debug :as debug]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.valinnat :as valinnat]))
 
 (defn luontilomake [e! {:keys [valittu-sopimus tallennus-kaynnissa? haetut-sopimukset] :as app}]
   (let [urakat (:urakat valittu-sopimus)]
@@ -62,10 +63,11 @@
     (komp/sisaan #(e! (tiedot/->HaeSopimukset)))
     (fn [e! {:keys [haetut-sopimukset sopimuksien-haku-kaynnissa?] :as app}]
       [:div
-       [napit/uusi "Lisää sopimus"
+       [valinnat/urakkatoiminnot {}
+        [napit/uusi "Lisää sopimus"
         #(e! (tiedot/->UusiSopimus))
         {:disabled (or (not (oikeudet/hallinta-vesivaylat))
-                       (nil? haetut-sopimukset))}]
+                       (nil? haetut-sopimukset))}]]
        [grid/grid
         {:otsikko (if (and (some? haetut-sopimukset) sopimuksien-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"] ;; Listassa on jo jotain, mutta sitä päivitetään

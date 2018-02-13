@@ -105,10 +105,11 @@
 
 (defn- rajaa-urakat-hakuoikeudella [db user hakuargumentit]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (let [kayttajan-urakka-idt (->> (hae-kayttajan-urakat-alueittain db user hakuargumentit)
-                                  (mapcat :urakat)
-                                  (map :id)
-                                  (set))
+  (let [kayttajan-urakka-idt (if (roolit/tilaajan-kayttaja? user)
+                               (constantly true)
+                               ; fixme. hanskaa keissi jossa urakoitsija saa nähdä kaikkien urakkatyyppien tiedot omien urakoiden elyissä
+                               (set (map :id (q/urakat-joihin-oikeus
+                                               db {:organisaatio (get-in user [:organisaatio :id])}))))
         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
         oikeudelliset-urakat (set (filter kayttajan-urakka-idt (:urakat hakuargumentit)))]
     oikeudelliset-urakat))
@@ -254,10 +255,12 @@
 
 (defn- laajenna-tyokone-extent [alue]
   (let [{:keys [xmin xmax ymin ymax]} alue
-        hypotenuusa (geo/alueen-hypotenuusa alue)
-        laajennettu-alue (geo/laajenna-extent [xmin ymin xmax ymax]
-                                              hypotenuusa)]
-    (zipmap [:xmin :ymin :xmax :ymax] laajennettu-alue)))
+        sade (max (* 2 (geo/alueen-hypotenuusa alue)) 10000)
+        [keskipiste-x keskipiste-y] (geo/extent-keskipiste [xmin ymin xmax ymax])
+        params {:keskipiste_x keskipiste-x
+                :keskipiste_y keskipiste-y
+                :sade sade}]
+    params))
 
 (defn- tyokoneiden-toimenpiteet
   "Palauttaa haettavat tehtävä työkonekyselyille"
@@ -370,11 +373,14 @@
   [db user {:keys [alue alku loppu] :as tiedot} urakat]
   (when-not (empty? urakat)
     (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-      (q/hae-toteumien-selitteet db
-                                 (konv/sql-date alku) (konv/sql-date loppu)
-                                 toimenpidekoodit urakat
-                                 (:xmin alue) (:ymin alue)
-                                 (:xmax alue) (:ymax alue)))))
+      {:viimeisin-toteuma (q/hae-valittujen-urakoiden-viimeisin-toteuma db {:urakat urakat})
+       :selitteet (q/hae-toteumien-selitteet db
+                                             {:alku (konv/sql-date alku)
+                                              :loppu (konv/sql-date loppu)
+                                              :toimenpidekoodit toimenpidekoodit
+                                              :urakat urakat
+                                              :xmin (:xmin alue) :ymin (:ymin alue)
+                                              :xmax (:xmax alue) :ymax (:ymax alue)})})))
 
 (defn- hae-varustetoteumat
   [db user {:keys [alue alku loppu varustetoteumat] :as tiedot} urakat]
@@ -482,10 +488,13 @@
                         oikeudet/tilannekuva-historia)
         kayttajan-urakat-alueittain (->>
                                       (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-                                       db user (fn [urakka-id kayttaja]
-                                                 (oikeudet/voi-lukea? oikeus-nakyma
-                                                                      urakka-id
-                                                                      kayttaja))
+                                       db user
+                                       (if (roolit/tilaajan-kayttaja? user)
+                                         (constantly true)
+                                         (fn [urakka-id kayttaja]
+                                           (oikeudet/voi-lukea? oikeus-nakyma
+                                                                urakka-id
+                                                                kayttaja)))
                                        nil (:urakoitsija tiedot) nil
                                        nil (:alku tiedot) (:loppu tiedot))
                                       (map
@@ -503,20 +512,26 @@
         ;; löydettynä käyttäjän oma urakka. Tämä ajateltiin aluksi bugina, mutta sittemmin sitä pidettiinkin
         ;; ihan hyvänä rajoitteena. Käytännössä tämä rajaa haettavan aikavälin vain sellaiselle välille, jolla
         ;; käyttäjän oma urakka on voimassa.
-        lisaoikeudet (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
-                       user oikeus-nakyma
-                       kayttajan-urakat-alueittain)
-        lisaoikeuksien-urakat-alueittain (->>
-                                           (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
-                                            db user (fn [urakka-id kayttaja]
-                                                      (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
-                                            nil (:urakoitsija tiedot) nil
-                                            nil (:alku tiedot) (:loppu tiedot))
-                                           (map
-                                             (fn [alue]
-                                               (update alue :urakat
-                                                       (fn [urakat]
-                                                         (filter :urakkanro urakat))))))
+
+        ;; Tilaajan käyttäjillä on oikeus kaikki urakoihin. Ei tarkastella silloin
+        ;; lisäoikeuksia ollenkaan jotta ollaan nopeampia
+        lisaoikeudet (if (roolit/tilaajan-kayttaja? user)
+                       []
+                       (maarita-oikeudet-omien-urakoiden-muihin-ely-urakoihin
+                        user oikeus-nakyma
+                        kayttajan-urakat-alueittain))
+        lisaoikeuksien-urakat-alueittain (when-not (empty? lisaoikeudet)
+                                           (->>
+                                             (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
+                                               db user (fn [urakka-id kayttaja]
+                                                         (lukuoikeus-urakkaan-lisaoikeudella? db urakka-id lisaoikeudet))
+                                               nil (:urakoitsija tiedot) nil
+                                               nil (:alku tiedot) (:loppu tiedot))
+                                             (map
+                                               (fn [alue]
+                                                 (update alue :urakat
+                                                         (fn [urakat]
+                                                           (filter :urakkanro urakat)))))))
         lopulliset-kayttajan-urakat-alueittain (kayttajatiedot/yhdista-kayttajan-urakat-alueittain
                                                  kayttajan-urakat-alueittain
                                                  lisaoikeuksien-urakat-alueittain)]

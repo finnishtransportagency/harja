@@ -122,8 +122,8 @@
                                 (map :aikataulu-tiemerkinta-loppu yhden-urakan-kohteet))
         eka-kohde (first yhden-urakan-kohteet)
         nakokulma-urakka-nimi (case nakokulma
-                                  :paallystys (:paallystysurakka-nimi eka-kohde)
-                                  :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))
+                                :paallystys (:paallystysurakka-nimi eka-kohde)
+                                :tiemerkinta (:tiemerkintaurakka-nimi eka-kohde))
         eka-kohde-osoite {:numero (:tr-numero eka-kohde)
                           :alkuosa (:tr-alkuosa eka-kohde)
                           :alkuetaisyys (:tr-alkuetaisyys eka-kohde)
@@ -191,7 +191,7 @@
    ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
-  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate ilmoittaja]}]
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate muut-vastaanottajat ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
                 tiemerkintaurakka-nimi pituus]} kohteen-tiedot
@@ -225,6 +225,17 @@
          :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})
+      (doseq [muu-vastaanottaja muut-vastaanottajat]
+        (try
+          (sahkoposti/laheta-viesti!
+            email
+            (sahkoposti/vastausosoite email)
+            muu-vastaanottaja
+            (str "Harja: " viestin-otsikko)
+            viestin-vartalo)
+          (catch Exception e
+            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
+                               muu-vastaanottaja (pr-str e))))))
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
         (viestinta/laheta-sahkoposti-itselle
           {:email email
@@ -279,10 +290,11 @@
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
   [{:keys [fim email kohteen-tiedot tiemerkintapvm
-           kopio-itselle? saate kayttaja]}]
+           kopio-itselle? saate kayttaja muut-vastaanottajat]}]
   (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu
     {:fim fim :email email :kohteen-tiedot kohteen-tiedot
      :tiemerkintapvm tiemerkintapvm
      :kopio-itselle? kopio-itselle?
      :saate saate
+     :muut-vastaanottajat muut-vastaanottajat
      :ilmoittaja kayttaja}))

@@ -29,10 +29,6 @@
                 :esta-poistaminen-tooltip
                 (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
 
-(defn- validoi-rajattu-numero-jos-muokattava [arvo rivi]
-  (when (or (:muokattava rivi) (neg? (:id rivi)))
-    (when (neg? (js/parseFloat arvo))
-      "Summan on oltava positiivinen")))
 
 (def grid-skeema
   [{:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm
@@ -42,7 +38,6 @@
     :validoi [[:ei-tyhja "Anna kuvaus"]]
     :tyyppi :string :leveys kustannus-selite-leveys}
    {:otsikko "Summa" :nimi :hinta :fmt fmt/euro-opt
-    :validoi [validoi-rajattu-numero-jos-muokattava]
     :tyyppi :numero :leveys kustannus-hinta-leveys}])
 
 (defn muut-kustannukset [urakka]

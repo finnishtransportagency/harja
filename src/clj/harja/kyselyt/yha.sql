@@ -54,6 +54,7 @@ SELECT
   sijainti,
   yhaid,
   toimenpide,
+  tyomenetelma,
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
@@ -133,10 +134,8 @@ SELECT yhaid
 FROM yhatiedot
 WHERE urakka = :urakkaid;
 
--- name: hae-urakan-kohteiden-yha-idt
-SELECT yhaid
-FROM yllapitokohde
-WHERE urakka = :urakkaid AND poistettu IS FALSE;
+-- name: hae-harjassa-olevat-yha-idt
+SELECT yhaid as "yha-id", TRUE as "loytyy-harjasta" FROM yllapitokohde WHERE yhaid IN (:annetut-yha-idt) AND poistettu IS FALSE;
 
 -- name: merkitse-urakan-yllapitokohteet-paivitetyksi<!
 UPDATE yhatiedot

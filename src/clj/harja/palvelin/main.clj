@@ -11,6 +11,7 @@
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
     [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
+    [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
 
     ;; Integraatiokomponentit
@@ -71,6 +72,7 @@
     [harja.palvelin.palvelut.raportit :as raportit]
     [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
     [harja.palvelin.palvelut.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
+    [harja.palvelin.palvelut.geometria-aineistot :as geometria-aineistot]
     [harja.palvelin.palvelut.status :as status]
     [harja.palvelin.palvelut.organisaatiot :as organisaatiot]
     [harja.palvelin.palvelut.tienakyma :as tienakyma]
@@ -118,7 +120,9 @@
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as turvalaitteiden-geometriat]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
+    [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
+    [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -172,7 +176,7 @@
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
-                       [:todennus :metriikka])
+                       [:todennus :metriikka :db])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
@@ -183,10 +187,12 @@
 
       :virustarkistus (virustarkistus/luo-virustarkistus (:virustarkistus asetukset))
 
+      :tiedostopesula (tiedostopesula/luo-tiedostopesula (:tiedostopesula asetukset))
+
       :liitteiden-hallinta (component/using
                              (harja.palvelin.komponentit.liitteet/->Liitteet
                                (get-in asetukset [:liitteet :fileyard-url]))
-                             [:db :virustarkistus :pois-kytketyt-ominaisuudet])
+                             [:db :virustarkistus :tiedostopesula :pois-kytketyt-ominaisuudet])
 
       :kehitysmoodi (component/using
                       (kehitysmoodi/luo-kehitysmoodi kehitysmoodi)
@@ -234,7 +240,7 @@
 
       ;; T-LOIK
       :tloik (component/using
-               (tloik/->Tloik (:tloik asetukset))
+               (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
                [:sonja :db :integraatioloki :klusterin-tapahtumat
                 :sonja-sahkoposti :labyrintti])
 
@@ -274,7 +280,7 @@
                                [:http-palvelin :db :fim :sonja-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
-                            [:http-palvelin :db])
+                            [:http-palvelin :db :pois-kytketyt-ominaisuudet])
 
       ;; Frontille tarjottavat palvelut
       :kayttajatiedot (component/using
@@ -348,13 +354,13 @@
                     [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :kan-toimenpiteet (component/using
                           (kan-toimenpiteet/->Kanavatoimenpiteet)
-                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -528,9 +534,17 @@
                                   (api-jarjestelmatunnukset/->APIJarjestelmatunnukset)
                                   [:http-palvelin :db :pois-kytketyt-ominaisuudet])
 
+      :geometria-aineistot (component/using
+                             (geometria-aineistot/->Geometria-aineistot)
+                             [:http-palvelin :db])
+
       :organisaatiot (component/using
                        (organisaatiot/->Organisaatiot)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
+
+      :koordinaatit (component/using
+                      (koordinaatit/->Koordinaatit)
+                      [:http-palvelin])
 
       ;; Harja API
       :api-urakat (component/using
@@ -623,6 +637,15 @@
       (component/using
         (let [asetukset (:vaylat asetukset)]
           (vaylien-geometriat/->VaylienGeometriahaku
+            (:geometria-url asetukset)
+            (:paivittainen-tarkistusaika asetukset)
+            (:paivitysvali-paivissa asetukset)))
+        [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
+
+      :kanavasiltojen-geometriahaku
+      (component/using
+        (let [asetukset (:kanavasillat asetukset)]
+          (kanavasiltojen-geometriat/->KanavasiltojenGeometriahaku
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))

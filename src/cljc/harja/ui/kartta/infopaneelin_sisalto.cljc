@@ -44,7 +44,11 @@
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
             [harja.fmt :as fmt]
-            [harja.domain.tierekisteri.varusteet :as varusteet]))
+            [harja.pvm :as pvm]
+            [harja.domain.tierekisteri.varusteet :as varusteet]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -359,8 +363,10 @@
                            "havaintoja"
 
                            :else nil)
-                    tila-str (when tila (str ", " tila))]
-                (str (pvm/pvm-aika (:aika tarkastus)) " - " (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str))
+                    tila-str (when tila (str ", " tila))
+                    otsikko-vektori [(str (pvm/pvm-aika (:aika tarkastus))) (str (tarkastukset/+tarkastustyyppi->nimi+ (:tyyppi tarkastus)) tila-str)]]
+                otsikko-vektori
+                )
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
@@ -598,6 +604,41 @@
                                      " muuta toimenpidettä.")])
                         ]))}]))
      :data turvalaite}))
+
+(defmethod infopaneeli-skeema :kohteenosa [osa]
+  {:tyyppi :kohteenosa
+   :jarjesta-fn (constantly false)
+   :otsikko (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde osa) osa)
+   :tiedot [{:otsikko "Kohde"
+             :tyyppi :string
+             :nimi (kohde/fmt-kohteen-nimi (::osa/kohde osa))}
+            (when (::osa/nimi osa)
+              {:otsikko "Nimi"
+               :tyyppi :string
+               :nimi ::osa/nimi})
+            {:otsikko "Tyyppi"
+             :tyyppi :string
+             :nimi ::osa/tyyppi
+             :fmt (comp string/capitalize osa/fmt-kohteenosa-tyyppi)}
+            {:otsikko "Oletuspalvelumuoto"
+             :nimi ::osa/oletuspalvelumuoto
+             :fmt liikenne/palvelumuoto->str
+             :tyyppi :string}]
+   :data osa})
+
+(defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]
+  {:tyyppi :suolatoteuma
+   :jarjesta-fn (let [fn :alkanut]
+                  (if (fn suolatoteuma)
+                    fn
+                    (constantly false)))
+   :otsikko (str "Suolatoteuma" (when (:alkanut suolatoteuma)
+                                  (str " " (pvm/pvm (:alkanut suolatoteuma)))))
+   :tiedot [{:otsikko "Materiaali" :nimi :materiaali_nimi}
+            {:otsikko "Määrä (t)" :nimi :maara}
+            {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
+            {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}]
+   :data suolatoteuma})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))

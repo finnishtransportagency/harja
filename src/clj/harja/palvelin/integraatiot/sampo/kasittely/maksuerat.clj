@@ -61,7 +61,7 @@
   (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
   (let [maksuerattomat-tpit (toimenpideinstanssit/hae-hoidon-maksuerattomat-toimenpideistanssit db)]
     (if (empty? maksuerattomat-tpit)
-      (log/debug "Kaikki maksuerät on jo perustettu hoidon urakoiden toimenpiteille"))
+      (log/debug "Kaikki maksuerät on jo perustettu urakoiden toimenpiteille"))
     (doseq [tpi maksuerattomat-tpit]
       (doseq [maksueratyyppi maksueratyypit]
         (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi)
@@ -111,7 +111,7 @@
         (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
 
       (catch Exception e
-        (log/error e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
         (merkitse-maksueralle-lahetysvirhe db numero)
         (throw e)))
 

@@ -10,6 +10,7 @@
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.palvelut.toteumat :refer [paivita-toteuman-reitti]]
+            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.tyokalut.lukot :as lukko]
             [com.stuartsierra.component :as component]))
@@ -51,7 +52,7 @@
 
 (defn tee-toteumien-reittien-tarkistustehtava
   [{:keys [db]} paivittainen-aika]
-  (when paivittainen-aika
+  (when (and (ominaisuus-kaytossa? :reittitarkistukset) paivittainen-aika)
     (ajastus/ajasta-paivittain
       paivittainen-aika
       (fn [_]

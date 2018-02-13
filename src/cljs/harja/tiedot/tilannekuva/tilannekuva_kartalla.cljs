@@ -71,15 +71,15 @@ etteivät ne mene päällekkäin muiden tasojen kanssa."}
             ;; Historiakuvassa ei haluta indikaattoria
             (str indikaattori)))))
 
-(defmethod muodosta-karttataso :toteumat [taso toimenpiteet]
-  (let [yhteensa (reduce + (map :lukumaara toimenpiteet))]
+(defmethod muodosta-karttataso :toteumat [taso tason-tiedot]
+  (let [indikaattori (:viimeisin-toteuma tason-tiedot)]
     (muodosta-kuva-karttataso
      :tilannekuva-toteumat
      (into #{}
            (map (comp esitettavat-asiat/toimenpiteen-selite :toimenpide))
-           toimenpiteet)
+           (:selitteet tason-tiedot))
      @url-hakuparametrit
-     yhteensa)))
+     indikaattori)))
 
 (defmethod muodosta-karttataso :tarkastukset [taso tarkastukset]
   (muodosta-kuva-karttataso

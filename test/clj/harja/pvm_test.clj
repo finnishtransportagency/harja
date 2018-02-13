@@ -138,3 +138,79 @@
 (deftest vesivaylaurakan-hoitokausi
   (is (= (pvm/->pvm "1.8.2017") (pvm/vesivaylien-hoitokauden-alkupvm 2017)))
   (is (= (pvm/->pvm "31.7.2018") (pvm/vesivaylien-hoitokauden-loppupvm 2018))))
+
+
+(deftest aikavalit-leikkaavat
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1)
+                                         (t/date-time 2017 12 31)
+                                         (t/date-time 2018 1 1)
+                                         (t/date-time 2018 12 31)))
+      "Toisiaan ei leikkaavat välit tunnistetaan oikein")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1)
+                                        (t/date-time 2017 12 31)
+                                        (t/date-time 2017 12 24)
+                                        (t/date-time 2018 12 31)))
+      "Toisiaan leikkaavat välit tunnisteaan oikein")
+
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         (t/date-time 2017 12 31 1 1)
+                                         (t/date-time 2018 12 31 0 0)))
+      "Kellonaika osataan huomioida oikein limittyvillä väleillä")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                        (t/date-time 2017 12 31 0 0)
+                                        (t/date-time 2017 12 31 0 0)
+                                        (t/date-time 2018 12 31 0 0)))
+      "Kellonaika osataan huomioida oikein leikkaavilla väleilleä")
+
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         (t/date-time 2018 1 1 1 1)
+                                         nil))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu loppupäivämäärä")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                        (t/date-time 2017 12 31 0 0)
+                                        (t/date-time 2017 12 24 1 1)
+                                        nil))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu loppupäivämäärä")
+
+  (is (false? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                         (t/date-time 2017 12 31 0 0)
+                                         nil
+                                         (t/date-time 2018 1 1 1 1)))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu alkupäivämäärä")
+
+  (is (true? (pvm/aikavalit-leikkaavat? (t/date-time 2017 1 1 0 0)
+                                        (t/date-time 2017 12 31 0 0)
+                                        nil
+                                        (t/date-time 2017 12 24 1 1)))
+      "Toimii oikein kun toiselta päivämäärältä puuttuu alkupäivämäärä"))
+
+(deftest paivat-valissa
+  (let [alku (t/date-time 2018 1 1)
+        loppu (t/date-time 2018 1 1)
+        paivat (pvm/paivat-aikavalissa alku loppu)]
+    (is (= 1 (count paivat))
+        "Jos alku- ja loppupäivämäärä on sama, palautetaan vain 1 päivä")
+    (is (t/equal? alku (first paivat))
+        "Jos alku- ja loppupäivämäärä on sama, palautetaan alkupvm"))
+
+  (let [alku (t/date-time 2018 1 2)
+        loppu (t/date-time 2018 1 1)
+        paivat (pvm/paivat-aikavalissa alku loppu)]
+    (is (= 1 (count paivat))
+        "Jos loppupäivämäärä on aiemmin kuin alku, palautetaan vain 1 päivä")
+    (is (t/equal? alku (first paivat))
+        "Jos loppupäivämäärä on aiemmin kuin alku, palautetaan alkupvm"))
+
+  (let [alku (t/date-time 2018 1 1)
+        loppu (t/date-time 2018 1 4)
+        paivat (pvm/paivat-aikavalissa alku loppu)]
+    (is (= 4 (count paivat)) "Välissä on 3 päivää")
+    (is (t/equal? alku (first paivat)) "Alkupäivämäärä on ensimmäinen")
+    (is (t/equal? (t/date-time 2018 1 2) (second paivat)) "Välissä oleva päivä on oikein")
+    (is (t/equal? (t/date-time 2018 1 3) (nth paivat 2)) "Välissä oleva päivä on oikein")
+    (is (t/equal? loppu (last paivat)) "Loppupäivämäärä on viimeinen")))

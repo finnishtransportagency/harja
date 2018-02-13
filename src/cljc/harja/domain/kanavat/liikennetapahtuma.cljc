@@ -15,6 +15,7 @@
     [harja.domain.sopimus :as sop]
     [harja.domain.kayttaja :as kayttaja]
     [harja.domain.kanavat.kohde :as kohde]
+    [harja.domain.kanavat.kohteenosa :as osa]
     [harja.domain.kanavat.lt-alus :as lt-alus]
     [harja.domain.kanavat.lt-toiminto :as toiminto]
     [harja.domain.kanavat.lt-ketjutus :as ketjutus])
@@ -93,7 +94,7 @@
 (def silta-toimenpide-vaihtoehdot (keys silta-toimenpiteet*))
 
 (defn toimenpide-vaihtoehdot [osa]
-  (if (kohde/sulku? osa)
+  (if (osa/sulku? osa)
     sulku-toimenpide-vaihtoehdot
     silta-toimenpide-vaihtoehdot))
 
@@ -132,32 +133,33 @@
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
                                                :opt [::kohde
                                                      ::lt-alus/laji
-                                                     ::lt-alus/suunta]
+                                                     ::lt-alus/suunta
+                                                     ::toiminto/toimenpiteet]
                                                :opt-un [::aikavali ::niput?]))
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req
                                                   [::id
                                                    ::aika
-                                                   ::vesipinta-ylaraja
-                                                   ::vesipinta-alaraja
                                                    ::sopimus
                                                    ::kuittaaja
                                                    ::toiminnot]
                                                   :opt
                                                   [::alukset
-                                                   ::lisatieto])))
+                                                   ::lisatieto
+                                                   ::vesipinta-ylaraja
+                                                   ::vesipinta-alaraja])))
 
 (s/def ::hakuparametrit ::hae-liikennetapahtumat-kysely)
 
 (s/def ::tallenna-liikennetapahtuma-kysely (s/keys :req [::aika
-                                                         ::vesipinta-ylaraja
-                                                         ::vesipinta-alaraja
                                                          ::sopimus-id
                                                          ::urakka-id
                                                          ::kuittaaja-id
                                                          ::kohde-id
                                                          ::toiminnot]
                                                    :opt [::id
+                                                         ::vesipinta-ylaraja
+                                                         ::vesipinta-alaraja
                                                          ::lisatieto
                                                          ::m/poistettu?
                                                          ::alukset]
@@ -168,7 +170,7 @@
                                                        ::kohde-id
                                                        ::sopimus-id]))
 
-(s/def ::kohde (s/nilable ::liikennetapahtuma))
+(s/def ::edellinen (s/nilable ::liikennetapahtuma))
 
 (s/def ::edellinen-alustieto (s/keys :req [::lt-alus/id
                                            ::lt-alus/suunta
@@ -193,7 +195,7 @@
 (s/def ::alas ::ylos)
 (s/def ::hae-edelliset-tapahtumat-vastaus (s/keys :req-un [::ylos
                                                            ::alas
-                                                           ::kohde]))
+                                                           ::edellinen]))
 
 (s/def ::poista-ketjutus-kysely (s/keys :req [::lt-alus/id
                                               ::urakka-id]))

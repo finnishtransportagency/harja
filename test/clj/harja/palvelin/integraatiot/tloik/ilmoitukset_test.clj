@@ -48,7 +48,7 @@
              (luo-tloik-komponentti)
              [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-uuden-ilmoituksen-tallennus
   (tuo-ilmoitus)
@@ -124,6 +124,7 @@
                                                        kayttaja portti))]
       (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
 
+      (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." 10000)
       (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 100000)
 
       (let [xml (first @viestit)

@@ -2,10 +2,12 @@
   (:require [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
             [clojure.string :as str]
+            [reagent.core :refer [atom] :as r]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
+            [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.kayttaja :as kayttaja]
             [harja.loki :refer [log]]
@@ -16,7 +18,8 @@
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [reagent.core :as r]))
 
 (defn valittu-tehtava [toimenpide]
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
@@ -31,27 +34,26 @@
    {:otsikko "Kohde"
     :nimi :kohde
     :tyyppi :string
-    :leveys 10
+    :leveys 8
     :hae kanavan-toimenpide/fmt-toimenpiteen-kohde}
    {:otsikko "Huolto\u00ADkohde"
-    :nimi :huoltokohde
+    :nimi ::kanavan-toimenpide/huoltokohde
     :tyyppi :string
-    :hae #(get-in % [::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi])
-    :fmt str/lower-case
+    :fmt ::kanavan-huoltokohde/nimi
     :leveys 10}
    {:otsikko "Tehtävä"
     :nimi :toimenpide
     :tyyppi :string
     :hae #(get-in % [::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi])
-    :leveys 15}
-   {:otsikko "Lisä\u00ADtieto"
-    :nimi ::kanavan-toimenpide/lisatieto
-    :tyyppi :string
     :leveys 10}
    {:otsikko "Muu toimen\u00ADpide"
     :nimi ::kanavan-toimenpide/muu-toimenpide
     :tyyppi :string
     :leveys 10}
+   {:otsikko "Lisä\u00ADtieto"
+    :nimi ::kanavan-toimenpide/lisatieto
+    :tyyppi :string
+    :leveys 13}
    {:otsikko "Suorit\u00ADtaja"
     :nimi ::kanavan-toimenpide/suorittaja
     :tyyppi :string
@@ -74,47 +76,116 @@
        (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
        " " toiminto "."))
 
+
+(defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]
+  (when urakan-materiaalit
+    (let [voi-muokata? true
+          avatun-materiaalit (::materiaali/materiaalit avattu-toimenpide)
+          virhe-atom (r/wrap varaosat-virheet lisaa-virhe-fn)
+          vertailuavaimet-jarjestysnumerolla (fn [materiaalin-kirjaus]
+                                               (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
+                                                        (nil? (:jarjestysnumero materiaalin-kirjaus)))
+                                                 [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
+                                                 [(:jarjestysnumero materiaalin-kirjaus) nil]))
+          muokatut-atom (r/wrap
+                         (zipmap (range)
+                                 (sort-by vertailuavaimet-jarjestysnumerolla avatun-materiaalit))
+                         ;; muokkaa-materiaaleja-fn on kok hint tai muutoshintaisen tiedot-ns:n ->MuokkaaMateriaaleja
+                         #(muokkaa-materiaaleja-fn (sort-by vertailuavaimet-jarjestysnumerolla (vals %))))]
+
+      [grid/muokkaus-grid
+       {:voi-muokata? voi-muokata?
+        :voi-lisata? false
+        :voi-poistaa? (constantly voi-muokata?)
+        :voi-kumota? false
+        :virheet virhe-atom
+        :piilota-toiminnot? false
+        :tyhja "Ei varaosia"
+        :otsikko "Varaosat"}
+       [{:otsikko "Varaosa"
+         :nimi :varaosa
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]
+         :tyyppi :valinta
+         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
+         :valinnat urakan-materiaalit
+         :leveys 1}
+        {:otsikko "Käytetty määrä"
+         :nimi :maara
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]
+         :tyyppi :positiivinen-numero
+         :kokonaisluku? true
+         :leveys 1}]
+       muokatut-atom])))
+
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
-                                          toimenpideinstanssit tehtavat]}]
+                                          toimenpideinstanssit tehtavat urakan-materiaalit lisaa-materiaali-fn
+                                          muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet paikannus-kaynnissa-fn]}]
+  (assert urakan-materiaalit)
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
-        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
-
+        valitun-kohteen-osat (cons nil (into [] (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))))]
     [{:otsikko "Sopimus"
       :nimi ::kanavan-toimenpide/sopimus-id
       :tyyppi :valinta
       :valinta-arvo first
       :valinta-nayta second
       :valinnat sopimukset
+      :valitse-ainoa? true
       :pakollinen? true}
      {:otsikko "Päivämäärä"
       :nimi ::kanavan-toimenpide/pvm
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :pakollinen? true}
-     {:otsikko "Kohde"
-      :nimi ::kanavan-toimenpide/kohde
-      :tyyppi :valinta
-      :valinta-nayta #(or (::kohde/nimi %) "- Valitse kohde -")
-      :valinnat kohteet}
-     {:otsikko "Kohteen osa"
-      :nimi ::kanavan-toimenpide/kohteenosa
-      :tyyppi :valinta
-      :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
-      :valinnat (or valitun-kohteen-osat [])}
-     {:otsikko "Huoltokohde"
-      :nimi ::kanavan-toimenpide/huoltokohde
-      :tyyppi :valinta
-      :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
-                            (str/lower-case nimi))
-                          "- Valitse huoltokohde -")
-      :valinnat huoltokohteet
-      :pakollinen? true}
+     (lomake/ryhma
+       {:otsikko "Sijainti tai kohde"}
+       {:nimi ::kanavan-toimenpide/sijainti
+        :otsikko "Sijainti"
+        :uusi-rivi? true
+        :tyyppi :sijaintivalitsin
+        :disabled? (not (nil? (::kanavan-toimenpide/kohde toimenpide)))
+        ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
+        ;; haun aikana
+        :paikannus-kaynnissa?-atom (r/wrap (:paikannus-kaynnissa? toimenpide)
+                                           (fn [_]
+                                             (paikannus-kaynnissa-fn)))
+        :poista-valinta? true
+        :karttavalinta-tehty-fn :kayta-lomakkeen-atomia}
+       {:otsikko "Kohde"
+        :nimi ::kanavan-toimenpide/kohde
+        :tyyppi :valinta
+        :disabled? (or (not (nil? (::kanavan-toimenpide/sijainti toimenpide)))
+                       (:paikannus-kaynnissa? toimenpide))
+        :aseta (fn [rivi arvo]
+                 (if (nil? arvo)
+                   (-> rivi
+                       (assoc ::kanavan-toimenpide/kohteenosa nil)
+                       (assoc ::kanavan-toimenpide/huoltokohde nil)
+                       (assoc ::kanavan-toimenpide/kohde arvo))
+                   (assoc rivi ::kanavan-toimenpide/kohde arvo)))
+        :valinta-nayta #(or (::kohde/nimi %) "Ei kohdetta")
+        :valinnat kohteet})
+     (when (::kanavan-toimenpide/kohde toimenpide)
+       (lomake/rivi
+         {:otsikko "Kohteenosa"
+          :nimi ::kanavan-toimenpide/kohteenosa
+          :tyyppi :valinta
+          :valinta-nayta #(or (kohteenosa/fmt-kohteenosa %) "Ei kohteenosaa")
+          :valinnat (or valitun-kohteen-osat [])}
+         {:otsikko "Huoltokohde"
+          :nimi ::kanavan-toimenpide/huoltokohde
+          :tyyppi :valinta
+          :valinta-nayta #(or (when-let [nimi (::kanavan-huoltokohde/nimi %)]
+                                nimi)
+                              "- Valitse huoltokohde -")
+          :valinnat (sort-by ::kanavan-huoltokohde/nimi huoltokohteet)
+          :pakollinen? true}))
      {:otsikko "Toimenpide"
       :nimi ::kanavan-toimenpide/toimenpideinstanssi-id
       :pakollinen? true
       :tyyppi :valinta
       :uusi-rivi? true
+      :valitse-ainoa? true
       :valinnat toimenpideinstanssit
       :fmt #(:tpi_nimi (urakan-toimenpiteet/toimenpideinstanssi-idlla % toimenpideinstanssit))
       :valinta-arvo :tpi_id
@@ -153,7 +224,22 @@
       :nimi ::kanavan-toimenpide/kuittaaja
       :tyyppi :string
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
-      :muokattava? (constantly false)}]))
+      :muokattava? (constantly false)}
+     (lomake/rivi
+       {:nimi :varaosat
+        :tyyppi :komponentti
+        :palstoja 2
+        :komponentti (fn [_]
+                       [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet])})
+     {:nimi :lisaa-varaosa
+      :tyyppi :komponentti
+      :uusi-rivi? true
+      :komponentti (fn [_]
+                     (assert lisaa-materiaali-fn)
+                     [napit/uusi "Lisää varaosa"
+                      lisaa-materiaali-fn
+                      ;; todo: katsotaan oikeustarkistuksesta näytetäänkö nappia
+                      {:disabled false}])}]))
 
 (defn- ei-yksiloity-vihje []
   [yleiset/vihje-elementti [:span
@@ -169,7 +255,8 @@
     "Tallenna"
     #(tallenna-lomake-fn toimenpide)
     {:tallennus-kaynnissa? tallennus-kaynnissa?
-     :disabled (not (lomake/voi-tallentaa? toimenpide))}]
+     :disabled (or (not (lomake/voi-tallentaa? toimenpide))
+                   (not-empty (:varaosat-taulukon-virheet toimenpide)))}]
    (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
      [napit/poista
       "Poista"
@@ -179,14 +266,17 @@
           :hyvaksy "Poista"
           :toiminto-fn (fn [] (poista-toimenpide-fn toimenpide))})])])
 
-(defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide toimenpideinstanssit tehtavat] :as app}
+(defn toimenpidelomake [{:keys [huoltokohteet avattu-toimenpide
+                                toimenpideinstanssit tehtavat urakan-materiaalit] :as app}
                         {:keys [tyhjenna-fn aseta-toimenpiteen-tiedot-fn
-                                tallenna-lomake-fn poista-toimenpide-fn]}]
+                                tallenna-lomake-fn poista-toimenpide-fn lisaa-materiaali-fn
+                                muokkaa-materiaaleja-fn lisaa-virhe-fn paikannus-kaynnissa-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
-        kanavakohteet @kanavaurakka/kanavakohteet
+        kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
         lomake-valmis? (and (not (empty? huoltokohteet))
-                            (not (empty? kanavakohteet)))]
+                            (not (empty? kanavakohteet))
+                            (not (nil? urakan-materiaalit)))]
     [:div
      [napit/takaisin "Takaisin toimenpideluetteloon" tyhjenna-fn]
      (if lomake-valmis?
@@ -202,6 +292,12 @@
                                      :kohteet kanavakohteet
                                      :huoltokohteet huoltokohteet
                                      :toimenpideinstanssit toimenpideinstanssit
-                                     :tehtavat tehtavat})
+                                     :tehtavat tehtavat
+                                     :paikannus-kaynnissa-fn paikannus-kaynnissa-fn
+                                     :urakan-materiaalit urakan-materiaalit
+                                     :lisaa-materiaali-fn lisaa-materiaali-fn
+                                     :muokkaa-materiaaleja-fn muokkaa-materiaaleja-fn
+                                     :lisaa-virhe-fn lisaa-virhe-fn
+                                     :varaosat-virheet (-> app :avattu-toimenpide :varaosat-taulukon-virheet)})
         avattu-toimenpide]
        [ajax-loader "Ladataan..."])]))

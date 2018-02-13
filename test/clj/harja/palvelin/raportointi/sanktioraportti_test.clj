@@ -66,7 +66,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2011 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2016 10 1))
-                                                      :urakkatyyppi "hoito"}})
+                                                      :urakkatyyppi :hoito}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 71977.05))
@@ -89,7 +89,7 @@
                                  :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 12 31))
-                                                      :urakkatyyppi "hoito"}})
+                                                      :urakkatyyppi :hoito}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 8099.80))
@@ -110,7 +110,7 @@
                                  :konteksti  "koko maa"
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 12 31))
-                                              :urakkatyyppi "hoito"}})
+                                              :urakkatyyppi :hoito}})
         nurkkasumma (last (last (last (last vastaus))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 15786.15))

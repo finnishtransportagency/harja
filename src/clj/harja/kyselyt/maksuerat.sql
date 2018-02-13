@@ -1,4 +1,4 @@
--- name: hae-urakan-maksuerien-summat
+-- name: hae-teiden-hoidon-urakan-maksuerien-summat
 -- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
 -- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
 -- eri maksuerätyypeille.
@@ -85,20 +85,44 @@ SELECT
    WHERE emo.id = tpk.emo) AS tuotenumero,
 
   -- Kustannussuunnitelman summa
-  COALESCE(CASE WHEN m.tyyppi = 'kokonaishintainen'
-    THEN (SELECT SUM(kht.summa)
-          FROM kokonaishintainen_tyo kht
-          WHERE kht.toimenpideinstanssi = tpi.id)
-           WHEN m.tyyppi = 'yksikkohintainen'
-             THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
-                   FROM yksikkohintainen_tyo yht
-                   WHERE
-                     yht.urakka = :urakkaid AND
-                     yht.tehtava IN (SELECT id
-                                     FROM toimenpidekoodi
-                                     WHERE emo = tpk.id))
-           ELSE 1
-           END, 0)         AS kustannussuunnitelma_summa
+  COALESCE(
+      CASE
+
+      -- Kokonaishintaiset maksuerät kaikille urakoille
+      WHEN m.tyyppi = 'kokonaishintainen'
+        THEN (SELECT SUM(kht.summa)
+              FROM kokonaishintainen_tyo kht
+              WHERE kht.toimenpideinstanssi = tpi.id)
+
+      -- Yksikköhintaiset muiden kuin kanavaurakoiden
+      WHEN m.tyyppi = 'yksikkohintainen' AND
+           NOT u.tyyppi = 'vesivayla-kanavien-hoito' AND
+           NOT u.tyyppi = 'vesivayla-kanavien-korjaus'
+
+        THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+              FROM yksikkohintainen_tyo yht
+              WHERE
+                yht.urakka = :urakkaid AND
+                yht.tehtava IN (SELECT id
+                                FROM toimenpidekoodi
+                                WHERE emo = tpk.id))
+
+      --  Kanavaurakoiden muutos ja lisätyöt
+      WHEN m.tyyppi = 'lisatyo' AND
+           (u.tyyppi = 'vesivayla-kanavien-hoito' OR
+            u.tyyppi = 'vesivayla-kanavien-korjaus')
+        THEN
+          (SELECT SUM(yht.arvioitu_kustannus)
+           FROM yksikkohintainen_tyo yht
+           WHERE
+             yht.urakka = :urakkaid AND
+             yht.tehtava IN (SELECT id
+                             FROM toimenpidekoodi
+                             WHERE emo = tpk.id))
+
+      -- Kaikki muut kustannussuunnitelmat
+      ELSE 1
+      END, 0)         AS kustannussuunnitelma_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
@@ -127,6 +151,7 @@ SELECT
   tpk.koodi                AS toimenpidekoodi,
   s.sampoid                AS sopimus_sampoid,
   u.sampoid                AS urakka_sampoid,
+  u.tyyppi                 AS urakka_tyyppi,
   k.tila                   AS kustannussuunnitelma_tila,
   k.lahetetty              AS kustannussuunnitelma_lahetetty,
   tpi.urakka               AS "urakka-id",
@@ -138,15 +163,17 @@ SELECT
 
   -- Kustannussuunnitelman summa
   CASE WHEN m.tyyppi = 'kokonaishintainen'
-       THEN (SELECT SUM(kht.summa)
-               FROM kokonaishintainen_tyo kht
-              WHERE kht.sopimus = s.id AND kht.toimenpideinstanssi = tpi.id)
-       WHEN m.tyyppi = 'yksikkohintainen'
-       THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
-               FROM yksikkohintainen_tyo yht
-              WHERE yht.urakka = u.id AND yht.tehtava IN (SELECT id FROM toimenpidekoodi WHERE emo = tpk.id))
-       ELSE 1
-  END AS kustannussuunnitelma_summa
+    THEN (SELECT SUM(kht.summa)
+          FROM kokonaishintainen_tyo kht
+          WHERE kht.sopimus = s.id AND kht.toimenpideinstanssi = tpi.id)
+  WHEN m.tyyppi = 'yksikkohintainen'
+    THEN (SELECT SUM(yht.maara * yht.yksikkohinta)
+          FROM yksikkohintainen_tyo yht
+          WHERE yht.urakka = u.id AND yht.tehtava IN (SELECT id
+                                                      FROM toimenpidekoodi
+                                                      WHERE emo = tpk.id))
+  ELSE 1
+  END                      AS kustannussuunnitelma_summa
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
   JOIN urakka u ON u.id = tpi.urakka
@@ -241,3 +268,48 @@ SELECT numero,
        tyyppi
   FROM maksuera
  WHERE toimenpideinstanssi in (SELECT id FROM toimenpideinstanssi WHERE urakka = :urakka_id);
+
+
+-- name: hae-kanavaurakan-maksuerien-summat
+-- Jos muokkaat tätä, joudut todennäköisesti muokkaamaan myös kanavien_laskutusyhteenveto.sql
+SELECT
+  tpi.id as "tpi_id",
+
+  -- kokonaishintaisten töiden summat
+  (SELECT COALESCE(SUM(summa), 0)
+   FROM kokonaishintainen_tyo
+   WHERE toimenpideinstanssi = tpi.id) AS "kokonaishintainen",
+
+  -- lisatyo
+  (SELECT COALESCE(sum(tyo.maara * yht.yksikkohinta), 0)
+   FROM kan_toimenpide ktp
+     JOIN kan_laskutettavat_hinnoittelut laskutettavat ON ktp.id = laskutettavat."toimenpide-id"
+     JOIN kan_tyo tyo ON (tyo.toimenpide = ktp.id AND tyo.poistettu IS NOT TRUE)
+     JOIN yksikkohintainen_tyo yht ON yht.tehtava = tyo."toimenpidekoodi-id" AND
+                                      ktp.pvm BETWEEN yht.alkupvm AND yht.loppupvm
+   WHERE ktp.tyyppi = 'muutos-lisatyo' :: KAN_TOIMENPIDETYYPPI AND
+         tyo.toimenpide = ktp.id AND
+         ktp.poistettu IS NOT TRUE AND
+         ktp.toimenpideinstanssi = tpi.id)
+  +
+  (SELECT COALESCE(SUM(k_hinta.summa * (1.0 + (k_hinta.yleiskustannuslisa / 100))), 0) +
+          COALESCE(SUM((k_hinta.maara * k_hinta.yksikkohinta) * (1.0 + (k_hinta.yleiskustannuslisa / 100))), 0)
+   FROM kan_toimenpide ktp
+     JOIN kan_laskutettavat_hinnoittelut laskutettavat ON ktp.id = laskutettavat."toimenpide-id"
+     JOIN kan_hinta k_hinta ON k_hinta.toimenpide = ktp.id AND k_hinta.poistettu IS NOT TRUE
+   WHERE ktp.toimenpideinstanssi = tpi.id AND
+         ktp.poistettu IS NOT TRUE)    AS "lisatyo",
+
+  -- muut kustannukset
+  (SELECT COALESCE(SUM(rahasumma), 0)
+   FROM erilliskustannus
+   WHERE tpi.id = toimenpideinstanssi) AS "muu",
+
+  -- sakot
+  (SELECT COALESCE(SUM(maara), 0)
+   FROM sanktio
+   WHERE tpi.id = toimenpideinstanssi) AS "sakko"
+
+FROM toimenpideinstanssi tpi
+WHERE tpi.urakka = :urakka
+GROUP BY tpi.id

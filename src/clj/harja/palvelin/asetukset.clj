@@ -47,7 +47,7 @@
                                                (s/optional-key :sahkoposti-ulos-jono) s/Str
                                                (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str}}
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
-                                        :palvelin/Str s/Str}
+                                        (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
                             :kuittausjono-sisaan s/Str
                             :lahetysjono-ulos s/Str
@@ -109,7 +109,10 @@
                                            (s/optional-key :siltojenpalvelusopimusten-tuontikohde) s/Str
                                            (s/optional-key :turvalaitteiden-shapefile) s/Str
                                            (s/optional-key :turvalaitteiden-osoite) s/Str
-                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str}
+                                           (s/optional-key :turvalaitteiden-tuontikohde) s/Str
+                                           (s/optional-key :kanavien-shapefile) s/Str
+                                           (s/optional-key :kanavien-osoite) s/Str
+                                           (s/optional-key :kanavien-tuontikohde) s/Str}
 
 
 
@@ -123,6 +126,7 @@
                                  :salasana s/Str}
 
    (s/optional-key :virustarkistus) {:url s/Str}
+   (s/optional-key :tiedostopesula) {:base-url s/Str}
 
    (s/optional-key :paivystystarkistus) {:paivittainen-aika [s/Num]}
    (s/optional-key :reittitarkistus) {:paivittainen-aika [s/Num]}
@@ -147,6 +151,10 @@
    (s/optional-key :vaylat) {:geometria-url s/Str
                              :paivittainen-tarkistusaika [s/Num]
                              :paivitysvali-paivissa s/Num}
+
+   (s/optional-key :kanavasillat) {:geometria-url s/Str
+                                   :paivittainen-tarkistusaika [s/Num]
+                                   :paivitysvali-paivissa s/Num}
 
    (s/optional-key :tyotunti-muistutukset) {:paivittainen-aika [s/Num]}
 

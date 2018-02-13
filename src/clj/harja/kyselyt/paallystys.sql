@@ -7,6 +7,7 @@ SELECT
   pi.tila,
   nimi,
   kohdenumero,
+  yhaid,
   tunnus,
   pi.paatos_tekninen_osa   AS "paatos-tekninen-osa",
   sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
@@ -16,7 +17,8 @@ SELECT
   lahetetty,
   lahetys_onnistunut       AS "lahetys-onnistunut",
   lahetysvirhe,
-  takuupvm
+  takuupvm,
+  pi.muokattu
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE

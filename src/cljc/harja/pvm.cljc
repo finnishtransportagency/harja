@@ -73,14 +73,15 @@
 
 (defn aikana [dt tunnit minuutit sekunnit millisekunnit]
   #?(:cljs
-     (goog.date.DateTime.
-       (.getYear dt)
-       (.getMonth dt)
-       (.getDate dt)
-       tunnit
-       minuutit
-       sekunnit
-       millisekunnit)
+     (when dt
+       (goog.date.DateTime.
+         (.getYear dt)
+         (.getMonth dt)
+         (.getDate dt)
+         tunnit
+         minuutit
+         sekunnit
+         millisekunnit))
 
      :clj
      (cond (instance? java.util.Date dt)
@@ -767,6 +768,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn aikavali-paivina [alku loppu]
      (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
+#?(:clj
+   (defn aikavali-sekuntteina [alku loppu]
+     (t/in-seconds (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
+
 (defn paivia-aikavalien-leikkauskohdassa
   "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
   [[alkupvm loppupvm] [vali-alkupvm vali-loppupvm]]
@@ -799,17 +804,26 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (when (and eka toka)
     (paivia-valissa eka toka)))
 
-#?(:clj
-   (defn iso-8601->pvm
-     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
-     [teksti]
-     (df/parse (df/formatter "yyyy-MM-dd") teksti)))
+(defn iso-8601->pvm
+  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
+  [teksti]
+  (df/parse (df/formatter "yyyy-MM-dd") teksti))
 
 #?(:clj
    (defn pvm->iso-8601
      "Parsii annetun päivämäärän ISO-8601 (yyyy-MM-DD) muotoon."
      [pvm]
      (df/unparse (df/formatter "yyyy-MM-dd") pvm)))
+
+#?(:clj
+   (defn iso-8601->aika
+     "Parsii annetun ISO-8601 (yyyy-MM-dd HH:mm:ss.SSSSSS) formaatissa olevan merkkijonon päivämääräksi."
+     [teksti]
+     (try
+       (df/parse (df/formatter "yyyy-MM-dd HH:mm:ss.SSSSSS") teksti)
+       (catch #?(:cljs js/Error
+                 :clj  Exception) e
+         nil))))
 
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
@@ -847,17 +861,39 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 (defn vuodet-valissa [alku loppu]
   (range (vuosi alku) (inc (vuosi loppu))))
 
-#?(:cljs
-   (defn yhdista-pvm-ja-aika
-     "Yhdistaa DateTime ja Aika tyypit yhdeksi DateTime:ksi"
-     [pvm aika]
-     (let [t (:tunnit aika)
-           min (:minuutit aika)
-           s (:sekunnit aika)]
-       (aikana pvm t min s 0))))
+(defn aikavalit-leikkaavat? [ensimmainen-alku ensimmainen-loppu toinen-alku toinen-loppu]
+  (boolean (or
+             (and
+               (not (nil? toinen-alku))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (valissa? toinen-alku ensimmainen-alku ensimmainen-loppu false))
+             (and
+               (not (nil? toinen-loppu))
+               (not (nil? ensimmainen-alku))
+               (not (nil? ensimmainen-loppu))
+               (valissa? toinen-loppu ensimmainen-alku ensimmainen-loppu false))
+             (and
+               (not (nil? ensimmainen-alku))
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (valissa? ensimmainen-alku toinen-alku toinen-loppu false))
+             (and
+               (not (nil? ensimmainen-loppu))
+               (not (nil? toinen-alku))
+               (not (nil? toinen-loppu))
+               (valissa? ensimmainen-loppu toinen-alku toinen-loppu false)))))
 
-#?(:cljs
-   (defn DateTime->Aika
-     "Annettunna DateTime, palauttaa Aika tyyppin, joka vastaa annetun DateTime:n aikaa"
-     [pvm]
-     (->Aika (tunti pvm) (minuutti pvm) (sekuntti pvm))))
+(defn pvm-ilman-samaa-vuotta
+  "Formatoi annetun pvm:n suomalaisessa muodossa. Jättää vuoden pois, mikäli se on sama kuin annettu.
+   Tällä tavalla voidaan esim. UI:ssa säästää tilaa, kun vuotta ei piirretä silloin kun on ilmeistä, mistä
+   vuodesta on kyse."
+  [pvm sama-vuosi]
+  (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) sama-vuosi)}))
+
+(defn paivat-aikavalissa [alku loppu]
+  (if (or (t/equal? alku loppu) (t/after? alku loppu))
+    [alku]
+    (sort (into [alku loppu]
+                (map #(t/plus alku (t/days %))
+                     (range 1 (t/in-days (t/interval alku loppu))))))))

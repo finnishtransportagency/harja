@@ -1,5 +1,5 @@
 (ns harja.ui.kentat
-  "UI input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
+  "UI-input kenttien muodostaminen tyypin perusteella, esim. grid ja lomake komponentteihin."
   (:require [reagent.core :refer [atom] :as r]
             [harja.pvm :as pvm]
             [harja.ui.pvm :as pvm-valinta]
@@ -40,6 +40,7 @@
             [harja.tyokalut.big :as big]
             [taoensso.timbre :as log])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
+                   [harja.tyokalut.ui :refer [for*]]
                    [harja.makrot :refer [nappaa-virhe]]))
 
 ;; PENDING: dokumentoi rajapinta, mitä eri avaimia kentälle voi antaa
@@ -256,37 +257,37 @@
     (komp/luo
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen?] :as kentta} data]
-       (let [nykyinen-data @data
-             nykyinen-teksti (or @teksti
-                                 (normalisoi-numero (fmt nykyinen-data))
-                                 "")
-             kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
-             desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
-                                                       (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
-                                                       "})?"))]
-         [:input {:class (when lomake? "form-control")
-                  :type "text"
-                  :placeholder (placeholder kentta data)
-                  :on-focus (:on-focus kentta)
-                  :on-blur #(reset! teksti nil)
-                  :value nykyinen-teksti
-                  :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
-                                    v (if vaadi-ei-negatiivinen?
-                                        (str/replace v #"-" "")
-                                        v)]
-                                (when (or (= v "")
-                                          (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                          (re-matches (if kokonaisluku?
-                                                        kokonaisluku-re-pattern
-                                                        desimaaliluku-re-pattern) v))
-                                  (reset! teksti v)
+        (let [nykyinen-data @data
+              nykyinen-teksti (or @teksti
+                                  (normalisoi-numero (fmt nykyinen-data))
+                                  "")
+              kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
+              desimaaliluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}((\\.|,)\\d{0,"
+                                                        (or (:desimaalien-maara kentta) +desimaalin-oletus-tarkkuus+)
+                                                        "})?"))]
+          [:input {:class (when lomake? "form-control")
+                   :type "text"
+                   :placeholder (placeholder kentta data)
+                   :on-focus (:on-focus kentta)
+                   :on-blur #(reset! teksti nil)
+                   :value nykyinen-teksti
+                   :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
+                                     v (if vaadi-ei-negatiivinen?
+                                         (str/replace v #"-" "")
+                                         v)]
+                                 (when (or (= v "")
+                                           (when-not vaadi-ei-negatiivinen? (= v "-"))
+                                           (re-matches (if kokonaisluku?
+                                                         kokonaisluku-re-pattern
+                                                         desimaaliluku-re-pattern) v))
+                                   (reset! teksti v)
 
-                                  (let [numero (if kokonaisluku?
-                                                 (js/parseInt v)
-                                                 (js/parseFloat (str/replace v #"," ".")))]
-                                    (if (not (js/isNaN numero))
-                                      (reset! data numero)
-                                      (reset! data nil)))))}])))))
+                                   (let [numero (if kokonaisluku?
+                                                  (js/parseInt v)
+                                                  (js/parseFloat (str/replace v #"," ".")))]
+                                     (if (not (js/isNaN numero))
+                                       (reset! data numero)
+                                       (reset! data nil)))))}])))))
 
 (defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara] :as kentta} data]
   (let [desimaalien-maara (or (when kokonaisluku? 0) desimaalien-maara +desimaalin-oletus-tarkkuus+)
@@ -379,10 +380,11 @@
 (defmethod tee-kentta :checkbox-group
   [{:keys [vaihtoehdot vaihtoehto-nayta valitse-kaikki?
            tyhjenna-kaikki? nayta-rivina? disabloi tasaa
-           muu-vaihtoehto muu-kentta
+           muu-vaihtoehto muu-kentta palstoja
            valitse-fn valittu-fn]} data]
   (assert data)
-  (let [vaihtoehto-nayta (or vaihtoehto-nayta
+  (let [palstoja (or palstoja 1)
+        vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
         data-nyt @data
         valitut (if valittu-fn
@@ -401,18 +403,32 @@
      (when valitse-kaikki?
        [:button.nappi-toissijainen {:on-click #(swap! data clojure.set/union (into #{} vaihtoehdot))}
         [ikonit/ikoni-ja-teksti [ikonit/livicon-check] "Tyhjennä kaikki"]])
-     (let [checkboxit (doall
-                        (for [v vaihtoehdot
-                              :let [valittu? (valitut v)]]
+     (let [vaihtoehdot-palstoissa (partition-all
+                                    (Math/ceil (/ (count vaihtoehdot) palstoja))
+                                    vaihtoehdot)
+           coll-luokka (Math/ceil (/ 12 palstoja))
+           checkbox (fn [vaihtoehto]
+                      (let [valittu? (valitut vaihtoehto)]
+                        [:div.checkbox
+                         [:label
+                          [:input {:type "checkbox" :checked (boolean valittu?)
+                                   :disabled (if disabloi
+                                               (disabloi valitut vaihtoehto)
+                                               false)
+                                   :on-change #(swap! data valitse vaihtoehto (not valittu?))}]
+                          (vaihtoehto-nayta vaihtoehto)]]))
+           checkboxit (doall
+                        (for [v vaihtoehdot]
                           ^{:key (str "boolean-group-" (name v))}
-                          [:div.checkbox
-                           [:label
-                            [:input {:type "checkbox" :checked (boolean valittu?)
-                                     :disabled (if disabloi
-                                                 (disabloi valitut v)
-                                                 false)
-                                     :on-change #(swap! data valitse v (not valittu?))}]
-                            (vaihtoehto-nayta v)]]))
+                          [checkbox v]))
+           checkboxit-palstoissa (doall
+                                   (for* [vaihtoehdot-palsta vaihtoehdot-palstoissa]
+                                     [:div
+                                      [:div (when (> palstoja 1)
+                                              {:class (str "col-sm-" coll-luokka)})
+                                       (for [v vaihtoehdot-palsta]
+                                         ^{:key (str "boolean-group-" (name v))}
+                                         [checkbox v])]]))
            muu (when (and muu-vaihtoehto
                           (valitut muu-vaihtoehto))
                  [tee-kentta muu-kentta
@@ -428,7 +444,7 @@
             (when muu
               ^{:key "muu"}
               [:td.muu muu])]]]
-         [:span checkboxit
+         [:span checkboxit-palstoissa
           [:span.muu muu]]))]))
 
 
@@ -498,11 +514,11 @@
 
 (defmethod tee-kentta :valinta [{:keys [alasveto-luokka valinta-nayta valinta-arvo
                                         valinnat valinnat-fn rivi on-focus jos-tyhja
-                                        jos-tyhja-fn
+                                        jos-tyhja-fn disabled?
                                         nayta-ryhmat ryhmittely ryhman-otsikko]} data]
   ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
   ;; esim. :id
-  (assert (or valinnat valinnat-fn "Anna joko valinnat tai valinnat-fn"))
+  (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
   (let [nykyinen-arvo @data
         valinnat (or valinnat (valinnat-fn rivi))]
     [livi-pudotusvalikko {:class (str "alasveto-gridin-kentta " alasveto-luokka)
@@ -519,7 +535,8 @@
                           :on-focus on-focus
                           :format-fn (if (empty? valinnat)
                                        (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
-                                       (or (and valinta-nayta #(valinta-nayta % true)) str))}
+                                       (or (and valinta-nayta #(valinta-nayta % true)) str))
+                          :disabled disabled?}
      valinnat]))
 
 (defmethod nayta-arvo :valinta [{:keys [valinta-nayta valinta-arvo
@@ -1119,55 +1136,91 @@
 (defmethod tee-kentta :sijaintivalitsin
   ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.
   ;; Optioilla voidaan asettaa vain toinen valinta mahdolliseksi.
-  [{:keys [karttavalinta? paikannus?
+  [{:keys [karttavalinta? paikannus? paikannus-kaynnissa?-atom
            paikannus-onnistui-fn paikannus-epaonnistui-fn
-           karttavalinta-tehty-fn]} data]
+           karttavalinta-tehty-fn poista-valinta? disabled?]} data]
   (let [karttavalinta? (if (some? karttavalinta?) karttavalinta? true)
         paikannus? (if (some? paikannus?) paikannus? true)
 
         paikannus-kaynnissa? (atom false)
 
-        karttavalinta-kaynnissa? (atom false)
-        lopeta-paikannus #(reset! paikannus-kaynnissa? false)
-        aloita-paikannus (fn [] (reset! paikannus-kaynnissa? true)
-                           (geo/nykyinen-geolokaatio
-                             #(do (lopeta-paikannus)
-                                  (paikannus-onnistui-fn %))
-                             #(do (lopeta-paikannus)
-                                  (paikannus-epaonnistui-fn %))))
-        lopeta-karttavalinta #(reset! karttavalinta-kaynnissa? false)
-        aloita-karttavalinta (fn []
-                               (reset! karttavalinta-kaynnissa? true))]
+        karttavalinta-kaynnissa? (atom false)]
+    (when paikannus-kaynnissa?-atom
+      (add-watch paikannus-kaynnissa?
+                 :paikannus?
+                 (fn [avain ref vanha uusi]
+                   (reset! paikannus-kaynnissa?-atom uusi))))
 
     (komp/luo
       (komp/sisaan #(do
-                      (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
+                      (if (nil? @data)
+                        (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
+                        (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti @data}))
                       (karttatasot/taso-paalle! :sijaintivalitsin)))
       (komp/ulos #(karttatasot/taso-pois! :sijaintivalitsin))
-      (fn [_ _]
-        [:div
-         (when paikannus?
-           [napit/yleinen-ensisijainen
-            "Paikanna"
-            #(when-not @paikannus-kaynnissa?
-               (aloita-paikannus))
-            {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
-             :ikoni (ikonit/screenshot)
-             :tallennus-kaynnissa? @paikannus-kaynnissa?}])
-
-         (when karttavalinta?
-           (if-not @karttavalinta-kaynnissa?
+      (fn [{disabled? :disabled?} data]
+        (let [paikannus-onnistui-fn (or paikannus-onnistui-fn
+                                        (fn [sijainti]
+                                          (let [coords (.-coords sijainti)
+                                                koordinaatit {:x (.-longitude coords)
+                                                              :y (.-latitude coords)}]
+                                            (go (let [piste (<! (k/post! :hae-piste-kartalle koordinaatit))]
+                                                  (if (k/virhe? piste)
+                                                    (reset! data {:virhe "Pisteen haku epäonnistui"})
+                                                    (do (if (= :kayta-lomakkeen-atomia karttavalinta-tehty-fn)
+                                                          (reset! data piste)
+                                                          (karttavalinta-tehty-fn piste))
+                                                        (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti piste}))))))))
+              paikannus-epaonnistui-fn (or paikannus-epaonnistui-fn
+                                           (fn [virhe]
+                                             (reset! data {:virhe "Paikannus epäonnistui"})))
+              lopeta-paikannus #(reset! paikannus-kaynnissa? false)
+              aloita-paikannus (fn [] (reset! paikannus-kaynnissa? true)
+                                 (geo/nykyinen-geolokaatio
+                                   #(do (lopeta-paikannus)
+                                        (paikannus-onnistui-fn %))
+                                   #(do (lopeta-paikannus)
+                                        (paikannus-epaonnistui-fn %))))
+              lopeta-karttavalinta #(reset! karttavalinta-kaynnissa? false)
+              aloita-karttavalinta (fn []
+                                     (reset! karttavalinta-kaynnissa? true))]
+          [:div
+           (when (and paikannus?
+                      (geo/geolokaatio-tuettu?))
              [napit/yleinen-ensisijainen
-              "Valitse kartalta"
-              #(when-not @karttavalinta-kaynnissa?
-                 (aloita-karttavalinta))
-              {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa?)
-               :ikoni (ikonit/map-marker)}]
-             [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
-                                                 :kun-valmis #(do
-                                                                (lopeta-karttavalinta)
-                                                                (karttavalinta-tehty-fn
-                                                                  {:type :point :coordinates %}))}]))]))))
+              "Paikanna"
+              #(when-not @paikannus-kaynnissa?
+                 (aloita-paikannus))
+              {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa? disabled?)
+               :ikoni (ikonit/screenshot)
+               :tallennus-kaynnissa? @paikannus-kaynnissa?}])
+
+           (when karttavalinta?
+             (if-not @karttavalinta-kaynnissa?
+               [napit/yleinen-ensisijainen
+                "Valitse kartalta"
+                #(when-not @karttavalinta-kaynnissa?
+                   (aloita-karttavalinta))
+                {:disabled (or @paikannus-kaynnissa? @karttavalinta-kaynnissa? disabled?)
+                 :ikoni (ikonit/map-marker)}]
+               [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
+                                                   :kun-valmis #(do
+                                                                  (lopeta-karttavalinta)
+                                                                  (if (= :kayta-lomakkeen-atomia karttavalinta-tehty-fn)
+                                                                    (reset! data {:type :point :coordinates %})
+                                                                    (karttavalinta-tehty-fn
+                                                                      {:type :point :coordinates %})))}]))
+           (when (and poista-valinta?
+                      (not @karttavalinta-kaynnissa?)
+                      (not @paikannus-kaynnissa?)
+                      (not (nil? @data))
+                      (not (contains? @data :virhe)))
+             [napit/poista
+              "Poista valinta"
+              (fn [e]
+                (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
+                (reset! data nil))
+              {:disabled disabled?}])])))))
 
 (defmethod nayta-arvo :tierekisteriosoite [_ data]
   (let [{:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys]} @data

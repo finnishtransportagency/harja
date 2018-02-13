@@ -129,7 +129,7 @@
       nil
       nil)))
 
-(defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id]
+(defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit")
   (q-toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
   (log/debug "Luodaan toteumalle uudet materiaalit")
@@ -146,6 +146,4 @@
         toteuma-id
         materiaalikoodi-id
         (get-in materiaali [:maara :maara])
-        (:id kirjaaja))))
-  ;; Päivitä sopimuksen päivän materiaalinkäyttö
-  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db (:sopimusId toteuma) (:alkanut toteuma)))
+        (:id kirjaaja)))))

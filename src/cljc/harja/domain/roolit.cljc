@@ -194,9 +194,10 @@ rooleista."
   [kayttaja]
   (case (name (or (get-in kayttaja [:organisaatio :tyyppi]) "tilaaja"))
     "liikennevirasto" :tilaaja
+    "hallintayksikko" :tilaaja
     "urakoitsija" :urakoitsija
-    ;; FIXME: laadunvalvontakonsultti ?
-    :tilaaja))
+
+    :urakoitsija))
 
 (defn tilaajan-kayttaja?
   [kayttaja]

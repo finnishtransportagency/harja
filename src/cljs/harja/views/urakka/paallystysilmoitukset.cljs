@@ -14,6 +14,7 @@
 
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
             [harja.tiedot.urakka :as u]
             [harja.tiedot.urakka.paallystys :as paallystys]
@@ -43,7 +44,8 @@
             [harja.ui.valinnat :as valinnat]
             [cljs-time.core :as t]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.views.urakka.valinnat :as u-valinnat])
+            [harja.views.urakka.valinnat :as u-valinnat]
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -289,6 +291,29 @@
          [kasittely urakka lomakedata-nyt lukittu? muokkaa!]
          [asiatarkastus urakka lomakedata-nyt lukittu? muokkaa!]])]]))
 
+(defn poista-lukitus [urakka lomakedata-nyt]
+  (let [paatosoikeus? (oikeudet/on-muu-oikeus? "päätös"
+                                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                               (:id urakka))
+        lahetettava-data {:urakka-id (:id urakka)
+                          :kohde-id (:paallystyskohde-id lomakedata-nyt)
+                          :tila :valmis}]
+    [:div
+     [:div "Tämä ilmoitus on lukittu. Urakanvalvoja voi avata lukituksen."]
+     [napit/palvelinkutsu-nappi
+      "Avaa lukitus"
+      #(when paatosoikeus?
+         (paallystys/avaa-paallystysilmoituksen-lukitus! lahetettava-data))
+      {:luokka "nappi-kielteinen avaa-lukitus-nappi"
+       :id "poista-paallystysilmoituksen-lukitus"
+       :disabled (not paatosoikeus?)
+       :ikoni (ikonit/livicon-wrench)
+       :virheviesti "Lukituksen avaaminen epäonnistui"
+       :kun-onnistuu (fn [vastaus]
+                       (swap! paallystys/paallystysilmoitus-lomakedata assoc :tila (:tila vastaus))
+                       (harja.atom/paivita! paallystys/paallystysilmoitukset))}]]))
+
+
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa!]
@@ -304,7 +329,24 @@
                             [(:id %) 0 0 0]
                             ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
         [:fieldset.lomake-osa
-         [:h3 "Tekninen osa"]
+         [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
+          {:otsikko "Päällystysilmoituksen täytön vihjeet"}
+          [leijuke/multipage-vihjesisalto
+           [:div
+            [:h6 "Arvon kopiointi alaspäin"]
+            [:figure
+             [:img {:src "images/pot_taytto1.gif"
+                    ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
+                    :style {:height "260px"}}]
+             [:figcaption
+              [:p "Voit kopioida kentän arvon alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]
+           [:div
+            [:h6 "Arvojen toistaminen alaspäin"]
+            [:figure
+             [:img {:src "images/pot_taytto2.gif"
+                    :style {:height "260px"}}]
+             [:figcaption
+              [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
           {:voi-kumota? false
@@ -334,28 +376,115 @@
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :rivinumerot? true
            :jarjesta jarjestys-fn}
-          [(assoc paallystys/paallyste-grid-skeema :nimi :toimenpide-paallystetyyppi :leveys 30)
-           (assoc paallystys/raekoko-grid-skeema :nimi :toimenpide-raekoko :leveys 10)
-           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)" :nimi :massamenekki
+          [(assoc paallystys/paallyste-grid-skeema
+             :nimi :toimenpide-paallystetyyppi
+             :leveys 30
+             :tayta-alas? #(not (nil? %))
+             :tayta-fn (fn [lahtorivi tama-rivi]
+                         (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi lahtorivi)))
+             :tayta-sijainti :ylos
+             :tayta-tooltip "Kopioi sama toimenpide alla oleville riveille"
+             :tayta-alas-toistuvasti? #(not (nil? %))
+             :tayta-toistuvasti-fn
+             (fn [toistettava-rivi tama-rivi]
+               (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi toistettava-rivi))))
+           (assoc paallystys/raekoko-grid-skeema
+             :nimi :toimenpide-raekoko :leveys 10
+             :tayta-alas? #(not (nil? %))
+             :tayta-fn (fn [lahtorivi tama-rivi]
+                         (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
+             :tayta-sijainti :ylos
+             :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
+             :tayta-alas-toistuvasti? #(not (nil? %))
+             :tayta-toistuvasti-fn
+             (fn [toistettava-rivi tama-rivi]
+               (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi))))
+           {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
+            :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
-            :tasaa :oikea :leveys 10}
+            :tasaa :oikea :leveys 10
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :massamenekki (:massamenekki lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :massamenekki (:massamenekki toistettava-rivi)))}
            {:otsikko "RC-%" :nimi :rc% :leveys 10 :tyyppi :numero :desimaalien-maara 0
             :tasaa :oikea :pituus-max 100
-            :validoi [[:rajattu-numero 0 100]]}
-           (assoc paallystys/tyomenetelma-grid-skeema :nimi :toimenpide-tyomenetelma :leveys 30)
+            :validoi [[:rajattu-numero 0 100]]
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :rc% (:rc% lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama RC-% alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           (assoc paallystys/tyomenetelma-grid-skeema
+             :nimi :toimenpide-tyomenetelma
+             :leveys 30
+             :tayta-alas? #(not (nil? %))
+             :tayta-fn (fn [lahtorivi tama-rivi]
+                         (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma lahtorivi)))
+             :tayta-sijainti :ylos
+             :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
+             :tayta-alas-toistuvasti? #(not (nil? %))
+             :tayta-toistuvasti-fn
+             (fn [toistettava-rivi tama-rivi]
+               (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma toistettava-rivi))))
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
-            :tasaa :oikea}
+            :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :leveys (:leveys lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama leveys alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :leveys (:leveys toistettava-rivi)))}
            {:otsikko "Kohteen kokonais\u00ADmassa\u00ADmäärä (t)" :nimi :kokonaismassamaara
-            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10}
+            :tyyppi :positiivinen-numero :tasaa :oikea :leveys 10
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :kokonaismassamaara (:kokonaismassamaara lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama kokonaismassamäärä alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :kokonaismassamaara (:kokonaismassamaara toistettava-rivi)))}
            {:otsikko "Pinta-ala (m²)" :nimi :pinta-ala :leveys 10 :tyyppi :positiivinen-numero
-            :tasaa :oikea}
+            :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :pinta-ala (:pinta-ala lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama pinta-ala alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :pinta-ala (:pinta-ala toistettava-rivi)))}
            {:otsikko "Kuulamylly"
             :nimi :kuulamylly
             :tyyppi :valinta
             :valinta-arvo :koodi
             :valinta-nayta #(:nimi %)
             :valinnat pot/+kyylamyllyt-ja-nil+
-            :leveys 30}]
+            :leveys 30
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :kuulamylly (:kuulamylly lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama kuulamylly alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :kuulamylly (:kuulamylly toistettava-rivi)))}]
           paallystystoimenpiteet]
 
          [grid/muokkaus-grid
@@ -371,18 +500,72 @@
            :virheet (wrap-virheet :kiviaines)
            :jarjesta jarjestys-fn}
           [{:otsikko "Kiviaines\u00ADesiintymä" :nimi :esiintyma :tyyppi :string :pituus-max 256
-            :leveys 30}
-           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20}
+            :leveys 30
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :esiintyma (:esiintyma lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama esiintymä alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :km-arvo (:km-arvo lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama KM-arvo alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
            {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
-            :leveys 20}
+            :leveys 20
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :muotoarvo (:muotoarvo lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama muotoarvo alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
            {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
             :tyyppi :valinta
             :valinta-arvo :koodi
             :valinta-nayta #(:nimi %)
-            :valinnat pot/+sideainetyypit-ja-nil+}
-           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea}
+            :valinnat pot/+sideainetyypit-ja-nil+
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :sideainetyyppi (:sideainetyyppi lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama sideainetyyppi alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+           {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :pitoisuus (:pitoisuus lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama pitoisuus alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
            {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
-            :pituus-max 256}]
+            :pituus-max 256
+            :tayta-alas? #(not (nil? %))
+            :tayta-fn (fn [lahtorivi tama-rivi]
+                        (assoc tama-rivi :lisaaineet (:lisaaineet lahtorivi)))
+            :tayta-sijainti :ylos
+            :tayta-tooltip "Kopioi sama tieto alla oleville riveille"
+            :tayta-alas-toistuvasti? #(not (nil? %))
+            :tayta-toistuvasti-fn
+            (fn [toistettava-rivi tama-rivi]
+              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}]
           paallystystoimenpiteet]
 
          (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
@@ -487,6 +670,8 @@
            (lomake/lomake-lukittu-huomautus lukko))
 
          [:h2 "Päällystysilmoitus"]
+         (when (= :lukittu (:tila lomakedata-nyt))
+           [poista-lukitus urakka lomakedata-nyt])
 
          [paallystysilmoitus-perustiedot urakka lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
 
@@ -511,19 +696,30 @@
                   (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                             (:id @nav/valittu-urakka))))))))
 
-(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset]
+(defn jarjesta-paallystysilmoitukset [paallystysilmoitukset jarjestys]
   (when paallystysilmoitukset
-    (sort-by
-      (juxt (fn [toteuma] (case (:tila toteuma)
-                            :lukittu 0
-                            :valmis 1
-                            :aloitettu 3
-                            4))
-            (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
-                            :hyvaksytty 0
-                            :hylatty 1
-                            3)))
-      paallystysilmoitukset)))
+    (case jarjestys
+      :kohdenumero
+      (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %)) paallystysilmoitukset)
+
+      :muokkausaika
+      ;; Muokkausajalliset ylimmäksi, ei-muokatut sen jälkeen kohdenumeron mukaan
+      (concat (sort-by :muokattu (filter #(some? (:muokattu %)) paallystysilmoitukset))
+              (sort-by #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+                       (filter #(nil? (:muokattu %)) paallystysilmoitukset)))
+
+      :tila
+      (sort-by
+        (juxt (fn [toteuma] (case (:tila toteuma)
+                              :lukittu 0
+                              :valmis 1
+                              :aloitettu 3
+                              4))
+              (fn [toteuma] (case (:paatos-tekninen-osa toteuma)
+                              :hyvaksytty 0
+                              :hylatty 1
+                              3)))
+        paallystysilmoitukset))))
 
 (defn- tayta-takuupvm [lahtorivi tama-rivi]
   ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
@@ -554,14 +750,17 @@
     :voi-kumota? false
     :voi-poistaa? (constantly false)
     :voi-muokata? true}
-   [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
+   [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
     {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
+    {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
     {:otsikko "Tila" :nimi :tila :muokattava? (constantly false) :tyyppi :string :leveys 20
      :hae (fn [rivi]
             (paallystys-ja-paikkaus/kuvaile-ilmoituksen-tila (:tila rivi)))}
     {:otsikko "Takuupäivämäärä" :nimi :takuupvm :tyyppi :pvm :leveys 20 :muokattava? (fn [t] (not (nil? (:id t))))
-     :fmt pvm/pvm-opt :tayta-alas? #(not (nil? %)) :tayta-fn tayta-takuupvm
+     :fmt pvm/pvm-opt
+     :tayta-alas? #(not (nil? %))
+     :tayta-fn tayta-takuupvm
      :tayta-tooltip "Kopioi sama takuupvm alla oleville kohteille"}
     {:otsikko "Päätös" :nimi :paatos-tekninen-osa :muokattava? (constantly true) :tyyppi :komponentti
      :leveys 20
@@ -594,12 +793,14 @@
    {:otsikko ""
     :tyhja (if (nil? paallystysilmoitukset) [ajax-loader "Haetaan ilmoituksia..."] "Ei ilmoituksia")
     :tunniste hash}
-   [{:otsikko "Kohdenumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
-    {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
+   [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 12}
+    {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
+    {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+    {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 45}
     {:otsikko "Edellinen lähetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
-     :leveys 60
+     :leveys 45
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
-    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 25 :tyyppi :komponentti
+    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 20 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/yha-lahetysnappi
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet
@@ -619,19 +820,20 @@
       (let [urakka-id (:id @nav/valittu-urakka)
             sopimus-id (first @u/valittu-sopimusnumero)
             urakan-vuosi @u/valittu-urakan-vuosi
-            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu)]
+            paallystysilmoitukset (jarjesta-paallystysilmoitukset @paallystys/paallystysilmoitukset-suodatettu
+                                                                  @yllapito-tiedot/kohdejarjestys)]
         [:div
          [:h3 "Päällystysilmoitukset"]
          [paallystysilmoitukset-taulukko urakka-id paallystysilmoitukset]
          [:h3 "YHA-lähetykset"]
          [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
-         [yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]
          [yha/yha-lahetysnappi
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id
           sopimus-id
           urakan-vuosi
-          paallystysilmoitukset]]))))
+          paallystysilmoitukset]
+         [yha-lahetykset-taulukko urakka-id sopimus-id urakan-vuosi paallystysilmoitukset]]))))
 
 (defn paallystysilmoituslomake-historia [ilmoituslomake]
   (let [historia (historia/historia ilmoituslomake)]
@@ -651,6 +853,24 @@
            (reset! paallystys/yllapitokohteet (:yllapitokohteet vastaus))
            (reset! ilmoituslomake nil))]))))
 
+(defn valinnat [urakka]
+  [:div
+   [valinnat/vuosi {}
+    (t/year (:alkupvm urakka))
+    (t/year (:loppupvm urakka))
+    urakka/valittu-urakan-vuosi
+    urakka/valitse-urakan-vuosi!]
+   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+   [u-valinnat/tienumero yllapito-tiedot/tienumero]
+   [yleiset/pudotusvalikko
+    "Järjestä kohteet"
+    {:valinta @yllapito-tiedot/kohdejarjestys
+     :valitse-fn #(reset! yllapito-tiedot/kohdejarjestys %)
+     :format-fn {:tila "Tilan mukaan"
+                 :kohdenumero "Kohdenumeron mukaan"
+                 :muokkausaika "Muokkausajan mukaan"}}
+    [:tila :kohdenumero :muokkausaika]]])
+
 (defn paallystysilmoitukset [urakka]
   (komp/luo
     (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
@@ -661,11 +881,5 @@
        (if @paallystys/paallystysilmoitus-lomakedata
          [paallystysilmoituslomake-historia paallystys/paallystysilmoitus-lomakedata]
          [:div
-          [valinnat/vuosi {}
-           (t/year (:alkupvm urakka))
-           (t/year (:loppupvm urakka))
-           urakka/valittu-urakan-vuosi
-           urakka/valitse-urakan-vuosi!]
-          [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-          [u-valinnat/tienumero yllapito-tiedot/tienumero]
+          [valinnat urakka]
           [ilmoitusluettelo]])])))

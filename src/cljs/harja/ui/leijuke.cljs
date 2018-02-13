@@ -2,12 +2,16 @@
   "Yleinen leijuke -komponentti. Leijuke on muun sisällön päälle tuleva absoluuttisesti
   positioitu pieni elementti, esim. lyhyt lomake."
   (:require [reagent.core :as r]
+            [reagent.core :refer [atom] :as r]
             [harja.ui.napit :as napit]
             [harja.ui.komponentti :as komp]
             [harja.ui.dom :as dom]
             [harja.fmt :as fmt]
             [goog.events.EventType :as EventType]
-            [harja.loki :refer [log]]))
+            [harja.loki :refer [log]]
+            [harja.ui.ikonit :as ikonit])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]
+                   [cljs.core.async.macros :refer [go]]))
 
 
 (def avautumissuunta-tyyli
@@ -28,11 +32,11 @@
 (defn- maarita-suunta [komponentti]
   (let [wrapper-node (r/dom-node komponentti)
         komponentti-node (.-firstChild wrapper-node)
-        [x y _ _] (dom/sijainti wrapper-node)
         [_ _ leveys korkeus :as sij] (dom/sijainti komponentti-node)
         viewport-korkeus @dom/korkeus
         etaisyys-oikeaan-reunaan (dom/elementin-etaisyys-viewportin-oikeaan-reunaan komponentti-node)
-        suunta (if (< viewport-korkeus (+ y korkeus))
+        etaisyys-ylareunaan (dom/elementin-etaisyys-viewportin-ylareunaan komponentti-node)
+        suunta (if (>= etaisyys-ylareunaan korkeus) ;; Ylös jos riittävästi tilaa, muuten alas (alas voi aina scrollata)
                  (if (< etaisyys-oikeaan-reunaan leveys)
                    :ylos-vasen
                    :ylos-oikea)
@@ -61,7 +65,6 @@
     (komp/luo
       (komp/piirretty paivita-suunta!)
       (komp/dom-kuuntelija js/window
-                           EventType/SCROLL paivita-suunta!
                            EventType/RESIZE paivita-suunta!
                            EventType/KEYUP sulje-esc-napilla!)
       (fn [{:keys [luokka sulje! otsikko] :as optiot} sisalto]
@@ -82,3 +85,61 @@
              [:h4 otsikko]]
             [:div.leijuke-sisalto
              sisalto]]])))))
+
+(defn vihjeleijuke [optiot leijuke-sisalto]
+  (let [nakyvissa? (atom false)]
+    (fn [optiot leijuke-sisalto]
+      [:div.inline-block.yleinen-pikkuvihje.klikattava
+       [:div.vihjeen-sisalto {:on-click #(reset! nakyvissa? true)}
+        (if @nakyvissa?
+          [leijuke (merge
+                     {:otsikko [ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) "Vihje"]
+                      :sulje! #(reset! nakyvissa? false)}
+                     optiot)
+           [:div {:style {:min-width "300px"}}
+            leijuke-sisalto]]
+          [:span
+           (harja.ui.ikonit/livicon-info-sign)
+           [:span " "] ;; TODO Anna olla noin kuukausi, sen jälkeen "Vihje" teksti pois (17.2.2018)
+           [:a "Vihje"]])]])))
+
+(defn otsikko-ja-vihjeleijuke [otsikko-taso otsikko leijuke-optiot leijuke-sisalto]
+  [:div
+   [(keyword (str "h" otsikko-taso)) {:style {:display :inline-block}} otsikko]
+   [:span " "]
+   [:span
+    [vihjeleijuke
+     leijuke-optiot
+     leijuke-sisalto]]])
+
+(defn multipage-vihjesisalto [& sisallot]
+  (let [sivu-index (atom 0)
+        seuraava-index-saatavilla? (fn [sivu-index sisallot]
+                                     (< sivu-index (dec (count sisallot))))
+        seuraava-index (fn []
+                         (when (seuraava-index-saatavilla? @sivu-index sisallot)
+                           (swap! sivu-index inc)))
+        edellinen-index-saatavilla? (fn [sivu-index]
+                                      (> sivu-index 0))
+        edellinen-index (fn []
+                          (when (edellinen-index-saatavilla? @sivu-index)
+                            (swap! sivu-index dec)))
+        linkki-elementti (fn [voi-klikata?]
+                           (if voi-klikata? :a :span))]
+
+    (fn []
+      (let [edellinen-saatavilla (edellinen-index-saatavilla? @sivu-index)
+            seuraava-saatavilla (seuraava-index-saatavilla? @sivu-index sisallot)]
+        [:div
+         [:div (nth sisallot @sivu-index)]
+
+         [:div.text-center
+          [(linkki-elementti edellinen-saatavilla)
+           (when edellinen-saatavilla
+             {:class "klikattava" :on-click edellinen-index})
+           "Edellinen vihje"]
+          [:span " - "]
+          [(linkki-elementti seuraava-saatavilla)
+           (when seuraava-saatavilla
+             {:class "klikattava " :on-click seuraava-index})
+           "Seuraava vihje"]]]))))

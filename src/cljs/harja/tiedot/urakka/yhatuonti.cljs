@@ -411,4 +411,6 @@
                           (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
                           (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHA:n. Vastaus: " (pr-str vastaus))
                               (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)))
-                        (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus)))}])))
+                        (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus)))
+        :virheviesti "Ylläpitokohteen lähettäminen YHA:n epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
+                      tai ota yhteyttä Harjan asiakastukeen."}])))

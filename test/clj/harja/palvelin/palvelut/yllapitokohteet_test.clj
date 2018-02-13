@@ -130,7 +130,7 @@
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
 
 (deftest yllapitokohteen-tila-paatellaan-oikein
-  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)] ;; 25.5.2017
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)]           ;; 25.5.2017
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila {})
            :ei-aloitettu))
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
@@ -141,51 +141,51 @@
            :kohde-aloitettu))
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
              {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))})
-           :kohde-aloitettu)))
-  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
-           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
-            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))})
-         :paallystys-aloitettu))
-  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
-           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
-            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
-            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))})
-         :paallystys-valmis))
-  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
-           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 1))
-            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 2))
-            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 3))})
-         :ei-aloitettu))
-  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
-           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
-            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
-            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
-            :kohde-valmispvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))})
-         :kohde-valmis))
-  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
-           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
-            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
-            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
-            :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 4))
-            :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 5))
-            :kohde-valmispvm (c/to-timestamp (pvm/luo-pvm 2016 1 6))})
-         :kohde-valmis))
-  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
-           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
-            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
-            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
-            :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 4))
-            :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 5))
-            :kohde-valmispvm nil})
-         :tiemerkinta-valmis))
-  (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
-           {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 1))
-            :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 2))
-            :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 3))
-            :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 4))
-            :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 5))
-            :kohde-valmispvm nil})
-         :ei-aloitettu)))
+           :kohde-aloitettu))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+              :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))})
+           :paallystys-aloitettu))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+              :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+              :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))})
+           :paallystys-valmis))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 1))
+              :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 2))
+              :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 3))})
+           :ei-aloitettu))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+              :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+              :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
+              :kohde-valmispvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))})
+           :kohde-valmis))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+              :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+              :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
+              :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 4))
+              :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 5))
+              :kohde-valmispvm (c/to-timestamp (pvm/luo-pvm 2016 1 6))})
+           :kohde-valmis))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 1))
+              :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 2))
+              :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 3))
+              :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2016 1 4))
+              :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2016 1 5))
+              :kohde-valmispvm nil})
+           :tiemerkinta-valmis))
+    (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
+             {:kohde-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 1))
+              :paallystys-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 2))
+              :paallystys-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 3))
+              :tiemerkinta-alkupvm (c/to-timestamp (pvm/luo-pvm 2018 1 4))
+              :tiemerkinta-loppupvm (c/to-timestamp (pvm/luo-pvm 2018 1 5))
+              :kohde-valmispvm nil})
+           :ei-aloitettu))))
 
 (deftest paallystyskohteiden-tila-paatellaan-oikein-kun-kesa-tulossa
   (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 0 1)] ;; 1.1.2017
@@ -267,13 +267,20 @@
                                    :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
                                    :vuosi 2017})
         leppajarven-ramppi (kohde-nimella aikataulu "Leppäjärven ramppi")
+        oulun-ramppi (kohde-nimella aikataulu "Oulun ohitusramppi")
         muut-kohteet (filter #(not= (:nimi %) "Leppäjärven ramppi") aikataulu)]
+
+    (is leppajarven-ramppi)
+    (is oulun-ramppi)
+
     (is (= (count urakan-yllapitokohteet) (count aikataulu))
         "Jokaiselle kohteelle saatiin haettua aikataulu")
     (is (false? (:tiemerkintaurakan-voi-vaihtaa? leppajarven-ramppi))
         "Leppäjärven rampilla on kirjauksia, ei saa vaihtaa suorittavaa tiemerkintäurakkaa")
     (is (every? true? (map :tiemerkintaurakan-voi-vaihtaa? muut-kohteet))
-        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")))
+        "Muiden kohteiden tiemerkinnän suorittaja voidaan vaihtaa")
+    (is (= (count (:tarkka-aikataulu oulun-ramppi)) 2)
+        "Oulun rampille löytyy myös yksityiskohtaisempi aikataulu")))
 
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
   (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -546,6 +553,70 @@
     ;; Tiemerkinnän aikatauluun ei koskettu
     (is (= (pvm/->pvm "22.5.2017") (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
     (is (= (pvm/->pvm "23.5.2017") (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        aikataulu-toimenpide :ojankaivuu
+        aikataulu-kuvaus "Kaivetaan iso monttu!"
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-yllapitokohteiden-tarkka-aikataulu
+                                +kayttaja-jvh+
+                                {:urakka-id urakka-id
+                                 :sopimus-id sopimus-id
+                                 :vuosi 2017
+                                 :yllapitokohde-id yllapitokohde-id
+                                 :aikataulurivit [{:toimenpide aikataulu-toimenpide
+                                                   :kuvaus aikataulu-kuvaus
+                                                   :alku (pvm/->pvm "15.4.2017")
+                                                   :loppu (pvm/->pvm "15.4.2017")}]})]
+
+    ;; Vastauksena ylläpitokohteet, joista jokaisella on :tarkka-aikataulu (vähintään tyhjä)
+    (is (every? :kohdenumero vastaus))
+    (is (every? :tarkka-aikataulu vastaus))
+
+    (let [paivitetty-aikataulurivi (-> (filter #(= (:id %) yllapitokohde-id) vastaus)
+                                       first :tarkka-aikataulu first)]
+      (is (= (:toimenpide paivitetty-aikataulurivi) aikataulu-toimenpide))
+      (is (= (:kuvaus paivitetty-aikataulurivi) aikataulu-kuvaus)))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu-ilman-oikeutta
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-yllapitokohteiden-tarkka-aikataulu
+                               +kayttaja-tero+
+                               {:urakka-id 4
+                                :sopimus-id 5
+                                :yllapitokohde-id 1
+                                :aikataulurivit []}))))
+
+(deftest tallenna-yllapitokohteen-tarkka-aikataulu-vaaraan-urakkaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2005-2010-paasopimuksen-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :tallenna-yllapitokohteiden-tarkka-aikataulu
+                                 +kayttaja-jvh+
+                                 {:urakka-id urakka-id
+                                  :sopimus-id sopimus-id
+                                  :vuosi 2017
+                                  :yllapitokohde-id yllapitokohde-id
+                                  :aikataulurivit []}))))
+
+  ;; Leppäjärven suorittavan tiemerkintäurakan aikataulua saapi muokata
+  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+        sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
+    (is (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tallenna-yllapitokohteiden-tarkka-aikataulu
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :sopimus-id sopimus-id
+                         :vuosi 2017
+                         :yllapitokohde-id yllapitokohde-id
+                         :aikataulurivit []}))))
 
 (deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -1007,11 +1078,12 @@
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :yllapitokohteen-urakan-yhteyshenkilot
                                     +kayttaja-jvh+
-                                    {:yllapitokohde-id leppajarven-ramppi-id})]
+                                    {:yllapitokohde-id leppajarven-ramppi-id
+                                     :urakkatyyppi :paallystys})]
 
         (is (= vastaus
                {:fim-kayttajat [{:kayttajatunnus "A000001"
-                                 :sahkoposti "erkki.esimerkki@example.com"
+                                 :sahkoposti "ELY_Urakanvalvoja@example.com"
                                  :puhelin ""
                                  :sukunimi "Esimerkki"
                                  :roolit ["ELY urakanvalvoja"]
@@ -1021,7 +1093,7 @@
                                  :tunniste nil
                                  :organisaatio "ELY"}
                                 {:kayttajatunnus "A000002"
-                                 :sahkoposti "eero.esimerkki@example.com"
+                                 :sahkoposti "vastuuhenkilo@example.com"
                                  :puhelin "0400123456789"
                                  :sukunimi "Esimerkki"
                                  :roolit ["Urakan vastuuhenkilö"]
@@ -1075,4 +1147,5 @@
         (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :yllapitokohteen-urakan-yhteyshenkilot
                                                +kayttaja-ulle+
-                                               {:yllapitokohde-id leppajarven-ramppi-id})))))))
+                                               {:yllapitokohde-id leppajarven-ramppi-id
+                                                :urakkatyyppi :paallystys})))))))

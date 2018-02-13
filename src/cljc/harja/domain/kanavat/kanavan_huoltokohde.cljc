@@ -1,6 +1,7 @@
 (ns harja.domain.kanavat.kanavan-huoltokohde
   (:require
     [clojure.spec.alpha :as s]
+    [clojure.string :as str]
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
@@ -15,4 +16,4 @@
   #{::id
     ::nimi})
 
-(s/def ::hae-huoltokohteet-kysely (s/coll-of ::huoltokohde))
+(s/def ::hae-huoltokohteet-vastaus (s/coll-of ::huoltokohde))

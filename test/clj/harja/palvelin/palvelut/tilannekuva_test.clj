@@ -164,7 +164,7 @@
   (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
     (is (>= (count (:toteumat vastaus)) 1))
     ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
-    (is (> (count (distinct (map :toimenpidekoodi (:toteumat vastaus)))) 1))
+    (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
     (is (>= (count (:turvallisuuspoikkeamat vastaus)) 1))
     (is (not (contains? vastaus :tarkastus)))
     (is (>= (count (:laatupoikkeamat vastaus)) 1))
@@ -187,10 +187,12 @@
     (is (= (count (:toteumat vastaus)) 0))))
 
 ;; Urakkatyyppi ei vaikuta enää hakutuloksiin
-(deftest urakkatyyppi-filter-toimii
-  (let [parametrit (assoc hakuargumentit-laaja-historia :urakkatyyppi :paallystys)
-        vastaus (hae-tk parametrit)]
-    (is (= (count (:toteumat vastaus)) 3))))
+(deftest urakkatyyppi-ei-vaikuta-hakutuloksiin
+  (let [parametrit-paallystys (assoc hakuargumentit-laaja-historia :urakkatyyppi :paallystys)
+        vastaus (hae-tk hakuargumentit-laaja-historia)
+        vastaus-paallystys (hae-tk parametrit-paallystys)]
+    (is (= (set (:selitteet (:toteumat vastaus)))
+           (set (:selitteet (:toteumat vastaus-paallystys)))))))
 
 (deftest ala-hae-tarkastuksia
   (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :tarkastukset)
@@ -225,8 +227,8 @@
                        (assoc :alku (c/to-date (t/local-date 2005 1 1)))
                        (assoc :loppu (c/to-date (t/local-date 2010 1 1))))
         vastaus-lyhyt-aikavali (hae-tk parametrit)]
-    (is (< (count (:toteumat vastaus-lyhyt-aikavali))
-           (count (:toteumat vastaus-pitka-aikavali))))))
+    (is (< (count (:selitteet (:toteumat vastaus-lyhyt-aikavali)))
+           (count (:selitteet (:toteumat vastaus-pitka-aikavali)))))))
 
 (deftest hae-tyokoneet-nykytilaan
   (let [parametrit (assoc hakuargumentit-laaja-historia :nykytilanne? true)
@@ -240,7 +242,7 @@
                                                                :xmax 1,
                                                                :ymax 1})
         vastaus (hae-tk parametrit)]
-    (is (= (count (:toteumat vastaus)) 0))))
+    (is (= (count (:selitteet (:toteumat vastaus))) 0))))
 
 (deftest ala-hae-tyokoneita-liian-lahelle-zoomatussa-nykytilannenakymassa
   (let [parametrit (-> hakuargumentit-laaja-historia
@@ -392,7 +394,12 @@
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia)
         elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
     (is (>= (count elynumerot) 6)
-        "JVH:n pitäisi nähdä aika monta ELYä")))
+        "JVH:n pitäisi nähdä kaikki ELY:t")))
+
+(deftest hae-urakat-tilannekuvaan-urakanvalvoja
+  (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+    (is (= (count elynumerot) 6)) "Urakanvalvojan pitäisi nähdä kaikki ELY:t"))
 
 (deftest hae-urakat-tilannekuvaan-ei-nay-mitaan
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-seppo+ hakuargumentit-laaja-historia)
@@ -400,7 +407,8 @@
 
     (is (= (count elynumerot) 0))))
 
-(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
+; TODO: kunnes lisäoikeudet mukana logiikassa
+#_(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
   ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
   ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
   (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
@@ -411,7 +419,8 @@
     (is (every? #(= % eka-ely) elynumerot)
         "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
 
-(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
+; TODO: kunnes lisäoikeudet mukana logiikassa
+#_(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
   ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
   (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
     (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
@@ -431,7 +440,8 @@
                           :urakkanro "1238"
                           :alue nil}}}])))))
 
-(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
+; TODO: kunnes lisäoikeudet mukana logiikassa
+#_(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
   (let [vastaus-ilman-lisaoikeutta
         ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
         (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
