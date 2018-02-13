@@ -64,8 +64,9 @@
                   ", " (tr/tierekisteriosoite-tekstina kohde2 {:teksti-tie? false})
                   ", " (:urakka kohde2))]]))])
 
-(defn validointivirheet-modal [{:keys [validointivirheet] :as modal-data}]
-  (let [validointivirheet-ryhmittain (group-by :validointivirhe validointivirheet)
+(defn validointivirheet-modal []
+  (let [modal-data @paallystys-tiedot/validointivirheet-modal ;; Pakko lukea eikä passata tänne, jotta ei aiheuta ridin renderiä
+        validointivirheet-ryhmittain (group-by :validointivirhe (:validointivirheet modal-data))
         kohteet-paallekain-virheet (:kohteet-paallekain validointivirheet-ryhmittain)
         sulje-fn #(swap! paallystys-tiedot/validointivirheet-modal assoc :nakyvissa? false)]
     [modal/modal {:otsikko "Ongelma kohteiden tallennuksessa"
@@ -91,7 +92,7 @@
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
          [valinnat/tienumero yllapito-tiedot/tienumero]
 
-         [validointivirheet-modal @paallystys-tiedot/validointivirheet-modal]
+         [validointivirheet-modal]
 
          [yllapitokohteet-view/yllapitokohteet
           ur
