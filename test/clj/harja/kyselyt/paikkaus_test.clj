@@ -75,7 +75,7 @@
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)]
 
-    (paikkaus-q/tallenna-paikkaustoteuma db testipaikkaus)
+    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaus)
     (is (= (true? (paikkaus-q/onko-toteuma-olemassa-ulkoisella-idlla? db testipaikkauksen-ulkoinen-id destian-kayttaja-id)))
         "Toteuma löytyy ulkoisella id:lla")
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara))
@@ -108,20 +108,20 @@
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
-    (paikkaus-q/tallenna-paikkaustoteuma db testipaikkaus)
+    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaus)
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uusi paikkaus luotiin")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uusi kohde luotiin")
 
     ;; ulkoisella id:lla paivittaminen
-    (paikkaus-q/tallenna-paikkaustoteuma db (assoc testipaikkaus ::paikkaus/massatyyppi "kivimastiks"))
+    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaus ::paikkaus/massatyyppi "kivimastiks"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
     (is (= "kivimastiks" (::paikkaus/massatyyppi (hae-testitoteuma db))) "Massatyyppi on päivitetty oikein")
 
     ;; harjan id:lla paivittaminen
-    (paikkaus-q/tallenna-paikkaustoteuma db (assoc testipaikkaus
-                                              ::paikkaus/id (::paikkaus/id (hae-testitoteuma db))
-                                              ::paikkaus/massatyyppi "pehmeät ab / bitumi"))
+    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaus
+                                                                  ::paikkaus/id (::paikkaus/id (hae-testitoteuma db))
+                                                                  ::paikkaus/massatyyppi "pehmeät ab / bitumi"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
     (is (= "pehmeät ab / bitumi" (::paikkaus/massatyyppi (hae-testitoteuma db))) "Massatyyppi on päivitetty oikein")))
@@ -130,11 +130,11 @@
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)
         uuden-kohteen-ulkoinen-id 12345]
-    (paikkaus-q/tallenna-paikkaustoteuma db testipaikkaus)
+    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaus)
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uusi kohde luotiin")
 
-    (paikkaus-q/tallenna-paikkaustoteuma db (assoc testipaikkaus ::paikkaus/paikkauskohde
-                                                                 {:harja.domain.paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id
-                                                                  :harja.domain.paikkaus/nimi "Testikohde"}))
+    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaus ::paikkaus/paikkauskohde
+                                                                                     {:harja.domain.paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id
+                                                                                      :harja.domain.paikkaus/nimi "Testikohde"}))
     (is (= (+ kohteiden-maara-luonnin-jalkeen 1) (hae-kohteiden-maara)) "Uusi kohde luotiin")
     (is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id}))))))
