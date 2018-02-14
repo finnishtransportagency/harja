@@ -1,7 +1,9 @@
 (ns harja.kyselyt.yllapitokohteet
   (:require [jeesql.core :refer [defqueries]]
             [harja.geo :as geo]
-            [jeesql.postgres :as postgres]))
+            [jeesql.postgres :as postgres]
+            [harja.kyselyt.konversio :as konv]
+            [clojure.set :as set]))
 
 (defqueries "harja/kyselyt/yllapitokohteet.sql"
   ;; PENDING: ylläpitokohteen poiston päättely on edelleen melko hidas.
@@ -28,3 +30,11 @@
         (let [kohteen-kohdeosat (filterv #(= (:yllapitokohde-id %) (kohde-id-avain kohde)) kohdeosat)]
           (assoc kohde :kohdeosat kohteen-kohdeosat)))
       kohteet))))
+
+(defn yllapitokohteiden-tiedot-sahkopostilahetykseen [db kohde-idt]
+  (let [tiedot (into []
+                     (comp
+                       (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
+                       (map konv/alaviiva->rakenne))
+                     (hae-yllapitokohteiden-tiedot-sahkopostilahetykseen db {:idt kohde-idt}))]
+    tiedot))
