@@ -1145,7 +1145,7 @@
         paikannus-kaynnissa? (atom false)
 
         karttavalinta-kaynnissa? (atom false)]
-    (when paikannus-kaynnissa?
+    (when paikannus-kaynnissa?-atom
       (add-watch paikannus-kaynnissa?
                  :paikannus?
                  (fn [avain ref vanha uusi]

@@ -241,7 +241,7 @@
 
       ;; T-LOIK
       :tloik (component/using
-               (tloik/->Tloik (:tloik asetukset))
+               (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
                [:sonja :db :integraatioloki :klusterin-tapahtumat
                 :sonja-sahkoposti :labyrintti])
 
