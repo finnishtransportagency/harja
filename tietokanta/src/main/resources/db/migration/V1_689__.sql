@@ -1,4 +1,5 @@
 ALTER TABLE vv_materiaali ADD COLUMN yksikko TEXT;
+ALTER TYPE vv_materiaali_muutos ADD ATTRIBUTE luotu TIMESTAMP;
 
 -- Nyt yksikkö löytyy myös materiaalille, joten muutetaan constraint takaisin
 ALTER TABLE kan_hinta

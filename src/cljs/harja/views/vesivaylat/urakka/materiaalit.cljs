@@ -43,7 +43,7 @@
       (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-varaosan-muuttuessa grid-tila varaosa-muutettu?)))))
 
 (defn- materiaaliloki [e! urakka-id rivit nimi yksikko nayta-kaikki?]
-  (let [rivit-jarjestyksessa (reverse (sort-by ::m/pvm rivit))
+  (let [rivit-jarjestyksessa (reverse (sort-by ::m/luotu rivit))
         rivin-voi-poistaa? (fn [rivi]
                              ;; Ensimmäistä luontiajan mukaista kirjausta käytetään määrittämään
                              ;; materiaalin alkuperäinen määrä, siksi sen saa poistaa vain jos se on ainoa kirjaus,
