@@ -171,6 +171,7 @@
                      (map :id (:muutokset %)))
                   materiaalilistaukset)
         yksikko "kg"
+        uusi-halytysraja 3000
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :muuta-materiaalien-alkuperaiset-tiedot
                           testi/+kayttaja-jvh+
@@ -178,7 +179,8 @@
                            :uudet-alkuperaiset-tiedot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
                                                         ::m/idt idt
                                                         ::m/alkuperainen-maara uusi-alkuperainen-maara
-                                                        ::m/yksikko yksikko}]})
+                                                        ::m/yksikko yksikko
+                                                        ::m/halytysraja uusi-halytysraja}]})
         uudet-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-vesivayla-materiaalilistaus
                                           testi/+kayttaja-jvh+
@@ -186,7 +188,8 @@
         hiekkasakki (first (filter #(= (::m/nimi %) materiaali-nimi) uudet-materiaalit))]
 
     (is (= (::m/alkuperainen-maara hiekkasakki) uusi-alkuperainen-maara))
-    (is (= (::m/yksikko hiekkasakki) yksikko))))
+    (is (= (::m/yksikko hiekkasakki) yksikko))
+    (is (= (::m/halytysraja hiekkasakki) uusi-halytysraja))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-ilman-oikeutta
   (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
