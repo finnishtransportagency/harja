@@ -130,7 +130,7 @@
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
 
 (deftest yllapitokohteen-tila-paatellaan-oikein
-  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)]           ;; 25.5.2017
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)] ;; 25.5.2017
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila {})
            :ei-aloitettu))
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
@@ -398,13 +398,16 @@
 
 (deftest tallenna-uusi-paallystyskohde-kantaan-vuodelle-2015
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)]
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                          :sopimus-id sopimus-id
+                                                                          :vuosi 2015
+                                                                          :kohteet [yllapitokohde-testidata]})]
 
-    (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
-                                                              :sopimus-id sopimus-id
-                                                              :vuosi 2015
-                                                              :kohteet [yllapitokohde-testidata]})
+    (is (= (:status vastaus) :ok))
+    (is (>= (count (:yllapitokohteet vastaus)) 1))
+
     (let [kohteet-kannassa (ffirst (q
                                      (str "SELECT COUNT(*)
                                       FROM yllapitokohde
