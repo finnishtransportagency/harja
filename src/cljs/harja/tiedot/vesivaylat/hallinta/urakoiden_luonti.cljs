@@ -240,7 +240,9 @@
 
   LomakevaihtoehdotHaettu
   (process-event [{tulos :tulos} app]
-    (assoc app :haetut-hallintayksikot (sort-by ::o/nimi (:hallintayksikot tulos))
+    (assoc app :haetut-hallintayksikot (remove
+                                         (comp (partial = "Kanavat ja avattavat sillat") ::o/nimi)
+                                         (sort-by ::o/nimi (:hallintayksikot tulos)))
                :haetut-urakoitsijat (sort-by ::o/nimi (:urakoitsijat tulos))
                :haetut-hankkeet (sort-by ::h/nimi (remove #(pvm/jalkeen? (pvm/nyt) (::h/loppupvm %)) (:hankkeet tulos)))
                :haetut-sopimukset (sort-by ::s/alkupvm pvm/jalkeen? (:sopimukset tulos))))

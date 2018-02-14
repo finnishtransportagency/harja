@@ -3,6 +3,7 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [harja.ui.komponentti :as komp]
+            [clojure.string :as string]
             [harja.loki :refer [log]]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
@@ -168,13 +169,28 @@
         "Kaikki yhteensä" (fmt/euro-opt (+ hinnat-yhteensa tyot-yhteensa
                                            yleiskustannuslisien-osuus))]]]]))
 
+(defn- suunniteltu-tyo-voimassa-paivamaaralle? [tp-pvm tyo]
+  (assert some? tp-pvm)
+  (pvm/valissa? tp-pvm (:alkupvm tyo) (:loppupvm tyo)))
+
+(defn- suunnitellut-tyot-paivamaaralle [app* pvm]
+  (filter (partial suunniteltu-tyo-voimassa-paivamaaralle? pvm)
+          (:suunnitellut-tyot app*)))
+
+
+(defn- suunniteltu-tyo-toimenpidekoodille [tpk suunnitellut-tyot]
+  (first (filter (fn [suunniteltu-tyo]
+                   (and (= (:tehtavan_id tpk)
+                           (:tehtava suunniteltu-tyo))))
+                 suunnitellut-tyot)))
+
 (defn- sopimushintaiset-tyot [e! app*]
   (let [tyot (get-in app* [:hinnoittele-toimenpide ::h/tyot])
+        tp-pvm (get-in app* [:hinnoittele-toimenpide ::to/pvm])
         ei-poistetut-tyot (remove ::m/poistettu? tyot)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
      [:table
-      ;; TODO Tämä voisi olla käytännöllisempää muuttaa comboboksiksi
       [sopimushintaiset-tyot-header {:yk-lisa? false}]
       [:tbody
        (map-indexed
@@ -182,26 +198,25 @@
            (let [toimenpidekoodi (tpk/toimenpidekoodi-tehtavalla (:suunnitellut-tyot app*)
                                                                  (::tyo/toimenpidekoodi-id tyorivi))
                  yksikko (:yksikko toimenpidekoodi)
-                 yksikkohinta (:yksikkohinta toimenpidekoodi)
+                 tyovalinnat-toimenpiteen-ajalle (sort-by :tehtavan_nimi (suunnitellut-tyot-paivamaaralle app* tp-pvm))
+                 suunniteltu-tyo (suunniteltu-tyo-toimenpidekoodille toimenpidekoodi tyovalinnat-toimenpiteen-ajalle)
+                 yksikkohinta (:yksikkohinta suunniteltu-tyo)
                  tyon-hinta-voidaan-laskea? (boolean (and yksikkohinta yksikko))]
              ^{:key index}
              [:tr
               [:td
-               (let [tyovalinnat (sort-by :tehtavan_nimi (:suunnitellut-tyot app*))]
-                 [yleiset/livi-pudotusvalikko
-                  {:valitse-fn #(do
-                                  (e! (tiedot/->AsetaTyorivilleTiedot
-                                        {::tyo/id (::tyo/id tyorivi)
-                                         ::tyo/toimenpidekoodi-id (:tehtava %)})))
-                   :format-fn #(if %
-                                 (:tehtavan_nimi %)
-                                 "Valitse työ")
-                   :class "livi-alasveto-250 inline-block"
-                   :valinta (first (filter #(= (::tyo/toimenpidekoodi-id tyorivi)
-                                               (:tehtava %))
-                                           tyovalinnat))
-                   :disabled false}
-                  tyovalinnat])]
+               [yleiset/livi-pudotusvalikko
+                {:valitse-fn #(do
+                                (e! (tiedot/->AsetaTyorivilleTiedot
+                                      {::tyo/id (::tyo/id tyorivi)
+                                       ::tyo/toimenpidekoodi-id (:tehtava %)})))
+                 :format-fn #(if %
+                               (:tehtavan_nimi %)
+                               "Valitse työ")
+                 :class "livi-alasveto-250 inline-block"
+                 :valinta suunniteltu-tyo
+                 :disabled false}
+                tyovalinnat-toimenpiteen-ajalle]]
               [:td.tasaa-oikealle (fmt/euro-opt yksikkohinta)]
               [:td.tasaa-oikealle
                [kentta-tyolle e! tyorivi ::tyo/maara {:tyyppi :positiivinen-numero :kokonaisosan-maara 5}]]
@@ -306,7 +321,9 @@
    [muut-hinnat e! app*]
    [hinnoittelun-yhteenveto app*]])
 
-(defn- hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
+(defn hinnoittele-toimenpide [e! app* toimenpide-rivi listaus-tunniste]
+  ;; Tätä kutsutaan hinta-gridistä solun komponenttina, mutta muuttuu tilanteen mukaan hinnoittelu-leijukkeeksi
+  ;; tai tavalliseksi solun arovksi
   (let [hinnoittele-toimenpide-id (get-in app* [:hinnoittele-toimenpide ::to/id])
         toimenpiteen-nykyiset-hinnat (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/hinnat])
         toimenpiteen-nykyiset-tyot (get-in toimenpide-rivi [::to/oma-hinnoittelu ::h/tyot])
@@ -338,8 +355,7 @@
                          (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                        (:id @nav/valittu-urakka))))}]]]]]
-
-       ;; Solun sisältö
+       ;; Piirrä solun sisältö
        (grid/arvo-ja-nappi
          {:sisalto (cond (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                         (get-in app* [:valinnat :urakka-id])))
@@ -357,6 +373,7 @@
                                        (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
                                                                      oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                                      (:id @nav/valittu-urakka))))}
+          ;; XXX K: meneekö oikein vs urakkavuodet? v: pitäisi mennä koska käytetään yllä aikavalin-hinnalliset-suunnitellut-tyot
           :arvo (fmt/euro-opt (+ (hinta/kokonaishinta-yleiskustannuslisineen toimenpiteen-nykyiset-hinnat)
                                  (tyo/toiden-kokonaishinta toimenpiteen-nykyiset-tyot
                                                            suunnitellut-tyot)))
