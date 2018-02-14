@@ -84,7 +84,7 @@
                                    ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
                                    ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
                                    ::to/reimari-toimenpidetyypit (when toimenpide (to/reimari-toimenpidetyyppi-avain->koodi toimenpide))
-                                   ::tu/id turvalaite
+                                   ::tu/turvalaitenro turvalaite
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?}))

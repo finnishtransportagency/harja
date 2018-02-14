@@ -41,9 +41,7 @@
                         :turvalaitenro_aiempi turvalaitenro_aiempi
                         :paavayla paavayla
                         :vaylat vaylat
-                        :geometria geometria
-                        :luoja "Integraatio"
-                        :muokkaaja "Integraatio"}]
+                        :geometria geometria}]
 
     (do
       (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit))))
@@ -57,4 +55,3 @@
                                   (vie-turvalaite-entry db turvalaite)))
       (log/debug "Turvalaitteiden tuonti kantaan valmis."))
     (log/debug "Turvalaitteiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
-

@@ -8,7 +8,6 @@ VALUES
   (666666, 'Sillviken alempi', 'POINT (421544.60804728785 6689983.7247258555)', 'Sillvikenin pohjukassa', 'Linjamerkki', 'KIINTEÄ', 'VAHVISTETTU', '2016-12-07', 'Jatkuva',
    '', 'Ei sovellettavissa', true, 'Liikennevirasto', 0, '5151: Tolkkisten väylä', '{5150,5151}', '0101000000BFF2A36EA2BA19418EE861EE2F855941', null, current_timestamp, null, null);
 
-
 INSERT INTO vatu_turvalaite (
   turvalaitenro, nimi, koordinaatit, sijainti, tyyppi, tarkenne, tila, vah_pvm, toimintatila, rakenne, navigointilaji, valaistu, omistaja, turvalaitenro_aiempi, paavayla, vaylat, geometria, luoja, luotu, muokkaaja, muokattu)
 VALUES
