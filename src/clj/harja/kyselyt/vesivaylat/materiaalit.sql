@@ -12,6 +12,13 @@ SET yksikko = :yksikko,
     muokattu = NOW()
 WHERE id IN (:idt);
 
+-- name: paivita-materiaalin-alkuperainen-halytysraja-kaikilta-kirjauksilta<!
+UPDATE vv_materiaali
+SET halytysraja = :halytysraja,
+    muokkaaja = :muokkaaja,
+    muokattu = NOW()
+WHERE id IN (:idt);
+
 -- name: urakan-tiedot-sahkopostin-lahetysta-varten
 SELECT sampoid,
        nimi

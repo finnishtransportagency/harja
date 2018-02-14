@@ -172,7 +172,7 @@
                   materiaalilistaukset)
         yksikko "kg"
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :muuta-materiaalien-alkuperainen-maara-ja-yksikko
+                          :muuta-materiaalien-alkuperaiset-tiedot
                           testi/+kayttaja-jvh+
                           {::m/urakka-id urakka-id
                            :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
@@ -196,7 +196,7 @@
                                 (get-in % [:muutokset 0 :id]))
                              materiaalilistaukset)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :muuta-materiaalien-alkuperainen-maara-ja-yksikko
+                                           :muuta-materiaalien-alkuperaiset-tiedot
                                            testi/+kayttaja-ulle+
                                            {::m/urakka-id urakka-id
                                             :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
@@ -213,7 +213,7 @@
                      (map :id (:muutokset %)))
                   materiaalilistaukset)]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :muuta-materiaalien-alkuperainen-maara-ja-yksikko
+                                                   :muuta-materiaalien-alkuperaiset-tiedot
                                                    testi/+kayttaja-jvh+
                                                    {::m/urakka-id urakka-id
                                                     :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id

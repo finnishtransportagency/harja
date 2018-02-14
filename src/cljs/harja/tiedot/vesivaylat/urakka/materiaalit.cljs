@@ -20,7 +20,7 @@
 (defrecord PaivitaLisattavaMateriaali [tiedot])
 (defrecord LisaaMateriaali [])
 (defrecord PeruMateriaalinLisays [])
-(defrecord MuutaAlkuperainenMaaraJaYksikko [tiedot])
+(defrecord MuutaAlkuperaisetTiedot [tiedot])
 
 (defrecord AloitaMateriaalinKirjaus [nimi tyyppi yksikko])
 (defrecord PaivitaMateriaalinKirjaus [tiedot])
@@ -84,22 +84,22 @@
   (process-event [_ app]
     (dissoc app :lisaa-materiaali))
 
-  MuutaAlkuperainenMaaraJaYksikko
+  MuutaAlkuperaisetTiedot
   (process-event [{tiedot :tiedot} app]
-    (let [uudet-alkuperaiset-maarat-ja-yksikot (map #(-> %
-                                                         (assoc ::m/ensimmainen-kirjaus-id (get-in % [::m/muutokset 0 ::m/id]))
-                                                         (assoc ::m/idt (map ::m/id (::m/muutokset %)))
-                                                         (dissoc ::m/muutokset))
-                                                    (:uudet-alkuperaiset-maarat-ja-yksikot tiedot))
+    (let [uudet-alkuperaiset-tiedot (map #(-> %
+                                              (assoc ::m/ensimmainen-kirjaus-id (get-in % [::m/muutokset 0 ::m/id]))
+                                              (assoc ::m/idt (map ::m/id (::m/muutokset %)))
+                                              (dissoc ::m/muutokset))
+                                         (:uudet-alkuperaiset-tiedot tiedot))
           urakka-id (:urakka-id tiedot)
           chan (:chan tiedot)
           onnistui! (tuck/send-async! ->ListausHaettu)
           epaonnistui! (tuck/send-async! ->Virhe)]
 
       (go
-        (let [vastaus (<! (k/post! :muuta-materiaalien-alkuperainen-maara-ja-yksikko
+        (let [vastaus (<! (k/post! :muuta-materiaalien-alkuperaiset-tiedot
                                    {::m/urakka-id urakka-id
-                                    :uudet-alkuperaiset-maarat-ja-yksikot uudet-alkuperaiset-maarat-ja-yksikot}))]
+                                    :uudet-alkuperaiset-tiedot uudet-alkuperaiset-tiedot}))]
           (if (k/virhe? vastaus)
             (epaonnistui! vastaus)
             (onnistui! vastaus))

@@ -63,23 +63,33 @@
     (m-q/poista-materiaalikirjaus db user (::m/id tiedot))
     (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id}))))
 
-(defn- muuta-materiaalin-alkuperainen-maara [db user materiaali]
-  (m-q/paivita-materiaalin-alkuperainen-maara<!
-    db
-    {:maara (::m/alkuperainen-maara materiaali)
-     :id (::m/ensimmainen-kirjaus-id materiaali)
-     :muokkaaja (:id user)}))
+(defn- muuta-materiaalin-alkuperainen-maara [db user alkuperainen-maara ensimmainen-kirjaus-id]
+  (when alkuperainen-maara
+    (m-q/paivita-materiaalin-alkuperainen-maara<!
+      db
+      {:maara alkuperainen-maara
+       :id ensimmainen-kirjaus-id
+       :muokkaaja (:id user)})))
 
-(defn- muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta [db user materiaali]
-  (m-q/paivita-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta<!
-    db
-    {:yksikko (::m/yksikko materiaali)
-     :idt (::m/idt materiaali)
-     :muokkaaja (:id user)}))
+(defn- muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta [db user yksikko idt]
+  (when yksikko
+    (m-q/paivita-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta<!
+      db
+      {:yksikko yksikko
+       :idt idt
+       :muokkaaja (:id user)})))
 
-(defn- muuta-materiaalien-alkuperainen-maara-ja-yksikko [db user tiedot]
+(defn- muuta-materiaalin-alkuperainen-halytysraja-kaikilta-kirjauksilta [db user halytysraja idt]
+  (when halytysraja
+    (m-q/paivita-materiaalin-alkuperainen-halytysraja-kaikilta-kirjauksilta<!
+      db
+      {:halytysraja halytysraja
+       :idt idt
+       :muokkaaja (:id user)})))
+
+(defn- muuta-materiaalien-alkuperaiset-tiedot [db user tiedot]
   (let [urakka-id (::m/urakka-id tiedot)
-        uudet (:uudet-alkuperaiset-maarat-ja-yksikot tiedot)]
+        uudet (:uudet-alkuperaiset-tiedot tiedot)]
     (assert (every? #(not (nil? (::m/idt %))) uudet) "Päivitettävien materiaalien idt ei voi olla nil")
     (assert (every? (fn [uusi]
                       (some #(= (::m/ensimmainen-kirjaus-id uusi) %)
@@ -93,9 +103,15 @@
       (vaadi-materiaali-kuuluu-urakkaan db urakka-id materiaali-id))
 
     (jdbc/with-db-transaction [db db]
-      (doseq [materiaali uudet]
-        (muuta-materiaalin-alkuperainen-maara db user materiaali)
-        (muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta db user materiaali))
+      (doseq [materiaali uudet
+              :let [alkuperainen-maara (::m/alkuperainen-maara materiaali)
+                    yksikko (::m/yksikko materiaali)
+                    halytysraja (::m/halytysraja materiaali)
+                    ensimmainen-kirjaus-id (::m/ensimmainen-kirjaus-id materiaali)
+                    idt (::m/idt materiaali)]]
+        (muuta-materiaalin-alkuperainen-maara db user alkuperainen-maara ensimmainen-kirjaus-id)
+        (muuta-materiaalin-alkuperainen-yksikko-kaikilta-kirjauksilta db user yksikko idt)
+        (muuta-materiaalin-alkuperainen-halytysraja-kaikilta-kirjauksilta db user halytysraja idt))
 
       (hae-materiaalilistaus db user (select-keys tiedot #{::m/urakka-id})))))
 
@@ -120,10 +136,10 @@
                                       (poista-materiaalikirjaus db user tiedot))
                                     {:kysely-spec ::m/poista-materiaalikirjaus
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
-    (http-palvelin/julkaise-palvelu http :muuta-materiaalien-alkuperainen-maara-ja-yksikko
+    (http-palvelin/julkaise-palvelu http :muuta-materiaalien-alkuperaiset-tiedot
                                     (fn [user tiedot]
-                                      (muuta-materiaalien-alkuperainen-maara-ja-yksikko db user tiedot))
-                                    {:kysely-spec ::m/muuta-materiaalien-alkuperainen-maara-ja-yksikko
+                                      (muuta-materiaalien-alkuperaiset-tiedot db user tiedot))
+                                    {:kysely-spec ::m/muuta-materiaalien-alkuperaiset-tiedot
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
     this)
 
@@ -133,5 +149,5 @@
       :hae-vesivayla-materiaalilistaus
       :kirjaa-vesivayla-materiaali
       :poista-materiaalikirjaus
-      :muuta-materiaalien-alkuperainen-maara-ja-yksikko)
+      :muuta-materiaalien-alkuperaiset-tiedot)
     this))
