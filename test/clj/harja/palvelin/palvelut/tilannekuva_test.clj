@@ -22,7 +22,6 @@
             [harja.domain.ely :as ely])
   (:use org.httpkit.fake))
 
-
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
