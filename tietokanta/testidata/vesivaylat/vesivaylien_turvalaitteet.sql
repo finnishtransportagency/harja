@@ -14,4 +14,3 @@ INSERT INTO vatu_turvalaite (
 VALUES
   (666667, 'Klobbudden läntinen alempi', 'POINT (418961.9204654185 6684132.571862175)', 'Klobbuddenin E-osassa.', 'Linjamerkki', 'KIINTEÄ', 'VAHVISTETTU', '2016-12-07', 'Jatkuva',
            '', 'Ei sovellettavissa', true, 'Liikennevirasto', 0, '5105: Kalvön 7,0m väylä', '{4007,5105}', '0101000000967C8EAE47921941CF639924797F5941', 'Testidata', current_timestamp, null, null);
-
