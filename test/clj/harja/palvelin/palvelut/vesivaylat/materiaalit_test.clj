@@ -175,10 +175,10 @@
                           :muuta-materiaalien-alkuperaiset-tiedot
                           testi/+kayttaja-jvh+
                           {::m/urakka-id urakka-id
-                           :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
-                                                                   ::m/idt idt
-                                                                   ::m/alkuperainen-maara uusi-alkuperainen-maara
-                                                                   ::m/yksikko yksikko}]})
+                           :uudet-alkuperaiset-tiedot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
+                                                        ::m/idt idt
+                                                        ::m/alkuperainen-maara uusi-alkuperainen-maara
+                                                        ::m/yksikko yksikko}]})
         uudet-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :hae-vesivayla-materiaalilistaus
                                           testi/+kayttaja-jvh+
@@ -199,9 +199,9 @@
                                            :muuta-materiaalien-alkuperaiset-tiedot
                                            testi/+kayttaja-ulle+
                                            {::m/urakka-id urakka-id
-                                            :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
-                                                                                    ::m/idt [hiekkasakin-id]
-                                                                                    ::m/alkuperainen-maara uusi-alkuperainen-maara}]})))))
+                                            :uudet-alkuperaiset-tiedot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
+                                                                         ::m/idt [hiekkasakin-id]
+                                                                         ::m/alkuperainen-maara uusi-alkuperainen-maara}]})))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-eri-urakkaan
   (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
@@ -216,9 +216,9 @@
                                                    :muuta-materiaalien-alkuperaiset-tiedot
                                                    testi/+kayttaja-jvh+
                                                    {::m/urakka-id urakka-id
-                                                    :uudet-alkuperaiset-maarat-ja-yksikot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
-                                                                                            ::m/idt idt
-                                                                                            ::m/alkuperainen-maara 666}]})))))
+                                                    :uudet-alkuperaiset-tiedot [{::m/ensimmainen-kirjaus-id hiekkasakin-id
+                                                                                 ::m/idt idt
+                                                                                 ::m/alkuperainen-maara 666}]})))))
 
 
 (deftest toimenpiteen-materiaalien-poisto
