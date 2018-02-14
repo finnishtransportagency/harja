@@ -100,10 +100,7 @@
                  (do (kasittele-istunto-vanhentunut)
                      (close! chan))
 
-                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (do (kasittele-palvelinvirhe palvelu vastaus)
-                     (close! chan))
-
+                 ;; Tietyntyyppinen virhe, jota halutaan yrittää uudelleen jos yrityksiä on vielä jäljellä
                  (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
                  (kysely palvelu metodi parametrit (assoc opts
                                                      :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
@@ -112,11 +109,15 @@
                                                      (let [timeout (:uudelleenyritys-timeout opts)]
                                                        (+ (or timeout 2000) 2000))))
 
+                 ;; Muun tyyppinen virhe
+                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
+                 (do (kasittele-palvelinvirhe palvelu vastaus)
+                     (close! chan))
+
                  :default
+                 ;; Annetaan vastaus kutsujalle (onnistunut tai uudelleenyrityksistä huolimatta epäonnistunut)
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                     (close! chan)))
-               ;; else
-               (close! chan)))]
+                     (close! chan)))))]
     (go
       (when uudelleenyritys-timeout
         (<! (timeout uudelleenyritys-timeout)))

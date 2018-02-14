@@ -593,13 +593,18 @@ SELECT
   ypk.tr_kaista             AS "tr-kaista",
   ypk.yllapitoluokka,
   tti.id                    AS "tietyoilmoitus-id",
-  paallystysurakka.nimi     AS paallystysurakka
+  paallystysurakka.nimi     AS paallystysurakka,
+  sposti.vastaanottajat         AS "sahkopostitiedot_muut-vastaanottajat",
+  sposti.saate                  AS sahkopostitiedot_saate,
+  sposti.kopio_lahettajalle     AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_tarkka_aikataulu ypkya ON ypk.id = ypkya.yllapitokohde
-                                                                 AND ypkya.poistettu IS NOT TRUE
+                                                      AND ypkya.poistettu IS NOT TRUE
   LEFT JOIN tietyoilmoitus tti ON ypk.id = tti.yllapitokohde
   LEFT JOIN urakka paallystysurakka ON ypk.urakka = paallystysurakka.id
+  LEFT JOIN yllapitokohteen_sahkopostitiedot sposti ON sposti.yllapitokohde_id = ypk.id
+
 WHERE
   ypk.suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(ypk.vuodet) = 0
@@ -715,44 +720,41 @@ SELECT
   ypk.nimi               AS "kohde-nimi",
   ypk.tr_numero          AS "tr-numero",
   ypk.tr_alkuosa         AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa        AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys   AS "tr-loppuetaisyys",
-  ypka.tiemerkinta_loppu AS "aikataulu-tiemerkinta-loppu",
-  pu.id                  AS "paallystysurakka-id",
-  pu.nimi                AS "paallystysurakka-nimi",
-  pu.sampoid             AS "paallystysurakka-sampo-id",
-  tu.id                  AS "tiemerkintaurakka-id",
-  tu.nimi                AS "tiemerkintaurakka-nimi",
-  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
+  ypk.tr_alkuetaisyys       AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa           AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys      AS "tr-loppuetaisyys",
+  ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  pu.id                     AS "paallystysurakka-id",
+  pu.nimi                   AS "paallystysurakka-nimi",
+  pu.sampoid                AS "paallystysurakka-sampo-id",
+  tu.id                     AS "tiemerkintaurakka-id",
+  tu.nimi                   AS "tiemerkintaurakka-nimi",
+  tu.sampoid                AS "tiemerkintaurakka-sampo-id",
+  sposti.vastaanottajat     AS "sahkopostitiedot_muut-vastaanottajat",
+  sposti.saate              AS sahkopostitiedot_saate,
+  sposti.kopio_lahettajalle AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk
   JOIN urakka pu ON ypk.urakka = pu.id
   LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_sahkopostitiedot sposti ON sposti.yllapitokohde_id = ypk.id
 WHERE ypk.id IN (:idt);
 
--- name: hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen
+-- name: hae-tanaan-valmistuvien-tiemerkintakohteiden-idt
 SELECT
-  ypk.id                 AS id,
-  ypk.nimi               AS "kohde-nimi",
-  ypk.tr_numero          AS "tr-numero",
-  ypk.tr_alkuosa         AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys    AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa        AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys   AS "tr-loppuetaisyys",
-  ypka.tiemerkinta_loppu AS "aikataulu-tiemerkinta-loppu",
-  pu.id                  AS "paallystysurakka-id",
-  pu.nimi                AS "paallystysurakka-nimi",
-  pu.sampoid             AS "paallystysurakka-sampo-id",
-  tu.id                  AS "tiemerkintaurakka-id",
-  tu.nimi                AS "tiemerkintaurakka-nimi",
-  tu.sampoid             AS "tiemerkintaurakka-sampo-id"
+  ypk.id                 AS id
 FROM yllapitokohde ypk
-  JOIN urakka pu ON ypk.urakka = pu.id
-  LEFT JOIN urakka tu ON ypk.suorittava_tiemerkintaurakka = tu.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE
   ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
+
+-- name: tallenna-valmistuneen-tiemerkkinnan-sahkopostitiedot<!
+INSERT INTO yllapitokohteen_sahkopostitiedot (tyyppi, yllapitokohde_id, vastaanottajat, saate, kopio_lahettajalle)
+    VALUES ('tiemerkinta_valmistunut'::yllapitokohteen_sahkopostitiedot_tyyppi, :yllapitokohde_id,
+            :vastaanottajat::TEXT[], :saate, :kopio_lahettajalle);
+
+-- name: poista-valmistuneen-tiemerkinnan-sahkopostitiedot!
+DELETE FROM yllapitokohteen_sahkopostitiedot WHERE yllapitokohde_id IN (:yllapitokohde_id) AND tyyppi = 'tiemerkinta_valmistunut'::yllapitokohteen_sahkopostitiedot_tyyppi;
 
 -- name: tallenna-tiemerkintakohteen-aikataulu!
 -- Tallentaa ylläpitokohteen aikataulun
