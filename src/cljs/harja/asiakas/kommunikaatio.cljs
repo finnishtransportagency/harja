@@ -334,8 +334,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       gstr/urlEncode))
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
-  (->
-    "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+  (-> 
+    "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))
