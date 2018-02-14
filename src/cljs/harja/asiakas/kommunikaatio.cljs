@@ -86,10 +86,20 @@
 
 (defn- kysely [palvelu metodi parametrit
                {:keys [transducer chan] :as opts}]
+  (log "Palvelukutsu: " (pr-str palvelu))
   (let [vastauskasittelija (fn [[_ vastaus]]
                              (when (some? vastaus)
-                               (put! chan (if transducer (into [] transducer vastaus) vastaus)))
-                             (close! chan))]
+                               (cond
+                                 (= (:status vastaus) 503)
+                                 (do
+                                   (log "Palvelukutsu VIRHE: " (pr-str palvelu) ". Uusi yritys!")
+                                   (kysely palvelu metodi parametrit opts))
+
+                                 :default
+                                 (do
+                                   (log "Palvelukutsu onnistui: " (pr-str palvelu))
+                                   (put! chan (if transducer (into [] transducer vastaus) vastaus))
+                                   (close! chan)))))]
     (go
       (ajax-request {:uri (str (polku) (name palvelu))
                      :method metodi
