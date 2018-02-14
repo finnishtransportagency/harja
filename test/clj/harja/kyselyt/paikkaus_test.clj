@@ -10,7 +10,6 @@
 
 (def testipaikkauksen-ulkoinen-id 666123)
 (def testikohteen-ulkoinen-id 666567)
-(def destian-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'destia';")))
 
 (def testipaikkaus
   {:harja.domain.paikkaus/alkuaika #inst"2018-02-06T10:47:24.183975000-00:00"
@@ -50,7 +49,8 @@
     (is (every? #(= ulkoinen-id (::paikkaus/ulkoinen-id %)) vastaus) "Jokainen löytynyt tietue vastaa hakuehtoa")))
 
 (deftest onko-olemassa-ulkoisella-idlla
-  (let [db (tietokanta/luo-tietokanta testitietokanta)]
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
+        destian-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'destia';"))]
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db nil)))
     (is (true? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 666)))
     (is (false? (paikkaus-q/onko-kohde-olemassa-ulkoisella-idlla? db 2345)))
@@ -72,6 +72,7 @@
 
 (deftest luo-uusi-paikkaus
   (let [db (tietokanta/luo-tietokanta testitietokanta)
+        destian-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'destia';"))
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)]
 
@@ -105,6 +106,7 @@
 
 (deftest paivita-paikkaustoteuma
   (let [db (tietokanta/luo-tietokanta testitietokanta)
+        destian-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'destia';"))
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
@@ -128,6 +130,7 @@
 
 (deftest kohteiden-paivittaminen
   (let [db (tietokanta/luo-tietokanta testitietokanta)
+        destian-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'destia';"))
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)
         uuden-kohteen-ulkoinen-id 12345]
     (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaus)
