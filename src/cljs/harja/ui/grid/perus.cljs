@@ -81,16 +81,16 @@
                                                         :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
                       [tee-kentta (assoc sarake
-                                   :focus (= fokus fokus-id)
-                                   :on-focus #(aseta-fokus! fokus-id)
-                                   :pituus-max (:pituus-max sarake))
-                      (r/wrap
-                        arvo
-                        (fn [uusi]
-                          (if aseta
-                            (muokkaa! id (fn [rivi]
-                                           (aseta rivi uusi)))
-                            (muokkaa! id assoc nimi uusi))))]])]
+                                    :focus (= fokus fokus-id)
+                                    :on-focus #(aseta-fokus! fokus-id)
+                                    :pituus-max (:pituus-max sarake))
+                       (r/wrap
+                         arvo
+                         (fn [uusi]
+                           (if aseta
+                             (muokkaa! id (fn [rivi]
+                                            (aseta rivi uusi)))
+                             (muokkaa! id assoc nimi uusi))))]])]
 
                   ^{:key (str nimi)}
                   [:td {:class (str "ei-muokattava " tasaus-luokka)}
@@ -226,7 +226,7 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko validoi-fn tunniste]}]
+                                peruuta otsikko validoi-fn tunniste voi-kumota?]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -245,12 +245,13 @@
             [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
             muokkaa-nappi)))]
      [:span.pull-right.muokkaustoiminnot
-      [:button.nappi-toissijainen
-       {:disabled (not muokattu?)
-        :on-click #(do (.stopPropagation %)
-                       (.preventDefault %)
-                       (peru!))}
-       [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
+      (when voi-kumota?
+        [:button.nappi-toissijainen
+         {:disabled (not muokattu?)
+          :on-click #(do (.stopPropagation %)
+                         (.preventDefault %)
+                         (peru!))}
+         [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])
 
       (when-not (= false voi-lisata?)
         [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
@@ -535,6 +536,7 @@
   :max-rivimaaran-ylitys-viesti         custom viesti :max-rivimaara -optiolle
   :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
   :voi-lisata?                          voiko rivin lisätä (boolean)
+  :voi-kumota?                          Jos false, ei näytetä kumoa-nappia. Oletus: true.
   :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :esta-poistaminen?                    funktio, joka ottaa rivin ja palauttaa true tai false.
                                         Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
@@ -589,7 +591,7 @@
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko
-           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta
+           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta voi-kumota?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
 
@@ -885,9 +887,10 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
-                    validoi-fn] :as opts}
+                    validoi-fn voi-kumota?] :as opts}
             skeema alkup-tiedot]
-        (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+        (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
+              skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
               mahdollista-rivin-valinta? (or mahdollista-rivin-valinta? false)
               muuta-gridia-muokataan? (and
                                         (>= (count @muokkauksessa-olevat-gridit) 1)
@@ -925,7 +928,7 @@
                              :tallenna-vain-muokatut tallenna-vain-muokatut
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                             :peruuta peruuta :otsikko otsikko
+                             :peruuta peruuta :otsikko otsikko :voi-kumota? voi-kumota?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :validoi-fn validoi-fn})
            [:div.panel-body
@@ -1009,7 +1012,7 @@
                                 :tallenna-vain-muokatut tallenna-vain-muokatut
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                                :peruuta peruuta :otsikko otsikko
+                                :peruuta peruuta :otsikko otsikko :voi-kumota? voi-kumota?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn})])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))

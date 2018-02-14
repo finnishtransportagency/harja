@@ -27,7 +27,6 @@
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.roolit :as roolit]
@@ -69,7 +68,7 @@
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)
   (let [vastaus (into []
-                      yllapitokohteet-q/kohdeosa-xf
+                      q/kohdeosa-xf
                       (q/hae-urakan-yllapitokohteen-yllapitokohdeosat db {:yllapitokohde yllapitokohde-id}))]
     vastaus))
 
@@ -94,9 +93,12 @@
     aikataulu))
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
-  (let [aikataulu (->> (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
-                                                              :vuosi vuosi})
-                       (map konv/alaviiva->rakenne))
+  (let [aikataulu (into []
+                        (comp
+                          (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
+                          (map konv/alaviiva->rakenne))
+                        (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
+                                                               :vuosi vuosi}))
         aikataulu (konv/sarakkeet-vektoriin
                     aikataulu
                     {:tarkkaaikataulu :tarkka-aikataulu})
@@ -153,15 +155,15 @@
 
       (when (or (viestinta/valita-tieto-valmis-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm)
                 (viestinta/valita-tieto-peru-valmius-tiemerkintaan? vanha-tiemerkintapvm tiemerkintapvm))
-        (let [kohteen-tiedot (first (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                      db {:idt [kohde-id]}))
+        (let [kohteen-tiedot (first (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                      db [kohde-id]))
               kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
           (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
             {:fim fim :email email :kohteen-tiedot kohteen-tiedot
              :tiemerkintapvm tiemerkintapvm
              :kopio-itselle? kopio-itselle?
              :saate saate
-             :muut-vastaanottajat muut-vastaanottajat
+             :sahkopostitiedot muut-vastaanottajat
              :kayttaja user})))
 
       (hae-urakan-aikataulu db user {:urakka-id urakka-id
@@ -221,16 +223,17 @@
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db tiemerkintaurakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [nykyiset-kohteet-kannassa (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                               db {:idt (map :id kohteet)}))
+    (let [nykyiset-kohteet-kannassa (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                               db (map :id kohteet)))
           valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan nykyiset-kohteet-kannassa kohteet)
-          lahetettavat-kohteet (filter #(pvm/sama-tai-jalkeen?
-                                          ;; Asiakkaan pyynnöstä toteutettu niin, että maili lähtee vain jos
-                                          ;; loppupvm on nykypäivä tai mennyt aika. Tulevaisuuteen suunniteltu
-                                          ;; loppupvm ei generoi maililähetystä.
-                                          (pvm/joda-timeksi (pvm/nyt))
-                                          (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %)))
-                                       valmistuneet-kohteet)]
+          mailattavat-kohteet (filter #(pvm/sama-tai-jalkeen?
+                                         ;; Asiakkaan pyynnöstä toteutettu niin, että maili lähtee vain jos
+                                         ;; loppupvm on nykypäivä tai mennyt aika. Tulevaisuuteen suunniteltu
+                                         ;; loppupvm ei generoi maililähetystä (ajastettu taski käsittelee ne myöhemmin).
+                                         (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi (pvm/nyt)))
+                                         (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %))))
+                                      valmistuneet-kohteet)]
+
       (doseq [kohde kohteet]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
@@ -244,14 +247,26 @@
             db
             {:aikataulu_tiemerkinta_takaraja (:aikataulu-tiemerkinta-takaraja kohde)
              :id (:id kohde)
-             :suorittava_tiemerkintaurakka tiemerkintaurakka-id})))
+             :suorittava_tiemerkintaurakka tiemerkintaurakka-id}))
+        ;; Tallenna käyttäjän kirjoittajamat vastaanottajat, selite ja kopio-viesti.
+        ;; Tietojen on oltava tallessa kannassa, koska viestinvälitys lukee ne aina kannasta.
+        ;; Näin siksi, että toteutus olisi yhtenäinen riippumatta siitä, lähetetäänkö viesti
+        ;; heti, vai myöhemmin.
+        (q/poista-valmistuneen-tiemerkinnan-sahkopostitiedot! db {:yllapitokohde_id (:id kohde)})
+        (q/tallenna-valmistuneen-tiemerkkinnan-sahkopostitiedot<!
+          db
+          {:yllapitokohde_id (:id kohde)
+           :vastaanottajat (konv/seq->array (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))
+           :saate (get-in kohde [:sahkopostitiedot :saate])
+           :kopio_lahettajalle (boolean (get-in kohde [:sahkopostitiedot :kopio-itselle?]))}))
 
       (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-        {:kayttaja user :fim fim
+        {:kayttaja user
+         :fim fim
+         :db db
          :email email
-         :valmistuneet-kohteet (into [] (q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                          db
-                                          {:idt (map :id lahetettavat-kohteet)}))}))))
+         :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                          db (map :id mailattavat-kohteet)))}))))
 
 (declare tallenna-yllapitokohteiden-tarkka-aikataulu)
 
@@ -301,7 +316,7 @@
 (defn tallenna-yllapitokohteiden-tarkka-aikataulu
   [db user {:keys [urakka-id sopimus-id vuosi yllapitokohde-id aikataulurivit] :as tiedot}]
   (assert (and urakka-id sopimus-id yllapitokohde-id) (str "Anna urakka-id, sopimus-id, yllapitokohde-id."
-  " Sain: " urakka-id "," sopimus-id "," yllapitokohde-id))
+                                                           " Sain: " urakka-id "," sopimus-id "," yllapitokohde-id))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)
   ;; Aikataulurivin kuulumista ylläpitokohteeseen tai urakkaan ei tarkisteta erikseen, vaan sisältyy UPDATE-kyselyn WHERE-lauseeseen.
@@ -527,9 +542,9 @@
           (oikeudet/voi-lukea? oikeudet/tilannekuva-historia nil user)
           (yy/lukuoikeus-paallystys-tai-tiemerkintaurakan-aikatauluun? db user yllapitokohde-id))
     (let [urakka-id (case urakkatyyppi
-                      :paallystys (:id (first (yllapitokohteet-q/hae-yllapitokohteen-urakka-id
+                      :paallystys (:id (first (q/hae-yllapitokohteen-urakka-id
                                                 db {:id yllapitokohde-id})))
-                      :tiemerkinta (:id (first (yllapitokohteet-q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
+                      :tiemerkinta (:id (first (q/hae-yllapitokohteen-suorittava-tiemerkintaurakka-id
                                                  db {:id yllapitokohde-id}))))
           fim-kayttajat (yhteyshenkilot/hae-urakan-kayttajat db fim urakka-id)
           yhteyshenkilot (yhteyshenkilot/hae-urakan-yhteyshenkilot db user urakka-id)]
@@ -547,14 +562,13 @@
           (lukot/yrita-ajaa-lukon-kanssa
             db
             "yllapitokohteiden-sahkoposti"
-            #(let [lahetettavat-kohteet
-                   (yllapitokohteet-q/hae-tanaan-valmistuvat-tiemerkintakohteet-sahkopostilahetykseen db)
-                   kohteet-urakoittain (group-by :paallystysurakka-sampo-id lahetettavat-kohteet)]
-               (doseq [urakan-kohteet kohteet-urakoittain]
-                 (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-                   {:fim fim
-                    :email email
-                    :valmistuneet-kohteet (second urakan-kohteet)})))))))
+            #(let [mailattavat-kohteet (q/hae-tanaan-valmistuvien-tiemerkintakohteiden-idt db)]
+               (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
+                 {:fim fim
+                  :db db
+                  :email email
+                  :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                                   db (map :id mailattavat-kohteet)))}))))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]

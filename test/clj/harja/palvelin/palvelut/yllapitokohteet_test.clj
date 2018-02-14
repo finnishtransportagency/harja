@@ -19,7 +19,10 @@
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.paneeliapurit :as paneeli]
-            [clj-time.coerce :as c])
+            [clj-time.coerce :as c]
+            [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sanomat]
+            [clojure.string :as str])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -130,7 +133,7 @@
       (is (= (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila oulun-ohitusramppi)) :kesken)))))
 
 (deftest yllapitokohteen-tila-paatellaan-oikein
-  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)]           ;; 25.5.2017
+  (with-redefs [pvm/nyt #(pvm/luo-pvm 2017 4 25)] ;; 25.5.2017
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila {})
            :ei-aloitettu))
     (is (= (yllapitokohteet-domain/yllapitokohteen-tarkka-tila
@@ -688,9 +691,10 @@
         (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")))))
 
 (deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-niin-etta-maili-lahtee
-  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
-        sahkoposti-valitetty (atom false)]
-    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-ja-oulun-tiemerkintaurakan-kayttajat.xml"))
+        sahkopostien-sisallot (atom [])]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [viesti]
+                                                            (swap! sahkopostien-sisallot conj (sanomat/lue-sahkoposti (.getText viesti)))))
     (with-fake-http
       [+testi-fim+ fim-vastaus]
       (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
@@ -703,7 +707,11 @@
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
                                                 " AND poistettu IS NOT TRUE;")))
+            saate "Kohteen saateviesti"
             kohteet [{:id leppajarven-ramppi-id
+                      :sahkopostitiedot {:kopio-itselle? true
+                                         :muut-vastaanottajat #{}
+                                         :saate saate}
                       :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -725,8 +733,104 @@
         (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
 
         ;; Leppäjärven tiemerkintä oli jo merkitty valmiiksi, mutta sitä päivitettiin -> pitäisi lähteä maili
-        (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-        (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))))
+        (odota-ehdon-tayttymista #(= (count @sahkopostien-sisallot) 4) "Sähköpostit lähetettiin" 5000)
+        (let [muhoksen-vastuuhenkilo (first (filter #(str/includes? (:vastaanottaja %) "vastuuhenkilo@example.com") @sahkopostien-sisallot))
+              muhoksen-urakanvalvoja (first (filter #(str/includes? (:vastaanottaja %) "ELY_Urakanvalvoja@example.com") @sahkopostien-sisallot))
+              tiemerkinnan-urakanvalvoja (first (filter #(str/includes? (:vastaanottaja %) "erkki.esimerkki@example.com") @sahkopostien-sisallot))
+              ilmoittaja (first (filter #(str/includes? (:vastaanottaja %) "jalmari@example.com") @sahkopostien-sisallot))]
+          ;; Viesti lähti oikeille henkilöille
+          (is muhoksen-vastuuhenkilo)
+          (is muhoksen-urakanvalvoja)
+          (is tiemerkinnan-urakanvalvoja)
+          (is ilmoittaja) ; Kopio lähettäjälle
+          ;; Viestit lähetettiin oikeasta näkökulmasta
+          (is (= (:otsikko muhoksen-vastuuhenkilo) "Harja: Urakan 'Muhoksen päällystysurakka' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          (is (= (:otsikko muhoksen-urakanvalvoja) "Harja: Urakan 'Muhoksen päällystysurakka' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          (is (= (:otsikko tiemerkinnan-urakanvalvoja) "Harja: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2018' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          (is (= (:otsikko ilmoittaja) "Harja-viesti lähetetty: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2018' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017")))
+        ;; Sähköposteista löytyy oleelliset asiat
+        (is (every? #(str/includes? % saate) @sahkopostien-sisallot) "Saate löytyy")
+        (is (every? #(str/includes? % "25.05.2017") @sahkopostien-sisallot) "Valmistumispvm löytyy")
+        (is (every? #(str/includes? % "Jalmari Järjestelmävastuuhenkilö (org. Liikennevirasto)") @sahkopostien-sisallot)
+            "Merkitsijä löytyy")))))
+
+(deftest paivita-tiemerkintaurakan-yllapitokohteen-aikataulu-tulevaisuuteen
+  (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
+        sahkoposti-valitetty (atom false)]
+    (sonja/kuuntele (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+    (with-fake-http
+      [+testi-fim+ fim-vastaus]
+      (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+            sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vuosi 2017
+            leppajarvi-aikataulu-tiemerkinta-alku (pvm/->pvm "22.5.2017")
+            leppajarvi-aikataulu-tiemerkinta-loppu (pvm/->pvm "25.5.2060")
+            saate "Kohde valmistui ajallaan"
+            muut-vastaanottajat #{"erkki.petteri@esimerkki.com"}
+            kohteet [{:id leppajarven-ramppi-id
+                      :sahkopostitiedot {:kopio-itselle? true
+                                         :muut-vastaanottajat muut-vastaanottajat
+                                         :saate saate}
+                      :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
+                      :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
+            mailitietojen-maara-ennen-lisaysta (ffirst (q
+                                                         (str "SELECT count(*) FROM yllapitokohteen_sahkopostitiedot
+                                         WHERE yllapitokohde_id = " 1 ";")))
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteiden-aikataulu
+                                    +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi vuosi
+                                     :kohteet kohteet})
+            vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")
+            mailitietojen-maara-lisayksen-jalkeen (q-map
+                                                    (str "SELECT * FROM yllapitokohteen_sahkopostitiedot
+                                         WHERE yllapitokohde_id = " 1 ";"))
+            mailitiedot (first mailitietojen-maara-lisayksen-jalkeen)]
+        ;; Muokatut kentät päivittyivät
+        (is (= leppajarvi-aikataulu-tiemerkinta-loppu (:aikataulu-tiemerkinta-loppu vastaus-leppajarven-ramppi)))
+        (is (= leppajarvi-aikataulu-tiemerkinta-alku (:aikataulu-tiemerkinta-alku vastaus-leppajarven-ramppi)))
+
+        ;; Ennen lähetystä kohteella ei ollut yhtään odottavaa mailia
+        (is (zero? mailitietojen-maara-ennen-lisaysta))
+
+        ;; Leppäjärven tiemerkintä merkittiin valmistuneeksi tulevaisuuteen -> maili ei lähde, vaan tiedot menevät odotukseen
+        (is (= mailitietojen-maara-ennen-lisaysta (dec (count mailitietojen-maara-lisayksen-jalkeen))))
+        (is (= (:tyyppi mailitiedot) "tiemerkinta_valmistunut"))
+        (is (= (:yllapitokohde_id mailitiedot) leppajarven-ramppi-id))
+        (is (= (:saate mailitiedot) saate))
+        (is (= (konv/array->set (:vastaanottajat mailitiedot)) muut-vastaanottajat))
+        (is (true? (:kopio_lahettajalle mailitiedot)))
+        (<!! (timeout 5000))
+        (is (false? @sahkoposti-valitetty) "Maili ei lähde, eikä pidäkään")
+
+        ;; Päivitä mailitiedot
+        (let [kohteet [{:id leppajarven-ramppi-id
+                        :sahkopostitiedot {:kopio-itselle? false
+                                           :muut-vastaanottajat #{}
+                                           :saate nil}
+                        :aikataulu-tiemerkinta-alku leppajarvi-aikataulu-tiemerkinta-alku
+                        :aikataulu-tiemerkinta-loppu leppajarvi-aikataulu-tiemerkinta-loppu}]
+              vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-yllapitokohteiden-aikataulu
+                                      +kayttaja-jvh+
+                                      {:urakka-id urakka-id
+                                       :sopimus-id sopimus-id
+                                       :vuosi vuosi
+                                       :kohteet kohteet})
+              mailitiedot-paivityksen-jalkeen (q-map
+                                                (str "SELECT * FROM yllapitokohteen_sahkopostitiedot
+                                         WHERE yllapitokohde_id = " 1 ";"))
+              mailitiedot (first mailitiedot-paivityksen-jalkeen)]
+
+          ;; Sähköpostitiedot päivittyi
+          (is (= (:tyyppi mailitiedot) "tiemerkinta_valmistunut"))
+          (is (= (:yllapitokohde_id mailitiedot) leppajarven-ramppi-id))
+          (is (= (:saate mailitiedot) nil))
+          (is (= (konv/array->set (:vastaanottajat mailitiedot)) #{}))
+          (is (false? (:kopio_lahettajalle mailitiedot))))))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-kayttajia
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
