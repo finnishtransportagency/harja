@@ -41,22 +41,22 @@
 
 
 (def perustiedot
-  #{:turvalaitenro
-    :nimi
-    :sijainti
-    :sijaintikuvaus
-    :tyyppi
-    :tarkenne
-    :tila
-    :vah_pvm
-    :toimintatila
-    :rakenne
-    :navigointilaji
-    :valaistu
-    :omistaja
-    :turvalaitenro_aiempi
-    :paavayla
-    :vaylat
+  #{::turvalaitenro
+    ::nimi
+    ::sijainti
+    ;; ::sijaintikuvaus ;; ei kantataulussa
+    ::tyyppi
+    ::tarkenne
+    ::tila
+    ::vah_pvm
+    ::toimintatila
+    ::rakenne
+    ::navigointilaji
+    ::valaistu
+    ::omistaja
+    ::turvalaitenro_aiempi
+    ::paavayla
+    ::vaylat
 })
 
 (s/def ::hae-turvalaitteet-kartalle-kysely
