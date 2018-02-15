@@ -9,7 +9,7 @@
 
 (declare aseta-kartta-debug-sijainti)
 
-(defonce tila (atom {:nayta-kartan-debug? false
+(defonce tila (atom {:nayta-kartan-debug? true
                      :nayta-kaikki-layerit? false
                      :nayta-kartan-ylaosassa? true
                      :kartan-paikka []}))
