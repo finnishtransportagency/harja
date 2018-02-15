@@ -26,7 +26,7 @@
    :the_geom "POINT(431153.667 7203743.451)"})
 
 (def referenssi-turvalaite-tietokannasta
-  {:turvalaitenro 6666666
+  {:turvalaitenro "6666666"
    :nimi "Loistava I"
    :sijainti "Nevernever"
    :tyyppi "Sektoriloisto"
@@ -43,5 +43,5 @@
 
 (t/deftest vie-turvalaite-tietokantaan
   (turvalaite-tuonti/vie-turvalaite-entry (:db ht/jarjestelma) referenssi-turvalaite-shapefilestä)
-    (let [tallentunut-turvalaite (first (q-vatu-turvalaite/hae-turvalaite-tunnuksella (:db ht/jarjestelma) {:turvalaitenro 6666666}))]
+  (let [tallentunut-turvalaite (first (q-vatu-turvalaite/hae-turvalaite-tunnuksella (:db ht/jarjestelma) {:turvalaitenro "6666666"}))]
       (ht/tarkista-map-arvot referenssi-turvalaite-tietokannasta tallentunut-turvalaite)))

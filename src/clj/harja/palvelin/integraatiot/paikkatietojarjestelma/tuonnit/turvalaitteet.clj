@@ -26,7 +26,7 @@
         paavayla (:paavayla turvalaite)
         vaylat (when (:vaylat turvalaite) (konv/seq->array (map #(Integer. %) (str/split (:vaylat turvalaite) #","))))
         geometria (.toString (:the_geom turvalaite))
-        sql-parametrit {:turvalaitenro turvalaitenro
+        sql-parametrit {:turvalaitenro (str turvalaitenro)
                         :nimi nimi
                         :sijainti sijainti
                         :tyyppi tyyppi
