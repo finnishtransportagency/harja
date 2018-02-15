@@ -73,14 +73,14 @@
        " " toiminto "."))
 
 (defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
-                                                     vaylatyyppi vaylanro turvalaite-id
+                                                     vaylatyyppi vaylanro turvalaitenro
                                                      tyolaji tyoluokka toimenpide
                                                      vain-vikailmoitukset? turvalaite] :as valinnat}]
   (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vaylanro vaylanro
-                                   ::to/turvalaite-id turvalaite-id
+                                   ::to/turvalaitenro turvalaitenro
                                    ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
                                    ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
                                    ::to/reimari-toimenpidetyypit (when toimenpide (to/reimari-toimenpidetyyppi-avain->koodi toimenpide))

@@ -51,7 +51,7 @@
     ::vikailmoitukset (specql.rel/has-many ::id ::vv-vikailmoitus/vikailmoitus ::vv-vikailmoitus/toimenpide-id)
     ::urakoitsija (specql.rel/has-one ::urakoitsija-id ::o/organisaatio ::o/id)
     ::urakka (specql.rel/has-one ::urakka-id ::urakka/urakka ::urakka/id)
-    ::turvalaite (specql.rel/has-one ::turvalaite-id ::vv-turvalaite/turvalaite ::vv-turvalaite/turvalaitenro)
+    ::turvalaite (specql.rel/has-one ::turvalaitenro ::vv-turvalaite/turvalaite ::vv-turvalaite/turvalaitenro)
     ::sopimus (specql.rel/has-one ::sopimus-id ::sopimus/sopimus ::sopimus/id)
     ::vayla (specql.rel/has-one ::vaylanro ::vv-vayla/vayla ::vv-vayla/vaylanro)
     ::kiintio (specql.rel/has-one ::kiintio-id ::kiintio/kiintio ::kiintio/id)
@@ -345,7 +345,7 @@ reimari-toimenpidetyypit
   #{::urakoitsija-id
     ::sopimus-id
     ::urakka-id
-    ::turvalaite-id
+    ::turvalaitenro
     ::vaylanro
     ::m/muokkaaja-id
     ::m/luoja-id
@@ -426,7 +426,7 @@ reimari-toimenpidetyypit
   (s/keys
     ;; Toimenpiteen / toteuman hakuparametrit
     :req [::urakka-id]
-    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vaylanro ::turvalaite-id
+    :opt [::sopimus-id ::vv-vayla/vaylatyyppi ::vaylanro ::turvalaitenro
           ::reimari-tyolaji ::reimari-tyoluokat ::reimari-toimenpidetyypit]
     ;; Muut hakuparametrit
     :opt-un [::alku ::loppu ::luotu-alku ::luotu-loppu

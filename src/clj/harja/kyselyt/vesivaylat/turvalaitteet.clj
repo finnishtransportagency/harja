@@ -18,7 +18,7 @@
             [clojure.string :as str]
             [harja.geo :as geo]))
 
-(defqueries "harja/kyselyt/vesivaylat/turvalaitteet.sql")
+(defqueries "harja/kyselyt/vesivaylat/vatu_turvalaitteet.sql")
 
 (defrecord &&op [values]
   op/Op
