@@ -1,0 +1,13 @@
+UPDATE vatu_turvalaite SET luoja = NULL WHERE luoja = 'Integraatio';
+ALTER TABLE vatu_turvalaite ALTER COLUMN luoja TYPE integer USING luoja::integer;
+ALTER TABLE vatu_turvalaite ALTER COLUMN turvalaitenro TYPE text USING turvalaitenro::text;
+UPDATE vatu_turvalaite SET muokkaaja = NULL WHERE muokkaaja = 'Integraatio';
+ALTER TABLE vatu_turvalaite ALTER COLUMN muokkaaja TYPE integer USING muokkaaja::integer;
+UPDATE vv_vikailmoitus SET "reimari-turvalaitenro" = (SELECT turvalaitenro FROM vv_turvalaite WHERE id = "turvalaite-id");
+ALTER TABLE vv_vikailmoitus DROP COLUMN "turvalaite-id";
+ALTER TABLE reimari_toimenpide DROP COLUMN "turvalaite-id";
+DROP TABLE vv_turvalaite;
+ALTER TABLE vatu_turvalaite ADD COLUMN kiintea BOOL;
+ALTER TABLE reimari_toimenpide ADD COLUMN turvalaitenro TEXT;
+DROP TRIGGER IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger ON vv_vikailmoitus;
+DROP FUNCTION IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger_proc();

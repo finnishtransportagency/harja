@@ -10,24 +10,54 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
+;; turvalaitetauluja on 3:
+;; - reimari_turvalaite - reimarista tuleva tieto turvalaitteiden urakka-alueista
+;; - vv_turvalaite (= alk/ava-tiedot ) - ei enää käytössä, entinen turvalaitedata
+;; - vatu_turvalaite - varsinainen turvalaitedata
+;;
+
 (define-tables
   ["reimari_turvalaite" ::reimari-turvalaite
    {"nro" ::r-nro
     "nimi" ::r-nimi
     "ryhma" ::r-ryhma}]
-  ["vv_turvalaite" ::turvalaite
+  ["vatu_turvalaite" ::turvalaite
    harja.domain.muokkaustiedot/muokkaustiedot
-   harja.domain.muokkaustiedot/poistettu?-sarake])
+   ;; harja.domain.muokkaustiedot/poistettu?-sarake
+   ])
 
-(def tyypit (s/describe ::tyyppi))
+;; todo: poistuvat sarakkeee vv_turvalaite -> vatu_turvalaite -muutoksen myötä
+;; id
+;; arvot (json)
+;; kiintea - mikä tämä oli, tarvitanako vielä, löytyykö vatu-tiedoista?
+;; poistettu
+
+;; (def perustiedot
+;;   #{::turvalaitenro
+;;     ::nimi
+;;     ::tyyppi
+;;     ::kiintea
+;;     ::vaylat})
+
 
 (def perustiedot
-  #{::id
+  #{::turvalaitenro
     ::nimi
+    ::sijainti
+    ;; ::sijaintikuvaus ;; ei kantataulussa
     ::tyyppi
-    ::turvalaitenro
-    ::kiintea
-    ::vaylat})
+    ::tarkenne
+    ::tila
+    ::vah_pvm
+    ::toimintatila
+    ::rakenne
+    ::navigointilaji
+    ::valaistu
+    ::omistaja
+    ::turvalaitenro_aiempi
+    ::paavayla
+    ::vaylat
+})
 
 (s/def ::hae-turvalaitteet-kartalle-kysely
   (s/keys :req []))

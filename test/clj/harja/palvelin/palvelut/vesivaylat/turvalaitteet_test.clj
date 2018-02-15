@@ -46,8 +46,7 @@
       (is (s/valid? ::tu/hae-turvalaitteet-kartalle-vastaus tulos))
 
       (is (= 1 (count tulos)))
-      (is (true? (contains? (first tulos) ::tu/sijainti)))
-      (is (empty? (filter ::m/poistettu? tulos)))))
+      (is (true? (contains? (first tulos) ::tu/sijainti)))))
 
 (deftest hae-kartalle-vaylanumerolla
   (let [params {:vaylanumerot #{66662}}
@@ -58,8 +57,7 @@
     (is (s/valid? ::tu/hae-turvalaitteet-kartalle-vastaus tulos))
 
     (is (= 4 (count tulos)))
-    (is (every? #(contains? % ::tu/sijainti) tulos))
-    (is (empty? (filter ::m/poistettu? tulos)))(is (empty? (filter ::m/poistettu? tulos)))))
+    (is (every? #(contains? % ::tu/sijainti) tulos))))
 
 (deftest hae-kartalle-tyhjilla-tiedoilla
   (let [params {}

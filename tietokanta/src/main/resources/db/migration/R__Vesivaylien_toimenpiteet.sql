@@ -21,12 +21,8 @@ BEGIN
                 -- id:ksi tulee NULL jos ei löydy, joka on ok
   -- RAISE NOTICE 'reimari_toimenpide linkit trigger: sopimus-id arvoksi %', NEW."sopimus-id";
 
-  id_temp := (SELECT id FROM vv_turvalaite
-               WHERE turvalaitenro::text = (NEW."reimari-turvalaite").nro);
-
-  NEW."turvalaite-id" = id_temp;
-                -- id:ksi tulee NULL jos ei löydy, joka on ok
-  -- RAISE NOTICE 'reimari_toimenpide linkit trigger: turvalaite-id arvoksi %', NEW."turvalaite-id";
+  NEW."turvalaitenro" = (NEW."reimari-turvalaite").nro;
+  -- RAISE NOTICE 'reimari_toimenpide linkit trigger: turvalaitenro arvoksi %', NEW."turvalaitenro";
 
   RETURN NEW;
 END;
@@ -87,6 +83,19 @@ BEGIN
                                  ELSE 'kokonaishintainen'
                             END;
      RAISE NOTICE 'reimari_toimenpide hintatyyppi trigger: hintatyypiksi %', NEW."hintatyyppi";
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION muodosta_vesivaylaurakan_geometria()
+  RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.turvalaitteet IS NOT NULL
+  THEN
+    NEW.urakka_alue := (SELECT ST_ConvexHull(ST_UNION(geometria))
+                        FROM vatu_turvalaite
+                        WHERE turvalaitenro = ANY ((NEW.turvalaitteet) :: TEXT []));
   END IF;
   RETURN NEW;
 END;

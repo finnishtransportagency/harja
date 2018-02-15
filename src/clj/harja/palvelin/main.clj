@@ -118,7 +118,6 @@
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
-    [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as turvalaitteiden-geometriat]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
@@ -623,15 +622,6 @@
       :status (component/using
                 (status/luo-status)
                 [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
-
-      :turvalaitteiden-geometriahaku
-      (component/using
-        (let [asetukset (:turvalaitteet asetukset)]
-          (turvalaitteiden-geometriat/->TurvalaitteidenGeometriahaku
-            (:geometria-url asetukset)
-            (:paivittainen-tarkistusaika asetukset)
-            (:paivitysvali-paivissa asetukset)))
-        [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
 
       :vaylien-geometriahaku
       (component/using

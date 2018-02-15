@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
-            [harja.kyselyt.vesivaylat.vatu-turvalaitteet :as q-turvalaitteet]
+            [harja.kyselyt.vesivaylat.turvalaitteet :as q-turvalaitteet]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [clj-time.coerce :as c]))
@@ -26,7 +26,7 @@
         paavayla (:paavayla turvalaite)
         vaylat (when (:vaylat turvalaite) (konv/seq->array (map #(Integer. %) (str/split (:vaylat turvalaite) #","))))
         geometria (.toString (:the_geom turvalaite))
-        sql-parametrit {:turvalaitenro turvalaitenro
+        sql-parametrit {:turvalaitenro (str turvalaitenro)
                         :nimi nimi
                         :sijainti sijainti
                         :tyyppi tyyppi
@@ -42,11 +42,10 @@
                         :paavayla paavayla
                         :vaylat vaylat
                         :geometria geometria
-                        :luoja "Integraatio"
-                        :muokkaaja "Integraatio"}]
+                        :luoja nil
+                        :muokkaaja nil}] ;; onko joku sopiva käyttäjä joka voidaan kovakoodata?
 
-    (do
-      (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit))))
+    (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit)))
 
 (defn vie-turvalaitteet-kantaan [db shapefile]
   (if shapefile
@@ -57,4 +56,3 @@
                                   (vie-turvalaite-entry db turvalaite)))
       (log/debug "Turvalaitteiden tuonti kantaan valmis."))
     (log/debug "Turvalaitteiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
-
