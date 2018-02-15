@@ -143,12 +143,13 @@
                  [com.atlassian.sourcemap/sourcemap "1.7.6"]
 
                  ;; Arbitrary precision math frontilla
-                 [cljsjs/big "3.1.3-1"]]
+                 [cljsjs/big "3.1.3-1"]
+
+                 [clj-gatling "0.11.0" :exclusions [[clj-time]]]]
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]
-                                  [clj-gatling "0.11.0" :exclusions [clj-time]]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
                              [test2junit "1.3.3"]]
