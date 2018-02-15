@@ -656,6 +656,7 @@
                      :hae-yllapitourakan-aikataulu
                      :tallenna-yllapitokohteiden-aikataulu
                      :sahkopostin-lahetys)
+
     (when sahkopostin-lahetys
       (sahkopostin-lahetys))
     (dissoc this ::sahkopostin-lahetys)))
