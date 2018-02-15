@@ -23,19 +23,41 @@
     "ryhma" ::r-ryhma}]
   ["vatu_turvalaite" ::turvalaite
    harja.domain.muokkaustiedot/muokkaustiedot
-   harja.domain.muokkaustiedot/poistettu?-sarake])
+   ;; harja.domain.muokkaustiedot/poistettu?-sarake
+   ])
 
 ;; todo: poistuvat sarakkeee vv_turvalaite -> vatu_turvalaite -muutoksen myötä
 ;; id
 ;; arvot (json)
-;; kiintea
+;; kiintea - mikä tämä oli, tarvitanako vielä, löytyykö vatu-tiedoista?
+;; poistettu
+
+;; (def perustiedot
+;;   #{::turvalaitenro
+;;     ::nimi
+;;     ::tyyppi
+;;     ::kiintea
+;;     ::vaylat})
+
 
 (def perustiedot
-  #{::turvalaitenro
-    ::nimi
-    ::tyyppi
-    ::kiintea
-    ::vaylat})
+  #{:turvalaitenro
+    :nimi
+    :sijainti
+    :sijaintikuvaus
+    :tyyppi
+    :tarkenne
+    :tila
+    :vah_pvm
+    :toimintatila
+    :rakenne
+    :navigointilaji
+    :valaistu
+    :omistaja
+    :turvalaitenro_aiempi
+    :paavayla
+    :vaylat
+})
 
 (s/def ::hae-turvalaitteet-kartalle-kysely
   (s/keys :req []))

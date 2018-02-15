@@ -50,10 +50,9 @@
             (geo/muunna-pg-tulokset ::tu/sijainti))
           (specql/fetch db
                         ::tu/turvalaite
-                        #{::tu/id
+                        #{::tu/turvalaitenro
                           ::tu/nimi
                           ::tu/sijainti
-                          ::tu/turvalaitenro
                           ::tu/tyyppi
                           ::tu/kiintea
                           ::tu/vaylat}
@@ -71,9 +70,8 @@
                               ;; Ei onnistu, joten antaa olla
                               )]
     (vec (specql/fetch db ::tu/turvalaite
-                       #{::tu/id
-                         ::tu/nimi
-                         ::tu/turvalaitenro}
+                       #{::tu/turvalaitenro
+                         ::tu/nimi}
                        (op/or {::tu/nimi (op/ilike (str hakuteksti "%"))}
                               (when hakuteksti-numerona
                                 {::tu/turvalaitenro hakuteksti-numerona}))))))
