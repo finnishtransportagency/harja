@@ -216,7 +216,7 @@
       (luo-tai-paivita-korjaavat-toimenpiteet db user korjaavattoimenpiteet tp-id urakka)
       tp-id)))
 
-(defn- vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan [db urakka-id turvallisuuspoikkeama-id]
+(defn vaadi-turvallisuuspoikkeama-kuuluu-urakkaan [db urakka-id turvallisuuspoikkeama-id]
   (when (id-olemassa? turvallisuuspoikkeama-id)
     (let [turpon-todellinen-urakka-id (:urakka (first
                                                  (q/hae-turvallisuuspoikkeaman-urakka db turvallisuuspoikkeama-id)))]
@@ -229,7 +229,7 @@
     (log/debug "Tallennetaan turvallisuuspoikkeama " id " urakkaan " urakka)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-turvallisuus user urakka)
     ;; Tarkista kaiken varalta, että annettu turpo-id kuuluu annettuun urakkaan
-    (vaadi-turvallisuuspoikkeaman-kuuluminen-urakkaan db urakka id)
+    (vaadi-turvallisuuspoikkeama-kuuluu-urakkaan db urakka id)
 
     (let [id (tallenna-turvallisuuspoikkeama-kantaan db user tp korjaavattoimenpiteet uusi-kommentti urakka)]
       (when turi

@@ -1,6 +1,23 @@
 (ns harja.domain.laadunseuranta.tarkastus
-  (:require [clojure.string :as str]
-            [harja.domain.hoitoluokat :as hoitoluokat]))
+  (:require
+    [clojure.spec.alpha :as s]
+    [clojure.string :as str]
+    [harja.domain.hoitoluokat :as hoitoluokat]
+    [clojure.set :as set]
+    #?@(:clj  [
+    [harja.kyselyt.specql-db :refer [define-tables]]
+    [clojure.future :refer :all]]
+        :cljs [[specql.impl.registry]])
+    [harja.domain.urakka :as ur]
+    [harja.domain.kayttaja :as kayttaja]
+    [harja.domain.muokkaustiedot :as muokkaustiedot])
+  #?(:cljs
+     (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
+
+(define-tables
+  ["tarkastus" ::tarkastus
+   ;; TODO Lisää uudelleennimeämisiä sitä mukaan kun tarvii (-id viittauksille jne.)
+   {"urakka" ::urakka-id}])
 
 (def +tarkastustyyppi->nimi+
   {:tiesto "Tiestötarkastus"
