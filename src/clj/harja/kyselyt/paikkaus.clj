@@ -67,9 +67,9 @@
   (insert! db ::paikkaus/paikkaustoteuma toteuma))
 
 (defn- tallenna-materiaalit [db toteuma-id materiaalit]
-  (delete! db ::paikkaus/paikkauksen-materiaalit {::paikkaus/paikkaustoteuma-id toteuma-id})
+  (delete! db ::paikkaus/paikkauksen_materiaali {::paikkaus/paikkaustoteuma-id toteuma-id})
   (doseq [materiaali materiaalit]
-    (insert! db ::paikkaus/paikkauksen-materiaalit (assoc materiaali ::paikkaus/paikkaustoteuma-id toteuma-id))))
+    (insert! db ::paikkaus/paikkauksen_materiaali (assoc materiaali ::paikkaus/paikkaustoteuma-id toteuma-id))))
 
 (defn tallenna-tienkohdat [db toteuma-id tienkohdat]
   (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaustoteuma-id toteuma-id})

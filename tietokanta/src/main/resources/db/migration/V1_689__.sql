@@ -1,6 +1,10 @@
-CREATE TABLE paikkauksen_kustannus (
+CREATE TABLE paikkauskustannus (
   id                 SERIAL PRIMARY KEY,
-  "paikkauskohde-id" INTEGER REFERENCES paikkauskohde (id) NOT NULL,
+  "ulkoinen-id"      INTEGER                                     NOT NULL,
+
+  "urakka-id"        INTEGER REFERENCES urakka (id)              NOT NULL,
+  "paikkauskohde-id" INTEGER REFERENCES paikkauskohde (id)       NOT NULL,
+
   "luoja-id"         INTEGER REFERENCES kayttaja (id),
   luotu              TIMESTAMP DEFAULT NOW(),
   "muokkaaja-id"     INTEGER REFERENCES kayttaja (id),
@@ -17,6 +21,9 @@ CREATE TABLE paikkauksen_kustannus (
   -- yksikköhintaisen kustannuksen kentät
   yksikko            TEXT,
   yksikkohinta       DECIMAL,
-  maara              DECIMAL
+  maara              DECIMAL,
+
+  CONSTRAINT paikkauskustannuksen_uniikki_ulkoinen_id_luoja_urakka
+  UNIQUE ("ulkoinen-id", "luoja-id", "urakka-id")
 );
 

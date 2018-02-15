@@ -15,7 +15,13 @@
 
 (define-tables
   ["paikkauskohde" ::paikkauskohde
-   {"luoja-id" ::muokkaustiedot/luoja-id}]
+   {"luoja-id" ::muokkaustiedot/luoja-id
+    ::paikkaukset (specql.rel/has-many ::id
+                                       ::paikkaustoteuma
+                                       ::paikkauskohde-id)
+    ::kustannukset (specql.rel/has-many ::id
+                                        ::paikkauskustannus
+                                        ::paikkauskohde-id)}]
   ["paikkaustoteuma" ::paikkaustoteuma
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
@@ -30,10 +36,17 @@
                                       ::paikkauksen-tienkohta
                                       ::paikkaustoteuma-id)
     ::materiaalit (specql.rel/has-many ::id
-                                       ::paikkauksen-materiaalit
+                                       ::paikkauksen_materiaali
                                        ::paikkaustoteuma-id)}]
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
-  ["paikkauksen_materiaali" ::paikkauksen-materiaalit])
+  ["paikkauksen_materiaali" ::paikkauksen_materiaali]
+  ["paikkauskustannus" ::paikkauskustannus
+   {"luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu
+    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "poistaja-id" ::muokkaustiedot/poistaja-id
+    "poistettu" ::muokkaustiedot/poistettu?}])
 
 (def paikkauskohteen-perustiedot
   #{::id
@@ -67,3 +80,6 @@
                      ::sideainetyyppi
                      ::pitoisuus
                      ::lisa-aineet}]})
+
+(def paikkauskustannuksen-perustiedot
+  #{:id })
