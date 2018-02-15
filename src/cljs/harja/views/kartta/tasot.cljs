@@ -35,7 +35,7 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
             [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti]
             [harja.tiedot.urakka.toteumat.suola :as suolatoteumat]
-            [harja.tiedot.kanavat.urakka.toimenpiteet-kartalla :as kan-kohteet])
+            [harja.tiedot.kanavat.kohteet-kartalla :as kan-kohteet])
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -67,7 +67,8 @@
     :kokonaishintaisten-turvalaitteet
     :yksikkohintaisten-turvalaitteet
     :kohteenosat-kohteiden-luonnissa
-    :suolatoteumat})
+    :suolatoteumat
+    :kan-kohteet})
 
 (def
   ^{:doc
