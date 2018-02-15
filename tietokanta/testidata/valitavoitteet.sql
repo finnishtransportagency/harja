@@ -109,7 +109,7 @@ VALUES ((SELECT id
         'Se iso kivi siirretty pois tieltä',
         '2007-05-29',
         '2007-05-29',
-        'Homma hoidettu hyvästi ennen tavoitepäivää!',L
+        'Homma hoidettu hyvästi ennen tavoitepäivää!',
         false),
   ((SELECT id
     FROM   urakka
