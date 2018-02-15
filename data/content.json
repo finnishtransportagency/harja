@@ -26,5 +26,12 @@
     "short": "",
     "body": "Uutisia Harjan käytöstä vesiväylillä",
     "images": ["images/Vesivaylien_aikataulu_1.png"]
+  },
+  {
+    "category": "problemsolving-process",
+    "title": "Ongelmanselvitysprosessi",
+    "short": "",
+    "body": "Harjan ongelmanselvitysprosessia avaavat kuvat",
+    "images": ["harjan-ongelmanselvitysprosessi_2017-12.png", "harjan-ongelmanselvitysprosessi_tloik_2017-12.png"]
   }
 ]
