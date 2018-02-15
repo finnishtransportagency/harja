@@ -68,6 +68,7 @@
 (def testmode (atom nil))
 
 (declare kasittele-yhteyskatkos)
+(declare kasittele-onnistunut-pingaus)
 
 (defn- kasittele-palvelinvirhe [palvelu vastaus]
   ;; Normaalitilanteessa ei pitäisi koskaan tulla ei oikeutta -virhettä. Voi tulla esim. jos frontin
@@ -98,9 +99,8 @@
    (let [vastauskasittelija (fn [[_ vastaus]]
                               (cond
                                 ;; Yhteysvirhe, jota halutaan yrittää uudelleen
-                                (and
-                                  (or (= (:status vastaus) 503)
-                                      (= (:status vastaus) 0))) ; Verkko poikki
+                                (or (= (:status vastaus) 503) ; Serveri kuormittunut
+                                    (= (:status vastaus) 0)) ; Verkko poikki
                                 (if (> uudelleenyrityksia 0)
                                   (do
                                     (log "Palvelukutsu VIRHE: " (pr-str palvelu) ". Uusi yritys: " uudelleenyrityksia)
@@ -108,8 +108,10 @@
                                             {:odota (+ odota 2000)
                                              :uudelleenyrityksia (dec uudelleenyrityksia)}))
                                   (do (log "Ei onnistu uudelleenyrityksistä huolimatta")
+                                      (kasittele-yhteyskatkos palvelu vastaus)
                                       (close! chan)))
 
+                                ; Pyyntö OK
                                 :default
                                 (do
                                   (log "Palvelukutsu onnistui: " (pr-str palvelu))
