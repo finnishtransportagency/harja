@@ -41,10 +41,11 @@
                         :turvalaitenro_aiempi turvalaitenro_aiempi
                         :paavayla paavayla
                         :vaylat vaylat
-                        :geometria geometria}]
+                        :geometria geometria
+                        :luoja nil
+                        :muokkaaja nil}]
 
-    (do
-      (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit))))
+    (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit)))
 
 (defn vie-turvalaitteet-kantaan [db shapefile]
   (if shapefile
