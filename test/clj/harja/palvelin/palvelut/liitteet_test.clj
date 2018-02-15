@@ -27,14 +27,16 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
-(defn- linkitystesti [{:keys [domain domain-taulu domain-liite-taulu domain-sarake]}]
+(defn- linkitystesti [{:keys [domain domain-subject-where domain-taulu domain-liite-taulu domain-sarake]}]
   (let [domain-taulu (or domain-taulu (name domain))
         domain-liite-taulu (or domain-liite-taulu (str domain-taulu "_liite"))
         domain-sarake (or domain-sarake domain-taulu)
         domain-liite (fn [domain-id liite-id]
                        (ffirst (q "SELECT COUNT(*) FROM " domain-liite-taulu " WHERE " domain-sarake " = " domain-id
                                   " AND liite = " liite-id)))
-        random-domain-subject (first (q-map "SELECT id, urakka FROM " domain-taulu))
+        random-domain-subject (first (q-map "SELECT id, urakka FROM " domain-taulu
+                                            (when domain-subject-where
+                                              (str " " domain-subject-where))))
         _ (u "INSERT INTO liite (tyyppi, nimi, liite_oid, lahde) VALUES ('image/jpeg', 'testi45435.jpg', '123', 'harja-ui')")
         liite-id (:id (first (q-map "SELECT id FROM liite WHERE nimi = 'testi45435.jpg'")))
         _ (u (str "INSERT INTO " domain-liite-taulu " (" domain-sarake ", liite) VALUES ("
@@ -55,4 +57,11 @@
   (linkitystesti {:domain :laatupoikkeama})
   (linkitystesti {:domain :turvallisuuspoikkeama})
   (linkitystesti {:domain :tarkastus})
-  (linkitystesti {:domain :toteuma}))
+  (linkitystesti {:domain :toteuma
+                  :domain-subject-where "WHERE tyyppi = 'lisatyo'"})
+  (linkitystesti {:domain :toteuma
+                  :domain-subject-where "WHERE tyyppi = 'muutostyo'"})
+  (linkitystesti {:domain :toteuma
+                  :domain-subject-where "WHERE tyyppi = 'yksikkohintainen'"})
+  (linkitystesti {:domain :toteuma
+                  :domain-subject-where "WHERE tyyppi = 'kokonaishintainen'"}))
