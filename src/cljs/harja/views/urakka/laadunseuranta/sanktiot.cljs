@@ -269,7 +269,7 @@
                                   :domain-id (get-in @tiedot/valittu-sanktio [:laatupoikkeama :id])
                                   :liite-id liite-id
                                   :poistettu-fn (fn []
-                                                  (let [liitteet (get-in @muokattu [:laatupoikkeama :uusi-liite])]
+                                                  (let [liitteet (get-in @muokattu [:laatupoikkeama :liitteet])]
                                                     (swap! tiedot/valittu-sanktio assoc-in [:laatupoikkeama :liitteet]
                                                            (filter (fn [liite]
                                                                      (not= (:id liite) liite-id))
