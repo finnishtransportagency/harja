@@ -36,7 +36,7 @@
   (swap! modal-sisalto assoc :nakyvissa? false))
 
 (defn- modal-container* [optiot sisalto]
-  (let [{:keys [otsikko footer nakyvissa? luokka leveys sulje-fn]} optiot
+  (let [{:keys [otsikko otsikko-tyyli footer nakyvissa? luokka leveys sulje-fn]} optiot
         sulje!  #(do
                   ;; estää file-open dialogin poistamisen
                   #_(.preventDefault %)
@@ -62,7 +62,9 @@
             [:button.close {:on-click sulje!
                             :type "button" :data-dismiss "modal" :aria-label "Sulje"}
              [:span {:aria-hidden "true"} "×"]]
-            [:h4.modal-title otsikko]])
+            [:h4.modal-title {:class (when (= otsikko-tyyli :virhe)
+                                       "modal-otsikko-virhe")}
+             otsikko]])
          [:div.modal-body sisalto]
          (when footer [:div.modal-footer footer])]]]
 

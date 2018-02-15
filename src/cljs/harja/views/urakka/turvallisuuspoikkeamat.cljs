@@ -129,10 +129,7 @@
   (modal/nayta!
     {:otsikko "Käyttäjähaku"
      :luokka "turvallisuuspoikkeama-kayttajahaku"
-     :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                      (.preventDefault e)
-                                                      (modal/piilota!))}
-              "Sulje"]}
+     :footer [napit/sulje #(modal/piilota!)]}
     [kayttajahaku-modal-sisalto korjaava-toimenpide toimenpiteet-atom urakka]))
 
 (defn korjaavattoimenpiteet
