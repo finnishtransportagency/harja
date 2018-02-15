@@ -222,7 +222,7 @@
                                                                              :harja.domain.vesivaylat.materiaali/id 13
                                                                              :harja.domain.vesivaylat.materiaali/maara -4
                                                                              :harja.domain.vesivaylat.materiaali/yksikko "kpl"
-                                                                             :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})
+                                                                             :harja.domain.vesivaylat.materiaali/lisatieto "Käytetty kohteessa: , huoltokohteeseen: "})
                                 })
 (deftest materiaalit-vs-tallennus
   (let [app app-tallennustestille
@@ -232,8 +232,7 @@
         toimenpide (:avattu-toimenpide app)
         tallennettava-toimenpide (toimenpiteet/tallennettava-toimenpide tehtavat toimenpide (-> app :valinnat :urakka) tyyppi)]
 
-    (tarkista-map-arvot tallennettava-vertailumap tallennettava-toimenpide)
-    ))
+    (tarkista-map-arvot tallennettava-vertailumap tallennettava-toimenpide)))
 
 (deftest materiaalit-vs-AsetaLomakkeenToimenpiteenTiedot
   (let [state {:urakan-materiaalit '({::materiaali/urakka-id 1

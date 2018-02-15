@@ -296,16 +296,21 @@
                                  (update ::vv-materiaali/materiaalikirjaukset (fn [materiaalit]
                                                                                 (flatten (map #(get % 0)
                                                                                               materiaalit))))
-                                 ;; Annetaan kirjauksille halutut arvot
+                                 ;; Muokataan backille lähtevää tavaraa
                                  (update ::vv-materiaali/materiaalikirjaukset (fn [materiaalit]
-                                                                                (mapv #(assoc % ::vv-materiaali/maara
-                                                                                                (case (::vv-materiaali/nimi %)
-                                                                                                  "Naulat" naulan-kulutus
-                                                                                                  "Ämpäreitä" amparin-kulutus)
-                                                                                                ::vv-materiaali/yksikko
-                                                                                                (case (::vv-materiaali/nimi %)
-                                                                                                  "Naulat" naulan-ykiskko
-                                                                                                  "Ämpäreitä" amparin-yksikko))
+                                                                                (mapv #(-> %
+                                                                                           ;; Poistetaan avaimet, joita ei lähetetä backille
+                                                                                           (dissoc ::vv-materiaali/luotu ::vv-materiaali/hairiotilanne
+                                                                                                   ::vv-materiaali/toimenpide)
+                                                                                           ;; Annetaan kirjauksille halutut arvot
+                                                                                           (assoc ::vv-materiaali/maara
+                                                                                                    (case (::vv-materiaali/nimi %)
+                                                                                                      "Naulat" naulan-kulutus
+                                                                                                      "Ämpäreitä" amparin-kulutus)
+                                                                                                    ::vv-materiaali/yksikko
+                                                                                                    (case (::vv-materiaali/nimi %)
+                                                                                                      "Naulat" naulan-ykiskko
+                                                                                                      "Ämpäreitä" amparin-yksikko)))
                                                                                       materiaalit))))
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-hairiotilanne
