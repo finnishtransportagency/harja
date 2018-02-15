@@ -418,7 +418,7 @@
   ;; Päällystyksen kunto -välilehti näytetään vain jos on oikeus johonkin hoitourakkaan
   (if oikeus-hoitourakkaan?
     valilehdet
-    (filterv #(not= (:avain %) :paallystyksen-kunto) valilehdet)))
+    (filterv #(not= (:avain %) :paallysteen-kunto) valilehdet)))
 
 (defn- kayttajaroolin-valilehdet-paallystyksen-tyovirheluettelo [valilehdet oikeus-paallystysurakkaan?]
   ;; Päällystyksen työvirheluettelo näytetään vain jos on oikeus johonkin päällystysurakkaan

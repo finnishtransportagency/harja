@@ -59,8 +59,10 @@
                       (merge (aikataulujana-tyylit :kohde)
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
                                                 [yllapitokohde-id :kohde])
+                              ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-kohde-alku
                               ::aikajana/loppu aikataulu-kohde-valmis
+                              ::aikajana/kohde-nimi (:nimi rivi)
                               ::aikajana/teksti (aikajana-teksti "Koko kohde"
                                                                  aikataulu-kohde-alku
                                                                  aikataulu-kohde-valmis)}))
@@ -68,8 +70,10 @@
                       (merge (aikataulujana-tyylit :paallystys)
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
                                                 [yllapitokohde-id :paallystys])
+                              ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-paallystys-alku
                               ::aikajana/loppu aikataulu-paallystys-loppu
+                              ::aikajana/kohde-nimi (:nimi rivi)
                               ::aikajana/teksti (aikajana-teksti "Päällystys"
                                                                  aikataulu-paallystys-alku
                                                                  aikataulu-paallystys-loppu)}))
@@ -77,8 +81,10 @@
                       (merge (aikataulujana-tyylit :tiemerkinta)
                              {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
                                                 [yllapitokohde-id :tiemerkinta])
+                              ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
                               ::aikajana/alku aikataulu-tiemerkinta-alku
                               ::aikajana/loppu aikataulu-tiemerkinta-loppu
+                              ::aikajana/kohde-nimi (:nimi rivi)
                               ::aikajana/teksti (aikajana-teksti "Tiemerkintä"
                                                                  aikataulu-tiemerkinta-alku
                                                                  aikataulu-tiemerkinta-loppu)}))])

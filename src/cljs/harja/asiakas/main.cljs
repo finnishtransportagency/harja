@@ -63,6 +63,7 @@
     (istunto/lisaa-ajastin-tapahtumakuuntelijat)
     (istunto/kaynnista-ajastin!)
     (modal/aloita-urln-kuuntelu)
+    (hairiotiedot/tarkkaile-hairioilmoituksia!)
     (k/kaynnista-palvelimen-pingaus)
     #_(hairiotiedot/tarkkaile-hairioilmoituksia!)
     #_(k/kaynnista-yhteysvirheiden-raportointi)
