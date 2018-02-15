@@ -84,32 +84,48 @@
 
 (declare kasittele-istunto-vanhentunut)
 
-(defn- kysely [palvelu metodi parametrit
-               {:keys [transducer chan] :as opts}]
-  (log "Palvelukutsu: " (pr-str palvelu))
-  (let [vastauskasittelija (fn [[_ vastaus]]
-                             (when (some? vastaus)
-                               (cond
-                                 (= (:status vastaus) 503)
-                                 (do
-                                   (log "Palvelukutsu VIRHE: " (pr-str palvelu) ". Uusi yritys!")
-                                   (kysely palvelu metodi parametrit opts))
+(def vakio-uudelleenyritys-optiot {:odota 2000
+                                   :uudelleenyrityksia 5})
 
-                                 :default
-                                 (do
-                                   (log "Palvelukutsu onnistui: " (pr-str palvelu))
-                                   (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                                   (close! chan)))))]
-    (go
-      (ajax-request {:uri (str (polku) (name palvelu))
-                     :method metodi
-                     :params parametrit
-                     :headers {"X-CSRF-Token" (<! (csrf-token))}
-                     :format (transit-request-format transit/write-optiot)
-                     :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                                :raw true})
-                     :handler vastauskasittelija}))
-    chan))
+(defn- kysely
+  ([palvelu metodi parametrit
+    {:keys [transducer chan] :as pyynto-optiot}]
+   (kysely palvelu metodi parametrit pyynto-optiot vakio-uudelleenyritys-optiot))
+  ([palvelu metodi parametrit
+    {:keys [transducer chan] :as pyynto-optiot}
+    {:keys [odota uudelleenyrityksia] :as uudelleenyritys-optiot}]
+   (log "Palvelukutsu: " (pr-str palvelu))
+   (let [vastauskasittelija (fn [[_ vastaus]]
+                              (cond
+                                ;; Yhteysvirhe, jota halutaan yrittää uudelleen
+                                (and
+                                  (or (= (:status vastaus) 503)
+                                      (= (:status vastaus) 0))) ; Verkko poikki
+                                (if (> uudelleenyrityksia 0)
+                                  (do
+                                    (log "Palvelukutsu VIRHE: " (pr-str palvelu) ". Uusi yritys: " uudelleenyrityksia)
+                                    (kysely palvelu metodi parametrit pyynto-optiot
+                                            {:odota (+ odota 2000)
+                                             :uudelleenyrityksia (dec uudelleenyrityksia)}))
+                                  (do (log "Ei onnistu uudelleenyrityksistä huolimatta")
+                                      (close! chan)))
+
+                                :default
+                                (do
+                                  (log "Palvelukutsu onnistui: " (pr-str palvelu))
+                                  (put! chan (if transducer (into [] transducer vastaus) vastaus))
+                                  (close! chan))))]
+     (go
+       (when odota (<! (timeout odota)))
+       (ajax-request {:uri (str (polku) (name palvelu))
+                      :method metodi
+                      :params parametrit
+                      :headers {"X-CSRF-Token" (<! (csrf-token))}
+                      :format (transit-request-format transit/write-optiot)
+                      :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                                 :raw true})
+                      :handler vastauskasittelija}))
+     chan)))
 
 
 (defn post!

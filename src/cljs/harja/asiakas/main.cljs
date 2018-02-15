@@ -62,7 +62,7 @@
     (istunto/lisaa-ajastin-tapahtumakuuntelijat)
     (istunto/kaynnista-ajastin!)
     (modal/aloita-urln-kuuntelu)
-    (k/kaynnista-palvelimen-pingaus)
+    #_(k/kaynnista-palvelimen-pingaus)
     (k/kaynnista-yhteysvirheiden-raportointi)
     (k/kysy-pois-kytketyt-ominaisuudet! istunto/pois-kytketyt-ominaisuudet)
     (istunto/aseta-kayttaja (<! (k/post! :kayttajatiedot
