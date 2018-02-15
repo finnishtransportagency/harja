@@ -295,7 +295,7 @@
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
 
-(def pudota-yhteyksia-randomisti? (atom false))
+(def pudota-yhteys-prosentti (atom 0))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
                          lopetus-fn kehitysmoodi
@@ -316,9 +316,8 @@
                  (cookies/wrap-cookies
                    (fn [req]
                      (if (and
-                           @pudota-yhteyksia-randomisti?
                            (= (:request-method req) :post)
-                           (= (rand-int 2) 0))
+                           (< (inc (rand-int 100)) @pudota-yhteys-prosentti))
                        {:status 503 :body ""}
                        (try+
                          (metriikka/inc! mittarit :aktiiviset_pyynnot)
