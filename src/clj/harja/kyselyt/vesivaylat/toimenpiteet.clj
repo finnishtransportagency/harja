@@ -285,7 +285,6 @@
         fetchattu (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
-
                                ;; Haetaan liitteet erikseen,
                                ;; specql 0.6 versio ei osaa hakea 2 has-many
                                ;; joukkoa samalla tasolla
