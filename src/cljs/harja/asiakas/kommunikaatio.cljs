@@ -85,31 +85,17 @@
 
 (declare kasittele-istunto-vanhentunut)
 
-(def vakio-uudelleenyritys-optiot {:odota 2000
-                                   :uudelleenyrityksia 5})
-
 (defn- kysely
-  ([palvelu metodi parametrit
+  [palvelu metodi parametrit
     {:keys [transducer chan] :as pyynto-optiot}]
-   (kysely palvelu metodi parametrit pyynto-optiot vakio-uudelleenyritys-optiot))
-  ([palvelu metodi parametrit
-    {:keys [transducer chan] :as pyynto-optiot}
-    {:keys [odota uudelleenyrityksia] :as uudelleenyritys-optiot}]
    (log "Palvelukutsu: " (pr-str palvelu))
    (let [vastauskasittelija (fn [[_ vastaus]]
                               (cond
-                                ;; Yhteysvirhe, jota halutaan yrittää uudelleen
-                                (or (= (:status vastaus) 503) ; Serveri kuormittunut
-                                    (= (:status vastaus) 0)) ; Verkko poikki
-                                (if (> uudelleenyrityksia 0)
-                                  (do
-                                    (log "Palvelukutsu VIRHE: " (pr-str palvelu) ". Uusi yritys: " uudelleenyrityksia)
-                                    (kysely palvelu metodi parametrit pyynto-optiot
-                                            {:odota (+ odota 2000)
-                                             :uudelleenyrityksia (dec uudelleenyrityksia)}))
-                                  (do (log "Ei onnistu uudelleenyrityksistä huolimatta")
-                                      (kasittele-yhteyskatkos palvelu vastaus)
-                                      (close! chan)))
+                                ;; Yhteysvirhe
+                                (or (= (:status vastaus) 0) ; Verkko poikki
+                                    (= (:status vastaus) 503)) ; Palvelin ei voi käsitellä pyyntöä
+                                (do (kasittele-yhteyskatkos palvelu vastaus)
+                                    (close! chan))
 
                                 ; Pyyntö OK
                                 :default
@@ -118,7 +104,6 @@
                                   (put! chan (if transducer (into [] transducer vastaus) vastaus))
                                   (close! chan))))]
      (go
-       (when odota (<! (timeout odota)))
        (ajax-request {:uri (str (polku) (name palvelu))
                       :method metodi
                       :params parametrit
@@ -127,7 +112,7 @@
                       :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
                                                                  :raw true})
                       :handler vastauskasittelija}))
-     chan)))
+     chan))
 
 
 (defn post!
