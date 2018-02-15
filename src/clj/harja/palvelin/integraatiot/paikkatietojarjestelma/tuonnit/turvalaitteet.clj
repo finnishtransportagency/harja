@@ -43,7 +43,7 @@
                         :vaylat vaylat
                         :geometria geometria
                         :luoja nil
-                        :muokkaaja nil}]
+                        :muokkaaja nil}] ;; onko joku sopiva käyttäjä joka voidaan kovakoodata?
 
     (q-turvalaitteet/vie-turvalaitetauluun<! db sql-parametrit)))
 
