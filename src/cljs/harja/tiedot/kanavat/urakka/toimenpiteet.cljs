@@ -178,9 +178,10 @@
 
           tp-id (::kanavatoimenpide/id tp)
           paivamaara (::kanavatoimenpide/pvm tp)
-          kohteen-nimi (-> tp ::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
+          kohteen-nimi (-> tp ::kanavatoimenpide/kohde ::kohde/nimi)
+          huoltokohteen-nimi (-> tp ::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
 
-          lisatieto (str "Kohteen " kohteen-nimi " materiaali")
+          lisatieto (str "Käytetty kohteessa: " kohteen-nimi ", huoltokohteeseen: " huoltokohteen-nimi)
           tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
       tallennettavat)))
 
