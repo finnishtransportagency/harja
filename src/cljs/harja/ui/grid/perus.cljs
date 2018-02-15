@@ -226,7 +226,7 @@
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?]}]
+                                peruuta otsikko validoi-fn tunniste voi-kumota?]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -245,12 +245,13 @@
             [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
             muokkaa-nappi)))]
      [:span.pull-right.muokkaustoiminnot
-      [:button.nappi-toissijainen
-       {:disabled (not muokattu?)
-        :on-click #(do (.stopPropagation %)
-                       (.preventDefault %)
-                       (peru!))}
-       [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]]
+      (when voi-kumota?
+        [:button.nappi-toissijainen
+         {:disabled (not muokattu?)
+          :on-click #(do (.stopPropagation %)
+                         (.preventDefault %)
+                         (peru!))}
+         [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])
 
       (when-not (= false voi-lisata?)
         [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
@@ -283,12 +284,9 @@
                              (do (.preventDefault %)
                                  (reset! tallennus-kaynnissa true)
                                  (go
-                                   (if (empty? tallennettavat)
-                                     (nollaa-muokkaustiedot!)
-                                     (let [vastaus (<! (tallenna tallennettavat))]
-                                       (if (nollaa-muokkaustiedot-tallennuksen-jalkeen? vastaus)
-                                         (nollaa-muokkaustiedot!)
-                                         (reset! tallennus-kaynnissa false))))))))}
+                                   (when-not (empty? tallennettavat)
+                                     (<! (tallenna tallennettavat)))
+                                   (nollaa-muokkaustiedot!)))))}
              [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
@@ -538,13 +536,14 @@
   :max-rivimaaran-ylitys-viesti         custom viesti :max-rivimaara -optiolle
   :voi-poistaa?                         funktio, joka kertoo, voiko rivin poistaa
   :voi-lisata?                          voiko rivin lisätä (boolean)
+  :voi-kumota?                          Jos false, ei näytetä kumoa-nappia. Oletus: true.
   :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :esta-poistaminen?                    funktio, joka ottaa rivin ja palauttaa true tai false.
                                         Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä.
-                                        Funktion pitää palauttaa kanava, mutta sen paluuarvolla ei tehdä mitään.
+                                        Funktion pitää palauttaa kanava.
                                         Jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
   :validoi-fn                           funktio, joka saa koko muokkausdatan ja palauttaa
                                         virheilmoituksen, jos tallennus estetään.
@@ -592,7 +591,7 @@
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
            uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko
-           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
+           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta voi-kumota?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
 
@@ -616,9 +615,6 @@
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
-        nollaa-muokkaustiedot-tallennuksen-jalkeen? (if (some? nollaa-muokkaustiedot-tallennuksen-jalkeen?)
-                                                      nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                                                      (constantly true))
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
                                  tallenna-vain-muokatut)
@@ -891,9 +887,10 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
-                    validoi-fn] :as opts}
+                    validoi-fn voi-kumota?] :as opts}
             skeema alkup-tiedot]
-        (let [skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
+        (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
+              skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
               mahdollista-rivin-valinta? (or mahdollista-rivin-valinta? false)
               muuta-gridia-muokataan? (and
                                         (>= (count @muokkauksessa-olevat-gridit) 1)
@@ -931,8 +928,7 @@
                              :tallenna-vain-muokatut tallenna-vain-muokatut
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                              :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                             :peruuta peruuta :otsikko otsikko
-                             :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                             :peruuta peruuta :otsikko otsikko :voi-kumota? voi-kumota?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :validoi-fn validoi-fn})
            [:div.panel-body
@@ -1016,8 +1012,7 @@
                                 :tallenna-vain-muokatut tallenna-vain-muokatut
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                 :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                                :peruuta peruuta :otsikko otsikko
-                                :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                                :peruuta peruuta :otsikko otsikko :voi-kumota? voi-kumota?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn})])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
