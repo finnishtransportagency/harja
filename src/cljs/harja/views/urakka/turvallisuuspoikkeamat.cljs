@@ -3,7 +3,7 @@
             [harja.loki :refer [log]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka.turvallisuuspoikkeamat :as tiedot]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
+            [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader]]
@@ -16,6 +16,7 @@
             [cljs.core.async :refer [<!]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.kommentti :as kommentti]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.modal :as modal]
             [harja.ui.yleiset :as yleiset]
@@ -24,7 +25,8 @@
             [harja.domain.urakan-tyotunnit :as ut]
             [harja.domain.urakka :as u-domain]
             [harja.ui.viesti :as viesti]
-            [harja.geo :as geo])
+            [harja.geo :as geo]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [harja.makrot :refer [defc fnc]]
                    [reagent.ratom :refer [reaction run!]]
@@ -127,10 +129,7 @@
   (modal/nayta!
     {:otsikko "Käyttäjähaku"
      :luokka "turvallisuuspoikkeama-kayttajahaku"
-     :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                      (.preventDefault e)
-                                                      (modal/piilota!))}
-              "Sulje"]}
+     :footer [napit/sulje #(modal/piilota!)]}
     [kayttajahaku-modal-sisalto korjaava-toimenpide toimenpiteet-atom urakka]))
 
 (defn korjaavattoimenpiteet
@@ -204,21 +203,21 @@
                          [yleiset/vihje
                           "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman."])}
          (remove
-          nil?
-          (mapcat
-           (fn [n]
-             (let [avain (keyword (str "juurisyy" n))
-                   selite-avain (keyword (str "juurisyy" n "-selite"))]
-               [{:tyyppi :valinta
-                 :uusi-rivi? true
-                 :otsikko (str n ". juurisyy")
-                 :valinnat (into [nil] turpodomain/juurisyyt)
-                 :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
-                 :nimi avain}
-                (when (get turvallisuuspoikkeama avain)
-                  {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
-                   :pituus-max 200})]))
-           (range 1 4)))))
+           nil?
+           (mapcat
+             (fn [n]
+               (let [avain (keyword (str "juurisyy" n))
+                     selite-avain (keyword (str "juurisyy" n "-selite"))]
+                 [{:tyyppi :valinta
+                   :uusi-rivi? true
+                   :otsikko (str n ". juurisyy")
+                   :valinnat (into [nil] turpodomain/juurisyyt)
+                   :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
+                   :nimi avain}
+                  (when (get turvallisuuspoikkeama avain)
+                    {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
+                     :pituus-max 200})]))
+             (range 1 4)))))
 
 (defn turvallisuuspoikkeaman-tiedot [urakka]
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
@@ -374,7 +373,22 @@
               [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
                {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
                                          #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
-                :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"}])}
+                :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"
+                :salli-poistaa-lisatty-liite? true
+                :poista-lisatty-liite-fn #(swap! turvallisuuspoikkeama dissoc :uusi-liite)
+                :salli-poistaa-tallennettu-liite? true
+                :poista-tallennettu-liite-fn
+                (fn [liite-id]
+                  (liitteet/poista-liite-kannasta
+                    {:urakka-id (:id urakka)
+                     :domain :turvallisuuspoikkeama
+                     :domain-id (:id @turvallisuuspoikkeama)
+                     :liite-id liite-id
+                     :poistettu-fn (fn []
+                                     (swap! turvallisuuspoikkeama assoc :liitteet
+                                            (filter (fn [liite]
+                                                      (not= (:id liite) liite-id))
+                                                    (:liitteet @turvallisuuspoikkeama))))}))}])}
            (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
                           :uusi-rivi? true}
                          {:otsikko "Etunimi"
@@ -426,8 +440,29 @@
             :palstoja 2
             :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                            [kommentit/kommentit {:voi-kommentoida? true
-                                                 :voi-liittaa true
-                                                 :liita-nappi-teksti " Lisää liite kommenttiin"
+                                                 :voi-liittaa? true
+                                                 :salli-poistaa-lisatty-liite? true
+                                                 :salli-poistaa-tallennettu-liite? true
+                                                 :poista-tallennettu-liite-fn
+                                                 (fn [liite-id]
+                                                   (let [liitteen-kommentti (kommentti/liitteen-kommentti
+                                                                              (:kommentit @turvallisuuspoikkeama)
+                                                                              liite-id)
+                                                         kommentit-ilman-poistettua-liitetta
+                                                         (map (fn [kommentti]
+                                                                (if (= (get-in kommentti [:liite :id]) liite-id)
+                                                                  (dissoc kommentti :liite)
+                                                                  kommentti))
+                                                              (:kommentit @turvallisuuspoikkeama))]
+                                                     (liitteet/poista-liite-kannasta
+                                                       {:urakka-id (:id urakka)
+                                                        :domain :turvallisuuspoikkeama-kommentti-liite
+                                                        :domain-id (:id @turvallisuuspoikkeama)
+                                                        :liite-id liite-id
+                                                        :poistettu-fn (fn []
+                                                                        (swap! turvallisuuspoikkeama assoc :kommentit
+                                                                               kommentit-ilman-poistettua-liitetta))})))
+                                                 :liita-nappi-teksti "Lisää liite kommenttiin"
                                                  :placeholder "Kirjoita kommentti..."
                                                  :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
                                                                          #(muokkaa-lomaketta (assoc data :uusi-kommentti %)))}

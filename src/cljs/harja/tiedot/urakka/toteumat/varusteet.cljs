@@ -380,6 +380,15 @@
   (process-event [{liite :liite} app]
     (assoc-in app [:varustetoteuma :uusi-liite] liite))
 
+  v/PoistaUusiLiitetiedosto
+  (process-event [_ app]
+    (assoc-in app [:varustetoteuma :uusi-liite] nil))
+
+  v/PaivitaLiitteet
+  (process-event [{liitteet :liitteet} app]
+    (assoc-in app [:varustetoteuma :liitteet] liitteet))
+
+
   v/HaeSijainninOsoite
   (process-event [{sijainti :sijainti} app]
     (let [virhe! (t/send-async! (partial v/->VirheTapahtui "Osoitteen haku epäonnistui käyttäjän sijainnilla."))

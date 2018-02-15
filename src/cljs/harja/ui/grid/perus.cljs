@@ -225,8 +225,8 @@
 (defn- muokkauspaneeli [{:keys [nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
-                                tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru!
-                                peruuta otsikko validoi-fn tunniste voi-kumota?]}]
+                                tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
+                                peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?]}]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -284,9 +284,12 @@
                              (do (.preventDefault %)
                                  (reset! tallennus-kaynnissa true)
                                  (go
-                                   (when-not (empty? tallennettavat)
-                                     (<! (tallenna tallennettavat)))
-                                   (nollaa-muokkaustiedot!)))))}
+                                   (if (empty? tallennettavat)
+                                     (nollaa-muokkaustiedot!)
+                                     (let [vastaus (<! (tallenna tallennettavat))]
+                                       (if (nollaa-muokkaustiedot-tallennuksen-jalkeen? vastaus)
+                                         (nollaa-muokkaustiedot!)
+                                         (reset! tallennus-kaynnissa false))))))))}
              [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
@@ -543,7 +546,7 @@
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
   :tallennus-ei-mahdollinen-tooltip     Teksti, joka näytetään jos tallennus on disabloitu
   :tallenna                             funktio, jolle kaikki muutokset, poistot ja lisäykset muokkauksen päätyttyä.
-                                        Funktion pitää palauttaa kanava.
+                                        Funktion pitää palauttaa kanava, mutta sen paluuarvolla ei tehdä mitään.
                                         Jos tallenna funktiota ei ole annettu, taulukon muokkausta ei sallita eikä nappia näytetään
   :validoi-fn                           funktio, joka saa koko muokkausdatan ja palauttaa
                                         virheilmoituksen, jos tallennus estetään.
@@ -590,8 +593,8 @@
   [{:keys [otsikko tallenna tallenna-vain-muokatut peruuta tyhja tunniste voi-poistaa? voi-lisata? salli-valiotsikoiden-piilotus?
            rivi-klikattu esta-poistaminen? esta-poistaminen-tooltip muokkaa-footer muokkaa-aina muutos infolaatikon-tila-muuttui
            rivin-luokka prosessoi-muutos aloita-muokkaus-fn piilota-toiminnot? nayta-toimintosarake? rivi-valinta-peruttu
-           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko
-           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta voi-kumota?
+           uusi-rivi vetolaatikot luokat korostustyyli mahdollista-rivin-valinta? max-rivimaara sivuta rivin-infolaatikko voi-kumota?
+           valiotsikoiden-alkutila ei-footer-muokkauspaneelia? ennen-muokkausta nollaa-muokkaustiedot-tallennuksen-jalkeen?
            max-rivimaaran-ylitys-viesti tallennus-ei-mahdollinen-tooltip voi-muokata-rivia?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
 
@@ -615,6 +618,9 @@
         valiotsikoiden-alkutila-maaritelty? (atom (boolean (not salli-valiotsikoiden-piilotus?))) ;; Määritetään kerran, kun gridi saa datan
         renderoi-max-rivia (atom renderoi-rivia-kerralla)
         skeema (keep identity skeema)
+        nollaa-muokkaustiedot-tallennuksen-jalkeen? (if (some? nollaa-muokkaustiedot-tallennuksen-jalkeen?)
+                                                      nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                                                      (constantly true))
         tallenna-vain-muokatut (if (nil? tallenna-vain-muokatut)
                                  true
                                  tallenna-vain-muokatut)
@@ -927,8 +933,9 @@
                              :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
                              :tallenna-vain-muokatut tallenna-vain-muokatut
                              :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
-                             :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                             :peruuta peruuta :otsikko otsikko :voi-kumota? voi-kumota?
+                             :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
+                             :peruuta peruuta :otsikko otsikko
+                             :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                              :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                              :validoi-fn validoi-fn})
            [:div.panel-body
@@ -1011,8 +1018,9 @@
                                 :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
                                 :tallenna-vain-muokatut tallenna-vain-muokatut
                                 :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
-                                :aloita-muokkaus! aloita-muokkaus! :peru! peru!
-                                :peruuta peruuta :otsikko otsikko :voi-kumota? voi-kumota?
+                                :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
+                                :peruuta peruuta :otsikko otsikko
+                                :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                 :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                 :validoi-fn validoi-fn})])
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])])))))
