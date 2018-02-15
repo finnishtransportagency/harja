@@ -2,15 +2,14 @@
 -- VIKA ILMAN KORJAUSTA
 -- ***********************************************
 
+
 INSERT INTO vv_vikailmoitus
-("reimari-id", "reimari-lisatiedot", "turvalaite-id", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
+("reimari-id", "reimari-lisatiedot", "reimari-turvalaitenro", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
  "reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
- "reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja", "reimari-turvalaitenro")
+ "reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja")
 VALUES
   ('1234', 'Akonniemen kyltti on lähtenyt irti myrskyn takia',
-           (SELECT id
-            FROM vv_turvalaite
-            WHERE nimi = 'Akonniemen kyltti'),
+           (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Akonniemen kyltti'),
            'ilmari vikailmoittaja', -- reimari-ilmoittaja
            'ilmari.vi@example.com +55 5555 5555 5555 555 55', -- reimari-ilmoittajan-yhteystiedot
            TRUE, -- reimari-epakunnossa?
@@ -21,8 +20,7 @@ VALUES
            '2017-05-01T13:13:13', -- muokattu
    '2017-05-01T13:13:13', -- luontiaika
    'lauri luoja', -- luoja
-   'mikko muokkaaja', -- muokkaaja
-   '123' -- turvalaitenro
+   'mikko muokkaaja' -- muokkaaja
   );
 
 -- ***********************************************
@@ -102,7 +100,7 @@ INSERT INTO reimari_toimenpide
  "sopimus-id",
  "reimari-komponentit",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -134,9 +132,7 @@ VALUES
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
      '{"(-2139967544,nimitahan,1022540401)","(-2139967548,toinennimi,1022540402)"}', -- reimari-komponentit (id, nimi, tila)
     '(8881, Poiju 1, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     'Kiintiöön kuuluva jutska',
     '2017-08-05T23:23Z',
     '2017-08-05',
@@ -167,7 +163,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -195,9 +191,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8882, Poiju 2, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-05T23:23Z',
     '2017-08-05',
@@ -224,7 +218,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -252,9 +246,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(12345, Poiju 3, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-08T23:23Z',
     '2017-08-08',
@@ -281,7 +273,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -310,9 +302,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8884, Poiju 4, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-08T23:23Z',
     '2017-08-08',
@@ -344,7 +334,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -372,9 +362,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(1234, Poiju 6, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren viitta'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren viitta'),
     'TESTITOIMENPIDE 2',
     '2017-04-04T23:23Z',
     '2017-04-04',
@@ -420,13 +408,13 @@ INSERT INTO reimari_toimenpide_liite ("toimenpide-id", "liite-id", poistettu) VA
 
 
 INSERT INTO vv_vikailmoitus
-("reimari-id", "reimari-lisatiedot", "turvalaite-id", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
+("reimari-id", "reimari-lisatiedot", "reimari-turvalaitenro", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
  "reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
  "reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja",
- "toimenpide-id", "reimari-turvalaitenro")
+ "toimenpide-id")
 VALUES
   ('123', 'Hietasaaren viitta on kaatunut',
-          (SELECT id FROM vv_turvalaite WHERE nimi = 'Hietasaaren viitta'),
+          (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren viitta'),
           'ilmari vikailmoittaja', -- reimari-ilmoittaja
           'ilmari.vi@example.com +55 5555 5555 5555 555 55', -- reimari-ilmoittajan-yhteystiedot
           TRUE, -- reimari-epakunnossa?
@@ -440,8 +428,7 @@ VALUES
    'mikko muokkaaja', -- muokkaaja
    (SELECT id
     FROM reimari_toimenpide
-    WHERE lisatieto = 'TESTITOIMENPIDE 2'),
-   '578'); -- turvalaitenro
+    WHERE lisatieto = 'TESTITOIMENPIDE 2'));
 update reimari_toimenpide set "reimari-viat" = '{"(123,8884848)"}'
 WHERE id = (SELECT id FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2');
 
@@ -459,7 +446,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -489,9 +476,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8890, Poiju 10, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-03T23:23Z',
     '2017-08-03',
@@ -522,7 +507,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -550,9 +535,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8891, Poiju 11, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren poiju'),
     NULL,
     '2017-08-08T23:23Z',
     '2017-08-08',
@@ -590,7 +573,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -621,9 +604,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8881, Poiju 1, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren pienempi poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Poijujen korjausta kuten on sovittu otos 2',
     '2017-08-08T23:23Z',
     '2017-08-08',
@@ -663,7 +644,7 @@ INSERT INTO reimari_toimenpide
  "reimari-sopimus",
  "sopimus-id",
  "reimari-turvalaite",
- "turvalaite-id",
+ "turvalaitenro",
  lisatieto,
  suoritettu,
  luotu,
@@ -691,9 +672,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8881, Poiju 1, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren pienempi poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Poijujen korjausta kuten on sovittu',
     '2017-08-08T23:23Z',
     '2017-08-08',
@@ -724,9 +703,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(8881, Poiju 1, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren pienempi poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Lisää poijujen korjausta',
     '2017-08-08T23:23Z',
     '2017-08-08',
@@ -757,9 +734,7 @@ VALUES
      FROM sopimus
      WHERE nimi = 'Helsingin väyläyksikön pääsopimus'),
     '(666, Poiju 666, 555)',
-    (SELECT id
-     FROM vv_turvalaite
-     WHERE nimi = 'Hietasaaren pienempi poiju'),
+    (SELECT turvalaitenro FROM vatu_turvalaite WHERE nimi = 'Hietasaaren pienempi poiju'),
     'Oulaisten poijujen korjaus',
     '2017-08-08T23:23Z',
     '2017-08-08',
