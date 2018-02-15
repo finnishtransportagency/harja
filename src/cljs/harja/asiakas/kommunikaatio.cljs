@@ -112,10 +112,9 @@
 
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (do (kasittele-palvelinvirhe palvelu vastaus)
-                     (close! chan))
+                     (close! chan)) ; Kutsujalle palautuu nil
 
-                 :default
-                 ;; Annetaan vastaus kutsujalle (onnistunut tai uudelleenyrityksistä huolimatta epäonnistunut)
+                 :default ; Pyyntö onnistui ja vastaus oli ok
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
                      (close! chan)))))]
     (go
