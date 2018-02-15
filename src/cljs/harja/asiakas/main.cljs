@@ -14,7 +14,8 @@
             [cljsjs.react]
 
             [harja.pvm]
-            [harja.ui.modal :as modal])
+            [harja.ui.modal :as modal]
+            [harja.tiedot.hairioilmoitukset :as hairiotiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn render []
@@ -62,6 +63,7 @@
     (istunto/lisaa-ajastin-tapahtumakuuntelijat)
     (istunto/kaynnista-ajastin!)
     (modal/aloita-urln-kuuntelu)
+    (hairiotiedot/tarkkaile-hairioilmoituksia!)
     (k/kaynnista-palvelimen-pingaus)
     (k/kaynnista-yhteysvirheiden-raportointi)
     (k/kysy-pois-kytketyt-ominaisuudet! istunto/pois-kytketyt-ominaisuudet)
