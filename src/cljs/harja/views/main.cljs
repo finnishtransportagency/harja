@@ -174,7 +174,8 @@
      ; {:nayta-pisteanimaatio? true}]
 
      ;(and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
-     ;[yhteys-palautunut-ilmoitus])
+     ;[yhteys-palautunut-ilmoitus]
+     )
 
    (let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
      (when (and hairiotiedot @hairiotiedot/nayta-hairioilmoitus?)
