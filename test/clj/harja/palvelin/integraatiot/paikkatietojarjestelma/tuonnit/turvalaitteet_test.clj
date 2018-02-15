@@ -2,8 +2,7 @@
   (:require [harja.testi :as ht]
             [clojure.test :as t]
             clj-time.core
-            [harja.kyselyt.vesivaylat.vatu-turvalaitteet :as q-vatu-turvalaite]
-            [harja.domain.vesivaylat.vatu-turvalaite :as turvalaite]
+            [harja.kyselyt.vesivaylat.turvalaitteet :as q-vatu-turvalaite]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaite-tuonti]))
 
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))

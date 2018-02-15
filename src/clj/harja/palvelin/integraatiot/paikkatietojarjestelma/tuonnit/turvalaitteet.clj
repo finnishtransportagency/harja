@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
-            [harja.kyselyt.vesivaylat.vatu-turvalaitteet :as q-turvalaitteet]
+            [harja.kyselyt.vesivaylat.turvalaitteet :as q-turvalaitteet]
             [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [clj-time.coerce :as c]))
