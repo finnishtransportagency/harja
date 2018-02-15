@@ -34,7 +34,7 @@
                            :aikavali [nil nil]
                            :vaylatyyppi :kauppamerenkulku
                            :vaylanro nil
-                           :turvalaite-id nil
+                           :turvalaitenro nil
                            :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
