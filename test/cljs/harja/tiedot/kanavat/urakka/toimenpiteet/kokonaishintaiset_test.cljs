@@ -222,7 +222,7 @@
                                                                              :harja.domain.vesivaylat.materiaali/id 13
                                                                              :harja.domain.vesivaylat.materiaali/maara -4
                                                                              :harja.domain.vesivaylat.materiaali/yksikko "kpl"
-                                                                             :harja.domain.vesivaylat.materiaali/lisatieto "Käytetty kohteessa: , huoltokohteeseen: "})
+                                                                             :harja.domain.vesivaylat.materiaali/lisatieto "Käytetty kohteessa: "})
                                 })
 (deftest materiaalit-vs-tallennus
   (let [app app-tallennustestille

@@ -89,7 +89,7 @@
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
         muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
-        paivamaara (::hairiotilanne/havaintoaika hairiotilanne)
+        korjaustoimenpide (::hairiotilanne/korjaustoimenpide hairiotilanne)
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
@@ -109,8 +109,8 @@
         ;; Lisätään lisätieto ja materiaalin pvm, koska se on required field. Materiaalia
         ;; muokatessa kumminkin ei vaihdeta pvm:ää
         (map #(assoc % ::materiaalit/pvm (or (::materiaalit/pvm %) (pvm/nyt))
-                       ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
-                                                    " kohteessa " kohteen-nimi)))
+                       ::materiaalit/lisatieto  (str "Käytetty kohteen " kohteen-nimi " häiriötilanteen korjaamiseen."
+                                                     (when korjaustoimenpide (str " Korjaustoimenpide: " korjaustoimenpide)))))
         ;; Otetaan joitain vv_materiaalilistaus tietoja pois (muuten tulee herjaa palvelin päässä)
         (map #(dissoc %
                       ::materiaalit/maara-nyt
