@@ -28,6 +28,7 @@ export default React.createClass({
     const maintenanceUrl = test + 'maintenance.json';
     const faqUrl = test + 'faq.json';
     const waterUrl = test + 'waterways.json';
+    const problemsolvingUrl = test + 'problemsolving-process.json';
 
     if (param === 'test') {
       // Slow down fetching for development
@@ -35,6 +36,7 @@ export default React.createClass({
       setTimeout(() => { this.getNotices(maintenanceUrl, Category.MAINTENANCE); }, 3000);
       setTimeout(() => { this.getNotices(faqUrl, Category.FAQ); }, 5000);
       setTimeout(() => { this.getNotices(waterUrl, Category.WATERWAYS); }, 5000);
+      setTimeout(() => { this.getNotices(problemsolvingUrl, Category.PROBLEMSOLVING); }, 5000);
       setTimeout(() => { this.getContent(); }, 5000);
     }
     else {
@@ -42,6 +44,7 @@ export default React.createClass({
       this.getNotices(maintenanceUrl, Category.MAINTENANCE);
       this.getNotices(faqUrl, Category.FAQ);
       this.getNotices(waterUrl, Category.WATERWAYS);
+      this.getNotices(problemsolvingUrl, Category.PROBLEMSOLVING);
       this.getContent();
     }
   },
@@ -56,6 +59,8 @@ export default React.createClass({
         return 'Koulutusvideo';
       case Category.WATERWAYS:
         return 'Vesiväylät';
+      case Category.PROBLEMSOLVING:
+        return 'Ongelmanratkaisu';
       default:
         return 'Tiedote';
     }
