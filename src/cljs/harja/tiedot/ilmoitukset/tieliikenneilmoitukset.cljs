@@ -323,6 +323,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
         (tulos! (<! (k/post! :tallenna-ilmoituksen-toimenpiteiden-aloitus id))))
       (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
 
+  v/PeruutaToimenpiteidenAloitus
+  (process-event [{id :id} app]
+    (let [tulos! (t/send-async! v/->ToimenpiteidenAloitusTallennettu)]
+      (go
+        (tulos! (<! (k/post! :peruuta-ilmoituksen-toimenpiteiden-aloitus id))))
+      (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
+
   v/ToimenpiteidenAloitusTallennettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden aloitus kirjattu" :success)

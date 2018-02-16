@@ -579,3 +579,9 @@ UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = now(),
   "aiheutti-toimenpiteita"   = TRUE
 WHERE id = :id;
+
+-- name: peruuta-ilmoituksen-toimenpiteiden-aloitus!
+UPDATE ilmoitus
+SET "toimenpiteet-aloitettu" = null,
+  "aiheutti-toimenpiteita"   = false
+WHERE id = :id;

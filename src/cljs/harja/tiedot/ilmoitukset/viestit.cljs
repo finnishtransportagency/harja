@@ -42,4 +42,5 @@
 (defrecord TallennaPikakuittaus [])
 (defrecord PeruutaPikakuittaus [])
 (defrecord TallennaToimenpiteidenAloitus [id])
+(defrecord PeruutaToimenpiteidenAloitus [id])
 (defrecord ToimenpiteidenAloitusTallennettu [])

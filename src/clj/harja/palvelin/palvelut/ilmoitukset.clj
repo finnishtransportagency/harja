@@ -409,10 +409,11 @@
     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))
 
-(defn tallenna-ilmoituksen-toimenpiteiden-aloitus [db user id]
+(defn tallenna-ilmoituksen-toimenpiteiden-aloitus [db user id peruutettu?]
   ;; todo: mieti oikeustarkistukset
-  (q/tallenna-ilmoituksen-toimenpiteiden-aloitus! db id)
-  )
+  (if peruutettu?
+    (q/peruuta-ilmoituksen-toimenpiteiden-aloitus! db id)
+    (q/tallenna-ilmoituksen-toimenpiteiden-aloitus! db id)))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
@@ -436,7 +437,10 @@
                         (hae-ilmoituksia-idlla db user tiedot)))
     (julkaise-palvelu http :tallenna-ilmoituksen-toimenpiteiden-aloitus
                       (fn [user id]
-                        (tallenna-ilmoituksen-toimenpiteiden-aloitus db user id)))
+                        (tallenna-ilmoituksen-toimenpiteiden-aloitus db user id false)))
+    (julkaise-palvelu http :peruuta-ilmoituksen-toimenpiteiden-aloitus
+                      (fn [user id]
+                        (tallenna-ilmoituksen-toimenpiteiden-aloitus db user id true)))
     this)
 
   (stop [this]
@@ -444,5 +448,6 @@
                      :hae-ilmoitukset
                      :tallenna-ilmoitustoimenpiteet
                      :hae-ilmoituksia-idlla
-                     :tallenna-ilmoituksen-toimenpiteiden-aloitus)
+                     :tallenna-ilmoituksen-toimenpiteiden-aloitus
+                     :peruuta-ilmoituksen-toimenpiteiden-aloitus)
     this))
