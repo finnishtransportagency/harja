@@ -180,6 +180,7 @@
       "properties": {
         "nimi": {
           "id": "urn:harja/tielupa/urakoitsija/nimi",
+          "required": true,
           "type": "string"
         },
         "yhteyshenkilo": {
