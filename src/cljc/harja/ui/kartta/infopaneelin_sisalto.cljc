@@ -34,7 +34,7 @@
             [taoensso.timbre :as log]
     #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
+            [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]

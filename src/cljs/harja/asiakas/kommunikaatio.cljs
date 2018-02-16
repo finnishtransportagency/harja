@@ -69,6 +69,10 @@
 
 (declare kasittele-yhteyskatkos)
 
+(defn yhteysvirhe? [vastaus]
+  ;; cljs-ajax kirjaston oma käsite: status 0 kun pyyntö ei mene lainkaan palvelimelle (verkkoyhteys poikki)
+  (= 0 (:status vastaus)))
+
 (defn- kasittele-palvelinvirhe [palvelu vastaus]
   ;; Normaalitilanteessa ei pitäisi koskaan tulla ei oikeutta -virhettä. Voi tulla esim. jos frontin
   ;; ja backendin oikeustarkistukset eivät ole yhteneväiset. Tällöin halutaan näyttää käyttäjälle tieto
@@ -77,15 +81,12 @@
     (tapahtumat/julkaise! {:aihe :ei-oikeutta
                            :viesti (str "Puutteelliset oikeudet kutsuttaessa palvelua " (pr-str palvelu))}))
 
-  (if (= 0 (:status vastaus)) ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
+  (if (yhteysvirhe? vastaus)
     (kasittele-yhteyskatkos palvelu vastaus)
     (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus)))
   (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
 
 (declare kasittele-istunto-vanhentunut)
-
-(defn extranet-virhe? [vastaus]
-  (= 0 (:status vastaus)))
 
 (defn- kysely [palvelu metodi parametrit
                {:keys [transducer paasta-virhe-lapi? chan yritysten-maara uudelleenyritys-timeout] :as opts}]
@@ -100,11 +101,8 @@
                  (do (kasittele-istunto-vanhentunut)
                      (close! chan))
 
-                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
-                 (do (kasittele-palvelinvirhe palvelu vastaus)
-                     (close! chan))
-
-                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
+                 ;; Yhteysvirhe, jota halutaan yrittää uudelleen jos yrityksiä on vielä jäljellä
+                 (and (yhteysvirhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
                  (kysely palvelu metodi parametrit (assoc opts
                                                      :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
                                                                         (+ (or yritysten-maara 0) 1))
@@ -112,11 +110,13 @@
                                                      (let [timeout (:uudelleenyritys-timeout opts)]
                                                        (+ (or timeout 2000) 2000))))
 
-                 :default
+                 (and (virhe? vastaus) (not paasta-virhe-lapi?))
+                 (do (kasittele-palvelinvirhe palvelu vastaus)
+                     (close! chan)) ; Kutsujalle palautuu nil
+
+                 :default ; Pyyntö onnistui ja vastaus oli ok
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                     (close! chan)))
-               ;; else
-               (close! chan)))]
+                     (close! chan)))))]
     (go
       (when uudelleenyritys-timeout
         (<! (timeout uudelleenyritys-timeout)))

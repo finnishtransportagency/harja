@@ -200,6 +200,7 @@
   (comp
     yllapitokohteet-domain/yllapitoluokka-xf
     (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
+    (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
     (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
     (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))

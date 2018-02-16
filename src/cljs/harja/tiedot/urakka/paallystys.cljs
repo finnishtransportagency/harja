@@ -25,6 +25,7 @@
 
 (def kohdeluettelossa? (atom false))
 (def paallystysilmoitukset-nakymassa? (atom false))
+(def validointivirheet-modal (atom nil))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
   (k/post! :urakan-paallystysilmoitukset {:urakka-id urakka-id
