@@ -11,7 +11,7 @@
 (defn vaadi-linkitys
   "Tarkistaa, että taulussa oleva rivi linkittyy annettuun id-arvoon.
    Jos ei linkity, heittää poikkeuksen.
-   Jos id:tä ei anneta, ei tee mitään.
+   Jos linkittyvää id:tä ei anneta, ei tee mitään.
    Jos linkitys-id puuttuu, heittää poikkeuksen (älä kutsu jos linkitystä ei ole olemassa)
 
    Tällä voi tarkistaa esim. sen, että päivitettävä rivi kuuluu siihen urakkaan, johon

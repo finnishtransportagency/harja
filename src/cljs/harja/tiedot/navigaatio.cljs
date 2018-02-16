@@ -19,6 +19,7 @@
     [harja.tiedot.urakat :as ur]
     [harja.tiedot.raportit :as raportit]
     [harja.tiedot.navigaatio.reitit :as reitit]
+    [harja.tiedot.hallinta.integraatioloki :as integraatioloki]
     [harja.atom :refer-macros [reaction<! reaction-writable]]
     [harja.pvm :as pvm]
     [clojure.string :as str]
@@ -421,7 +422,6 @@
     (let [uri (Uri/parse url)
           polku (.getPath uri)
           parametrit (.getQueryData uri)]
-      (log "POLKU: " polku)
       (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
       (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
       ;; Kun ollaan aloitusikkunassa, katsotaan mikä on käyttäjän perusurakkatyyppi, jotta voidaan näyttää oikean
@@ -437,7 +437,26 @@
 
       (<! (hy/aseta-hallintayksikot-vaylamuodolle! @valittu-vaylamuoto))
       (swap! reitit/url-navigaatio
-             reitit/tulkitse-polku polku))
+             reitit/tulkitse-polku polku)
+      ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
+      (when (and (= polku "hallinta/integraatioloki")
+                 (.get parametrit "valittu-jarjestelma")
+                 (.get parametrit "valittu-integraatio")
+                 (.get parametrit "tapahtuma-id")
+                 (.get parametrit "alkanut"))
+        (let [jarjestelmat (<! (integraatioloki/hae-jarjestelmien-integraatiot))
+              jarjestelma (.get parametrit "valittu-jarjestelma")]
+          (reset! integraatioloki/valittu-jarjestelma (some #(when (= jarjestelma (:jarjestelma %))
+                                                               %)
+                                                            jarjestelmat))
+          (reset! integraatioloki/valittu-integraatio (.get parametrit "valittu-integraatio"))
+          (reset! integraatioloki/tapahtuma-id #{(try (js/parseInt (.get parametrit "tapahtuma-id"))
+                                                      (catch :default e
+                                                        nil))})
+          (reset! integraatioloki/nayta-uusimmat-tilassa? false)
+          (reset! integraatioloki/valittu-aikavali [(pvm/iso-8601->pvm (.get parametrit "alkanut")) (pvm/nyt)])
+          ;; Paivitetään url, jotta parametrit eivät enään näy urlissa
+          (paivita-url))))
     (reset! render-lupa-url-kasitelty? true)
     (log "Render lupa annettu!")
     (t/julkaise! {:aihe :url-muuttui :url url})

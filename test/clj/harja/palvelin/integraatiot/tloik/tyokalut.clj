@@ -253,7 +253,8 @@
             :toimenpidejono +tloik-ilmoitustoimenpideviestijono+
             :toimenpidekuittausjono +tloik-ilmoitustoimenpidekuittausjono+
             :tietyoilmoitusviestijono +tloik-tietyoilmoitusviestijono+
-            :tietyoilmoituskuittausjono +tloik-tietyoilmoituskuittausjono+}))
+            :tietyoilmoituskuittausjono +tloik-tietyoilmoituskuittausjono+}
+           true))
 
 (def +ilmoitus-ruotsissa+
   (clojure.string/replace
