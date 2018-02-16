@@ -6,7 +6,8 @@
             [reagent.core :as r :refer [atom]]
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [clojure.string :as clj-str])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (declare aseta-kartta-debug-sijainti)
@@ -22,6 +23,45 @@
 (defonce geometriat (reaction (into {} (map (fn [[kerros kerroksen-geometria]]
                                               [kerros @kerroksen-geometria])
                                             tasot/geometrioiden-atomit))))
+
+(defn- varita-mappi [geometriat]
+  (let [kasittele-map-fn (fn [mappi]
+                           (let [pakolliset-kentat #{:tyyppi-kartalla :alue}]
+                             (when (:ylin-taso? (meta mappi))
+                               (doseq [pakollinen-kentta pakolliset-kentat]
+                                 (when (not (contains? mappi pakollinen-kentta))
+                                   (console.log (str "%c" pakollinen-kentta) "color: red"))))
+                             (doseq [[avain arvo] mappi
+                                     :let [varita-sininen? (pakolliset-kentat avain)
+                                           avain-printtaus (if varita-sininen?
+                                                             [(str "%c" avain) "color: blue"]
+                                                             (str avain))]]
+                               (if (or (vector? arvo) (map? arvo))
+                                 (do (if varita-sininen?
+                                       (apply console.log avain-printtaus)
+                                       (console.log avain-printtaus))
+                                     (varita-mappi arvo))
+                                 (if varita-sininen?
+                                   (apply console.log [(str (first avain-printtaus) " %c" arvo)
+                                                       (str (last avain-printtaus))
+                                                       "color: black"])
+                                   (console.log (str avain-printtaus " " arvo)))))))]
+    (cond
+      (vector? geometriat) (do
+                             (console.group "VECTOR")
+                             (doseq [geometry geometriat]
+                               (varita-mappi geometry))
+                             (console.groupEnd))
+      (map? geometriat) (do
+                          (console.group "HASH-MAP")
+                          (kasittele-map-fn geometriat)
+                          (console.groupEnd))
+      :else (console.log (str geometriat))))
+  #_(let [rivitetty (-> (str geometry) (clj-str/replace #", :" "\n:") (clj-str/replace #"\{" "\n{"))
+          palaset (clj-str/split rivitetty #":tyyppi-kartalla")
+          yhistetty (->> palaset (interpose ":tyyppi-kartalla") (map #(str "%c" %)))
+          varit (take (count yhistetty) (cycle ["color: black" "color: blue"]))]
+      (apply console.log (apply str yhistetty) varit)))
 
 (defn- checkbox-kentta
   [{:keys [teksti checked? disabled? on-change]}]
@@ -63,7 +103,13 @@
                           [checkbox-kentta {:teksti [:span
                                                      [:span (str (name taso))]
                                                      [:button {:on-click #(do (.stopPropagation %)
-                                                                              (cljs.pprint/pprint tason-geometria))}
+                                                                              (varita-mappi (cond
+                                                                                              (vector? tason-geometria) (mapv (fn [geometria]
+                                                                                                                               (with-meta
+                                                                                                                                 geometria
+                                                                                                                                 {:ylin-taso? true}))
+                                                                                                                             tason-geometria)
+                                                                                              :else tason-geometria)))}
                                                       (str " geometriat")]]
                                             :checked? paalla?
                                             :disabled? (not geometria?)

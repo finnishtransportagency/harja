@@ -615,6 +615,18 @@
                                 false
                                 ikoni))))
 
+(defmethod asia-kartalle :kohde [kohde kohde-valittu?]
+  ;; Näyttää toteuman reittipisteet palloina
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde kohde-valittu?)]
+    (assoc kohde
+      :type :kohteenosa
+      :nimi (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde kohde) kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                false
+                                ikoni))))
+
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
     (log/warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
