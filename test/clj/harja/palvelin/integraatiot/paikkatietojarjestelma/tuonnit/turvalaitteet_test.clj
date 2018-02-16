@@ -31,7 +31,7 @@
    :nimi "Loistava I"
    :sijainti "Nevernever"
    :tyyppi "Sektoriloisto"
-   :tarkenne "KIINTEÄ"
+   :kiintea true
    :tila "POISTETTU"
    :toimintatila "Poistettu käytöstä"
    :rakenne "Radiomasto"

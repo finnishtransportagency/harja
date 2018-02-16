@@ -30,7 +30,7 @@
                         :nimi nimi
                         :sijainti sijainti
                         :tyyppi tyyppi
-                        :tarkenne tarkenne
+                        :kiintea (= tarkenne "KIINTEÄ")
                         :tila tila
                         :vah_pvm vah_pvm
                         :toimintatila toimintatila
