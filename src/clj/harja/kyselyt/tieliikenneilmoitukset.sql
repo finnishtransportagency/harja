@@ -576,5 +576,6 @@ SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
 
 -- name: tallenna-ilmoituksen-toimenpiteiden-aloitus!
 UPDATE ilmoitus
-SET "toimenpiteet-aloitettu" = now()
+SET "toimenpiteet-aloitettu" = now(),
+  "aiheutti-toimenpiteita"   = TRUE
 WHERE id = :id;
