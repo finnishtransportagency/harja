@@ -335,7 +335,8 @@
                                       ::hinta/materiaali-id (some #(when (and (= "Naulat" (:nimi %))
                                                                               (= maara-nauloja (:maara %)))
                                                                      (:materiaali-id %))
-                                                                  materiaalit)}
+                                                                  materiaalit)
+                                      ::hinta/yksikko "kpl"}
                                      {::hinta/yleiskustannuslisa 0
                                       ::hinta/otsikko "Ämpäreitä"
                                       ::hinta/id -5
@@ -345,7 +346,8 @@
                                       ::hinta/materiaali-id (some #(when (and (= "Ämpäreitä" (:nimi %))
                                                                               (= maara-ampareita (:maara %)))
                                                                      (:materiaali-id %))
-                                                                  materiaalit)}
+                                                                  materiaalit)
+                                      ::hinta/yksikko "kpl"}
                                      {::hinta/yleiskustannuslisa 12
                                       ::hinta/otsikko "foo-muutyo"
                                       ::hinta/id -6
@@ -365,7 +367,8 @@
                                       ::hinta/id -8
                                       ::hinta/ryhma "materiaali"
                                       ::hinta/yksikkohinta 3
-                                      ::hinta/maara 4}
+                                      ::hinta/maara 4
+                                      ::hinta/yksikko "bar"}
                                      {::hinta/summa 20
                                       ::hinta/yleiskustannuslisa 0
                                       ::hinta/otsikko "foo-kulurivi"
