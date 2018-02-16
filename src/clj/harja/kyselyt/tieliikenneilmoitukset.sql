@@ -572,3 +572,8 @@ SELECT exists(SELECT
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
                            FROM ilmoitus
                            WHERE id = :id));
+
+-- name: tallenna-ilmoituksen-toimenpiteiden-aloitus!
+UPDATE ilmoitus
+SET "toimenpiteet-aloitettu" = now()
+WHERE id = :id;
