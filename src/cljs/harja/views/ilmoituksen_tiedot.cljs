@@ -61,7 +61,18 @@
          [yleiset/tietoja {}
           "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
           "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
-          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
+          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]
+
+         [:br]
+         (when (and
+                 (:ilmoitusid ilmoitus)
+                 (oikeudet/voi-kirjoittaa?
+                   oikeudet/ilmoitukset-ilmoitukset
+                   (:id @nav/valittu-urakka)))
+           [:button.nappi-ensisijainen
+            {:class "uusi-kuittaus-nappi"
+             :on-click #(e! (v/->TallennaToimenpiteidenAloitus (:id ilmoitus)))}
+            "Toimenpiteet aloitettu"])]]
        [:div.kuittaukset
         [:h3 "Kuittaukset"]
         [:div

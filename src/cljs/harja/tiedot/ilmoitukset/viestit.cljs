@@ -41,3 +41,5 @@
 (defrecord PaivitaPikakuittaus [pikakuittaus])
 (defrecord TallennaPikakuittaus [])
 (defrecord PeruutaPikakuittaus [])
+(defrecord TallennaToimenpiteidenAloitus [id])
+(defrecord ToimenpiteidenAloitusTallennettu [])
