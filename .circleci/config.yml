@@ -94,7 +94,7 @@ jobs:
 
       - run:
           name: replace slurped secrets
-          command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e '/:kehitysmoodi true/:kehitysmoodi false/'
+          command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/:kehitysmoodi true/:kehitysmoodi false/'
 
       - run:
           name: Run Harja app
