@@ -182,7 +182,7 @@
                                                          (contains? (:integraatiot @tiedot/valittu-jarjestelma)
                                                                     @tiedot/valittu-integraatio))
                                             (reset! tiedot/valittu-integraatio nil)))}
-      (vec (concat [nil] @tiedot/jarjestelmien-integraatiot))]]
+       (vec (concat [nil] (sort-by :jarjestelma @tiedot/jarjestelmien-integraatiot)))]]
 
     (when @tiedot/valittu-jarjestelma
       [:div.label-ja-alasveto
@@ -190,7 +190,7 @@
        [livi-pudotusvalikko {:valinta @tiedot/valittu-integraatio
                              :format-fn #(if % (str %) "Kaikki integraatiot")
                              :valitse-fn #(reset! tiedot/valittu-integraatio %)}
-        (vec (concat [nil] (:integraatiot @tiedot/valittu-jarjestelma)))]])
+        (vec (concat [nil] (sort (:integraatiot @tiedot/valittu-jarjestelma))))]])
 
 
     (if @tiedot/nayta-uusimmat-tilassa?
