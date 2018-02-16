@@ -25,7 +25,8 @@
 (def virhekasittely
   {:error-handler #(log/error "Käsittelemätön poikkeus ajastetussa tehtävässä:" %)})
 
-(def avattavat-siltatyypit {:teraksinen-kaantosilta "Teräksinen kääntösilta"
+(def avattavat-siltatyypit {
+                            :teraksinen-kaantosilta "Teräksinen kääntösilta"
                             :teraksinen-kaantosilta-teraskansi "Teräksinen kääntösilta, teräskantinen"
                             :teraksinen-kantosilta-puukansi "Teräksinen kääntösilta, puukantinen"
                             :teraksinen-lappasilta-teraskansi "Teräksinen läppäsilta, teräskantinen"
@@ -52,6 +53,7 @@
                      :kaltimonkoski "Kaltimonkosken silta"
                      :kyronsalmi "Kyrönsalmen silta"
                      :uimasalmen-rata "Uimasalmen ratasilta"})
+
 
 (def poistetut-siltatilat {:poistettu "poistettu"
                            :purettu "purettu"
