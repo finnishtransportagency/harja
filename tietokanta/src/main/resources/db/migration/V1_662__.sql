@@ -140,7 +140,7 @@ CREATE TABLE tielupa (
   "urakoitsija-sahkopostiosoite"                                  TEXT,
 
   -- liikenteenohjauksesta vastaavan tiedot
-  "liikenneohjaajan-nimi"                                         TEXT,
+  "liikenneohjaajan-nimi"                                         TEXT                                 NOT NULL,
   "liikenneohjaajan-yhteyshenkilo"                                TEXT,
   "liikenneohjaajan-puhelinnumero"                                TEXT,
   "liikenneohjaajan-sahkopostiosoite"                             TEXT,
