@@ -62,4 +62,16 @@
 (define-tables
   ["liite" ::liite
    {"liite_oid" ::liite-oid
-    "urakka" ::urakka-id}])
+    "urakka" ::urakka-id}]
+  ["turvallisuuspoikkeama_liite" ::turvallisuuspoikkeama<->liite
+   {"turvallisuuspoikkeama" ::turvallisuuspoikkeama-id
+    "liite" ::liite-id}]
+  ["laatupoikkeama_liite" ::laatupoikkeama<->liite
+   {"laatupoikkeama" ::laatupoikkeama-id
+    "liite" ::liite-id}]
+  ["tarkastus_liite" ::tarkastus<->liite
+   {"tarkastus" ::tarkastus-id
+    "liite" ::liite-id}]
+  ["toteuma_liite" ::toteuma<->liite
+   {"toteuma" ::toteuma-id
+    "liite" ::liite-id}])

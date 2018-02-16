@@ -529,6 +529,7 @@
           tyot (or (::h/tyot toimenpiteen-oma-hinnoittelu) [])]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
+                  ::to/pvm (::to/pvm hinnoiteltava-toimenpide)
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
                   ::h/tyot tyot})))
 

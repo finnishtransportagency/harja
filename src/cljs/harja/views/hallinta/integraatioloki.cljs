@@ -182,7 +182,7 @@
                                                          (contains? (:integraatiot @tiedot/valittu-jarjestelma)
                                                                     @tiedot/valittu-integraatio))
                                             (reset! tiedot/valittu-integraatio nil)))}
-      (vec (concat [nil] @tiedot/jarjestelmien-integraatiot))]]
+       (vec (concat [nil] (sort-by :jarjestelma @tiedot/jarjestelmien-integraatiot)))]]
 
     (when @tiedot/valittu-jarjestelma
       [:div.label-ja-alasveto
@@ -190,7 +190,7 @@
        [livi-pudotusvalikko {:valinta @tiedot/valittu-integraatio
                              :format-fn #(if % (str %) "Kaikki integraatiot")
                              :valitse-fn #(reset! tiedot/valittu-integraatio %)}
-        (vec (concat [nil] (:integraatiot @tiedot/valittu-jarjestelma)))]])
+        (vec (concat [nil] (sort (:integraatiot @tiedot/valittu-jarjestelma))))]])
 
 
     (if @tiedot/nayta-uusimmat-tilassa?
@@ -250,7 +250,9 @@
       :vetolaatikot (into {}
                           (map (juxt :id (fn [tapahtuma]
                                            [tapahtuman-tiedot tapahtuma]))
-                               @tiedot/haetut-tapahtumat))}
+                               @tiedot/haetut-tapahtumat))
+      :vetolaatikot-auki (when @tiedot/tapahtuma-id tiedot/tapahtuma-id)
+      }
 
      (vec
        (keep identity
@@ -311,6 +313,8 @@
   (komp/luo
     (komp/ulos (aloita-tapahtumien-paivitys!))
     (komp/lippu tiedot/nakymassa?)
+    (komp/sisaan #(when @tiedot/tapahtuma-id
+                   (tiedot/hae-tapahtumat!)))
     (fn []
       [:div.integraatioloki
        [tapahtumien-paanakyma]])))

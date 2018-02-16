@@ -183,10 +183,10 @@
 
         ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 0))
         ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 2))
-        ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 7))
+        ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 8))
         ymp-suolaliuos-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 2))
-        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 10))
-        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 10))
+        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 11))
+        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 11))
         materiaali (apurit/taulukko-otsikolla
                      (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :suorita-raportti
@@ -196,10 +196,12 @@
                                       :urakka-id urakka-id
                                       :parametrit param})
                      "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 30.09.2015")
-        mat-kaytetty-suola (apurit/taulukon-solu materiaali 1 0)
-        mat-kaytetty-talvisuolaliuos (apurit/taulukon-solu materiaali 2 0)
-        mat-kaytetty-natriumformiaatti (apurit/taulukon-solu materiaali 3 0)
-        mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 4 0)
+        _ (println "materiaali" materiaali)
+        mat-kaytetty-kaikki-talvisuola (apurit/taulukon-solu materiaali 1 0)
+        mat-kaytetty-suola (apurit/taulukon-solu materiaali 2 0)
+        mat-kaytetty-talvisuolaliuos (apurit/taulukon-solu materiaali 3 0)
+        mat-kaytetty-natriumformiaatti (apurit/taulukon-solu materiaali 4 0)
+        mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 5 0)
         suola (apurit/taulukko-otsikolla
                 (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti

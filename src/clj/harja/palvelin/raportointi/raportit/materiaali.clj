@@ -58,6 +58,12 @@
 (defn- materiaalin-otsikko [t]
   (str (:materiaali-nimi t) " (" (:materiaali-yksikko t) ")"))
 
+(defn- materiaalin-otsikko-sarakeen-nimeen [nimi]
+  (if-not (= "Talvisuola (t)" nimi)
+    nimi
+    ;; Osa käyttäjistä on sekoittanut Talvisuola nimen tarkoittavan kaikkea käytettyä
+    ;; talvisuolaa. Tehdään siihen ero kertomalla että tämä on rakeista NaCl:ia
+    "Talvisuola, NaCl (t)"))
 
 (defn suorita [db user {:keys [urakka-id
                                hallintayksikko-id alkupvm loppupvm urakkatyyppi] :as parametrit}]
@@ -83,7 +89,6 @@
           (muodosta-materiaaliraportti-koko-maalle db user {:alkupvm alkupvm
                                                             :loppupvm loppupvm
                                                             :urakkatyyppi urakkatyyppi}))
-
         raportin-nimi "Materiaaliraportti"
         otsikko (raportin-otsikko
                   (case konteksti
@@ -120,8 +125,8 @@
             (concat
               [{:otsikko (if (= konteksti :koko-maa) "Hallintayksikkö" "Urakka")}]
               (map (fn [mat]
-                     {:otsikko mat :fmt :numero})
-                   materiaaliotsikot)))
+                     {:otsikko (materiaalin-otsikko-sarakeen-nimeen mat) :fmt :numero})
+                   (cons "Kaikki talvisuola yhteensä" materiaaliotsikot))))
       (keep identity
             (into
               []
@@ -131,14 +136,20 @@
                   (into []
                         (concat [alue]
                                 (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
-                                  (for [m materiaaliotsikot]
-                                    (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m))))))))
+                                  (cons
+                                    (reduce + (keep :kokonaismaara (filter #(= "talvisuola" (:materiaalityyppi %)) toteumat)))
+                                    (for [m materiaaliotsikot]
+                                      (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m)))))))))
 
                 ;; Tehdään yhteensä rivi, jossa kaikki toteumat lasketaan yhteen materiaalin perusteella
                 (when (not (empty? toteumat))
                   [(concat ["Yhteensä"]
                            (let [toteumat-materiaalin-mukaan (group-by materiaalin-otsikko toteumat)]
-                             (for [m materiaaliotsikot]
-                               (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m))))))]))))]]))
+                             (cons
+                               (reduce + (keep :kokonaismaara (filter #(= "talvisuola" (:materiaalityyppi %)) toteumat)))
+                               (for [m materiaaliotsikot]
+                                (reduce + (keep :kokonaismaara (toteumat-materiaalin-mukaan m)))))))]))))]
+     (when-not (empty? toteumat)
+       [:teksti "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön."])]))
 
     

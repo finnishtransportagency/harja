@@ -177,13 +177,13 @@
           :validoi [[:ei-tyhja "Anna perustelu"]]}
 
          (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
-           {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa
+           {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
             :hae (comp :muukasittelytapa :paatos :laatupoikkeama)
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :muukasittelytapa] arvo))
             :leveys 2 :tyyppi :string
             :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-         (when-not vesivayla?                               ;; Vesiväylässä lajeina on vain sakko
+         (when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
            {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
             :palstoja 1 :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
@@ -254,8 +254,26 @@
             :komponentti (fn [_]
                            [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
                             {:uusi-liite-atom (r/wrap (:uusi-liite @tiedot/valittu-sanktio)
-                                                      #(swap! tiedot/valittu-sanktio (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
-                             :uusi-liite-teksti "Lisää liite sanktioon"}])})]
+                                                      #(swap! tiedot/valittu-sanktio
+                                                              (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
+                             :uusi-liite-teksti "Lisää liite sanktioon"
+                             :salli-poistaa-lisatty-liite? true
+                             :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
+                                                              (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))
+                             :salli-poistaa-tallennettu-liite? true
+                             :poista-tallennettu-liite-fn
+                             (fn [liite-id]
+                               (liitteet/poista-liite-kannasta
+                                 {:urakka-id urakka-id
+                                  :domain :laatupoikkeama
+                                  :domain-id (get-in @tiedot/valittu-sanktio [:laatupoikkeama :id])
+                                  :liite-id liite-id
+                                  :poistettu-fn (fn []
+                                                  (let [liitteet (get-in @muokattu [:laatupoikkeama :liitteet])]
+                                                    (swap! tiedot/valittu-sanktio assoc-in [:laatupoikkeama :liitteet]
+                                                           (filter (fn [liite]
+                                                                     (not= (:id liite) liite-id))
+                                                                   liitteet))))}))}])})]
         @muokattu]
        [ajax-loader "Ladataan..."])]))
 

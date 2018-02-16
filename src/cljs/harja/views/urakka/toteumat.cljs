@@ -48,7 +48,7 @@
 
       "Muutos- ja lisätyöt" :muut-tyot
       (when (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
-        [muut-tyot/muut-tyot-toteumat])
+        [muut-tyot/muut-tyot-toteumat ur])
 
       "Suola" :suola
       (when (and (oikeudet/urakat-toteumat-suola id)
