@@ -34,6 +34,14 @@ export default React.createClass({
         <NavButton item={linkWater} />
       </div>
     );
+    
+    
+    const linkProblemsolving = {title: "Ongelmanratkaisu", data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}};
+    const moreWaterEl = (
+      <div className="harja-more harja-problemsolving">
+        <NavButton item={linkProblemsolving} />
+      </div>
+    );
 
     return (
       <div className="harja-hero">
