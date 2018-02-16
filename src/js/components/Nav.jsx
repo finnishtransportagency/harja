@@ -15,7 +15,8 @@ export default React.createClass({
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}, buttonStyle: 'large button'},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}, buttonStyle: 'large button'},
       {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}, buttonStyle: 'large button'},
-      {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'}
+      {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}, buttonStyle: 'large button'},
+      {title: 'ONGELMANRATKAISUPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}, buttonStyle: 'large button'}
     ];
 
     const normalButtonLinks = [
@@ -23,7 +24,8 @@ export default React.createClass({
       {title: 'TEIDEN HOITO', data: {action: Events.CATEGORY, category: Category.CARE}},
       {title: 'TEIDEN YLLÄPITO', data: {action: Events.CATEGORY, category: Category.MAINTENANCE}},
       {title: 'VESIVÄYLÄT', data: {action: Events.CATEGORY, category: Category.WATERWAYS}},
-      {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}}
+      {title: 'KOULUTUSVIDEOT', data: {action: Events.CATEGORY, category: Category.FAQ}},
+      {title: 'ONGELMANRATKAISUPROSESSI', data: {action: Events.CATEGORY, category: Category.PROBLEMSOLVING}}
     ];
 
     const feedbackAddress = "harjapalaute@solita.fi";
