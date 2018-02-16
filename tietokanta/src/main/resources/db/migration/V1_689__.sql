@@ -66,3 +66,4 @@ $$ LANGUAGE plpgsql;
 UPDATE kan_silta
 SET muokattu = current_timestamp, muokkaaja = 'Migraatio';
 
+
