@@ -108,7 +108,7 @@
         (map :varaosa)
         ;; Lisätään lisätieto ja materiaalin pvm, koska se on required field. Materiaalia
         ;; muokatessa kumminkin ei vaihdeta pvm:ää
-        (map #(assoc % ::materiaalit/pvm (or (::materiaalit/pvm %) (pvm/nyt))
+        (map #(assoc % ::materiaalit/pvm (or (::hairiotilanne/havaintoaika hairiotilanne) (pvm/nyt))
                        ::materiaalit/lisatieto  (str "Käytetty kohteen " kohteen-nimi " häiriötilanteen korjaamiseen."
                                                      (when korjaustoimenpide (str " Korjaustoimenpide: " korjaustoimenpide)))))
         ;; Otetaan joitain vv_materiaalilistaus tietoja pois (muuten tulee herjaa palvelin päässä)

@@ -152,7 +152,7 @@
 
 (defn yksi-tallennettava-materiaalikirjaus
   "Palauttaa tallennettavan mapin kun m-kirjaus on muokattu, ei-tyhja, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...} - muutoin nil"
-  [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
+  [muokkaamattomat-kirjaukset lisatieto paivamaara m-kirjaus]
 
   (let [muokkaamaton? (if (seq muokkaamattomat-kirjaukset)
                        (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
@@ -166,6 +166,7 @@
     (if (or tyhja? poistettu? muokkaamaton?)
       nil
       (assoc varaosa
+             ::materiaalit/pvm paivamaara
              ::materiaalit/maara (- (:maara m-kirjaus)) ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
              ::materiaalit/lisatieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
 
@@ -183,7 +184,7 @@
 
           lisatieto (str "Käytetty kohteessa: " kohteen-nimi
                          (when kohteen-lisatieto (str ", Lisätietona: " kohteen-lisatieto)))
-          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
+          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto paivamaara) materiaali-kirjaukset)]
       tallennettavat)))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]
