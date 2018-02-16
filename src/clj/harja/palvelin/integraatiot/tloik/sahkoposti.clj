@@ -20,6 +20,7 @@ otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 (def ^{:doc "Kuittaustyypit, joita sähköpostilla voi ilmoittaa" :const true :private true}
 kuittaustyypit [["Vastaanotettu" :vastaanotettu]
                 ["Aloitettu" :aloitettu]
+                ["Toimenpiteet aloitettu" :toimenpiteet-aloitettu]
                 ["Lopetettu" :lopetettu]
                 ["Lopetettu toimenpitein" :lopetettu]
                 ["Muutettu" :muutettu]
@@ -27,7 +28,7 @@ kuittaustyypit [["Vastaanotettu" :vastaanotettu]
                 ["Väärä urakka" :vaara-urakka]])
 
 (def ^{:doc "Kuittaustyypin tunnistava regex pattern" :const true :private true}
-kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Lopetettu|Lopetettu toimenpitein|Muutettu|Vastattu|Väärä urakka)\]")
+kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopetettu|Lopetettu toimenpitein|Muutettu|Vastattu|Väärä urakka)\]")
 
 (def ^{:doc "Viesti, joka lähetetään vastaanottajalle kun saadaan sisään sähköposti, jota ei tunnisteta" :private true}
 +virheellinen-toimenpide-viesti+
@@ -173,5 +174,8 @@ kuittauksen lähettäjälle."
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
   (let [v (lue-kuittausviesti otsikko sisalto)]
     (if (:ilmoitus-id v)
-      (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v)
+      (if (= (:kuittaustyyppi v) :toimenpiteet-aloitettu)
+        (when-let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db (:ilmoitus-id v))))]
+          (ilmoitukset/tallenna-ilmoituksen-toimenpiteiden-aloitus! db id))
+        (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
       +virheellinen-toimenpide-viesti+)))
