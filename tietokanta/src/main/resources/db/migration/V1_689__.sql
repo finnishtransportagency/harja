@@ -1,6 +1,7 @@
 UPDATE vatu_turvalaite SET luoja = NULL WHERE luoja = 'Integraatio';
 ALTER TABLE vatu_turvalaite ALTER COLUMN luoja TYPE integer USING luoja::integer;
 ALTER TABLE vatu_turvalaite ALTER COLUMN turvalaitenro TYPE text USING turvalaitenro::text;
+ALTER TABLE vatu_turvalaite ALTER COLUMN koordinaatit TYPE geometry USING koordinaatit::geometry;
 UPDATE vatu_turvalaite SET muokkaaja = NULL WHERE muokkaaja = 'Integraatio';
 ALTER TABLE vatu_turvalaite ALTER COLUMN muokkaaja TYPE integer USING muokkaaja::integer;
 UPDATE vv_vikailmoitus SET "reimari-turvalaitenro" = (SELECT turvalaitenro FROM vv_turvalaite WHERE id = "turvalaite-id");

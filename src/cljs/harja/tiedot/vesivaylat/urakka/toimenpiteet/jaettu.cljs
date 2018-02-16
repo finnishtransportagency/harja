@@ -125,7 +125,7 @@
     (constantly false)
     (comp
       (map #(assoc % :tyyppi-kartalla :turvalaite))
-      (map #(set/rename-keys % {::tu/sijainti :sijainti}))
+      (map #(set/rename-keys % {::tu/koordinaatit :sijainti}))
       (map #(assoc % :toimenpiteet (turvalaitteen-toimenpiteet % app))))))
 
 (defn paivita-kartta [app]

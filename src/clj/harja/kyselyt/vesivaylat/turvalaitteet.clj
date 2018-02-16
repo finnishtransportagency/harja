@@ -47,17 +47,16 @@
             (not-empty vaylanumerot))
     (into []
           (comp
-            (geo/muunna-pg-tulokset ::tu/sijainti))
+            (geo/muunna-pg-tulokset ::tu/koordinaatit))
           (specql/fetch db
                         ::tu/turvalaite
                         #{::tu/turvalaitenro
                           ::tu/nimi
-                          ::tu/sijainti
+                          ::tu/koordinaatit
                           ::tu/tyyppi
                           ::tu/kiintea
                           ::tu/vaylat}
                         (op/and
-                          {::m/poistettu? false}
                           (when (not-empty turvalaitenumerot)
                             {::tu/turvalaitenro (op/in turvalaitenumerot)})
                           (when (not-empty vaylanumerot)

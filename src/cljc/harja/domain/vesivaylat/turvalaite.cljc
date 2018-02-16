@@ -29,7 +29,8 @@
 ;; todo: poistuvat sarakkeee vv_turvalaite -> vatu_turvalaite -muutoksen myötä
 ;; id
 ;; arvot (json)
-;; kiintea - mikä tämä oli, tarvitanako vielä, löytyykö vatu-tiedoista?
+;; kiintea
+;;   - tarkenne-kentässä on arvot KIINTEA tai KELLUVA, josta tämä voidaan johtaa
 ;; poistettu
 
 ;; (def perustiedot
@@ -43,8 +44,8 @@
 (def perustiedot
   #{::turvalaitenro
     ::nimi
+    ::koordinaatit
     ::sijainti
-    ;; ::sijaintikuvaus ;; ei kantataulussa
     ::tyyppi
     ::tarkenne
     ::tila
@@ -59,8 +60,11 @@
     ::vaylat
 })
 
+(s/def ::turvalaitenumerot
+  (s/nilable (s/coll-of ::turvalaitenro)))
+
 (s/def ::hae-turvalaitteet-kartalle-kysely
-  (s/keys :req []))
+  (s/keys :req [] :opt-un [::turvalaitenumerot]))
 
 (s/def ::hae-turvalaitteet-kartalle-vastaus
   (s/nilable (s/coll-of ::turvalaite)))
