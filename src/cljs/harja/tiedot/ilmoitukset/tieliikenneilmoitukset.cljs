@@ -324,11 +324,10 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
       (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
 
   v/ToimenpiteidenAloitusTallennettu
-  (process-event [{ilmoitus :ilmoitus} app]
-    (assoc
-      (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false)
-      :valittu-ilmoitus
-      ilmoitus)))
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden aloitus kirjattu" :success)
+    ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
+    (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false)))
 
 (defonce karttataso-ilmoitukset (atom false))
 

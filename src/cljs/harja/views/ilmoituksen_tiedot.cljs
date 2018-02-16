@@ -46,6 +46,7 @@
           "Lisatieto:  " (when (:lisatieto ilmoitus)
                            [yleiset/pitka-teksti (:lisatieto ilmoitus)])
           "Selitteet: " [selitelista ilmoitus]
+          "Toimenpiteet aloitettu: " (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus))
           "Aiheutti toimenpiteitä:" (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
          [:br]
          [yleiset/tietoja {}

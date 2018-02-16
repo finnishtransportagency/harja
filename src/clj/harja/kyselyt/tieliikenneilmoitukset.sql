@@ -174,6 +174,7 @@ SELECT
 
   i.tunniste,
   i."aiheutti-toimenpiteita",
+  i."toimenpiteet-aloitettu",
 
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
