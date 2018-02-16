@@ -20,9 +20,9 @@
 (defrecord PaivitaLisattavaMateriaali [tiedot])
 (defrecord LisaaMateriaali [])
 (defrecord PeruMateriaalinLisays [])
-(defrecord MuutaAlkuperainenMaara [tiedot])
+(defrecord MuutaAlkuperaisetTiedot [tiedot])
 
-(defrecord AloitaMateriaalinKirjaus [nimi tyyppi])
+(defrecord AloitaMateriaalinKirjaus [nimi tyyppi yksikko])
 (defrecord PaivitaMateriaalinKirjaus [tiedot])
 (defrecord PoistaMateriaalinKirjaus [tiedot])
 (defrecord KirjaaMateriaali [])
@@ -49,19 +49,19 @@
   (process-event [{urakka :urakka} app]
     (let [u (:id urakka)]
       (post! (assoc app
-                      :urakka-id u
-                      :materiaalilistaus nil)
+                    :urakka-id u
+                    :materiaalilistaus nil)
              :hae-vesivayla-materiaalilistaus {::m/urakka-id u}
              {:onnistui ->ListausHaettu
-                     :epaonnistui ->Virhe})))
+              :epaonnistui ->Virhe})))
 
   ListausHaettu
   (process-event [{tulokset :tulokset} app]
     (assoc app
-      :materiaalilistaus tulokset
-      :lisaa-materiaali nil
-      :kirjaa-materiaali nil
-      :tallennus-kaynnissa? false))
+           :materiaalilistaus tulokset
+           :lisaa-materiaali nil
+           :kirjaa-materiaali nil
+           :tallennus-kaynnissa? false))
 
   AloitaMateriaalinLisays
   (process-event [_ app]
@@ -78,27 +78,28 @@
         (assoc :tallennus-kaynnissa? true)
         (post! :kirjaa-vesivayla-materiaali (lomake/ilman-lomaketietoja lisaa-materiaali)
                {:onnistui ->ListausHaettu
-                       :epaonnistui ->Virhe})))
+                :epaonnistui ->Virhe})))
 
   PeruMateriaalinLisays
   (process-event [_ app]
     (dissoc app :lisaa-materiaali))
 
-  MuutaAlkuperainenMaara
+  MuutaAlkuperaisetTiedot
   (process-event [{tiedot :tiedot} app]
-    (let [uudet-alkuperaiset-maarat (map #(-> %
-                                             (assoc ::m/id (get-in % [::m/muutokset 0 ::m/id]))
-                                             (dissoc ::m/muutokset))
-                                         (:uudet-alkuperaiset-maarat tiedot))
+    (let [uudet-alkuperaiset-tiedot (map #(-> %
+                                              (assoc ::m/ensimmainen-kirjaus-id (get-in % [::m/muutokset 0 ::m/id]))
+                                              (assoc ::m/idt (map ::m/id (::m/muutokset %)))
+                                              (dissoc ::m/muutokset))
+                                         (:uudet-alkuperaiset-tiedot tiedot))
           urakka-id (:urakka-id tiedot)
           chan (:chan tiedot)
           onnistui! (tuck/send-async! ->ListausHaettu)
           epaonnistui! (tuck/send-async! ->Virhe)]
 
       (go
-        (let [vastaus (<! (k/post! :muuta-materiaalien-alkuperainen-maara
+        (let [vastaus (<! (k/post! :muuta-materiaalien-alkuperaiset-tiedot
                                    {::m/urakka-id urakka-id
-                                    :uudet-alkuperaiset-maarat uudet-alkuperaiset-maarat}))]
+                                    :uudet-alkuperaiset-tiedot uudet-alkuperaiset-tiedot}))]
           (if (k/virhe? vastaus)
             (epaonnistui! vastaus)
             (onnistui! vastaus))
@@ -107,11 +108,12 @@
       (assoc app :tallennus-kaynnissa? true)))
 
   AloitaMateriaalinKirjaus
-  (process-event [{nimi :nimi tyyppi :tyyppi} app]
+  (process-event [{nimi :nimi tyyppi :tyyppi yksikko :yksikko} app]
     (assoc app :kirjaa-materiaali {::m/urakka-id (:urakka-id app)
                                    ::m/nimi nimi
                                    ::m/pvm (pvm/nyt)
-                                   :tyyppi tyyppi}))
+                                   :tyyppi tyyppi
+                                   ::m/yksikko yksikko}))
 
   PaivitaMateriaalinKirjaus
   (process-event [{tiedot :tiedot} app]
@@ -120,9 +122,9 @@
   PoistaMateriaalinKirjaus
   (process-event [{tiedot :tiedot} app]
     (post! app :poista-materiaalikirjaus {::m/urakka-id (:urakka-id tiedot)
-                                                 ::m/id (:materiaali-id tiedot)}
+                                          ::m/id (:materiaali-id tiedot)}
            {:onnistui ->ListausHaettu
-                   :epaonnistui ->Virhe}))
+            :epaonnistui ->Virhe}))
 
   PeruMateriaalinKirjaus
   (process-event [_ app]
@@ -134,21 +136,21 @@
         (assoc :tallennus-kaynnissa? true)
         (post! :kirjaa-vesivayla-materiaali
                (as-> kirjaa-materiaali m
-                            (lomake/ilman-lomaketietoja m)
-                            ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
-                            (if (= :- (:tyyppi m))
-                              (update m ::m/maara -)
-                              m)
-                            (dissoc m :tyyppi))
+                     (lomake/ilman-lomaketietoja m)
+                     ;; Jos kirjataan käyttöä, muutetaan määrä negatiiviseksi
+                     (if (= :- (:tyyppi m))
+                       (update m ::m/maara -)
+                       m)
+                     (dissoc m :tyyppi))
                {:onnistui ->ListausHaettu
-                       :epaonnistui ->Virhe})))
+                :epaonnistui ->Virhe})))
 
   NaytaKaikkiKirjauksetVaihto
   (process-event [{nimi :nimi} app]
     (update app :materiaalilistaus (fn [listaus]
-                                    (map #(if (= (::m/nimi %) nimi)
-                                            (update % :nayta-kaikki? not) %)
-                                         listaus))))
+                                     (map #(if (= (::m/nimi %) nimi)
+                                             (update % :nayta-kaikki? not) %)
+                                          listaus))))
 
   Virhe
   (process-event [virhe app]
