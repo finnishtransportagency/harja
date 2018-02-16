@@ -93,6 +93,10 @@ jobs:
           command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/#=(slurp "[^"]*")/"xxxx"/g'
 
       - run:
+          name: replace slurped secrets
+          command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e '/:kehitysmoodi true/:kehitysmoodi false/'
+
+      - run:
           name: Run Harja app
           command: cd /tmp/harja && env TZ=EET java -jar harja.jar
           background: true
