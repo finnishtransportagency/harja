@@ -24,9 +24,9 @@
                   :alkupvm (pvm/luo-pvm 2017 1 1)
                   :loppupvm (pvm/luo-pvm 2018 1 1)}]
     (is (= (toimenpiteet/muodosta-kohteiden-hakuargumentit {:urakka {:id 666}
-                                                  :sopimus-id 666
-                                                  :toimenpide {:id 666}
-                                                  :aikavali aikavali}
+                                                            :sopimus-id 666
+                                                            :toimenpide {:id 666}
+                                                            :aikavali aikavali}
                                                            :kokonaishintainen)
            odotettu))
     (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely odotettu))))
@@ -83,7 +83,7 @@
 
 (defn kutsu-poikkeuslokituksella [fn]
   (try
-    (let [paluuarvo  (fn)]
+    (let [paluuarvo (fn)]
       paluuarvo)
     (catch js/Error e
       (.log js/console (.-stack e)))))
@@ -157,57 +157,73 @@
            (e! (tiedot/->KytkePaikannusKaynnissa) (assoc-in app [:avattu-toimenpide :paikannus-kaynnissa?] true))))))
 
 (def app-tallennustestille {:urakan-materiaalit (:urakan-materiaalit '({::materiaali/urakka-id 1
-                               ::materiaali/toimenpide 2
-                               ::materiaali/muutokset [{::materiaali/maara 1000
-                                                        ::materiaali/id 4}
-                                                       {::materiaali/maara -3
-                                                        ::materiaali/id 5}
-                                                       {::materiaali/maara -3
-                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
-                                                        ::materiaali/id 13
-                                                        ::materiaali/toimenpide 2}
-                                                       {::materiaali/maara -1
-                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
-                                                        ::materiaali/id 16
-                                                        ::materiaali/toimenpide 3}]
-                               ::materiaali/nimi "Naulat"}
-                              {::materiaali/urakka-id 1
-                               ::materiaali/toimenpide 2
-                                ::materiaali/muutokset [{::materiaali/maara 500
-                                                         ::materiaali/id 8}
-                                                        {::materiaali/maara -12
-                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
-                                                         ::materiaali/id 12
-                                                         ::materiaali/toimenpide 2}]
-                                ::materiaali/nimi "Ämpäreitä"}))
+                                                                        ::materiaali/toimenpide 2
+                                                                        ::materiaali/muutokset [{::materiaali/maara 1000
+                                                                                                 ::materiaali/id 4}
+                                                                                                {::materiaali/maara -3
+                                                                                                 ::materiaali/id 5}
+                                                                                                {::materiaali/maara -3
+                                                                                                 ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                                                                 ::materiaali/id 13
+                                                                                                 ::materiaali/toimenpide 2}
+                                                                                                {::materiaali/maara -1
+                                                                                                 ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
+                                                                                                 ::materiaali/id 16
+                                                                                                 ::materiaali/toimenpide 3}]
+                                                                        ::materiaali/nimi "Naulat"
+                                                                        ::materiaali/yksikko "kpl"}
+                                                                        {::materiaali/urakka-id 1
+                                                                         ::materiaali/toimenpide 2
+                                                                         ::materiaali/muutokset [{::materiaali/maara 500
+                                                                                                  ::materiaali/id 8}
+                                                                                                 {::materiaali/maara -12
+                                                                                                  ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                                                                  ::materiaali/id 12
+                                                                                                  ::materiaali/toimenpide 2}]
+                                                                         ::materiaali/nimi "Ämpäreitä"
+                                                                         ::materiaali/yksikko "kpl"}))
                             :avattu-toimenpide {::kanavan-toimenpide/id 2
                                                 ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
                                                 ::materiaali/materiaalit (seq [{:maara 4
+                                                                                :yksikko "kpl"
                                                                                 :varaosa {::materiaali/nimi "Naulat"
                                                                                           ::materiaali/urakka-id 1
                                                                                           ::materiaali/pvm nil
-                                                                                          ::materiaali/id 13}}
+                                                                                          ::materiaali/id 13
+                                                                                          ::materiaali/yksikko "kpl"}}
                                                                                {:poistettu true
                                                                                 :maara 12
+                                                                                :yksikko "kpl"
                                                                                 :varaosa {::materiaali/nimi "Ämpäreitä"
                                                                                           ::materiaali/urakka-id 1
                                                                                           ::materiaali/pvm nil
-                                                                                          ::materiaali/id 12}}
+                                                                                          ::materiaali/id 12
+                                                                                          ::materiaali/yksikko "kpl"}}
                                                                                ])
                                                 ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
+                                                                                                :yksikko "kpl"
                                                                                                 :varaosa {::materiaali/nimi "Naulat"
                                                                                                           ::materiaali/urakka-id 1
                                                                                                           ::materiaali/pvm nil
-                                                                                                          ::materiaali/id 13}}
+                                                                                                          ::materiaali/id 13
+                                                                                                          ::materiaali/yksikko "kpl"}}
                                                                                                {:maara 12
+                                                                                                :yksikko "kpl"
                                                                                                 :varaosa {::materiaali/nimi "Ämpäreitä"
                                                                                                           ::materiaali/urakka-id 1
                                                                                                           ::materiaali/pvm nil
+                                                                                                          ::materiaali/yksikko "kpl"
                                                                                                           ::materiaali/id 12}}])}})
 
 (def tallennettava-vertailumap {::kanavan-toimenpide/materiaalipoistot '({:harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/id 12})
-                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat", :harja.domain.vesivaylat.materiaali/urakka-id 1, :harja.domain.vesivaylat.materiaali/pvm nil, :harja.domain.vesivaylat.materiaali/id 13, :harja.domain.vesivaylat.materiaali/maara -4, :harja.domain.vesivaylat.materiaali/lisatieto "Kohteen  materiaali"})
-})
+                                ::kanavan-toimenpide/materiaalikirjaukset '({:harja.domain.vesivaylat.materiaali/nimi "Naulat"
+                                                                             :harja.domain.vesivaylat.materiaali/urakka-id 1
+                                                                             :harja.domain.vesivaylat.materiaali/pvm nil
+                                                                             :harja.domain.vesivaylat.materiaali/id 13
+                                                                             :harja.domain.vesivaylat.materiaali/maara -4
+                                                                             :harja.domain.vesivaylat.materiaali/yksikko "kpl"
+                                                                             :harja.domain.vesivaylat.materiaali/lisatieto "Käytetty kohteessa: "})
+                                })
 (deftest materiaalit-vs-tallennus
   (let [app app-tallennustestille
         tyyppi :kokonaishintainen
@@ -216,68 +232,67 @@
         toimenpide (:avattu-toimenpide app)
         tallennettava-toimenpide (toimenpiteet/tallennettava-toimenpide tehtavat toimenpide (-> app :valinnat :urakka) tyyppi)]
 
-    (tarkista-map-arvot tallennettava-vertailumap tallennettava-toimenpide)
-    ))
+    (tarkista-map-arvot tallennettava-vertailumap tallennettava-toimenpide)))
 
 (deftest materiaalit-vs-AsetaLomakkeenToimenpiteenTiedot
   (let [state {:urakan-materiaalit '({::materiaali/urakka-id 1
-                               ::materiaali/toimenpide 2
-                               ::materiaali/muutokset [{::materiaali/maara 1000
-                                                        ::materiaali/id 4}
-                                                       {::materiaali/maara -3
-                                                        ::materiaali/id 5}
-                                                       {::materiaali/maara -3
-                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
-                                                        ::materiaali/id 13
-                                                        ::materiaali/toimenpide 2}
-                                                       {::materiaali/maara -1
-                                                        ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
-                                                        ::materiaali/id 16
-                                                        ::materiaali/toimenpide 3}]
-                               ::materiaali/nimi "Naulat"}
-                              {::materiaali/urakka-id 1
-                               ::materiaali/toimenpide 2
-                                ::materiaali/muutokset [{::materiaali/maara 500
-                                                         ::materiaali/id 8}
-                                                        {::materiaali/maara -12
-                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
-                                                         ::materiaali/id 12
-                                                         ::materiaali/toimenpide 2}]
-                                ::materiaali/nimi "Ämpäreitä"})}
+                                      ::materiaali/toimenpide 2
+                                      ::materiaali/muutokset [{::materiaali/maara 1000
+                                                               ::materiaali/id 4}
+                                                              {::materiaali/maara -3
+                                                               ::materiaali/id 5}
+                                                              {::materiaali/maara -3
+                                                               ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                               ::materiaali/id 13
+                                                               ::materiaali/toimenpide 2}
+                                                              {::materiaali/maara -1
+                                                               ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
+                                                               ::materiaali/id 16
+                                                               ::materiaali/toimenpide 3}]
+                                      ::materiaali/nimi "Naulat"
+                                      ::materiaali/yksikko "kpl"}
+                                      {::materiaali/urakka-id 1
+                                       ::materiaali/toimenpide 2
+                                       ::materiaali/muutokset [{::materiaali/maara 500
+                                                                ::materiaali/id 8}
+                                                               {::materiaali/maara -12
+                                                                ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
+                                                                ::materiaali/id 12
+                                                                ::materiaali/toimenpide 2}]
+                                       ::materiaali/nimi "Ämpäreitä"
+                                       ::materiaali/yksikko "kpl"})}
         kysely {::kanavan-toimenpide/id 2
                 ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)}
         vastaus {:urakan-materiaalit (:urakan-materiaalit state)
                  :avattu-toimenpide {::kanavan-toimenpide/id 2
-                                         ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
-                                         ::materiaali/materiaalit (seq [{:maara 3
-                                                                         :varaosa {::materiaali/nimi "Naulat"
-                                                                                   ::materiaali/urakka-id 1
-                                                                                   ::materiaali/pvm nil
-                                                                                   ::materiaali/id 13}}
-                                                                        {:maara 12
-                                                                         :varaosa {::materiaali/nimi "Ämpäreitä"
-                                                                                   ::materiaali/urakka-id 1
-                                                                                   ::materiaali/pvm nil
-                                                                                   ::materiaali/id 12}}])
-                                         ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
-                                                                                         :varaosa {::materiaali/nimi "Naulat"
-                                                                                                   ::materiaali/urakka-id 1
-                                                                                                   ::materiaali/pvm nil
-                                                                                                   ::materiaali/id 13}}
-                                                                                        {:maara 12
-                                                                                         :varaosa {::materiaali/nimi "Ämpäreitä"
-                                                                                                   ::materiaali/urakka-id 1
-                                                                                                   ::materiaali/pvm nil
-                                                                                                   ::materiaali/id 12}}])}}]
+                                     ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
+                                     ::materiaali/materiaalit (seq [{:maara 3
+                                                                     :yksikko "kpl"
+                                                                     :varaosa {::materiaali/nimi "Naulat"
+                                                                               ::materiaali/urakka-id 1
+                                                                               ::materiaali/pvm nil
+                                                                               ::materiaali/id 13
+                                                                               ::materiaali/yksikko "kpl"}}
+                                                                    {:maara 12
+                                                                     :yksikko "kpl"
+                                                                     :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                               ::materiaali/urakka-id 1
+                                                                               ::materiaali/pvm nil
+                                                                               ::materiaali/id 12
+                                                                               ::materiaali/yksikko "kpl"}}])
+                                     ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
+                                                                                     :yksikko "kpl"
+                                                                                     :varaosa {::materiaali/nimi "Naulat"
+                                                                                               ::materiaali/urakka-id 1
+                                                                                               ::materiaali/pvm nil
+                                                                                               ::materiaali/id 13
+                                                                                               ::materiaali/yksikko "kpl"}}
+                                                                                    {:maara 12
+                                                                                     :yksikko "kpl"
+                                                                                     :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                               ::materiaali/urakka-id 1
+                                                                                               ::materiaali/pvm nil
+                                                                                               ::materiaali/id 12
+                                                                                               ::materiaali/yksikko "kpl"}}])}}]
 
-    (tarkista-map-arvot (:avattu-toimenpide vastaus) (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot kysely) state)))
-    (let [materiaalit-ennen [{:maara 1
-                              :varaosa {::materiaali/id 12
-                                        ::materiaali/nimi "Naulat"
-                                        ::materiaali/pvm nil
-                                        ::materiaali/urakka-id 1}}]
-          materiaalit-jalkeen [{:maara 1
-                                :varaosa {::materiaali/id 12
-                                          ::materiaali/nimi "Naulat"
-                                          ::materiaali/pvm nil
-                                          ::materiaali/urakka-id 1}}]])))
+    (tarkista-map-arvot (:avattu-toimenpide vastaus) (:avattu-toimenpide (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot kysely) state)))))
