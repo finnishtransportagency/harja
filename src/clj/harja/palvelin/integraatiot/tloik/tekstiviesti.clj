@@ -28,6 +28,7 @@
        "Kuittauskoodit:\n"
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
+       "K%s = toimenpiteet käynnissä\n"
        "L%s = lopetettu\n"
        "T%s = lopetettu toimenpitein\n"
        "M%s = muutettu\n"
@@ -47,6 +48,7 @@
   (case toimenpide
     "V" "vastaanotto"
     "A" "aloitus"
+    "K" "toimenpiteet-kaynnissa"
     "L" "lopetus"
     "T" "lopetus"
     "M" "muutos"
@@ -70,7 +72,7 @@
         ;;            2. viestinumero ([0-9]+)
         ;;            3. vapaateksti (.+)
         osat (re-find #"^(.{1})([0-9]+)(.*)" viesti)
-        toimenpidelyhenne(nth osat 1)
+        toimenpidelyhenne (nth osat 1)
         toimenpide (parsi-toimenpide toimenpidelyhenne)
         viestinumero (parsi-viestinumero (nth osat 2))
         vapaateksti (.trim (nth osat 3))]
@@ -105,8 +107,11 @@
         (let [aloitus-kuittaus-id (tallenna "vastaanotto" "Vastaanotettu")]
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db aloitus-kuittaus-id)))
 
-      (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
-        (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id))
+      (if (= toimenpide "toimenpiteet-kaynnissa")
+        (when-let [id (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitusid)]
+          (ilmoitukset/tallenna-ilmoituksen-toimenpiteiden-aloitus! db id))
+        (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
+          (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)))
 
       (when aiheutti-toimenpiteita
         (ilmoitukset/ilmoitus-aiheutti-toimenpiteita! db true ilmoitus))
