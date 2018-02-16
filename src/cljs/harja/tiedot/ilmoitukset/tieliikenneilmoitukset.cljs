@@ -341,7 +341,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/TallennaToimenpiteidenAloitusMonelle
   (process-event [_ {:keys [kuittaa-monta] :as app}]
-    (println "--->>>" (:ilmoitukset kuittaa-monta))
     (let [idt (map :id (:ilmoitukset kuittaa-monta))
           tulos! (t/send-async! v/->ToimenpiteidenAloitusMonelleTallennettu)]
       (go
