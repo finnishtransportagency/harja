@@ -87,7 +87,9 @@
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
-        muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
+        muokkaamattomat-materiaali-kirjaukset (filter
+                                                #(= (::materiaalit/pvm %) (::hairiotilanne/havaintoaika hairiotilanne))
+                                                (::materiaalit/muokkaamattomat-materiaalit hairiotilanne))
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
         korjaustoimenpide (::hairiotilanne/korjaustoimenpide hairiotilanne)
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
