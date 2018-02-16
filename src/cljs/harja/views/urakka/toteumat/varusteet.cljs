@@ -176,7 +176,7 @@
       {:nimi :tietolaji
        :otsikko "Varusteen tyyppi"
        :tyyppi :valinta
-       :valinnat (vec (tierekisteri-varusteet/muokattavat-tietolajit))
+       :valinnat (sort-by second (vec (tierekisteri-varusteet/muokattavat-tietolajit)))
        :valinta-nayta second
        :valinta-arvo first
        :muokattava? (constantly muokattava?)}
