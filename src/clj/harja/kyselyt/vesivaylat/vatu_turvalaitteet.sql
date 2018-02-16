@@ -7,7 +7,7 @@ INSERT INTO vatu_turvalaite
   koordinaatit,
   sijainti,
   tyyppi,
-  tarkenne,
+  kiintea,
   tila,
   vah_pvm,
   toimintatila,
