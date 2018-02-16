@@ -175,10 +175,12 @@
     []
     ;; else
     (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
-          muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
+          muokkaamattomat-materiaali-kirjaukset (filter
+                                                  ;; Lasketaan muokkaamattoksi vain ne, joilla on
+                                                  ;; myös sama pvm kuin tallennettavalla toimenpiteellä
+                                                  #(= (::materiaalit/pvm %) (::kanavatoimenpide/pvm tp))
+                                                  (::materiaalit/muokkaamattomat-materiaalit tp))
 
-          tp-id (::kanavatoimenpide/id tp)
-          paivamaara (::kanavatoimenpide/pvm tp)
           kohteen-nimi (-> tp ::kanavatoimenpide/kohde ::kohde/nimi)
           kohteen-lisatieto (::kanavatoimenpide/lisatieto tp)
 
