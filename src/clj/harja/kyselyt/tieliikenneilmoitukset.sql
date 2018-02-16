@@ -22,6 +22,7 @@ SELECT
   ulompi_i.tr_alkuetaisyys,
   ulompi_i.tr_loppuetaisyys,
   ulompi_i."aiheutti-toimenpiteita",
+  ulompi_i."toimenpiteet-aloitettu",
   it.id                                                              AS kuittaus_id,
   it.kuitattu                                                        AS kuittaus_kuitattu,
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
