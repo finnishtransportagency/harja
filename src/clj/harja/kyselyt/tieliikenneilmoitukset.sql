@@ -574,14 +574,14 @@ SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
                            FROM ilmoitus
                            WHERE id = :id));
 
--- name: tallenna-ilmoituksen-toimenpiteiden-aloitus!
+-- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = now(),
   "aiheutti-toimenpiteita"   = TRUE
-WHERE id = :id;
+WHERE id in (:idt);
 
--- name: peruuta-ilmoituksen-toimenpiteiden-aloitus!
+-- name: peruuta-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = null,
   "aiheutti-toimenpiteita"   = false
-WHERE id = :id;
+WHERE id in (:idt);

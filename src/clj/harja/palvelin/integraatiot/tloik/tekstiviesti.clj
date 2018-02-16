@@ -109,7 +109,7 @@
 
       (if (= toimenpide "toimenpiteet-kaynnissa")
         (when-let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitusid)))]
-          (ilmoitukset/tallenna-ilmoituksen-toimenpiteiden-aloitus! db id))
+          (ilmoitukset/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db [id]))
         (let [ilmoitustoimenpide-id (tallenna toimenpide vapaateksti)]
           (ilmoitustoimenpiteet/laheta-ilmoitustoimenpide jms-lahettaja db ilmoitustoimenpide-id)))
 

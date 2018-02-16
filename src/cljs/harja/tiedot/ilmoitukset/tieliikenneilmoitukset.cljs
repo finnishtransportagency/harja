@@ -316,25 +316,46 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (process-event [_ app]
     (dissoc app :pikakuittaus))
 
+
+
   v/TallennaToimenpiteidenAloitus
   (process-event [{id :id} app]
     (let [tulos! (t/send-async! v/->ToimenpiteidenAloitusTallennettu)]
       (go
-        (tulos! (<! (k/post! :tallenna-ilmoituksen-toimenpiteiden-aloitus id))))
+        (tulos! (<! (k/post! :tallenna-ilmoituksen-toimenpiteiden-aloitus [id]))))
       (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
 
   v/PeruutaToimenpiteidenAloitus
   (process-event [{id :id} app]
     (let [tulos! (t/send-async! v/->ToimenpiteidenAloitusTallennettu)]
       (go
-        (tulos! (<! (k/post! :peruuta-ilmoituksen-toimenpiteiden-aloitus id))))
+        (tulos! (<! (k/post! :peruuta-ilmoituksen-toimenpiteiden-aloitus [id]))))
       (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
 
   v/ToimenpiteidenAloitusTallennettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden aloitus kirjattu" :success)
     ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
-    (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false)))
+    (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false))
+
+
+  v/TallennaToimenpiteidenAloitusMonelle
+  (process-event [_ {:keys [kuittaa-monta] :as app}]
+    (println "--->>>" (:ilmoitukset kuittaa-monta))
+    (let [idt (map :id (:ilmoitukset kuittaa-monta))
+          tulos! (t/send-async! v/->ToimenpiteidenAloitusMonelleTallennettu)]
+      (go
+        (tulos! (<! (k/post! :tallenna-ilmoituksen-toimenpiteiden-aloitus idt)))))
+    (assoc-in app [:kuittaa-monta :tallennus-kaynnissa?] true))
+
+  v/ToimenpiteidenAloitusMonelleTallennettu
+  (process-event [{v :vastaus} app]
+    (when v
+      (viesti/nayta! "Toimenpiteiden aloitukset tallennettu." :success))
+    (hae
+      (assoc app
+        :kuittaa-monta nil
+        :pikakuittaus nil))))
 
 (defonce karttataso-ilmoitukset (atom false))
 

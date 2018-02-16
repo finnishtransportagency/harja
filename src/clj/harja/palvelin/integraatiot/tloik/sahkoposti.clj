@@ -176,6 +176,6 @@ kuittauksen lähettäjälle."
     (if (:ilmoitus-id v)
       (if (= (:kuittaustyyppi v) :toimenpiteet-aloitettu)
         (when-let [id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db (:ilmoitus-id v))))]
-          (ilmoitukset/tallenna-ilmoituksen-toimenpiteiden-aloitus! db id))
+          (ilmoitukset/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db [id]))
         (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
       +virheellinen-toimenpide-viesti+)))
