@@ -26,7 +26,7 @@ VALUES
   (
     :turvalaitenro,
     :nimi,
-    :geometria, --tallennetaan koordinaattipiste tekstinä
+    :geometria ::geometry,
     :sijainti,
     :tyyppi,
     :tarkenne,
@@ -49,7 +49,7 @@ ON CONFLICT (turvalaitenro)
     SET
       turvalaitenro        = :turvalaitenro,
       nimi                 = :nimi,
-      koordinaatit         = :geometria,
+      koordinaatit         = :geometria ::geometry,
       sijainti             = :sijainti,
       tyyppi               = :tyyppi,
       tarkenne             = :tarkenne,
