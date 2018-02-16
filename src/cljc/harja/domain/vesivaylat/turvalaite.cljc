@@ -10,12 +10,6 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-;; turvalaitetauluja on 3:
-;; - reimari_turvalaite - reimarista tuleva tieto turvalaitteiden urakka-alueista
-;; - vv_turvalaite (= alk/ava-tiedot ) - ei enää käytössä, entinen turvalaitedata
-;; - vatu_turvalaite - varsinainen turvalaitedata
-;;
-
 (define-tables
   ["reimari_turvalaite" ::reimari-turvalaite
    {"nro" ::r-nro
@@ -26,28 +20,13 @@
    ;; harja.domain.muokkaustiedot/poistettu?-sarake
    ])
 
-;; todo: poistuvat sarakkeee vv_turvalaite -> vatu_turvalaite -muutoksen myötä
-;; id
-;; arvot (json)
-;; kiintea
-;;   - tarkenne-kentässä on arvot KIINTEA tai KELLUVA, josta tämä voidaan johtaa
-;; poistettu
-
-;; (def perustiedot
-;;   #{::turvalaitenro
-;;     ::nimi
-;;     ::tyyppi
-;;     ::kiintea
-;;     ::vaylat})
-
-
 (def perustiedot
   #{::turvalaitenro
     ::nimi
     ::koordinaatit
     ::sijainti
     ::tyyppi
-    ::tarkenne
+    ::kiintea
     ::tila
     ::vah_pvm
     ::toimintatila
