@@ -291,30 +291,21 @@
              (= (:koodi vastaus) :vkm-muunnos-epaonnistui-osittain))
         (modal/nayta!
           {:otsikko "Kaikkia kohteita ei voitu käsitellä"
-           :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                            (.preventDefault e)
-                                                            (modal/piilota!))}
-                    "Sulje"]}
+           :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
           {:otsikko "Kaikkia kohteita ei voitu käsitellä"
-           :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                            (.preventDefault e)
-                                                            (modal/piilota!))}
-                    "Sulje"]}
+           :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :vkm-muunnos-ja-kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
           {:otsikko "Kaikkia kohteita ei voitu käsitellä"
-           :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                            (.preventDefault e)
-                                                            (modal/piilota!))}
-                    "Sulje"]}
+           :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)
                                         :epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
 

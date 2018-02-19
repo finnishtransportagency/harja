@@ -23,7 +23,8 @@
             [harja.domain.toimenpidekoodi :as tpk]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.domain.roolit :as roolit])
+            [harja.domain.roolit :as roolit]
+            [harja.domain.vesivaylat.materiaali :as materiaali])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -106,42 +107,16 @@
    [:div.rivinlisays
     [napit/uusi otsikko toiminto optiot]]))
 
-(defn- sopimushintaiset-tyot-header
-  ([] (sopimushintaiset-tyot-header {:yk-lisa? true}))
-  ([{:keys [yk-lisa?] :as optiot}]
-   [:thead
-    [:tr
-     [:th {:style {:width "40%"}} "Työ"]
-     [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
-     [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
-     [:th {:style {:width "5%"}} "Yks."]
-     [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
-     [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
-     [:th {:style {:width "5%"}} ""]]]))
-
-(defn- muu-hinnoittelu-header
-  ([] (muu-hinnoittelu-header {:otsikot? false}))
-  ([{:keys [otsikot?] :as optiot}]
-   [:thead
-    [:tr
-     [:th {:style {:width "40%"}} (when otsikot? "Työ")]
-     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
-     [:th.tasaa-oikealle {:style {:width "15%"}} ""]
-     [:th {:style {:width "5%"}} ""]
-     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "Yhteensä")]
-     [:th.tasaa-oikealle {:style {:width "10%"}} (when otsikot? "YK-lisä")]
-     [:th {:style {:width "5%"}} ""]]]))
-
-(defn- materiaalit-header
-  []
+(defn- hinnoittelu-header
+  [{:keys [otsikko yk-lisa? yhteensa-otsikko? hinnoittelu-otsikot?] :as optiot}]
   [:thead
    [:tr
-    [:th {:style {:width "40%"}} "Materiaali"]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Yks. hinta"]
-    [:th.tasaa-oikealle {:style {:width "15%"}} "Määrä"]
-    [:th {:style {:width "5%"}}]
-    [:th.tasaa-oikealle {:style {:width "10%"}} "Yhteensä"]
-    [:th.tasaa-oikealle {:style {:width "10%"}}]
+    [:th {:style {:width "40%"}} (when otsikko otsikko)]
+    [:th.tasaa-oikealle {:style {:width "15%"}} (when hinnoittelu-otsikot? "Yks. hinta")]
+    [:th.tasaa-oikealle {:style {:width "15%"}} (when hinnoittelu-otsikot? "Määrä")]
+    [:th {:style {:width "5%"}} (when hinnoittelu-otsikot? "Yks.")]
+    [:th.tasaa-oikealle {:style {:width "10%"}} (when yhteensa-otsikko? "Yhteensä")]
+    [:th.tasaa-oikealle {:style {:width "10%"}} (when yk-lisa? "YK-lisä")]
     [:th {:style {:width "5%"}} ""]]])
 
 (declare suunnitellut-tyot-paivamaaralle)
@@ -156,7 +131,7 @@
     [:div
      [valiotsikko ""]
      [:table
-      [muu-hinnoittelu-header {:otsikot? false}]
+      [hinnoittelu-header]
       [:tbody
        [toimenpiteen-hinnoittelutaulukko-yhteenvetorivi
         "Hinnat yhteensä" (fmt/euro-opt (+ hinnat-yhteensa tyot-yhteensa))]
@@ -184,7 +159,7 @@
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Sopimushintaiset tyot ja materiaalit"]
      [:table
-      [sopimushintaiset-tyot-header {:yk-lisa? false}]
+      [hinnoittelu-header {:otsikko "Työ" :yk-lisa? false :yhteensa-otsikko? true :hinnoittelu-otsikot? true}]
       [:tbody
        (map-indexed
          (fn [index tyorivi]
@@ -243,7 +218,7 @@
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
      [valiotsikko "Muut työt (ei indeksilaskentaa)"]
      [:table
-      [sopimushintaiset-tyot-header]
+      [hinnoittelu-header {:otsikko "Työ" :yk-lisa? true :yhteensa-otsikko? true :hinnoittelu-otsikot? true}]
       [:tbody
        (for* [muu-tyo muut-tyot]
          [muu-tyo-hinnoittelurivi e! muu-tyo])]]
@@ -265,7 +240,10 @@
                          (::hinta/maara materiaali-hinta)
                          [kentta-hinnalle e! materiaali-hinta ::hinta/maara
                           {:tyyppi :positiivinen-numero}])]
-   [:td ""]
+   [:td (if (tiedot/kaytto-merkattu-toimenpiteelle? materiaali-hinta materiaalit)
+          (::hinta/yksikko materiaali-hinta)
+          [kentta-hinnalle e! materiaali-hinta ::hinta/yksikko
+           {:tyyppi :string}])]
    [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen materiaali-hinta))]
    [:td.keskita [yleiskustannuslisakentta e! materiaali-hinta]]
    [:td.keskita
@@ -278,7 +256,7 @@
     [:div.hinnoitteluosio
      [valiotsikko "Varaosat ja materiaalit"]
      [:table
-      [materiaalit-header]
+      [hinnoittelu-header {:otsikko "Materiaali" :yk-lisa? true :yhteensa-otsikko? true :hinnoittelu-otsikot? true}]
       [:tbody
        (for* [materiaali-hinta materiaali-hinnat]
          [materiaali-hinnoittelurivi e! materiaali-hinta (:urakan-materiaalit app*)])]]
@@ -292,7 +270,7 @@
     [:div.hinnoitteluosio.muut-osio
      [valiotsikko "Muut"]
      [:table
-      [muu-hinnoittelu-header]
+      [hinnoittelu-header]
       [:tbody
        (map-indexed
          (fn [index hinta]
@@ -417,15 +395,15 @@
        :ikoni (ikonit/livicon-pen)}]
 
      [napit/tallenna
-     "Valmis"
-     #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
-     {:luokka "btn-xs"
-      :disabled (or
-                  (not (tiedot/hinnoittelun-voi-tallentaa? app*))
-                  (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
-                  (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
-                                                oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                (:id @nav/valittu-urakka))))}])])
+      "Valmis"
+      #(e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*)))
+      {:luokka "btn-xs"
+       :disabled (or
+                   (not (tiedot/hinnoittelun-voi-tallentaa? app*))
+                   (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                   (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                 (:id @nav/valittu-urakka))))}])])
 
 (defn tilaajan-footer-napit [e! app* tila]
   [:footer.vv-toimenpiteen-hinnoittelu-footer

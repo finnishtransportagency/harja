@@ -132,7 +132,7 @@ UNION
 SELECT ty.yllapitokohde
 FROM tarkastus_yllapitokohde ty
   JOIN tarkastus t ON ty.tarkastus = t.id
-WHERE ty.yllapitokohde IN (:idt) AND t.poistettu IS NOT TRUE
+WHERE ty.yllapitokohde IN (:idt) AND t.poistettu IS NOT TRUE;
 
 -- name: yllapitokohde-sisaltaa-kirjauksia-urakassa
 SELECT ((EXISTS(SELECT *
@@ -203,6 +203,7 @@ SELECT
   ypk.yha_kohdenumero                   AS "yha-kohdenumero",
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
+  ypk.vuodet,
   ypka.kohde_alku                       AS "kohde-alkupvm",
   ypka.paallystys_alku                  AS "paallystys-alkupvm",
   ypka.paallystys_loppu                 AS "paallystys-loppupvm",
@@ -918,3 +919,19 @@ SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 
 -- name: luo-yllapitokohteelle-tyhja-aikataulu<!
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
+
+-- name: hae-yhden-vuoden-yha-kohteet
+SELECT
+  ypk.id,
+  u.nimi           AS "urakka",
+  ypk.nimi,
+  kohdenumero,
+  tr_numero        AS "tr-numero",
+  tr_alkuosa       AS "tr-alkuosa",
+  tr_alkuetaisyys  AS "tr-alkuetaisyys",
+  tr_loppuosa      AS "tr-loppuosa",
+  tr_loppuetaisyys AS "tr-loppuetaisyys"
+FROM yllapitokohde ypk
+  LEFT JOIN urakka u ON ypk.urakka = u.id
+WHERE vuodet @> ARRAY [:vuosi] :: INT []
+      AND yhaid IS NOT NULL;

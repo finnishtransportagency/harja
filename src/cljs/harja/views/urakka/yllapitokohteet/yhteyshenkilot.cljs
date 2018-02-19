@@ -10,7 +10,8 @@
             [harja.domain.urakka :as u]
             [harja.ui.viesti :as viesti]
             [harja.domain.roolit :as roolit]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.napit :as napit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction-writable]]))
@@ -55,9 +56,5 @@
     {:otsikko (str "Kohteen "
                    (str/lower-case (u/urakkatyyppi->otsikko urakkatyyppi))
                    "urakan yhteyshenkilöt")
-     :footer [:span
-              [:button.nappi-toissijainen {:type "button"
-                                           :on-click #(do (.preventDefault %)
-                                                          (modal/piilota!))}
-               "Sulje"]]}
+     :footer [napit/sulje #(modal/piilota!)]}
     [yhteyshenkilot-view yhteyshenkilot]))

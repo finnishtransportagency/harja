@@ -25,7 +25,9 @@
 
 
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder
-                         voi-liittaa leveys-col liita-nappi-teksti]} kommentit]
+                         voi-liittaa? leveys-col liita-nappi-teksti
+                         salli-poistaa-tallennettu-liite? poista-tallennettu-liite-fn
+                         salli-poistaa-lisatty-liite?]} kommentit]
   [:div.kommentit
    (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}
@@ -34,7 +36,9 @@
       [:span.kommentin-aika (pvm/pvm-aika aika)]
       [:div.kommentin-teksti kommentti]
       (when liite
-        [liitteet/liitetiedosto liite])])
+        [liitteet/liitetiedosto liite
+         {:salli-poisto? salli-poistaa-tallennettu-liite?
+          :poista-liite-fn poista-tallennettu-liite-fn}])])
    (when voi-kommentoida?
      [:div.uusi-kommentti
       [:div.uusi-kommentti-teksti
@@ -47,7 +51,9 @@
          {:on-click #(kommentoi! @uusi-kommentti)
           :disabled (str/blank? (:kommentti @uusi-kommentti))}
          "Tallenna kommentti"])
-      (when voi-liittaa [liitteet/lisaa-liite
-                         (:id @nav/valittu-urakka)
-                         {:liite-ladattu #(swap! uusi-kommentti assoc :liite %)
-                          :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")}])])])
+      (when voi-liittaa? [liitteet/lisaa-liite
+                          (:id @nav/valittu-urakka)
+                          {:liite-ladattu #(swap! uusi-kommentti assoc :liite %)
+                           :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")
+                           :salli-poistaa-lisatty-liite? salli-poistaa-lisatty-liite?
+                           :poista-lisatty-liite-fn #(swap! uusi-kommentti dissoc :liite %)}])])])

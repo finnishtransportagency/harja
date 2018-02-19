@@ -116,13 +116,9 @@
       Urakan sopimus pitää perustaa Sampoon.")]])))
 
 (defn nayta-tuontidialogi [urakka]
-  (log "NÄYTÄ DIALOGI: " (pr-str urakka))
   (modal/nayta!
     {:otsikko "Urakan sitominen YHA-urakkaan"
      :luokka "yha-tuonti"
-     :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                      (.preventDefault e)
-                                                      (modal/piilota!))}
-              "Sulje"]
+     :footer [napit/sulje #(modal/piilota!)]
      :sulje #(reset! yha/hakutulokset-data [])}
     [tuontidialogi urakka {:sitomaton-urakka? (nil? (:yhatiedot urakka))}]))
