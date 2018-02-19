@@ -414,9 +414,9 @@
 (defn jarjesta-valilehdet [valilehdet]
   (into [] (sort-by :jarjestys valilehdet)))
 
-(defn- kayttajaroolin-valilehdet-paallystys [valilehdet oikeus-paallystysurakkaan?]
+(defn- kayttajaroolin-valilehdet-paallystys [valilehdet oikeus-vain-paallystysurakoihin?]
   ;; Päällystyshenkilöille siirretään päällystystystä koskevat välilehdet kärkeen.
-  (if oikeus-paallystysurakkaan?
+  (if oikeus-vain-paallystysurakoihin?
     (let [muokatut-valilehdet (mapv #(cond
                                        (= (:avain %) :paallystyksen-tyovirheluettelo)
                                        (assoc % :jarjestys -10)
@@ -427,6 +427,7 @@
                                        :default %)
                                     valilehdet)]
       (jarjesta-valilehdet muokatut-valilehdet))
+
     valilehdet))
 
 (defn kayttajaroolin-mukaiset-valilehdet
@@ -442,7 +443,7 @@
         urakoitsija? (= (get-in kayttajatiedot [:organisaatio :tyyppi]) :urakoitsija)]
 
     (-> oletusvalilehdet
-        (kayttajaroolin-valilehdet-paallystys oikeus-paallystysurakkaan?))))
+        (kayttajaroolin-valilehdet-paallystys oikeus-vain-paallystysurakoihin?))))
 
 (def oletusvalilehdet
   [{:avain :talvihoito
