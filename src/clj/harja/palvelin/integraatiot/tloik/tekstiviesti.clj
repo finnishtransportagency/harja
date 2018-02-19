@@ -174,6 +174,7 @@
               viestinumero
               viestinumero
               viestinumero
+              viestinumero
               viestinumero))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
