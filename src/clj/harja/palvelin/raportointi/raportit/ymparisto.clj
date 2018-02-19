@@ -28,7 +28,10 @@
 (defn hae-raportti* [db hakuasetukset]
   (let [urakoittain? (:urakoittain? hakuasetukset)
         rivit (hae-raportin-tiedot db hakuasetukset)
-        materiaali-rivit (hae-materiaalit db)
+        materiaali-rivit (cons {:nimi "Kaikki talvisuola yhteensä"
+                                :yksikko "t"}
+                               (hae-materiaalit db))
+        _ (println " materiaali-rivit " materiaali-rivit)
         urakat (into #{} (map :urakka rivit))
         materiaali-avaimet (if urakoittain?
                              [:materiaali :urakka]
@@ -64,6 +67,21 @@
                      :hallintayksikko hallintayksikko-id
                      :urakoittain? urakoittain?}))
 
+(defn- materiaalin-nimi [nimi]
+  (if-not (= "Talvisuola" nimi)
+    nimi
+    ;; Osa käyttäjistä on sekoittanut Talvisuola nimen tarkoittavan kaikkea käytettyä
+    ;; talvisuolaa. Tehdään siihen ero kertomalla että tämä on rakeista NaCl:ia
+    "Talvisuola, NaCl"))
+
+
+
+(defn- materiaalien-jarjestys-ymparistoraportilla
+  [materiaalinimi]
+  (if (= "Kaikki talvisuola yhteensä" materiaalinimi)
+    7.5
+    (materiaalidomain/materiaalien-jarjestys materiaalinimi)))
+
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
                                urakoittain? urakkatyyppi] :as parametrit}]
@@ -85,9 +103,11 @@
                                                     db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        materiaalit (sort-by #(materiaalidomain/materiaalien-jarjestys
-                               (get-in (first %) [:materiaali :nimi]))
+        _ (println "materiaalit ennen jarjestystä" materiaalit)
+        materiaalit (sort-by #(materiaalien-jarjestys-ymparistoraportilla
+                                (get-in (first %) [:materiaali :nimi]))
                              materiaalit)
+        _ (println "materiaalit " materiaalit)
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
         talvisuolan-maxmaaratieto (when (= :urakka konteksti)
                                     (:talvisuolaraja (first (suolasakko-q/hae-urakan-suolasakot db {:urakka urakka-id}))))
@@ -149,6 +169,7 @@
                luokitellut (filter :luokka rivit)
                materiaalirivit (remove #(nil? (:kk %)) rivit)
                kk-rivit (group-by :kk (filter (comp not :luokka) materiaalirivit))
+               _ (println "kk rivit " kk-rivit)
                kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
                                      (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + (keep :maara rivit))
                                                                            :yksikko (:yksikko materiaali)
@@ -161,9 +182,17 @@
                                      [:arvo-ja-yksikko {:arvo yht
                                                         :yksikko (:yksikko materiaali)
                                                         :desimaalien-maara 3}])))]
-           ;(log/info "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
+           (println "materiaalin" (:nimi materiaali)  "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
-            ;; Normaali materiaalikohtainen rivi
+             ;; Talvisuolat-väliotsikko
+             (when (= "Talvisuola" (:nimi materiaali))
+                      [{:otsikko "Talvisuolat"}])
+
+             ;; Muut materiaalit -väliotsikko, pakko käyttää nimeä, perustuu järjestykseen domain.materiaali:ssa
+             (when (= "Kaliumformiaatti" (:nimi materiaali))
+               [{:otsikko "Muut materiaalit"}])
+             
+             ;; Normaali materiaalikohtainen rivi
             [{:lihavoi? true
               :rivi (into []
                           (concat
@@ -173,7 +202,7 @@
                               [(:nimi urakka)])
 
                             ;; Materiaalin nimi
-                            [(:nimi materiaali)]
+                            [(materiaalin-nimi (:nimi materiaali))]
 
                             ;; Kuukausittaiset määrät
                             (map kk-arvot kuukaudet)
@@ -210,3 +239,4 @@
        materiaalit)]
      (when-not (empty? materiaalit)
        [:teksti "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta."])]))
+
