@@ -294,9 +294,9 @@
          todennettavat false} (group-by #(or (:ei-todennettava %) false) kasittelijat)]
     [todennettavat ei-todennettavat]))
 
-(defn kasiteltava-kutsu [kehitysmoodi kutsu]
+(defn kasiteltava-kutsu [salli-oletuskayttaja? kutsu]
   ;; Jos kehitysmoodi on käytössä ja kutsussa ei ole käyttäjätietoja, käytetään oletus käyttöoikeuksia
-  (if (and kehitysmoodi (empty? (get (:headers kutsu) "oam_remote_user")))
+  (if (and salli-oletuskayttaja? (empty? (get (:headers kutsu) "oam_remote_user")))
     (assoc kutsu :headers (conj (:headers kutsu) {"oam_remote_user" "oletus-kaytto-oikeudet"}))
     kutsu))
 
@@ -318,7 +318,7 @@
                (http/run-server
                  (cookies/wrap-cookies
                    (fn [req]
-                     (let [req (kasiteltava-kutsu kehitysmoodi req)]
+                     (let [req (kasiteltava-kutsu (:salli-oletuskayttaja? asetukset) req)]
                        (try+
                          (metriikka/inc! mittarit :aktiiviset_pyynnot)
                          (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)

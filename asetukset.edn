@@ -5,7 +5,8 @@
                   {:kayttajanimi "yit_uuvh" :kuvaus "YIT:n urakan vastuuhenkilö"}]
 
  :http-palvelin {:threads 16
-                 :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")}
+                 :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
+                 :salli-oletuskayttaja? true}
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
               :portti 5432
