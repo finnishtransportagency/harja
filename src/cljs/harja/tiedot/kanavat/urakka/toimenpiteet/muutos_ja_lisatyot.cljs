@@ -163,7 +163,8 @@
            (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
                     {:nimi (::materiaalit/nimi materiaali)
                      :maara (- (::materiaalit/maara %))
-                     :materiaali-id (::materiaalit/id %)})
+                     :materiaali-id (::materiaalit/id %)
+                     :yksikko (::materiaalit/yksikko materiaali)})
                  (::materiaalit/muutokset materiaali)))
          materiaalit)))
 
@@ -294,12 +295,13 @@
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
 
 (defn materiaali->hinta
-  [{:keys [nimi maara materiaali-id]}]
+  [{:keys [nimi maara materiaali-id yksikko]}]
   {::hinta/otsikko nimi
    ::hinta/ryhma "materiaali"
    ::hinta/maara maara
    ::hinta/yksikkohinta 0
-   ::hinta/materiaali-id materiaali-id})
+   ::hinta/materiaali-id materiaali-id
+   ::hinta/yksikko yksikko})
 
 (extend-protocol tuck/Event
   Nakymassa?
