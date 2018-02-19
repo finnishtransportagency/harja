@@ -176,6 +176,14 @@ oikein eikä harja räsähdä.
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
 
+#### Cypress
+Vanhojen Selenium-testien rinnalle ollaan ottamassa käyttöön Cypressiä (https://www.cypress.io/). Testit sijaitsevat kansiossa ./cypress/integration. 
+
+Cypressin voit asentaa omalle koneelle NPM:llä: npm install cypress --save-dev.
+
+Cypressin voi käynnistää ajamalla scriptin sh shell-scripts/avaa-cypress.sh. 
+
+
 ## Tietokanta
 
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harja-repositorion kansiossa tietokanta
