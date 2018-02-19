@@ -80,7 +80,8 @@
                                                         ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Soskua"
                                                         ::materiaali/id 16
                                                         ::materiaali/hairiotilanne 3}]
-                               ::materiaali/nimi "Naulat"}
+                               ::materiaali/nimi "Naulat"
+                               ::materiaali/yksikko "kpl"}
                                {::materiaali/urakka-id 1
                                 ::materiaali/muutokset [{::materiaali/maara 500
                                                          ::materiaali/id 8}
@@ -88,32 +89,41 @@
                                                          ::materiaali/lisatieto "Käytetty häiriötilanteessa 10.12.2017 kohteessa Pälli"
                                                          ::materiaali/id 12
                                                          ::materiaali/hairiotilanne 2}]
-                                ::materiaali/nimi "Ämpäreitä"})}
+                                ::materiaali/nimi "Ämpäreitä"
+                                ::materiaali/yksikko "kpl"})}
         kysely {::hairiotilanne/id 2
                 ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 10)}
         vastaus {:materiaalit (:materiaalit state)
                  :valittu-hairiotilanne {::hairiotilanne/id 2
                                          ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 10)
                                          ::materiaali/materiaalit (seq [{:maara 3
+                                                                         :yksikko "kpl"
                                                                          :varaosa {::materiaali/nimi "Naulat"
                                                                                    ::materiaali/urakka-id 1
                                                                                    ::materiaali/pvm nil
-                                                                                   ::materiaali/id 13}}
+                                                                                   ::materiaali/id 13
+                                                                                   ::materiaali/yksikko "kpl"}}
                                                                         {:maara 12
+                                                                         :yksikko "kpl"
                                                                          :varaosa {::materiaali/nimi "Ämpäreitä"
                                                                                    ::materiaali/urakka-id 1
                                                                                    ::materiaali/pvm nil
-                                                                                   ::materiaali/id 12}}])
+                                                                                   ::materiaali/id 12
+                                                                                   ::materiaali/yksikko "kpl"}}])
                                          ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
+                                                                                         :yksikko "kpl"
                                                                                          :varaosa {::materiaali/nimi "Naulat"
                                                                                                    ::materiaali/urakka-id 1
                                                                                                    ::materiaali/pvm nil
-                                                                                                   ::materiaali/id 13}}
+                                                                                                   ::materiaali/id 13
+                                                                                                   ::materiaali/yksikko "kpl"}}
                                                                                         {:maara 12
+                                                                                         :yksikko "kpl"
                                                                                          :varaosa {::materiaali/nimi "Ämpäreitä"
                                                                                                    ::materiaali/urakka-id 1
                                                                                                    ::materiaali/pvm nil
-                                                                                                   ::materiaali/id 12}}])}}]
+                                                                                                   ::materiaali/id 12
+                                                                                                   ::materiaali/yksikko "kpl"}}])}}]
 
     (is (= (:valittu-hairiotilanne vastaus) (:valittu-hairiotilanne (e! (tiedot/->ValitseHairiotilanne kysely) state))))))
 
