@@ -94,40 +94,43 @@
                     (virheen-ohje kentan-virheet))
 
                   (cond
-                    ;; Disabloidun muokkauskentän sisältö määritellään erikseen.
-                    ;; Jos ei määritelty, ei muokkauskenttää piirretä disabloidulle riville
+                    ;; Mikäli rivi on disabloitu, piirretään erikseen määritelty sisältö, jos se on annettu
                     (and rivi-disabloitu? (:sisalto-kun-rivi-disabloitu sarake))
                     ((:sisalto-kun-rivi-disabloitu sarake) rivi i)
 
-                    (and (not rivi-disabloitu?) (= tyyppi :komponentti))
-                    (komponentti rivi {:index i
-                                       :muokataan? true})
+                    ;; Rivi disabloitu, eikä ole erikseen määritelty sisältöä tai sallittu muokkausta -> ei piirretä mitään
+                    (and rivi-disabloitu? (not (:salli-muokkaus-rivin-ollessa-disabloituna? sarake)))
+                    nil
 
-                    (and (not rivi-disabloitu?) (not= tyyppi :komponentti))
-                    (if voi-muokata?
-                      [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+                    ;; Rivi ei ole disabloitu
+                    :default
+                    (if (= tyyppi :komponentti)
+                      (komponentti rivi {:index i
+                                         :muokataan? true})
+                      (if voi-muokata?
+                       [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
-                       (when tayta-alas
-                         (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
-                                                         :fokus-id fokus-id
-                                                         :arvo arvo :tayta-alas tayta-alas
-                                                         :rivi-index rivi-index
-                                                         :tulevat-rivit tulevat-rivit
-                                                         :hae hae
-                                                         :sarake sarake :ohjaus ohjaus :rivi rivi}))
+                        (when tayta-alas
+                          (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
+                                                          :fokus-id fokus-id
+                                                          :arvo arvo :tayta-alas tayta-alas
+                                                          :rivi-index rivi-index
+                                                          :tulevat-rivit tulevat-rivit
+                                                          :hae hae
+                                                          :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
-                       [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
-                        (r/wrap
-                          arvo
-                          (fn [uusi]
-                            (if aseta
-                              (muokkaa! muokatut-atom virheet skeema
-                                        id (fn [rivi]
-                                             (aseta rivi uusi)))
-                              (muokkaa! muokatut-atom virheet skeema
-                                        id assoc nimi uusi))))]]
-                      [nayta-arvo (assoc sarake :index i :muokataan? false)
-                       (vain-luku-atomina arvo)]))]
+                        [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
+                         (r/wrap
+                           arvo
+                           (fn [uusi]
+                             (if aseta
+                               (muokkaa! muokatut-atom virheet skeema
+                                         id (fn [rivi]
+                                              (aseta rivi uusi)))
+                               (muokkaa! muokatut-atom virheet skeema
+                                         id assoc nimi uusi))))]]
+                       [nayta-arvo (assoc sarake :index i :muokataan? false)
+                        (vain-luku-atomina arvo)])))]
 
                  ^{:key (str j nimi)}
                  [:td {:class (str "ei-muokattava " tasaus-luokka)}

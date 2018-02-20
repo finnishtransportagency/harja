@@ -139,24 +139,28 @@
             :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
                             alkuosa-ei-lopun-jalkeen]
                            (:validoi aosa))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aosa)
             :muokattava? (or (:muokattava? aosa) (constantly true))}
            {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
                             alkuetaisyys-ei-lopun-jalkeen]
                            (:validoi aet))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aet)
             :muokattava? (or (:muokattava? aet) (constantly true))}
            {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
                             loppuosa-ei-alkua-ennen]
                            (:validoi losa))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? losa)
             :muokattava? (or (:muokattava? losa) (constantly true))}
            {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
                             loppuetaisyys-ei-alkua-ennen]
                            (:validoi let))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? let)
             :muokattava? (or (:muokattava? let) (constantly true))}
            (merge
              {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
@@ -348,16 +352,20 @@
                                 {:nimi :tr-kaista :muokattava? (constantly false)}
                                 {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
                                                                   (pos? rivi))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
                                                                        (pos? rivi))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)
                                            (partial validoi-alkuetaisyys-kohteen-sisalla kohde)]}
                                 {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
                                                                    (< rivi (dec kohdeosia)))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
                                                                         (< rivi (dec kohdeosia)))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
                                            (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
                                 {:hae (partial tr/laske-tien-pituus osan-pituus)}])
