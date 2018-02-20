@@ -23,6 +23,7 @@ Suoritettava toimenpide kirjataan seuraaviin kenttiin:\n
 - tyomenetelma\n
 - massamaara\n
 - toimenpide (sanallinen selitys).';
+COMMENT ON COLUMN yllapitokohdeosa.hyppy IS 'Mikäli true, niin tämä kohdeosa kuvaa pätkää, jolle ei tehdä mitään.'
 
 COMMENT ON TABLE yllapitokohteen_aikataulu IS
 E'Sisältää ylläpitokohteen aikataulutiedot kohteen aloituksesta ja lopetuksesta ensisijaisen urakan näkökulmasta. Lisäksi päällystykselle ja tiemerkinnälle on omat aloitus- ja lopetusaikataulut.
