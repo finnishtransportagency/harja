@@ -51,6 +51,9 @@ jobs:
       - image: solita/napote-circleci:latest
       - image: solita/harjadb:latest
 
+    environment:
+       TZ: "/usr/share/zoneinfo/America/Helsinki"
+
     steps:
       - checkout
 
@@ -61,13 +64,13 @@ jobs:
           name: Run migrations, setup test database and import test data
           command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
-      - run:
-          name: Set timezone
-          command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
+      #- run:
+      #    name: Set timezone
+      #    command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
 
-      - run:
-          name: Set timezone (again)
-          command: sudo dpkg-reconfigure --frontend noninteractive tzdata
+      #- run:
+      #    name: Set timezone (again)
+      #    command: sudo dpkg-reconfigure --frontend noninteractive tzdata
 
       - run:
           name: Run unit tests (without performance tests)
