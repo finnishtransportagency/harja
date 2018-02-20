@@ -72,12 +72,6 @@
       :rivi-valittu-fn rivi-valittu-fn
       :leveys 5})])
 
-(defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
-  (str toimenpiteiden-lkm " "
-       (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
-       " " toiminto "."))
-
-
 (defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]
   (when urakan-materiaalit
     (let [voi-muokata? true
