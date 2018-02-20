@@ -50,7 +50,7 @@ jobs:
       - image: solita/harjadb:latest
 
     steps:
-     - checkout
+      - checkout
 
       - attach_workspace:
           at: /tmp/harja
