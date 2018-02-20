@@ -19,7 +19,8 @@
             [harja.ui.lomake :as lomake]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.views.vesivaylat.urakka.materiaalit :as materiaali-view]))
 
 (defn valittu-tehtava [toimenpide]
   (or (::kanavan-toimenpide/toimenpidekoodi-id toimenpide)
@@ -101,19 +102,24 @@
         :virheet virhe-atom
         :piilota-toiminnot? false
         :tyhja "Ei varaosia"
-        :otsikko "Varaosat"}
+        :otsikko "Varaosat"
+        :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
        [{:otsikko "Varaosa"
          :nimi :varaosa
          :validoi [[:ei-tyhja "Tieto puuttuu"]]
          :tyyppi :valinta
          :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
          :valinnat urakan-materiaalit
-         :leveys 1}
+         :leveys 3}
         {:otsikko "Käytetty määrä"
          :nimi :maara
          :validoi [[:ei-tyhja "Tieto puuttuu"]]
          :tyyppi :positiivinen-numero
          :kokonaisluku? true
+         :leveys 3}
+        {:otsikko "Yksikkö"
+         :nimi :yksikko
+         :muokattava? (constantly false)
          :leveys 1}]
        muokatut-atom])))
 

@@ -62,7 +62,7 @@
           tulos (into [] yhteiset/laatupoikkeama-xf uniikit)]
       tulos)))
 
-(defn- vaadi-laatupoikkeama-kuuluu-urakkaan
+(defn vaadi-laatupoikkeama-kuuluu-urakkaan
   "Tarkistaa, että laatupoikkeama kuuluu annettuun urakkaan"
   [db urakka-id laatupoikkeama-id]
   (when (id-olemassa? laatupoikkeama-id)

@@ -13,7 +13,8 @@
             [harja.atom :refer-macros [reaction<!]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.napit :as napit])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -31,11 +32,7 @@
   [o]
   (modal/nayta! {:otsikko (:nimi o)
                  :luokka "yhteystieto"
-                 :footer [:span
-                          [:button.nappi-toissijainen {:type "button"
-                                                       :on-click #(do (.preventDefault %)
-                                                                      (modal/piilota!))}
-                           "Sulje"]]}
+                 :footer [napit/sulje #(modal/piilota!)]}
                 [:div.kayttajan-tiedot
                  [tietoja {}
                   "Org. tyyppi:" (name (:tyyppi o))
@@ -101,11 +98,7 @@
   [k]
   (modal/nayta! {:otsikko (str (:etunimi k) " " (:sukunimi k))
                  :luokka "yhteystieto"
-                 :footer [:span
-                          [:button.nappi-toissijainen {:type "button"
-                                                       :on-click #(do (.preventDefault %)
-                                                                      (modal/piilota!))}
-                           "Sulje"]]}
+                 :footer [napit/sulje #(modal/piilota!)]}
 
                 (kayttajan-tiedot k)))
 
