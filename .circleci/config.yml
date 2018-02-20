@@ -69,7 +69,6 @@ jobs:
     docker:
       - image: solita/napote-circleci:latest
       - image: solita/harjadb:latest
-      - image: wernight/phantomjs
 
     environment:
         QT_QPA_PLATFORM: offscreen
@@ -80,9 +79,9 @@ jobs:
       #- restore_cache:
       #      key: phantomjs
 
-      #- run:
-      #    name: Install PhantomJS
-      #    command: sudo apt update && sudo apt install phantomjs -y
+      - run:
+          name: Install PhantomJS
+          command: sudo apt update && sudo apt install phantomjs -y
 
       #- save_cache:
       #    key: phantomjs
@@ -101,7 +100,6 @@ jobs:
     docker:
       - image: solita/napote-circleci:latest
       - image: solita/harjadb:latest
-      - image: wernight/phantomjs
 
     environment:
       QT_QPA_PLATFORM: offscreen
@@ -112,9 +110,9 @@ jobs:
       #- restore_cache:
       #    key: phantomjs
 
-      #- run:
-      #    name: Install PhantomJS
-      #    command: sudo apt update && sudo apt install phantomjs -y
+      - run:
+          name: Install PhantomJS
+          command: sudo apt update && sudo apt install phantomjs -y
 
       #- save_cache:
       #    key: phantomjs
