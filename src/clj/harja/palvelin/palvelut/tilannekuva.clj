@@ -281,8 +281,7 @@
                   db
                   (merge
                     (laajenna-tyokone-extent alue)
-                    {:nayta-kaikki (roolit/tilaajan-kayttaja? user)
-                     :organisaatio (:id (:organisaatio user))
+                    {:organisaatio (:id (:organisaatio user))
                      :urakat urakat
                      :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito tarkastukset user)
                      :alku alku
@@ -342,7 +341,6 @@
     (merge
       (laajenna-tyokone-extent alue)
       {:urakat urakat
-       :nayta-kaikki (roolit/tilaajan-kayttaja? user)
        :toimenpiteet (tyokoneiden-toimenpiteet talvi kesa yllapito tarkastukset user)
        :alku alku
        :loppu loppu
@@ -674,7 +672,6 @@
                                          :urakat (rajaa-urakat-hakuoikeudella db user p)
                                          :x x
                                          :y y
-                                         :nayta-kaikki (roolit/tilaajan-kayttaja? user)
                                          :organisaatio (-> user :organisaatio :id))))))
 
 (defn hae-paallystysten-sijainnit-kartalle
