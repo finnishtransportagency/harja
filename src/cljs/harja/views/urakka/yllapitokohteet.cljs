@@ -301,16 +301,16 @@
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
             [:span
-             [:button.nappi-ensisijainen.btn-xs
+             [napit/yleinen-ensisijainen "Lisää"
+              #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
               {:disabled (= kohdetyyppi :sora)
-               :on-click
-               #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
-              (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
-             [:button.nappi-kielteinen.btn-xs
+               :ikoni (ikonit/livicon-arrow-down)
+               :luokka "btn-xs"}]
+             [napit/kielteinen "Poista"
+              #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
               {:disabled (= 1 (count kohdeosat-nyt))
-               :on-click
-               #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))}
-              (ikonit/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
+               :ikoni (ikonit/livicon-trash)
+               :luokka "btn-xs"}]]))
 
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
