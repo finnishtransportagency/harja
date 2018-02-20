@@ -355,7 +355,7 @@
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
+                                          paallystetyyppi raekoko tyomenetelma massamaara hyppy?]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -374,14 +374,14 @@
                                :tyomenetelma tyomenetelma
                                :massamaara massamaara
                                :toimenpide toimenpide
+                               :hyppy hyppy?
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
-                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata hyppy?
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
-
   (log/debug "Päivitetään ylläpitokohdeosa")
   (q/paivita-yllapitokohdeosa<! db
                                 {:nimi nimi
@@ -398,6 +398,7 @@
                                  :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
+                                 :hyppy hyppy?
                                  :urakka urakka-id}))
 
 (defn tallenna-yllapitokohdeosat
@@ -405,6 +406,7 @@
    Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat] :as tiedot}]
+  (log/debug "TALLENNA KOHDEOSAT: " tiedot)
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]

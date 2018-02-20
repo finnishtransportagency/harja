@@ -422,7 +422,7 @@ WHERE id = :id
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide,
                               paallystetyyppi, raekoko, tyomenetelma, massamaara,
-                              ulkoinen_id, sijainti)
+                              ulkoinen_id, hyppy, sijainti)
 VALUES (:yllapitokohde,
   :nimi,
   :tr_numero,
@@ -434,17 +434,18 @@ VALUES (:yllapitokohde,
   :tr_kaista,
   :toimenpide,
   :paallystetyyppi,
-        :raekoko,
-        :tyomenetelma,
-        :massamaara,
-        :ulkoinen-id,
-        (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
-         FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
-                                                CAST(:tr_alkuosa AS INTEGER),
-                                                CAST(:tr_alkuetaisyys AS INTEGER),
-                                                CAST(:tr_loppuosa AS INTEGER),
-                                                CAST(:tr_loppuetaisyys AS INTEGER),
-                                                CAST(:tr_ajorata AS INTEGER))));
+  :raekoko,
+  :tyomenetelma,
+  :massamaara,
+  :ulkoinen-id,
+  hyppy,
+  (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+   FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
+                                          CAST(:tr_alkuosa AS INTEGER),
+                                          CAST(:tr_alkuetaisyys AS INTEGER),
+                                          CAST(:tr_loppuosa AS INTEGER),
+                                          CAST(:tr_loppuetaisyys AS INTEGER),
+                                          CAST(:tr_ajorata AS INTEGER))));
 
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
@@ -482,6 +483,7 @@ SET
   tyomenetelma     = :tyomenetelma,
   massamaara       = :massamaara,
   toimenpide       = :toimenpide,
+  hyppy            = :hyppy,
   muokattu         = NOW(),
   sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
                       FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
