@@ -178,6 +178,12 @@
              (zipmap (iterate inc (+ 2 (count avaimet-ennen)))
                      (map #(get kohdeosat %) (rest avaimet-jalkeen)))))))
 
+(defn merkitse-kohdeosa-hypyksi
+  [kohdeosat key hyppy?]
+  (let [rivi (get kohdeosat key)
+        uusi-rivi (assoc rivi :hyppy? hyppy?)]
+    (assoc kohdeosat key uusi-rivi)))
+
 (defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn epaonnistui-fn]
   (when (oikeustarkistus-fn)
     (fn [kohteet]

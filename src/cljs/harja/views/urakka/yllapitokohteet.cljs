@@ -300,17 +300,21 @@
         toiminnot-komponentti
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
-            [:span
-             [napit/yleinen-ensisijainen "Lisää"
-              #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
-              {:disabled (= kohdetyyppi :sora)
-               :ikoni (ikonit/livicon-arrow-down)
-               :luokka "btn-xs"}]
-             [napit/kielteinen "Poista"
-              #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
-              {:disabled (= 1 (count kohdeosat-nyt))
-               :ikoni (ikonit/livicon-trash)
-               :luokka "btn-xs"}]]))
+            (let [rivi-hyppy? (get-in kohdeosat-nyt [(inc index) :hyppy?])]
+              [:span
+               [napit/yleinen-toissijainen (if rivi-hyppy? "Poista hyppy" "Aseta hyppy")
+                #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) (not rivi-hyppy?)))
+                {:luokka "btn-xs"}]
+               [napit/yleinen-ensisijainen "Lisää"
+                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
+                {:disabled (= kohdetyyppi :sora)
+                 :ikoni (ikonit/livicon-arrow-down)
+                 :luokka "btn-xs"}]
+               [napit/kielteinen "Poista"
+                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
+                {:disabled (= 1 (count kohdeosat-nyt))
+                 :ikoni (ikonit/livicon-trash)
+                 :luokka "btn-xs"}]])))
 
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
@@ -426,7 +430,7 @@
 
             skeema (if voi-muokata?
                      (conj skeema
-                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 15
+                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 25
                             :tasaa :keskita
                             :komponentti (toiminnot-komponentti kohdeosat-nyt
                                                                 muokkaa-kohdeosat!)})
