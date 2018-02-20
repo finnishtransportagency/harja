@@ -454,6 +454,8 @@
            ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
            :voi-lisata? false
            :piilota-toiminnot? true
+           :pienenna-rivi? (fn [rivi] (:hyppy? rivi)) ;; TODO Ja hyppyjen piilotus päällä
+           :pienennetyn-rivin-otsikko (constantly "Hyppy")
            :ulkoinen-validointi? true
            :paneelikomponentit
            (when kohdeosat-paivitetty-fn

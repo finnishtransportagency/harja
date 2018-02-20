@@ -58,6 +58,7 @@
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
                              nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
+                             pienenna-rivi? pienennetyn-rivin-otsikko
                              voi-poistaa? toimintonappi-fn]}]
   [:tr.muokataan {:class (str (if (even? (+ i 1))
                                 "parillinen"
@@ -138,6 +139,7 @@
 
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
+                             pienenna-rivi? pienennetyn-rivin-otsikko
                              muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                              vetolaatikot-auki virheet-ylos? toimintonappi-fn]}]
   [:tbody
@@ -173,6 +175,7 @@
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
                                           :tulevat-rivit (tulevat-rivit i) :rivi-index i
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
+                                          :pienenna-rivi? pienenna-rivi? :pienennetyn-rivin-otsikko pienennetyn-rivin-otsikko
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                           :skeema skeema :voi-poistaa? voi-poistaa?
                                           :toimintonappi-fn toimintonappi-fn}]
@@ -230,7 +233,7 @@
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
-           virhe-viesti toimintonappi-fn] :as opts}
+           virhe-viesti toimintonappi-fn pienennetyn-rivin-otsikko pienenna-rivi?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -349,7 +352,7 @@
       {:reagent-render
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
-                    vetolaatikot uusi-id paneelikomponentit validoi-aina?
+                    vetolaatikot uusi-id paneelikomponentit validoi-aina? pienennetyn-rivin-otsikko pienenna-rivi?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
@@ -392,6 +395,8 @@
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
                              :vetolaatikot vetolaatikot :nayta-virheet? nayta-virheet?
                              :nykyinen-fokus nykyinen-fokus :peru! peru!
+                             :pienennetyn-rivin-otsikko pienennetyn-rivin-otsikko
+                             :pienenna-rivi? pienenna-rivi?
                              :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
