@@ -5,8 +5,10 @@
             [harja.ui.dom :as dom]
             [reagent.core :as r :refer [atom]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.kartta :as kartta]
             [harja.fmt :as fmt]
             [harja.ui.kentat :as kentat]
+            [harja.ui.kartta.infopaneelin-sisalto :as info]
             [clojure.string :as clj-str]
             [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction]]))
@@ -16,6 +18,7 @@
 (defonce tila (atom {:nayta-kartan-debug? true
                      :nayta-kaikki-layerit? false
                      :nayta-kartan-ylaosassa? true
+                     :nayta-infopaneelin-tiedot? true
                      :kartan-paikka []}))
 (defonce layers (reaction (into {} (map (fn [[kerros kerroksen-tila-atom]]
                                           [kerros @kerroksen-tila-atom])
@@ -25,10 +28,18 @@
                                               [kerros @kerroksen-geometria])
                                             tasot/geometrioiden-atomit))))
 
-(defn- varita-mappi [geometriat]
+(defn- varita-mappi [geometriat tietosisalto]
   (let [kasittele-map-fn (fn [mappi]
-                           (let [pakolliset-kentat #{:tyyppi-kartalla :alue}
-                                 mielenkiintoiset-kentat-ylin-taso #{:sijainti :type :selite}]
+                           (let [pakolliset-kentat (case tietosisalto
+                                                     :layer #{:tyyppi-kartalla :alue}
+                                                     :linkki-funktiot #{}
+                                                     :asiat-raaka #{:tyyppi-kartalla}
+                                                     :asiat-kasitelty #{:otsikko :tiedot :data :tyyppi :jarjesta-fn})
+                                 mielenkiintoiset-kentat-ylin-taso (case tietosisalto
+                                                                     :layer #{:sijainti :type :selite}
+                                                                     :linkki-funktiot #{:teksti :teksti-fn :ikoni :tooltip :toiminto :when}
+                                                                     :asiat-raaka #{}
+                                                                     :asiat-kasitelty #{})]
                              (when (:ylin-taso? (meta mappi))
                                (doseq [varitettava-kentta (set/union pakolliset-kentat mielenkiintoiset-kentat-ylin-taso)]
                                  (when (not (contains? mappi varitettava-kentta))
@@ -41,15 +52,17 @@
                                            avain-printtaus (if (:ylin-taso? (meta mappi))
                                                              (cond
                                                                varita-sininen? [(str "%c" avain) "color: blue"]
-                                                               varita-ruskea? [(str "%c" avain) "color: brown"]
+                                                               varita-ruskea? [(str "%c" avain) "color: darkturquoise "]
                                                                :else (str avain))
-                                                             (str avain))]]
+                                                             (str avain))
+                                           varitetaan? (and (or varita-sininen? varita-ruskea?)
+                                                            (:ylin-taso? (meta mappi)))]]
                                (if (or (vector? arvo) (map? arvo))
-                                 (do (if (or varita-sininen? varita-ruskea?)
+                                 (do (if varitetaan?
                                        (apply console.log avain-printtaus)
                                        (console.log avain-printtaus))
-                                     (varita-mappi arvo))
-                                 (if (or varita-sininen? varita-ruskea?)
+                                     (varita-mappi arvo tietosisalto))
+                                 (if varitetaan?
                                    (apply console.log [(str (first avain-printtaus) " %c" arvo)
                                                        (str (last avain-printtaus))
                                                        "color: black"])
@@ -58,18 +71,13 @@
       (vector? geometriat) (do
                              (console.group "VECTOR")
                              (doseq [geometry geometriat]
-                               (varita-mappi geometry))
+                               (varita-mappi geometry tietosisalto))
                              (console.groupEnd))
       (map? geometriat) (do
                           (console.group "HASH-MAP")
                           (kasittele-map-fn geometriat)
                           (console.groupEnd))
-      :else (console.log (str geometriat))))
-  #_(let [rivitetty (-> (str geometry) (clj-str/replace #", :" "\n:") (clj-str/replace #"\{" "\n{"))
-          palaset (clj-str/split rivitetty #":tyyppi-kartalla")
-          yhistetty (->> palaset (interpose ":tyyppi-kartalla") (map #(str "%c" %)))
-          varit (take (count yhistetty) (cycle ["color: black" "color: blue"]))]
-      (apply console.log (apply str yhistetty) varit)))
+      :else (console.log (str geometriat)))))
 
 (defn- checkbox-kentta
   [{:keys [teksti checked? disabled? on-change]}]
@@ -93,6 +101,7 @@
     [:div
      [checkbox-kentta (optiot-fn "Nayta kartan debug?" :nayta-kartan-debug?)]
      [checkbox-kentta (optiot-fn "Nayta kaikki layerit?" :nayta-kaikki-layerit?)]
+     [checkbox-kentta (optiot-fn "Nayta infopaneelin tiedot? " :nayta-infopaneelin-tiedot?)]
      [checkbox-kentta (optiot-fn "Nayta kartan yläosassa?" :nayta-kartan-ylaosassa? #(apply aseta-kartta-debug-sijainti (:kartan-paikka @tila)))]]))
 
 (defn- nayta-layersit []
@@ -118,13 +127,52 @@
                                                                                                                                   geometria
                                                                                                                                   {:ylin-taso? true}))
                                                                                                                               tason-geometria)
-                                                                                              :else tason-geometria)))}
+                                                                                              :else tason-geometria)
+                                                                                            :layer))}
                                                       (str " geometriat")]]
                                             :checked? paalla?
                                             :disabled? (not geometria?)
                                             :on-change on-change
                                             :jarjestys (name taso)}])))
                     @layers)))])
+
+(defn- nayta-infopaneelin-tiedot []
+  (when (and (:nayta-infopaneelin-tiedot? @tila)
+             @kartta/infopaneeli-nakyvissa?)
+    (let [linkki-funkitot-vektori? (vector? @kartta/infopaneelin-linkkifunktiot)
+          metan-asettaminen-linkkifunktioille #(into {} (map (fn [[avain arvo]]
+                                                               [avain (if (vector? arvo)
+                                                                        (mapv (fn [mappi] (with-meta mappi {:ylin-taso? true})) arvo)
+                                                                        (with-meta arvo {:ylin-taso? true}))])
+                                                             @kartta/infopaneelin-linkkifunktiot))
+          metan-asettaminen-asioille-raaka #(update @harja.views.kartta/asiat-pisteessa :asiat (fn [asiat]
+                                                                                                 (mapv (fn [asia]
+                                                                                                         (with-meta asia {:ylin-taso? true}))
+                                                                                                       asiat)))
+          metan-asettaminen-asioille-kasitelty #(->> @harja.views.kartta/asiat-pisteessa
+                                                     :asiat
+                                                     info/skeemamuodossa
+                                                     (mapv (fn [asia]
+                                                             (with-meta asia {:ylin-taso? true}))))]
+      [:div {:style {:display "flex"
+                     :flex-flow "column wrap"
+                     :pointer-events "none"}}
+       "Infopaneelin tiedot"
+       [:button {:style {:pointer-events "auto"}
+                 :on-click #(do (.stopPropagation %)
+                                (varita-mappi (metan-asettaminen-linkkifunktioille)
+                                              :linkki-funktiot))}
+        (str "Linkki funktiot")]
+
+       [:button {:style {:pointer-events "auto"}
+                 :on-click #(do (.stopPropagation %)
+                                (varita-mappi (metan-asettaminen-asioille-raaka) :asiat-raaka))}
+        (str "Asiat Pisteessä (raaka)")]
+
+       [:button {:style {:pointer-events "auto"}
+                 :on-click #(do (.stopPropagation %)
+                                (varita-mappi (metan-asettaminen-asioille-kasitelty) :asiat-kasitelty))}
+        (str "Asiat Pisteessä (käsitelty)")]])))
 
 (defn kartta-layers
   []
@@ -139,7 +187,8 @@
                                 "visible"
                                 "hidden")}}
       [nayta-asetukset]
-      [nayta-layersit]]]))
+      [nayta-layersit]
+      [nayta-infopaneelin-tiedot]]]))
 
 (defn aseta-kartta-debug-sijainti
   [x y w h naulattu?]

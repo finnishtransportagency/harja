@@ -626,6 +626,18 @@
              :tyyppi :string}]
    :data osa})
 
+(defmethod infopaneeli-skeema :kohde [kohde]
+  {:tyyppi :kohde
+   :jarjesta-fn (constantly false)
+   :otsikko (kohde/fmt-kohteen-nimi kohde)
+   :tiedot [{:otsikko "Kohteenosan tyyppi"
+             :tyyppi :string
+             :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet :kohteenosan-tyyppi))}
+            {:otsikko "Huoltokohde"
+             :tyyppi :string
+             :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet :huoltokohde))}]
+   :data kohde})
+
 (defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]
   {:tyyppi :suolatoteuma
    :jarjesta-fn (let [fn :alkanut]

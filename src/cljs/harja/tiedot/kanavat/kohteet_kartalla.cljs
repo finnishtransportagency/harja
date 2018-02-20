@@ -5,6 +5,8 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as kokonaishintaiset]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
+            [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -24,13 +26,25 @@
   (reaction
     (let [{:keys [toimenpiteet avattu-toimenpide nakymassa?]} @kokonaishintaiset/tila
           lomakkeella? (boolean avattu-toimenpide)
-          kokonaishintaiset-nakymassa? nakymassa?]
+          kokonaishintaiset-nakymassa? nakymassa?
+          ;; Yhdistetään kohteen ja kohteelle tehdyn toimenpiteen tiedot. Toimenpiteen tietoja näytetään kartan
+          ;; infopaneelissa.
+          kohteet (map (fn [kohde]
+                         (let [kohteen-toimenpiteet (some #(when (= (-> % ::kanavan-toimenpide/kohde ::kohde/id) (::kohde/id kohde))
+                                                             {:huoltokohde (-> % ::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
+                                                              :kohteenosan-tyyppi (when-let [tyyppi (-> % ::kanavan-toimenpide/kohteenosa ::kohteenosa/tyyppi)]
+                                                                                    (name tyyppi))})
+                                                          toimenpiteet)]
+                           (assoc kohde :toimenpiteet kohteen-toimenpiteet)))
+                       @kanavaurakka/kanavakohteet)]
       (reduce (fn [kasitellyt kasiteltava]
                 (cond
+                  ;; Jos ollaan lomakkeella, näytetään kaikki kohteet
                   lomakkeella? (conj kasitellyt kasiteltava)
+                  ;; Jos ollaan gridinäkymässä, niin näytetään vain ne kohteet, joille on tehty toimenpiteitä
                   (and kokonaishintaiset-nakymassa? (kohde-on-gridissa? kasiteltava toimenpiteet)) (conj kasitellyt kasiteltava)
                   :else kasitellyt))
-              [] @kanavaurakka/kanavakohteet))))
+              [] kohteet))))
 
 (defonce kohteet-kartalla
   (reaction
