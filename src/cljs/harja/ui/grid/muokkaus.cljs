@@ -94,15 +94,15 @@
                     (virheen-ohje kentan-virheet))
 
                   (cond
-                    ;; Mikäli rivi on disabloitu, piirretään erikseen määritelty sisältö, jos se on annettu
+                    ;; Mikäli rivi on disabloitu, piirretään erikseen määritelty sisältö, jos se on annettu...
                     (and rivi-disabloitu? (:sisalto-kun-rivi-disabloitu sarake))
                     ((:sisalto-kun-rivi-disabloitu sarake) rivi i)
 
-                    ;; Rivi disabloitu, eikä ole erikseen määritelty sisältöä tai sallittu muokkausta -> ei piirretä mitään
+                    ;; ... tai mikäli sisältöä ei ole määritelty, eikä ole erikseen sallittu muokkausta, ei piirretä mitään
                     (and rivi-disabloitu? (not (:salli-muokkaus-rivin-ollessa-disabloituna? sarake)))
                     nil
 
-                    ;; Rivi ei ole disabloitu
+                    ;; Rivi ei ole disabloitu tai sisällön muokkaus on sallittu
                     :default
                     (if (= tyyppi :komponentti)
                       (komponentti rivi {:index i
