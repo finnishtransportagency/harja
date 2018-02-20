@@ -374,7 +374,7 @@
                                :tyomenetelma tyomenetelma
                                :massamaara massamaara
                                :toimenpide toimenpide
-                               :hyppy hyppy?
+                               :hyppy (if (some? hyppy?) hyppy? false)
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
@@ -398,7 +398,7 @@
                                  :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
-                                 :hyppy hyppy?
+                                 :hyppy (if (some? hyppy?) hyppy? false)
                                  :urakka urakka-id}))
 
 (defn tallenna-yllapitokohdeosat

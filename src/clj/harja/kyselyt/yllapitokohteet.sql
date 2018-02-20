@@ -438,7 +438,7 @@ VALUES (:yllapitokohde,
   :tyomenetelma,
   :massamaara,
   :ulkoinen-id,
-  hyppy,
+  :hyppy,
   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
    FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
                                           CAST(:tr_alkuosa AS INTEGER),
