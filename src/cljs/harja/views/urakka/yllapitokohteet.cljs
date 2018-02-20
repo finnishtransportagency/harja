@@ -323,7 +323,9 @@
                                        kohdeosat-nyt
                                        (inc index)
                                        (not rivi-hyppy?)))
-                {:disabled (= 1 (count kohdeosat-nyt))
+                ;; Kaikki kohteet eivät voi olla hyppyjä
+                {:disabled (>= (inc (count (filter :hyppy? (vals kohdeosat-nyt))))
+                               (count kohdeosat-nyt))
                  :luokka "btn-xs"}]])))
 
         pituus (fn [osan-pituus tieosa]
@@ -493,6 +495,7 @@
                                                         yllapitokohde-id
                                                         osat))
                  {:disabled (or (not (empty? @virheet))
+                                (every? :hyppy? (vals @grid-data))
                                 (not kirjoitusoikeus?))
                   :luokka "nappi-myonteinen grid-tallenna"
                   :virheviesti "Tallentaminen epäonnistui."
