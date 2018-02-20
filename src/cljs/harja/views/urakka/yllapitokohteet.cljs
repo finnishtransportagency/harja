@@ -101,7 +101,7 @@
           [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
                        :leveys (+ perusleveys 5)
                        :pituus-max 30
-                       :sisalto-kun-disabloitu (:sisalto-kun-disabloitu nimi)
+                       :sisalto-kun-rivi-disabloitu (:sisalto-kun-rivi-disabloitu nimi)
                        :muokattava? (or (:muokattava? nimi) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
@@ -342,7 +342,7 @@
                              (tierekisteriosoite-sarakkeet
                                tr-leveys
                                [{:nimi :nimi :pituus-max 30
-                                 :sisalto-kun-disabloitu (constantly "Hyppy")}
+                                 :sisalto-kun-rivi-disabloitu (constantly "Hyppy")}
                                 {:nimi :tr-numero :muokattava? (constantly false)}
                                 {:nimi :tr-ajorata :muokattava? (constantly false)}
                                 {:nimi :tr-kaista :muokattava? (constantly false)}
@@ -439,7 +439,7 @@
                      (conj skeema
                            {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 25
                             :tasaa :keskita
-                            :sisalto-kun-disabloitu
+                            :sisalto-kun-rivi-disabloitu
                             (fn [rivi index]
                               [napit/yleinen-toissijainen "Poista hyppy"
                                #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) false))

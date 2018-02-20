@@ -96,8 +96,8 @@
                   (cond
                     ;; Disabloidun muokkauskentän sisältö määritellään erikseen.
                     ;; Jos ei määritelty, ei muokkauskenttää piirretä disabloidulle riville
-                    (and rivi-disabloitu? (:sisalto-kun-disabloitu sarake))
-                    ((:sisalto-kun-disabloitu sarake) rivi i)
+                    (and rivi-disabloitu? (:sisalto-kun-rivi-disabloitu sarake))
+                    ((:sisalto-kun-rivi-disabloitu sarake) rivi i)
 
                     (and (not rivi-disabloitu?) (= tyyppi :komponentti))
                     (komponentti rivi {:index i
