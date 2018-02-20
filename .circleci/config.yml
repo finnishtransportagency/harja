@@ -52,7 +52,7 @@ jobs:
       - image: solita/harjadb:latest
 
     environment:
-       TZ: "/usr/share/zoneinfo/America/Helsinki"
+       TZ: "/usr/share/zoneinfo/Europe/Helsinki"
 
     steps:
       - checkout
