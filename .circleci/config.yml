@@ -71,7 +71,7 @@ jobs:
 
       - run:
           name: Run unit tests (without performance tests)
-          command: lein test :no-perf
+          command: env TZ=EET lein test :no-perf
 
   frontend-desktop-app-unit-tests:
     docker:
@@ -98,7 +98,7 @@ jobs:
 
       - run:
           name: Run desktop app Phantom front end tests
-          command: lein doo phantom test once
+          command: env TZ=EET lein doo phantom test once
 
   frontend-mobile-app-unit-tests:
         docker:
