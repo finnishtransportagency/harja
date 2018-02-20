@@ -189,44 +189,44 @@
   Tiedot tulee olla atomi tai wrapatty data, jota tietojen muokkaus itsessään manipuloi.
 
   Optiot on mappi optioita:
-  :id                 grid pääelementin DOM id
-  :muokkaa-footer     optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
-  :muutos             jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
-                      Parametrina Grid ohjauskahva
-  :uusi-rivi          jos annettu uuden rivin tiedot käsitellään tällä funktiolla
-  :voi-muokata?       jos false, tiedot eivät ole muokattavia ollenkaan
-  :voi-lisata?        jos false, uusia rivejä ei voi lisätä
-  :voi-kumota?        jos false, kumoa-nappia ei näytetä
-  :voi-poistaa?       funktio, joka palauttaa true tai false.
-  :rivinumerot?       Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
-  :jarjesta           jos annettu funktio, sortataan rivit tämän mukaan
-  :jarjesta-avaimen-mukaan jos annettu funktio, sortataan avaimen mukaan
-  :paneelikomponentit vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
-  :piilota-toiminnot? boolean, piilotetaan toiminnot sarake jos true
-  :toimintonappi-fn   funktio, joka saa parametrikseen rivin, ja rivin muokkausfunktion.
-                      Jos palauttaa nil, näytetään oletustoiminto (roskakori).
-                      Funktion pitää palauttaa hiccup-elementti, esim [:span]. Oletuksena (constantly nil).
-                      Parametrina saatava muokkausfunktio ottaa parametrikseen funktion ja sen parametrit,
-                      joilla muutos riviin tehdään. Esim (muokkaa! assoc :poistettu true)
-  :luokat             Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
-  :virheet            atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
-                      luodaan sisäisesti atomi virheille
-  :uusi-id            seuraavan uuden luotavan rivin id, jos ei anneta luodaan uusia id:tä
-                      sarjana -1, -2, -3, ...
-  :nayta-virheet?     :aina (oletus) tai :fokus.
-                      Jos fokus, näytetään virheviesti vain fokusoidulle kentälle,
-                      virheen indikoiva punainen viiva näytetään silti aina.
+  :id                             grid pääelementin DOM id
+  :muokkaa-footer                 optionaalinen footer komponentti joka muokkaustilassa näytetään, parametrina Grid ohjauskahva
+  :muutos                         jos annettu, kaikista gridin muutoksista tulee kutsu tähän funktioon.
+                                  Parametrina Grid ohjauskahva
+  :uusi-rivi                      jos annettu uuden rivin tiedot käsitellään tällä funktiolla
+  :voi-muokata?                   jos false, tiedot eivät ole muokattavia ollenkaan
+  :voi-lisata?                    jos false, uusia rivejä ei voi lisätä
+  :voi-kumota?                    jos false, kumoa-nappia ei näytetä
+  :voi-poistaa?                   funktio, joka palauttaa true tai false.
+  :rivinumerot?                   Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
+  :jarjesta                       jos annettu funktio, sortataan rivit tämän mukaan
+  :jarjesta-avaimen-mukaan        jos annettu funktio, sortataan avaimen mukaan
+  :paneelikomponentit             vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
+  :piilota-toiminnot?             boolean, piilotetaan toiminnot sarake jos true
+  :toimintonappi-fn               funktio, joka saa parametrikseen rivin, ja rivin muokkausfunktion.
+                                  Jos palauttaa nil, näytetään oletustoiminto (roskakori).
+                                  Funktion pitää palauttaa hiccup-elementti, esim [:span]. Oletuksena (constantly nil).
+                                  Parametrina saatava muokkausfunktio ottaa parametrikseen funktion ja sen parametrit,
+                                  joilla muutos riviin tehdään. Esim (muokkaa! assoc :poistettu true)
+  :luokat                         Päätason div-elementille annettavat lisäkuokat (vectori stringejä)
+  :virheet                        atomi gridin virheitä {rivinid {:kentta (\"virhekuvaus\")}}, jos ei anneta
+                                  luodaan sisäisesti atomi virheille
+  :uusi-id                        seuraavan uuden luotavan rivin id, jos ei anneta luodaan uusia id:tä
+                                  sarjana -1, -2, -3, ...
+  :nayta-virheet?                 :aina (oletus) tai :fokus.
+                                  Jos fokus, näytetään virheviesti vain fokusoidulle kentälle,
+                                  virheen indikoiva punainen viiva näytetään silti aina.
 
-  :valiotsikot        mäppäys rivin tunnisteesta, jota ennen otsikko tulee näyttää, Otsikkoon
-  :ulkoinen-validointi? jos true, grid ei tee validointia muokkauksen yhteydessä.
-                        Käytä tätä, jos teet validoinnin muualla (esim jos grid data on wrap,
-                        jonka muutoksen yhteydessä validointi tehdään).
+  :valiotsikot                    mäppäys rivin tunnisteesta, jota ennen otsikko tulee näyttää, Otsikkoon
+  :ulkoinen-validointi?           jos true, grid ei tee validointia muokkauksen yhteydessä.
+                                  Käytä tätä, jos teet validoinnin muualla (esim jos grid data on wrap,
+                                  jonka muutoksen yhteydessä validointi tehdään).
 
-  :virheet-dataan?    jos true, validointivirheet asetetaan rivin datan mäppiin
-                      avaimella :harja.ui.grid/virheet
-  :virheet-ylos?      Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-avaimen-mukaan
-                      avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?
-  :virhe-viesti       String, joka näytetään gridin otsikon oikealla puolella punaisella."
+  :virheet-dataan?                jos true, validointivirheet asetetaan rivin datan mäppiin
+                                  avaimella :harja.ui.grid/virheet
+  :virheet-ylos?                  Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-avaimen-mukaan
+                                  avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?
+  :virhe-viesti                   String, joka näytetään gridin otsikon oikealla puolella punaisella."
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
