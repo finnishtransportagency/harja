@@ -35,6 +35,7 @@
   [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
+  [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
@@ -300,5 +301,21 @@
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
 
+
+
+{:nimi :kanavien-muutos-ja-lisatyot
+ :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
+              {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
+              {:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
+              {:tyyppi "urakoittain", :konteksti "hallintayksikko", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
+              {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+ :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+ :kuvaus "Muutos- ja lisätyöt"
+ :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
+ :urakkatyyppi #{:hoito}}
+
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
+
+;; TODO: kanavissa jaottelu toimenpiteen sijaan tehtävätasolla => Kehitä jos tarvii.
+;; TODO: kanavissa jaottelu elyjen sijaan meri/sisä => Kehitä jos tarvii.
