@@ -86,6 +86,10 @@ jobs:
             - /usr/local/bin/phantomjs
 
       - run:
+          name: Set headless
+          command: env QT_QPA_PLATFORM=offscreen
+
+      - run:
           name: Run migrations, setup test database and import test data
           command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
@@ -117,6 +121,10 @@ jobs:
               name: Run migrations, setup test database and import test data
               command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
+          - run:
+              name: Set headless
+              command: env QT_QPA_PLATFORM=offscreen
+              
           - run:
               name: Run mobile app Phantom front end tests
               command: lein doo phantom laadunseuranta-test once
