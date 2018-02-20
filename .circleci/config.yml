@@ -69,22 +69,25 @@ jobs:
     docker:
       - image: solita/napote-circleci:latest
       - image: solita/harjadb:latest
+      - image: wernight/phantomjs
+
     environment:
         QT_QPA_PLATFORM: offscreen
+
     steps:
       - checkout
 
-      - restore_cache:
-            key: phantomjs
+      #- restore_cache:
+      #      key: phantomjs
 
-      - run:
-          name: Install PhantomJS
-          command: sudo apt update && sudo apt install phantomjs -y
+      #- run:
+      #    name: Install PhantomJS
+      #    command: sudo apt update && sudo apt install phantomjs -y
 
-      - save_cache:
-          key: phantomjs
-          paths:
-            - /usr/local/bin/phantomjs
+      #- save_cache:
+      #    key: phantomjs
+      #    paths:
+      #      - /usr/local/bin/phantomjs
 
       - run:
           name: Run migrations, setup test database and import test data
@@ -98,6 +101,7 @@ jobs:
     docker:
       - image: solita/napote-circleci:latest
       - image: solita/harjadb:latest
+      - image: wernight/phantomjs
 
     environment:
       QT_QPA_PLATFORM: offscreen
@@ -105,17 +109,17 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          key: phantomjs
+      #- restore_cache:
+      #    key: phantomjs
 
-      - run:
-          name: Install PhantomJS
-          command: sudo apt update && sudo apt install phantomjs -y
+      #- run:
+      #    name: Install PhantomJS
+      #    command: sudo apt update && sudo apt install phantomjs -y
 
-      - save_cache:
-          key: phantomjs
-          paths:
-            - /usr/local/bin/phantomjs
+      #- save_cache:
+      #    key: phantomjs
+      #    paths:
+      #      - /usr/local/bin/phantomjs
 
       - run:
           name: Run migrations, setup test database and import test data
