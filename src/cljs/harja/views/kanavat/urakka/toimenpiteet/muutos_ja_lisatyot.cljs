@@ -128,6 +128,7 @@
             [:span
              [kartta/kartan-paikka]
              [:div
+              [debug app]
               (if avattu-toimenpide
                 [lisatyot-lomake e! app]
                 [:div

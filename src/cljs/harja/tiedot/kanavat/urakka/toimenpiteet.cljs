@@ -58,16 +58,17 @@
   (mapcat (fn [materiaalilistaus]
             (transduce
              (comp
-              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
-              ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
+               (filter (partial toimenpiteen-materiaalimuutos? toimenpide))
+              ;; Varaosat gridissä on :maara, :yksikko ja :varaosa nimiset sarakkeet. Materiaalin
+              ;; nimi, yksikko, urakka-id, pvm ja id tarvitaan tallentamista varten.
               (map #(identity {:maara (- (::materiaalit/maara %))
+                               :yksikko (::materiaalit/yksikko materiaalilistaus)
                                :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                          ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
                                          ::materiaalit/pvm (::materiaalit/pvm %)
-                                         ::materiaalit/id (::materiaalit/id %)}})))
-             conj (filter
-                   (partial toimenpiteen-materiaalimuutos? toimenpide)
-                   (::materiaalit/muutokset materiaalilistaus))))
+                                         ::materiaalit/id (::materiaalit/id %)
+                                         ::materiaalit/yksikko (::materiaalit/yksikko materiaalilistaus)}})))
+             conj (::materiaalit/muutokset materiaalilistaus)))
           listaukset))
 
 (defn aseta-lomakkeen-tiedot [app toimenpide]
@@ -151,7 +152,7 @@
 
 (defn yksi-tallennettava-materiaalikirjaus
   "Palauttaa tallennettavan mapin kun m-kirjaus on muokattu, ei-tyhja, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...} - muutoin nil"
-  [muokkaamattomat-kirjaukset lisatieto m-kirjaus]
+  [muokkaamattomat-kirjaukset lisatieto paivamaara m-kirjaus]
 
   (let [muokkaamaton? (if (seq muokkaamattomat-kirjaukset)
                        (first (filter (partial = m-kirjaus) muokkaamattomat-kirjaukset))
@@ -165,6 +166,7 @@
     (if (or tyhja? poistettu? muokkaamaton?)
       nil
       (assoc varaosa
+             ::materiaalit/pvm paivamaara
              ::materiaalit/maara (- (:maara m-kirjaus)) ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
              ::materiaalit/lisatieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
 
@@ -173,14 +175,18 @@
     []
     ;; else
     (let [materiaali-kirjaukset (::materiaalit/materiaalit tp)
-          muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit tp)
+          muokkaamattomat-materiaali-kirjaukset (filter
+                                                  ;; Lasketaan muokkaamattoksi vain ne, joilla on
+                                                  ;; myös sama pvm kuin tallennettavalla toimenpiteellä
+                                                  #(= (::materiaalit/pvm %) (::kanavatoimenpide/pvm tp))
+                                                  (::materiaalit/muokkaamattomat-materiaalit tp))
 
-          tp-id (::kanavatoimenpide/id tp)
-          paivamaara (::kanavatoimenpide/pvm tp)
-          kohteen-nimi (-> tp ::kanavatoimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
+          kohteen-nimi (-> tp ::kanavatoimenpide/kohde ::kohde/nimi)
+          kohteen-lisatieto (::kanavatoimenpide/lisatieto tp)
 
-          lisatieto (str "Kohteen " kohteen-nimi " materiaali")
-          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto) materiaali-kirjaukset)]
+          lisatieto (str "Käytetty kohteessa: " kohteen-nimi
+                         (when kohteen-lisatieto (str ", Lisätietona: " kohteen-lisatieto)))
+          tallennettavat (keep (partial yksi-tallennettava-materiaalikirjaus muokkaamattomat-materiaali-kirjaukset lisatieto paivamaara) materiaali-kirjaukset)]
       tallennettavat)))
 
 (defn tallennettava-toimenpide [tehtavat toimenpide urakka tyyppi]

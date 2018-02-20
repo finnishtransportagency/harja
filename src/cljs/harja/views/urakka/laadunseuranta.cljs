@@ -54,11 +54,6 @@
        {:style :tabs :classes "tabs-taso2"
         :active (nav/valittu-valilehti-atom :laadunseuranta)}
 
-       "Häiriötilanteet"
-       :hairiotilanteet
-       (when (valilehti-mahdollinen? :hairiotilanteet ur)
-         [hairiotilanteet/hairiotilanteet])
-
        "Tarkastukset" :tarkastukset
        (when (valilehti-mahdollinen? :tarkastukset ur)
          [tarkastukset/tarkastukset {:nakyma tyyppi
@@ -78,6 +73,11 @@
                   (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
          ^{:key "siltatarkastukset"}
          [siltatarkastukset/siltatarkastukset])
+
+       "Häiriötilanteet"
+       :hairiotilanteet
+       (when (valilehti-mahdollinen? :hairiotilanteet ur)
+         [hairiotilanteet/hairiotilanteet])
 
        "Mobiilityökalu" :mobiilityokalu
        ^{:key "mobiilityokalu"}

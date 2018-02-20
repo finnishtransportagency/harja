@@ -20,6 +20,7 @@
 
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.views.vesivaylat.urakka.materiaalit :as materiaali-view]
             [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
@@ -133,20 +134,25 @@
       :virheet virhe-atom
       :piilota-toiminnot? false
       :tyhja "Ei varaosia"
-      :otsikko "Varaosat"}
+      :otsikko "Varaosat"
+      :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
      [{:otsikko "Varaosa"
        :nimi :varaosa
-       :leveys 1
+       :leveys 3
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :valinta
        :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
        :valinnat materiaalit}
       {:otsikko "Käytettävä määrä"
        :nimi :maara
-       :leveys 1
+       :leveys 3
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :positiivinen-numero
-       :kokonaisluku? true}]
+       :kokonaisluku? true}
+      {:otsikko "Yksikkö"
+       :nimi :yksikko
+       :leveys 1
+       :muokattava? (constantly false)}]
      (r/wrap
        (zipmap (range)
                (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
@@ -315,7 +321,7 @@
                       #(e! (tiedot/->NakymaSuljettu)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
-      @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
+      @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
       [:div
        [debug/debug app]
        (if valittu-hairiotilanne

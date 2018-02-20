@@ -65,6 +65,7 @@
 (defrecord VarusteHakuTulos [tietolaji varusteet])
 (defrecord VarusteHakuEpaonnistui [virhe])
 (defrecord LisaaLiitetiedosto [liite])
+(defrecord PoistaUusiLiitetiedosto [liite])
 
 ;; Toimenpiteet Tierekisteriin
 (defrecord PoistaVaruste [tunniste])
@@ -188,4 +189,8 @@
 
   LisaaLiitetiedosto
   (process-event [{liite :liite} app]
-    (assoc-in app [:tierekisterin-varusteet :tarkastus :uusi-liite] liite)))
+    (assoc-in app [:tierekisterin-varusteet :tarkastus :uusi-liite] liite))
+
+  PoistaUusiLiitetiedosto
+  (process-event [_ app]
+    (assoc-in app [:tierekisterin-varusteet :tarkastus :uusi-liite] nil)))
