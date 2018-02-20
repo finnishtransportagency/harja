@@ -304,7 +304,8 @@
               [:span
                [napit/yleinen-toissijainen (if rivi-hyppy? "Poista hyppy" "Aseta hyppy")
                 #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) (not rivi-hyppy?)))
-                {:luokka "btn-xs"}]
+                {:disabled (= 1 (count kohdeosat-nyt))
+                 :luokka "btn-xs"}]
                [napit/yleinen-ensisijainen "Lisää"
                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
                 {:disabled (= kohdetyyppi :sora)
