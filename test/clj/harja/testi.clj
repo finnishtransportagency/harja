@@ -299,7 +299,8 @@
                                                             :lisatieto :string
                                                             :id :string
                                                             :hairiotilanne :string
-                                                            :toimenpide :string))
+                                                            :toimenpide :string
+                                                            :luotu :string))
                                   ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
                                   ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
                                   ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
@@ -310,7 +311,8 @@
                                                    :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
                                                    :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
                                                    :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))
-                                                   :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))))))
+                                                   :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))
+                                                   :luotu (tyhja-string->nil pvm/dateksi (:pvm %))))))
                             conj [] (first materiaali-vector))
                 nimi (second materiaali-vector)]
             {:muutokset muutokset :nimi nimi}))
@@ -409,14 +411,14 @@
               WHERE u.nimi = 'Saimaan kanava' AND kk.nimi = 'Tikkalansaaren sulku';")))
 
 (defn hae-saimaan-kanavan-materiaalit []
-  (let [haku (q "SELECT muutokset, nimi
+  (let [haku (q "SELECT muutokset, nimi, yksikko
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');")
         saimaan-materiaalit (materiaali-haun-pg-Array->map haku)]
     saimaan-materiaalit))
 
 (defn hae-helsingin-vesivaylaurakan-materiaalit []
-  (let [haku (q "SELECT muutokset, nimi
+  (let [haku (q "SELECT muutokset, nimi, yksikko
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');")
         helsingin-materiaalit (materiaali-haun-pg-Array->map haku)]

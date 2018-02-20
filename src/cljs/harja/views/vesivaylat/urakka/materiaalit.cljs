@@ -2,6 +2,7 @@
   (:require [tuck.core :as tuck]
             [cljs.core.async :as async :refer [put! <! chan close!]]
             [harja.ui.grid :as grid]
+            [harja.ui.grid.protokollat :as grid-protokolla]
             [harja.ui.napit :as napit]
             [harja.domain.vesivaylat.materiaali :as m]
             [harja.tiedot.vesivaylat.urakka.materiaalit :as tiedot]
@@ -21,9 +22,28 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
+(defn- muuta-yksikko-varaosan-muuttuessa
+  [grid-tila predikaatti]
+  (into {} (map (fn [[avain arvo]]
+                  (if (predikaatti arvo)
+                    [avain (assoc arvo :yksikko (-> arvo :varaosa ::m/yksikko))]
+                    [avain arvo]))
+                grid-tila)))
 
-(defn- materiaaliloki [e! urakka-id rivit nimi nayta-kaikki?]
-  (let [rivit-jarjestyksessa (reverse (sort-by ::m/pvm rivit))
+(defn hoida-varaosataulukon-yksikko
+  [grid-komponentti]
+  ;; Tässä on tarkoituksena laittaa gridissä käsiteltävän rivin
+  ;; :yksikko avaimen alle oikea yksikkö, kun valitaan materiaali varaosa valikosta.
+  (let [grid-tila (grid-protokolla/hae-muokkaustila grid-komponentti)
+        varaosa-muutettu? #(and (:varaosa %)
+                                (not= (-> % :varaosa ::m/yksikko)
+                                      (:yksikko %)))
+        joku-varaosa-muutettu? (some varaosa-muutettu? (vals grid-tila))]
+    (when joku-varaosa-muutettu?
+      (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-varaosan-muuttuessa grid-tila varaosa-muutettu?)))))
+
+(defn- materiaaliloki [e! urakka-id rivit nimi yksikko nayta-kaikki?]
+  (let [rivit-jarjestyksessa (reverse (sort-by (juxt ::m/pvm ::m/luotu) rivit))
         rivin-voi-poistaa? (fn [rivi]
                              ;; Ensimmäistä luontiajan mukaista kirjausta käytetään määrittämään
                              ;; materiaalin alkuperäinen määrä, siksi sen saa poistaa vain jos se on ainoa kirjaus,
@@ -56,7 +76,7 @@
                           [:td {:width "15%" :class (if (neg? maara)
                                                       "materiaali-miinus"
                                                       "materiaali-plus")}
-                           maara " kpl"]
+                           (str maara " " yksikko)]
                           [:td {:width "60%"} lisatieto]
                           [:td {:width "10%"}
                            (when (rivin-voi-poistaa? rivi)
@@ -107,9 +127,11 @@
        :validoi [(fn [nimi]
                    (when (some #(= nimi (::m/nimi %)) materiaalilistaus)
                      "Materiaali on jo käytössä urakassa"))]}
-      {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :placeholder maara-placeholder
-       :palstoja 1 :kokonaisluku? true
-       :pakollinen? true ::lomake/col-luokka "col-lg-6"}
+      (lomake/rivi
+        {:otsikko "Määrä" :nimi ::m/maara :tyyppi :numero :placeholder maara-placeholder
+         :kokonaisluku? true :pakollinen? true ::lomake/col-luokka "col-lg-6"}
+        {:otsikko "Yksikkö" :nimi ::m/yksikko :tyyppi :string :pakollinen? true
+         ::lomake/col-luokka "col-lg-6"})
       {:otsikko "Hälytysraja" :nimi ::m/halytysraja :tyyppi :numero :palstoja 1
        ::lomake/col-luokka "col-lg-6" :pakollinen? false}
       {:otsikko "Pvm" :nimi ::m/pvm :tyyppi :pvm :palstoja 1 ::lomake/col-luokka "col-lg-6"
@@ -128,14 +150,17 @@
                                  ::m/muutokset
                                  (sort-by ::m/pvm)
                                  first
-                                 ::m/pvm)]
+                                 ::m/pvm)
+        yksikko (->> (filter #(= nimi (::m/nimi %)) listaus)
+                     first
+                     ::m/yksikko)]
     [:div.vv-materiaalin-kirjaus
      [napit/yleinen-ensisijainen "Kirjaa käyttö"
-      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :-))
+      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :- yksikko))
       {:ikoni (ikonit/livicon-minus)
        :luokka "materiaalin-kaytto"}]
      [napit/yleinen-ensisijainen "Kirjaa lisäys"
-      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :+))
+      #(e! (tiedot/->AloitaMateriaalinKirjaus nimi :+ yksikko))
       {:ikoni (ikonit/livicon-plus)
        :luokka "materiaalin-lisays"}]
 
@@ -221,23 +246,24 @@
                        voi-kirjata?
                        (fn [sisalto]
                          (let [ch (chan)]
-                           (e! (tiedot/->MuutaAlkuperainenMaara
+                           (e! (tiedot/->MuutaAlkuperaisetTiedot
                                  {:urakka-id (:urakka-id app)
-                                  :uudet-alkuperaiset-maarat (map
-                                                               #(select-keys % [::m/alkuperainen-maara ::m/muutokset])
+                                  :uudet-alkuperaiset-tiedot (map
+                                                               #(select-keys % [::m/alkuperainen-maara ::m/muutokset ::m/yksikko ::m/halytysraja])
                                                                sisalto)
                                   :chan ch}))
                            ch)))
            :vetolaatikot (into {}
                                (map (juxt ::m/nimi
-                                          (fn [{muutokset ::m/muutokset nimi ::m/nimi nayta-kaikki? :nayta-kaikki?}]
-                                            [materiaaliloki e! (:urakka-id app) muutokset nimi nayta-kaikki?])))
+                                          (fn [{muutokset ::m/muutokset nimi ::m/nimi yksikko ::m/yksikko nayta-kaikki? :nayta-kaikki?}]
+                                            [materiaaliloki e! (:urakka-id app) muutokset nimi yksikko nayta-kaikki?])))
                                materiaalilistaus)}
           [{:tyyppi :vetolaatikon-tila :leveys 1}
            {:otsikko "Materiaali" :nimi ::m/nimi :tyyppi :string :leveys 30 :muokattava? (constantly false)}
            {:otsikko "Alkuperäinen määrä" :nimi ::m/alkuperainen-maara :tyyppi :numero :leveys 10}
            {:otsikko "Määrä nyt" :nimi ::m/maara-nyt :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
-           {:otsikko "Hälytysraja" :nimi ::m/halytysraja :tyyppi :numero :leveys 10 :muokattava? (constantly false)}
+           {:otsikko "Yksikkö" :nimi ::m/yksikko :tyyppi :string :leveys 10}
+           {:otsikko "Hälytysraja" :nimi ::m/halytysraja :tyyppi :numero :leveys 10}
            (when voi-kirjata?
              {:otsikko "Kirjaa" :leveys 15 :tyyppi :komponentti
               :komponentti (fn [{nimi ::m/nimi}]

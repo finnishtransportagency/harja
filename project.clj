@@ -143,7 +143,9 @@
                  [com.atlassian.sourcemap/sourcemap "1.7.6"]
 
                  ;; Arbitrary precision math frontilla
-                 [cljsjs/big "3.1.3-1"]]
+                 [cljsjs/big "3.1.3-1"]
+
+                 [clj-gatling "0.11.0" :exclusions [[clj-time]]]]
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]

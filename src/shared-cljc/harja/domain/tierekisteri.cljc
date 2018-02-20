@@ -271,7 +271,7 @@
 (defn tr-vali-leikkaa-tr-valin?
   "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen.
    Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin hieman osoitteen 1 tien sisällä,
-   ei siis riitä, että peölkästään alku/loppu on samassa kohtaa.
+   ei siis riitä, että pelkästään alku/loppu on samassa kohtaa.
 
    Olettaa, että tr-välit ovat samalla tiellä."
   [tr-vali1 tr-vali2]
