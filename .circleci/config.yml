@@ -24,7 +24,9 @@ jobs:
           paths:
             - ~/.m2
 
-      - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+      - run:
+          name: Aja migraatiot, pystytä testitietokanta ja aja sisään testidata
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - run:
           name: Rakenna Harja JAR
@@ -54,7 +56,11 @@ jobs:
 
       - attach_workspace:
           at: /tmp/harja
-          
+
+      - run:
+          name: Aja migraatiot, pystytä testitietokanta ja aja sisään testidata
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
       - run:
           name: Aseta aikavyöhyke
           command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
@@ -94,7 +100,9 @@ jobs:
       - attach_workspace:
           at: /tmp/harja
 
-      - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+      - run:
+          name: Aja migraatiot, pystytä testitietokanta ja aja sisään testidata
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - restore_cache:
           keys:
