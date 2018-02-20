@@ -10,7 +10,8 @@
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti]
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [harja.tyokalut.local-storage :as local-storage])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -183,6 +184,8 @@
   (let [rivi (get kohdeosat key)
         uusi-rivi (assoc rivi :hyppy? hyppy?)]
     (assoc kohdeosat key uusi-rivi)))
+
+(defonce piilota-hypyt? (local-storage/local-storage-atom :piilota-hypyt? true nil))
 
 (defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn epaonnistui-fn]
   (when (oikeustarkistus-fn)

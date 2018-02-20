@@ -27,7 +27,8 @@
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -454,7 +455,9 @@
            ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
            :voi-lisata? false
            :piilota-toiminnot? true
-           :pienenna-rivi? (fn [rivi] (:hyppy? rivi)) ;; TODO Ja hyppyjen piilotus päällä
+           :pienenna-rivi? (fn [rivi]
+                             (and @tiedot/piilota-hypyt?
+                                  (:hyppy? rivi))) ;; TODO Ja hyppyjen piilotus päällä
            :pienennetyn-rivin-otsikko (constantly "Hyppy")
            :ulkoinen-validointi? true
            :paneelikomponentit
@@ -495,7 +498,11 @@
                               (when (= kohdetyyppi :sora)
                                 [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
-          grid-data]]))))
+          grid-data]
+
+         [kentat/tee-kentta {:tyyppi :checkbox
+                             :teksti "Piilota hypyt"}
+          tiedot/piilota-hypyt?]]))))
 
 (defn- aseta-uudet-kohdeosat [kohteet id kohdeosat]
   (let [kohteet (vec kohteet)
