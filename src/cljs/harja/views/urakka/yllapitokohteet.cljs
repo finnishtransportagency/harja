@@ -101,6 +101,7 @@
           [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
                        :leveys (+ perusleveys 5)
                        :pituus-max 30
+                       :sisalto-kun-disabloitu (:sisalto-kun-disabloitu nimi)
                        :muokattava? (or (:muokattava? nimi) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
@@ -303,10 +304,6 @@
           (fn [_ {:keys [index]}]
             (let [rivi-hyppy? (get-in kohdeosat-nyt [(inc index) :hyppy?])]
               [:span
-               [napit/yleinen-toissijainen (if rivi-hyppy? "Poista hyppy" "Aseta hyppy")
-                #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) (not rivi-hyppy?)))
-                {:disabled (= 1 (count kohdeosat-nyt)) ;; TODO Lisäksi: ei kahta peräkkäistä?
-                 :luokka "btn-xs"}]
                [napit/yleinen-ensisijainen "Lisää"
                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
                 {:disabled (= kohdetyyppi :sora)
@@ -316,6 +313,13 @@
                 #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
                 {:disabled (= 1 (count kohdeosat-nyt))
                  :ikoni (ikonit/livicon-trash)
+                 :luokka "btn-xs"}]
+               [napit/yleinen-toissijainen "Aseta hyppy"
+                #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi
+                                       kohdeosat-nyt
+                                       (inc index)
+                                       (not rivi-hyppy?)))
+                {:disabled (= 1 (count kohdeosat-nyt))
                  :luokka "btn-xs"}]])))
 
         pituus (fn [osan-pituus tieosa]
@@ -337,7 +341,8 @@
                            (concat
                              (tierekisteriosoite-sarakkeet
                                tr-leveys
-                               [{:nimi :nimi :pituus-max 30}
+                               [{:nimi :nimi :pituus-max 30
+                                 :sisalto-kun-disabloitu (constantly "Hyppy")}
                                 {:nimi :tr-numero :muokattava? (constantly false)}
                                 {:nimi :tr-ajorata :muokattava? (constantly false)}
                                 {:nimi :tr-kaista :muokattava? (constantly false)}
@@ -434,6 +439,12 @@
                      (conj skeema
                            {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 25
                             :tasaa :keskita
+                            :sisalto-kun-disabloitu
+                            (fn [rivi index]
+                              [napit/yleinen-toissijainen "Poista hyppy"
+                               #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) false))
+                               {:disabled (= 1 (count kohdeosat-nyt))
+                                :luokka "btn-xs"}])
                             :komponentti (toiminnot-komponentti kohdeosat-nyt
                                                                 muokkaa-kohdeosat!)})
                      skeema)
@@ -455,10 +466,7 @@
            ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
            :voi-lisata? false
            :piilota-toiminnot? true
-           :pienenna-rivi? (fn [rivi]
-                             (and @tiedot/piilota-hypyt?
-                                  (:hyppy? rivi))) ;; TODO Ja hyppyjen piilotus päällä
-           :pienennetyn-rivin-otsikko (constantly "Hyppy")
+           :disabloi-rivi? (fn [rivi] (:hyppy? rivi)) ;; TODO Ja hyppyjen piilotus päällä
            :ulkoinen-validointi? true
            :paneelikomponentit
            (when kohdeosat-paivitetty-fn
@@ -498,11 +506,7 @@
                               (when (= kohdetyyppi :sora)
                                 [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
           skeema
-          grid-data]
-
-         [kentat/tee-kentta {:tyyppi :checkbox
-                             :teksti "Piilota hypyt"}
-          tiedot/piilota-hypyt?]]))))
+          grid-data]]))))
 
 (defn- aseta-uudet-kohdeosat [kohteet id kohdeosat]
   (let [kohteet (vec kohteet)

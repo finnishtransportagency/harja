@@ -185,8 +185,6 @@
         uusi-rivi (assoc rivi :hyppy? hyppy?)]
     (assoc kohdeosat key uusi-rivi)))
 
-(defonce piilota-hypyt? (local-storage/local-storage-atom :piilota-hypyt? true nil))
-
 (defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn epaonnistui-fn]
   (when (oikeustarkistus-fn)
     (fn [kohteet]

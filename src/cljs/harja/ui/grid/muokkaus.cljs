@@ -58,16 +58,14 @@
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
                              nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
-                             pienenna-rivi? pienennetyn-rivin-otsikko
+                             disabloi-rivi?
                              voi-poistaa? toimintonappi-fn]}]
-  (let [pienennetty? (and pienenna-rivi? (pienenna-rivi? rivi))]
+  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
     [:tr.muokataan {:class (str (if (even? (+ i 1))
                                   "parillinen "
                                   "pariton ")
-                                (when pienennetty? "pienennetty-rivi"))}
+                                (when rivi-disabloitu? "disabloitu-rivi"))}
      (when rivinumerot? [:td.rivinumero (+ i 1)])
-     (when (and pienennetty? pienennetyn-rivin-otsikko)
-       [:span.pienennetty-rivi-otsikko (pienennetyn-rivin-otsikko rivi)])
      (doall
        (map-indexed
          (fn [j {:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
@@ -87,7 +85,7 @@
                  [:td {:class (str "muokattava "
                                    tasaus-luokka
                                    (when (and (not (empty? kentan-virheet))
-                                              (not pienennetty?))
+                                              (not rivi-disabloitu?))
                                      " sisaltaa-virheen"))}
                   (when (and (not (empty? kentan-virheet))
                              (case nayta-virheet?
@@ -95,39 +93,46 @@
                                :aina true))
                     (virheen-ohje kentan-virheet))
 
-                  ;; Pienennettyyn kenttään ei piirretä komponentteja eikä muokattavia kenttiä
-                  (when-not pienennetty?
-                    (if (= tyyppi :komponentti)
-                      (komponentti rivi {:index i
-                                         :muokataan? true})
-                      (if voi-muokata?
-                        [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+                  (cond
+                    ;; Disabloidun muokkauskentän sisältö määritellään erikseen.
+                    ;; Jos ei määritelty, ei muokkauskenttää piirretä disabloidulle riville
+                    (and rivi-disabloitu? (:sisalto-kun-disabloitu sarake))
+                    ((:sisalto-kun-disabloitu sarake) rivi i)
 
-                         (when tayta-alas
-                           (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
-                                                           :fokus-id fokus-id
-                                                           :arvo arvo :tayta-alas tayta-alas
-                                                           :rivi-index rivi-index
-                                                           :tulevat-rivit tulevat-rivit
-                                                           :hae hae
-                                                           :sarake sarake :ohjaus ohjaus :rivi rivi}))
+                    (and (not rivi-disabloitu?) (= tyyppi :komponentti))
+                    (komponentti rivi {:index i
+                                       :muokataan? true})
 
-                         [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
-                          (r/wrap
-                            arvo
-                            (fn [uusi]
-                              (if aseta
-                                (muokkaa! muokatut-atom virheet skeema
-                                          id (fn [rivi]
-                                               (aseta rivi uusi)))
-                                (muokkaa! muokatut-atom virheet skeema
-                                          id assoc nimi uusi))))]]
-                        [nayta-arvo (assoc sarake :index i :muokataan? false)
-                         (vain-luku-atomina arvo)])))]
+                    (and (not rivi-disabloitu?) (not= tyyppi :komponentti))
+                    (if voi-muokata?
+                      [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+
+                       (when tayta-alas
+                         (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
+                                                         :fokus-id fokus-id
+                                                         :arvo arvo :tayta-alas tayta-alas
+                                                         :rivi-index rivi-index
+                                                         :tulevat-rivit tulevat-rivit
+                                                         :hae hae
+                                                         :sarake sarake :ohjaus ohjaus :rivi rivi}))
+
+                       [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
+                        (r/wrap
+                          arvo
+                          (fn [uusi]
+                            (if aseta
+                              (muokkaa! muokatut-atom virheet skeema
+                                        id (fn [rivi]
+                                             (aseta rivi uusi)))
+                              (muokkaa! muokatut-atom virheet skeema
+                                        id assoc nimi uusi))))]]
+                      [nayta-arvo (assoc sarake :index i :muokataan? false)
+                       (vain-luku-atomina arvo)]))]
 
                  ^{:key (str j nimi)}
                  [:td {:class (str "ei-muokattava " tasaus-luokka)}
-                  ((or fmt str) (hae rivi))])))) skeema))
+                  ((or fmt str) (hae rivi))]))))
+         skeema))
      (when-not piilota-toiminnot?
        [:td.toiminnot
         (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
@@ -146,8 +151,7 @@
 
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
-                             pienenna-rivi? pienennetyn-rivin-otsikko
-                             muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
+                             disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                              vetolaatikot-auki virheet-ylos? toimintonappi-fn]}]
   [:tbody
    (let [muokatut-atom muokatut
@@ -182,7 +186,7 @@
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
                                           :tulevat-rivit (tulevat-rivit i) :rivi-index i
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
-                                          :pienenna-rivi? pienenna-rivi? :pienennetyn-rivin-otsikko pienennetyn-rivin-otsikko
+                                          :disabloi-rivi? disabloi-rivi?
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                           :skeema skeema :voi-poistaa? voi-poistaa?
                                           :toimintonappi-fn toimintonappi-fn}]
@@ -240,7 +244,7 @@
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
-           virhe-viesti toimintonappi-fn pienennetyn-rivin-otsikko pienenna-rivi?] :as opts}
+           virhe-viesti toimintonappi-fn disabloi-rivi?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -359,7 +363,7 @@
       {:reagent-render
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
-                    vetolaatikot uusi-id paneelikomponentit validoi-aina? pienennetyn-rivin-otsikko pienenna-rivi?
+                    vetolaatikot uusi-id paneelikomponentit validoi-aina? disabloi-rivi?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
@@ -402,8 +406,7 @@
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
                              :vetolaatikot vetolaatikot :nayta-virheet? nayta-virheet?
                              :nykyinen-fokus nykyinen-fokus :peru! peru!
-                             :pienennetyn-rivin-otsikko pienennetyn-rivin-otsikko
-                             :pienenna-rivi? pienenna-rivi?
+                             :disabloi-rivi? disabloi-rivi?
                              :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
