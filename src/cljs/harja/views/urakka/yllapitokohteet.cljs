@@ -342,7 +342,7 @@
                              (tierekisteriosoite-sarakkeet
                                tr-leveys
                                [{:nimi :nimi :pituus-max 30
-                                 :sisalto-kun-rivi-disabloitu (constantly "Hyppy")}
+                                 :sisalto-kun-rivi-disabloitu (constantly [:div.keskita "Hyppy"])}
                                 {:nimi :tr-numero :muokattava? (constantly false)}
                                 {:nimi :tr-ajorata :muokattava? (constantly false)}
                                 {:nimi :tr-kaista :muokattava? (constantly false)}
