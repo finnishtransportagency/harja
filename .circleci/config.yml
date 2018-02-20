@@ -46,7 +46,7 @@ jobs:
             - asetukset.edn
             - cypress.json
 
-  unit-tests:
+  backend-unit-tests:
     docker:
       - image: solita/napote-circleci:latest
       - image: solita/harjadb:latest
@@ -73,13 +73,59 @@ jobs:
           name: Run unit tests (without performance tests)
           command: lein test :no-perf
 
-      - run:
-          name: Run desktop Phantom front end tests
-          command: lein doo phantom test once
+  frontend-desktop-app-unit-tests:
+    docker:
+      - image: solita/napote-circleci:latest
+      - image: solita/harjadb:latest
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: /tmp/harja
 
       - run:
-          name: Run mobile Phantom front end tests
-          command: lein doo phantom laadunseuranta-test once
+          name: Run migrations, setup test database and import test data
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
+      - run:
+          name: Set timezone
+          command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
+
+      - run:
+          name: Set timezone (again)
+          command: sudo dpkg-reconfigure --frontend noninteractive tzdata
+
+      - run:
+          name: Run desktop app Phantom front end tests
+          command: lein doo phantom test once
+
+  frontend-mobile-app-unit-tests:
+        docker:
+          - image: solita/napote-circleci:latest
+          - image: solita/harjadb:latest
+
+        steps:
+          - checkout
+
+          - attach_workspace:
+              at: /tmp/harja
+
+          - run:
+              name: Run migrations, setup test database and import test data
+              command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
+          - run:
+              name: Set timezone
+              command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
+
+          - run:
+              name: Set timezone (again)
+              command: sudo dpkg-reconfigure --frontend noninteractive tzdata
+
+          - run:
+              name: Run mobile app Phantom front end tests
+              command: lein doo phantom laadunseuranta-test once
 
   e2e-pr:
     docker:
@@ -143,9 +189,15 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - unit-tests:
+      - backend-unit-tests:
           requires:
             - build
+      - frontend-desktop-app-unit-tests:
+          requires:
+            - build
+      - frontend-mobile-app-unit-tests:
+                requires:
+                  - build
       - e2e-pr:
           requires:
             - build
