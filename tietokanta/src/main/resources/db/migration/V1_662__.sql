@@ -134,13 +134,13 @@ CREATE TABLE tielupa (
   "hakija-maakoodi"                                               TEXT,
 
   -- urakoitsijan tiedot
-  "urakoitsija-nimi"                                              TEXT,
+  "urakoitsija-nimi"                                              TEXT                                 NOT NULL,
   "urakoitsija-yhteyshenkilo"                                     TEXT,
   "urakoitsija-puhelinnumero"                                     TEXT,
   "urakoitsija-sahkopostiosoite"                                  TEXT,
 
   -- liikenteenohjauksesta vastaavan tiedot
-  "liikenneohjaajan-nimi"                                         TEXT,
+  "liikenneohjaajan-nimi"                                         TEXT                                 NOT NULL,
   "liikenneohjaajan-yhteyshenkilo"                                TEXT,
   "liikenneohjaajan-puhelinnumero"                                TEXT,
   "liikenneohjaajan-sahkopostiosoite"                             TEXT,
