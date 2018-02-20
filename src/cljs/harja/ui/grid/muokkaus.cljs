@@ -86,7 +86,8 @@
                  ^{:key (str j nimi)}
                  [:td {:class (str "muokattava "
                                    tasaus-luokka
-                                   (when-not (empty? kentan-virheet)
+                                   (when (and (not (empty? kentan-virheet))
+                                              (not pienennetty?))
                                      " sisaltaa-virheen"))}
                   (when (and (not (empty? kentan-virheet))
                              (case nayta-virheet?
@@ -94,6 +95,7 @@
                                :aina true))
                     (virheen-ohje kentan-virheet))
 
+                  ;; Pienennettyyn kenttään ei piirretä komponentteja eikä muokattavia kenttiä
                   (when-not pienennetty?
                     (if (= tyyppi :komponentti)
                       (komponentti rivi {:index i
