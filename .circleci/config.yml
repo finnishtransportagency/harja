@@ -25,15 +25,15 @@ jobs:
             - ~/.m2
 
       - run:
-          name: Aja migraatiot, pystytä testitietokanta ja aja sisään testidata
+          name: Run migrations, setup test database and import test data
           command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - run:
-          name: Rakenna Harja JAR
+          name: Build Harja JAR
           command: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
 
       - run:
-          name: Konfiguroi buildi
+          name: Configure build
           command: |
             mkdir /tmp/harja
             cp asetukset.edn cypress.json /tmp/harja/
@@ -58,27 +58,27 @@ jobs:
           at: /tmp/harja
 
       - run:
-          name: Aja migraatiot, pystytä testitietokanta ja aja sisään testidata
+          name: Run migrations, setup test database and import test data
           command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - run:
-          name: Aseta aikavyöhyke
+          name: Set timezone
           command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
 
       - run:
-          name: Aseta aikavyöhyke
+          name: Set timezone (again)
           command: sudo dpkg-reconfigure --frontend noninteractive tzdata
 
       - run:
-          name: Aja yksikkötestit ilman suorituskykytestejä
+          name: Run unit tests (without performance tests)
           command: lein test :no-perf
 
       - run:
-          name: Aja Harjan front end -testit
+          name: Run desktop Phantom front end tests
           command: lein doo phantom test once
 
       - run:
-          name: Aja mobiililaadunseurannan front end -testit
+          name: Run mobile Phantom front end tests
           command: lein doo phantom laadunseuranta-test once
 
   e2e-pr:
@@ -101,7 +101,7 @@ jobs:
           at: /tmp/harja
 
       - run:
-          name: Aja migraatiot, pystytä testitietokanta ja aja sisään testidata
+          name: Run migrations, setup test database and import test data
           command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - restore_cache:
@@ -109,7 +109,7 @@ jobs:
             - v2-npm-deps-
 
       - run:
-          name: Asenna Cypress
+          name: Install Cypress
           command: npm i cypress@1.x && $(npm bin)/cypress verify
 
       - save_cache:
@@ -118,24 +118,24 @@ jobs:
             - node_modules
 
       - run:
-          name: Korjaa salasanat asetuksiin
+          name: Set up secretes to settings
           command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/#=(slurp "[^"]*")/"xxxx"/g'
 
       - run:
-          name: Aseta kehitysmoodi pois päältä
+          name: Set development mode off
           command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/:kehitysmoodi true/:kehitysmoodi false/'
 
       - run:
-          name: Käynnistä Harja-sovellus
+          name: Start up app
           command: cd /tmp/harja && env TZ=EET java -jar harja.jar
           background: true
 
       - run:
-          name: Odota sovelluksen käynnistymistä
+          name: Wait for app to start up
           command: for i in {1..10}; do curl http://localhost:3000 > /dev/null 2>&1 && break; echo wait/retry $i; sleep 5; done
 
       - run:
-          name: Aja smoketestit pull requestille
+          name: Run Cypress E2E smoke tests
           command: $(npm bin)/cypress run --browser chrome --spec cypress/integration/nakymien_avaus_spec.js
 
 workflows:
@@ -148,4 +148,4 @@ workflows:
             - build
       - e2e-pr:
           requires:
-            - unit-tests
+            - build
