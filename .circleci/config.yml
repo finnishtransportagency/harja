@@ -70,7 +70,7 @@ jobs:
 
       #- run:
       #    name: Set timezone (again)
-      #    command: sudo dpkg-reconfigure --frontend noninteractive tzdata
+      #    command: sudo dpkg-reconfigure --frontend nonintera  ctive tzdata
 
       - run:
           name: Run unit tests (without performance tests)
@@ -233,15 +233,9 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - backend-unit-tests:
-          requires:
-            - build
-      - frontend-desktop-app-unit-tests:
-          requires:
-            - build
-      - frontend-mobile-app-unit-tests:
-                requires:
-                  - build
+      - backend-unit-tests
+      - frontend-desktop-app-unit-tests
+      - frontend-mobile-app-unit-tests
       - e2e-pr:
           requires:
             - build
