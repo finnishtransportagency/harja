@@ -109,6 +109,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     border-collapse: collapse;
     table-layout: fixed;
   }
+
   table.grid tr.vetolaatikko-auki {
     display: table-row;
     > td {
@@ -261,6 +262,16 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
         padding: 0;
       }
     }
+  }
+
+  tr.pienennetty-rivi {
+    background-color: @harmaa6 !important;
+    height: 5px;
+    color: @valkoinen;
+  }
+
+  .pienennetty-rivi-otsikko {
+    padding: 3px;
   }
 
   .livi-grid-pagination {

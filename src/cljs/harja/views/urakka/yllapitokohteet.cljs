@@ -304,7 +304,7 @@
               [:span
                [napit/yleinen-toissijainen (if rivi-hyppy? "Poista hyppy" "Aseta hyppy")
                 #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) (not rivi-hyppy?)))
-                {:disabled (= 1 (count kohdeosat-nyt))
+                {:disabled (= 1 (count kohdeosat-nyt)) ;; TODO Lisäksi: ei kahta peräkkäistä?
                  :luokka "btn-xs"}]
                [napit/yleinen-ensisijainen "Lisää"
                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))

@@ -60,82 +60,87 @@
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
                              pienenna-rivi? pienennetyn-rivin-otsikko
                              voi-poistaa? toimintonappi-fn]}]
-  [:tr.muokataan {:class (str (if (even? (+ i 1))
-                                "parillinen"
-                                "pariton"))}
-   (if rivinumerot? [:td.rivinumero (+ i 1)])
-   (doall
-     (map-indexed
-       (fn [j {:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
-                      komponentti] :as sarake}]
-         (if (= :vetolaatikon-tila tyyppi)
-           ^{:key (str "vetolaatikontila" id)}
-           [vetolaatikon-tila ohjaus vetolaatikot id]
-           (let [sarake (assoc sarake :rivi rivi)
-                 hae (or hae #(get % nimi))
-                 arvo (hae rivi)
-                 tasaus-luokka (y/tasaus-luokka tasaa)
-                 kentan-virheet (get rivin-virheet nimi)
-                 tayta-alas (:tayta-alas? sarake)
-                 fokus-id [i nimi]]
-             (if (or (nil? muokattava?) (muokattava? rivi i))
-               ^{:key (str j nimi)}
-               [:td {:class (str "muokattava "
-                                 tasaus-luokka
-                                 (when-not (empty? kentan-virheet)
-                                   " sisaltaa-virheen"))}
-                (when (and (not (empty? kentan-virheet))
-                           (case nayta-virheet?
-                             :fokus (= nykyinen-fokus [i nimi])
-                             :aina true))
-                  (virheen-ohje kentan-virheet))
+  (let [pienennetty? (and pienenna-rivi? (pienenna-rivi? rivi))]
+    [:tr.muokataan {:class (str (if (even? (+ i 1))
+                                  "parillinen "
+                                  "pariton ")
+                                (when pienennetty? "pienennetty-rivi"))}
+     (when rivinumerot? [:td.rivinumero (+ i 1)])
+     (when (and pienennetty? pienennetyn-rivin-otsikko)
+       [:span.pienennetty-rivi-otsikko (pienennetyn-rivin-otsikko rivi)])
+     (doall
+       (map-indexed
+         (fn [j {:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
+                        komponentti] :as sarake}]
+           (if (= :vetolaatikon-tila tyyppi)
+             ^{:key (str "vetolaatikontila" id)}
+             [vetolaatikon-tila ohjaus vetolaatikot id]
+             (let [sarake (assoc sarake :rivi rivi)
+                   hae (or hae #(get % nimi))
+                   arvo (hae rivi)
+                   tasaus-luokka (y/tasaus-luokka tasaa)
+                   kentan-virheet (get rivin-virheet nimi)
+                   tayta-alas (:tayta-alas? sarake)
+                   fokus-id [i nimi]]
+               (if (or (nil? muokattava?) (muokattava? rivi i))
+                 ^{:key (str j nimi)}
+                 [:td {:class (str "muokattava "
+                                   tasaus-luokka
+                                   (when-not (empty? kentan-virheet)
+                                     " sisaltaa-virheen"))}
+                  (when (and (not (empty? kentan-virheet))
+                             (case nayta-virheet?
+                               :fokus (= nykyinen-fokus [i nimi])
+                               :aina true))
+                    (virheen-ohje kentan-virheet))
 
-                (if (= tyyppi :komponentti)
-                  (komponentti rivi {:index i
-                                     :muokataan? true})
-                  (if voi-muokata?
-                    [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
+                  (when-not pienennetty?
+                    (if (= tyyppi :komponentti)
+                      (komponentti rivi {:index i
+                                         :muokataan? true})
+                      (if voi-muokata?
+                        [:span.grid-kentta-wrapper (when tayta-alas {:style {:position "relative"}})
 
-                     (when tayta-alas
-                       (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
-                                                       :fokus-id fokus-id
-                                                       :arvo arvo :tayta-alas tayta-alas
-                                                       :rivi-index rivi-index
-                                                       :tulevat-rivit tulevat-rivit
-                                                       :hae hae
-                                                       :sarake sarake :ohjaus ohjaus :rivi rivi}))
+                         (when tayta-alas
+                           (grid-yleiset/tayta-alas-nappi {:fokus (when fokus @fokus)
+                                                           :fokus-id fokus-id
+                                                           :arvo arvo :tayta-alas tayta-alas
+                                                           :rivi-index rivi-index
+                                                           :tulevat-rivit tulevat-rivit
+                                                           :hae hae
+                                                           :sarake sarake :ohjaus ohjaus :rivi rivi}))
 
-                     [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
-                      (r/wrap
-                        arvo
-                        (fn [uusi]
-                          (if aseta
-                            (muokkaa! muokatut-atom virheet skeema
-                                      id (fn [rivi]
-                                           (aseta rivi uusi)))
-                            (muokkaa! muokatut-atom virheet skeema
-                                      id assoc nimi uusi))))]]
-                    [nayta-arvo (assoc sarake :index i :muokataan? false)
-                     (vain-luku-atomina arvo)]))]
+                         [tee-kentta (assoc sarake :on-focus #(reset! fokus [i nimi]))
+                          (r/wrap
+                            arvo
+                            (fn [uusi]
+                              (if aseta
+                                (muokkaa! muokatut-atom virheet skeema
+                                          id (fn [rivi]
+                                               (aseta rivi uusi)))
+                                (muokkaa! muokatut-atom virheet skeema
+                                          id assoc nimi uusi))))]]
+                        [nayta-arvo (assoc sarake :index i :muokataan? false)
+                         (vain-luku-atomina arvo)])))]
 
-               ^{:key (str j nimi)}
-               [:td {:class (str "ei-muokattava " tasaus-luokka)}
-                ((or fmt str) (hae rivi))])))) skeema))
-   (when-not piilota-toiminnot?
-     [:td.toiminnot
-      (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
-          (when (and (not= false voi-muokata?)
-                     (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
-            [:span.klikattava {:on-click
-                               #(do (.preventDefault %)
-                                    (muokkaa! muokatut-atom
-                                              virheet skeema
-                                              id assoc
-                                              :poistettu true))}
-             (ikonit/livicon-trash)]))
-      (when-not (empty? rivin-virheet)
-        [:span.rivilla-virheita
-         (ikonit/livicon-warning-sign)])])])
+                 ^{:key (str j nimi)}
+                 [:td {:class (str "ei-muokattava " tasaus-luokka)}
+                  ((or fmt str) (hae rivi))])))) skeema))
+     (when-not piilota-toiminnot?
+       [:td.toiminnot
+        (or (toimintonappi-fn rivi (partial muokkaa! muokatut-atom virheet skeema id))
+            (when (and (not= false voi-muokata?)
+                       (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
+              [:span.klikattava {:on-click
+                                 #(do (.preventDefault %)
+                                      (muokkaa! muokatut-atom
+                                                virheet skeema
+                                                id assoc
+                                                :poistettu true))}
+               (ikonit/livicon-trash)]))
+        (when-not (empty? rivin-virheet)
+          [:span.rivilla-virheita
+           (ikonit/livicon-warning-sign)])])]))
 
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
