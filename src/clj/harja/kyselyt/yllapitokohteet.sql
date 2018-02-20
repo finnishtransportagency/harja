@@ -294,7 +294,8 @@ SELECT
   tyomenetelma,
   massamaara            AS "massamaara",
   toimenpide,
-  sijainti
+  sijainti,
+  hyppy                 AS "hyppy?"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
                             AND ypk.poistettu IS NOT TRUE
@@ -319,7 +320,8 @@ SELECT
   tyomenetelma,
   massamaara            AS "massamaara",
   toimenpide,
-  sijainti
+  sijainti,
+  hyppy                 AS "hyppy?"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
                             AND ypk.poistettu IS NOT TRUE
