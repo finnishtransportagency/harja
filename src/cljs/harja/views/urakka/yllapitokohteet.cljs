@@ -307,7 +307,7 @@
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
             (let [rivi-hyppy? (get-in kohdeosat-nyt [(inc index) :hyppy?])]
-              [:span
+              [:div.tasaa-oikealle
                [napit/yleinen-ensisijainen "Lisää"
                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
                 {:disabled (= kohdetyyppi :sora)
@@ -449,10 +449,11 @@
                             :tasaa :keskita
                             :sisalto-kun-rivi-disabloitu
                             (fn [rivi index]
-                              [napit/yleinen-toissijainen "Poista hyppy"
-                               #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) false))
-                               {:disabled (= 1 (count kohdeosat-nyt))
-                                :luokka "btn-xs"}])
+                              [:div.tasaa-oikealle
+                               [napit/yleinen-toissijainen "Poista hyppy"
+                                #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) false))
+                                {:disabled (= 1 (count kohdeosat-nyt))
+                                 :luokka "btn-xs"}]])
                             :komponentti (toiminnot-komponentti kohdeosat-nyt
                                                                 muokkaa-kohdeosat!)})
                      skeema)
