@@ -27,16 +27,24 @@ jobs:
 
       - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
-      # # run tests!
-      # - run: env TZ=EET lein test
+      - run:
+          name: Aja yksikkötestit ilman suorituskykytestejä
+          command: lein test :no-perf
 
       - run:
-          name: Build Harja jar
-          # command: lein do compile, cljsbuild once prod, less once, uberjar # järkeilty
-          command: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar # kopioitu traviksesta
+          name: Aja Harjan fronttitestit
+          command: lein doo phantom test once
 
       - run:
-          name: Configure build
+          name: Aja mobiililaadunseurannan fronttitestit
+          command: lein doo phantom laadunseuranta-test once
+
+      - run:
+          name: Rakenna Harja jar
+          command: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
+
+      - run:
+          name: Konfiguroi builidi
           command: |
             mkdir /tmp/harja
             cp asetukset.edn cypress.json /tmp/harja/
@@ -59,7 +67,6 @@ jobs:
     working_directory: ~/repo
 
     environment:
-      ## this enables colors + fixes failing unit tests (they say)
       TERM: "xterm"
       LEIN_ROOT: "true"
       CYPRESS_BASE_URL: "http://localhost:3000"
@@ -69,10 +76,8 @@ jobs:
       - checkout
 
       - attach_workspace:
-          # Must be absolute path or relative path from working_directory
           at: /tmp/harja
 
-      # setup database
       - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - restore_cache:
@@ -80,7 +85,7 @@ jobs:
             - v2-npm-deps-
 
       - run:
-          name: Install Cypress
+          name: Asenna Cypress
           command: npm i cypress@1.x && $(npm bin)/cypress verify
 
       - save_cache:
@@ -89,25 +94,24 @@ jobs:
             - node_modules
 
       - run:
-          name: replace slurped secrets
+          name: Korjaa salasanat asetuksiin
           command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/#=(slurp "[^"]*")/"xxxx"/g'
 
       - run:
-          name: replace slurped secrets
+          name: Aseta kehitysmoodi pois päältä
           command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/:kehitysmoodi true/:kehitysmoodi false/'
 
       - run:
-          name: Run Harja app
+          name: Käynnistä Harja-sovellus
           command: cd /tmp/harja && env TZ=EET java -jar harja.jar
           background: true
 
       - run:
-          name: Wait for app start
+          name: Odota sovelluksen käynnistymistä
           command: for i in {1..10}; do curl http://localhost:3000 > /dev/null 2>&1 && break; echo wait/retry $i; sleep 5; done
 
-      # Note: When running with chrome, it seems we cannot record a video. Only Electron browser can record a video.
       - run:
-          name: Run smoke tests for pull request
+          name: Aja smoketestit pull requestille
           command: $(npm bin)/cypress run --browser chrome --spec cypress/integration/nakymien_avaus_spec.js
 
 workflows:
