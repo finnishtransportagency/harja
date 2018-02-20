@@ -76,7 +76,11 @@
             "yksikkohintainen"
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
             "kokonaishintainen"
-            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id))]))
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id)
+            "muutostyo"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
+            "lisatyo"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id))]))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
@@ -774,6 +778,13 @@
   (let [idt (into [] (:idt tiedot))]
     (toteumat-q/hae-toteumien-reitit db {:idt idt :urakka-id (:urakka-id tiedot)})))
 
+(defn- hae-toteuman-liitteet [db user {:keys [urakka-id toteuma-id oikeus]}]
+  (let [nst-joista-saa-kutsua-toteuman-liitteden-hakua #{'urakat-toteumat-varusteet}] ;; voit lisätä oikeuksia tarpeen mukaan
+    (when (nst-joista-saa-kutsua-toteuman-liitteden-hakua oikeus)
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
+      (oikeudet/vaadi-lukuoikeus (deref (ns-resolve 'harja.domain.oikeudet oikeus)) user urakka-id)
+      (toteumat-q/hae-toteuman-liitteet db toteuma-id))))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -855,7 +866,12 @@
         (siirry-toteuma db-replica user toteuma-id))
       :hae-toteumien-reitit
       (fn [user tiedot]
-        (hae-toteumien-reitit db-replica user tiedot)))
+        (hae-toteumien-reitit db-replica user tiedot))
+      :hae-toteuman-liitteet
+      (fn [user {:keys [urakka-id toteuma-id oikeus]}]
+        (hae-toteuman-liitteet db user {:urakka-id urakka-id
+                                        :toteuma-id toteuma-id
+                                        :oikeus oikeus})))
     this)
 
   (stop [this]
@@ -879,5 +895,6 @@
       :hae-toteuman-reitti-ja-tr-osoite
       :siirry-toteuma
       :tallenna-varustetoteuma
-      :hae-toteumien-reitit)
+      :hae-toteumien-reitit
+      :hae-toteuman-liitteet)
     this))

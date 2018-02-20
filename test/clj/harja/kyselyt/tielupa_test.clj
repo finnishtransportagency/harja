@@ -58,7 +58,7 @@
    ::tielupa/urakoitsija-yhteyshenkilo "Yrjänä Yhteyshenkilo"
    ::tielupa/urakoitsija-nimi "Puulaaki Oy"})
 
-(deftest hae-kanavan-toimenpiteet
+(deftest hae-tieluvat
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         haettu-osasto "Osasto 123"
         vastaus (tielupa-q/hae-tieluvat db {::tielupa/hakija-osasto haettu-osasto})]

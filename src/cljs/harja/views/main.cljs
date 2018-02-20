@@ -244,7 +244,6 @@
   []
   (varoita-jos-vanha-ie)
   (kuuntele-oikeusvirheita)
-  (hairiotiedot/tarkkaile-hairioilmoituksia!)
   (komp/luo
     (fn []
       (if @nav/render-lupa?

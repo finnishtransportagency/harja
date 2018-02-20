@@ -22,7 +22,6 @@
             [harja.domain.ely :as ely])
   (:use org.httpkit.fake))
 
-
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
@@ -191,7 +190,8 @@
   (let [parametrit-paallystys (assoc hakuargumentit-laaja-historia :urakkatyyppi :paallystys)
         vastaus (hae-tk hakuargumentit-laaja-historia)
         vastaus-paallystys (hae-tk parametrit-paallystys)]
-    (is (= (:selitteet (:toteumat vastaus)) (:selitteet (:toteumat vastaus-paallystys))))))
+    (is (= (set (:selitteet (:toteumat vastaus)))
+           (set (:selitteet (:toteumat vastaus-paallystys)))))))
 
 (deftest ala-hae-tarkastuksia
   (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :tarkastukset)

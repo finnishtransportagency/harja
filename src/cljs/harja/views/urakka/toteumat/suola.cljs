@@ -24,16 +24,11 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (defn nayta-toteumat-kartalla [toteumat]
-  (let [idt (map :tid toteumat)]
-    (nav/vaihda-kartan-koko! :L)
-    (reset! tiedot/valitut-toteumat
-            (into #{} (concat @tiedot/valitut-toteumat idt))))
-  (reset! tiedot/valittu-suolatoteuma (first toteumat)))
+  (nav/vaihda-kartan-koko! :L)
+  (tiedot/valitse-suolatoteumat toteumat))
 
 (defn piilota-toteumat-kartalla [toteumat]
-  (let [idt (map :tid toteumat)]
-    (reset! tiedot/valitut-toteumat
-            (into #{} (remove (into #{} idt) @tiedot/valitut-toteumat)))))
+  (tiedot/poista-valituista-suolatoteumista toteumat))
 
 (defn suolankayton-paivan-erittely [suolan-kaytto]
   [grid/grid
@@ -42,20 +37,23 @@
     :tunniste :id}
    [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
-    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero :leveys 10}
+    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
+     :fmt #(fmt/desimaaliluku-opt % 3) :desimaalien-maara 3 :leveys 10}
     {:otsikko ""
      :nimi :nayta-kartalla
      :tyyppi :komponentti
      :leveys 7
      :komponentti (fn [toteuma]
                     [:div
-                     [:button.nappi-ensisijainen.nappi-grid
-                      {:on-click #(if (contains? @tiedot/valitut-toteumat (:tid toteuma))
+                     [(if (tiedot/valittu-suolatoteuma? toteuma)
+                        :button.nappi-toissijainen.nappi-grid
+                        :button.nappi-ensisijainen.nappi-grid)
+                      {:on-click #(if (tiedot/valittu-suolatoteuma? toteuma)
                                     (piilota-toteumat-kartalla [toteuma])
                                     (nayta-toteumat-kartalla [toteuma]))}
                       (ikonit/ikoni-ja-teksti
                         (ikonit/map-marker)
-                        (if (contains? @tiedot/valitut-toteumat (:tid toteuma))
+                        (if (tiedot/valittu-suolatoteuma? toteuma)
                           "Piilota kartalta"
                           "Näytä kartalla"))]])}]
    (map-indexed (fn [i toteuma]
@@ -78,7 +76,7 @@
                                oikeudet/urakat-toteumat-suola
                                (:id @nav/valittu-urakka))
                            #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
-                                  (paivita! toteumat)))
+                                  (paivita! tiedot/toteumat)))
                            :ei-mahdollinen)
                :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-toteumat-suola)
                :tyhja (if (nil? @tiedot/toteumat)
@@ -90,35 +88,37 @@
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                :vetolaatikot (into {}
                                    (map (juxt :id (fn [rivi] [suolankayton-paivan-erittely rivi])))
-                                   @tiedot/toteumat)}
+                                   @tiedot/toteumat)
+               :piilota-toiminnot? true}
     [{:tyyppi :vetolaatikon-tila :leveys "1%"}
-     {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys "15%" :muokattava? muokattava?
+     {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 15 :muokattava? muokattava?
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse materiaali"]]
       :valinta-nayta #(or (:nimi %) "- valitse -")
       :valinnat @tiedot/materiaalit}
-     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys "15%" :muokattava? muokattava?
+     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 15 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna päivämäärä"]]
       :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
-     {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku % 3)
-      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys "15%" :muokattava? muokattava?
+     {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
+      :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 15 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
-     {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys "40%" :muokattava? muokattava?
+     {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 30 :muokattava? muokattava?
       :hae #(if (muokattava? %)
               (:lisatieto %)
-              (str (:lisatieto %) " (Koneellisesti raportoitu)"))}
+              (str (:lisatieto %) " (Koneellisesti raportoitu, toteumia: "
+                   (count (:toteumat %)) ")"))}
      {:otsikko ""
       :nimi :nayta-kartalla
       :tyyppi :komponentti
-      :leveys "10%"
+      :leveys "20"
       :komponentti (fn [rivi]
                      (let [toteumat (:toteumat rivi)
-                           valittu? #(some (fn [toteuma]
-                                             (contains? @tiedot/valitut-toteumat (:tid toteuma)))
-                                           toteumat)]
+                           valittu? #(some (fn [toteuma] (tiedot/valittu-suolatoteuma? toteuma)) toteumat)]
                        (when (not (empty? toteumat))
                          [:div
-                          [:button.nappi-ensisijainen.nappi-grid
+                          [(if (valittu?)
+                             :button.nappi-toissijainen.nappi-grid
+                             :button.nappi-ensisijainen.nappi-grid)
                            {:on-click #(if (valittu?)
                                          (piilota-toteumat-kartalla toteumat)
                                          (nayta-toteumat-kartalla toteumat))}
@@ -151,7 +151,7 @@
             materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
                                                nimi)
                                             @tiedot/toteumat))
-            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku (reduce + (keep :maara listaus))) "t")]
+            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku-opt (reduce + (keep :maara listaus))) "t")]
         (suolatoteumat-taulukko muokattava?
                                 urakka
                                 sopimus-id

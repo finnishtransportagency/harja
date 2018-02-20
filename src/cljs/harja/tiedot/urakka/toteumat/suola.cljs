@@ -12,7 +12,7 @@
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(declare hae-toteumat hae-materiaalit hae-toteumien-reitit!)
+(declare hae-toteumat hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
 
 (defonce suolatoteumissa? (atom false))
 
@@ -43,32 +43,49 @@
 (defonce valitut-toteumat (atom #{}))
 
 (defonce valitut-toteumat-kartalla
-  (reaction<! [toteumat @valitut-toteumat @nav/valittu-urakka]
+  (reaction<! [toteumat (distinct (map :tid @valitut-toteumat))
+               valittu-urakka @nav/valittu-urakka]
               (when @nav/valittu-urakka
                 (hae-toteumien-reitit! (:id @nav/valittu-urakka) toteumat))))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
-(defonce valittu-suolatoteuma (atom nil))
-
 (def karttataso-suolatoteumat (atom false))
-
-(defn valittu-suolatoteuma? [suolatoteuma]
-  (and @valittu-suolatoteuma suolatoteuma (= (:tid suolatoteuma) (:tid @valittu-suolatoteuma))))
-
-(defn hae-toteuman-sijainti [toteuma]
-  (:sijainti (first (filter #(= (:tid toteuma) (:id %)) @valitut-toteumat-kartalla))))
 
 (defonce suolatoteumat-kartalla
   (reaction
     (when @karttataso-suolatoteumat
       (kartalla-esitettavaan-muotoon
         (let [yksittaiset-toteumat (filter
-                                     #(contains? @valitut-toteumat (:tid %))
+                                     #(valittu-suolatoteuma? %)
                                      (apply concat (map :toteumat @toteumat)))]
           (map #(assoc % :tyyppi-kartalla :suolatoteuma
                          :sijainti (hae-toteuman-sijainti %)) yksittaiset-toteumat))
-        #(valittu-suolatoteuma? %)))))
+        #(constantly false)))))
+
+(defn hae-toteuman-sijainti [toteuma]
+  (:sijainti (first (filter #(= (:tid toteuma) (:id %))
+                            @valitut-toteumat-kartalla))))
+
+(defn eriteltavat-toteumat [toteumat]
+  (map #(hash-map :tid (:tid %) :materiaali_nimi (:materiaali_nimi %)) toteumat))
+
+(defn valittu-suolatoteuma? [toteuma]
+  (contains? @valitut-toteumat {:tid (:tid toteuma)
+                                :materiaali_nimi (:materiaali_nimi toteuma)}))
+
+(defn valitse-suolatoteumat [toteumat]
+  (reset! valitut-toteumat
+          (into #{}
+                (concat @valitut-toteumat
+                        (eriteltavat-toteumat toteumat)))))
+
+(defn poista-valituista-suolatoteumista [toteumat]
+  (reset! valitut-toteumat
+          (into #{}
+                (remove (into #{}
+                              (eriteltavat-toteumat toteumat))
+                        @valitut-toteumat))))
 
 (defn hae-toteumat [urakka-id [alkupvm loppupvm]]
   {:pre [(int? urakka-id)]}

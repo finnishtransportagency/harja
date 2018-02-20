@@ -108,6 +108,7 @@
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
+    [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -240,7 +241,7 @@
 
       ;; T-LOIK
       :tloik (component/using
-               (tloik/->Tloik (:tloik asetukset))
+               (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
                [:sonja :db :integraatioloki :klusterin-tapahtumat
                 :sonja-sahkoposti :labyrintti])
 
@@ -613,6 +614,9 @@
       :api-tieluvat (component/using
                       (api-tieluvat/->Tieluvat)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
+      :api-paikkaukset (component/using
+                         (api-paikkaukset/->Paikkaukset)
+                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

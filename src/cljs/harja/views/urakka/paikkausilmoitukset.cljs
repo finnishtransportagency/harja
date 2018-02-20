@@ -238,7 +238,7 @@
                   :tyyppi :komponentti
                   :komponentti (fn [_]
                                  [kommentit/kommentit {:voi-kommentoida? (not= :lukittu (:tila @paikkaus/paikkausilmoitus-lomakedata))
-                                                      :voi-liittaa false
+                                                      :voi-liittaa? false
                                                       :leveys-col 40
                                                       :placeholder "Kirjoita kommentti..."
                                                       :uusi-kommentti (r/wrap (:uusi-kommentti @paikkaus/paikkausilmoitus-lomakedata)

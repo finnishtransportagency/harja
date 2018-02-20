@@ -36,7 +36,7 @@
   (:require [clojure.string :as str]
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
+            [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.domain.raportointi :refer [info-solu]]
             [harja.domain.urakka :as urakka]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi raportin-otsikko vuosi-ja-kk

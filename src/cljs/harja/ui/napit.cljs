@@ -223,6 +223,13 @@
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)})]))
 
+(defn sulje
+  ([toiminto] (yleinen-toissijainen "Sulje" toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-toissijainen" " " luokka)})]))
+
 (defn tallenna
   ([teksti toiminto] (tallenna teksti toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]
