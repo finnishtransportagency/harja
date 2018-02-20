@@ -15,12 +15,12 @@ jobs:
 
       - restore_cache:
           keys:
-          - v2-dependencies-{{ .Branch }}-{{ checksum "harja/project.clj" }}
+          - v2-dependencies-{{ .Branch }}-{{ checksum "project.clj" }}
           - v2-dependencies-{{ .Branch }}
           - v2-dependencies-
 
       - save_cache:
-          key: v2-dependencies-{{ .Branch }}-{{ checksum "harja/project.clj" }}
+          key: v2-dependencies-{{ .Branch }}-{{ checksum "project.clj" }}
           paths:
             - ~/.m2
 
