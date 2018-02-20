@@ -240,10 +240,7 @@ FROM
   LEFT JOIN organisaatio o ON t.organisaatio = o.id
   LEFT JOIN urakka u ON u.id = t.urakkaid
 WHERE sijainti IS NOT NULL AND
-      (t.urakkaid IN (:urakat) OR
-       -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
-       (t.urakkaid IS NULL AND
-        (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+      (t.urakkaid IN (:urakat)) AND
       (t.lahetysaika BETWEEN :alku AND :loppu) AND
       ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
 GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid, o.nimi, u.nimi;
@@ -554,10 +551,7 @@ SELECT
   MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
 WHERE ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
-(t.urakkaid IN (:urakat) OR
--- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
-(t.urakkaid IS NULL AND
-(:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+(t.urakkaid IN (:urakat)) AND
 -- Rajaa toimenpiteellä
 (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
 -- Rajaa ajalla
@@ -576,10 +570,7 @@ SELECT
 FROM tyokonehavainto t
 WHERE
   ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
-(t.urakkaid IN (:urakat) OR
--- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
-(t.urakkaid IS NULL AND
-(:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+(t.urakkaid IN (:urakat)) AND
 -- Rajaa toimenpiteellä
 (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
 -- Rajaa ajalla
