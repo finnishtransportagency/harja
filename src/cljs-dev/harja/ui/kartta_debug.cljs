@@ -7,7 +7,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.fmt :as fmt]
             [harja.ui.kentat :as kentat]
-            [clojure.string :as clj-str])
+            [clojure.string :as clj-str]
+            [clojure.set :as set])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 (declare aseta-kartta-debug-sijainti)
@@ -26,22 +27,29 @@
 
 (defn- varita-mappi [geometriat]
   (let [kasittele-map-fn (fn [mappi]
-                           (let [pakolliset-kentat #{:tyyppi-kartalla :alue}]
+                           (let [pakolliset-kentat #{:tyyppi-kartalla :alue}
+                                 mielenkiintoiset-kentat-ylin-taso #{:sijainti :type :selite}]
                              (when (:ylin-taso? (meta mappi))
-                               (doseq [pakollinen-kentta pakolliset-kentat]
-                                 (when (not (contains? mappi pakollinen-kentta))
-                                   (console.log (str "%c" pakollinen-kentta) "color: red"))))
+                               (doseq [varitettava-kentta (set/union pakolliset-kentat mielenkiintoiset-kentat-ylin-taso)]
+                                 (when (not (contains? mappi varitettava-kentta))
+                                   (cond
+                                     (pakolliset-kentat varitettava-kentta) (console.log (str "%c" varitettava-kentta) "color: red")
+                                     (mielenkiintoiset-kentat-ylin-taso varitettava-kentta) (console.log (str "%c" varitettava-kentta) "color: orange")))))
                              (doseq [[avain arvo] mappi
                                      :let [varita-sininen? (pakolliset-kentat avain)
-                                           avain-printtaus (if varita-sininen?
-                                                             [(str "%c" avain) "color: blue"]
+                                           varita-ruskea? (mielenkiintoiset-kentat-ylin-taso avain)
+                                           avain-printtaus (if (:ylin-taso? (meta mappi))
+                                                             (cond
+                                                               varita-sininen? [(str "%c" avain) "color: blue"]
+                                                               varita-ruskea? [(str "%c" avain) "color: brown"]
+                                                               :else (str avain))
                                                              (str avain))]]
                                (if (or (vector? arvo) (map? arvo))
-                                 (do (if varita-sininen?
+                                 (do (if (or varita-sininen? varita-ruskea?)
                                        (apply console.log avain-printtaus)
                                        (console.log avain-printtaus))
                                      (varita-mappi arvo))
-                                 (if varita-sininen?
+                                 (if (or varita-sininen? varita-ruskea?)
                                    (apply console.log [(str (first avain-printtaus) " %c" arvo)
                                                        (str (last avain-printtaus))
                                                        "color: black"])
@@ -97,18 +105,19 @@
                       (when (or paalla?
                                 (:nayta-kaikki-layerit? @tila))
                         (let [tason-geometria (taso @geometriat)
+                              z-index (-> @tasot/geometriat-kartalle taso meta :zindex)
                               geometria? (some? tason-geometria)
                               on-change #(reset! (taso tasot/tasojen-nakyvyys-atomit) (-> % .-target .-checked))]
                           ^{:key taso}
                           [checkbox-kentta {:teksti [:span
-                                                     [:span (str (name taso))]
+                                                     [:span (str (name taso) "(" z-index ")")]
                                                      [:button {:on-click #(do (.stopPropagation %)
                                                                               (varita-mappi (cond
                                                                                               (vector? tason-geometria) (mapv (fn [geometria]
-                                                                                                                               (with-meta
-                                                                                                                                 geometria
-                                                                                                                                 {:ylin-taso? true}))
-                                                                                                                             tason-geometria)
+                                                                                                                                (with-meta
+                                                                                                                                  geometria
+                                                                                                                                  {:ylin-taso? true}))
+                                                                                                                              tason-geometria)
                                                                                               :else tason-geometria)))}
                                                       (str " geometriat")]]
                                             :checked? paalla?

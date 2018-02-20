@@ -498,7 +498,6 @@ tr-ikoni {:img (pinni-ikoni "musta")
         (let [[vari teksti] (kohteenosa-pinni-varit #{:vapaa (::osa/tyyppi osa)})]
           [(pinni-ikoni vari) teksti])))
 
-(defn kan-kohde [kohde kohde-valittu?]
-  (if kohde-valittu?
-    (kohteenosa-pinni-varit #{:sama-kohde :silta})
-    (kohteenosa-pinni-varit #{:vapaa :silta})))
+(defn kan-kohde [kohde]
+  (let [[vari teksti] (kohteenosa-pinni-varit #{:sama-kohde :silta})]
+    [(pinni-ikoni vari) teksti]))

@@ -617,14 +617,14 @@
 
 (defmethod asia-kartalle :kohde [kohde kohde-valittu?]
   ;; Näyttää toteuman reittipisteet palloina
-  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde kohde-valittu?)]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
     (assoc kohde
-      :type :kohteenosa
-      :nimi (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde kohde) kohde)
+      :type :kohde
+      :nimi (kohde/fmt-kohteen-nimi kohde)
       :selite {:teksti teksti
                :img ikoni}
       :alue (maarittele-feature kohde
-                                false
+                                kohde-valittu?
                                 ikoni))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
