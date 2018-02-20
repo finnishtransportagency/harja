@@ -50,6 +50,11 @@ jobs:
       - image: solita/harjadb:latest
 
     steps:
+     - checkout
+
+      - attach_workspace:
+          at: /tmp/harja
+          
       - run:
           name: Aseta aikavyöhyke
           command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
