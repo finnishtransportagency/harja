@@ -27,7 +27,7 @@ jobs:
       - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - run:
-          name: Rakenna Harja jar
+          name: Rakenna Harja JAR
           command: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
 
       - run:
@@ -133,7 +133,6 @@ workflows:
       - unit-tests:
           requires:
             - build
-      # Ota pois kommenteista ajaaksesi Cypress.io E2E-testit
       - e2e-pr:
           requires:
             - unit-tests
