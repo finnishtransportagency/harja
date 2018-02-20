@@ -51,6 +51,14 @@ jobs:
 
     steps:
       - run:
+          name: Aseta aikavyöhyke
+          command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
+
+      - run:
+          name: Aseta aikavyöhyke
+          command: sudo dpkg-reconfigure --frontend noninteractive tzdata
+
+      - run:
           name: Aja yksikkötestit ilman suorituskykytestejä
           command: lein test :no-perf
 
@@ -106,7 +114,7 @@ jobs:
 
       - run:
           name: Käynnistä Harja-sovellus
-          command: cd /tmp/harja && env TZ=TET java -jar harja.jar
+          command: cd /tmp/harja && env TZ=EET java -jar harja.jar
           background: true
 
       - run:
