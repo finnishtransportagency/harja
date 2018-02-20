@@ -16,7 +16,6 @@ jobs:
       - restore_cache:
           keys:
           - v2-dependencies-{{ .Branch }}-{{ checksum "harja/project.clj" }}
-          # fallback to using the latest cache if no exact match is found
           - v2-dependencies-{{ .Branch }}
           - v2-dependencies-
 
@@ -28,36 +27,40 @@ jobs:
       - run: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - run:
-          name: Aja yksikkötestit ilman suorituskykytestejä
-          command: lein test :no-perf
-
-      - run:
-          name: Aja Harjan fronttitestit
-          command: lein doo phantom test once
-
-      - run:
-          name: Aja mobiililaadunseurannan fronttitestit
-          command: lein doo phantom laadunseuranta-test once
-
-      - run:
           name: Rakenna Harja jar
           command: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
 
       - run:
-          name: Konfiguroi builidi
+          name: Konfiguroi buildi
           command: |
             mkdir /tmp/harja
             cp asetukset.edn cypress.json /tmp/harja/
             mv target/harja-0.0.1-SNAPSHOT-standalone.jar /tmp/harja/harja.jar
 
       - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory
           root: /tmp/harja
-          # Must be relative path from root
           paths:
             - harja.jar
             - asetukset.edn
             - cypress.json
+
+  unit-tests:
+    docker:
+      - image: solita/napote-circleci:latest
+      - image: solita/harjadb:latest
+
+    steps:
+      - run:
+          name: Aja yksikkötestit ilman suorituskykytestejä
+          command: lein test :no-perf
+
+      - run:
+          name: Aja Harjan front end -testit
+          command: lein doo phantom test once
+
+      - run:
+          name: Aja mobiililaadunseurannan front end -testit
+          command: lein doo phantom laadunseuranta-test once
 
   e2e-pr:
     docker:
@@ -103,7 +106,7 @@ jobs:
 
       - run:
           name: Käynnistä Harja-sovellus
-          command: cd /tmp/harja && env TZ=EET java -jar harja.jar
+          command: cd /tmp/harja && env TZ=TET java -jar harja.jar
           background: true
 
       - run:
@@ -119,6 +122,10 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - e2e-pr:
+      - unit-tests:
           requires:
             - build
+      # Ota pois kommenteista ajaaksesi Cypress.io E2E-testit
+      - e2e-pr:
+          requires:
+            - unit-tests
