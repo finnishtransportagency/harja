@@ -57,9 +57,6 @@ jobs:
     steps:
       - checkout
 
-      - attach_workspace:
-          at: /tmp/harja
-
       - run:
           name: Run migrations, setup test database and import test data
           command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
@@ -75,9 +72,6 @@ jobs:
 
     steps:
       - checkout
-
-      - attach_workspace:
-          at: /tmp/harja
 
       - restore_cache:
             key: phantomjs
@@ -96,16 +90,8 @@ jobs:
           command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
 
       - run:
-          name: Set timezone
-          command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
-
-      - run:
-          name: Set timezone (again)
-          command: sudo dpkg-reconfigure --frontend noninteractive tzdata
-
-      - run:
           name: Run desktop app Phantom front end tests
-          command: env TZ=EET lein doo phantom test once
+          command: lein doo phantom test once
 
   frontend-mobile-app-unit-tests:
         docker:
@@ -114,9 +100,6 @@ jobs:
 
         steps:
           - checkout
-
-          - attach_workspace:
-              at: /tmp/harja
 
           - restore_cache:
               key: phantomjs
@@ -133,14 +116,6 @@ jobs:
           - run:
               name: Run migrations, setup test database and import test data
               command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
-
-          - run:
-              name: Set timezone
-              command: echo 'Europe/Helsinki' | sudo tee /etc/timezone
-
-          - run:
-              name: Set timezone (again)
-              command: sudo dpkg-reconfigure --frontend noninteractive tzdata
 
           - run:
               name: Run mobile app Phantom front end tests
