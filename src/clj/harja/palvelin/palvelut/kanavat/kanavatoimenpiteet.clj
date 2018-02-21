@@ -164,7 +164,8 @@
     ;; else
     (do
       (doseq [kirjaus-ilman-tpid materiaalikirjaukset
-              :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id)]]
+              :let [kirjaus (assoc kirjaus-ilman-tpid ::materiaali/toimenpide toimenpide-id
+                                                      ::materiaali/pvm (::toimenpide/pvm toimenpide))]]
         (q-materiaali/kirjaa-materiaali db kayttaja kirjaus)
         (materiaali-palvelu/hoida-halytysraja db kirjaus fim email))
       (let [poistettavien-materiaalien-idt (set (map ::materiaali/id materiaalipoistot))
