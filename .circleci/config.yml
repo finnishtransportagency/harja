@@ -9,6 +9,7 @@ jobs:
 
     environment:
       LEIN_ROOT: "true"
+      QT_QPA_PLATFORM: offscreen
 
     steps:
       - checkout
@@ -80,6 +81,7 @@ jobs:
 
     environment:
         QT_QPA_PLATFORM: offscreen
+        LEIN_ROOT: "true"
 
     steps:
       - checkout
