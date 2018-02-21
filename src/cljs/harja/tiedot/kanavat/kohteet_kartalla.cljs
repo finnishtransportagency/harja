@@ -33,6 +33,18 @@
   (some #(= (::kohde/id kohde) (-> % ::kanavan-toimenpide/kohde ::kohde/id))
         toimenpiteet))
 
+(defn on-item-click-fn [klikattu-kohde]
+  (let [klikatun-kohteen-id (::kohde/id klikattu-kohde)
+        kohde (some (fn [kohde]
+                      (when (= (::kohde/id kohde) klikatun-kohteen-id)
+                        kohde))
+                    @kanavaurakka/kanavakohteet)]
+    (case (:nakyma @aktiivinen-nakyma)
+      :kokonaishintaiset (swap! kokonaishintaiset/tila update
+                                :avattu-toimenpide #(assoc % ::kanavan-toimenpide/kohde kohde))
+      :lisatyot
+      nil)))
+
 (defonce naytettavat-kanavakohteet
   (reaction
     (let [{:keys [toimenpiteet avattu-toimenpide nakymassa?]} (:tila @aktiivinen-nakyma)
@@ -59,7 +71,9 @@
       (reduce (fn [kasitellyt kasiteltava]
                 (cond
                   ;; Jos ollaan lomakkeella, näytetään kaikki kohteet
-                  avattu-toimenpide (conj kasitellyt kasiteltava)
+                  avattu-toimenpide (conj kasitellyt (assoc kasiteltava
+                                                            :on-item-click-fn on-item-click-fn
+                                                            :avaa-paneeli? false))
                   ;; Jos ollaan gridinäkymässä, niin näytetään vain ne kohteet, joille on tehty toimenpiteitä
                   (and nakymassa? (kohde-on-gridissa? kasiteltava toimenpiteet)) (conj kasitellyt kasiteltava)
                   :else kasitellyt))
