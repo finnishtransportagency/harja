@@ -181,9 +181,9 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - backend-unit-tests
-      - frontend-desktop-app-unit-tests
-      - frontend-mobile-app-unit-tests
+      #- backend-unit-tests
+      #- frontend-desktop-app-unit-tests
+      #- frontend-mobile-app-unit-tests
       - e2e-pr:
           requires:
             - build
