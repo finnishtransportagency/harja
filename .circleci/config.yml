@@ -39,6 +39,14 @@ jobs:
             cp asetukset.edn cypress.json /tmp/harja/
             mv target/harja-0.0.1-SNAPSHOT-standalone.jar /tmp/harja/harja.jar
 
+      - run:
+          name: Install PhantomJS
+          command: sudo apt update && sudo apt install phantomjs -y
+
+       - run:
+          name: Run desktop app Phantom front end tests
+          command: lein doo phantom test once
+
       - persist_to_workspace:
           root: /tmp/harja
           paths:
