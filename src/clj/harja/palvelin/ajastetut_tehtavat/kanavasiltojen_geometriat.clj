@@ -5,7 +5,6 @@
             [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [harja.palvelin.integraatiot.integraatioloki :as loki]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [cheshire.core :as cheshire]
             [clojure.java.jdbc :as jdbc]
@@ -32,28 +31,24 @@
                             :teraksinen-lappasilta-teraskansi "Teräksinen läppäsilta, teräskantinen"
                             :teraksinen-lappasilta-terasbetonikansi "Teräksinen läppäsilta, teräsbetonikantinen"
                             :teraksinen-nostosilta "Teräksinen nostosilta"
-                            :teraksinen-nostosilta-teraskansi "Teräksinen nostosilta, teräskantinen"
-                            :terasbetoninen-ponttonisilta "Teräsbetoninen ponttonisilta"
-
-                            ;; testataan palautuuko siltoja liikaa
-                            :teraksinen-langer-palkkisilta-teraskansi "Teräksinen langerpalkkisilta, teräskantinen"
-                            :teraksinen-langer-palkkisilta-terasbetonikansi "Teräksinen langerpalkkisilta, teräsbetonikantinen"
-                            :teraksinen-jatkuva-palkkisilta-terasbetonikansi "Teräksinen jatkuva palkkisilta, teräsbetonikantinen"
-                            :teraksinen-palkkisilta-terasbetonikansi-liittorakenne "Teräksinen palkkisilta, teräsbetonikantinen, liittorakenteinen"
-                            :teraksinen-palkkisilta-terasbetonikansi "Teräksinen palkkisilta, teräsbetonikantinen"
-                            :teraksinen-jatkuva-kotelopalkkisilta "Teräksinen jatkuva kotelopalkkisilta"
-                            :teraksinen-ristikkosilta-teraskansi "Teräksinen ristikkosilta,teräskantinen"})
+                            :teraksinen-nostosilta-teraskansi "Teräksinen nostosilta, teräskantinen"})
 
 ;; Osa silloista on tyypiltään sellaisia, ettei niitä tunnista avattaviksi. TREX:istä ei saa tarpeisiimme sopivaa luokittelua.
-;; Siksi suodatus on täydennetty nimilistalla.
-(def nimetyt-sillat {:pohjanlahti "Pohjanlahden läntisen salmen silta"
-                     :kellosalmi "Kellosalmen silta"
-                     :itikka "Itikan silta"
-                     :uimasalmi "Uimasalmen silta"
-                     :kaltimonkoski "Kaltimonkosken silta"
-                     :kyronsalmi "Kyrönsalmen silta"
-                     :uimasalmen-rata "Uimasalmen ratasilta"})
+;; Siksi suodatus on täydennetty siltanumerolistalla.
 
+;; Aineistosta puuttuu kokonaan Saimaan kanavan Venäjä puoleiset sillat
+;; 1399, Saimaan kanava (Venäjä), Pällin läppäsilta
+;; 1401, Saimaan kanava (Venäjä), Rättijärven läppäsilta
+;; 1402, Saimaan kanava (Venäjä), Särkijärven läppäsilta
+
+(def nimetyt-sillat {:pohjanlahti 1151
+                     :kellosalmi 2724
+                     :lillholmen 1510
+                     :itikka 234
+                     :uimasalmi 1148
+                     :kaltimonkoski 1219
+                     :kyronsalmi 2619
+                     :uimasalmen-rata 2621})
 
 (def poistetut-siltatilat {:poistettu "poistettu"
                            :purettu "purettu"
@@ -69,9 +64,6 @@
     (or (nil? viimeisin-paivitys)
         (>= (pvm/paivia-valissa viimeisin-paivitys (pvm/nyt-suomessa)) paivitysvali-paivissa))))
 
-
-
-;; TODO: Tallenna tr-osoite.
 (defn poista-viimeinen-pilkku[teksti]
   (str/join (assoc (vec teksti) (str/last-index-of teksti ",") nil)))
 
@@ -88,7 +80,6 @@
 (defn muodosta-tr-osoite-array [osoitteet]
   (poista-viimeinen-pilkku (pr-str "ARRAY[" (doall (map muunna-tallennettavaan-muotoon osoitteet)) "]")))
 
-
 ;; Avattavat sillat haetaan TREX:sta. TREX:in (= taitorakennerekisteri) rajapinnan kuvaus on liitetty tikettiin HAR-6948.
 (defn tallenna-kanavasilta [db kanavasilta]
   (let [siltanro (kanavasilta :siltanro)
@@ -98,7 +89,7 @@
         tila (kanavasilta :elinkaaritila)
         pituus (kanavasilta :siltapit)
         rakennetiedot (when (kanavasilta :rakennety) (konv/seq->array (kanavasilta :rakennety)))
-        tieosoitteet nil                                    ;(when (kanavasilta :tieosoitteet) (konv/seq->array (map #((muunna-tallennettavaan-muotoon (muunna-mapiksi %))) (kanavasilta :tieosoitteet)) ))
+        tieosoitteet nil   ;ei toteutettu loppuun, tietoa ei käytetä (when (kanavasilta :tieosoitteet) (konv/seq->array (map #((muunna-tallennettavaan-muotoon (muunna-mapiksi %))) (kanavasilta :tieosoitteet)) ))
         sijainti_lev (kanavasilta :sijainti_n)
         sijainti_pit (kanavasilta :sijainti_e)
         avattu (when (kanavasilta :avattuliikenteellepvm) (konv/unix-date->java-date (kanavasilta :avattuliikenteellepvm)))
@@ -116,8 +107,8 @@
                         :tieosoitteet tieosoitteet
                         :sijainti_lev sijainti_lev
                         :sijainti_pit sijainti_pit
-                        :avattu avattu
-                        :trex_muutettu trex_muutettu
+                        :avattu nil
+                        :trex_muutettu nil
                         :trex_oid trex_oid
                         :trex_sivu trex_sivu
                         :luoja "Integraatio"
@@ -128,7 +119,6 @@
 (defn kasittele-kanavasillat [db kanavasillat]
   (jdbc/with-db-transaction [db db]
                             (doseq [kanavasilta kanavasillat]
-                              (println kanavasillat)
                               (tallenna-kanavasilta db kanavasilta))
                             (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt))))
 
@@ -138,15 +128,15 @@
                         (set (% :rakennety))))
           (vastaus :tulokset)))
 
-(defn suodata-sillat-nimen-mukaan [vastaus]
+(defn suodata-sillat-numeron-mukaan [vastaus]
   (let [haettavat-sillat (set (vals nimetyt-sillat))
-        palautuneet-sillat (set (map #(:siltanimi %) (vastaus :tulokset)))
+        palautuneet-sillat (set (map #(:siltanro %) (vastaus :tulokset)))
         relevantit-sillat (set/intersection haettavat-sillat palautuneet-sillat)]
-    (filter #(contains? relevantit-sillat (:siltanimi %)) (vastaus :tulokset))))
+    (filter #(contains? relevantit-sillat (:siltanro %)) (vastaus :tulokset))))
 
 (defn suodata-sillat [vastaus]
   (concat (suodata-avattavat-sillat-rakennetyypin-mukaan vastaus)
-          (suodata-sillat-nimen-mukaan vastaus)))
+          (suodata-sillat-numeron-mukaan vastaus)))
 
 (defn muodosta-sivutettu-url [url sivunro]
   (clojure.string/replace url #"%1" (str sivunro)))
@@ -166,9 +156,9 @@
               {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (if vastaus
             (let [data (cheshire/decode vastaus keyword)]
-              (kasittele-kanavasillat db (suodata-sillat vastaus))
-              (log/debug (str "Kanavasiltoja ei palautunut. Sivunumero: " (+ num 1))))))))
-    (log/debug "Kanavasiltojen päivitys tehty")))
+              (kasittele-kanavasillat db (suodata-sillat data))
+              (log/debug (str "Kanavasiltoja ei palautunut. Sivunumero: " (+ num 1)))))))))
+    (log/debug "Kanavasiltojen päivitys tehty"))
 
 (defn- kanavasiltojen-geometriahakutehtava [integraatioloki db url paivittainen-tarkistusaika paivitysvali-paivissa]
   (log/debug (format "Ajastetaan kanavasiltojen geometrioiden haku tehtäväksi %s päivän väl ein osoitteesta: %s."
