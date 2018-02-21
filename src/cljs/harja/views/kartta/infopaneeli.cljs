@@ -58,9 +58,11 @@
                      ((:when linkki) data))]
           [yleiset/wrap-if tooltip
            [yleiset/tooltip {} :% tooltip]
-           [napit/yleinen-toissijainen (or teksti (teksti-fn data))
+           [napit/yleinen-toissijainen
+            ;; teksti tai teksti-fn eivät ole pakollisia, siksi when!
+            (or teksti (when teksti-fn (teksti-fn data)))
             #(toiminto data)
-            {:ikoni (or ikoni (ikoni-fn data))
+            {:ikoni (or ikoni (when ikoni-fn (ikoni-fn data)))
              :luokka "ip-toiminto btn-xs"}]])])
      (apply yleiset/tietoja {}
             (mapcat (juxt :otsikko
