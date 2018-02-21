@@ -156,3 +156,6 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Tieluvat
 \i testidata/tieluvat.sql
+
+-- Paikkaukset
+\i testidata/paikkaukset.sql
