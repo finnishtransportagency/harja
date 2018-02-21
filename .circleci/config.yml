@@ -71,23 +71,14 @@ jobs:
       - image: solita/harjadb:latest
 
     environment:
-        QT_QPA_PLATFORM: offscreen
 
     steps:
       - checkout
 
-      #- restore_cache:
-      #      key: phantomjs
-
       - run:
-          name: Install PhantomJS
-          command: npm update && npm install phantomjs
+          name: Install Karma
+          command: npm update && npm install karma --save-dev && npm install karma karma-cljs-test --save-dev && npm install -g karma-cli && npm install karma-chrome-launcher karma-firefox-launcher --save-dev
           # sudo apt update && sudo apt install phantomjs -y
-
-      #- save_cache:
-      #    key: phantomjs
-      #    paths:
-      #      - /usr/local/bin/phantomjs
 
       - run:
           name: Run migrations, setup test database and import test data
@@ -95,7 +86,7 @@ jobs:
 
       - run:
           name: Run desktop app Phantom front end tests
-          command: lein doo phantom test once
+          command: lein doo chrome-headless test once
 
   frontend-mobile-app-unit-tests:
     docker:

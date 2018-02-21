@@ -62,17 +62,17 @@
            'harja.tiedot.muokkauslukko-test
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.siltatarkastukset-test
-           'harja.views.urakka.paallystysilmoitukset-test
+           ;; 'harja.views.urakka.paallystysilmoitukset-test
            'harja.views.urakka.paikkausilmoitukset-test
            'harja.views.urakka.yllapitokohteet-test
            'harja.views.urakka.valitavoitteet-test
-           'harja.views.urakka.yleiset-test
-           'harja.ui.historia-test
-           'harja.ui.kentat-test
-           'harja.ui.grid-test
+           ;; 'harja.views.urakka.yleiset-test
+           ;; 'harja.ui.historia-test
+           ;; 'harja.ui.kentat-test
+           ;; 'harja.ui.grid-test
            'harja.ui.edistymispalkki-test
            'harja.fmt-test
-           'harja.tiedot.urakka.siirtymat-test
+           ;; 'harja.tiedot.urakka.siirtymat-test
            'harja.tiedot.tierekisteri.varusteet-test
            'harja.ui.kartta.infopaneelin-sisalto-test
            'harja.tiedot.tilannekuva.tienakyma-test
@@ -80,9 +80,9 @@
            'harja.views.kartta-test
            'harja.tiedot.tilannekuva.tilannekuva-test
            'harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test
-           'harja.views.ilmoitukset.tietyoilmoitushakulomake-test
-           'harja.views.ilmoitukset.tietyoilmoituslomake-test
-           'harja.views.kartta.tasot-test
+           ;; 'harja.views.ilmoitukset.tietyoilmoitushakulomake-test
+           ;; 'harja.views.ilmoitukset.tietyoilmoituslomake-test
+           ;; 'harja.views.kartta.tasot-test
            'harja.tiedot.urakka.yllapitokohteet-test
            'harja.ui.kartta.esitettavat-asiat-test
            'harja.views.urakka.paallystyksen-maksuerat-test
@@ -96,10 +96,10 @@
            'harja.tiedot.hallintayksikot-test
            'harja.tiedot.vesivaylat.urakka.laadunseuranta.viat-test
            'harja.tiedot.urakka.urakan-tyotunnit-test
-           'harja.ui.validointi-test
+           ;; 'harja.ui.validointi-test
            'harja.views.urakka.suunnittelu.yksikkohintaiset-tyot-test
-           'harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
-           'harja.views.vesivaylat.urakka.materiaalit-test
+           ;; 'harja.tiedot.vesivaylat.urakka.suunnittelu.kiintiot-test
+           ;; 'harja.views.vesivaylat.urakka.materiaalit-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu-test
            'harja.tiedot.kanavat.hallinta.kohteiden-luonti-test
            'harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-test
