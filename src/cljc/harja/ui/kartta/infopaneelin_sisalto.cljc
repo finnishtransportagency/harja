@@ -32,7 +32,8 @@
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-    #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
+    #?@(:cljs [[harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]]
+               [reagent.core :as r]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
@@ -627,16 +628,24 @@
    :data osa})
 
 (defmethod infopaneeli-skeema :kohde [kohde]
-  {:tyyppi :kohde
-   :jarjesta-fn (constantly false)
-   :otsikko (kohde/fmt-kohteen-nimi kohde)
-   :tiedot [{:otsikko "Kohteenosan tyyppi"
-             :tyyppi :string
-             :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet :kohteenosan-tyyppi))}
-            {:otsikko "Huoltokohde"
-             :tyyppi :string
-             :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet :huoltokohde))}]
-   :data kohde})
+  (let [toimenpiteen-kentta (fn [otsikko kentta]
+                              (when (-> kohde :toimenpiteet kentta)
+                                {:otsikko otsikko
+                                 :tyyppi :string
+                                 :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet kentta))}))]
+    {:tyyppi :kohde
+     :jarjesta-fn (constantly false)
+     :otsikko (kohde/fmt-kohteen-nimi kohde)
+     :tiedot [(toimenpiteen-kentta "Kohteenosan tyyppi" :kohteenosan-tyyppi)
+              (toimenpiteen-kentta "Huoltokohde" :huoltokohde)
+              (if (-> kohde :toimenpiteet :muu-toimenpide)
+                (toimenpiteen-kentta "Toimenpide" :muu-toimenpide)
+                (toimenpiteen-kentta "Toimenpide" :toimenpide))
+              (toimenpiteen-kentta "Lisatieto" :lisatieto)
+              (toimenpiteen-kentta "Suorittaja" :suorittaja)
+              (toimenpiteen-kentta "Kuittaaja" :kuittaaja)
+              (toimenpiteen-kentta "Päivämäärä" :pvm)]
+     :data kohde}))
 
 (defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]
   {:tyyppi :suolatoteuma

@@ -7,7 +7,10 @@
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
-            [clojure.set :as set])
+            [harja.domain.kayttaja :as kayttaja]
+            [harja.domain.toimenpidekoodi :as toimenpidekoodi]
+            [clojure.set :as set]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -33,7 +36,14 @@
                          (let [kohteen-toimenpiteet (some #(when (= (-> % ::kanavan-toimenpide/kohde ::kohde/id) (::kohde/id kohde))
                                                              {:huoltokohde (-> % ::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
                                                               :kohteenosan-tyyppi (when-let [tyyppi (-> % ::kanavan-toimenpide/kohteenosa ::kohteenosa/tyyppi)]
-                                                                                    (name tyyppi))})
+                                                                                    (name tyyppi))
+                                                              :kuittaaja (str (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/etunimi) " "
+                                                                              (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/sukunimi))
+                                                              :lisatieto (::kanavan-toimenpide/lisatieto %)
+                                                              :muu-toimenpide (::kanavan-toimenpide/muu-toimenpide %)
+                                                              :pvm (pvm/pvm (::kanavan-toimenpide/pvm %))
+                                                              :suorittaja (::kanavan-toimenpide/suorittaja %)
+                                                              :toimenpide (-> % ::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi)})
                                                           toimenpiteet)]
                            (assoc kohde :toimenpiteet kohteen-toimenpiteet)))
                        @kanavaurakka/kanavakohteet)]
