@@ -33,8 +33,8 @@
   Palauttaa kanavan, joka suljetaan renderin jälkeen."
   []
   (let [ch (async/chan)]
-    (r/flush)
     (r/after-render #(async/close! ch))
+    (r/flush)
     ch))
 
 (defn grid-solu

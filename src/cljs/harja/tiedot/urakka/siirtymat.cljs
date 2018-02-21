@@ -7,7 +7,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<!] :as async]
+            [cljs.core.async :refer [<! alts!] :as async]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
