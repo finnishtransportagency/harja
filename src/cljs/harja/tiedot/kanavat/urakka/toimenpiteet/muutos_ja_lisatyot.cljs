@@ -17,7 +17,6 @@
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]

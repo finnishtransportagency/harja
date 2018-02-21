@@ -36,8 +36,6 @@
 (defonce naytettavat-kanavakohteet
   (reaction
     (let [{:keys [toimenpiteet avattu-toimenpide nakymassa?]} (:tila @aktiivinen-nakyma)
-          lomakkeella? (boolean avattu-toimenpide)
-          kokonaishintaiset-nakymassa? nakymassa?
           ;; Yhdistetään kohteen ja kohteelle tehdyn toimenpiteen tiedot. Toimenpiteen tietoja näytetään kartan
           ;; infopaneelissa.
           kohteet (flatten (map (fn [kohde]
@@ -53,15 +51,17 @@
                                                                        :suorittaja (::kanavan-toimenpide/suorittaja %)
                                                                        :toimenpide (-> % ::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi)})
                                                                    toimenpiteet)]
-                                    (map #(assoc kohde :toimenpiteet %)
-                                         kohteen-toimenpiteet)))
+                                    (if (empty? kohteen-toimenpiteet)
+                                      kohde
+                                      (map #(assoc kohde :toimenpiteet %)
+                                           kohteen-toimenpiteet))))
                                 @kanavaurakka/kanavakohteet))]
       (reduce (fn [kasitellyt kasiteltava]
                 (cond
                   ;; Jos ollaan lomakkeella, näytetään kaikki kohteet
-                  lomakkeella? (conj kasitellyt kasiteltava)
+                  avattu-toimenpide (conj kasitellyt kasiteltava)
                   ;; Jos ollaan gridinäkymässä, niin näytetään vain ne kohteet, joille on tehty toimenpiteitä
-                  (and kokonaishintaiset-nakymassa? (kohde-on-gridissa? kasiteltava toimenpiteet)) (conj kasitellyt kasiteltava)
+                  (and nakymassa? (kohde-on-gridissa? kasiteltava toimenpiteet)) (conj kasitellyt kasiteltava)
                   :else kasitellyt))
               [] kohteet))))
 
