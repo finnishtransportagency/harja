@@ -77,7 +77,7 @@ jobs:
 
       - run:
           name: Install Karma
-          command: sudo npm update && sudo npm install karma --save-dev && sudo npm install karma karma-cljs-test --save-dev && sudo npm install -g karma-cli && sudo npm install karma-chrome-launcher --save-dev
+          command: sudo npm update && sudo npm install karma --save-dev && sudo npm install karma karma-cljs-test --save-dev && sudo npm install -g karma-cli && sudo npm install karma-chrome-launcher karma-firefox-launcher --save-dev
 
       - run:
           name: Run migrations, setup test database and import test data
@@ -98,9 +98,18 @@ jobs:
     steps:
       - checkout
 
+      #- restore_cache:
+      #    key: phantomjs
+
       - run:
-          name: Install Karma
-          command: sudo npm update && sudo npm install karma --save-dev && sudo npm install karma karma-cljs-test --save-dev && sudo npm install -g karma-cli && sudo npm install karma-chrome-launcher --save-dev
+          name: Install PhantomJS
+          command: npm update && npm install phantomjs
+          # sudo apt update && sudo apt install phantomjs -y
+
+      #- save_cache:
+      #    key: phantomjs
+      #    paths:
+      #      - /usr/local/bin/phantomjs
 
       - run:
           name: Run migrations, setup test database and import test data
@@ -108,7 +117,7 @@ jobs:
 
       - run:
           name: Run mobile app Phantom front end tests
-          command: lein doo chrome-headless laadunseuranta-test once
+          command: lein doo phantom laadunseuranta-test once
 
   e2e-pr:
     docker:
