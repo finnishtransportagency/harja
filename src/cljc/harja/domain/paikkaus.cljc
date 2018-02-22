@@ -81,5 +81,5 @@
                      ::pitoisuus
                      ::lisa-aineet}]})
 
-(def asdfa-perustiedot
-  #{:id })
+(def paikkaustoteuman-perustiedot
+  #{::id })

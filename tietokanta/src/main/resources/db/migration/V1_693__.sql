@@ -15,7 +15,7 @@ CREATE TABLE paikkaustoteuma (
 
   "urakka-id"        INTEGER REFERENCES urakka (id)              NOT NULL,
   "paikkauskohde-id" INTEGER REFERENCES paikkauskohde (id)       NOT NULL,
-  "toteuma-id"       INTEGER REFERENCES toteuma                  NOT NULL,
+  "toteuma-id"       INTEGER REFERENCES toteuma,
 
   "luoja-id"         INTEGER REFERENCES kayttaja (id),
   luotu              TIMESTAMP DEFAULT NOW(),

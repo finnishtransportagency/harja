@@ -9,23 +9,23 @@ VALUES ((SELECT id
         'Testikohde');
 
 INSERT INTO paikkaus ("luoja-id",
-                             luotu,
-                             "muokkaaja-id",
-                             muokattu,
-                             "poistaja-id",
-                             poistettu,
-                             "urakka-id",
-                             "paikkauskohde-id",
-                             "ulkoinen-id",
-                             alkuaika,
-                             loppuaika,
-                             tierekisteriosoite,
-                             tyomenetelma,
-                             massatyyppi,
-                             leveys,
-                             massamenekki,
-                             raekoko,
-                             kuulamylly) VALUES (
+                      luotu,
+                      "muokkaaja-id",
+                      muokattu,
+                      "poistaja-id",
+                      poistettu,
+                      "urakka-id",
+                      "paikkauskohde-id",
+                      "ulkoinen-id",
+                      alkuaika,
+                      loppuaika,
+                      tierekisteriosoite,
+                      tyomenetelma,
+                      massatyyppi,
+                      leveys,
+                      massamenekki,
+                      raekoko,
+                      kuulamylly) VALUES (
   (SELECT id
    FROM kayttaja
    WHERE kayttajanimi = 'destia'
@@ -52,12 +52,12 @@ INSERT INTO paikkaus ("luoja-id",
   '2');
 
 INSERT INTO paikkauksen_materiaali ("paikkaus-id",
-                                     esiintyma,
-                                     "kuulamylly-arvo",
-                                     muotoarvo,
-                                     sideainetyyppi,
-                                     pitoisuus,
-                                     "lisa-aineet")
+                                    esiintyma,
+                                    "kuulamylly-arvo",
+                                    muotoarvo,
+                                    sideainetyyppi,
+                                    pitoisuus,
+                                    "lisa-aineet")
 VALUES ((SELECT id
          FROM paikkaus
          WHERE "ulkoinen-id" = 6661
@@ -84,3 +84,63 @@ VALUES ((SELECT id
         ARRAY [1, 2],
         ARRAY [1],
         NULL);
+
+
+INSERT INTO paikkaustoteuma ("ulkoinen-id",
+                             "urakka-id",
+                             "paikkauskohde-id",
+                             "toteuma-id",
+                             "luoja-id",
+                             tyyppi,
+                             selite,
+                             hinta)
+VALUES
+  (6661,
+   (SELECT id
+    FROM urakka
+    WHERE sampoid = '1242141-AGSG'
+    LIMIT 1),
+   (SELECT id
+    FROM paikkaus
+    WHERE "ulkoinen-id" = 6661
+    LIMIT 1),
+   NULL,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'destia'
+    LIMIT 1),
+   'kokonaishintainen',
+   'Liikennejärjestelyt',
+   3500);
+
+INSERT INTO paikkaustoteuma ("ulkoinen-id",
+                             "urakka-id",
+                             "paikkauskohde-id",
+                             "toteuma-id",
+                             "luoja-id",
+                             tyyppi,
+                             selite,
+                             yksikko,
+                             yksikkohinta,
+                             maara)
+VALUES
+  (6662,
+   (SELECT id
+    FROM urakka
+    WHERE sampoid = '1242141-AGSG'
+    LIMIT 1),
+   (SELECT id
+    FROM paikkaus
+    WHERE "ulkoinen-id" = 6661
+    LIMIT 1),
+   NULL,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'destia'
+    LIMIT 1),
+   'yksikkohintainen',
+   'Asfaltti',
+   'tonnia/€',
+   200,
+   13.2)
+
