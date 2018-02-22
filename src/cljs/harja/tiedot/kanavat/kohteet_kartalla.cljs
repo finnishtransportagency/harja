@@ -4,10 +4,12 @@
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.toimenpiteet.kokonaishintaiset :as kokonaishintaiset]
             [harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot :as lisatyot]
+            [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.kanavat.kanavan-huoltokohde :as kanavan-huoltokohde]
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
+            [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [clojure.set :as set]
@@ -19,19 +21,38 @@
 
 (defonce aktiivinen-nakyma
   (reaction
-    (let [kokonaishintaiset-nakymassa? (:nakymassa? @kokonaishintaiset/tila)
-          lisatyot-nakymassa? (:nakymassa? @lisatyot/tila)]
-      (zipmap [:tila :nakyma]
-              (cond
-                kokonaishintaiset-nakymassa? [@kokonaishintaiset/tila :kokonaishintaiset]
-                lisatyot-nakymassa? [@lisatyot/tila :lisatyot])))))
+    (let [tila-kok @kokonaishintaiset/tila
+          tila-lisa @lisatyot/tila
+          tila-hairio @hairiotilanteet/tila
+          kokonaishintaiset-nakymassa? (:nakymassa? tila-kok)
+          lisatyot-nakymassa? (:nakymassa? tila-lisa)
+          hairiotilanne-nakymassa? (:nakymassa? tila-hairio)
+          tila (cond
+                 kokonaishintaiset-nakymassa? {:avattu-tieto (-> tila-kok :avattu-toimenpide)
+                                               :avattu-kohde (-> tila-kok :avattu-toimenpide ::kanavan-toimenpide/kohde)
+                                               :gridissa-olevat-kohteen-tiedot (:toimenpiteet tila-kok)}
+                 lisatyot-nakymassa? {:avattu-tieto (-> tila-lisa :avattu-toimenpide)
+                                      :avattu-kohde (-> tila-lisa :avattu-toimenpide ::kanavan-toimenpide/kohde)
+                                      :gridissa-olevat-kohteen-tiedot (:toimenpiteet tila-lisa)}
+                 hairiotilanne-nakymassa? {:avattu-tieto (-> tila-hairio :valittu-hairiotilanne)
+                                           :avattu-kohde (-> tila-hairio :valittu-hairiotilanne ::hairiotilanne/kohde)
+                                           :gridissa-olevat-kohteen-tiedot (:hairiotilanteet tila-hairio)})]
+      {:tila tila
+       :nakyma (cond
+                 kokonaishintaiset-nakymassa? :kokonaishintaiset
+                 lisatyot-nakymassa? :lisatyot
+                 hairiotilanne-nakymassa? :hairiotilanteet)})))
 
 (defn- kohde-valittu? [kohde]
-  (= (::kohde/id kohde) (-> @aktiivinen-nakyma :tila :avattu-toimenpide ::kanavan-toimenpide/kohde ::kohde/id)))
+  (= (::kohde/id kohde) (-> @aktiivinen-nakyma :tila :avattu-kohde ::kohde/id)))
 
-(defn- kohde-on-gridissa? [kohde toimenpiteet]
-  (some #(= (::kohde/id kohde) (-> % ::kanavan-toimenpide/kohde ::kohde/id))
-        toimenpiteet))
+(defn- kohde-on-gridissa? [kohde gridissa-olevat-kohteen-tiedot nakyma]
+  (let [kohteen-avain (case nakyma
+                        (:kokonaishintaiset :lisatyot) ::kanavan-toimenpide/kohde
+                        :hairiotilanteet ::hairiotilanne/kohde
+                        nil)]
+    (some #(= (::kohde/id kohde) (-> % kohteen-avain ::kohde/id))
+          gridissa-olevat-kohteen-tiedot)))
 
 (defn on-item-click-fn [klikattu-kohde]
   (let [klikatun-kohteen-id (::kohde/id klikattu-kohde)
@@ -42,41 +63,58 @@
     (case (:nakyma @aktiivinen-nakyma)
       :kokonaishintaiset (swap! kokonaishintaiset/tila update
                                 :avattu-toimenpide #(assoc % ::kanavan-toimenpide/kohde kohde))
-      :lisatyot
+      :lisatyot (swap! lisatyot/tila update
+                       :avattu-toimenpide #(assoc % ::kanavan-toimenpide/kohde kohde))
+      :hairiotilanteet (swap! hairiotilanteet/tila update
+                              :valittu-hairiotilanne #(assoc % ::hairiotilanne/kohde kohde))
       nil)))
+
+(defn- kohteelle-tiedot [kohde nakyma gridissa-olevat-kohteen-tiedot]
+  (let [{:keys [tietokentta gridin-kohde-avain kohteen-tiedot-fn]}
+        (case nakyma
+          (:kokonaishintaiset :lisatyot) {:tietokentta :toimenpiteet
+                                          :gridin-kohde-avain ::kanavan-toimenpide/kohde
+                                          :kohteen-tiedot-fn #(identity
+                                                                {:huoltokohde (-> % ::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
+                                                                :kohteenosan-tyyppi (when-let [tyyppi (-> % ::kanavan-toimenpide/kohteenosa ::kohteenosa/tyyppi)]
+                                                                                      (name tyyppi))
+                                                                :kuittaaja (str (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/etunimi) " "
+                                                                                (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/sukunimi))
+                                                                :lisatieto (::kanavan-toimenpide/lisatieto %)
+                                                                :muu-toimenpide (::kanavan-toimenpide/muu-toimenpide %)
+                                                                :pvm (pvm/pvm (::kanavan-toimenpide/pvm %))
+                                                                :suorittaja (::kanavan-toimenpide/suorittaja %)
+                                                                :toimenpide (-> % ::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi)})}
+          :hairiotilanteet {:tietokentta :hairiot
+                            :gridin-kohde-avain ::hairiotilanne/kohde
+                            :kohteen-tiedot-fn #(identity
+                                                  {:kohde (-> % ::hairiotilanne/kohde ::kohde/nimi)})}
+          nil)
+        kohteen-tiedot (keep #(when (= (-> % gridin-kohde-avain ::kohde/id) (::kohde/id kohde))
+                                (kohteen-tiedot-fn %))
+                             gridissa-olevat-kohteen-tiedot)]
+    (if (empty? kohteen-tiedot)
+      kohde
+      (map #(assoc kohde tietokentta %)
+           kohteen-tiedot))))
 
 (defonce naytettavat-kanavakohteet
   (reaction
-    (let [{:keys [toimenpiteet avattu-toimenpide nakymassa?]} (:tila @aktiivinen-nakyma)
+    (let [{:keys [gridissa-olevat-kohteen-tiedot avattu-tieto]} (:tila @aktiivinen-nakyma)
           ;; Yhdistetään kohteen ja kohteelle tehdyn toimenpiteen tiedot. Toimenpiteen tietoja näytetään kartan
           ;; infopaneelissa.
           kohteet (flatten (map (fn [kohde]
-                                  (let [kohteen-toimenpiteet (keep #(when (= (-> % ::kanavan-toimenpide/kohde ::kohde/id) (::kohde/id kohde))
-                                                                      {:huoltokohde (-> % ::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
-                                                                       :kohteenosan-tyyppi (when-let [tyyppi (-> % ::kanavan-toimenpide/kohteenosa ::kohteenosa/tyyppi)]
-                                                                                             (name tyyppi))
-                                                                       :kuittaaja (str (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/etunimi) " "
-                                                                                       (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/sukunimi))
-                                                                       :lisatieto (::kanavan-toimenpide/lisatieto %)
-                                                                       :muu-toimenpide (::kanavan-toimenpide/muu-toimenpide %)
-                                                                       :pvm (pvm/pvm (::kanavan-toimenpide/pvm %))
-                                                                       :suorittaja (::kanavan-toimenpide/suorittaja %)
-                                                                       :toimenpide (-> % ::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi)})
-                                                                   toimenpiteet)]
-                                    (if (empty? kohteen-toimenpiteet)
-                                      kohde
-                                      (map #(assoc kohde :toimenpiteet %)
-                                           kohteen-toimenpiteet))))
+                                  (kohteelle-tiedot kohde (:nakyma @aktiivinen-nakyma) gridissa-olevat-kohteen-tiedot))
                                 @kanavaurakka/kanavakohteet))]
       (reduce (fn [kasitellyt kasiteltava]
                 (cond
                   ;; Jos ollaan lomakkeella, näytetään kaikki kohteet
-                  avattu-toimenpide (conj kasitellyt (assoc kasiteltava
-                                                            :on-item-click on-item-click-fn
-                                                            :nayta-paneelissa? false
-                                                            :avaa-paneeli? false))
+                  avattu-tieto (conj kasitellyt (assoc kasiteltava
+                                                       :on-item-click on-item-click-fn
+                                                       :nayta-paneelissa? false
+                                                       :avaa-paneeli? false))
                   ;; Jos ollaan gridinäkymässä, niin näytetään vain ne kohteet, joille on tehty toimenpiteitä
-                  (and nakymassa? (kohde-on-gridissa? kasiteltava toimenpiteet)) (conj kasitellyt kasiteltava)
+                  (kohde-on-gridissa? kasiteltava gridissa-olevat-kohteen-tiedot (:nakyma @aktiivinen-nakyma)) (conj kasitellyt kasiteltava)
                   :else kasitellyt))
               [] kohteet))))
 
@@ -86,7 +124,11 @@
       (kartalla-esitettavaan-muotoon
         (map #(-> %
                   (set/rename-keys {::kohde/sijainti :sijainti})
-                  (assoc :tyyppi-kartalla :kohde)
+                  (assoc :tyyppi-kartalla
+                         (case (:nakyma @aktiivinen-nakyma)
+                           (:kokonaishintaiset :lisatyot) :kohde-toimenpide
+                           :hairiotilanteet :kohde-hairiotilanne
+                           nil))
                   (dissoc ::kohde/kohteenosat ::kohde/kohdekokonaisuus ::kohde/urakat))
              @naytettavat-kanavakohteet)
         kohde-valittu?))))

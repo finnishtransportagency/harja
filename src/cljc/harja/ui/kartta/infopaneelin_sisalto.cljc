@@ -627,7 +627,7 @@
              :tyyppi :string}]
    :data osa})
 
-(defmethod infopaneeli-skeema :kohde [kohde]
+(defmethod infopaneeli-skeema :kohde-toimenpide [kohde]
   (let [toimenpiteen-kentta (fn [otsikko kentta]
                               (when (-> kohde :toimenpiteet kentta)
                                 {:otsikko otsikko
@@ -645,6 +645,18 @@
               (toimenpiteen-kentta "Suorittaja" :suorittaja)
               (toimenpiteen-kentta "Kuittaaja" :kuittaaja)
               (toimenpiteen-kentta "Päivämäärä" :pvm)]
+     :data kohde}))
+
+(defmethod infopaneeli-skeema :kohde-hairiotilanne [kohde]
+  (let [toimenpiteen-kentta (fn [otsikko kentta]
+                              (when (-> kohde :hairiot kentta)
+                                {:otsikko otsikko
+                                 :tyyppi :string
+                                 :hae (hakufunktio :hairiot #(-> % :hairiot kentta))}))]
+    {:tyyppi :kohde
+     :jarjesta-fn (constantly false)
+     :otsikko (kohde/fmt-kohteen-nimi kohde)
+     :tiedot [(toimenpiteen-kentta "Kohde" :kohde)]
      :data kohde}))
 
 (defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]

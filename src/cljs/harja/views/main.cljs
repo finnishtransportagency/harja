@@ -204,6 +204,8 @@
         [urakat/urakat])]]]
    [modal/modal-container]
    [viesti-container]
+   (when @nav/kartta-nakyvissa?
+     [kartta-layers])
 
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
@@ -215,8 +217,7 @@
                                    :overflow (if @nav/kartta-nakyvissa?
                                                "hidden"
                                                "visible")}}
-    [kartta/kartta]]
-   [kartta-layers]])
+    [kartta/kartta]]])
 
 (defn varoita-jos-vanha-ie []
   (if dom/ei-tuettu-ie?
