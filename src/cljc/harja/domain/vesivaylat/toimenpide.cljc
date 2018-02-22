@@ -74,8 +74,7 @@
    "1022541805" :muut-vaylatyot
    "1022541806" :rakennus-ja-kuljetuspalvelut
    "1022541808" :muut-palvelut
-   "1022541804" :vesiliikennemerkit
-   "1022540501" :kiintea-turvalaite})
+   "1022541804" :vesiliikennemerkit})
 
 (def
   ^{:doc "Reimarin työluokat. Huom: eri koodeilla voi olla sama selite."}
@@ -116,7 +115,6 @@
     :rakennus-ja-kuljetuspalvelut "Rakennus- ja kuljetuspalvelut"
     :muut-palvelut "Muut palvelut"
     :vesiliikennemerkit "Vesiliikennemerkit"
-    :kiintea-turvalaite "Kiinteä turvalaite"
     ;; Formatoidaan sinne päin
     (some-> tyyppi name str/capitalize)))
 
