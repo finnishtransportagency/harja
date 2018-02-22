@@ -9,10 +9,10 @@
 (defqueries "harja/kyselyt/paikkaus.sql"
             {:positional? true})
 
-(defn hae-paikkaustoteumat [db hakuehdot]
+(defn hae-paikkaukset [db hakuehdot]
   (fetch db
          ::paikkaus/paikkaus
-         paikkaus/paikkaustoteuman-perustiedot
+         paikkaus/paikkauksen-perustiedot
          hakuehdot))
 
 (defn hae-paikkauskohteet [db hakuehdot]
@@ -25,7 +25,7 @@
   (and
     (number? ulkoinen-id)
     (number? luoja-id)
-    (not (empty? (hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id
+    (not (empty? (hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id
                                            ::muokkaustiedot/luoja-id luoja-id})))))
 
 (defn onko-kohde-olemassa-ulkoisella-idlla? [db ulkoinen-id]
@@ -33,8 +33,8 @@
     (number? ulkoinen-id)
     (not (empty? (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id})))))
 
-(defn hae-urakan-paikkaustoteumat [db urakka-id]
-  (first (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id})))
+(defn hae-urakan-paikkaukset [db urakka-id]
+  (first (hae-paikkaukset db {::paikkaus/urakka-id urakka-id})))
 
 (defn tallenna-paikkauskohde [db kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
@@ -52,7 +52,7 @@
         (::paikkaus/id (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id}))
         (::paikkaus/id (tallenna-paikkauskohde db kayttaja-id paikkauskohde)))))
 
-(defn- paivita-toteuma [db toteuma]
+(defn- paivita-paikkaus [db toteuma]
   (let [id (::paikkaus/id toteuma)
         luoja-id (::muokkaustiedot/luoja-id toteuma)
         ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
@@ -61,9 +61,9 @@
                 {::paikkaus/ulkoinen-id ulkoinen-id
                  ::muokkaustiedot/luoja-id luoja-id})]
     (update! db ::paikkaus/paikkaus toteuma ehdot)
-    (first (hae-paikkaustoteumat db ehdot))))
+    (first (hae-paikkaukset db ehdot))))
 
-(defn- luo-toteuma [db toteuma]
+(defn- luo-paikkaus [db toteuma]
   (insert! db ::paikkaus/paikkaus toteuma))
 
 (defn- tallenna-materiaalit [db toteuma-id materiaalit]
@@ -76,7 +76,7 @@
   (doseq [tienkohta tienkohdat]
     (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id))))
 
-(defn tallenna-paikkaustoteuma [db kayttaja-id toteuma]
+(defn tallenna-paikkaus [db kayttaja-id toteuma]
   (let [id (::paikkaus/id toteuma)
         ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
         paikkauskohde-id (hae-tai-tee-paikkauskohde db kayttaja-id (::paikkaus/paikkauskohde toteuma))
@@ -91,7 +91,7 @@
                                         ::muokkaustiedot/muokattu (pvm/nyt))
         paivita? (or (id-olemassa? id) (onko-toteuma-olemassa-ulkoisella-idlla? db ulkoinen-id kayttaja-id))
         id (::paikkaus/id (if paivita?
-                            (paivita-toteuma db muokattu-toteuma)
-                            (luo-toteuma db uusi-toteuma)))]
+                            (paivita-paikkaus db muokattu-toteuma)
+                            (luo-paikkaus db uusi-toteuma)))]
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))

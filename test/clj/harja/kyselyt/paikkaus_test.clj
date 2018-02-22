@@ -45,7 +45,7 @@
 (deftest hae-paikkaustoimenpiteet
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         ulkoinen-id 6661
-        vastaus (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id ulkoinen-id})]
+        vastaus (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id})]
     (is (every? #(= ulkoinen-id (::paikkaus/ulkoinen-id %)) vastaus) "Jokainen löytynyt tietue vastaa hakuehtoa")))
 
 (deftest onko-olemassa-ulkoisella-idlla
@@ -61,10 +61,10 @@
     (is (false? (paikkaus-q/onko-toteuma-olemassa-ulkoisella-idlla? db "foo" destian-kayttaja-id)))))
 
 (defn hae-testitoteuma [db]
-  (first (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
+  (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id})))
 
 (defn hae-paikkausten-maara []
-  (ffirst (q "select count (id) from paikkaustoteuma;")))
+  (ffirst (q "select count (id) from paikkaus;")))
 
 (defn hae-kohteiden-maara []
   (ffirst (q "select count (id) from paikkauskohde;")))
@@ -74,7 +74,7 @@
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)]
 
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaus)
+    (paikkaus-q/tallenna-paikkaus db destian-kayttaja-id testipaikkaus)
     (is (= (true? (paikkaus-q/onko-toteuma-olemassa-ulkoisella-idlla? db testipaikkauksen-ulkoinen-id destian-kayttaja-id)))
         "Toteuma löytyy ulkoisella id:lla")
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara))
@@ -107,18 +107,18 @@
         paikkausten-maara-luonnin-jalkeen (+ (hae-paikkausten-maara) 1)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
 
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaus)
+    (paikkaus-q/tallenna-paikkaus db destian-kayttaja-id testipaikkaus)
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uusi paikkaus luotiin")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uusi kohde luotiin")
 
     ;; ulkoisella id:lla paivittaminen
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaus ::paikkaus/massatyyppi "kivimastiks"))
+    (paikkaus-q/tallenna-paikkaus db destian-kayttaja-id (assoc testipaikkaus ::paikkaus/massatyyppi "kivimastiks"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
     (is (= "kivimastiks" (::paikkaus/massatyyppi (hae-testitoteuma db))) "Massatyyppi on päivitetty oikein")
 
     ;; harjan id:lla paivittaminen
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaus
+    (paikkaus-q/tallenna-paikkaus db destian-kayttaja-id (assoc testipaikkaus
                                                                   ::paikkaus/id (::paikkaus/id (hae-testitoteuma db))
                                                                   ::paikkaus/massatyyppi "pehmeät ab / bitumi"))
     (is (= paikkausten-maara-luonnin-jalkeen (hae-paikkausten-maara)) "Uutta paikkausta ei luotu")
@@ -129,11 +129,11 @@
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)
         uuden-kohteen-ulkoinen-id 12345]
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaus)
+    (paikkaus-q/tallenna-paikkaus db destian-kayttaja-id testipaikkaus)
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uusi kohde luotiin")
 
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaus ::paikkaus/paikkauskohde
-                                                                                     {:harja.domain.paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id
+    (paikkaus-q/tallenna-paikkaus db destian-kayttaja-id (assoc testipaikkaus ::paikkaus/paikkauskohde
+                                                                              {:harja.domain.paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id
                                                                                       :harja.domain.paikkaus/nimi "Testikohde"}))
     (is (= (+ kohteiden-maara-luonnin-jalkeen 1) (hae-kohteiden-maara)) "Uusi kohde luotiin")
     (is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id}))))))

@@ -53,7 +53,7 @@
     ::ulkoinen-id
     ::nimi})
 
-(def paikkaustoteuman-perustiedot
+(def paikkauksen-perustiedot
   #{::id
     ::urakka-id
     ::paikkauskohde-id
@@ -81,5 +81,5 @@
                      ::pitoisuus
                      ::lisa-aineet}]})
 
-(def paikkaustoteuman-perustiedot
+(def asdfa-perustiedot
   #{:id })

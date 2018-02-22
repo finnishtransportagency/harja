@@ -18,7 +18,7 @@
   (let [paikkaustoteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkaustoteuma %))
                               (:paikkaustoteumat toteumat))]
     (doseq [paikkaustoteuma paikkaustoteumat]
-      (paikkaus-q/tallenna-paikkaustoteuma db kayttaja-id paikkaustoteuma))))
+      (paikkaus-q/tallenna-paikkaus db kayttaja-id paikkaustoteuma))))
 
 (defn kirjaa-paikkaustoteumat [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan uusia paikkaustoteumia: %s kpl urakalle: %s käyttäjän: %s toimesta"
