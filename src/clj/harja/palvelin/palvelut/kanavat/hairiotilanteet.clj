@@ -42,6 +42,7 @@
 (defn tallenna-materiaalikirjaukset [db fim email
                                      {kayttaja-id :id :as kayttaja}
                                      urakka-id
+                                     havaintoaika
                                      hairio-id
                                      materiaalikirjaukset
                                      materiaalipoistot]
@@ -50,7 +51,8 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-hairiotilanteet kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [hairioton-mk materiaalikirjaukset
-            :let [mk-hairiolla (assoc hairioton-mk ::materiaali/hairiotilanne hairio-id)]]
+            :let [mk-hairiolla (assoc hairioton-mk ::materiaali/hairiotilanne hairio-id
+                                                   ::materiaali/pvm havaintoaika)]]
       (m-q/kirjaa-materiaali db kayttaja mk-hairiolla)
       (materiaali-palvelu/hoida-halytysraja db mk-hairiolla fim email))
     (doseq [mk materiaalipoistot]
@@ -83,6 +85,7 @@
             (when (and tallennettu-hairiotilanne (or materiaalikirjaukset materiaalipoistot))
               (tallenna-materiaalikirjaukset db fim email kayttaja
                                              (::hairio/urakka-id hairiotilanne)
+                                             (::hairio/havaintoaika hairiotilanne)
                                              (::hairio/id tallennettu-hairiotilanne)
                                              materiaalikirjaukset materiaalipoistot))
             {:hairiotilanteet (hae-hairiotilanteet db kayttaja hakuehdot)
