@@ -1,12 +1,15 @@
 ALTER TABLE paikkaustoteuma
   RENAME TO paikkaus;
 
-CREATE TABLE paikkauskustannus (
+CREATE TYPE PAIKKAUSTOTEUMATYYPPI AS ENUM ('kokonaishintainen', 'yksikkohintainen');
+
+CREATE TABLE paikkaustoteuma (
   id                 SERIAL PRIMARY KEY,
   "ulkoinen-id"      INTEGER                                     NOT NULL,
 
   "urakka-id"        INTEGER REFERENCES urakka (id)              NOT NULL,
   "paikkauskohde-id" INTEGER REFERENCES paikkauskohde (id)       NOT NULL,
+  "toteuma-id"       INTEGER REFERENCES toteuma                  NOT NULL,
 
   "luoja-id"         INTEGER REFERENCES kayttaja (id),
   luotu              TIMESTAMP DEFAULT NOW(),
@@ -16,6 +19,8 @@ CREATE TABLE paikkauskustannus (
   poistettu          BOOLEAN,
 
   kirjattu           TIMESTAMP DEFAULT NOW(),
+
+  tyyppi             PAIKKAUSTOTEUMATYYPPI,
 
   -- kokonaishintaisen kustannuksen kentät
   selite             TEXT,
