@@ -1,60 +1,15 @@
-CREATE TABLE paikkauskohde (
-  id            SERIAL PRIMARY KEY,
-  "luoja-id"    INTEGER REFERENCES kayttaja (id),
-  "ulkoinen-id" INTEGER NOT NULL,
-  "nimi"        TEXT    NOT NULL,
-  CONSTRAINT paikkauskohteen_uniikki_ulkoinen_id_luoja
-  UNIQUE ("ulkoinen-id", "luoja-id")
-);
+-- Lisää taulu, johon tullaan tallentamaan odottavien sähköpostien tietoja (aluksi tiemerkinnän valmistuminen)
+CREATE TYPE YLLAPITOKOHTEEN_SAHKOPOSTITIEDOT_TYYPPI AS ENUM ('tiemerkinta_valmistunut');
 
-CREATE TABLE paikkaustoteuma (
+CREATE TABLE yllapitokohteen_sahkopostitiedot (
   id                 SERIAL PRIMARY KEY,
-  "luoja-id"         INTEGER REFERENCES kayttaja (id),
-  luotu              TIMESTAMP DEFAULT NOW(),
-  "muokkaaja-id"     INTEGER REFERENCES kayttaja (id),
-  muokattu           TIMESTAMP,
-  "poistaja-id"      INTEGER REFERENCES kayttaja (id),
-  poistettu          BOOLEAN                                     NOT NULL                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            DEFAULT FALSE,
-
-  "urakka-id"        INTEGER REFERENCES urakka (id)              NOT NULL,
-  "paikkauskohde-id" INTEGER REFERENCES paikkauskohde (id)       NOT NULL,
-  "ulkoinen-id"      INTEGER                                     NOT NULL,
-
-  alkuaika           TIMESTAMP                                   NOT NULL,
-  loppuaika          TIMESTAMP                                   NOT NULL,
-
-  tierekisteriosoite TR_OSOITE                                   NOT NULL,
-
-  tyomenetelma       TEXT                                        NOT NULL,
-  massatyyppi        TEXT                                        NOT NULL,
-  leveys             DECIMAL,
-  massamenekki       INTEGER,
-  raekoko            INTEGER,
-  kuulamylly         TEXT,
-
-  CONSTRAINT paikkaustoteuman_uniikki_ulkoinen_id_luoja_urakka
-  UNIQUE ("ulkoinen-id", "luoja-id", "urakka-id")
+  tyyppi             YLLAPITOKOHTEEN_SAHKOPOSTITIEDOT_TYYPPI NOT NULL,
+  yllapitokohde_id   INTEGER REFERENCES yllapitokohde (id)   NOT NULL,
+  vastaanottajat     TEXT []                                 NOT NULL,
+  saate              TEXT,
+  kopio_lahettajalle BOOLEAN                                 NOT NULL DEFAULT FALSE -- Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)
 );
 
-CREATE TABLE paikkauksen_tienkohta (
-  id                   SERIAL PRIMARY KEY,
-  "paikkaustoteuma-id" INTEGER REFERENCES paikkaustoteuma (id),
-  ajorata              INTEGER,
-  reunat               INTEGER [],
-  ajourat              INTEGER [],
-  ajouravalit          INTEGER [],
-  keskisaumat          INTEGER []
-);
-
-CREATE TABLE paikkauksen_materiaali (
-  id                   SERIAL PRIMARY KEY,
-  "paikkaustoteuma-id" INTEGER REFERENCES paikkaustoteuma (id),
-  esiintyma            TEXT,
-  "kuulamylly-arvo"    TEXT,
-  muotoarvo            TEXT,
-  sideainetyyppi       TEXT,
-  pitoisuus            DECIMAL,
-  "lisa-aineet"        TEXT
-);
-
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaustoteuma');
+-- Vain yksi samantyyppinen rivi per ylläpitokohde
+ALTER TABLE yllapitokohteen_sahkopostitiedot
+  ADD CONSTRAINT uniikki_yllapitokohde UNIQUE (yllapitokohde_id, tyyppi);

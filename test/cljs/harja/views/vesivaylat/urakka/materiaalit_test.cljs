@@ -14,11 +14,12 @@
 (test/use-fixtures :each u/komponentti-fixture utils/fake-palvelut-fixture utils/jvh-fixture)
 
 (def listaus
-  [{::m/nimi "Poiju" ::m/alkuperainen-maara 20  ::m/maara-nyt 18 ::m/lisatieto "annettu 20 poijua"
+  [{::m/nimi "Poiju" ::m/alkuperainen-maara 20  ::m/maara-nyt 18 ::m/lisatieto "annettu 20 poijua" ::m/halytysraja 2
+    ::m/yksikko "kpl"
     ::m/muutokset
-    [{::m/pvm (pvm/->pvm "3.5.2017") ::m/maara -3 ::m/lisatieto "käytettiin 3kpl"}
-     {::m/pvm (pvm/->pvm "2.5.2017") ::m/maara -1 ::m/lisatieto "yksi upposi mereen"}
-     {::m/pvm (pvm/->pvm "1.5.2017") ::m/maara 2 ::m/lisatieto "saatiin pajalta 2"}]}])
+    [{::m/pvm (pvm/->pvm "3.5.2017") ::m/maara -3 ::m/lisatieto "käytettiin 3kpl" ::m/luotu (pvm/->pvm "3.5.2017") ::m/yksikko "kpl" ::m/halytysraja 2}
+     {::m/pvm (pvm/->pvm "2.5.2017") ::m/maara -1 ::m/lisatieto "yksi upposi mereen" ::m/luotu (pvm/->pvm "2.5.2017") ::m/yksikko "kpl" ::m/halytysraja 2}
+     {::m/pvm (pvm/->pvm "1.5.2017") ::m/maara 2 ::m/lisatieto "saatiin pajalta 2" ::m/luotu (pvm/->pvm "1.5.2017") ::m/yksikko "kpl" ::m/halytysraja 2}]}])
 
 (def alkutila
   {:urakka-id 1
@@ -33,13 +34,14 @@
         tallennus (utils/fake-palvelukutsu
                    :kirjaa-vesivayla-materiaali
                    (fn [tiedot]
-                     (let [listaus (:materiaalilistaus @app)]
+                     (let [listaus (:materiaalilistaus @app)
+                           tiedot (assoc tiedot ::m/luotu (pvm/nyt))]
                        (update listaus 0
                                (fn [poijut]
                                  (-> poijut
                                      (update ::m/maara-nyt + (::m/maara tiedot))
                                      (update ::m/muutokset conj
-                                             (select-keys tiedot #{::m/pvm ::m/lisatieto ::m/maara}))))))))]
+                                             (select-keys tiedot #{::m/pvm ::m/lisatieto ::m/maara ::m/luotu}))))))))]
 
     (komponenttitesti
      [tuck/tuck app sut/materiaalit*]
