@@ -132,8 +132,6 @@
         muokattu-toteuma (assoc uusi-toteuma ::muokkaustiedot/muokkaaja-id kayttaja-id
                                              ::muokkaustiedot/muokattu (pvm/nyt))
         paivita? (or (id-olemassa? id) (onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db ulkoinen-id kayttaja-id))]
-
-    (println "--->> " paivita?)
     (::paikkaus/id (if paivita?
                      (paivita-paikkaustoteuma db muokattu-toteuma)
                      (luo-paikkaustoteuma db uusi-toteuma)))))
