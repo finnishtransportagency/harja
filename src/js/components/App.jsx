@@ -60,7 +60,7 @@ export default React.createClass({
       case Category.WATERWAYS:
         return 'Vesiväylät';
       case Category.PROBLEMSOLVING:
-        return 'Ongelmanratkaisu';
+        return 'Ongelmanselvitys';
       default:
         return 'Tiedote';
     }
