@@ -15,4 +15,6 @@
 (def sijainti-kartalla
   (reaction
     (when @karttataso-sijainti
-      [{:alue (maarittele-feature @valittu-sijainti true (kartta-ikonit/pinni-ikoni "vihrea"))}])))
+      (let [feature (maarittele-feature @valittu-sijainti true (kartta-ikonit/pinni-ikoni "vihrea"))]
+        (when feature
+          [{:alue feature}])))))
