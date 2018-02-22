@@ -277,7 +277,7 @@
                     (filter #(= valittu-tp-id (:toimenpide %))
                             @valitun-hoitokauden-tyot)))
 
-        prosenttijako? (reaction (= (:tyyppi @urakka) :vesivayla-hoito))
+        prosenttijako? (atom false)
 
         tyorivit (reaction
                    (tyorivit
