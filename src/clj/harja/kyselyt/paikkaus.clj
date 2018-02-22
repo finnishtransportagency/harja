@@ -11,7 +11,7 @@
 
 (defn hae-paikkaustoteumat [db hakuehdot]
   (fetch db
-         ::paikkaus/paikkaustoteuma
+         ::paikkaus/paikkaus
          paikkaus/paikkaustoteuman-perustiedot
          hakuehdot))
 
@@ -60,11 +60,11 @@
                 {::paikkaus/id id}
                 {::paikkaus/ulkoinen-id ulkoinen-id
                  ::muokkaustiedot/luoja-id luoja-id})]
-    (update! db ::paikkaus/paikkaustoteuma toteuma ehdot)
+    (update! db ::paikkaus/paikkaus toteuma ehdot)
     (first (hae-paikkaustoteumat db ehdot))))
 
 (defn- luo-toteuma [db toteuma]
-  (insert! db ::paikkaus/paikkaustoteuma toteuma))
+  (insert! db ::paikkaus/paikkaus toteuma))
 
 (defn- tallenna-materiaalit [db toteuma-id materiaalit]
   (delete! db ::paikkaus/paikkauksen_materiaali {::paikkaus/paikkaustoteuma-id toteuma-id})

@@ -17,12 +17,12 @@
   ["paikkauskohde" ::paikkauskohde
    {"luoja-id" ::muokkaustiedot/luoja-id
     ::paikkaukset (specql.rel/has-many ::id
-                                       ::paikkaustoteuma
+                                       ::paikkaus
                                        ::paikkauskohde-id)
     ::kustannukset (specql.rel/has-many ::id
                                         ::paikkauskustannus
                                         ::paikkauskohde-id)}]
-  ["paikkaustoteuma" ::paikkaustoteuma
+  ["paikkaus" ::paikkaus
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
