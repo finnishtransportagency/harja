@@ -1,0 +1,189 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: solita/napote-circleci:latest
+      - image: solita/harjadb:latest
+
+    working_directory: ~/repo
+
+    environment:
+      LEIN_ROOT: "true"
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+          - v2-dependencies-{{ .Branch }}-{{ checksum "project.clj" }}
+          - v2-dependencies-{{ .Branch }}
+          - v2-dependencies-
+
+      - save_cache:
+          key: v2-dependencies-{{ .Branch }}-{{ checksum "project.clj" }}
+          paths:
+            - ~/.m2
+
+      - run:
+          name: Run migrations, setup test database and import test data
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
+      - run:
+          name: Build Harja JAR
+          command: lein do clean, deps, compile, cljsbuild once prod, less once, cljsbuild once laadunseuranta-min, uberjar
+
+      - run:
+          name: Configure build
+          command: |
+            mkdir /tmp/harja
+            cp asetukset.edn cypress.json /tmp/harja/
+            mv target/harja-0.0.1-SNAPSHOT-standalone.jar /tmp/harja/harja.jar
+
+      - persist_to_workspace:
+          root: /tmp/harja
+          paths:
+            - harja.jar
+            - asetukset.edn
+            - cypress.json
+
+  backend-unit-tests:
+    docker:
+      - image: solita/napote-circleci:latest
+      - image: solita/harjadb:latest
+
+    environment:
+       TZ: "/usr/share/zoneinfo/Europe/Helsinki"
+
+    steps:
+      - checkout
+
+      - run:
+          name: Run migrations, setup test database and import test data
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
+      - run:
+          name: Run unit tests (without performance tests)
+          command: env TZ=EET lein test :no-perf
+
+  frontend-desktop-app-unit-tests:
+    docker:
+      - image: solita/napote-circleci:latest
+      - image: solita/harjadb:latest
+
+    environment:
+
+    steps:
+      - checkout
+
+      - run:
+          name: Install Karma
+          command: sudo npm update && sudo npm install karma --save-dev && sudo npm install karma karma-cljs-test --save-dev && sudo npm install -g karma-cli && sudo npm install karma-chrome-launcher karma-firefox-launcher --save-dev
+
+      - run:
+          name: Run migrations, setup test database and import test data
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
+      - run:
+          name: Run desktop app front end tests
+          command: lein doo chrome-headless test once
+
+  frontend-mobile-app-unit-tests:
+    docker:
+      - image: solita/napote-circleci:latest
+      - image: solita/harjadb:latest
+
+    environment:
+      QT_QPA_PLATFORM: offscreen
+
+    steps:
+      - checkout
+
+      #- restore_cache:
+      #    key: phantomjs
+
+      - run:
+          name: Install PhantomJS
+          command: npm update && npm install phantomjs
+          # sudo apt update && sudo apt install phantomjs -y
+
+      #- save_cache:
+      #    key: phantomjs
+      #    paths:
+      #      - /usr/local/bin/phantomjs
+
+      - run:
+          name: Run migrations, setup test database and import test data
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
+      - run:
+          name: Run mobile app Phantom front end tests
+          command: lein doo phantom laadunseuranta-test once
+
+  e2e-pr:
+    docker:
+      - image: solita/napote-circleci:latest
+      - image: solita/harjadb:latest
+
+    working_directory: ~/repo
+
+    environment:
+      TERM: "xterm"
+      LEIN_ROOT: "true"
+      CYPRESS_BASE_URL: "http://localhost:3000"
+      #DEBUG: "cypress*"
+
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: /tmp/harja
+
+      - run:
+          name: Run migrations, setup test database and import test data
+          command: cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+
+      - restore_cache:
+          keys:
+            - v2-npm-deps-
+
+      - run:
+          name: Install Cypress
+          command: npm i cypress@1.x && $(npm bin)/cypress verify
+
+      - save_cache:
+          key: v2-npm-deps-
+          paths:
+            - node_modules
+
+      - run:
+          name: Set up secretes to settings
+          command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/#=(slurp "[^"]*")/"xxxx"/g'
+
+      - run:
+          name: Set development mode off
+          command: ls /tmp/harja && sed -i /tmp/harja/asetukset.edn -e 's/:kehitysmoodi true/:kehitysmoodi false/'
+
+      - run:
+          name: Start up app
+          command: cd /tmp/harja && env TZ=EET java -jar harja.jar
+          background: true
+
+      - run:
+          name: Wait for app to start up
+          command: for i in {1..10}; do curl http://localhost:3000 > /dev/null 2>&1 && break; echo wait/retry $i; sleep 5; done
+
+      - run:
+          name: Run Cypress E2E smoke tests
+          command: $(npm bin)/cypress run --browser chrome --spec cypress/integration/nakymien_avaus_spec.js
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - backend-unit-tests
+      #- frontend-desktop-app-unit-tests
+      #- frontend-mobile-app-unit-tests
+      - e2e-pr:
+          requires:
+            - build

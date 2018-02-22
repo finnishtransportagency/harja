@@ -72,7 +72,6 @@
            'harja.ui.grid-test
            'harja.ui.edistymispalkki-test
            'harja.fmt-test
-           'harja.tiedot.urakka.siirtymat-test
            'harja.tiedot.tierekisteri.varusteet-test
            'harja.ui.kartta.infopaneelin-sisalto-test
            'harja.tiedot.tilannekuva.tienakyma-test
@@ -107,5 +106,6 @@
            'harja.tiedot.kanavat.urakka.toimenpiteet.muutos-ja-lisatyot-test
            'harja.tiedot.kanavat.urakka.liikenne-test
            'harja.views.urakka.jarjestelma-asetukset-test
+           'harja.tiedot.urakka.siirtymat-test
            ;; uusi testi tähän
            )

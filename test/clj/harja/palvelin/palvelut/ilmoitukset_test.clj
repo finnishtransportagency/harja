@@ -324,10 +324,3 @@
             (:ilmoitustyyppi i)) "ilmoitustyyppi"))
     (is (= 501 (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä") ;eka sivullinen eli 500+1 palautuu
     (is (= ilmoitusten-maara-suoraan-kannasta 10040) "Ilmoitusten lukumäärä")))
-
-(deftest ^:perf hae-ilmoitukset-kesto
-  (is (gatling-onnistuu-ajassa?
-        "Hae ilmoitukset"
-        {:concurrency 100
-         :timeout-in-ms 1500}
-        #(hae hae-ilmoitukset-parametrit))))

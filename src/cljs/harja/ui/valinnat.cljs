@@ -155,7 +155,7 @@
 (defn- toimenpideinstanssi-fmt
   [tpi]
   (if-let [tpi-nimi (:tpi_nimi tpi)]
-    (clojure.string/replace tpi-nimi #"alueurakka" "AU")
+    (str/replace tpi-nimi #"alueurakka" "AU")
     "Ei toimenpidettä"))
 
 (defn urakan-toimenpide
