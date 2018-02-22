@@ -8,7 +8,7 @@ VALUES ((SELECT id
         666,
         'Testikohde');
 
-INSERT INTO paikkaustoteuma ("luoja-id",
+INSERT INTO paikkaus ("luoja-id",
                              luotu,
                              "muokkaaja-id",
                              muokattu,
@@ -51,7 +51,7 @@ INSERT INTO paikkaustoteuma ("luoja-id",
   1,
   '2');
 
-INSERT INTO paikkauksen_materiaali ("paikkaustoteuma-id",
+INSERT INTO paikkauksen_materiaali ("paikkaus-id",
                                      esiintyma,
                                      "kuulamylly-arvo",
                                      muotoarvo,
@@ -59,7 +59,7 @@ INSERT INTO paikkauksen_materiaali ("paikkaustoteuma-id",
                                      pitoisuus,
                                      "lisa-aineet")
 VALUES ((SELECT id
-         FROM paikkaustoteuma
+         FROM paikkaus
          WHERE "ulkoinen-id" = 6661
          LIMIT 1),
         'Testikivi',
@@ -69,14 +69,14 @@ VALUES ((SELECT id
         3.2,
         'Lisäaineet');
 
-INSERT INTO paikkauksen_tienkohta ("paikkaustoteuma-id",
+INSERT INTO paikkauksen_tienkohta ("paikkaus-id",
                                    ajorata,
                                    reunat,
                                    ajourat,
                                    ajouravalit,
                                    keskisaumat)
 VALUES ((SELECT id
-         FROM paikkaustoteuma
+         FROM paikkaus
          WHERE "ulkoinen-id" = 6661
          LIMIT 1),
         1,

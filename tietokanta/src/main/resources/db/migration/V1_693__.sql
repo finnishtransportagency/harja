@@ -1,6 +1,12 @@
 ALTER TABLE paikkaustoteuma
   RENAME TO paikkaus;
 
+ALTER TABLE paikkauksen_tienkohta
+  RENAME COLUMN "paikkaustoteuma-id" TO "paikkaus-id";
+
+ALTER TABLE paikkauksen_materiaali
+  RENAME COLUMN "paikkaustoteuma-id" TO "paikkaus-id";
+
 CREATE TYPE PAIKKAUSTOTEUMATYYPPI AS ENUM ('kokonaishintainen', 'yksikkohintainen');
 
 CREATE TABLE paikkaustoteuma (

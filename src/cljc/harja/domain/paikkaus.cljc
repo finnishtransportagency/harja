@@ -34,10 +34,10 @@
                                         ::id)
     ::tienkohdat (specql.rel/has-many ::id
                                       ::paikkauksen-tienkohta
-                                      ::paikkaustoteuma-id)
+                                      ::paikkaus-id)
     ::materiaalit (specql.rel/has-many ::id
                                        ::paikkauksen_materiaali
-                                       ::paikkaustoteuma-id)}]
+                                       ::paikkaus-id)}]
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
   ["paikkauksen_materiaali" ::paikkauksen_materiaali]
   ["paikkauskustannus" ::paikkauskustannus

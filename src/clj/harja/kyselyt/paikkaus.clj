@@ -67,14 +67,14 @@
   (insert! db ::paikkaus/paikkaus toteuma))
 
 (defn- tallenna-materiaalit [db toteuma-id materiaalit]
-  (delete! db ::paikkaus/paikkauksen_materiaali {::paikkaus/paikkaustoteuma-id toteuma-id})
+  (delete! db ::paikkaus/paikkauksen_materiaali {::paikkaus/paikkaus-id toteuma-id})
   (doseq [materiaali materiaalit]
-    (insert! db ::paikkaus/paikkauksen_materiaali (assoc materiaali ::paikkaus/paikkaustoteuma-id toteuma-id))))
+    (insert! db ::paikkaus/paikkauksen_materiaali (assoc materiaali ::paikkaus/paikkaus-id toteuma-id))))
 
 (defn tallenna-tienkohdat [db toteuma-id tienkohdat]
-  (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaustoteuma-id toteuma-id})
+  (delete! db ::paikkaus/paikkauksen-tienkohta {::paikkaus/paikkaus-id toteuma-id})
   (doseq [tienkohta tienkohdat]
-    (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaustoteuma-id toteuma-id))))
+    (insert! db ::paikkaus/paikkauksen-tienkohta (assoc tienkohta ::paikkaus/paikkaus-id toteuma-id))))
 
 (defn tallenna-paikkaustoteuma [db kayttaja-id toteuma]
   (let [id (::paikkaus/id toteuma)
