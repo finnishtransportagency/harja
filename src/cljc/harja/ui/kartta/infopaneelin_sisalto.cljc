@@ -656,7 +656,14 @@
     {:tyyppi :kohde
      :jarjesta-fn (constantly false)
      :otsikko (kohde/fmt-kohteen-nimi kohde)
-     :tiedot [(toimenpiteen-kentta "Kohde" :kohde)]
+     :tiedot [(toimenpiteen-kentta "Kohde" :kohde)
+              (toimenpiteen-kentta "Havaintoaika" :havaintoaika)
+              (toimenpiteen-kentta "Korjauksen tila" :korjauksen-tila)
+              (toimenpiteen-kentta "Vikaluokka" :vikaluokka)
+              (toimenpiteen-kentta "Korjaustoimenpide" :korjaustoimenpide)
+              (toimenpiteen-kentta "Korjausaika (h)" :korjausaika-h)
+              (toimenpiteen-kentta "Syy" :syy)
+              (toimenpiteen-kentta "Kuittaaja" :kuittaaja)]
      :data kohde}))
 
 (defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]

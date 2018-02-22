@@ -13,6 +13,7 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [clojure.set :as set]
+            [clojure.string :as clj-str]
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -42,6 +43,9 @@
                  kokonaishintaiset-nakymassa? :kokonaishintaiset
                  lisatyot-nakymassa? :lisatyot
                  hairiotilanne-nakymassa? :hairiotilanteet)})))
+
+(defn- tekstiksi [avain]
+  (clj-str/capitalize (clj-str/replace (name avain) #"[_-]" " ")))
 
 (defn- kohde-valittu? [kohde]
   (= (::kohde/id kohde) (-> @aktiivinen-nakyma :tila :avattu-kohde ::kohde/id)))
@@ -76,19 +80,27 @@
                                           :gridin-kohde-avain ::kanavan-toimenpide/kohde
                                           :kohteen-tiedot-fn #(identity
                                                                 {:huoltokohde (-> % ::kanavan-toimenpide/huoltokohde ::kanavan-huoltokohde/nimi)
-                                                                :kohteenosan-tyyppi (when-let [tyyppi (-> % ::kanavan-toimenpide/kohteenosa ::kohteenosa/tyyppi)]
-                                                                                      (name tyyppi))
-                                                                :kuittaaja (str (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/etunimi) " "
-                                                                                (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/sukunimi))
-                                                                :lisatieto (::kanavan-toimenpide/lisatieto %)
-                                                                :muu-toimenpide (::kanavan-toimenpide/muu-toimenpide %)
-                                                                :pvm (pvm/pvm (::kanavan-toimenpide/pvm %))
-                                                                :suorittaja (::kanavan-toimenpide/suorittaja %)
-                                                                :toimenpide (-> % ::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi)})}
+                                                                 :kohteenosan-tyyppi (when-let [tyyppi (-> % ::kanavan-toimenpide/kohteenosa ::kohteenosa/tyyppi)]
+                                                                                       (tekstiksi tyyppi))
+                                                                 :kuittaaja (str (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/etunimi) " "
+                                                                                 (-> % ::kanavan-toimenpide/kuittaaja ::kayttaja/sukunimi))
+                                                                 :lisatieto (::kanavan-toimenpide/lisatieto %)
+                                                                 :muu-toimenpide (::kanavan-toimenpide/muu-toimenpide %)
+                                                                 :pvm (when-let [paivamaara (::kanavan-toimenpide/pvm %)] (pvm/pvm paivamaara))
+                                                                 :suorittaja (::kanavan-toimenpide/suorittaja %)
+                                                                 :toimenpide (-> % ::kanavan-toimenpide/toimenpidekoodi ::toimenpidekoodi/nimi)})}
           :hairiotilanteet {:tietokentta :hairiot
                             :gridin-kohde-avain ::hairiotilanne/kohde
                             :kohteen-tiedot-fn #(identity
-                                                  {:kohde (-> % ::hairiotilanne/kohde ::kohde/nimi)})}
+                                                  {:kohde (-> % ::hairiotilanne/kohde ::kohde/nimi)
+                                                   :havaintoaika (when-let [paivamaara (::hairiotilanne/havaintoaika %)] (pvm/pvm paivamaara))
+                                                   :korjauksen-tila (when-let [korjauksen-tila (::hairiotilanne/korjauksen-tila %)] (tekstiksi korjauksen-tila))
+                                                   :vikaluokka (when-let [vikaluokka (::hairiotilanne/vikaluokka %)] (tekstiksi vikaluokka))
+                                                   :korjaustoimenpide (::hairiotilanne/korjaustoimenpide %)
+                                                   :kuittaaja (str (-> % ::hairiotilanne/kuittaaja ::kayttaja/etunimi) " "
+                                                                   (-> % ::hairiotilanne/kuittaaja ::kayttaja/sukunimi))
+                                                   :korjausaika-h (::hairiotilanne/korjausaika-h %)
+                                                   :syy (::hairiotilanne/syy %)})}
           nil)
         kohteen-tiedot (keep #(when (= (-> % gridin-kohde-avain ::kohde/id) (::kohde/id kohde))
                                 (kohteen-tiedot-fn %))
