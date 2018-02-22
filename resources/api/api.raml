@@ -50,7 +50,7 @@ schemas:
  - urakan-tyotuntien-kirjaus-request: !include schemas/urakan-tyotuntien-kirjaus-request.schema.json
  - toteuman-poisto-request: !include schemas/toteuman-poisto-request.schema.json
  - tarkastuksen-poisto-request: !include schemas/tarkastuksen-poisto-request.schema.json
- - paikkaustoteuman-kirjaus-request: !include schemas/paikkaustoteuman-kirjaus-request.schema.json
+ - paikkausten-kirjaus-request: !include schemas/paikkausten-kirjaus-request.schema.json
  - paikkauskustannusten-kirjaus-request: !include schemas/paikkauskustannusten-kirjaus-request.schema.json
 
 securitySchemes:
@@ -944,30 +944,29 @@ documentation:
     /paikkaus:
       is: [secured]
       description: Paikkaustoteumien sekä niiden hinnoittelujen kirjaus
-      /toteuma:
-        post:
-          is: [secured]
-          description: Uuden paikkauksen kirjaaminen tai vanhan päivittäminen.
-          body:
-            application/json:
-              example: !include examples/paikkaustoteuman-kirjaus-request.json
-              schema: paikkaustoteuman-kirjaus-request
-          responses:
-            200:
-             body:
-               application/json:
-                 example: !include examples/onnistunut-kirjaus-response.json
-                 schema: kirjaus-response
-            400:
-             body:
-               application/json:
-                 example: !include examples/virhe-response.json
-                 schema: virhe-response
-            500:
-             body:
-               application/json:
-                 example: !include examples/virhe-response.json
-                 schema: virhe-response
+      post:
+        is: [secured]
+        description: Uuden paikkauksen kirjaaminen tai vanhan päivittäminen.
+        body:
+          application/json:
+            example: !include examples/paikkausten-kirjaus-request.json
+            schema: paikkausten-kirjaus-request
+        responses:
+          200:
+           body:
+             application/json:
+               example: !include examples/onnistunut-kirjaus-response.json
+               schema: kirjaus-response
+          400:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
+          500:
+           body:
+             application/json:
+               example: !include examples/virhe-response.json
+               schema: virhe-response
       /kustannus:
         post:
           is: [secured]

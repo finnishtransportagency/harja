@@ -40,3 +40,7 @@ CREATE TABLE paikkaustoteuma (
   CONSTRAINT paikkauskustannuksen_uniikki_ulkoinen_id_luoja_urakka
   UNIQUE ("ulkoinen-id", "luoja-id", "urakka-id")
 );
+
+UPDATE integraatio
+SET nimi = 'kirjaa-paikkaus'
+WHERE nimi = 'kirjaa-paikkaustoteuma';

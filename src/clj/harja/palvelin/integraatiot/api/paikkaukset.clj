@@ -14,35 +14,35 @@
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id toteumat]
-  (let [paikkaustoteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkaustoteuma %))
-                              (:paikkaustoteumat toteumat))]
-    (doseq [paikkaustoteuma paikkaustoteumat]
-      (paikkaus-q/tallenna-paikkaus db kayttaja-id paikkaustoteuma))))
+(defn tallenna-paikkaus [db urakka-id kayttaja-id toteumat]
+  (let [paikkaukset (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkaus %))
+                              (:paikkaukset toteumat))]
+    (doseq [paikkaus paikkaukset]
+      (paikkaus-q/tallenna-paikkaus db kayttaja-id paikkaus))))
 
-(defn kirjaa-paikkaustoteumat [db {id :id} data kayttaja]
-  (log/debug (format "Kirjataan uusia paikkaustoteumia: %s kpl urakalle: %s käyttäjän: %s toimesta"
-                     (count (:paikkaustoteumat data)) id kayttaja))
+(defn kirjaa-paikkaus [db {id :id} data kayttaja]
+  (log/debug (format "Kirjataan uusia paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
+                     (count (:paikkaus data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (tallenna-paikkaustoteuma db urakka-id kayttaja-id data))
+    (tallenna-paikkaus db urakka-id kayttaja-id data))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
 (defrecord Paikkaukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
-      http :kirjaa-paikkaustoteuma
-      (POST "/api/urakat/:id/paikkaus/toteuma" request
+      http :kirjaa-paikkaus
+      (POST "/api/urakat/:id/paikkaus" request
         (kasittele-kutsu db
                          integraatioloki
-                         :kirjaa-paikkaustoteuma
+                         :kirjaa-paikkaus
                          request
-                         json-skeemat/paikkaustoteuman-kirjaus-request
+                         json-skeemat/paikkausten-kirjaus-request
                          json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
-                           (kirjaa-paikkaustoteumat db parametrit data kayttaja))))
+                           (kirjaa-paikkaus db parametrit data kayttaja))))
       true)
     this)
 
