@@ -72,7 +72,7 @@
                 (cond
                   ;; Jos ollaan lomakkeella, näytetään kaikki kohteet
                   avattu-toimenpide (conj kasitellyt (assoc kasiteltava
-                                                            :on-item-click-fn on-item-click-fn
+                                                            :on-item-click on-item-click-fn
                                                             :avaa-paneeli? false))
                   ;; Jos ollaan gridinäkymässä, niin näytetään vain ne kohteet, joille on tehty toimenpiteitä
                   (and nakymassa? (kohde-on-gridissa? kasiteltava toimenpiteet)) (conj kasitellyt kasiteltava)

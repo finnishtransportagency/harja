@@ -572,10 +572,10 @@
         hallintayksikko? #(= :hy (:type %))
         valittu-organisaatio? #(tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
                                 val-ur-id val-hy-id %)
-        avaa-paneeli? (some #(when (contains? :avaa-paneeli? %)
-                               (:avaa-paneeli? %))
-                            items)
-        avaa-paneeli? (if (nil? avaa-paneeli?) true avaa-paneeli?)]
+        avaa-paneeli?-sisaltava-item (some #(when (contains? % :avaa-paneeli?)
+                                              %)
+                                           items)
+        avaa-paneeli? (if (nil? avaa-paneeli?-sisaltava-item) true (:avaa-paneeli? avaa-paneeli?-sisaltava-item))]
     ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
     ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
     ;; ja avaamalla sen tiedot infopaneeliin (paitsi ilmoituksissa, missä avataan suoraan lomake),
@@ -588,8 +588,8 @@
     ;; Tuplaklikkauksissa eventin keskeyttäminen tarkoittaa, että zoomausta ei tehdä.
 
     ;; Käyttäjä voi itse määrittää mitä tapahtuu, kun itemiä klikataan
-    (some #(when (contains? :on-item-click %)
-             ((:on-item-click-fn %) %))
+    (some #(when (contains? % :on-item-click)
+             ((:on-item-click %) %))
           items)
     (cond
       ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
