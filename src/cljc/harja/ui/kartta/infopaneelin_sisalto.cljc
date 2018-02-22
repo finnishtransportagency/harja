@@ -32,8 +32,7 @@
   (:require [clojure.string :as string]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
-    #?@(:cljs [[harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]]
-               [reagent.core :as r]])
+    #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]

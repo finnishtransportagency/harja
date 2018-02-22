@@ -500,4 +500,4 @@ tr-ikoni {:img (pinni-ikoni "musta")
 
 (defn kan-kohde [kohde]
   (let [[vari teksti] (kohteenosa-pinni-varit #{:sama-kohde :silta})]
-    [(pinni-ikoni vari) teksti]))
+    [(pinni-ikoni vari) "Kohde"]))
