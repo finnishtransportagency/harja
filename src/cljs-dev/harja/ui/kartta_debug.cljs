@@ -1,6 +1,8 @@
 (ns harja.ui.kartta-debug
   "Näyttää kartan tilan. Defaulttina näytetään layerit, jotka on aktiivisiksi merkattu.
-   Layereiden checkboxit on disabloitu, mikäli niiden näyttämää dataa ei ole haettu."
+   Layereiden checkboxit on disabloitu, mikäli niiden näyttämää dataa ei ole haettu.
+   Infopaneelista näytetään näkee linkki funktiot ja kartalle näytettävät asiat. Infopaneelin
+   tiedot näyttävät nappulat on näkyvissä vain, kun infopaneelikin on näkyvissä."
   (:require [harja.views.kartta.tasot :as tasot]
             [harja.ui.dom :as dom]
             [reagent.core :as r :refer [atom]]
@@ -15,7 +17,7 @@
 
 (declare aseta-kartta-debug-sijainti)
 
-(defonce tila (atom {:nayta-kartan-debug? true
+(defonce tila (atom {:nayta-kartan-debug? false
                      :nayta-kaikki-layerit? false
                      :nayta-kartan-ylaosassa? true
                      :nayta-infopaneelin-tiedot? true
@@ -28,7 +30,11 @@
                                               [kerros @kerroksen-geometria])
                                             tasot/geometrioiden-atomit))))
 
-(defn- varita-mappi [geometriat tietosisalto]
+(defn- varita-mappi
+  "Tän vois refaktoroida nätimmäksi ja nimenkin muuttaa. Tässä consoliin
+   logitetaan vektoretia ja mappeja ryhmitettynä ja muutamia keywordeja
+   varitetaan."
+  [geometriat tietosisalto]
   (let [kasittele-map-fn (fn [mappi]
                            (let [pakolliset-kentat (case tietosisalto
                                                      :layer #{:tyyppi-kartalla :alue}
