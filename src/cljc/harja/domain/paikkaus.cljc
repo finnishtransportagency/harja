@@ -40,7 +40,7 @@
                                        ::paikkaus-id)}]
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
   ["paikkauksen_materiaali" ::paikkauksen_materiaali]
-  ["paikkauskustannus" ::paikkauskustannus
+  ["paikkaustoteuma" ::paikkaustoteuma
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
@@ -81,5 +81,5 @@
                      ::pitoisuus
                      ::lisa-aineet}]})
 
-(def paikkauskustannuksen-perustiedot
+(def paikkaustoteuman-perustiedot
   #{:id })
