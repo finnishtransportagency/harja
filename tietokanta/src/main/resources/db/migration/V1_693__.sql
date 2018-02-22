@@ -37,7 +37,7 @@ CREATE TABLE paikkaustoteuma (
   yksikkohinta       DECIMAL,
   maara              DECIMAL,
 
-  CONSTRAINT paikkauskustannuksen_uniikki_ulkoinen_id_luoja_urakka
+  CONSTRAINT paikkaustoteuman_uniikki_ulkoinen_id_luoja_urakka
   UNIQUE ("ulkoinen-id", "luoja-id", "urakka-id")
 );
 
