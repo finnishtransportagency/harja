@@ -545,6 +545,12 @@
   #_(piilota-infopaneeli-jos-muuttunut vanha uusi)
   (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
 
+(defn- nayta-paneelissa?-fn
+  [item]
+  (if (contains? item :nayta-paneelissa?)
+    (:nayta-paneelissa? item)
+    true))
+
 (defn klikkauksesta-seuraavat-tapahtumat
   "Funktio palauttaa mäpin, joka sisältää ohjeet, miten kyseiseen select-tapahtumaan
   tulee reagoida.
@@ -567,7 +573,9 @@
   (let [monta? #(< 1 (count %))
         klikatut-organisaatiot (filter tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
         paallimmainen-organisatio (first klikatut-organisaatiot)
-        klikatut-asiat (remove tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
+        klikatut-asiat (remove #(or (tapahtuman-geometria-on-hallintayksikko-tai-urakka? %)
+                                    (not (nayta-paneelissa?-fn %)))
+                               items)
         urakka? #(= :ur (:type %))
         hallintayksikko? #(= :hy (:type %))
         valittu-organisaatio? #(tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
