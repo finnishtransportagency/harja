@@ -35,7 +35,10 @@ INSERT INTO paikkaus ("luoja-id",
   NULL,
   NULL,
   FALSE,
-  4,
+  (SELECT id
+   FROM urakka
+   WHERE sampoid = '1242141-OULU2'
+   LIMIT 1),
   (SELECT id
    FROM paikkauskohde
    WHERE "ulkoinen-id" = 666
@@ -98,7 +101,7 @@ VALUES
   (6661,
    (SELECT id
     FROM urakka
-    WHERE sampoid = '1242141-AGSG'
+    WHERE sampoid = '1242141-OULU2'
     LIMIT 1),
    (SELECT id
     FROM paikkaus
@@ -127,7 +130,7 @@ VALUES
   (6662,
    (SELECT id
     FROM urakka
-    WHERE sampoid = '1242141-AGSG'
+    WHERE sampoid = '1242141-OULU2'
     LIMIT 1),
    (SELECT id
     FROM paikkaus

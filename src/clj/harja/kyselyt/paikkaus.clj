@@ -15,26 +15,35 @@
          paikkaus/paikkauksen-perustiedot
          hakuehdot))
 
+(defn hae-paikkaustoteumat [db hakuehdot]
+  (fetch db
+         ::paikkaus/paikkaustoteuma
+         paikkaus/paikkaustoteuman-perustiedot
+         hakuehdot))
+
 (defn hae-paikkauskohteet [db hakuehdot]
   (fetch db
          ::paikkaus/paikkauskohde
          paikkaus/paikkauskohteen-perustiedot
          hakuehdot))
 
+(defn hae-urakan-paikkaukset [db urakka-id]
+  (hae-paikkaukset db {::paikkaus/urakka-id urakka-id}))
+
+(defn hae-urakan-paikkaustoteumat [db urakka-id]
+  (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id}))
+
 (defn onko-toteuma-olemassa-ulkoisella-idlla? [db ulkoinen-id luoja-id]
   (and
     (number? ulkoinen-id)
     (number? luoja-id)
     (not (empty? (hae-paikkaukset db {::paikkaus/ulkoinen-id ulkoinen-id
-                                           ::muokkaustiedot/luoja-id luoja-id})))))
+                                      ::muokkaustiedot/luoja-id luoja-id})))))
 
 (defn onko-kohde-olemassa-ulkoisella-idlla? [db ulkoinen-id]
   (and
     (number? ulkoinen-id)
     (not (empty? (hae-paikkauskohteet db {::paikkaus/ulkoinen-id ulkoinen-id})))))
-
-(defn hae-urakan-paikkaukset [db urakka-id]
-  (first (hae-paikkaukset db {::paikkaus/urakka-id urakka-id})))
 
 (defn tallenna-paikkauskohde [db kayttaja-id kohde]
   (let [id (::paikkaus/id kohde)
@@ -83,15 +92,16 @@
         materiaalit (::paikkaus/materiaalit toteuma)
         tienkohdat (::paikkaus/tienkohdat toteuma)
         uusi-toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id
-                                       ::muokkaustiedot/luoja-id kayttaja-id)
-                        ::paikkaus/materiaalit
-                        ::paikkaus/tienkohdat
-                        ::paikkaus/paikkauskohde)
+                                            ::muokkaustiedot/luoja-id kayttaja-id)
+                             ::paikkaus/materiaalit
+                             ::paikkaus/tienkohdat
+                             ::paikkaus/paikkauskohde)
         muokattu-toteuma (assoc uusi-toteuma ::muokkaustiedot/muokkaaja-id kayttaja-id
-                                        ::muokkaustiedot/muokattu (pvm/nyt))
+                                             ::muokkaustiedot/muokattu (pvm/nyt))
         paivita? (or (id-olemassa? id) (onko-toteuma-olemassa-ulkoisella-idlla? db ulkoinen-id kayttaja-id))
         id (::paikkaus/id (if paivita?
                             (paivita-paikkaus db muokattu-toteuma)
                             (luo-paikkaus db uusi-toteuma)))]
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
+

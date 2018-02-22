@@ -82,4 +82,15 @@
                      ::lisa-aineet}]})
 
 (def paikkaustoteuman-perustiedot
-  #{::id })
+  #{::id
+    ::urakka-id
+    ::paikkauskohde-id
+    ::ulkoinen-id
+    ::toteuma-id
+    ::kirjattu
+    ::tyyppi
+    ::selite
+    ::hinta
+    ::yksikko
+    ::yksikkohinta
+    ::maara})
