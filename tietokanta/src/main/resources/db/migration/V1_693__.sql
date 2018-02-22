@@ -44,3 +44,5 @@ CREATE TABLE paikkaustoteuma (
 UPDATE integraatio
 SET nimi = 'kirjaa-paikkaus'
 WHERE nimi = 'kirjaa-paikkaustoteuma';
+
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaustoteuma')

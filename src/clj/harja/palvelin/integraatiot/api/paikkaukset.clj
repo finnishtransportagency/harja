@@ -29,6 +29,15 @@
     (tallenna-paikkaus db urakka-id kayttaja-id data))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
+(defn kirjaa-paikkaustoteuma [db parametrit data kayttaja]
+  (log/debug (format "Kirjataan uusia paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
+                     (count (:paikkaus data)) id kayttaja))
+  (let [urakka-id (Integer/parseInt id)
+        kayttaja-id (:id kayttaja)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (tallenna-paikkaustoteuma db urakka-id kayttaja-id data))
+  (tee-kirjausvastauksen-body {:ilmoitukset "Paikkauskustannukset kirjattu onnistuneesti"}))
+
 (defrecord Paikkaukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
@@ -43,6 +52,18 @@
                          json-skeemat/kirjausvastaus
                          (fn [parametrit data kayttaja db]
                            (kirjaa-paikkaus db parametrit data kayttaja))))
+      true)
+    (julkaise-reitti
+      http :kirjaa-paikkaustoteuma
+      (POST "/api/urakat/:id/paikkaus/kustannus" request
+        (kasittele-kutsu db
+                         integraatioloki
+                         :kirjaa-paikkaustoteuma
+                         request
+                         json-skeemat/paikkauskustannusten-kirjaus-request
+                         json-skeemat/kirjausvastaus
+                         (fn [parametrit data kayttaja db]
+                           (kirjaa-paikkaustoteuma db parametrit data kayttaja))))
       true)
     this)
 
