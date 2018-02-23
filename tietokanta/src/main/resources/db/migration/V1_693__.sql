@@ -35,10 +35,7 @@ CREATE TABLE paikkaustoteuma (
   -- yksikköhintaisen kustannuksen kentät
   yksikko            TEXT,
   yksikkohinta       DECIMAL,
-  maara              DECIMAL,
-
-  CONSTRAINT paikkaustoteuman_uniikki_ulkoinen_id_luoja_urakka
-  UNIQUE ("ulkoinen-id", "luoja-id", "urakka-id")
+  maara              DECIMAL
 );
 
 UPDATE integraatio

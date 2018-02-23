@@ -121,24 +121,21 @@
     (tallenna-tienkohdat db id tienkohdat)))
 
 (defn tallenna-paikkaustoteuma [db kayttaja-id toteuma]
-  (let [id (::paikkaus/id toteuma)
-        ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
-        paikkauskohde-id (hae-tai-tee-paikkauskohde db kayttaja-id (::paikkaus/paikkauskohde toteuma))
+  (let [paikkauskohde-id (hae-tai-tee-paikkauskohde db kayttaja-id (::paikkaus/paikkauskohde toteuma))
         uusi-toteuma (dissoc (assoc toteuma ::paikkaus/paikkauskohde-id paikkauskohde-id
                                             ::muokkaustiedot/luoja-id kayttaja-id)
                              ::paikkaus/materiaalit
                              ::paikkaus/tienkohdat
-                             ::paikkaus/paikkauskohde)
-        muokattu-toteuma (assoc uusi-toteuma ::muokkaustiedot/muokkaaja-id kayttaja-id
-                                             ::muokkaustiedot/muokattu (pvm/nyt))
-        paivita? (or (id-olemassa? id) (onko-paikkaustoteuma-olemassa-ulkoisella-idlla? db ulkoinen-id kayttaja-id))]
-    (::paikkaus/id (if paivita?
-                     (paivita-paikkaustoteuma db muokattu-toteuma)
-                     (luo-paikkaustoteuma db uusi-toteuma)))))
+                             ::paikkaus/paikkauskohde)]
+    (::paikkaus/id (luo-paikkaustoteuma db uusi-toteuma))))
 
 (defn hae-urakan-paikkaukset [db urakka-id]
   (hae-paikkaukset db {::paikkaus/urakka-id urakka-id}))
 
 (defn hae-urakan-paikkaustoteumat [db urakka-id]
   (hae-paikkaustoteumat db {::paikkaus/urakka-id urakka-id}))
+
+(defn poista-paikkaustoteumat [db kayttaja-id ulkoinen-id]
+  (delete! db ::paikkaus/paikkaustoteuma {::muokkaustiedot/luoja-id kayttaja-id
+                                          ::paikkaus/ulkoinen-id ulkoinen-id}))
 

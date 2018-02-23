@@ -1,6 +1,6 @@
 (ns harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma-test
   (:require [clojure.test :refer :all]
-            [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as paikkaustoteumasanoma]
+            [harja.palvelin.integraatiot.api.sanomat.paikkaussanoma :as paikkaustoteumasanoma]
             [harja.testi :refer :all]))
 
 (deftest paikkaustoteuma-api->domain

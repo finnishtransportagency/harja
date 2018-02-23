@@ -9,16 +9,24 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
+            [harja.palvelin.integraatiot.api.sanomat.paikkaussanoma :as paikkaussanoma]
             [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as paikkaustoteumasanoma]
             [harja.kyselyt.paikkaus :as paikkaus-q]
+            [harja.domain.paikkaus :as paikkaus]
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tallenna-paikkaus [db urakka-id kayttaja-id toteumat]
-  (let [paikkaukset (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkaus %))
-                              (:paikkaukset toteumat))]
+(defn tallenna-paikkaus [db urakka-id kayttaja-id data]
+  (let [paikkaukset (map #(paikkaussanoma/api->domain urakka-id (:paikkaus %)) (:paikkaukset data))]
     (doseq [paikkaus paikkaukset]
       (paikkaus-q/tallenna-paikkaus db kayttaja-id paikkaus))))
+
+(defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id data]
+  (let [toteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkauskustannus %)) (:paikkauskustannukset data))]
+    (doseq [[ulkoinen-id toteumat] (group-by ::paikkaus/ulkoinen-id (apply concat toteumat))]
+      (paikkaus-q/poista-paikkaustoteumat db kayttaja-id ulkoinen-id)
+      (doseq [toteuma toteumat]
+        (paikkaus-q/tallenna-paikkaustoteuma db kayttaja-id toteuma)))))
 
 (defn kirjaa-paikkaus [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan uusia paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
@@ -29,7 +37,7 @@
     (tallenna-paikkaus db urakka-id kayttaja-id data))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
-(defn kirjaa-paikkaustoteuma [db parametrit data kayttaja]
+(defn kirjaa-paikkaustoteuma [db {id :id} data kayttaja]
   (log/debug (format "Kirjataan uusia paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
                      (count (:paikkaus data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)

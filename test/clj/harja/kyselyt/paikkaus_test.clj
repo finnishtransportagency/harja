@@ -205,3 +205,11 @@
     (is (= toteumien-maara-luonnin-jalkeen (hae-paikkaustoteumien-maara)) "Uutta paikkausta ei luotu")
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
     (is (= "testi 2" (::paikkaus/selite (hae-testipaikkaustoteuma db))) "Selite on päivitetty oikein")))
+
+(deftest poista-paikkaustoteuma
+  (let [db (tietokanta/luo-tietokanta testitietokanta)
+        hae-toteuma #(paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id})]
+    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaustoteuma)
+    (is (= 1 (count (hae-toteuma))) "Paikkaustoteuma löytyy tallennuksen jälkeen")
+    (paikkaus-q/poista-paikkaustoteumat db destian-kayttaja-id testipaikkaustoteuman-ulkoinen-id)
+    (is (= 0 (count (hae-toteuma))) "Paikkaustoteuma ei löydy poiston jälkeen")))
