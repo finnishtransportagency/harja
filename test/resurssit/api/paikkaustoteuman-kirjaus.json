@@ -16,7 +16,7 @@
     {
       "paikkauskustannus": {
         "tunniste": {
-          "id": <PAIKKAUSTUNNISTE>
+          "id": <TOTEUMATUNNISTE>
         },
         "paikkauskohde": {
           "nimi": "Testipaikkauskohde",
