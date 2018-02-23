@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.paikkaukset
-  "Tielupien hallinta API:n kautta"
+  "Paikkausten ja niiden kustannusten hallinta API:n kautta"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET DELETE]]
             [clojure.string :refer [join]]
