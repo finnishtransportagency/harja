@@ -32,8 +32,7 @@
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
-        odotettu-paikkaus {                           ::paikkaus/tyomenetelma "massapintaus"
-                           ::paikkaus/paikkauskohde-id 2
+        odotettu-paikkaus {::paikkaus/tyomenetelma "massapintaus"
                            ::paikkaus/materiaalit [{::paikkaus/esiintyma "testi"
                                                     ::paikkaus/kuulamylly-arvo "testi"
                                                     ::paikkaus/muotoarvo "testi"
@@ -60,18 +59,20 @@
                                                      ::paikkaus/nimi "Testipaikkauskohde"}
 
                            ::paikkaus/massamenekki 12}
-        odotettu-kohde {::paikkaus/id 2
-                        ::paikkaus/nimi "Testipaikkauskohde"
+        odotettu-kohde {::paikkaus/nimi "Testipaikkauskohde"
                         ::paikkaus/ulkoinen-id 1231234}]
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkaukset kirjattu onnistuneesti"))
     (is (= odotettu-paikkaus (dissoc (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
                                      ::paikkaus/id
                                      ::paikkaus/loppuaika
-                                     ::paikkaus/alkuaika)))
-    (is (= odotettu-kohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))))))
+                                     ::paikkaus/alkuaika
+                                     ::paikkaus/paikkauskohde-id)))
+    (is (= odotettu-kohde (dissoc
+                            (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
+                            ::paikkaus/id)))))
 
-(deftest kirjaa-paikkauskustannu
+(deftest kirjaa-paikkauskustannus
   (let [db (luo-testitietokanta)
         urakka (hae-oulun-alueurakan-2014-2019-id)
         toteumatunniste 234531
@@ -81,23 +82,24 @@
                (.replace "<TOTEUMATUNNISTE>" (str toteumatunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
-        odotetut-paikkaustoteumat [{:harja.domain.paikkaus/kirjattu #inst "2018-01-30T12:00:00.000000000-00:00"
-                                    :harja.domain.paikkaus/paikkauskohde-id 3
-                                    :harja.domain.paikkaus/selite "asfaltti"
-                                    :harja.domain.paikkaus/tyyppi "kokonaishintainen"
-                                    :harja.domain.paikkaus/ulkoinen-id 234531
-                                    :harja.domain.paikkaus/urakka-id 4}
-                                   {:harja.domain.paikkaus/kirjattu #inst "2018-01-30T12:00:00.000000000-00:00"
-                                    :harja.domain.paikkaus/paikkauskohde-id 3
-                                    :harja.domain.paikkaus/selite "Liikennejärjestelyt"
-                                    :harja.domain.paikkaus/tyyppi "yksikkohintainen"
-                                    :harja.domain.paikkaus/ulkoinen-id 234531
-                                    :harja.domain.paikkaus/urakka-id 4}]
-        odotettu-kohde {:harja.domain.paikkaus/nimi "Testipaikkauskohde"
-                        :harja.domain.paikkaus/ulkoinen-id 466645}]
+        odotetut-paikkaustoteumat [{::paikkaus/selite "asfaltti"
+                                    ::paikkaus/tyyppi "kokonaishintainen"
+                                    ::paikkaus/ulkoinen-id 234531
+                                    ::paikkaus/urakka-id 4}
+                                   {::paikkaus/selite "Liikennejärjestelyt"
+                                    ::paikkaus/tyyppi "yksikkohintainen"
+                                    ::paikkaus/ulkoinen-id 234531
+                                    ::paikkaus/urakka-id 4}]
+        odotettu-kohde {::paikkaus/nimi "Testipaikkauskohde"
+                        ::paikkaus/ulkoinen-id 466645}]
 
     (is (= 200 (:status vastaus)) "Tietueen lisäys onnistui")
     (is (.contains (:body vastaus) "Paikkauskustannukset kirjattu onnistuneesti"))
-    (is (= odotetut-paikkaustoteumat (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id toteumatunniste})))
-    (is (= odotettu-kohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))))))
+    (is (= odotetut-paikkaustoteumat (mapv
+                                       #(dissoc % ::paikkaus/id ::paikkaus/paikkauskohde-id ::paikkaus/kirjattu)
+                                       (paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id toteumatunniste}))))
+    (is (= odotettu-kohde (dissoc
+                            (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id kohdetunniste}))
+                            ::paikkaus/id
+                            ::paikkaus/kirjattu)))))
 
