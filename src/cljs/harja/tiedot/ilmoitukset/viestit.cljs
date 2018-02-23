@@ -44,5 +44,6 @@
 (defrecord TallennaToimenpiteidenAloitus [id])
 (defrecord PeruutaToimenpiteidenAloitus [id])
 (defrecord ToimenpiteidenAloitusTallennettu [])
+(defrecord ToimenpiteidenAloituksenPeruutusTallennettu [])
 (defrecord TallennaToimenpiteidenAloitusMonelle[])
 (defrecord ToimenpiteidenAloitusMonelleTallennettu[])

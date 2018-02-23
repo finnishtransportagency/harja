@@ -316,8 +316,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (process-event [_ app]
     (dissoc app :pikakuittaus))
 
-
-
   v/TallennaToimenpiteidenAloitus
   (process-event [{id :id} app]
     (let [tulos! (t/send-async! v/->ToimenpiteidenAloitusTallennettu)]
@@ -327,7 +325,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/PeruutaToimenpiteidenAloitus
   (process-event [{id :id} app]
-    (let [tulos! (t/send-async! v/->ToimenpiteidenAloitusTallennettu)]
+    (let [tulos! (t/send-async! v/->ToimenpiteidenAloituksenPeruutusTallennettu)]
       (go
         (tulos! (<! (k/post! :peruuta-ilmoituksen-toimenpiteiden-aloitus [id]))))
       (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
@@ -338,6 +336,11 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
     (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false))
 
+  v/ToimenpiteidenAloituksenPeruutusTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden aloitus peruutettu" :success)
+    ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
+    (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false))
 
   v/TallennaToimenpiteidenAloitusMonelle
   (process-event [_ {:keys [kuittaa-monta] :as app}]
