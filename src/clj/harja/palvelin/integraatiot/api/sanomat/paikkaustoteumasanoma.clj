@@ -31,9 +31,7 @@
                                      paikkauskohde
                                      kirjausaika
                                      kokonaishintaiset-kustannukset
-                                     yksikkohintaiset-kustannukset]
-                              :as paikkaustoteuma}]
-  (def testitoteuma paikkaustoteuma)
+                                     yksikkohintaiset-kustannukset]}]
   (let [yksikkohintaiset (map #(yksikkohintainen-toteuma
                                  urakka-id
                                  tunniste

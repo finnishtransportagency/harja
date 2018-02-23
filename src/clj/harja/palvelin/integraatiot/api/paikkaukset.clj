@@ -16,13 +16,13 @@
             [taoensso.timbre :as log])
   (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tallenna-paikkaus [db urakka-id kayttaja-id data]
-  (let [paikkaukset (map #(paikkaussanoma/api->domain urakka-id (:paikkaus %)) (:paikkaukset data))]
+(defn tallenna-paikkaus [db urakka-id kayttaja-id {paikkaukset :paikkaukset}]
+  (let [paikkaukset (map #(paikkaussanoma/api->domain urakka-id (:paikkaus %)) paikkaukset)]
     (doseq [paikkaus paikkaukset]
       (paikkaus-q/tallenna-paikkaus db kayttaja-id paikkaus))))
 
-(defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id data]
-  (let [toteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkauskustannus %)) (:paikkauskustannukset data))]
+(defn tallenna-paikkaustoteuma [db urakka-id kayttaja-id {paikkauskustannukset :paikkauskustannukset}]
+  (let [toteumat (map #(paikkaustoteumasanoma/api->domain urakka-id (:paikkauskustannus %)) paikkauskustannukset)]
     (doseq [[ulkoinen-id toteumat] (group-by ::paikkaus/ulkoinen-id (apply concat toteumat))]
       (paikkaus-q/poista-paikkaustoteumat db kayttaja-id ulkoinen-id)
       (doseq [toteuma toteumat]
