@@ -48,7 +48,7 @@
        :otsikko "Varusteen tyyppi"
        :tyyppi :valinta
        :pakollinen? true
-       :valinnat (vec varusteet/tietolaji->selitys)
+       :valinnat (sort-by second (vec varusteet/tietolaji->selitys))
        :valinta-nayta #(if (nil? %) "- valitse -" (second %))
        :valinta-arvo first}
       {:nimi :voimassaolopvm
@@ -136,6 +136,8 @@
                         {:uusi-liite-teksti "Lisää liite tarkastukseen"
                          :uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
                                                   #(e! (v/->LisaaLiitetiedosto %)))
+                         :salli-poistaa-lisatty-liite? true
+                         :poista-lisatty-liite-fn #(e! (v/->PoistaUusiLiitetiedosto %))
                          :modaalissa? true}])}]
       tarkastus]]))
 

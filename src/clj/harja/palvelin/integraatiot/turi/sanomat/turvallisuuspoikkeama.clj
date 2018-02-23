@@ -3,7 +3,7 @@
             [harja.tyokalut.xml :as xml]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liitteet]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain])
+            [harja.domain.turvallisuuspoikkeama :as turpodomain])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (def +xsd-polku+ "xsd/turi/")

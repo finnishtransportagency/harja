@@ -21,6 +21,10 @@
 ;; Kanavakokonaisuuden muodostaa.
 (def geometriapaivitystunnus "kanavasillat")
 
+
+
+
+
 (def avattavat-siltatyypit {
                             :teraksinen-kaantosilta "Teräksinen kääntösilta"
                             :teraksinen-kaantosilta-teraskansi "Teräksinen kääntösilta, teräskantinen"
@@ -31,6 +35,7 @@
                             :teraksinen-nostosilta-teraskansi "Teräksinen nostosilta, teräskantinen"
                             :teraksinen-langer-palkkisilta-teraskansi "Teräksinen langerpalkkisilta,teräskantinen"
                             :terasbetoninen-ponttonisilta "Teräsbetoninen ponttonisilta"
+                            :temop "Puinen palkkisilta"
                             ;;Jotkut avattavat sillat ovat tämän tyyppisiä, mutta näiden perusteella suodattaessa jäljelle jää paljon turhia siltojas
                             ;;:teraksinen-palkkisilta-terasbetonikansi "Teräksinen palkkisilta, teräsbetonikantinen"
                             ;;:teraksinen-jatkuva-palkkisilta-terasbetonikansi "Teräksinen jatkuva palkkisilta, teräsbetonikantinen"
@@ -40,6 +45,16 @@
                             ;;:teraksinen-levypalkkisilta-ajorata-ylhaalla "Teräksinen levypalkkisilta, ajorata ylhäällä"
                             ;;:teraksinen-ristikkosilta-ajorata-ylhaalla "Teräksinen ristikkosilta, ajorata ylhäällä"
                             })
+
+(def silta-nimet ["Kyrönsalmen rataslta"
+                  "Uimasalmen rataslta"
+                  "Pohjanlahden läntisen salmen silta"
+                  "Kellosalmen silta"
+                  "Itikan silta"
+                  "Uimasalmen silta"
+                  "Kaltimonkosken silta"
+                  "Pinosilta"
+                  "Suojoen"])
 
 (def kanavasiltatunnukset {:kanavasilta "KaS"})
 
@@ -137,6 +152,13 @@
                         (set (vals avattavat-siltatyypit))
                         (set (% :rakennety))))
           (vastaus :tulokset)))
+
+(defn suodata-nimetyt-sillat [vastaus]
+  (filter #(not-empty (set/intersection
+                        (set  silta-nimet)
+                        (set  (% :siltanimi))))
+          (vastaus :tulokset)))
+
 
 (defn muodosta-sivutettu-url [url sivunro]
   (clojure.string/replace url #"%1" (str sivunro)))

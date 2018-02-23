@@ -277,7 +277,7 @@
                           [kommentit/kommentit
                            {:voi-kommentoida?
                             (not= :lukittu (:tila lomakedata-nyt))
-                            :voi-liittaa false
+                            :voi-liittaa? false
                             :palstoja 40
                             :placeholder "Kirjoita kommentti..."
                             :uusi-kommentti (r/wrap (:uusi-kommentti lomakedata-nyt)

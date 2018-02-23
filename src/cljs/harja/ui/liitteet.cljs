@@ -11,8 +11,31 @@
             [harja.ui.img-with-exif :refer [img-with-exif]]
             [harja.fmt :as fmt]
             [harja.ui.komponentti :as komp]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.viesti :as viesti])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(defn poista-liite-kannasta-kysely
+  [{:keys [urakka-id domain domain-id liite-id] :as args}]
+  (assert (and urakka-id domain domain-id liite-id) (pr-str "Puutteelit argumentit, sain: " args))
+  (k/post! :poista-liite-linkki {:urakka-id urakka-id
+                                 :domain domain
+                                 :liite-id liite-id
+                                 :domain-id domain-id}))
+
+(defn poista-liite-kannasta
+  [{:keys [urakka-id domain domain-id liite-id poistettu-fn] :as args}]
+  (assert (and urakka-id domain domain-id liite-id poistettu-fn) (pr-str "Puutteelit argumentit, sain: " args))
+  (go
+    (let [vastaus (<! (poista-liite-kannasta-kysely
+                        {:urakka-id urakka-id
+                         :domain domain
+                         :domain-id domain-id
+                         :liite-id liite-id}))]
+      (if (k/virhe? vastaus)
+        (viesti/nayta! "Liitteen poisto epäonnistui!" :danger)
+        (do (poistettu-fn)
+            (viesti/nayta! "Liite poistettu!" :success))))))
 
 (defn lyhenna-pitkan-liitteen-nimi [nimi]
   (if (> (count nimi) 20)

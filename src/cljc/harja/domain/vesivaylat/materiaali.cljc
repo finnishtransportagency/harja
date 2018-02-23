@@ -17,13 +17,13 @@
 (s/def ::materiaalilistauksen-haku (s/keys :req [::urakka-id]))
 (s/def ::materiaalilistauksen-vastaus (s/coll-of ::materiaalilistaus))
 
-(s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::maara ::pvm]
+(s/def ::materiaalikirjaus (s/keys :req [::urakka-id ::nimi ::maara ::pvm ::yksikko]
                                    :opt [::lisatieto ::halytysraja ::hairiotilanne ::toimenpide]))
 
 (s/def ::materiaalikirjaukset (s/coll-of ::materiaalikirjaus))
 
 (s/def ::poista-materiaalikirjaus (s/keys :req [::id ::urakka-id]))
-(s/def ::muuta-materiaalien-alkuperainen-maara (s/keys :req [::urakka-id]
-                                                       :req-un [::uudet-alkuperaiset-maarat]))
+(s/def ::muuta-materiaalien-alkuperaiset-tiedot (s/keys :req [::urakka-id]
+                                                        :req-un [::uudet-alkuperaiset-tiedot]))
 
 (s/def ::poista-materiaalikirjauksia (s/coll-of ::poista-materiaalikirjaus))
