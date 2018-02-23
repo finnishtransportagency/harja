@@ -1,11 +1,61 @@
-ALTER TABLE paikkaustoteuma
-  RENAME TO paikkaus;
+CREATE TABLE paikkauskohde (
+  id            SERIAL PRIMARY KEY,
+  "luoja-id"    INTEGER REFERENCES kayttaja (id),
+  "ulkoinen-id" INTEGER NOT NULL,
+  "nimi"        TEXT    NOT NULL,
+  CONSTRAINT paikkauskohteen_uniikki_ulkoinen_id_luoja
+  UNIQUE ("ulkoinen-id", "luoja-id")
+);
 
-ALTER TABLE paikkauksen_tienkohta
-  RENAME COLUMN "paikkaustoteuma-id" TO "paikkaus-id";
+CREATE TABLE paikkaus (
+  id                 SERIAL PRIMARY KEY,
+  "luoja-id"         INTEGER REFERENCES kayttaja (id),
+  luotu              TIMESTAMP DEFAULT NOW(),
+  "muokkaaja-id"     INTEGER REFERENCES kayttaja (id),
+  muokattu           TIMESTAMP,
+  "poistaja-id"      INTEGER REFERENCES kayttaja (id),
+  poistettu          BOOLEAN                                     NOT NULL                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            DEFAULT FALSE,
 
-ALTER TABLE paikkauksen_materiaali
-  RENAME COLUMN "paikkaustoteuma-id" TO "paikkaus-id";
+  "urakka-id"        INTEGER REFERENCES urakka (id)              NOT NULL,
+  "paikkauskohde-id" INTEGER REFERENCES paikkauskohde (id)       NOT NULL,
+  "ulkoinen-id"      INTEGER                                     NOT NULL,
+
+  alkuaika           TIMESTAMP                                   NOT NULL,
+  loppuaika          TIMESTAMP                                   NOT NULL,
+
+  tierekisteriosoite TR_OSOITE                                   NOT NULL,
+
+  tyomenetelma       TEXT                                        NOT NULL,
+  massatyyppi        TEXT                                        NOT NULL,
+  leveys             DECIMAL,
+  massamenekki       INTEGER,
+  raekoko            INTEGER,
+  kuulamylly         TEXT,
+
+  CONSTRAINT paikkauksen_uniikki_ulkoinen_id_luoja_urakka
+  UNIQUE ("ulkoinen-id", "luoja-id", "urakka-id")
+);
+
+CREATE TABLE paikkauksen_tienkohta (
+  id            SERIAL PRIMARY KEY,
+  "paikkaus-id" INTEGER REFERENCES paikkaus (id),
+  ajorata       INTEGER,
+  reunat        INTEGER [],
+  ajourat       INTEGER [],
+  ajouravalit   INTEGER [],
+  keskisaumat   INTEGER []
+);
+
+CREATE TABLE paikkauksen_materiaali (
+  id                SERIAL PRIMARY KEY,
+  "paikkaus-id"     INTEGER REFERENCES paikkaus (id),
+  esiintyma         TEXT,
+  "kuulamylly-arvo" TEXT,
+  muotoarvo         TEXT,
+  sideainetyyppi    TEXT,
+  pitoisuus         DECIMAL,
+  "lisa-aineet"     TEXT
+);
 
 CREATE TYPE PAIKKAUSTOTEUMATYYPPI AS ENUM ('kokonaishintainen', 'yksikkohintainen');
 
@@ -38,8 +88,6 @@ CREATE TABLE paikkaustoteuma (
   maara              DECIMAL
 );
 
-UPDATE integraatio
-SET nimi = 'kirjaa-paikkaus'
-WHERE nimi = 'kirjaa-paikkaustoteuma';
 
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaustoteuma')
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaus');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaustoteuma');

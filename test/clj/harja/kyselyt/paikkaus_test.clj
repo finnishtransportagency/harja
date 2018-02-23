@@ -13,45 +13,45 @@
 (def destian-kayttaja-id (ffirst (q "select id from kayttaja where kayttajanimi = 'destia';")))
 
 (def testipaikkaus
-  {:harja.domain.paikkaus/alkuaika #inst"2018-02-06T10:47:24.183975000-00:00"
-   :harja.domain.paikkaus/tyomenetelma "massapintaus"
-   :harja.domain.paikkaus/paikkauskohde-id 1
-   :harja.domain.paikkaus/raekoko 1
-   :harja.domain.paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id
-   :harja.domain.paikkaus/leveys 1.3M
-   :harja.domain.paikkaus/urakka-id (hae-oulun-alueurakan-2014-2019-id)
+  {::paikkaus/alkuaika #inst"2018-02-06T10:47:24.183975000-00:00"
+   ::paikkaus/tyomenetelma "massapintaus"
+   ::paikkaus/paikkauskohde-id 1
+   ::paikkaus/raekoko 1
+   ::paikkaus/ulkoinen-id testipaikkauksen-ulkoinen-id
+   ::paikkaus/leveys 1.3M
+   ::paikkaus/urakka-id (hae-oulun-alueurakan-2014-2019-id)
    :harja.domain.muokkaustiedot/luoja-id destian-kayttaja-id
-   :harja.domain.paikkaus/tierekisteriosoite {:harja.domain.tierekisteri/aet 1
+   ::paikkaus/tierekisteriosoite {:harja.domain.tierekisteri/aet 1
                                               :harja.domain.tierekisteri/let 100
                                               :harja.domain.tierekisteri/tie 20
                                               :harja.domain.tierekisteri/aosa 1
                                               :harja.domain.tierekisteri/losa 1}
-   :harja.domain.paikkaus/massatyyppi "asfalttibetoni"
-   :harja.domain.paikkaus/kuulamylly "2"
-   :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/ulkoinen-id testikohteen-ulkoinen-id
-                                         :harja.domain.paikkaus/nimi "Testikohde"}
-   :harja.domain.paikkaus/loppuaika #inst"2018-02-06T10:47:24.183975000-00:00"
-   :harja.domain.paikkaus/massamenekki 2
-   :harja.domain.paikkaus/materiaalit [{:harja.domain.paikkaus/esiintyma "Testikivi"
-                                        :harja.domain.paikkaus/kuulamylly-arvo "1"
-                                        :harja.domain.paikkaus/muotoarvo "Muotoarvo"
-                                        :harja.domain.paikkaus/lisa-aineet "Lisäaineet"
-                                        :harja.domain.paikkaus/pitoisuus 3.2M
-                                        :harja.domain.paikkaus/sideainetyyppi "Sideaine"}]
-   :harja.domain.paikkaus/tienkohdat [{:harja.domain.paikkaus/ajourat [1 2]
-                                       :harja.domain.paikkaus/ajorata 1
-                                       :harja.domain.paikkaus/ajouravalit [1]
-                                       :harja.domain.paikkaus/reunat [0]}]})
+   ::paikkaus/massatyyppi "asfalttibetoni"
+   ::paikkaus/kuulamylly "2"
+   ::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id testikohteen-ulkoinen-id
+                                         ::paikkaus/nimi "Testikohde"}
+   ::paikkaus/loppuaika #inst"2018-02-06T10:47:24.183975000-00:00"
+   ::paikkaus/massamenekki 2
+   ::paikkaus/materiaalit [{::paikkaus/esiintyma "Testikivi"
+                                        ::paikkaus/kuulamylly-arvo "1"
+                                        ::paikkaus/muotoarvo "Muotoarvo"
+                                        ::paikkaus/lisa-aineet "Lisäaineet"
+                                        ::paikkaus/pitoisuus 3.2M
+                                        ::paikkaus/sideainetyyppi "Sideaine"}]
+   ::paikkaus/tienkohdat [{::paikkaus/ajourat [1 2]
+                                       ::paikkaus/ajorata 1
+                                       ::paikkaus/ajouravalit [1]
+                                       ::paikkaus/reunat [0]}]})
 
 (def testipaikkaustoteuma
-  {:harja.domain.paikkaus/selite "Testi"
-   :harja.domain.paikkaus/urakka-id 4
-   :harja.domain.paikkaus/hinta 3500M
-   :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/ulkoinen-id testikohteen-ulkoinen-id
-                                         :harja.domain.paikkaus/nimi "Testikohde"}
-   :harja.domain.paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id
-   :harja.domain.paikkaus/tyyppi "kokonaishintainen"
-   :harja.domain.paikkaus/kirjattu #inst"2018-02-22T08:00:15.937759000-00:00"})
+  {::paikkaus/selite "Testi"
+   ::paikkaus/urakka-id 4
+   ::paikkaus/hinta 3500M
+   ::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id testikohteen-ulkoinen-id
+                                         ::paikkaus/nimi "Testikohde"}
+   ::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id
+   ::paikkaus/tyyppi "kokonaishintainen"
+   ::paikkaus/kirjattu #inst"2018-02-22T08:00:15.937759000-00:00"})
 
 (deftest hae-paikkaustoimenpiteet
   (let [db (tietokanta/luo-tietokanta testitietokanta)
@@ -104,18 +104,18 @@
     (let [toteuma (hae-testipaikkaus db)
           materiaalit (::paikkaus/materiaalit toteuma)
           tienkohdat (::paikkaus/tienkohdat toteuma)]
-      (is (= [{:harja.domain.paikkaus/esiintyma "Testikivi"
-               :harja.domain.paikkaus/kuulamylly-arvo "1"
-               :harja.domain.paikkaus/muotoarvo "Muotoarvo"
-               :harja.domain.paikkaus/lisa-aineet "Lisäaineet"
-               :harja.domain.paikkaus/pitoisuus 3.2M
-               :harja.domain.paikkaus/sideainetyyppi "Sideaine"}]
+      (is (= [{::paikkaus/esiintyma "Testikivi"
+               ::paikkaus/kuulamylly-arvo "1"
+               ::paikkaus/muotoarvo "Muotoarvo"
+               ::paikkaus/lisa-aineet "Lisäaineet"
+               ::paikkaus/pitoisuus 3.2M
+               ::paikkaus/sideainetyyppi "Sideaine"}]
              materiaalit)
           "Oletetut materiaalit löytyvät")
-      (is (= [{:harja.domain.paikkaus/ajourat [1 2]
-               :harja.domain.paikkaus/ajorata 1
-               :harja.domain.paikkaus/ajouravalit [1]
-               :harja.domain.paikkaus/reunat [0]}]
+      (is (= [{::paikkaus/ajourat [1 2]
+               ::paikkaus/ajorata 1
+               ::paikkaus/ajouravalit [1]
+               ::paikkaus/reunat [0]}]
              tienkohdat)
           "Oletetut tienkohdat löytyvät"))))
 
@@ -150,8 +150,8 @@
     (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uusi kohde luotiin")
 
     (paikkaus-q/tallenna-paikkaus db destian-kayttaja-id (assoc testipaikkaus ::paikkaus/paikkauskohde
-                                                                              {:harja.domain.paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id
-                                                                               :harja.domain.paikkaus/nimi "Testikohde"}))
+                                                                              {::paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id
+                                                                               ::paikkaus/nimi "Testikohde"}))
     (is (= (+ kohteiden-maara-luonnin-jalkeen 1) (hae-kohteiden-maara)) "Uusi kohde luotiin")
     (is (= 1 (count (paikkaus-q/hae-paikkauskohteet db {::paikkaus/ulkoinen-id uuden-kohteen-ulkoinen-id}))))))
 
@@ -174,14 +174,15 @@
         "Kohteiden määrä on noussut yhdellä")
 
     (let [toteuma (hae-testipaikkaustoteuma db)]
-      (is (= (dissoc toteuma :harja.domain.paikkaus/kirjattu )
-             {:harja.domain.paikkaus/selite "Testi"
-              :harja.domain.paikkaus/urakka-id 4
-              :harja.domain.paikkaus/hinta 3500M
-              :harja.domain.paikkaus/paikkauskohde-id 2
-              :harja.domain.paikkaus/id 3
-              :harja.domain.paikkaus/ulkoinen-id 666987
-              :harja.domain.paikkaus/tyyppi "kokonaishintainen"})))))
+      (is (= (dissoc toteuma
+                     ::paikkaus/kirjattu
+                     ::paikkaus/id
+                     ::paikkaus/paikkauskohde-id)
+             {::paikkaus/selite "Testi"
+              ::paikkaus/urakka-id 4
+              ::paikkaus/hinta 3500M
+              ::paikkaus/ulkoinen-id 666987
+              ::paikkaus/tyyppi "kokonaishintainen"})))))
 
 (deftest poista-paikkaustoteuma
   (let [db (tietokanta/luo-tietokanta testitietokanta)
