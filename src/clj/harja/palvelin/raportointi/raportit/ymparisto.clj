@@ -25,13 +25,14 @@
                                    (yleinen/kk-ja-vv pvm))))))
         (hae-ymparistoraportti-tiedot db parametrit)))
 
+(def materiaali-kaikki-talvisuola-yhteensa
+  {:nimi "Kaikki talvisuola yhteensä"
+   :yksikko "t"})
+
 (defn hae-raportti* [db hakuasetukset]
   (let [urakoittain? (:urakoittain? hakuasetukset)
         rivit (hae-raportin-tiedot db hakuasetukset)
-        materiaali-rivit (cons {:nimi "Kaikki talvisuola yhteensä"
-                                :yksikko "t"}
-                               (hae-materiaalit db))
-        _ (println " materiaali-rivit " materiaali-rivit)
+        materiaali-rivit (hae-materiaalit db)
         urakat (into #{} (map :urakka rivit))
         materiaali-avaimet (if urakoittain?
                              [:materiaali :urakka]
@@ -82,6 +83,24 @@
     7.5
     (materiaalidomain/materiaalien-jarjestys materiaalinimi)))
 
+(defn- kk-rivit
+  "Kk-rivit toteumille eli tummmennetut rivit - ei hoitoluokkakohtaiset"
+  [rivit]
+  (group-by :kk (filter (comp not :luokka) (remove #(nil? (:kk %)) rivit))))
+
+(defn- kk-arvot
+  "Funktio joka palauttaa kk-arvot raportin ymmärtämässä muodossa ja oikeassa järjestyksessä"
+  [kk-rivit materiaali]
+  (reduce-kv (fn [kk-arvot kk rivit]
+                    (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + (keep :maara rivit))
+                                                          :yksikko (:yksikko materiaali)
+                                                          :desimaalien-maara 3}]))
+                  {} kk-rivit))
+
+(defn- yhteensa-arvo
+  [arvot]
+  (reduce + (remove nil? (map (comp :arvo second) arvot))))
+
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
                                urakoittain? urakkatyyppi] :as parametrit}]
@@ -103,11 +122,36 @@
                                                     db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        _ (println "materiaalit ennen jarjestystä" materiaalit)
+
+
+        _ (println " materiaalit " materiaalit)
+        kaikki-talvisuola-yhteensa (filter #(= "talvisuola" (get-in % [:materiaali :tyyppi]))
+                                           (apply concat (map second materiaalit)))
+        kaikki-talvisuola-yhteensa-urakan-ja-kk-mukaan (group-by (juxt :kk :urakka) kaikki-talvisuola-yhteensa)
+        summatut-talvisuolat-urakan-ja-kkn-mukaan
+        (map (fn [[[kk urakka] rivit]]
+               {[kk urakka] (assoc (first rivit) :maara (reduce + (keep :maara rivit))
+                                                 :materiaali materiaali-kaikki-talvisuola-yhteensa)})
+             kaikki-talvisuola-yhteensa-urakan-ja-kk-mukaan)
+        _ (println " summatut-talvisuolat-urakan-ja-kkn-mukaan " summatut-talvisuolat-urakan-ja-kkn-mukaan)
+
+        suolasummat (mapv (fn [rivi]
+                            (let [[kk urakka] (ffirst rivi)
+                                  arvo (last (first rivi))]
+
+                              (println " kk " kk " urakka " urakka " arvo " arvo)
+                              [{:materiaali materiaali-kaikki-talvisuola-yhteensa
+                                :urakka urakka}
+                               [arvo]]))
+                          summatut-talvisuolat-urakan-ja-kkn-mukaan)
+        ; FIXME: urakkaerittelyssä nyt joka kuukaudelle per urakka ilmestyy oma summarivi
+        ; päästävä yhteen riviin per urakka "Kaikki talvisuola yhteensä" materiaalille
+        materiaalit (concat materiaalit suolasummat)
+        _ (println "suolasummat " suolasummat)
         materiaalit (sort-by #(materiaalien-jarjestys-ymparistoraportilla
                                 (get-in (first %) [:materiaali :nimi]))
                              materiaalit)
-        _ (println "materiaalit " materiaalit)
+
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
         talvisuolan-maxmaaratieto (when (= :urakka konteksti)
                                     (:talvisuolaraja (first (suolasakko-q/hae-urakan-suolasakot db {:urakka urakka-id}))))
@@ -163,26 +207,18 @@
 
       (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
+         ;(println "urakka" urakka   "materiaali: " materiaali " rivit " rivit )
          (let [suunnitellut (keep :maara (filter #(nil? (:kk %)) rivit))
                suunniteltu (when-not (empty? suunnitellut)
                          (reduce + suunnitellut))
                luokitellut (filter :luokka rivit)
-               materiaalirivit (remove #(nil? (:kk %)) rivit)
-               kk-rivit (group-by :kk (filter (comp not :luokka) materiaalirivit))
-               _ (println "kk rivit " kk-rivit)
-               kk-arvot (reduce-kv (fn [kk-arvot kk rivit]
-                                     (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + (keep :maara rivit))
-                                                                           :yksikko (:yksikko materiaali)
-                                                                           :desimaalien-maara 3}]))
-                                   {} kk-rivit)
-               yhteensa-arvo #(reduce + (remove nil? (map (comp :arvo second) %)))
+               kk-arvot (kk-arvot (kk-rivit rivit) materiaali)
                yhteensa-kentta (fn [arvot nayta-aina?]
                                  (let [yht (yhteensa-arvo arvot)]
                                    (when (or (> yht 0) nayta-aina?)
                                      [:arvo-ja-yksikko {:arvo yht
                                                         :yksikko (:yksikko materiaali)
                                                         :desimaalien-maara 3}])))]
-           (println "materiaalin" (:nimi materiaali)  "KK-ARVOT: " kk-arvot "; KUUKAUDET: " kuukaudet)
            (concat
              ;; Talvisuolat-väliotsikko
              (when (= "Talvisuola" (:nimi materiaali))
