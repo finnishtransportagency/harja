@@ -28,7 +28,7 @@
        "Kuittauskoodit:\n"
        "V%s = vastaanotettu\n"
        "A%s = aloitettu\n"
-       "K%s = toimenpiteet käynnissä\n"
+       "K%s = toimenpiteet aloitettu\n"
        "L%s = lopetettu\n"
        "T%s = lopetettu toimenpitein\n"
        "M%s = muutettu\n"
