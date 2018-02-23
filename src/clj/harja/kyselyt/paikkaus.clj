@@ -76,17 +76,6 @@
 (defn- luo-paikkaus [db paikkaus]
   (insert! db ::paikkaus/paikkaus paikkaus))
 
-(defn paivita-paikkaustoteuma [db toteuma]
-  (let [id (::paikkaus/id toteuma)
-        luoja-id (::muokkaustiedot/luoja-id toteuma)
-        ulkoinen-id (::paikkaus/ulkoinen-id toteuma)
-        ehdot (if (id-olemassa? id)
-                {::paikkaus/id id}
-                {::paikkaus/ulkoinen-id ulkoinen-id
-                 ::muokkaustiedot/luoja-id luoja-id})]
-    (update! db ::paikkaus/paikkaustoteuma toteuma ehdot)
-    (first (hae-paikkaustoteumat db ehdot))))
-
 (defn luo-paikkaustoteuma [db toteuma]
   (insert! db ::paikkaus/paikkaustoteuma toteuma))
 

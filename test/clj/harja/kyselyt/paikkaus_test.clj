@@ -183,29 +183,6 @@
               :harja.domain.paikkaus/ulkoinen-id 666987
               :harja.domain.paikkaus/tyyppi "kokonaishintainen"})))))
 
-(deftest paivita-paikkaustoteuma
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
-        toteumien-maara-luonnin-jalkeen (+ (hae-paikkaustoteumien-maara) 1)
-        kohteiden-maara-luonnin-jalkeen (+ (hae-kohteiden-maara) 1)]
-
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id testipaikkaustoteuma)
-    (is (= toteumien-maara-luonnin-jalkeen (hae-paikkaustoteumien-maara)) "Uusi paikkaus luotiin")
-    (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uusi kohde luotiin")
-
-    ;; ulkoisella id:lla paivittaminen
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaustoteuma ::paikkaus/selite "testi"))
-    (is (= toteumien-maara-luonnin-jalkeen (hae-paikkaustoteumien-maara)) "Uutta paikkausta ei luotu")
-    (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
-    (is (= "testi" (::paikkaus/selite (hae-testipaikkaustoteuma db))) "Selite on päivitetty oikein")
-
-    ;; harjan id:lla paivittaminen
-    (paikkaus-q/tallenna-paikkaustoteuma db destian-kayttaja-id (assoc testipaikkaustoteuma
-                                                           ::paikkaus/id (::paikkaus/id (hae-testipaikkaustoteuma db))
-                                                           ::paikkaus/selite "testi 2"))
-    (is (= toteumien-maara-luonnin-jalkeen (hae-paikkaustoteumien-maara)) "Uutta paikkausta ei luotu")
-    (is (= kohteiden-maara-luonnin-jalkeen (hae-kohteiden-maara)) "Uutta kohdetta ei luotu")
-    (is (= "testi 2" (::paikkaus/selite (hae-testipaikkaustoteuma db))) "Selite on päivitetty oikein")))
-
 (deftest poista-paikkaustoteuma
   (let [db (tietokanta/luo-tietokanta testitietokanta)
         hae-toteuma #(paikkaus-q/hae-paikkaustoteumat db {::paikkaus/ulkoinen-id testipaikkaustoteuman-ulkoinen-id})]
