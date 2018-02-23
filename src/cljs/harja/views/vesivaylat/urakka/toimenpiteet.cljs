@@ -31,8 +31,7 @@
          [yks-hint/yksikkohintaiset-toimenpiteet])
 
        "Erilliskustannukset" :erilliskustannukset
-       (when (and (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id)
-                  (not (urakka-domain/kanavaurakka? ur)))
+       (when (and (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id))
          [erilliskustannukset/erilliskustannusten-toteumat ur])
 
        "Kokonaishintaiset"
