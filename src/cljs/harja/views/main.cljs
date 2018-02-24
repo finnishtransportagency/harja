@@ -168,14 +168,13 @@
       {:linkki "Lataa sivu uudelleen"
        :linkki-fn #(.reload js/location)}]
 
-     ;@k/yhteys-katkennut?
-     ;[yleinen-varoituspalkki
-     ; "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
-     ; {:nayta-pisteanimaatio? true}]
+     @k/yhteys-katkennut?
+     [yleinen-varoituspalkki
+      "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
+      {:nayta-pisteanimaatio? true}]
 
-     ;(and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
-     ;[yhteys-palautunut-ilmoitus]
-     )
+     (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
+     [yhteys-palautunut-ilmoitus])
 
    (let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
      (when (and hairiotiedot @hairiotiedot/nayta-hairioilmoitus?)
