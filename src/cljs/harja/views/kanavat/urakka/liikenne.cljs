@@ -163,7 +163,6 @@
                                kohteet]
   (let [uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))]
     [:div
-     [debug app]
      [napit/takaisin "Takaisin tapahtumaluetteloon" #(e! (tiedot/->ValitseTapahtuma nil))]
      [lomake/lomake
       {:otsikko (if uusi-tapahtuma?
@@ -381,7 +380,6 @@
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?] :as app}
                                  kohteet]
   [:div
-   [debug app]
    [valinnat e! app kohteet]
    [grid/grid
     {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
