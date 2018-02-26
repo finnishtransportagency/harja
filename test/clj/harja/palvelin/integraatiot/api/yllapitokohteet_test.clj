@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.yllapitokohteet-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
@@ -49,24 +49,31 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-yllapitokohteiden-haku
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet"] kayttaja-paallystys portti)
-        data (cheshire/decode (:body vastaus) true)
-        yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
-        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
-                                          yllapitokohteet))]
-    (is (= 200 (:status vastaus)))
-    (is (= 6 (count yllapitokohteet)))
-    (is (some? leppajarven-ramppi))
-    (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
-    (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
+  (testing "Ylläpitokohtiden haku: ilman hyppyjä"
+    (let [muhoksen-paikkausurakan-id (hae-muhoksen-paallystysurakan-id)
+          vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paikkausurakan-id "/yllapitokohteet")]
+                                          kayttaja-paallystys
+                                          portti)
+          data (cheshire/decode (:body vastaus) true)
+          yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
+          leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                            yllapitokohteet))]
+      (is (= 200 (:status vastaus)))
+      (is (= 6 (count yllapitokohteet)))
+      (is (some? leppajarven-ramppi))
+      (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
+      (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
+      (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
+      (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
+      (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
+      (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
+      (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus])))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet" urakka] "Erkki Esimerkki" portti)]
+  (let [muhoksen-paikkausurakan-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paikkausurakan-id "/yllapitokohteet") urakka]
+                                        "Erkki Esimerkki"
+                                        portti)]
     (is (= 403 (:status vastaus)))
     (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
 
@@ -749,8 +756,8 @@
                      #".*api\/urakat.*" :allow]
       (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
             vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
-                                                     kayttaja-paallystys portti
-                                                     payload)]
+                                            kayttaja-paallystys portti
+                                            payload)]
         (log/debug vastaus)
         (is (= 200 (:status vastaus)) "Kutsu tehtiin onnistuneesti")
 
