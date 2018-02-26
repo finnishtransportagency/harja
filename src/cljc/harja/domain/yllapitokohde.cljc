@@ -359,3 +359,6 @@ yllapitoluokkanimi->numero
    :sekoitusjyrsinta "Sekoitusjyrsintä"
    :murskeenlisays "Murskeenlisäys"
    :muu "Muu"})
+
+(defn suodata-hypyt [alikohteet]
+  (filter (comp not :hyppy?) alikohteet))

@@ -56,6 +56,7 @@
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
+            [harja.domain.yllapitokohde :as ypk-domain]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
@@ -88,7 +89,10 @@
           yllapitokohteet (konv/sarakkeet-vektoriin
                             yllapitokohteet
                             {:kohdeosa :alikohteet}
-                            :id)]
+                            :id)
+          yllapitokohteet (map (fn [yllapitokohde]
+                                 (assoc yllapitokohde :alikohteet (ypk-domain/suodata-hypyt (:alikohteet yllapitokohde))))
+                               yllapitokohteet)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet karttapvm))))
 
 (defn- tarkista-aikataulun-oikeellisuus [aikataulu]

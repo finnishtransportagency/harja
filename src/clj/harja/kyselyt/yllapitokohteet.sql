@@ -51,6 +51,7 @@ SELECT
   ypko.tyomenetelma                     AS "kohdeosa_tyomenetelma",
   ypko.massamaara                       AS "kohdeosa_massamaara",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
+  ypko.hyppy                            AS "kohdeosa_hyppy?",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
