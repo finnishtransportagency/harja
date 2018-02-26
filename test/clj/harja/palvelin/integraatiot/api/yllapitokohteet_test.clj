@@ -50,8 +50,8 @@
 
 (deftest tarkista-yllapitokohteiden-haku
   (testing "Ylläpitokohtiden haku: ilman hyppyjä"
-    (let [muhoksen-paikkausurakan-id (hae-muhoksen-paallystysurakan-id)
-          vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paikkausurakan-id "/yllapitokohteet")]
+    (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
+          vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet")]
                                           kayttaja-paallystys
                                           portti)
           data (cheshire/decode (:body vastaus) true)
@@ -70,8 +70,8 @@
       (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus])))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
-  (let [muhoksen-paikkausurakan-id (hae-muhoksen-paallystysurakan-id)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paikkausurakan-id "/yllapitokohteet") urakka]
+  (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet") urakka]
                                         "Erkki Esimerkki"
                                         portti)]
     (is (= 403 (:status vastaus)))
