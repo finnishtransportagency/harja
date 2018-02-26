@@ -520,6 +520,7 @@
                                                :osat korjatut-kohdeosat})))))
 
 (defn- validoi-tallennettava-yllapitokohteet [db tallennettavat-kohteet vuosi]
+  ;; FIXME tr-vali-leikkaa-tr-valin olettaa, että annetut pätkät ovat samalla tiellä. Huomioidaanko täällä ajorata ja kaista?
   (let [saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
     (reduce
       (fn [virheet tallennettava-kohde]
