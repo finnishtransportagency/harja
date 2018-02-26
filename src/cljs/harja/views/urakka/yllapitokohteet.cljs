@@ -308,8 +308,13 @@
           (fn [_ {:keys [index]}]
             (let [rivi-hyppy? (get-in kohdeosat-nyt [(inc index) :hyppy?])]
               [:div.tasaa-oikealle
-               [napit/yleinen-ensisijainen "Lisää"
+               [napit/yleinen-ensisijainen "Lisää osa"
                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
+                {:disabled (= kohdetyyppi :sora)
+                 :ikoni (ikonit/livicon-arrow-down)
+                 :luokka "btn-xs"}]
+               [napit/yleinen-toissijainen "Lisää hyppy"
+                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index) true))
                 {:disabled (= kohdetyyppi :sora)
                  :ikoni (ikonit/livicon-arrow-down)
                  :luokka "btn-xs"}]
@@ -317,15 +322,6 @@
                 #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
                 {:disabled (= 1 (count kohdeosat-nyt))
                  :ikoni (ikonit/livicon-trash)
-                 :luokka "btn-xs"}]
-               [napit/yleinen-toissijainen "Aseta hyppy"
-                #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi
-                                       kohdeosat-nyt
-                                       (inc index)
-                                       (not rivi-hyppy?)))
-                ;; Kaikki kohteet eivät voi olla hyppyjä
-                {:disabled (>= (inc (count (filter :hyppy? (vals kohdeosat-nyt))))
-                               (count kohdeosat-nyt))
                  :luokka "btn-xs"}]])))
 
         pituus (fn [osan-pituus tieosa]
@@ -447,14 +443,15 @@
 
             skeema (if voi-muokata?
                      (conj skeema
-                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 25
+                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 30
                             :tasaa :keskita
                             :sisalto-kun-rivi-disabloitu
                             (fn [rivi index]
                               [:div.tasaa-oikealle
-                               [napit/yleinen-toissijainen "Poista hyppy"
-                                #(muokkaa-kohdeosat! (tiedot/merkitse-kohdeosa-hypyksi kohdeosat-nyt (inc index) false))
+                               [napit/kielteinen "Poista"
+                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
                                 {:disabled (= 1 (count kohdeosat-nyt))
+                                 :ikoni (ikonit/livicon-trash)
                                  :luokka "btn-xs"}]])
                             :komponentti (toiminnot-komponentti kohdeosat-nyt
                                                                 muokkaa-kohdeosat!)})

@@ -120,24 +120,27 @@
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
-  [kohdeosat key]
-  (let [rivi (get kohdeosat key)
-        avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
-        uusi-rivi {:nimi ""
-                   :tr-numero (:tr-numero rivi)
-                   :tr-alkuosa nil
-                   :tr-alkuetaisyys nil
-                   :tr-loppuosa (:tr-loppuosa rivi)
-                   :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
-                   :tr-ajorata (:tr-ajorata rivi)
-                   :tr-kaista (:tr-kaista rivi)
-                   :toimenpide ""}]
-    (-> kohdeosat
-        (assoc-in [key :tr-loppuosa] nil)
-        (assoc-in [key :tr-loppuetaisyys] nil)
-        (assoc (inc key) uusi-rivi)
-        (merge (zipmap (map inc avaimet-jalkeen)
-                       (map #(get kohdeosat %) avaimet-jalkeen))))))
+  ([kohdeosat key]
+   (lisaa-uusi-kohdeosa kohdeosat key false))
+  ([kohdeosat key hyppy?]
+   (let [rivi (get kohdeosat key)
+         avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
+         uusi-rivi {:nimi ""
+                    :tr-numero (:tr-numero rivi)
+                    :tr-alkuosa nil
+                    :tr-alkuetaisyys nil
+                    :hyppy? hyppy?
+                    :tr-loppuosa (:tr-loppuosa rivi)
+                    :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
+                    :tr-ajorata (:tr-ajorata rivi)
+                    :tr-kaista (:tr-kaista rivi)
+                    :toimenpide ""}]
+     (-> kohdeosat
+         (assoc-in [key :tr-loppuosa] nil)
+         (assoc-in [key :tr-loppuetaisyys] nil)
+         (assoc (inc key) uusi-rivi)
+         (merge (zipmap (map inc avaimet-jalkeen)
+                        (map #(get kohdeosat %) avaimet-jalkeen)))))))
 
 (defn poista-kohdeosa
   "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus
@@ -178,12 +181,6 @@
                              (alku kohdeosa)))}
              (zipmap (iterate inc (+ 2 (count avaimet-ennen)))
                      (map #(get kohdeosat %) (rest avaimet-jalkeen)))))))
-
-(defn merkitse-kohdeosa-hypyksi
-  [kohdeosat key hyppy?]
-  (let [rivi (get kohdeosat key)
-        uusi-rivi (assoc rivi :hyppy? hyppy?)]
-    (assoc kohdeosat key uusi-rivi)))
 
 (defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn epaonnistui-fn]
   (when (oikeustarkistus-fn)
