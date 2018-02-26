@@ -299,40 +299,40 @@
     (is (= (:kohdenimi paallystysilmoitus-kannassa) "Leppäjärven ramppi"))
     (is (= (:kohdenumero paallystysilmoitus-kannassa) "L03"))
     ;; Kohdeosat on OK
-    (is (= (count kohdeosat) 1))
-    (is (= kohdeosat
-           [{;; Alikohteen tiedot
-             :kohdeosa-id 666
-             :nimi "Leppäjärven kohdeosa"
-             :tr-ajorata 1
-             :tr-alkuetaisyys 0
-             :tr-alkuosa 1
-             :tr-kaista 1
-             :tr-loppuetaisyys 0
-             :tr-loppuosa 3
-             :tr-numero 20
-             :paallystetyyppi nil
-             :raekoko nil
-             :tyomenetelma nil
-             :massamaara nil
-             :toimenpide nil
-             ;; Päällystetoimenpiteen tiedot
-             :toimenpide-paallystetyyppi 2
-             :toimenpide-raekoko 1
-             :toimenpide-tyomenetelma 21
-             :kokonaismassamaara 12
-             :kuulamylly 2
-             :leveys 12
-             :massamenekki 1
-             :pinta-ala 12
-             :rc% 12
-             ;; Kiviaines- ja sideainetiedot
-             :esiintyma "12"
-             :km-arvo "12"
-             :lisaaineet "12"
-             :muotoarvo "12"
-             :pitoisuus 12
-             :sideainetyyppi 2}]))
+    (is (= (count kohdeosat) 2))
+    (is (= (first kohdeosat)
+           {;; Alikohteen tiedot
+            :kohdeosa-id 666
+            :nimi "Leppäjärven kohdeosa"
+            :tr-ajorata 1
+            :tr-alkuetaisyys 0
+            :tr-alkuosa 1
+            :tr-kaista 1
+            :tr-loppuetaisyys 0
+            :tr-loppuosa 3
+            :tr-numero 20
+            :paallystetyyppi nil
+            :raekoko nil
+            :tyomenetelma nil
+            :massamaara nil
+            :toimenpide nil
+            ;; Päällystetoimenpiteen tiedot
+            :toimenpide-paallystetyyppi 2
+            :toimenpide-raekoko 1
+            :toimenpide-tyomenetelma 21
+            :kokonaismassamaara 12
+            :kuulamylly 2
+            :leveys 12
+            :massamenekki 1
+            :pinta-ala 12
+            :rc% 12
+            ;; Kiviaines- ja sideainetiedot
+            :esiintyma "12"
+            :km-arvo "12"
+            :lisaaineet "12"
+            :muotoarvo "12"
+            :pitoisuus 12
+            :sideainetyyppi 2}))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
