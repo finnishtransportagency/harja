@@ -84,8 +84,7 @@
                  ^{:key (str j nimi)}
                  [:td {:class (str "muokattava "
                                    tasaus-luokka
-                                   (when (and (not (empty? kentan-virheet))
-                                              (not rivi-disabloitu?))
+                                 (when-not (empty? kentan-virheet)
                                      " sisaltaa-virheen"))}
                   (when (and (not (empty? kentan-virheet))
                              (case nayta-virheet?
