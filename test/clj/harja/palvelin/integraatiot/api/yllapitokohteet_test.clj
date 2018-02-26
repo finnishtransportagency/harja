@@ -540,7 +540,7 @@
                                         (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json"))]
     (is (= 400 (:status vastaus)))))
 
-(deftest avoimen-kohteen-paivittaminen-toimii
+(deftest avoimen-yllapitokohteen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
