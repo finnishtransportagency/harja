@@ -101,6 +101,19 @@
   [arvot]
   (reduce + (remove nil? (map (comp :arvo second) arvot))))
 
+(defn- materiaalien-comparator
+  "Järjestää materiaalit ensisijaisesti materiaalin nimen, toissijaisesti urakan nimen perusteella (if any)"
+  [x y]
+  (let [c (compare (materiaalien-jarjestys-ymparistoraportilla
+                     (get-in (first y) [:materiaali :nimi]))
+                   (materiaalien-jarjestys-ymparistoraportilla
+                     (get-in (first x) [:materiaali :nimi])))]
+    (if (not= c 0)
+      c
+      (let [c (compare (get-in (first y) [:urakka :nimi])
+                       (get-in (first x) [:urakka :nimi]))]
+        c))))
+
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
                                urakoittain? urakkatyyppi] :as parametrit}]
@@ -123,35 +136,34 @@
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
 
+        talvisuolan-ryhmittely-fn (if urakoittain? (juxt :kk :urakka) :kk)
+        kaikki-talvisuola-yhteensa-ryhmiteltyna (group-by talvisuolan-ryhmittely-fn
+                                                          (filter #(= "talvisuola" (get-in % [:materiaali :tyyppi]))
+                                                                  (apply concat (map second materiaalit))))
 
-        _ (println " materiaalit " materiaalit)
-        kaikki-talvisuola-yhteensa (filter #(= "talvisuola" (get-in % [:materiaali :tyyppi]))
-                                           (apply concat (map second materiaalit)))
-        kaikki-talvisuola-yhteensa-urakan-ja-kk-mukaan (group-by (juxt :kk :urakka) kaikki-talvisuola-yhteensa)
-        summatut-talvisuolat-urakan-ja-kkn-mukaan
-        (map (fn [[[kk urakka] rivit]]
-               {[kk urakka] (assoc (first rivit) :maara (reduce + (keep :maara rivit))
-                                                 :materiaali materiaali-kaikki-talvisuola-yhteensa)})
-             kaikki-talvisuola-yhteensa-urakan-ja-kk-mukaan)
-        _ (println " summatut-talvisuolat-urakan-ja-kkn-mukaan " summatut-talvisuolat-urakan-ja-kkn-mukaan)
+        kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna
+        (map (fn [[ryhmittelyavain rivit]]
+               {(if urakoittain?
+                  ;; [kk urakka]
+                  [(first ryhmittelyavain) (second ryhmittelyavain)]
+                  ;; kk
+                  [ryhmittelyavain])
+                (assoc (first rivit) :maara (reduce + (keep :maara rivit))
+                                     :materiaali materiaali-kaikki-talvisuola-yhteensa)})
+             kaikki-talvisuola-yhteensa-ryhmiteltyna)
 
-        suolasummat (mapv (fn [rivi]
-                            (let [[kk urakka] (ffirst rivi)
-                                  arvo (last (first rivi))]
+        kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna
+        (group-by :urakka
+                  (apply concat (map vals kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna)))
 
-                              (println " kk " kk " urakka " urakka " arvo " arvo)
-                              [{:materiaali materiaali-kaikki-talvisuola-yhteensa
-                                :urakka urakka}
-                               [arvo]]))
-                          summatut-talvisuolat-urakan-ja-kkn-mukaan)
-        ; FIXME: urakkaerittelyssä nyt joka kuukaudelle per urakka ilmestyy oma summarivi
-        ; päästävä yhteen riviin per urakka "Kaikki talvisuola yhteensä" materiaalille
+        suolasummat (mapv (fn [[urakka rivit]]
+                            [{:materiaali materiaali-kaikki-talvisuola-yhteensa
+                              :urakka urakka}
+                             rivit])
+                          kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna)
         materiaalit (concat materiaalit suolasummat)
-        _ (println "suolasummat " suolasummat)
-        materiaalit (sort-by #(materiaalien-jarjestys-ymparistoraportilla
-                                (get-in (first %) [:materiaali :nimi]))
-                             materiaalit)
 
+        materiaalit (sort #(materiaalien-comparator %2 %1) materiaalit)
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
         talvisuolan-maxmaaratieto (when (= :urakka konteksti)
                                     (:talvisuolaraja (first (suolasakko-q/hae-urakan-suolasakot db {:urakka urakka-id}))))
@@ -161,7 +173,8 @@
                                               (mapcat second)
                                               (filter #(nil? (:luokka %))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
                                               (map :maara)
-                                              (reduce +))]
+                                              (reduce +))
+        listan-ensimmaisen-urakan-id (get-in (ffirst materiaalit) [:urakka :id])]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
@@ -207,7 +220,6 @@
 
       (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
-         ;(println "urakka" urakka   "materiaali: " materiaali " rivit " rivit )
          (let [suunnitellut (keep :maara (filter #(nil? (:kk %)) rivit))
                suunniteltu (when-not (empty? suunnitellut)
                          (reduce + suunnitellut))
@@ -221,11 +233,13 @@
                                                         :desimaalien-maara 3}])))]
            (concat
              ;; Talvisuolat-väliotsikko
-             (when (= "Talvisuola" (:nimi materiaali))
+             (when (and (= listan-ensimmaisen-urakan-id (:id urakka))
+                     (= "Talvisuola" (:nimi materiaali)))
                       [{:otsikko "Talvisuolat"}])
 
              ;; Muut materiaalit -väliotsikko, pakko käyttää nimeä, perustuu järjestykseen domain.materiaali:ssa
-             (when (= "Kaliumformiaatti" (:nimi materiaali))
+             (when (and (= listan-ensimmaisen-urakan-id (:id urakka))
+                        (= "Kaliumformiaatti" (:nimi materiaali)))
                [{:otsikko "Muut materiaalit"}])
              
              ;; Normaali materiaalikohtainen rivi
