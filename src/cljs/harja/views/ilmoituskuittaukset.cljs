@@ -175,8 +175,7 @@
       {:muokkaa! #(e! (v/->AsetaKuittausTiedot %))
        :palstoja 3
        :otsikko "Kuittaa monta ilmoitusta"}
-      [
-       (lomake/rivi
+      [(lomake/rivi
          {:otsikko "Kuittaustyyppi"
           :pakollinen? true
           :tyyppi :valinta
@@ -209,33 +208,42 @@
        :disabled (or (:tallennus-kaynnissa? data)
                      (not (lomake/voi-tallentaa-ja-muokattu? data))
                      (zero? valittuna))}]
+     [napit/tallenna (if (> valittuna 1)
+                       (str "Toimenpiteet aloitettu " valittuna " ilmoituksella")
+                       "Toimenpiteet aloitettu")
+      #(e! (v/->TallennaToimenpiteidenAloitusMonelle))
+      {:ikoni (ikonit/tallenna)
+       :tallennus-kaynnissa? tallennus-kaynnissa?
+       :luokka (str (when tallennus-kaynnissa? "disabled ") "nappi-ensisijainen kuittaa-monta-tallennus")
+       :disabled (or (:tallennus-kaynnissa? data)
+                     (zero? valittuna))}]
      [napit/peruuta "Peruuta" #(e! (v/->PeruMonenKuittaus))]
      [yleiset/vihje "Valitse kuitattavat ilmoitukset listalta."]]))
 
 (defn- pikakuittauslomake [e! pikakuittaus]
   (komp/luo
-   (komp/fokusoi "input.form-control")
-   (fn [e! {:keys [tyyppi tallennus-kaynnissa?] :as pikakuittaus}]
-     [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
-                     :otsikko (apurit/kuittaustyypin-selite tyyppi)
-                     :footer-fn (fn [data]
-                                  [napit/tallenna "Kuittaa"
-                                   #(e! (v/->TallennaPikakuittaus))
-                                   {:disabled tallennus-kaynnissa?}])}
-      [(when (= tyyppi :lopetus)
-         {:nimi :aiheutti-toimenpiteita
-          :otsikko "Aiheutti toimenpiteita"
-          :tyyppi :checkbox
-          :palstoja 2
-          ::lomake/col-luokka ""})
-       {:tyyppi :string
-        :nimi :vapaateksti
-        :otsikko "Vapaateksti" :palstoja 2
-        ::lomake/col-luokka ""}
-       (merge vakiofraasi-kentta
-              {:palstoja 2
-               ::lomake/col-luokka ""})]
-      pikakuittaus])))
+    (komp/fokusoi "input.form-control")
+    (fn [e! {:keys [tyyppi tallennus-kaynnissa?] :as pikakuittaus}]
+      [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
+                      :otsikko (apurit/kuittaustyypin-selite tyyppi)
+                      :footer-fn (fn [data]
+                                   [napit/tallenna "Kuittaa"
+                                    #(e! (v/->TallennaPikakuittaus))
+                                    {:disabled tallennus-kaynnissa?}])}
+       [(when (= tyyppi :lopetus)
+          {:nimi :aiheutti-toimenpiteita
+           :otsikko "Aiheutti toimenpiteita"
+           :tyyppi :checkbox
+           :palstoja 2
+           ::lomake/col-luokka ""})
+        {:tyyppi :string
+         :nimi :vapaateksti
+         :otsikko "Vapaateksti" :palstoja 2
+         ::lomake/col-luokka ""}
+        (merge vakiofraasi-kentta
+               {:palstoja 2
+                ::lomake/col-luokka ""})]
+       pikakuittaus])))
 
 (defn pikakuittaus [e! pikakuittaus]
   [leijuke/leijuke

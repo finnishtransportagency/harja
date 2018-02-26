@@ -46,6 +46,8 @@
           "Lisatieto:  " (when (:lisatieto ilmoitus)
                            [yleiset/pitka-teksti (:lisatieto ilmoitus)])
           "Selitteet: " [selitelista ilmoitus]
+          "Toimenpiteet aloitettu: " (when (:toimenpiteet-aloitettu ilmoitus)
+                                       (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
           "Aiheutti toimenpiteitä:" (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
          [:br]
          [yleiset/tietoja {}
@@ -61,7 +63,22 @@
          [yleiset/tietoja {}
           "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
           "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
-          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]]]
+          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]
+
+         [:br]
+         (when (and
+                 (:ilmoitusid ilmoitus)
+                 (oikeudet/voi-kirjoittaa?
+                   oikeudet/ilmoitukset-ilmoitukset
+                   (:id @nav/valittu-urakka)))
+           ;; todo: tämä kirjaus ei ole sallittu, jos lopetuskuittaus on jo tehty
+           (if (:toimenpiteet-aloitettu ilmoitus)
+             [:button.nappi-kielteinen
+              {:on-click #(e! (v/->PeruutaToimenpiteidenAloitus (:id ilmoitus)))}
+              "Peruuta toimenpiteiden aloitus"]
+             [:button.nappi-ensisijainen
+              {:on-click #(e! (v/->TallennaToimenpiteidenAloitus (:id ilmoitus)))}
+              "Toimenpiteet aloitettu"]))]]
        [:div.kuittaukset
         [:h3 "Kuittaukset"]
         [:div

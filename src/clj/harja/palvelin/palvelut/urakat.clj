@@ -26,7 +26,7 @@
 (def ^{:const true} oletus-toleranssi 50)
 
 (defn urakoiden-alueet
-  [db user oikeus-fn urakka-idt toleranssi]
+  [db user oikeus-fn urakka-idt]
   (when-not (empty? urakka-idt)
     (into []
           (comp
@@ -35,7 +35,7 @@
             (harja.geo/muunna-pg-tulokset :urakka_alue)
             (harja.geo/muunna-pg-tulokset :alueurakka_alue)
             (map konv/alaviiva->rakenne))
-          (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt))))
+          (q/hae-urakoiden-geometriat db urakka-idt))))
 
 (defn hae-urakka-idt-sijainnilla
   "Hakee annetun tyyppisen urakan sijainnilla. Mikäli tyyppiä vastaavaa urakkaa ei löydy, haetaan alueella toimiva
