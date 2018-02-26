@@ -525,6 +525,7 @@
     (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
 
 (deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-paallystyskayttajana
+  ;; Ylläpitokohteen päivitys voidaan tehdä vain päällystysurakkaan
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
@@ -533,6 +534,7 @@
     (is (= 400 (:status vastaus)))))
 
 (deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-tiemerkintakayttajana
+  ;; Ylläpitokohteen päivitys voidaan tehdä vain päällystysurakkaan
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
