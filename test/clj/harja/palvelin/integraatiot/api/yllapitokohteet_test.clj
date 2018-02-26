@@ -49,25 +49,26 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-yllapitokohteiden-haku
-  (testing "Ylläpitokohtiden haku: ilman hyppyjä"
-    (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
-          vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet")]
-                                          kayttaja-paallystys
-                                          portti)
-          data (cheshire/decode (:body vastaus) true)
-          yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
-          leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
-                                            yllapitokohteet))]
-      (is (= 200 (:status vastaus)))
-      (is (= 6 (count yllapitokohteet)))
-      (is (some? leppajarven-ramppi))
-      (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
-      (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
-      (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
-      (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
-      (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
-      (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
-      (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus])))))))
+  (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet")]
+                                        kayttaja-paallystys
+                                        portti)
+        data (cheshire/decode (:body vastaus) true)
+        yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
+        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                          yllapitokohteet))]
+
+    (is (= 200 (:status vastaus)))
+    (is (= 6 (count yllapitokohteet)))
+    (is (some? leppajarven-ramppi))
+    (is (= (count (:alikohteet leppajarven-ramppi)) 1))
+    (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
+    (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
+    (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
   (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
