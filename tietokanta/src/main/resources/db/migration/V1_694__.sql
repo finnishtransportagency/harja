@@ -10,9 +10,9 @@ update vatu_turvalaite set kiintea = false where tarkenne = 'KELLUVA';
 ALTER TABLE vatu_turvalaite DROP COLUMN tarkenne;
 UPDATE vv_vikailmoitus SET "reimari-turvalaitenro" = (SELECT turvalaitenro FROM vv_turvalaite WHERE id = "turvalaite-id");
 ALTER TABLE vv_vikailmoitus DROP COLUMN "turvalaite-id";
-ALTER TABLE reimari_toimenpide ADD COLUMN turvalaitenro TEXT;
-UPDATE reimari_toimenpide SET turvalaitenro = "turvalaite-id";
-ALTER TABLE reimari_toimenpide DROP COLUMN "turvalaite-id";
-DROP TABLE vv_turvalaite;
 DROP TRIGGER IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger ON vv_vikailmoitus;
 DROP FUNCTION IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger_proc();
+ALTER TABLE reimari_toimenpide ADD COLUMN turvalaitenro TEXT;
+UPDATE reimari_toimenpide SET muokattu = current_timestamp; -- Turvalaitenumerot päivittyvät uuteen kenttään
+ALTER TABLE reimari_toimenpide DROP COLUMN "turvalaite-id";
+DROP TABLE vv_turvalaite;
