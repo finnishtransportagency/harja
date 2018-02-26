@@ -748,10 +748,11 @@
     (with-fake-http [+testi-vkm+ vkm-vastaus
                      #".*api\/urakat.*" :allow]
       (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
-            {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+            vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
                                                      kayttaja-paallystys portti
                                                      payload)]
-        (is (= 200 status) "Kutsu tehtiin onnistuneesti")
+        (log/debug vastaus)
+        (is (= 200 (:status vastaus)) "Kutsu tehtiin onnistuneesti")
 
         (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
               oletettu-tr-osoite {:numero 20
