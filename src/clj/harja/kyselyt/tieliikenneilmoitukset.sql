@@ -22,6 +22,7 @@ SELECT
   ulompi_i.tr_alkuetaisyys,
   ulompi_i.tr_loppuetaisyys,
   ulompi_i."aiheutti-toimenpiteita",
+  ulompi_i."toimenpiteet-aloitettu",
   it.id                                                              AS kuittaus_id,
   it.kuitattu                                                        AS kuittaus_kuitattu,
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
@@ -174,6 +175,7 @@ SELECT
 
   i.tunniste,
   i."aiheutti-toimenpiteita",
+  i."toimenpiteet-aloitettu",
 
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
@@ -572,3 +574,15 @@ SELECT exists(SELECT
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
                            FROM ilmoitus
                            WHERE id = :id));
+
+-- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
+UPDATE ilmoitus
+SET "toimenpiteet-aloitettu" = now(),
+  "aiheutti-toimenpiteita"   = TRUE
+WHERE id in (:idt);
+
+-- name: peruuta-ilmoitusten-toimenpiteiden-aloitukset!
+UPDATE ilmoitus
+SET "toimenpiteet-aloitettu" = null,
+  "aiheutti-toimenpiteita"   = false
+WHERE id in (:idt);
