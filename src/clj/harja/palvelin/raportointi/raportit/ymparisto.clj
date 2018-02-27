@@ -10,7 +10,8 @@
              :refer [raportin-otsikko]]
             [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"
   {:positional? true})
@@ -94,7 +95,7 @@
   (reduce-kv (fn [kk-arvot kk rivit]
                     (assoc kk-arvot kk [:arvo-ja-yksikko {:arvo (reduce + (keep :maara rivit))
                                                           :yksikko (:yksikko materiaali)
-                                                          :desimaalien-maara 3}]))
+                                                          :desimaalien-maara 2}]))
                   {} kk-rivit))
 
 (defn- yhteensa-arvo
@@ -114,6 +115,20 @@
                        (get-in (first x) [:urakka :nimi]))]
         c))))
 
+(defn- urakan-talvisuolan-maxmaara
+  "Palauttaa Ympäristöraportille talvisuolan käyttörajarivin.
+
+  Kun kk on nil, tulkitaan suunnittelutiedoksi eikä toteumaksi.
+  Kun luokka on nil, tulkitaan toteumaksi, ei hoitoluokittaiseksi määräksi."
+  [talvisuolan-maxmaarat urakka urakoittain?]
+  (let [talvisuolan-maxmaara (if urakoittain?
+                               (:talvisuolaraja (first (get talvisuolan-maxmaarat urakka)))
+                               (reduce + 0 (keep :talvisuolaraja
+                                                (apply concat (vals talvisuolan-maxmaarat)))))]
+    {:maara talvisuolan-maxmaara
+     :luokka nil :kk nil :urakka (when urakoittain? urakka)
+     :materiaali materiaali-kaikki-talvisuola-yhteensa}))
+
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
                                urakoittain? urakkatyyppi] :as parametrit}]
@@ -121,7 +136,7 @@
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        materiaalit (if urakoittain?
+        materiaalit-kannasta (if urakoittain?
                       (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id urakkatyyppi urakoittain?)
                       (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi urakoittain?))
         kk-lev (if urakoittain?
@@ -139,7 +154,7 @@
         talvisuolan-ryhmittely-fn (if urakoittain? (juxt :kk :urakka) :kk)
         kaikki-talvisuola-yhteensa-ryhmiteltyna (group-by talvisuolan-ryhmittely-fn
                                                           (filter #(= "talvisuola" (get-in % [:materiaali :tyyppi]))
-                                                                  (apply concat (map second materiaalit))))
+                                                                  (apply concat (map second materiaalit-kannasta))))
 
         kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna
         (map (fn [[ryhmittelyavain rivit]]
@@ -155,18 +170,32 @@
         kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna
         (group-by :urakka
                   (apply concat (map vals kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna)))
-
         suolasummat (mapv (fn [[urakka rivit]]
                             [{:materiaali materiaali-kaikki-talvisuola-yhteensa
                               :urakka urakka}
                              rivit])
                           kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna)
-        materiaalit (concat materiaalit suolasummat)
 
-        materiaalit (sort #(materiaalien-comparator %2 %1) materiaalit)
-        kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
-        talvisuolan-maxmaaratieto (when (= :urakka konteksti)
-                                    (:talvisuolaraja (first (suolasakko-q/hae-urakan-suolasakot db {:urakka urakka-id}))))
+        kontekstin-urakka-idt (set (keep #(get-in % [:urakka :id]) (apply concat (vals materiaalit-kannasta))))
+
+        ;; Haetaan tietokannasta kontekstin urakoiden talvisuolojen käyttörajat
+        hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
+        talvisuolan-maxmaarat (group-by :urakka
+                                        (map
+                                          konv/alaviiva->rakenne
+                                          (suolasakko-q/hae-urakoiden-talvisuolarajat
+                                            db
+                                            {:urakka_idt kontekstin-urakka-idt
+                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
+
+        ;; Lisätään suolasummiin talvisuolojen käyttörajat
+        suolasummat (map (fn [[{materiaali :materiaali urakka :urakka :as avain} rivit]]
+                           [avain (conj rivit (urakan-talvisuolan-maxmaara talvisuolan-maxmaarat
+                                                                           urakka
+                                                                           urakoittain?))])
+                         suolasummat)
+        materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta suolasummat))
+
         talvisuolan-toteutunut-maara (some->> materiaalit
                                               (filter (fn [[materiaali _]]
                                                         (= "talvisuola" (get-in materiaali [:materiaali :tyyppi])))) ;; vain talvisuolat
@@ -174,28 +203,15 @@
                                               (filter #(nil? (:luokka %))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
                                               (map :maara)
                                               (reduce +))
-        listan-ensimmaisen-urakan-id (get-in (ffirst materiaalit) [:urakka :id])]
+        listan-ensimmaisen-urakan-id (get-in (ffirst materiaalit) [:urakka :id])
+        kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
                    (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
                    "t")]
-     (when (= konteksti :urakka)
-       [:teksti
-        (if talvisuolan-maxmaaratieto
-          (str "Hoitokauden talvisuolan maksimimäärä urakassa: "
-               talvisuolan-maxmaaratieto "t")
-          "Urakassa ei ole asetettu talvisuolan käyttörajaa")])
-     (when (and (= konteksti :urakka)
-                talvisuolan-maxmaaratieto
-                (not (== 0 talvisuolan-maxmaaratieto))) ;älä anna jakaa nollalla
-       [:teksti (str
-                  "Toteumaprosentti suhteessa hoitokauden maksimimäärään: "
-                  (fmt/desimaaliluku-opt
-                    (* 100 (with-precision 3 (/ talvisuolan-toteutunut-maara
-                                                talvisuolan-maxmaaratieto)))
-                    1) "%")])
+
      [:taulukko {:otsikko otsikko
                  :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
                  :sheet-nimi raportin-nimi}
@@ -216,7 +232,7 @@
              [{:otsikko "Määrä yhteensä" :leveys "8%" :fmt :numero :jos-tyhja "-"
                :excel [:summa-vasen (if urakoittain? 2 1)]}
               {:otsikko "Tot-%" :leveys "8%" :fmt :prosentti :jos-tyhja "-"}
-              {:otsikko "Suunniteltu määrä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
+              {:otsikko "Suunniteltu määrä / talvisuolan max-määrä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
 
       (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
@@ -230,7 +246,7 @@
                                    (when (or (> yht 0) nayta-aina?)
                                      [:arvo-ja-yksikko {:arvo yht
                                                         :yksikko (:yksikko materiaali)
-                                                        :desimaalien-maara 3}])))]
+                                                        :desimaalien-maara 2}])))]
            (concat
              ;; Talvisuolat-väliotsikko
              (when (and (= listan-ensimmaisen-urakan-id (:id urakka))
@@ -264,14 +280,14 @@
                                                                   :desimaalien-maara 2}])
                              (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
                                                                   :yksikko (:yksikko materiaali)
-                                                                  :desimaalien-maara 3}])]))}]
+                                                                  :desimaalien-maara 2}])]))}]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
                    (let [kk-arvot (into {}
                                         (map (juxt :kk #(do [:arvo-ja-yksikko {:arvo (:maara %)
                                                                                :yksikko (:yksikko materiaali)
-                                                                               :desimaalien-maara 3}])))
+                                                                               :desimaalien-maara 2}])))
                                         rivit)]
                      (into []
                            (concat
