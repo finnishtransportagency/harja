@@ -220,5 +220,4 @@
                           yllapitokohteet
                           #(= (id lomakedata) (id %))
                           yllapitokohteet-domain/yllapitokohde-kartalle-xf)]
-     (log "KARTTAMUODOSSA: " (pr-str karttamuodossa))
      karttamuodossa)))
