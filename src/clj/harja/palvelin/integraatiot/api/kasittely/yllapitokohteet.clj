@@ -42,6 +42,7 @@
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)
+                        :hyppy (:hyppy alikohde)
                         :tr_numero (:numero sijainti)
                         :tr_alkuosa (:aosa sijainti)
                         :tr_alkuetaisyys (:aet sijainti)

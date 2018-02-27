@@ -451,7 +451,7 @@ VALUES (:yllapitokohde,
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, hyppy, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
@@ -460,6 +460,7 @@ VALUES (:yllapitokohde,
         :tr_loppuosa,
         :tr_loppuetaisyys,
         :ulkoinen-id,
+        :hyppy,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
                                             CAST(:tr_alkuosa AS INTEGER),
