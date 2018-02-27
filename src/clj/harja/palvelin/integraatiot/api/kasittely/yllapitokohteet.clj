@@ -29,7 +29,7 @@
                         :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
                         :massamaara (:kokonaismassamaara alikohde)
                         :toimenpide (:toimenpide alikohde)
-                        :hyppy (or (:hyppy alikohde) false) ;; TODO Puuttuu JSONista, tehdään taskissa HAR-7449
+                        :hyppy (or (:hyppy alikohde) false)
                         :ulkoinen-id (:ulkoinen-id alikohde)}]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))
     alikohteet))
