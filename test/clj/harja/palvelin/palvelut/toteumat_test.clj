@@ -18,16 +18,18 @@
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
+                    (let [tietokanta (tietokanta/luo-tietokanta testitietokanta)]
+                      (component/start
+                       (component/system-map
+                        :db tietokanta
+                        :db-replica tietokanta
                         :http-palvelin (testi-http-palvelin)
                         :karttakuvat (component/using
-                                       (karttakuvat/luo-karttakuvat)
-                                       [:http-palvelin :db])
+                                      (karttakuvat/luo-karttakuvat)
+                                      [:http-palvelin :db])
                         :toteumat (component/using
-                                    (toteumat/->Toteumat)
-                                    [:http-palvelin :db :karttakuvat])))))
+                                   (toteumat/->Toteumat)
+                                   [:http-palvelin :db :db-replica :karttakuvat]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
