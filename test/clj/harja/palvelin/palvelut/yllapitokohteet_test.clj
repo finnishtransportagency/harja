@@ -426,7 +426,9 @@
                                   :tr-alkuosa 1
                                   :tr-alkuetaisyys 0
                                   :tr-loppuosa 3
-                                  :tr-loppuetaisyys 0}]
+                                  :tr-loppuetaisyys 0
+                                  :tr-ajorata 1
+                                  :tr-kaista 1}]
     (testing "Päällekäin menevät kohteet samana vuonna"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
@@ -437,9 +439,8 @@
                                      :vuosi 2017
                                      :kohteet [kohde-leppajarven-paalle]})]
 
-        ;; Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle
-        ;; Pitäisi tulla validointivirhe
-        (is (= (:status vastaus) :validointiongelma))
+        (is (= (:status vastaus) :validointiongelma)
+            "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle --> tulee herja")
         (is (= (count (:validointivirheet vastaus)) 1))
         (is (= (-> (:validointivirheet vastaus)
                    first
@@ -456,8 +457,8 @@
                                      :vuosi 2018
                                      :kohteet [kohde-leppajarven-paalle]})]
 
-        ;; Kohteet menevät päällekäin, mutta eri vuonna --> ei herjaa
-        (is (not= (:status vastaus) :validointiongelma))))
+        (is (not= (:status vastaus) :validointiongelma)
+            "Kohteet menevät päällekäin, mutta eri vuonna --> ei herjaa")))
 
     (testing "Päällekäin menevät osoitteet eri tiellä"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
@@ -471,8 +472,38 @@
                                                  kohde-leppajarven-paalle
                                                  :tr-numero 21)]})]
 
-        ;; Osoitteet menevät päällekäin, mutta eri tiellä --> ei herjaa
-        (is (not= (:status vastaus) :validointiongelma))))))
+        (is (not= (:status vastaus) :validointiongelma)
+            "Osoitteet menevät päällekäin, mutta eri tiellä --> ei herjaa")))
+
+    (testing "Päällekäin menevät osoitteet eri kaistalla"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet [(assoc
+                                                 kohde-leppajarven-paalle
+                                                 :tr-kaista 2)]})]
+
+        (is (not= (:status vastaus) :validointiongelma)
+            "Osoitteet menevät päällekäin, mutta eri kaistalla --> ei herjaa")))
+
+    (testing "Päällekäin menevät osoitteet eri ajoradalla"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet [(assoc
+                                                 kohde-leppajarven-paalle
+                                                 :tr-ajorata 2)]})]
+
+        (is (not= (:status vastaus) :validointiongelma)
+            "Osoitteet menevät päällekäin, mutta eri ajoradalla --> ei herjaa")))))
 
 (deftest yllapitokohteen-tallennus-vaaraan-urakkaan-ei-onnistu
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
