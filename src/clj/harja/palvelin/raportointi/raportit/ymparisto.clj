@@ -167,7 +167,10 @@
                   ;; kk
                   [ryhmittelyavain])
                 (assoc (first rivit) :maara (reduce + (keep :maara rivit))
-                                     :materiaali materiaali-kaikki-talvisuola-yhteensa)})
+                                     :materiaali materiaali-kaikki-talvisuola-yhteensa
+                                     :urakka (if urakoittain?
+                                               (:urakka (first rivit))
+                                               nil))})
              kaikki-talvisuola-yhteensa-ryhmiteltyna)
 
         kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna
