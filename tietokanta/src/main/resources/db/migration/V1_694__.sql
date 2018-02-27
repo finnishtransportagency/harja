@@ -1,12 +1,3 @@
-CREATE TABLE paikkauskohde (
-  id            SERIAL PRIMARY KEY,
-  "luoja-id"    INTEGER REFERENCES kayttaja (id),
-  "ulkoinen-id" INTEGER NOT NULL,
-  "nimi"        TEXT    NOT NULL,
-  CONSTRAINT paikkauskohteen_uniikki_ulkoinen_id_luoja
-  UNIQUE ("ulkoinen-id", "luoja-id")
-);
-
 -- Dropataan uudelleennimeämisten takia migraatiossa 682 luodut taulut
 DROP TABLE paikkauksen_materiaali;
 DROP TABLE paikkauksen_tienkohta;
