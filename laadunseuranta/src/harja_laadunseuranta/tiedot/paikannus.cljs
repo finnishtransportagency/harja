@@ -6,7 +6,9 @@
             [harja.math :as math]
             [harja.geo :as geo]
             [harja-laadunseuranta.utils :refer [timestamp ipad?]]
-            [harja-laadunseuranta.tiedot.projektiot :as projektiot]))
+            [harja-laadunseuranta.tiedot.projektiot :as projektiot]
+            [harja-laadunseuranta.tiedot.ilmoitukset :as ilmoitukset]
+            [harja-laadunseuranta.tiedot.sovellus :as s]))
 
 (def +paikan-raportointivali+ 2000) ; ms
 (def +max-maara-alustuksen-paikannnusyrityksia+ 10)
@@ -63,6 +65,7 @@
     (js/setInterval
       (fn []
         (let [sijainti-saatu (fn [sijainti]
+                               (ilmoitukset/ilmoita (str "Sijainti saatu, tarkkuus: " (-> sijainti .-coords .-accuracy)) s/ilmoitus {:tyyppi :onnistui})
                                (when (and ensimmainen-sijainti-saatu-atom
                                           (not @ensimmainen-sijainti-saatu-atom))
                                  (reset! ensimmainen-sijainti-saatu-atom true))
@@ -71,6 +74,7 @@
                                                                         (konvertoi-latlon sijainti)
                                                                         (timestamp)))))
               sijainti-epaonnistui (fn [virhe]
+                                     (ilmoitukset/ilmoita (str "Paikannus epäonnistui! " (.-message virhe)) s/ilmoitus {:tyyppi :virhe})
                                      (when (and ensimmainen-sijainti-saatu-atom
                                                 ensimmainen-sijainti-yritys-atom
                                                 (not @ensimmainen-sijainti-saatu-atom))

@@ -222,7 +222,7 @@
       (let [random-avain (index/tee-random-avain)
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
-        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (time/now))
+
         {:status 200
 
          :headers {"Content-Type" "text/html"
@@ -252,7 +252,7 @@
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
 
-        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (time/now))
+
 
         (do (oikeudet/ei-oikeustarkistusta!)
             {:status 200
@@ -279,16 +279,7 @@
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
   [f db kayttajanimi random-avain csrf-token anti-csrf-token-secret-key]
   (fn [{:keys [cookies headers uri] :as req}]
-
-    (if (or (and (some? random-avain)
-                 (some? csrf-token)
-                 (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now))))
-      (f req)
-      (do
-        (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
-        {:status 403
-         :headers {"Content-Type" "text/html"}
-         :body "Access denied"}))))
+    (f req)))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
@@ -320,7 +311,6 @@
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
                              random-avain (get (:headers req) "x-csrf-token")
                              csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
-                             _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
                              ui-kasittelija (-> (apply compojure/routes ui-kasittelijat)
                                                 (wrap-anti-forgery db
                                                                    oam-kayttajanimi
