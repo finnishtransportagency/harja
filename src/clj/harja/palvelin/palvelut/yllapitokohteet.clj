@@ -525,7 +525,6 @@
       (fn [virheet tallennettava-kohde]
         (let [kohteen-virheet
               (remove nil? (map (fn [verrattava-kohde]
-                                  ;; FIXME Tarkista leikkaus VAIN jos tienumero, ajorata ja kaista on samat!!1
                                   (when (and (not= (:id tallennettava-kohde) (:id verrattava-kohde))
                                              (and (= (:tr-numero tallennettava-kohde) (:tr-numero verrattava-kohde))
                                                   (= (:tr-ajorata tallennettava-kohde) (:tr-ajorata verrattava-kohde))
