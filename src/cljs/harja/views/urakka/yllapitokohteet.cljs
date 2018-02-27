@@ -448,6 +448,11 @@
                             :sisalto-kun-rivi-disabloitu
                             (fn [rivi index]
                               [:div.tasaa-oikealle
+                               [napit/yleinen-ensisijainen "Lisää osa"
+                                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
+                                {:disabled (= kohdetyyppi :sora)
+                                 :ikoni (ikonit/livicon-arrow-down)
+                                 :luokka "btn-xs"}]
                                [napit/kielteinen "Poista"
                                 #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
                                 {:disabled (= 1 (count kohdeosat-nyt))
