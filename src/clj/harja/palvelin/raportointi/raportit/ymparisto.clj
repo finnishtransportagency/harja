@@ -153,7 +153,10 @@
 
         talvisuolan-ryhmittely-fn (if urakoittain? (juxt :kk :urakka) :kk)
         kaikki-talvisuola-yhteensa-ryhmiteltyna (group-by talvisuolan-ryhmittely-fn
-                                                          (filter #(= "talvisuola" (get-in % [:materiaali :tyyppi]))
+                                                          (filter #(and
+                                                                     ;; summataan vain toteumat eli kun luokka on nil
+                                                                     (nil? (:luokka %))
+                                                                     (= "talvisuola" (get-in % [:materiaali :tyyppi])))
                                                                   (apply concat (map second materiaalit-kannasta))))
 
         kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna
@@ -170,12 +173,11 @@
         kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna
         (group-by :urakka
                   (apply concat (map vals kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna)))
-        suolasummat (mapv (fn [[urakka rivit]]
-                            [{:materiaali materiaali-kaikki-talvisuola-yhteensa
-                              :urakka urakka}
-                             rivit])
-                          kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna)
-
+        suolasummat-ilman-kayttorajoja (mapv (fn [[urakka rivit]]
+                                               [{:materiaali materiaali-kaikki-talvisuola-yhteensa
+                                                 :urakka urakka}
+                                                rivit])
+                                             kaikki-talvisuola-yhteensa-ryhmiteltyna-ja-summattuna)
         kontekstin-urakka-idt (set (keep #(get-in % [:urakka :id]) (apply concat (vals materiaalit-kannasta))))
 
         ;; Haetaan tietokannasta kontekstin urakoiden talvisuolojen käyttörajat
@@ -193,7 +195,7 @@
                            [avain (conj rivit (urakan-talvisuolan-maxmaara talvisuolan-maxmaarat
                                                                            urakka
                                                                            urakoittain?))])
-                         suolasummat)
+                         suolasummat-ilman-kayttorajoja)
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta suolasummat))
 
         talvisuolan-toteutunut-maara (some->> materiaalit
