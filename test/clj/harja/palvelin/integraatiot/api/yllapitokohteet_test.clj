@@ -566,16 +566,21 @@
                                                      :kaista 1
                                                      :loppuet 666
                                                      :losa 14
-                                                     :numero 20}
+                                                     :numero 20
+                                                     :hyppy? false}
           oletettu-toisen-alikohteen-tr-osoite {:aet 666
                                                 :ajorata 1
                                                 :aosa 14
                                                 :kaista 1
                                                 :loppuet 1
                                                 :losa 17
-                                                :numero 20}]
+                                                :numero 20
+                                                :hyppy? false}]
+
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
+      (is (= 3 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
+      (is (= 2 (count (filter (comp not :hyppy?) alikohteiden-tr-osoitteet))) "2 alikohdetta on ei-hyppyjä")
+      (is (= 1 (count (filter :hyppy? alikohteiden-tr-osoitteet))) "1 alikohde on hyppy")
       (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
       (is (alikohteiden-tr-osoitteet oletettu-toisen-alikohteen-tr-osoite)
