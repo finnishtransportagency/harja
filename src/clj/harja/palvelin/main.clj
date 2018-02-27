@@ -321,7 +321,7 @@
                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
+                  [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
