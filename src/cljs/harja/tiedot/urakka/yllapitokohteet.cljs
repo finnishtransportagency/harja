@@ -61,6 +61,10 @@
   (k/post! :hae-maaramuutokset {:urakka-id urakka-id
                                 :yllapitokohde-id yllapitokohde-id}))
 
+(defn hae-muut-kohdeosat [urakka-id yllapitokohde-id]
+  (k/post! :hae-muut-kohdeosat {:urakka-id urakka-id
+                                :yllapitokohde-id yllapitokohde-id}))
+
 (defn tallenna-maaramuutokset! [{:keys [urakka-id yllapitokohde-id maaramuutokset
                                         sopimus-id vuosi]}]
   (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id

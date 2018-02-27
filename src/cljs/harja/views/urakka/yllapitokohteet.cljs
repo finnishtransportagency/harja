@@ -526,8 +526,16 @@
        @osan-pituus])))
 
 (defn muut-kohdeosat
-  []
-  (let [muut-kohdeosat (atom '())
+  [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
+  (let [muut-kohdeosat (atom nil)
+        voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id)
+        hae-maara-muutokset! (fn [urakka-id yllapitokohde-id]
+                               (go (let [vastaus (<! (tiedot/hae-muut-kohdeosat urakka-id yllapitokohde-id))]
+                                     (if (k/virhe? vastaus)
+                                       (viesti/nayta! "Muiden kohdeosien haku epäonnistui"
+                                                      :warning
+                                                      viesti/viestin-nayttoaika-keskipitka)
+                                       (reset! muut-kohdeosat vastaus)))))
         skeema (into []
                      (remove
                        nil?
@@ -608,11 +616,12 @@
                            :tayta-toistuvasti-fn
                            (fn [toistettava-rivi tama-rivi]
                              (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}])))]
+    (hae-maara-muutokset! urakka-id yllapitokohde-id)
     (fn []
       [:div
        [grid/grid
         {:otsikko "Muut kohdeosat"
-         :tyhja (if (nil? @muut-kohdeosat) [ajax-loader "Haetaan määrämuutoksia..."] "Ei määrämuutoksia")
+         :tyhja (if (nil? @muut-kohdeosat) [ajax-loader "Haetaan muita kohdeosia..."] "Ei muita kohdeosia")
          #_#_:tallenna (when voi-muokata?
                          #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset!
                                                   {:urakka-id urakka-id
@@ -715,7 +724,9 @@
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
    (when (= kohdetyyppi :paallystys)
      [:div
-      [muut-kohdeosat]
+      [muut-kohdeosat {:yllapitokohde-id (:id rivi)
+                       :urakka-id (:id urakka)
+                       :yllapitokohteet-atom kohteet-atom}]
       [maaramuutokset {:yllapitokohde-id (:id rivi)
                        :urakka-id (:id urakka)
                        :yllapitokohteet-atom kohteet-atom}]])
