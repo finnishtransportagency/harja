@@ -935,7 +935,9 @@ SELECT
   tr_alkuosa       AS "tr-alkuosa",
   tr_alkuetaisyys  AS "tr-alkuetaisyys",
   tr_loppuosa      AS "tr-loppuosa",
-  tr_loppuetaisyys AS "tr-loppuetaisyys"
+  tr_loppuetaisyys AS "tr-loppuetaisyys",
+  tr_ajorata       AS "tr-ajorata",
+  tr_kaista        AS "tr-kaista"
 FROM yllapitokohde ypk
   LEFT JOIN urakka u ON ypk.urakka = u.id
 WHERE vuodet @> ARRAY [:vuosi] :: INT []
