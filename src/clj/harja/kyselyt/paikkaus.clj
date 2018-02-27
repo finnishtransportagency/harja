@@ -95,3 +95,4 @@
                             (luo-toteuma db uusi-toteuma)))]
     (tallenna-materiaalit db id materiaalit)
     (tallenna-tienkohdat db id tienkohdat)))
+
