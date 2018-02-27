@@ -419,30 +419,45 @@
       (is (= kohteet-kannassa 1) "Kohde tallentui oikein"))))
 
 (deftest tallenna-paallekain-menevat-yllapitokohteet
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-yllapitokohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :sopimus-id sopimus-id
-                                 :vuosi 2017
-                                 :kohteet [{:kohdenumero 666
-                                            :nimi "Erkkipetteri"
-                                            :yllapitokohdetyotyyppi :paallystys
-                                            :tr-numero 20
-                                            :tr-alkuosa 1
-                                            :tr-alkuetaisyys 0
-                                            :tr-loppuosa 3
-                                            :tr-loppuetaisyys 0}]})]
+  (let [kohteet-leppajarven-paalle [{:kohdenumero 666
+                                     :nimi "Erkkipetteri"
+                                     :yllapitokohdetyotyyppi :paallystys
+                                     :tr-numero 20
+                                     :tr-alkuosa 1
+                                     :tr-alkuetaisyys 0
+                                     :tr-loppuosa 3
+                                     :tr-loppuetaisyys 0}]]
+    (testing "Päällekäin menevät kohteet samana vuonna"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet kohteet-leppajarven-paalle})]
 
-    ;; Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle
-    ;; Pitäisi tulla validointivirhe
-    (is (= (:status vastaus) :validointiongelma))
-    (is (= (count (:validointivirheet vastaus)) 1))
-    (is (= (-> (:validointivirheet vastaus)
-               first
-               :validointivirhe)
-           :kohteet-paallekain))))
+        ;; Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle
+        ;; Pitäisi tulla validointivirhe
+        (is (= (:status vastaus) :validointiongelma))
+        (is (= (count (:validointivirheet vastaus)) 1))
+        (is (= (-> (:validointivirheet vastaus)
+                   first
+                   :validointivirhe)
+               :kohteet-paallekain))))
+
+    (testing "Päällekäin menevät kohteet eri vuonna"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2018
+                                     :kohteet kohteet-leppajarven-paalle})]
+
+        ;; Kohteet menevät päällekäin, mutta eri vuonna --> ei herjaa
+        (is (not= (:status vastaus) :validointiongelma))))))
 
 (deftest yllapitokohteen-tallennus-vaaraan-urakkaan-ei-onnistu
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
