@@ -7,6 +7,11 @@ CREATE TABLE paikkauskohde (
   UNIQUE ("ulkoinen-id", "luoja-id")
 );
 
+-- Dropataan uudelleennimeämisten takia migraatiossa 682 luodut taulut
+DROP TABLE paikkauksen_materiaali;
+DROP TABLE paikkauksen_tienkohta;
+DROP TABLE paikkaustoteuma;
+
 CREATE TABLE paikkaus (
   id                 SERIAL PRIMARY KEY,
   "luoja-id"         INTEGER REFERENCES kayttaja (id),
@@ -48,7 +53,7 @@ CREATE TABLE paikkauksen_tienkohta (
 
 CREATE TABLE paikkauksen_materiaali (
   id                SERIAL PRIMARY KEY,
-  "paikkaus-id"     INTEGER REFERENCES paikkaus (id),
+  "paikkaus-id"     INTEGER REFERENCES paikkaus(id),
   esiintyma         TEXT,
   "kuulamylly-arvo" TEXT,
   muotoarvo         TEXT,
@@ -88,6 +93,4 @@ CREATE TABLE paikkaustoteuma (
   maara              DECIMAL
 );
 
-
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaus');
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'kirjaa-paikkaustoteuma');
