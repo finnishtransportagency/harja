@@ -47,23 +47,31 @@
         solu? #(or (nil? %)
                    (and (apurit/raporttisolu? %) (number? (apurit/raporttisolun-arvo %)))
                    (apurit/tyhja-raporttisolu? %))]
-    (and (= (count rivi) 16)
-         (string? materiaali)
-         (every? solu? hoitokaudet)
-         (solu? yhteensa)
-         (solu? suunniteltu)
-         (or (nil? prosentti)
-             (and (number? prosentti) (or (= 0 prosentti) (pos? prosentti)))
-             (and (vector? prosentti) (= "%" (:yksikko (second prosentti))))) ;; Tämä on näitä keissejä varten [:arvo-ja-yksikko {:arvo 277.625, :yksikko "%", :desimaalien-maara 2}]
-         (or (and (every? nil? hoitokaudet) (nil? yhteensa))
-             (= (reduce (fnil + 0 0) (map apurit/raporttisolun-arvo hoitokaudet))
-                (apurit/raporttisolun-arvo yhteensa)))
-         (or
-           (nil? prosentti) (nil? yhteensa) (nil? suunniteltu)
-           (= (/ (* 100.0 (apurit/raporttisolun-arvo yhteensa)) (apurit/raporttisolun-arvo suunniteltu))
-              (if (number? prosentti)
-                prosentti
-                (apurit/raporttisolun-arvo prosentti)))))))
+
+    (or
+      ; väliotsikko
+      (and
+        (contains? sisalto :otsikko)
+        (or (= "Talvisuolat" (:otsikko sisalto))
+            (= "Muut materiaalit" (:otsikko sisalto))))
+      ; datarivi
+      (and (= (count rivi) 16)
+          (string? materiaali)
+          (every? solu? hoitokaudet)
+          (solu? yhteensa)
+          (solu? suunniteltu)
+          (or (nil? prosentti)
+              (and (number? prosentti) (or (= 0 prosentti) (pos? prosentti)))
+              (and (vector? prosentti) (= "%" (:yksikko (second prosentti))))) ;; Tämä on näitä keissejä varten [:arvo-ja-yksikko {:arvo 277.625, :yksikko "%", :desimaalien-maara 2}]
+          (or (and (every? nil? hoitokaudet) (nil? yhteensa))
+              (= (reduce (fnil + 0 0) (map apurit/raporttisolun-arvo hoitokaudet))
+                 (apurit/raporttisolun-arvo yhteensa)))
+          (or
+            (nil? prosentti) (nil? yhteensa) (nil? suunniteltu)
+            (= (/ (* 100.0 (apurit/raporttisolun-arvo yhteensa)) (apurit/raporttisolun-arvo suunniteltu))
+               (if (number? prosentti)
+                 prosentti
+                 (apurit/raporttisolun-arvo prosentti))))))))
 
 
 (deftest raportin-suoritus-urakalle-toimii
@@ -100,7 +108,7 @@
                                           {:otsikko "09/16"}
                                           {:otsikko "Määrä yhteensä"}
                                           {:otsikko "Tot-%"}
-                                          {:otsikko "Suunniteltu määrä"})
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -132,7 +140,7 @@
                                           {:otsikko "09/16"}
                                           {:otsikko "Määrä yhteensä"}
                                           {:otsikko "Tot-%"}
-                                          {:otsikko "Suunniteltu määrä"})
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
@@ -163,7 +171,7 @@
                                           {:otsikko "09/16"}
                                           {:otsikko "Määrä yhteensä"}
                                           {:otsikko "Tot-%"}
-                                          {:otsikko "Suunniteltu määrä"})
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest ymparisto-materiaali-ja-suolaraportin-tulokset-tasmaavat
@@ -181,12 +189,12 @@
                                      :parametrit param})
                     "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015")
 
-        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 0))
-        ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 2))
-        ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 8))
-        ymp-suolaliuos-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 2))
-        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 11))
-        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 11))
+        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 1))
+        ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 3))
+        ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 11))
+        ymp-suolaliuos-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 3))
+        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 14))
+        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 14))
         materiaali (apurit/taulukko-otsikolla
                      (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :suorita-raportti
@@ -196,7 +204,6 @@
                                       :urakka-id urakka-id
                                       :parametrit param})
                      "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 30.09.2015")
-        _ (println "materiaali" materiaali)
         mat-kaytetty-kaikki-talvisuola (apurit/taulukon-solu materiaali 1 0)
         mat-kaytetty-suola (apurit/taulukon-solu materiaali 2 0)
         mat-kaytetty-talvisuolaliuos (apurit/taulukon-solu materiaali 3 0)
