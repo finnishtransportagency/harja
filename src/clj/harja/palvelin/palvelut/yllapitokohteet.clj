@@ -406,7 +406,6 @@
    Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
    Palauttaa kohteen päivittyneet kohdeosat."
   [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat] :as tiedot}]
-  (log/debug "TALLENNA KOHDEOSAT: " tiedot)
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
