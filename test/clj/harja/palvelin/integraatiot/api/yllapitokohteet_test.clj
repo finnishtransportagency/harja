@@ -61,7 +61,10 @@
     (is (= 200 (:status vastaus)))
     (is (= 6 (count yllapitokohteet)))
     (is (some? leppajarven-ramppi))
-    (is (= (count (:alikohteet leppajarven-ramppi)) 1))
+    (is (some :hyppy (map :alikohde (:alikohteet leppajarven-ramppi)))
+        "Palautuu tieto hypyllisistä kohteista")
+    (is (some (comp not :hyppy) (map :alikohde (:alikohteet leppajarven-ramppi)))
+        "Palautuu tieto hypyttömistä kohteista")
     (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
@@ -197,39 +200,61 @@
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
           kohdeosa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
-        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " LIMIT 1;")))]
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
       ;; Tiedot ovat skeeman mukaiset
       (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id (:id kohdeosa)
-                                          :lisaaineet "lisäaineet"
-                                          :leveys 1.2
-                                          :kokonaismassamaara 12.3
-                                          :sideainetyyppi 1
-                                          :muotoarvo "testi"
-                                          :esiintyma "testi"
-                                          :pitoisuus 1.2
-                                          :pinta-ala 2.2
-                                          :massamenekki 22
-                                          :kuulamylly 4
-                                          :raekoko 12
-                                          :tyomenetelma 72
-                                          :rc% 54
-                                          :paallystetyyppi 11
-                                          :km-arvo "testi"}],
-                             :alustatoimet [{:verkkotyyppi 1
+      (is (= ilmoitustiedot {:alustatoimet [{:kasittelymenetelma 1
+                                             :paksuus 1
+                                             :tekninen-toimenpide 1
+                                             :tr-alkuetaisyys 1
                                              :tr-alkuosa 1
                                              :tr-loppuetaisyys 15
-                                             :verkon-tarkoitus 5
-                                             :kasittelymenetelma 1
                                              :tr-loppuosa 5
-                                             :tr-alkuetaisyys 1
-                                             :tekninen-toimenpide 1
-                                             :paksuus 1
-                                             :verkon-sijainti 1}]}))
+                                             :verkkotyyppi 1
+                                             :verkon-sijainti 1
+                                             :verkon-tarkoitus 5}]
+                             :osoitteet [{:esiintyma "testi"
+                                          :km-arvo "testi"
+                                          :kohdeosa-id 14
+                                          :kokonaismassamaara 12.3
+                                          :kuulamylly 4
+                                          :leveys 1.2
+                                          :lisaaineet "lisäaineet"
+                                          :massamenekki 22
+                                          :muotoarvo "testi"
+                                          :paallystetyyppi 11
+                                          :pinta-ala 2.2
+                                          :pitoisuus 1.2
+                                          :raekoko 12
+                                          :rc% 54
+                                          :sideainetyyppi 1
+                                          :tyomenetelma 72}
+                                         ;; TODO Palauta hyppytieto!
+                                         {:esiintyma "testi2"
+                                          :km-arvo "testi2"
+                                          :kohdeosa-id 15
+                                          :kokonaismassamaara 12.3
+                                          :kuulamylly 4
+                                          :leveys 1.2
+                                          :lisaaineet "lisäaineet"
+                                          :massamenekki 22
+                                          :muotoarvo "testi2"
+                                          :paallystetyyppi 11
+                                          :pinta-ala 2.2
+                                          :pitoisuus 1.2
+                                          :raekoko 12
+                                          :rc% 54
+                                          :sideainetyyppi 1
+                                          :tyomenetelma 72}]}))
+
+
+
+
+
       (is (= (dissoc kohdeosa :id)
              {:massamaara nil
               :nimi "1. testialikohde"

@@ -89,10 +89,7 @@
           yllapitokohteet (konv/sarakkeet-vektoriin
                             yllapitokohteet
                             {:kohdeosa :alikohteet}
-                            :id)
-          yllapitokohteet (map (fn [yllapitokohde]
-                                 (assoc yllapitokohde :alikohteet (ypk-domain/suodata-hypyt (:alikohteet yllapitokohde))))
-                               yllapitokohteet)]
+                            :id)]
       (yllapitokohdesanomat/rakenna-kohteet yllapitokohteet karttapvm))))
 
 (defn- tarkista-aikataulun-oikeellisuus [aikataulu]
