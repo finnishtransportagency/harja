@@ -12,10 +12,10 @@
              :ensimmainen-sijainti-yritys 0
              :ensimmainen-sijainti-virhekoodi nil
              :verkkoyhteys? (.-onLine js/navigator)
-             :selain-tuettu? true
-             :kayttaja-tunnistettu true
-             :oikeus-ainakin-yhteen-urakkaan true
-             :selain-vanhentunut? false}
+             :selain-tuettu? (utils/tuettu-selain?)
+             :kayttaja-tunnistettu nil
+             :oikeus-ainakin-yhteen-urakkaan nil
+             :selain-vanhentunut? (utils/vanhentunut-selain?)}
 
    ;; Tarkastusajon perustiedot
    :tarkastusajo-alkamassa? false ; Käynnistysnappia painettu UI:sta

@@ -235,7 +235,7 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
 
   Todennus
   (todenna-pyynto [{db :db :as this} req]
-    (let [headerit {"origin" "http://localhost:3000", "host" "localhost:3000", "user-agent" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.167 Safari/537.36", "content-type" "application/transit+json", "cookie" "anti-csrf-token=CWStmdgiiwIkotIxTeHu7NNhmN2VETBZon67zimX5s4%3D; __utmc=111872281; __utmz=111872281.1519207145.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); __utma=111872281.1886813577.1519207145.1519366046.1519390559.6; __atuvc=156%7C8", "content-length" "23", "oam_user_mobile" "0400123123", "referer" "http://localhost:3000/laadunseuranta/", "connection" "keep-alive", "x-csrf-token" "4qx7GBZu2vwwXiWKcN1p1Q==", "oam_user_first_name" "Jalmari", "accept" "application/transit+json, application/transit+transit, application/json, text/plain, text/html, */*", "oam_groups" "Jarjestelmavastaava", "accept-language" "en,fi;q=0.9", "oam_organization" "Liikennevirasto", "accept-encoding" "gzip, deflate, br", "oam_remote_user" "jvh", "oam_user_last_name" "Jarjestelmavastaava", "dnt" "1", "oam_user_email" "jvh@example.com"}
+    (let [headerit (:headers req)
           kayttaja-id (headerit "oam_remote_user")]
 
       (if (nil? kayttaja-id)

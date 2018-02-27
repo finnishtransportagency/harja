@@ -222,7 +222,7 @@
       (let [random-avain (index/tee-random-avain)
             csrf-token (index/muodosta-csrf-token random-avain
                                                   anti-csrf-token-secret-key)]
-
+        (anti-csrf-q/poista-ja-luo-csrf-sessio db oam-kayttajanimi csrf-token (time/now))
         {:status 200
 
          :headers {"Content-Type" "text/html"

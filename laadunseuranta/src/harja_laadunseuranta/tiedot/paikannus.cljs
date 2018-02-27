@@ -68,9 +68,6 @@
                                                      tarkkuus
                                                      asetukset/+suurin-sallittu-tarkkuus+)]
 
-                             (ilmoitukset/ilmoita (str "Sijainti saatu, tarkkuus: " (-> sijainti .-coords .-accuracy))
-                                                  s/ilmoitus {:tyyppi :onnistui})
-
                              (when (and ensimmainen-sijainti-saatu-atom
                                         (not @ensimmainen-sijainti-saatu-atom))
                                (reset! ensimmainen-sijainti-saatu-atom true))
