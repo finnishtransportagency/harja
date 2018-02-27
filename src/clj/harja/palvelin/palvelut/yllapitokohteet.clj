@@ -520,12 +520,12 @@
                                                :osat korjatut-kohdeosat})))))
 
 (defn- validoi-tallennettava-yllapitokohteet [db tallennettavat-kohteet vuosi]
-  ;; FIXME tr-vali-leikkaa-tr-valin olettaa, että annetut pätkät ovat samalla tiellä. Huomioidaanko täällä ajorata ja kaista?
   (let [saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
     (reduce
       (fn [virheet tallennettava-kohde]
         (let [kohteen-virheet
               (remove nil? (map (fn [verrattava-kohde]
+                                  ;; FIXME Tarkista leikkaus VAIN jos tienumero, ajorata ja kaista on samat!!1
                                   (when (and (not= (:id tallennettava-kohde) (:id verrattava-kohde))
                                              (tr/tr-vali-leikkaa-tr-valin? tallennettava-kohde verrattava-kohde))
                                     {:validointivirhe :kohteet-paallekain
