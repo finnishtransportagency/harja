@@ -173,27 +173,29 @@
                                 %
                                 (first valittu-sopimusnumero))
         tyhjat-tyot (when hoitokauden-alku
-                      (keep tyorivi tyhjat-kkt))]
+                      (keep tyorivi tyhjat-kkt))
+        prosenttijako-alkuera (when (and prosenttijako?
+                                      (u/ensimmainen-hoitokausi? urakka valittu-hoitokausi)
+                                      (not (some #(= -1 (:kuukausi %)) valitun-toimenpiteen-ja-hoitokauden-tyot)))
+                                   ;; Jos vesiväylien hoitourakan ensimmäisellä hoitokaudella ei ole
+                                   ;; "urakan alkaessa" erää, lisätään se
+                                   {:toimenpideinstanssi (:tpi_id valittu-toimenpideinstanssi)
+                                    :summa nil
+                                    :kuukausi -1 :vuosi (pvm/vuosi hoitokauden-alku)
+                                    :maksupvm nil
+                                    :alkupvm hoitokauden-alku :loppupvm hoitokauden-alku
+                                    :sopimus (first valittu-sopimusnumero)})]
 
     (prosenttiosuudet
-      (into (if (and prosenttijako?
-                     (u/ensimmainen-hoitokausi? urakka valittu-hoitokausi)
-                     (not (some #(= -1 (:kuukausi %)) valitun-toimenpiteen-ja-hoitokauden-tyot)))
-              ;; Jos vesiväylien hoitourakan ensimmäisellä hoitokaudella ei ole
-              ;; "urakan alkaessa" erää, lisätään se
-              [{:toimenpideinstanssi (:tpi_id valittu-toimenpideinstanssi)
-                :summa nil
-                :kuukausi -1 :vuosi (pvm/vuosi hoitokauden-alku)
-                :maksupvm nil
-                :alkupvm hoitokauden-alku :loppupvm hoitokauden-alku
-                :sopimus (first valittu-sopimusnumero)}]
-              [])
-            (sort-by (juxt :vuosi :kuukausi)
-                     (concat valitun-toimenpiteen-ja-hoitokauden-tyot
-                             ;; filteröidään pois hoitokauden ulkopuoliset kk:t
-                             (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
-                                                    hoitokauden-alku hoitokauden-loppu)
-                                     tyhjat-tyot)))))))
+     (into (if prosenttijako-alkuera
+             [prosenttijako-alkuera]
+             [])
+           (sort-by (juxt :vuosi :kuukausi)
+                    (concat valitun-toimenpiteen-ja-hoitokauden-tyot
+                            ;; filteröidään pois hoitokauden ulkopuoliset kk:t
+                            (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
+                                                   hoitokauden-alku hoitokauden-loppu)
+                                    tyhjat-tyot)))))))
 
 (defn- nayta-tehtavalista-ja-kustannukset? [tyyppi]
   (not (#{:tiemerkinta :vesivayla-hoito :vesivayla-kanavien-hoito} tyyppi)))
@@ -277,7 +279,7 @@
                     (filter #(= valittu-tp-id (:toimenpide %))
                             @valitun-hoitokauden-tyot)))
 
-        prosenttijako? (atom false)
+        prosenttijako? (reaction (= (:tyyppi @urakka) :vesivayla-hoito))
 
         tyorivit (reaction
                    (tyorivit
@@ -459,3 +461,6 @@
              @s/valitun-hoitokauden-kok-hint-kustannukset
              @kaikkien-hoitokausien-taman-tpin-kustannukset
              @valitun-hoitokauden-yks-hint-kustannukset])]]))))
+
+
+;; Prosenttijako-moodi:
