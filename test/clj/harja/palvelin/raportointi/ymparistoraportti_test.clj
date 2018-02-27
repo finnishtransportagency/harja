@@ -193,6 +193,8 @@
         ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 3))
         ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 11))
         ymp-suolaliuos-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 3))
+        ymp-kaikki-talvisuola-helmikuu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 5 8))
+        ymp-kaikki-talvisuola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 13 8))
         ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 14 14))
         ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu ymparisto 15 14))
         materiaali (apurit/taulukko-otsikolla
@@ -227,6 +229,7 @@
            (+ ymp-kaytetty-suolaliuos ymp-kaytetty-suola)
            (+ mat-kaytetty-suola mat-kaytetty-talvisuolaliuos)
            2000M) "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Natriumformiaatti samalla tavalla")
+    (is (= 2000M ymp-kaikki-talvisuola-helmikuu ymp-kaikki-talvisuola-yht) "Kaikki talvisuola yhteensä")
     ;; Testidatasta riippuvia testejä.. vähän huonoja
     (is (= 0.0 ymp-hiekka-totpros) "Ympäristöraportin hiekan toteumaprosentin pitäisi olla nolla, toteumia ei ole")
     (is (= 0 mat-kaytetty-hiekka) "Materiaaliraportin pitäisi raportoida hiekan määräksi nolla, koska toteumia ei ole")
