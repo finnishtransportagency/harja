@@ -36,6 +36,7 @@
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
+  [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -285,6 +286,13 @@
     :suorita #'harja.palvelin.raportointi.raportit.yllapidon-aikataulu/suorita
     :kuvaus "Ylläpidon aikataulu"
     :urakkatyyppi #{:paallystys :tiemerkinta}}
+
+   {:nimi :vastaanottotarkastusraportti
+    :parametrit []
+    :konteksti #{"urakka"}
+    :suorita #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
+    :kuvaus "Vastaanottotarkastusraportti"
+    :urakkatyyppi #{:paallystys}}
 
    {:nimi :vesivaylien-laskutusyhteenveto
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
