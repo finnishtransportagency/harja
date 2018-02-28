@@ -286,9 +286,7 @@
           oulu-talvisuola-luokka-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 3))
           oulu-talvisuola-luokka-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 4))
           oulu-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 5))
-          oulu-talvisuola-luokka-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 6))
-          ]
-      (println "pop-ely-talvisuola-luokka-IsE "pop-ely-talvisuola-luokka-IsE)
+          oulu-talvisuola-luokka-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 6))]
 
       ;; Assertoidaan että hoitoluokittaiset määrät natsaavat, POP Elyllä oltava
       ;; tämän testidatan mukaisesti kaksinkertaiset määrät kuin Oululla tai Kajaanilla yksin

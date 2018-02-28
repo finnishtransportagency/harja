@@ -289,8 +289,14 @@
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit
             (map (fn [[luokka rivit]]
-                   (let [kk-arvot (into {}
-                                        (map (juxt :kk #(do [:arvo-ja-yksikko {:arvo (:maara %)
+                   (let [rivit (if urakoittain?
+                                 rivit
+                                 ;; Jos ei eritellä urakoittain, on laskettava eri urakoiden määrät yhteen
+                                 [(assoc (first rivit) :maara
+                                                       (reduce + 0 (keep :maara rivit)))])
+                         kk-arvot (into {}
+                                        (map (juxt :kk #(do
+                                                          [:arvo-ja-yksikko {:arvo (:maara %)
                                                                                :yksikko (:yksikko materiaali)
                                                                                :desimaalien-maara 2}])))
                                         rivit)]
