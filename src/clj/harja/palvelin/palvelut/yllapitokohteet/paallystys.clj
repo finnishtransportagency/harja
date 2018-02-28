@@ -232,7 +232,6 @@
                                     paallystysilmoitus
                                     {:kohdeosa :kohdeosat}
                                     :id))
-        _ (log/debug "POTTI NYT: " paallystysilmoitus)
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
         _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
             (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
