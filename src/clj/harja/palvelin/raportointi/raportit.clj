@@ -40,6 +40,8 @@
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
+;; HOX Muista lisätä uusi raportti myös Roolit-Exceliin!
+
 (def raportit
   [{:nimi :sanktioraportti-yllapito
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
@@ -288,7 +290,7 @@
     :urakkatyyppi #{:paallystys :tiemerkinta}}
 
    {:nimi :vastaanottotarkastusraportti
-    :parametrit []
+    :parametrit [{:tyyppi nil, :konteksti nil, :pakollinen nil, :nimi nil}]
     :konteksti #{"urakka"}
     :suorita #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
     :kuvaus "Vastaanottotarkastusraportti"
