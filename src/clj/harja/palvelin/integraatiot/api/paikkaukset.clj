@@ -29,7 +29,7 @@
         (paikkaus-q/tallenna-paikkaustoteuma db kayttaja-id toteuma)))))
 
 (defn kirjaa-paikkaus [db {id :id} data kayttaja]
-  (log/debug (format "Kirjataan uusia paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
+  (log/debug (format "Kirjataan paikkauksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
                      (count (:paikkaus data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
@@ -38,7 +38,7 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
 (defn kirjaa-paikkaustoteuma [db {id :id} data kayttaja]
-  (log/debug (format "Kirjataan uusia paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
+  (log/debug (format "Kirjataan paikkauskustannuksia: %s kpl urakalle: %s käyttäjän: %s toimesta"
                      (count (:paikkaus data)) id kayttaja))
   (let [urakka-id (Integer/parseInt id)
         kayttaja-id (:id kayttaja)]
@@ -76,5 +76,5 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :kirjaa-paikkaus)
+    (poista-palvelut http :kirjaa-paikkaus :kirjaa-paikkaustoteuma)
     this))
