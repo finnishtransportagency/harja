@@ -1,0 +1,55 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2018-01-30T12:00:00Z"
+  },
+  "paikkauskustannukset": [
+    {
+      "paikkauskustannus": {
+        "tunniste": {
+          "id": <TOTEUMATUNNISTE>
+        },
+        "paikkauskohde": {
+          "nimi": "Testipaikkauskohde",
+          "tunniste": {
+            "id": <KOHDETUNNISTE>
+          }
+        },
+        "kirjausaika": "2018-01-30T12:00:00Z",
+        "kokonaishintaiset-kustannukset": [
+          { "kokonaishintainen-kustannus": {
+            "selite": "Lähtömaksu",
+            "hinta": 450.30
+          }},
+          {"kokonaishintainen-kustannus": {
+            "selite": "Liikennejärjestelyt",
+            "hinta": 2000
+          }}
+        ],
+        "yksikkohintaiset-kustannukset": [
+          { "yksikkohintainen-kustannus": {
+            "selite": "asfaltti",
+            "yksikko": "t",
+            "yksikkohinta": 200,
+            "maara": 12.5
+          }},
+          {"yksikkohintainen-kustannus": {
+            "selite": "bitumi",
+            "yksikko": "kg",
+            "yksikkohinta": 20.40,
+            "maara": 14.5
+          }}
+        ]
+      }
+    }
+  ]
+}
