@@ -50,4 +50,4 @@
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
                (concat [[:otsikko otsikko]]
                        (yleinen/osat (raportti-fn db user tiedot))))
-             [[:yllapidon-aikataulu "Ylläpidon aikataulu" yllapidon-aikataulu/suorita]])]))
+             [[:yllapidon-aikataulu "Aikataulu" yllapidon-aikataulu/suorita]])]))
