@@ -10,7 +10,6 @@
             [harja.fmt :as fmt]
             [harja.domain.urakka :as urakka]))
 
-
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
 (defn raportin-otsikko
