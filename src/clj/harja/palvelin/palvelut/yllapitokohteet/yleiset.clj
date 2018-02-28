@@ -183,18 +183,21 @@
   "Liittää ylläpitokohteisiin määrämuutoksien kokonaissumman"
   [db yllapitokohteet]
   (let [yllapitokohteiden-maaramuutokset (hae-yllapitokohteiden-maaramuutokset
-                                           db (map :id yllapitokohteet))]
-    (mapv (fn [yllapitokohde]
-            (if (= (:yllapitokohdetyotyyppi yllapitokohde) :paallystys)
-              (let [kohteen-maaramuutokset (filter #(= (:yllapitokohde-id %) (:id yllapitokohde))
-                                                   yllapitokohteiden-maaramuutokset)
-                    summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
-                    maaramuutokset (:tulos summatut-maaramuutokset)
-                    maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
-                (assoc yllapitokohde :maaramuutokset maaramuutokset
-                                     :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
-              yllapitokohde))
-          yllapitokohteet)))
+                                           db (map :id yllapitokohteet))
+        vastaus (mapv (fn [yllapitokohde]
+                        (if (= (:yllapitokohdetyotyyppi yllapitokohde) :paallystys)
+                          (let [kohteen-maaramuutokset (filter #(= (:yllapitokohde-id %) (:id yllapitokohde))
+                                                               yllapitokohteiden-maaramuutokset)
+                                summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
+                                maaramuutokset (:tulos summatut-maaramuutokset)
+                                maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
+                            (assoc yllapitokohde :maaramuutokset maaramuutokset
+                                                 :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
+                          yllapitokohde))
+                      yllapitokohteet)]
+    (log/debug "VASTAUS: " vastaus)
+    vastaus
+    ))
 
 (def urakan-yllapitokohde-xf
   (comp

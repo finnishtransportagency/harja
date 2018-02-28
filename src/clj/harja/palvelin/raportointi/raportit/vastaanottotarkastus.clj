@@ -9,10 +9,12 @@
             [jeesql.core :refer [defqueries]]
             [harja.domain.roolit :as roolit]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [clj-time.core :as t]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [harja.math :as math]))
+            [harja.math :as math]
+            [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
@@ -21,7 +23,10 @@
         raportin-nimi "Vastaanottotarkastus"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                      ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))
-        yllapitokohteet (hae-yllapitokohteet db {:urakka urakka-id})]
+        yllapitokohteet (->> (into []
+                                   (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
+                                   (hae-yllapitokohteet db {:urakka urakka-id}))
+                             (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db))]
     [:raportti {:nimi raportin-nimi}
 
      [:taulukko {:otsikko otsikko
@@ -41,7 +46,7 @@
        {:otsikko "KVL" :leveys 5}
        {:otsikko "YP-lk" :leveys 5}
        {:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
-       {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5 :fmt :raha} ; TODO LASKE
+       {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5 :fmt :raha}
        {:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
        {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha} ; TODO LASKE
        {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
@@ -63,7 +68,7 @@
            (:kvl yllapitokohde)
            (:yplk yllapitokohde)
            (:tarjoushinta yllapitokohde)
-           (:maaramuutokset yllapitokohde) ; TODO LASKE
+           (:maaramuutokset yllapitokohde)
            (:arvonmuutokset yllapitokohde)
            (:sakot-ja-bonukset yllapitokohde) ; TODO LASKE
            (:bitumi-indeksi yllapitokohde)

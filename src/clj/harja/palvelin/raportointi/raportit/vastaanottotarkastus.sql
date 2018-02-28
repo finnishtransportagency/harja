@@ -4,6 +4,7 @@ SELECT
   kohdenumero,
   tunnus,
   nimi,
+  yllapitokohdetyotyyppi,
   tr_numero                         AS "tr-numero",
   tr_ajorata                        AS "tr-ajorata",
   tr_kaista                         AS "tr-kaista",
