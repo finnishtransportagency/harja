@@ -26,8 +26,8 @@
 (defn nykyinen-sijainti-riittavan-tarkka?
   "Palauttaa true tai false sen mukaan onko nykyinen sijainti riittävän tarkka.
    Mikäli tarkkuutta ei ole voitu määrittää, palauttaa true"
-  [nykyinen-sijainti sallittu-tarkkuus]
-  (if-let [tarkkuus (:accuracy nykyinen-sijainti)]
+  [tarkkuus sallittu-tarkkuus]
+  (if tarkkuus
     (<= tarkkuus sallittu-tarkkuus)
     (do (.log js/console "Nykyisellä sijainnilla ei ole tarkkuutta!")
         true)))
@@ -142,7 +142,7 @@
 (defn kirjaa-pistemainen-havainto! [{:keys [idxdb sijainti tarkastusajo-id
                                             havainto-kirjattu-fn tr-osoite
                                             epaonnistui-fn jatkuvat-havainnot havainto-avain] :as tiedot}]
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
+  (if (nykyinen-sijainti-riittavan-tarkka? (-> sijainti :nykyinen :accuracy)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (let [aikaleima-nyt (lt/local-now)
           kirjaustulos (kirjaa-kertakirjaus idxdb
@@ -171,7 +171,7 @@
   ;; Hyväksytään lomake, jos sijainti on riittävän tarkka tai käyttäjä
   ;; on itse kirjannut tieosoitteen.
   (if (or
-        (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
+        (nykyinen-sijainti-riittavan-tarkka? (-> sijainti :nykyinen :accuracy)
                                              asetukset/+suurin-sallittu-tarkkuus+)
         (and (get-in lomakedata [:tr-osoite :tie])
              (get-in lomakedata [:tr-osoite :aosa])
@@ -200,7 +200,7 @@
 (defn kirjaa-mittausarvo! [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot
                                    mittaustyyppi mittausarvo epaonnistui-fn] :as tiedot}]
   (.log js/console (str "Kirjataan mittaus " mittaustyyppi ", arvo: " (pr-str mittausarvo)))
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
+  (if (nykyinen-sijainti-riittavan-tarkka? (-> sijainti :nykyinen :accuracy)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (do (kirjaa-kertakirjaus
           idxdb
@@ -225,7 +225,7 @@
    vaan niistä tulee kirjata erikseen oma merkintä."
   [{:keys [idxdb sijainti tarkastusajo-id jatkuvat-havainnot mittaustyyppi tr-osoite havainto-avain
            soratiemittaussyotto epaonnistui-fn havainto-kirjattu-fn] :as tiedot}]
-  (if (nykyinen-sijainti-riittavan-tarkka? (:nykyinen sijainti)
+  (if (nykyinen-sijainti-riittavan-tarkka? (-> sijainti :nykyinen :accuracy)
                                            asetukset/+suurin-sallittu-tarkkuus+)
     (let [aikaleima-nyt (lt/local-now)
           kirjaustulos (kirjaa-kertakirjaus idxdb
