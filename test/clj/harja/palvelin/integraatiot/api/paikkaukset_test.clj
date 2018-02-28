@@ -82,14 +82,30 @@
                (.replace "<TOTEUMATUNNISTE>" (str toteumatunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
-        odotetut-paikkaustoteumat [{::paikkaus/selite "asfaltti"
-                                    ::paikkaus/tyyppi "kokonaishintainen"
-                                    ::paikkaus/ulkoinen-id 234531
-                                    ::paikkaus/urakka-id 4}
-                                   {::paikkaus/selite "Liikennejärjestelyt"
-                                    ::paikkaus/tyyppi "yksikkohintainen"
-                                    ::paikkaus/ulkoinen-id 234531
-                                    ::paikkaus/urakka-id 4}]
+        odotetut-paikkaustoteumat [{:harja.domain.paikkaus/yksikkohinta 200M,
+                                    :harja.domain.paikkaus/maara 12.5M,
+                                    :harja.domain.paikkaus/selite "asfaltti",
+                                    :harja.domain.paikkaus/tyyppi "yksikkohintainen",
+                                    :harja.domain.paikkaus/ulkoinen-id 234531,
+                                    :harja.domain.paikkaus/urakka-id 4,
+                                    :harja.domain.paikkaus/yksikko "t"}
+                                   {:harja.domain.paikkaus/yksikkohinta 20.4M,
+                                    :harja.domain.paikkaus/maara 14.5M,
+                                    :harja.domain.paikkaus/selite "bitumi",
+                                    :harja.domain.paikkaus/tyyppi "yksikkohintainen",
+                                    :harja.domain.paikkaus/ulkoinen-id 234531,
+                                    :harja.domain.paikkaus/urakka-id 4,
+                                    :harja.domain.paikkaus/yksikko "kg"}
+                                   {:harja.domain.paikkaus/selite "Lähtömaksu",
+                                    :harja.domain.paikkaus/urakka-id 4,
+                                    :harja.domain.paikkaus/hinta 450.3M,
+                                    :harja.domain.paikkaus/ulkoinen-id 234531,
+                                    :harja.domain.paikkaus/tyyppi "kokonaishintainen"}
+                                   {:harja.domain.paikkaus/selite "Liikennejärjestelyt",
+                                    :harja.domain.paikkaus/urakka-id 4,
+                                    :harja.domain.paikkaus/hinta 2000M,
+                                    :harja.domain.paikkaus/ulkoinen-id 234531,
+                                    :harja.domain.paikkaus/tyyppi "kokonaishintainen"}]
         odotettu-kohde {::paikkaus/nimi "Testipaikkauskohde"
                         ::paikkaus/ulkoinen-id 466645}]
 
