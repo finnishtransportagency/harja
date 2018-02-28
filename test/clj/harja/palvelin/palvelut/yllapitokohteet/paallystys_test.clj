@@ -303,6 +303,7 @@
     (is (= (first kohdeosat)
            {;; Alikohteen tiedot
             :kohdeosa-id 666
+            :hyppy? false
             :nimi "Leppäjärven kohdeosa"
             :tr-ajorata 1
             :tr-alkuetaisyys 0
@@ -333,6 +334,22 @@
             :muotoarvo "12"
             :pitoisuus 12
             :sideainetyyppi 2}))
+    (is (= (second kohdeosat)
+           {:kohdeosa-id 1024
+            :hyppy? true
+            :massamaara nil
+            :nimi "Leppäjärven hyppy"
+            :paallystetyyppi nil
+            :raekoko nil
+            :toimenpide nil
+            :tr-ajorata 1
+            :tr-alkuetaisyys 0
+            :tr-alkuosa 3
+            :tr-kaista 1
+            :tr-loppuetaisyys 0
+            :tr-loppuosa 3
+            :tr-numero 20
+            :tyomenetelma nil}))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
@@ -374,6 +391,7 @@
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
                              :kohdeosa-id 14
+                             :hyppy? false
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
@@ -463,6 +481,7 @@
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
                              :kohdeosa-id 14
+                             :hyppy? false
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
