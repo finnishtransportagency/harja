@@ -3,6 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
+            [harja.domain.hoitoluokat :as hoitoluokat]
             [harja.kyselyt.urakat :as urk-q]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
@@ -49,6 +50,9 @@
                    (apurit/tyhja-raporttisolu? %))]
 
     (or
+      ; hoitoluokittainen materiaalitieto
+      (and (some #(= (str " - " (:nimi %)) (first sisalto))
+                 hoitoluokat/talvihoitoluokat))
       ; väliotsikko
       (and
         (contains? sisalto :otsikko)
@@ -244,3 +248,77 @@
                    "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015")
         nimet (apurit/taulukon-sarake taulukko 0)]
     (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
+
+
+
+(deftest ymparistoraportin-hoitoluokittaiset-maarat
+  (let [vastaus-pop-ely (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :suorita-raportti
+                                        +kayttaja-jvh+
+                                        {:nimi               :ymparistoraportti
+                                         :konteksti          "hallintayksikko"
+                                         :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                         :parametrit         {:alkupvm      (c/to-date (t/local-date 2017 10 1))
+                                                              :loppupvm     (c/to-date (t/local-date 2018 9 30))
+                                                              :urakkatyyppi :hoito}})
+        vastaus-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :suorita-raportti
+                                        +kayttaja-jvh+
+                                        {:nimi               :ymparistoraportti
+                                         :konteksti          "urakka"
+                                         :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                                         :parametrit         {:alkupvm      (c/to-date (t/local-date 2017 10 1))
+                                                              :loppupvm     (c/to-date (t/local-date 2018 9 30))
+                                                              :urakkatyyppi :hoito}})]
+
+    (is (vector? vastaus-pop-ely))
+    (let [otsikko-pop-ely "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+          taulukko-pop-ely (apurit/taulukko-otsikolla vastaus-pop-ely otsikko-pop-ely)
+          pop-ely-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 2))
+          pop-ely-talvisuola-luokka-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 3))
+          pop-ely-talvisuola-luokka-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 4))
+          pop-ely-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 5))
+          pop-ely-talvisuola-luokka-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 6))
+
+          otsikko-oulu "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+          taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
+          oulu-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 2))
+          oulu-talvisuola-luokka-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 3))
+          oulu-talvisuola-luokka-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 4))
+          oulu-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 5))
+          oulu-talvisuola-luokka-TIb (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 6))
+          ]
+      (println "pop-ely-talvisuola-luokka-IsE "pop-ely-talvisuola-luokka-IsE)
+
+      ;; Assertoidaan että hoitoluokittaiset määrät natsaavat, POP Elyllä oltava
+      ;; tämän testidatan mukaisesti kaksinkertaiset määrät kuin Oululla tai Kajaanilla yksin
+      (is (= pop-ely-talvisuola-luokka-IsE 600M))
+      (is (= pop-ely-talvisuola-luokka-Is 400M))
+      (is (= pop-ely-talvisuola-luokka-I 400M))
+      (is (= pop-ely-talvisuola-luokka-Ib 400M))
+      (is (= pop-ely-talvisuola-luokka-TIb 200M))
+
+      (is (= oulu-talvisuola-luokka-IsE 300M))
+      (is (= oulu-talvisuola-luokka-Is 200M))
+      (is (= oulu-talvisuola-luokka-I 200M))
+      (is (= oulu-talvisuola-luokka-Ib 200M))
+      (is (= oulu-talvisuola-luokka-TIb 100M))
+
+      (apurit/tarkista-taulukko-sarakkeet taulukko-pop-ely
+                                          {:otsikko "Materiaali"}
+                                          {:otsikko "10/17"}
+                                          {:otsikko "11/17"}
+                                          {:otsikko "12/17"}
+                                          {:otsikko "01/18"}
+                                          {:otsikko "02/18"}
+                                          {:otsikko "03/18"}
+                                          {:otsikko "04/18"}
+                                          {:otsikko "05/18"}
+                                          {:otsikko "06/18"}
+                                          {:otsikko "07/18"}
+                                          {:otsikko "08/18"}
+                                          {:otsikko "09/18"}
+                                          {:otsikko "Määrä yhteensä"}
+                                          {:otsikko "Tot-%"}
+                                          {:otsikko "Suunniteltu määrä / talvisuolan max-määrä"})
+      (apurit/tarkista-taulukko-kaikki-rivit taulukko-pop-ely tarkistusfunktio))))

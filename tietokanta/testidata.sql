@@ -136,6 +136,9 @@ SELECT paivita_pohjavesialueet();
 -- Tietyöilmoitukset
 \i testidata/tietyoilmoitukset.sql
 
+-- Hoitoluokittaiset materiaalin käytöt (cachetaulut)
+\i testidata/hoitoluokittaiset_materiaalit.sql
+
 SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 
 -- Vesiväylät & kanavat
