@@ -40,13 +40,13 @@
        {:otsikko "Pit. (m)" :leveys 5} ; TODO LASKE!
        {:otsikko "KVL" :leveys 5}
        {:otsikko "YP-lk" :leveys 5}
-       {:otsikko "Tarjous\u00ADhinta" :leveys 5}
-       {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5} ; TODO LASKE
-       {:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5}
-       {:otsikko "Sakko/bonus" :leveys 5} ; TODO LASKE
-       {:otsikko "Bitumi-indeksi" :leveys 5}
-       {:otsikko "Kaasu\u00ADindeksi" :leveys 5}
-       {:otsikko "Koko\u00ADnais\u00ADhinta (indek\u00ADsit mukana)" :leveys 5}] ; TODO LASKE
+       {:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
+       {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5 :fmt :raha} ; TODO LASKE
+       {:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
+       {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha} ; TODO LASKE
+       {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
+       {:otsikko "Kaasu\u00ADindeksi" :leveys 5 :fmt :raha}
+       {:otsikko "Koko\u00ADnais\u00ADhinta (indek\u00ADsit mukana)" :leveys 5 :fmt :raha}] ; TODO LASKE
       (map
         (fn [yllapitokohde]
           [(:kohdenumero yllapitokohde)
