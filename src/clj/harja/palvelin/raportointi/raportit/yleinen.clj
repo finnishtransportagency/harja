@@ -213,3 +213,12 @@
                   (if kkn-indeksiarvo
                     (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
                     " puuttuu.")))])
+
+(defn osat [raportti]
+  ;; Pudotetaan pois :raportti keyword ja string tai map optiot.
+  ;; Palautetaan vain sen jälkeen tulevat raporttielementit
+  (remove nil?
+          (mapcat #(if (and (seq? %) (not (vector? %)))
+                     %
+                     [%])
+                  (drop 2 raportti))))
