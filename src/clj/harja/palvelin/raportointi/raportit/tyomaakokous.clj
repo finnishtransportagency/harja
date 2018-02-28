@@ -32,10 +32,9 @@
 (defn suorita [db user {:keys [kuukausi urakka-id] :as tiedot}]
   [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
    (mapcat (fn [[aja-parametri otsikko raportti-fn]]
-             (do
-               (when (get tiedot aja-parametri)
-                (concat [[:otsikko otsikko]]
-                        (osat (raportti-fn db user tiedot))))))
+             (when (get tiedot aja-parametri)
+               (concat [[:otsikko otsikko]]
+                       (osat (raportti-fn db user tiedot)))))
            ;; säilytä aakkosjärjestys ellei toisin vaadita
            [[:erilliskustannukset "Erilliskustannukset" erilliskustannukset/suorita]
             [:ilmoitusraportti "Ilmoitukset" ilmoitus/suorita]

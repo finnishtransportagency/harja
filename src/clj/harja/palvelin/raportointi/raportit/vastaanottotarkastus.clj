@@ -3,6 +3,7 @@
             [harja.kyselyt.toimenpideinstanssit :refer [hae-urakan-toimenpideinstanssi]]
             [harja.fmt :as fmt]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.palvelin.raportointi.raportit.yllapidon-aikataulu :as yllapidon-aikataulu]
             [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
             [harja.domain.roolit :as roolit]
@@ -12,17 +13,24 @@
             [clj-time.coerce :as c]
             [harja.math :as math]))
 
-(defn suorita [db user {:keys [urakka-id] :as parametrit}]
+(defn osat [raportti]
+  ;; Pudotetaan pois :raportti keyword ja string tai map optiot.
+  ;; Palautetaan vain sen jälkeen tulevat raporttielementit
+  (remove nil?
+          (mapcat #(if (and (seq? %) (not (vector? %)))
+                     %
+                     [%])
+                  (drop 2 raportti))))
+
+(defn suorita [db user {:keys [urakka-id] :as tiedot}]
   (let [konteksti :urakka
         raportin-nimi "Vastaanottotarkastus"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                      ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))
         otsikkorivit []
         datarivit []]
-    [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi}
-     [:taulukko {:otsikko otsikko
-                 :tyhja (when (empty? datarivit) "Ei raportoitavaa.")
-                 :sheet-nimi raportin-nimi}
-      otsikkorivit
-      datarivit]]))
+    [:raportti {:nimi raportin-nimi}
+     (mapcat (fn [[aja-parametri otsikko raportti-fn]]
+               (concat [[:otsikko otsikko]]
+                       (osat (raportti-fn db user tiedot))))
+             [[:yllapidon-aikataulu "Ylläpidon aikataulu" yllapidon-aikataulu/suorita]])]))
