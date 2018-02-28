@@ -18,4 +18,5 @@ SELECT
   bitumi_indeksi                    AS "bitumi-indeksi",
   kaasuindeksi
 FROM yllapitokohde ypk
-WHERE ypk.urakka = :urakka;
+WHERE ypk.urakka = :urakka
+AND poistettu IS NOT TRUE;

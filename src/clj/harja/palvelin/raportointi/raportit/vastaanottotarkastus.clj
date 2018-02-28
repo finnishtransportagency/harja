@@ -50,6 +50,7 @@
       (map
         (fn [yllapitokohde]
           [(:kohdenumero yllapitokohde)
+           (:tunnus yllapitokohde)
            (:nimi yllapitokohde)
            (:tr-numero yllapitokohde)
            (:tr-ajorata yllapitokohde)
