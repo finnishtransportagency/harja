@@ -26,7 +26,8 @@
         yllapitokohteet (->> (into []
                                    (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
                                    (hae-yllapitokohteet db {:urakka urakka-id}))
-                             (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db))]
+                             (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
+                             (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %)))]
     [:raportti {:nimi raportin-nimi}
 
      [:taulukko {:otsikko otsikko

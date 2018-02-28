@@ -195,9 +195,7 @@
                                                  :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
                           yllapitokohde))
                       yllapitokohteet)]
-    (log/debug "VASTAUS: " vastaus)
-    vastaus
-    ))
+    vastaus))
 
 (def urakan-yllapitokohde-xf
   (comp
@@ -246,6 +244,9 @@
   (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
                                                        :aosa tr-alkuosa
                                                        :losa tr-loppuosa})
+        _ (log/debug "LASKE PITUUS " osien-pituudet {:tie tr-numero
+                                                     :aosa tr-alkuosa
+                                                     :losa tr-loppuosa})
         pituus (tr/laske-tien-pituus osien-pituudet kohde)]
     (assoc kohde :pituus pituus)))
 
