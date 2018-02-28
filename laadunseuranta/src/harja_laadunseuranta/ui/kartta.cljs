@@ -180,7 +180,7 @@
 (defn- paivita-ajoneuvon-sijainti [kartta ajoneuvo ajoneuvokerros ajoneuvon-sijainti]
   (doto ajoneuvo
     (.setGeometry (tee-piste ajoneuvon-sijainti))
-    (.setStyle (nuoli-ikoni-tyyli (laske-suunta (:heading ajoneuvon-sijainti)))))
+    (.setStyle (nuoli-ikoni-tyyli (- (/ Math/PI 2)))))
   (.changed ajoneuvokerros)
   (.changed (.getView kartta)))
 
