@@ -1,6 +1,7 @@
 -- name: hae-yllapitokohteet
 SELECT
   ypk.id,
+  ypk.yhaid,
   ypk.kohdenumero,
   ypk.tunnus,
   ypk.nimi,
