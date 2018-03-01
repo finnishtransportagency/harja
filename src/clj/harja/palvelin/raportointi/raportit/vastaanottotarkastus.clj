@@ -153,10 +153,13 @@
                              (yllapitokohteet-domain/jarjesta-yllapitokohteet))]
     [:raportti {:nimi raportin-nimi}
 
+     ;; TODO Vuosi-filtteri rapsalle ja SQL-kyselyihin
+
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet) :yha)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet) :paikkaus)
      ;; TODO Muut kustannukset -taulukko
+     ;; TODO kohteeseen liittämättömät sakot ja bonukset
      (yllapitokohteet-yhteensa-taulukko yllapitokohteet)
 
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
