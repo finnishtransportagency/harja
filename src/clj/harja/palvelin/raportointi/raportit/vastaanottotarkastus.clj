@@ -43,7 +43,7 @@
        [{:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
         {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5 :fmt :raha}])
      (when (= taulukkotyyppi :paikkaus)
-       [{:otsikko "Toteutunut hinta" :leveys 5 :fmt :raha}])
+       [{:otsikko "Toteutunut hinta" :leveys 10 :fmt :raha}])
      [{:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
       {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}
       {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
