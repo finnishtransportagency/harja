@@ -96,8 +96,9 @@
             (:kokonaishinta yllapitokohde)]))
        yllapitokohteet)]))
 
-(defn yhteensa-taulukko [yllapitokohteet muut-kustannukset]
-  (let [muut-kustannukset-yhteensa (reduce + 0 (keep :hinta muut-kustannukset))]
+(defn yhteensa-taulukko [yllapitokohteet muut-kustannukset urakan-sanktiot]
+  (let [muut-kustannukset-yhteensa (reduce + 0 (concat (keep :hinta muut-kustannukset)
+                                                       (keep :maara urakan-sanktiot)))]
     [:taulukko {:otsikko "Yhteenveto"
                 :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
                 :sheet-nimi "Ylläpitokohteet yhteensä"}
@@ -141,7 +142,7 @@
        (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
           muut-kustannukset-yhteensa)]]]))
 
-(defn muut-kustannukset-taulukko [muut-kustannukset]
+(defn muut-kustannukset-taulukko [muut-kustannukset urakan-sanktiot]
   (let [nimi "Muut kustannukset"]
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? muut-kustannukset) "Ei muita kustannuksia.")
@@ -150,11 +151,13 @@
       {:otsikko "Selitys" :leveys 10}
       {:otsikko "Summa" :leveys 10 :fmt :raha}]
      (map
-       (fn [yllapitokohde]
-         (-> [(:pvm yllapitokohde)
-              (:selite yllapitokohde)
-              (:hinta yllapitokohde)]))
-       muut-kustannukset)]))
+       (fn [kustannus]
+         (-> [(:pvm kustannus)
+              (or (:selite kustannus)
+                  (:sakkoryhma kustannus))
+              (or (:hinta kustannus)
+                  (:maara kustannus))]))
+       (apply conj muut-kustannukset urakan-sanktiot))]))
 
 (defn suorita [db user {:keys [urakka-id] :as tiedot}]
   (let [raportin-nimi "Vastaanottotarkastus"
@@ -167,7 +170,8 @@
                                           (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
                                           (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %)))
                                           (yllapitokohteet-domain/jarjesta-yllapitokohteet))
-        muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id})]
+        muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id})
+        urakan-sanktiot (hae-kohteisiin-kuulumattomat-kustannukset db {:urakka urakka-id})]
     [:raportti {:nimi raportin-nimi}
 
      ;; TODO Vuosi-filtteri rapsalle ja SQL-kyselyihin
@@ -178,8 +182,8 @@
      ;; TODO kohteeseen liittämättömät sakot ja bonukset
      ;; TODO Testi raportille
      ;; TODO Testaa tuotantokopiota vasten: kohdeluettelo täsmää rapsan kanssa
-     (muut-kustannukset-taulukko muut-kustannukset)
-     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset)
+     (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot)
+     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot)
 
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
                (concat [[:otsikko otsikko]]

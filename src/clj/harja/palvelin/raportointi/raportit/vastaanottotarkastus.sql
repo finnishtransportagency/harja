@@ -25,7 +25,7 @@ FROM yllapitokohde ypk
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
 WHERE ypk.urakka = :urakka
-AND ypk.poistettu IS NOT TRUE
+      AND ypk.poistettu IS NOT TRUE
 GROUP BY ypk.id;
 
 -- name: hae-muut-kustannukset
@@ -38,3 +38,15 @@ FROM yllapito_muu_toteuma yt
 WHERE yt.urakka = :urakka
       AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
+
+-- name: hae-kohteisiin-kuulumattomat-kustannukset
+SELECT
+  s.maara,
+  s.sakkoryhma
+FROM sanktio s
+WHERE s.laatupoikkeama IN (SELECT id
+                           FROM laatupoikkeama lp
+                           WHERE lp.urakka = :urakka AND lp.yllapitokohde IS NULL)
+      AND (s.sakkoryhma = 'yllapidon_sakko' OR s.sakkoryhma = 'yllapidon_bonus')
+      AND s.poistettu IS NOT TRUE
+ORDER BY s.perintapvm DESC;
