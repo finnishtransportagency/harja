@@ -122,9 +122,9 @@
 
   ; Numeron perusteella suodatettava palautuu, palautuu 1
   (t/is (= 1 (count (kanavasilta-tuonti/suodata-sillat-nimen-mukaan referenssi-tulos))))
-  (t/is (= 666667 (:siltanro (first (kanavasilta-tuonti/suodata-sillat-nimen-mukaan referenssi-tulos)))))
+  (t/is (= 666667 (:siltanro (first (kanavasilta-tuonti/suodata-sillat-numeron-ja-tunnuksen-mukaan referenssi-tulos)))))
 
-  ; Sekä rakennustyypin että nimen perusteella suodatettava palautuu, palautuuu 2
+  ; Sekä rakennustyypin että numeron ja tunnuksen perusteella suodatettava palautuu, palautuuu 2
   (t/is (= 2 (count (kanavasilta-tuonti/suodata-sillat referenssi-tulos))))
   (t/is (= 666666 (:siltanro (first (kanavasilta-tuonti/suodata-sillat referenssi-tulos)))))
   (t/is (= 666667 (:siltanro (second (kanavasilta-tuonti/suodata-sillat referenssi-tulos))))))
