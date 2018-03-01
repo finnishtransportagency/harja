@@ -290,7 +290,7 @@
     :urakkatyyppi #{:paallystys :tiemerkinta}}
 
    {:nimi :vastaanottotarkastusraportti
-    :parametrit [{:tyyppi nil, :konteksti nil, :pakollinen nil, :nimi nil}]
+    :parametrit [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
     :konteksti #{"urakka"}
     :suorita #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
     :kuvaus "Vastaanottotarkastusraportti"
