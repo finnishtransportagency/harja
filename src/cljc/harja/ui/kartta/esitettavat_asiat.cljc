@@ -600,6 +600,7 @@
                 (pvm/pvm-aika-sek aika))
      :alue (assoc sijainti
              :fill true
+             :radius 50
              :color vari)}))
 
 (defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]

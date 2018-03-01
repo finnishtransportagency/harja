@@ -277,15 +277,14 @@
    tulee oikeasti Harjan palvelimen käyttäjälle kopioimalta frontilta.
 
    Jos tarkistus on ok, kutsutaan funktiota f, muuten palautuu 403."
-  [f db kayttajanimi random-avain csrf-token anti-csrf-token-secret-key]
+  [f db kayttajanimi random-avain csrf-token]
   (fn [{:keys [cookies headers uri] :as req}]
-
-    (if (or (and (some? random-avain)
-                 (some? csrf-token)
-                 (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now))))
+    (if (and (some? random-avain)
+             (some? csrf-token)
+             (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now)))
       (f req)
       (do
-        (log/warn "Virheellinen CSRF-cookie, palautetaan 403")
+        (log/warn "Virheellinen CSRF-cookie varmennettavassa pyynnössä, palautetaan 403 - uri:" uri)
         {:status 403
          :headers {"Content-Type" "text/html"}
          :body "Access denied"}))))
@@ -315,6 +314,7 @@
                    (fn [req]
                      (try+
                        (metriikka/inc! mittarit :aktiiviset_pyynnot)
+
                        (let [[todennettavat ei-todennettavat] (jaa-todennettaviin-ja-ei-todennettaviin @sessiottomat-kasittelijat)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
@@ -325,8 +325,7 @@
                                                 (wrap-anti-forgery db
                                                                    oam-kayttajanimi
                                                                    random-avain
-                                                                   csrf-token
-                                                                   anti-csrf-token-secret-key))]
+                                                                   csrf-token))]
                          (or (reitita req (conj (mapv :fn ei-todennettavat)
                                                 dev-resurssit resurssit) false)
                              (reitita (todennus/todenna-pyynto todennus req)
