@@ -97,9 +97,6 @@
   ([db user oikeustarkistus-fn]
    (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn nil nil nil nil (pvm/nyt) (pvm/nyt)))
   ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu]
-   (kayttajan-urakat-aikavalilta-alueineen db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi
-                                           hallintayksikot alku loppu urakat/oletus-toleranssi))
-  ([db user oikeustarkistus-fn urakka-id urakoitsija urakkatyyppi hallintayksikot alku loppu toleranssi]
    (let [aluekokonaisuudet (kayttajan-urakat-aikavalilta db user oikeustarkistus-fn urakka-id
                                                          urakoitsija urakkatyyppi
                                                          hallintayksikot alku loppu)
@@ -115,8 +112,8 @@
                                        db
                                        user
                                        oikeustarkistus-fn
-                                       urakka-idt
-                                       toleranssi)))]
+                                       urakka-idt)))]
+
      (mapv
        (fn [au]
          (assoc au :urakat (mapv
