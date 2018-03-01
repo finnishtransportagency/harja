@@ -133,7 +133,7 @@
    "tienumero" 4
    "yhteydenottopyynto" false})
 
-(deftest kuuntele-urakan-ilmoituksia
+#_(deftest kuuntele-urakan-ilmoituksia
   (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?odotaUusia=true"] kayttaja portti))
         tloik-kuittaukset (atom [])]
     (sonja/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ +testi-ilmoitus-sanoma+)
