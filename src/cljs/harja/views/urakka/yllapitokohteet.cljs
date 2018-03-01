@@ -535,7 +535,7 @@
                                        (viesti/nayta! "Muiden kohdeosien haku epäonnistui"
                                                       :warning
                                                       viesti/viestin-nayttoaika-keskipitka)
-                                       (reset! muut-kohdeosat vastaus)))))
+                                       (reset! muut-kohdeosat (zipmap (range) vastaus))))))
         skeema (into []
                      (remove
                        nil?
@@ -615,35 +615,72 @@
                            :tayta-alas-toistuvasti? #(not (nil? %))
                            :tayta-toistuvasti-fn
                            (fn [toistettava-rivi tama-rivi]
-                             (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}])))]
+                             (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}])))
+        skeema (if voi-muokata?
+                 (conj skeema {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 15
+                               :tasaa :keskita
+                               :komponentti (fn [rivi _]
+                                              [:button.nappi-kielteinen.btn-xs
+                                               {:on-click
+                                                #(swap! muut-kohdeosat dissoc (:id rivi))}
+                                               (ikonit/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")])})
+                 skeema)]
     (hae-maara-muutokset! urakka-id yllapitokohde-id)
     (fn []
       [:div
-       [grid/grid
+       [grid/muokkaus-grid
         {:otsikko "Muut kohdeosat"
          :tyhja (if (nil? @muut-kohdeosat) [ajax-loader "Haetaan muita kohdeosia..."] "Ei muita kohdeosia")
+         :piilota-toiminnot? true
+         :voi-lisata? true
+         :voi-kumota? false
+         :paneelikomponentit (when voi-muokata?
+                               [(fn []
+                                  [napit/palvelinkutsu-nappi
+                                   [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+                                   #(tiedot/tallenna-muut-kohdeosat!
+                                      {:urakka-id urakka-id
+                                       :yllapitokohde-id yllapitokohde-id
+                                       :muut-kohdeosat (vals @muut-kohdeosat)})
+                                   {#_#_:disabled (not voi-muokata?)
+                                    :luokka "nappi-myonteinen grid-tallenna"
+                                    :virheviesti "Tallentaminen epäonnistui."
+                                    #_#_:kun-onnistuu
+                                    (fn [vastaus]
+                                      (log "[KOHDEOSAT] Päivitys onnistui, vastaus: " (pr-str kohdeosat))
+                                      (u/lukitse-urakan-yha-sidonta! urakka-id)
+                                      (kohdeosat-paivitetty-fn vastaus)
+                                      (resetoi-tr-tiedot)
+                                      (viesti/nayta! "Kohdeosat tallennettu."
+                                                     :success viesti/viestin-nayttoaika-keskipitka))}])])
+         ;:uusi-rivi (fn [rivi]
+         ;             (if (::t/materiaali rivi)
+         ;               rivi
+         ;               (assoc rivi ::t/materiaali (ffirst tp-valinnat))))
          #_#_:tallenna (when voi-muokata?
-                         #(go (let [vastaus (<! (tiedot/tallenna-maaramuutokset!
+                         #(go (let [vastaus (<! (tiedot/tallenna-muut-kohdeosat!
                                                   {:urakka-id urakka-id
-                                                   :sopimus-id sopimus-id
-                                                   :vuosi vuosi
                                                    :yllapitokohde-id yllapitokohde-id
-                                                   :maaramuutokset (filterv (comp not :jarjestelman-lisaama) %)}))]
+                                                   :muut-kohdeosat %}))]
                                 (if (k/virhe? vastaus)
-                                  (viesti/nayta! "Määrämuutoksien tallennus epäonnistui"
+                                  (viesti/nayta! "Muiden kohteiden tallennus epäonnistui"
                                                  :warning
                                                  viesti/viestin-nayttoaika-keskipitka)
-                                  (do
-                                    (reset! maaramuutokset (:maaramuutokset vastaus))
+                                  #_(do
+                                    (reset! muut-kohdeosat (:maaramuutokset vastaus))
                                     (reset! yllapitokohteet-atom (:yllapitokohteet vastaus)))))))
-         #_#_:voi-muokata? voi-muokata?
          #_#_:esta-poistaminen? #(:jarjestelman-lisaama %)
          #_#_:esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää kohdetta ei voi poistaa.")
          #_#_:voi-muokata-rivia? #(not (:jarjestelman-lisaama %))}
         skeema
-        @muut-kohdeosat]
+        muut-kohdeosat
+        #_(r/wrap @muut-kohdeosat
+                (fn [kohdeosat]
+                  (println kohdeosat)
+                  (reset! muut-kohdeosat kohdeosat)))]
        #_(when (some :jarjestelman-lisaama @maaramuutokset)
-         [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
+         [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])
+       [debug/debug @muut-kohdeosat {:colgroup? true}]])))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
   (let [sopimus-id (first @u/valittu-sopimusnumero)
@@ -723,13 +760,15 @@
    [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
    (when (= kohdetyyppi :paallystys)
-     [:div
-      [muut-kohdeosat {:yllapitokohde-id (:id rivi)
-                       :urakka-id (:id urakka)
-                       :yllapitokohteet-atom kohteet-atom}]
-      [maaramuutokset {:yllapitokohde-id (:id rivi)
-                       :urakka-id (:id urakka)
-                       :yllapitokohteet-atom kohteet-atom}]])
+     (list
+       ^{:key "foo"}
+        [muut-kohdeosat {:yllapitokohde-id (:id rivi)
+                         :urakka-id (:id urakka)
+                         :yllapitokohteet-atom kohteet-atom}]
+       ^{:key "bar"}
+        [maaramuutokset {:yllapitokohde-id (:id rivi)
+                         :urakka-id (:id urakka)
+                         :yllapitokohteet-atom kohteet-atom}]))
    [debug/debug @kohteet-atom {:colgroup? true}]])
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille-atom]

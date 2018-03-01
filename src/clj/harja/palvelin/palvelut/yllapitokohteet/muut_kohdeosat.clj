@@ -15,6 +15,10 @@
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
 
   (doseq [kohdeosa muut-kohdeosat]
+    (assert (and (not (nil? (:tr-numero kohdeosa)))
+                 (not (nil? (:tr-alkuosa kohdeosa)))
+                 (not (nil? (:tr-alkuetaisyys kohdeosa))))
+            "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys ei saa olla nil")
     (vaadi-kohdeosa-ei-kuulu-yllapitokohteeseen db yllapitokohde-id kohdeosa))
 
   (jdbc/with-db-transaction [db db]
@@ -37,10 +41,10 @@
         (q/poista-yllapitokohdeosa {:id (:id poistettava-osa) :urakka urakka-id}))
       (doseq [tallennettava-osa tallennettavat-osat]
         (if (kannasta-loytyvat-osat (:id tallennettava-osa))
-          ;:nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :paallystetyyppi :raekoko :tyomenetelma :massamaara :toimenpide
+          ;:nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara
           (q/paivita-yllapitokohdeosa tallennettava-osa)
           ;:yllapitokohde :nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara :ulkoinen-id
-          (q/luo-yllapitokohdeosa tallennettava-osa))))))
+          (q/luo-yllapitokohdeosa (assoc tallennettava-osa :yllapitokohde yllapitokohde-id)))))))
 
 (defn hae-yllapitokohteen-muut-kohdeosat [db user {:keys [urakka-id yllapitokohde-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)

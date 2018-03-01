@@ -65,13 +65,11 @@
   (k/post! :hae-muut-kohdeosat {:urakka-id urakka-id
                                 :yllapitokohde-id yllapitokohde-id}))
 
-(defn tallenna-maaramuutokset! [{:keys [urakka-id yllapitokohde-id maaramuutokset
-                                        sopimus-id vuosi]}]
-  (k/post! :tallenna-maaramuutokset {:urakka-id urakka-id
-                                     :sopimus-id sopimus-id
-                                     :vuosi vuosi
-                                     :yllapitokohde-id yllapitokohde-id
-                                     :maaramuutokset maaramuutokset}))
+(defn tallenna-maaramuutokset! [parmas]
+  (k/post! :tallenna-maaramuutokset params))
+
+(defn tallenna-muut-kohdeosat! [params]
+  (k/post! :tallenna-muut-kohdeosat params))
 
 (def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
 (def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
