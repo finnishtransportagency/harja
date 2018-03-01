@@ -27,3 +27,14 @@ FROM yllapitokohde ypk
 WHERE ypk.urakka = :urakka
 AND ypk.poistettu IS NOT TRUE
 GROUP BY ypk.id;
+
+-- name: hae-muut-kustannukset
+SELECT
+  yt.id,
+  yt.selite,
+  yt.hinta
+FROM yllapito_muu_toteuma yt
+  LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
+WHERE yt.urakka = :urakka
+      AND yt.poistettu IS NOT TRUE
+ORDER BY yt.pvm DESC;
