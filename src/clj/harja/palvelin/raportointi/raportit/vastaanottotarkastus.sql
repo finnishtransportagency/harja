@@ -14,7 +14,7 @@ SELECT
   tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   keskimaarainen_vuorokausiliikenne AS "kvl",
   yllapitoluokka                    AS "yplk",
-  sopimuksen_mukaiset_tyot          AS "tarjoushinta",
+  sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
   arvonvahennykset                  AS "arvonmuutokset",
   bitumi_indeksi                    AS "bitumi-indeksi",
   kaasuindeksi

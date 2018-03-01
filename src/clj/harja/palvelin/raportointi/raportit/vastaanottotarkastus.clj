@@ -14,7 +14,8 @@
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
             [harja.math :as math]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
@@ -27,7 +28,9 @@
                                    (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
                                    (hae-yllapitokohteet db {:urakka urakka-id}))
                              (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
-                             (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %)))]
+                             (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
+                             ;; TODO Tähän väliin vielä sakot ja bonukset
+                             (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))))]
     [:raportti {:nimi raportin-nimi}
 
      [:taulukko {:otsikko otsikko
@@ -68,7 +71,7 @@
            (:pituus yllapitokohde)
            (:kvl yllapitokohde)
            (:yplk yllapitokohde)
-           (:tarjoushinta yllapitokohde)
+           (:sopimuksen-mukaiset-tyot yllapitokohde)
            (:maaramuutokset yllapitokohde)
            (:arvonmuutokset yllapitokohde)
            (:sakot-ja-bonukset yllapitokohde) ; TODO LASKE

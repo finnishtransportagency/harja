@@ -355,7 +355,7 @@
                                 :tayta-alas? #(not (nil? %))
                                 :tayta-fn (fn [lahtorivi tama-rivi]
                                             (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
-                                :tayta-sijainti :ylos
+                              :tayta-sijainti :ylos
                                 :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille"
                                 :tayta-alas-toistuvasti? #(not (nil? %))
                                 :tayta-toistuvasti-fn
