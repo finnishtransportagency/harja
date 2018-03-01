@@ -96,56 +96,57 @@
             (:kokonaishinta yllapitokohde)]))
        yllapitokohteet)]))
 
-(defn yllapitokohteet-yhteensa-taulukko [yllapitokohteet]
-  [:taulukko {:otsikko "Yhteenveto"
-              :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
-              :sheet-nimi "Ylläpitokohteet yhteensä"}
-   [{:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 10}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "" :leveys 5}
-    {:otsikko "Muut kustannukset" :leveys 10 :fmt :raha}
-    {:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
-    {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}
-    {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
-    {:otsikko "Kaasu\u00ADindeksi" :leveys 5 :fmt :raha}
-    {:otsikko "Koko\u00ADnais\u00ADhinta (indek\u00ADsit mukana)" :leveys 5 :fmt :raha}]
-   [[nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     nil
-     0 ;; TODO LASKE!
-     (reduce + 0 (keep :arvonvahennykset yllapitokohteet))
-     (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet))
-     (reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
-     (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
-     (reduce + 0 (keep :kokonaishinta yllapitokohteet))]] ; TODO HUOMIO MUUT KUSTANNUKSET
-   ])
+(defn yhteensa-taulukko [yllapitokohteet muut-kustannukset]
+  (let [muut-kustannukset-yhteensa (reduce + 0 (keep :hinta muut-kustannukset))]
+    [:taulukko {:otsikko "Yhteenveto"
+                :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
+                :sheet-nimi "Ylläpitokohteet yhteensä"}
+     [{:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 10}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 5}
+      {:otsikko "Muut kustannukset" :leveys 10 :fmt :raha}
+      {:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
+      {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}
+      {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
+      {:otsikko "Kaasu\u00ADindeksi" :leveys 5 :fmt :raha}
+      {:otsikko "Koko\u00ADnais\u00ADhinta (indek\u00ADsit mukana)" :leveys 5 :fmt :raha}]
+     [[nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       nil
+       muut-kustannukset-yhteensa
+       (reduce + 0 (keep :arvonvahennykset yllapitokohteet))
+       (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet))
+       (reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
+       (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
+       (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
+          muut-kustannukset-yhteensa)]]]))
 
 (defn muut-kustannukset-taulukko [muut-kustannukset]
   (let [nimi "Muut kustannukset"]
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? muut-kustannukset) "Ei muita kustannuksia.")
                 :sheet-nimi nimi}
-     [{:otsikko "Pvm" :leveys 10  :fmt :pvm}
+     [{:otsikko "Pvm" :leveys 10 :fmt :pvm}
       {:otsikko "Selitys" :leveys 10}
       {:otsikko "Summa" :leveys 10 :fmt :raha}]
      (map
@@ -178,7 +179,7 @@
      ;; TODO Testi raportille
      ;; TODO Testaa tuotantokopiota vasten: kohdeluettelo täsmää rapsan kanssa
      (muut-kustannukset-taulukko muut-kustannukset)
-     (yllapitokohteet-yhteensa-taulukko yllapitokohteet+kustannukset)
+     (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset)
 
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
                (concat [[:otsikko otsikko]]
