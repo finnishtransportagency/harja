@@ -12,9 +12,9 @@
     },
     "lahetysaika": "2018-01-30T12:00:00Z"
   },
-  "paikkaustoteumat": [
+  "paikkaukset": [
     {
-      "paikkaustoteuma": {
+      "paikkaus": {
         "tunniste": {
           "id": 123
         },
