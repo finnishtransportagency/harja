@@ -73,6 +73,7 @@
           (:bitumi-indeksi yllapitokohde)
           (:kaasuindeksi yllapitokohde)
           (:kokonaishinta yllapitokohde)]
+         ;; TODO Yhteenvetorivi
          :paikkaus
          [(:kohdenumero yllapitokohde)
           (:tunnus yllapitokohde)
@@ -93,6 +94,7 @@
           (:bitumi-indeksi yllapitokohde)
           (:kaasuindeksi yllapitokohde)
           (:kokonaishinta yllapitokohde)]))
+     ;; TODO Yhteenvetorivi
      yllapitokohteet)])
 
 (defn suorita [db user {:keys [urakka-id] :as tiedot}]
@@ -110,10 +112,8 @@
     [:raportti {:nimi raportin-nimi}
 
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet) raportin-nimi :yha)
+     (when (some :maaramuutokset-ennustettu? yllapitokohteet) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet) raportin-nimi :paikkaus)
-
-     ;; TODO Yhteenvetorivi
-     ;; TODO Info, jos sisältää ennustettuja määrämuutoksia?
 
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
                (concat [[:otsikko otsikko]]
