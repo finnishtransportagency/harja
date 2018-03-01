@@ -34,6 +34,8 @@
    ::h/hinnat nil
    ::h/tyot []})
 
+(def alustettu-toimenpide {})
+
 (def alustettu-hintaryhman-hinnoittelu
   {::h/id nil
    ::h/hinnat nil})
@@ -74,7 +76,8 @@
          :korostetut-turvalaitteet nil
          ;; korostettu-hintaryhma on false, kun hintaryhmää ei ole korostettu,
          ;; koska "kokonaishintaisista siirrettyjen" hintaryhmän id:n täytyy olla nil
-         :korostettu-hintaryhma false}))
+         :korostettu-hintaryhma false
+         :valittu-toimenpide nil}))
 
 (defonce karttataso-yksikkohintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
 (defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))
@@ -153,6 +156,10 @@
 ;; Kartta
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
+
+(defrecord AvaaLomakkeelle [toimenpide])
+(defrecord ToimenpidettaMuokattu [toimenpide])
+(defrecord TallennaToimenpide [toimenpide])
 
 (defn- hintakentta
   [hinta]
@@ -681,4 +688,16 @@
   (process-event [_ app]
     (->> app
          (poista-hintaryhmien-korostus)
-         (jaettu/korosta-kartalla nil))))
+         (jaettu/korosta-kartalla nil)))
+
+  AvaaLomakkeelle
+  (process-event [{:keys [toimenpide]} app]
+    (assoc app :valittu-toimenpide toimenpide))
+
+  ToimenpidettaMuokattu
+  (process-event [{:keys [toimenpide]} app]
+    (assoc app :valittu-toimenpide toimenpide))
+
+  TallennaToimenpide
+  (process-event [{:keys [toimenpide]} app]
+    (assoc app :valittu-toimenpide nil)))
