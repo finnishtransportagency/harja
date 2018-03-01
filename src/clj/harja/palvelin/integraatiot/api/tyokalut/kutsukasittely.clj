@@ -17,7 +17,8 @@
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import [java.sql SQLException]
            (java.io StringWriter PrintWriter)
-           (java.util.zip GZIPInputStream)))
+           (java.util.zip GZIPInputStream)
+           (org.httpkit BytesInputStream)))
 
 (defn tee-kirjausvastauksen-body
   "Ottaa kirjausvastauksen tiedot (mappi, jossa id, ilmoitukset, varoitukset ja virheet) ja tekee vastauksen bodyn.
@@ -261,12 +262,12 @@
         resurssi))))
 
 (defn- lue-body [request]
-  (if (:body request)
-    (if (= (get-in request [:headers "content-encoding"]) "gzip")
-      (with-open [gzip (GZIPInputStream. (:body request))]
-        (slurp gzip))
-      (slurp (:body request)))
-    nil))
+  (let [body (:body request)]
+    (when body
+      (if (= (get-in request [:headers "content-encoding"]) "gzip")
+        (with-open [gzip (GZIPInputStream. body)]
+          (slurp gzip))
+        (slurp body)))))
 
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
@@ -277,23 +278,26 @@
   käsittelyvirhe."
 
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
-
-  (let [body (lue-body request)
-        tapahtuma-id (when integraatioloki
-                       (lokita-kutsu integraatioloki resurssi request body))
-        parametrit (:params request)
-        vastaus (aja-virhekasittelyn-kanssa
-                  resurssi
-                  body
-                  parametrit
-                  #(let
-                    [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
-                     kutsun-data (lue-kutsu kutsun-skeema request body)
-                     vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                    (tee-vastaus vastauksen-skeema vastauksen-data)))]
-    (when integraatioloki
-      (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
-    vastaus))
+  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    {:status 415
+     :headers {"Content-Type" "text/plain"}
+     :body "Virhe: Saatiin JSON-kutsu lomakedatan content-typellä\n"}
+    (let [body (lue-body request)
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request body))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                   resurssi
+                   body
+                   parametrit
+                   #(let
+                        [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                         kutsun-data (lue-kutsu kutsun-skeema request body)
+                         vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+                      (tee-vastaus vastauksen-skeema vastauksen-data)))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))
 
 (defn kasittele-kutsu-async
   "Käsittelee asynkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja

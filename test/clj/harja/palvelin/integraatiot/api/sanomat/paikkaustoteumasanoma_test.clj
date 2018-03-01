@@ -1,68 +1,60 @@
 (ns harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma-test
   (:require [clojure.test :refer :all]
-            [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as paikkaustoteumasanoma]
-            [harja.testi :refer :all]))
+            [harja.testi :refer :all]
+            [harja.palvelin.integraatiot.api.sanomat.paikkaustoteumasanoma :as sanoma]
+            [taoensso.timbre :as log]))
 
 (deftest paikkaustoteuma-api->domain
-
-  (let [paikkaustoteuma {:leveys 10
-                         :sijainti {:tie 20
-                                    :aosa 1
-                                    :aet 1
-                                    :losa 5
-                                    :let 16
-                                    :ajoradat [{:ajorata 1
-                                                :tienkohdat {:reunat [{:reuna 1}]
-                                                             :ajourat [{:ajoura 2} {:ajoura 3}]
-                                                             :ajouravalit [{:ajouravali 5}
-                                                                           {:ajouravali 7}]
-                                                             :keskisaumat [{:keskisauma 1}
-                                                                           {:keskisauma 1}]}}]}
-                         :loppuaika "2018-01-30T18:00:00Z"
-                         :paikkauskohde {:nimi "Kuusamontien paikkaus" :tunniste {:id 567}}
-                         :alkuaika "2018-01-30T12:00:00Z"
-                         :kivi-ja-sideaineet [{:kivi-ja-sideaine {:esiintyma "testi"
-                                                                  :km-arvo "testi"
-                                                                  :muotoarvo "testi"
-                                                                  :sideainetyyppi "20/30"
-                                                                  :pitoisuus 1.2M
-                                                                  :lisa-aineet "lisäaineet"}}]
-                         :massamenekki 12
-                         :kuulamylly "AN5"
-                         :raekoko 1
-                         :tyomenetelma "massapintaus"
-                         :massatyyppi "asfalttibetoni"
-                         :tunniste {:id 123}}
-        odotettu {:harja.domain.paikkaus/alkuaika #inst "2018-01-30T12:00:00.000-00:00"
-                  :harja.domain.paikkaus/kuulamylly "AN5"
-                  :harja.domain.paikkaus/leveys 10M
-                  :harja.domain.paikkaus/loppuaika #inst "2018-01-30T18:00:00.000-00:00"
-                  :harja.domain.paikkaus/massamenekki 12
-                  :harja.domain.paikkaus/massatyyppi "asfalttibetoni"
-                  :harja.domain.paikkaus/materiaalit [{:harja.domain.paikkaus/esiintyma "testi"
-                                                       :harja.domain.paikkaus/kuulamylly-arvo "testi"
-                                                       :harja.domain.paikkaus/lisa-aineet "lisäaineet"
-                                                       :harja.domain.paikkaus/muotoarvo "testi"
-                                                       :harja.domain.paikkaus/pitoisuus 1.2M
-                                                       :harja.domain.paikkaus/sideainetyyppi "20/30"}]
-                  :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/nimi "Kuusamontien paikkaus"
-                                                        :harja.domain.paikkaus/ulkoinen-id 567}
-                  :harja.domain.paikkaus/raekoko 1
-                  :harja.domain.paikkaus/tienkohdat [{:harja.domain.paikkaus/ajorata 1
-                                                      :harja.domain.paikkaus/ajourat [2
-                                                                                      3]
-                                                      :harja.domain.paikkaus/ajouravalit [5
-                                                                                          7]
-                                                      :harja.domain.paikkaus/keskisaumat [1
-                                                                                          1]
-                                                      :harja.domain.paikkaus/reunat [1]}]
-                  :harja.domain.paikkaus/tierekisteriosoite {:harja.domain.tierekisteri/aet 1
-                                                             :harja.domain.tierekisteri/aosa 1
-                                                             :harja.domain.tierekisteri/let 16
-                                                             :harja.domain.tierekisteri/losa 5
-                                                             :harja.domain.tierekisteri/tie 20}
-                  :harja.domain.paikkaus/tyomenetelma "massapintaus"
-                  :harja.domain.paikkaus/ulkoinen-id 123
-                  :harja.domain.paikkaus/urakka-id 666}]
-
-    (is (= odotettu (paikkaustoteumasanoma/api->domain 666 paikkaustoteuma)))))
+  (let [paikkaustoteuma {:tunniste {:id 123}
+                         :paikkauskohde {:nimi "Kuusamontien paikkaus"
+                                         :tunniste {:id 567}}
+                         :kirjausaika "2018-01-30T12:00:00Z"
+                         :kokonaishintaiset-kustannukset [{:kokonaishintainen-kustannus {:selite "Liikennejärjestelyt"
+                                                                                         :hinta 3500}}
+                                                          {:kokonaishintainen-kustannus {:selite "Lähtömaksu"
+                                                                                         :hinta 256.70}}]
+                         :yksikkohintaiset-kustannukset [{:yksikkohintainen-kustannus {:selite "asfaltti"
+                                                                                       :yksikko "t"
+                                                                                       :yksikkohinta 2000
+                                                                                       :maara 5}}
+                                                         {:yksikkohintainen-kustannus {:selite "bitumi"
+                                                                                       :yksikko "kg"
+                                                                                       :yksikkohinta 32.5
+                                                                                       :maara 12.5}}]}
+        odotettu [{:harja.domain.paikkaus/yksikkohinta 2000M,
+                   :harja.domain.paikkaus/maara 5M,
+                   :harja.domain.paikkaus/kirjattu #inst"2018-01-30T12:00:00.000-00:00",
+                   :harja.domain.paikkaus/selite "asfaltti",
+                   :harja.domain.paikkaus/tyyppi "yksikkohintainen",
+                   :harja.domain.paikkaus/ulkoinen-id 123,
+                   :harja.domain.paikkaus/urakka-id 666,
+                   :harja.domain.paikkaus/yksikko "t",
+                   :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/nimi "Kuusamontien paikkaus",
+                                                         :harja.domain.paikkaus/ulkoinen-id 567}}
+                  {:harja.domain.paikkaus/yksikkohinta 32.5M,
+                   :harja.domain.paikkaus/maara 12.5M,
+                   :harja.domain.paikkaus/kirjattu #inst"2018-01-30T12:00:00.000-00:00",
+                   :harja.domain.paikkaus/selite "bitumi",
+                   :harja.domain.paikkaus/tyyppi "yksikkohintainen",
+                   :harja.domain.paikkaus/ulkoinen-id 123,
+                   :harja.domain.paikkaus/urakka-id 666,
+                   :harja.domain.paikkaus/yksikko "kg",
+                   :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/nimi "Kuusamontien paikkaus",
+                                                         :harja.domain.paikkaus/ulkoinen-id 567}}
+                  {:harja.domain.paikkaus/urakka-id 666,
+                   :harja.domain.paikkaus/ulkoinen-id 123,
+                   :harja.domain.paikkaus/tyyppi "kokonaishintainen",
+                   :harja.domain.paikkaus/kirjattu #inst"2018-01-30T12:00:00.000-00:00",
+                   :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/nimi "Kuusamontien paikkaus",
+                                                         :harja.domain.paikkaus/ulkoinen-id 567},
+                   :harja.domain.paikkaus/hinta 3500M,
+                   :harja.domain.paikkaus/selite "Liikennejärjestelyt"}
+                  {:harja.domain.paikkaus/urakka-id 666,
+                   :harja.domain.paikkaus/ulkoinen-id 123,
+                   :harja.domain.paikkaus/tyyppi "kokonaishintainen",
+                   :harja.domain.paikkaus/kirjattu #inst"2018-01-30T12:00:00.000-00:00",
+                   :harja.domain.paikkaus/paikkauskohde {:harja.domain.paikkaus/nimi "Kuusamontien paikkaus",
+                                                         :harja.domain.paikkaus/ulkoinen-id 567},
+                   :harja.domain.paikkaus/hinta 256.70M,
+                   :harja.domain.paikkaus/selite "Lähtömaksu"}]]
+               (is (= odotettu (sanoma/api->domain 666 paikkaustoteuma)))))
