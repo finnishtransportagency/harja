@@ -33,6 +33,8 @@
                              (yllapitokohteet-domain/jarjesta-yllapitokohteet))]
     [:raportti {:nimi raportin-nimi}
 
+     ;; TODO Oma taulukko YHA-kohteille ja paikkauskohteille
+     ;; TODO Lisää urakan muut kustannukset -taulukko
      [:taulukko {:otsikko otsikko
                  :tyhja (when (empty? yllapitokohteet) "Ei raportoitavaa.")
                  :sheet-nimi raportin-nimi}
