@@ -29,7 +29,6 @@
                                    (hae-yllapitokohteet db {:urakka urakka-id}))
                              (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
                              (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
-                             ;; TODO Tähän väliin vielä sakot ja bonukset
                              (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))))]
     [:raportti {:nimi raportin-nimi}
 
@@ -52,7 +51,7 @@
        {:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
        {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5 :fmt :raha}
        {:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
-       {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha} ; TODO LASKE
+       {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}
        {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
        {:otsikko "Kaasu\u00ADindeksi" :leveys 5 :fmt :raha}
        {:otsikko "Koko\u00ADnais\u00ADhinta (indek\u00ADsit mukana)" :leveys 5 :fmt :raha}]
@@ -74,7 +73,7 @@
            (:sopimuksen-mukaiset-tyot yllapitokohde)
            (:maaramuutokset yllapitokohde)
            (:arvonmuutokset yllapitokohde)
-           (:sakot-ja-bonukset yllapitokohde) ; TODO LASKE
+           (:sakot-ja-bonukset yllapitokohde)
            (:bitumi-indeksi yllapitokohde)
            (:kaasuindeksi yllapitokohde)
            (:kokonaishinta yllapitokohde)
