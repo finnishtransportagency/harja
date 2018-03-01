@@ -43,7 +43,7 @@
        {:otsikko "Aet" :leveys 5}
        {:otsikko "Losa" :leveys 5}
        {:otsikko "Let" :leveys 5}
-       {:otsikko "Pit. (m)" :leveys 5} ; TODO LASKE!
+       {:otsikko "Pit. (m)" :leveys 5}
        {:otsikko "KVL" :leveys 5}
        {:otsikko "YP-lk" :leveys 5}
        {:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
@@ -65,7 +65,7 @@
            (:tr-alkuetaisyys yllapitokohde)
            (:tr-loppuosa yllapitokohde)
            (:tr-loppuetaisyys yllapitokohde)
-           (:pituus yllapitokohde) ; TODO LASKE
+           (:pituus yllapitokohde)
            (:kvl yllapitokohde)
            (:yplk yllapitokohde)
            (:tarjoushinta yllapitokohde)
@@ -74,7 +74,7 @@
            (:sakot-ja-bonukset yllapitokohde) ; TODO LASKE
            (:bitumi-indeksi yllapitokohde)
            (:kaasuindeksi yllapitokohde)
-           (:ykokonaishinta yllapitokohde) ; TODO LASKE
+           (:kokonaishinta yllapitokohde) ; TODO LASKE
            ])
         yllapitokohteet)]
 
