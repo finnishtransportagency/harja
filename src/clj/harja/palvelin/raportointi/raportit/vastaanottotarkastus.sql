@@ -1,23 +1,28 @@
 -- name: hae-yllapitokohteet
 SELECT
-  id,
-  kohdenumero,
-  tunnus,
-  nimi,
-  yllapitokohdetyotyyppi,
-  tr_numero                         AS "tr-numero",
-  tr_ajorata                        AS "tr-ajorata",
-  tr_kaista                         AS "tr-kaista",
-  tr_alkuosa                        AS "tr-alkuosa",
-  tr_alkuetaisyys                   AS "tr-alkuetaisyys",
-  tr_loppuosa                       AS "tr-loppuosa",
-  tr_loppuetaisyys                  AS "tr-loppuetaisyys",
-  keskimaarainen_vuorokausiliikenne AS "kvl",
-  yllapitoluokka                    AS "yplk",
-  sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  arvonvahennykset                  AS "arvonmuutokset",
-  bitumi_indeksi                    AS "bitumi-indeksi",
-  kaasuindeksi
+  ypk.id,
+  ypk.kohdenumero,
+  ypk.tunnus,
+  ypk.nimi,
+  ypk.yllapitokohdetyotyyppi,
+  ypk.tr_numero                         AS "tr-numero",
+  ypk.tr_ajorata                        AS "tr-ajorata",
+  ypk.tr_kaista                         AS "tr-kaista",
+  ypk.tr_alkuosa                        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys                   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa                       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
+  ypk.keskimaarainen_vuorokausiliikenne AS "kvl",
+  ypk.yllapitoluokka                    AS "yplk",
+  sum(-s.maara)                     AS "sakot-ja-bonukset",
+  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypk.arvonvahennykset                  AS "arvonmuutokset",
+  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypk.kaasuindeksi
 FROM yllapitokohde ypk
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
 WHERE ypk.urakka = :urakka
-AND poistettu IS NOT TRUE;
+AND ypk.poistettu IS NOT TRUE
+GROUP BY ypk.id
+ORDER BY kohdenumero;
