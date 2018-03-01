@@ -42,8 +42,10 @@ ORDER BY yt.pvm DESC;
 -- name: hae-kohteisiin-kuulumattomat-kustannukset
 SELECT
   s.maara,
-  s.sakkoryhma
+  s.sakkoryhma,
+  lp.aika AS "pvm"
 FROM sanktio s
+  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
 WHERE s.laatupoikkeama IN (SELECT id
                            FROM laatupoikkeama lp
                            WHERE lp.urakka = :urakka AND lp.yllapitokohde IS NULL)

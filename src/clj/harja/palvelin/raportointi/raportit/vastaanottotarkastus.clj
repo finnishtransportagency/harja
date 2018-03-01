@@ -154,7 +154,9 @@
        (fn [kustannus]
          (-> [(:pvm kustannus)
               (or (:selite kustannus)
-                  (:sakkoryhma kustannus))
+                  (case (:sakkoryhma kustannus)
+                    "yllapidon_sakko" "Sakko"
+                    "yllapidon_bonus" "Bonus"))
               (or (:hinta kustannus)
                   (:maara kustannus))]))
        (apply conj muut-kustannukset urakan-sanktiot))]))
@@ -179,7 +181,6 @@
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus)
-     ;; TODO kohteeseen liittämättömät sakot ja bonukset
      ;; TODO Testi raportille
      ;; TODO Testaa tuotantokopiota vasten: kohdeluettelo täsmää rapsan kanssa
      (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot)
