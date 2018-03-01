@@ -17,7 +17,7 @@ SELECT
   ypk.yllapitoluokka                    AS "yplk",
   sum(-s.maara)                         AS "sakot-ja-bonukset",
   ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset                  AS "arvonmuutokset",
+  ypk.arvonvahennykset                  AS "arvonvahennykset",
   ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.bitumi_indeksi                    AS "bitumi-indeksi",
   ypk.kaasuindeksi

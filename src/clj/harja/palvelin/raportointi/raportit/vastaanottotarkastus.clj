@@ -69,7 +69,7 @@
             (:yplk yllapitokohde)
             (:sopimuksen-mukaiset-tyot yllapitokohde)
             (:maaramuutokset yllapitokohde)
-            (:arvonmuutokset yllapitokohde)
+            (:arvonvahennykset yllapitokohde)
             (:sakot-ja-bonukset yllapitokohde)
             (:bitumi-indeksi yllapitokohde)
             (:kaasuindeksi yllapitokohde)
@@ -89,7 +89,7 @@
             (:kvl yllapitokohde)
             (:yplk yllapitokohde)
             (:toteutunut-hinta yllapitokohde)
-            (:arvonmuutokset yllapitokohde)
+            (:arvonvahennykset yllapitokohde)
             (:sakot-ja-bonukset yllapitokohde)
             (:bitumi-indeksi yllapitokohde)
             (:kaasuindeksi yllapitokohde)
@@ -133,7 +133,7 @@
      nil
      nil
      0 ;; TODO LASKE!
-     (reduce + 0 (keep :arvonmuutokset yllapitokohteet))
+     (reduce + 0 (keep :arvonvahennykset yllapitokohteet))
      (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet))
      (reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
      (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
