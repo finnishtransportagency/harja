@@ -12,7 +12,7 @@
 
 (defn sarakkeiden-data [taulukko]
   (let [tayta (fn [pituus coll] (concat coll (take (- pituus (count coll)) (repeat nil))))
-        rivin-data #(or (:rivi %) identity)
+        rivin-data #(or (:rivi %) (identity %))
         rivit (map rivin-data (taulukon-rivit taulukko))
         pituus (apply max (map count rivit))
         taytetyt (map (partial tayta pituus) rivit)]
