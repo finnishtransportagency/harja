@@ -36,19 +36,23 @@
 ;; Osa silloista on tyypiltään sellaisia, ettei niitä tunnista avattaviksi. TREX:istä ei saa tarpeisiimme sopivaa luokittelua.
 ;; Siksi suodatus on täydennetty siltanumerolistalla.
 
-;; Aineistosta puuttuu kokonaan Saimaan kanavan Venäjä puoleiset sillat
+;; Aineistosta puuttuu kokonaan Saimaan kanavan Venäjän puoleiset sillat, mutta ne ovat mukana rajauksessa
 ;; 1399, Saimaan kanava (Venäjä), Pällin läppäsilta
 ;; 1401, Saimaan kanava (Venäjä), Rättijärven läppäsilta
 ;; 1402, Saimaan kanava (Venäjä), Särkijärven läppäsilta
 
-(def nimetyt-sillat {:pohjanlahti 1151
-                     :kellosalmi 2724
-                     :lillholmen 1510
-                     :itikka 234
-                     :uimasalmi 1148
-                     :kaltimonkoski 1219
-                     :kyronsalmi 2619
-                     :uimasalmen-rata 2621})
+;; Vektorissa siltanro ja tunnus-prefix
+(def nimetyt-sillat {:pohjanlahti [1151, "U"]
+                     :kellosalmi [2724, "U"]
+                     :lillholmen [1510, "T"]
+                     :itikka [234, "SK"]
+                     :uimasalmi [1148, "SK"]
+                     :kaltimonkoski [1219, "SK"]
+                     :kyronsalmi-rata [2619, "SK"]
+                     :uimasalmen-rata [2621 "SK"]
+                     :palli [1399 "KaS"]
+                     :rattijarvi [1401 "KaS"]
+                     :sarkijarvi [1402 "KaS"]})
 
 (def poistetut-siltatilat {:poistettu "poistettu"
                            :purettu "purettu"
@@ -73,7 +77,6 @@
                 osoite)))
 
 (defn muunna-tallennettavaan-muotoon [osoite]
-  ;(doseq [osoite osoitteet]
   (let [osoite-map (muunna-mapiksi osoite)]
     (str "ROW (" (:tie osoite-map) "," (:osa osoite-map) "," (:etaisyys osoite-map) ",,," (:ajorata osoite-map) ",,,,) ::TR_OSOITE_LAAJENNETTU,")))
 
@@ -81,7 +84,7 @@
   (poista-viimeinen-pilkku (pr-str "ARRAY[" (doall (map muunna-tallennettavaan-muotoon osoitteet)) "]")))
 
 ;; Avattavat sillat haetaan TREX:sta. TREX:in (= taitorakennerekisteri) rajapinnan kuvaus on liitetty tikettiin HAR-6948.
-(defn tallenna-kanavasilta [db kanavasilta]
+(defn tallenna-kanavasilta [db kanavasilta sivunro]
   (let [siltanro (kanavasilta :siltanro)
         nimi (kanavasilta :siltanimi)
         tunnus (kanavasilta :tunnus_prefix)
@@ -95,7 +98,7 @@
         avattu (when (kanavasilta :avattuliikenteellepvm) (konv/unix-date->java-date (kanavasilta :avattuliikenteellepvm)))
         trex_muutettu (when (kanavasilta :muutospvm) (konv/unix-date->java-date (kanavasilta :muutospvm)))
         trex_oid (kanavasilta :trex_oid)
-        trex_sivu (kanavasilta :sivu)
+        trex_sivu sivunro
         poistettu (onko-silta-poistettu? (kanavasilta :elinkaaritila))
         sql-parametrit {:siltanro siltanro
                         :nimi nimi
@@ -116,10 +119,10 @@
                         :poistettu poistettu}]
     (q-kanavasillat/luo-kanavasilta<! db sql-parametrit)))
 
-(defn kasittele-kanavasillat [db kanavasillat]
+(defn kasittele-kanavasillat [db kanavasillat sivunro]
   (jdbc/with-db-transaction [db db]
                             (doseq [kanavasilta kanavasillat]
-                              (tallenna-kanavasilta db kanavasilta))
+                              (tallenna-kanavasilta db kanavasilta sivunro))
                             (q-geometriapaivitykset/paivita-viimeisin-paivitys db geometriapaivitystunnus (harja.pvm/nyt))))
 
 (defn suodata-avattavat-sillat-rakennetyypin-mukaan [vastaus]
@@ -128,15 +131,15 @@
                         (set (% :rakennety))))
           (vastaus :tulokset)))
 
-(defn suodata-sillat-numeron-mukaan [vastaus]
+(defn suodata-sillat-numeron-ja-tunnuksen-mukaan [vastaus]
   (let [haettavat-sillat (set (vals nimetyt-sillat))
-        palautuneet-sillat (set (map #(:siltanro %) (vastaus :tulokset)))
+        palautuneet-sillat (set (map #(vector (:siltanro %) (:tunnus_prefix %)) (vastaus :tulokset)))
         relevantit-sillat (set/intersection haettavat-sillat palautuneet-sillat)]
-    (filter #(contains? relevantit-sillat (:siltanro %)) (vastaus :tulokset))))
+    (filter #(contains? relevantit-sillat (vector (:siltanro %) (:tunnus_prefix %)))(vastaus :tulokset))))
 
 (defn suodata-sillat [vastaus]
   (concat (suodata-avattavat-sillat-rakennetyypin-mukaan vastaus)
-          (suodata-sillat-numeron-mukaan vastaus)))
+          (suodata-sillat-numeron-ja-tunnuksen-mukaan vastaus)))
 
 (defn muodosta-sivutettu-url [url sivunro]
   (clojure.string/replace url #"%1" (str sivunro)))
@@ -156,7 +159,7 @@
               {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (if vastaus
             (let [data (cheshire/decode vastaus keyword)]
-              (kasittele-kanavasillat db (suodata-sillat data))
+              (kasittele-kanavasillat db (suodata-sillat data) num)
               (log/debug (str "Kanavasiltoja ei palautunut. Sivunumero: " (+ num 1)))))))))
     (log/debug "Kanavasiltojen päivitys tehty"))
 

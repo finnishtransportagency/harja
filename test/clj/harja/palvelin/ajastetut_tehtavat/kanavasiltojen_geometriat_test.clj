@@ -94,21 +94,21 @@
 (t/deftest tallenna-ja-paivita-kanavasilta
 
   ; Uusi silta
-  (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) referenssi-kanavasilta)
+  (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) referenssi-kanavasilta 1)
   (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_silta where siltanro = 666666;")) "Kuuskanavan silta"))
   (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_kohteenosa where lahdetunnus = 666666;")) "Kuuskanavan silta"))
   (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_kohteenosa where lahdetunnus = 666666;")) false))
 
   ; Päivittynyt silta
   (let [paivitetty-silta (assoc referenssi-kanavasilta :siltanimi "Kuusikko")]
-    (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) paivitetty-silta))
+    (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) paivitetty-silta 2))
   (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_silta where siltanro = 666666;")) "Kuusikko"))
   (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_kohteenosa where lahdetunnus = 666666;")) "Kuusikko"))
   (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_kohteenosa where lahdetunnus = 666666;")) false))
 
   ; Poistettu silta
   (let [poistettu-silta (assoc referenssi-kanavasilta :elinkaaritila "purettu")]
-    (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) poistettu-silta))
+    (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) poistettu-silta 3))
   (t/is (= (ffirst (ht/q "SELECT tila FROM kan_silta where siltanro = 666666;")) "purettu"))
   (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_silta where siltanro = 666666;")) true))
   (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_kohteenosa where lahdetunnus = 666666;")) true)))
@@ -120,7 +120,7 @@
   (t/is (= 1 (count (kanavasilta-tuonti/suodata-avattavat-sillat-rakennetyypin-mukaan referenssi-tulos))))
   (t/is (= 666666 (:siltanro (first (kanavasilta-tuonti/suodata-avattavat-sillat-rakennetyypin-mukaan referenssi-tulos)))))
 
-  ; Nimen perusteella suodatettava palautuu, palautuu 1
+  ; Numeron perusteella suodatettava palautuu, palautuu 1
   (t/is (= 1 (count (kanavasilta-tuonti/suodata-sillat-nimen-mukaan referenssi-tulos))))
   (t/is (= 666667 (:siltanro (first (kanavasilta-tuonti/suodata-sillat-nimen-mukaan referenssi-tulos)))))
 
