@@ -14,9 +14,10 @@ SELECT
   ypk.tr_loppuetaisyys                  AS "tr-loppuetaisyys",
   ypk.keskimaarainen_vuorokausiliikenne AS "kvl",
   ypk.yllapitoluokka                    AS "yplk",
-  sum(-s.maara)                     AS "sakot-ja-bonukset",
+  sum(-s.maara)                         AS "sakot-ja-bonukset",
   ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
   ypk.arvonvahennykset                  AS "arvonmuutokset",
+  ypk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.bitumi_indeksi                    AS "bitumi-indeksi",
   ypk.kaasuindeksi
 FROM yllapitokohde ypk
