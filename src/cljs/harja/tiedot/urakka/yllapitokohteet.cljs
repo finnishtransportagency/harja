@@ -197,7 +197,10 @@
                       (viesti/nayta! "Tallennus onnistui. Tarkista myös muokkaamiesi tieosoitteiden alikohteet."
                                      :success viesti/viestin-nayttoaika-keskipitka)
                       (onnistui-fn (:yllapitokohteet vastaus)))
-                    (epaonnistui-fn vastaus)))))))))
+                    (do
+                      (viesti/nayta! "Tallennus epäonnistui!"
+                                     :danger viesti/viestin-nayttoaika-keskipitka)
+                      (epaonnistui-fn vastaus))))))))))
 
 (defn yllapitokohteet-kartalle
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.
