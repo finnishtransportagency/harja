@@ -88,8 +88,8 @@ FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = :paallystyskohde
                                      AND ypko.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON u.id = ypk.urakka
-  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE
@@ -283,12 +283,12 @@ WHERE yllapitokohde = :yllapitokohdeid AND
 -- name: avaa-paallystysilmoituksen-lukko!
 UPDATE paallystysilmoitus
 SET tila = 'valmis' :: PAALLYSTYSTILA
-WHERE paallystyskohde = :yllapitokohde_id
+WHERE paallystyskohde = :yllapitokohde_id;
 
 -- name: lukitse-paallystysilmoitus!
 UPDATE paallystysilmoitus
 SET tila = 'lukittu' :: PAALLYSTYSTILA
-WHERE paallystyskohde = :yllapitokohde_id
+WHERE paallystyskohde = :yllapitokohde_id;
 
 -- name: hae-urakan-maksuerat
 SELECT
@@ -309,8 +309,8 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_maksueratunnus ymt ON ymt.yllapitokohde = ypk.id
-  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
 WHERE ypk.urakka = :urakka
       AND ypk.sopimus = :sopimus
       AND ypk.poistettu IS NOT TRUE
