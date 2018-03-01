@@ -24,7 +24,7 @@
                :yha "YHA-kohteet"
                :paikkaus "Harjan paikkauskohteet ja muut kohteet")]
     [:taulukko {:otsikko nimi
-                :tyhja (when (empty? yllapitokohteet) "Ei raportoitavaa.")
+                :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
                 :sheet-nimi nimi}
      (concat
        [{:otsikko "Kohde\u00ADnumero" :leveys 5}
@@ -98,7 +98,7 @@
 
 (defn yllapitokohteet-yhteensa-taulukko [yllapitokohteet]
   [:taulukko {:otsikko "Yhteenveto"
-              :tyhja (when (empty? yllapitokohteet) "Ei raportoitavaa.")
+              :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
               :sheet-nimi "Ylläpitokohteet yhteensä"}
    [{:otsikko "" :leveys 5}
     {:otsikko "" :leveys 5}
@@ -137,32 +137,48 @@
      (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet))
      (reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
      (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
-     (reduce + 0 (keep :kokonaishinta yllapitokohteet))]] ; TODO HUOMIO MUUT KUSTANNUKSET (korjaa taulukko urakasta)
+     (reduce + 0 (keep :kokonaishinta yllapitokohteet))]] ; TODO HUOMIO MUUT KUSTANNUKSET
    ])
+
+(defn muut-kustannukset-taulukko [muut-kustannukset]
+  (let [nimi "Muut kustannukset"]
+    [:taulukko {:otsikko nimi
+                :tyhja (when (empty? muut-kustannukset) "Ei muita kustannuksia.")
+                :sheet-nimi nimi}
+     [{:otsikko "Pvm" :leveys 10  :fmt :pvm}
+      {:otsikko "Selitys" :leveys 10}
+      {:otsikko "Summa" :leveys 10 :fmt :raha}]
+     (map
+       (fn [yllapitokohde]
+         (-> [(:pvm yllapitokohde)
+              (:selite yllapitokohde)
+              (:hinta yllapitokohde)]))
+       muut-kustannukset)]))
 
 (defn suorita [db user {:keys [urakka-id] :as tiedot}]
   (let [raportin-nimi "Vastaanottotarkastus"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                      ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))
-        yllapitokohteet (->> (into []
-                                   (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
-                                   (hae-yllapitokohteet db {:urakka urakka-id}))
-                             (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
-                             (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
-                             (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %)))
-                             (yllapitokohteet-domain/jarjesta-yllapitokohteet))]
+        yllapitokohteet+kustannukset (->> (into []
+                                                (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
+                                                (hae-yllapitokohteet db {:urakka urakka-id}))
+                                          (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
+                                          (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
+                                          (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %)))
+                                          (yllapitokohteet-domain/jarjesta-yllapitokohteet))
+        muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id})]
     [:raportti {:nimi raportin-nimi}
 
      ;; TODO Vuosi-filtteri rapsalle ja SQL-kyselyihin
 
-     (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet) :yha)
-     (when (some :maaramuutokset-ennustettu? yllapitokohteet) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
-     (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet) :paikkaus)
-     ;; TODO Muut kustannukset -taulukko
+     (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha)
+     (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
+     (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus)
      ;; TODO kohteeseen liittämättömät sakot ja bonukset
      ;; TODO Testi raportille
      ;; TODO Testaa tuotantokopiota vasten: kohdeluettelo täsmää rapsan kanssa
-     (yllapitokohteet-yhteensa-taulukko yllapitokohteet)
+     (muut-kustannukset-taulukko muut-kustannukset)
+     (yllapitokohteet-yhteensa-taulukko yllapitokohteet+kustannukset)
 
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
                (concat [[:otsikko otsikko]]

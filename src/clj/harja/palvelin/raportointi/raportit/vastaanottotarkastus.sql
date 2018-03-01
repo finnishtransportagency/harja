@@ -31,6 +31,7 @@ GROUP BY ypk.id;
 -- name: hae-muut-kustannukset
 SELECT
   yt.id,
+  yt.pvm,
   yt.selite,
   yt.hinta
 FROM yllapito_muu_toteuma yt
