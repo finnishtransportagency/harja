@@ -24,5 +24,4 @@ FROM yllapitokohde ypk
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
 WHERE ypk.urakka = :urakka
 AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id
-ORDER BY kohdenumero;
+GROUP BY ypk.id;

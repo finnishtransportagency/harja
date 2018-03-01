@@ -29,7 +29,8 @@
                                    (hae-yllapitokohteet db {:urakka urakka-id}))
                              (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
                              (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
-                             (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))))]
+                             (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %)))
+                             (yllapitokohteet-domain/jarjesta-yllapitokohteet))]
     [:raportti {:nimi raportin-nimi}
 
      [:taulukko {:otsikko otsikko
