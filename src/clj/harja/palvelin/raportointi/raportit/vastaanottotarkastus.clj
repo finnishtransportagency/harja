@@ -160,6 +160,8 @@
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet) :paikkaus)
      ;; TODO Muut kustannukset -taulukko
      ;; TODO kohteeseen liittämättömät sakot ja bonukset
+     ;; TODO Testi raportille
+     ;; TODO Testaa tuotantokopiota vasten: kohdeluettelo täsmää rapsan kanssa
      (yllapitokohteet-yhteensa-taulukko yllapitokohteet)
 
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
