@@ -327,7 +327,8 @@
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
-  (formatoi fi-pvm-aika pvm))
+  (when pvm
+    (formatoi fi-pvm-aika pvm)))
 
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."

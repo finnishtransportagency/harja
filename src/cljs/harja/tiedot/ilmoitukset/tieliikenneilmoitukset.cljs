@@ -31,13 +31,13 @@
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
   (reaction
-   {:voi-hakea? true
-    :hallintayksikko (:id @nav/valittu-hallintayksikko)
-    :urakka (:id @nav/valittu-urakka)
-    :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
-    :urakoitsija (:id @nav/valittu-urakoitsija)
-    :urakkatyyppi (:arvo @nav/urakkatyyppi)
-    :hoitokausi @u/valittu-hoitokausi}))
+    {:voi-hakea? true
+     :hallintayksikko (:id @nav/valittu-hallintayksikko)
+     :urakka (:id @nav/valittu-urakka)
+     :valitun-urakan-hoitokaudet @u/valitun-urakan-hoitokaudet
+     :urakoitsija (:id @nav/valittu-urakoitsija)
+     :urakkatyyppi (:arvo @nav/urakkatyyppi)
+     :hoitokausi @u/valittu-hoitokausi}))
 
 
 (def ^{:const true}
@@ -177,8 +177,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                        (update :tilat
                                #(if (empty? %) (into #{} tila-filtterit) %)))]
           (tulos!
-           {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))
-            :taustahaku? taustahaku?}))))
+            {:ilmoitukset (<! (k/post! :hae-ilmoitukset haku))
+             :taustahaku? taustahaku?}))))
     (if taustahaku?
       app
       (assoc app :ilmoitukset nil)))
@@ -286,8 +286,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                          ;; olemassaolevat liitetään
                          (into (first v) kuittaukset))))
         (assoc app
-               :kuittaa-monta nil
-               :pikakuittaus nil))))
+          :kuittaa-monta nil
+          :pikakuittaus nil))))
 
   v/PeruMonenKuittaus
   (process-event [_ app]
@@ -296,8 +296,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/AloitaPikakuittaus
   (process-event [{:keys [ilmoitus kuittaustyyppi]} app]
     (assoc app :pikakuittaus
-           {:ilmoitus ilmoitus
-            :tyyppi kuittaustyyppi}))
+               {:ilmoitus ilmoitus
+                :tyyppi kuittaustyyppi}))
 
   v/PaivitaPikakuittaus
   (process-event [{:keys [pikakuittaus]} app]
@@ -308,25 +308,68 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     (let [tulos! (t/send-async! v/->KuittaaVastaus)]
       (go
         (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset!
-                     [(:ilmoitus pikakuittaus)]
-                     (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi :aiheutti-toimenpiteita})))))
+                      [(:ilmoitus pikakuittaus)]
+                      (select-keys pikakuittaus #{:vapaateksti :vakiofraasi :tyyppi :aiheutti-toimenpiteita})))))
       (assoc-in app [:pikakuittaus :tallennus-kaynnissa?] true)))
 
   v/PeruutaPikakuittaus
   (process-event [_ app]
-    (dissoc app :pikakuittaus)))
+    (dissoc app :pikakuittaus))
+
+  v/TallennaToimenpiteidenAloitus
+  (process-event [{id :id} app]
+    (let [tulos! (t/send-async! v/->ToimenpiteidenAloitusTallennettu)]
+      (go
+        (tulos! (<! (k/post! :tallenna-ilmoituksen-toimenpiteiden-aloitus [id]))))
+      (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
+
+  v/PeruutaToimenpiteidenAloitus
+  (process-event [{id :id} app]
+    (let [tulos! (t/send-async! v/->ToimenpiteidenAloituksenPeruutusTallennettu)]
+      (go
+        (tulos! (<! (k/post! :peruuta-ilmoituksen-toimenpiteiden-aloitus [id]))))
+      (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] true)))
+
+  v/ToimenpiteidenAloitusTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden aloitus kirjattu" :success)
+    ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
+    (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false))
+
+  v/ToimenpiteidenAloituksenPeruutusTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Toimenpiteiden aloitus peruutettu" :success)
+    ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
+    (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false))
+
+  v/TallennaToimenpiteidenAloitusMonelle
+  (process-event [_ {:keys [kuittaa-monta] :as app}]
+    (let [idt (map :id (:ilmoitukset kuittaa-monta))
+          tulos! (t/send-async! v/->ToimenpiteidenAloitusMonelleTallennettu)]
+      (go
+        (tulos! (<! (k/post! :tallenna-ilmoituksen-toimenpiteiden-aloitus idt)))))
+    (assoc-in app [:kuittaa-monta :tallennus-kaynnissa?] true))
+
+  v/ToimenpiteidenAloitusMonelleTallennettu
+  (process-event [{v :vastaus} app]
+    (when v
+      (viesti/nayta! "Toimenpiteiden aloitukset tallennettu." :success))
+    (hae
+      (assoc app
+        :kuittaa-monta nil
+        :pikakuittaus nil))))
 
 (defonce karttataso-ilmoitukset (atom false))
 
 (defonce ilmoitukset-kartalla
-         (reaction
-           (let [{:keys [ilmoitukset valittu-ilmoitus]} @ilmoitukset]
-             (when @karttataso-ilmoitukset
-               (kartalla-esitettavaan-muotoon
-                 (map
-                   #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
-                   ilmoitukset)
-                 #(= (:id %) (:id valittu-ilmoitus)))))))
+  (reaction
+    (let [{:keys [ilmoitukset valittu-ilmoitus]} @ilmoitukset]
+      (when @karttataso-ilmoitukset
+        (kartalla-esitettavaan-muotoon
+          (map
+            #(assoc % :tyyppi-kartalla (get % :ilmoitustyyppi))
+            ilmoitukset)
+          #(= (:id %) (:id valittu-ilmoitus)))))))
 
 
 (defn avaa-ilmoitus! [ilmoitus]

@@ -16,19 +16,21 @@
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
+                    (let [tietokanta (tietokanta/luo-tietokanta testitietokanta)]
+                      (component/start
+                       (component/system-map
+                        :db tietokanta
+                        :db-replica tietokanta
                         :http-palvelin (testi-http-palvelin)
                         :yksikkohintaiset-tyot (component/using
-                                                 (->Yksikkohintaiset-tyot)
-                                                 [:http-palvelin :db])
+                                                (->Yksikkohintaiset-tyot)
+                                                [:http-palvelin :db])
                         :toteumat (component/using
-                                    (toteumat/->Toteumat)
-                                    [:http-palvelin :db])
+                                   (toteumat/->Toteumat)
+                                   [:http-palvelin :db :db-replica])
                         :muut-tyot (component/using
-                                     (muut-tyot/->Muut-tyot)
-                                     [:http-palvelin :db])))))
+                                    (muut-tyot/->Muut-tyot)
+                                    [:http-palvelin :db]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))

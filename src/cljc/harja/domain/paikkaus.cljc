@@ -15,8 +15,14 @@
 
 (define-tables
   ["paikkauskohde" ::paikkauskohde
-   {"luoja-id" ::muokkaustiedot/luoja-id}]
-  ["paikkaustoteuma" ::paikkaustoteuma
+   {"luoja-id" ::muokkaustiedot/luoja-id
+    ::paikkaukset (specql.rel/has-many ::id
+                                       ::paikkaus
+                                       ::paikkauskohde-id)
+    ::kustannukset (specql.rel/has-many ::id
+                                        ::paikkauskustannus
+                                        ::paikkauskohde-id)}]
+  ["paikkaus" ::paikkaus
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
@@ -28,19 +34,26 @@
                                         ::id)
     ::tienkohdat (specql.rel/has-many ::id
                                       ::paikkauksen-tienkohta
-                                      ::paikkaustoteuma-id)
+                                      ::paikkaus-id)
     ::materiaalit (specql.rel/has-many ::id
-                                       ::paikkauksen-materiaalit
-                                       ::paikkaustoteuma-id)}]
+                                       ::paikkauksen_materiaali
+                                       ::paikkaus-id)}]
   ["paikkauksen_tienkohta" ::paikkauksen-tienkohta]
-  ["paikkauksen_materiaali" ::paikkauksen-materiaalit])
+  ["paikkauksen_materiaali" ::paikkauksen_materiaali]
+  ["paikkaustoteuma" ::paikkaustoteuma
+   {"luoja-id" ::muokkaustiedot/luoja-id
+    "luotu" ::muokkaustiedot/luotu
+    "muokkaaja-id" ::muokkaustiedot/muokkaaja-id
+    "muokattu" ::muokkaustiedot/muokattu
+    "poistaja-id" ::muokkaustiedot/poistaja-id
+    "poistettu" ::muokkaustiedot/poistettu?}])
 
 (def paikkauskohteen-perustiedot
   #{::id
     ::ulkoinen-id
     ::nimi})
 
-(def paikkaustoteuman-perustiedot
+(def paikkauksen-perustiedot
   #{::id
     ::urakka-id
     ::paikkauskohde-id
@@ -67,3 +80,17 @@
                      ::sideainetyyppi
                      ::pitoisuus
                      ::lisa-aineet}]})
+
+(def paikkaustoteuman-perustiedot
+  #{::id
+    ::urakka-id
+    ::paikkauskohde-id
+    ::ulkoinen-id
+    ::toteuma-id
+    ::kirjattu
+    ::tyyppi
+    ::selite
+    ::hinta
+    ::yksikko
+    ::yksikkohinta
+    ::maara})

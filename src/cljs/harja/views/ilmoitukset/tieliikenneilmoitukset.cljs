@@ -267,6 +267,7 @@
          :leveys 2}
         {:otsikko "Sijainti" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
+         :tyyppi :pvm-aika
          :leveys 7}
 
         {:otsikko "Selitteet" :nimi :selitteet
@@ -282,7 +283,10 @@
            :hae #(let [selite (tilan-selite (:tila %))]
                  (if (:aiheutti-toimenpiteita %)
                    (str selite " (Toimenpitein)")
-                   selite))}]
+                   selite))}
+        {:otsikko "Toimenpiteet aloitettu" :nimi :toimenpiteet-aloitettu
+         :tyyppi :pvm :fmt pvm/pvm-aika
+         :leveys 6}]
        (mapv #(merge %
                      (when (:yhteydenottopyynto %)
                        {:lihavoi true})
