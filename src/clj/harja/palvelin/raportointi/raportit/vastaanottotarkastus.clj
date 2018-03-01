@@ -81,6 +81,9 @@
            ])
         yllapitokohteet)]
 
+     ;; TODO Yhteenvetorivi
+     ;; TODO Info, jos sisältää ennustettuja määrämuutoksia?
+
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
                (concat [[:otsikko otsikko]]
                        (yleinen/osat (raportti-fn db user tiedot))))
