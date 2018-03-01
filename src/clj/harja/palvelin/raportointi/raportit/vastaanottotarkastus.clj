@@ -156,6 +156,7 @@
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet) :yha)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet) :paikkaus)
+     ;; TODO Muut kustannukset -taulukko
      (yllapitokohteet-yhteensa-taulukko yllapitokohteet)
 
      (mapcat (fn [[aja-parametri otsikko raportti-fn]]
