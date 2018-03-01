@@ -22,6 +22,7 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.toimenpidekoodi :as tpk]
+            [harja.domain.sopimus :as sop]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
@@ -246,9 +247,27 @@
                      #(e! (tiedot/->TallennaToimenpide (lomake/ilman-lomaketietoja %)))
                      {:disabled (or tallennus-kaynnissa?
                                     (not (lomake/voi-tallentaa? valittu-toimenpide)))}]])}
-     [{:otsikko "Foobar"
-       :tyyppi :string
-       :nimi ::to/foobar}]
+     [{:otsikko "Aika"
+       :tyyppi :pvm-aika
+       :pakollinen? true
+       :nimi ::to/suoritettu}
+      {:otsikko "Sopimus"
+       :nimi ::to/sopimus
+       :tyyppi :valinta
+       :pakollinen? true
+       :valinta-nayta ::sop/nimi
+       :valinnat (map (fn [[id nimi]] {::sop/id id ::sop/nimi nimi}) (:sopimukset @nav/valittu-urakka))
+       :fmt ::sop/nimi}
+      {:otsikko "Työlaji"
+       :tyyppi :valinta
+       :nimi ::to/tyolaji
+       :valinnat to/reimari-tyolajit
+       :valinta-nayta (comp to/reimari-tyolaji-fmt second)
+       :valinta-arvo first
+       :fmt (comp to/reimari-tyolaji-fmt second)}
+      {:otsikko "Lisätieto"
+       :tyyppi :text
+       :nimi ::to/lisatieto}]
      valittu-toimenpide]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app ulkoiset-valinnat]
@@ -272,7 +291,9 @@
       (if (some? valittu-toimenpide)
         ;; Tänne ei tarvita esim kartan paikkaa, koska tällä hetkellä lomakkeelle avattavilla
         ;; toimenpiteillä ei ikinä ole sijaintitietoja, koska ne eivät liity turvalaitteseen
-        [toimenpidelomake e! app]
+        [:div
+         [debug/debug app]
+         [toimenpidelomake e! app]]
 
         (let [hintaryhmat (concat
                            [tiedot/kokonaishintaisista-siirretyt-hintaryhma]
