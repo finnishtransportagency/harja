@@ -75,3 +75,7 @@
                   (mapv (fn [item]
                           (assoc item pvm-avain (aika-string->java-sql-date (pvm-avain item))))
                         vector)))))
+
+(defn nil-turvallinen-bigdec [arvo]
+  (when (not (nil? arvo))
+    (bigdec arvo)))
