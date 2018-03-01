@@ -55,7 +55,7 @@
        {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha} ; TODO LASKE
        {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
        {:otsikko "Kaasu\u00ADindeksi" :leveys 5 :fmt :raha}
-       {:otsikko "Koko\u00ADnais\u00ADhinta (indek\u00ADsit mukana)" :leveys 5 :fmt :raha}] ; TODO LASKE
+       {:otsikko "Koko\u00ADnais\u00ADhinta (indek\u00ADsit mukana)" :leveys 5 :fmt :raha}]
       (map
         (fn [yllapitokohde]
           [(:kohdenumero yllapitokohde)
@@ -77,7 +77,7 @@
            (:sakot-ja-bonukset yllapitokohde) ; TODO LASKE
            (:bitumi-indeksi yllapitokohde)
            (:kaasuindeksi yllapitokohde)
-           (:kokonaishinta yllapitokohde) ; TODO LASKE
+           (:kokonaishinta yllapitokohde)
            ])
         yllapitokohteet)]
 
