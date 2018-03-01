@@ -133,6 +133,9 @@
    "tienumero" 4
    "yhteydenottopyynto" false})
 
+
+;; FIXME: ao. testi feilaillut todella paljon randomisti ja häiritsee CI putkea.
+;; Olisi syytä löytää syy epävakauteen ja palauttaa paremmin käyttäytyvänä testi takaisin
 #_(deftest kuuntele-urakan-ilmoituksia
   (let [vastaus (future (api-tyokalut/get-kutsu ["/api/urakat/4/ilmoitukset?odotaUusia=true"] kayttaja portti))
         tloik-kuittaukset (atom [])]
