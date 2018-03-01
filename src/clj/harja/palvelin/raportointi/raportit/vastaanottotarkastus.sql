@@ -34,7 +34,6 @@ SELECT
   yt.selite,
   yt.hinta
 FROM yllapito_muu_toteuma yt
-  LEFT JOIN urakka_laskentakohde lk ON lk.id = yt.laskentakohde
 WHERE yt.urakka = :urakka
       AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
