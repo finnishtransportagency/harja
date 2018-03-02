@@ -12,6 +12,9 @@
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.sopimus :as sop]
+
             [harja.id :refer [id-olemassa?]]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
@@ -24,8 +27,9 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
-            [harja.domain.urakka :as urakka]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tyokalut.tuck :as tt]
+            [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -160,6 +164,8 @@
 (defrecord AvaaLomakkeelle [toimenpide])
 (defrecord ToimenpidettaMuokattu [toimenpide])
 (defrecord TallennaToimenpide [toimenpide])
+(defrecord ToimenpideTallennettu [vastaus])
+(defrecord ToimenpideEiTallennettu [virhe])
 
 (defn- hintakentta
   [hinta]
@@ -351,6 +357,16 @@
               (::to/id %))
        %)
     (:toimenpiteet app)))
+
+(defn tallennusparametrit [toimenpide]
+  (-> toimenpide
+      (assoc ::to/sopimus-id (get-in toimenpide [::to/sopimus ::sop/id])
+             ::to/urakka-id (:id @nav/valittu-urakka))
+      (dissoc ::to/sopimus
+              ::to/urakka)
+      (set/rename-keys {::to/tyolaji ::to/reimari-tyolaji
+                        ::to/tyoluokka ::to/reimari-tyoluokka
+                        ::to/toimenpidetyyppi ::to/reimari-toimenpidetyyppi})))
 
 (extend-protocol tuck/Event
 
@@ -699,5 +715,29 @@
     (assoc app :valittu-toimenpide toimenpide))
 
   TallennaToimenpide
-  (process-event [{:keys [toimenpide]} app]
-    (assoc app :valittu-toimenpide nil)))
+  (process-event [{:keys [toimenpide]} {:keys [tallennus-kaynnissa?] :as app}]
+    (if-not tallennus-kaynnissa?
+      (-> app
+          (tuck-tyokalut/post! :tallenna-toimenpide
+                               {:tallennettava (tallennusparametrit toimenpide)
+                                :hakuehdot (set/rename-keys (:valinnat app) {:urakka-id ::to/urakka-id})}
+                               {:onnistui ->ToimenpideTallennettu
+                                :epaonnistui ->ToimenpideEiTallennettu})
+          (assoc :tallennus-kaynnissa? true))
+
+      app))
+
+  ToimenpideTallennettu
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+        (assoc :tallennus-kaynnissa? false
+               :valittu-toimenpide nil
+               :toimenpiteet (-> vastaus
+                                 hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
+                                 jaettu/toimenpiteet-aikajarjestyksessa))))
+
+  ToimenpideEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe toimenpiteen tallennuksessa" :danger)
+    (-> app
+        (assoc :tallennus-kaynnissa? false))))
