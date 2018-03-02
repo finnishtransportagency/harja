@@ -1032,4 +1032,4 @@ SELECT
   id,
   reitti as sijainti
 FROM toteuma
-WHERE id IN (:idt);
+WHERE urakka = :urakka-id AND id IN (:idt);

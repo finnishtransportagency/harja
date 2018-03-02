@@ -108,6 +108,7 @@
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
+    [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -320,7 +321,7 @@
                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
+                  [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -612,6 +613,10 @@
       :api-tieluvat (component/using
                       (api-tieluvat/->Tieluvat)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
+
+      :api-paikkaukset (component/using
+        (api-paikkaukset/->Paikkaukset)
+        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
 
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus

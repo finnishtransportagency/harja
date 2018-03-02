@@ -68,6 +68,7 @@
     :kan-hairio
     :kan-toimenpiteet
     :api-tieluvat
+    :api-paikkaukset
     :koordinaatit
     :tiedostopesula})
 
