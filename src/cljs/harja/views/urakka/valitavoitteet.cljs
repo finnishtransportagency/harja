@@ -76,6 +76,21 @@
          :fmt #(if %
                  (pvm/pvm-opt %)
                  "-")})
+      (when (or (= (:tyyppi urakka) :paallystys)
+                (= (:tyyppi urakka) :tiemerkinta))
+        {:otsikko (case (:tyyppi urakka)
+                    :paallystys "Pääl\u00ADlystys\u00ADkohde"
+                    :tiemerkinta "Tie\u00ADmerkintä\u00ADkohde")
+         :leveys 20
+         :nimi :yllapitokohde
+         :fmt #(if %
+                 (pvm/pvm-opt %)
+                 "Ei kohdetta")
+         :tyyppi :valinta
+         :valinnat [1 2 3]
+         :valinta-nayta #(if %
+                           %
+                           "- Valitse kohde -")})
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja
        :fmt #(if %
                (pvm/pvm-opt %)
