@@ -93,7 +93,7 @@
                       (yllapitokohde-domain/yllapitokohde-tekstina valittu-kohde))
                     "Ei kohdetta"))
            :tyyppi :valinta
-           :valinnat (map :id yllapitokohteet)
+           :valinnat (concat [nil] (map :id yllapitokohteet))
            :valinta-nayta (fn [kohde-id muokattava?]
                             (if kohde-id
                               (let [valittu-kohde (first (filter #(= (:id %) kohde-id) yllapitokohteet))]
@@ -104,9 +104,7 @@
                                             :tr-alkuetaisyys (:tr-alkuetaisyys valittu-kohde)
                                             :tr-loppuosa (:tr-loppuosa valittu-kohde)
                                             :tr-loppuetaisyys (:tr-loppuetaisyys valittu-kohde)}}))
-                              (if muokattava?
-                                "- Valitse kohde -"
-                                "")))})
+                              "Ei kohdetta"))})
         {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja
          :fmt #(if %
                  (pvm/pvm-opt %)
