@@ -116,9 +116,12 @@
   [db user urakka-id yllapitokohteet]
   (if (oikeudet/voi-lukea? oikeudet/urakat-valitavoitteet urakka-id user)
     (let [urakan-valitavoitteet (valitavoitteet/hae-urakan-valitavoitteet db user urakka-id)]
-      (log/debug "URAKAN VÄLITAVOITTEET AIKATAULUKSI: " urakan-valitavoitteet)
-      ;; TODO Yhdistä
-      yllapitokohteet)
+      (map (fn [yllapitokohde]
+             (let [kohteen-valitavoitteet (filter
+                                            #(= (:yllapitokohde-id urakan-valitavoitteet) (:id yllapitokohde))
+                                            urakan-valitavoitteet)]
+               (assoc yllapitokohde :valitavoitteet kohteen-valitavoitteet)))
+           yllapitokohteet))
     yllapitokohteet))
 
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
@@ -127,12 +130,14 @@
   (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
-    (->> (case (hae-urakkatyyppi db urakka-id)
-           :paallystys
-           (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
-           :tiemerkinta
-           (hae-tiemerkintaurakan-aikataulu db urakka-id vuosi))
-         (lisaa-yllapitokohteille-valitavoitteet db user urakka-id))))
+    ;; TODO Testi että palauttaa myös välitavoitteet
+    (let [aikataulu (case (hae-urakkatyyppi db urakka-id)
+                      :paallystys
+                      (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
+                      :tiemerkinta
+                      (hae-tiemerkintaurakan-aikataulu db urakka-id vuosi))
+          aikataulu (lisaa-yllapitokohteille-valitavoitteet db user urakka-id aikataulu)]
+      aikataulu)))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
