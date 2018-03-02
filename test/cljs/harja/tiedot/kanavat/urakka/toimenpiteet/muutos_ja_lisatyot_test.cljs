@@ -73,7 +73,7 @@
                 {::hinta/id 2}]
         uusi-hinta {::hinta/id -1
                     ::hinta/otsikko ""
-                    ::hinta/summa 0
+                    ::hinta/summa nil
                     ::hinta/ryhma "oma"
                     ::hinta/yleiskustannuslisa 0}]
     (is (= (e! (tiedot/->LisaaOmakustannushintainenTyorivi)
@@ -85,7 +85,7 @@
                 {::hinta/id -1}]
         uusi-hinta {::hinta/id -2
                     ::hinta/otsikko ""
-                    ::hinta/summa 0
+                    ::hinta/summa nil
                     ::hinta/ryhma "oma"
                     ::hinta/yleiskustannuslisa 0}]
     (is (= (e! (tiedot/->LisaaOmakustannushintainenTyorivi)
