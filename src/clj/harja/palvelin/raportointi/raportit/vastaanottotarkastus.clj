@@ -181,8 +181,6 @@
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus)
-     ;; TODO Testi raportille
-     ;; TODO Testaa tuotantokopiota vasten: kohdeluettelo täsmää rapsan kanssa
      (muut-kustannukset-taulukko muut-kustannukset urakan-sanktiot)
      (yhteensa-taulukko yllapitokohteet+kustannukset muut-kustannukset urakan-sanktiot)
 
