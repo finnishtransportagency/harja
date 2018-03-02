@@ -51,8 +51,7 @@ SELECT
   ypk.arvonvahennykset,
   ypk.bitumi_indeksi           AS "bitumi-indeksi",
   ypk.kaasuindeksi,
-  sum(-s.maara)                AS "sakot-ja-bonukset",
-  -- käännetään toisin päin jotta summaus toimii oikein
+  sum(-s.maara)                AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
   paatos_tekninen_osa          AS "tekninen-osa_paatos",
@@ -76,6 +75,7 @@ SELECT
   ypko.tyomenetelma            AS "kohdeosa_tyomenetelma",
   ypko.massamaara              AS "kohdeosa_massamaara",
   ypko.toimenpide              AS "kohdeosa_toimenpide",
+  ypko.hyppy                   AS "kohdeosa_hyppy?",
   ypk.tr_numero                AS "tr-numero",
   ypk.tr_alkuosa               AS "tr-alkuosa",
   ypk.tr_alkuetaisyys          AS "tr-alkuetaisyys",

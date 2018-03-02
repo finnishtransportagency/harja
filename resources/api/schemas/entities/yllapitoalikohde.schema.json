@@ -21,12 +21,17 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
-    } ,
+    },
     "toimenpide": {
-      "id": "urn:harja/yllapitokohde/nimi",
+      "id": "urn:harja/yllapitokohde/toimenpide",
       "required": false,
       "type": "string",
       "maxLength": 128
+    },
+    "hyppy": {
+      "id": "urn:harja/yllapitokohde/hyppy",
+      "required": false,
+      "type": "boolean"
     }
   }
 }
