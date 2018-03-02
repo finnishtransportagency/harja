@@ -50,12 +50,13 @@
                                                                                         (.setTime (.getTime arvo)))]
                                                                                [avain arvo]))
                                                                            toimenpide))]
-                                                 (assoc toimenpide
-                                                        ::kanavan-toimenpide/kohde kohde
-                                                        ::kanavan-toimenpide/huoltokohde huoltokohde
-                                                        ::kanavan-toimenpide/kohteenosa (-> kohde ::kohde/kohteenosat first)
-                                                        ::kanavan-toimenpide/kuittaaja kayttaja
-                                                        ::kanavan-toimenpide/toimenpidekoodi toimenpidekoodi)))
+                                                 (merge toimenpide
+                                                        (when kohde
+                                                          {::kanavan-toimenpide/kohde kohde
+                                                           ::kanavan-toimenpide/huoltokohde huoltokohde
+                                                           ::kanavan-toimenpide/kohteenosa (-> kohde ::kohde/kohteenosat first)
+                                                           ::kanavan-toimenpide/kuittaaja kayttaja
+                                                           ::kanavan-toimenpide/toimenpidekoodi toimenpidekoodi}))))
                                              (gen/tuple (s/gen kanavakohteet)
                                                         (s/gen ::kanavan-toimenpide/kanava-toimenpide)
                                                         (generaattori-setista-speceja huoltokohde/perustiedot)
@@ -67,7 +68,7 @@
 
 (s/def ::nakymassa? true?)
 (s/def ::avattu-toimenpide (s/coll-of ::kanavan-toimenpide))
-(s/def ::toimenpiteet (s/coll-of ::toimenpide :min-count 1 :max-count 1))
+(s/def ::toimenpiteet (s/coll-of ::toimenpide :min-count 1))
 
 (s/def ::kokonaishintaiset-grid-nakyma (s/keys :req-un [::toimenpiteet ::nakymassa?]))
 (s/def ::kokonaishintaiset-lomake-nakyma (s/keys :req-un [::avattu-toimenpide ::toimenpiteet ::nakymassa?]))
@@ -75,10 +76,10 @@
 ;; ------ Kanavakohteet
 (s/def ::kohde/kohteenosa (s/with-gen #(map? %)
                                       #(generaattori-setista-speceja osa/perustiedot)))
-(s/def ::kohde/kohteenosat (s/coll-of ::kohde/kohteenosa :min-count 1 :max-count 1))
+(s/def ::kohde/kohteenosat (s/coll-of ::kohde/kohteenosa :min-count 1 :max-count 5))
 
 (s/def ::kanavakohde (s/keys :req [::kohde/kohteenosat ::kohde/id ::kohde/sijainti ::kohde/nimi ::kohde/urakat]))
-(s/def ::kanavakohteet (s/coll-of ::kanavakohde :min-count 1 :max-count 1))
+(s/def ::kanavakohteet (s/coll-of ::kanavakohde :min-count 1))
 
 ;; Speckien loppu
 ;;;;;;;;;;
@@ -90,23 +91,20 @@
         kokonaishintaiset-tila (gen/generate (s/gen ::kokonaishintaiset-grid-nakyma))]
     (reset! kohteet-kartalla/karttataso-kohteet true)
     (reset! kokonaishintaiset/tila kokonaishintaiset-tila)
-    (println "<------ AKTIIVINEN NÄKYMÄ ------->")
-    (cljs.pprint/pprint @kohteet-kartalla/aktiivinen-nakyma)
-    (println "<------ NÄYTETTÄVÄT KANAVAKOHTEET ----- -->")
-    (cljs.pprint/pprint @kohteet-kartalla/naytettavat-kanavakohteet)
-    (println "<------ KOHTEET KARTALLA ------>")
-    (cljs.pprint/pprint @kohteet-kartalla/kohteet-kartalla)
     (is (= (count (-> @kohteet-kartalla/aktiivinen-nakyma :tila :gridissa-olevat-kohteen-tiedot))
            (count @kohteet-kartalla/naytettavat-kanavakohteet)))
     (doseq [kohde (-> @kohteet-kartalla/aktiivinen-nakyma :tila :gridissa-olevat-kohteen-tiedot)
             :let [kohde-kartalla (some (fn [kohde-kartalla]
                                           (when (and (= (:nimi kohde-kartalla)
                                                         (-> kohde ::kanavan-toimenpide/kohde ::kohde/nimi))
-                                                     (= (:sijainti kohde-kartalla)
-                                                        (-> kohde ::kanavan-toimenpide/kohde ::kohde/sijainti)))
+                                                     (= (-> kohde-kartalla :toimenpiteet :kuittaaja)
+                                                        (str (-> kohde ::kanavan-toimenpide/kuittaaja ::kayttaja/etunimi) " "
+                                                             (-> kohde ::kanavan-toimenpide/kuittaaja ::kayttaja/sukunimi))))
                                             kohde-kartalla))
                                        @kohteet-kartalla/kohteet-kartalla)]]
       (is (not (nil? kohde-kartalla)))
+      (is (= (:sijainti kohde-kartalla)
+             (-> kohde ::kanavan-toimenpide/kohde ::kohde/sijainti)))
       (is (= (:toimenpiteet kohde-kartalla)
              {:huoltokohde (-> kohde ::kanavan-toimenpide/huoltokohde ::huoltokohde/nimi)
               :kohteenosan-tyyppi (when-let [tyyppi (-> kohde ::kanavan-toimenpide/kohteenosa ::osa/tyyppi)]
