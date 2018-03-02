@@ -11,13 +11,13 @@
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
 
-(def referenssi-tulos
+(def referenssi-joukko
   {:lukumaara 3
    :sivu 1
    :aloitus 1
    :ajankohta 1517899053259
    :tulokset [{:siltanro 666666
-               :siltanimi "Kuuskanavan silta"
+               :siltanimi "Rakennetyyppi relevantti"
                :tunnus_prefix "V"
                :d_kayttotar_koodi ["11"]
                :elinkaaritila "käytössä"
@@ -30,9 +30,9 @@
                :muutospvm 1515522968901
                :trex_oid "1.2.246.578.1.15.1000666"
                :sivu 1}
-              {:siltanro 666667
-               :siltanimi "Itikan silta"
-               :tunnus_prefix "V"
+              {:siltanro 1151
+               :siltanimi "Numero ja tunnus relevantti"
+               :tunnus_prefix "U"
                :d_kayttotar_koodi ["11"]
                :elinkaaritila "käytössä"
                :siltapit 24
@@ -44,8 +44,8 @@
                :muutospvm 1515522968901
                :trex_oid "1.2.246.578.1.15.1000666"
                :sivu 1}
-              {:siltanro 666668
-               :siltanimi "Ei relevantti nimi"
+              {:siltanro 2724
+               :siltanimi "Numero löytyy tunnus ei"
                :tunnus_prefix "V"
                :d_kayttotar_koodi ["11"]
                :elinkaaritila "käytössä"
@@ -61,7 +61,7 @@
 
 (def referenssi-kanavasilta
   {:siltanro 666666
-   :siltanimi "Kuuskanavan silta"
+   :siltanimi "Rakennetyyppi relevantti"
    :tunnus_prefix "V"
    :d_kayttotar_koodi ["11"]
    :elinkaaritila "käytössä"
@@ -95,8 +95,8 @@
 
   ; Uusi silta
   (kanavasilta-tuonti/tallenna-kanavasilta (:db ht/jarjestelma) referenssi-kanavasilta 1)
-  (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_silta where siltanro = 666666;")) "Kuuskanavan silta"))
-  (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_kohteenosa where lahdetunnus = 666666;")) "Kuuskanavan silta"))
+  (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_silta where siltanro = 666666;")) "Rakennetyyppi relevantti"))
+  (t/is (= (ffirst (ht/q "SELECT nimi FROM kan_kohteenosa where lahdetunnus = 666666;")) "Rakennetyyppi relevantti"))
   (t/is (= (ffirst (ht/q "SELECT poistettu FROM kan_kohteenosa where lahdetunnus = 666666;")) false))
 
   ; Päivittynyt silta
@@ -117,16 +117,16 @@
 (t/deftest suodata-sillat
 
   ; Rakennustyypin perusteteella suodatettava palautuu, palautuu 1
-  (t/is (= 1 (count (kanavasilta-tuonti/suodata-avattavat-sillat-rakennetyypin-mukaan referenssi-tulos))))
-  (t/is (= 666666 (:siltanro (first (kanavasilta-tuonti/suodata-avattavat-sillat-rakennetyypin-mukaan referenssi-tulos)))))
+  (t/is (= 1 (count (kanavasilta-tuonti/suodata-avattavat-sillat-rakennetyypin-mukaan referenssi-joukko))))
+  (t/is (= 666666 (:siltanro (first (kanavasilta-tuonti/suodata-avattavat-sillat-rakennetyypin-mukaan referenssi-joukko)))))
 
   ; Numeron perusteella suodatettava palautuu, palautuu 1
-  (t/is (= 1 (count (kanavasilta-tuonti/suodata-sillat-numeron-ja-tunnuksen-mukaan referenssi-tulos))))
-  (t/is (= 666667 (:siltanro (first (kanavasilta-tuonti/suodata-sillat-numeron-ja-tunnuksen-mukaan referenssi-tulos)))))
+  (t/is (= 1 (count (kanavasilta-tuonti/suodata-sillat-numeron-ja-tunnuksen-mukaan referenssi-joukko))))
+  (t/is (= 1151 (:siltanro (first (kanavasilta-tuonti/suodata-sillat-numeron-ja-tunnuksen-mukaan referenssi-joukko)))))
 
   ; Sekä rakennustyypin että numeron ja tunnuksen perusteella suodatettava palautuu, palautuuu 2
-  (t/is (= 2 (count (kanavasilta-tuonti/suodata-sillat referenssi-tulos))))
-  (t/is (= 666666 (:siltanro (first (kanavasilta-tuonti/suodata-sillat referenssi-tulos)))))
-  (t/is (= 666667 (:siltanro (second (kanavasilta-tuonti/suodata-sillat referenssi-tulos))))))
+  (t/is (= 2 (count (kanavasilta-tuonti/suodata-sillat referenssi-joukko))))
+  (t/is (= 666666 (:siltanro (first (kanavasilta-tuonti/suodata-sillat referenssi-joukko)))))
+  (t/is (= 1151 (:siltanro (second (kanavasilta-tuonti/suodata-sillat referenssi-joukko))))))
 
 
