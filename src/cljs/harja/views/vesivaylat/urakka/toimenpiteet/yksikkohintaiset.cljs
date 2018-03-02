@@ -235,40 +235,56 @@
 
 (defn- toimenpidelomake [e! {:keys [valittu-toimenpide tallennus-kaynnissa?] :as app}]
   (let [uusi-toimenpide? (not (id-olemassa? (::to/id valittu-toimenpide)))]
-    [lomake/lomake
-     {:otsikko (if uusi-toimenpide?
-                 "Kirjaa turvalaitteeton toimenpide"
-                 "Muokkaa toimenpidettä")
-      :muokkaa! #(e! (tiedot/->ToimenpidettaMuokattu (lomake/ilman-lomaketietoja %)))
-      :footer-fn (fn [tapahtuma]
-                   [:div
-                    [napit/tallenna
-                     "Tallenna toimenpide"
-                     #(e! (tiedot/->TallennaToimenpide (lomake/ilman-lomaketietoja %)))
-                     {:disabled (or tallennus-kaynnissa?
-                                    (not (lomake/voi-tallentaa? valittu-toimenpide)))}]])}
-     [{:otsikko "Aika"
-       :tyyppi :pvm-aika
-       :pakollinen? true
-       :nimi ::to/suoritettu}
-      {:otsikko "Sopimus"
-       :nimi ::to/sopimus
-       :tyyppi :valinta
-       :pakollinen? true
-       :valinta-nayta ::sop/nimi
-       :valinnat (map (fn [[id nimi]] {::sop/id id ::sop/nimi nimi}) (:sopimukset @nav/valittu-urakka))
-       :fmt ::sop/nimi}
-      {:otsikko "Työlaji"
-       :tyyppi :valinta
-       :nimi ::to/tyolaji
-       :valinnat to/reimari-tyolajit
-       :valinta-nayta (comp to/reimari-tyolaji-fmt second)
-       :valinta-arvo first
-       :fmt (comp to/reimari-tyolaji-fmt second)}
-      {:otsikko "Lisätieto"
-       :tyyppi :text
-       :nimi ::to/lisatieto}]
-     valittu-toimenpide]))
+    [:div
+     [napit/takaisin #(e! (tiedot/->AvaaLomakkeelle nil))]
+     [lomake/lomake
+      {:otsikko (if uusi-toimenpide?
+                  "Kirjaa turvalaitteeton toimenpide"
+                  "Muokkaa toimenpidettä")
+       :muokkaa! #(e! (tiedot/->ToimenpidettaMuokattu (lomake/ilman-lomaketietoja %)))
+       :footer-fn (fn [tapahtuma]
+                    [:div
+                     [napit/tallenna
+                      "Tallenna toimenpide"
+                      #(e! (tiedot/->TallennaToimenpide (lomake/ilman-lomaketietoja tapahtuma)))
+                      {:disabled (or tallennus-kaynnissa?
+                                     (not (lomake/voi-tallentaa? valittu-toimenpide)))}]])}
+      [{:otsikko "Aika"
+        :tyyppi :pvm-aika
+        :pakollinen? true
+        :nimi ::to/suoritettu}
+       {:otsikko "Sopimus"
+        :nimi ::to/sopimus
+        :tyyppi :valinta
+        :pakollinen? true
+        :valinta-nayta ::sop/nimi
+        :valinnat (map (fn [[id nimi]] {::sop/id id ::sop/nimi nimi}) (:sopimukset @nav/valittu-urakka))
+        :fmt ::sop/nimi}
+       {:otsikko "Työlaji"
+        :tyyppi :valinta
+        :nimi ::to/tyolaji
+        :valinnat to/reimari-tyolajit
+        :valinta-nayta (comp to/reimari-tyolaji-fmt second)
+        :valinta-arvo first
+        :fmt (comp to/reimari-tyolaji-fmt second)}
+       {:otsikko "Työluokka"
+        :tyyppi :valinta
+        :nimi ::to/tyoluokka
+        :valinnat to/reimari-tyoluokat
+        :valinta-nayta (comp to/reimari-tyoluokka-fmt second)
+        :valinta-arvo first
+        :fmt (comp to/reimari-tyoluokka-fmt second)}
+       {:otsikko "Toimenpide"
+        :tyyppi :valinta
+        :nimi ::to/toimenpidetyyppi
+        :valinnat to/reimari-toimenpidetyypit
+        :valinta-nayta (comp to/reimari-toimenpidetyyppi-fmt second)
+        :valinta-arvo first
+        :fmt (comp to/reimari-toimenpidetyyppi-fmt second)}
+       {:otsikko "Lisätieto"
+        :tyyppi :text
+        :nimi ::to/lisatieto}]
+      valittu-toimenpide]]))
 
 (defn- yksikkohintaiset-toimenpiteet-nakyma [e! app ulkoiset-valinnat]
   (komp/luo
