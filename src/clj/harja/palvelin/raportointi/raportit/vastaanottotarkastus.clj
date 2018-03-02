@@ -161,23 +161,23 @@
                   (:maara kustannus))]))
        (apply conj muut-kustannukset urakan-sanktiot))]))
 
-(defn suorita [db user {:keys [urakka-id] :as tiedot}]
+(defn suorita [db user {:keys [urakka-id vuosi] :as tiedot}]
   (let [raportin-nimi "Vastaanottotarkastus"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                      ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))
         yllapitokohteet+kustannukset (->> (into []
                                                 (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
-                                                (hae-yllapitokohteet db {:urakka urakka-id}))
+                                                (hae-yllapitokohteet db {:urakka urakka-id
+                                                                         :vuosi vuosi}))
                                           (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
                                           (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
                                           (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %)))
                                           (yllapitokohteet-domain/jarjesta-yllapitokohteet))
-        muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id})
-        urakan-sanktiot (hae-kohteisiin-kuulumattomat-kustannukset db {:urakka urakka-id})]
+        muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
+                                                     :vuosi vuosi})
+        urakan-sanktiot (hae-kohteisiin-kuulumattomat-kustannukset db {:urakka urakka-id
+                                                                       :vuosi vuosi})]
     [:raportti {:nimi raportin-nimi}
-
-     ;; TODO Vuosi-filtteri rapsalle ja SQL-kyselyihin
-
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus)

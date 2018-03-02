@@ -25,6 +25,7 @@ FROM yllapitokohde ypk
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
 WHERE ypk.urakka = :urakka
+      AND ypk.vuodet @> ARRAY [:vuosi] :: INT []
       AND ypk.poistettu IS NOT TRUE
 GROUP BY ypk.id;
 
@@ -36,6 +37,7 @@ SELECT
   yt.hinta
 FROM yllapito_muu_toteuma yt
 WHERE yt.urakka = :urakka
+      AND (SELECT EXTRACT(YEAR FROM yt.pvm)) = :vuosi
       AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
 
@@ -50,5 +52,6 @@ WHERE s.laatupoikkeama IN (SELECT id
                            FROM laatupoikkeama lp
                            WHERE lp.urakka = :urakka AND lp.yllapitokohde IS NULL)
       AND (s.sakkoryhma = 'yllapidon_sakko' OR s.sakkoryhma = 'yllapidon_bonus')
+      AND (SELECT EXTRACT(YEAR FROM lp.aika)) = :vuosi
       AND s.poistettu IS NOT TRUE
 ORDER BY s.perintapvm DESC;
