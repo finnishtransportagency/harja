@@ -116,15 +116,17 @@
           ;; Yhdistetään kohteen ja kohteelle tehdyn toimenpiteen tiedot. Toimenpiteen tietoja näytetään kartan
           ;; infopaneelissa.
           kohteet (flatten (map (fn [kohde]
-                                  (kohteelle-tiedot kohde (:nakyma @aktiivinen-nakyma) gridissa-olevat-kohteen-tiedot))
+                                  (if avattu-tieto
+                                    (assoc kohde
+                                           :on-item-click on-item-click-fn
+                                           :nayta-paneelissa? false
+                                           :avaa-paneeli? false)
+                                    (kohteelle-tiedot kohde (:nakyma @aktiivinen-nakyma) gridissa-olevat-kohteen-tiedot)))
                                 @kanavaurakka/kanavakohteet))]
       (reduce (fn [kasitellyt kasiteltava]
                 (cond
                   ;; Jos ollaan lomakkeella, näytetään kaikki kohteet
-                  avattu-tieto (conj kasitellyt (assoc kasiteltava
-                                                       :on-item-click on-item-click-fn
-                                                       :nayta-paneelissa? false
-                                                       :avaa-paneeli? false))
+                  avattu-tieto (conj kasitellyt kasiteltava)
                   ;; Jos ollaan gridinäkymässä, niin näytetään vain ne kohteet, joille on tehty toimenpiteitä
                   (kohde-on-gridissa? kasiteltava gridissa-olevat-kohteen-tiedot (:nakyma @aktiivinen-nakyma)) (conj kasitellyt kasiteltava)
                   :else kasitellyt))
