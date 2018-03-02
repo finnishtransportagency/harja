@@ -86,12 +86,13 @@
                       :paikkaus "Paik\u00ADkaus\u00ADkohde"
                       :tiemerkinta "Tie\u00ADmerkintä\u00ADkohde")
            :leveys 20
-           :nimi :yllapitokohde
+           :nimi :yllapitokohde-id
            :fmt #(if %
                    (pvm/pvm-opt %)
                    "Ei kohdetta")
            :tyyppi :valinta
            :valinnat yllapitokohteet
+           :valinta-arvo :id
            :valinta-nayta (fn [arvo muokattava?]
                             (if arvo
                               (yllapitokohde-domain/yllapitokohde-tekstina
