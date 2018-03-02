@@ -66,13 +66,19 @@
      :otsikko "Loppuen" :palstoja 3}]
    valinnat])
 
+
+
 (defn tienakyman-infopaneelin-linkit [e!]
   {:toteuma
    [{:teksti "Siirry toteumanäkymään"
      :ikoni [ikonit/livicon-eye]
      :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}
-    {:teksti "Näytä reittipisteet kartalla"
-     :ikoni [ikonit/livicon-info-circle]
+    {:teksti-fn #(if (tiedot/toteuman-reittipisteet-naytetty? %)
+                   "Piilota reittipisteet"
+                   "Näytä reittipisteet kartalla")
+     :ikoni-fn #(if (tiedot/toteuman-reittipisteet-naytetty? %)
+                  [ikonit/livicon-delete]
+                  [ikonit/livicon-info-circle])
      :toiminto #(e! (tiedot/->HaeToteumanReittipisteet %))}]
 
    :varustetoteuma
@@ -81,8 +87,8 @@
      :ikoni [ikonit/livicon-eye]
      :toiminto #(e! (tiedot/->TarkasteleToteumaa %))}]
    :ilmoitus
-    {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))
-     :teksti "Näytä kuittaukset"}})
+   {:toiminto #(jaettu/nayta-kuittausten-tiedot (:kuittaukset %))
+    :teksti "Näytä kuittaukset"}})
 
 (defn- nayta-tulospaneeli! [e! tulokset avatut-tulokset]
   ;; Poistetaan TR-valinnan katkoviiva häiritsemästä

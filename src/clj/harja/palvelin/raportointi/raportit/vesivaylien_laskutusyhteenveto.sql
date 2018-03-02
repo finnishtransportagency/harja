@@ -38,6 +38,7 @@ SELECT
                                       -- Suunnitteluaika osuu annetun aikavälin sisälle
                                       AND yht.alkupvm <= :alkupvm
                                       AND yht.loppupvm >= :loppupvm
+                                      AND yht.urakka = :urakkaid
    WHERE "hinnoittelu-id" IN
          -- Työ kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
          (SELECT "hinnoittelu-id"
