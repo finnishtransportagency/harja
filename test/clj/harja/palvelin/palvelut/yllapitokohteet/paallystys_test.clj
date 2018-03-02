@@ -95,7 +95,7 @@
                                  :pitoisuus 54
                                  :lisaaineet "asd"}
                                 {;; Alikohteen tiedot
-                                 :poistettu true            ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
+                                 :poistettu true ;; HUOMAA POISTETTU, EI SAA TALLENTUA!
                                  :nimi "Tie 555"
                                  :tr-numero 555
                                  :tr-alkuosa 2
@@ -422,6 +422,75 @@
                              :lisaaineet "asd"}]}))
         (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";"))))))
 
+(deftest tallenna-uusi-hypyllinen-paallystysilmoitus-kantaan
+  (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
+    (is (not (nil? paallystyskohde-id)))
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus, jossa hyppyjä")
+    (let [urakka-id @muhoksen-paallystysurakan-id
+          sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
+          paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
+                                                      :valmis-kasiteltavaksi true)
+                                 ;; Muuta eka osoite hypyksi
+                                 (assoc-in [:ilmoitustiedot :osoitteet]
+                                           [(assoc (first (get-in pot-testidata [:ilmoitustiedot :osoitteet]))
+                                              :hyppy? true)
+                                            (second (get-in pot-testidata [:ilmoitustiedot :osoitteet]))]))
+          _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                         :sopimus-id sopimus-id
+                                                                         :paallystysilmoitus paallystysilmoitus})
+          paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                      :urakan-paallystysilmoitus-paallystyskohteella
+                                                      +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                      :sopimus-id sopimus-id
+                                                                      :paallystyskohde-id paallystyskohde-id})]
+      (log/debug "Testitallennus valmis. POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
+      (is (not (nil? paallystysilmoitus-kannassa)))
+      (is (= (:ilmoitustiedot paallystysilmoitus-kannassa)
+             {:alustatoimet [{:kasittelymenetelma 1
+                              :paksuus 1234
+                              :tekninen-toimenpide 1
+                              :tr-alkuetaisyys 3
+                              :tr-alkuosa 2
+                              :tr-loppuetaisyys 5
+                              :tr-loppuosa 4
+                              :verkkotyyppi 1
+                              :verkon-sijainti 1
+                              :verkon-tarkoitus 1}]
+              :osoitteet [{;; Alikohteen tiedot
+                           :nimi "Tie 666"
+                           :kohdeosa-id 14
+                           :hyppy? true
+                           :tr-numero 666
+                           :tr-alkuosa 2
+                           :tr-alkuetaisyys 3
+                           :tr-loppuosa 4
+                           :tr-loppuetaisyys 5
+                           :tr-ajorata 1
+                           :tr-kaista 1
+                           :paallystetyyppi 1
+                           :raekoko 1
+                           :tyomenetelma 12
+                           :massamaara 2.00M
+                           :toimenpide "Wut"
+                           ;; Päällystetoimenpiteen tiedot
+                           :toimenpide-paallystetyyppi 1
+                           :toimenpide-raekoko 1
+                           :kokonaismassamaara 2
+                           :rc% 3
+                           :toimenpide-tyomenetelma 12
+                           :leveys 5
+                           :massamenekki 7
+                           :pinta-ala 8
+                           ;; Kiviaines- ja sideainetiedot
+                           :esiintyma "asd"
+                           :km-arvo "asd"
+                           :muotoarvo "asd"
+                           :sideainetyyppi 1
+                           :pitoisuus 54
+                           :lisaaineet "asd"}]}))
+      (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";")))))
+
 (deftest uuden-paallystysilmoituksen-tallennus-eri-urakkaan-ei-onnistu
   (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
     (is (not (nil? paallystyskohde-id)))
@@ -719,13 +788,13 @@
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (:paallystyskohde (first (q-map (str "SELECT paallystyskohde "
-                                                               "FROM paallystysilmoitus pi "
-                                                               "JOIN yllapitokohde yk ON yk.id=pi.paallystyskohde "
-                                                               "WHERE (pi.paatos_tekninen_osa IS NULL OR "
-                                                               "pi.paatos_tekninen_osa='hylatty'::paallystysilmoituksen_paatostyyppi) AND "
-                                                               "pi.tila!='valmis'::paallystystila AND "
-                                                               "yk.urakka=" urakka-id " "
-                                                               "LIMIT 1"))))
+                                                                "FROM paallystysilmoitus pi "
+                                                                "JOIN yllapitokohde yk ON yk.id=pi.paallystyskohde "
+                                                                "WHERE (pi.paatos_tekninen_osa IS NULL OR "
+                                                                "pi.paatos_tekninen_osa='hylatty'::paallystysilmoituksen_paatostyyppi) AND "
+                                                                "pi.tila!='valmis'::paallystystila AND "
+                                                                "yk.urakka=" urakka-id " "
+                                                                "LIMIT 1"))))
         ;; Tehdään ensin sellainen päällystysilmoitus, joka on valmis tarkastettavaksi
         ;; ja lähetetään paallystysilmoituksen valmistumisesta sähköposti ely valvojalle
         paallystysilmoitus (assoc pot-testidata
