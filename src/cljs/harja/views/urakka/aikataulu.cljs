@@ -592,7 +592,8 @@
                 ;; Tässä on kuitenkin ongelma: palvelin päättelee rivin pvm:n asettamisesta tai muuttamisesta, pitääkö
                 ;; maili lähettää. Näin rivin muiden tietojen muokkaus ei generoi turhaan maililähetystä.
                 ;; Täten saman pvm:n asettaminen uudelleen ei generoi maililähetystä, joten dialogi näyttäminen on turhaa.
-                ;; TODO Tosin on edelleen mahdollista nähdä dialogi jos vaihtaa pvm:n toiseksi ja sitten takaisin vanhaan.
+                ;; FIXME Tosin on edelleen mahdollista nähdä dialogi jos vaihtaa pvm:n toiseksi ja sitten takaisin vanhaan.
+                ;; Tällöin dialogi näytetään turhaa, sillä tietoja ei tulla lähettämään
                 (when (not (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu rivi) arvo))
                   (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
                         ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
