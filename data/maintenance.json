@@ -1,5 +1,10 @@
 [
   {
+    "date": "2018-02-02",
+    "title": "Ylläpitokohteiden hyppy",
+    "body": "Ylläpitokohteiden kohdeosille on nyt mahdollista kirjata hypyn sisältävä kohdeosa kohdeluettelissa sekä päällystysilmoitusnäkymässä."
+  },
+  {
     "date": "2018-01-29",
     "title": "Päällystysilmoituksen täytön helpotus",
     "body": "Päällystysilmoituksessa on nyt mahdollista helposti täyttää tai toistaa rivin arvo seuraaville riveille. Tämä nopeuttaa päällystysilmoituksen täyttöä silloin kun sama arvo toistuu useilla eri riveillä, sillä arvoa ei tarvitse kirjoittaa käsin uudestaan. Tarkempi ohje täytön / toiston käyttöön löytyy päällystysilmoituksesta olevasta vihjeestä."
