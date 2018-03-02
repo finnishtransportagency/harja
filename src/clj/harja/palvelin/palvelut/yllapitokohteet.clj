@@ -25,6 +25,7 @@
             [clj-time.coerce :as c]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [harja.palvelin.palvelut.valitavoitteet.urakkakohtaiset-valitavoitteet :as valitavoitteet]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.id :refer [id-olemassa?]]
@@ -110,17 +111,28 @@
                        aikataulu)]
     aikataulu))
 
+(defn- lisaa-yllapitokohteille-valitavoitteet
+  "Lisää ylläpitokohteille välitavoitteet, mikäli käyttäjällä on oikeus nähdä urakan välitavoitteet"
+  [db user urakka-id yllapitokohteet]
+  (if (oikeudet/voi-lukea? oikeudet/urakat-valitavoitteet urakka-id user)
+    (let [urakan-valitavoitteet (valitavoitteet/hae-urakan-valitavoitteet db user urakka-id)]
+      (log/debug "URAKAN VÄLITAVOITTEET AIKATAULUKSI: " urakan-valitavoitteet)
+      ;; TODO Yhdistä
+      yllapitokohteet)
+    yllapitokohteet))
+
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
-    (case (hae-urakkatyyppi db urakka-id)
-      :paallystys
-      (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
-      :tiemerkinta
-      (hae-tiemerkintaurakan-aikataulu db urakka-id vuosi))))
+    (->> (case (hae-urakkatyyppi db urakka-id)
+           :paallystys
+           (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
+           :tiemerkinta
+           (hae-tiemerkintaurakan-aikataulu db urakka-id vuosi))
+         (lisaa-yllapitokohteille-valitavoitteet db user urakka-id))))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
