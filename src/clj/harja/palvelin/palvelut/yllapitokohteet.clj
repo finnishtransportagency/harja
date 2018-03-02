@@ -118,7 +118,7 @@
     (let [urakan-valitavoitteet (valitavoitteet/hae-urakan-valitavoitteet db user urakka-id)]
       (map (fn [yllapitokohde]
              (let [kohteen-valitavoitteet (filter
-                                            #(= (:yllapitokohde-id urakan-valitavoitteet) (:id yllapitokohde))
+                                            #(= (:yllapitokohde-id %) (:id yllapitokohde))
                                             urakan-valitavoitteet)]
                (assoc yllapitokohde :valitavoitteet kohteen-valitavoitteet)))
            yllapitokohteet))
