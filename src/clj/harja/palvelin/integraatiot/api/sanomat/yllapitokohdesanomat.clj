@@ -19,6 +19,7 @@
               :tunnus (:tunnus alikohde)
               :nimi (:nimi alikohde)
               :sijainti (rakenna-sijainti alikohde karttapvm)
+              :hyppy (:hyppy? alikohde)
               :toimenpide (:toimenpide alikohde)}})
 
 (defn rakenna-kohde [{:keys [paallystysilmoitus] :as kohde} karttapvm]

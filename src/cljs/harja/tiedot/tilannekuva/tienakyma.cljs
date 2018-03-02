@@ -20,7 +20,8 @@
                           :haku-kaynnissa? nil
                           :tulokset nil
                           :nakymassa? false
-                          :reittipisteet {}}))
+                          :reittipisteet {}
+                          :naytetyt-toteumat #{}}))
 
 (defrecord PaivitaSijainti [sijainti])
 (defrecord PaivitaValinnat [valinnat])
@@ -32,6 +33,11 @@
 (defrecord TarkasteleToteumaa [toteuma])
 (defrecord HaeToteumanReittipisteet [toteuma])
 (defrecord ToteumanReittipisteetHaettu [id reittipisteet])
+
+(defn toteuman-reittipisteet-naytetty?
+  ([toteuma] (toteuman-reittipisteet-naytetty? @tienakyma toteuma))
+  ([app toteuma]
+   (some? ((:naytetyt-toteumat app) (:id toteuma)))))
 
 (defn- kartalle
   "Muodosta tuloksista karttataso.
@@ -163,15 +169,23 @@
 
   HaeToteumanReittipisteet
   (process-event [{toteuma :toteuma} app]
-    (let [tulos! (tuck/send-async! (partial ->ToteumanReittipisteetHaettu (:id toteuma)))]
-      (go
-        (tulos! (<! (k/post! :hae-reittipisteet-tienakymaan {:toteuma-id (:id toteuma)})))))
-    app)
+    (if ((:naytetyt-toteumat app) (:id toteuma))
+      (kartalle (-> app
+                    (update :naytetyt-toteumat disj (:id toteuma))
+                    (update :reittipisteet dissoc (:id toteuma))))
+
+      (do
+        (let [tulos! (tuck/send-async! (partial ->ToteumanReittipisteetHaettu (:id toteuma)))]
+          (go
+            (tulos! (<! (k/post! :hae-reittipisteet-tienakymaan {:toteuma-id (:id toteuma)})))))
+        app)))
 
   ToteumanReittipisteetHaettu
   (process-event [{:keys [id reittipisteet]} app]
     (log "Toteumalle " id " löytyi " (count reittipisteet) " reittipistettä.")
-    (kartalle (update app :reittipisteet assoc id reittipisteet))))
+    (kartalle (-> app
+                  (update :naytetyt-toteumat conj id)
+                  (update :reittipisteet assoc id reittipisteet)))))
 
 (defonce muut-tulokset-kartalla
   (r/cursor tienakyma [:muut-tulokset-kartalla]))
