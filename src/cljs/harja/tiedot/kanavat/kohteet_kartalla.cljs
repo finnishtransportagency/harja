@@ -44,7 +44,7 @@
                  lisatyot-nakymassa? :lisatyot
                  hairiotilanne-nakymassa? :hairiotilanteet)})))
 
-(defn- tekstiksi [avain]
+(defn tekstiksi [avain]
   (clj-str/capitalize (clj-str/replace (name avain) #"[_-]" " ")))
 
 (defn- kohde-valittu? [kohde]
