@@ -247,6 +247,7 @@
     (schema/optional-key :kokonaismassamaara) (schema/maybe schema/Num) ;; tonnia
     (schema/optional-key :pinta-ala) (schema/maybe schema/Num) ;; m2
     (schema/optional-key :kuulamylly) +kuulamylly-tai-nil+
+    (schema/optional-key :hyppy?) (schema/maybe schema/Bool)
     ;; Edellinen päällystetyyppi -arvoa käytettiin lomakkeessa aiemmin, nykyään ei ole enää kiinnostava tieto
     ;; Säilytetään skeemassa vanhan datan yhteensopivuuden vuoksi
     (schema/optional-key :edellinen-paallystetyyppi) paallystys-ja-paikkaus/+paallystetyyppi-tai-nil+

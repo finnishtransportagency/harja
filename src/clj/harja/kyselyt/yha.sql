@@ -55,6 +55,7 @@ SELECT
   yhaid,
   toimenpide,
   tyomenetelma,
+  hyppy                      AS "hyppy?",
   (SELECT viimeisin_paivitys
    FROM geometriapaivitys
    WHERE nimi = 'tieverkko') AS karttapvm
