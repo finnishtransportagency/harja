@@ -466,3 +466,12 @@ reimari-toimenpidetyypit
 
 (s/def ::poista-toimenpiteen-liite-kysely
   (s/keys :req [::id ::urakka-id ::liite-id]))
+
+(s/def ::tallennettava
+  (s/keys :req [::lisatieto ::sopimus-id ::reimari-tyolaji ::urakka-id]
+          :opt [::id ::luoja ::luotu ::muokattu ::muokkaaja ::poistettu ::poistaja]))
+
+(s/def ::hakuehdot ::hae-vesivaylien-toimenpiteet-kysely)
+
+(s/def ::tallenna-toimenpide-kysely
+  (s/keys :req-un [::hakuehdot ::tallennettava]))
