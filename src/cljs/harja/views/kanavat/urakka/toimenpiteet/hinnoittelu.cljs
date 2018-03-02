@@ -217,7 +217,7 @@
 (defn- omakustannushintaiset-tyot [e! app*]
   (let [omakustannushintaiset-tyot (tiedot/omakustannushintaiset-tyot app*)]
     [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
-     [valiotsikko "Omakustannushintaiset työt (ei indeksilaskentaa ????)"]
+     [valiotsikko "Omakustannushintaiset työt (ei indeksilaskentaa)"]
      [:table
       [hinnoittelu-header {:otsikko "Työ" :yk-lisa? true :yhteensa-otsikko? true :hinnoittelu-otsikot? true}]
       [:tbody

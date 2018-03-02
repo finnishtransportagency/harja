@@ -73,9 +73,9 @@
                 {::hinta/id 2}]
         uusi-hinta {::hinta/id -1
                     ::hinta/otsikko ""
-                    ::hinta/summa 30
+                    ::hinta/summa 0
                     ::hinta/ryhma "oma"
-                    ::hinta/yleiskustannuslisa 2}]
+                    ::hinta/yleiskustannuslisa 0}]
     (is (= (e! (tiedot/->LisaaOmakustannushintainenTyorivi)
                {:hinnoittele-toimenpide {::hinta/hinnat hinnat}})
            {:hinnoittele-toimenpide {::hinta/hinnat (conj hinnat uusi-hinta)}})))
@@ -85,10 +85,10 @@
                 {::hinta/id -1}]
         uusi-hinta {::hinta/id -2
                     ::hinta/otsikko ""
-                    ::hinta/summa 10
+                    ::hinta/summa 0
                     ::hinta/ryhma "oma"
                     ::hinta/yleiskustannuslisa 0}]
-    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+    (is (= (e! (tiedot/->LisaaOmakustannushintainenTyorivi)
                {:hinnoittele-toimenpide {::hinta/hinnat hinnat}})
            {:hinnoittele-toimenpide {::hinta/hinnat (conj hinnat uusi-hinta)}}))))
 

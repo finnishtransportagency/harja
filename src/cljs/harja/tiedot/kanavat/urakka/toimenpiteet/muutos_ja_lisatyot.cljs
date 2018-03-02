@@ -198,7 +198,8 @@
   (merge
     {::hinta/summa (cond
                      (or (nil? (::hinta/ryhma hinta))
-                         (#{"muu"} (::hinta/ryhma hinta)))
+                         (#{"muu"} (::hinta/ryhma hinta))
+                         (#{"oma"} (::hinta/ryhma hinta)))
                      0
 
                      (= "tyo" (::hinta/ryhma hinta))
