@@ -87,21 +87,23 @@
                       :tiemerkinta "Tie\u00ADmerkintä\u00ADkohde")
            :leveys 20
            :nimi :yllapitokohde-id
-           :fmt #(if %
-                   (pvm/pvm-opt %)
-                   "Ei kohdetta")
+           :fmt (fn [kohde-id]
+                  (if kohde-id
+                    (let [valittu-kohde (first (filter #(= (:id %) kohde-id) yllapitokohteet))]
+                      (yllapitokohde-domain/yllapitokohde-tekstina valittu-kohde))
+                    "Ei kohdetta"))
            :tyyppi :valinta
-           :valinnat yllapitokohteet
-           :valinta-arvo :id
-           :valinta-nayta (fn [arvo muokattava?]
-                            (if arvo
-                              (yllapitokohde-domain/yllapitokohde-tekstina
-                                arvo
-                                {:osoite {:tr-numero (:tr-numero arvo)
-                                          :tr-alkuosa (:tr-alkuosa arvo)
-                                          :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
-                                          :tr-loppuosa (:tr-loppuosa arvo)
-                                          :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
+           :valinnat (map :id yllapitokohteet)
+           :valinta-nayta (fn [kohde-id muokattava?]
+                            (if kohde-id
+                              (let [valittu-kohde (first (filter #(= (:id %) kohde-id) yllapitokohteet))]
+                                (yllapitokohde-domain/yllapitokohde-tekstina
+                                  valittu-kohde
+                                  {:osoite {:tr-numero (:tr-numero valittu-kohde)
+                                            :tr-alkuosa (:tr-alkuosa valittu-kohde)
+                                            :tr-alkuetaisyys (:tr-alkuetaisyys valittu-kohde)
+                                            :tr-loppuosa (:tr-loppuosa valittu-kohde)
+                                            :tr-loppuetaisyys (:tr-loppuetaisyys valittu-kohde)}}))
                               (if muokattava?
                                 "- Valitse kohde -"
                                 "")))})

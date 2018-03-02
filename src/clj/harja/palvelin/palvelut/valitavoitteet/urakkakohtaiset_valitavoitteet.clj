@@ -35,7 +35,7 @@
                            (:id user) urakka-id id)))
 
 (defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [aloituspvm takaraja nimi] :as valitavoite} (filter
+  (doseq [{:keys [aloituspvm takaraja nimi yllapitokohde-id] :as valitavoite} (filter
                                                     #(and (not (id-olemassa? (:id %)))
                                                           (not (:poistettu %)))
                                                     valitavoitteet)]
@@ -44,6 +44,7 @@
                                                                :aloituspvm (konv/sql-date aloituspvm)
                                                                :takaraja (konv/sql-date takaraja)
                                                                :nimi nimi
+                                                               :yllapitokohde yllapitokohde-id ; TODO Testaa tämä
                                                                :valtakunnallinen_valitavoite nil
                                                                :luoja (:id user)}))]
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
@@ -51,7 +52,7 @@
 
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
   (let [valitavoitteet (filter (comp not :valtakunnallinen-id) valitavoitteet)]
-    (doseq [{:keys [id takaraja nimi aloituspvm] :as valitavoite}
+    (doseq [{:keys [id takaraja nimi aloituspvm yllapitokohde-id] :as valitavoite}
             (filter #(and (id-olemassa? (:id %))
                           (not (:poistettu %)))
                     valitavoitteet)]
@@ -61,6 +62,7 @@
                                       :takaraja (konv/sql-date takaraja)
                                       :aloituspvm (konv/sql-date aloituspvm)
                                       :muokkaaja (:id user)
+                                      :yllapitokohde yllapitokohde-id ; TODO Testaa tämä
                                       :urakka urakka-id
                                       :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)

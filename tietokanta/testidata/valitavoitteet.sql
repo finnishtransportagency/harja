@@ -132,7 +132,7 @@ VALUES ((SELECT id
   ((SELECT id
     FROM   urakka
     WHERE  nimi = 'Muhoksen päällystysurakka'),
-   (SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'),
+   NULL,
    'Koko homma valamis',
    '2017-06-08',
    NULL,
