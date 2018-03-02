@@ -199,6 +199,37 @@
          ei-poistetut-tyot)]]
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]))
 
+
+(defn omakustannushintainen-tyo-hinnoittelurivi [e! hinta]
+  [:tr
+   [:td [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/yksikkohinta
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/maara
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
+   [:td
+    [kentta-hinnalle e! hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
+   [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen hinta))] ;;TODO: mikä on hinnoittelulogiikka tässä
+   [:td.keskita [yleiskustannuslisakentta e! hinta]]
+   [:td.keskita
+    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi hinta))]]])
+
+(defn- omakustannushintaiset-tyot [e! app*]
+  (let [omakustannushintaiset-tyot (tiedot/omakustannushintaiset-tyot app*)]
+    [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
+     [valiotsikko "Omakustannushintaiset työt (ei indeksilaskentaa ????)"]
+     [:table
+      [hinnoittelu-header {:otsikko "Työ" :yk-lisa? true :yhteensa-otsikko? true :hinnoittelu-otsikot? true}]
+      [:tbody
+       (for* [okt-tyo omakustannushintaiset-tyot]
+             [omakustannushintainen-tyo-hinnoittelurivi e! okt-tyo])]]
+     ;; kutsuketju rivinlisäyksessä:
+     ;; tiedot/->LisaaOmakustannushintainenTyorivi -> lisaa-hintarivi-toimenpiteelle (ryhma "oma")
+     ;; (huom lisaa-hintarivi, ei lisaa-tyorivi, vaikka kyseessä on ui:lla työ) ;;TODO meneekö samalla logiikalla nämä omat?
+
+     [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaOmakustannushintainenTyorivi))]]))
+
+
 (defn muu-tyo-hinnoittelurivi [e! hinta]
   [:tr
    [:td [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}]]
@@ -283,6 +314,7 @@
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
+   [omakustannushintaiset-tyot e! app*]
    [muut-tyot e! app*]
    [materiaalit e! app*]
    [muut-hinnat e! app*]

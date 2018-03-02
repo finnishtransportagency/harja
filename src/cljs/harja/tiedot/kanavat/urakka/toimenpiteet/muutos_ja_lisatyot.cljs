@@ -99,6 +99,7 @@
 (defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
+(defrecord LisaaOmakustannushintainenTyorivi [])
 (defrecord LisaaMuuKulurivi [])
 (defrecord LisaaMuuTyorivi [])
 (defrecord LisaaMateriaaliKulurivi [])
@@ -141,6 +142,9 @@
   (let [tyo-hinnat (etsi-mapit (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
                                ::hinta/ryhma ryhma-kriteeri)]
     (ilman-poistettuja tyo-hinnat)))
+
+(defn omakustannushintaiset-tyot [app]
+  (hintaryhman-tyot app "oma"))
 
 (defn muut-tyot [app]
   (hintaryhman-tyot app "tyo"))
@@ -471,6 +475,12 @@
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
     (lisaa-tyorivi-toimenpiteelle app))
+
+  LisaaOmakustannushintainenTyorivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma "oma"}
+      app))
 
   LisaaMuuKulurivi
   (process-event [_ app]

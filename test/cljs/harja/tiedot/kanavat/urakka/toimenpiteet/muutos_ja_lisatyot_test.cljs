@@ -68,6 +68,30 @@
         tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 42) app)]
     (is (-> app :valinnat :urakka :id (= 7)))))
 
+(deftest LisaaOmakustannushintainenTyorivi
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}]
+        uusi-hinta {::hinta/id -1
+                    ::hinta/otsikko ""
+                    ::hinta/summa 30
+                    ::hinta/ryhma "oma"
+                    ::hinta/yleiskustannuslisa 2}]
+    (is (= (e! (tiedot/->LisaaOmakustannushintainenTyorivi)
+               {:hinnoittele-toimenpide {::hinta/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::hinta/hinnat (conj hinnat uusi-hinta)}})))
+
+  (let [hinnat [{::hinta/id 1}
+                {::hinta/id 2}
+                {::hinta/id -1}]
+        uusi-hinta {::hinta/id -2
+                    ::hinta/otsikko ""
+                    ::hinta/summa 10
+                    ::hinta/ryhma "oma"
+                    ::hinta/yleiskustannuslisa 0}]
+    (is (= (e! (tiedot/->LisaaMuuKulurivi)
+               {:hinnoittele-toimenpide {::hinta/hinnat hinnat}})
+           {:hinnoittele-toimenpide {::hinta/hinnat (conj hinnat uusi-hinta)}}))))
+
 (deftest LisaaMuuKulurivi
   (let [hinnat [{::hinta/id 1}
                 {::hinta/id 2}]
