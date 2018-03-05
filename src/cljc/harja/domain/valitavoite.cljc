@@ -6,8 +6,8 @@
 (defn valmiustila-fmt [{:keys [valmispvm takaraja] :as valitavoite} tila]
   (case tila
         :uusi "Uusi"
-        :valmistunut "Valmistunut"
-        :ei-valmis
+        :valmis "Valmistunut"
+        :kesken
         (let [paivia-valissa (pvm/paivia-valissa (pvm/nyt) takaraja)]
           (str "Ei valmis" (when (pos? paivia-valissa)
                              (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
@@ -21,15 +21,15 @@
                                                                  {:lyhenna-yksikot? true})
                                  ")"))))))
 
-(defn valmiustila [{:keys [valmispvm takaraja]}]
+(defn valmiustila [{:keys [valmispvm takaraja] :as valitavoite}]
   (cond (nil? takaraja)
         :uusi
 
         (and takaraja valmispvm)
-        :valmistunut
+        :valmis
 
         (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
-        :ei-valmis
+        :kesken
 
         (and takaraja (nil? valmispvm) (t/after? (pvm/nyt) takaraja))
         :myohassa))
