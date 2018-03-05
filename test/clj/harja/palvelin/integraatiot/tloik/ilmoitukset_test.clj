@@ -141,7 +141,7 @@
       (let [{:keys [status body] :as vastaus} @ilmoitushaku]
         (println "ilmoitushaku: " vastaus)
         (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
-        ;; TODO HAR-7541 tiketillä korjataan, jos korjataan
+        ; FIXME Failaa randomisti Jenkinsillä, syy ei tiedossa
         #_(is (= (-> (cheshire/decode body)
                    (get "ilmoitukset")
                    count) 1) "Ilmoituksia on vastauksessa yksi")))

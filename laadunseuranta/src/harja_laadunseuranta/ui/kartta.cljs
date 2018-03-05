@@ -180,7 +180,7 @@
 (defn- paivita-ajoneuvon-sijainti [kartta ajoneuvo ajoneuvokerros ajoneuvon-sijainti]
   (doto ajoneuvo
     (.setGeometry (tee-piste ajoneuvon-sijainti))
-    (.setStyle (nuoli-ikoni-tyyli (laske-suunta (:heading ajoneuvon-sijainti)))))
+    (.setStyle (nuoli-ikoni-tyyli (- (/ Math/PI 2)))))
   (.changed ajoneuvokerros)
   (.changed (.getView kartta)))
 
@@ -267,7 +267,7 @@
 (defn- maarita-kartan-rotaatio-ajosuunnan-mukaan [kartta sijainti-edellinen sijainti-nykyinen]
   ;; Rotatoi kartta ajosuuntaan, mutta vain jos nopeus on riittävä, muuten
   ;; paikallaolo ja siitä aiheutuva GPS-kohina saa kartan levottomaksi
-  (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 8)
+  (when (>= (math/pisteiden-etaisyys sijainti-edellinen sijainti-nykyinen) 1)
     (paivita-kartan-rotaatio kartta (- (math/pisteiden-kulma-radiaaneina
                                          sijainti-edellinen
                                          sijainti-nykyinen)

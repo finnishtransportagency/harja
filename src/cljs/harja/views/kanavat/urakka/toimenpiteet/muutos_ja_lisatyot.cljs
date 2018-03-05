@@ -27,6 +27,7 @@
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as tasot]
             [harja.domain.kanavat.kommentti :as kommentti])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
@@ -116,9 +117,13 @@
                                   :aikavali @u/valittu-aikavali
                                   :toimenpide @u/valittu-toimenpideinstanssi}))
                            (e! (tiedot/->HaeSuunnitellutTyot))
-                           (e! (tiedot/->HaeHuoltokohteet)))
+                           (e! (tiedot/->HaeHuoltokohteet))
+                           (tasot/taso-paalle! :kan-kohteet)
+                           (tasot/taso-pois! :organisaatio))
                         #(do
-                           (e! (tiedot/->Nakymassa? false))))
+                           (e! (tiedot/->Nakymassa? false))
+                           (tasot/taso-pois! :kan-kohteet)
+                           (tasot/taso-paalle! :organisaatio)))
 
       (fn [e! {:keys [toimenpiteet haku-kaynnissa? avattu-toimenpide] :as app}]
         @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!

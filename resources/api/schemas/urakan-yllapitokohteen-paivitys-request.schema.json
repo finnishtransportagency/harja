@@ -50,6 +50,11 @@
                     "type": "string",
                     "maxLength": 128
                   },
+                  "hyppy": {
+                    "id": "urn:harja/yllapitokohde/hyppy",
+                    "required": false,
+                    "type": "boolean"
+                  },
                   "sijainti": {
                     "id": "urn:harja/yllapitokohde/tiesijainti",
                     "type": "object",
