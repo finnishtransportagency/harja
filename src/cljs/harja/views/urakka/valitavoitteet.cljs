@@ -118,7 +118,8 @@
    välitavoitteet"
   [{:keys [urakka kaikki-valitavoitteet-atom valittu-urakan-vuosi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
-        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))]
+        voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
+        yllapitokohteet @tiedot/urakan-yllapitokohteet-lomakkeelle]
     [grid/grid
      {:otsikko "Urakan välitavoitteet"
       :tyhja (if (nil? @kaikki-valitavoitteet-atom)
@@ -136,7 +137,7 @@
 
      [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
       (when @urakka/yllapitokohdeurakka?
-        (sarake-yllapitokohde urakka @kaikki-valitavoitteet-atom))
+        (sarake-yllapitokohde urakka yllapitokohteet))
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                     (pvm/pvm-opt %)
                                                                     "Ei takarajaa")
