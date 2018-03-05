@@ -472,8 +472,8 @@
                        ;; Välitavoitteet
                        (map-indexed
                          (fn [i valitavoite]
-                           ^{:key i}
                            (let [x (paiva-x (:takaraja valitavoite))]
+                             ^{:key i}
                              [:rect {:x x
                                      :y y
                                      :width 5
