@@ -1,5 +1,5 @@
 (ns harja.tiedot.kanavat.hallinta.kohteiden-luonti
-  (:require [reagent.core :refer [atom]]
+  (:require [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
             [cljs.core.async :as async :refer [<!]]
             [clojure.set :as set]
@@ -18,7 +18,6 @@
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.urakka :as ur]
             [clojure.string :as str]
-            [reagent.core :as r]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila])
   (:require-macros [cljs.core.async.macros :refer [go]]

@@ -11,7 +11,6 @@
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
-            [harja.ui.lomake :as lomake]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
