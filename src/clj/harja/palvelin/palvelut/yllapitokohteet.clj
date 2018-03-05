@@ -130,7 +130,6 @@
   (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
-    ;; TODO Testi että palauttaa myös välitavoitteet
     (let [aikataulu (case (hae-urakkatyyppi db urakka-id)
                       :paallystys
                       (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
