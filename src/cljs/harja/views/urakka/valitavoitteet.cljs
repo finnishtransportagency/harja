@@ -18,30 +18,10 @@
             [harja.tiedot.urakka :as urakka]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.urakka :as u-domain]
+            [harja.domain.valitavoite :as vt-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain])
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go]]))
-
-(defn valmiustilan-kuvaus [{:keys [valmispvm takaraja]}]
-  (cond (nil? takaraja)
-        "Uusi"
-
-        (and takaraja valmispvm)
-        "Valmistunut"
-
-        (and takaraja (nil? valmispvm) (pvm/sama-tai-ennen? (pvm/nyt) takaraja))
-        (let [paivia-valissa (pvm/paivia-valissa (pvm/nyt) takaraja)]
-          (str "Ei valmis" (when (pos? paivia-valissa)
-                             (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
-                                                                  {:lyhenna-yksikot? true})
-                                  " jäljellä)"))))
-
-        (and takaraja (nil? valmispvm) (t/after? (pvm/nyt) takaraja))
-        (let [paivia-valissa (pvm/paivia-valissa takaraja (pvm/nyt))]
-          (str "Myöhässä" (when (pos? paivia-valissa)
-                            (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
-                                                                 {:lyhenna-yksikot? true})
-                                 ")"))))))
 
 (defn- suodata-valitavoitteet-urakkavuodella [valitavoitteet valittu-urakan-vuosi]
   (filterv #(or
@@ -113,7 +93,7 @@
                     "Takaraja ei voi olla ennen aloituspäivää."]]
          :tyyppi :pvm}
         {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
-         :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+         :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
         {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
          :muokattava? (constantly voi-merkita-valmiiksi?)
          :nimi :valmispvm
@@ -156,7 +136,7 @@
                                                                     "Ei takarajaa")
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
-       :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+       :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
       {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
        :muokattava? (constantly voi-merkita-valmiiksi?)
        :nimi :valmispvm
@@ -263,7 +243,7 @@
         :tyyppi :pvm
         :muokattava? (constantly voi-tehda-tarkennuksen?)}
        {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
-        :nimi :valmiustila :hae identity :fmt valmiustilan-kuvaus}
+        :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
        {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
         :muokattava? (constantly voi-merkita-valmiiksi?)
         :nimi :valmispvm
