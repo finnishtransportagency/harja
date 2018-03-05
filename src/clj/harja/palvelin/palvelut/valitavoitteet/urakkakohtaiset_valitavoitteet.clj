@@ -44,7 +44,7 @@
                                                                :aloituspvm (konv/sql-date aloituspvm)
                                                                :takaraja (konv/sql-date takaraja)
                                                                :nimi nimi
-                                                               :yllapitokohde yllapitokohde-id ; TODO Testaa tämä
+                                                               :yllapitokohde yllapitokohde-id
                                                                :valtakunnallinen_valitavoite nil
                                                                :luoja (:id user)}))]
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
@@ -62,7 +62,7 @@
                                       :takaraja (konv/sql-date takaraja)
                                       :aloituspvm (konv/sql-date aloituspvm)
                                       :muokkaaja (:id user)
-                                      :yllapitokohde yllapitokohde-id ; TODO Testaa tämä
+                                      :yllapitokohde yllapitokohde-id
                                       :urakka urakka-id
                                       :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
