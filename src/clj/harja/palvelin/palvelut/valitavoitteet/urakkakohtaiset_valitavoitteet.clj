@@ -6,6 +6,7 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]))
 
@@ -87,6 +88,9 @@
 
 (defn tallenna-urakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (doseq [valitavoite valitavoitteet]
+    (when-let [yllapitokohde-id (:yllapitokohde-id valitavoite)]
+      (ypk-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)))
   (log/debug "Tallenna urakan välitavoitteet " (pr-str valitavoitteet))
   (jdbc/with-db-transaction [db db]
     (poista-poistetut-urakan-valitavoitteet db user valitavoitteet urakka-id)

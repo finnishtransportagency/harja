@@ -42,7 +42,7 @@
     (is (>= (count vastaus) 4))))
 
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-toimii
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
                          :aloituspvm (c/to-date (t/now))
@@ -134,6 +134,22 @@
 
     ;; Siivoa sotkut
     (u "DELETE FROM valitavoite WHERE nimi = 'testi566' OR nimi = '34554';")))
+
+(deftest urakkakohtaisen-valitavoitteen-tallentaminen-epaonnistuu-virheelliseen-kohteeseen
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        valitavoitteet [{:nimi "Oops...", :takaraja (c/to-date (t/now)),
+                         :aloituspvm (c/to-date (t/now))
+                         :yllapitokohde-id yllapitokohde-id
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}]]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua
+                   (:http-palvelin jarjestelma)
+                   :tallenna-urakan-valitavoitteet
+                   +kayttaja-jvh+
+                   {:urakka-id urakka-id
+                    :valitavoitteet valitavoitteet}))
+        "Ei voi lisätä kohdetta, joka ei kuulu urakkaan")))
 
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
