@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.yllapitokohteet-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
@@ -49,14 +49,22 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-yllapitokohteiden-haku
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet"] kayttaja-paallystys portti)
+  (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet")]
+                                        kayttaja-paallystys
+                                        portti)
         data (cheshire/decode (:body vastaus) true)
         yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
         leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
                                           yllapitokohteet))]
+
     (is (= 200 (:status vastaus)))
     (is (= 6 (count yllapitokohteet)))
     (is (some? leppajarven-ramppi))
+    (is (some :hyppy (map :alikohde (:alikohteet leppajarven-ramppi)))
+        "Palautuu tieto hypyllisistä kohteista")
+    (is (some (comp not :hyppy) (map :alikohde (:alikohteet leppajarven-ramppi)))
+        "Palautuu tieto hypyttömistä kohteista")
     (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
     (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
     (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
@@ -66,7 +74,10 @@
     (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/5/yllapitokohteet" urakka] "Erkki Esimerkki" portti)]
+  (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet") urakka]
+                                        "Erkki Esimerkki"
+                                        portti)]
     (is (= 403 (:status vastaus)))
     (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
 
@@ -84,9 +95,12 @@
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
                                              (.replace "__VALMIS__" (str false))))
-        kohdeosa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, hyppy, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
-        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " LIMIT 1;")))]
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
+        kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, hyppy, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
 
     (is (= 200 (:status vastaus)))
     (is (.contains (:body vastaus) "Päällystysilmoitus kirjattu onnistuneesti."))
@@ -94,43 +108,60 @@
     ;; Tarkistetaan, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila, id
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
-          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
+          ilmoitustiedot-kannassa (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))]
       ;; Päällystysilmoitusten määrä kasvoi yhdellä
       (is (= (+ paallystysilmoitusten-maara-kannassa-ennen 1) paallystysilmoitusten-maara-kannassa-jalkeen))
 
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id (:id kohdeosa)
-                                          :lisaaineet "lisäaineet"
-                                          :leveys 1.2
-                                          :kokonaismassamaara 12.3
-                                          :sideainetyyppi 1
-                                          :muotoarvo "testi"
-                                          :esiintyma "testi"
-                                          :pitoisuus 1.2
-                                          :pinta-ala 2.2
-                                          :massamenekki 22
-                                          :kuulamylly 4
-                                          :raekoko 12
-                                          :tyomenetelma 72
-                                          :rc% 54
-                                          :paallystetyyppi 11
-                                          :km-arvo "testi"}],
-                             :alustatoimet [{:verkkotyyppi 1
-                                             :tr-alkuosa 1
-                                             :tr-loppuetaisyys 15
-                                             :verkon-tarkoitus 5
-                                             :kasittelymenetelma 1
-                                             :tr-loppuosa 5
-                                             :tr-alkuetaisyys 1
-                                             :tekninen-toimenpide 1
-                                             :paksuus 1
-                                             :verkon-sijainti 1}]}))
-      (is (= (dissoc kohdeosa :id)
+      (is (= ilmoitustiedot-kannassa {:alustatoimet [{:kasittelymenetelma 1
+                                                      :paksuus 1
+                                                      :tekninen-toimenpide 1
+                                                      :tr-alkuetaisyys 1
+                                                      :tr-alkuosa 1
+                                                      :tr-loppuetaisyys 15
+                                                      :tr-loppuosa 5
+                                                      :verkkotyyppi 1
+                                                      :verkon-sijainti 1
+                                                      :verkon-tarkoitus 5}]
+                                      :osoitteet [{:esiintyma "testi"
+                                                   :km-arvo "testi"
+                                                   :kohdeosa-id 14
+                                                   :kokonaismassamaara 12.3
+                                                   :kuulamylly 4
+                                                   :leveys 1.2
+                                                   :lisaaineet "lisäaineet"
+                                                   :massamenekki 22
+                                                   :muotoarvo "testi"
+                                                   :paallystetyyppi 11
+                                                   :pinta-ala 2.2
+                                                   :pitoisuus 1.2
+                                                   :raekoko 12
+                                                   :rc% 54
+                                                   :sideainetyyppi 1
+                                                   :tyomenetelma 72}
+                                                  {:esiintyma "testi2"
+                                                   :km-arvo "testi2"
+                                                   :kohdeosa-id 15
+                                                   :kokonaismassamaara 12.3
+                                                   :kuulamylly 4
+                                                   :leveys 1.2
+                                                   :lisaaineet "lisäaineet"
+                                                   :massamenekki 22
+                                                   :muotoarvo "testi2"
+                                                   :paallystetyyppi 11
+                                                   :pinta-ala 2.2
+                                                   :pitoisuus 1.2
+                                                   :raekoko 12
+                                                   :rc% 54
+                                                   :sideainetyyppi 1
+                                                   :tyomenetelma 72}]}))
+      (is (= (dissoc kohdeosa-1-kannassa :id)
              {:massamaara nil
+              :hyppy false
               :nimi "1. testialikohde"
               :paallystetyyppi nil
               :raekoko nil
@@ -142,6 +173,20 @@
               :tr_loppuetaisyys 16
               :tyomenetelma nil
               :yllapitokohde kohde-id}))
+      (is (= (dissoc kohdeosa-2-kannassa :id)
+             {:hyppy true
+              :massamaara nil
+              :nimi "2. testialikohde"
+              :paallystetyyppi nil
+              :raekoko nil
+              :toimenpide nil
+              :tr_alkuetaisyys 16
+              :tr_alkuosa 5
+              :tr_loppuetaisyys 16
+              :tr_loppuosa 5
+              :tr_numero 20
+              :tyomenetelma nil
+              :yllapitokohde 5}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) "aloitettu") "Ei asetettu käsiteltäväksi, joten tila on aloitettu")
 
@@ -185,45 +230,67 @@
     ;; Tarkistetana, että tiedot tallentuivat oikein
     (let [paallystysilmoitus (first (q (str "SELECT ilmoitustiedot, takuupvm, tila
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
-          ilmoitustiedot (konv/jsonb->clojuremap (first paallystysilmoitus))
+          ilmoitustiedot-kannassa (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
-          kohdeosa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+          kohdeosa-1-kannassa (first (q-map (str "SELECT id, hyppy, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
-        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " LIMIT 1;")))]
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
+          kohdeosa-2-kannassa (first (q-map (str "SELECT id, hyppy, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
+        FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
       (is (= paallystysilmoitusten-maara-kannassa-ennen paallystysilmoitusten-maara-kannassa-jalkeen))
       ;; Tiedot ovat skeeman mukaiset
-      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot))
+      (is (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+ ilmoitustiedot-kannassa))
 
       ;; Tiedot vastaavat API:n kautta tullutta payloadia
-      (is (= ilmoitustiedot {:osoitteet [{:kohdeosa-id (:id kohdeosa)
-                                          :lisaaineet "lisäaineet"
-                                          :leveys 1.2
-                                          :kokonaismassamaara 12.3
-                                          :sideainetyyppi 1
-                                          :muotoarvo "testi"
-                                          :esiintyma "testi"
-                                          :pitoisuus 1.2
-                                          :pinta-ala 2.2
-                                          :massamenekki 22
-                                          :kuulamylly 4
-                                          :raekoko 12
-                                          :tyomenetelma 72
-                                          :rc% 54
-                                          :paallystetyyppi 11
-                                          :km-arvo "testi"}],
-                             :alustatoimet [{:verkkotyyppi 1
-                                             :tr-alkuosa 1
-                                             :tr-loppuetaisyys 15
-                                             :verkon-tarkoitus 5
-                                             :kasittelymenetelma 1
-                                             :tr-loppuosa 5
-                                             :tr-alkuetaisyys 1
-                                             :tekninen-toimenpide 1
-                                             :paksuus 1
-                                             :verkon-sijainti 1}]}))
-      (is (= (dissoc kohdeosa :id)
-             {:massamaara nil
+      (is (= ilmoitustiedot-kannassa
+             {:alustatoimet [{:kasittelymenetelma 1
+                              :paksuus 1
+                              :tekninen-toimenpide 1
+                              :tr-alkuetaisyys 1
+                              :tr-alkuosa 1
+                              :tr-loppuetaisyys 15
+                              :tr-loppuosa 5
+                              :verkkotyyppi 1
+                              :verkon-sijainti 1
+                              :verkon-tarkoitus 5}]
+              :osoitteet [{:esiintyma "testi"
+                           :km-arvo "testi"
+                           :kohdeosa-id 14
+                           :kokonaismassamaara 12.3
+                           :kuulamylly 4
+                           :leveys 1.2
+                           :lisaaineet "lisäaineet"
+                           :massamenekki 22
+                           :muotoarvo "testi"
+                           :paallystetyyppi 11
+                           :pinta-ala 2.2
+                           :pitoisuus 1.2
+                           :raekoko 12
+                           :rc% 54
+                           :sideainetyyppi 1
+                           :tyomenetelma 72}
+                          {:esiintyma "testi2"
+                           :km-arvo "testi2"
+                           :kohdeosa-id 15
+                           :kokonaismassamaara 12.3
+                           :kuulamylly 4
+                           :leveys 1.2
+                           :lisaaineet "lisäaineet"
+                           :massamenekki 22
+                           :muotoarvo "testi2"
+                           :paallystetyyppi 11
+                           :pinta-ala 2.2
+                           :pitoisuus 1.2
+                           :raekoko 12
+                           :rc% 54
+                           :sideainetyyppi 1
+                           :tyomenetelma 72}]}))
+
+      (is (= (dissoc kohdeosa-1-kannassa :id)
+             {:hyppy false
+              :massamaara nil
               :nimi "1. testialikohde"
               :paallystetyyppi nil
               :raekoko nil
@@ -235,6 +302,20 @@
               :tr_loppuetaisyys 16
               :tyomenetelma nil
               :yllapitokohde kohde-id}))
+      (is (= (dissoc kohdeosa-2-kannassa :id)
+             {:hyppy true
+              :massamaara nil
+              :nimi "2. testialikohde"
+              :paallystetyyppi nil
+              :raekoko nil
+              :toimenpide nil
+              :tr_alkuetaisyys 16
+              :tr_alkuosa 5
+              :tr_loppuetaisyys 16
+              :tr_loppuosa 5
+              :tr_numero 20
+              :tyomenetelma nil
+              :yllapitokohde 1}))
       (is (some? (get paallystysilmoitus 1)) "Takuupvm on")
       (is (= (get paallystysilmoitus 2) (get vanha-paallystysilmoitus 2)) "Tila ei muuttunut miksikään"))))
 
@@ -517,6 +598,7 @@
     (is (.contains (:body vastaus) "Ylläpitokohde ei kuulu urakkaan"))))
 
 (deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-paallystyskayttajana
+  ;; Ylläpitokohteen päivitys voidaan tehdä vain päällystysurakkaan
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
@@ -525,6 +607,7 @@
     (is (= 400 (:status vastaus)))))
 
 (deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-tiemerkintakayttajana
+  ;; Ylläpitokohteen päivitys voidaan tehdä vain päällystysurakkaan
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
@@ -532,7 +615,7 @@
                                         (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json"))]
     (is (= 400 (:status vastaus)))))
 
-(deftest avoimen-kohteen-paivittaminen-toimii
+(deftest avoimen-yllapitokohteen-paivittaminen-toimii
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
         payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-request.json")
@@ -556,16 +639,21 @@
                                                      :kaista 1
                                                      :loppuet 666
                                                      :losa 14
-                                                     :numero 20}
+                                                     :numero 20
+                                                     :hyppy? false}
           oletettu-toisen-alikohteen-tr-osoite {:aet 666
                                                 :ajorata 1
                                                 :aosa 14
                                                 :kaista 1
                                                 :loppuet 1
                                                 :losa 17
-                                                :numero 20}]
+                                                :numero 20
+                                                :hyppy? false}]
+
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 2 kpl")
+      (is (= 3 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
+      (is (= 2 (count (filter (comp not :hyppy?) alikohteiden-tr-osoitteet))) "2 alikohdetta on ei-hyppyjä")
+      (is (= 1 (count (filter :hyppy? alikohteiden-tr-osoitteet))) "1 alikohde on hyppy")
       (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
       (is (alikohteiden-tr-osoitteet oletettu-toisen-alikohteen-tr-osoite)
@@ -748,10 +836,11 @@
     (with-fake-http [+testi-vkm+ vkm-vastaus
                      #".*api\/urakat.*" :allow]
       (let [payload (slurp "test/resurssit/api/toisen-paivan-verkon-paallystyskohteen-paivitys-request.json")
-            {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
-                                                     kayttaja-paallystys portti
-                                                     payload)]
-        (is (= 200 status) "Kutsu tehtiin onnistuneesti")
+            vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                            kayttaja-paallystys portti
+                                            payload)]
+        (log/debug vastaus)
+        (is (= 200 (:status vastaus)) "Kutsu tehtiin onnistuneesti")
 
         (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
               oletettu-tr-osoite {:numero 20
@@ -761,9 +850,12 @@
                                   :loppuet 100
                                   :ajorata 1
                                   :kaista 1}
-              odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1}
-              odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1}
+              odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1
+                                            :hyppy? false}
+              odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1
+                                            :hyppy? false}
               alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))]
+
           (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
           (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
           (is (alikohteiden-tr-osoitteet odotettu-1-alikohteen-osoite))
