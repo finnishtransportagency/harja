@@ -626,6 +626,45 @@
              :tyyppi :string}]
    :data osa})
 
+(defmethod infopaneeli-skeema :kohde-toimenpide [kohde]
+  (let [toimenpiteen-kentta (fn [otsikko kentta]
+                              (when (-> kohde :toimenpiteet kentta)
+                                {:otsikko otsikko
+                                 :tyyppi :string
+                                 :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet kentta))}))]
+    {:tyyppi :kohde
+     :jarjesta-fn (constantly false)
+     :otsikko (kohde/fmt-kohteen-nimi kohde)
+     :tiedot [(toimenpiteen-kentta "Kohteenosan tyyppi" :kohteenosan-tyyppi)
+              (toimenpiteen-kentta "Huoltokohde" :huoltokohde)
+              (if (-> kohde :toimenpiteet :muu-toimenpide)
+                (toimenpiteen-kentta "Toimenpide" :muu-toimenpide)
+                (toimenpiteen-kentta "Toimenpide" :toimenpide))
+              (toimenpiteen-kentta "Lisatieto" :lisatieto)
+              (toimenpiteen-kentta "Suorittaja" :suorittaja)
+              (toimenpiteen-kentta "Kuittaaja" :kuittaaja)
+              (toimenpiteen-kentta "Päivämäärä" :pvm)]
+     :data kohde}))
+
+(defmethod infopaneeli-skeema :kohde-hairiotilanne [kohde]
+  (let [hairiotilanteen-kentta (fn [otsikko kentta]
+                                 (when (-> kohde :hairiot kentta)
+                                   {:otsikko otsikko
+                                    :tyyppi :string
+                                    :hae (hakufunktio :hairiot #(-> % :hairiot kentta))}))]
+    {:tyyppi :kohde
+     :jarjesta-fn (constantly false)
+     :otsikko (kohde/fmt-kohteen-nimi kohde)
+     :tiedot [(hairiotilanteen-kentta "Kohde" :kohde)
+              (hairiotilanteen-kentta "Havaintoaika" :havaintoaika)
+              (hairiotilanteen-kentta "Korjauksen tila" :korjauksen-tila)
+              (hairiotilanteen-kentta "Vikaluokka" :vikaluokka)
+              (hairiotilanteen-kentta "Korjaustoimenpide" :korjaustoimenpide)
+              (hairiotilanteen-kentta "Korjausaika (h)" :korjausaika-h)
+              (hairiotilanteen-kentta "Syy" :syy)
+              (hairiotilanteen-kentta "Kuittaaja" :kuittaaja)]
+     :data kohde}))
+
 (defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]
   {:tyyppi :suolatoteuma
    :jarjesta-fn (let [fn :alkanut]
