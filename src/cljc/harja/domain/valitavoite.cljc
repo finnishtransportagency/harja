@@ -5,21 +5,27 @@
 
 (defn valmiustila-fmt [{:keys [valmispvm takaraja] :as valitavoite} tila]
   (case tila
-        :uusi "Uusi"
-        :valmis "Valmistunut"
-        :kesken
-        (let [paivia-valissa (pvm/paivia-valissa (pvm/nyt) takaraja)]
-          (str "Ei valmis" (when (pos? paivia-valissa)
-                             (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
-                                                                  {:lyhenna-yksikot? true})
-                                  " jäljellä)"))))
+    :uusi "Uusi"
+    :valmis "Valmistunut"
+    :kesken
+    (let [paivia-valissa (pvm/paivia-valissa (pvm/nyt) takaraja)]
+      (str "Ei valmis" (when (pos? paivia-valissa)
+                         (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
+                                                              {:lyhenna-yksikot? true})
+                              " jäljellä)"))))
 
-        :myohassa
-        (let [paivia-valissa (pvm/paivia-valissa takaraja (pvm/nyt))]
-          (str "Myöhässä" (when (pos? paivia-valissa)
-                            (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
-                                                                 {:lyhenna-yksikot? true})
-                                 ")"))))))
+    :myohassa
+    (let [paivia-valissa (pvm/paivia-valissa takaraja (pvm/nyt))]
+      (str "Myöhässä" (when (pos? paivia-valissa)
+                        (str " (" (fmt/kuvaile-paivien-maara paivia-valissa
+                                                             {:lyhenna-yksikot? true})
+                             ")"))))))
+
+(def valmiustila-fmt-yksinkertainen
+  {:uusi "Uusi"
+   :valmis "Valmistunut"
+   :kesken "Ei valmis"
+   :myohassa "Myöhässä"})
 
 (defn valmiustila [{:keys [valmispvm takaraja] :as valitavoite}]
   (cond (nil? takaraja)
@@ -36,3 +42,6 @@
 
 (defn valmiustilan-kuvaus [valitavoite]
   (valmiustila-fmt valitavoite (valmiustila valitavoite)))
+
+(defn valmiustilan-kuvaus-yksinkertainen [valitavoite]
+  (valmiustila-fmt-yksinkertainen (valmiustila valitavoite)))

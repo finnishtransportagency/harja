@@ -17,7 +17,8 @@
     #?(:clj
     [clojure.future :refer :all])
     #?(:clj
-    [harja.tyokalut.spec :refer [defn+]]))
+    [harja.tyokalut.spec :refer [defn+]])
+    [clojure.string :as str])
   #?(:cljs (:require-macros [harja.tyokalut.spec :refer [defn+]]
              [cljs.core.async.macros :refer [go]])))
 
@@ -489,9 +490,17 @@
                                      :height korkeus
                                      :fill vari
                                      :fill-opacity 1.0
-                                     :on-mouse-over #(show-tooltip! {:x x
-                                                                     :y (hover-y y)
-                                                                     :text (:nimi valitavoite)})
+                                     :on-mouse-over #(show-tooltip!
+                                                       {:x x
+                                                        :y (hover-y y)
+                                                        :text (str (:nimi valitavoite)
+                                                                   " ("
+                                                                   (str/lower-case
+                                                                     (vt-domain/valmiustilan-kuvaus-yksinkertainen
+                                                                       valitavoite))
+                                                                   ", takaraja "
+                                                                   (pvm/pvm (:takaraja valitavoite))
+                                                                   ")")})
                                      :on-mouse-out hide-tooltip!}]))
                          (filter :takaraja (::valitavoitteet rivi)))]))
                   ajat)
