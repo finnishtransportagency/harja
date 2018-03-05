@@ -60,6 +60,7 @@
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
                                                 [yllapitokohde-id :kohde])
                               ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
+                              ::aikajana/valitavoitteet (:valitavoitteet rivi)
                               ::aikajana/alku aikataulu-kohde-alku
                               ::aikajana/loppu aikataulu-kohde-valmis
                               ::aikajana/kohde-nimi (:nimi rivi)
@@ -71,6 +72,7 @@
                              {::aikajana/drag (when (voi-muokata-paallystys? rivi)
                                                 [yllapitokohde-id :paallystys])
                               ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
+                              ::aikajana/valitavoitteet (:valitavoitteet rivi)
                               ::aikajana/alku aikataulu-paallystys-alku
                               ::aikajana/loppu aikataulu-paallystys-loppu
                               ::aikajana/kohde-nimi (:nimi rivi)
@@ -82,6 +84,7 @@
                              {::aikajana/drag (when (voi-muokata-tiemerkinta? rivi)
                                                 [yllapitokohde-id :tiemerkinta])
                               ::aikajana/sahkopostitiedot (:sahkopostitiedot rivi)
+                              ::aikajana/valitavoitteet (:valitavoitteet rivi)
                               ::aikajana/alku aikataulu-tiemerkinta-alku
                               ::aikajana/loppu aikataulu-tiemerkinta-loppu
                               ::aikajana/kohde-nimi (:nimi rivi)

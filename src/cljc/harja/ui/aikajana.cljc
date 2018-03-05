@@ -467,7 +467,20 @@
                                      :y y :show-tooltip! show-tooltip!
                                      :paivan-leveys paivan-leveys
                                      :hide-tooltip! hide-tooltip! :reuna reuna
-                                     :vari vari :suunta (if alku :oikea :vasen)})))]))
+                                     :vari vari :suunta (if alku :oikea :vasen)})))
+
+                       ;; Välitavoitteet
+                       [:rect {:x (+ x 100) :y y
+                               :width 5
+                               :height korkeus
+                               :fill "#FFA500"
+                               :fill-opacity 1.0
+                               :on-mouse-over #(show-tooltip! {:x (+ x 100)
+                                                               :y (hover-y y)
+                                                               :text "Ihan mahoton välitavoite"})
+                               :on-mouse-out hide-tooltip!}]
+
+                       ]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}
