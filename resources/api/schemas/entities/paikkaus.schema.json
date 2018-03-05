@@ -6,23 +6,23 @@
   "required": true,
   "properties": {
     "tunniste": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tunniste",
+      "id": "urn:harja/paikkaukset/0/paikkaus/tunniste",
       "required": true,
       "additionalProperties": false,
       "type": "object",
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
     "paikkauskohde": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde",
+      "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde",
       "required": true,
       "additionalProperties": false,
       "type": "object",
       "nimi": {
-        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde/nimi",
+        "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde/nimi",
         "type": "string"
       },
       "tunniste": {
-        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/paikkauskohde/tunniste",
+        "id": "urn:harja/paikkaukset/0/paikkaus/paikkauskohde/tunniste",
         "required": true,
         "additionalProperties": false,
         "type": "object",
@@ -30,7 +30,7 @@
       }
     },
     "alkuaika": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/alkuaika",
+      "id": "urn:harja/paikkaukset/0/paikkaus/alkuaika",
       "type": [
         "string",
         "null"
@@ -39,7 +39,7 @@
       "required": true
     },
     "loppuaika": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/loppuaika",
+      "id": "urn:harja/paikkaukset/0/paikkaus/loppuaika",
       "type": [
         "string",
         "null"
@@ -48,14 +48,14 @@
       "required": true
     },
     "sijainti": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/sijainti",
+      "id": "urn:harja/paikkaukset/0/paikkaus/sijainti",
       "type": "object",
       "additionalProperties": false,
       "required": true,
       "$ref": "file:resources/api/schemas/entities/tieosoitevali-tienkohdilla.schema.json"
     },
     "tyomenetelma": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/tyomenetelma",
+      "id": "urn:harja/paikkaukset/0/paikkaus/tyomenetelma",
       "required": true,
       "enum": [
         "massapintaus",
@@ -64,7 +64,7 @@
       ]
     },
     "massatyyppi": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/massatyyppi",
+      "id": "urn:harja/paikkaukset/0/paikkaus/massatyyppi",
       "required": true,
       "enum": [
         "asfalttibetoni",
@@ -73,19 +73,19 @@
       ]
     },
     "leveys": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/leveys",
+      "id": "urn:harja/paikkaukset/0/paikkaus/leveys",
       "type": "number"
     },
     "massamenekki": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/massamenekki",
+      "id": "urn:harja/paikkaukset/0/paikkaus/massamenekki",
       "type": "integer"
     },
     "raekoko": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/raekoko",
+      "id": "urn:harja/paikkaukset/0/paikkaus/raekoko",
       "$ref": "file:resources/api/schemas/entities/paallystys_raekoko.schema.json"
     },
     "kuulamylly": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kuulamylly",
+      "id": "urn:harja/paikkaukset/0/paikkaus/kuulamylly",
       "enum": [
         "AN5",
         "AN7",
@@ -97,33 +97,33 @@
       ]
     },
     "kivi-ja-sideaineet": {
-      "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet",
+      "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet",
       "type": "array",
       "maxItems": 100,
       "items": {
-        "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0",
+        "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "kivi-ja-sideaine": {
-            "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0",
+            "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0",
             "type": "object",
             "additionalProperties": false,
             "properties": {
               "esiintyma": {
-                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/esiintyma",
+                "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0/esiintyma",
                 "type": "string"
               },
               "km-arvo": {
-                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/km-arvo",
+                "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0/km-arvo",
                 "type": "string"
               },
               "muotoarvo": {
-                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/muotoarvo",
+                "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0/muotoarvo",
                 "type": "string"
               },
               "sideainetyyppi": {
-                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/sideainetyyppi",
+                "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0/sideainetyyppi",
                 "enum": [
                   "20/30",
                   "35/50",
@@ -150,11 +150,11 @@
                 ]
               },
               "pitoisuus": {
-                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/pitoisuus",
+                "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0/pitoisuus",
                 "type": "number"
               },
               "lisa-aineet": {
-                "id": "urn:harja/paikkaustoteumat/0/paikkaustoteuma/kivi-ja-sideaineet/0/lisa-aineet",
+                "id": "urn:harja/paikkaukset/0/paikkaus/kivi-ja-sideaineet/0/lisa-aineet",
                 "type": "string"
               }
             }

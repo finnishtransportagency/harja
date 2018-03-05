@@ -11,21 +11,21 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "paikkaustoteumat": {
-      "id": "urn:harja/paikkaustoteumat",
+    "paikkaukset": {
+      "id": "urn:harja/paikkaukset",
       "type": "array",
       "maxItems": 100,
       "required": true,
       "items": {
-        "id": "urn:harja/paikkaustoteumat/0",
+        "id": "urn:harja/paikkaukset/0",
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "paikkaustoteuma": {
+          "paikkaus": {
             "type": "object",
             "additionalProperaties": false,
             "required": true,
-            "$ref": "file:resources/api/schemas/entities/paikkaustoteuma.schema.json"
+            "$ref": "file:resources/api/schemas/entities/paikkaus.schema.json"
           }
         }
       }

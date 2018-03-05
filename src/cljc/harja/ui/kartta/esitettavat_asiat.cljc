@@ -600,6 +600,7 @@
                 (pvm/pvm-aika-sek aika))
      :alue (assoc sijainti
              :fill true
+             :radius 50
              :color vari)}))
 
 (defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]
@@ -613,6 +614,28 @@
       :alue (maarittele-feature osa
                                 ;; Ei haluta piirtää valitun kohteen osia isommalla, vain eri värillä
                                 false
+                                ikoni))))
+
+(defmethod asia-kartalle :kohde-toimenpide [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-toimenpide
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kohde-hairiotilanne [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-hairiotilanne
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
                                 ikoni))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]

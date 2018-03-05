@@ -109,6 +109,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     border-collapse: collapse;
     table-layout: fixed;
   }
+
   table.grid tr.vetolaatikko-auki {
     display: table-row;
     > td {
@@ -260,6 +261,15 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       .pvm-aika-kentta td {
         padding: 0;
       }
+    }
+  }
+
+  tr.disabloitu-rivi {
+    background-color: @harmaa6 !important;
+    color: @valkoinen;
+
+    input {
+      color: initial;
     }
   }
 

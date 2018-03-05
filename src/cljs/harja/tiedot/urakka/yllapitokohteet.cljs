@@ -10,7 +10,8 @@
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti]
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [harja.tyokalut.local-storage :as local-storage])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -123,24 +124,27 @@
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
-  [kohdeosat key]
-  (let [rivi (get kohdeosat key)
-        avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
-        uusi-rivi {:nimi ""
-                   :tr-numero (:tr-numero rivi)
-                   :tr-alkuosa nil
-                   :tr-alkuetaisyys nil
-                   :tr-loppuosa (:tr-loppuosa rivi)
-                   :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
-                   :tr-ajorata (:tr-ajorata rivi)
-                   :tr-kaista (:tr-kaista rivi)
-                   :toimenpide ""}]
-    (-> kohdeosat
-        (assoc-in [key :tr-loppuosa] nil)
-        (assoc-in [key :tr-loppuetaisyys] nil)
-        (assoc (inc key) uusi-rivi)
-        (merge (zipmap (map inc avaimet-jalkeen)
-                       (map #(get kohdeosat %) avaimet-jalkeen))))))
+  ([kohdeosat key]
+   (lisaa-uusi-kohdeosa kohdeosat key false))
+  ([kohdeosat key hyppy?]
+   (let [rivi (get kohdeosat key)
+         avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
+         uusi-rivi {:nimi ""
+                    :tr-numero (:tr-numero rivi)
+                    :tr-alkuosa nil
+                    :tr-alkuetaisyys nil
+                    :hyppy? hyppy?
+                    :tr-loppuosa (:tr-loppuosa rivi)
+                    :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
+                    :tr-ajorata (:tr-ajorata rivi)
+                    :tr-kaista (:tr-kaista rivi)
+                    :toimenpide ""}]
+     (-> kohdeosat
+         (assoc-in [key :tr-loppuosa] nil)
+         (assoc-in [key :tr-loppuetaisyys] nil)
+         (assoc (inc key) uusi-rivi)
+         (merge (zipmap (map inc avaimet-jalkeen)
+                        (map #(get kohdeosat %) avaimet-jalkeen)))))))
 
 (defn poista-kohdeosa
   "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus
@@ -207,6 +211,7 @@
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.
    Ottaa vectorin ylläpitokohteita ja palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
    Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
+   Suodattaa pois kohdeosat, jotka on merkitty hypyksi.
 
    yllapitokohteet  Vector ylläpitokohteita, joilla on mukana ylläpitokohteen kohdeosat (:kohdeosat avaimessa)
    lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot"

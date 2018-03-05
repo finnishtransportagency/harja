@@ -139,6 +139,7 @@
                             {:yllapitokohde (:id kohde)
                              :nimi nimi
                              :tunnus tunnus
+                             :hyppy false ; YHA:sta ei tule hyppyjä
                              :tr_numero (:tienumero tierekisteriosoitevali)
                              :tr_alkuosa (:aosa tierekisteriosoitevali)
                              :tr_alkuetaisyys (:aet tierekisteriosoitevali)

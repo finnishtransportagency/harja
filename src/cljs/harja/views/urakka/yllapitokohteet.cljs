@@ -25,7 +25,15 @@
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.tiedot.urakka :as u]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.atom :refer [wrap-vain-luku]])
+            [harja.ui.viesti :as viesti]
+            [harja.tiedot.urakka :as urakka]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.ui.validointi :as validointi]
+            [harja.atom :refer [wrap-vain-luku]]
+            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.kentat :as kentat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -98,6 +106,7 @@
           [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
                        :leveys (+ perusleveys 5)
                        :pituus-max 30
+                       :sisalto-kun-rivi-disabloitu (:sisalto-kun-rivi-disabloitu nimi)
                        :muokattava? (or (:muokattava? nimi) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
@@ -135,24 +144,28 @@
             :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADo\u00ADsa"]
                             alkuosa-ei-lopun-jalkeen]
                            (:validoi aosa))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aosa)
             :muokattava? (or (:muokattava? aosa) (constantly true))}
            {:otsikko "Aet" :nimi (:nimi aet) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna al\u00ADku\u00ADe\u00ADtäi\u00ADsyys"]
                             alkuetaisyys-ei-lopun-jalkeen]
                            (:validoi aet))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? aet)
             :muokattava? (or (:muokattava? aet) (constantly true))}
            {:otsikko "Losa" :nimi (:nimi losa) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADo\u00ADsa"]
                             loppuosa-ei-alkua-ennen]
                            (:validoi losa))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? losa)
             :muokattava? (or (:muokattava? losa) (constantly true))}
            {:otsikko "Let" :nimi (:nimi let) :leveys perusleveys :tyyppi :positiivinen-numero
             :tasaa :oikea :kokonaisluku? true
             :validoi (into [[:ei-tyhja "An\u00ADna lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys"]
                             loppuetaisyys-ei-alkua-ennen]
                            (:validoi let))
+            :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? let)
             :muokattava? (or (:muokattava? let) (constantly true))}
            (merge
              {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
@@ -298,17 +311,23 @@
         toiminnot-komponentti
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
-            [:span
-             [:button.nappi-ensisijainen.btn-xs
-              {:disabled (= kohdetyyppi :sora)
-               :on-click
-               #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))}
-              (ikonit/ikoni-ja-teksti (ikonit/livicon-arrow-down) "Lisää")]
-             [:button.nappi-kielteinen.btn-xs
-              {:disabled (= 1 (count kohdeosat-nyt))
-               :on-click
-               #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))}
-              (ikonit/ikoni-ja-teksti (ikonit/livicon-trash) "Poista")]]))
+            (let [rivi-hyppy? (get-in kohdeosat-nyt [(inc index) :hyppy?])]
+              [:div.tasaa-oikealle
+               [napit/yleinen-ensisijainen "Lisää osa"
+                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
+                {:disabled (= kohdetyyppi :sora)
+                 :ikoni (ikonit/livicon-arrow-down)
+                 :luokka "btn-xs"}]
+               [napit/yleinen-toissijainen "Lisää hyppy"
+                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index) true))
+                {:disabled (= kohdetyyppi :sora)
+                 :ikoni (ikonit/livicon-arrow-down)
+                 :luokka "btn-xs"}]
+               [napit/kielteinen "Poista"
+                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
+                {:disabled (= 1 (count kohdeosat-nyt))
+                 :ikoni (ikonit/livicon-trash)
+                 :luokka "btn-xs"}]])))
 
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
@@ -329,22 +348,27 @@
                            (concat
                              (tierekisteriosoite-sarakkeet
                                tr-leveys
-                               [{:nimi :nimi :pituus-max 30}
+                               [{:nimi :nimi :pituus-max 30
+                                 :sisalto-kun-rivi-disabloitu (constantly [:div.keskita "Hyppy"])}
                                 {:nimi :tr-numero :muokattava? (constantly false)}
                                 {:nimi :tr-ajorata :muokattava? (constantly false)}
                                 {:nimi :tr-kaista :muokattava? (constantly false)}
                                 {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
                                                                   (pos? rivi))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-alkuetaisyys :muokattava? (fn [_ rivi]
                                                                        (pos? rivi))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)
                                            (partial validoi-alkuetaisyys-kohteen-sisalla kohde)]}
                                 {:nimi :tr-loppuosa :muokattava? (fn [_ rivi]
                                                                    (< rivi (dec kohdeosia)))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
                                 {:nimi :tr-loppuetaisyys :muokattava? (fn [_ rivi]
                                                                         (< rivi (dec kohdeosia)))
+                                 :salli-muokkaus-rivin-ollessa-disabloituna? true
                                  :validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
                                            (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
                                 {:hae (partial tr/laske-tien-pituus osan-pituus)}])
@@ -424,8 +448,21 @@
 
             skeema (if voi-muokata?
                      (conj skeema
-                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 15
+                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 30
                             :tasaa :keskita
+                            :sisalto-kun-rivi-disabloitu
+                            (fn [rivi index]
+                              [:div.tasaa-oikealle
+                               [napit/yleinen-ensisijainen "Lisää osa"
+                                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
+                                {:disabled (= kohdetyyppi :sora)
+                                 :ikoni (ikonit/livicon-arrow-down)
+                                 :luokka "btn-xs"}]
+                               [napit/kielteinen "Poista"
+                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
+                                {:disabled (= 1 (count kohdeosat-nyt))
+                                 :ikoni (ikonit/livicon-trash)
+                                 :luokka "btn-xs"}]])
                             :komponentti (toiminnot-komponentti kohdeosat-nyt
                                                                 muokkaa-kohdeosat!)})
                      skeema)
@@ -447,6 +484,7 @@
            ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
            :voi-lisata? false
            :piilota-toiminnot? true
+           :disabloi-rivi? (fn [rivi] (:hyppy? rivi))
            :ulkoinen-validointi? true
            :paneelikomponentit
            (when kohdeosat-paivitetty-fn
@@ -464,6 +502,7 @@
                                                         yllapitokohde-id
                                                         osat))
                  {:disabled (or (not (empty? @virheet))
+                                (every? :hyppy? (vals @grid-data))
                                 (not kirjoitusoikeus?))
                   :luokka "nappi-myonteinen grid-tallenna"
                   :virheviesti "Tallentaminen epäonnistui."

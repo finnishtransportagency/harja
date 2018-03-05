@@ -17,6 +17,19 @@ SELECT
 FROM suolasakko ss
   WHERE ss.urakka = :urakka;
 
+-- name: hae-urakoiden-talvisuolarajat
+-- Hakee useamman urakan talvisuolan käyttörajat urakoiden id:illä,
+-- joilla suolaraja on käytössä (ss.kaytossa)
+SELECT ss.urakka as urakka_id,
+       u.nimi as urakka_nimi,
+       ss.talvisuolaraja
+  FROM suolasakko ss
+    JOIN urakka u ON ss.urakka = u.id
+ WHERE ss.urakka in (:urakka_idt)
+       AND ss.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+       AND ss.kaytossa IS TRUE
+GROUP BY ss.urakka, u.nimi, ss.talvisuolaraja;
+
 -- name: hae-urakan-lampotilat
 -- Hakee urakan lämpotilat urakan id:llä
 SELECT
