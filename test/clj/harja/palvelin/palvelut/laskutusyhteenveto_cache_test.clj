@@ -352,7 +352,6 @@
                               {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
                                :loppupvm (pvm/->pvm "31.8.2015")})
           cachesta-haettu-kysely (hae-cachesta-kentat urakka-id +tuotekoodi-talvihoito+)
-          haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) +tuotekoodi-talvihoito+) eka-tietojen-haku))
           cache-count (:count (first (q-map "SELECT count(*) FROM laskutusyhteenveto_cache c WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01';")))
           indeksi-ennen-maku2005 (ffirst (q "SELECT indeksi FROM  urakka where id = " urakka-id))
           ;; muuta Oulun urakan käyttämää indeksiä
