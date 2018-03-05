@@ -124,7 +124,7 @@ VALUES ((SELECT id
     FROM   urakka
     WHERE  nimi = 'Muhoksen päällystysurakka'),
    (SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'),
-   'Päällystys valmis',
+   'Koko homma paketissa',
    '2017-06-05',
    NULL,
    NULL,
