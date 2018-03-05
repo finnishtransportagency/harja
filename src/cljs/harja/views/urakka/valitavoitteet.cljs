@@ -30,6 +30,32 @@
                    (= (pvm/vuosi (:takaraja %)) valittu-urakan-vuosi)))
            valitavoitteet))
 
+(defn sarake-yllapitokohde [urakka yllapitokohteet]
+  {:otsikko (case (:tyyppi urakka)
+              :paallystys "Pääl\u00ADlystys\u00ADkohde"
+              :paikkaus "Paik\u00ADkaus\u00ADkohde"
+              :tiemerkinta "Tie\u00ADmerkintä\u00ADkohde")
+   :leveys 20
+   :nimi :yllapitokohde-id
+   :fmt (fn [kohde-id]
+          (if kohde-id
+            (let [valittu-kohde (first (filter #(= (:id %) kohde-id) yllapitokohteet))]
+              (yllapitokohde-domain/yllapitokohde-tekstina valittu-kohde))
+            "Ei kohdetta"))
+   :tyyppi :valinta
+   :valinnat (concat [nil] (map :id yllapitokohteet))
+   :valinta-nayta (fn [kohde-id muokattava?]
+                    (if kohde-id
+                      (let [valittu-kohde (first (filter #(= (:id %) kohde-id) yllapitokohteet))]
+                        (yllapitokohde-domain/yllapitokohde-tekstina
+                          valittu-kohde
+                          {:osoite {:tr-numero (:tr-numero valittu-kohde)
+                                    :tr-alkuosa (:tr-alkuosa valittu-kohde)
+                                    :tr-alkuetaisyys (:tr-alkuetaisyys valittu-kohde)
+                                    :tr-loppuosa (:tr-loppuosa valittu-kohde)
+                                    :tr-loppuetaisyys (:tr-loppuetaisyys valittu-kohde)}}))
+                      "Ei kohdetta"))})
+
 (defn urakan-omat-valitavoitteet
   [{:keys [urakka kaikki-valitavoitteet-atom urakan-valitavoitteet valittu-urakan-vuosi]}]
   (let [voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet (:id urakka))
@@ -60,31 +86,9 @@
            :fmt #(if %
                    (pvm/pvm-opt %)
                    "-")})
+
         (when @urakka/yllapitokohdeurakka?
-          {:otsikko (case (:tyyppi urakka)
-                      :paallystys "Pääl\u00ADlystys\u00ADkohde"
-                      :paikkaus "Paik\u00ADkaus\u00ADkohde"
-                      :tiemerkinta "Tie\u00ADmerkintä\u00ADkohde")
-           :leveys 20
-           :nimi :yllapitokohde-id
-           :fmt (fn [kohde-id]
-                  (if kohde-id
-                    (let [valittu-kohde (first (filter #(= (:id %) kohde-id) yllapitokohteet))]
-                      (yllapitokohde-domain/yllapitokohde-tekstina valittu-kohde))
-                    "Ei kohdetta"))
-           :tyyppi :valinta
-           :valinnat (concat [nil] (map :id yllapitokohteet))
-           :valinta-nayta (fn [kohde-id muokattava?]
-                            (if kohde-id
-                              (let [valittu-kohde (first (filter #(= (:id %) kohde-id) yllapitokohteet))]
-                                (yllapitokohde-domain/yllapitokohde-tekstina
-                                  valittu-kohde
-                                  {:osoite {:tr-numero (:tr-numero valittu-kohde)
-                                            :tr-alkuosa (:tr-alkuosa valittu-kohde)
-                                            :tr-alkuetaisyys (:tr-alkuetaisyys valittu-kohde)
-                                            :tr-loppuosa (:tr-loppuosa valittu-kohde)
-                                            :tr-loppuetaisyys (:tr-loppuetaisyys valittu-kohde)}}))
-                              "Ei kohdetta"))})
+          (sarake-yllapitokohde urakka yllapitokohteet))
         {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja
          :fmt #(if %
                  (pvm/pvm-opt %)
@@ -94,7 +98,7 @@
          :tyyppi :pvm}
         {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
          :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
-        {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
+        {:otsikko "Valmis\u00ADtumis\u00ADpäivä" :leveys 20 :tyyppi :pvm
          :muokattava? (constantly voi-merkita-valmiiksi?)
          :nimi :valmispvm
          :fmt #(if %
@@ -104,7 +108,7 @@
          :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                        (:valmispvm %))
          :nimi :valmis-kommentti}
-        {:otsikko "Valmiiksimerkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+        {:otsikko "Valmiiksi\u00ADmerkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
          :nimi :merkitsija :hae (fn [rivi]
                                   (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
        (suodata-valitavoitteet-urakkavuodella urakan-valitavoitteet valittu-urakan-vuosi)])))
@@ -131,13 +135,15 @@
       (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-valitavoitteet)}
 
      [{:otsikko "Nimi" :leveys 25 :nimi :nimi :tyyppi :string :pituus-max 128}
+      (when @urakka/yllapitokohdeurakka?
+        (sarake-yllapitokohde urakka @kaikki-valitavoitteet-atom))
       {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                     (pvm/pvm-opt %)
                                                                     "Ei takarajaa")
        :tyyppi :pvm}
       {:otsikko "Tila" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :valmiustila :hae identity :fmt vt-domain/valmiustilan-kuvaus}
-      {:otsikko "Valmistumispäivä" :leveys 20 :tyyppi :pvm
+      {:otsikko "Valmis\u00ADtumis\u00ADpäivä" :leveys 20 :tyyppi :pvm
        :muokattava? (constantly voi-merkita-valmiiksi?)
        :nimi :valmispvm
        :fmt #(if %
@@ -147,7 +153,7 @@
        :leveys 35 :tyyppi :string :muokattava? #(and voi-merkita-valmiiksi?
                                                      (:valmispvm %))
        :nimi :valmis-kommentti}
-      {:otsikko "Merkitsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
+      {:otsikko "Merkit\u00ADsijä" :leveys 20 :tyyppi :string :muokattava? (constantly false)
        :nimi :merkitsija :hae (fn [rivi]
                                 (str (:valmis-merkitsija-etunimi rivi) " " (:valmis-merkitsija-sukunimi rivi)))}]
      (suodata-valitavoitteet-urakkavuodella @kaikki-valitavoitteet-atom valittu-urakan-vuosi)]))
