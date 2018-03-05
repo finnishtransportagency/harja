@@ -1,6 +1,8 @@
 (ns harja.domain.valitavoite
   (:require [harja.pvm :as pvm]
-            [cljs-time.core :as t]
+    #?(:cljs [cljs-time.core :as t])
+    #?(:clj
+            [clj-time.core :as t])
             [harja.fmt :as fmt]))
 
 (defn valmiustila-fmt [{:keys [valmispvm takaraja] :as valitavoite} tila]
