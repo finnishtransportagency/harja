@@ -470,17 +470,21 @@
                                      :vari vari :suunta (if alku :oikea :vasen)})))
 
                        ;; Välitavoitteet
-                       [:rect {:x (+ x 100) :y y
-                               :width 5
-                               :height korkeus
-                               :fill "#FFA500"
-                               :fill-opacity 1.0
-                               :on-mouse-over #(show-tooltip! {:x (+ x 100)
-                                                               :y (hover-y y)
-                                                               :text "Ihan mahoton välitavoite"})
-                               :on-mouse-out hide-tooltip!}]
-
-                       ]))
+                       (map-indexed
+                         (fn [i valitavoite]
+                           ^{:key i}
+                           (let [x (paiva-x (:takaraja valitavoite))]
+                             [:rect {:x x
+                                     :y y
+                                     :width 5
+                                     :height korkeus
+                                     :fill "#FFA500"
+                                     :fill-opacity 1.0
+                                     :on-mouse-over #(show-tooltip! {:x x
+                                                                     :y (hover-y y)
+                                                                     :text (:nimi valitavoite)})
+                                     :on-mouse-out hide-tooltip!}]))
+                         (::valitavoitteet rivi))]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}
