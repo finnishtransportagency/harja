@@ -19,6 +19,7 @@
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.views.kartta :as kartta]
+            [harja.views.kartta.tasot :as tasot]
             [harja.ui.debug :as debug]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
@@ -117,7 +118,14 @@
 (defn kokonaishintaiset* [e! _]
   (komp/luo
     (komp/watcher tiedot/valinnat (fn [_ _ uusi] (e! (tiedot/->PaivitaValinnat uusi))))
-    (komp/sisaan-ulos #(e! (tiedot/->NakymaAvattu)) #(e! (tiedot/->NakymaSuljettu)))
+    (komp/sisaan-ulos #(do
+                         (tasot/taso-paalle! :kan-kohteet)
+                         (tasot/taso-pois! :organisaatio)
+                         (e! (tiedot/->NakymaAvattu)))
+                      #(do
+                         (tasot/taso-pois! :kan-kohteet)
+                         (tasot/taso-paalle! :organisaatio)
+                         (e! (tiedot/->NakymaSuljettu))))
     (fn [e! app]
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!
       @tiedot/valinnat

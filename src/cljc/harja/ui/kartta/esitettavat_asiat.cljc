@@ -616,6 +616,28 @@
                                 false
                                 ikoni))))
 
+(defmethod asia-kartalle :kohde-toimenpide [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-toimenpide
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kohde-hairiotilanne [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-hairiotilanne
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
+                                ikoni))))
+
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
     (log/warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
