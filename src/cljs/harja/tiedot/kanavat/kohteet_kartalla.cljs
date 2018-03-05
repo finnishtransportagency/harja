@@ -66,11 +66,17 @@
                     @kanavaurakka/kanavakohteet)]
     (case (:nakyma @aktiivinen-nakyma)
       :kokonaishintaiset (swap! kokonaishintaiset/tila update
-                                :avattu-toimenpide #(assoc % ::kanavan-toimenpide/kohde kohde))
+                                :avattu-toimenpide #(assoc %
+                                                           ::kanavan-toimenpide/kohde kohde
+                                                           ::kanavan-toimenpide/kohteenosa nil))
       :lisatyot (swap! lisatyot/tila update
-                       :avattu-toimenpide #(assoc % ::kanavan-toimenpide/kohde kohde))
+                       :avattu-toimenpide #(assoc %
+                                                  ::kanavan-toimenpide/kohde kohde
+                                                  ::kanavan-toimenpide/kohteenosa nil))
       :hairiotilanteet (swap! hairiotilanteet/tila update
-                              :valittu-hairiotilanne #(assoc % ::hairiotilanne/kohde kohde))
+                              :valittu-hairiotilanne #(assoc %
+                                                             ::hairiotilanne/kohde kohde
+                                                             ::hairiotilanne/kohteenosa nil))
       nil)))
 
 (defn- kohteelle-tiedot [kohde nakyma gridissa-olevat-kohteen-tiedot]
