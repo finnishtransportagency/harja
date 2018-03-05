@@ -35,9 +35,7 @@ COPY src /tmp/src
 RUN service postgresql start && cd /tmp && sleep 20 && mvn flyway:migrate && service postgresql stop
 
 # Siivotaan sotkut ja minifioidaan image
-RUN apt-get -y remove maven;
 RUN apt-get -y autoremove;
-RUN rm /tmp/pom.xml
 RUN rm -R /tmp/src
 
 # Käynnistyskomento
