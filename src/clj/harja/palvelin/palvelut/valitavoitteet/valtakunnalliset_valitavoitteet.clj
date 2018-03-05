@@ -131,6 +131,7 @@
                                                 :aloituspvm nil
                                                 :takaraja (konv/sql-date (c/to-date tarkka-takaraja))
                                                 :nimi nimi
+                                                :yllapitokohde nil
                                                 :valtakunnallinen_valitavoite valtakunnallinen-valitavoite-id
                                                 :luoja (:id user)}))))))))
 
