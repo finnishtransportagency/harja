@@ -101,6 +101,8 @@ logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 
 Kantaimagen päivitys: docker pull solita/harjadb
 
+Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up.
+
 ## Dokumentaatio
 
 ### Tietokanta
