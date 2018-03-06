@@ -15,7 +15,6 @@
                                     raekoko paallystetyyppi hyppy?
                                     yllapitokohde-id yllapitokohdeosa-id urakka-id]
                              :as data}]
-  (log/debug "TALLENNUS PARAMETRIT: " (pr-str data))
   (let [yhteiset {:nimi nimi
                   :tr_numero tr-numero
                   :tr_alkuosa tr-alkuosa
@@ -47,8 +46,10 @@
   (doseq [kohdeosa muut-kohdeosat]
     (assert (and (not (nil? (:tr-numero kohdeosa)))
                  (not (nil? (:tr-alkuosa kohdeosa)))
-                 (not (nil? (:tr-alkuetaisyys kohdeosa))))
-            "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys ei saa olla nil")
+                 (not (nil? (:tr-alkuetaisyys kohdeosa)))
+                 (not (nil? (:tr-loppuetaisyys kohdeosa)))
+                 (not (nil? (:tr-loppuosa kohdeosa))))
+            "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
     ;; TODO: Toteuta tää funktio
     (vaadi-kohdeosa-ei-kuulu-yllapitokohteeseen db yllapitokohde-id kohdeosa))
 
@@ -60,16 +61,19 @@
 
     (let [kannasta-loytyvat-osat (into #{}
                                        (map :id (yy/hae-yllapitokohteen-muut-kohdeosat db yllapitokohde-id)))
-          poistettavat-osat (filter #(and (:poista %)
-                                          (kannasta-loytyvat-osat %))
+          poistettavat-osat (filter #(and (:poistettu %)
+                                          (kannasta-loytyvat-osat (:id %)))
                                     muut-kohdeosat)
-          tallennettavat-osat (remove :poista muut-kohdeosat)]
+          tallennettavat-osat (remove :poistettu muut-kohdeosat)]
+      (log/debug "KANNASTA LÖYTYVÄT OSAT: " (pr-str kannasta-loytyvat-osat))
+      (log/debug "POISTETTAVAT OSAT: " (pr-str poistettavat-osat))
+      (log/debug "TALLENNETAAVAT OSAT: " (pr-str tallennettavat-osat))
       (doseq [poistettava-osa poistettavat-osat]
         (q/poista-yllapitokohdeosa! db {:id (:id poistettava-osa) :urakka urakka-id}))
       (doseq [tallennettava-osa (set/rename tallennettavat-osat {:id :yllapitokohdeosa-id})]
-        (if (kannasta-loytyvat-osat (:id tallennettava-osa))
+        (if (kannasta-loytyvat-osat (:yllapitokohdeosa-id tallennettava-osa))
           ;:nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara
-          (q/paivita-yllapitokohdeosa<! db (tallennus-parametrit false tallennettava-osa))
+          (do (println "PÄIVITETÄÄN") (clojure.pprint/pprint (tallennus-parametrit false tallennettava-osa)) (q/paivita-yllapitokohdeosa<! db (tallennus-parametrit false tallennettava-osa)))
           ;:yllapitokohde :nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara :ulkoinen-id
           (q/luo-yllapitokohdeosa<! db (tallennus-parametrit true
                                                              (assoc tallennettava-osa
