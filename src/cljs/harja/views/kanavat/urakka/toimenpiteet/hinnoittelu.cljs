@@ -424,6 +424,12 @@
                          (e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*))))
           :hyvaksy "Kyllä, ylikirjoita hinnoittelu"})
       {:luokka "btn-xs"
+       :disabled (or
+                   (not (tiedot/hinnoittelun-voi-tallentaa? app*))
+                   (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                   (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                 (:id @nav/valittu-urakka))))
        :ikoni (ikonit/livicon-pen)}]
 
      [napit/tallenna
