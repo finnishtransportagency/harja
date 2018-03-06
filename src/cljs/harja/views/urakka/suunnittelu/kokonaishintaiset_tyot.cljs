@@ -213,23 +213,30 @@
     (paivita-kk-summa-prosentin-mukaan {:prosentti (b 10) :summa (b 20)} (b 50))))
 
 
-(defn numero-joka-on-numero? [x]
-  (or (big/big? x)
-      (and (number? x) (not (js/isNaN x)))))
+(def big-0 (big/->big 0))
+(def big-1 (big/->big 1))
+
+(defn big-pos? [b]
+  (big/gt b big-0))
+
+(defn positiivinen-numero-tai-bigdec? [x]
+  (or (and (big/big? x)
+           (big-pos? x))
+      (and (number? x)
+           (not (js/isNaN x))
+           (pos? x))))
 
 (defn- paivita-kk-prosentti-summan-mukaan [rivi vuosisumma]
   (when (nil? rivi)
     (log "paivita-kk-prosentti-summan-mukaan: rivi oli nil"))
   (if-let [summa (:summa rivi)]
-    (let [/ (fnil big/div (big/->big 0) (big/->big 1))
-          * (fnil big/mul (big/->big 0) (big/->big 0))
-          prosentti (when  (numero-joka-on-numero? summa)
-                      (/ (* (big/->big 100) (big/->big summa)) (big/->big vuosisumma)))
-          ;; prosentti (when (and (numero-joka-on-numero? summa) (pos? vuosisumma))
-          ;;             (/ (* (big/->big 100) (big/->big summa)) (big/->big vuosisumma)))
-          ]
-      (when-not (pos? vuosisumma)
-        (log "paivita-kk-prosentti-summan-mukaan: vuosisumma oli" (pr-str vuosisumma)))
+    (let [/ (fnil big/div big-0 big-1)
+          * (fnil big/mul big-0 big-0)
+          prosentti (when (and (positiivinen-numero-tai-bigdec? summa)
+                               (positiivinen-numero-tai-bigdec? vuosisumma))
+                      (/ (* (big/->big 100) (big/->big summa)) (big/->big vuosisumma)))]
+      ;; (when-not (pos? vuosisumma)
+      ;;   (log "paivita-kk-prosentti-summan-mukaan: vuosisumma oli" (pr-str vuosisumma)))
 
       (assoc rivi :prosentti prosentti))
     ;; else
@@ -290,7 +297,7 @@
    [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]])
 
 (defn prosentit-yht [rivit]
-  (reduce big/plus (big/->big 0) (keep :prosentti rivit)))
+  (reduce big/plus big-0 (keep :prosentti rivit)))
 
 
 ;; Gridin tiedot luetaan tyorivit-reaktiosta.
@@ -405,28 +412,34 @@
                :tyhja (if (nil? @toimenpiteet)
                         [ajax-loader "Kokonaishintaisia töitä haetaan..."]
                         "Ei kokonaishintaisia töitä")
-               :tallenna (do
-                           (reset! vuosisumma-muokattava? false)
-                           #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?))
+               ;; :tallenna (do
+               ;;             (reset! vuosisumma-muokattava? false)
+               ;;             #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?))
                ;;
-               ;; :tallenna (if (oikeudet/voi-kirjoittaa?
-               ;;                 (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)) (:id ur))
-               ;;             (do
-               ;;               (reset! vuosisumma-muokattava? false)
-               ;;               #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?))
-               ;;             :ei-mahdollinen)
+               :tallenna (if (oikeudet/voi-kirjoittaa?
+                               (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)) (:id ur))
+                           (do
+                             (log "tallenna-fn - voidaan kirjoittaa joten reset & tt-funktio")
+                             (reset! vuosisumma-muokattava? false)
+                             #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?))
+                           (do
+                             (log "tallenna-fn - ei mahdollinen")
+                             :ei-mahdollinen))
 
                :aloita-muokkaus-fn #(do (reset! vuosisumma-muokattava? true) %)
                :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
                                                    :kirjoitus
                                                    (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)))
                :tallenna-vain-muokatut false
-               ;; :validoi-fn (when @prosenttijako?
-               ;;               (fn [rivit]
-               ;;                 (when (not (big/eq (big/->big 100)
-               ;;                                    (prosentit-yht rivit)))
-               ;;                   "Prosenttien tulee olla yhteensä 100")))
-               :validoi-fn (constantly true)
+               :validoi-fn (when @prosenttijako?
+                             (fn [rivit]
+                               (log "validoi prosentit-yht: arvo: " (big/fmt (prosentit-yht rivit) 3))
+                               (log "validoi prosentit-yht: onko 100? -> " (pr-str (big/eq (big/->big 100)
+                                                                              (prosentit-yht rivit))))
+                               (when-not (= "100"
+                                            (big/fmt (prosentit-yht rivit) 3))
+                                 "Prosenttien tulee olla yhteensä 100")))
+               ;; :validoi-fn #(constantly true)
                :peruuta #(do
                            (reset! vuosisumma-muokattava? false)
                            (reset! tuleville? false))
@@ -437,7 +450,7 @@
                                    (if-not @prosenttijako?
                                      rivit
                                      (fmap (fn [rivi]
-                                             (log "prosessoi-muutos: rivi" (pr-str rivi))
+                                             ;; (log "prosessoi-muutos: rivi" (pr-str rivi))
                                              (paivita-kk-prosentti-summan-mukaan rivi @vuosisumma)) rivit)))
                :muokkaa-footer (fn [g]
                                  (when-not @prosenttijako?
@@ -455,8 +468,8 @@
                                        {:teksti "Yhteensä" :sarakkeita 2}
                                        {:teksti (str (big/fmt
                                                       (big/div ((fnil big/mul
-                                                                      (big/->big 0)
-                                                                      (big/->big 0))
+                                                                      big-0
+                                                                      big-0)
                                                                 prosentti-yht
                                                                 @vuosisumma)
                                                                (big/->big 100)) 2) " €")}
@@ -467,10 +480,10 @@
                  {:otsikko "%" :nimi :prosentti
                   :tyyppi :big
                   :desimaalien-maara 4
-                  ;; :validoi [#(when-not (and %
-                  ;;                           (big/gte % (big/->big 0))
-                  ;;                           (big/lte % (big/->big 100)))
-                  ;;              "Anna prosentti välillä 0 - 100")]
+                  :validoi [#(when-not (and %
+                                            (big-pos? %)
+                                            (big/lte % (big/->big 100)))
+                               "Anna prosentti välillä 0 - 100")]
                   :fmt #(if % (big/fmt % 2) "-")
                   :leveys 12
                   :muokattava? (constantly false)})
