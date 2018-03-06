@@ -267,3 +267,8 @@
     (fn [tehtava]
       (some #(= % tyyppi) (:hinnoittelu tehtava)))
     (map #(nth % 3) tehtavat)))
+
+(defn toimenpiteiden-toiminto-suoritettu [toimenpiteiden-lkm toiminto]
+  (str toimenpiteiden-lkm " "
+       (if (= 1 toimenpiteiden-lkm) "toimenpide" "toimenpidettä")
+       " " toiminto "."))
