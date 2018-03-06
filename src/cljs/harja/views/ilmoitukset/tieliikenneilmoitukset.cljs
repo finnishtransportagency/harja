@@ -28,7 +28,6 @@
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.views.ilmoituksen-tiedot :as it]
             [harja.views.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset-view]
-            [harja.ui.ikonit :as ikonit]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.notifikaatiot :as notifikaatiot]
