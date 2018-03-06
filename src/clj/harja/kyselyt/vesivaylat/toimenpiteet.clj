@@ -52,6 +52,7 @@
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/sopimus
                           ::vv-toimenpide/lisatieto
+                          ::vv-toimenpide/harjassa-luotu
                           ::vv-toimenpide/liitteet
                           ::vv-toimenpide/komponentit
                           ::vv-toimenpide/reimari-henkilo-lkm
