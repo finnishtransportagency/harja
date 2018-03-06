@@ -421,6 +421,7 @@
 (deftest tallenna-paallekain-menevat-yllapitokohteet
   (let [kohde-leppajarven-paalle {:kohdenumero 666
                                   :nimi "Erkkipetteri"
+                                  :yhaid 666
                                   :yllapitokohdetyotyyppi :paallystys
                                   :tr-numero 20
                                   :tr-alkuosa 1

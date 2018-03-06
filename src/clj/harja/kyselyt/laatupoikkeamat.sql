@@ -28,7 +28,7 @@ SELECT
   ypk.nimi             AS yllapitokohde_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
-  LEFT JOIN sanktio s ON lp.id = s.laatupoikkeama
+  LEFT JOIN sanktio s ON lp.id = s.laatupoikkeama AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
@@ -70,7 +70,7 @@ SELECT
   ypk.nimi             AS yllapitokohde_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
@@ -111,7 +111,7 @@ SELECT
   ypk.nimi             AS yllapitokohde_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
@@ -154,7 +154,7 @@ SELECT
   ypk.nimi             AS yllapitokohde_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE
@@ -199,7 +199,7 @@ SELECT
   ypk.nimi                           AS yllapitokohde_nimi
 FROM laatupoikkeama lp
   JOIN kayttaja k ON lp.luoja = k.id
-  LEFT JOIN sanktio s ON lp.id = s.laatupoikkeama
+  LEFT JOIN sanktio s ON lp.id = s.laatupoikkeama AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE lp.urakka = :urakka
       AND lp.poistettu IS NOT TRUE

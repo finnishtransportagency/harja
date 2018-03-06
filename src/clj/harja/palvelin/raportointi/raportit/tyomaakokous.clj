@@ -2,6 +2,7 @@
   "Työmaakokouksen koosteraportti, joka kutsuu muita raportteja ja yhdistää niiden tiedot"
   (:require
     [taoensso.timbre :as log]
+    [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
     [harja.palvelin.raportointi.raportit.erilliskustannukset :as erilliskustannukset]
     [harja.palvelin.raportointi.raportit.laatupoikkeama :as laatupoikkeamat]
     [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
@@ -20,22 +21,12 @@
     [harja.palvelin.raportointi.raportit.laaduntarkastus :as laaduntarkastus]
     [harja.palvelin.raportointi.raportit.toimenpideajat :as toimenpideajat]))
 
-(defn osat [raportti]
-  ;; Pudotetaan pois :raportti keyword ja string tai map optiot.
-  ;; Palautetaan vain sen jälkeen tulevat raporttielementit
-  (remove nil?
-          (mapcat #(if (and (seq? %) (not (vector? %)))
-                    %
-                    [%])
-                  (drop 2 raportti))))
-
 (defn suorita [db user {:keys [kuukausi urakka-id] :as tiedot}]
   [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
    (mapcat (fn [[aja-parametri otsikko raportti-fn]]
-             (do
-               (when (get tiedot aja-parametri)
-                (concat [[:otsikko otsikko]]
-                        (osat (raportti-fn db user tiedot))))))
+             (when (get tiedot aja-parametri)
+               (concat [[:otsikko otsikko]]
+                       (yleinen/osat (raportti-fn db user tiedot)))))
            ;; säilytä aakkosjärjestys ellei toisin vaadita
            [[:erilliskustannukset "Erilliskustannukset" erilliskustannukset/suorita]
             [:ilmoitusraportti "Ilmoitukset" ilmoitus/suorita]
