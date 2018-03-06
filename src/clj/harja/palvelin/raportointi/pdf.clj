@@ -331,14 +331,15 @@
                    #_[[:fo:block {:id "raportti-loppu"}]]))))
 
 (defmethod muodosta-pdf :aikajana [[_ optiot rivit]]
-  (let [aikajana (aikajana/aikajana (merge {:leveys (case *orientaatio*
+  (let [orientaatio (or *orientaatio* :landscape) ;; Dynamic binding ei toimi jos aikajana upotetaan toiseen raporttiin
+        aikajana (aikajana/aikajana (merge {:leveys (case orientaatio
                                                       :portrait 750
                                                       :landscape 1000)}
                                            optiot)
                                     rivit)]
     [:fo:block
      (when aikajana
-       [:fo:instream-foreign-object {:content-width (case *orientaatio*
+       [:fo:instream-foreign-object {:content-width (case orientaatio
                                                       :portrait "19cm"
                                                       :landscape "27.5cm")
 

@@ -30,16 +30,16 @@
        [{:otsikko "Kohde\u00ADnumero" :leveys 5}
         {:otsikko "Tunnus" :leveys 5}
         {:otsikko "Nimi" :leveys 10}
-        {:otsikko "Tie\u00ADnumero" :leveys 5}
-        {:otsikko "Ajorata" :leveys 5}
-        {:otsikko "Kaista" :leveys 5}
-        {:otsikko "Aosa" :leveys 5}
-        {:otsikko "Aet" :leveys 5}
-        {:otsikko "Losa" :leveys 5}
-        {:otsikko "Let" :leveys 5}
-        {:otsikko "Pit. (m)" :leveys 5}
-        {:otsikko "KVL" :leveys 5}
-        {:otsikko "YP-lk" :leveys 5}]
+        {:otsikko "Tie\u00ADnumero" :leveys 3}
+        {:otsikko "Ajorata" :leveys 3}
+        {:otsikko "Kaista" :leveys 3}
+        {:otsikko "Aosa" :leveys 3}
+        {:otsikko "Aet" :leveys 3}
+        {:otsikko "Losa" :leveys 3}
+        {:otsikko "Let" :leveys 3}
+        {:otsikko "Pit. (m)" :leveys 3}
+        {:otsikko "KVL" :leveys 3}
+        {:otsikko "YP-lk" :leveys 3}]
        (when (= taulukkotyyppi :yha)
          [{:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
           {:otsikko "Määrä\u00ADmuu\u00ADtokset" :leveys 5 :fmt :raha}])
@@ -105,18 +105,18 @@
      [{:otsikko "" :leveys 5}
       {:otsikko "" :leveys 5}
       {:otsikko "" :leveys 10}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
-      {:otsikko "" :leveys 5}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
+      {:otsikko "" :leveys 3}
       {:otsikko "Muut kustannukset" :leveys 10 :fmt :raha}
-      {:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
+      {:otsikko "Arvonväh." :leveys 5 :fmt :raha}
       {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}
       {:otsikko "Bitumi-indeksi" :leveys 5 :fmt :raha}
       {:otsikko "Kaasu\u00ADindeksi" :leveys 5 :fmt :raha}
@@ -178,7 +178,8 @@
         urakan-sanktiot (->> (hae-kohteisiin-kuulumattomat-sanktiot db {:urakka urakka-id
                                                                     :vuosi vuosi})
                             (map #(assoc % :maara (- (:maara %)))))]
-    [:raportti {:nimi raportin-nimi}
+    [:raportti {:orientaatio :landscape
+                :nimi raportin-nimi}
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus)
