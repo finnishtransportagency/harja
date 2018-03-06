@@ -58,10 +58,10 @@
                      :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     "Urakoitsija" (get-in toimenpide [::to/reimari-urakoitsija ::urakoitsija/nimi])
-    "Sopimusnumero" (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi])
-                         " ("
-                         (get-in toimenpide [::to/reimari-sopimus ::sop/r-nro])
-                         ")")
+    "Sopimusnumero" (str (when-let [nimi (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi])]
+                           (when-not (empty? nimi) nimi))
+                         (when-let [nro (get-in toimenpide [::to/reimari-sopimus ::sop/r-nro])]
+                           (when-not (empty? nro) (str " (" nro ")"))))
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (to/reimari-tyoluokka-fmt (::to/tyoluokka toimenpide))
@@ -310,7 +310,8 @@
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti
-                                                      rivi-klikattu infolaatikon-tila-muuttui]}]
+                                                      rivi-klikattu infolaatikon-tila-muuttui
+                                                      avaa-toimenpide-lomakkeelle]}]
   [:div.vv-toimenpideryhma-sisalto
    [grid/grid
     {:tunniste ::to/id
@@ -321,10 +322,12 @@
                                         infolaatikon-tila-muuttui)))
      :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
      :rivin-infolaatikko (fn [rivi data]
-                           [toimenpide-infolaatikossa rivi])
+                           (when-not (::to/harjassa-luotu rivi) [toimenpide-infolaatikossa rivi]))
      :salli-valiotsikoiden-piilotus? true
      :ei-footer-muokkauspaneelia? true
-     :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
+     :rivi-klikattu (fn [rivi] (if (and avaa-toimenpide-lomakkeelle (::to/harjassa-luotu rivi))
+                                 (avaa-toimenpide-lomakkeelle rivi)
+                                 (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu))))
      :valiotsikoiden-alkutila :kaikki-kiinni}
     gridin-sarakkeet
     (tiedot/toimenpiteet-aikajarjestyksessa toimenpiteet)]
@@ -339,12 +342,14 @@
 (defn listaus
   ([e! app] (listaus e! app {}))
   ([e! app {:keys [paneelin-checkbox-sijainti vaylan-checkbox-sijainti
-                   footer listaus-tunniste sarakkeet rivi-klikattu infolaatikon-tila-muuttui]}]
+                   footer listaus-tunniste sarakkeet rivi-klikattu infolaatikon-tila-muuttui
+                   avaa-toimenpide-lomakkeelle]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     sarakkeet
     {:footer footer
      :listaus-tunniste listaus-tunniste
+     :avaa-toimenpide-lomakkeelle avaa-toimenpide-lomakkeelle
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
      :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
      :rivi-klikattu rivi-klikattu

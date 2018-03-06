@@ -361,12 +361,19 @@
 (defn tallennusparametrit [toimenpide]
   (-> toimenpide
       (assoc ::to/sopimus-id (get-in toimenpide [::to/sopimus ::sop/id])
-             ::to/urakka-id (:id @nav/valittu-urakka))
+             ::to/urakka-id (:id @nav/valittu-urakka)
+             ::to/hintatyyppi :yksikkohintainen)
       (dissoc ::to/sopimus
               ::to/urakka)
       (set/rename-keys {::to/tyolaji ::to/reimari-tyolaji
                         ::to/tyoluokka ::to/reimari-tyoluokka
                         ::to/toimenpidetyyppi ::to/reimari-toimenpidetyyppi})))
+
+(defn haetut-toimenpiteet [vastaus]
+  (-> vastaus
+      jaettu/korosta-harjassa-luodut
+      hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
+      jaettu/toimenpiteet-aikajarjestyksessa))
 
 (extend-protocol tuck/Event
 
@@ -429,9 +436,7 @@
   (process-event [{toimenpiteet :toimenpiteet} app]
     (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
       (go (turvalaitteet-kartalle toimenpiteet))
-      (assoc app :toimenpiteet (-> toimenpiteet
-                                   hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
-                                   jaettu/toimenpiteet-aikajarjestyksessa)
+      (assoc app :toimenpiteet (haetut-toimenpiteet toimenpiteet)
                  :toimenpiteiden-haku-kaynnissa? false)))
 
   ToimenpiteetEiHaettu
@@ -732,9 +737,7 @@
     (-> app
         (assoc :tallennus-kaynnissa? false
                :valittu-toimenpide nil
-               :toimenpiteet (-> vastaus
-                                 hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
-                                 jaettu/toimenpiteet-aikajarjestyksessa))))
+               :toimenpiteet (haetut-toimenpiteet vastaus))))
 
   ToimenpideEiTallennettu
   (process-event [_ app]

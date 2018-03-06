@@ -141,6 +141,7 @@
     (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
       (go (turvalaitteet-kartalle toimenpiteet))
       (assoc app :toimenpiteet (-> toimenpiteet
+                                   jaettu/korosta-harjassa-luodut
                                    kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin
                                    jaettu/toimenpiteet-aikajarjestyksessa)
                  :toimenpiteiden-haku-kaynnissa? false)))

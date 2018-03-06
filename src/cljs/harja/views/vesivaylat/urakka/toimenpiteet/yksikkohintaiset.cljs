@@ -391,6 +391,7 @@
                                       [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
                       (jaettu/sarake-checkbox e! app*)]
                      :listaus-tunniste listaus-tunniste
+                     :avaa-toimenpide-lomakkeelle #(e! (tiedot/->AvaaLomakkeelle %))
                      :rivi-klikattu [tiedot/poista-hintaryhmien-korostus]
                      :infolaatikon-tila-muuttui [tiedot/poista-hintaryhmien-korostus]
                      :footer (when nayta-hintaryhman-yhteenveto?
