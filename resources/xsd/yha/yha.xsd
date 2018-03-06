@@ -84,7 +84,7 @@
     <xs:element name="urakan-kohteiden-toteumatietojen-kirjaus">
         <xs:annotation>
             <xs:documentation>
-                Kirjaa urakan kohteet ja alikohteet toteumatietoineneen YHA:n.
+                Kirjaa urakan kohteet ja alikohteet toteumatietoineneen YHAan.
             </xs:documentation>
         </xs:annotation>
         <xs:complexType>

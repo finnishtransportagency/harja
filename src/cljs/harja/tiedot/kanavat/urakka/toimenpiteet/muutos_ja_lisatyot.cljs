@@ -17,12 +17,10 @@
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka :as urakkatiedot])
@@ -407,7 +405,7 @@
 
   ValitutSiirretty
   (process-event [_ app]
-    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+    (viesti/nayta! (toimenpiteet/toimenpiteiden-toiminto-suoritettu
                      (count (:valitut-toimenpide-idt app)) "siirretty") :success)
     (assoc app :toimenpiteiden-siirto-kaynnissa? false
                :valitut-toimenpide-idt #{}
