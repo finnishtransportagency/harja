@@ -265,7 +265,7 @@
        {:otsikko "Työlaji"
         :tyyppi :valinta
         :nimi ::to/tyolaji
-        :valinnat (into [nil] (mapv val to/reimari-tyolajit))
+        :valinnat (into [nil] (to/jarjesta-reimari-tyolajit (set (mapv val to/reimari-tyolajit))))
         :valinta-nayta #(or (to/reimari-tyolaji-fmt %) "Ei työlajia")
         :fmt #(or (to/reimari-tyolaji-fmt %) "Ei työlajia")}
        (when (or (::to/tyolaji valittu-toimenpide)
@@ -273,7 +273,7 @@
          {:otsikko "Työluokka"
           :tyyppi :valinta
           :nimi ::to/tyoluokka
-          :valinnat (into [nil] (mapv val to/reimari-tyoluokat))
+          :valinnat (into [nil] (to/jarjesta-reimari-tyoluokat(set (mapv val to/reimari-tyoluokat))))
           :valinta-nayta #(or (to/reimari-tyoluokka-fmt %) "Ei työluokkaa")
           :fmt #(or (to/reimari-tyoluokka-fmt %) "Ei työluokkaa")})
        (when (or (and (::to/tyolaji valittu-toimenpide)
@@ -282,7 +282,7 @@
          {:otsikko "Toimenpide"
           :tyyppi :valinta
           :nimi ::to/toimenpide
-          :valinnat (into [nil] (mapv val to/reimari-toimenpidetyypit))
+          :valinnat (into [nil] (to/jarjesta-reimari-toimenpidetyypit (set (mapv val to/reimari-toimenpidetyypit))))
           :valinta-nayta #(or (to/reimari-toimenpidetyyppi-fmt %) "Ei toimenpidettä")
           :fmt #(or (to/reimari-toimenpidetyyppi-fmt %) "Ei toimenpidettä")})
        {:otsikko "Lisätieto"
