@@ -518,8 +518,11 @@
                                                :yllapitokohde-id id
                                                :osat korjatut-kohdeosat})))))
 
-(defn- validoi-tallennettava-yllapitokohteet [db tallennettavat-kohteet vuosi]
-  (let [saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
+(defn- validoi-tallennettava-yllapitokohteet
+  "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
+  [db tallennettavat-kohteet vuosi]
+  (let [yha-kohteet (filter :yhaid tallennettavat-kohteet)
+        saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
     (reduce
       (fn [virheet tallennettava-kohde]
         (let [kohteen-virheet
@@ -541,7 +544,7 @@
             virheet
             (concat virheet kohteen-virheet))))
       []
-      tallennettavat-kohteet)))
+      yha-kohteet)))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
