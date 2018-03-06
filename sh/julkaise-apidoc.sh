@@ -2,7 +2,7 @@
 
 echo "Julkaistaan uusin Harja API:n dokumentaatio GH.pagesiin (http://finnishtransportagency.github.io/harja/)";
 
-cd ../harja-sivut/apidoc;
+cd ../../harja-sivut/apidoc;
 git pull;
 rm -rf *;
 curl -O https://harja-test.solitaservices.fi/apidoc/api.zip;

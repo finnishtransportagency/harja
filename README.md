@@ -88,13 +88,7 @@ Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000 tai local
 
 ### Kehitystyötä helpottavat työkalut
 
-Migraatioiden ajaminen Vagrantin VirtualBox-koneeseen:
-
-- **migrate_test.sh** pystyttää testikannan uudelleen
-- **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
-
 - **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
-- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten.
 
 ### Docker paikallinen kehitysympäristö
 
