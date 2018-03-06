@@ -3,9 +3,39 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [clojure.set :as set]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as q]
             [harja.domain.oikeudet :as oikeudet]))
+
+(defn tallennus-parametrit [luo-uusi?
+                            {:keys [nimi tr-numero tr-alkuosa tr-alkuetaisyys
+                                    tr-loppuosa tr-loppuetaisyys tr-ajorata
+                                    tr-kaista tyomenetelma massamaara toimenpide
+                                    raekoko paallystetyyppi hyppy?
+                                    yllapitokohde-id yllapitokohdeosa-id urakka-id]
+                             :as data}]
+  (log/debug "TALLENNUS PARAMETRIT: " (pr-str data))
+  (let [yhteiset {:nimi nimi
+                  :tr_numero tr-numero
+                  :tr_alkuosa tr-alkuosa
+                  :tr_alkuetaisyys tr-alkuetaisyys
+                  :tr_loppuosa tr-loppuosa
+                  :tr_loppuetaisyys tr-loppuetaisyys
+                  :tr_ajorata tr-ajorata
+                  :tr_kaista tr-kaista
+                  :tyomenetelma tyomenetelma
+                  :massamaara massamaara
+                  :toimenpide toimenpide
+                  :raekoko raekoko
+                  :paallystetyyppi paallystetyyppi
+                  :hyppy (if (some? hyppy?) hyppy? false)}]
+    (merge yhteiset
+           (if luo-uusi?
+             {:yllapitokohde yllapitokohde-id
+              :ulkoinen-id nil}
+             {:id yllapitokohdeosa-id
+              :urakka urakka-id}))))
 
 (defn vaadi-kohdeosa-ei-kuulu-yllapitokohteeseen
   [db yllapitokohde-id kohdeosa])
@@ -19,16 +49,13 @@
                  (not (nil? (:tr-alkuosa kohdeosa)))
                  (not (nil? (:tr-alkuetaisyys kohdeosa))))
             "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys ei saa olla nil")
+    ;; TODO: Toteuta tää funktio
     (vaadi-kohdeosa-ei-kuulu-yllapitokohteeseen db yllapitokohde-id kohdeosa))
 
   (jdbc/with-db-transaction [db db]
-    ;; (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id) <- Mikäs tää on?
     ;; TODO:
-    ;; - Hae kannassa olevat kohteen muut osat
     ;; - Vertaile tallennettavia osia olemassaoleviin, jotta tiedät mitä poistetaan ja mitä tallennetaan
     ;; - Poista poistettavat osat
-    ;; - Tallenna tallennettavat osat
-    ;; - Päivitä päivitettävät osat
     ;; - Palauta frontille jotain järkevää
 
     (let [kannasta-loytyvat-osat (into #{}
@@ -38,13 +65,15 @@
                                     muut-kohdeosat)
           tallennettavat-osat (remove :poista muut-kohdeosat)]
       (doseq [poistettava-osa poistettavat-osat]
-        (q/poista-yllapitokohdeosa {:id (:id poistettava-osa) :urakka urakka-id}))
-      (doseq [tallennettava-osa tallennettavat-osat]
+        (q/poista-yllapitokohdeosa! db {:id (:id poistettava-osa) :urakka urakka-id}))
+      (doseq [tallennettava-osa (set/rename tallennettavat-osat {:id :yllapitokohdeosa-id})]
         (if (kannasta-loytyvat-osat (:id tallennettava-osa))
           ;:nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara
-          (q/paivita-yllapitokohdeosa tallennettava-osa)
+          (q/paivita-yllapitokohdeosa<! db (tallennus-parametrit false tallennettava-osa))
           ;:yllapitokohde :nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara :ulkoinen-id
-          (q/luo-yllapitokohdeosa (assoc tallennettava-osa :yllapitokohde yllapitokohde-id)))))))
+          (q/luo-yllapitokohdeosa<! db (tallennus-parametrit true
+                                                             (assoc tallennettava-osa
+                                                               :yllapitokohde-id yllapitokohde-id))))))))
 
 (defn hae-yllapitokohteen-muut-kohdeosat [db user {:keys [urakka-id yllapitokohde-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)

@@ -73,6 +73,7 @@
 (def tyomenetelma-leveys 10)
 (def massamaara-leveys 5)
 (def toimenpide-leveys 10)
+(def toiminnot-leveys 30)
 
 (defn alkuosa-ei-lopun-jalkeen [aosa {losa :tr-loppuosa}]
   (when (and aosa losa (> aosa losa))
@@ -448,7 +449,7 @@
 
             skeema (if voi-muokata?
                      (conj skeema
-                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 30
+                           {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys toiminnot-leveys
                             :tasaa :keskita
                             :sisalto-kun-rivi-disabloitu
                             (fn [rivi index]
@@ -582,24 +583,20 @@
                          (tierekisteriosoite-sarakkeet
                            tr-leveys
                            [{:nimi :nimi :pituus-max 30}
-                            {:nimi :tr-numero :muokattava? (constantly false)}
-                            {:nimi :tr-ajorata :muokattava? (constantly false)}
-                            {:nimi :tr-kaista :muokattava? (constantly false)}
-                            {:nimi :tr-alkuosa :muokattava? (fn [_ rivi]
-                                                              (pos? rivi))
+                            {:nimi :tr-numero :tyyppi :string}
+                            {:nimi :tr-ajorata :tyyppi :string}
+                            {:nimi :tr-kaista :tyyppi :string}
+                            {:nimi :tr-alkuosa
                              #_#_:validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
-                            {:nimi :tr-alkuetaisyys #_#_:muokattava? (fn [_ rivi]
-                                                                   (pos? rivi))
+                            {:nimi :tr-alkuetaisyys
                              #_#_:validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-alkuosa)
                                        (partial validoi-alkuetaisyys-kohteen-sisalla kohde)]}
-                            {:nimi :tr-loppuosa #_#_:muokattava? (fn [_ rivi]
-                                                               (< rivi (dec kohdeosia)))
+                            {:nimi :tr-loppuosa
                              #_#_:validoi [(partial validoi-kohdeosa-olemassa osan-pituus kohde)]}
-                            {:nimi :tr-loppuetaisyys #_#_:muokattava? (fn [_ rivi]
-                                                                    (< rivi (dec kohdeosia)))
+                            {:nimi :tr-loppuetaisyys
                              #_#_:validoi [(partial validoi-osan-maksimipituus osan-pituus :tr-loppuosa)
                                        (partial validoi-loppuetaisyys-kohteen-sisalla kohde)]}
-                            #_{:hae (partial tr/laske-tien-pituus osan-pituus)}])
+                            {:hae (partial tr/laske-tien-pituus osan-pituus)}])
                          [(assoc paallystys-tiedot/paallyste-grid-skeema
                                  :leveys paallyste-leveys
                                  :tayta-alas? #(not (nil? %))
@@ -656,7 +653,7 @@
                            (fn [toistettava-rivi tama-rivi]
                              (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}])))
         skeema (if voi-muokata?
-                 (conj skeema {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 15
+                 (conj skeema {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys toiminnot-leveys
                                :tasaa :keskita
                                :komponentti (fn [rivi _]
                                               [:button.nappi-kielteinen.btn-xs
@@ -800,11 +797,11 @@
     {:voi-muokata? (not @grid/gridia-muokataan?)}]
    (when (= kohdetyyppi :paallystys)
      (list
-       ^{:key "foo"}
+       ^{:key :muut-kohdeosat}
         [muut-kohdeosat {:yllapitokohde-id (:id rivi)
                          :urakka-id (:id urakka)
                          :yllapitokohteet-atom kohteet-atom}]
-       ^{:key "bar"}
+       ^{:key :maaramuutokset}
         [maaramuutokset {:yllapitokohde-id (:id rivi)
                          :urakka-id (:id urakka)
                          :yllapitokohteet-atom kohteet-atom}]))
