@@ -263,24 +263,21 @@
        {:otsikko "Työlaji"
         :tyyppi :valinta
         :nimi ::to/tyolaji
-        :valinnat to/reimari-tyolajit
-        :valinta-nayta (comp to/reimari-tyolaji-fmt second)
-        :valinta-arvo first
-        :fmt (comp to/reimari-tyolaji-fmt second)}
+        :valinnat (map val to/reimari-tyolajit)
+        :valinta-nayta to/reimari-tyolaji-fmt
+        :fmt to/reimari-tyolaji-fmt}
        {:otsikko "Työluokka"
         :tyyppi :valinta
         :nimi ::to/tyoluokka
-        :valinnat to/reimari-tyoluokat
-        :valinta-nayta (comp to/reimari-tyoluokka-fmt second)
-        :valinta-arvo first
-        :fmt (comp to/reimari-tyoluokka-fmt second)}
+        :valinnat (map val to/reimari-tyoluokat)
+        :valinta-nayta to/reimari-tyoluokka-fmt
+        :fmt to/reimari-tyoluokka-fmt}
        {:otsikko "Toimenpide"
         :tyyppi :valinta
-        :nimi ::to/toimenpidetyyppi
-        :valinnat to/reimari-toimenpidetyypit
-        :valinta-nayta (comp to/reimari-toimenpidetyyppi-fmt second)
-        :valinta-arvo first
-        :fmt (comp to/reimari-toimenpidetyyppi-fmt second)}
+        :nimi ::to/toimenpide
+        :valinnat (map val to/reimari-toimenpidetyypit)
+        :valinta-nayta to/reimari-toimenpidetyyppi-fmt
+        :fmt to/reimari-toimenpidetyyppi-fmt}
        {:otsikko "Lisätieto"
         :tyyppi :text
         :nimi ::to/lisatieto}]
@@ -382,11 +379,12 @@
                       jaettu/sarake-turvalaite
                       jaettu/sarake-turvalaitenumero
                       jaettu/sarake-vikakorjaus
+                      jaettu/sarake-lisatieto
                       (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
                                                         "lisää-liite"
                                                         oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                         (:id @nav/valittu-urakka)))
-                      {:otsikko "Hinta" :tyyppi :komponentti :leveys 10
+                      {:otsikko "Hinta" :tyyppi :komponentti :leveys 8
                        :komponentti (fn [rivi]
                                       [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
                       (jaettu/sarake-checkbox e! app*)]
