@@ -35,7 +35,8 @@
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -119,7 +120,18 @@
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä" tiedot/aikavalit valinnat-nyt)
+   [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä"
+                               tiedot/aikavalit
+                               valinnat-nyt
+                               {:valokioaikavali :ilmoitettu-vakioaikavali
+                                :alkuaika :ilmoitettu-alkuaika
+                                :loppuaika :ilmoitettu-loppuaika})
+    (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
+                               tiedot/toimenpiteiden-aikavalit
+                               valinnat-nyt
+                               {:valokioaikavali :toimenpiteet-aloitettu-vakioaikavali
+                                :alkuaika :toimenpiteet-aloitettu-alkuaika
+                                :loppuaika :toimenpiteet-aloitettu-loppuaika})
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
      :tyyppi :string
