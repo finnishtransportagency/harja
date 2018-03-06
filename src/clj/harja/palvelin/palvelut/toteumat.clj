@@ -77,9 +77,14 @@
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
             "kokonaishintainen"
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id)
+            ;; Kaikki seuraavat ovat pohjimmiltaan muutos- ja lisätöitä
             "muutostyo"
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
             "lisatyo"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
+            "akillinen-hoitotyo"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
+            "vahinkojen-korjaukset"
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id))]))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
