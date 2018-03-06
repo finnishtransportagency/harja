@@ -379,6 +379,7 @@ reimari-toimenpidetyypit
 (def perustiedot
   #{::id
     ::lisatieto
+    ::harjassa-luotu
     ::reimari-lisatyo?
     ::suoritettu
     ::hintatyyppi
@@ -431,21 +432,38 @@ reimari-toimenpidetyypit
              ::vikailmoitukset? ::tyyppi ::urakoitsija-id]))
 
 (s/def ::hae-vesivayilien-yksikkohintaiset-toimenpiteet-vastaus
-  (s/coll-of (s/keys :req [::id ::tyolaji
-                           ::tyoluokka ::toimenpide ::pvm
-                           ::turvalaite ::reimari-urakoitsija
-                           ::reimari-sopimus ::komponentit]
-                     :opt [::vikakorjauksia? ::vayla
-                           ::suoritettu ::hintatyyppi ::lisatieto
-                           ::oma-hinnoittelu ::hintaryhma-id])))
+  (s/coll-of (s/keys :req [::id
+                           ::tyolaji
+                           ::tyoluokka
+                           ::toimenpide
+                           ::pvm
+                           ::komponentit]
+                     :opt [::vikakorjauksia?
+                           ::vayla
+                           ::suoritettu
+                           ::hintatyyppi
+                           ::lisatieto
+                           ::oma-hinnoittelu
+                           ::hintaryhma-id
+                           ::reimari-urakoitsija
+                           ::turvalaite
+                           ::reimari-sopimus])))
 
 (s/def ::hae-vesivayilien-kokonaishintaiset-toimenpiteet-vastaus
-  (s/coll-of (s/keys :req [::id ::tyolaji
-                           ::tyoluokka ::toimenpide ::pvm
-                           ::turvalaite ::reimari-urakoitsija
-                           ::reimari-sopimus ::komponentit]
-                     :opt [::vikakorjauksia?  ::vayla
-                           ::suoritettu ::hintatyyppi ::lisatieto])))
+  (s/coll-of (s/keys :req [::id
+                           ::tyolaji
+                           ::tyoluokka
+                           ::toimenpide
+                           ::pvm
+                           ::komponentit]
+                     :opt [::vikakorjauksia?
+                           ::vayla
+                           ::suoritettu
+                           ::hintatyyppi
+                           ::lisatieto
+                           ::turvalaite
+                           ::reimari-urakoitsija
+                           ::reimari-sopimus])))
 
 (s/def ::siirra-toimenpiteet-yksikkohintaisiin-kysely
   (s/keys
