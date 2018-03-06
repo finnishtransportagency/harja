@@ -50,6 +50,7 @@
                           ::vv-toimenpide/vikakorjauksia?
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
+                          ::vv-toimenpide/sopimus
                           ::vv-toimenpide/lisatieto
                           ::vv-toimenpide/liitteet
                           ::vv-toimenpide/komponentit
