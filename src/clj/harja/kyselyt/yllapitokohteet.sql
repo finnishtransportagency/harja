@@ -221,8 +221,8 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija
                                FROM urakka
