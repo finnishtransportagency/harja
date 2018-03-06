@@ -364,10 +364,26 @@
              ::to/urakka-id (:id @nav/valittu-urakka)
              ::to/hintatyyppi :yksikkohintainen)
       (dissoc ::to/sopimus
-              ::to/urakka)
+              ::to/urakka
+              ::to/turvalaite
+              ::to/liitteet
+              ::to/vikakorjauksia?
+              ::to/komponentit
+              ::to/pvm
+              ::to/oma-hinnoittelu
+              ::to/hintaryhma-id
+              :lihavoi)
       (set/rename-keys {::to/tyolaji ::to/reimari-tyolaji
                         ::to/tyoluokka ::to/reimari-tyoluokka
-                        ::to/toimenpidetyyppi ::to/reimari-toimenpidetyyppi})))
+                        ::to/toimenpide ::to/reimari-toimenpidetyyppi})
+      ;; Samalla nimellä voi palautua monta koodia.
+      ;; On epäselvää, onko esim eri "Poisto" toimenpidetyypeillä mitään eroa,
+      ;; jos on, se ei ainakaan näy käyttöliittymässä.
+      ;; Voitaneen siis toistaiseksi tehdä vaan naivi ratkaisu, missä valitaan "satunnaisesti"
+      ;; koodi.
+      (update ::to/reimari-tyolaji to/reimari-tyolaji-avain->koodi)
+      (update ::to/reimari-tyoluokka (comp first to/reimari-tyoluokka-avain->koodi))
+      (update ::to/reimari-toimenpidetyyppi (comp first to/reimari-toimenpidetyyppi-avain->koodi))))
 
 (defn haetut-toimenpiteet [vastaus]
   (-> vastaus
