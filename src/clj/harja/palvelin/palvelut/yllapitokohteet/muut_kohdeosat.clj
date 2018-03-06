@@ -6,7 +6,8 @@
             [clojure.set :as set]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.yllapitokohteet :as q]
-            [harja.domain.oikeudet :as oikeudet]))
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri :as tierekisteri]))
 
 (defn tallennus-parametrit [luo-uusi?
                             {:keys [nimi tr-numero tr-alkuosa tr-alkuetaisyys
@@ -36,48 +37,43 @@
              {:id yllapitokohdeosa-id
               :urakka urakka-id}))))
 
-(defn vaadi-kohdeosa-ei-kuulu-yllapitokohteeseen
-  [db yllapitokohde-id kohdeosa])
-
 (defn tallenna-muut-kohdeosat [db user {:keys [urakka-id yllapitokohde-id muut-kohdeosat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
 
-  (doseq [kohdeosa muut-kohdeosat]
-    (assert (and (not (nil? (:tr-numero kohdeosa)))
-                 (not (nil? (:tr-alkuosa kohdeosa)))
-                 (not (nil? (:tr-alkuetaisyys kohdeosa)))
-                 (not (nil? (:tr-loppuetaisyys kohdeosa)))
-                 (not (nil? (:tr-loppuosa kohdeosa))))
-            "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
-    ;; TODO: Toteuta tää funktio
-    (vaadi-kohdeosa-ei-kuulu-yllapitokohteeseen db yllapitokohde-id kohdeosa))
+  (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))]
+    (doseq [kohdeosa muut-kohdeosat]
+      ;; Tarkistetaan, että joku tie on annettu
+      (assert (and (not (nil? (:tr-numero kohdeosa)))
+                   (not (nil? (:tr-alkuosa kohdeosa)))
+                   (not (nil? (:tr-alkuetaisyys kohdeosa)))
+                   (not (nil? (:tr-loppuetaisyys kohdeosa)))
+                   (not (nil? (:tr-loppuosa kohdeosa))))
+              "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
+      ;; Tarkistetaan, että tie ei ole pääkohteen sisällä
+      (assert (not (tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde kohdeosa))
+              "Muihin kohdeosiin ei tulisi tallentaa kohteen sisäisiä osia"))
 
-  (jdbc/with-db-transaction [db db]
-    ;; TODO:
-    ;; - Vertaile tallennettavia osia olemassaoleviin, jotta tiedät mitä poistetaan ja mitä tallennetaan
-    ;; - Poista poistettavat osat
-    ;; - Palauta frontille jotain järkevää
-
-    (let [kannasta-loytyvat-osat (into #{}
-                                       (map :id (yy/hae-yllapitokohteen-muut-kohdeosat db yllapitokohde-id)))
-          poistettavat-osat (filter #(and (:poistettu %)
-                                          (kannasta-loytyvat-osat (:id %)))
-                                    muut-kohdeosat)
-          tallennettavat-osat (remove :poistettu muut-kohdeosat)]
-      (log/debug "KANNASTA LÖYTYVÄT OSAT: " (pr-str kannasta-loytyvat-osat))
-      (log/debug "POISTETTAVAT OSAT: " (pr-str poistettavat-osat))
-      (log/debug "TALLENNETAAVAT OSAT: " (pr-str tallennettavat-osat))
-      (doseq [poistettava-osa poistettavat-osat]
-        (q/poista-yllapitokohdeosa! db {:id (:id poistettava-osa) :urakka urakka-id}))
-      (doseq [tallennettava-osa (set/rename tallennettavat-osat {:id :yllapitokohdeosa-id})]
-        (if (kannasta-loytyvat-osat (:yllapitokohdeosa-id tallennettava-osa))
-          ;:nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara
-          (do (println "PÄIVITETÄÄN") (clojure.pprint/pprint (tallennus-parametrit false tallennettava-osa)) (q/paivita-yllapitokohdeosa<! db (tallennus-parametrit false tallennettava-osa)))
-          ;:yllapitokohde :nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara :ulkoinen-id
-          (q/luo-yllapitokohdeosa<! db (tallennus-parametrit true
-                                                             (assoc tallennettava-osa
-                                                               :yllapitokohde-id yllapitokohde-id))))))))
+    (jdbc/with-db-transaction [db db]
+      (let [kannasta-loytyvat-osat (into #{}
+                                         (map :id (yy/hae-yllapitokohteen-muut-kohdeosat db yllapitokohde-id)))
+            poistettavat-osat (filter #(and (:poistettu %)
+                                            (kannasta-loytyvat-osat (:id %)))
+                                      muut-kohdeosat)
+            tallennettavat-osat (remove :poistettu muut-kohdeosat)]
+        (log/debug "KANNASTA LÖYTYVÄT OSAT: " (pr-str kannasta-loytyvat-osat))
+        (log/debug "POISTETTAVAT OSAT: " (pr-str poistettavat-osat))
+        (log/debug "TALLENNETAAVAT OSAT: " (pr-str tallennettavat-osat))
+        (doseq [poistettava-osa poistettavat-osat]
+          (q/poista-yllapitokohdeosa! db {:id (:id poistettava-osa) :urakka urakka-id}))
+        (doseq [tallennettava-osa (set/rename tallennettavat-osat {:id :yllapitokohdeosa-id})]
+          (if (kannasta-loytyvat-osat (:yllapitokohdeosa-id tallennettava-osa))
+            ;:nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara
+            (do (println "PÄIVITETÄÄN") (clojure.pprint/pprint (tallennus-parametrit false tallennettava-osa)) (q/paivita-yllapitokohdeosa<! db (tallennus-parametrit false tallennettava-osa)))
+            ;:yllapitokohde :nimi :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys :tr_ajorata :tr_kaista :toimenpide :paallystetyyppi :raekoko :tyomenetelma :massamaara :ulkoinen-id
+            (q/luo-yllapitokohdeosa<! db (tallennus-parametrit true
+                                                               (assoc tallennettava-osa
+                                                                 :yllapitokohde-id yllapitokohde-id)))))))))
 
 (defn hae-yllapitokohteen-muut-kohdeosat [db user {:keys [urakka-id yllapitokohde-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
