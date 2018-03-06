@@ -40,3 +40,18 @@ ALTER TABLE reimari_toimenpide
   DROP CONSTRAINT "reimari_toimenpide_reimari-tila_check",
   ADD CONSTRAINT "reimari_toimenpide_reimari-tila_check" CHECK
 ("reimari-tila" IS NULL OR (sisaltaa_tekstia("reimari-tila")));
+
+ALTER TABLE reimari_toimenpide
+  DROP CONSTRAINT "reimari_toimenpide_reimari-tyoluokka_check",
+  ADD CONSTRAINT "reimari_toimenpide_reimari-tyoluokka_check" CHECK
+("reimari-tyoluokka" IS NULL OR (sisaltaa_tekstia("reimari-tyoluokka")));
+
+ALTER TABLE reimari_toimenpide
+  DROP CONSTRAINT "reimari_toimenpide_reimari-tyolaji_check",
+  ADD CONSTRAINT "reimari_toimenpide_reimari-tyolaji_check" CHECK
+("reimari-tyolaji" IS NULL OR (sisaltaa_tekstia("reimari-tyolaji")));
+
+ALTER TABLE reimari_toimenpide
+  DROP CONSTRAINT "reimari_toimenpide_reimari-tyyppi_check",
+  ADD CONSTRAINT "reimari_toimenpide_reimari-toimenpidetyyppi_check" CHECK
+("reimari-toimenpidetyyppi" IS NULL OR (sisaltaa_tekstia("reimari-toimenpidetyyppi")));

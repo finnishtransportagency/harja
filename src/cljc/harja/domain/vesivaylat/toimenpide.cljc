@@ -300,10 +300,10 @@ reimari-toimenpidetyypit
 (s/def ::tyoluokka (set (vals reimari-tyoluokat)))
 (s/def ::toimenpide (set (vals reimari-toimenpidetyypit)))
 ;; Reimarin työlaji/-luokka/toimenpide ovat tiettyjä string-koodiarvoja
-(s/def ::reimari-tyolaji (set (keys reimari-tyolajit)))
-(s/def ::reimari-tyoluokka (set (keys reimari-tyoluokat)))
+(s/def ::reimari-tyolaji (s/nilable (set (keys reimari-tyolajit))))
+(s/def ::reimari-tyoluokka (s/nilable (set (keys reimari-tyoluokat))))
 (s/def ::reimari-tyoluokat (s/and set? (s/every ::reimari-tyoluokka)))
-(s/def ::reimari-toimenpidetyyppi (set (keys reimari-toimenpidetyypit)))
+(s/def ::reimari-toimenpidetyyppi (s/nilable (set (keys reimari-toimenpidetyypit))))
 (s/def ::reimari-toimenpidetyypit (s/and set? (s/every ::reimari-toimenpidetyyppi)))
 
 (s/def ::komponentit (s/every ::tkomp/turvalaitekomponentti))
@@ -486,8 +486,10 @@ reimari-toimenpidetyypit
   (s/keys :req [::id ::urakka-id ::liite-id]))
 
 (s/def ::tallennettava
-  (s/keys :req [::lisatieto ::sopimus-id ::reimari-tyolaji ::urakka-id]
-          :opt [::id ::luoja ::luotu ::muokattu ::muokkaaja ::poistettu ::poistaja]))
+  (s/keys :req [::sopimus-id ::urakka-id]
+          :opt [::lisatieto
+                ::id ::luoja ::luotu ::muokattu ::muokkaaja ::poistettu ::poistaja
+                ::reimari-tyolaji ::reimari-tyoluokka ::reimari-toimenpidetyyppi]))
 
 (s/def ::hakuehdot ::hae-vesivaylien-toimenpiteet-kysely)
 

@@ -242,42 +242,49 @@
                   "Kirjaa turvalaitteeton toimenpide"
                   "Muokkaa toimenpidettä")
        :muokkaa! #(e! (tiedot/->ToimenpidettaMuokattu (lomake/ilman-lomaketietoja %)))
-       :footer-fn (fn [tapahtuma]
+       :footer-fn (fn [toimenpide]
                     [:div
                      [napit/tallenna
                       "Tallenna toimenpide"
-                      #(e! (tiedot/->TallennaToimenpide (lomake/ilman-lomaketietoja tapahtuma)))
+                      #(e! (tiedot/->TallennaToimenpide (lomake/ilman-lomaketietoja toimenpide)))
                       {:disabled (or tallennus-kaynnissa?
-                                     (not (lomake/voi-tallentaa? valittu-toimenpide)))}]])}
+                                     (not (lomake/voi-tallentaa? toimenpide)))}]])}
       [{:otsikko "Aika"
         :tyyppi :pvm-aika
         :pakollinen? true
-        :nimi ::to/suoritettu}
+        :nimi ::to/suoritettu
+        :validoi [[:ei-tyhja "Anna aika"]]}
        {:otsikko "Sopimus"
         :nimi ::to/sopimus
         :tyyppi :valinta
         :pakollinen? true
         :valinta-nayta ::sop/nimi
         :valinnat (map (fn [[id nimi]] {::sop/id id ::sop/nimi nimi}) (:sopimukset @nav/valittu-urakka))
-        :fmt ::sop/nimi}
+        :fmt ::sop/nimi
+        :validoi [[:ei-tyhja "Valitse sopimus"]]}
        {:otsikko "Työlaji"
         :tyyppi :valinta
         :nimi ::to/tyolaji
-        :valinnat (map val to/reimari-tyolajit)
-        :valinta-nayta to/reimari-tyolaji-fmt
-        :fmt to/reimari-tyolaji-fmt}
-       {:otsikko "Työluokka"
-        :tyyppi :valinta
-        :nimi ::to/tyoluokka
-        :valinnat (map val to/reimari-tyoluokat)
-        :valinta-nayta to/reimari-tyoluokka-fmt
-        :fmt to/reimari-tyoluokka-fmt}
-       {:otsikko "Toimenpide"
-        :tyyppi :valinta
-        :nimi ::to/toimenpide
-        :valinnat (map val to/reimari-toimenpidetyypit)
-        :valinta-nayta to/reimari-toimenpidetyyppi-fmt
-        :fmt to/reimari-toimenpidetyyppi-fmt}
+        :valinnat (into [nil] (mapv val to/reimari-tyolajit))
+        :valinta-nayta #(or (to/reimari-tyolaji-fmt %) "Ei työlajia")
+        :fmt #(or (to/reimari-tyolaji-fmt %) "Ei työlajia")}
+       (when (or (::to/tyolaji valittu-toimenpide)
+                 (::to/tyoluokka valittu-toimenpide))
+         {:otsikko "Työluokka"
+          :tyyppi :valinta
+          :nimi ::to/tyoluokka
+          :valinnat (into [nil] (mapv val to/reimari-tyoluokat))
+          :valinta-nayta #(or (to/reimari-tyoluokka-fmt %) "Ei työluokkaa")
+          :fmt #(or (to/reimari-tyoluokka-fmt %) "Ei työluokkaa")})
+       (when (or (and (::to/tyolaji valittu-toimenpide)
+                      (::to/tyoluokka valittu-toimenpide))
+                 (::to/toimenpide valittu-toimenpide))
+         {:otsikko "Toimenpide"
+          :tyyppi :valinta
+          :nimi ::to/toimenpide
+          :valinnat (into [nil] (mapv val to/reimari-toimenpidetyypit))
+          :valinta-nayta #(or (to/reimari-toimenpidetyyppi-fmt %) "Ei toimenpidettä")
+          :fmt #(or (to/reimari-toimenpidetyyppi-fmt %) "Ei toimenpidettä")})
        {:otsikko "Lisätieto"
         :tyyppi :text
         :nimi ::to/lisatieto}]
