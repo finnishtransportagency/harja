@@ -58,9 +58,9 @@
                      :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     "Urakoitsija" (get-in toimenpide [::to/reimari-urakoitsija ::urakoitsija/nimi])
-    "Sopimusnumero" (str (when-let [nimi (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi])]
+    "Sopimusnumero" (str (when-let [nimi (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi]))]
                            (when-not (empty? nimi) nimi))
-                         (when-let [nro (get-in toimenpide [::to/reimari-sopimus ::sop/r-nro])]
+                         (when-let [nro (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nro]))]
                            (when-not (empty? nro) (str " (" nro ")"))))
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
