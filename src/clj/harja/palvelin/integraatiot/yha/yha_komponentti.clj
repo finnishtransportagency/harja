@@ -74,8 +74,8 @@
                                (map :kohde-yha-id virheet)))]
 
     (if onnistunut?
-      (log/info "Kohteiden lähetys YHA:n onnistui")
-      (log/error (str "Virheitä kohteiden lähetyksessä YHA:n: " virhe-viesti)))
+      (log/info "Kohteiden lähetys YHAan onnistui")
+      (log/error (str "Virheitä kohteiden lähetyksessä YHAan: " virhe-viesti)))
 
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
@@ -190,7 +190,7 @@
 
    Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
-  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
+  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "yha" "kohteiden-lahetys" nil
