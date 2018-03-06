@@ -1,7 +1,8 @@
 ALTER TABLE reimari_toimenpide
   ALTER COLUMN "reimari-id" DROP NOT NULL,
   ALTER COLUMN "reimari-luotu" DROP NOT NULL,
-  ALTER COLUMN "reimari-lisatyo" DROP NOT NULL;
+  ALTER COLUMN "reimari-lisatyo" DROP NOT NULL,
+  ADD COLUMN "harjassa-luotu" BOOLEAN DEFAULT FALSE NOT NULL;
 
 ALTER TABLE reimari_toimenpide
   DROP CONSTRAINT "reimari_toimenpide_reimari-sopimus_check",

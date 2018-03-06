@@ -345,9 +345,13 @@
     (if (id-olemassa? (::vv-toimenpide/id toimenpide))
       (update! db
                ::vv-toimenpide/reimari-toimenpide
-               (m/lisaa-muokkaustiedot toimenpide ::vv-toimenpide/id user)
+               (-> toimenpide
+                   (assoc ::vv-toimenpide/harjassa-luotu true)
+                   (m/lisaa-muokkaustiedot ::vv-toimenpide/id user))
                {::vv-toimenpide/id (::vv-toimenpide/id toimenpide)})
 
       (insert! db
                ::vv-toimenpide/reimari-toimenpide
-               (m/lisaa-muokkaustiedot toimenpide ::vv-toimenpide/id user)))))
+               (-> toimenpide
+                   (assoc ::vv-toimenpide/harjassa-luotu true)
+                   (m/lisaa-muokkaustiedot ::vv-toimenpide/id user))))))
