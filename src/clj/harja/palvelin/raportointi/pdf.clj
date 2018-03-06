@@ -18,7 +18,9 @@
             [harja.ui.skeema :as skeema]
             [harja.fmt :as fmt]
             [harja.domain.raportointi :as raportti-domain]
-            [harja.ui.aikajana :as aikajana]))
+            [harja.ui.aikajana :as aikajana]
+            [harja.pvm :as pvm]
+            [clj-time.coerce :as c]))
 
 (def ^:dynamic *orientaatio* nil)
 
@@ -330,15 +332,30 @@
                                  sisalto))
                    #_[[:fo:block {:id "raportti-loppu"}]]))))
 
+
 (defmethod muodosta-pdf :aikajana [[_ optiot rivit]]
-  (let [aikajana (aikajana/aikajana (merge {:leveys (case *orientaatio*
+  (let [rivit (map (fn [rivi]
+                     (assoc rivi ::aikajana/ajat
+                                 (map (fn [aika]
+                                        (assoc aika
+                                          ::aikajana/alku
+                                          (when-let [alku (::aikajana/alku aika)]
+                                            (pvm/suomen-aikavyohykkeeseen (c/from-sql-date alku)))
+                                          ::aikajana/loppu
+                                          (when-let [loppu (::aikajana/loppu aika)]
+                                            (pvm/suomen-aikavyohykkeeseen (c/from-sql-date loppu)))))
+                                      (::aikajana/ajat rivi))))
+                   rivit)
+
+        orientaatio (or *orientaatio* :landscape) ;; Dynamic binding ei toimi jos aikajana upotetaan toiseen raporttiin
+        aikajana (aikajana/aikajana (merge {:leveys (case orientaatio
                                                       :portrait 750
                                                       :landscape 1000)}
                                            optiot)
                                     rivit)]
     [:fo:block
      (when aikajana
-       [:fo:instream-foreign-object {:content-width (case *orientaatio*
+       [:fo:instream-foreign-object {:content-width (case orientaatio
                                                       :portrait "19cm"
                                                       :landscape "27.5cm")
 
