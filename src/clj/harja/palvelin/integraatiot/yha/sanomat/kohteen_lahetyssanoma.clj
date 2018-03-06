@@ -122,7 +122,7 @@
   (let [sisalto (muodosta-sanoma urakka kohteet)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" xml)]
-      (let [virheviesti (format "Kohdetta ei voi lähettää YHA:n. XML ei ole validia. Validointivirheet: %s" virheet)]
+      (let [virheviesti (format "Kohdetta ei voi lähettää YHAan. XML ei ole validia. Validointivirheet: %s" virheet)]
         (log/error virheviesti)
         (throw+ {:type :invalidi-yha-kohde-xml
                  :error virheviesti}))
