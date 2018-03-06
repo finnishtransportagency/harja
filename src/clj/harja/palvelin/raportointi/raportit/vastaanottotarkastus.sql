@@ -41,7 +41,7 @@ WHERE yt.urakka = :urakka
       AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
 
--- name: hae-kohteisiin-kuulumattomat-kustannukset
+-- name: hae-kohteisiin-kuulumattomat-sanktiot
 SELECT
   s.maara,
   s.sakkoryhma,

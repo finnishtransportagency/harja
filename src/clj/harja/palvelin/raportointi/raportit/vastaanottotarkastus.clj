@@ -175,8 +175,9 @@
                                           (yllapitokohteet-domain/jarjesta-yllapitokohteet))
         muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
                                                      :vuosi vuosi})
-        urakan-sanktiot (hae-kohteisiin-kuulumattomat-kustannukset db {:urakka urakka-id
-                                                                       :vuosi vuosi})]
+        urakan-sanktiot (->> (hae-kohteisiin-kuulumattomat-sanktiot db {:urakka urakka-id
+                                                                    :vuosi vuosi})
+                            (map #(assoc % :maara (- (:maara %)))))]
     [:raportti {:nimi raportin-nimi}
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
