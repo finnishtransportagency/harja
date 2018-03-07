@@ -207,7 +207,9 @@
           "Peruuta"
           #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
         (when-not (tiedot/valiaikainen-hintaryhma? hintaryhma)
-          (if (empty? hinnat)
+          (if (and (nil? hintaryhman-toimenpiteiden-yhteishinta)
+                   (nil? hintaryhman-kokonaishinta)
+                   (empty? hinnat))
             [napit/yleinen-ensisijainen
              "Määrittele yksi hinta koko tilaukselle"
              #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
