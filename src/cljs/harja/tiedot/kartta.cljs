@@ -7,7 +7,8 @@
             [harja.loki :refer [log]]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers :as openlayers]
-            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila])
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila]
+            [harja.ui.kartta.apurit :as apurit])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -67,7 +68,9 @@
                          (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))]
       (log "EXTENT TASOISTA: " (pr-str extent))
       (if (not-empty (tasot/aktiiviset-nakymien-tasot))
-        (when extent (keskita-kartta-alueeseen! (geo/laajenna-extent-prosentilla extent)))
+        (when extent (keskita-kartta-alueeseen! (-> extent
+                                                    geo/laajenna-extent-prosentilla
+                                                    (geo/laajenna-pinta-alaan apurit/min-pinta-ala-automaattiselle-zoomille))))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]

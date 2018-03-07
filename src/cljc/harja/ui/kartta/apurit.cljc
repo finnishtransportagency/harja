@@ -8,6 +8,8 @@
 
 (def +koko-suomi-extent+ [60000 6613000 736400 7780300])
 
+(def min-pinta-ala-automaattiselle-zoomille 1000000)
+
 (defn kulma [[x1 y1] [x2 y2]]
   (Math/atan2
    (- y2 y1)
