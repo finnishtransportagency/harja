@@ -123,13 +123,13 @@
    [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä"
                                tiedot/aikavalit
                                valinnat-nyt
-                               {:valokioaikavali :ilmoitettu-vakioaikavali
+                               {:vakioaikavali :ilmoitettu-vakioaikavali
                                 :alkuaika :ilmoitettu-alkuaika
                                 :loppuaika :ilmoitettu-loppuaika})
     (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
                                tiedot/toimenpiteiden-aikavalit
                                valinnat-nyt
-                               {:valokioaikavali :toimenpiteet-aloitettu-vakioaikavali
+                               {:vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
                                 :alkuaika :toimenpiteet-aloitettu-alkuaika
                                 :loppuaika :toimenpiteet-aloitettu-loppuaika})
     {:nimi :hakuehto :otsikko "Hakusana"
