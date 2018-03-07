@@ -1,14 +1,21 @@
 (ns harja.ui.kartta.apurit
-  (:require [harja.geo :as geo]
-            #?@(:cljs
-                [[ol.geom.Point]])))
+  (:require
+    [harja.geo :as geo]
+    [harja.domain.urakka :as ur]
+    #?@(:cljs
+        [[ol.geom.Point]])))
 
 (def kulmaraja-nuolelle (/ Math/PI 4)) ;; pi / 4 = 45 astetta
 (defn abs [i] (max i (- i)))
 
 (def +koko-suomi-extent+ [60000 6613000 736400 7780300])
 
-(def min-pinta-ala-automaattiselle-zoomille 1000000)
+(defn min-pinta-ala-automaattiselle-zoomille
+  ([urakka]
+    ;; Koko suomen pinta-ala 789561720000
+   (if (ur/vesivaylaurakka-ei-kanava? urakka)
+     1500000000
+     0)))
 
 (defn kulma [[x1 y1] [x2 y2]]
   (Math/atan2

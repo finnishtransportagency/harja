@@ -70,7 +70,8 @@
       (if (not-empty (tasot/aktiiviset-nakymien-tasot))
         (when extent (keskita-kartta-alueeseen! (-> extent
                                                     geo/laajenna-extent-prosentilla
-                                                    (geo/laajenna-pinta-alaan apurit/min-pinta-ala-automaattiselle-zoomille))))
+                                                    (geo/laajenna-pinta-alaan (apurit/min-pinta-ala-automaattiselle-zoomille
+                                                                                @nav/valittu-urakka)))))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
