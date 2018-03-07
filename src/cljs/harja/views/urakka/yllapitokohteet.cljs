@@ -680,7 +680,7 @@
                                            ;; YHA-kohteille näytetään ajorata ja kaista vain siinä tapauksessa, että
                                            ;; ainakin yhdellä kohteella ne on annettu
                                            (and yha-sidottu?
-                                                (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))
+                                                (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))]
           [:div.yllapitokohteet
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
