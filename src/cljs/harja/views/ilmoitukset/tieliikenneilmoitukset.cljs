@@ -155,19 +155,16 @@
      :otsikko "Tunniste"
      :placeholder "Rajaa tunnisteella"
      :tyyppi :string}
-
-    (lomake/ryhma
-      {:rivi? true}
-      {:nimi :ilmoittaja-nimi
-       :palstoja 1
-       :otsikko "Ilmoittajan nimi"
-       :placeholder "Rajaa ilmoittajan nimellä"
-       :tyyppi :string}
-      {:nimi :ilmoittaja-puhelin
-       :palstoja 1
-       :otsikko "Ilmoittajan puhelinnumero"
-       :placeholder "Rajaa ilmoittajan puhelinnumerolla"
-       :tyyppi :puhelin})
+    {:nimi :ilmoittaja-nimi
+     :palstoja 1
+     :otsikko "Ilmoittajan nimi"
+     :placeholder "Rajaa ilmoittajan nimellä"
+     :tyyppi :string}
+    {:nimi :ilmoittaja-puhelin
+     :palstoja 1
+     :otsikko "Ilmoittajan puhelinnumero"
+     :placeholder "Rajaa ilmoittajan puhelinnumerolla"
+     :tyyppi :puhelin}
 
     (lomake/ryhma
       {:rivi? true}

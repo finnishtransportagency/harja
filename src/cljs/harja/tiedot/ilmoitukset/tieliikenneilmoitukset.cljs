@@ -29,7 +29,7 @@
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
 (def toimenpiteiden-aikavalit
-  [{:nimi "Ei käytössä" :ei-kaytossa? true}
+  [{:nimi "Ei rajoitusta" :ei-kaytossa? true}
    {:nimi "1 tunnin sisällä" :tunteja 1}
    {:nimi "12 tunnin sisällä" :tunteja 12}
    {:nimi "1 päivän sisällä" :tunteja 24}
