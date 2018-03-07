@@ -16,19 +16,21 @@
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
                   (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
+                    (let [tietokanta (tietokanta/luo-tietokanta testitietokanta)]
+                      (component/start
+                       (component/system-map
+                        :db tietokanta
+                        :db-replica tietokanta
                         :http-palvelin (testi-http-palvelin)
                         :yksikkohintaiset-tyot (component/using
-                                                 (->Yksikkohintaiset-tyot)
-                                                 [:http-palvelin :db])
+                                                (->Yksikkohintaiset-tyot)
+                                                [:http-palvelin :db])
                         :toteumat (component/using
-                                    (toteumat/->Toteumat)
-                                    [:http-palvelin :db])
+                                   (toteumat/->Toteumat)
+                                   [:http-palvelin :db :db-replica])
                         :muut-tyot (component/using
-                                     (muut-tyot/->Muut-tyot)
-                                     [:http-palvelin :db])))))
+                                    (muut-tyot/->Muut-tyot)
+                                    [:http-palvelin :db]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -337,6 +339,33 @@
         (is (= 7.6787994891441166912000000M
                (:kaikki_laskutetaan_ind_korotus toka-haetut-tiedot-oulu-talvihoito)
                (:kaikki_laskutetaan_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan_ind_korotus laskutusyhteenvedossa")))))
+
+
+;; HAR-7520
+(deftest laskutusyhteenvedon-cache-tyhjenee-jos-urakan-kayttama-indeksi-muuttuu
+  (testing "laskutusyhteenvedon-cache-tyhjenee-jos-urakan-kayttama-indeksi-muuttuu"
+    (let [urakka-id @oulun-alueurakan-2014-2019-id
+          varmista-tyhjyys (tyhjenna-urakan-cache urakka-id)
+          cache-tyhja (first (q-map "SELECT * FROM laskutusyhteenveto_cache WHERE urakka = " urakka-id ";"))
+          eka-tietojen-haku (laskutusyhteenveto/hae-laskutusyhteenvedon-tiedot
+                              (:db jarjestelma) +kayttaja-jvh+
+                              {:urakka-id urakka-id :alkupvm (pvm/->pvm "1.8.2015")
+                               :loppupvm (pvm/->pvm "31.8.2015")})
+          cachesta-haettu-kysely (hae-cachesta-kentat urakka-id +tuotekoodi-talvihoito+)
+          cache-count (:count (first (q-map "SELECT count(*) FROM laskutusyhteenveto_cache c WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01';")))
+          indeksi-ennen-maku2005 (ffirst (q "SELECT indeksi FROM  urakka where id = " urakka-id))
+          ;; muuta Oulun urakan käyttämää indeksiä
+          poistettu-indeksi (u "UPDATE urakka SET indeksi = NULL where id = " urakka-id)
+          indeksi-jalkeen-maku2010 (ffirst (q "SELECT indeksi FROM  urakka where id = " urakka-id))
+          cache-count-indeksipaivityksen-jalkeen (:count (first (q-map "SELECT count(*) FROM laskutusyhteenveto_cache c WHERE c.urakka = " urakka-id " AND c.alkupvm = '2015-8-01';")))]
+      (is (= cache-count 1) "Monta kyselyä samoin parametrein, silti vain yksi cachessa")
+      (is (nil? cache-tyhja) "cache tyhjä ennen kyselyn ajoa")
+      (is (some? cachesta-haettu-kysely) "cache ei tyhjä ennen kyselyn ajoa")
+      (is (= "MAKU 2005" indeksi-ennen-maku2005) "indeksi ennen muutosta")
+      (is (nil? indeksi-jalkeen-maku2010) "indeksi jälkeen muutoksen")
+
+      ;; varmista että cache tyhjenee kun indeksiä muutetaan
+      (is (= 0 cache-count-indeksipaivityksen-jalkeen)))))
 
 ;; Kysely, jolla voi tarkistaa onko tyhjiä laskutusyhteenvetoja:
 ;; SELECT u.nimi, y.urakka, y.alkupvm, y.loppupvm, y.tallennettu,

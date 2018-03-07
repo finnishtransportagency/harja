@@ -159,7 +159,7 @@
 (defn- hae-yllapitokohteet
   [db user {:keys [toleranssi alku loppu yllapito nykytilanne? tyyppi alue]} urakat]
   ;; Huomaa: hakee vain sellaiset ylläpitokohteet, jotka piirretään frontilla (paikkauskohteet).
-  ;; Yhtenäisyyden ja suorituskyvyn vyoksi olisi Mahdollisesti syytä piirtää kaikki ylläpitokohteet palvelimella
+  ;; Yhtenäisyyden ja suorituskyvyn vuoksi olisi mahdollisesti syytä piirtää kaikki ylläpitokohteet palvelimella
   ;; ja palauttaa karttakuvina, kuten nyt tehdään päällystyksen kanssa.
   ;; Paikkauksia on kuitenkin verrattain vähän, joten toistaiseksi tämä toimii.
   (when (tk/valittu? yllapito (case tyyppi

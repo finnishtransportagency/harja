@@ -139,6 +139,7 @@
                             {:yllapitokohde (:id kohde)
                              :nimi nimi
                              :tunnus tunnus
+                             :hyppy false ; YHA:sta ei tule hyppyjä
                              :tr_numero (:tienumero tierekisteriosoitevali)
                              :tr_alkuosa (:aosa tierekisteriosoitevali)
                              :tr_alkuetaisyys (:aet tierekisteriosoitevali)
@@ -208,11 +209,11 @@
         (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
 
 (defn laheta-kohteet-yhaan
-  "Lähettää annetut kohteet teknisine tietoineen YHA:n."
+  "Lähettää annetut kohteet teknisine tietoineen YHAan."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
-  (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
+  (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
   (let [lahetys-onnistui? (yha/laheta-kohteet yha urakka-id kohde-idt)
         paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     {:paallystysilmoitukset paivitetyt-ilmoitukset

@@ -51,6 +51,7 @@ SELECT
   ypko.tyomenetelma                     AS "kohdeosa_tyomenetelma",
   ypko.massamaara                       AS "kohdeosa_massamaara",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
+  ypko.hyppy                            AS "kohdeosa_hyppy?",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
@@ -220,8 +221,8 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
                                     AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
-  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka)
-  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id
+  LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
+  LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija
                                FROM urakka
@@ -294,7 +295,8 @@ SELECT
   tyomenetelma,
   massamaara            AS "massamaara",
   toimenpide,
-  sijainti
+  sijainti,
+  hyppy                 AS "hyppy?"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
                             AND ypk.poistettu IS NOT TRUE
@@ -319,7 +321,8 @@ SELECT
   tyomenetelma,
   massamaara            AS "massamaara",
   toimenpide,
-  sijainti
+  sijainti,
+  hyppy                 AS "hyppy?"
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
                             AND ypk.poistettu IS NOT TRUE
@@ -420,7 +423,7 @@ WHERE id = :id
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide,
                               paallystetyyppi, raekoko, tyomenetelma, massamaara,
-                              ulkoinen_id, sijainti)
+                              ulkoinen_id, hyppy, sijainti)
 VALUES (:yllapitokohde,
   :nimi,
   :tr_numero,
@@ -432,22 +435,23 @@ VALUES (:yllapitokohde,
   :tr_kaista,
   :toimenpide,
   :paallystetyyppi,
-        :raekoko,
-        :tyomenetelma,
-        :massamaara,
-        :ulkoinen-id,
-        (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
-         FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
-                                                CAST(:tr_alkuosa AS INTEGER),
-                                                CAST(:tr_alkuetaisyys AS INTEGER),
-                                                CAST(:tr_loppuosa AS INTEGER),
-                                                CAST(:tr_loppuetaisyys AS INTEGER),
-                                                CAST(:tr_ajorata AS INTEGER))));
+  :raekoko,
+  :tyomenetelma,
+  :massamaara,
+  :ulkoinen-id,
+  :hyppy,
+  (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+   FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
+                                          CAST(:tr_alkuosa AS INTEGER),
+                                          CAST(:tr_alkuetaisyys AS INTEGER),
+                                          CAST(:tr_loppuosa AS INTEGER),
+                                          CAST(:tr_loppuetaisyys AS INTEGER),
+                                          CAST(:tr_ajorata AS INTEGER))));
 
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, hyppy, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
@@ -456,6 +460,7 @@ VALUES (:yllapitokohde,
         :tr_loppuosa,
         :tr_loppuetaisyys,
         :ulkoinen-id,
+        :hyppy,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
                                             CAST(:tr_alkuosa AS INTEGER),
@@ -480,6 +485,7 @@ SET
   tyomenetelma     = :tyomenetelma,
   massamaara       = :massamaara,
   toimenpide       = :toimenpide,
+  hyppy            = :hyppy,
   muokattu         = NOW(),
   sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
                       FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
@@ -930,7 +936,9 @@ SELECT
   tr_alkuosa       AS "tr-alkuosa",
   tr_alkuetaisyys  AS "tr-alkuetaisyys",
   tr_loppuosa      AS "tr-loppuosa",
-  tr_loppuetaisyys AS "tr-loppuetaisyys"
+  tr_loppuetaisyys AS "tr-loppuetaisyys",
+  tr_ajorata       AS "tr-ajorata",
+  tr_kaista        AS "tr-kaista"
 FROM yllapitokohde ypk
   LEFT JOIN urakka u ON ypk.urakka = u.id
 WHERE vuodet @> ARRAY [:vuosi] :: INT []

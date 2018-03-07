@@ -3,7 +3,6 @@
             [tuck.core :as tuck]
             [harja.id :refer [id-olemassa?]]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -178,7 +177,7 @@
 
   ValitutSiirretty
   (process-event [_ app]
-    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+    (viesti/nayta! (toimenpiteet/toimenpiteiden-toiminto-suoritettu
                      (count (:valitut-toimenpide-idt app)) "siirretty") :success)
     (assoc app :toimenpiteiden-siirto-kaynnissa? false
                :valitut-toimenpide-idt #{}

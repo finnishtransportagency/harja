@@ -2,6 +2,8 @@
 <b>Julkaistu: 01.02.2018</b>
 
 <b>Versiohistoria:</b>
+- Versionumero: 1.0.32 Julkaistu: 28.2.2018:
+    - Ylläpitokohteiden ja päällystysilmoituksen päivitys ottaa nyt vastaan uuden, vapaaehtoisen hyppy-kentän alikohteelle. Jos sen arvo on true, merkitään alikohde hypyksi. Urakan kohteiden haku palauttaa tiedon, onko kyseessä hyppy-alikohde.
 - Versionumero: 1.0.31 Julkaistu: 1.2.2018:
     - Lisätty uudet rajapinnat paikkauksille sekä niiden hinnoitteluille
 - Versionumero: 1.0.30 Julkaistu: 27.11.2017:

@@ -30,7 +30,9 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
-            [harja.domain.kanavat.kohteenosa :as kohteenosa])
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
+            [harja.views.kartta.tasot :as tasot]
+            [harja.views.kartta :as kartta])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -317,18 +319,24 @@
                            (e! (tiedot/->PaivitaValinnat
                                  {:urakka @nav/valittu-urakka
                                   :sopimus-id (first @u/valittu-sopimusnumero)
-                                  :aikavali @u/valittu-aikavali})))
-                      #(e! (tiedot/->NakymaSuljettu)))
+                                  :aikavali @u/valittu-aikavali}))
+                           (tasot/taso-paalle! :kan-kohteet)
+                           (tasot/taso-pois! :organisaatio))
+                      #(e! (tiedot/->NakymaSuljettu)
+                           (tasot/taso-pois! :kan-kohteet)
+                           (tasot/taso-paalle! :organisaatio)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
       @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
-      [:div
-       [debug/debug app]
-       (if valittu-hairiotilanne
-         [hairiolomake e! app @kanavaurakka/kanavakohteet]
-         [:div
-          [suodattimet-ja-toiminnot e! app]
-          [hairiolista e! app]])])))
+      [:span
+       [kartta/kartan-paikka]
+       [:div
+        [debug/debug app]
+        (if valittu-hairiotilanne
+          [hairiolomake e! app @kanavaurakka/kanavakohteet]
+          [:div
+           [suodattimet-ja-toiminnot e! app]
+           [hairiolista e! app]])]])))
 
 (defn hairiotilanteet []
   [tuck tiedot/tila hairiotilanteet*])

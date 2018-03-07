@@ -88,13 +88,7 @@ Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000 tai local
 
 ### Kehitystyötä helpottavat työkalut
 
-Migraatioiden ajaminen Vagrantin VirtualBox-koneeseen:
-
-- **migrate_test.sh** pystyttää testikannan uudelleen
-- **migrate_and_clean.sh** pystyttää molemmat tietokannat uudelleen tyhjästä
-
 - **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
-- **deploy2.sh** Deployaa aktiivisen haaran testipalvelimelle testausta varten.
 
 ### Docker paikallinen kehitysympäristö
 
@@ -106,6 +100,8 @@ logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
 * ActiveMQ: docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 rmohr/activemq
 
 Kantaimagen päivitys: docker pull solita/harjadb
+
+Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up.
 
 ## Dokumentaatio
 
