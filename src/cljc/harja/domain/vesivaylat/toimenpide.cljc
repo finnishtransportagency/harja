@@ -256,6 +256,17 @@ reimari-toimenpidetyypit
     ;; Formatoidaan sinne päin
     (some-> toimenpide name str/capitalize)))
 
+(defn toimenpide-komponentit-fmt [komponentit]
+  (println "tk-fmt: kutsuttu, eka" (pr-str (first komponentit)))
+  (let [komponenttityypit (mapv ::tkomp/komponenttityyppi komponentit)
+        fmt-tyyppi (fn [ktyyppi]
+                     (println "fmt-tyyppi: saatiin" (pr-str ktyyppi))
+                     (str (:harja.domain.vesivaylat.komponenttityyppi/luokan-nimi ktyyppi "<ei luokkaa>") ": " (:harja.domain.vesivaylat.komponenttityyppi/nimi ktyyppi "<ei nimeä>")))
+        teksti (str/join ", "
+                         (mapv fmt-tyyppi komponenttityypit))]
+    (println "palautetaan teksti:" teksti)
+    teksti))
+
 (def
   ^{:doc "Reimarin toimenpiteen tilat"}
   reimari-tilat

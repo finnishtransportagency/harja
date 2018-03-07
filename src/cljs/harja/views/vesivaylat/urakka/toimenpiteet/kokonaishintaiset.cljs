@@ -124,6 +124,7 @@
                              jaettu/sarake-vayla
                              jaettu/sarake-turvalaite
                              jaettu/sarake-turvalaitenumero
+                             jaettu/sarake-komponentit
                              jaettu/sarake-vikakorjaus
                              (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
                                                                "lisää-liite"

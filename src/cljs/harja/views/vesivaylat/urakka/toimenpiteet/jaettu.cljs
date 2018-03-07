@@ -187,6 +187,8 @@
 (def sarake-turvalaitenumero {:otsikko "Turva\u00ADlaite\u00ADnumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
 (def sarake-vikakorjaus {:otsikko "Vika\u00ADkorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 4})
 (def sarake-vayla {:otsikko "Väylä" :nimi :vayla :hae (comp ::va/nimi ::to/vayla) :leveys 10})
+(def sarake-komponentit {:otsikko "Komponentit" :nimi :komponentit
+                         :hae ::to/komponentit :fmt to/toimenpide-komponentit-fmt :leveys 10})
 (defn sarake-liitteet [e! app oikeus-fn]
   {:otsikko "Liit\u00ADteet" :nimi :liitteet :tyyppi :komponentti :leveys 6
    :komponentti (fn [rivi]
@@ -210,16 +212,16 @@
 
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   (grid/rivinvalintasarake
-    {:otsikkovalinta? true
-     :kaikki-valittu?-fn #(tiedot/kaikki-valittu? (:toimenpiteet app))
-     :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
-     :rivi-valittu?-fn (fn [rivi]
-                         (:valittu? rivi))
-     :rivi-valittu-fn (fn [rivi uusi-arvo]
-                        (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                         :valinta uusi-arvo}
-                                                        toimenpiteet)))
-     :leveys 3}))
+   {:otsikkovalinta? true
+    :kaikki-valittu?-fn #(tiedot/kaikki-valittu? (:toimenpiteet app))
+    :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
+    :rivi-valittu?-fn (fn [rivi]
+                        (:valittu? rivi))
+    :rivi-valittu-fn (fn [rivi uusi-arvo]
+                       (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                        :valinta uusi-arvo}
+                                                       toimenpiteet)))
+    :leveys 3}))
 
 (defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
