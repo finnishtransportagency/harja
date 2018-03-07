@@ -311,7 +311,7 @@
         toiminnot-komponentti
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
-            (let [rivi-hyppy? (get-in kohdeosat-nyt [(inc index) :hyppy?])]
+            (let [seuraava-kohde-hyppy? (:hyppy? (get kohdeosat-nyt (+ index 2)))]
               [:div.tasaa-oikealle
                [napit/yleinen-ensisijainen "Lisää osa"
                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
@@ -320,7 +320,8 @@
                  :luokka "btn-xs"}]
                [napit/yleinen-toissijainen "Lisää hyppy"
                 #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index) true))
-                {:disabled (= kohdetyyppi :sora)
+                {:disabled (or (= kohdetyyppi :sora)
+                               seuraava-kohde-hyppy?)
                  :ikoni (ikonit/livicon-arrow-down)
                  :luokka "btn-xs"}]
                [napit/kielteinen "Poista"
