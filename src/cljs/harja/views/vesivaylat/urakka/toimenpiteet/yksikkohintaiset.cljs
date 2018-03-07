@@ -351,19 +351,20 @@
                 ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-hintaryhma")}
                 [:div.vv-toimenpideryhma
                  ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-otsikko")}
-                 [:span [napit/nappi
-                         (ikonit/map-marker)
-                         #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
-                            (e! (tiedot/->PoistaHintaryhmanKorostus))
+                 [:span
+                  [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+                  [napit/nappi
+                   (ikonit/map-marker)
+                   #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                      (e! (tiedot/->PoistaHintaryhmanKorostus))
 
-                            (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
-                         {:ikoninappi? true
-                          :disabled hintaryhma-tyhja?
-                          :luokka (str "vv-hintaryhma-korostus-nappi "
-                                       (if (tiedot/hintaryhma-korostettu? hintaryhma app)
-                                         "nappi-ensisijainen"
-                                         "nappi-toissijainen"))}]
-                  [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]]
+                      (e! (tiedot/->KorostaHintaryhmaKartalla hintaryhma)))
+                   {:ikoninappi? true
+                    :disabled hintaryhma-tyhja?
+                    :luokka (str "vv-hintaryhma-korostus-nappi "
+                                 (if (tiedot/hintaryhma-korostettu? hintaryhma app)
+                                   "nappi-ensisijainen"
+                                   "nappi-toissijainen"))}]]
 
                  (if hintaryhma-tyhja?
                    ^{:key (str "yksikkohintaiset-toimenpiteet-" hintaryhma-id "-top-level")}
