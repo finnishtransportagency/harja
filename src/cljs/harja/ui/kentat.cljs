@@ -1147,9 +1147,9 @@
         karttavalinta-kaynnissa? (atom false)]
     (when paikannus-kaynnissa?-atom
       (add-watch paikannus-kaynnissa?
-                 :paikannus?
-                 (fn [avain ref vanha uusi]
-                   (reset! paikannus-kaynnissa?-atom uusi))))
+        :paikannus?
+        (fn [avain ref vanha uusi]
+          (reset! paikannus-kaynnissa?-atom uusi))))
 
     (komp/luo
       (komp/sisaan #(do
@@ -1240,6 +1240,14 @@
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
+
+(defn tee-otsikko-ja-kentat [{:keys [otsikko luokka kentat]}]
+  [:span {:class (or luokka "label-ja-kentta")}
+   [:span.kentan-otsikko otsikko]
+   [:span
+    (for* [{:keys [kentta-params arvo-atom] :as kentta} kentat]
+      [:div.kentta
+       [tee-kentta kentta-params arvo-atom]])]])
 
 (defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
   [:span {:class (or luokka "label-ja-kentta")}
