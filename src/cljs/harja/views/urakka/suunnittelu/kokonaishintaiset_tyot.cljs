@@ -299,7 +299,6 @@
 (defn prosentit-yht [rivit]
   (reduce big/plus big-0 (keep :prosentti rivit)))
 
-
 ;; Gridin tiedot luetaan tyorivit-reaktiosta.
 ;; Grid pitää muokkaustilassa kirjaa muuttuneista riveistä, ja välittää ne
 ;; tallenna-napin painalluksesta tallennusfunktiolle.
@@ -412,10 +411,6 @@
                :tyhja (if (nil? @toimenpiteet)
                         [ajax-loader "Kokonaishintaisia töitä haetaan..."]
                         "Ei kokonaishintaisia töitä")
-               ;; :tallenna (do
-               ;;             (reset! vuosisumma-muokattava? false)
-               ;;             #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?))
-               ;;
                :tallenna (if (oikeudet/voi-kirjoittaa?
                                (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)) (:id ur))
                            (do
@@ -499,6 +494,11 @@
                 :muokattava? (constantly true)
                 :tyyppi :positiivinen-numero :leveys 25
                 :tayta-alas? #(not (nil? %))
+                :tayta-fn (fn tayta-summa [lahtorivi tama-rivi]
+                            (log "summa tayta-fn: lasketaan prosenttikin")
+                            (-> tama-rivi
+                                (assoc :summa (:summa lahtorivi))
+                                (paivita-kk-prosentti-summan-mukaan @vuosisumma)))
                 :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
                {:otsikko "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %)
                                                                                (- (:kuukausi %) 1)
