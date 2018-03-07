@@ -84,8 +84,10 @@
     [:raportti {:nimi "Ylläpidon aikataulu"
                 :orientaatio :landscape}
      [:aikajana {}
-      (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?
-                                             :nayta-valitavoitteet? nayta-valitavoitteet?})
+      ;; Välitavoitteita ei piirretä PDF-raporttiin, koska tod.näk. niitä ei siinä haluta nähdä.
+      ;; Järkevä käyttö vaatisi muutenkin hoverointia, mikä ei PDF-raportilla toimi.
+      ;; Jos välitavoitteet kuitenkin rapsallekin halutaan, niin tästä voi passata eteenpäin.
+      (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?})
            aikataulu)]
      [:taulukko {:otsikko "Kohdeluettelo"}
       (mapv #(dissoc % :fmt :hae) sarakkeet)
