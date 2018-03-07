@@ -797,10 +797,10 @@
     {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
     {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
     {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 45}
-    {:otsikko "Edellinen lähetys YHA:n" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
+    {:otsikko "Edellinen lähetys YHAan" :nimi :edellinen-lahetys :muokattava? (constantly false) :tyyppi :komponentti
      :leveys 45
      :komponentti (fn [rivi] [nayta-lahetystiedot rivi])}
-    {:otsikko "Lähetä YHA:n" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 20 :tyyppi :komponentti
+    {:otsikko "Lähetä YHAan" :nimi :laheta-yhan :muokattava? (constantly false) :leveys 20 :tyyppi :komponentti
      :komponentti (fn [rivi]
                     [yha/yha-lahetysnappi
                      oikeudet/urakat-kohdeluettelo-paallystyskohteet
@@ -826,7 +826,7 @@
          [:h3 "Päällystysilmoitukset"]
          [paallystysilmoitukset-taulukko urakka-id paallystysilmoitukset]
          [:h3 "YHA-lähetykset"]
-         [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHA:n."]
+         [yleiset/vihje "Ilmoituksen täytyy olla merkitty valmiiksi ja kokonaisuudessaan hyväksytty ennen kuin se voidaan lähettää YHAan."]
          [yha/yha-lahetysnappi
           oikeudet/urakat-kohdeluettelo-paallystyskohteet
           urakka-id
