@@ -235,8 +235,6 @@
           prosentti (when (and (positiivinen-numero-tai-bigdec? summa)
                                (positiivinen-numero-tai-bigdec? vuosisumma))
                       (/ (* (big/->big 100) (big/->big summa)) (big/->big vuosisumma)))]
-      ;; (when-not (pos? vuosisumma)
-      ;;   (log "paivita-kk-prosentti-summan-mukaan: vuosisumma oli" (pr-str vuosisumma)))
 
       (assoc rivi :prosentti prosentti))
     ;; else
@@ -414,11 +412,9 @@
                :tallenna (if (oikeudet/voi-kirjoittaa?
                                (oikeudet/tarkistettava-oikeus-kok-hint-tyot (:tyyppi ur)) (:id ur))
                            (do
-                             (log "tallenna-fn - voidaan kirjoittaa joten reset & tt-funktio")
                              (reset! vuosisumma-muokattava? false)
                              #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?))
                            (do
-                             (log "tallenna-fn - ei mahdollinen")
                              :ei-mahdollinen))
 
                :aloita-muokkaus-fn #(do (reset! vuosisumma-muokattava? true) %)
@@ -428,13 +424,9 @@
                :tallenna-vain-muokatut false
                :validoi-fn (when @prosenttijako?
                              (fn [rivit]
-                               (log "validoi prosentit-yht: arvo: " (big/fmt (prosentit-yht rivit) 3))
-                               (log "validoi prosentit-yht: onko 100? -> " (pr-str (big/eq (big/->big 100)
-                                                                              (prosentit-yht rivit))))
                                (when-not (= "100"
                                             (big/fmt (prosentit-yht rivit) 3))
                                  "Prosenttien tulee olla yhteensä 100")))
-               ;; :validoi-fn #(constantly true)
                :peruuta #(do
                            (reset! vuosisumma-muokattava? false)
                            (reset! tuleville? false))
@@ -445,7 +437,6 @@
                                    (if-not @prosenttijako?
                                      rivit
                                      (fmap (fn [rivi]
-                                             ;; (log "prosessoi-muutos: rivi" (pr-str rivi))
                                              (paivita-kk-prosentti-summan-mukaan rivi @vuosisumma)) rivit)))
                :muokkaa-footer (fn [g]
                                  (when-not @prosenttijako?
@@ -495,7 +486,6 @@
                 :tyyppi :positiivinen-numero :leveys 25
                 :tayta-alas? #(not (nil? %))
                 :tayta-fn (fn tayta-summa [lahtorivi tama-rivi]
-                            (log "summa tayta-fn: lasketaan prosenttikin")
                             (-> tama-rivi
                                 (assoc :summa (:summa lahtorivi))
                                 (paivita-kk-prosentti-summan-mukaan @vuosisumma)))
