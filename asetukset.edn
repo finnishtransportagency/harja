@@ -8,16 +8,16 @@
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")}
  :tietokanta {:palvelin "localhost"
               :tietokanta "harja"
-              :portti 5432
+              :portti 7731
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana ""}
+              :salasana "s_harja"}
  :tietokanta-replica {:palvelin "localhost"
                       :tietokanta "harja"
-                      :portti 5432
+                      :portti 7731
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana ""}
+                      :salasana "s_harja"}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
@@ -169,7 +169,9 @@
                                :tietyoilmoitusten-lahetys
                                :ais-data
                                :reittitarkistukset
-                               :tiedostopesula}
+                               :tiedostopesula
+                               :tierekisterin-varusteet
+                               :varuste-api}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
