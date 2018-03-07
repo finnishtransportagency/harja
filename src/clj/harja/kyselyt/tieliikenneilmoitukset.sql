@@ -549,7 +549,7 @@ WHERE
 SELECT id
 FROM ilmoitustoimenpide
 WHERE
-  (tila IS NULL OR tila = 'virhe') AND
+  (lahetetty IS NULL OR tila IS NULL OR tila = 'virhe') AND
   kuittaustyyppi != 'valitys';
 
 -- name: hae-ilmoituksen-tieosoite
