@@ -93,18 +93,21 @@
              (< loppuet alkuet))
     "Lop\u00ADpu\u00ADe\u00ADtäi\u00ADsyys ei voi olla enn\u00ADen al\u00ADku\u00ADe\u00ADtäi\u00ADsyyt\u00ADtä"))
 
-(defn tierekisteriosoite-sarakkeet [perusleveys
+(defn tierekisteriosoite-sarakkeet
+  "Perusleveys on leveys, jota kentille käytetään, ellei määritetä kenttäkohtaista leveyttä.
+   Nimi-kenttä on kaksi kertaa perusleveys, ellei määritetä kenttäkohtaista leveyttä."
+  [perusleveys
                                     [nimi tie ajorata kaista aosa aet losa let pituus]]
   (into []
         (remove
           nil?
           [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
-                       :leveys (+ perusleveys 5)
+                       :leveys (or (:leveys nimi) (* perusleveys 2))
                        :pituus-max 30
                        :sisalto-kun-rivi-disabloitu (:sisalto-kun-rivi-disabloitu nimi)
                        :muokattava? (or (:muokattava? nimi) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
-            :tyyppi :positiivinen-numero :leveys (or (:leveys tie) perusleveys) :tasaa :oikea
+            :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
             :validoi [[:ei-tyhja "Anna tienumero"]]
             :kokonaisluku? true
             :muokattava? (or (:muokattava? tie) (constantly true))}
@@ -716,9 +719,9 @@
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
                       [{:otsikko "Nimi" :nimi :nimi
-                        :tyyppi :string :leveys kohde-leveys :pituus-max 30}
-                       {:nimi :tr-numero :muokattava? (constantly (not yha-sidottu?))
-                        :leveys (if nayta-ajorata-ja-kaista? tr-leveys (* tr-leveys 3))}
+                        :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
+                        :pituus-max 30}
+                       {:nimi :tr-numero :muokattava? (constantly (not yha-sidottu?))}
                        (when nayta-ajorata-ja-kaista?
                          {:nimi :tr-ajorata :muokattava? (constantly (not yha-sidottu?))})
                        (when nayta-ajorata-ja-kaista?
