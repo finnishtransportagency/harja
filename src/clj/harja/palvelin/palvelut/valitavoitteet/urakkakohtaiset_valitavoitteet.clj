@@ -80,6 +80,7 @@
                                      {:nimi nimi
                                       :takaraja (konv/sql-date takaraja)
                                       :aloituspvm nil
+                                      :yllapitokohde nil
                                       :muokkaaja (:id user)
                                       :urakka urakka-id
                                       :id id})
