@@ -90,7 +90,7 @@
 (defrecord PoistaKiintionKorostus [])
 
 (def valiaikainen-kiintio
-  {::kiintio/nimi "Reimarista haetut, valitse kiintiö."
+  {::kiintio/nimi "Kiintiöttömät"
    ::kiintio/id -1})
 
 (defn kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin [toimenpiteet]
