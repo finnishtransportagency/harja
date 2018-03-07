@@ -6,6 +6,7 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]))
 
@@ -35,7 +36,7 @@
                            (:id user) urakka-id id)))
 
 (defn- luo-uudet-urakan-valitavoitteet [db user valitavoitteet urakka-id]
-  (doseq [{:keys [aloituspvm takaraja nimi] :as valitavoite} (filter
+  (doseq [{:keys [aloituspvm takaraja nimi yllapitokohde-id] :as valitavoite} (filter
                                                     #(and (not (id-olemassa? (:id %)))
                                                           (not (:poistettu %)))
                                                     valitavoitteet)]
@@ -44,6 +45,7 @@
                                                                :aloituspvm (konv/sql-date aloituspvm)
                                                                :takaraja (konv/sql-date takaraja)
                                                                :nimi nimi
+                                                               :yllapitokohde yllapitokohde-id
                                                                :valtakunnallinen_valitavoite nil
                                                                :luoja (:id user)}))]
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
@@ -51,7 +53,7 @@
 
 (defn- paivita-urakan-valitavoitteet! [db user valitavoitteet urakka-id]
   (let [valitavoitteet (filter (comp not :valtakunnallinen-id) valitavoitteet)]
-    (doseq [{:keys [id takaraja nimi aloituspvm] :as valitavoite}
+    (doseq [{:keys [id takaraja nimi aloituspvm yllapitokohde-id] :as valitavoite}
             (filter #(and (id-olemassa? (:id %))
                           (not (:poistettu %)))
                     valitavoitteet)]
@@ -61,6 +63,7 @@
                                       :takaraja (konv/sql-date takaraja)
                                       :aloituspvm (konv/sql-date aloituspvm)
                                       :muokkaaja (:id user)
+                                      :yllapitokohde yllapitokohde-id
                                       :urakka urakka-id
                                       :id id})
       (when (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet urakka-id user)
@@ -77,6 +80,7 @@
                                      {:nimi nimi
                                       :takaraja (konv/sql-date takaraja)
                                       :aloituspvm nil
+                                      :yllapitokohde nil
                                       :muokkaaja (:id user)
                                       :urakka urakka-id
                                       :id id})
@@ -85,6 +89,9 @@
 
 (defn tallenna-urakan-valitavoitteet! [db user {:keys [urakka-id valitavoitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-valitavoitteet user urakka-id)
+  (doseq [valitavoite valitavoitteet]
+    (when-let [yllapitokohde-id (:yllapitokohde-id valitavoite)]
+      (ypk-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka-id yllapitokohde-id)))
   (log/debug "Tallenna urakan välitavoitteet " (pr-str valitavoitteet))
   (jdbc/with-db-transaction [db db]
     (poista-poistetut-urakan-valitavoitteet db user valitavoitteet urakka-id)

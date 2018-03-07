@@ -31,11 +31,13 @@
     :aikataulu-valinnat
     {:nayta-aikajana? true
      :nayta-tarkka-aikana? false
+     :nayta-valitavoitteet? false
      :jarjestys :aika}
     nil))
 
 (defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
 (defonce nayta-tarkka-aikajana? (r/cursor valinnat [:nayta-tarkka-aikana?]))
+(defonce nayta-valitavoitteet? (r/cursor valinnat [:nayta-valitavoitteet?]))
 
 (defn toggle-nayta-aikajana! []
   (swap! valinnat update :nayta-aikajana? not))
