@@ -597,6 +597,11 @@
                                  (validoi-yllapitokohteen-osoite @osan-pituudet-teille kentta arvo rivi))
         tien-osat-riville (fn [rivi]
                             (get @osan-pituudet-teille (:tr-numero rivi)))
+        osa-kohteen-ulkopuolella (fn [_ rivi _]
+                                  (when (and (= (:tr-numero rivi) (:tr-numero kohde))
+                                             (tr/tr-vali-paakohteen-sisalla? kohde rivi))
+                                    (str "Tämä osoite on varsinaisen kohteen sisällä. "
+                                         "Käytä Tierekisterikohteet taulukossa tarvittaessa hyppyjä tämän osan merkitsemiseen.")))
         skeema (into []
                      (remove
                        nil?
@@ -608,13 +613,17 @@
                             {:nimi :tr-ajorata :tyyppi :string}
                             {:nimi :tr-kaista :tyyppi :string}
                             {:nimi :tr-alkuosa
-                             :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)]}
+                             :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)
+                                       osa-kohteen-ulkopuolella]}
                             {:nimi :tr-alkuetaisyys
-                             :validoi [(partial validoi-kohteen-osoite :tr-alkuetaisyys)]}
+                             :validoi [(partial validoi-kohteen-osoite :tr-alkuetaisyys)
+                                       osa-kohteen-ulkopuolella]}
                             {:nimi :tr-loppuosa
-                             :validoi [(partial validoi-kohteen-osoite :tr-loppuosa)]}
+                             :validoi [(partial validoi-kohteen-osoite :tr-loppuosa)
+                                       osa-kohteen-ulkopuolella]}
                             {:nimi :tr-loppuetaisyys
-                             :validoi [(partial validoi-kohteen-osoite :tr-loppuetaisyys)]}
+                             :validoi [(partial validoi-kohteen-osoite :tr-loppuetaisyys)
+                                       osa-kohteen-ulkopuolella]}
                             {:hae (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))}])
                          [(assoc paallystys-tiedot/paallyste-grid-skeema
                                  :leveys paallyste-leveys
