@@ -70,7 +70,9 @@
                    (hae %)
                    (get % nimi))))
 
-(defn suorita [db user {jarjestys :jarjestys nayta-tarkka-aikajana? :nayta-tarkka-aikajana? :as parametrit}]
+(defn suorita [db user {jarjestys :jarjestys
+                        nayta-tarkka-aikajana? :nayta-tarkka-aikajana?
+                        nayta-valitavoitteet? :nayta-valitavoitteet? :as parametrit}]
   (let [parametrit (parametrit-urakan-tiedoilla db parametrit)
         aikataulu (yllapitokohteet/hae-urakan-aikataulu db user parametrit)
         aikataulu (if (or (nil? jarjestys) (= :aika jarjestys))
@@ -82,6 +84,9 @@
     [:raportti {:nimi "Ylläpidon aikataulu"
                 :orientaatio :landscape}
      [:aikajana {}
+      ;; Välitavoitteita ei piirretä PDF-raporttiin, koska tod.näk. niitä ei siinä haluta nähdä.
+      ;; Järkevä käyttö vaatisi muutenkin hoverointia, mikä ei PDF-raportilla toimi.
+      ;; Jos välitavoitteet kuitenkin rapsallekin halutaan, niin tästä voi passata eteenpäin.
       (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?})
            aikataulu)]
      [:taulukko {:otsikko "Kohdeluettelo"}

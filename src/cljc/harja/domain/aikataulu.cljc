@@ -45,11 +45,12 @@
             aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-loppu
             nimi id kohdenumero] :as rivi}
     {:keys [voi-muokata-paallystys? voi-muokata-tiemerkinta?
-            nayta-tarkka-aikajana? nakyma urakka-id] :as tiedot}]
+            nayta-valitavoitteet? nayta-tarkka-aikajana? nakyma urakka-id] :as tiedot}]
    (let [yllapitokohde-id id
          voi-muokata-paallystys? (or voi-muokata-paallystys? (constantly false))
          voi-muokata-tiemerkinta? (or voi-muokata-tiemerkinta? (constantly false))]
      {::aikajana/otsikko (str kohdenumero " - " nimi)
+      ::aikajana/valitavoitteet (when nayta-valitavoitteet? (:valitavoitteet rivi))
       ::aikajana/ajat
       ;; Ylläpitokohteen "perusaikataulu"
       (vec (concat
