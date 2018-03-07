@@ -34,7 +34,8 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
             [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti]
-            [harja.tiedot.urakka.toteumat.suola :as suolatoteumat])
+            [harja.tiedot.urakka.toteumat.suola :as suolatoteumat]
+            [harja.tiedot.kanavat.kohteet-kartalla :as kan-kohteet])
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -66,7 +67,8 @@
     :kokonaishintaisten-turvalaitteet
     :yksikkohintaisten-turvalaitteet
     :kohteenosat-kohteiden-luonnissa
-    :suolatoteumat})
+    :suolatoteumat
+    :kan-kohteet})
 
 (def
   ^{:doc
@@ -231,6 +233,7 @@
    :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
    :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla
    :kohteenosat-kohteiden-luonnissa koht-luonti/kohteenosat-kartalla
+   :kan-kohteet kan-kohteet/kohteet-kartalla
    :suolatoteumat suolatoteumat/suolatoteumat-kartalla})
 
 (defn nayta-geometria!
@@ -295,6 +298,7 @@
        :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
        :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
        :kohteenosat-kohteiden-luonnissa (taso :kohteenosat-kohteiden-luonnissa)
+       :kan-kohteet (taso :kan-kohteet)
        :suolatoteumat (taso :suolatoteumat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
@@ -333,6 +337,7 @@
    :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
    :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
    :kohteenosat-kohteiden-luonnissa koht-luonti/karttataso-kohteenosat-kohteen-luonnissa
+   :kan-kohteet kan-kohteet/karttataso-kohteet
    :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
