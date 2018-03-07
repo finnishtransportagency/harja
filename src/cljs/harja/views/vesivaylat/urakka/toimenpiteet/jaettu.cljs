@@ -305,8 +305,10 @@
                 :rivi-klikattu rivi-klikattu}]])
            tyolajit))))
 
-(defn hintaryhman-otsikko [otsikko]
-  [:h1.vv-hintaryhman-otsikko otsikko])
+(defn hintaryhman-otsikko
+  ([otsikko] [hintaryhman-otsikko {} otsikko])
+  ([opts otsikko]
+   [:h1.vv-hintaryhman-otsikko opts otsikko]))
 
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [paneelin-checkbox-sijainti footer
