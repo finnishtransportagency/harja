@@ -483,25 +483,26 @@
                                         :myohassa vari-myohassa
                                         vari-kesken)
                                  x (paiva-x (:takaraja valitavoite))]
-                             ^{:key i}
-                             [:rect {:x x
-                                     :y y
-                                     :width 5
-                                     :height korkeus
-                                     :fill vari
-                                     :fill-opacity 1.0
-                                     :on-mouse-over #(show-tooltip!
-                                                       {:x x
-                                                        :y (hover-y y)
-                                                        :text (str (:nimi valitavoite)
-                                                                   " ("
-                                                                   (str/lower-case
-                                                                     (vt-domain/valmiustilan-kuvaus-yksinkertainen
-                                                                       valitavoite))
-                                                                   ", takaraja "
-                                                                   (pvm/pvm (:takaraja valitavoite))
-                                                                   ")")})
-                                     :on-mouse-out hide-tooltip!}]))
+                             (when (>= x alku-x)
+                               ^{:key i}
+                               [:rect {:x x
+                                       :y y
+                                       :width 5
+                                       :height korkeus
+                                       :fill vari
+                                       :fill-opacity 1.0
+                                       :on-mouse-over #(show-tooltip!
+                                                         {:x x
+                                                          :y (hover-y y)
+                                                          :text (str (:nimi valitavoite)
+                                                                     " ("
+                                                                     (str/lower-case
+                                                                       (vt-domain/valmiustilan-kuvaus-yksinkertainen
+                                                                         valitavoite))
+                                                                     ", takaraja "
+                                                                     (pvm/pvm (:takaraja valitavoite))
+                                                                     ")")})
+                                       :on-mouse-out hide-tooltip!}])))
                          (filter :takaraja (::valitavoitteet rivi)))]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
