@@ -1,21 +1,24 @@
 (ns harja.ui.aikajana
   "Aikajananäkymä, jossa voi useita eri asioita näyttää aikajanalla.
   Vähän kuten paljon käytetty gantt kaavio."
-  (:require [clojure.spec.alpha :as s]
+  (:require
+    [clojure.spec.alpha :as s]
+    [harja.domain.valitavoite :as vt-domain]
     #?(:cljs [reagent.core :as r])
     #?(:cljs [harja.ui.dom :as dom])
-            [harja.pvm :as pvm]
+    [harja.pvm :as pvm]
     #?(:cljs [cljs-time.core :as t]
        :clj
-            [clj-time.core :as t])
+    [clj-time.core :as t])
     #?(:cljs [harja.ui.debug :as debug])
     #?(:cljs [cljs.core.async :refer [<!]]
        :clj
-            [clojure.core.async :refer [<! go]])
+    [clojure.core.async :refer [<! go]])
     #?(:clj
-            [clojure.future :refer :all])
+    [clojure.future :refer :all])
     #?(:clj
-            [harja.tyokalut.spec :refer [defn+]]))
+    [harja.tyokalut.spec :refer [defn+]])
+    [clojure.string :as str])
   #?(:cljs (:require-macros [harja.tyokalut.spec :refer [defn+]]
              [cljs.core.async.macros :refer [go]])))
 
@@ -467,7 +470,40 @@
                                      :y y :show-tooltip! show-tooltip!
                                      :paivan-leveys paivan-leveys
                                      :hide-tooltip! hide-tooltip! :reuna reuna
-                                     :vari vari :suunta (if alku :oikea :vasen)})))]))
+                                     :vari vari :suunta (if alku :oikea :vasen)})))
+
+                       ;; Välitavoitteet
+                       (map-indexed
+                         (fn [i valitavoite]
+                           (let [vari-kesken "#FFA500"
+                                 vari-valmis "#00cc25"
+                                 vari-myohassa "#da252e"
+                                 vari (case (vt-domain/valmiustila valitavoite)
+                                        :valmis vari-valmis
+                                        :myohassa vari-myohassa
+                                        vari-kesken)
+                                 x (paiva-x (:takaraja valitavoite))]
+                             (when (>= x alku-x)
+                               ^{:key i}
+                               [:rect {:x x
+                                       :y y
+                                       :width 5
+                                       :height korkeus
+                                       :fill vari
+                                       :fill-opacity 1.0
+                                       :on-mouse-over #(show-tooltip!
+                                                         {:x x
+                                                          :y (hover-y y)
+                                                          :text (str (:nimi valitavoite)
+                                                                     " ("
+                                                                     (str/lower-case
+                                                                       (vt-domain/valmiustilan-kuvaus-yksinkertainen
+                                                                         valitavoite))
+                                                                     ", takaraja "
+                                                                     (pvm/pvm (:takaraja valitavoite))
+                                                                     ")")})
+                                       :on-mouse-out hide-tooltip!}])))
+                         (filter :takaraja (::valitavoitteet rivi)))]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}

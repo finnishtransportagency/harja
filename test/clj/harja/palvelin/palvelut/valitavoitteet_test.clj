@@ -31,13 +31,22 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-oulun-alueurakan-2014-2019-id))]
 
-    (log/debug "Vastaus: " vastaus)
+    (log/debug  vastaus)
+    (is (>= (count vastaus) 4)))
+
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-muhoksen-paallystysurakan-id))]
+
+    (is (some :yllapitokohde-id vastaus)
+        "Ainakin yksi on liitetty ylläpitokohteeseen")
     (is (>= (count vastaus) 4))))
 
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-toimii
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         valitavoitteet [{:nimi "testi566", :takaraja (c/to-date (t/now)),
                          :aloituspvm (c/to-date (t/now))
+                         :yllapitokohde-id yllapitokohde-id
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}
                         {:nimi "testi34554", :takaraja (c/to-date (t/now)),
                          :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis tämäkin!"}
@@ -72,6 +81,7 @@
       (is (some? (:valmis-merkitsija vt1)))
       (is (some? (:aloituspvm vt1)))
       (is (some? (:valmispvm vt1)))
+      (is (= (:yllapitokohde-id vt1) yllapitokohde-id))
       (is (nil? (:valtakunnallinen-id vt1)))
       (is (= (:urakka-id vt1) urakka-id))
       (is (some? (:takaraja vt1)))
@@ -94,11 +104,13 @@
       (is (nil? (:valmis-kommentti vt3))))
 
     ;; Päivitys toimii
-    (let [muokattu-vt (->> vt-lisayksen-jalkeen
+    (let [paivitetty-yllapitokohde (hae-yllapitokohde-oulun-ohitusramppi)
+          muokattu-vt (->> vt-lisayksen-jalkeen
                            (filter #(or (= (:nimi %) "testi566")
                                         (= (:nimi %) "testi34554")))
                            (mapv #(if (= (:nimi %) "testi566")
-                                    (assoc % :valmis-kommentti "hyvin tehty")
+                                    (assoc % :valmis-kommentti "hyvin tehty"
+                                             :yllapitokohde-id paivitetty-yllapitokohde)
                                     %)))
           _ (kutsu-palvelua
               (:http-palvelin jarjestelma)
@@ -116,11 +128,28 @@
 
       ;; VT1 päivittyi oikein
       (let [vt1 (first (filter #(= (:nimi %) "testi566") vt-paivityksen-jalkeen))]
-        (is (= (:valmis-kommentti vt1) "hyvin tehty"))))
+        (is (= (:valmis-kommentti vt1) "hyvin tehty"))
+        (is (= (:yllapitokohde-id vt1) paivitetty-yllapitokohde))))
 
 
     ;; Siivoa sotkut
     (u "DELETE FROM valitavoite WHERE nimi = 'testi566' OR nimi = '34554';")))
+
+(deftest urakkakohtaisen-valitavoitteen-tallentaminen-epaonnistuu-virheelliseen-kohteeseen
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        valitavoitteet [{:nimi "Oops...", :takaraja (c/to-date (t/now)),
+                         :aloituspvm (c/to-date (t/now))
+                         :yllapitokohde-id yllapitokohde-id
+                         :valmispvm (c/to-date (t/now)), :valmis-kommentti "valmis!"}]]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua
+                   (:http-palvelin jarjestelma)
+                   :tallenna-urakan-valitavoitteet
+                   +kayttaja-jvh+
+                   {:urakka-id urakka-id
+                    :valitavoitteet valitavoitteet}))
+        "Ei voi lisätä kohdetta, joka ei kuulu urakkaan")))
 
 (deftest urakkakohtaisen-valitavoitteen-tallentaminen-ei-toimi-ilman-oikeuksia
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
