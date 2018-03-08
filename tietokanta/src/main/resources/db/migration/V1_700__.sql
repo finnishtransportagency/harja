@@ -1,7 +1,7 @@
 -- Irrota ylläpitokohteen rahakentät omaan tauluun
 CREATE TABLE yllapitokohteen_kustannukset (
   id                       SERIAL PRIMARY KEY,
-  yllapitokohde            INTEGER REFERENCES yllapitokohde (id),
+  yllapitokohde            INTEGER REFERENCES yllapitokohde (id) UNIQUE NOT NULL, -- Kohteella voi olla vain yksi kustannusrivi
   sopimuksen_mukaiset_tyot NUMERIC,
   arvonvahennykset         NUMERIC,
   bitumi_indeksi           NUMERIC,
