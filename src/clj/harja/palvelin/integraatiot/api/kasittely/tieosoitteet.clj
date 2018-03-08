@@ -20,7 +20,9 @@
             (dissoc a :vkm-id)))
         alkuperaiset))
 
-(defn muunna-yllapitokohteen-tieosoitteet [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
+(defn muunna-yllapitokohteen-tieosoitteet-paivan-verkolle
+  "Muuntaa ylläpitokohteiden tiosoitteet annetun päivän verkolle käyttäen VKM-palvelua."
+  [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
   (if karttapvm
     (let [paakohteen-vkm-id "paakohde"
           muunnettavat-alikohteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
