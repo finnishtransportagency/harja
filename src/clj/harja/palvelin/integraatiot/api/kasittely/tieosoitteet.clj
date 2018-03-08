@@ -26,7 +26,9 @@
           muunnettavat-alikohteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
                                                  (assoc alikohde
                                                    :vkm-id (str "alikohde-" i)
-                                                   :sijainti (assoc sijainti :tie (get-in alikohde [:sijainti :numero]))))
+                                                   :sijainti (assoc sijainti :tie (or
+                                                                                    (get-in alikohde [:sijainti :numero])
+                                                                                    kohteen-tienumero))))
                                                alikohteet)
           muunnettavat-sijainnit (conj
                                    (map #(assoc (:sijainti %) :vkm-id (:vkm-id %)) muunnettavat-alikohteet)

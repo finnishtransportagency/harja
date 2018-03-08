@@ -7,12 +7,13 @@
     [clojure.spec.alpha :as s]
     [harja.pvm :as pvm]
     #?@(:clj
-        [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-         [clojure.future :refer :all]
-         [harja.pvm :as pvm]
-         [clj-time.core :as t]
-         [taoensso.timbre :as log]
-         [clj-time.coerce :as c]])))
+        [
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+    [clojure.future :refer :all]
+    [harja.pvm :as pvm]
+    [clj-time.core :as t]
+    [taoensso.timbre :as log]
+    [clj-time.coerce :as c]])))
 
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::kohdenumero (s/nilable string?))
@@ -149,12 +150,20 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn validoi-alikohteet [kohde-id kohteen-sijainti alikohteet]
-     (when alikohteet
-       (concat
-         (tarkista-alikohteiden-sijainnit alikohteet)
-         (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet)))))
+     (let [paakohteen-tie (:tie kohteen-sijainti)
+           sama-tie? #(= paakohteen-tie (get-in % [:sijainti :tie]))
+           paakohteen-tien-alikohteet (filter sama-tie? alikohteet)
+           muut-alikohteet (filter (comp not sama-tie?) alikohteet)]
+
+       (when paakohteen-tien-alikohteet
+         (concat
+           (tarkista-alikohteiden-sijainnit paakohteen-tien-alikohteet)
+           (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
+           (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
+           (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden paakohteen-tien-alikohteet)))
+
+
+       )))
 
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
@@ -316,14 +325,14 @@ yllapitoluokkanimi->numero
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
-                            maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset                ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
-                            toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
 (defn yllapitokohde-tekstina
