@@ -149,21 +149,28 @@ yllapitoluokkanimi->numero
      (flatten (mapv #(validoi-sijainti (:sijainti %)) alikohteet))))
 
 #?(:clj
+   (defn tarkista-alikohteet-eivat-leikkaa-muita [alikohteet]
+    
+     ))
+
+#?(:clj
    (defn validoi-alikohteet [kohde-id kohteen-sijainti alikohteet]
      (let [paakohteen-tie (:tie kohteen-sijainti)
            sama-tie? #(= paakohteen-tie (get-in % [:sijainti :tie]))
            paakohteen-tien-alikohteet (filter sama-tie? alikohteet)
            muut-alikohteet (filter (comp not sama-tie?) alikohteet)]
 
-       (when paakohteen-tien-alikohteet
-         (concat
-           (tarkista-alikohteiden-sijainnit paakohteen-tien-alikohteet)
-           (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
-           (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
-           (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden paakohteen-tien-alikohteet)))
+       (concat
+         (when paakohteen-tien-alikohteet
+           (concat
+             (tarkista-alikohteiden-sijainnit paakohteen-tien-alikohteet)
+             (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
+             (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
+             (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden paakohteen-tien-alikohteet)))
 
-
-       )))
+         (when muut-alikohteet
+           (tarkista-alikohteiden-sijainnit muut-alikohteet)
+           (tarkista-alikohteet-eivat-leikkaa-muita muut-alikohteet))))))
 
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
