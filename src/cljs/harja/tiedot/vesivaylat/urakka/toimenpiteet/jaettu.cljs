@@ -143,6 +143,14 @@
                                :epaonnistui ->ToimenpiteetEiSiirretty})
   (assoc app :siirto-kaynnissa? true))
 
+(defn korosta-harjassa-luotu [toimenpide]
+  (if (::to/harjassa-luotu toimenpide)
+    (assoc toimenpide :lihavoi true)
+    toimenpide))
+
+(defn korosta-harjassa-luodut [vastaus]
+  (map korosta-harjassa-luotu vastaus))
+
 (extend-protocol tuck/Event
   ValitseToimenpide
   (process-event [{tiedot :tiedot listan-toimenpiteet :toimenpiteet} {:keys [toimenpiteet] :as app}]
