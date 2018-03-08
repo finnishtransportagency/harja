@@ -320,7 +320,8 @@
   (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
-      (let [kohteen-sisaiset-tierekisteriosoitteet (filter #(tr/tr-vali-paakohteen-sisalla? lomakedata-nyt %)
+      (let [muut-kohdeosat (atom nil)
+            kohteen-sisaiset-tierekisteriosoitteet (filter #(tr/tr-vali-paakohteen-sisalla? lomakedata-nyt %)
                                                            (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet]))
             kohde-muut-kohdeosat-taulukkoon (-> lomakedata-nyt
                                                 (select-keys #{:tr-numero :tr-alkuetaisyys :tr-alkuosa
@@ -371,6 +372,8 @@
 
          [yllapitokohteet/muut-kohdeosat {:kohde kohde-muut-kohdeosat-taulukkoon
                                           :urakka-id (:id urakka)
+                                          :voi-muokata? voi-muokata?
+                                          :muut-kohdeosat muut-kohdeosat
                                           :grid-asetukset {:rivinumeron-aloitus-n (inc (count kohteen-sisaiset-tierekisteriosoitteet))
                                                            :rivinumerot? true}}]
 

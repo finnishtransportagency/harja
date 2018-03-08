@@ -62,7 +62,7 @@
                              voi-poistaa? toimintonappi-fn]}]
   (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))
         rivinumeron-aloitus-n (if (integer? rivinumeron-aloitus-n) (dec rivinumeron-aloitus-n) 0)]
-    [:tr.muokataan {:class (str (if (even? (+ i 1))
+    [:tr.muokataan {:class (str (if (even? (+ rivinumeron-aloitus-n i 1))
                                   "parillinen "
                                   "pariton ")
                                 (when rivi-disabloitu? "disabloitu-rivi"))}
@@ -154,7 +154,7 @@
 
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
-                             disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
+                             disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-alussa
                              vetolaatikot-auki virheet-ylos? toimintonappi-fn rivinumeron-aloitus-n]}]
   [:tbody
    (let [muokatut-atom muokatut
@@ -195,11 +195,18 @@
                                           :toimintonappi-fn toimintonappi-fn}]
 
                             (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan)]))))
-               (if (or jarjesta jarjesta-avaimen-mukaan)
-                 (if jarjesta
-                   (sort-by (comp (juxt virheet-ylos-fn jarjesta) second) (seq muokatut))
-                   (sort-by (comp (juxt virheet-ylos-fn jarjesta-avaimen-mukaan) first) (seq muokatut)))
-                 (seq muokatut))))))))])
+               (cond
+                 jarjesta (sort-by (comp (juxt virheet-ylos-fn jarjesta) second) (seq muokatut))
+                 (and jarjesta-alussa (:ensimmainen-data? (meta muokatut))) (let [jarjestys-alussa (sort-by (comp (juxt virheet-ylos-fn jarjesta-alussa) second) (seq muokatut))
+                                                                                  tallennettu-jarjestys (map-indexed (fn [i [id rivi]]
+                                                                                                                       [id (assoc rivi :jarjestys-gridissa i)])
+                                                                                                                     jarjestys-alussa)]
+                                                                              (reset! muokatut-atom (with-meta (into {} tallennettu-jarjestys) {:ensimmainen-data? false}))
+                                                                              tallennettu-jarjestys)
+                 (and jarjesta-alussa (not (:ensimmainen-data? (meta muokatut)))) (sort-by (fn [[i rivi]]
+                                                                                             (conj ((juxt virheet-ylos-fn :jarjestys-gridissa) rivi) i))
+                                                                                           (seq muokatut))
+                 :else (seq muokatut))))))))])
 
 (defn muokkaus-grid
   "Versio gridistä, jossa on vain muokkaustila. Tilan tulee olla muokkauksen vaatimassa {<id> <tiedot>} array mapissa.
@@ -218,7 +225,8 @@
   :rivinumerot?                   Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :rivinumeron-aloitus-n          Integer, joka kertoo mistä rivinumerointi pitäisi aloittaa
   :jarjesta                       jos annettu funktio, sortataan rivit tämän mukaan
-  :jarjesta-avaimen-mukaan        jos annettu funktio, sortataan avaimen mukaan
+  :jarjesta-alussa                funktio jonka mukaan sortataan alussa. Olettaa, että datalla, jota sortataan
+                                  on metana {:ensimmainen-data? true}. Jos metaa ei anneta, sorttaa vain avaimen mukaan.
   :paneelikomponentit             vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
   :piilota-toiminnot?             boolean, piilotetaan toiminnot sarake jos true
   :toimintonappi-fn               funktio, joka saa parametrikseen rivin, ja rivin muokkausfunktion.
@@ -242,11 +250,11 @@
 
   :virheet-dataan?                jos true, validointivirheet asetetaan rivin datan mäppiin
                                   avaimella :harja.ui.grid/virheet
-  :virheet-ylos?                  Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-avaimen-mukaan
+  :virheet-ylos?                  Jos on virheellistä dataa taulukossa ja on annettu :jarjesta tai :jarjesta-alussa
                                   avimille arvot, niin näytetäänkö virheellinen data ylhäällä vai ei?
   :virhe-viesti                   String, joka näytetään gridin otsikon oikealla puolella punaisella."
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
-           voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
+           voi-muokata? voi-lisata? jarjesta jarjesta-alussa piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
            virhe-viesti toimintonappi-fn disabloi-rivi? rivinumeron-aloitus-n] :as opts}
    skeema muokatut]
@@ -365,7 +373,7 @@
 
     (r/create-class
       {:reagent-render
-       (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
+       (fn [{:keys [otsikko tallenna jarjesta jarjesta-alussa voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
                     vetolaatikot uusi-id paneelikomponentit validoi-aina? disabloi-rivi? rivinumeron-aloitus-n
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
@@ -413,7 +421,7 @@
                              :disabloi-rivi? disabloi-rivi? :rivinumeron-aloitus-n rivinumeron-aloitus-n
                              :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
-                             :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
+                             :jarjesta jarjesta :jarjesta-alussa jarjesta-alussa
                              :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?
                              :toimintonappi-fn (or toimintonappi-fn (constantly nil))})]
              (when (and (not= false voi-muokata?) muokkaa-footer)

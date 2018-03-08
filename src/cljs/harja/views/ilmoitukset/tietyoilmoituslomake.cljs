@@ -165,7 +165,7 @@
                             :piilota-toiminnot? false
                             :tyhja "Ei työaikoja"
                             :virheet-dataan? true
-                            :jarjesta-avaimen-mukaan identity})
+                            :jarjesta-alussa identity})
 
 (defn tyoajat-komponentti-grid [e! tyoajat]
   [muokkaus-grid

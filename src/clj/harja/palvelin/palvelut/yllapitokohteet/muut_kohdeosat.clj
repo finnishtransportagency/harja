@@ -94,7 +94,8 @@
             (q/paivita-yllapitokohdeosa<! db (tallennus-parametrit false tallennettava-osa))
             (q/luo-yllapitokohdeosa<! db (tallennus-parametrit true
                                                                (assoc tallennettava-osa
-                                                                 :yllapitokohde-id yllapitokohde-id)))))))))
+                                                                 :yllapitokohde-id yllapitokohde-id)))))
+        {:onnistui? true}))))
 
 (defn hae-yllapitokohteen-muut-kohdeosat [db user {:keys [urakka-id yllapitokohde-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
