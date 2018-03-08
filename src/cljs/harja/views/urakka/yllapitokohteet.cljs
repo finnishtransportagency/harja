@@ -583,7 +583,7 @@
     (swap! virheet-atom update (:rivi virhe-backilta) virherivin-paivitys)))
 
 (defn muut-kohdeosat
-  [{:keys [kohde urakka-id yllapitokohteet-atom] :as tiedot}]
+  [{:keys [kohde urakka-id] :as tiedot}]
   (let [yllapitokohde-id (:id kohde)
         muut-kohdeosat (atom nil)
         tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
@@ -744,7 +744,7 @@
                                                  :luokka "btn-xs"}]])})
                  skeema)]
     (hae-maara-muutokset! urakka-id yllapitokohde-id)
-    (fn [{:keys [kohde urakka-id yllapitokohteet-atom] :as tiedot}]
+    (fn [{:keys [kohde urakka-id] :as tiedot}]
       [:div
        [grid/muokkaus-grid
         {:otsikko "Muut kohdeosat"
@@ -876,20 +876,20 @@
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [urakka kohteet-atom rivi kohdetyyppi]
-  [:div
-   [yllapitokohdeosat-kohteelle urakka kohteet-atom rivi
-    {:voi-muokata? (not @grid/gridia-muokataan?)}]
-   (when (= kohdetyyppi :paallystys)
-     (list
-       ^{:key :muut-kohdeosat}
-       [muut-kohdeosat {:kohde rivi
-                        :urakka-id (:id urakka)
-                        :yllapitokohteet-atom kohteet-atom}]
-       ^{:key :maaramuutokset}
-       [maaramuutokset {:yllapitokohde-id (:id rivi)
-                        :urakka-id (:id urakka)
-                        :yllapitokohteet-atom kohteet-atom}]))
-   [debug/debug @kohteet-atom {:colgroup? true}]])
+  (let [kohde-paakohteen-sisaisilla-osilla (update rivi :kohdeosat (fn [kohdeosat] (filter #(tr/tr-vali-paakohteen-sisalla? rivi %) kohdeosat)))]
+    [:div
+     [yllapitokohdeosat-kohteelle urakka kohteet-atom kohde-paakohteen-sisaisilla-osilla
+      {:voi-muokata? (not @grid/gridia-muokataan?)}]
+     (when (= kohdetyyppi :paallystys)
+       (list
+         ^{:key :muut-kohdeosat}
+         [muut-kohdeosat {:kohde rivi
+                          :urakka-id (:id urakka)}]
+         ^{:key :maaramuutokset}
+         [maaramuutokset {:yllapitokohde-id (:id rivi)
+                          :urakka-id (:id urakka)
+                          :yllapitokohteet-atom kohteet-atom}]))
+     [debug/debug @kohteet-atom {:colgroup? true}]]))
 
 (defn- vasta-muokatut-lihavoitu []
   [yleiset/vihje "Viikon sisällä muokatut lihavoitu" "inline-block bold pull-right"])
