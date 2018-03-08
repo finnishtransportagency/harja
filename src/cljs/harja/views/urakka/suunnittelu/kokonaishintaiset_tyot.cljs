@@ -480,7 +480,9 @@
                                                        (pvm/kuukauden-nimi (:kuukausi %)))
                 :muokattava? (constantly false)
                 :tyyppi :numero :leveys 25}
-               {:otsikko "Summa" :nimi :summa :tasaa :oikea
+               {:otsikko "Summa"
+                :nimi :summa
+                :tasaa :oikea
                 :fmt fmt/euro-opt
                 :muokattava? (constantly true)
                 :tyyppi :positiivinen-numero :leveys 25
