@@ -40,6 +40,8 @@
 
 (defmethod debug-show :coll [data path open-paths toggle! options]
   [:table.debug-coll
+   (when (:otsikko options)
+     [:caption (:otsikko options)])
    (when (:colgroup? options)
      [:colgroup
       [:col {:style {:width "5%"}}]
@@ -59,6 +61,8 @@
 
 (defmethod debug-show :map [data path open-paths toggle! options]
   [:table.debug-map
+   (when (:otsikko options)
+     [:caption (:otsikko options)])
    (when (:colgroup? options)
      [:colgroup
       [:col {:style {:width "5%"}}]

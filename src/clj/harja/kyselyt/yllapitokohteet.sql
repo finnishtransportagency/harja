@@ -948,7 +948,6 @@ WHERE vuodet @> ARRAY [:vuosi] :: INT []
 SELECT
   u.nimi               AS "urakan-nimi",
   yk.nimi,
-  yk.vuodet,
   yko.id               AS "kohdeosa-id",
   yko.tr_numero,
   yko.tr_numero        AS "tr-numero",

@@ -9,6 +9,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.validointi :as validointi]
             [harja.ui.viesti :as viesti]
+            [harja.ui.kentat :as kentat]
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
             [clojure.string :as str]
@@ -25,15 +26,11 @@
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.tiedot.urakka :as u]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.validointi :as validointi]
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.kentat :as kentat])
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -111,7 +108,7 @@
                        :muokattava? (or (:muokattava? nimi) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
-            :validoi [[:ei-tyhja "Anna tienumero"]]
+            :validoi (into [] (concat (:validoi tie) [[:ei-tyhja "Anna tienumero"]]))
             :kokonaisluku? true
             :muokattava? (or (:muokattava? tie) (constantly true))}
            {:otsikko "Ajo\u00ADrata"
@@ -575,6 +572,16 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
+(defn lisaa-backilta-tullut-virhe-riville
+  [{:keys [virheet-atom virhe-backilta]}]
+  (let [paivitettavat-kentat #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}
+        virherivin-paivitys (fn [rivin-virheet]
+                              (apply assoc rivin-virheet (mapcat #(identity
+                                                                 [% (conj (get rivin-virheet %)
+                                                                          (:viesti virhe-backilta))])
+                                                              paivitettavat-kentat)))]
+    (swap! virheet-atom update (:rivi virhe-backilta) virherivin-paivitys)))
+
 (defn muut-kohdeosat
   [{:keys [kohde urakka-id yllapitokohteet-atom] :as tiedot}]
   (let [yllapitokohde-id (:id kohde)
@@ -605,6 +612,10 @@
                                              (tr/tr-vali-paakohteen-sisalla? kohde rivi))
                                     (str "Tämä osoite on varsinaisen kohteen sisällä. "
                                          "Käytä Tierekisterikohteet taulukossa tarvittaessa hyppyjä tämän osan merkitsemiseen.")))
+        backilta-tulleiden-virheiden-validointi (fn [_ rivi _]
+                                                  (when (and (:paalekkain-oleva-kohde rivi)
+                                                             (tr/kohdeosat-paalekkain? (:paalekkain-oleva-kohde rivi) rivi))
+                                                    (:virhe-viesti rivi)))
         skeema (into []
                      (remove
                        nil?
@@ -612,23 +623,30 @@
                          (tierekisteriosoite-sarakkeet
                            tr-leveys
                            [{:nimi :nimi :pituus-max 30}
-                            {:nimi :tr-numero}
+                            {:nimi :tr-numero
+                             :validoi [backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-ajorata
-                             :validoi [[:ei-tyhja "Anna ajorata"]]}
+                             :validoi [[:ei-tyhja "Anna ajorata"]
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-kaista
-                             :validoi [[:ei-tyhja "Anna kaista"]]}
+                             :validoi [[:ei-tyhja "Anna kaista"]
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-alkuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)
-                                       osa-kohteen-ulkopuolella]}
+                                       osa-kohteen-ulkopuolella
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-alkuetaisyys
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuetaisyys)
-                                       osa-kohteen-ulkopuolella]}
+                                       osa-kohteen-ulkopuolella
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-loppuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-loppuosa)
-                                       osa-kohteen-ulkopuolella]}
+                                       osa-kohteen-ulkopuolella
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-loppuetaisyys
                              :validoi [(partial validoi-kohteen-osoite :tr-loppuetaisyys)
-                                       osa-kohteen-ulkopuolella]}
+                                       osa-kohteen-ulkopuolella
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:hae (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))}])
                          [(assoc paallystys-tiedot/paallyste-grid-skeema
                                  :leveys paallyste-leveys
@@ -739,25 +757,35 @@
                                    #(tiedot/tallenna-muut-kohdeosat!
                                       {:urakka-id urakka-id
                                        :yllapitokohde-id yllapitokohde-id
-                                       :muut-kohdeosat (remove :koskematon (vals @muut-kohdeosat))
+                                       :muut-kohdeosat (into {} (remove (fn [[_ kohdeosa]]
+                                                                          (:koskematon kohdeosa))
+                                                                        @muut-kohdeosat))
                                        :vuosi @u/valittu-urakan-vuosi})
                                    {:disabled (or (not (empty? @grid-virheet)) (not voi-muokata?))
                                     :luokka "nappi-myonteinen grid-tallenna"
                                     :virheviesti "Tallentaminen epäonnistui."
                                     :kun-onnistuu
                                     (fn [vastaus]
-                                      (println (pr-str vastaus))
                                       (if-not (nil? vastaus)
-                                        (viesti/nayta! (apply str (keep (fn [virhe]
-                                                                          (when (= (:virhe virhe) :kohdeosa-paalekkain-toisen-osan-kanssa)
-                                                                            (str (:viesti virhe) "\\n")))
-                                                                        vastaus))
-                                                       :warning viesti/viestin-nayttoaika-pitka)
+                                        (do
+                                          (doseq [virhe vastaus]
+                                            (when (= (:validointivirhe virhe) :kohteet-paallekain)
+                                              ;; Näytetään virhe gridissä
+                                              (lisaa-backilta-tullut-virhe-riville {:virheet-atom grid-virheet :virhe-backilta virhe})
+                                              ;; Tallennetaan virhe tilaan
+                                              (swap! muut-kohdeosat update (:rivi virhe) #(assoc %
+                                                                                                 :paalekkain-oleva-kohde (-> virhe :kohteet first)
+                                                                                                 :virhe-viesti (:viesti virhe)))))
+                                          ;; Näytetään virhe modaalissa
+                                          (reset! paallystys-tiedot/validointivirheet-modal {:nakyvissa? true
+                                                                                             :otsikko "Muiden kohteenosien tallennus epäonnistui!"
+                                                                                             :validointivirheet vastaus}))
                                         (viesti/nayta! "Kohdeosat tallennettu."
                                                        :success viesti/viestin-nayttoaika-keskipitka)))}])])}
         skeema
         muut-kohdeosat]
-       [debug/debug @muut-kohdeosat {:colgroup? true}]])))
+       [debug/debug @grid-virheet {:colgroup? true :otsikko "Muut kohdeosat virheet"}]
+       [debug/debug @muut-kohdeosat {:colgroup? true :otsikko "Muut kohdeosat"}]])))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
   (let [sopimus-id (first @u/valittu-sopimusnumero)

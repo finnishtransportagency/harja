@@ -37,31 +37,26 @@
              {:id yllapitokohdeosa-id
               :urakka urakka-id}))))
 
-(defn- kohdeosat-paalekkain? [osa-yksi osa-kaksi]
-  (if (and (= (:tr-numero osa-yksi) (:tr-numero osa-kaksi))
-           (= (:tr-ajorata osa-yksi) (:tr-ajorata osa-kaksi))
-           (= (:tr-kaista osa-yksi) (:tr-kaista osa-kaksi)))
-    (tierekisteri/tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi)
-    false))
-
 (defn- validoi-kysely [db {:keys [urakka-id yllapitokohde-id muut-kohdeosat vuosi]}]
   (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
         kaikki-vuoden-yllapitokohdeosat-harjassa (q/hae-saman-vuoden-yllapitokohdeosat db {:vuosi vuosi})
-        paalekkaisyydet (keep (fn [kohdeosa]
-                               (some #(when (and (kohdeosat-paalekkain? kohdeosa %)
-                                                 (not (= (:kohdeosa-id %) (:id kohdeosa))))
-                                        {:virhe :kohdeosa-paalekkain-toisen-osan-kanssa
-                                         :viesti (str "Kohdeosa aosa: " (:tr-alkuosa kohdeosa)
-                                                      " aet: " (:tr-alkuetaisyys kohdeosa)
-                                                      " losa: " (:tr-loppuosa kohdeosa)
-                                                      " let: " (:tr-loppuetaisyys kohdeosa)
-                                                      " on päälekkäin jonkin kohdeosan kanssa urakassa " (:urakan-nimi %)
-                                                      " kohteen " (:nimi %)
-                                                      " sisällä.")})
-                                     kaikki-vuoden-yllapitokohdeosat-harjassa))
-                             muut-kohdeosat)]
+        paalekkaisyydet (keep (fn [[grid-id kohdeosa]]
+                                (some #(when (and (tierekisteri/kohdeosat-paalekkain? kohdeosa %)
+                                                  (not (= (:kohdeosa-id %) (:id kohdeosa))))
+                                         {:rivi grid-id
+                                          :viesti (str "Kohdeosa aosa: " (:tr-alkuosa kohdeosa)
+                                                       " aet: " (:tr-alkuetaisyys kohdeosa)
+                                                       " losa: " (:tr-loppuosa kohdeosa)
+                                                       " let: " (:tr-loppuetaisyys kohdeosa)
+                                                       " on päälekkäin jonkin kohdeosan kanssa urakassa " (:urakan-nimi %)
+                                                       " kohteen " (:nimi %)
+                                                       " sisällä.")
+                                          :validointivirhe :kohteet-paallekain
+                                          :kohteet [% kohdeosa]})
+                                      kaikki-vuoden-yllapitokohdeosat-harjassa))
+                              muut-kohdeosat)]
     ;; Asserteille on jo frontilla check
-    (doseq [kohdeosa muut-kohdeosat]
+    (doseq [kohdeosa (vals muut-kohdeosat)]
       ;; Tarkistetaan, että joku tie on annettu
       (assert (and (not (nil? (:tr-numero kohdeosa)))
                    (not (nil? (:tr-alkuosa kohdeosa)))
@@ -82,7 +77,8 @@
   (jdbc/with-db-transaction [db db]
     (if-let [virhe (validoi-kysely db params)]
       virhe
-      (let [kannasta-loytyvat-osat (into #{}
+      (let [muut-kohdeosat (vals muut-kohdeosat)
+            kannasta-loytyvat-osat (into #{}
                                          (map :id (yy/hae-yllapitokohteen-muut-kohdeosat db yllapitokohde-id)))
             poistettavat-osat (filter #(and (:poistettu %)
                                             (kannasta-loytyvat-osat (:id %)))
