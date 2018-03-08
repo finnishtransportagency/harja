@@ -321,7 +321,7 @@ WHERE ypk.urakka = :urakka
       AND ypk.poistettu IS NOT TRUE
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
-GROUP BY ypk.id, ym.id, ymt.maksueratunnus;
+GROUP BY ypk.id, ym.id, ymt.maksueratunnus, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi;
 
 -- name: hae-yllapitokohteen-maksuera
 SELECT
