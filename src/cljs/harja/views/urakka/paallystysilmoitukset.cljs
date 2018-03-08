@@ -320,7 +320,13 @@
   (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
-      (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
+      (let [kohteen-sisaiset-tierekisteriosoitteet (filter #(tr/tr-vali-paakohteen-sisalla? lomakedata-nyt %)
+                                                           (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet]))
+            kohde-muut-kohdeosat-taulukkoon (-> lomakedata-nyt
+                                                (select-keys #{:tr-numero :tr-alkuetaisyys :tr-alkuosa
+                                                               :tr-loppuosa :tr-loppuetaisyys :yllapitokohde-id})
+                                                (assoc :id (:yllapitokohde-id lomakedata-nyt))
+                                                (dissoc :yllapitokohde-id))
             paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
@@ -358,10 +364,13 @@
            :rivinumerot? true
            :voi-muokata? voi-muokata?
            :virheet yllapitokohde-virheet}
-          urakka tierekisteriosoitteet
+          urakka kohteen-sisaiset-tierekisteriosoitteet
           (select-keys lomakedata-nyt
                        #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
           @osan-pituus]
+
+         [yllapitokohteet/muut-kohdeosat {:kohde kohde-muut-kohdeosat-taulukkoon
+                                          :urakka-id (:id urakka)}]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
