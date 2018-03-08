@@ -25,15 +25,13 @@ BEGIN
                                               arvonvahennykset,
                                               bitumi_indeksi,
                                               kaasuindeksi,
-                                              toteutunut_hinta,
-                                              muokattu)
+                                              toteutunut_hinta)
     VALUES (rivi.id,
             rivi.sopimuksen_mukaiset_tyot,
             rivi.arvonvahennykset,
             rivi.bitumi_indeksi,
             rivi.kaasuindeksi,
-            rivi.toteutunut_hinta,
-            rivi.muokattu);
+            rivi.toteutunut_hinta);
   END LOOP;
   RETURN;
 END
