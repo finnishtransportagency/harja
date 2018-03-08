@@ -58,10 +58,10 @@
                      :otsikot-samalla-rivilla #{"Työlaji" "Työluokka" "Toimenpide"}
                      :tyhja-rivi-otsikon-jalkeen #{"Vesialue ja väylä" "Toimenpide"}}
     "Urakoitsija" (get-in toimenpide [::to/reimari-urakoitsija ::urakoitsija/nimi])
-    "Sopimusnumero" (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi])
-                         " ("
-                         (get-in toimenpide [::to/reimari-sopimus ::sop/r-nro])
-                         ")")
+    "Sopimusnumero" (str (when-let [nimi (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nimi]))]
+                           (when-not (empty? nimi) nimi))
+                         (when-let [nro (str (get-in toimenpide [::to/reimari-sopimus ::sop/r-nro]))]
+                           (when-not (empty? nro) (str " (" nro ")"))))
     "Vesialue ja väylä" (get-in toimenpide [::to/vayla ::va/nimi])
     "Työlaji" (to/reimari-tyolaji-fmt (::to/tyolaji toimenpide))
     "Työluokka" (to/reimari-tyoluokka-fmt (::to/tyoluokka toimenpide))
@@ -183,12 +183,13 @@
 (def sarake-tyoluokka {:otsikko "Työ\u00ADluokka" :nimi ::to/tyoluokka :fmt to/reimari-tyoluokka-fmt :leveys 10})
 (def sarake-toimenpide {:otsikko "Toimen\u00ADpide" :nimi ::to/toimenpide :fmt to/reimari-toimenpidetyyppi-fmt :leveys 10})
 (def sarake-pvm {:otsikko "Päivä\u00ADmäärä" :nimi ::to/pvm :fmt pvm/pvm-aika-opt :leveys 6})
-(def sarake-turvalaite {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 10 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
+(def sarake-turvalaite {:otsikko "Turva\u00ADlaite" :nimi ::to/turvalaite :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/nimi])})
 (def sarake-turvalaitenumero {:otsikko "Turva\u00ADlaite\u00ADnumero" :nimi :turvalaitenumero :leveys 5 :hae #(get-in % [::to/turvalaite ::tu/turvalaitenro])})
-(def sarake-vikakorjaus {:otsikko "Vika\u00ADkorjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 4})
-(def sarake-vayla {:otsikko "Väylä" :nimi :vayla :hae (comp ::va/nimi ::to/vayla) :leveys 10})
+(def sarake-vikakorjaus {:otsikko "Vika\u00ADkor\u00ADjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 4})
+(def sarake-vayla {:otsikko "Väy\u00ADlä" :nimi :vayla :hae (comp ::va/nimi ::to/vayla) :leveys 8})
+(def sarake-lisatieto {:otsikko "Li\u00ADsä\u00ADtie\u00ADto" :nimi ::to/lisatieto :leveys 10})
 (defn sarake-liitteet [e! app oikeus-fn]
-  {:otsikko "Liit\u00ADteet" :nimi :liitteet :tyyppi :komponentti :leveys 6
+  {:otsikko "Liit\u00ADteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
    :komponentti (fn [rivi]
                   [liitteet/liitteet-ja-lisays
                    (get-in app [:valinnat :urakka-id])
@@ -310,7 +311,8 @@
 (defn- toimenpiteet-listaus [e! {:keys [toimenpiteet infolaatikko-nakyvissa toimenpiteiden-haku-kaynnissa?] :as app}
                              gridin-sarakkeet {:keys [paneelin-checkbox-sijainti footer
                                                       listaus-tunniste vaylan-checkbox-sijainti
-                                                      rivi-klikattu infolaatikon-tila-muuttui]}]
+                                                      rivi-klikattu infolaatikon-tila-muuttui
+                                                      avaa-toimenpide-lomakkeelle]}]
   [:div.vv-toimenpideryhma-sisalto
    [grid/grid
     {:tunniste ::to/id
@@ -321,10 +323,12 @@
                                         infolaatikon-tila-muuttui)))
      :mahdollista-rivin-valinta? (nil? (get-in app [:hinnoittele-toimenpide ::to/id]))
      :rivin-infolaatikko (fn [rivi data]
-                           [toimenpide-infolaatikossa rivi])
+                           (when-not (::to/harjassa-luotu rivi) [toimenpide-infolaatikossa rivi]))
      :salli-valiotsikoiden-piilotus? true
      :ei-footer-muokkauspaneelia? true
-     :rivi-klikattu (fn [rivi] (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu)))
+     :rivi-klikattu (fn [rivi] (if (and avaa-toimenpide-lomakkeelle (::to/harjassa-luotu rivi))
+                                 (avaa-toimenpide-lomakkeelle rivi)
+                                 (e! (tiedot/->KorostaToimenpideKartalla rivi rivi-klikattu))))
      :valiotsikoiden-alkutila :kaikki-kiinni}
     gridin-sarakkeet
     (tiedot/toimenpiteet-aikajarjestyksessa toimenpiteet)]
@@ -339,12 +343,14 @@
 (defn listaus
   ([e! app] (listaus e! app {}))
   ([e! app {:keys [paneelin-checkbox-sijainti vaylan-checkbox-sijainti
-                   footer listaus-tunniste sarakkeet rivi-klikattu infolaatikon-tila-muuttui]}]
+                   footer listaus-tunniste sarakkeet rivi-klikattu infolaatikon-tila-muuttui
+                   avaa-toimenpide-lomakkeelle]}]
    (assert (and paneelin-checkbox-sijainti vaylan-checkbox-sijainti) "Anna checkboxin sijainnit")
    [toimenpiteet-listaus e! app
     sarakkeet
     {:footer footer
      :listaus-tunniste listaus-tunniste
+     :avaa-toimenpide-lomakkeelle avaa-toimenpide-lomakkeelle
      :paneelin-checkbox-sijainti paneelin-checkbox-sijainti
      :vaylan-checkbox-sijainti vaylan-checkbox-sijainti
      :rivi-klikattu rivi-klikattu
