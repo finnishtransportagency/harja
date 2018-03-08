@@ -53,8 +53,7 @@ SELECT
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi           AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
-  sum(-s.maara)                 AS "sakot-ja-bonukset",
-  -- käännetään toisin päin jotta summaus toimii oikein
+  sum(-s.maara)                 AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
   paatos_tekninen_osa           AS "tekninen-osa_paatos",
