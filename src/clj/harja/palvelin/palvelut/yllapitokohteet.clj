@@ -525,7 +525,7 @@
         (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde id
                                                       :urakka urakka-id
                                                       :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                                                      :arvonvanhennykset arvonvahennykset
+                                                      :arvonvahennykset arvonvahennykset
                                                       :bitumi_indeksi bitumi-indeksi
                                                       :kaasuindeksi kaasuindeksi
                                                       :toteutunut_hinta toteutunut-hinta

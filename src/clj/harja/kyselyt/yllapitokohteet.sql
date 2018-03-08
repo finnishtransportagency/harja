@@ -676,10 +676,10 @@ SET
   toteutunut_hinta         = :toteutunut_hinta,
   muokattu                 = NOW(),
   muokkaaja                = :muokkaaja
-WHERE yllapitokohde = :id
+WHERE yllapitokohde = :yllapitokohde
       AND (SELECT urakka
            FROM yllapitokohde
-           WHERE id = :id) = :urakka;
+           WHERE id = :yllapitokohde) = :urakka;
 
 -- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun
