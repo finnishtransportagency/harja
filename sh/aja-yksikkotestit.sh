@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd ..
+
 function fail {
     if [ -z "$1" ];
     then
