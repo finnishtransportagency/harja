@@ -125,6 +125,7 @@
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Ajorata -"
                                                      "")))
+            :validoi (:validoi ajorata)
             :valinnat pot/+ajoradat-numerona+
             :leveys (- perusleveys 2)}
            {:otsikko "Kais\u00ADta"
@@ -138,6 +139,7 @@
                              (if arvo (:nimi arvo) (if muokattava?
                                                      "- Kaista -"
                                                      "")))
+            :validoi (:validoi kaista)
             :valinnat pot/+kaistat+
             :leveys (- perusleveys 2)}
            {:otsikko "Aosa" :nimi (:nimi aosa) :leveys perusleveys :tyyppi :positiivinen-numero
@@ -610,9 +612,11 @@
                          (tierekisteriosoite-sarakkeet
                            tr-leveys
                            [{:nimi :nimi :pituus-max 30}
-                            {:nimi :tr-numero :tyyppi :string}
-                            {:nimi :tr-ajorata :tyyppi :string}
-                            {:nimi :tr-kaista :tyyppi :string}
+                            {:nimi :tr-numero}
+                            {:nimi :tr-ajorata
+                             :validoi [[:ei-tyhja "Anna ajorata"]]}
+                            {:nimi :tr-kaista
+                             :validoi [[:ei-tyhja "Anna kaista"]]}
                             {:nimi :tr-alkuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)
                                        osa-kohteen-ulkopuolella]}
