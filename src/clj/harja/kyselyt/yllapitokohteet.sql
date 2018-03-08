@@ -416,7 +416,8 @@ WHERE id = :id
 -- name: poista-yllapitokohde!
 -- Poistaa ylläpitokohteen
 UPDATE yllapitokohde
-SET poistettu = TRUE
+SET poistettu = TRUE,
+  muokattu    = NOW()
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -677,11 +678,28 @@ WHERE yllapitokohde = :id
            FROM yllapitokohde
            WHERE id = :id) = :urakka;
 
+-- name: tallenna-yllapitokohteen-kustannukset!
+-- Tallentaa ylläpitokohteen kustannukset
+UPDATE yllapitokohteen_kustannukset
+SET
+  sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
+  arvonvahennykset         = :arvonvahennykset,
+  bitumi_indeksi           = :bitumi_indeksi,
+  kaasuindeksi             = :kaasuindeksi,
+  toteutunut_hinta         = :toteutunut_hinta,
+  muokattu                 = NOW(),
+  muokkaaja                = :muokkaaja
+WHERE yllapitokohde = :id
+      AND (SELECT urakka
+           FROM yllapitokohde
+           WHERE id = :id) = :urakka;
+
 -- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
 SET
-  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka
+  suorittava_tiemerkintaurakka = :suorittava_tiemerkintaurakka,
+  muokattu = NOW()
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -689,7 +707,8 @@ WHERE id = :id
 UPDATE yllapitokohde
 SET
   kohdenumero = :kohdenumero,
-  nimi        = :nimi
+  nimi        = :nimi,
+  muokattu = NOW()
 WHERE id = :id
       AND urakka = :urakka;
 
@@ -880,7 +899,8 @@ SET
   tr_alkuosa       = :tr_alkuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuosa      = :tr_loppuosa,
-  tr_loppuetaisyys = :tr_loppuetaisyys
+  tr_loppuetaisyys = :tr_loppuetaisyys,
+  muokattu = NOW()
 WHERE id = :id;
 
 -- name: paivita-yllapitokohteen-paallystysaikataulu!
@@ -928,6 +948,14 @@ SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 
 -- name: luo-yllapitokohteelle-tyhja-aikataulu<!
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
+
+-- name: luo-yllapitokohteelle-kustannukset<!
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahennykset, :bitumi_indeksi, :kaasuindeksi);
+
+-- name: luo-yllapitokohteelle-tyhja-kustannustaulu<!
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+VALUES (:yllapitokohde, 0, 0, 0, 0, 0);
 
 -- name: hae-yhden-vuoden-yha-kohteet
 SELECT

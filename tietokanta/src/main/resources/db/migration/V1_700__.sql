@@ -11,8 +11,6 @@ CREATE TABLE yllapitokohteen_kustannukset (
   muokattu                 TIMESTAMP
 );
 
-ALTER TABLE yllapitokohde ADD COLUMN muokkaaja INTEGER REFERENCES  kayttaja (id);
-
 -- Migratoi olemassa oleva data uuteen tauluun
 CREATE OR REPLACE FUNCTION migratoi_yllapitokohteiden_kustannukset()
   RETURNS VOID AS
@@ -28,16 +26,14 @@ BEGIN
                                               bitumi_indeksi,
                                               kaasuindeksi,
                                               toteutunut_hinta,
-                                              muokattu,
-                                              muokkaaja)
+                                              muokattu)
     VALUES (rivi.id,
             rivi.sopimuksen_mukaiset_tyot,
             rivi.arvonvahennykset,
             rivi.bitumi_indeksi,
             rivi.kaasuindeksi,
             rivi.toteutunut_hinta,
-            rivi.muokattu,
-            rivi.muokkaaja);
+            rivi.muokattu);
   END LOOP;
   RETURN;
 END
