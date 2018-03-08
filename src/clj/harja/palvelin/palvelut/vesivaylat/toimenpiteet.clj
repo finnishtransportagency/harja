@@ -75,6 +75,13 @@
         (q/poista-toimenpiteen-liite db (::to/id tiedot) (::to/liite-id tiedot))))
     {:ok? true}))
 
+(defn tallenna-toimenpide! [db user {:keys [hakuehdot tallennettava]}]
+  (q/tallenna-toimenpide! db user tallennettava)
+  (if (= :yksikkohintainen (::to/hintatyyppi tallennettava))
+    (hae-yksikkohintaiset-toimenpiteet db user hakuehdot)
+
+    (hae-kokonaishintaiset-toimenpiteet db user hakuehdot)))
+
 (defrecord Toimenpiteet []
   component/Lifecycle
   (start [{http :http-palvelin
@@ -117,6 +124,13 @@
       (fn [user tiedot]
         (poista-toimenpiteen-liite db user tiedot))
       {:kysely-spec ::to/poista-toimenpiteen-liite-kysely})
+    (julkaise-palvelu
+      http
+      :tallenna-toimenpide
+      (fn [user tiedot]
+        (tallenna-toimenpide! db user tiedot))
+      {:kysely-spec ::to/tallenna-toimenpide-kysely
+       :vastaus-sepc ::to/tallenna-toimenpide-vastaus})
     this)
 
   (stop [this]
