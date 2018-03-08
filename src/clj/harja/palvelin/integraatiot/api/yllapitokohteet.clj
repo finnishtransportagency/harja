@@ -155,7 +155,7 @@
           kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet-paivan-verkolle vkm db kohteen-tienumero karttapvm muunnettava-kohde)
           kohteen-sijainti (:sijainti kohde)
           alikohteet (:alikohteet kohde)]
-      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+      (validointi/tarkista-yllapitokohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde alikohteet)
