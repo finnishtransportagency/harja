@@ -16,14 +16,15 @@ SELECT
   ypk.keskimaarainen_vuorokausiliikenne AS "kvl",
   ypk.yllapitoluokka                    AS "yplk",
   sum(-s.maara)                         AS "sakot-ja-bonukset",
-  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset                  AS "arvonvahennykset",
-  ypk.toteutunut_hinta                  AS "toteutunut-hinta",
-  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
-  ypk.kaasuindeksi
+  ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypkk.arvonvahennykset                  AS "arvonvahennykset",
+  ypkk.toteutunut_hinta                  AS "toteutunut-hinta",
+  ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypkk.kaasuindeksi
 FROM yllapitokohde ypk
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
 WHERE ypk.urakka = :urakka
       AND ypk.vuodet @> ARRAY [:vuosi] :: INT []
       AND ypk.poistettu IS NOT TRUE
