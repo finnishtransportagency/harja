@@ -32,8 +32,6 @@
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction-writable]]))
 
-
-
 (defn luo-tyhja-tyo [urakkatyyppi tpi [alkupvm loppupvm] kk sn]
   (let [tyon-kalenteri-vuosi (case urakkatyyppi
 
@@ -141,27 +139,29 @@
 
 (defn- prosenttiosuudet [tyorivit]
   (let [summa (reduce big/plus (big/->big 0)
-                      (keep (comp big/->big :summa) tyorivit))]
-    (with-meta
-      (mapv (fn [{s :summa osuus :osuus-hoitokauden-summasta :as rivi}]
-              (assoc rivi :prosentti
-                     (cond
+                      (keep (comp big/->big :summa) tyorivit))
+        rivit (mapv (fn [{s :summa osuus :osuus-hoitokauden-summasta :as rivi}]
+                      {:pre [(map? rivi)]}
+                      (assoc rivi :prosentti
+                             (cond
 
-                       ;; Osuus tiedossa, muunnetaan se prosenteiksi
-                       osuus
-                       (big/mul (big/->big 100)
-                                (or (:osuus-hoitokauden-summasta rivi)
-                                    (big/->big 0)))
+                               ;; Osuus tiedossa, muunnetaan se prosenteiksi
+                               osuus
+                               (big/mul (big/->big 100)
+                                        (or (:osuus-hoitokauden-summasta rivi)
+                                            (big/->big 0)))
 
-                       ;; Summat tiedossa, lasketaan prosenttimäärä
-                       (and s (big/gt summa (big/->big 0)))
-                       (big/mul (big/->big 100) (big/div (big/->big s) summa))
+                               ;; Summat tiedossa, lasketaan prosenttimäärä
+                               (and s (big/gt summa (big/->big 0)))
+                               (big/mul (big/->big 100) (big/div (big/->big s) summa))
 
-                       :default nil)))
-            tyorivit)
-      {:vuosisumma summa})))
+                               :default nil)))
+                    tyorivit)]
+    (with-meta rivit {:vuosisumma summa})))
 
-(defn- tyorivit [urakka valittu-sopimusnumero valittu-hoitokausi valittu-toimenpideinstanssi
+
+;; Tämä on gridille välitetyn reactionin työhevonen, joka muodostaa gridissä näytettävät tiedot.
+(defn- muodosta-tyorivit! [urakka valittu-sopimusnumero valittu-hoitokausi valittu-toimenpideinstanssi
                  valitun-toimenpiteen-ja-hoitokauden-tyot prosenttijako?]
   (let [kirjatut-kkt (into #{} (map #(:kuukausi %)
                                     valitun-toimenpiteen-ja-hoitokauden-tyot))
@@ -173,37 +173,80 @@
                                 %
                                 (first valittu-sopimusnumero))
         tyhjat-tyot (when hoitokauden-alku
-                      (keep tyorivi tyhjat-kkt))]
+                      (keep tyorivi tyhjat-kkt))
+        prosenttijako-alkuera (when (and prosenttijako?
+                                      (u/ensimmainen-hoitokausi? urakka valittu-hoitokausi)
+                                      (not (some #(= -1 (:kuukausi %)) valitun-toimenpiteen-ja-hoitokauden-tyot)))
+                                   ;; Jos vesiväylien hoitourakan ensimmäisellä hoitokaudella ei ole
+                                   ;; "urakan alkaessa" erää, lisätään se
+                                   {:toimenpideinstanssi (:tpi_id valittu-toimenpideinstanssi)
+                                    :summa nil
+                                    :kuukausi -1 :vuosi (pvm/vuosi hoitokauden-alku)
+                                    :maksupvm nil
+                                    :alkupvm hoitokauden-alku :loppupvm hoitokauden-alku
+                                    :sopimus (first valittu-sopimusnumero)})]
 
     (prosenttiosuudet
-      (into (if (and prosenttijako?
-                     (u/ensimmainen-hoitokausi? urakka valittu-hoitokausi)
-                     (not (some #(= -1 (:kuukausi %)) valitun-toimenpiteen-ja-hoitokauden-tyot)))
-              ;; Jos vesiväylien hoitourakan ensimmäisellä hoitokaudella ei ole
-              ;; "urakan alkaessa" erää, lisätään se
-              [{:toimenpideinstanssi (:tpi_id valittu-toimenpideinstanssi)
-                :summa nil
-                :kuukausi -1 :vuosi (pvm/vuosi hoitokauden-alku)
-                :maksupvm nil
-                :alkupvm hoitokauden-alku :loppupvm hoitokauden-alku
-                :sopimus (first valittu-sopimusnumero)}]
-              [])
-            (sort-by (juxt :vuosi :kuukausi)
-                     (concat valitun-toimenpiteen-ja-hoitokauden-tyot
-                             ;; filteröidään pois hoitokauden ulkopuoliset kk:t
-                             (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
-                                                    hoitokauden-alku hoitokauden-loppu)
-                                     tyhjat-tyot)))))))
+     (into (if prosenttijako-alkuera
+             [prosenttijako-alkuera]
+             [])
+           (sort-by (juxt :vuosi :kuukausi)
+                    (concat valitun-toimenpiteen-ja-hoitokauden-tyot
+                            ;; filteröidään pois hoitokauden ulkopuoliset kk:t
+                            (filter #(pvm/valissa? (pvm/luo-pvm (:vuosi %) (dec (:kuukausi %)) 15)
+                                                   hoitokauden-alku hoitokauden-loppu)
+                                    tyhjat-tyot)))))))
 
 (defn- nayta-tehtavalista-ja-kustannukset? [tyyppi]
   (not (#{:tiemerkinta :vesivayla-hoito :vesivayla-kanavien-hoito} tyyppi)))
 
 
-(defn- paivita-kk-arvo-prosentin-mukaan [{:keys [prosentti] :as rivi} vuosisumma]
+(defn paivita-kk-summa-prosentin-mukaan [{:keys [prosentti] :as rivi} vuosisumma]
+  ;; vanha
   (let [* (fnil big/mul (big/->big 0) (big/->big 0))]
     (assoc rivi :summa (if prosentti
                          (big/div (* prosentti vuosisumma) (big/->big 100))
                          nil))))
+
+(defn testi-pros []
+  (let [b big/->big]
+    (paivita-kk-summa-prosentin-mukaan {:prosentti (b 10) :summa (b 20)} (b 50))))
+
+
+(def big-0 (big/->big 0))
+(def big-1 (big/->big 1))
+
+(defn big-pos? [b]
+  (big/gt b big-0))
+
+(defn positiivinen-numero-tai-bigdec? [x]
+  (or (and (big/big? x)
+           (big-pos? x))
+      (and (number? x)
+           (not (js/isNaN x))
+           (pos? x))))
+
+(defn- paivita-kk-prosentti-summan-mukaan [rivi vuosisumma]
+  (when (nil? rivi)
+    (log "paivita-kk-prosentti-summan-mukaan: rivi oli nil"))
+  (if-let [summa (:summa rivi)]
+    (let [/ (fnil big/div big-0 big-1)
+          * (fnil big/mul big-0 big-0)
+          prosentti (when (and (positiivinen-numero-tai-bigdec? summa)
+                               (positiivinen-numero-tai-bigdec? vuosisumma))
+                      (/ (* (big/->big 100) (big/->big summa)) (big/->big vuosisumma)))]
+
+      (assoc rivi :prosentti prosentti))
+    ;; else
+    rivi))
+
+(defn testi-summa []
+  (let [b big/->big
+        vastaus (paivita-kk-prosentti-summan-mukaan {:prosentti (b 10) :summa (b 24)} (b 120))]
+
+    (if  (= "20" (big/fmt (:prosentti vastaus) 0))
+      true
+      vastaus)))
 
 (defn- vuosisumma-kentta [g vuosisumma-atom muokattava-atom?]
   [(if @muokattava-atom?
@@ -220,7 +263,7 @@
                               g
                               (fn [rivit]
                                 (map (fn [rivi]
-                                       (paivita-kk-arvo-prosentin-mukaan rivi %))
+                                       (paivita-kk-prosentti-summan-mukaan rivi %))
                                      rivit)))))}])
 
 (defn- tayta-maksupvm [lahtorivi tama-rivi]
@@ -252,7 +295,11 @@
    [u-valinnat/urakan-sopimus-ja-hoitokausi-ja-toimenpide urakka]])
 
 (defn prosentit-yht [rivit]
-  (reduce big/plus (big/->big 0) (keep :prosentti rivit)))
+  (reduce big/plus big-0 (keep :prosentti rivit)))
+
+;; Gridin tiedot luetaan tyorivit-reaktiosta.
+;; Grid pitää muokkaustilassa kirjaa muuttuneista riveistä, ja välittää ne
+;; tallenna-napin painalluksesta tallennusfunktiolle.
 
 (defn kokonaishintaiset-tyot [ur valitun-hoitokauden-yks-hint-kustannukset]
   (let [urakan-kok-hint-tyot u/urakan-kok-hint-tyot
@@ -279,12 +326,12 @@
 
         prosenttijako? (reaction (= (:tyyppi @urakka) :vesivayla-hoito))
 
-        tyorivit (reaction
-                   (tyorivit
-                     @urakka @u/valittu-sopimusnumero
-                     @u/valittu-hoitokausi @u/valittu-toimenpideinstanssi
-                     @valitun-toimenpiteen-ja-hoitokauden-tyot
-                     @prosenttijako?))
+        tyorivit-reaktio (reaction
+                          (muodosta-tyorivit!
+                           @urakka @u/valittu-sopimusnumero
+                           @u/valittu-hoitokausi @u/valittu-toimenpideinstanssi
+                           @valitun-toimenpiteen-ja-hoitokauden-tyot
+                           @prosenttijako?))
         ;; kopioidaanko myös tuleville kausille (oletuksena false, vaarallinen)
         tuleville? (atom false)
 
@@ -317,7 +364,7 @@
 
 
 
-        vuosisumma (reaction-writable (:vuosisumma (meta @tyorivit)))
+        vuosisumma (reaction-writable (:vuosisumma (meta @tyorivit-reaktio)))
         vuosisumma-muokattava? (atom false)
 
         g (grid/grid-ohjaus)]
@@ -352,6 +399,7 @@
             [:div.col-md-6
 
              (when @prosenttijako?
+               ;; prosenttimoodissa tähän syötetään vuosisumma, josta prosentit lasketaan
                [vuosisumma-kentta g vuosisumma vuosisumma-muokattava?])
 
              [grid/grid
@@ -366,7 +414,9 @@
                            (do
                              (reset! vuosisumma-muokattava? false)
                              #(tallenna-tyot ur @u/valittu-sopimusnumero @u/valittu-hoitokausi urakan-kok-hint-tyot % tuleville?))
-                           :ei-mahdollinen)
+                           (do
+                             :ei-mahdollinen))
+
                :aloita-muokkaus-fn #(do (reset! vuosisumma-muokattava? true) %)
                :tallennus-ei-mahdollinen-tooltip (oikeudet/oikeuden-puute-kuvaus
                                                    :kirjoitus
@@ -374,8 +424,8 @@
                :tallenna-vain-muokatut false
                :validoi-fn (when @prosenttijako?
                              (fn [rivit]
-                               (when (not (big/eq (big/->big 100)
-                                                  (prosentit-yht rivit)))
+                               (when-not (= "100"
+                                            (big/fmt (prosentit-yht rivit) 3))
                                  "Prosenttien tulee olla yhteensä 100")))
                :peruuta #(do
                            (reset! vuosisumma-muokattava? false)
@@ -387,7 +437,7 @@
                                    (if-not @prosenttijako?
                                      rivit
                                      (fmap (fn [rivi]
-                                             (paivita-kk-arvo-prosentin-mukaan rivi @vuosisumma)) rivit)))
+                                             (paivita-kk-prosentti-summan-mukaan rivi @vuosisumma)) rivit)))
                :muokkaa-footer (fn [g]
                                  (when-not @prosenttijako?
                                    [:div.kok-hint-muokkaa-footer
@@ -404,8 +454,8 @@
                                        {:teksti "Yhteensä" :sarakkeita 2}
                                        {:teksti (str (big/fmt
                                                       (big/div ((fnil big/mul
-                                                                      (big/->big 0)
-                                                                      (big/->big 0))
+                                                                      big-0
+                                                                      big-0)
                                                                 prosentti-yht
                                                                 @vuosisumma)
                                                                (big/->big 100)) 2) " €")}
@@ -417,11 +467,12 @@
                   :tyyppi :big
                   :desimaalien-maara 4
                   :validoi [#(when-not (and %
-                                            (big/gte % (big/->big 0))
+                                            (big-pos? %)
                                             (big/lte % (big/->big 100)))
                                "Anna prosentti välillä 0 - 100")]
-                  :fmt #(when % (big/fmt % 4))
-                  :leveys 12})
+                  :fmt #(if % (big/fmt % 2) "-")
+                  :leveys 12
+                  :muokattava? (constantly false)})
 
                {:otsikko "Vuosi" :nimi :vuosi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
                {:otsikko "Kuukausi" :nimi "kk" :hae #(if (= -1 (:kuukausi %))
@@ -429,11 +480,17 @@
                                                        (pvm/kuukauden-nimi (:kuukausi %)))
                 :muokattava? (constantly false)
                 :tyyppi :numero :leveys 25}
-               {:otsikko "Summa" :nimi :summa :tasaa :oikea
+               {:otsikko "Summa"
+                :nimi :summa
+                :tasaa :oikea
                 :fmt fmt/euro-opt
-                :muokattava? (constantly (not @prosenttijako?))
+                :muokattava? (constantly true)
                 :tyyppi :positiivinen-numero :leveys 25
                 :tayta-alas? #(not (nil? %))
+                :tayta-fn (fn tayta-summa [lahtorivi tama-rivi]
+                            (-> tama-rivi
+                                (assoc :summa (:summa lahtorivi))
+                                (paivita-kk-prosentti-summan-mukaan @vuosisumma)))
                 :tayta-tooltip "Kopioi sama summa tuleville kuukausille"}
                {:otsikko "Maksupvm" :nimi :maksupvm :pvm-tyhjana #(pvm/luo-pvm (:vuosi %)
                                                                                (- (:kuukausi %) 1)
@@ -442,9 +499,10 @@
                 :tayta-alas? #(not (nil? %))
                 :tayta-tooltip "Kopioi sama maksupäivän tuleville kuukausille"
                 :tayta-fn tayta-maksupvm}]
-              @tyorivit]
+              @tyorivit-reaktio]
 
-             [debug/debug @tyorivit]
+
+             [debug/debug @tyorivit-reaktio]
 
              (when (nayta-tehtavalista-ja-kustannukset? (:tyyppi @urakka))
                [kokonaishintaiset-tyot-tehtavalista
