@@ -110,15 +110,16 @@ INSERT INTO paikkausilmoitus_kommentti (ilmoitus, kommentti) VALUES (:paikkausil
 -- name: hae-urakan-yllapitokohde
 -- Hakee urakan yksittäisen ylläpitokohteen
 SELECT
-  id,
+  ypk.id,
   kohdenumero,
   nimi,
-  sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
-  arvonvahennykset,
-  bitumi_indeksi           AS "bitumi-indeksi",
-  kaasuindeksi
-FROM yllapitokohde
-WHERE urakka = :urakka AND id = :id;
+  ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypkk.arvonvahennykset,
+  ypkk.bitumi_indeksi           AS "bitumi-indeksi",
+  ypkk.kaasuindeksi
+FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+WHERE urakka = :urakka AND ypk.id = :id;
 
 -- name: yllapitokohteella-paikkausilmoitus
 SELECT EXISTS(SELECT id
@@ -126,7 +127,7 @@ SELECT EXISTS(SELECT id
               WHERE paikkauskohde = :yllapitokohde);
 
 -- name: paivita-paikkauskohteen-toteutunut-hinta!
--- Päivittää paikkauskohteen toteutuneen hinnan yllapitokohde tauluun
-UPDATE yllapitokohde
+-- Päivittää paikkauskohteen toteutuneen hinnan
+UPDATE yllapitokohteen_kustannukset
    SET toteutunut_hinta = :toteutunut_hinta
- WHERE id = :id;
+ WHERE yllapitokohde = :id;
