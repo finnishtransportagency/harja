@@ -282,15 +282,15 @@
         },
         "tienalituksia": {
           "id": "urn:harja/tielupa/johto-ja-kaapelilupa/tienalituksia",
-          "type": "integer"
+          "type": "string"
         },
         "tienylityksia": {
           "id": "urn:harja/tielupa/johto-ja-kaapelilupa/tienylityksia",
-          "type": "integer"
+          "type": "string"
         },
         "silta-asennuksia": {
           "id": "urn:harja/tielupa/johto-ja-kaapelilupa/silta-asennuksia",
-          "type": "integer"
+          "type": "string"
         },
         "kaapeliasennukset": {
           "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset",
@@ -369,7 +369,7 @@
                   },
                   "nopeusrajoitus": {
                     "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/nopeusrajoitus",
-                    "type": "integer"
+                    "type": "string"
                   },
                   "liikennemaara": {
                     "id": "urn:harja/tielupa/johto-ja-kaapelilupa/kaapeliasennukset/0/kaapeliasennus/liikennemaara",
@@ -454,15 +454,15 @@
         },
         "arvioitu-kokonaisliikenne": {
           "id": "urn:harja/tielupa/liittymalupa/arvioitu-kokonaisliikenne",
-          "type": "integer"
+          "type": "string"
         },
         "arvioitu-kuorma-autoliikenne": {
           "id": "urn:harja/tielupa/liittymalupa/arvioitu-kuorma-autoliikenne",
-          "type": "integer"
+          "type": "string"
         },
         "nykyisen-liittyman-numero": {
           "id": "urn:harja/tielupa/liittymalupa/nykyisen-liittyman-numero",
-          "type": "integer"
+          "type": "string"
         },
         "nykyisen-liittyman-paivays": {
           "id": "urn:harja/tielupa/liittymalupa/nykyisen-liittyman-paivays",
@@ -693,7 +693,7 @@
         },
         "alkuperainen-lupanro": {
           "id": "urn:harja/tielupa/opastelupa/alkuperainen-lupanro",
-          "type": "integer"
+          "type": "string"
         },
         "alkuperaisen-luvan-alkupvm": {
           "id": "urn:harja/tielupa/opastelupa/alkuperaisen-luvan-alkupvm",
@@ -724,7 +724,7 @@
                 "properties": {
                   "tulostenumero": {
                     "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/tulostenumero",
-                    "type": "integer"
+                    "type": "string"
                   },
                   "kuvaus": {
                     "id": "urn:/harja/tielupa/opastelupa/opasteet/0/opaste/kuvaus",
@@ -936,15 +936,15 @@
       "properties": {
         "tienylityksia": {
           "id": "urn:harja/tielupa/vesihuoltolupa/tienylityksia",
-          "type": "integer"
+          "type": "string"
         },
         "tienalituksia": {
           "id": "urn:harja/tielupa/vesihuoltolupa/tienalituksia",
-          "type": "integer"
+          "type": "string"
         },
         "silta-asennuksia": {
           "id": "urn:harja/tielupa/vesihuoltolupa/silta-asennuksia",
-          "type": "integer"
+          "type": "string"
         },
         "johtoasennukset": {
           "id": "urn:harja/tielupa/vesihuoltolupa/johtoasennukset",
