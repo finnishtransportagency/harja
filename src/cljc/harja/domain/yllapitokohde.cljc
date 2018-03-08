@@ -156,6 +156,8 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn validoi-alikohteet [kohde-id kohteen-sijainti alikohteet]
+     (log/debug "VALIDOI ALIKOHTEET, KOHTEEN SIJAINTI: " kohteen-sijainti)
+     (log/debug "VALIDOI ALIKOHTEET, ALIKOHTEET: " alikohteet)
      (let [paakohteen-tie (:tie kohteen-sijainti)
            sama-tie? #(= paakohteen-tie (get-in % [:sijainti :tie]))
            paakohteen-tien-alikohteet (filter sama-tie? alikohteet)
