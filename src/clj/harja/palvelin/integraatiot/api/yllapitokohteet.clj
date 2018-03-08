@@ -144,10 +144,11 @@
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
-          muunnetut-alikohteet (mapv #(-> (:alikohde %)
-                                          (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
-                                          ;; TODO Käytä alikohteen omaa tienumeroa jos on.
-                                          (assoc-in [:sijainti :numero] kohteen-tienumero))
+          muunnetut-alikohteet (mapv #(as-> (:alikohde %) alikohde
+                                            (assoc alikohde :ulkoinen-id (get-in alikohde [:tunniste :id]))
+                                            (assoc-in alikohde [:sijainti :numero]
+                                                      (or (get-in alikohde [:sijainti :numero])
+                                                          kohteen-tienumero)))
                                      (:alikohteet kohde))
           muunnettu-kohde (assoc kohde :alikohteet muunnetut-alikohteet)
           karttapvm (as-> (get-in muunnettu-kohde [:sijainti :karttapvm]) karttapvm
