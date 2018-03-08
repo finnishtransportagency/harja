@@ -28,7 +28,7 @@ FROM yllapitokohde ypk
 WHERE ypk.urakka = :urakka
       AND ypk.vuodet @> ARRAY [:vuosi] :: INT []
       AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id;
+GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,  ypkk.toteutunut_hinta;
 
 -- name: hae-muut-kustannukset
 SELECT
