@@ -138,6 +138,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
+    ;; Muunnetaan kohde ja alikohteet tallennusmuotoon
     (let [;; TODO Miksi haetaan kannasta? Miksei lueta payloadista?
           kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
           kohde (-> (:yllapitokohde data)
@@ -145,12 +146,13 @@
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
           muunnettavat-alikohteet (mapv #(-> (:alikohde %)
                                             (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
+                                             ;; TODO Käytä alikohteen omaa tienumeroa jos on.
                                             (assoc-in [:sijainti :numero] kohteen-tienumero))
                                         (:alikohteet kohde))
           muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
           karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
                           (when karttapvm (parametrit/pvm-aika karttapvm)))
-          kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
+          kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet-paivan-verkolle vkm db kohteen-tienumero karttapvm muunnettava-kohde)
           kohteen-sijainti (:sijainti kohde)
           alikohteet (:alikohteet kohde)]
       (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
