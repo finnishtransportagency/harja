@@ -34,7 +34,7 @@ SELECT
   valmispvm_paikkaus AS "valmispvm-paikkaus",
   ypk.nimi as kohdenimi,
   ypk.kohdenumero,
-  ypk.toteutunut_hinta AS "toteutunut-hinta",
+  ypkk.toteutunut_hinta AS "toteutunut-hinta",
   ilmoitustiedot,
   paatos,
   perustelu,
@@ -44,6 +44,7 @@ FROM paikkausilmoitus
                            AND ypk.urakka = :urakka
                            AND ypk.sopimus = :sopimus
                            AND ypk.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
 WHERE paikkauskohde = :paikkauskohde
       AND paikkausilmoitus.poistettu IS NOT TRUE;
 

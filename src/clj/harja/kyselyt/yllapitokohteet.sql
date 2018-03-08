@@ -10,10 +10,10 @@ SELECT
   ypk.tunnus,
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
-  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset,
-  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
-  ypk.kaasuindeksi,
+  ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypkk.arvonvahennykset,
+  ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypkk.kaasuindeksi,
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
   ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   ypk.yllapitoluokka,
@@ -57,6 +57,7 @@ FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
 WHERE
   (ypk.urakka = :urakka OR ypk.suorittava_tiemerkintaurakka = :urakka)
   AND ypk.poistettu IS NOT TRUE;
@@ -185,11 +186,11 @@ SELECT
   ypk.kohdenumero,
   ypk.nimi,
   ypk.tunnus,
-  ypk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset,
-  ypk.bitumi_indeksi                    AS "bitumi-indeksi",
-  ypk.kaasuindeksi,
-  ypk.toteutunut_hinta                  AS "toteutunut-hinta",
+  ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypkk.arvonvahennykset,
+  ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
+  ypkk.kaasuindeksi,
+  ypkk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
   ypk.keskimaarainen_vuorokausiliikenne AS "keskimaarainen-vuorokausiliikenne",
   yllapitoluokka,
@@ -224,6 +225,7 @@ FROM yllapitokohde ypk
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija
                                FROM urakka
                                WHERE id = ypk.urakka) = o.id
@@ -813,10 +815,10 @@ SELECT
   sopimus,
   kohdenumero,
   nimi,
-  sopimuksen_mukaiset_tyot,
-  arvonvahennykset,
-  bitumi_indeksi,
-  kaasuindeksi,
+  ypkk.sopimuksen_mukaiset_tyot,
+  ypkk.arvonvahennykset,
+  ypkk.bitumi_indeksi,
+  ypkk.kaasuindeksi,
   poistettu,
   ypka.kohde_alku            AS "aikataulu_kohde_alku",
   ypka.paallystys_alku       AS "aikataulu_paallystys_alku",
@@ -849,6 +851,7 @@ SELECT
    WHERE nimi = 'tieverkko') AS karttapvm
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
 WHERE ypk.id = :id;
 
 -- name: hae-yllapitokohteen-tiemerkintaaikataulu
