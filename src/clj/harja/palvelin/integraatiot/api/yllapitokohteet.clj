@@ -143,7 +143,9 @@
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
           muunnettavat-alikohteet (mapv #(-> (:alikohde %)
-                                             (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id])))
+                                            (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
+                                             ;; TODO Aseta alikohteen tienumeroksi pääkohteen tienumero vain jos alikohteen tienumeroa ei ole määritelty
+                                            (assoc-in [:sijainti :numero] kohteen-tienumero))
                                         (:alikohteet kohde))
           muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
           karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
