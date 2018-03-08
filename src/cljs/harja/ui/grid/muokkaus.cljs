@@ -58,14 +58,15 @@
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
                              nayta-virheet? nykyinen-fokus i voi-muokata? fokus tulevat-rivit
                              muokatut-atom muokkaa! virheet piilota-toiminnot? skeema
-                             disabloi-rivi?
+                             disabloi-rivi? rivinumeron-aloitus-n
                              voi-poistaa? toimintonappi-fn]}]
-  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
+  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))
+        rivinumeron-aloitus-n (if (integer? rivinumeron-aloitus-n) (dec rivinumeron-aloitus-n) 0)]
     [:tr.muokataan {:class (str (if (even? (+ i 1))
                                   "parillinen "
                                   "pariton ")
                                 (when rivi-disabloitu? "disabloitu-rivi"))}
-     (when rivinumerot? [:td.rivinumero (+ i 1)])
+     (when rivinumerot? [:td.rivinumero (+ rivinumeron-aloitus-n i 1)])
      (doall
        (map-indexed
          (fn [j {:keys [nimi hae aseta fmt muokattava? tyyppi tasaa
@@ -154,7 +155,7 @@
 (defn- gridin-runko [{:keys [muokatut skeema tyhja virheet valiotsikot ohjaus vetolaatikot
                              nayta-virheet? rivinumerot? nykyinen-fokus fokus voi-muokata?
                              disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                             vetolaatikot-auki virheet-ylos? toimintonappi-fn]}]
+                             vetolaatikot-auki virheet-ylos? toimintonappi-fn rivinumeron-aloitus-n]}]
   [:tbody
    (let [muokatut-atom muokatut
          muokatut @muokatut
@@ -188,7 +189,7 @@
                                           :i i :voi-muokata? voi-muokata? :fokus fokus
                                           :tulevat-rivit (tulevat-rivit i) :rivi-index i
                                           :muokatut-atom muokatut-atom :muokkaa! muokkaa!
-                                          :disabloi-rivi? disabloi-rivi?
+                                          :disabloi-rivi? disabloi-rivi? :rivinumeron-aloitus-n rivinumeron-aloitus-n
                                           :virheet virheet :piilota-toiminnot? piilota-toiminnot?
                                           :skeema skeema :voi-poistaa? voi-poistaa?
                                           :toimintonappi-fn toimintonappi-fn}]
@@ -215,6 +216,7 @@
   :voi-kumota?                    jos false, kumoa-nappia ei näytetä
   :voi-poistaa?                   funktio, joka palauttaa true tai false.
   :rivinumerot?                   Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
+  :rivinumeron-aloitus-n          Integer, joka kertoo mistä rivinumerointi pitäisi aloittaa
   :jarjesta                       jos annettu funktio, sortataan rivit tämän mukaan
   :jarjesta-avaimen-mukaan        jos annettu funktio, sortataan avaimen mukaan
   :paneelikomponentit             vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
@@ -246,7 +248,7 @@
   [{:keys [otsikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota?
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos?
-           virhe-viesti toimintonappi-fn disabloi-rivi?] :as opts}
+           virhe-viesti toimintonappi-fn disabloi-rivi? rivinumeron-aloitus-n] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
         historia (atom [])
@@ -365,7 +367,7 @@
       {:reagent-render
        (fn [{:keys [otsikko tallenna jarjesta jarjesta-avaimen-mukaan voi-muokata? voi-lisata? voi-kumota?
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja
-                    vetolaatikot uusi-id paneelikomponentit validoi-aina? disabloi-rivi?
+                    vetolaatikot uusi-id paneelikomponentit validoi-aina? disabloi-rivi? rivinumeron-aloitus-n
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                virheet (or (:virheet opts) virheet-atom)
@@ -408,7 +410,7 @@
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
                              :vetolaatikot vetolaatikot :nayta-virheet? nayta-virheet?
                              :nykyinen-fokus nykyinen-fokus :peru! peru!
-                             :disabloi-rivi? disabloi-rivi?
+                             :disabloi-rivi? disabloi-rivi? :rivinumeron-aloitus-n rivinumeron-aloitus-n
                              :fokus fokus :voi-muokata? voi-muokata? :muokkaa! muokkaa!
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan

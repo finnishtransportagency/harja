@@ -370,7 +370,9 @@
           @osan-pituus]
 
          [yllapitokohteet/muut-kohdeosat {:kohde kohde-muut-kohdeosat-taulukkoon
-                                          :urakka-id (:id urakka)}]
+                                          :urakka-id (:id urakka)
+                                          :grid-asetukset {:rivinumeron-aloitus-n (inc (count kohteen-sisaiset-tierekisteriosoitteet))
+                                                           :rivinumerot? true}}]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"

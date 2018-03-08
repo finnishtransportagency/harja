@@ -589,7 +589,7 @@
     (swap! virheet-atom update (:rivi virhe-backilta) virherivin-paivitys)))
 
 (defn muut-kohdeosat
-  [{:keys [kohde urakka-id] :as tiedot}]
+  [{:keys [kohde urakka-id grid-asetukset] :as tiedot}]
   (let [yllapitokohde-id (:id kohde)
         muut-kohdeosat (atom nil)
         tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
@@ -750,59 +750,60 @@
                                                  :luokka "btn-xs"}]])})
                  skeema)]
     (hae-maara-muutokset! urakka-id yllapitokohde-id)
-    (fn [{:keys [kohde urakka-id] :as tiedot}]
+    (fn [{:keys [kohde urakka-id grid-asetukset] :as tiedot}]
       [:div
        [grid/muokkaus-grid
-        {:otsikko "Muut kohdeosat"
-         :virheet grid-virheet
-         :tyhja (if (nil? @muut-kohdeosat) [ajax-loader "Haetaan muita kohdeosia..."]
-                                           [:div
-                                            [:div {:style {:display "inline-block"}} "Ei muita kohdeosia"]
-                                            [:div {:style {:display "inline-block"
-                                                           :float "right"}}
-                                             [napit/yleinen-ensisijainen "Lisää osa"
-                                              uusi-kohteenosa-fn
-                                              {:ikoni (ikonit/livicon-arrow-down)
-                                               :luokka "btn-xs"}]]])
-         :jarjesta-avaimen-mukaan identity
-         :piilota-toiminnot? true
-         :voi-lisata? false
-         :voi-kumota? false
-         :muutos (fn [grid]
-                   (hae-osan-pituudet grid osan-pituudet-teille)
-                   (validoi-tr-osoite grid tr-sijainnit tr-virheet))
-         :paneelikomponentit (when voi-muokata?
-                               [(fn []
-                                  [napit/palvelinkutsu-nappi
-                                   [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-                                   #(tiedot/tallenna-muut-kohdeosat!
-                                      {:urakka-id urakka-id
-                                       :yllapitokohde-id yllapitokohde-id
-                                       :muut-kohdeosat (into {} (remove (fn [[_ kohdeosa]]
-                                                                          (:koskematon kohdeosa))
-                                                                        @muut-kohdeosat))
-                                       :vuosi @u/valittu-urakan-vuosi})
-                                   {:disabled (or (not (empty? @grid-virheet)) (not voi-muokata?))
-                                    :luokka "nappi-myonteinen grid-tallenna"
-                                    :virheviesti "Tallentaminen epäonnistui."
-                                    :kun-onnistuu
-                                    (fn [vastaus]
-                                      (if-not (nil? vastaus)
-                                        (do
-                                          (doseq [virhe vastaus]
-                                            (when (= (:validointivirhe virhe) :kohteet-paallekain)
-                                              ;; Näytetään virhe gridissä
-                                              (lisaa-backilta-tullut-virhe-riville {:virheet-atom grid-virheet :virhe-backilta virhe})
-                                              ;; Tallennetaan virhe tilaan
-                                              (swap! muut-kohdeosat update (:rivi virhe) #(assoc %
-                                                                                                 :paalekkain-oleva-kohde (-> virhe :kohteet first)
-                                                                                                 :virhe-viesti (:viesti virhe)))))
-                                          ;; Näytetään virhe modaalissa
-                                          (reset! paallystys-tiedot/validointivirheet-modal {:nakyvissa? true
-                                                                                             :otsikko "Muiden kohteenosien tallennus epäonnistui!"
-                                                                                             :validointivirheet vastaus}))
-                                        (viesti/nayta! "Kohdeosat tallennettu."
-                                                       :success viesti/viestin-nayttoaika-keskipitka)))}])])}
+        (merge {:otsikko "Muut kohdeosat"
+                :virheet grid-virheet
+                :tyhja (if (nil? @muut-kohdeosat) [ajax-loader "Haetaan muita kohdeosia..."]
+                                                  [:div
+                                                   [:div {:style {:display "inline-block"}} "Ei muita kohdeosia"]
+                                                   [:div {:style {:display "inline-block"
+                                                                  :float "right"}}
+                                                    [napit/yleinen-ensisijainen "Lisää osa"
+                                                     uusi-kohteenosa-fn
+                                                     {:ikoni (ikonit/livicon-arrow-down)
+                                                      :luokka "btn-xs"}]]])
+                :jarjesta-avaimen-mukaan identity
+                :piilota-toiminnot? true
+                :voi-lisata? false
+                :voi-kumota? false
+                :muutos (fn [grid]
+                          (hae-osan-pituudet grid osan-pituudet-teille)
+                          (validoi-tr-osoite grid tr-sijainnit tr-virheet))
+                :paneelikomponentit (when voi-muokata?
+                                      [(fn []
+                                         [napit/palvelinkutsu-nappi
+                                          [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+                                          #(tiedot/tallenna-muut-kohdeosat!
+                                             {:urakka-id urakka-id
+                                              :yllapitokohde-id yllapitokohde-id
+                                              :muut-kohdeosat (into {} (remove (fn [[_ kohdeosa]]
+                                                                                 (:koskematon kohdeosa))
+                                                                               @muut-kohdeosat))
+                                              :vuosi @u/valittu-urakan-vuosi})
+                                          {:disabled (or (not (empty? @grid-virheet)) (not voi-muokata?))
+                                           :luokka "nappi-myonteinen grid-tallenna"
+                                           :virheviesti "Tallentaminen epäonnistui."
+                                           :kun-onnistuu
+                                           (fn [vastaus]
+                                             (if-not (nil? vastaus)
+                                               (do
+                                                 (doseq [virhe vastaus]
+                                                   (when (= (:validointivirhe virhe) :kohteet-paallekain)
+                                                     ;; Näytetään virhe gridissä
+                                                     (lisaa-backilta-tullut-virhe-riville {:virheet-atom grid-virheet :virhe-backilta virhe})
+                                                     ;; Tallennetaan virhe tilaan
+                                                     (swap! muut-kohdeosat update (:rivi virhe) #(assoc %
+                                                                                                        :paalekkain-oleva-kohde (-> virhe :kohteet first)
+                                                                                                        :virhe-viesti (:viesti virhe)))))
+                                                 ;; Näytetään virhe modaalissa
+                                                 (reset! paallystys-tiedot/validointivirheet-modal {:nakyvissa? true
+                                                                                                    :otsikko "Muiden kohteenosien tallennus epäonnistui!"
+                                                                                                    :validointivirheet vastaus}))
+                                               (viesti/nayta! "Kohdeosat tallennettu."
+                                                              :success viesti/viestin-nayttoaika-keskipitka)))}])])}
+               grid-asetukset)
         skeema
         muut-kohdeosat]
        [debug/debug @grid-virheet {:colgroup? true :otsikko "Muut kohdeosat virheet"}]
