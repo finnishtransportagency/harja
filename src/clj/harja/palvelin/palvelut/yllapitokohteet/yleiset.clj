@@ -253,3 +253,9 @@
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
+
+(defn hae-yllapitokohteen-muut-kohdeosat [db yllapitokohde-id]
+  (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
+        yllapitokohteen-osat (q/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt [yllapitokohde-id]})]
+    (remove #(tr/tr-vali-paakohteen-sisalla? yllapitokohde %)
+            yllapitokohteen-osat)))

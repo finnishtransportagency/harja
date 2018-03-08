@@ -288,6 +288,13 @@
                                (>= (:tr-alkuetaisyys tr-vali2) (:tr-loppuetaisyys tr-vali1)))))]
     (boolean (not ei-leikkaa?))))
 
+(defn kohdeosat-paalekkain? [osa-yksi osa-kaksi]
+  (if (and (= (:tr-numero osa-yksi) (:tr-numero osa-kaksi))
+           (= (:tr-ajorata osa-yksi) (:tr-ajorata osa-kaksi))
+           (= (:tr-kaista osa-yksi) (:tr-kaista osa-kaksi)))
+    (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi)
+    false))
+
 (defn pistemainen? [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}]
   (or (and (number? tr-alkuosa)
            (number? tr-alkuetaisyys)

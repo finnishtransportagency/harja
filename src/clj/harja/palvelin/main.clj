@@ -51,6 +51,7 @@
     [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
     [harja.palvelin.palvelut.yllapitokohteet.paikkaus :as paikkaus]
     [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
+    [harja.palvelin.palvelut.yllapitokohteet.muut-kohdeosat :as muut-kohdeosat]
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
@@ -372,6 +373,9 @@
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
                          [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :vkm])
+      :muut-kohdeosat (component/using
+                        (muut-kohdeosat/->MuutKohdeosat)
+                        [:http-palvelin :db])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db :pois-kytketyt-ominaisuudet])
