@@ -6,7 +6,8 @@
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<! >! chan]]
             [harja.pvm :as pvm]
-            [harja.tiedot.navigaatio :as nav])
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
@@ -43,3 +44,20 @@
 (def valtakunnalliset-valitavoitteet
   (reaction (when @valitavoitteet
               (filterv :valtakunnallinen-id @valitavoitteet))))
+
+(defn hae-urakan-yllapitokohteet
+  "Hakee urakan ylläpitokohteet näytettäväksi välitavoitteiden näkymässä"
+  [urakka-id sopimus-id]
+  (k/post! :urakan-yllapitokohteet-lomakkeelle
+           {:urakka-id urakka-id
+            :sopimus-id sopimus-id}))
+
+(def urakan-yllapitokohteet-lomakkeelle
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               urakka-tyyppi (:tyyppi @nav/valittu-urakka)
+               [sopimus-id _] @u/valittu-sopimusnumero
+               nakymassa? @nakymassa?
+               yllapitokohdeurakka? @u/yllapitokohdeurakka?]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and yllapitokohdeurakka? nakymassa? urakka-id sopimus-id)
+                (hae-urakan-yllapitokohteet urakka-id sopimus-id))))
