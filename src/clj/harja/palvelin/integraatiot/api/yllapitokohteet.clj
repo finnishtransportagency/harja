@@ -144,15 +144,16 @@
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
-          muunnettavat-alikohteet (mapv #(-> (:alikohde %)
-                                            (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
-                                             ;; TODO Käytä alikohteen omaa tienumeroa jos on.
-                                            (assoc-in [:sijainti :numero] kohteen-tienumero))
-                                        (:alikohteet kohde))
-          muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
-          karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
+          muunnetut-alikohteet (mapv #(-> (:alikohde %)
+                                          (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
+                                          ;; TODO Käytä alikohteen omaa tienumeroa jos on.
+                                          (assoc-in [:sijainti :numero] kohteen-tienumero))
+                                     (:alikohteet kohde))
+          muunnettu-kohde (assoc kohde :alikohteet muunnetut-alikohteet)
+          karttapvm (as-> (get-in muunnettu-kohde [:sijainti :karttapvm]) karttapvm
                           (when karttapvm (parametrit/pvm-aika karttapvm)))
-          kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet-paivan-verkolle vkm db kohteen-tienumero karttapvm muunnettava-kohde)
+          kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet-paivan-verkolle
+                  vkm db kohteen-tienumero karttapvm muunnettu-kohde)
           kohteen-sijainti (:sijainti kohde)
           alikohteet (:alikohteet kohde)]
       (validointi/tarkista-yllapitokohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
