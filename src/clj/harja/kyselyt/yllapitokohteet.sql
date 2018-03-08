@@ -362,10 +362,7 @@ WHERE yllapitokohde IN (:idt)
 INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
-                           yllapitoluokka, sopimuksen_mukaiset_tyot,
-                           arvonvahennykset, bitumi_indeksi, kaasuindeksi, toteutunut_hinta,
-                           yllapitokohdetyyppi,
-                           yllapitokohdetyotyyppi, vuodet)
+                           yllapitoluokka, yllapitokohdetyyppi, yllapitokohdetyotyyppi, vuodet)
 VALUES (:urakka,
   :sopimus,
   :kohdenumero,
@@ -379,11 +376,6 @@ VALUES (:urakka,
   :tr_kaista,
   :keskimaarainen_vuorokausiliikenne,
   :yllapitoluokka,
-  :sopimuksen_mukaiset_tyot,
-  :arvonvahennykset,
-  :bitumi_indeksi,
-  :kaasuindeksi,
-  :toteutunut_hinta,
   :yllapitokohdetyyppi :: YLLAPITOKOHDETYYPPI,
   :yllapitokohdetyotyyppi :: YLLAPITOKOHDETYOTYYPPI,
   :vuodet :: INTEGER []);
@@ -404,11 +396,6 @@ SET
   tr_kaista                         = :tr_kaista,
   keskimaarainen_vuorokausiliikenne = :keskimaarainen_vuorokausiliikenne,
   yllapitoluokka                    = :yllapitoluokka,
-  sopimuksen_mukaiset_tyot          = :sopimuksen_mukaiset_tyot,
-  arvonvahennykset                  = :arvonvanhennykset,
-  bitumi_indeksi                    = :bitumi_indeksi,
-  kaasuindeksi                      = :kaasuindeksi,
-  toteutunut_hinta                  = :toteutunut_hinta,
   muokattu                          = now()
 WHERE id = :id
       AND urakka = :urakka;
