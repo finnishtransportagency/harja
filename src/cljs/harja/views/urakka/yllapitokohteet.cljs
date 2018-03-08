@@ -616,6 +616,14 @@
                                                   (when (and (:paalekkain-oleva-kohde rivi)
                                                              (tr/kohdeosat-paalekkain? (:paalekkain-oleva-kohde rivi) rivi))
                                                     (:virhe-viesti rivi)))
+        kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa (fn [_ rivi taulukko]
+                                                                (let [muut-rivit (keep (fn [[grid-id kohdeosa]]
+                                                                                         (when-not (= (:id rivi) (:id kohdeosa))
+                                                                                           kohdeosa))
+                                                                                         taulukko)]
+                                                                  (some #(when (tr/kohdeosat-paalekkain? % rivi)
+                                                                           (str "Kohteenosa on päälekkäin osan " (:nimi %) " kanssa"))
+                                                                        muut-rivit)))
         skeema (into []
                      (remove
                        nil?
@@ -624,29 +632,36 @@
                            tr-leveys
                            [{:nimi :nimi :pituus-max 30}
                             {:nimi :tr-numero
-                             :validoi [backilta-tulleiden-virheiden-validointi]}
+                             :validoi [backilta-tulleiden-virheiden-validointi
+                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-ajorata
                              :validoi [[:ei-tyhja "Anna ajorata"]
-                                       backilta-tulleiden-virheiden-validointi]}
+                                       backilta-tulleiden-virheiden-validointi
+                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-kaista
                              :validoi [[:ei-tyhja "Anna kaista"]
-                                       backilta-tulleiden-virheiden-validointi]}
+                                       backilta-tulleiden-virheiden-validointi
+                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-alkuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi]}
+                                       backilta-tulleiden-virheiden-validointi
+                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-alkuetaisyys
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuetaisyys)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi]}
+                                       backilta-tulleiden-virheiden-validointi
+                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-loppuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-loppuosa)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi]}
+                                       backilta-tulleiden-virheiden-validointi
+                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-loppuetaisyys
                              :validoi [(partial validoi-kohteen-osoite :tr-loppuetaisyys)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi]}
+                                       backilta-tulleiden-virheiden-validointi
+                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:hae (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))}])
                          [(assoc paallystys-tiedot/paallyste-grid-skeema
                                  :leveys paallyste-leveys

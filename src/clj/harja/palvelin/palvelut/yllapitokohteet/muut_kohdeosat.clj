@@ -44,19 +44,17 @@
                                 (some #(when (and (tierekisteri/kohdeosat-paalekkain? kohdeosa %)
                                                   (not (= (:kohdeosa-id %) (:id kohdeosa))))
                                          {:rivi grid-id
-                                          :viesti (str "Kohdeosa aosa: " (:tr-alkuosa kohdeosa)
-                                                       " aet: " (:tr-alkuetaisyys kohdeosa)
-                                                       " losa: " (:tr-loppuosa kohdeosa)
-                                                       " let: " (:tr-loppuetaisyys kohdeosa)
-                                                       " on päälekkäin jonkin kohdeosan kanssa urakassa " (:urakan-nimi %)
-                                                       " kohteen " (:nimi %)
-                                                       " sisällä.")
+                                          :viesti "Kohdeosa on päälekkäin toisen kohdeosan kanssa"
                                           :validointivirhe :kohteet-paallekain
                                           :kohteet [% kohdeosa]})
                                       kaikki-vuoden-yllapitokohdeosat-harjassa))
                               muut-kohdeosat)]
     ;; Asserteille on jo frontilla check
-    (doseq [kohdeosa (vals muut-kohdeosat)]
+    (doseq [kohdeosa (vals muut-kohdeosat)
+            :let [muut-rivit (keep (fn [[grid-id muu-kohdeosa]]
+                                     (when-not (= (:id kohdeosa) (:id muu-kohdeosa))
+                                       muu-kohdeosa))
+                                   muut-kohdeosat)]]
       ;; Tarkistetaan, että joku tie on annettu
       (assert (and (not (nil? (:tr-numero kohdeosa)))
                    (not (nil? (:tr-alkuosa kohdeosa)))
@@ -64,9 +62,14 @@
                    (not (nil? (:tr-loppuetaisyys kohdeosa)))
                    (not (nil? (:tr-loppuosa kohdeosa))))
               "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
-      ;; Tarkistetaan, että tie ei ole pääkohteen sisällä
+      ;; Tarkistetaan, että kohteenosa ei ole pääkohteen sisällä
       (assert (not (tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde kohdeosa))
-              "Muihin kohdeosiin ei tulisi tallentaa kohteen sisäisiä osia"))
+              "Muihin kohdeosiin ei tulisi tallentaa kohteen sisäisiä osia")
+      ;; Tarkistetaan, että kohteenosa ei ole muiden kohteenosien kanssa päälekkäin
+      (assert (not (some #(when (tierekisteri/kohdeosat-paalekkain? % kohdeosa)
+                            true)
+                         muut-rivit))
+              "Annetut kohteenosat ovat päällekkäin"))
     (when-not (empty? paalekkaisyydet)
       paalekkaisyydet)))
 
