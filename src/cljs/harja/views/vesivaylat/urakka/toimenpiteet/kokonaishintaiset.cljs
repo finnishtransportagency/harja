@@ -74,16 +74,17 @@
                       #(do
                          (u/valitse-oletussopimus-jos-valittuna-kaikki!)
                          (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [toimenpiteet] :as app}]
+    (fn [e! {:keys [toimenpiteet avoimet-kiintiot] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [; Kiintiöttömät toimenpiteet liitetään väliaikaiseen kiintiöön kun ne palautuvat
             ; palvelimelta
             kiintiot (concat
-                       [tiedot/valiaikainen-kiintio]
-                       (kiintio/jarjesta-kiintiot (into #{} (keep ::to/kiintio toimenpiteet))))]
+                       (kiintio/jarjesta-kiintiot (into #{} (keep ::to/kiintio toimenpiteet)))
+                       [tiedot/valiaikainen-kiintio])]
         [:div
         [kartta/kartan-paikka]
+         [debug/debug app]
         [jaettu/suodattimet e!
          tiedot/->PaivitaValinnat
          app (:urakka valinnat)
@@ -96,43 +97,52 @@
                  :let [kiintio-id (::kiintio/id kiintio)
                        kiintion-toimenpiteet (to/toimenpiteet-kiintiolla toimenpiteet kiintio-id)
                        app* (assoc app :toimenpiteet kiintion-toimenpiteet)
-                       kiintio-tyhja? (empty? (:toimenpiteet app*))]]
+                       kiintio-tyhja? (empty? (:toimenpiteet app*))
+                       kiintio-auki? (and (some? avoimet-kiintiot) (avoimet-kiintiot kiintio-id))]]
             (when-not kiintio-tyhja?
               [:div.vv-toimenpideryhma
-               [:span [napit/nappi
-                       (ikonit/map-marker)
-                       #(if (tiedot/kiintio-korostettu? kiintio app)
-                          (e! (tiedot/->PoistaKiintionKorostus))
+               [:span
+                [jaettu/hintaryhman-otsikko
+                 {:on-click #(e! (if kiintio-auki?
+                                   (tiedot/->SuljeKiintio kiintio-id)
+                                   (tiedot/->AvaaKiintio kiintio-id)))}
+                 (str
+                   (if kiintio-auki? "- " "+ ")
+                   (::kiintio/nimi kiintio))]
+                [napit/nappi
+                 (ikonit/map-marker)
+                 #(if (tiedot/kiintio-korostettu? kiintio app)
+                    (e! (tiedot/->PoistaKiintionKorostus))
 
-                          (e! (tiedot/->KorostaKiintioKartalla kiintio)))
-                       {:ikoninappi? true
-                        :disabled kiintio-tyhja?
-                        :luokka (str "vv-hintaryhma-korostus-nappi "
-                                     (if (tiedot/kiintio-korostettu? kiintio app)
-                                       "nappi-ensisijainen"
-                                       "nappi-toissijainen"))}]
-                [jaettu/hintaryhman-otsikko (::kiintio/nimi kiintio)]]
+                    (e! (tiedot/->KorostaKiintioKartalla kiintio)))
+                 {:ikoninappi? true
+                  :disabled kiintio-tyhja?
+                  :luokka (str "vv-hintaryhma-korostus-nappi "
+                               (if (tiedot/kiintio-korostettu? kiintio app)
+                                 "nappi-ensisijainen"
+                                 "nappi-toissijainen"))}]]
 
-               [jaettu/listaus e! app*
-                {:otsikko (or (::kiintio/nimi kiintio) "Kiintiö")
-                 :sarakkeet [jaettu/sarake-tyolaji
-                             jaettu/sarake-tyoluokka
-                             jaettu/sarake-toimenpide
-                             {:otsikko "Kiintiö" :tyyppi :string :leveys 10
-                              :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
-                             jaettu/sarake-pvm
-                             jaettu/sarake-vayla
-                             jaettu/sarake-turvalaite
-                             jaettu/sarake-turvalaitenumero
-                             jaettu/sarake-vikakorjaus
-                             (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
-                                                               "lisää-liite"
-                                                               oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
-                                                               (:id @nav/valittu-urakka)))
-                             (jaettu/sarake-checkbox e! app*)]
-                 :listaus-tunniste :kokonaishintaiset-toimenpiteet
-                 :paneelin-checkbox-sijainti "95.5%"
-                 :vaylan-checkbox-sijainti "95.5%"}]]))]]]))))
+               (when kiintio-auki?
+                 [jaettu/listaus e! app*
+                  {:otsikko (or (::kiintio/nimi kiintio) "Kiintiö")
+                   :sarakkeet [jaettu/sarake-tyolaji
+                               jaettu/sarake-tyoluokka
+                               jaettu/sarake-toimenpide
+                               {:otsikko "Kiintiö" :tyyppi :string :leveys 10
+                                :hae #(get-in % [::to/kiintio ::kiintio/nimi])}
+                               jaettu/sarake-pvm
+                               jaettu/sarake-vayla
+                               jaettu/sarake-turvalaite
+                               jaettu/sarake-turvalaitenumero
+                               jaettu/sarake-vikakorjaus
+                               (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
+                                                                 "lisää-liite"
+                                                                 oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
+                                                                 (:id @nav/valittu-urakka)))
+                               (jaettu/sarake-checkbox e! app*)]
+                   :listaus-tunniste :kokonaishintaiset-toimenpiteet
+                   :paneelin-checkbox-sijainti "95.5%"
+                   :vaylan-checkbox-sijainti "95.5%"}])]))]]]))))
 
 (defn- kokonaishintaiset-toimenpiteet* [e! app]
   [kokonaishintaiset-toimenpiteet-nakyma e! app {:urakka @nav/valittu-urakka

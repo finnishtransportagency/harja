@@ -257,17 +257,21 @@
                        :pois-teksti "Piilota aikajana"
                        :toggle! tiedot/toggle-nayta-aikajana!}
        :arvo-atom tiedot/nayta-aikajana?}]
-     [kentat/tee-otsikollinen-kentta
+     [kentat/tee-otsikko-ja-kentat
       {:otsikko "Aikajanan asetukset"
        :luokka "label-ja-kentta-puolikas"
-       :kentta-params {:tyyppi :checkbox
-                       :teksti "Näytä tarkka aikataulu"}
-       :arvo-atom tiedot/nayta-tarkka-aikajana?}]
+       :kentat [{:kentta-params {:tyyppi :checkbox
+                                 :teksti "Näytä tarkka aikataulu"}
+                 :arvo-atom tiedot/nayta-tarkka-aikajana?}
+                {:kentta-params {:tyyppi :checkbox
+                                 :teksti "Näytä välitavoitteet"}
+                 :arvo-atom tiedot/nayta-valitavoitteet?}]}]
 
      [upotettu-raportti/raportin-vientimuodot
       (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu
                                           {:jarjestys jarjestys
-                                           :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})]]))
+                                           :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
+                                           :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?})]]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
@@ -363,7 +367,7 @@
                                                                      (set (mapcat (fn [jana] (get-in jana [::aikajana/sahkopostitiedot :muut-vastaanottajat]))
                                                                                   tiemerkinnan-valmistumiset))))
                                    :saate (str/join " " (map #(get-in % [::aikajana/sahkopostitiedot :saate])
-                                                              tiemerkinnan-valmistumiset))}})
+                                                             tiemerkinnan-valmistumiset))}})
              ;; Ei muokattujen tiemerkintöjen valmistumisia, tallenna suoraan
              (valmis!))))
        :muuta! (fn [drag]
@@ -382,7 +386,8 @@
                                              :urakka-id urakka-id
                                              :voi-muokata-paallystys? voi-muokata-paallystys?
                                              :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
-                                             :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?})
+                                             :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
+                                             :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?})
            aikataulurivit)]]))
 
 (defn aikataulu-grid
@@ -592,7 +597,8 @@
                 ;; Tässä on kuitenkin ongelma: palvelin päättelee rivin pvm:n asettamisesta tai muuttamisesta, pitääkö
                 ;; maili lähettää. Näin rivin muiden tietojen muokkaus ei generoi turhaan maililähetystä.
                 ;; Täten saman pvm:n asettaminen uudelleen ei generoi maililähetystä, joten dialogi näyttäminen on turhaa.
-                ;; TODO Tosin on edelleen mahdollista nähdä dialogi jos vaihtaa pvm:n toiseksi ja sitten takaisin vanhaan.
+                ;; FIXME Tosin on edelleen mahdollista nähdä dialogi jos vaihtaa pvm:n toiseksi ja sitten takaisin vanhaan.
+                ;; Tällöin dialogi näytetään turhaa, sillä tietoja ei tulla lähettämään
                 (when (not (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu rivi) arvo))
                   (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
                         ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
