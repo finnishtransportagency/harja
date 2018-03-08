@@ -540,7 +540,7 @@
                                                :yllapitokohde-id id
                                                :osat korjatut-kohdeosat})))))
 
-(defn- validoi-tallennettava-yllapitokohteet
+(defn- validoi-tallennettavat-yllapitokohteet
   "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
   [db tallennettavat-kohteet vuosi]
   (let [yha-kohteet (filter :yhaid tallennettavat-kohteet)
@@ -573,7 +573,7 @@
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [validointivirheet (validoi-tallennettava-yllapitokohteet db kohteet vuosi)]
+    (let [validointivirheet (validoi-tallennettavat-yllapitokohteet db kohteet vuosi)]
       (if (empty? validointivirheet)
         (do (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
             (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))
