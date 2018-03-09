@@ -268,8 +268,8 @@
         parametrit {:hallintayksikko nil
                     :urakka nil
                     :hoitokausi nil
-                    :alkuaika (c/to-date alkuaika)
-                    :loppuaika (c/to-date loppuaika)
+                    :ilmoitettu-alkuaika(c/to-date alkuaika)
+                    :ilmoitettu-loppuaika (c/to-date loppuaika)
                     :tyypit +ilmoitustyypit+
                     :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                     :aloituskuittauksen-ajankohta :kaikki

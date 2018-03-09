@@ -59,7 +59,7 @@
                                           yllapitokohteet))]
 
     (is (= 200 (:status vastaus)))
-    (is (= 6 (count yllapitokohteet)))
+    (is (= 12 (count yllapitokohteet)))
     (is (some? leppajarven-ramppi))
     (is (some :hyppy (map :alikohde (:alikohteet leppajarven-ramppi)))
         "Palautuu tieto hypyllisistä kohteista")
