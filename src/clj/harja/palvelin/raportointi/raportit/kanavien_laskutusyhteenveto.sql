@@ -19,6 +19,7 @@ GROUP BY tpi.id;
 
 -- name: hae-muutos-ja-lisatyot
 -- Jos muokkaat tätä, joudut todennäköisesti muokkaamaan myös maksuerat.sql / hae-kanavaurakan-maksuerien-summat
+-- Tarkista myös kanavien_muutos_ja_liastyot.sql
 SELECT tpi.id as "tpi-id", tpi.nimi as "tpi-nimi",
   COALESCE(SUM((hinta.summa * (1.0 + (hinta.yleiskustannuslisa / 100)))), 0) as summat,
   COALESCE(SUM((hinta.maara * hinta.yksikkohinta) * (1.0 + (hinta.yleiskustannuslisa / 100))), 0) as summat_kan_hinta_yksikkohinnalla,

@@ -313,16 +313,16 @@
 
 
 
-{:nimi :kanavien-muutos-ja-lisatyot
- :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-              {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
-              {:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-              {:tyyppi "urakoittain", :konteksti "hallintayksikko", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-              {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
- :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
- :kuvaus "Muutos- ja lisätyöt"
- :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
- :urakkatyyppi #{:hoito}}
+;{:nimi :kanavien-muutos-ja-lisatyot
+; :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
+;              {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
+;              {:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
+;              {:tyyppi "urakoittain", :konteksti "hallintayksikko", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
+;              {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+; :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+; :kuvaus "Muutos- ja lisätyöt"
+; :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
+; :urakkatyyppi #{:hoito}}
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
