@@ -44,7 +44,8 @@
          :turvalaitteet-kartalla nil
          :karttataso-nakyvissa? false
          :korostetut-turvalaitteet nil
-         :korostettu-kiintio false}))
+         :korostettu-kiintio false
+         :avoimet-kiintiot #{}}))
 
 (defonce karttataso-kokonaishintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
 (defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))
@@ -82,12 +83,14 @@
 (defrecord LiitaToimenpiteetKiintioon [])
 (defrecord ToimenpiteetLiitettyKiintioon [vastaus])
 (defrecord ToimenpiteetEiLiitettyKiintioon [])
+(defrecord AvaaKiintio [id])
+(defrecord SuljeKiintio [id])
 ;; Kartta
 (defrecord KorostaKiintioKartalla [kiintio])
 (defrecord PoistaKiintionKorostus [])
 
 (def valiaikainen-kiintio
-  {::kiintio/nimi "Reimarista haetut, valitse kiintiö."
+  {::kiintio/nimi "Kiintiöttömät"
    ::kiintio/id -1})
 
 (defn kiintiottomat-toimenpiteet-valiaikaisiin-kiintioihin [toimenpiteet]
@@ -202,6 +205,18 @@
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden liittäminen kiintiöön epäonnistui!" :danger)
     (assoc app :kiintioon-liittaminen-kaynnissa? false))
+
+  AvaaKiintio
+  (process-event [{id :id} app]
+    (if (nil? (:avoimet-kiintiot app))
+      (assoc app :avoimet-kiintiot #{id})
+      (update app :avoimet-kiintiot conj id)))
+
+  SuljeKiintio
+  (process-event [{id :id} app]
+    (if (nil? (:avoimet-kiintiot app))
+      app
+      (update app :avoimet-kiintiot disj id)))
 
   KorostaKiintioKartalla
   (process-event [{kiintio :kiintio} {:keys [toimenpiteet] :as app}]

@@ -277,9 +277,9 @@
                                          v)]
                                  (when (or (= v "")
                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                           (re-matches (if kokonaisluku?
-                                                         kokonaisluku-re-pattern
-                                                         desimaaliluku-re-pattern) v))
+                                           ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
+                                           ;; mutta tätä välivaihetta ei tallenneta dataan
+                                           (re-matches #"[0-9,.-]+" v))
                                    (reset! teksti v)
 
                                    (let [numero (if kokonaisluku?
