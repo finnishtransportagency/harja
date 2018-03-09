@@ -617,8 +617,7 @@
         tien-osat-riville (fn [rivi]
                             (get @osan-pituudet-teille (:tr-numero rivi)))
         osa-kohteen-ulkopuolella (fn [_ rivi _]
-                                  (when (and (= (:tr-numero rivi) (:tr-numero kohde))
-                                             (tr/tr-vali-paakohteen-sisalla? kohde rivi))
+                                  (when (tr/kohdeosat-paalekkain? kohde rivi)
                                     (str "Tämä osoite on varsinaisen kohteen sisällä. "
                                          "Käytä Tierekisterikohteet taulukossa tarvittaessa hyppyjä tämän osan merkitsemiseen.")))
         backilta-tulleiden-virheiden-validointi (fn [_ rivi _]
@@ -642,14 +641,17 @@
                            [{:nimi :nimi :pituus-max 30}
                             {:nimi :tr-numero
                              :validoi [backilta-tulleiden-virheiden-validointi
+                                       osa-kohteen-ulkopuolella
                                        kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-ajorata
                              :validoi [[:ei-tyhja "Anna ajorata"]
                                        backilta-tulleiden-virheiden-validointi
+                                       osa-kohteen-ulkopuolella
                                        kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-kaista
                              :validoi [[:ei-tyhja "Anna kaista"]
                                        backilta-tulleiden-virheiden-validointi
+                                       osa-kohteen-ulkopuolella
                                        kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
                             {:nimi :tr-alkuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)
@@ -889,7 +891,7 @@
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [urakka kohteet-atom rivi kohdetyyppi]
-  (let [kohde-paakohteen-sisaisilla-osilla (update rivi :kohdeosat (fn [kohdeosat] (filter #(tr/tr-vali-paakohteen-sisalla? rivi %) kohdeosat)))]
+  (let [kohde-paakohteen-sisaisilla-osilla (update rivi :kohdeosat (fn [kohdeosat] (filter #(tr/kohdeosat-paalekkain? rivi %) kohdeosat)))]
     [:div
      [yllapitokohdeosat-kohteelle urakka kohteet-atom kohde-paakohteen-sisaisilla-osilla
       {:voi-muokata? (not @grid/gridia-muokataan?)}]

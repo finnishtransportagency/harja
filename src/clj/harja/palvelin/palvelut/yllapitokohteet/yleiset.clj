@@ -257,5 +257,5 @@
 (defn hae-yllapitokohteen-muut-kohdeosat [db yllapitokohde-id]
   (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
         yllapitokohteen-osat (q/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt [yllapitokohde-id]})]
-    (remove #(tr/tr-vali-paakohteen-sisalla? yllapitokohde %)
+    (remove #(tr/kohdeosat-paalekkain? yllapitokohde %)
             yllapitokohteen-osat)))

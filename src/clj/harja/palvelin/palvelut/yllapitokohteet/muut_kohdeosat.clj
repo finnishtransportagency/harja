@@ -71,7 +71,7 @@
       (assert (tierekisteri/onko-tie-annettu kohdeosa)
               "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
       ;; Tarkistetaan, että kohteenosa ei ole pääkohteen sisällä
-      (assert (not (tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde kohdeosa))
+      (assert (not (tierekisteri/kohdeosat-paalekkain? yllapitokohde kohdeosa))
               "Muihin kohdeosiin ei tulisi tallentaa kohteen sisäisiä osia"))
     ;; Tarkistetaan, että kohteenosa ei ole muiden kohteenosien kanssa päälekkäin
     (assert (empty? (kohdeosat-keskenaan-paallekkain (vals muut-kohdeosat)))
