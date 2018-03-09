@@ -142,18 +142,18 @@
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
-         muunnettavat-alikohteet (mapv #(-> (:alikohde %)
-                                            (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
-                                            (assoc-in [:sijainti :numero] kohteen-tienumero))
-                                     (:alikohteet kohde))
-         muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
-         karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
+          muunnettavat-alikohteet (mapv #(-> (:alikohde %)
+                                             (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
+                                             (assoc-in [:sijainti :numero] kohteen-tienumero))
+                                        (:alikohteet kohde))
+          muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
+          karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
                           (when karttapvm (parametrit/pvm-aika karttapvm)))
-         kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
+          kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
           kohteen-sijainti (:sijainti kohde)
           alikohteet (:alikohteet kohde)]
 
-     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde alikohteet)
