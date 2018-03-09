@@ -109,7 +109,7 @@
         [{:koodi :viallisia-tieosia
           :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]))))
 
-(defn tarkista-yllapitokohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
+(defn tarkista-paallystysilmoituksen-kohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
   (try+
     (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
     (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
@@ -131,7 +131,7 @@
             :viesti "Alustatoimenpiteet sisältävät sijainteja, joita ei löydy tieverkolta"}])))))
 
 (defn tarkista-paallystysilmoitus [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet]
-  (tarkista-yllapitokohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+  (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
   (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet))
 
 (defn tarkista-tietyomaa [db id jarjestelma]

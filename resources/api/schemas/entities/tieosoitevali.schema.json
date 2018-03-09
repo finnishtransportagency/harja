@@ -3,11 +3,6 @@
   "id": "urn:harja",
   "type": "object",
   "properties": {
-    "numero": {
-      "id": "urn:harja/sijainti/tie/numero",
-      "type": "integer",
-      "minimum": 0
-    },
     "aosa": {
       "id": "urn:harja/tieosoitevali/aosa",
       "type": "integer",

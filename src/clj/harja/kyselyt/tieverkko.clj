@@ -18,8 +18,6 @@
     (and (:tie rivi)
          rivi)))
 
-(defn onko-tierekisteriosoite-validi?
-  "Tarkistaa, onko tieosoite validi tieverkolla (voidaan geometrisoida viivaksi)"
-  [db tie aosa aet losa loppuet]
+(defn onko-tierekisteriosoite-validi? [db tie aosa aet losa loppuet]
   (let [osoite {:tie tie :aosa aosa :aet aet :losa losa :loppuet loppuet}]
     (some? (tierekisteriosoite-viivaksi db osoite))))
