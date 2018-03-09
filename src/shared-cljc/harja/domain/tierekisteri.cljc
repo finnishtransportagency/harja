@@ -374,3 +374,10 @@
                       (geo/viivojen-paatepisteet-koskettavat-toisiaan? geo1-viiva geo2-viiva threshold))
                     geometria2-viivat))
             geometria1-viivat))))
+
+(defn onko-tie-annettu [kohdeosa]
+  (and (not (nil? (:tr-numero kohdeosa)))
+       (not (nil? (:tr-alkuosa kohdeosa)))
+       (not (nil? (:tr-alkuetaisyys kohdeosa)))
+       (not (nil? (:tr-loppuetaisyys kohdeosa)))
+       (not (nil? (:tr-loppuosa kohdeosa)))))

@@ -760,12 +760,13 @@
                 :tyhja (if (nil? @muut-kohdeosat) [ajax-loader "Haetaan muita kohdeosia..."]
                                                   [:div
                                                    [:div {:style {:display "inline-block"}} "Ei muita kohdeosia"]
-                                                   [:div {:style {:display "inline-block"
-                                                                  :float "right"}}
-                                                    [napit/yleinen-ensisijainen "Lisää osa"
-                                                     uusi-kohteenosa-fn
-                                                     {:ikoni (ikonit/livicon-arrow-down)
-                                                      :luokka "btn-xs"}]]])
+                                                   (when voi-muokata?
+                                                     [:div {:style {:display "inline-block"
+                                                                    :float "right"}}
+                                                      [napit/yleinen-ensisijainen "Lisää osa"
+                                                       uusi-kohteenosa-fn
+                                                       {:ikoni (ikonit/livicon-arrow-down)
+                                                        :luokka "btn-xs"}]])])
                 :jarjesta-alussa (juxt :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)
                 :piilota-toiminnot? true
                 :voi-muokata? voi-muokata?

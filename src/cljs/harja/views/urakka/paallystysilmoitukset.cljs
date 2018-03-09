@@ -321,7 +321,8 @@
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
       (let [muut-kohdeosat (atom nil)
-            kohteen-sisaiset-tierekisteriosoitteet (filter #(tr/tr-vali-paakohteen-sisalla? lomakedata-nyt %)
+            kohteen-sisaiset-tierekisteriosoitteet (filter #(or (tr/tr-vali-paakohteen-sisalla? lomakedata-nyt %)
+                                                                (not (tr/onko-tie-annettu %)))
                                                            (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet]))
             kohde-muut-kohdeosat-taulukkoon (-> lomakedata-nyt
                                                 (select-keys #{:tr-numero :tr-alkuetaisyys :tr-alkuosa
@@ -332,9 +333,11 @@
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
             muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
-            jarjestys-fn #(if (not (nil? (:id %)))
-                            [(:id %) 0 0 0]
-                            ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
+            jarjestys-fn #(cond
+                            ;; Jos on taulukossa "Muut kohdeosat", laitetaan tulokset loppuun. Tehdään tämä antamalla isompi vektori vertailuun
+                            (not (tr/tr-vali-paakohteen-sisalla? lomakedata-nyt %)) (conj ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %) 1)
+                            (not (nil? (:id %))) [(:id %) 0 0 0]
+                            :else ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
         [:fieldset.lomake-osa
          [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
           {:otsikko "Päällystysilmoituksen täytön vihjeet"}

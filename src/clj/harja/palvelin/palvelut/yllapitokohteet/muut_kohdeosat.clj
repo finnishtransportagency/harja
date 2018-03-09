@@ -37,13 +37,6 @@
              {:id yllapitokohdeosa-id
               :urakka urakka-id}))))
 
-(defn onko-tie-annettu [kohdeosa]
-  (and (not (nil? (:tr-numero kohdeosa)))
-       (not (nil? (:tr-alkuosa kohdeosa)))
-       (not (nil? (:tr-alkuetaisyys kohdeosa)))
-       (not (nil? (:tr-loppuetaisyys kohdeosa)))
-       (not (nil? (:tr-loppuosa kohdeosa)))))
-
 (defn kohdeosa-paalekkain-muiden-kohdeosien-kanssa
   [kohdeosa muut-kohdeosat]
   (keep #(when (tierekisteri/kohdeosat-paalekkain? kohdeosa %)
@@ -67,15 +60,15 @@
         kaikki-vuoden-yllapitokohdeosat-harjassa (q/hae-saman-vuoden-yllapitokohdeosat db {:vuosi vuosi})
         tallennettavien-olevien-osien-idt (into #{} (map :id (vals muut-kohdeosat)))
         muut-paitsi-tallennettavat-osat-kannassa (remove tallennettavien-olevien-osien-idt kaikki-vuoden-yllapitokohdeosat-harjassa)
-        paalekkaisyydet (keep (fn [[grid-id kohdeosa]]
-                                (when-let [paalekkaisyydet (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-paitsi-tallennettavat-osat-kannassa)]
-                                  (map #(assoc % :rivi grid-id)
-                                       paalekkaisyydet)))
-                              muut-kohdeosat)]
+        paalekkaisyydet (flatten (keep (fn [[grid-id kohdeosa]]
+                                         (when-let [paalekkaisyydet (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-paitsi-tallennettavat-osat-kannassa)]
+                                           (map #(assoc % :rivi grid-id)
+                                                paalekkaisyydet)))
+                                       muut-kohdeosat))]
     ;; Asserteille on jo frontilla check
     (doseq [kohdeosa (vals muut-kohdeosat)]
       ;; Tarkistetaan, että joku tie on annettu
-      (assert (onko-tie-annettu kohdeosa)
+      (assert (tierekisteri/onko-tie-annettu kohdeosa)
               "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
       ;; Tarkistetaan, että kohteenosa ei ole pääkohteen sisällä
       (assert (not (tierekisteri/tr-vali-paakohteen-sisalla? yllapitokohde kohdeosa))
@@ -84,7 +77,7 @@
     (assert (empty? (kohdeosat-keskenaan-paallekkain (vals muut-kohdeosat)))
             "Annetut kohteenosat ovat päällekkäin")
     (when-not (empty? paalekkaisyydet)
-      (flatten paalekkaisyydet))))
+      paalekkaisyydet)))
 
 (defn tallenna-muut-kohdeosat [db user {:keys [urakka-id yllapitokohde-id muut-kohdeosat vuosi] :as params}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
