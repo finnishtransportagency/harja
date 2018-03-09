@@ -21,10 +21,10 @@
       (when @karttataso-toimenpiteet-vapaassa-sijainnissa
         (kartalla-esitettavaan-muotoon
           (map
-            #(set/rename-keys {::to/sijainti :sijainti} %)
-            (:toimenpiteet @tila))
-          #(= (get-in @tila [:valittu-toimenpide ::to/id]) (::to/id %))
+            #(set/rename-keys % {::to/sijainti :sijainti})
+            (:toimenpiteet tila))
+          #(= (get-in tila [:valittu-toimenpide ::to/id]) (::to/id %))
           (comp
-            (filter #(not (nil? (:sijainti %))))
-            (remove #(nil? (::to/kohde %)))
+            (remove #(nil? (:sijainti %)))
+            (remove #(some? (::to/kohde %)))
             (map #(assoc % :tyyppi-kartalla :kan-toimenpide))))))))
