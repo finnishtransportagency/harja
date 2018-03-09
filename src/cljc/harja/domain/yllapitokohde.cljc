@@ -316,14 +316,14 @@ yllapitoluokkanimi->numero
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
-                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset                ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
-                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
 (defn yllapitokohde-tekstina
