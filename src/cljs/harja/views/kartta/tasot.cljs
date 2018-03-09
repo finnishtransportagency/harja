@@ -35,7 +35,8 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
             [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti]
             [harja.tiedot.urakka.toteumat.suola :as suolatoteumat]
-            [harja.tiedot.kanavat.kohteet-kartalla :as kan-kohteet])
+            [harja.tiedot.kanavat.kohteet-kartalla :as kan-kohteet]
+            [harja.tiedot.kanavat.urakka.toimenpiteet.kan-toimenpiteet-kartalla :as kan-toimenpiteet])
   (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -68,7 +69,8 @@
     :yksikkohintaisten-turvalaitteet
     :kohteenosat-kohteiden-luonnissa
     :suolatoteumat
-    :kan-kohteet})
+    :kan-kohteet
+    :kan-toimenpiteet})
 
 (def
   ^{:doc
@@ -234,6 +236,7 @@
    :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla
    :kohteenosat-kohteiden-luonnissa koht-luonti/kohteenosat-kartalla
    :kan-kohteet kan-kohteet/kohteet-kartalla
+   :kan-toimenpiteet kan-toimenpiteet/toimenpiteet-kartalla
    :suolatoteumat suolatoteumat/suolatoteumat-kartalla})
 
 (defn nayta-geometria!
@@ -299,6 +302,7 @@
        :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
        :kohteenosat-kohteiden-luonnissa (taso :kohteenosat-kohteiden-luonnissa)
        :kan-kohteet (taso :kan-kohteet)
+       :kan-toimenpiteet (taso :kan-toimenpiteet)
        :suolatoteumat (taso :suolatoteumat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
@@ -338,6 +342,7 @@
    :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
    :kohteenosat-kohteiden-luonnissa koht-luonti/karttataso-kohteenosat-kohteen-luonnissa
    :kan-kohteet kan-kohteet/karttataso-kohteet
+   :kan-toimenpiteet kan-toimenpiteet/karttataso-toimenpiteet-vapaassa-sijainnissa
    :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
