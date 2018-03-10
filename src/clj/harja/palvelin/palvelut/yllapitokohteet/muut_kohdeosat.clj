@@ -42,24 +42,24 @@
   (keep #(when (tierekisteri/kohdeosat-paalekkain? kohdeosa %)
            {:viesti "Kohdeosa on päälekkäin toisen kohdeosan kanssa"
             :validointivirhe :kohteet-paallekain
-            :kohteet [% kohdeosa]})
+            :kohteet (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :id) [% kohdeosa])})
         muut-kohdeosat))
 
 (defn kohdeosat-keskenaan-paallekkain
   [kohdeosat]
-  (flatten
-    (for [kohdeosa kohdeosat
-          :let [muut-kohdeosat (keep (fn [muu-kohdeosa]
-                                       (when-not (= (:id kohdeosa) (:id muu-kohdeosa))
-                                         muu-kohdeosa))
-                                     kohdeosat)]]
-      (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat))))
+  (let [paallekkaiset (flatten (for [kohdeosa kohdeosat
+                                     :let [muut-kohdeosat (keep (fn [muu-kohdeosa]
+                                                                  (when-not (= (:id kohdeosa) (:id muu-kohdeosa))
+                                                                    muu-kohdeosa))
+                                                                kohdeosat)]]
+                                 (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat)))]
+    (distinct paallekkaiset)))
 
 (defn- validoi-kysely [db {:keys [urakka-id yllapitokohde-id muut-kohdeosat vuosi]}]
   (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
         kaikki-vuoden-yllapitokohdeosat-harjassa (q/hae-saman-vuoden-yllapitokohdeosat db {:vuosi vuosi})
         tallennettavien-olevien-osien-idt (into #{} (map :id (vals muut-kohdeosat)))
-        muut-paitsi-tallennettavat-osat-kannassa (remove tallennettavien-olevien-osien-idt kaikki-vuoden-yllapitokohdeosat-harjassa)
+        muut-paitsi-tallennettavat-osat-kannassa (remove #(tallennettavien-olevien-osien-idt (:kohdeosa-id %)) kaikki-vuoden-yllapitokohdeosat-harjassa)
         paalekkaisyydet (flatten (keep (fn [[grid-id kohdeosa]]
                                          (when-let [paalekkaisyydet (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-paitsi-tallennettavat-osat-kannassa)]
                                            (map #(assoc % :rivi grid-id)
