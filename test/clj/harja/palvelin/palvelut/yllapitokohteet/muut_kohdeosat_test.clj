@@ -1,7 +1,5 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.muut-kohdeosat-test
   (:require [clojure.test :refer :all]
-            [clojure.spec.alpha :as s]
-            [clojure.spec.gen.alpha :as gen]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -46,42 +44,6 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each (compose-fixtures jarjestelma-fixture tietokanta-fixture))
-
-(s/def ::positiivinen-numero (s/and
-                               integer?
-                               #(> % 0)))
-(s/def ::tr-numero ::positiivinen-numero)
-(s/def ::tr-ajorata ::positiivinen-numero)
-(s/def ::tr-kaista ::positiivinen-numero)
-(s/def ::tr-alkuosa ::positiivinen-numero)
-(s/def ::tr-alkuetaisyys ::positiivinen-numero)
-(s/def ::tr-loppuosa ::positiivinen-numero)
-(s/def ::tr-loppuetaisyys ::positiivinen-numero)
-
-(s/def ::tie (s/with-gen (s/keys :req-un [::tr-numero ::tr-ajorata ::tr-kaista ::tr-alkuosa
-                                          ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys])
-                         #(gen/fmap (fn [numeroita]
-                                      (let [[alkuosa loppuosa] (sort (take 2 numeroita))
-                                            [alkuetaisyys loppuetaisyys] ((if (= alkuosa loppuosa) sort identity)
-                                                                           (->> numeroita (drop 2) (take 2)))
-                                            [numero ajorata kaista] (drop 4 numeroita)]
-                                        {:tr-numero numero
-                                         :tr-ajorata ajorata
-                                         :tr-kaista kaista
-                                         :tr-alkuosa alkuosa
-                                         :tr-alkuetaisyys alkuetaisyys
-                                         :tr-loppuosa loppuosa
-                                         :tr-loppuetaisyys loppuetaisyys}))
-                                    (s/gen (s/coll-of ::positiivinen-numero :kind vector? :count 7)))))
-
-(def kohde
-  {:tr-numero 20
-   :tr-ajorata 1
-   :tr-kaista 1
-   :tr-alkuosa 1
-   :tr-alkuetaisyys 1
-   :tr-loppuosa 4
-   :tr-loppuetaisyys 100})
 
 (def ok-data
   [{:id -1
