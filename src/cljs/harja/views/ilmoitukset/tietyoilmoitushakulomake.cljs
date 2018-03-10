@@ -48,7 +48,7 @@
         "Luotu välillä"
         tiedot/luonti-aikavalit
         valinnat-nyt
-        {:valokioaikavali :luotu-vakioaikavali
+        {:vakioaikavali :luotu-vakioaikavali
          :alkuaika :luotu-alkuaika
          :loppuaika :luotu-loppuaika}
         true)
@@ -56,7 +56,7 @@
         "Käynnissä välillä"
         tiedot/kaynnissa-aikavalit
         valinnat-nyt
-        {:valokioaikavali :kaynnissa-vakioaikavali
+        {:vakioaikavali :kaynnissa-vakioaikavali
          :alkuaika :kaynnissa-alkuaika
          :loppuaika :kaynnissa-loppuaika}
         true)
