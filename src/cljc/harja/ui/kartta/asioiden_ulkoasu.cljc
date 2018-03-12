@@ -500,3 +500,6 @@ tr-ikoni {:img (pinni-ikoni "musta")
 
 (defn kan-kohde [kohde]
   [(pinni-ikoni "lime") "Kohde"])
+
+(defn kan-toimenpide [toimenpide]
+  [(pinni-ikoni "sininen") "Toimenpide vapaassa sijainnissa"])

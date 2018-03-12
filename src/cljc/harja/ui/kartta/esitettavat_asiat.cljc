@@ -630,7 +630,7 @@
                                 ikoni))))
 
 (defmethod asia-kartalle :kan-toimenpide [toimenpide valittu?]
-  (let [[ikoni teksti] (ulkoasu/kan-kohde toimenpide)]
+  (let [[ikoni teksti] (ulkoasu/kan-toimenpide toimenpide)]
     (assoc toimenpide
       :type :kan-toimenpide
       :nimi (kohde/fmt-kohteen-nimi toimenpide)
