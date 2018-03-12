@@ -354,7 +354,9 @@
                  (if toimenpiteiden-haku-kaynnissa?
                    [:h1 [ajax-loader "Päivitetään listaa.." {:sama-rivi? true}]]
                    [:span
-                   [jaettu/hintaryhman-otsikko (h/hintaryhman-nimi hintaryhma)]
+                   [jaettu/hintaryhman-otsikko
+                    (h/hintaryhman-nimi hintaryhma)
+                    (str " (" (count hintaryhman-toimenpiteet) " kpl)")]
                    [napit/nappi
                     (ikonit/map-marker)
                     #(if (tiedot/hintaryhma-korostettu? hintaryhma app)
