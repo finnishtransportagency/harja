@@ -91,10 +91,10 @@
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
                                              (.replace "__VALMIS__" (str false))))
-        kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, hyppy, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
-        kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, hyppy, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
 
@@ -226,10 +226,10 @@
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
           ilmoitustiedot-kannassa (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
-          kohdeosa-1-kannassa (first (q-map (str "SELECT id, hyppy, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+          kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
-          kohdeosa-2-kannassa (first (q-map (str "SELECT id, hyppy, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+          kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
       ;; Pottien määrä pysyy samana

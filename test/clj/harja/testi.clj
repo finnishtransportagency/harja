@@ -769,7 +769,7 @@
 (defn hae-yllapitokohteen-kohdeosien-tr-osoitteet [kohde-id]
   (map
     pura-tr-osoite
-    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata, hyppy
+    (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata
              FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id ";"))))
 
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää

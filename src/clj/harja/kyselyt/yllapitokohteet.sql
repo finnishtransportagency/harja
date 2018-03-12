@@ -420,7 +420,7 @@ WHERE id = :id
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide,
                               paallystetyyppi, raekoko, tyomenetelma, massamaara,
-                              ulkoinen_id, hyppy, sijainti)
+                              ulkoinen_id, sijainti)
 VALUES (:yllapitokohde,
   :nimi,
   :tr_numero,
@@ -447,7 +447,7 @@ VALUES (:yllapitokohde,
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, hyppy, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
