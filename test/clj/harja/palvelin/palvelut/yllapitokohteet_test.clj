@@ -615,7 +615,8 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
-                                         AND poistettu IS NOT TRUE;")))
+                                         AND poistettu IS NOT TRUE
+                                         AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
         kohteet [{:id yllapitokohde-id
                   :nimi "Leppäjärven superramppi"
                   :kohdenumero "L666"
@@ -633,7 +634,8 @@
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
-                                         AND poistettu IS NOT TRUE;")))
+                                         AND poistettu IS NOT TRUE
+                                         AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
         vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven superramppi")]
     ;; Kohteiden määrä ei muuttunut
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
@@ -746,7 +748,8 @@
             maara-ennen-lisaysta (ffirst (q
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                " AND poistettu IS NOT TRUE;")))
+                                                " AND poistettu IS NOT TRUE
+                                                  AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             kohteet [{:id leppajarven-ramppi-id
                       :nimi "Leppäjärven superramppi"
                       :kohdenumero "666"
@@ -764,7 +767,8 @@
             maara-paivityksen-jalkeen (ffirst (q
                                                 (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                     " AND poistettu IS NOT TRUE;")))
+                                                     " AND poistettu IS NOT TRUE
+                                                     AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
@@ -797,7 +801,8 @@
             maara-ennen-lisaysta (ffirst (q
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                " AND poistettu IS NOT TRUE;")))
+                                                " AND poistettu IS NOT TRUE
+                                                  AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             saate "Kohteen saateviesti"
             kohteet [{:id leppajarven-ramppi-id
                       :sahkopostitiedot {:kopio-itselle? true
@@ -815,7 +820,8 @@
             maara-paivityksen-jalkeen (ffirst (q
                                                 (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                     " AND poistettu IS NOT TRUE;")))
+                                                     " AND poistettu IS NOT TRUE
+                                                     AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))

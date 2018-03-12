@@ -17,6 +17,7 @@ SELECT
   v.muokattu,
   v.luoja,
   v.muokkaaja,
+  v.yllapitokohde as "yllapitokohde-id",
   vv.nimi as "valtakunnallinen-nimi",
   vv.takaraja as "valtakunnallinen-takaraja",
   vv.takaraja_toistopaiva as "valtakunnallinen-takarajan-toistopaiva",
@@ -71,6 +72,7 @@ INSERT
    takaraja,
    valtakunnallinen_valitavoite,
    nimi,
+   yllapitokohde,
    luoja,
    luotu)
   VALUES (:urakka,
@@ -78,6 +80,7 @@ INSERT
           :takaraja,
           :valtakunnallinen_valitavoite,
           :nimi,
+          :yllapitokohde,
           :luoja,
           NOW());
 
@@ -87,6 +90,7 @@ UPDATE valitavoite
    SET nimi = :nimi,
      takaraja = :takaraja,
      aloituspvm = :aloituspvm,
+     yllapitokohde = :yllapitokohde,
      muokattu = NOW(),
      muokkaaja = :muokkaaja
  WHERE urakka = :urakka AND id = :id;

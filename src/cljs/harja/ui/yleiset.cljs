@@ -34,11 +34,13 @@
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
-  ([viesti opts]
+  ([viesti {:keys [luokka sama-rivi?] :as opts}]
    [:div {:class (str "ajax-loader " (when (:luokka opts) (:luokka opts)))}
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
-      [:div.viesti viesti])]))
+      (if sama-rivi?
+        [:span.viesti (str " " viesti)]
+        [:div.viesti viesti]))]))
 
 (defn ajax-loader-pieni
   "Näyttää pienen inline latausanimaatiokuvan ja optionaalisen viestin."
