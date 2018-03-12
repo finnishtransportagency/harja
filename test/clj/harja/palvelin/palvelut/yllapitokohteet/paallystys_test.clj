@@ -542,7 +542,6 @@
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
                              :kohdeosa-id 14
-                             :hyppy? false
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
