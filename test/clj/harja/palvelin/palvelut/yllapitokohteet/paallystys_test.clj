@@ -333,21 +333,6 @@
             :muotoarvo "12"
             :pitoisuus 12
             :sideainetyyppi 2}))
-    (is (= (second kohdeosat)
-           {:kohdeosa-id 1024
-            :massamaara nil
-            :nimi "Leppäjärven hyppy"
-            :paallystetyyppi nil
-            :raekoko nil
-            :toimenpide nil
-            :tr-ajorata 1
-            :tr-alkuetaisyys 0
-            :tr-alkuosa 3
-            :tr-kaista 1
-            :tr-loppuetaisyys 0
-            :tr-loppuosa 3
-            :tr-numero 20
-            :tyomenetelma nil}))
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan

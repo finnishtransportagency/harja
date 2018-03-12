@@ -342,8 +342,7 @@
                            (concat
                              (tierekisteriosoite-sarakkeet
                                tr-leveys
-                               [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys
-                                 :sisalto-kun-rivi-disabloitu (constantly [:div.keskita "Hyppy"])}
+                               [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys}
                                 {:nimi :tr-numero :muokattava? (constantly false)}
                                 {:nimi :tr-ajorata :muokattava? (constantly false)}
                                 {:nimi :tr-kaista :muokattava? (constantly false)}

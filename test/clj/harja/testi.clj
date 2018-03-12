@@ -752,7 +752,7 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
-(defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata hyppy]]
+(defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata]]
   {:numero numero
    :aosa aosa
    :aet aet
