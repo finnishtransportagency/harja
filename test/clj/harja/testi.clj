@@ -753,15 +753,13 @@
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
 (defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata hyppy]]
-  (merge (when (some? hyppy)
-           {:hyppy? hyppy})
-         {:numero numero
-          :aosa aosa
-          :aet aet
-          :losa losa
-          :loppuet loppuet
-          :kaista kaista
-          :ajorata ajorata}))
+  {:numero numero
+   :aosa aosa
+   :aet aet
+   :losa losa
+   :loppuet loppuet
+   :kaista kaista
+   :ajorata ajorata})
 
 (defn hae-yllapitokohteen-tr-osoite [kohde-id]
   (pura-tr-osoite (first (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,

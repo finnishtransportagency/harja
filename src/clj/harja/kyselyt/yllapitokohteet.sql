@@ -51,7 +51,6 @@ SELECT
   ypko.tyomenetelma                     AS "kohdeosa_tyomenetelma",
   ypko.massamaara                       AS "kohdeosa_massamaara",
   ypko.toimenpide                       AS "kohdeosa_toimenpide",
-  ypko.hyppy                            AS "kohdeosa_hyppy?",
   pi.takuupvm                           AS "paallystysilmoitus_takuupvm"
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohdeosa ypko ON ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE
@@ -295,8 +294,7 @@ SELECT
   tyomenetelma,
   massamaara            AS "massamaara",
   toimenpide,
-  sijainti,
-  hyppy                 AS "hyppy?"
+  sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
                             AND ypk.poistettu IS NOT TRUE
@@ -321,8 +319,7 @@ SELECT
   tyomenetelma,
   massamaara            AS "massamaara",
   toimenpide,
-  sijainti,
-  hyppy                 AS "hyppy?"
+  sijainti
 FROM yllapitokohdeosa ypko
   JOIN yllapitokohde ypk ON ypko.yllapitokohde = ypk.id
                             AND ypk.poistettu IS NOT TRUE
@@ -439,7 +436,6 @@ VALUES (:yllapitokohde,
   :tyomenetelma,
   :massamaara,
   :ulkoinen-id,
-  :hyppy,
   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
    FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
                                           CAST(:tr_alkuosa AS INTEGER),
@@ -460,7 +456,6 @@ VALUES (:yllapitokohde,
         :tr_loppuosa,
         :tr_loppuetaisyys,
         :ulkoinen-id,
-        :hyppy,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),
                                             CAST(:tr_alkuosa AS INTEGER),
@@ -485,7 +480,6 @@ SET
   tyomenetelma     = :tyomenetelma,
   massamaara       = :massamaara,
   toimenpide       = :toimenpide,
-  hyppy            = :hyppy,
   muokattu         = NOW(),
   sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
                       FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),

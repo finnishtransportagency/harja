@@ -371,7 +371,7 @@
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma massamaara hyppy?]}]
+                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -390,12 +390,11 @@
                                :tyomenetelma tyomenetelma
                                :massamaara massamaara
                                :toimenpide toimenpide
-                               :hyppy (if (some? hyppy?) hyppy? false)
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
-                                         tr-loppuosa tr-loppuetaisyys tr-ajorata hyppy?
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
   (log/debug "Päivitetään ylläpitokohdeosa")
@@ -414,7 +413,6 @@
                                  :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
-                                 :hyppy (if (some? hyppy?) hyppy? false)
                                  :urakka urakka-id}))
 
 (defn tallenna-yllapitokohdeosat

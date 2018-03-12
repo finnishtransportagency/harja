@@ -311,24 +311,17 @@
         toiminnot-komponentti
         (fn [kohdeosat-nyt muokkaa-kohdeosat!]
           (fn [_ {:keys [index]}]
-            (let [seuraava-kohde-hyppy? (:hyppy? (get kohdeosat-nyt (+ index 2)))]
-              [:div.tasaa-oikealle
-               [napit/yleinen-ensisijainen "Lisää osa"
-                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
-                {:disabled (= kohdetyyppi :sora)
-                 :ikoni (ikonit/livicon-arrow-down)
-                 :luokka "btn-xs"}]
-               [napit/yleinen-toissijainen "Lisää hyppy"
-                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index) true))
-                {:disabled (or (= kohdetyyppi :sora)
-                               seuraava-kohde-hyppy?)
-                 :ikoni (ikonit/livicon-arrow-down)
-                 :luokka "btn-xs"}]
-               [napit/kielteinen "Poista"
-                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
-                {:disabled (= 1 (count kohdeosat-nyt))
-                 :ikoni (ikonit/livicon-trash)
-                 :luokka "btn-xs"}]])))
+            [:div.tasaa-oikealle
+             [napit/yleinen-ensisijainen "Lisää osa"
+              #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat-nyt (inc index)))
+              {:disabled (= kohdetyyppi :sora)
+               :ikoni (ikonit/livicon-arrow-down)
+               :luokka "btn-xs"}]
+             [napit/kielteinen "Poista"
+              #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat-nyt (inc index)))
+              {:disabled (= 1 (count kohdeosat-nyt))
+               :ikoni (ikonit/livicon-trash)
+               :luokka "btn-xs"}]]))
 
         pituus (fn [osan-pituus tieosa]
                  (tr/laske-tien-pituus osan-pituus tieosa))]
@@ -485,7 +478,6 @@
            ;; Kohdeosille on toteutettu custom lisäys ja poistologiikka
            :voi-lisata? false
            :piilota-toiminnot? true
-           :disabloi-rivi? (fn [rivi] (:hyppy? rivi))
            :ulkoinen-validointi? true
            :paneelikomponentit
            (when kohdeosat-paivitetty-fn
@@ -503,7 +495,6 @@
                                                         yllapitokohde-id
                                                         osat))
                  {:disabled (or (not (empty? @virheet))
-                                (every? :hyppy? (vals @grid-data))
                                 (not kirjoitusoikeus?))
                   :luokka "nappi-myonteinen grid-tallenna"
                   :virheviesti "Tallentaminen epäonnistui."

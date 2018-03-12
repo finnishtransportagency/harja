@@ -303,7 +303,6 @@
     (is (= (first kohdeosat)
            {;; Alikohteen tiedot
             :kohdeosa-id 666
-            :hyppy? false
             :nimi "Leppäjärven kohdeosa"
             :tr-ajorata 1
             :tr-alkuetaisyys 0
@@ -336,7 +335,6 @@
             :sideainetyyppi 2}))
     (is (= (second kohdeosat)
            {:kohdeosa-id 1024
-            :hyppy? true
             :massamaara nil
             :nimi "Leppäjärven hyppy"
             :paallystetyyppi nil
@@ -391,7 +389,6 @@
                 :osoitteet [{;; Alikohteen tiedot
                              :nimi "Tie 666"
                              :kohdeosa-id 14
-                             :hyppy? false
                              :tr-numero 666
                              :tr-alkuosa 2
                              :tr-alkuetaisyys 3
@@ -428,13 +425,8 @@
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus, jossa hyppyjä")
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
-          paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
-                                                      :valmis-kasiteltavaksi true)
-                                 ;; Muuta eka osoite hypyksi
-                                 (assoc-in [:ilmoitustiedot :osoitteet]
-                                           [(assoc (first (get-in pot-testidata [:ilmoitustiedot :osoitteet]))
-                                              :hyppy? true)
-                                            (second (get-in pot-testidata [:ilmoitustiedot :osoitteet]))]))
+          paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
+                                                  :valmis-kasiteltavaksi true)
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
                             :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                          :sopimus-id sopimus-id
@@ -460,7 +452,6 @@
               :osoitteet [{;; Alikohteen tiedot
                            :nimi "Tie 666"
                            :kohdeosa-id 14
-                           :hyppy? true
                            :tr-numero 666
                            :tr-alkuosa 2
                            :tr-alkuetaisyys 3

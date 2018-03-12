@@ -120,16 +120,13 @@
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
-  ([kohdeosat key]
-   (lisaa-uusi-kohdeosa kohdeosat key false))
-  ([kohdeosat key hyppy?]
+  [kohdeosat key]
    (let [rivi (get kohdeosat key)
          avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
          uusi-rivi {:nimi ""
                     :tr-numero (:tr-numero rivi)
                     :tr-alkuosa nil
                     :tr-alkuetaisyys nil
-                    :hyppy? hyppy?
                     :tr-loppuosa (:tr-loppuosa rivi)
                     :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
                     :tr-ajorata (:tr-ajorata rivi)
@@ -140,7 +137,7 @@
          (assoc-in [key :tr-loppuetaisyys] nil)
          (assoc (inc key) uusi-rivi)
          (merge (zipmap (map inc avaimet-jalkeen)
-                        (map #(get kohdeosat %) avaimet-jalkeen)))))))
+                        (map #(get kohdeosat %) avaimet-jalkeen))))))
 
 (defn poista-kohdeosa
   "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus
