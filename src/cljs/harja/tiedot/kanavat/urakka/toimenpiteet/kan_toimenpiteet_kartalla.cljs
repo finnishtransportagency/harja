@@ -23,7 +23,7 @@
           (map
             #(set/rename-keys % {::to/sijainti :sijainti})
             (:toimenpiteet tila))
-          #(= (get-in tila [:valittu-toimenpide ::to/id]) (::to/id %))
+          #(= (get-in tila [:avattu-toimenpide ::to/id]) (::to/id %))
           (comp
             (remove #(nil? (:sijainti %)))
             (remove #(some? (::to/kohde %)))
