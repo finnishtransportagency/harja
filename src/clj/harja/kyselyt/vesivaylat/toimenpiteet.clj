@@ -10,7 +10,9 @@
             [specql.rel :as rel]
             [taoensso.timbre :as log]
 
+            [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.vesivaylat.tyot :as tyot-q]
+            [harja.tyokalut.functor :refer [fmap]]
 
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.liite :as liite]
@@ -23,8 +25,7 @@
             [harja.domain.vesivaylat.hinnoittelu :as vv-hinnoittelu]
             [harja.domain.vesivaylat.hinta :as vv-hinta]
             [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
-            [harja.domain.urakka :as ur]
-            [harja.tyokalut.functor :refer [fmap]]))
+            [harja.domain.urakka :as ur]))
 
 (def toimenpiteet-xf
   (comp
@@ -49,7 +50,9 @@
                           ::vv-toimenpide/vikakorjauksia?
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
+                          ::vv-toimenpide/sopimus
                           ::vv-toimenpide/lisatieto
+                          ::vv-toimenpide/harjassa-luotu
                           ::vv-toimenpide/liitteet
                           ::vv-toimenpide/komponentit
                           ::vv-toimenpide/reimari-henkilo-lkm
@@ -337,3 +340,19 @@
 
       kokonaishintaiset?
       toimenpiteet)))
+
+(defn tallenna-toimenpide! [db user toimenpide]
+  (jdbc/with-db-transaction [db db]
+    (if (id-olemassa? (::vv-toimenpide/id toimenpide))
+      (update! db
+               ::vv-toimenpide/reimari-toimenpide
+               (-> toimenpide
+                   (assoc ::vv-toimenpide/harjassa-luotu true)
+                   (m/lisaa-muokkaustiedot ::vv-toimenpide/id user))
+               {::vv-toimenpide/id (::vv-toimenpide/id toimenpide)})
+
+      (insert! db
+               ::vv-toimenpide/reimari-toimenpide
+               (-> toimenpide
+                   (assoc ::vv-toimenpide/harjassa-luotu true)
+                   (m/lisaa-muokkaustiedot ::vv-toimenpide/id user))))))

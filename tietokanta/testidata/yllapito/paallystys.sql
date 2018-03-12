@@ -2,7 +2,7 @@
 -- Muhoksen päällystysurakka
 ----------------------------
 
--- Päällystyskohteet
+-- Päällystyskohteet 2017
 
 
 INSERT INTO yllapitokohde
@@ -162,6 +162,151 @@ VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 2,
 INSERT INTO yllapitokohteen_maksuera (yllapitokohde, maksueranumero, sisalto)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'), 3, '1/3');
 
+-- Päällystyskohteet 2018
+
+INSERT INTO yllapitokohde
+(yllapitoluokka, urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi,
+ kaasuindeksi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
+ tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+ suorittava_tiemerkintaurakka, vuodet, keskimaarainen_vuorokausiliikenne, poistettu)
+VALUES
+  (8, (SELECT id
+       FROM urakka
+       WHERE nimi = 'Muhoksen päällystysurakka'),
+      (SELECT id
+       FROM sopimus
+       WHERE urakka = (SELECT id
+                       FROM urakka
+                       WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+      3, 'L03', 'Leppäjärven ramppi 2018', 400, 100, 4543.95, 0, 'paallyste' :: yllapitokohdetyyppi,
+    'paallystys' ::yllapitokohdetyotyyppi, 34554345,
+    20, 1, 0, 3, 0, (SELECT id
+                     FROM urakka
+                     WHERE nimi =
+                           'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+    '{2018}', 500, FALSE),
+  (8, (SELECT id
+       FROM urakka
+       WHERE nimi = 'Muhoksen päällystysurakka'),
+      (SELECT id
+       FROM sopimus
+       WHERE urakka = (SELECT id
+                       FROM urakka
+                       WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+      308, '308a', 'Oulun ohitusramppi 2018', 9000, 200, 565, 100, 'paallyste' :: yllapitokohdetyyppi,
+    'paallystys' ::yllapitokohdetyotyyppi, 54523345243,
+    20, 4, 334, 10, 10, (SELECT id
+                         FROM urakka
+                         WHERE nimi =
+                               'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+    '{2018}', 605, FALSE),
+  (9, (SELECT id
+       FROM urakka
+       WHERE nimi = 'Muhoksen päällystysurakka'),
+      (SELECT id
+       FROM sopimus
+       WHERE urakka = (SELECT id
+                       FROM urakka
+                       WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+      308, '308b', 'Nakkilan ramppi 2018', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+    'paallystys' ::yllapitokohdetyotyyppi, 26554257,
+    20, 12, 1, 19, 2, (SELECT id
+                       FROM urakka
+                       WHERE nimi =
+                             'Oulun tiemerkinnän palvelusopimus 2013-2018'),
+    '{2018}', 605, FALSE),
+  (10, (SELECT id
+        FROM urakka
+        WHERE nimi = 'Muhoksen päällystysurakka'),
+       (SELECT id
+        FROM sopimus
+        WHERE urakka = (SELECT id
+                        FROM urakka
+                        WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+       310, '310', 'Oulaisten ohitusramppi 2018', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+    'paallystys' ::yllapitokohdetyotyyppi, 45689694558,
+    20, 19, 5, 21, 15, NULL, '{2018}', 900, FALSE),
+  (2, (SELECT id
+       FROM urakka
+       WHERE nimi = 'Muhoksen päällystysurakka'),
+      (SELECT id
+       FROM sopimus
+       WHERE urakka = (SELECT id
+                       FROM urakka
+                       WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+      666, '666', 'Kuusamontien testi 2018', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+    'paallystys' ::yllapitokohdetyotyyppi, 456896534959,
+    20, 26, 1, 41, 15, NULL, '{2018}', 66, FALSE),
+  (2, (SELECT id
+       FROM urakka
+       WHERE nimi = 'Muhoksen päällystysurakka'),
+      (SELECT id
+       FROM sopimus
+       WHERE urakka = (SELECT id
+                       FROM urakka
+                       WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+      3456, '3456', 'Ei YHA-kohde 2018', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi, 'paallystys' ::yllapitokohdetyotyyppi,
+                                                                                              NULL,
+                                                                                              20, 26, 1, 41, 15, NULL, '{2018}', 66, FALSE),
+  (2, (SELECT id
+       FROM urakka
+       WHERE nimi = 'Muhoksen päällystysurakka'),
+      (SELECT id
+       FROM sopimus
+       WHERE urakka = (SELECT id
+                       FROM urakka
+                       WHERE nimi = 'Muhoksen päällystysurakka') AND paasopimus IS NULL),
+      3457, '3457', 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN 2018', 500, 3457, 5, 6, 'paallyste' :: yllapitokohdetyyppi,
+    'paallystys' ::yllapitokohdetyotyyppi, NULL,
+    20, 26, 1, 41, 15, NULL, '{2018}', 66, TRUE);
+
+INSERT INTO yllapitokohteen_aikataulu
+(yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
+ kohde_valmis, muokkaaja, muokattu, valmis_tiemerkintaan, tiemerkinta_takaraja)
+VALUES
+  ((SELECT id
+    FROM yllapitokohde
+    WHERE nimi = 'Leppäjärven ramppi 2018'), '2017-05-19',
+                                             '2017-05-19', '2017-05-21', '2017-05-22',
+                                             '2017-05-23',
+                                             '2017-05-24', (SELECT id
+                                                            FROM kayttaja
+                                                            WHERE kayttajanimi = 'jvh'), NOW(),
+                                             '2017-05-21', '2017-06-04'),
+  ((SELECT id
+    FROM yllapitokohde
+    WHERE nimi = 'Oulun ohitusramppi 2018'), '2017-05-21',
+                                             '2017-05-21', NULL, NULL, NULL,
+                                             NULL, (SELECT id
+                                                    FROM kayttaja
+                                                    WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
+  ((SELECT id
+    FROM yllapitokohde
+    WHERE nimi = 'Oulaisten ohitusramppi 2018'), '2017-05-26',
+                                                 NULL, NULL, NULL, NULL,
+                                                 NULL, (SELECT id
+                                                        FROM kayttaja
+                                                        WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL),
+  ((SELECT id
+    FROM yllapitokohde
+    WHERE nimi = 'Kuusamontien testi 2018'), '2017-06-02',
+                                             NULL, NULL, NULL, NULL,
+                                             NULL, (SELECT id
+                                                    FROM kayttaja
+                                                    WHERE kayttajanimi = 'jvh'), NOW(), NULL, NULL);
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
+                                                               FROM yllapitokohde
+                                                               WHERE nimi = 'Nakkilan ramppi 2018'));
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
+                                                               FROM yllapitokohde
+                                                               WHERE nimi = 'Ei YHA-kohde 2018'));
+INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES ((SELECT id
+                                                               FROM yllapitokohde
+                                                               WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN 2018'));
+
+INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'ojankaivuu'::yllapitokohteen_aikataulu_toimenpide, 'Kaivetaan syvä oja ensin', '2017-05-19', '2017-05-20', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
+INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'muu'::yllapitokohteen_aikataulu_toimenpide, 'Siirretään iso kivi pois alta', '2017-05-22', '2017-05-22', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
+INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'rp_tyot'::yllapitokohteen_aikataulu_toimenpide, NULL, '2017-05-22', '2017-05-25', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
 
 -- Testidatan kohdeosilla on hardkoodattu id, jotta päällystysilmoituksen ilmoitustiedoissa viitataan
 -- oikeaa id:n (ei voi hakea id:tä nimellä, koska ilmoitustiedot ovat JSON-muodossa)

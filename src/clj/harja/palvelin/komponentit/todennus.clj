@@ -94,7 +94,7 @@ on nil."
 
 ;; Pidetään käyttäjätietoja muistissa vartti, jotta ei tarvitse koko ajan hakea tietokannasta
 ;; uudestaan. KOKA->käyttäjätiedot pitää hakea joka ikiselle HTTP pyynnölle.
-(def kayttajatiedot (atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
+(def kayttajatiedot-cache-atom (atom (cache/ttl-cache-factory {} :ttl (* 15 60 1000))))
 
 (defn- pura-header-arvo
   "KOKA lähettää ääkkösellisen headerin muodossa \"=?UTF?B?...base64...?=\"."
@@ -209,16 +209,16 @@ headerit palautetaan normaalisti."
 
 (defn koka->kayttajatiedot [db headerit oikeudet]
   (let [oam-tiedot (ohita-oikeudet (koka-headerit headerit) oikeudet)]
-    (get (swap! kayttajatiedot
-                #(cache/through
-                  (fn [oam-tiedot]
-                    (try
-                      (varmista-kayttajatiedot db oam-tiedot)
-                      (catch Throwable t
-                        (log/warn t "Käyttäjätietojen varmistuksessa virhe!"))))
-                  %
-                  oam-tiedot))
-         oam-tiedot)))
+    (try
+      (get (swap! kayttajatiedot-cache-atom
+                  #(cache/through
+                    (fn [oam-tiedot]
+                      (varmista-kayttajatiedot db oam-tiedot))
+                    %
+                    oam-tiedot))
+           oam-tiedot)
+      (catch Throwable t
+        (log/warn t "Käyttäjätietojen varmistuksessa virhe!")))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
