@@ -111,7 +111,8 @@
                                     (tiedot/->AvaaKiintio kiintio-id)))}
                   (str
                     (if kiintio-auki? "- " "+ ")
-                    (::kiintio/nimi kiintio))]
+                    (::kiintio/nimi kiintio)
+                    (str " (" (count kiintion-toimenpiteet) " kpl)"))]
                  [napit/nappi
                   (ikonit/map-marker)
                   #(if (tiedot/kiintio-korostettu? kiintio app)
