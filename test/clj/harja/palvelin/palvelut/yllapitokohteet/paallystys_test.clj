@@ -423,6 +423,7 @@
   (let [paallystyskohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)]
     (is (not (nil? paallystyskohde-id)))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus, jossa hyppyjä")
+    ;; TODO Ei enää hyppy-käsitettä, testaa niin että alikohteet eivät täytä pääkohdetta
     (let [urakka-id @muhoksen-paallystysurakan-id
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
