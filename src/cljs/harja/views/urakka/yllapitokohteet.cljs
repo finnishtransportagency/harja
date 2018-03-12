@@ -589,13 +589,28 @@
                                                               paivitettavat-kentat)))]
     (swap! virheet-atom update (:rivi virhe-backilta) virherivin-paivitys)))
 
+(defn nayta-virhe-fn [vastaus grid-virheet muut-kohdeosat]
+  (do
+    (doseq [virhe vastaus]
+      (when (= (:validointivirhe virhe) :kohteet-paallekain)
+        ;; Näytetään virhe gridissä
+        (lisaa-backilta-tullut-virhe-riville {:virheet-atom grid-virheet :virhe-backilta virhe})
+        ;; Tallennetaan virhe tilaan
+        (swap! muut-kohdeosat update (:rivi virhe) #(assoc %
+                                                           :paalekkain-oleva-kohde (-> virhe :kohteet first)
+                                                           :virhe-viesti (:viesti virhe)))))
+    ;; Näytetään virhe modaalissa
+    (reset! paallystys-tiedot/validointivirheet-modal {:nakyvissa? true
+                                                       :otsikko "Muiden kohteenosien tallennus epäonnistui!"
+                                                       :validointivirheet vastaus})))
+
 (defn muut-kohdeosat
-  [{:keys [kohde urakka-id grid-asetukset voi-muokata? muut-kohdeosat] :as tiedot}]
+  [{:keys [kohde urakka-id grid-asetukset voi-muokata? muokkaa! kohdeosat-atom virheet-atom] :as tiedot}]
   (let [yllapitokohde-id (:id kohde)
-        muut-kohdeosat (or muut-kohdeosat (atom nil))
+        muut-kohdeosat (or kohdeosat-atom (atom nil))
         tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
-        grid-virheet (atom {})
+        grid-virheet (or virheet-atom (atom {}))
         voi-muokata? (and
                        (if (nil? voi-muokata?) true voi-muokata?)
                        (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet urakka-id))
@@ -605,7 +620,7 @@
         ;; ja sitä käytetään validoinnissa, jota myöskin kutsutaan joka muokkauksella, niin sen ei
         ;; itsessään tarvitse triggeröidä mitään
         osan-pituudet-teille (cljs.core/atom nil)
-        hae-maara-muutokset! (fn [urakka-id yllapitokohde-id]
+        hae-muut-kohdeosat! (fn [urakka-id yllapitokohde-id]
                                (go (let [vastaus (<! (tiedot/hae-muut-kohdeosat urakka-id yllapitokohde-id))]
                                      (if (k/virhe? vastaus)
                                        (viesti/nayta! "Muiden kohdeosien haku epäonnistui"
@@ -753,8 +768,8 @@
                                                 {:ikoni (ikonit/livicon-trash)
                                                  :luokka "btn-xs"}]])})
                  skeema)]
-    (hae-maara-muutokset! urakka-id yllapitokohde-id)
-    (fn [{:keys [kohde urakka-id grid-asetukset] :as tiedot}]
+    (hae-muut-kohdeosat! urakka-id yllapitokohde-id)
+    (fn [{:keys [kohde urakka-id grid-asetukset muokkaa!] :as tiedot}]
       [:div
        [grid/muokkaus-grid
         (merge {:otsikko "Muut kohdeosat"
@@ -775,9 +790,11 @@
                 :voi-lisata? false
                 :voi-kumota? false
                 :muutos (fn [grid]
+                          (when muokkaa!
+                            (muokkaa! (grid/hae-muokkaustila grid)))
                           (hae-osan-pituudet grid osan-pituudet-teille)
                           (validoi-tr-osoite grid tr-sijainnit tr-virheet))
-                :paneelikomponentit (when voi-muokata?
+                :paneelikomponentit (when (and voi-muokata? (not (:ala-nayta-tallenna-nappia? grid-asetukset)))
                                       [(fn []
                                          (let [tallennettavat-rivit (into {} (remove (fn [[_ kohdeosa]]
                                                                                        (:koskematon kohdeosa))
@@ -795,19 +812,7 @@
                                              :kun-onnistuu
                                              (fn [vastaus]
                                                (if-not (:onnistui? vastaus)
-                                                 (do
-                                                   (doseq [virhe vastaus]
-                                                     (when (= (:validointivirhe virhe) :kohteet-paallekain)
-                                                       ;; Näytetään virhe gridissä
-                                                       (lisaa-backilta-tullut-virhe-riville {:virheet-atom grid-virheet :virhe-backilta virhe})
-                                                       ;; Tallennetaan virhe tilaan
-                                                       (swap! muut-kohdeosat update (:rivi virhe) #(assoc %
-                                                                                                          :paalekkain-oleva-kohde (-> virhe :kohteet first)
-                                                                                                          :virhe-viesti (:viesti virhe)))))
-                                                   ;; Näytetään virhe modaalissa
-                                                   (reset! paallystys-tiedot/validointivirheet-modal {:nakyvissa? true
-                                                                                                      :otsikko "Muiden kohteenosien tallennus epäonnistui!"
-                                                                                                      :validointivirheet vastaus}))
+                                                 (nayta-virhe-fn vastaus grid-virheet muut-kohdeosat)
                                                  (viesti/nayta! "Kohdeosat tallennettu."
                                                                 :success viesti/viestin-nayttoaika-keskipitka))
                                                (reset! muut-kohdeosat (with-meta tallennettavat-rivit {:ensimmainen-data? true})))}]))])}

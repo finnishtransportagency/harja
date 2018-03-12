@@ -55,7 +55,7 @@
                                  (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat)))]
     (distinct paallekkaiset)))
 
-(defn- validoi-kysely [db {:keys [urakka-id yllapitokohde-id muut-kohdeosat vuosi]}]
+(defn validoi-kysely [db {:keys [urakka-id yllapitokohde-id muut-kohdeosat vuosi]}]
   (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
         kaikki-vuoden-yllapitokohdeosat-harjassa (q/hae-saman-vuoden-yllapitokohdeosat db {:vuosi vuosi})
         tallennettavien-olevien-osien-idt (into #{} (map :id (vals muut-kohdeosat)))
@@ -65,6 +65,7 @@
                                            (map #(assoc % :rivi grid-id)
                                                 paalekkaisyydet)))
                                        muut-kohdeosat))]
+    (log/debug "PÄÄLEKKÄISYYDET: " (pr-str paalekkaisyydet))
     ;; Asserteille on jo frontilla check
     (doseq [kohdeosa (vals muut-kohdeosat)]
       ;; Tarkistetaan, että joku tie on annettu

@@ -362,7 +362,7 @@
                           [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti])
+                    [:http-palvelin :db :pois-kytketyt-ominaisuudet :fim :sonja-sahkoposti :muut-kohdeosat])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet])

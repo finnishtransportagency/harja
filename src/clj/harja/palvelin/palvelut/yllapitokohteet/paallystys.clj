@@ -31,7 +31,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.palvelin.palvelut.viestinta :as viestinta]))
+            [harja.palvelin.palvelut.viestinta :as viestinta]
+            [harja.palvelin.palvelut.yllapitokohteet.muut-kohdeosat :as muut-kohdeosat]))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -192,7 +193,9 @@
                                              :hyppy? :toimenpide :massamaara :raekoko
                                              :paallystetyyppi :tyomenetelma)))
                                (:osoitteet ilmoitustiedot))]
-    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
+    (-> ilmoitustiedot
+        (assoc :osoitteet paivitetyt-osoitteet)
+        (dissoc :muut-osoitteet))))
 
 (defn- muunna-tallennetut-ilmoitustiedot-lomakemuotoon
   "Muuntaa päällystysilmoituksen ilmoitustiedot lomakkeessa esitettävään muotoon."
@@ -241,6 +244,18 @@
                                  (assoc p :ilmoitustiedot
                                           (muunna-tallennetut-ilmoitustiedot-lomakemuotoon (:ilmoitustiedot p)))
                                  (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
+        ;; Poistetaan kohteen ulkopuoliset
+        _ (println "--> PÄÄLLYSTYSILMOITUS")
+        _ (clojure.pprint/pprint paallystysilmoitus)
+        paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet] (fn [osoitteet]
+                                                                                        (filter #(and
+                                                                                                   (= (:tr-numero osoitteet) (:tr-numero %))
+                                                                                                   (= (:tr-ajorata osoitteet) (:tr-ajorata %))
+                                                                                                   (= (:tr-kaista osoitteet) (:tr-kaista %))
+                                                                                                   (tr-domain/tr-vali-paakohteen-sisalla? paallystysilmoitus %))
+                                                                                                osoitteet)))
+        _ (println "----> FOO")
+        _ (clojure.pprint/pprint paallystysilmoitus)
         kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus)
         kommentit (into []
                         (comp (map konv/alaviiva->rakenne)
@@ -459,51 +474,60 @@
              ", päällystyskohde-id:" (:paallystyskohde-id paallystysilmoitus))
 
   (log/debug "Aloitetaan päällystysilmoituksen tallennus")
-  (jdbc/with-db-transaction [db db]
-    ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
-    (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
-    (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
-                                   (first (into []
-                                                (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
-                                                      (map #(konv/string-poluista->keyword %
-                                                                                           [[:tila]])))
-                                                (q/hae-paallystysilmoitus-paallystyskohteella
-                                                  db
-                                                  {:paallystyskohde paallystyskohde-id}))))
-          paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
-          paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
-                                 db user {:urakka-id urakka-id :sopimus-id sopimus-id
-                                          :yllapitokohde-id paallystyskohde-id
-                                          :osat (map #(assoc % :id (:kohdeosa-id %))
-                                                     (->> paallystysilmoitus
-                                                          :ilmoitustiedot
-                                                          :osoitteet
-                                                          (filter (comp not :poistettu))))})
-          paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
-          vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
-          paallystysilmoitus-id (if vanha-paallystysilmoitus
-                                  (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
-                                                              vanha-paallystysilmoitus)
-                                  (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
-          tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
+  (if-let [virhe (muut-kohdeosat/validoi-kysely db {:urakka-id urakka-id
+                                                    :yllapitokohde-id (:paallystyskohde-id paallystysilmoitus)
+                                                    :muut-kohdeosat (get-in paallystysilmoitus [:ilmoitustiedot :muut-osoitteet])
+                                                    :vuosi vuosi})]
+    virhe
+    (jdbc/with-db-transaction [db db]
+      ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
+      (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
+      (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
+      (let [hae-paallystysilmoitus (fn [paallystyskohde-id]
+                                     (first (into []
+                                                  (comp (map #(konv/jsonb->clojuremap % :ilmoitustiedot))
+                                                        (map #(konv/string-poluista->keyword %
+                                                                                             [[:tila]])))
+                                                  (q/hae-paallystysilmoitus-paallystyskohteella
+                                                    db
+                                                    {:paallystyskohde paallystyskohde-id}))))
+            paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
+            paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
+                                   db user {:urakka-id urakka-id :sopimus-id sopimus-id
+                                            :yllapitokohde-id paallystyskohde-id
+                                            :osat (map #(assoc % :id (:kohdeosa-id %))
+                                                       (->> paallystysilmoitus
+                                                            :ilmoitustiedot
+                                                            :osoitteet
+                                                            (filter (comp not :poistettu))))})
+            paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
+            vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
+            paallystysilmoitus-id (if vanha-paallystysilmoitus
+                                    (paivita-paallystysilmoitus db user urakka-id paallystysilmoitus
+                                                                vanha-paallystysilmoitus)
+                                    (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
+            tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
 
-      (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
-      (laheta-paallystysilmoitussahkoposti-tarvittaessa {:db db :fim fim :email email :urakka-id urakka-id
-                                                         :paallystyskohde-id paallystyskohde-id
-                                                         :uusi-tila (:tila tuore-paallystysilmoitus)
-                                                         :vanha-tila (:tila vanha-paallystysilmoitus)
-                                                         :uusi-paatos (:tekninen-osa_paatos tuore-paallystysilmoitus)
-                                                         :vanha-paatos (:tekninen-osa_paatos vanha-paallystysilmoitus)})
+        (muut-kohdeosat/tallenna-muut-kohdeosat db user {:urakka-id urakka-id
+                                                    :yllapitokohde-id (:paallystyskohde-id paallystysilmoitus)
+                                                    :muut-kohdeosat (get-in paallystysilmoitus [:ilmoitustiedot :muut-osoitteet])
+                                                    :vuosi vuosi})
+        (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
+        (laheta-paallystysilmoitussahkoposti-tarvittaessa {:db db :fim fim :email email :urakka-id urakka-id
+                                                           :paallystyskohde-id paallystyskohde-id
+                                                           :uusi-tila (:tila tuore-paallystysilmoitus)
+                                                           :vanha-tila (:tila vanha-paallystysilmoitus)
+                                                           :uusi-paatos (:tekninen-osa_paatos tuore-paallystysilmoitus)
+                                                           :vanha-paatos (:tekninen-osa_paatos vanha-paallystysilmoitus)})
 
-      ;; Rakennetaan vastaus
-      (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
-                                                                                 :sopimus-id sopimus-id
-                                                                                 :vuosi vuosi})
-            uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
-                                                                         :sopimus-id sopimus-id})]
-        {:yllapitokohteet yllapitokohteet
-         :paallystysilmoitukset uudet-ilmoitukset}))))
+        ;; Rakennetaan vastaus
+        (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
+                                                                                   :sopimus-id sopimus-id
+                                                                                   :vuosi vuosi})
+              uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
+                                                                           :sopimus-id sopimus-id})]
+          {:yllapitokohteet yllapitokohteet
+           :paallystysilmoitukset uudet-ilmoitukset})))))
 
 (defn tallenna-paallystysilmoitusten-takuupvmt [db user {urakka-id ::urakka-domain/id
                                                          takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
