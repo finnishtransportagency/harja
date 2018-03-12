@@ -28,6 +28,14 @@
                 {:nimi "1 viikon ajalta" :tunteja 168}
                 {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
 
+(def toimenpiteiden-aikavalit
+  [{:nimi "Ei rajoitusta" :ei-kaytossa? true}
+   {:nimi "1 tunnin sisällä" :tunteja 1}
+   {:nimi "12 tunnin sisällä" :tunteja 12}
+   {:nimi "1 päivän sisällä" :tunteja 24}
+   {:nimi "1 viikon sisällä" :tunteja 168}
+   {:nimi "Vapaa aikaväli" :vapaa-aikavali true}])
+
 ;; Valinnat jotka riippuvat ulkoisista atomeista
 (defonce valinnat
   (reaction
@@ -65,9 +73,10 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                     :aloituskuittauksen-ajankohta :kaikki
                     :ilmoittaja-nimi ""
                     :ilmoittaja-puhelin ""
-                    :vakioaikavali (second aikavalit)
-                    :alkuaika (pvm/tuntia-sitten 12)
-                    :loppuaika (pvm/nyt)}
+                    :ilmoitettu-vakioaikavali (second aikavalit)
+                    :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
+                    :ilmoitettu-alkuaika (pvm/tuntia-sitten 12)
+                    :ilmoitettu-loppuaika (pvm/nyt)}
          :kuittaa-monta nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]

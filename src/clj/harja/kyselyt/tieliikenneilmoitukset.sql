@@ -45,6 +45,12 @@ WHERE ulompi_i.id IN
        (:alku_annettu IS FALSE AND sisempi_i.ilmoitettu  <= :loppu) OR
        (sisempi_i.ilmoitettu  BETWEEN :alku AND :loppu)) AND
 
+      -- Tarkasta että ilmoituksen toimenpiteiden aloitus sopii hakuehtoihin
+      ((:toimenpiteet_alku_annettu IS FALSE AND :toimenpiteet_loppu_annettu IS FALSE) OR
+       (:toimenpiteet_loppu_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  >= :toimenpiteet_alku) OR
+       (:toimenpiteet_alku_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  <= :toimenpiteet_loppu) OR
+       (sisempi_i."toimenpiteet-aloitettu"  BETWEEN :toimenpiteet_alku AND :toimenpiteet_loppu)) AND
+
       -- Tarkista ilmoituksen tilat
       ((:kuittaamattomat IS TRUE AND sisempi_i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
        (:vastaanotetut IS TRUE AND sisempi_i.tila = 'vastaanotettu' :: ilmoituksen_tila) OR
@@ -543,7 +549,7 @@ WHERE
 SELECT id
 FROM ilmoitustoimenpide
 WHERE
-  (lahetetty IS NULL OR tila IS NULL OR tila = 'virhe') AND
+  (tila IS NULL OR tila = 'virhe') AND
   kuittaustyyppi != 'valitys';
 
 -- name: hae-ilmoituksen-tieosoite
