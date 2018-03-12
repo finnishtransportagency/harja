@@ -456,7 +456,7 @@
                        (str/capitalize (:rooli %))))
            :valinta-nayta #(if (nil? %) "- valitse -" (str/capitalize %))
 
-           :valinnat (vec (concat [nil] yhteyshenkilotyypit))
+           :valinnat (vec yhteyshenkilotyypit)
 
            :validoi [[:ei-tyhja "Anna yhteyshenkilön rooli"]]}
           {:otsikko "Organisaatio"
