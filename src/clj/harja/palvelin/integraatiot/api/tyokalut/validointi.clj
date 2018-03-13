@@ -12,7 +12,8 @@
     [harja.domain.roolit :as roolit]
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.yllapitokohde :as kohteet]
-    [harja.kyselyt.paallystys :as paallystys-q])
+    [harja.kyselyt.paallystys :as paallystys-q]
+    [harja.domain.tierekisteri :as tierekisteri])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-urakka [db urakka-id]
@@ -183,3 +184,39 @@
     (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti "Käyttäjällä ei resurssiin."}]})))
+
+(defn tarkista-leikkaavatko-alikohteet-toisiaan [muut-alikohteet]
+  (let [paallekkain? (fn [ensimmainen toinen]
+                       (let [ensimmainen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti ensimmainen))
+                             toinen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti toinen))]
+                         (when (tierekisteri/kohdeosat-paalekkain? ensimmainen-sijainti toinen-sijainti)
+                           (format "Alikohteiden: %s (tunniste: %s ) ja: %s (tunniste: %s ) osoitteet leikkaavat toisiaan. Osoitteet: %s %s."
+                                   (:nimi ensimmainen)
+                                   (get-in ensimmainen [:tunniste :id ])
+                                   (:nimi toinen)
+                                   (get-in toinen [:tunniste :id])
+                                   (:sijainti ensimmainen)
+                                   (:sijainti toinen)))))]
+    (apply concat (for [[x i] (zipmap muut-alikohteet (range (count muut-alikohteet)))]
+                    (keep (partial paallekkain? x)
+                          (concat (take i muut-alikohteet) (drop (+ 1 i) muut-alikohteet)))))))
+
+(defn tarkista-muut-alikohteet [db muut-alikohteet]
+  (def nykyiset-alikohteet muut-alikohteet)
+  ;; todo: tarkista ensin, että kohteet eivät mene toistensa kanssa päällekäin
+  ;; todo: tarkista, että tiet löytyvät
+  ;; todo: tarkista, että osat löytyvät
+  ;; todo: tarkista, että pituudet ovat osien pituuksien sisällä
+  (let [virheet [(-> muut-alikohteet
+                     (tarkista-leikkaavatko-alikohteet-toisiaan))]])
+
+  #_(q-tieverkko/onko-tierekisteriosoite-validi?
+    db
+    tienumero
+    (:aosa %)
+    (:aet %)
+    (:losa %)
+    (:let %))
+
+  #_(virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)
+  )

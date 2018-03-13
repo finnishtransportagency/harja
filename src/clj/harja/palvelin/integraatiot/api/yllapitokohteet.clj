@@ -164,7 +164,7 @@
           muut-alikohteet (filter (comp not paakohteen-sisalla?) (:alikohteet kohde))]
 
       (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
-      ;; todo: validoi muut alikohteet
+      (validointi/tarkista-muut-alikohteet db muut-alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
         (kasittely/paivita-alikohteet db kohde (concat paakohteen-alikohteet muut-alikohteet))
