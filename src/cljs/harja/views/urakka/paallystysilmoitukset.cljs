@@ -31,6 +31,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri :as tr]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.views.urakka.paallystyskohteet :as paallystyskohteet]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet-tiedot]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka :as urakka]
@@ -700,6 +701,7 @@
                            (atom/wrap-arvo lomakedata-nyt [:virheet virheet-key] muokkaa!))]
         [:div.paallystysilmoituslomake
 
+         [paallystyskohteet/validointivirheet-modal]
          [napit/takaisin "Takaisin ilmoitusluetteloon" #(muokkaa! (constantly nil))]
 
          (when lukittu?
