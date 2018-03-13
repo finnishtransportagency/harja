@@ -603,6 +603,8 @@
              :radius 50
              :color vari)}))
 
+;; Tätä käytetään hallintanäkymässä - jos haluat näyttää kohteenosia kartalla muualla,
+;; haluat mahdollisesti tehdä uuden metodin
 (defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]
   ;; Näyttää toteuman reittipisteet palloina
   (let [[ikoni teksti] (ulkoasu/kohteenosa-kohteiden-luonnissa osa osan-kohde-valittu?)]
@@ -625,6 +627,28 @@
                :img ikoni}
       :alue (maarittele-feature kohde
                                 kohde-valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kan-toimenpide [toimenpide valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-toimenpide toimenpide)]
+    (assoc toimenpide
+      :type :kan-toimenpide
+      :nimi "Toimenpide"
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature toimenpide
+                                valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kan-hairiotilanne [hairiotilanne valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-hairiotilanne hairiotilanne)]
+    (assoc hairiotilanne
+      :type :kan-hairiotilanne
+      :nimi "Häiriötilanne"
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature hairiotilanne
+                                valittu?
                                 ikoni))))
 
 (defmethod asia-kartalle :kohde-hairiotilanne [kohde kohde-valittu?]
