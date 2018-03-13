@@ -32,7 +32,8 @@
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.domain.kanavat.kohteenosa :as kohteenosa]
             [harja.views.kartta.tasot :as tasot]
-            [harja.views.kartta :as kartta])
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -330,11 +331,17 @@
                                   :aikavali @u/valittu-aikavali}))
                            (tasot/taso-paalle! :kan-kohteet)
                            (tasot/taso-paalle! :kan-hairiot)
-                           (tasot/taso-pois! :organisaatio))
+                           (tasot/taso-pois! :organisaatio)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit!
+                             {:kan-hairiotilanne {:toiminto (fn [ht]
+                                                              (e! (tiedot/->ValitseHairiotilanne ht))
+                                                              (kartta-tiedot/piilota-infopaneeli!))
+                                                  :teksti "Avaa häiriötilanne"}}))
                       #(e! (tiedot/->NakymaSuljettu)
                            (tasot/taso-pois! :kan-kohteet)
                            (tasot/taso-pois! :kan-hairiot)
-                           (tasot/taso-paalle! :organisaatio)))
+                           (tasot/taso-paalle! :organisaatio)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
       @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
