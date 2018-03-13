@@ -141,7 +141,7 @@
                                jaettu/sarake-komponentit
                                jaettu/sarake-vikakorjaus
                                (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
-                                                                 "lisää-liite"
+                                                                "lisää-liite"
                                                                  oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                                                  (:id @nav/valittu-urakka)))
                                (jaettu/sarake-checkbox e! app*)]
