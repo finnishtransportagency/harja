@@ -12,10 +12,8 @@
             [harja.palvelin.integraatiot.vkm.vkm-test :refer [+testi-vkm+]]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [clojure.walk :as walk]
             [clojure.core.async :refer [<!! timeout]]
             [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.komponentit.sonja :as sonja]
@@ -860,3 +858,34 @@
           (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
           (is (alikohteiden-tr-osoitteet odotettu-1-alikohteen-osoite))
           (is (alikohteiden-tr-osoitteet odotettu-2-alikohteen-osoite)))))))
+
+(deftest muutettavat-alikohteet
+  (let [alikohteet [{:alikohde {:tunniste {:id 1},
+                                :nimi "1. Testialikohde",
+                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide"}}
+                    {:alikohde {:tunniste {:id 2},
+                                :nimi "2. Testialikohde",
+                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide"}}
+                    {:alikohde {:tunniste {:id 3},
+                                :nimi "Testiramppi",
+                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide"}}]
+        oletetut-muunnettavat [{:tunniste {:id 1},
+                                :nimi "1. Testialikohde",
+                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 1, :numero 666},
+                                :toimenpide "testitoimenpide",
+                                :ulkoinen-id 1}
+                               {:tunniste {:id 2},
+                                :nimi "2. Testialikohde",
+                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 1, :numero 666},
+                                :toimenpide "testitoimenpide",
+                                :ulkoinen-id 2}
+                               {:tunniste {:id 3},
+                                :nimi "Testiramppi",
+                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide",
+                                :ulkoinen-id 3}]]
+    (is (= (api-yllapitokohteet/muunnettavat-alikohteet 666 alikohteet) oletetut-muunnettavat)
+        "Muunnos alikohteille tehdään oletetulla tavalla")))

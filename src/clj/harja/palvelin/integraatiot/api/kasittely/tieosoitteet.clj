@@ -24,9 +24,13 @@
   (if karttapvm
     (let [paakohteen-vkm-id "paakohde"
           muunnettavat-alikohteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
+                                                 (def nykyinen-sijainti sijainti)
                                                  (assoc alikohde
                                                    :vkm-id (str "alikohde-" i)
-                                                   :sijainti (assoc sijainti :tie kohteen-tienumero)))
+                                                   :sijainti (assoc sijainti :tie (or
+                                                                                    (:numero sijainti)
+                                                                                    (:tie sijainti)
+                                                                                    kohteen-tienumero))))
                                                alikohteet)
           muunnettavat-sijainnit (conj
                                    (map #(assoc (:sijainti %) :vkm-id (:vkm-id %)) muunnettavat-alikohteet)
