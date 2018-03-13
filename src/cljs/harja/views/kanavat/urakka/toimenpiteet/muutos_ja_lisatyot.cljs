@@ -119,10 +119,12 @@
                            (e! (tiedot/->HaeSuunnitellutTyot))
                            (e! (tiedot/->HaeHuoltokohteet))
                            (tasot/taso-paalle! :kan-kohteet)
+                           (tasot/taso-paalle! :kan-toimenpiteet)
                            (tasot/taso-pois! :organisaatio))
                         #(do
                            (e! (tiedot/->Nakymassa? false))
                            (tasot/taso-pois! :kan-kohteet)
+                           (tasot/taso-pois! :kan-toimenpiteet)
                            (tasot/taso-paalle! :organisaatio)))
 
       (fn [e! {:keys [toimenpiteet haku-kaynnissa? avattu-toimenpide] :as app}]

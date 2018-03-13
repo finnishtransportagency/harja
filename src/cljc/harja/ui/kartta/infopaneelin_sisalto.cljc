@@ -43,11 +43,13 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
+            [harja.domain.toimenpidekoodi :as tpk]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kanavan-toimenpide :as kan-to]
             [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
@@ -645,6 +647,27 @@
               (toimenpiteen-kentta "Kuittaaja" :kuittaaja)
               (toimenpiteen-kentta "Päivämäärä" :pvm)]
      :data kohde}))
+
+(defmethod infopaneeli-skeema :kan-toimenpide [toimenpide]
+  (let [toimenpiteen-kentta (fn [otsikko kentta]
+                              {:otsikko otsikko
+                               :tyyppi :string
+                               :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet kentta))})]
+    {:tyyppi :kan-toimenpide
+     :jarjesta-fn (constantly false)
+     :otsikko (str
+                (pvm/pvm (::kan-to/pvm toimenpide))
+                " "
+                (or
+                  (get-in toimenpide [::kan-to/muu-toimenpide])
+                  (get-in toimenpide [::kan-to/toimenpidekoodi ::tpk/nimi])))
+     :tiedot [{:otsikko "Tehtävä"
+               :tyyppi :string
+               :hae (hakufunktio #{[::kan-to/toimenpidekoodi ::tpk/nimi]} #(get-in % [::kan-to/toimenpidekoodi ::tpk/nimi]))}
+              {:otsikko "Pvm" :nimi ::kan-to/pvm :tyyppi :pvm}
+              {:otsikko "Suorittaja" :nimi ::kan-to/suorittaja :tyyppi :string}
+              {:otsikko "Lisätieto" :nimi ::kan-to/lisatieto :tyyppi :string}]
+     :data toimenpide}))
 
 (defmethod infopaneeli-skeema :kohde-hairiotilanne [kohde]
   (let [hairiotilanteen-kentta (fn [otsikko kentta]

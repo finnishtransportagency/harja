@@ -499,5 +499,7 @@ tr-ikoni {:img (pinni-ikoni "musta")
           [(pinni-ikoni vari) teksti])))
 
 (defn kan-kohde [kohde]
-  (let [[vari teksti] (kohteenosa-pinni-varit #{:sama-kohde :silta})]
-    [(pinni-ikoni vari) "Kohde"]))
+  [(pinni-ikoni "lime") "Kohde"])
+
+(defn kan-toimenpide [toimenpide]
+  [(pinni-ikoni "sininen") "Toimenpide vapaassa sijainnissa"])

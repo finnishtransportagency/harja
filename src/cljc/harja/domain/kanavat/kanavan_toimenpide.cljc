@@ -99,7 +99,8 @@
     ::lisatieto
     ::suorittaja
     ::sopimus-id
-    ::toimenpideinstanssi-id})
+    ::toimenpideinstanssi-id
+    ::sijainti})
 
 (def perustiedot-viittauksineen
   (set/union perustiedot
