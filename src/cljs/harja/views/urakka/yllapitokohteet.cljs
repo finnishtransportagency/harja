@@ -579,22 +579,22 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
-(defn lisaa-backilta-tullut-virhe-riville
-  [{:keys [virheet-atom virhe-backilta]}]
+(defn lisaa-virhe-riville
+  [{:keys [virheet-atom virhe]}]
   (let [paivitettavat-kentat #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}
         virherivin-paivitys (fn [rivin-virheet]
                               (apply assoc rivin-virheet (mapcat #(identity
                                                                  [% (conj (get rivin-virheet %)
-                                                                          (:viesti virhe-backilta))])
+                                                                          (:viesti virhe))])
                                                               paivitettavat-kentat)))]
-    (swap! virheet-atom update (:rivi virhe-backilta) virherivin-paivitys)))
+    (swap! virheet-atom update (:rivi virhe) virherivin-paivitys)))
 
 (defn nayta-virhe-fn [vastaus grid-virheet muut-kohdeosat]
   (do
     (doseq [virhe vastaus]
       (when (= (:validointivirhe virhe) :kohteet-paallekain)
         ;; Näytetään virhe gridissä
-        (lisaa-backilta-tullut-virhe-riville {:virheet-atom grid-virheet :virhe-backilta virhe})
+        (lisaa-virhe-riville {:virheet-atom grid-virheet :virhe virhe})
         ;; Tallennetaan virhe tilaan
         (swap! muut-kohdeosat update (:rivi virhe) #(assoc %
                                                            :paalekkain-oleva-kohde (-> virhe :kohteet first)
@@ -603,6 +603,47 @@
     (reset! paallystys-tiedot/validointivirheet-modal {:nakyvissa? true
                                                        :otsikko "Muiden kohteenosien tallennus epäonnistui!"
                                                        :validointivirheet vastaus})))
+
+(defn indexed-map-loop [loop-fn funktio data]
+  (into {} (loop-fn (fn [[avain arvo]]
+                        (let [id-ja-arvo [avain (funktio arvo)]]
+                          (when-not (-> id-ja-arvo second empty?)
+                            id-ja-arvo))))
+        data))
+
+(defn validoi-kohdeosien-paallekkyys [grid virheet-atom]
+  (let [gridin-tila (grid/hae-muokkaustila grid)
+        gridin-virheet @virheet-atom
+        paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain (vals gridin-tila))
+        gridin-paallekkaiset-osat (flatten (keep (fn [[avain rivi]]
+                                                   (let [rivin-paallekkaiset-osat
+                                                         (keep #(let [{id-1 :id nimi-1 :nimi} (-> % :kohteet first)
+                                                                     {id-2 :id nimi-2 :nimi} (-> % :kohteet second)]
+                                                                 (when (or (= id-1 avain) (= id-2 avain))
+                                                                   {:rivi avain
+                                                                    :viesti (str "Kohteenosa on päälekkäin osan "
+                                                                                 (cond
+                                                                                   (= avain id-1) nimi-2
+                                                                                   (= avain id-2) nimi-1
+                                                                                   :else nil)
+                                                                                 " kanssa")}))
+                                                              paallekkaiset-osat)]
+                                                     (if (empty? rivin-paallekkaiset-osat)
+                                                       nil rivin-paallekkaiset-osat)))
+                                                 gridin-tila))
+        poista-korjatut-virheet (indexed-map-loop map
+                                                  (fn [rivin-virheet]
+                                                    (indexed-map-loop keep
+                                                                      (fn [virheviestit]
+                                                                        (if-let [virheviesti (some #(re-find #"Kohteenosa on päälekkäin osan \w* kanssa" %)
+                                                                                                   virheviestit)]
+                                                                          (remove #(= % virheviesti) virheviestit)
+                                                                          virheviestit))
+                                                                      rivin-virheet))
+                                                  gridin-virheet)]
+    (reset! virheet-atom poista-korjatut-virheet)
+    (doseq [paallekkainen-osa gridin-paallekkaiset-osat]
+      (lisaa-virhe-riville {:virheet-atom virheet-atom :virhe paallekkainen-osa}))))
 
 (defn muut-kohdeosat
   [{:keys [kohde urakka-id grid-asetukset voi-muokata? muokkaa! kohdeosat-atom virheet-atom] :as tiedot}]
@@ -655,38 +696,31 @@
                            [{:nimi :nimi :pituus-max 30}
                             {:nimi :tr-numero
                              :validoi [backilta-tulleiden-virheiden-validointi
-                                       osa-kohteen-ulkopuolella
-                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
+                                       osa-kohteen-ulkopuolella]}
                             {:nimi :tr-ajorata
                              :validoi [[:ei-tyhja "Anna ajorata"]
                                        backilta-tulleiden-virheiden-validointi
-                                       osa-kohteen-ulkopuolella
-                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
+                                       osa-kohteen-ulkopuolella]}
                             {:nimi :tr-kaista
                              :validoi [[:ei-tyhja "Anna kaista"]
                                        backilta-tulleiden-virheiden-validointi
-                                       osa-kohteen-ulkopuolella
-                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
+                                       osa-kohteen-ulkopuolella]}
                             {:nimi :tr-alkuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuosa)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi
-                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-alkuetaisyys
                              :validoi [(partial validoi-kohteen-osoite :tr-alkuetaisyys)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi
-                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-loppuosa
                              :validoi [(partial validoi-kohteen-osoite :tr-loppuosa)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi
-                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:nimi :tr-loppuetaisyys
                              :validoi [(partial validoi-kohteen-osoite :tr-loppuetaisyys)
                                        osa-kohteen-ulkopuolella
-                                       backilta-tulleiden-virheiden-validointi
-                                       kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa]}
+                                       backilta-tulleiden-virheiden-validointi]}
                             {:hae (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))}])
                          [(assoc paallystys-tiedot/paallyste-grid-skeema
                                  :leveys paallyste-leveys
@@ -791,6 +825,7 @@
                 :muutos (fn [grid]
                           (when muokkaa!
                             (muokkaa! (grid/hae-muokkaustila grid)))
+                          (validoi-kohdeosien-paallekkyys grid grid-virheet)
                           (hae-osan-pituudet grid osan-pituudet-teille)
                           (validoi-tr-osoite grid tr-sijainnit tr-virheet))
                 :paneelikomponentit (when (and voi-muokata? (not (:ala-nayta-tallenna-nappia? grid-asetukset)))

@@ -388,3 +388,21 @@
        (not (nil? (:tr-alkuetaisyys kohdeosa)))
        (not (nil? (:tr-loppuetaisyys kohdeosa)))
        (not (nil? (:tr-loppuosa kohdeosa)))))
+
+(defn kohdeosa-paalekkain-muiden-kohdeosien-kanssa
+  [kohdeosa muut-kohdeosat]
+  (keep #(when (kohdeosat-paalekkain? kohdeosa %)
+           {:viesti "Kohdeosa on päälekkäin toisen kohdeosan kanssa"
+            :validointivirhe :kohteet-paallekain
+            :kohteet (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :id) [% kohdeosa])})
+        muut-kohdeosat))
+
+(defn kohdeosat-keskenaan-paallekkain
+  [kohdeosat]
+  (let [paallekkaiset (flatten (for [kohdeosa kohdeosat
+                                     :let [muut-kohdeosat (keep (fn [muu-kohdeosa]
+                                                                  (when-not (= (:id kohdeosa) (:id muu-kohdeosa))
+                                                                    muu-kohdeosa))
+                                                                kohdeosat)]]
+                                 (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat)))]
+    (distinct paallekkaiset)))
