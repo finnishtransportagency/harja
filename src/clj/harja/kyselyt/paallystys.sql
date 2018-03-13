@@ -1,27 +1,29 @@
 -- name: hae-urakan-paallystysilmoitukset
 -- Hakee urakan kaikki päällystysilmoitukset
 SELECT
-  ypk.id                   AS "paallystyskohde-id",
+  ypk.id                        AS "paallystyskohde-id",
   pi.id,
-  ypk.tr_numero            AS "tr-numero",
+  ypk.tr_numero                 AS "tr-numero",
   pi.tila,
   nimi,
   kohdenumero,
   yhaid,
   tunnus,
-  pi.paatos_tekninen_osa   AS "paatos-tekninen-osa",
-  sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
-  arvonvahennykset,
-  bitumi_indeksi           AS "bitumi-indeksi",
-  kaasuindeksi,
+  pi.paatos_tekninen_osa        AS "paatos-tekninen-osa",
+  ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypkk.arvonvahennykset,
+  ypkk.bitumi_indeksi           AS "bitumi-indeksi",
+  ypkk.kaasuindeksi,
   lahetetty,
-  lahetys_onnistunut       AS "lahetys-onnistunut",
+  lahetys_onnistunut            AS "lahetys-onnistunut",
   lahetysvirhe,
   takuupvm,
   pi.muokattu
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+
 WHERE urakka = :urakka
       AND sopimus = :sopimus
       AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
@@ -39,51 +41,51 @@ WHERE paallystyskohde = :paallystyskohde;
 SELECT
   pi.id,
   tila,
-  ypka.kohde_alku              AS "aloituspvm",
-  ypka.kohde_valmis            AS "valmispvm-kohde",
-  ypka.paallystys_loppu        AS "valmispvm-paallystys",
+  ypka.kohde_alku               AS "aloituspvm",
+  ypka.kohde_valmis             AS "valmispvm-kohde",
+  ypka.paallystys_loppu         AS "valmispvm-paallystys",
   takuupvm,
-  ypk.id                       AS "yllapitokohde-id",
-  ypk.nimi                     AS kohdenimi,
+  ypk.id                        AS "yllapitokohde-id",
+  ypk.nimi                      AS kohdenimi,
   ypk.tunnus,
   ypk.kohdenumero,
-  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset,
-  ypk.bitumi_indeksi           AS "bitumi-indeksi",
-  ypk.kaasuindeksi,
-  sum(-s.maara)                AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
+  ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypkk.arvonvahennykset,
+  ypkk.bitumi_indeksi           AS "bitumi-indeksi",
+  ypkk.kaasuindeksi,
+  sum(-s.maara)                 AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
-  paatos_tekninen_osa          AS "tekninen-osa_paatos",
-  perustelu_tekninen_osa       AS "tekninen-osa_perustelu",
-  kasittelyaika_tekninen_osa   AS "tekninen-osa_kasittelyaika",
-  asiatarkastus_pvm            AS "asiatarkastus_tarkastusaika",
-  asiatarkastus_tarkastaja     AS "asiatarkastus_tarkastaja",
-  asiatarkastus_hyvaksytty     AS "asiatarkastus_hyvaksytty",
-  asiatarkastus_lisatiedot     AS "asiatarkastus_lisatiedot",
-  ypko.id                      AS kohdeosa_id,
-  ypko.nimi                    AS kohdeosa_nimi,
-  ypko.tr_numero               AS "kohdeosa_tr-numero",
-  ypko.tr_alkuosa              AS "kohdeosa_tr-alkuosa",
-  ypko.tr_alkuetaisyys         AS "kohdeosa_tr-alkuetaisyys",
-  ypko.tr_loppuosa             AS "kohdeosa_tr-loppuosa",
-  ypko.tr_loppuetaisyys        AS "kohdeosa_tr-loppuetaisyys",
-  ypko.tr_ajorata              AS "kohdeosa_tr-ajorata",
-  ypko.tr_kaista               AS "kohdeosa_tr-kaista",
-  ypko.paallystetyyppi         AS "kohdeosa_paallystetyyppi",
-  ypko.raekoko                 AS "kohdeosa_raekoko",
-  ypko.tyomenetelma            AS "kohdeosa_tyomenetelma",
-  ypko.massamaara              AS "kohdeosa_massamaara",
-  ypko.toimenpide              AS "kohdeosa_toimenpide",
-  ypko.hyppy                   AS "kohdeosa_hyppy?",
-  ypk.tr_numero                AS "tr-numero",
-  ypk.tr_alkuosa               AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys          AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa              AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys         AS "tr-loppuetaisyys",
-  ypk.tr_ajorata               AS "tr-ajorata",
-  ypk.tr_kaista                AS "tr-kaista",
-  u.id                         AS "urakka-id"
+  paatos_tekninen_osa           AS "tekninen-osa_paatos",
+  perustelu_tekninen_osa        AS "tekninen-osa_perustelu",
+  kasittelyaika_tekninen_osa    AS "tekninen-osa_kasittelyaika",
+  asiatarkastus_pvm             AS "asiatarkastus_tarkastusaika",
+  asiatarkastus_tarkastaja      AS "asiatarkastus_tarkastaja",
+  asiatarkastus_hyvaksytty      AS "asiatarkastus_hyvaksytty",
+  asiatarkastus_lisatiedot      AS "asiatarkastus_lisatiedot",
+  ypko.id                       AS kohdeosa_id,
+  ypko.nimi                     AS kohdeosa_nimi,
+  ypko.tr_numero                AS "kohdeosa_tr-numero",
+  ypko.tr_alkuosa               AS "kohdeosa_tr-alkuosa",
+  ypko.tr_alkuetaisyys          AS "kohdeosa_tr-alkuetaisyys",
+  ypko.tr_loppuosa              AS "kohdeosa_tr-loppuosa",
+  ypko.tr_loppuetaisyys         AS "kohdeosa_tr-loppuetaisyys",
+  ypko.tr_ajorata               AS "kohdeosa_tr-ajorata",
+  ypko.tr_kaista                AS "kohdeosa_tr-kaista",
+  ypko.paallystetyyppi          AS "kohdeosa_paallystetyyppi",
+  ypko.raekoko                  AS "kohdeosa_raekoko",
+  ypko.tyomenetelma             AS "kohdeosa_tyomenetelma",
+  ypko.massamaara               AS "kohdeosa_massamaara",
+  ypko.toimenpide               AS "kohdeosa_toimenpide",
+  ypko.hyppy                    AS "kohdeosa_hyppy?",
+  ypk.tr_numero                 AS "tr-numero",
+  ypk.tr_alkuosa                AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys           AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa               AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys          AS "tr-loppuetaisyys",
+  ypk.tr_ajorata                AS "tr-ajorata",
+  ypk.tr_kaista                 AS "tr-kaista",
+  u.id                          AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
@@ -93,9 +95,11 @@ FROM yllapitokohde ypk
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE
 GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paallystys_loppu,
+  ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,
   u.id;
 
 -- name: hae-paallystysilmoitus-paallystyskohteella
@@ -298,27 +302,28 @@ SELECT
   ypk.kohdenumero,
   ypk.nimi,
   ypk.tunnus,
-  ypk.tr_numero     AS "tr-numero",
-  ym.id             AS "maksuera_id",
-  ym.sisalto        AS "maksuera_sisalto",
-  ym.maksueranumero AS "maksuera_maksueranumero",
+  ypk.tr_numero                 AS "tr-numero",
+  ym.id                         AS "maksuera_id",
+  ym.sisalto                    AS "maksuera_sisalto",
+  ym.maksueranumero             AS "maksuera_maksueranumero",
   ymt.maksueratunnus,
-  ypk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
-  ypk.arvonvahennykset,
-  ypk.bitumi_indeksi           AS "bitumi-indeksi",
-  ypk.kaasuindeksi,
-  sum(-s.maara)                AS "sakot-ja-bonukset" -- Käännetään, jotta laskenta toimii suoraan oikein
+  ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypkk.arvonvahennykset,
+  ypkk.bitumi_indeksi           AS "bitumi-indeksi",
+  ypkk.kaasuindeksi,
+  sum(-s.maara)                 AS "sakot-ja-bonukset" -- Käännetään, jotta laskenta toimii suoraan oikein
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_maksuera ym ON ym.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_maksueratunnus ymt ON ymt.yllapitokohde = ypk.id
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
 WHERE ypk.urakka = :urakka
       AND ypk.sopimus = :sopimus
       AND ypk.poistettu IS NOT TRUE
       AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
-GROUP BY ypk.id, ym.id, ymt.maksueratunnus;
+GROUP BY ypk.id, ym.id, ymt.maksueratunnus, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi;
 
 -- name: hae-yllapitokohteen-maksuera
 SELECT
