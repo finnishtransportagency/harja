@@ -48,6 +48,7 @@
                           ::vv-toimenpide/toimenpide
                           ::vv-toimenpide/turvalaite
                           ::vv-toimenpide/vikakorjauksia?
+                          ::vv-toimenpide/vikailmoitukset
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/sopimus
