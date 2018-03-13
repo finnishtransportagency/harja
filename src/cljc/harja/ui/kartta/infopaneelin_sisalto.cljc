@@ -50,6 +50,7 @@
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
             [harja.domain.kanavat.kanavan-toimenpide :as kan-to]
             [harja.domain.kanavat.hairiotilanne :as ht]
             [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
@@ -688,6 +689,10 @@
              :tyyppi :string
              :hae (hakufunktio #{[::kan-to/toimenpidekoodi ::tpk/nimi]} #(get-in % [::kan-to/toimenpidekoodi ::tpk/nimi]))}
             {:otsikko "Pvm" :nimi ::kan-to/pvm :tyyppi :pvm}
+            {:otsikko "Huoltokohde"
+             :hae (hakufunktio #{[::kan-to/huoltokohde ::huoltokohde/nimi]}
+                               #(get-in % [::kan-to/huoltokohde ::huoltokohde/nimi]))
+             :tyyppi :string}
             {:otsikko "Suorittaja" :nimi ::kan-to/suorittaja :tyyppi :string}
             {:otsikko "Lisätieto" :nimi ::kan-to/lisatieto :tyyppi :string}]
    :data toimenpide})
