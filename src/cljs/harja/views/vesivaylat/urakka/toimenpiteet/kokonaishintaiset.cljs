@@ -7,6 +7,7 @@
             [harja.domain.vesivaylat.kiintio :as kiintio]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.ui.komponentti :as komp]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.loki :refer [log]]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
@@ -74,7 +75,7 @@
                       #(do
                          (u/valitse-oletussopimus-jos-valittuna-kaikki!)
                          (e! (tiedot/->Nakymassa? false))))
-    (fn [e! {:keys [toimenpiteet avoimet-kiintiot] :as app}]
+    (fn [e! {:keys [toimenpiteet avoimet-kiintiot toimenpiteiden-haku-kaynnissa?] :as app}]
       @tiedot/valinnat ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity.
 
       (let [; Kiintiöttömät toimenpiteet liitetään väliaikaiseen kiintiöön kun ne palautuvat
@@ -101,26 +102,28 @@
                        kiintio-auki? (and (some? avoimet-kiintiot) (avoimet-kiintiot kiintio-id))]]
             (when-not kiintio-tyhja?
               [:div.vv-toimenpideryhma
-               [:span
-                [jaettu/hintaryhman-otsikko
-                 {:on-click #(e! (if kiintio-auki?
-                                   (tiedot/->SuljeKiintio kiintio-id)
-                                   (tiedot/->AvaaKiintio kiintio-id)))}
-                 (str
-                   (if kiintio-auki? "- " "+ ")
-                   (::kiintio/nimi kiintio))]
-                [napit/nappi
-                 (ikonit/map-marker)
-                 #(if (tiedot/kiintio-korostettu? kiintio app)
-                    (e! (tiedot/->PoistaKiintionKorostus))
+               (if toimenpiteiden-haku-kaynnissa?
+                 [:h1 [ajax-loader "Päivitetään listaa.." {:sama-rivi? true}]]
+                 [:span
+                 [jaettu/hintaryhman-otsikko
+                  {:on-click #(e! (if kiintio-auki?
+                                    (tiedot/->SuljeKiintio kiintio-id)
+                                    (tiedot/->AvaaKiintio kiintio-id)))}
+                  (str
+                    (if kiintio-auki? "- " "+ ")
+                    (::kiintio/nimi kiintio))]
+                 [napit/nappi
+                  (ikonit/map-marker)
+                  #(if (tiedot/kiintio-korostettu? kiintio app)
+                     (e! (tiedot/->PoistaKiintionKorostus))
 
-                    (e! (tiedot/->KorostaKiintioKartalla kiintio)))
-                 {:ikoninappi? true
-                  :disabled kiintio-tyhja?
-                  :luokka (str "vv-hintaryhma-korostus-nappi "
-                               (if (tiedot/kiintio-korostettu? kiintio app)
-                                 "nappi-ensisijainen"
-                                 "nappi-toissijainen"))}]]
+                     (e! (tiedot/->KorostaKiintioKartalla kiintio)))
+                  {:ikoninappi? true
+                   :disabled kiintio-tyhja?
+                   :luokka (str "vv-hintaryhma-korostus-nappi "
+                                (if (tiedot/kiintio-korostettu? kiintio app)
+                                  "nappi-ensisijainen"
+                                  "nappi-toissijainen"))}]])
 
                (when kiintio-auki?
                  [jaettu/listaus e! app*

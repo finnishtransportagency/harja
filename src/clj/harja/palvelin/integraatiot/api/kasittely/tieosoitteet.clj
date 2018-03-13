@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.api.kasittely.tieosoitteet
   (:require [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
             [harja.kyselyt.geometriapaivitykset :as q-geometriapaivitykset]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [taoensso.timbre :as log]))
 
 (defn- sisaltaa-sijainnin? [osoitteet vkm-id]
   (some #(= vkm-id (:vkm-id %)) osoitteet))
@@ -20,15 +21,13 @@
             (dissoc a :vkm-id)))
         alkuperaiset))
 
-(defn muunna-yllapitokohteen-tieosoitteet [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
+(defn muunna-yllapitokohteen-tieosoitteet-paivan-verkolle
+  "Muuntaa ylläpitokohteiden tiosoitteet annetun päivän verkolle käyttäen VKM-palvelua."
+  [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
   (if karttapvm
     (let [paakohteen-vkm-id "paakohde"
           muunnettavat-alikohteet (map-indexed (fn [i {sijainti :sijainti :as alikohde}]
-                                                 (assoc alikohde
-                                                   :vkm-id (str "alikohde-" i)
-                                                   :sijainti (assoc sijainti :tie (or
-                                                                                    (get-in alikohde [:sijainti :numero])
-                                                                                    kohteen-tienumero))))
+                                                 (assoc alikohde :vkm-id (str "alikohde-" i)))
                                                alikohteet)
           muunnettavat-sijainnit (conj
                                    (map #(assoc (:sijainti %) :vkm-id (:vkm-id %)) muunnettavat-alikohteet)

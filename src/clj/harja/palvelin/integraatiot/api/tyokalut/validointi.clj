@@ -109,22 +109,9 @@
         [{:koodi :viallisia-tieosia
           :viesti "Päällystysilmoitus sisältää kohteen tai alikohteita, joita ei löydy tieverkolta"}]))))
 
-(defn tarkista-muut-kohteet [db kohde-id muut-alikohteet]
-  (let [vuodet (:vuodet (first (q-yllapitokohteet/hae-kohteen-vuodet db {:kohdeid 1})))
-        alikohteet-kohteen-vuosilta (q-yllapitokohteet/hae-yllapitokohdeosat-vuosille db {:vuodet vuodet})]
-
-    ;; todo: tarkista että muut alikohteet eivät mene päällekäin itsensä kanssa tai kannassa olevien
-    ;; voit käyttää harja.domain.tierekisteri/kohdeosat-paalekkain?
-    
-    ))
-
-(defn tarkista-kohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
+(defn tarkista-yllapitokohde-ja-alikohteet [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet]
   (try+
-    (let [sama-tie? #(= kohteen-tienumero (get-in % [:sijainti :tie]))
-          paakohteen-tien-alikohteet (filter sama-tie? alikohteet)
-          muut-alikohteet (filter (comp not sama-tie?) alikohteet)]
-      (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
-      (tarkista-muut-kohteet db kohde-id muut-alikohteet))
+    (kohteet/tarkista-kohteen-ja-alikohteiden-sijannit kohde-id kohteen-sijainti alikohteet)
     (catch [:type kohteet/+kohteissa-viallisia-sijainteja+] {:keys [virheet]}
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)))
   (validoi-kohteiden-sijainnit-tieverkolla db kohteen-tienumero kohteen-sijainti alikohteet))
@@ -144,7 +131,7 @@
             :viesti "Alustatoimenpiteet sisältävät sijainteja, joita ei löydy tieverkolta"}])))))
 
 (defn tarkista-paallystysilmoitus [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet]
-  (tarkista-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+  (tarkista-yllapitokohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
   (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet))
 
 (defn tarkista-tietyomaa [db id jarjestelma]
