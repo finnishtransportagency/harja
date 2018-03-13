@@ -189,7 +189,6 @@
 (def sarake-vayla {:otsikko "Väy\u00ADlä" :nimi :vayla :hae (comp ::va/nimi ::to/vayla) :leveys 8})
 (def sarake-lisatieto {:otsikko "Li\u00ADsä\u00ADtie\u00ADto" :nimi ::to/lisatieto :leveys 10})
 (def sarake-komponentit {:otsikko "Komponentit" :nimi :komponentit
-                           :hae ::to/komponentit
                            ;; :komponentti on gridin parametrin nimi, ei liity turvalaitteiden komponentteihin
                            :tyyppi :komponentti
                            :komponentti (fn [rivi]
@@ -198,7 +197,7 @@
                                               "-"
                                               ;; else
                                               [:ul
-                                               (for [k komponentit]
+                                               (for* [k komponentit]
                                                  [:li (to/toimenpide-komponentit-fmt k)])])))
                            :leveys 10})
 (defn sarake-liitteet [e! app oikeus-fn]
