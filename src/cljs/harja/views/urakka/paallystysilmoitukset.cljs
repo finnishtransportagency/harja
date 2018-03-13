@@ -390,7 +390,10 @@
                                           :voi-muokata? voi-muokata?
                                           :muokkaa! (fn [muut-kohdeosat]
                                                       (swap! paallystys/paallystysilmoitus-lomakedata assoc-in [:ilmoitustiedot :muut-osoitteet]
-                                                             muut-kohdeosat))
+                                                             (into {} (keep (fn [[id arvo]]
+                                                                             (when-not (:koskematon arvo)
+                                                                               [id arvo]))
+                                                                           muut-kohdeosat))))
                                           :kohdeosat-atom muut-kohdeosat-state :virheet-atom muut-kohdeosat-virheet
                                           :grid-asetukset {:rivinumeron-aloitus-n (if (= kohteen-sisaisten-kohteiden-lkm 0)
                                                                                     2 (inc kohteen-sisaisten-kohteiden-lkm))

@@ -245,13 +245,9 @@
                                           (muunna-tallennetut-ilmoitustiedot-lomakemuotoon (:ilmoitustiedot p)))
                                  (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
         ;; Poistetaan kohteen ulkopuoliset
-        _ (println "--> PÄÄLLYSTYSILMOITUS")
-        _ (clojure.pprint/pprint paallystysilmoitus)
         paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet] (fn [osoitteet]
                                                                                         (filter #(tr-domain/kohteenosa-paallekkain-paakohteen-kanssa? paallystysilmoitus %)
                                                                                                 osoitteet)))
-        _ (println "----> FOO")
-        _ (clojure.pprint/pprint paallystysilmoitus)
         kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus)
         kommentit (into []
                         (comp (map konv/alaviiva->rakenne)
