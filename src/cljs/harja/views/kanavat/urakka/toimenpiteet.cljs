@@ -273,7 +273,7 @@
                                 muokkaa-materiaaleja-fn lisaa-virhe-fn paikannus-kaynnissa-fn]}]
   (let [urakka (get-in app [:valinnat :urakka])
         sopimukset (:sopimukset urakka)
-        kanavakohteet (cons nil (into [] @kanavaurakka/kanavakohteet))
+        kanavakohteet (into [nil] @kanavaurakka/kanavakohteet)
         lomake-valmis? (and (not (empty? huoltokohteet))
                             (not (empty? kanavakohteet))
                             (not (nil? urakan-materiaalit)))]
