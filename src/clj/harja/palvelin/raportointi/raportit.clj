@@ -5,41 +5,41 @@
   Jos lisäät uuden raportin, lisää sen nimiavaruuden require alle sekä
   raportin tiedot `raportit` vektoriin."
 
- (:require
-  ;; vaaditaan built in raportit
-  [harja.palvelin.raportointi.raportit.erilliskustannukset]
-  [harja.palvelin.raportointi.raportit.ilmoitus]
-  [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
-  [harja.palvelin.raportointi.raportit.materiaali]
-  [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
-  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
-  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
-  [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
-  [harja.palvelin.raportointi.raportit.suolasakko]
-  [harja.palvelin.raportointi.raportit.tiestotarkastus]
-  [harja.palvelin.raportointi.raportit.kelitarkastus]
-  [harja.palvelin.raportointi.raportit.laaduntarkastus]
-  [harja.palvelin.raportointi.raportit.laatupoikkeama]
-  [harja.palvelin.raportointi.raportit.siltatarkastus]
-  [harja.palvelin.raportointi.raportit.sanktio]
-  [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
-  [harja.palvelin.raportointi.raportit.soratietarkastus]
-  [harja.palvelin.raportointi.raportit.valitavoiteraportti]
-  [harja.palvelin.raportointi.raportit.ymparisto]
-  [harja.palvelin.raportointi.raportit.tyomaakokous]
-  [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
-  [harja.palvelin.raportointi.raportit.toimenpideajat]
-  [harja.palvelin.raportointi.raportit.toimenpidepaivat]
-  [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
-  [harja.palvelin.raportointi.raportit.indeksitarkistus]
-  [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
-  [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
-  [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
-  [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
-  [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
-  [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
-  [harja.domain.urakka :as urakka-domain]
-  [clojure.set :as set]))
+  (:require
+    ;; vaaditaan built in raportit
+    [harja.palvelin.raportointi.raportit.erilliskustannukset]
+    [harja.palvelin.raportointi.raportit.ilmoitus]
+    [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
+    [harja.palvelin.raportointi.raportit.materiaali]
+    [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot]
+    [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
+    [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
+    [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
+    [harja.palvelin.raportointi.raportit.suolasakko]
+    [harja.palvelin.raportointi.raportit.tiestotarkastus]
+    [harja.palvelin.raportointi.raportit.kelitarkastus]
+    [harja.palvelin.raportointi.raportit.laaduntarkastus]
+    [harja.palvelin.raportointi.raportit.laatupoikkeama]
+    [harja.palvelin.raportointi.raportit.siltatarkastus]
+    [harja.palvelin.raportointi.raportit.sanktio]
+    [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
+    [harja.palvelin.raportointi.raportit.soratietarkastus]
+    [harja.palvelin.raportointi.raportit.valitavoiteraportti]
+    [harja.palvelin.raportointi.raportit.ymparisto]
+    [harja.palvelin.raportointi.raportit.tyomaakokous]
+    [harja.palvelin.raportointi.raportit.turvallisuuspoikkeamat]
+    [harja.palvelin.raportointi.raportit.toimenpideajat]
+    [harja.palvelin.raportointi.raportit.toimenpidepaivat]
+    [harja.palvelin.raportointi.raportit.toimenpidekilometrit]
+    [harja.palvelin.raportointi.raportit.indeksitarkistus]
+    [harja.palvelin.raportointi.raportit.tiemerkinnan-kustannusyhteenveto]
+    [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
+    [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
+    [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
+    [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
+    [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
+    [harja.domain.urakka :as urakka-domain]
+    [clojure.set :as set]))
 
 ;; HOX Muista lisätä uusi raportti myös Roolit-Exceliin!
 
@@ -309,23 +309,28 @@
     :konteksti #{"urakka"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto/suorita
+    :urakkatyyppi urakka-domain/kanava-urakkatyypit}
+
+   {:nimi :kanavien-muutos-ja-lisatyot
+    :parametrit [{:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä kanavakokonaisuudet eriteltynä"}
+                 {:tyyppi "kohteittain", :konteksti "urakka", :pakollinen false, :nimi "Kohde"}
+                 {:tyyppi "tehtavittain", :konteksti "urakka", :pakollinen false, :nimi "Tehtava"}
+                 {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti #{"koko maa" "urakka"}
+    :kuvaus "Muutos- ja lisätyöt"
+    :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}])
 
+;; TODO: kanavissa jaottelu toimenpiteen sijaan tehtävätasolla => Kehitä jos tarvii.
+;"Esimerkki 1.
+;Rajaukset:
+;- Aika: Tammikuu 2018
+;- Urakka: Saimaan kanava
+;-  Kohde: kaikki kohteet
+;- Tehtävä: kaikki tehtävät"
 
 
-;{:nimi :kanavien-muutos-ja-lisatyot
-; :parametrit [{:tyyppi "urakoittain", :konteksti "hankinta-alue", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-;              {:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Toimenpide"}
-;              {:tyyppi "urakoittain", :konteksti "koko maa", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-;              {:tyyppi "urakoittain", :konteksti "hallintayksikko", :pakollinen true, :nimi "Näytä urakka-alueet eriteltynä"}
-;              {:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-; :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
-; :kuvaus "Muutos- ja lisätyöt"
-; :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
-; :urakkatyyppi #{:hoito}}
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
 
-;; TODO: kanavissa jaottelu toimenpiteen sijaan tehtävätasolla => Kehitä jos tarvii.
-;; TODO: kanavissa jaottelu elyjen sijaan meri/sisä => Kehitä jos tarvii.

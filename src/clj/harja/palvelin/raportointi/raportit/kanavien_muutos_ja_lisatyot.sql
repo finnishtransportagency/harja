@@ -1,172 +1,278 @@
--- name: hae-kanavien-muutos-ja-lisatyot-raportille
--- Hakee muutos-, lisä- ja äkilliset hoitotyötoteumat raportille
-SELECT
-  t.tyyppi,
-  t.alkanut,
-  t.lisatieto,
-  tt.id                                                  AS tehtava_id,
-  tt.toteuma                                             AS toteuma_id,
-  tt.toimenpidekoodi                                     AS tehtava_toimenpidekoodi,
-  tt.maara                                               AS tehtava_maara,
-  tt.lisatieto                                           AS tehtava_lisatieto,
-  tt.paivan_hinta                                        AS tehtava_paivanhinta,
-  tt.indeksi                                             AS tehtava_indeksi,
-  mht.yksikkohinta                                       AS tehtava_yksikkohinta,
-  COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta) AS tehtava_summa,
-  (SELECT korotus
-   FROM laske_kuukauden_indeksikorotus(
-       (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
-       (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
-       CASE WHEN tt.indeksi IS TRUE
-         THEN (SELECT indeksi
-               FROM urakka
-               WHERE id = u.id)
-       ELSE
-         NULL
-       END,
-       COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       indeksilaskennan_perusluku(u.id)))    AS korotus,
-  u.id                                                   AS urakka_id,
-  u.nimi                                                 AS urakka_nimi,
-  hy.id                                                  AS hallintayksikko_id,
-  hy.nimi                                                AS hallintayksikko_nimi,
-  lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero,
-  tpi.id                                                 AS tpi_id,
-  tpi.nimi                                               AS tpi_nimi,
-  t.sopimus                                              AS sopimus_id,
-  s.sampoid                                              AS sopimus_sampoid,
-  tpk4.emo                                               AS tehtava_emo,
-  tpk4.nimi                                              AS tehtava_nimi
-FROM toteuma_tehtava tt
-  JOIN toteuma t ON (tt.toteuma = t.id AND
-                     t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                  'lisatyo' :: toteumatyyppi,
-                                  'muutostyo' :: toteumatyyppi,
-                                  'vahinkojen-korjaukset' :: toteumatyyppi) AND
-                     t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
-  JOIN toimenpideinstanssi tpi
-    ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
-  LEFT JOIN muutoshintainen_tyo mht
-    ON (mht.tehtava = tt.toimenpidekoodi AND mht.urakka = t.urakka AND
-        mht.sopimus = t.sopimus)
-  JOIN sopimus s ON t.sopimus = s.id
-  JOIN urakka u ON t.urakka = u.id
-  JOIN organisaatio hy ON hy.id = u.hallintayksikko
+-- name: hae-kanavien-urakkakohtaiset-muutos-ja-lisatyot
+-- Hakee sopimus- ja yksikköhintaiset muutos- ja lisätyöt urakan ja aikavälin perusteella
+-- Kaikki kohteet ja kaikki tehtävät
+(select
+   ktp.id AS kan_toimenpide_id,
+   ktp.urakka AS urakka,
+   ktp.tyyppi AS toimenpidetyyppi,
+   ktp.toimenpidekoodi,
+   ktp.pvm AS pvm,
+   ktp.toimenpidekoodi AS tehtava,
+   ktp."kohde-id" AS kohde,
+   ktp."kohteenosa-id" AS kohteenosa,
+   ktp.huoltokohde AS huoltokohde,
+   tpk.nimi AS nimi,
+   ktp.lisatieto AS lisatieto,
+   sopimus_tyo.id as tyo_id,
+   sopimus_tyo.maara as tyo_maara,
+   '' AS otsikko,
+   'sopimushintainen-tyo' AS ryhma
+ from kan_toimenpide ktp
+   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   JOIN  kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu is not TRUE)
+ WHERE
+   tyyppi = 'muutos-lisatyo' AND
+   urakka = :urakka AND (pvm BETWEEN '2018-03-07' AND '2018-03-13')
+ ORDER BY ktp.urakka, ktp."kohde-id", ktp.toimenpideinstanssi, ktp.toimenpidekoodi)
+UNION
+(select
+   ktp.id AS kan_toimenpide_id,
+   ktp.urakka AS urakka,
+   ktp.tyyppi AS toimenpidetyyppi,
+   ktp.toimenpidekoodi,
+   ktp.pvm AS pvm,
+   ktp.toimenpidekoodi AS tehtava,
+   ktp."kohde-id" AS kohde,
+   ktp."kohteenosa-id" AS kohteenosa,
+   ktp.huoltokohde AS huoltokohde,
+   tpk.nimi AS nimi,
+   ktp.lisatieto AS lisatieto,
+   hinnoiteltu_tyo.id as hinta_id,
+   hinnoiteltu_tyo.maara as hinta_maara,
+   hinnoiteltu_tyo.otsikko AS otsikko,
+   hinnoiteltu_tyo.ryhma AS ryhma -- TODO: Päättele onko kyseessä sopimushintainen materiaali hinnoiteltu_tyo."materiaali-id" IS NOTNULL
+ from kan_toimenpide ktp
+   JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+   LEFT OUTER JOIN  kan_hinta hinnoiteltu_tyo ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu is not TRUE)
+ WHERE
+   tyyppi = 'muutos-lisatyo' AND
+   urakka = :urakka AND
+   (pvm BETWEEN '2018-03-07' AND '2018-03-13')
+ ORDER BY ktp.urakka, ktp."kohde-id", ktp.toimenpideinstanssi, ktp.toimenpidekoodi);
+
+
+
+-- name: hae-kanavien-tehtavakohtaiset-muutos-ja-lisatyot
+-- Hakee sopimus- ja yksikköhintaiset muutos- ja lisätyöt urakan, aikavälin ja tehtävän perusteella
+-- Kaikki kohteet
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  sopimus_tyo.id as tyo_id,
+  sopimus_tyo.maara as tyo_maara,
+  '' AS otsikko,
+  'sopimushintainen-tyo' AS ryhma
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+  JOIN  kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu is not TRUE)
 WHERE
-  tt.poistettu IS NOT TRUE AND
-  mht.poistettu IS NOT TRUE AND
-  ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
-  AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
-                                   (:urakkatyyppi :: urakkatyyppi IS NULL OR
-                                    u.tyyppi =
-                                    :urakkatyyppi :: urakkatyyppi)))
-  AND (:hallintayksikko_annettu IS FALSE OR
-       u.id IN (SELECT id
-                FROM urakka
-                WHERE hallintayksikko = :hallintayksikko))
-  AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
-                                                    WHERE tpk.emo = :tpi))
-  AND t.alkanut :: DATE BETWEEN :alku AND :loppu;
-
-
-
-SELECT
-  t.tyyppi,
-  sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
-  sum((SELECT korotus
-   FROM laske_kuukauden_indeksikorotus(
-       (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
-       (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
-       CASE WHEN tt.indeksi IS TRUE
-         THEN (SELECT indeksi
-               FROM urakka
-               WHERE id = u.id)
-       ELSE
-         NULL
-       END,
-       COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       indeksilaskennan_perusluku(u.id))))   AS korotus,
-  hy.id                                                  AS hallintayksikko_id,
-  hy.nimi                                                AS hallintayksikko_nimi,
-  lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
-FROM toteuma_tehtava tt
-  JOIN toteuma t ON (tt.toteuma = t.id AND
-                     t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                  'lisatyo' :: toteumatyyppi,
-                                  'muutostyo' :: toteumatyyppi,
-                                  'vahinkojen-korjaukset' :: toteumatyyppi) AND
-                     t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
-  JOIN toimenpideinstanssi tpi
-    ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
-  LEFT JOIN muutoshintainen_tyo mht
-    ON (mht.tehtava = tt.toimenpidekoodi AND mht.urakka = t.urakka AND
-        mht.sopimus = t.sopimus)
-  JOIN sopimus s ON t.sopimus = s.id
-  JOIN urakka u ON t.urakka = u.id
-  JOIN organisaatio hy ON hy.id = u.hallintayksikko
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = 31 AND
+  toimenpidekoodi = :tehtava AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13')
+UNION
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  hinnoiteltu_tyo.id as hinta_id,
+  hinnoiteltu_tyo.maara as hinta_maara,
+  hinnoiteltu_tyo.otsikko AS otsikko,
+  hinnoiteltu_tyo.ryhma AS ryhma -- TODO: Päättele onko kyseessä sopimushintainen materiaali hinnoiteltu_tyo."materiaali-id" IS NOTNULL
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi AND tpk.id = :tehtavaid)
+  LEFT OUTER JOIN  kan_hinta hinnoiteltu_tyo ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu is not TRUE)
 WHERE
-  tt.poistettu IS NOT TRUE AND
-  mht.poistettu IS NOT TRUE AND
-  ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
-  AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
-                                   (:urakkatyyppi :: urakkatyyppi IS NULL OR
-                                    u.tyyppi =
-                                    :urakkatyyppi :: urakkatyyppi)))
-  AND (:hallintayksikko_annettu IS FALSE OR
-       u.id IN (SELECT id
-                FROM urakka
-                WHERE hallintayksikko = :hallintayksikko))
-  AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
-                                                    WHERE tpk.emo = :tpi))
-  AND t.alkanut :: DATE BETWEEN :alku AND :loppu
-GROUP BY hy.id, t.tyyppi;
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = 31 AND
+  toimenpidekoodi = :tehtava AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13');
 
--- name: hae-tyypin-ja-urakan-mukaan-ryhmitellyt-hyn-muutos-ja-lisatyot-raportille
-SELECT
-  t.tyyppi,
-  sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
-  sum((SELECT korotus
-       FROM laske_kuukauden_indeksikorotus(
-           (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
-           (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
-           CASE WHEN tt.indeksi IS TRUE
-             THEN (SELECT indeksi
-                   FROM urakka
-                   WHERE id = u.id)
-           ELSE
-             NULL
-           END,
-           COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-           indeksilaskennan_perusluku(u.id))))   AS korotus,
-  u.id                                                  AS hallintayksikko_id, -- PARDON, kutsutaan hallintayksiköksi mutta on urakkaid ja nimi, koska raportti toimii sukkana mitään muuttamatta
-  u.nimi                                                AS hallintayksikko_nimi
-FROM toteuma_tehtava tt
-  JOIN toteuma t ON (tt.toteuma = t.id AND
-                     t.tyyppi IN ('akillinen-hoitotyo' :: toteumatyyppi,
-                                  'lisatyo' :: toteumatyyppi,
-                                  'muutostyo' :: toteumatyyppi,
-                                  'vahinkojen-korjaukset' :: toteumatyyppi) AND
-                     t.poistettu IS NOT TRUE)
-  JOIN toimenpidekoodi tpk4 ON tpk4.id = tt.toimenpidekoodi
-  JOIN toimenpideinstanssi tpi
-    ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
-  LEFT JOIN muutoshintainen_tyo mht
-    ON (mht.tehtava = tt.toimenpidekoodi AND mht.urakka = t.urakka AND
-        mht.sopimus = t.sopimus)
-  JOIN sopimus s ON t.sopimus = s.id
-  JOIN urakka u ON t.urakka = u.id
-  JOIN organisaatio hy ON hy.id = u.hallintayksikko
+
+
+
+-- name: hae-kanavien-kohdekohtaiset-muutos-ja-lisatyot
+-- Hakee sopimus- ja yksikköhintaiset muutos- ja lisätyöt urakan, aikavälin ja kohteen perusteella
+-- Kaikki tehtävät
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  sopimus_tyo.id as tyo_id,
+  sopimus_tyo.maara as tyo_maara,
+  '' AS otsikko,
+  'sopimushintainen-tyo' AS ryhma
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+  JOIN  kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu is not TRUE)
 WHERE
-  tt.poistettu IS NOT TRUE AND
-  mht.poistettu IS NOT TRUE
-  AND (:urakkatyyppi :: urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi :: urakkatyyppi)
-  AND u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko)
-  AND (:rajaa_tpi = FALSE OR tt.toimenpidekoodi IN (SELECT tpk.id
-                                                    FROM toimenpidekoodi tpk
-                                                    WHERE tpk.emo = :tpi))
-  AND t.alkanut :: DATE BETWEEN :alku AND :loppu
-GROUP BY u.id, t.tyyppi;
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = 31 AND
+  "kohde-id" = :kohde AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13')
+UNION
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  hinnoiteltu_tyo.id as hinta_id,
+  hinnoiteltu_tyo.maara as hinta_maara,
+  hinnoiteltu_tyo.otsikko AS otsikko,
+  hinnoiteltu_tyo.ryhma AS ryhma -- TODO: Päättele onko kyseessä sopimushintainen materiaali hinnoiteltu_tyo."materiaali-id" IS NOTNULL
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi AND tpk.id = :tehtavaid)
+  LEFT OUTER JOIN  kan_hinta hinnoiteltu_tyo ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu is not TRUE)
+WHERE
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = 31 AND
+  "kohde-id" = :kohde AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13');
+
+
+-- name: hae-kanavien-kohde-ja-tehtavakohtaiset-muutos-ja-lisatyot-raportille
+-- Hakee sopimus- ja yksikköhintaiset muutos- ja lisätyöt urakan, aikavälin, kohteen ja tehtävän perusteella
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  sopimus_tyo.id as tyo_id,
+  sopimus_tyo.maara as tyo_maara,
+  '' AS otsikko,
+  'sopimushintainen-tyo' AS ryhma
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+  JOIN  kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu is not TRUE)
+WHERE
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = 31 AND
+  "kohde-id" = :kohde AND
+  toimenpidekoodi = :tehtava AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13')
+UNION
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  hinnoiteltu_tyo.id as hinta_id,
+  hinnoiteltu_tyo.maara as hinta_maara,
+  hinnoiteltu_tyo.otsikko AS otsikko,
+  hinnoiteltu_tyo.ryhma AS ryhma -- TODO: Päättele onko kyseessä sopimushintainen materiaali hinnoiteltu_tyo."materiaali-id" IS NOTNULL
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi AND tpk.id = :tehtavaid)
+  LEFT OUTER JOIN  kan_hinta hinnoiteltu_tyo ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu is not TRUE)
+WHERE
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = 31 AND
+  "kohde-id" = :kohde AND
+  toimenpidekoodi = :tehtava AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13');
+
+-- name: hae-kanavien-muutos-ja-lisatyot
+-- Hakee sopimus- ja yksikköhintaiset muutos- ja lisätyöt aikavälin perusteella
+-- Kaikki urakat, kohteet ja tehtävät
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  sopimus_tyo.id as tyo_id,
+  sopimus_tyo.maara as tyo_maara,
+  '' AS otsikko,
+  'sopimushintainen-tyo' AS ryhma
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+  JOIN  kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu is not TRUE)
+WHERE
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = :urakka AND (pvm BETWEEN '2018-03-07' AND '2018-03-13')
+UNION
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  hinnoiteltu_tyo.id as hinta_id,
+  hinnoiteltu_tyo.maara as hinta_maara,
+  hinnoiteltu_tyo.otsikko AS otsikko,
+  hinnoiteltu_tyo.ryhma AS ryhma -- TODO: Päättele onko kyseessä sopimushintainen materiaali hinnoiteltu_tyo."materiaali-id" IS NOTNULL
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+  LEFT OUTER JOIN  kan_hinta hinnoiteltu_tyo ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu is not TRUE)
+WHERE
+  tyyppi = 'muutos-lisatyo' AND
+  urakka = :urakka AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13');
+
+-- name: hae-kanavien-tehtavakohtaiset-muutos-ja-lisatyot-raportille
+-- Hakee sopimus- ja yksikköhintaiset muutos- ja lisätyöt aikavälin ja tehtävän perusteella
+-- Kaikki urakat, kaikki kohteet
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  sopimus_tyo.id as tyo_id,
+  sopimus_tyo.maara as tyo_maara,
+  '' AS otsikko,
+  'sopimushintainen-tyo' AS ryhma
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi)
+  JOIN  kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu is not TRUE)
+WHERE
+  tyyppi = 'muutos-lisatyo' AND
+  toimenpidekoodi = :tehtava AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13')
+UNION
+select
+  ktp.id AS kan_toimenpide_id,
+  ktp.urakka AS urakka,
+  ktp.tyyppi AS toimenpidetyyppi,
+  ktp.pvm AS pvm,
+  tpk.nimi AS nimi,
+  ktp.lisatieto AS lisatieto,
+  hinnoiteltu_tyo.id as hinta_id,
+  hinnoiteltu_tyo.maara as hinta_maara,
+  hinnoiteltu_tyo.otsikko AS otsikko,
+  hinnoiteltu_tyo.ryhma AS ryhma -- TODO: Päättele onko kyseessä sopimushintainen materiaali hinnoiteltu_tyo."materiaali-id" IS NOTNULL
+from kan_toimenpide ktp
+  JOIN toimenpidekoodi tpk ON (tpk.id = ktp.toimenpidekoodi AND tpk.id = :tehtavaid)
+  LEFT OUTER JOIN  kan_hinta hinnoiteltu_tyo ON (hinnoiteltu_tyo.toimenpide = ktp.id AND hinnoiteltu_tyo.poistettu is not TRUE)
+WHERE
+  tyyppi = 'muutos-lisatyo' AND
+  toimenpidekoodi = :tehtava AND
+  (pvm BETWEEN '2018-03-07' AND '2018-03-13');
+
+
+
+-- name: hae-kanavakohteen-nimi
+SELECT nimi FROM kan_kohde where id = :kohdeid;
+
+
+--name: hae-kanavatoimenpiteen-nimi;
+SELECT nimi FROM toimenpidekoodi WHERE id = :tehtavaid;
+
