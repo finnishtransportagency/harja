@@ -633,10 +633,21 @@
   (let [[ikoni teksti] (ulkoasu/kan-toimenpide toimenpide)]
     (assoc toimenpide
       :type :kan-toimenpide
-      :nimi (kohde/fmt-kohteen-nimi toimenpide)
+      :nimi "Toimenpide"
       :selite {:teksti teksti
                :img ikoni}
       :alue (maarittele-feature toimenpide
+                                valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kan-hairiotilanne [hairiotilanne valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-hairiotilanne hairiotilanne)]
+    (assoc hairiotilanne
+      :type :kan-hairiotilanne
+      :nimi "Häiriötilanne"
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature hairiotilanne
                                 valittu?
                                 ikoni))))
 
