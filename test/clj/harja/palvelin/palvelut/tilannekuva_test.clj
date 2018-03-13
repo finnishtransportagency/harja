@@ -382,7 +382,7 @@
 
     (is (= [] ei-loydy-vastaus) "Ahvenanmaan keskeltä ei löydy päällystyskohteita")
 
-    (is (= 1 (count loytyy-vastaus)) "Yksi kohde löytyy pisteelle")
+    (is (= 2 (count loytyy-vastaus)) "Yksi kohde löytyy pisteelle")
     (is (= "Oulun ohitusramppi" (get-in loytyy-vastaus [0 :yllapitokohde :nimi])))
     (is (= "308a" (get-in loytyy-vastaus [0 :yllapitokohde :kohdenumero])))
     (is (= "Oulun kohdeosa" (get-in loytyy-vastaus [0 :nimi])))

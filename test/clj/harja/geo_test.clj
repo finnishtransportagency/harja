@@ -55,3 +55,16 @@
           [minx miny maxx maxy :as muutokset] (map - (geo/laajenna-extent-prosentilla extent) extent)]
       (is (= (absolute (int minx)) (absolute (int maxx))) "Oletuksena extentin pitäis laajeta vasemmalle ja oikealle saman verran")
       (is (< (absolute miny) (absolute maxy)) "Oletuksena extentin pitäis kasvaa ylöspäin enemmän kuin alaspäin"))))
+
+(deftest pinta-ala
+  (testing "Pinta-ala lasketaan oikein"
+    (is (= 100 (geo/extent-pinta-ala [0 0 10 10])))
+    (is (= 100 (geo/extent-pinta-ala [0 0 -10 -10])))
+    (is (= 100 (geo/extent-pinta-ala [0 0 10 -10]))))
+
+  (testing "Älä laajenna pinta-alaan, jos on jo isompi"
+    (is (= [0 0 10 10] (geo/laajenna-pinta-alaan [0 0 10 10] 5)))
+    (is (= [0 0 10 10] (geo/laajenna-pinta-alaan [0 0 10 10] 10))))
+
+  (testing "Laajenna tasaisesti joka suuntaan"
+    (is (= [-5.0 -5.0 15.0 15.0] (geo/laajenna-pinta-alaan [0 0 10 10] 400)))))

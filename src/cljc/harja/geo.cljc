@@ -315,6 +315,27 @@
 (defn- kasvata-ylospain [[_ miny _ maxy] prosentti]
   (first (muuta-valimatkaa* + maxy miny prosentti)))
 
+(defn extent-pinta-ala [[minx miny maxx maxy]]
+  (Math/abs (* (- maxx minx) (- maxy miny))))
+
+(defn toisen-asteen-yhtalo [a b c]
+  [(/ (+ (- b) (Math/sqrt (- (* b b) (* 4 a c)))) (* 2 a))
+   (/ (- (- b) (Math/sqrt (- (* b b) (* 4 a c)))) (* 2 a))])
+
+(defn laajenna-pinta-alaan [[minx miny maxx maxy :as ext] haluttu-ala]
+  ;; Käytetään estämään liian lähelle zoomaamista
+  (if (> haluttu-ala (extent-pinta-ala ext))
+    (let [x-pituus (- maxx minx)
+         y-pituus (- maxy miny)
+         laajennos (/ (apply max (toisen-asteen-yhtalo
+                                   1
+                                   (+ x-pituus y-pituus)
+                                   (- (* x-pituus y-pituus) haluttu-ala)))
+                      2)]
+     (laajenna-extent ext laajennos))
+
+    ext))
+
 
 (defn laajenna-extent-prosentilla
   ([extent] (laajenna-extent-prosentilla extent [0.001 0.001 0.001 0.05]))

@@ -75,8 +75,7 @@ yllapitoluokkanimi->numero
      {:koodi koodi :viesti viesti}))
 
 #?(:clj
-   (defn validoi-sijainnin-numeroarvot
-     [{:keys [aosa aet losa let] :as sijainti}]
+   (defn validoi-sijainti [{:keys [aosa aet losa let] :as sijainti}]
      ;; Käytetään täydellä namespacella, jotta voidaan destrukturoida loppuetäisyys (let).
      (clojure.core/let [virhe (fn [viesti] (tee-virhe +viallinen-yllapitokohteen-sijainti+ (format viesti sijainti)))
                         negatiivinen? #(and % (> 0 %))
@@ -90,8 +89,7 @@ yllapitoluokkanimi->numero
                                        {:validaattori #(negatiivinen? let) :virhe (virhe "Loppuetäisyys ei saa olla negatiivinen. Sijainti: %s")}
                                        {:validaattori #(> aosa losa) :virhe (virhe "Alkuosa on loppuosaa isompi. Sijainti: %s")}]]
        (keep (fn [{:keys [validaattori virhe]}]
-               (when (validaattori) virhe))
-             validaattorit))))
+               (when (validaattori) virhe)) validaattorit))))
 
 #?(:clj
    (defn alikohde-kohteen-sisalla? [kohteen-sijainti alikohteen-sijainti]
@@ -147,33 +145,16 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn tarkista-alikohteiden-sijainnit [alikohteet]
-     (flatten (mapv #(validoi-sijainnin-numeroarvot (:sijainti %)) alikohteet))))
-
-#?(:clj
-   (defn tarkista-alikohteet-eivat-leikkaa-muita [alikohteet]
-    
-     ))
+     (flatten (mapv #(validoi-sijainti (:sijainti %)) alikohteet))))
 
 #?(:clj
    (defn validoi-alikohteet [kohde-id kohteen-sijainti alikohteet]
-     (log/debug "VALIDOI ALIKOHTEET, KOHTEEN SIJAINTI: " kohteen-sijainti)
-     (log/debug "VALIDOI ALIKOHTEET, ALIKOHTEET: " alikohteet)
-     (let [paakohteen-tie (:tie kohteen-sijainti)
-           sama-tie? #(= paakohteen-tie (get-in % [:sijainti :tie]))
-           paakohteen-tien-alikohteet (filter sama-tie? alikohteet)
-           muut-alikohteet (filter (comp not sama-tie?) alikohteet)]
-
+     (when alikohteet
        (concat
-         (when paakohteen-tien-alikohteet
-           (concat
-             (tarkista-alikohteiden-sijainnit paakohteen-tien-alikohteet)
-             (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
-             (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti paakohteen-tien-alikohteet)
-             (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden paakohteen-tien-alikohteet)))
-
-         (when muut-alikohteet
-           (tarkista-alikohteiden-sijainnit muut-alikohteet)
-           (tarkista-alikohteet-eivat-leikkaa-muita muut-alikohteet))))))
+         (tarkista-alikohteiden-sijainnit alikohteet)
+         (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
+         (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
+         (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet)))))
 
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
@@ -183,7 +164,7 @@ yllapitoluokkanimi->numero
 
      (let [alikohteet (when alikohteet (sort-by (juxt #(get-in % [:sijainti :aosa]) #(get-in % [:sijainti :aet])) alikohteet))
            virheet (remove nil? (concat
-                                  (validoi-sijainnin-numeroarvot kohteen-sijainti)
+                                  (validoi-sijainti kohteen-sijainti)
                                   (validoi-alikohteet kohde-id kohteen-sijainti alikohteet)))]
 
        (when (not (empty? virheet))
@@ -203,7 +184,7 @@ yllapitoluokkanimi->numero
                   (keep (fn [{:keys [sijainti]}]
                           (let [kohteenvirheet
                                 (concat
-                                  (validoi-sijainnin-numeroarvot sijainti)
+                                  (validoi-sijainti sijainti)
                                   (validoi-alustatoimenpide kohde-id kohteen-sijainti sijainti))]
                             kohteenvirheet))
                         alustatoimet))]
@@ -335,14 +316,14 @@ yllapitoluokkanimi->numero
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
-                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset                ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
-                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
 (defn yllapitokohde-tekstina
