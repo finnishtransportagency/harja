@@ -1964,7 +1964,7 @@ SELECT lisaa_toimenpidekoodi(
 SELECT lisaa_toimenpidekoodi(
     'Hoito, meri','24000',1,  null,  null,  NULL ,  NULL ,  NULL );
 SELECT lisaa_toimenpidekoodi(
-    'Väylänhoito ','24100',2,  null,  201,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='24000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='24000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='24000') );
+    'Väylänhoito','24100',2,  null,  201,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='24000') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='24000') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='24000') );
 SELECT lisaa_toimenpidekoodi(
     'Sopimuksen mukaiset työt','24101',3,  null,  null,  (SELECT nimi FROM toimenpidekoodi WHERE koodi='24100') ,  (SELECT koodi FROM toimenpidekoodi WHERE koodi='24100') ,  (SELECT taso FROM toimenpidekoodi WHERE koodi='24100') );
 SELECT lisaa_toimenpidekoodi(
