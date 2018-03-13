@@ -39,6 +39,7 @@
               ::hairiotilanne/korjauksen-tila :kesken
               ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 17)
               ::hairiotilanne/urakka-id urakka-id
+              ::hairiotilanne/sijainti nil
               ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
               ::hairiotilanne/huviliikenne-lkm 1
               ::hairiotilanne/korjausaika-h 1
@@ -57,7 +58,7 @@
     (let [syy "Aivan liikaa sähköä"
           muokattu (assoc uusi-tallennettu ::hairiotilanne/syy syy)
           _ (hairiotilanne-q/tallenna-hairiotilanne db kayttaja-id muokattu)
-          muokattu-tallennettu (first (hairiotilanne-q/hae-kanavatoimenpiteet db {::hairiotilanne/id tallennettu-id}))
+          muokattu-tallennettu (first (hairiotilanne-q/hae-hairiotilanteet db {::hairiotilanne/id tallennettu-id}))
           maara-muokkauksen-jalkeen (hae-maara)]
       (is (= maara-uuden-luonnin-jalkeen maara-muokkauksen-jalkeen))
       (is (= syy (::hairiotilanne/syy muokattu-tallennettu)))
@@ -66,7 +67,7 @@
 
       (let [poistettu (assoc muokattu ::muokkaustiedot/poistettu? true)
             _ (hairiotilanne-q/tallenna-hairiotilanne db kayttaja-id poistettu)
-            poistettu-tallennettu (first (hairiotilanne-q/hae-kanavatoimenpiteet db {::hairiotilanne/id tallennettu-id}))
+            poistettu-tallennettu (first (hairiotilanne-q/hae-hairiotilanteet db {::hairiotilanne/id tallennettu-id}))
             maara-poiston-jalkeen (hae-maara)]
         (is (= maara-alussa maara-poiston-jalkeen))
         (is (::muokkaustiedot/poistettu? poistettu-tallennettu))))))
