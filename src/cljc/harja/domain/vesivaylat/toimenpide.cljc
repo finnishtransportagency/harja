@@ -258,7 +258,6 @@ reimari-toimenpidetyypit
 
 (defn toimenpide-komponentit-fmt [komponentti]
   (let [ktyyppi (::tkomp/komponenttityyppi komponentti)]
-    (println "fmt-tyyppi: saatiin" (pr-str ktyyppi))
     (str (:harja.domain.vesivaylat.komponenttityyppi/luokan-nimi ktyyppi "<ei luokkaa>") ": " (:harja.domain.vesivaylat.komponenttityyppi/nimi ktyyppi "<ei nimeä>"))))
 
 (def

@@ -194,7 +194,6 @@
                            :tyyppi :komponentti
                            :komponentti (fn [rivi]
                                           (let [komponentit (::to/komponentit rivi)]
-                                            (println "komponentti-komponenttia kutsuttu, komponentit:" (pr-str komponentit))
                                             (if (empty? komponentit)
                                               "-"
                                               ;; else
