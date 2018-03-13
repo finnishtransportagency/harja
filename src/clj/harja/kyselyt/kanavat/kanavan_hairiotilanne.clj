@@ -9,9 +9,10 @@
             [harja.domain.kanavat.hairiotilanne :as hairiotilanne]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.vesivaylat.materiaali :as materiaali]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [harja.geo :as geo]))
 
-(defn hae-kanavatoimenpiteet [db hakuehdot]
+(defn hae-hairiotilanteet [db hakuehdot]
   (fetch db
          ::hairiotilanne/hairiotilanne
          (set/union
@@ -33,7 +34,7 @@
         paikallinen-kaytto? (:haku-paikallinen-kaytto? hakuehdot)
         [aikavali-alku aikavali-loppu] (:haku-aikavali hakuehdot)]
 
-    (hae-kanavatoimenpiteet db (op/and
+    (hae-hairiotilanteet db (op/and
                                  (op/or {::muokkaustiedot/poistettu? op/null?}
                                         {::muokkaustiedot/poistettu? false})
                                  (merge
@@ -54,15 +55,16 @@
                                      {::hairiotilanne/havaintoaika (op/between aikavali-alku aikavali-loppu)}))))))
 
 (defn tallenna-hairiotilanne [db kayttaja-id hairiotilanne]
-  (if (id/id-olemassa? (::hairiotilanne/id hairiotilanne))
-    (let [hairiotilanne (assoc hairiotilanne
-                             ::muokkaustiedot/muokattu (pvm/nyt)
-                             ::muokkaustiedot/muokkaaja-id kayttaja-id)]
-      (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})
-      (first (fetch db ::hairiotilanne/hairiotilanne #{::hairiotilanne/id} {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})))
-    (let [hairiotilanne (assoc hairiotilanne
-                             ::hairiotilanne/kuittaaja-id kayttaja-id
-                             ::muokkaustiedot/luotu (pvm/nyt)
-                             ::muokkaustiedot/luoja-id kayttaja-id)
-          lisatty-rivi (insert! db ::hairiotilanne/hairiotilanne hairiotilanne)]
-      lisatty-rivi)))
+  (let [hairiotilanne (update hairiotilanne ::hairiotilanne/sijainti #(geo/geometry (geo/clj->pg %)))]
+    (if (id/id-olemassa? (::hairiotilanne/id hairiotilanne))
+     (let [hairiotilanne (assoc hairiotilanne
+                           ::muokkaustiedot/muokattu (pvm/nyt)
+                           ::muokkaustiedot/muokkaaja-id kayttaja-id)]
+       (update! db ::hairiotilanne/hairiotilanne hairiotilanne {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})
+       (first (fetch db ::hairiotilanne/hairiotilanne #{::hairiotilanne/id} {::hairiotilanne/id (::hairiotilanne/id hairiotilanne)})))
+     (let [hairiotilanne (assoc hairiotilanne
+                           ::hairiotilanne/kuittaaja-id kayttaja-id
+                           ::muokkaustiedot/luotu (pvm/nyt)
+                           ::muokkaustiedot/luoja-id kayttaja-id)
+           lisatty-rivi (insert! db ::hairiotilanne/hairiotilanne hairiotilanne)]
+       lisatty-rivi))))
