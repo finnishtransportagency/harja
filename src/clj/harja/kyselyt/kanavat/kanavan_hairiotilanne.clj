@@ -55,7 +55,7 @@
                                      {::hairiotilanne/havaintoaika (op/between aikavali-alku aikavali-loppu)}))))))
 
 (defn tallenna-hairiotilanne [db kayttaja-id hairiotilanne]
-  (let [hairiotilanne (update hairiotilanne ::hairiotilanne/sijainti #(geo/geometry (geo/clj->pg %)))]
+  (let [hairiotilanne (update hairiotilanne ::hairiotilanne/sijainti #(when % (geo/geometry (geo/clj->pg %))))]
     (if (id/id-olemassa? (::hairiotilanne/id hairiotilanne))
      (let [hairiotilanne (assoc hairiotilanne
                            ::muokkaustiedot/muokattu (pvm/nyt)
