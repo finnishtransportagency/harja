@@ -1,2 +1,1 @@
-UPDATE toimenpidekoodi set nimi = 'Väylänhoito' where nimi = 'Väylänhoito ';
-
+ALTER TABLE kan_hairio ADD COLUMN sijainti GEOMETRY;
