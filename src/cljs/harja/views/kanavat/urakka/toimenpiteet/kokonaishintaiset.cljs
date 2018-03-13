@@ -120,10 +120,12 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi] (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do
                          (tasot/taso-paalle! :kan-kohteet)
+                         (tasot/taso-paalle! :kan-toimenpiteet)
                          (tasot/taso-pois! :organisaatio)
                          (e! (tiedot/->NakymaAvattu)))
                       #(do
                          (tasot/taso-pois! :kan-kohteet)
+                         (tasot/taso-pois! :kan-toimenpiteet)
                          (tasot/taso-paalle! :organisaatio)
                          (e! (tiedot/->NakymaSuljettu))))
     (fn [e! app]
