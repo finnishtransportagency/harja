@@ -8,6 +8,7 @@
             [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
             [harja.domain.kanavat.kohde :as kohde]
             [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.hairiotilanne :as ht]
             [harja.ui.kartta.varit :as varit]))
 
 (def +valitun-skaala+ 1.5)
@@ -499,10 +500,12 @@ tr-ikoni {:img (pinni-ikoni "musta")
           [(pinni-ikoni vari) teksti])))
 
 (defn kan-kohde [kohde]
-  [(pinni-ikoni "lime") "Kohde"])
+  [(pinni-ikoni "syaani") "Kohde"])
 
 (defn kan-toimenpide [toimenpide]
   [(pinni-ikoni "sininen") "Toimenpide"])
 
 (defn kan-hairiotilanne [hairio]
-  [(pinni-ikoni "punainen") "Häiriötilanne"])
+  (if (= :valmis (::ht/korjauksen-tila hairio))
+    [(pinni-ikoni "vihrea") "Korjattu häiriö"]
+    [(pinni-ikoni "punainen") "Häiriötilanne"]))
