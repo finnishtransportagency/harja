@@ -56,34 +56,33 @@ SELECT
   sum(-s.maara)                 AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
   ypk.yllapitokohdetyyppi,
   ilmoitustiedot,
-  paatos_tekninen_osa           AS "tekninen-osa_paatos",
-  perustelu_tekninen_osa        AS "tekninen-osa_perustelu",
-  kasittelyaika_tekninen_osa    AS "tekninen-osa_kasittelyaika",
-  asiatarkastus_pvm             AS "asiatarkastus_tarkastusaika",
-  asiatarkastus_tarkastaja      AS "asiatarkastus_tarkastaja",
-  asiatarkastus_hyvaksytty      AS "asiatarkastus_hyvaksytty",
-  asiatarkastus_lisatiedot      AS "asiatarkastus_lisatiedot",
-  ypko.id                       AS kohdeosa_id,
-  ypko.nimi                     AS kohdeosa_nimi,
-  ypko.tr_numero                AS "kohdeosa_tr-numero",
-  ypko.tr_alkuosa               AS "kohdeosa_tr-alkuosa",
-  ypko.tr_alkuetaisyys          AS "kohdeosa_tr-alkuetaisyys",
-  ypko.tr_loppuosa              AS "kohdeosa_tr-loppuosa",
-  ypko.tr_loppuetaisyys         AS "kohdeosa_tr-loppuetaisyys",
-  ypko.tr_ajorata               AS "kohdeosa_tr-ajorata",
-  ypko.tr_kaista                AS "kohdeosa_tr-kaista",
-  ypko.paallystetyyppi          AS "kohdeosa_paallystetyyppi",
-  ypko.raekoko                  AS "kohdeosa_raekoko",
-  ypko.tyomenetelma             AS "kohdeosa_tyomenetelma",
-  ypko.massamaara               AS "kohdeosa_massamaara",
-  ypko.toimenpide               AS "kohdeosa_toimenpide",
-  ypko.hyppy                    AS "kohdeosa_hyppy?",
-  ypk.tr_numero                 AS "tr-numero",
-  ypk.tr_alkuosa                AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys           AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa               AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys          AS "tr-loppuetaisyys",
-  u.id                          AS "urakka-id"
+  paatos_tekninen_osa          AS "tekninen-osa_paatos",
+  perustelu_tekninen_osa       AS "tekninen-osa_perustelu",
+  kasittelyaika_tekninen_osa   AS "tekninen-osa_kasittelyaika",
+  asiatarkastus_pvm            AS "asiatarkastus_tarkastusaika",
+  asiatarkastus_tarkastaja     AS "asiatarkastus_tarkastaja",
+  asiatarkastus_hyvaksytty     AS "asiatarkastus_hyvaksytty",
+  asiatarkastus_lisatiedot     AS "asiatarkastus_lisatiedot",
+  ypko.id                      AS kohdeosa_id,
+  ypko.nimi                    AS kohdeosa_nimi,
+  ypko.tr_numero               AS "kohdeosa_tr-numero",
+  ypko.tr_alkuosa              AS "kohdeosa_tr-alkuosa",
+  ypko.tr_alkuetaisyys         AS "kohdeosa_tr-alkuetaisyys",
+  ypko.tr_loppuosa             AS "kohdeosa_tr-loppuosa",
+  ypko.tr_loppuetaisyys        AS "kohdeosa_tr-loppuetaisyys",
+  ypko.tr_ajorata              AS "kohdeosa_tr-ajorata",
+  ypko.tr_kaista               AS "kohdeosa_tr-kaista",
+  ypko.paallystetyyppi         AS "kohdeosa_paallystetyyppi",
+  ypko.raekoko                 AS "kohdeosa_raekoko",
+  ypko.tyomenetelma            AS "kohdeosa_tyomenetelma",
+  ypko.massamaara              AS "kohdeosa_massamaara",
+  ypko.toimenpide              AS "kohdeosa_toimenpide",
+  ypk.tr_numero                AS "tr-numero",
+  ypk.tr_alkuosa               AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys          AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa              AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys         AS "tr-loppuetaisyys",
+  u.id                         AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
                                      AND pi.poistettu IS NOT TRUE
@@ -246,7 +245,7 @@ SELECT
 FROM yllapitokohteen_maaramuutos ym
   LEFT JOIN kayttaja k ON ym.luoja = k.id
 WHERE yllapitokohde IN (:idt)
-  AND ym.poistettu IS NOT TRUE;
+      AND ym.poistettu IS NOT TRUE;
 
 -- name: luo-yllapitokohteen-maaramuutos<!
 INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara,
