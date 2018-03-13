@@ -162,10 +162,12 @@
           paakohteen-sisalla? #(= kohteen-tienumero (get-in % [:sijainti :tie]))
           paakohteen-alikohteet (filter paakohteen-sisalla? (:alikohteet kohde))
           muut-alikohteet (filter (comp not paakohteen-sisalla?) (:alikohteet kohde))]
+
       (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
+      ;; todo: validoi muut alikohteet
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
-        (kasittely/paivita-alikohteet db kohde paakohteen-alikohteet)
+        (kasittely/paivita-alikohteet db kohde (concat paakohteen-alikohteet muut-alikohteet))
         (yy/paivita-yllapitourakan-geometria db urakka-id))
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
