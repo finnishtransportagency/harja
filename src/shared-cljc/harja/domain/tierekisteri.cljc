@@ -310,9 +310,12 @@
       :else (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi))
     false))
 
-(defn kohteenosa-paakohteen-sisalla? [paakohde kohteenosa]
-  (and (= (:tr-numero paakohde) (:tr-numero kohteenosa))
-       (tr-vali-paakohteen-sisalla? paakohde kohteenosa)))
+(defn kohteenosa-paallekkain-paakohteen-kanssa? [paakohde kohteenosa]
+  (if (= (:tr-numero paakohde) (:tr-numero kohteenosa))
+    (if (pistemainen? kohteenosa)
+      (tr-vali-paakohteen-sisalla? paakohde kohteenosa)
+      (tr-vali-leikkaa-tr-valin? paakohde kohteenosa))
+    false))
 
 (defn alikohteet-tayttamaan-kohde
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.

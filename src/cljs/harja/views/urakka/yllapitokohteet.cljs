@@ -618,13 +618,14 @@
         gridin-paallekkaiset-osat (flatten (keep (fn [[avain rivi]]
                                                    (let [rivin-paallekkaiset-osat
                                                          (keep #(let [{id-1 :id nimi-1 :nimi} (-> % :kohteet first)
-                                                                     {id-2 :id nimi-2 :nimi} (-> % :kohteet second)]
-                                                                 (when (or (= id-1 avain) (= id-2 avain))
+                                                                     {id-2 :id nimi-2 :nimi} (-> % :kohteet second)
+                                                                      rivin-id (:id rivi)]
+                                                                 (when (or (= id-1 rivin-id) (= id-2 rivin-id))
                                                                    {:rivi avain
                                                                     :viesti (str "Kohteenosa on päälekkäin osan "
                                                                                  (cond
-                                                                                   (= avain id-1) nimi-2
-                                                                                   (= avain id-2) nimi-1
+                                                                                   (= rivin-id id-1) nimi-2
+                                                                                   (= rivin-id id-2) nimi-1
                                                                                    :else nil)
                                                                                  " kanssa")}))
                                                               paallekkaiset-osat)]
@@ -673,7 +674,7 @@
         tien-osat-riville (fn [rivi]
                             (get @osan-pituudet-teille (:tr-numero rivi)))
         osa-kohteen-ulkopuolella (fn [_ rivi _]
-                                  (when (tr/kohteenosa-paakohteen-sisalla? kohde rivi)
+                                  (when (tr/kohteenosa-paallekkain-paakohteen-kanssa? kohde rivi)
                                     (str "Tämä osoite on varsinaisen kohteen sisällä.")))
         backilta-tulleiden-virheiden-validointi (fn [_ rivi _]
                                                   (when (and (:paalekkain-oleva-kohde rivi)
@@ -930,7 +931,7 @@
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [urakka kohteet-atom rivi kohdetyyppi]
-  (let [kohde-paakohteen-sisaisilla-osilla (update rivi :kohdeosat (fn [kohdeosat] (filter #(tr/kohteenosa-paakohteen-sisalla? rivi %) kohdeosat)))]
+  (let [kohde-paakohteen-sisaisilla-osilla (update rivi :kohdeosat (fn [kohdeosat] (filter #(tr/kohteenosa-paallekkain-paakohteen-kanssa? rivi %) kohdeosat)))]
     [:div
      [yllapitokohdeosat-kohteelle urakka kohteet-atom kohde-paakohteen-sisaisilla-osilla
       {:voi-muokata? (not @grid/gridia-muokataan?)}]

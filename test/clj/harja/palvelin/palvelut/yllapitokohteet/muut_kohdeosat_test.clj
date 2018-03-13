@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.jms-test :refer [feikki-sonja]]))
+            [harja.jms-test :refer [feikki-sonja]]
+            [harja.domain.tierekisteri :as tr]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -85,22 +86,6 @@
     :tr-alkuosa 1
     :tr-alkuetaisyys 2
     :tr-loppuosa 1
-    :tr-loppuetaisyys 3}
-   {:id -6
-    :tr-numero 20
-    :tr-ajorata 2
-    :tr-kaista 1
-    :tr-alkuosa 12
-    :tr-alkuetaisyys 1
-    :tr-loppuosa 12
-    :tr-loppuetaisyys 3}
-   {:id -7
-    :tr-numero 20
-    :tr-ajorata 1
-    :tr-kaista 11
-    :tr-alkuosa 12
-    :tr-alkuetaisyys 1
-    :tr-loppuosa 12
     :tr-loppuetaisyys 3}])
 
 (def keskenaan-paallekkaiset
@@ -131,7 +116,7 @@
                           :tr-alkuetaisyys 220
                           :tr-loppuosa 21
                           :tr-loppuetaisyys 230}
-        virhe-sisalto (muut-kohdeosat/kohdeosa-paalekkain-muiden-kohdeosien-kanssa paalekkainen-osa ok-data)]
+        virhe-sisalto (tr/kohdeosa-paalekkain-muiden-kohdeosien-kanssa paalekkainen-osa ok-data)]
     (is (= 1 (count virhe-sisalto)))
     (is (= (first virhe-sisalto) {:viesti "Kohdeosa on päälekkäin toisen kohdeosan kanssa"
                                   :validointivirhe :kohteet-paallekain
@@ -153,7 +138,7 @@
                                                :tr-loppuetaisyys 230})}))))
 
 (deftest kohdeosat-keskenaan-paalekkain
-  (let [paallekkaiset-osat (muut-kohdeosat/kohdeosat-keskenaan-paallekkain keskenaan-paallekkaiset)
+  (let [paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain keskenaan-paallekkaiset)
         paallekkaisten-parien-idt (into #{} (map (fn [virhe-sisalto]
                                                    (into #{} (map :id (:kohteet virhe-sisalto))))
                                                  paallekkaiset-osat))]

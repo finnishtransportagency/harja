@@ -248,11 +248,7 @@
         _ (println "--> PÄÄLLYSTYSILMOITUS")
         _ (clojure.pprint/pprint paallystysilmoitus)
         paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet] (fn [osoitteet]
-                                                                                        (filter #(and
-                                                                                                   (= (:tr-numero osoitteet) (:tr-numero %))
-                                                                                                   (= (:tr-ajorata osoitteet) (:tr-ajorata %))
-                                                                                                   (= (:tr-kaista osoitteet) (:tr-kaista %))
-                                                                                                   (tr-domain/tr-vali-paakohteen-sisalla? paallystysilmoitus %))
+                                                                                        (filter #(tr-domain/kohteenosa-paallekkain-paakohteen-kanssa? paallystysilmoitus %)
                                                                                                 osoitteet)))
         _ (println "----> FOO")
         _ (clojure.pprint/pprint paallystysilmoitus)

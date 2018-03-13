@@ -37,9 +37,22 @@
              {:id yllapitokohdeosa-id
               :urakka urakka-id}))))
 
-(defn validoi-kysely [db {:keys [urakka-id yllapitokohde-id muut-kohdeosat vuosi]}]
-  (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
-        kaikki-vuoden-yllapitokohdeosat-harjassa (q/hae-saman-vuoden-yllapitokohdeosat db {:vuosi vuosi})
+(defn tarkista-front-checkit [db {:keys [yllapitokohde-id muut-kohdeosat]}]
+  (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))]
+    (doseq [kohdeosa (vals muut-kohdeosat)]
+      ;; Tarkistetaan, että joku tie on annettu
+      (assert (tierekisteri/onko-tie-annettu kohdeosa)
+              "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
+      ;; Tarkistetaan, että kohteenosa ei ole pääkohteen sisällä
+      (assert (not (tierekisteri/kohteenosa-paallekkain-paakohteen-kanssa? yllapitokohde kohdeosa))
+              "Muihin kohdeosiin ei tulisi tallentaa kohteen sisäisiä osia"))
+    ;; Tarkistetaan, että kohteenosa ei ole muiden kohteenosien kanssa päälekkäin
+    (assert (empty? (tierekisteri/kohdeosat-keskenaan-paallekkain (vals muut-kohdeosat)))
+            "Annetut kohteenosat ovat päällekkäin")))
+
+(defn validoi-kysely [db {:keys [urakka-id yllapitokohde-id muut-kohdeosat vuosi] :as params}]
+  (tarkista-front-checkit db params)
+  (let [kaikki-vuoden-yllapitokohdeosat-harjassa (q/hae-saman-vuoden-yllapitokohdeosat db {:vuosi vuosi})
         tallennettavien-olevien-osien-idt (into #{} (map :id (vals muut-kohdeosat)))
         muut-paitsi-tallennettavat-osat-kannassa (remove #(tallennettavien-olevien-osien-idt (:kohdeosa-id %)) kaikki-vuoden-yllapitokohdeosat-harjassa)
         paalekkaisyydet (flatten (keep (fn [[grid-id kohdeosa]]
@@ -48,17 +61,6 @@
                                                 paalekkaisyydet)))
                                        muut-kohdeosat))]
     (log/debug "PÄÄLEKKÄISYYDET: " (pr-str paalekkaisyydet))
-    ;; Asserteille on jo frontilla check
-    (doseq [kohdeosa (vals muut-kohdeosat)]
-      ;; Tarkistetaan, että joku tie on annettu
-      (assert (tierekisteri/onko-tie-annettu kohdeosa)
-              "Kohdeosan tr-numero, tr-alkuosa, tr-alkuetaisyys, tr-loppuosa ja tr-loppuetaisyys eivät saa olla nil")
-      ;; Tarkistetaan, että kohteenosa ei ole pääkohteen sisällä
-      (assert (not (tierekisteri/kohteenosa-paakohteen-sisalla? yllapitokohde kohdeosa))
-              "Muihin kohdeosiin ei tulisi tallentaa kohteen sisäisiä osia"))
-    ;; Tarkistetaan, että kohteenosa ei ole muiden kohteenosien kanssa päälekkäin
-    (assert (empty? (tierekisteri/kohdeosat-keskenaan-paallekkain (vals muut-kohdeosat)))
-            "Annetut kohteenosat ovat päällekkäin")
     (when-not (empty? paalekkaisyydet)
       paalekkaisyydet)))
 

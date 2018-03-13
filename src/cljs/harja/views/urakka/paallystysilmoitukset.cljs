@@ -331,14 +331,11 @@
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
    voi-muokata? grid-wrap wrap-virheet muokkaa! muut-kohdeosat-state muut-kohdeosat-virheet]
-  (let [osan-pituus (atom {})
-        kohteen-ulkoiset-tierekisteriosoitteet (remove (fn [kohdeosa]
-                                                         (or (tr/tr-vali-paakohteen-sisalla? lomakedata-nyt kohdeosa)
-                                                             (:tierekisterikohteet-taulukko? kohdeosa)))
-                                                       (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet]))]
+  (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa! muut-kohdeosat-state muut-kohdeosat-virheet]
       (let [kohteen-sisaiset-tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
+            kohteen-sisaisten-kohteiden-lkm (count kohteen-sisaiset-tierekisteriosoitteet)
             kohde-muut-kohdeosat-taulukkoon (-> lomakedata-nyt
                                                 (select-keys #{:tr-numero :tr-alkuetaisyys :tr-alkuosa
                                                                :tr-loppuosa :tr-loppuetaisyys :yllapitokohde-id})
@@ -395,7 +392,8 @@
                                                       (swap! paallystys/paallystysilmoitus-lomakedata assoc-in [:ilmoitustiedot :muut-osoitteet]
                                                              muut-kohdeosat))
                                           :kohdeosat-atom muut-kohdeosat-state :virheet-atom muut-kohdeosat-virheet
-                                          :grid-asetukset {:rivinumeron-aloitus-n (inc (count kohteen-sisaiset-tierekisteriosoitteet))
+                                          :grid-asetukset {:rivinumeron-aloitus-n (if (= kohteen-sisaisten-kohteiden-lkm 0)
+                                                                                    2 (inc kohteen-sisaisten-kohteiden-lkm))
                                                            :rivinumerot? true
                                                            :ala-nayta-tallenna-nappia? true}}]
 
