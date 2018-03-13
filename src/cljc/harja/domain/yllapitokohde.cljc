@@ -127,8 +127,8 @@ yllapitoluokkanimi->numero
                            (:virheet edellinen)
                            (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                                       (format "Alikohteet (tunnus: %s ja tunnus: %s) eivät muodosta yhteistä osuutta"
-                                              (:tunnus (:edellinen edellinen))
-                                              (:tunnus seuraava)))))
+                                              (or (:tunnus (:edellinen edellinen) (get-in (:edellinen edellinen) [:tunniste :id])) )
+                                              (or (:tunnus seuraava) (get-in seuraava [:tunniste :id]))))))
            seuraava-jatkaa-edellista? (fn [seuraava edellinen]
                                         (and
                                           (= (get-in edellinen [:edellinen :sijainti :losa]) (:aosa (:sijainti seuraava)))
