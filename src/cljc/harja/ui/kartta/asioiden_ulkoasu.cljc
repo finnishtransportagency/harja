@@ -502,4 +502,7 @@ tr-ikoni {:img (pinni-ikoni "musta")
   [(pinni-ikoni "lime") "Kohde"])
 
 (defn kan-toimenpide [toimenpide]
-  [(pinni-ikoni "sininen") "Toimenpide vapaassa sijainnissa"])
+  [(pinni-ikoni "sininen") "Toimenpide"])
+
+(defn kan-hairiotilanne [hairio]
+  [(pinni-ikoni "punainen") "Häiriötilanne"])
