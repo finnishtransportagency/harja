@@ -39,6 +39,7 @@
               ::hairiotilanne/korjauksen-tila :kesken
               ::hairiotilanne/havaintoaika (pvm/luo-pvm 2017 11 17)
               ::hairiotilanne/urakka-id urakka-id
+              ::hairiotilanne/sijainti nil
               ::hairiotilanne/kuittaaja-id (:id +kayttaja-jvh+)
               ::hairiotilanne/huviliikenne-lkm 1
               ::hairiotilanne/korjausaika-h 1
