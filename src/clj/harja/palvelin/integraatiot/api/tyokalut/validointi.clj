@@ -13,7 +13,8 @@
     [harja.domain.oikeudet :as oikeudet]
     [harja.domain.yllapitokohde :as kohteet]
     [harja.kyselyt.paallystys :as paallystys-q]
-    [harja.domain.tierekisteri :as tierekisteri])
+    [harja.domain.tierekisteri :as tierekisteri]
+    [cheshire.core :as cheshire])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn tarkista-urakka [db urakka-id]
@@ -185,38 +186,45 @@
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti "Käyttäjällä ei resurssiin."}]})))
 
-(defn tarkista-leikkaavatko-alikohteet-toisiaan [muut-alikohteet]
+(defn tarkista-leikkaavatko-alikohteet-toisiaan [alikohteet]
   (let [paallekkain? (fn [ensimmainen toinen]
                        (let [ensimmainen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti ensimmainen))
                              toinen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti toinen))]
                          (when (tierekisteri/kohdeosat-paalekkain? ensimmainen-sijainti toinen-sijainti)
-                           (format "Alikohteiden: %s (tunniste: %s ) ja: %s (tunniste: %s ) osoitteet leikkaavat toisiaan. Osoitteet: %s %s."
-                                   (:nimi ensimmainen)
-                                   (get-in ensimmainen [:tunniste :id ])
-                                   (:nimi toinen)
-                                   (get-in toinen [:tunniste :id])
-                                   (:sijainti ensimmainen)
-                                   (:sijainti toinen)))))]
-    (apply concat (for [[x i] (zipmap muut-alikohteet (range (count muut-alikohteet)))]
+                           {:koodi virheet/+virheellinen-sijainti+
+                            :viesti (format "Alikohteiden: %s (tunniste: %s) ja: %s (tunniste: %s) osoitteet leikkaavat toisiaan. Osoitteet: %s %s."
+                                            (:nimi ensimmainen)
+                                            (get-in ensimmainen [:tunniste :id])
+                                            (:nimi toinen)
+                                            (get-in toinen [:tunniste :id])
+                                            (cheshire/encode (:sijainti ensimmainen))
+                                            (cheshire/encode (:sijainti toinen)))})))]
+    (apply concat (for [[x i] (zipmap alikohteet (range (count alikohteet)))]
                     (keep (partial paallekkain? x)
-                          (concat (take i muut-alikohteet) (drop (+ 1 i) muut-alikohteet)))))))
+                          (concat (take i alikohteet) (drop (+ 1 i) alikohteet)))))))
+
+(defn tarkista-ovatko-tieosat-olemassa [db alikohteet]
+  (def nykyiset-alikohteet alikohteet)
+  (let [onko-olemassa? (fn [{:keys [sijainti nimi tunniste]}]
+                         (when (not (q-tieverkko/onko-tierekisteriosoite-validi?
+                                      db
+                                      (:numero sijainti)
+                                      (:aosa sijainti)
+                                      (:aet sijainti)
+                                      (:losa sijainti)
+                                      (:let sijainti)))
+                           {:koodi virheet/+virheellinen-sijainti+
+                            :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Osoite: %s."
+                                            nimi
+                                            (:id tunniste)
+                                            (cheshire/encode sijainti))}))]
+    (filter (comp not nil?) (map onko-olemassa? alikohteet))))
 
 (defn tarkista-muut-alikohteet [db muut-alikohteet]
   (def nykyiset-alikohteet muut-alikohteet)
-  ;; todo: tarkista ensin, että kohteet eivät mene toistensa kanssa päällekäin
-  ;; todo: tarkista, että tiet löytyvät
-  ;; todo: tarkista, että osat löytyvät
-  ;; todo: tarkista, että pituudet ovat osien pituuksien sisällä
-  (let [virheet [(-> muut-alikohteet
-                     (tarkista-leikkaavatko-alikohteet-toisiaan))]])
-
-  #_(q-tieverkko/onko-tierekisteriosoite-validi?
-    db
-    tienumero
-    (:aosa %)
-    (:aet %)
-    (:losa %)
-    (:let %))
-
-  #_(virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet)
-  )
+  (let [virheet (concat
+                  (tarkista-leikkaavatko-alikohteet-toisiaan muut-alikohteet)
+                  (tarkista-ovatko-tieosat-olemassa db muut-alikohteet))]
+    (def nykyiset-virheet virheet)
+    (when (not (empty? virheet))
+      (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet))))
