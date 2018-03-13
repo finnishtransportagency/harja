@@ -55,19 +55,36 @@
                                         portti)
         data (cheshire/decode (:body vastaus) true)
         yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
-        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
-                                          yllapitokohteet))]
+        leppajarven-ramppi-2017 (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                               yllapitokohteet))
+        leppajarven-ramppi-2018 (first (filter #(= (:nimi %) "Leppäjärven ramppi 2018")
+                                               yllapitokohteet))]
+
+    (log/debug "leppajarven-ramppi-2018 " leppajarven-ramppi-2018)
 
     (is (= 200 (:status vastaus)))
-    (is (= 12 (count yllapitokohteet)))
-    (is (some? leppajarven-ramppi))
-    (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
-    (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
+    (is (= 12 (count yllapitokohteet))
+        "Palautuu kaikkien vuosien kohteet (2017 & 2018)")
+
+    (testing "2017 kohde palautuu oikein"
+      (is (some? leppajarven-ramppi-2017))
+      (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:takuupvm (get-in leppajarven-ramppi-2017 [:aikataulu :paallystysilmoitus])))))
+
+    (testing "2018 kohde palautuu oikein"
+      (is (some? leppajarven-ramppi-2018))
+      (is (= (:sijainti leppajarven-ramppi-2018)
+             {:numero 20
+              :aosa 1
+              :aet 0
+              :losa 3
+              :let 0})
+          "Sijainti palautuu oikein, ilman ajorataa ja kaistaa"))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
   (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
