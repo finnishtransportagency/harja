@@ -299,7 +299,7 @@
     (is (= (:kohdenimi paallystysilmoitus-kannassa) "Leppäjärven ramppi"))
     (is (= (:kohdenumero paallystysilmoitus-kannassa) "L03"))
     ;; Kohdeosat on OK
-    (is (= (count kohdeosat) 2))
+    (is (= (count kohdeosat) 1))
     (is (= (first kohdeosat)
            {;; Alikohteen tiedot
             :kohdeosa-id 666
