@@ -154,7 +154,7 @@
      :tyyppi :positiivinen-numero
      :tasaa :oikea
      :muokattava? (constantly false)}]
-   kohdeosat])
+   (yllapitokohde-domain/jarjesta-yllapitokohteet kohdeosat)])
 
 (defn paallystysurakan-kohteet
   [urakka paallystysurakan-kohteet]
