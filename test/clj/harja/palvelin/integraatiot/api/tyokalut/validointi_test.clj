@@ -26,7 +26,7 @@
 
 (deftest tarkista-leikkaavatko-alikohteet-toisiaan
   (let [odotettu-virhe {:koodi "virheellinen-sijainti"
-                        :viesti "Alikohteiden: Kohde 1 (tunniste: 3) ja: Kohde 2 (tunniste: 666) osoitteet leikkaavat toisiaan. Osoitteet: {\"numero\":21101,\"aosa\":1,\"aet\":1,\"losa\":1,\"let\":100,\"ajr\":1,\"kaista\":1,\"tie\":21101} {\"numero\":21101,\"aosa\":1,\"aet\":99,\"losa\":1,\"let\":120,\"ajr\":1,\"kaista\":1,\"tie\":21101}."}
+                        :viesti "Alikohteiden: Kohde 1 (tunniste: 3) ja: Kohde 2 (tunniste: 666) osoitteet leikkaavat toisiaan."}
         paallekkaiset-kohteet [{:tunniste {:id 3}
                                 :nimi "Kohde 1"
                                 :sijainti {:numero 21101
@@ -84,7 +84,7 @@
                                        :kaista 1}}]
           virhe (first (validointi/tarkista-ovatko-tierekisterosoitteet-validit db olematon-tieosa))]
       (is (= "virheellinen-sijainti" (:koodi virhe)) "Virhekoodi on oikea")
-      (is (= "Kohteen: Kohde 1 (tunniste: 3) osoite ei ole validi. Tietä tai osaa ei löydy. Osoite: {\"numero\":70012,\"tie\":70012,\"aosa\":1,\"aet\":1,\"losa\":1,\"let\":100,\"ajr\":1,\"kaista\":1}."
+      (is (= "Kohteen: Kohde 1 (tunniste: 3) osoite ei ole validi. Tietä tai osaa ei löydy."
              (:viesti virhe))
           "Virheviesti on oikea"))
 
@@ -100,7 +100,7 @@
                                        :kaista 1}}]
           virhe (first (validointi/tarkista-ovatko-tierekisterosoitteet-validit db olematon-tieosa))]
       (is (= "virheellinen-sijainti" (:koodi virhe)) "Virhekoodi on oikea")
-      (is (= "Kohteen: Kohde 1 (tunniste: 3) osoite ei ole validi. Tietä tai osaa ei löydy. Osoite: {\"numero\":70012,\"tie\":70012,\"aosa\":1,\"aet\":1,\"losa\":1,\"let\":100,\"ajr\":1,\"kaista\":1}."
+      (is (= "Kohteen: Kohde 1 (tunniste: 3) osoite ei ole validi. Tietä tai osaa ei löydy."
              (:viesti virhe))
           "Virheviesti on oikea"))
 
@@ -116,7 +116,7 @@
                                        :kaista 0}}]
           virhe (first (validointi/tarkista-ovatko-tierekisterosoitteet-validit db liian-pitka-osa))]
       (is (= "virheellinen-sijainti" (:koodi virhe)) "Virhekoodi on oikea")
-      (is (= "Kohteen: Kohde 1 (tunniste: 3) osoite ei ole validi. Etäisyydet ovat liian pitkiä. Osoite: {\"numero\":70012,\"tie\":70012,\"aosa\":270,\"aet\":100,\"losa\":270,\"let\":300,\"ajr\":0,\"kaista\":0}."
+      (is (= "Kohteen: Kohde 1 (tunniste: 3) osoite ei ole validi. Etäisyydet ovat liian pitkiä."
              (:viesti virhe))
           "Virheviesti on oikea"))
     

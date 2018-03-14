@@ -192,13 +192,11 @@
                              toinen-sijainti (tierekisteri/tr-alkuiseksi (:sijainti toinen))]
                          (when (tierekisteri/kohdeosat-paalekkain? ensimmainen-sijainti toinen-sijainti)
                            {:koodi virheet/+virheellinen-sijainti+
-                            :viesti (format "Alikohteiden: %s (tunniste: %s) ja: %s (tunniste: %s) osoitteet leikkaavat toisiaan. Osoitteet: %s %s."
+                            :viesti (format "Alikohteiden: %s (tunniste: %s) ja: %s (tunniste: %s) osoitteet leikkaavat toisiaan."
                                             (:nimi ensimmainen)
                                             (get-in ensimmainen [:tunniste :id])
                                             (:nimi toinen)
-                                            (get-in toinen [:tunniste :id])
-                                            (cheshire/encode (:sijainti ensimmainen))
-                                            (cheshire/encode (:sijainti toinen)))})))]
+                                            (get-in toinen [:tunniste :id]))})))]
     (apply concat (for [[x i] (zipmap alikohteet (range (count alikohteet)))]
                     (keep (partial paallekkain? x)
                           (concat (take i alikohteet) (drop (+ 1 i) alikohteet)))))))
@@ -213,15 +211,13 @@
                            (if (q-tieverkko/onko-tierekisteriosoite-validi? db numero aosa aet losa loppuet)
                              (when (not (q-tieverkko/ovatko-tierekisteriosoitteen-etaisyydet-validit? db numero aosa aet losa loppuet))
                                {:koodi virheet/+virheellinen-sijainti+
-                                :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Etäisyydet ovat liian pitkiä. Osoite: %s."
+                                :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Etäisyydet ovat liian pitkiä."
                                                 nimi
-                                                (:id tunniste)
-                                                (cheshire/encode sijainti))})
+                                                (:id tunniste))})
                              {:koodi virheet/+virheellinen-sijainti+
-                              :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Tietä tai osaa ei löydy. Osoite: %s."
+                              :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Tietä tai osaa ei löydy."
                                               nimi
-                                              (:id tunniste)
-                                              (cheshire/encode sijainti))})))]
+                                              (:id tunniste))})))]
     (filter (comp not nil?) (map validi? alikohteet))))
 
 (defn tarkista-muut-alikohteet [db muut-alikohteet]
