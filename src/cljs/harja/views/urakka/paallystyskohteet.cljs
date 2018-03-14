@@ -120,7 +120,7 @@
            (yllapitokohteet/kasittele-tallennettavat-kohteet!
              #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
              :paikkaus
-             #(reset! paallystys-tiedot/yllapitokohteet %)
+             #(reset! paallystys-tiedot/yllapitokohteet %) ;; TODO TESTI TÄLLE TALLENNUKSELLE (backend)
              #(constantly nil))}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
 
          [muut-kustannukset-view/muut-kustannukset ur]

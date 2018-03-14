@@ -36,7 +36,10 @@
                              fokus aseta-fokus! tulevat-rivit vetolaatikot
                              voi-muokata-rivia? rivi-index]}
                      skeema rivi index]
+  (when (nil? rivi)
+    (log "muokkausrivi on nil"))
   [:tr.muokataan {:class luokka}
+
    (doall (for [{:keys [nimi hae aseta fmt muokattava? tasaa tyyppi komponentti] :as sarake} skeema]
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
@@ -448,8 +451,9 @@
 
                         (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)
-                                vetolaatikko-colspan (cond-> (inc (count skeema))
-                                                             piilota-toiminnot? dec)]
+                                vetolaatikko-colspan (if (or piilota-toiminnot? (nil? tallenna))
+                                                       (count skeema)
+                                                       (inc (count skeema)))]
                             [^{:key id}
                             [nayttorivi {:ohjaus ohjaus
                                          :vetolaatikot vetolaatikot
@@ -904,7 +908,7 @@
               colspan (if (or piilota-toiminnot? (nil? tallenna))
                         (count skeema)
                         (inc (count skeema)))
-              muokataan (not (nil? @muokatut))
+              muokataan (some? @muokatut)
               tiedot (if max-rivimaara
                        (take max-rivimaara alkup-tiedot)
                        alkup-tiedot)

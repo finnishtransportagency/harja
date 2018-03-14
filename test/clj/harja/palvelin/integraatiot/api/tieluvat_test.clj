@@ -11,8 +11,7 @@
             [harja.kyselyt.tielupa :as tielupa-q]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut])
-  (:import (org.postgis PGgeometry)))
+            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]))
 
 (def kayttaja "livi")
 
