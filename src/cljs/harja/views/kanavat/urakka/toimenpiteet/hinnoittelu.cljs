@@ -253,9 +253,6 @@
       [:tbody
        (for* [muu-tyo muut-tyot]
          [muu-tyo-hinnoittelurivi e! muu-tyo])]]
-     ;; kutsuketju rivinlisäyksessä:
-     ;; tiedot/->LisaaMuuTyorivi -> lisaa-hintarivi-toimenpiteelle (ryhma "tyo")
-     ;; (huom lisaa-hintarivi, ei lisaa-tyorivi, vaikka kyseessä on ui:lla työ)
 
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
