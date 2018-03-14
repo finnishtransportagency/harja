@@ -26,7 +26,8 @@
             [harja.ui.yleiset :as yleiset]
             [harja.domain.kanavat.kohde :as kohde]
             [reagent.core :as r]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]))
@@ -120,11 +121,19 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi] (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do
                          (tasot/taso-paalle! :kan-kohteet)
+                         (tasot/taso-paalle! :kan-toimenpiteet)
                          (tasot/taso-pois! :organisaatio)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit!
+                           {:kan-toimenpide {:toiminto (fn [t]
+                                                         (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot t))
+                                                         (kartta-tiedot/piilota-infopaneeli!))
+                                             :teksti "Avaa toimenpide"}})
                          (e! (tiedot/->NakymaAvattu)))
                       #(do
                          (tasot/taso-pois! :kan-kohteet)
+                         (tasot/taso-pois! :kan-toimenpiteet)
                          (tasot/taso-paalle! :organisaatio)
+                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (e! (tiedot/->NakymaSuljettu))))
     (fn [e! app]
       ;; Reaktio on pakko lukea komponentissa, muuten se ei päivity!

@@ -28,7 +28,8 @@
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as tasot]
-            [harja.domain.kanavat.kommentti :as kommentti])
+            [harja.domain.kanavat.kommentti :as kommentti]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -118,11 +119,19 @@
                                   :toimenpide @u/valittu-toimenpideinstanssi}))
                            (e! (tiedot/->HaeSuunnitellutTyot))
                            (e! (tiedot/->HaeHuoltokohteet))
+                           (kartta-tiedot/kasittele-infopaneelin-linkit!
+                             {:kan-toimenpide {:toiminto (fn [t]
+                                                           (e! (tiedot/->AsetaLomakkeenToimenpiteenTiedot t))
+                                                           (kartta-tiedot/piilota-infopaneeli!))
+                                               :teksti "Avaa toimenpide"}})
                            (tasot/taso-paalle! :kan-kohteet)
+                           (tasot/taso-paalle! :kan-toimenpiteet)
                            (tasot/taso-pois! :organisaatio))
                         #(do
                            (e! (tiedot/->Nakymassa? false))
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                            (tasot/taso-pois! :kan-kohteet)
+                           (tasot/taso-pois! :kan-toimenpiteet)
                            (tasot/taso-paalle! :organisaatio)))
 
       (fn [e! {:keys [toimenpiteet haku-kaynnissa? avattu-toimenpide] :as app}]
