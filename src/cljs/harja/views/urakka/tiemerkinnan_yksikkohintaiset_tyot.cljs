@@ -115,6 +115,47 @@
             :fmt pvm/pvm-opt}]
           (yllapitokohteet-domain/jarjesta-yllapitokohteet @tiemerkinnan-toteumat-atom)]]))))
 
+(defn- paallystysurakan-kohteet-vetolaatikko [kohdeosat]
+  [grid/grid
+   {:otsikko "Tierekisterikohteet"
+    :tyhja "Ei kohteita"}
+   [{:otsikko "Nimi" :leveys 7 :nimi :nimi :tyyppi :string :pituus-max 128
+     :muokattava? (constantly false)}
+    {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi :tr-numero
+     :tyyppi :positiivinen-numero :leveys 3 :tasaa :oikea
+     :muokattava? (constantly false)}
+    {:otsikko "Ajo\u00ADrata"
+     :nimi :tr-ajorata
+     :muokattava? (constantly false)
+     :tyyppi :string
+     :tasaa :oikea
+     :fmt #(pot/arvo-koodilla pot/+ajoradat-numerona+ %)
+     :leveys 3}
+    {:otsikko "Kais\u00ADta"
+     :muokattava? (constantly false)
+     :nimi :tr-kaista
+     :tyyppi :string
+     :tasaa :oikea
+     :fmt #(pot/arvo-koodilla pot/+kaistat+ %)
+     :leveys 3}
+    {:otsikko "Aosa" :nimi :tr-alkuosa :leveys 3
+     :tyyppi :positiivinen-numero
+     :tasaa :oikea
+     :muokattava? (constantly false)}
+    {:otsikko "Aet" :nimi :tr-alkuetaisyys :leveys 3
+     :tyyppi :positiivinen-numero
+     :tasaa :oikea
+     :muokattava? (constantly false)}
+    {:otsikko "Losa" :nimi :tr-loppuosa :leveys 3
+     :tyyppi :positiivinen-numero
+     :tasaa :oikea
+     :muokattava? (constantly false)}
+    {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 3
+     :tyyppi :positiivinen-numero
+     :tasaa :oikea
+     :muokattava? (constantly false)}]
+   kohdeosat])
+
 (defn paallystysurakan-kohteet
   [urakka paallystysurakan-kohteet]
   (komp/luo
@@ -126,8 +167,15 @@
           {:otsikko "Päällystysurakassa tehdyt päällystykset"
            :tyhja (if (nil? paallystysurakan-kohteet)
                     [ajax-loader "Haetaan töitä..."]
-                    "Kohteita ei löytynyt")}
-          [{:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
+                    "Kohteita ei löytynyt")
+           :vetolaatikot (into {}
+                               (map (juxt :id
+                                          (fn [rivi]
+                                            [paallystysurakan-kohteet-vetolaatikko
+                                             (:kohdeosat rivi)]))
+                                    paallystysurakan-kohteet))}
+          [{:tyyppi :vetolaatikon-tila :leveys 1}
+           {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
            {:otsikko "YHA-id" :leveys 3 :nimi :yha-id :tyyppi :string
             :pituus-max 128 :muokattava? (constantly false)}
