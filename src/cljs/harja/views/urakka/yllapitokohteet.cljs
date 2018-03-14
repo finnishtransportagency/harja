@@ -418,7 +418,7 @@
                           kohdeosat)
        :tallenna-fn tallenna-fn}]
      [yllapitokohdeosat
-      {:otsikko "Kohteen muut tierekisteriosoitteet"
+      {:otsikko "Muut tierekisteriosoitteet"
        :kohdeosat (filter #(not= (:tr-numero rivi) (:tr-numero %))
                           kohdeosat)
        :tallenna-fn tallenna-fn}]
