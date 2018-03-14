@@ -203,28 +203,30 @@
                     (keep (partial paallekkain? x)
                           (concat (take i alikohteet) (drop (+ 1 i) alikohteet)))))))
 
-(defn tarkista-ovatko-tieosat-olemassa [db alikohteet]
-  (def nykyiset-alikohteet alikohteet)
-  (let [onko-olemassa? (fn [{:keys [sijainti nimi tunniste]}]
-                         (when (not (q-tieverkko/onko-tierekisteriosoite-validi?
-                                      db
-                                      (:numero sijainti)
-                                      (:aosa sijainti)
-                                      (:aet sijainti)
-                                      (:losa sijainti)
-                                      (:let sijainti)))
-                           {:koodi virheet/+virheellinen-sijainti+
-                            :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Osoite: %s."
-                                            nimi
-                                            (:id tunniste)
-                                            (cheshire/encode sijainti))}))]
-    (filter (comp not nil?) (map onko-olemassa? alikohteet))))
+(defn tarkista-ovatko-tierekisterosoitteet-validit [db alikohteet]
+  (let [validi? (fn [{:keys [sijainti nimi tunniste]}]
+                         (let [numero (:numero sijainti)
+                               aosa (:aosa sijainti)
+                               aet (:aet sijainti)
+                               losa (:losa sijainti)
+                               loppuet (:let sijainti)]
+                           (if (q-tieverkko/onko-tierekisteriosoite-validi? db numero aosa aet losa loppuet)
+                             (when (not (q-tieverkko/ovatko-tierekisteriosoitteen-etaisyydet-validit? db numero aosa aet losa loppuet))
+                               {:koodi virheet/+virheellinen-sijainti+
+                                :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Etäisyydet ovat liian pitkiä. Osoite: %s."
+                                                nimi
+                                                (:id tunniste)
+                                                (cheshire/encode sijainti))})
+                             {:koodi virheet/+virheellinen-sijainti+
+                              :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Tietä tai osaa ei löydy. Osoite: %s."
+                                              nimi
+                                              (:id tunniste)
+                                              (cheshire/encode sijainti))})))]
+    (filter (comp not nil?) (map validi? alikohteet))))
 
 (defn tarkista-muut-alikohteet [db muut-alikohteet]
-  (def nykyiset-alikohteet muut-alikohteet)
   (let [virheet (concat
                   (tarkista-leikkaavatko-alikohteet-toisiaan muut-alikohteet)
-                  (tarkista-ovatko-tieosat-olemassa db muut-alikohteet))]
-    (def nykyiset-virheet virheet)
+                  (tarkista-ovatko-tierekisterosoitteet-validit db muut-alikohteet))]
     (when (not (empty? virheet))
       (virheet/heita-poikkeus virheet/+viallinen-kutsu+ virheet))))
