@@ -244,8 +244,13 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(defn yllapitokohdeosat [{:keys [urakka-id sopimus-id yllapitokohde tallenna-fn tallennettu-fn]}]
+(defn yllapitokohdeosat [{:keys [yllapitokohde tallenna-fn]}]
   (let [kohdeosat (:kohdeosat yllapitokohde)]
+
+
+    (log "KOHDEOSAT: " (pr-str kohdeosat))
+
+
     [grid/grid
      {:otsikko "Tierekisterikohteet"
       :tallenna tallenna-fn}
@@ -394,9 +399,7 @@
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
   [:div
    [yllapitokohdeosat
-    {:urakka-id (:id urakka)
-     :sopimus-id sopimus
-     :yllapitokohde rivi
+    {:yllapitokohde rivi
      :tallenna-fn (fn [rivit]
                     (go (let [vastaus (<! (tiedot/tallenna-yllapitokohdeosat!
                                             (:id urakka)
