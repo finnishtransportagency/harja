@@ -246,11 +246,6 @@
 
 (defn yllapitokohdeosat [{:keys [yllapitokohde tallenna-fn]}]
   (let [kohdeosat (:kohdeosat yllapitokohde)]
-
-
-    (log "KOHDEOSAT: " (pr-str kohdeosat))
-
-
     [grid/grid
      {:otsikko "Tierekisterikohteet"
       :tallenna tallenna-fn}
