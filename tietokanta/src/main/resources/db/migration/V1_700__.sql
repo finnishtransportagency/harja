@@ -1,0 +1,1 @@
+ALTER TABLE yhteyshenkilo_urakka ALTER COLUMN rooli TYPE VARCHAR(128);
