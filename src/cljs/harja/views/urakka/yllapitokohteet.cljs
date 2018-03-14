@@ -259,7 +259,7 @@
                      {:nimi :tr-alkuetaisyys}
                      {:nimi :tr-loppuosa}
                      {:nimi :tr-loppuetaisyys}])
-                  ;; FIXME Kaikki täytä alas napit ei toimi!?
+                  ;; FIXME Täytä alas napit ei toimi!?
                   [(assoc paallystys-tiedot/paallyste-grid-skeema
                      :leveys paallyste-leveys
                      :tayta-alas? #(not (nil? %))
