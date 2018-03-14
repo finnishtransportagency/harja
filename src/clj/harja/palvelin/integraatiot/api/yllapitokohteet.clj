@@ -152,6 +152,7 @@
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
+          _ (def nykyinen-kohde kohde)
           muunnettavat-alikohteet (muunnettavat-alikohteet kohteen-tienumero (:alikohteet kohde))
           muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
           karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
@@ -159,10 +160,9 @@
           kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
 
           kohteen-sijainti (:sijainti kohde)
-          paakohteen-sisalla? #(= kohteen-tienumero (get-in % [:sijainti :tie]))
+          paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
           paakohteen-alikohteet (filter paakohteen-sisalla? (:alikohteet kohde))
           muut-alikohteet (filter (comp not paakohteen-sisalla?) (:alikohteet kohde))]
-
       (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
       (validointi/tarkista-muut-alikohteet db muut-alikohteet)
       (jdbc/with-db-transaction [db db]
