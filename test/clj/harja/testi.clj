@@ -371,6 +371,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-pyhaselan-vesivaylaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Pyhäselän urakka';"))))
+
 (defn hae-merivaylien-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio

@@ -1075,6 +1075,205 @@ VALUES
     FROM kayttaja
     WHERE kayttajanimi = 'tero'));
 
+
+-- Sisävesiväylät, Pyhäselän ja Rentoselän urakka
+INSERT INTO vv_hinnoittelu
+(nimi, hintaryhma, luoja, "urakka-id")
+VALUES
+  ('Pyhäselän poijujen korjaus', TRUE,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM urakka
+    WHERE nimi ILIKE 'Pyhäselän urakka'));
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, summa, luoja)
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Pyhäselän poijujen korjaus'),
+   'Ryhmähinta', 60000, (SELECT id
+                         FROM kayttaja
+                         WHERE kayttajanimi = 'tero'));
+
+
+INSERT INTO reimari_toimenpide
+(hintatyyppi,
+ "reimari-komponentit",
+ "reimari-lisatyo",
+ "urakka-id",
+ "reimari-id",
+ "reimari-urakoitsija",
+ "urakoitsija-id",
+ "reimari-sopimus",
+ "sopimus-id",
+ "reimari-turvalaite",
+ "turvalaite-id",
+ lisatieto,
+ suoritettu,
+ luotu,
+ luoja,
+ "reimari-luotu",
+ "reimari-alus",
+ "reimari-tila",
+ "reimari-toimenpidetyyppi",
+ "reimari-tyolaji",
+ "reimari-tyoluokka",
+ "reimari-vayla",
+ "reimari-henkilo-lkm",
+ "vaylanro")
+VALUES
+  ('yksikkohintainen',
+    '{"(-2139967544,nimitahan,1022540401)","(-2139967548,toinennimi,1022540402)"}',
+    TRUE,
+    (SELECT id
+     FROM urakka
+     WHERE nimi ILIKE 'Pyhäselän urakka'),
+    998,
+    '(23, Pohjanmeren venepojat)',
+    (SELECT id
+     FROM organisaatio
+     WHERE nimi = 'Pohjanmeren venepojat'),
+    '(-25, 1022542301, Pyhäselän pääsopimus,)',
+    (SELECT id
+     FROM sopimus
+     WHERE nimi = 'Pyhäselän pääsopimus'),
+    '(8881, Poiju 1, 555)',
+    (SELECT id
+     FROM vv_turvalaite
+     WHERE nimi = 'Pyhäselän pienempi poiju'),
+    'Poijujen korjausta kuten on sovittu Pyhäselkä',
+    '2016-08-08T23:23Z',
+    '2016-08-08',
+    (SELECT id
+     FROM kayttaja
+     WHERE kayttajanimi = 'tero'),
+    '2016-08-08',
+    '(MBKE24524, MS Piggy)',
+    '1022541202',
+    '1022542001',
+    '1022541802',
+    '1022541905',
+   '(123,Pyhäselän läntinen rinnakkaisväylä,55)',
+   3,
+   (SELECT vaylanro
+    FROM vv_vayla
+    WHERE nimi = 'Pyhäselän läntinen rinnakkaisväylä'));
+
+INSERT INTO vv_hinnoittelu
+(nimi, hintaryhma, luoja, "urakka-id")
+VALUES
+  ('Rentoselän poijujen korjaus', TRUE,
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'),
+   (SELECT id
+    FROM urakka
+    WHERE nimi ILIKE 'Rentoselän urakka'));
+
+INSERT INTO vv_hinta
+("hinnoittelu-id", otsikko, summa, luoja)
+VALUES
+  ((SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Rentoselän poijujen korjaus'),
+   'Ryhmähinta', 60000, (SELECT id
+                         FROM kayttaja
+                         WHERE kayttajanimi = 'tero'));
+
+
+INSERT INTO reimari_toimenpide
+(hintatyyppi,
+ "reimari-komponentit",
+ "reimari-lisatyo",
+ "urakka-id",
+ "reimari-id",
+ "reimari-urakoitsija",
+ "urakoitsija-id",
+ "reimari-sopimus",
+ "sopimus-id",
+ "reimari-turvalaite",
+ "turvalaite-id",
+ lisatieto,
+ suoritettu,
+ luotu,
+ luoja,
+ "reimari-luotu",
+ "reimari-alus",
+ "reimari-tila",
+ "reimari-toimenpidetyyppi",
+ "reimari-tyolaji",
+ "reimari-tyoluokka",
+ "reimari-vayla",
+ "reimari-henkilo-lkm",
+ "vaylanro")
+VALUES
+  ('yksikkohintainen',
+    '{"(-2139967544,nimitahan,1022540401)","(-2139967548,toinennimi,1022540402)"}',
+    TRUE,
+    (SELECT id
+     FROM urakka
+     WHERE nimi ILIKE 'Rentoselän urakka'),
+    999,
+    '(23, Pohjanmeren venepojat)',
+    (SELECT id
+     FROM organisaatio
+     WHERE nimi = 'Pohjanmeren venepojat'),
+    '(-26, 1022542301, Rentoselän pääsopimus,)',
+    (SELECT id
+     FROM sopimus
+     WHERE nimi = 'Rentoselän pääsopimus'),
+    '(8881, Poiju 1, 555)',
+    (SELECT id
+     FROM vv_turvalaite
+     WHERE nimi = 'Rentoselän pienempi poiju'),
+    'Poijujen korjausta kuten on sovittu Rentoselkä',
+    '2016-08-08T23:23Z',
+    '2016-08-08',
+    (SELECT id
+     FROM kayttaja
+     WHERE kayttajanimi = 'tero'),
+    '2016-08-08',
+    '(MBKE24524, MS Piggy)',
+    '1022541202',
+    '1022542001',
+    '1022541802',
+    '1022541905',
+   '(123,Rentoselän läntinen rinnakkaisväylä,55)',
+   3,
+   (SELECT vaylanro
+    FROM vv_vayla
+    WHERE nimi = 'Rentoselän läntinen rinnakkaisväylä'));
+
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id", luoja)
+VALUES
+  ((SELECT id
+    FROM reimari_toimenpide
+    WHERE lisatieto = 'Poijujen korjausta kuten on sovittu Pyhäselkä'),
+   (SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Pyhäselän poijujen korjaus'),
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'));
+
+INSERT INTO vv_hinnoittelu_toimenpide
+("toimenpide-id", "hinnoittelu-id", luoja)
+VALUES
+  ((SELECT id
+    FROM reimari_toimenpide
+    WHERE lisatieto = 'Poijujen korjausta kuten on sovittu Rentoselkä'),
+   (SELECT id
+    FROM vv_hinnoittelu
+    WHERE nimi = 'Rentoselän poijujen korjaus'),
+   (SELECT id
+    FROM kayttaja
+    WHERE kayttajanimi = 'tero'));
+
 -- ***********************************************
 -- TODO: ERIKSEEN TILATTU YKSIKKÖHINTAINEN TYÖ?
 -- ***********************************************

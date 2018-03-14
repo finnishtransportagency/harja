@@ -70,6 +70,31 @@
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
     (is (= ["Kaikki yhteensä" 30.0M] taulukko-yhteenveto-yhteensa))))
 
+(deftest raportin-suoritus-urakalle-toimii-pyhaselka
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi :vesivaylien-laskutusyhteenveto
+                                 :konteksti "urakka"
+                                 :urakka-id (hae-pyhaselan-vesivaylaurakan-id)
+                                 :parametrit {:alkupvm (c/to-date (t/local-date 2016 8 1))
+                                              :loppupvm (c/to-date (t/local-date 2017 7 31))}})
+        odotettu-otsikko "hae-pyhaselan-vesivaylaurakan-id, Laskutusyhteenveto ajalta 01.08.2016 - 31.07.2017"
+        saatu-otsikko (:nimi (second vastaus))
+        taulukko-kauppamerenkulku (nth vastaus 2)
+        taulukko-kauppamerenkulku-yhteensa (yhteensa-rivi taulukko-kauppamerenkulku)
+        taulukko-muu-vesiliikenne (nth vastaus 3)
+        taulukko-muu-vesiliikenne-yhteensa (yhteensa-rivi taulukko-muu-vesiliikenne)
+        taulukko-yhteenveto (nth vastaus 4)
+        taulukko-yhteenveto-yhteensa (yhteensa-rivi taulukko-yhteenveto)]
+
+
+    (is (vector? vastaus))
+    (is (= (first vastaus) :raportti))
+
+    (is (= ["Yhteensä" "" 60030.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
+    (is (= ["Kaikki yhteensä" 60030.0M] taulukko-yhteenveto-yhteensa))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-hoitokausi-2016-2017
@@ -77,10 +102,10 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :kanavien-laskutusyhteenveto
-                                 :konteksti "urakka"
+                                 :konteksti "hallintayksikko"
                                  :hallintayksikko-id (hae-sisavesivaylien-hallintayksikon-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
-                                              :loppupvm (c/to-date (t/local-date 2018 7 30))}})
+                                 :parametrit {:alkupvm (c/to-date (t/local-date 2016 8 1))
+                                              :loppupvm (c/to-date (t/local-date 2017 7 30))}})
         odotettu-otsikko "Sisävesiväylät, Laskutusyhteenveto ajalta 01.08.2016 - 31.07.2017"
         saatu-otsikko (:nimi (second vastaus))
         taulukko-kauppamerenkulku (nth vastaus 2)
@@ -90,6 +115,7 @@
         taulukko-yhteenveto (nth vastaus 4)
         taulukko-yhteenveto-yhteensa (yhteensa-rivi taulukko-yhteenveto)]
 
+     (println " vastaus " vastaus)
 
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))

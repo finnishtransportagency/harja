@@ -145,6 +145,8 @@
                                                      :loppupvm loppupvm}))
                                urakoiden-parametrit)
 
+
+        _ (println " urakoiden-tiedot  " urakoiden-tiedot)
         ;FIXME: tähän reduce + himmeli
         raportin-tiedot (apply merge-with (fnil + 0 0) urakoiden-tiedot)
         _ (println " raportin tiedot  " raportin-tiedot)

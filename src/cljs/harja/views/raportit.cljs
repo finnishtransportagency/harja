@@ -119,10 +119,10 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
-(defonce vesivaylaurakassa? (reaction (or (urakka-domain/vesivayla-urakkatyypit (:tyyppi @nav/valittu-urakka))
-                                      (urakka-domain/vesivayla-urakkatyypit-raporttinakyma (:tyyppi @nav/valittu-urakka)))))
 
 (defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
+
+(defonce vesivaylaurakassa? (reaction (urakka-domain/vesivayla-urakkatyypit (:tyyppi @nav/valittu-urakka))))
 
 (defonce valittu-hoitokausi (reaction-writable
                               (when (= @valittu-urakkatyyppi :hoito)
@@ -251,7 +251,7 @@
          {:disabled @vapaa-aikavali?}
          (if (or hoitourakassa? vesivaylaurakassa?)
            (u/hoito-tai-sopimuskaudet ur)
-           (u/edelliset-hoitokaudet 5 true))
+           (u/edelliset-hoitokaudet 5 false urakkatyyppi))
          valittu-hoitokausi
          #(do
            (reset! valittu-hoitokausi %)
