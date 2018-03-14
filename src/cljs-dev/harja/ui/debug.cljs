@@ -38,15 +38,8 @@
        "\u25b6")]
     [:td " "]))
 
-(defmethod debug-show :coll [data path open-paths toggle! options]
+(defmethod debug-show :coll [data path open-paths toggle!]
   [:table.debug-coll
-   (when (:otsikko options)
-     [:caption (:otsikko options)])
-   (when (:colgroup? options)
-     [:colgroup
-      [:col {:style {:width "5%"}}]
-      [:col {:style {:width "5%"}}]
-      [:col {:style {:width "90%"}}]])
    [:thead [:th "#"] [:th " "] [:th "Value"]]
    [:tbody
     (doall
@@ -59,15 +52,8 @@
          [:td [show-value value (conj path i) open-paths toggle!]]])
       data))]])
 
-(defmethod debug-show :map [data path open-paths toggle! options]
+(defmethod debug-show :map [data path open-paths toggle!]
   [:table.debug-map
-   (when (:otsikko options)
-     [:caption (:otsikko options)])
-   (when (:colgroup? options)
-     [:colgroup
-      [:col {:style {:width "5%"}}]
-      [:col {:style {:width "5%"}}]
-      [:col {:style {:width "90%"}}]])
    [:thead
     [:tr [:th "Key"] [:th " "] [:th "Value"]]]
    [:tbody
@@ -80,10 +66,10 @@
        [:td
         [show-value value p open-paths toggle!]]])]])
 
-(defmethod debug-show :pr-str [data p _ _ options]
+(defmethod debug-show :pr-str [data p _ _]
   [:span (pr-str data)])
 
-(defn debug [item options]
+(defn debug [item]
   (let [open-paths (r/atom #{})
         toggle! #(swap! open-paths
                         (fn [paths]
@@ -92,4 +78,4 @@
                             (conj paths %))))]
     (fn [item]
       [:div.debug
-       [debug-show item [] @open-paths toggle! options]])))
+       [debug-show item [] @open-paths toggle!]])))

@@ -146,7 +146,6 @@
     (is (= 200 (:status @vastaus)))
 
     (let [vastausdata (cheshire/decode (:body @vastaus))
-          _ (println @vastaus)
           ilmoitus (get (first (get vastausdata "ilmoitukset")) "ilmoitus")]
       (is (= 1 (count (get vastausdata "ilmoitukset"))))
       (is (= odotettu-ilmoitus ilmoitus)))
