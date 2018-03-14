@@ -256,6 +256,7 @@
 
 (defn hae-yllapitokohteen-muut-kohdeosat [db yllapitokohde-id]
   (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
-        yllapitokohteen-osat (q/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt [yllapitokohde-id]})]
-    (remove #(tr/kohdeosat-paalekkain? yllapitokohde %)
+        yllapitokohteen-osat (map #(clojure.set/rename-keys % {:id :kohdeosa-id})
+                                  (q/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt [yllapitokohde-id]}))]
+    (remove #(tr/kohteenosa-paallekkain-paakohteen-kanssa? yllapitokohde %)
             yllapitokohteen-osat)))

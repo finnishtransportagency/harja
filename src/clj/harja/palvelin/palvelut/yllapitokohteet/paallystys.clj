@@ -194,20 +194,39 @@
                                              :paallystetyyppi :tyomenetelma)))
                                (:osoitteet ilmoitustiedot))]
     (-> ilmoitustiedot
-        (assoc :osoitteet paivitetyt-osoitteet)
-        (dissoc :muut-osoitteet))))
+        (assoc :osoitteet paivitetyt-osoitteet))))
 
 (defn- muunna-tallennetut-ilmoitustiedot-lomakemuotoon
   "Muuntaa päällystysilmoituksen ilmoitustiedot lomakkeessa esitettävään muotoon."
-  [ilmoitustiedot]
-  (let [paivitetyt-osoitteet (mapv
-                               (fn [osoite]
-                                 (clojure.set/rename-keys osoite
-                                                          {:paallystetyyppi :toimenpide-paallystetyyppi
-                                                           :raekoko :toimenpide-raekoko
-                                                           :tyomenetelma :toimenpide-tyomenetelma}))
-                               (:osoitteet ilmoitustiedot))]
-    (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))
+  [paallystysilmoitus]
+  (let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)
+        toimenpiteen-tiedot (mapv
+                              (fn [osoite]
+                                (let [osoitteen-tiedot (select-keys osoite #{:paallystetyyppi :raekoko :massamenekki :rc% :tyomenetelma
+                                                                             :leveys :kokonaismassamaara :pinta-ala :kuulamylly
+                                                                             :esiintyma :km-arvo :muotoarvo :sideainetyyppi :pitoisuus
+                                                                             :lisaaineet :kohdeosa-id})]
+                                  (if (tr-domain/kohteenosa-paallekkain-paakohteen-kanssa? paallystysilmoitus osoite)
+                                    (assoc osoitteen-tiedot :taulukko :yllapitokohdeosat)
+                                    (assoc osoitteen-tiedot :taulukko :muut-kohdeosat))))
+                              (:osoitteet ilmoitustiedot))
+
+        osoite-tiedot (reduce (fn [osoitteet osoite]
+                                (let [osoite (select-keys osoite #{:tr-kaista :tr-ajorata :tr-loppuosa
+                                                                   :tunnus :tr-alkuosa :tr-loppuetaisyys
+                                                                   :nimi :tr-alkuetaisyys :tr-numero
+                                                                   :hyppy? :toimenpide :massamaara :raekoko
+                                                                   :paallystetyyppi :tyomenetelma :kohdeosa-id})]
+                                  (if (tr-domain/kohteenosa-paallekkain-paakohteen-kanssa? paallystysilmoitus osoite)
+                                    (update osoitteet :osoitteet conj osoite)
+                                    (update osoitteet :muut-osoitteet conj osoite))))
+                              {:osoitteet [] :muut-osoitteet []} (:osoitteet ilmoitustiedot))]
+    (println "MUUT OSOITTEET")
+    (clojure.pprint/pprint osoite-tiedot)
+    (-> paallystysilmoitus
+        (assoc :paallystystoimenpiteet toimenpiteen-tiedot
+               :muut-osoitteet (:muut-osoitteet osoite-tiedot))
+        (assoc-in [:ilmoitustiedot :osoitteet] (:osoitteet osoite-tiedot)))))
 
 
 (defn hae-urakan-paallystysilmoitus-paallystyskohteella
@@ -236,18 +255,15 @@
                                     {:kohdeosa :kohdeosat}
                                     :id))
         paallystysilmoitus (pyorista-kasittelypaksuus paallystysilmoitus)
-        _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
-            (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
         ;; Tyhjälle ilmoitukselle esitäytetään kohdeosat. Jos ilmoituksessa on tehty toimenpiteitä
         ;; kohdeosille, niihin liitetään kohdeosan tiedot, jotta voidaan muokata frontissa.
-        paallystysilmoitus (as-> paallystysilmoitus p
-                                 (assoc p :ilmoitustiedot
-                                          (muunna-tallennetut-ilmoitustiedot-lomakemuotoon (:ilmoitustiedot p)))
-                                 (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
-        ;; Poistetaan kohteen ulkopuoliset
-        paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet] (fn [osoitteet]
-                                                                                        (filter #(tr-domain/kohteenosa-paallekkain-paakohteen-kanssa? paallystysilmoitus %)
-                                                                                                osoitteet)))
+        _ (println "---> PÄÄLLYSTYSILMOITUS")
+        _ (clojure.pprint/pprint paallystysilmoitus)
+        _ (when-let [ilmoitustiedot (:ilmoitustiedot paallystysilmoitus)]
+            (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot))
+        paallystysilmoitus (-> paallystysilmoitus
+                               (taydenna-paallystysilmoituksen-kohdeosien-tiedot)
+                               (muunna-tallennetut-ilmoitustiedot-lomakemuotoon))
         kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus)
         kommentit (into []
                         (comp (map konv/alaviiva->rakenne)
@@ -399,6 +415,8 @@
                                 (first
                                   (filter #(and
                                              (= (:tr-numero %) (:tr-numero osoite))
+                                             (= (:tr-ajorata %) (:tr-ajorata osoite))
+                                             (= (:tr-kaista %) (:tr-kaista osoite))
                                              (= (:tr-alkuosa %) (:tr-alkuosa osoite))
                                              (= (:tr-alkuetaisyys %) (:tr-alkuetaisyys osoite))
                                              (= (:tr-loppuosa %) (:tr-loppuosa osoite))
@@ -439,7 +457,7 @@
           url (str "https://extranet.liikennevirasto.fi/harja#urakat/kohdeluettelo-paallystys/paallystysilmoitukset?"
                    "&hy=" hallintayksikko-id
                    "&u=" urakka-id)
-            kayttajaroolit (if sposti-urakan-valvojalle? #{"ely urakanvalvoja"} #{"urakan vastuuhenkilö"})
+          kayttajaroolit (if sposti-urakan-valvojalle? #{"ely urakanvalvoja"} #{"urakan vastuuhenkilö"})
           spostin-parametrit {:fim fim
                               :email email
                               :urakka-sampoid urakka-sampoid
@@ -484,14 +502,18 @@
                                                     db
                                                     {:paallystyskohde paallystyskohde-id}))))
             paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
+            paivitettevat-kohdeosat (map #(assoc % :id (:kohdeosa-id %))
+                                         (concat (->> paallystysilmoitus
+                                                      :ilmoitustiedot
+                                                      :osoitteet
+                                                      (filter (comp not :poistettu)))
+                                                 (->> paallystysilmoitus
+                                                      :muut-osoitteet
+                                                      (filter (comp not :poistettu)))))
             paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                    db user {:urakka-id urakka-id :sopimus-id sopimus-id
                                             :yllapitokohde-id paallystyskohde-id
-                                            :osat (map #(assoc % :id (:kohdeosa-id %))
-                                                       (->> paallystysilmoitus
-                                                            :ilmoitustiedot
-                                                            :osoitteet
-                                                            (filter (comp not :poistettu))))})
+                                            :osat paivitettevat-kohdeosat})
             paallystysilmoitus (lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus paivitetyt-kohdeosat)
             vanha-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)
             paallystysilmoitus-id (if vanha-paallystysilmoitus
@@ -500,10 +522,6 @@
                                     (luo-paallystysilmoitus db user urakka-id paallystysilmoitus))
             tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
 
-        (muut-kohdeosat/tallenna-muut-kohdeosat db user {:urakka-id urakka-id
-                                                    :yllapitokohde-id (:paallystyskohde-id paallystysilmoitus)
-                                                    :muut-kohdeosat (get-in paallystysilmoitus [:ilmoitustiedot :muut-osoitteet])
-                                                    :vuosi vuosi})
         (tallenna-paallystysilmoituksen-kommentti db user paallystysilmoitus paallystysilmoitus-id)
         (laheta-paallystysilmoitussahkoposti-tarvittaessa {:db db :fim fim :email email :urakka-id urakka-id
                                                            :paallystyskohde-id paallystyskohde-id

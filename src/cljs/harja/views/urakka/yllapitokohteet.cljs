@@ -339,7 +339,7 @@
                  (tr/laske-tien-pituus osan-pituus tieosa))]
 
     (fn [{:keys [kohdeosat-paivitetty-fn muokkaa!
-                 rivinumerot? voi-muokata?] :as opts}
+                 rivinumerot? voi-muokata? lisaa-taulukon-nimi] :as opts}
          urakka kohdeosat {yllapitokohde-id :id :as kohde} osan-pituus]
       (let [voi-muokata? (if (nil? voi-muokata?)
                            true
@@ -448,7 +448,11 @@
                 (muokkaa! (->> uudet-tiedot
                                seq
                                (sort-by first)
-                               (mapv second))
+                               (sequence
+                                 (comp
+                                   (map #(update % 1 (fn [kohdeosa] (assoc kohdeosa :id (first %)))))
+                                   (map second)))
+                               vec)
                           uudet-virheet)))
 
 
@@ -614,12 +618,12 @@
 (defn validoi-kohdeosien-paallekkyys [muut-kohdeosat virheet-atom]
   (let [gridin-tila @muut-kohdeosat
         gridin-virheet @virheet-atom
-        paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain (vals gridin-tila))
+        paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain (vals gridin-tila) :kohdeosa-id)
         gridin-paallekkaiset-osat (flatten (keep (fn [[avain rivi]]
                                                    (let [rivin-paallekkaiset-osat
-                                                         (keep #(let [{id-1 :id nimi-1 :nimi} (-> % :kohteet first)
-                                                                     {id-2 :id nimi-2 :nimi} (-> % :kohteet second)
-                                                                      rivin-id (:id rivi)]
+                                                         (keep #(let [{id-1 :kohdeosa-id nimi-1 :nimi} (-> % :kohteet first)
+                                                                     {id-2 :kohdeosa-id nimi-2 :nimi} (-> % :kohteet second)
+                                                                      rivin-id (:kohdeosa-id rivi)]
                                                                  (when (or (= id-1 rivin-id) (= id-2 rivin-id))
                                                                    {:rivi avain
                                                                     :viesti (str "Kohteenosa on päälekkäin osan "
@@ -647,7 +651,7 @@
       (lisaa-virhe-riville {:virheet-atom virheet-atom :virhe paallekkainen-osa}))))
 
 (defn muut-kohdeosat
-  [{:keys [kohde urakka-id grid-asetukset voi-muokata? muokkaa! kohdeosat-atom virheet-atom] :as tiedot}]
+  [{:keys [kohde urakka-id grid-asetukset voi-muokata? muokkaa! kohdeosat-atom virheet-atom rivin-lisays-fn lisaa-taulukon-nimi] :as tiedot}]
   (let [yllapitokohde-id (:id kohde)
         muut-kohdeosat (or kohdeosat-atom (atom nil))
         tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
@@ -680,9 +684,9 @@
                                                   (when (and (:paalekkain-oleva-kohde rivi)
                                                              (tr/kohdeosat-paalekkain? (:paalekkain-oleva-kohde rivi) rivi))
                                                     (:virhe-viesti rivi)))
-        kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa (fn [_ rivi taulukko]
+        #_#_kohteenosa-ei-paalekkain-muiden-taulukon-osien-kanssa (fn [_ rivi taulukko]
                                                                 (let [muut-rivit (keep (fn [[grid-id kohdeosa]]
-                                                                                         (when-not (= (:id rivi) (:id kohdeosa))
+                                                                                         (when-not (= (:kohdeosa-id rivi) (:kohdeosa-id kohdeosa))
                                                                                            kohdeosa))
                                                                                          taulukko)]
                                                                   (some #(when (tr/kohdeosat-paalekkain? % rivi)
@@ -782,8 +786,14 @@
                                   uusi-id (if (or (= pienin-id 1)
                                                   (nil? pienin-id))
                                             -1 (dec pienin-id))]
-                              (swap! muut-kohdeosat assoc uusi-id {:id uusi-id
-                                                                   :koskematon true}))
+                              (swap! muut-kohdeosat assoc uusi-id (when lisaa-taulukon-nimi
+                                                                    {:kohdeosa-id uusi-id
+                                                                     :koskematon true
+                                                                     :taulukko lisaa-taulukon-nimi}
+                                                                    {:kohdeosa-id uusi-id
+                                                                     :koskematon true}))
+                              (when rivin-lisays-fn
+                                (rivin-lisays-fn @muut-kohdeosat)))
         skeema (if voi-muokata?
                  (conj skeema {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys toiminnot-leveys
                                :tasaa :keskita
@@ -794,17 +804,19 @@
                                                 {:luokka "btn-xs"}]
                                                [napit/kielteinen "Poista"
                                                 #(do
-                                                   (if (< (:id rivi) 0)
-                                                       ;; Kyseessä siis juuri luotu kohteenosa, jota ei ole tallennettu kantaan
-                                                       (swap! muut-kohdeosat dissoc (:id rivi))
-                                                       ;; On tallennettu jo kantaan
-                                                       (swap! muut-kohdeosat update index (fn [rivi]
-                                                                                            (assoc rivi :poistettu true))))
-                                                   (when (contains? @grid-virheet (:id rivi))
-                                                     (swap! grid-virheet dissoc (:id rivi))
+                                                   (if (< (:kohdeosa-id rivi) 0)
+                                                     ;; Kyseessä siis juuri luotu kohteenosa, jota ei ole tallennettu kantaan
+                                                     (swap! muut-kohdeosat dissoc index)
+                                                     ;; On tallennettu jo kantaan
+                                                     (swap! muut-kohdeosat update index (fn [rivi]
+                                                                                          (assoc rivi :poistettu true))))
+                                                   (when (contains? @grid-virheet (:kohdeosa-id rivi))
+                                                     (swap! grid-virheet dissoc (:kohdeosa-id rivi))
                                                      (validoi-kohdeosien-paallekkyys muut-kohdeosat grid-virheet))
                                                    (when muokkaa!
-                                                     (muokkaa! @muut-kohdeosat)))
+                                                     (muokkaa! @muut-kohdeosat))
+                                                   (when rivin-lisays-fn
+                                                     (rivin-lisays-fn @muut-kohdeosat)))
                                                 {:ikoni (ikonit/livicon-trash)
                                                  :luokka "btn-xs"}]])})
                  skeema)]

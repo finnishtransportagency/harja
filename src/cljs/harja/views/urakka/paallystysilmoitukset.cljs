@@ -202,19 +202,15 @@
                                   ;; Poistetaan poistetut elementit
                                   (grid/poista-poistetut [:ilmoitustiedot :osoitteet])
                                   (grid/poista-poistetut [:ilmoitustiedot :alustatoimet])
-                                  ;; Poistetaan :tierekisterikohteet-taulukko? avain
-                                  (update-in [:ilmoitustiedot :osoitteet] (fn [osoitteet]
-                                                                            (map (fn [osoite]
-                                                                                    (dissoc osoite :tierekisterikohteet-taulukko?))
-                                                                                 osoitteet)))
-                                  (update-in [:ilmoitukset :muut-osoitteet] (fn [muut-osoitteet]
-                                                                              (into {} (map (fn [[id rivi]]
-                                                                                              (let [rivin-oleelliset-tiedot (select-keys rivi #{:tr-kaista :tr-ajorata :tr-loppuosa
-                                                                                                                                                :tr-alkuosa :tr-loppuetaisyys :tr-alkuetaisyys
-                                                                                                                                                :nimi :tr-numero :hyppy? :paallystetyyppi
-                                                                                                                                                :raekoko :tyomenetelma :massamaara :id})]
-                                                                                                [id rivin-oleelliset-tiedot]))
-                                                                                            muut-osoitteet)))))]
+
+                                  (update :muut-osoitteet (fn [muut-osoitteet]
+                                                            (into {} (map (fn [[id rivi]]
+                                                                            (let [rivin-oleelliset-tiedot (select-keys rivi #{:tr-kaista :tr-ajorata :tr-loppuosa
+                                                                                                                              :tr-alkuosa :tr-loppuetaisyys :tr-alkuetaisyys
+                                                                                                                              :nimi :tr-numero :hyppy? :paallystetyyppi
+                                                                                                                              :raekoko :tyomenetelma :massamaara :id})]
+                                                                              [id rivin-oleelliset-tiedot]))
+                                                                          muut-osoitteet)))))]
          (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
          (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
          (paallystys/tallenna-paallystysilmoitus! {:urakka-id urakka-id
@@ -328,6 +324,34 @@
                        (swap! paallystys/paallystysilmoitus-lomakedata assoc :tila (:tila vastaus))
                        (harja.atom/paivita! paallystys/paallystysilmoitukset))}]]))
 
+(defn paivita-paallystystoimenpide
+  [paallystystoimenpiteet muokattu-data taulukko]
+  (println "MUOKATTU DATA")
+  (cljs.pprint/pprint muokattu-data)
+  (println "PÄÄLLYSTYSTOIMENPITEET")
+  (cljs.pprint/pprint paallystystoimenpiteet)
+  (println "---> TAULUKKO: " (pr-str taulukko))
+  (when-let [uusi-kohteenosa (some (fn [kohteenosan-tiedot]
+                                     (when (some #(do
+                                                    (not= (:kohdeosa-id kohteenosan-tiedot) (:kohdeosa-id %)))
+                                                 (filter #(= (:taulukko %) taulukko) paallystystoimenpiteet))
+                                       kohteenosan-tiedot))
+                                   (if (= taulukko :muut-kohdeosat)
+                                         (vals muokattu-data) muokattu-data))]
+    (println "UUSI KOHTEENOSA")
+    (cljs.pprint/pprint uusi-kohteenosa)
+    (conj paallystystoimenpiteet uusi-kohteenosa)))
+
+(defn foo-fn [kohteen-sisaiset-tierekisteriosoitteet muut-kohdeosat-state muu-kohdeosa]
+  (if-let [muu-kohdeosa-rivi-id (some (fn [[rivi-index kohdeosa]]
+                                        (when (= (:kohdeosa-id kohdeosa) (:kohdeosa-id muu-kohdeosa))
+                                          rivi-index))
+                                      @muut-kohdeosat-state)]
+    [1 muu-kohdeosa-rivi-id]
+    [-1 (some (fn [kohdeosa]
+                (when (= (:kohdeosa-id kohdeosa) (:kohdeosa-id muu-kohdeosa))
+                  ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) kohdeosa)))
+              kohteen-sisaiset-tierekisteriosoitteet)]))
 
 (defn paallystysilmoitus-tekninen-osa
   [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
@@ -342,15 +366,11 @@
                                                                :tr-loppuosa :tr-loppuetaisyys :yllapitokohde-id})
                                                 (assoc :id (:yllapitokohde-id lomakedata-nyt))
                                                 (dissoc :yllapitokohde-id))
-            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
+            paallystystoimenpiteet (grid-wrap [:paallystystoimenpiteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
             muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
-            jarjestys-fn #(cond
-                            ;; Jos on taulukossa "Muut kohdeosat", laitetaan tulokset loppuun. Tehdään tämä antamalla isompi vektori vertailuun
-                            (not (tr/tr-vali-paakohteen-sisalla? lomakedata-nyt %)) (conj ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %) 1)
-                            (not (nil? (:id %))) [(:id %) 0 0 0]
-                            :else ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
+            jarjestys-fn #((partial foo-fn kohteen-sisaiset-tierekisteriosoitteet muut-kohdeosat-state) %)]
         [:fieldset.lomake-osa
          [leijuke/otsikko-ja-vihjeleijuke 3 "Tekninen osa"
           {:otsikko "Päällystysilmoituksen täytön vihjeet"}
@@ -371,13 +391,16 @@
              [:figcaption
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
+         [debug lomakedata-nyt {:colgroup? true :otsikko "Lomakedata"}]
          [yllapitokohteet/yllapitokohdeosat
           {:voi-kumota? false
            :muokkaa! (fn [kohteet virheet]
                        (muokkaa! (fn [lomake]
                                    (-> lomake
                                        (assoc-in [:ilmoitustiedot :osoitteet] kohteet)
-                                       (assoc-in [:virheet :alikohteet] virheet)))))
+                                       (assoc-in [:virheet :alikohteet] virheet)
+                                       (update :paallystystoimenpiteet paivita-paallystystoimenpide kohteet :yllapitokohdeosat)))))
+           :lisaa-taulukon-nimi :yllapitokohdeosat
            :rivinumerot? true
            :voi-muokata? voi-muokata?
            :virheet yllapitokohde-virheet}
@@ -390,11 +413,15 @@
                                           :urakka-id (:id urakka)
                                           :voi-muokata? voi-muokata?
                                           :muokkaa! (fn [muut-kohdeosat]
-                                                      (swap! paallystys/paallystysilmoitus-lomakedata assoc-in [:ilmoitustiedot :muut-osoitteet]
+                                                      (swap! paallystys/paallystysilmoitus-lomakedata assoc :muut-osoitteet
                                                              (into {} (keep (fn [[id arvo]]
-                                                                             (when-not (:koskematon arvo)
-                                                                               [id arvo]))
-                                                                           muut-kohdeosat))))
+                                                                              (when-not (:koskematon arvo)
+                                                                                [id arvo]))
+                                                                            muut-kohdeosat))))
+                                          :lisaa-taulukon-nimi :muut-kohdeosat
+                                          :rivin-lisays-fn (fn [muut-kohdeosat]
+                                                             (muokkaa! (fn [lomake]
+                                                                         (update lomake :paallystystoimenpiteet paivita-paallystystoimenpide muut-kohdeosat :muut-kohdeosat))))
                                           :kohdeosat-atom muut-kohdeosat-state :virheet-atom muut-kohdeosat-virheet
                                           :grid-asetukset {:rivinumeron-aloitus-n (if (= kohteen-sisaisten-kohteiden-lkm 0)
                                                                                     2 (inc kohteen-sisaisten-kohteiden-lkm))
@@ -415,28 +442,28 @@
            :rivinumerot? true
            :jarjesta jarjestys-fn}
           [(assoc paallystys/paallyste-grid-skeema
-             :nimi :toimenpide-paallystetyyppi
+             :nimi :paallystetyyppi
              :leveys 30
              :tayta-alas? #(not (nil? %))
              :tayta-fn (fn [lahtorivi tama-rivi]
-                         (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi lahtorivi)))
+                         (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
              :tayta-sijainti :ylos
              :tayta-tooltip "Kopioi sama toimenpide alla oleville riveille"
              :tayta-alas-toistuvasti? #(not (nil? %))
              :tayta-toistuvasti-fn
              (fn [toistettava-rivi tama-rivi]
-               (assoc tama-rivi :toimenpide-paallystetyyppi (:toimenpide-paallystetyyppi toistettava-rivi))))
+               (assoc tama-rivi :paallystetyyppi (:paallystetyyppi toistettava-rivi))))
            (assoc paallystys/raekoko-grid-skeema
-             :nimi :toimenpide-raekoko :leveys 10
+             :nimi :raekoko :leveys 10
              :tayta-alas? #(not (nil? %))
              :tayta-fn (fn [lahtorivi tama-rivi]
-                         (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko lahtorivi)))
+                         (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
              :tayta-sijainti :ylos
              :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
              :tayta-alas-toistuvasti? #(not (nil? %))
              :tayta-toistuvasti-fn
              (fn [toistettava-rivi tama-rivi]
-               (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi))))
+               (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
            {:otsikko "Massa\u00ADmenek\u00ADki (kg/m²)"
             :nimi :massamenekki
             :tyyppi :positiivinen-numero :desimaalien-maara 0
@@ -461,19 +488,19 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+              (assoc tama-rivi :raekoko (:raekoko toistettava-rivi)))}
            (assoc paallystys/tyomenetelma-grid-skeema
-             :nimi :toimenpide-tyomenetelma
+             :nimi :tyomenetelma
              :leveys 30
              :tayta-alas? #(not (nil? %))
              :tayta-fn (fn [lahtorivi tama-rivi]
-                         (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma lahtorivi)))
+                         (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
              :tayta-sijainti :ylos
              :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
              :tayta-alas-toistuvasti? #(not (nil? %))
              :tayta-toistuvasti-fn
              (fn [toistettava-rivi tama-rivi]
-               (assoc tama-rivi :toimenpide-tyomenetelma (:toimenpide-tyomenetelma toistettava-rivi))))
+               (assoc tama-rivi :tyomenetelma (:tyomenetelma toistettava-rivi))))
            {:otsikko "Leveys (m)" :nimi :leveys :leveys 10 :tyyppi :positiivinen-numero
             :tasaa :oikea
             :tayta-alas? #(not (nil? %))
@@ -522,8 +549,13 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :kuulamylly (:kuulamylly toistettava-rivi)))}]
+              (assoc tama-rivi :kuulamylly (:kuulamylly toistettava-rivi)))}
+           ;;TODO POISTA TÄÄ SARAKE
+           {:otsikko "ID"
+            :nimi :kohdeosa-id
+            :tyyppi :string}]
           paallystystoimenpiteet]
+         [debug @paallystystoimenpiteet {:colgroup? true :otsikko "Päällystystoimenpiteet"}]
 
          [grid/muokkaus-grid
           {:otsikko "Kiviaines ja sideaine"
@@ -547,7 +579,7 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+              (assoc tama-rivi :raekoko (:raekoko toistettava-rivi)))}
            {:otsikko "KM-arvo" :nimi :km-arvo :tyyppi :string :pituus-max 256 :leveys 20
             :tayta-alas? #(not (nil? %))
             :tayta-fn (fn [lahtorivi tama-rivi]
@@ -557,7 +589,7 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+              (assoc tama-rivi :raekoko (:raekoko toistettava-rivi)))}
            {:otsikko "Muoto\u00ADarvo" :nimi :muotoarvo :tyyppi :string :pituus-max 256
             :leveys 20
             :tayta-alas? #(not (nil? %))
@@ -568,7 +600,7 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+              (assoc tama-rivi :raekoko (:raekoko toistettava-rivi)))}
            {:otsikko "Sideaine\u00ADtyyppi" :nimi :sideainetyyppi :leveys 30
             :tyyppi :valinta
             :valinta-arvo :koodi
@@ -582,7 +614,7 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+              (assoc tama-rivi :raekoko (:raekoko toistettava-rivi)))}
            {:otsikko "Pitoisuus" :nimi :pitoisuus :leveys 20 :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
             :tayta-alas? #(not (nil? %))
             :tayta-fn (fn [lahtorivi tama-rivi]
@@ -592,7 +624,7 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}
+              (assoc tama-rivi :raekoko (:raekoko toistettava-rivi)))}
            {:otsikko "Lisä\u00ADaineet" :nimi :lisaaineet :leveys 20 :tyyppi :string
             :pituus-max 256
             :tayta-alas? #(not (nil? %))
@@ -603,7 +635,7 @@
             :tayta-alas-toistuvasti? #(not (nil? %))
             :tayta-toistuvasti-fn
             (fn [toistettava-rivi tama-rivi]
-              (assoc tama-rivi :toimenpide-raekoko (:toimenpide-raekoko toistettava-rivi)))}]
+              (assoc tama-rivi :raekoko (:raekoko toistettava-rivi)))}]
           paallystystoimenpiteet]
 
          (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
