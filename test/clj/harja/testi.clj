@@ -371,6 +371,16 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-merivaylien-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Meriväylät';"))))
+
+(defn hae-sisavesivaylien-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Sisävesiväylät';"))))
+
 (defn hae-saimaan-kanavaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka

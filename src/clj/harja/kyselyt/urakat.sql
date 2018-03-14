@@ -184,7 +184,7 @@ SELECT id,
   FROM urakka u
  WHERE :urakkaid::INTEGER IS NULL AND
        u.hallintayksikko = :hallintayksikkoid AND
-       u.tyyppi = 'hoito' AND
+       u.tyyppi = :urakkatyyppi::urakkatyyppi AND
        (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
         u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
        u.urakkanro IS NOT NULL

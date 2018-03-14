@@ -9,6 +9,7 @@
             [harja.fmt :as fmt]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [clojure.set :as set]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vesivaylien_laskutusyhteenveto.sql")
@@ -118,54 +119,86 @@
                                    [(:erilliskustannukset tiedot)]
                                    (map :toteutunut-maara (vals (:kokonaishintaiset tiedot))))))])
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
-  (let [raportin-tiedot (hinnoittelutiedot {:db db
-                                            :urakka-id urakka-id
-                                            :alkupvm alkupvm
-                                            :loppupvm loppupvm})
-        urakan-nimi (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
+  (println "suorita urakka id " urakka-id " hallintayksikkö id " hallintayksikko-id)
+  (let [konteksti (cond urakka-id :urakka
+                        hallintayksikko-id :hallintayksikko
+                        :default :urakka)
+        {alueen-nimi :nimi} (first (if (= konteksti :hallintayksikko)
+                                     (hallintayksikko-q/hae-organisaatio db hallintayksikko-id)
+                                     (urakat-q/hae-urakka db urakka-id)))
+
+        urakat (urakat-q/hae-urakkatiedot-laskutusyhteenvetoon
+                 db {:alkupvm alkupvm :loppupvm loppupvm
+                     :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id
+                     :urakkatyyppi "vesivayla-hoito"})
+        urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
+                                                      :urakka-nimi (:nimi %)
+                                                      :indeksi (:indeksi %)) urakat)
+
+        ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
+        urakoiden-tiedot (mapv (fn [urakan-parametrit]
+                                 (println " urakan params" urakan-parametrit)
+                                 (hinnoittelutiedot {:db db
+                                                     :urakka-id (:urakka-id urakan-parametrit)
+                                                     :alkupvm alkupvm
+                                                     :loppupvm loppupvm}))
+                               urakoiden-parametrit)
+
+        ;FIXME: tähän reduce + himmeli
+        raportin-tiedot (apply merge-with (fnil + 0 0) urakoiden-tiedot)
+        _ (println " raportin tiedot  " raportin-tiedot)
         raportin-nimi "Laskutusyhteenveto"
-        raportin-otsikko (raportin-otsikko urakan-nimi raportin-nimi alkupvm loppupvm)]
+        raportin-otsikko (raportin-otsikko alueen-nimi raportin-nimi alkupvm loppupvm)]
 
-    [:raportti {:orientaatio :landscape
-                :nimi raportin-otsikko}
+    (vec
+      (keep identity
+            [:raportti {:orientaatio :landscape
+                        :nimi raportin-otsikko}
 
-     (let [kauppamerenkulku-kok-hint-rivit (kok-hint-hinnoittelurivit
-                                             (:kauppamerenkulku (:kokonaishintaiset raportin-tiedot)))
-           kauppamerenkulku-yks-hint-rivit (yks-hint-hinnoittelurivit
+             (let [kauppamerenkulku-kok-hint-rivit (kok-hint-hinnoittelurivit
+                                                     (:kauppamerenkulku (:kokonaishintaiset raportin-tiedot)))
+                   kauppamerenkulku-yks-hint-rivit (yks-hint-hinnoittelurivit
+                                                     (:yksikkohintaiset raportin-tiedot)
+                                                     "kauppamerenkulku")
+                   kauppamerenkulku-yht-rivit (hinnoittelu-yhteensa-rivi
+                                                (vaylatyypin-summa raportin-tiedot "kauppamerenkulku"))]
+               [:taulukko {:otsikko "Kauppamerenkulku"
+                           :tyhja (if (empty? kauppamerenkulku-kok-hint-rivit) "Ei raportoitavaa.")
+                           :sheet-nimi raportin-nimi
+                           :viimeinen-rivi-yhteenveto? true}
+                hinnoittelusarakkeet
+                (concat kauppamerenkulku-kok-hint-rivit
+                        kauppamerenkulku-yks-hint-rivit
+                        [kauppamerenkulku-yht-rivit])])
+
+             (let [muu-vesi-kok-hint-rivit (kok-hint-hinnoittelurivit
+                                             (:muu (:kokonaishintaiset raportin-tiedot)))
+                   muu-vesi-yks-hint-rivit (yks-hint-hinnoittelurivit
                                              (:yksikkohintaiset raportin-tiedot)
-                                             "kauppamerenkulku")
-           kauppamerenkulku-yht-rivit (hinnoittelu-yhteensa-rivi
-                                        (vaylatyypin-summa raportin-tiedot "kauppamerenkulku"))]
-       [:taulukko {:otsikko "Kauppamerenkulku"
-                   :tyhja (if (empty? kauppamerenkulku-kok-hint-rivit) "Ei raportoitavaa.")
-                   :sheet-nimi raportin-nimi
-                   :viimeinen-rivi-yhteenveto? true}
-        hinnoittelusarakkeet
-        (concat kauppamerenkulku-kok-hint-rivit
-                kauppamerenkulku-yks-hint-rivit
-                [kauppamerenkulku-yht-rivit])])
+                                             "muu")
+                   muu-vesi-yht-rivit (hinnoittelu-yhteensa-rivi
+                                        (vaylatyypin-summa raportin-tiedot "muu"))]
+               [:taulukko {:otsikko "Muu vesiliikenne"
+                           :tyhja (if (empty? muu-vesi-yht-rivit) "Ei raportoitavaa.")
+                           :sheet-nimi raportin-nimi
+                           :viimeinen-rivi-yhteenveto? true}
+                hinnoittelusarakkeet
+                (concat muu-vesi-kok-hint-rivit
+                        muu-vesi-yks-hint-rivit
+                        [muu-vesi-yht-rivit])])
 
-     (let [muu-vesi-kok-hint-rivit (kok-hint-hinnoittelurivit
-                                     (:muu (:kokonaishintaiset raportin-tiedot)))
-           muu-vesi-yks-hint-rivit (yks-hint-hinnoittelurivit
-                                     (:yksikkohintaiset raportin-tiedot)
-                                     "muu")
-           muu-vesi-yht-rivit (hinnoittelu-yhteensa-rivi
-                                (vaylatyypin-summa raportin-tiedot "muu"))]
-       [:taulukko {:otsikko "Muu vesiliikenne"
-                   :tyhja (if (empty? muu-vesi-yht-rivit) "Ei raportoitavaa.")
-                   :sheet-nimi raportin-nimi
-                   :viimeinen-rivi-yhteenveto? true}
-        hinnoittelusarakkeet
-        (concat muu-vesi-kok-hint-rivit
-                muu-vesi-yks-hint-rivit
-                [muu-vesi-yht-rivit])])
+             (let [kaikki-yht-rivit (kaikki-yhteensa-rivit raportin-tiedot)]
+               [:taulukko {:otsikko "Yhteenveto"
+                           :tyhja (if (empty? kaikki-yht-rivit) "Ei raportoitavaa.")
+                           :sheet-nimi raportin-nimi
+                           :viimeinen-rivi-yhteenveto? true}
+                yhteenveto-sarakkeet
+                kaikki-yht-rivit])
 
-     (let [kaikki-yht-rivit (kaikki-yhteensa-rivit raportin-tiedot)]
-       [:taulukko {:otsikko "Yhteenveto"
-                   :tyhja (if (empty? kaikki-yht-rivit) "Ei raportoitavaa.")
-                   :sheet-nimi raportin-nimi
-                   :viimeinen-rivi-yhteenveto? true}
-        yhteenveto-sarakkeet
-        kaikki-yht-rivit])]))
+             ;; Listataan lopuksi mitkä urakat ovat mukana raportilla
+             (when (and hallintayksikko-id (< 0 (count urakat)))
+               [:otsikko "Raportti sisältää seuraavien urakoiden tiedot: "])
+             (when (and hallintayksikko-id (< 0 (count urakat)))
+               (for [u (sort-by :nimi urakat)]
+                 [:teksti (str (:nimi u))]))]))))

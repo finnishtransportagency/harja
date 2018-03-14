@@ -15,6 +15,13 @@ VALUES ('Saimaan korjaushanke', '2016-07-07', '2021-05-05', true, NOW());
 INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Pohjanmeren hoitohanke', '2021-07-07', '2030-05-05', true, NOW());
 
+INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Pyhäselän syvennyshanke', '2016-08-01', '2019-07-30', true, NOW());
+
+
+INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Rentoselän syvennyshanke', '2016-08-01', '2019-07-30', true, NOW());
+
 -- URAKKA
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro, sampoid)
 VALUES
@@ -61,6 +68,30 @@ VALUES
    'vesivayla-hoito',
    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'), 'vv-HAR-126');
 
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro, sampoid)
+VALUES
+  ('Pyhäselän urakka',
+    'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi',
+    '2016-08-01', '2019-07-30',
+    (SELECT id FROM organisaatio WHERE nimi = 'Sisävesiväylät'),
+    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
+    (SELECT id FROM hanke WHERE nimi = 'Pyhäselän syvennyshanke'),
+    'vesivayla-hoito',
+    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   '555', 'vv-HAR-1249');
+
+INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, tyyppi,  harjassa_luotu, luotu, luoja, urakkanro, sampoid)
+VALUES
+  ('Rentoselän urakka',
+    'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi',
+    '2016-08-01', '2019-07-30',
+    (SELECT id FROM organisaatio WHERE nimi = 'Sisävesiväylät'),
+    (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
+    (SELECT id FROM hanke WHERE nimi = 'Rentoselän syvennyshanke'),
+    'vesivayla-hoito',
+    true, NOW(), (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
+   '555', 'vv-HAR-1250');
+
 -- SOPIMUS
 INSERT INTO sopimus (nimi, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Kotkan väyläyksikön pääsopimus',  NULL,
@@ -98,10 +129,25 @@ VALUES ('Vantaan väyläyksikön pääsopimus',
         '2021-08-01', '2024-07-30',
         true, NOW());
 
+
+INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Pyhäselän pääsopimus',
+        (SELECT id FROM urakka WHERE nimi = 'Pyhäselän urakka'),
+        NULL,
+        '2016-08-01', '2019-07-30', true, NOW());
+
+INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
+VALUES ('Rentoselän pääsopimus',
+        (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'),
+        NULL,
+        '2016-08-01', '2019-07-30', true, NOW());
+
 -- reimarin sopimus-id linkkaukset
 INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Meriväylien sopimus'), -666);
 INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Helsingin väyläyksikön pääsopimus'), -5);
 INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-diaarinro") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Vantaan väyläyksikön pääsopimus'), '123/45');
+INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Pyhäselän pääsopimus'), -25);
+INSERT INTO reimari_sopimuslinkki ("harja-sopimus-id", "reimari-sopimus-id") VALUES ((SELECT id FROM sopimus WHERE nimi = 'Rentoselän pääsopimus'), -26);
 
 -- TOIMENPIDEKOODIT
 INSERT INTO toimenpidekoodi (taso, emo, nimi)
