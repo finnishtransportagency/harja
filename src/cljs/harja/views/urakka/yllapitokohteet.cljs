@@ -244,76 +244,80 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(defn yllapitokohdeosat [{:keys [kohdeosat tallenna-fn]}]
+(def yllapitokohdeosat-sarakkeet
+  (remove nil?
+          (concat
+            (tierekisteriosoite-sarakkeet
+              tr-leveys
+              [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys}
+               {:nimi :tr-numero} ;; FIXME Validoi, että on sama tie tai eri tie, riippuen taulukon tyypistä
+               {:nimi :tr-ajorata}
+               {:nimi :tr-kaista}
+               {:nimi :tr-alkuosa}
+               {:nimi :tr-alkuetaisyys}
+               {:nimi :tr-loppuosa}
+               {:nimi :tr-loppuetaisyys}])
+            [(assoc paallystys-tiedot/paallyste-grid-skeema
+               :leveys paallyste-leveys
+               :tayta-alas? #(not (nil? %))
+               :tayta-fn (fn [lahtorivi tama-rivi]
+                           (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
+               :tayta-sijainti :ylos
+               :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille"
+               :tayta-alas-toistuvasti? #(not (nil? %))
+               :tayta-toistuvasti-fn
+               (fn [toistettava-rivi tama-rivi]
+                 (assoc tama-rivi :paallystetyyppi (:paallystetyyppi toistettava-rivi))))
+             (assoc paallystys-tiedot/raekoko-grid-skeema
+               :leveys raekoko-leveys
+               :tayta-alas? #(not (nil? %))
+               :tayta-fn (fn [lahtorivi tama-rivi]
+                           (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
+               :tayta-sijainti :ylos
+               :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
+               :tayta-alas-toistuvasti? #(not (nil? %))
+               :tayta-toistuvasti-fn
+               (fn [toistettava-rivi tama-rivi]
+                 (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
+             (assoc paallystys-tiedot/tyomenetelma-grid-skeema
+               :leveys tyomenetelma-leveys
+               :tayta-alas? #(not (nil? %))
+               :tayta-fn (fn [lahtorivi tama-rivi]
+                           (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
+               :tayta-sijainti :ylos
+               :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
+               :tayta-alas-toistuvasti? #(not (nil? %))
+               :tayta-toistuvasti-fn
+               (fn [toistettava-rivi tama-rivi]
+                 (assoc tama-rivi :tyomenetelma (:tyomenetelma toistettava-rivi))))
+             {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
+              :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
+              :tayta-alas? #(not (nil? %))
+              :tayta-fn (fn [lahtorivi tama-rivi]
+                          (assoc tama-rivi :massamaara (:massamaara lahtorivi)))
+              :tayta-sijainti :ylos
+              :tayta-tooltip "Kopioi sama massamäärä alla oleville riveille"
+              :tayta-alas-toistuvasti? #(not (nil? %))
+              :tayta-toistuvasti-fn
+              (fn [toistettava-rivi tama-rivi]
+                (assoc tama-rivi :massamaara (:massamaara toistettava-rivi)))}
+             {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
+              :leveys toimenpide-leveys
+              :tayta-alas? #(not (nil? %))
+              :tayta-fn (fn [lahtorivi tama-rivi]
+                          (assoc tama-rivi :toimenpide (:toimenpide lahtorivi)))
+              :tayta-sijainti :ylos
+              :tayta-tooltip "Kopioi sama selitys alla oleville riveille"
+              :tayta-alas-toistuvasti? #(not (nil? %))
+              :tayta-toistuvasti-fn
+              (fn [toistettava-rivi tama-rivi]
+                (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}])))
+
+(defn yllapitokohdeosat [{:keys [otsikko kohdeosat tallenna-fn]}]
   [grid/grid
-   {:otsikko "Tierekisterikohteet"
-    :tallenna tallenna-fn}
-   (remove nil? (concat
-                  (tierekisteriosoite-sarakkeet
-                    tr-leveys
-                    [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys}
-                     {:nimi :tr-numero} ;; FIXME Validoi, että on sama tie tai eri tie, riippuen taulukon tyypistä
-                     {:nimi :tr-ajorata}
-                     {:nimi :tr-kaista}
-                     {:nimi :tr-alkuosa}
-                     {:nimi :tr-alkuetaisyys}
-                     {:nimi :tr-loppuosa}
-                     {:nimi :tr-loppuetaisyys}])
-                  [(assoc paallystys-tiedot/paallyste-grid-skeema
-                     :leveys paallyste-leveys
-                     :tayta-alas? #(not (nil? %))
-                     :tayta-fn (fn [lahtorivi tama-rivi]
-                                 (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
-                     :tayta-sijainti :ylos
-                     :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille"
-                     :tayta-alas-toistuvasti? #(not (nil? %))
-                     :tayta-toistuvasti-fn
-                     (fn [toistettava-rivi tama-rivi]
-                       (assoc tama-rivi :paallystetyyppi (:paallystetyyppi toistettava-rivi))))
-                   (assoc paallystys-tiedot/raekoko-grid-skeema
-                     :leveys raekoko-leveys
-                     :tayta-alas? #(not (nil? %))
-                     :tayta-fn (fn [lahtorivi tama-rivi]
-                                 (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
-                     :tayta-sijainti :ylos
-                     :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
-                     :tayta-alas-toistuvasti? #(not (nil? %))
-                     :tayta-toistuvasti-fn
-                     (fn [toistettava-rivi tama-rivi]
-                       (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
-                   (assoc paallystys-tiedot/tyomenetelma-grid-skeema
-                     :leveys tyomenetelma-leveys
-                     :tayta-alas? #(not (nil? %))
-                     :tayta-fn (fn [lahtorivi tama-rivi]
-                                 (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
-                     :tayta-sijainti :ylos
-                     :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
-                     :tayta-alas-toistuvasti? #(not (nil? %))
-                     :tayta-toistuvasti-fn
-                     (fn [toistettava-rivi tama-rivi]
-                       (assoc tama-rivi :tyomenetelma (:tyomenetelma toistettava-rivi))))
-                   {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
-                    :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :massamaara (:massamaara lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama massamäärä alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :massamaara (:massamaara toistettava-rivi)))}
-                   {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
-                    :leveys toimenpide-leveys
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :toimenpide (:toimenpide lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama selitys alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}]))
+   {:otsikko otsikko
+    :tallenna tallenna-fn} ;; TODO Oikeustarkistus!
+   yllapitokohdeosat-sarakkeet
    kohdeosat])
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
