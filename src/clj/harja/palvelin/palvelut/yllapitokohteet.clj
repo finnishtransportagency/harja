@@ -49,8 +49,13 @@
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan tiemerkintäurakalle osoitetut ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
-    (let [yllapitokohteet (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id})
-          yllapitokohteet (mapv (partial yy/lisaa-yllapitokohteelle-pituus db) yllapitokohteet)]
+    (let [yllapitokohteet (into []
+                                (map konv/alaviiva->rakenne)
+                                (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id}))
+          yllapitokohteet (mapv (partial yy/lisaa-yllapitokohteelle-pituus db) yllapitokohteet)
+          yllapitokohteet (konv/sarakkeet-vektoriin
+                            yllapitokohteet
+                            {:kohdeosa :kohdeosat})]
       yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]

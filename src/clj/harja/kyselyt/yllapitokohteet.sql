@@ -239,22 +239,32 @@ GROUP BY ypk.id, pi.id, pai.id, o.nimi, u.nimi, u.id,
   ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
 
 -- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
--- Hakee urakan sopimuksen kaikki yllapitokohteet ja niihin liittyvät ilmoitukset
 SELECT
   ypk.id,
   ypk.kohdenumero,
   ypk.nimi,
-  ypk.tr_numero        AS "tr-numero",
-  ypk.tr_alkuosa       AS "tr-alkuosa",
-  ypk.tr_alkuetaisyys  AS "tr-alkuetaisyys",
-  ypk.tr_loppuosa      AS "tr-loppuosa",
-  ypk.tr_loppuetaisyys AS "tr-loppuetaisyys",
-  ypk.tr_ajorata       AS "tr-ajorata",
-  ypk.tr_kaista        AS "tr-kaista",
-  ypk.yhaid            AS "yha-id",
-  ypk.yha_kohdenumero  AS "yha-kohdenumero",
-  ypk.yllapitoluokka   AS "yllapitoluokka"
+  ypk.tr_numero         AS "tr-numero",
+  ypk.tr_alkuosa        AS "tr-alkuosa",
+  ypk.tr_alkuetaisyys   AS "tr-alkuetaisyys",
+  ypk.tr_loppuosa       AS "tr-loppuosa",
+  ypk.tr_loppuetaisyys  AS "tr-loppuetaisyys",
+  ypk.tr_ajorata        AS "tr-ajorata",
+  ypk.tr_kaista         AS "tr-kaista",
+  ypk.yhaid             AS "yha-id",
+  ypk.yha_kohdenumero   AS "yha-kohdenumero",
+  ypk.yllapitoluokka    AS "yllapitoluokka",
+  ypko.id               AS kohdeosa_id,
+  ypko.nimi             AS kohdeosa_nimi,
+  ypko.tr_numero        AS "kohdeosa_tr-numero",
+  ypko.tr_alkuosa       AS "kohdeosa_tr-alkuosa",
+  ypko.tr_alkuetaisyys  AS "kohdeosa_tr-alkuetaisyys",
+  ypko.tr_loppuosa      AS "kohdeosa_tr-loppuosa",
+  ypko.tr_loppuetaisyys AS "kohdeosa_tr-loppuetaisyys",
+  ypko.tr_ajorata       AS "kohdeosa_tr-ajorata",
+  ypko.tr_kaista        AS "kohdeosa_tr-kaista"
 FROM yllapitokohde ypk
+  LEFT JOIN yllapitokohdeosa ypko ON ypko.yllapitokohde = ypk.id
+                                     AND ypko.poistettu IS NOT TRUE
 WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
