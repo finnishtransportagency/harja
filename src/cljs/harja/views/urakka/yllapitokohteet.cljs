@@ -244,22 +244,11 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-
-(defn- aseta-uudet-kohdeosat [kohteet id kohdeosat]
-  (let [kohteet (vec kohteet)
-        rivi (some #(when (= (:id (nth kohteet %))
-                             id)
-                      %)
-                   (range 0 (count kohteet)))]
-    (if rivi
-      (assoc-in kohteet [rivi :kohdeosat] kohdeosat)
-      kohteet)))
-
-(defn yllapitokohdeosat-kohteelle [yllapitokohde]
+(defn yllapitokohdeosat [{:keys [urakka-id sopimus-id yllapitokohde tallenna-fn tallennettu-fn]}]
   (let [kohdeosat (:kohdeosat yllapitokohde)]
     [grid/grid
      {:otsikko "Tierekisterikohteet"
-      :tallenna #(log "TALLENNA!")}
+      :tallenna tallenna-fn}
      (remove nil? (concat
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
@@ -271,6 +260,7 @@
                        {:nimi :tr-alkuetaisyys}
                        {:nimi :tr-loppuosa}
                        {:nimi :tr-loppuetaisyys}])
+                    ;; FIXME Kaikki täytä alas napit ei toimi!?
                     [(assoc paallystys-tiedot/paallyste-grid-skeema
                        :leveys paallyste-leveys
                        :tayta-alas? #(not (nil? %))
@@ -401,9 +391,28 @@
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
-(defn kohteen-vetolaatikko [urakka kohteet-atom rivi kohdetyyppi]
+(defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
   [:div
-   [yllapitokohdeosat-kohteelle rivi]
+   [yllapitokohdeosat
+    {:urakka-id (:id urakka)
+     :sopimus-id sopimus
+     :yllapitokohde rivi
+     :tallenna-fn (fn [rivit]
+                    (go (let [vastaus (<! (tiedot/tallenna-yllapitokohdeosat!
+                                            (:id urakka)
+                                            sopimus
+                                            (:id rivi)rivit))]
+
+                          (if (k/virhe? vastaus)
+                            (viesti/nayta! "Tallennus epäonnistui!" :danger)
+                            ;; Liitä ylläpitokohteeseen uudet kohdeosat
+                            (let [yllapitokohde-uusilla-kohdeosilla (assoc rivi :kohdeosat vastaus)]
+                              (reset! kohteet-atom
+                                (map (fn [kohde]
+                                       (if (= (:id kohde) (:id rivi))
+                                         yllapitokohde-uusilla-kohdeosilla
+                                         kohde))
+                                     @kohteet-atom)))))))}]
    (when (= kohdetyyppi :paallystys)
      [maaramuutokset {:yllapitokohde-id (:id rivi)
                       :urakka-id (:id urakka)
@@ -458,7 +467,11 @@
                    (map (juxt
                           :id
                           (fn [rivi]
-                            [kohteen-vetolaatikko urakka kohteet-atom rivi (:kohdetyyppi optiot)])))
+                            [kohteen-vetolaatikko {:urakka urakka
+                                                   :sopimus (first @u/valittu-sopimusnumero)
+                                                   :kohteet-atom kohteet-atom
+                                                   :rivi rivi
+                                                   :kohdetyyppi (:kohdetyyppi optiot)}])))
                    @kohteet-atom)
              :tallenna @tallenna
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
