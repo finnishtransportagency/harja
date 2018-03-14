@@ -7,7 +7,7 @@
 (defn voi-avata? [item]
   (some #(% item) [map? coll?]))
 
-(defmulti debug-show (fn [item path open-paths toggle! options]
+(defmulti debug-show (fn [item path open-paths toggle!]
                        (cond
                          (map? item) :map
                          (coll? item) :coll
