@@ -180,7 +180,6 @@
       "properties": {
         "nimi": {
           "id": "urn:harja/tielupa/urakoitsija/nimi",
-          "required": true,
           "type": "string"
         },
         "yhteyshenkilo": {
@@ -204,7 +203,6 @@
       "properties": {
         "nimi": {
           "id": "urn:harja/tielupa/liikenteenohjauksesta-vastaava/nimi",
-          "required": true,
           "type": "string"
         },
         "yhteyshenkilo": {
