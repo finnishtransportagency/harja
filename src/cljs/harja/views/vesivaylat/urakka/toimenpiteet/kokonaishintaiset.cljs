@@ -111,7 +111,8 @@
                                     (tiedot/->AvaaKiintio kiintio-id)))}
                   (str
                     (if kiintio-auki? "- " "+ ")
-                    (::kiintio/nimi kiintio))]
+                    (::kiintio/nimi kiintio)
+                    (str " (" (count kiintion-toimenpiteet) " kpl)"))]
                  [napit/nappi
                   (ikonit/map-marker)
                   #(if (tiedot/kiintio-korostettu? kiintio app)
@@ -137,9 +138,10 @@
                                jaettu/sarake-vayla
                                jaettu/sarake-turvalaite
                                jaettu/sarake-turvalaitenumero
+                               jaettu/sarake-komponentit
                                jaettu/sarake-vikakorjaus
                                (jaettu/sarake-liitteet e! app #(oikeudet/on-muu-oikeus?
-                                                                 "lisää-liite"
+                                                                "lisää-liite"
                                                                  oikeudet/urakat-vesivaylatoimenpiteet-kokonaishintaiset
                                                                  (:id @nav/valittu-urakka)))
                                (jaettu/sarake-checkbox e! app*)]

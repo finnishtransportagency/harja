@@ -1,0 +1,1 @@
+ALTER TABLE kan_hairio ADD COLUMN sijainti GEOMETRY;
