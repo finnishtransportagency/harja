@@ -47,6 +47,29 @@
                         <paallystetyomenetelma>22</paallystetyomenetelma>
                     </paallystystoimenpide>
                 </alikohde>
+                <alikohde>
+                    <yha-id>4</yha-id>
+                    <tierekisteriosoitevali>
+                        <karttapaivamaara>2017-12-12</karttapaivamaara>
+                        <tienumero>20</tienumero>
+                        <aosa>1</aosa>
+                        <aet>1</aet>
+                        <losa>1</losa>
+                        <let>100</let>
+                        <ajorata>2</ajorata>
+                        <kaista>1</kaista>
+                    </tierekisteriosoitevali>
+                    <!--Optional:-->
+                    <paallystystoimenpide>
+                        <uusi-paallyste>11</uusi-paallyste>
+                        <raekoko>12</raekoko>
+                        <kokonaismassamaara>124</kokonaismassamaara>
+                        <rc-prosentti>14</rc-prosentti>
+                        <!--Optional:-->
+                        <kuulamylly>4</kuulamylly>
+                        <paallystetyomenetelma>22</paallystetyomenetelma>
+                    </paallystystoimenpide>
+                </alikohde>
             </alikohteet>
         </kohde>
     </kohteet>
