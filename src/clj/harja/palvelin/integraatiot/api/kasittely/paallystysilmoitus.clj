@@ -71,7 +71,11 @@
   (let [paallystysilmoitus (:paallystysilmoitus data)
         alustatoimenpiteet (mapv #(assoc-in (:alustatoimenpide %) [:sijainti :numero] kohteen-tienumero)
                                  (:alustatoimenpiteet paallystysilmoitus))
-        alikohteet (mapv #(assoc-in (:alikohde %) [:sijainti :numero] kohteen-tienumero)
+        alikohteet (mapv #(assoc-in (:alikohde %)
+                            [:sijainti :numero]
+                            (get-in % [:alikohde :sijainti :numero]
+                                    (get-in % [:alikohde :sijainti :tie]
+                                            kohteen-tienumero)))
                          (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
         muunnettava-kohde (-> (:yllapitokohde paallystysilmoitus)
                               (assoc-in [:sijainti :numero] kohteen-tienumero)
@@ -103,12 +107,12 @@
 (defn tallenna-paallystysilmoitus [db kayttaja urakka-id kohde paallystysilmoitus valmis-kasiteltavaksi]
   (jdbc/with-db-transaction [db db]
     (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-         alikohteet (get-in paallystysilmoitus [:yllapitokohde :alikohteet])]
-     (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
-     (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)
-           ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
-           paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
-       (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi)))))
+          alikohteet (get-in paallystysilmoitus [:yllapitokohde :alikohteet])]
+      (yllapitokohteet/paivita-kohde db (:id kohde) kohteen-sijainti)
+      (let [paivitetyt-alikohteet (yllapitokohteet/paivita-alikohteet-paallystysilmoituksesta db kohde alikohteet)
+            ;; Päivittyneiden alikohteiden id:t pitää päivittää päällystysilmoituksille
+            paallystysilmoitus (assoc-in paallystysilmoitus [:yllapitokohde :alikohteet] paivitetyt-alikohteet)]
+        (luo-tai-paivita-paallystysilmoitus db kayttaja urakka-id (:id kohde) paallystysilmoitus valmis-kasiteltavaksi)))))
 
 (defn kirjaa-paallystysilmoitus [vkm db kayttaja urakka-id kohde-id data]
   (let [kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
