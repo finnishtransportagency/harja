@@ -76,7 +76,7 @@ INSERT INTO yllapitokohde
 (urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  tr_ajorata, tr_kaista,
  tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yllapitoluokka, keskimaarainen_vuorokausiliikenne,
- nykyinen_paallyste, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, nimi, vuodet)
+ nykyinen_paallyste, nimi, vuodet)
 VALUES (
   :urakka,
   (SELECT id
@@ -98,10 +98,6 @@ VALUES (
   :yllapitoluokka,
   :keskimaarainen_vuorokausiliikenne,
   :nykyinen_paallyste,
-  0,
-  0,
-  0,
-  0,
   :nimi,
   :vuodet :: INTEGER []);
 

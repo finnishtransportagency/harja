@@ -28,7 +28,7 @@
     ::loppupvm
     ::valiaikainen})
 
-(def komponenttityyppi #{[::komponenttityyppi #{::ktyyppi/nimi}]})
+(def komponenttityyppi #{[::komponenttityyppi #{::ktyyppi/nimi ::ktyyppi/luokan-nimi}]})
 
 (defn turvalaitekomponentit-turvalaitenumerolla [turvalaitekomponentit turvalaitenumero]
   (filter #(= (::turvalaitenro %) turvalaitenumero) turvalaitekomponentit))

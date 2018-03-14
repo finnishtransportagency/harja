@@ -256,6 +256,10 @@ reimari-toimenpidetyypit
     ;; Formatoidaan sinne päin
     (some-> toimenpide name str/capitalize)))
 
+(defn toimenpide-komponentit-fmt [komponentti]
+  (let [ktyyppi (::tkomp/komponenttityyppi komponentti)]
+    (str (:harja.domain.vesivaylat.komponenttityyppi/luokan-nimi ktyyppi "<ei luokkaa>") ": " (:harja.domain.vesivaylat.komponenttityyppi/nimi ktyyppi "<ei nimeä>"))))
+
 (def
   ^{:doc "Reimarin toimenpiteen tilat"}
   reimari-tilat
