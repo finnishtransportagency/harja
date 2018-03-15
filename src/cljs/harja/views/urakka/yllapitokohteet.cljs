@@ -463,7 +463,6 @@
           {:otsikko "Kohteen tierekisteriosoitteet"
            :urakka urakka
            ; TODO Salli ajoradan ja kaistan muokkaus vain jos pääkohteella niitä ei ole
-           :muokattava-tie? (constantly false)
            :muokattava-ajorata-ja-kaista? (constantly false)
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(= (:tr-numero rivi) (:tr-numero %))
@@ -475,7 +474,6 @@
           {:otsikko "Muut tierekisteriosoitteet"
            :urakka urakka
            :muokattava-tie? (constantly true)
-           :muokattava-ajorata-ja-kaista? (constantly false)
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(not= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
