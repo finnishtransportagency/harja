@@ -124,6 +124,13 @@
   (when (hinnoitteluun-kuuluu-toimenpiteita? db hinnoittelu-id)
     (throw (RuntimeException. "Hinnoitteluun kuuluu toimenpiteitä."))))
 
+(defn liita-laskutuslupa-hintaryhmiin [db hintaryhmat]
+  (let [hyvaksytyt (set (map :hinnoittelu-id (laskutusluvalliset-hintaryhmat db)))]
+    (map
+      (fn [h]
+        (assoc h ::h/laskutuslupa? (boolean (hyvaksytyt (::h/id h)))))
+      hintaryhmat)))
+
 (defn hae-hintaryhmat [db urakka-id]
   (->> (specql/fetch db
                      ::h/hinnoittelu
@@ -132,7 +139,8 @@
                       ::h/hintaryhma? true
                       ::m/poistettu? false})
        (mapv #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %))))
-       (mapv #(assoc % ::h/tyhja? (not (hinnoitteluun-kuuluu-toimenpiteita? db (::h/id %)))))))
+       (mapv #(assoc % ::h/tyhja? (not (hinnoitteluun-kuuluu-toimenpiteita? db (::h/id %)))))
+       (liita-laskutuslupa-hintaryhmiin db)))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (let [urakka-id (::ur/id tiedot)

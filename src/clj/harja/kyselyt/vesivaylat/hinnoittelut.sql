@@ -7,3 +7,6 @@ INSERT INTO vv_hinnoittelun_kommentti
      :kommentti,
      :kayttaja_id,
      (SELECT hintaryhman_id FROM vv_toimenpiteen_hinnoittelun_hintaryhma WHERE oman_hinnan_id = :toimenpide_id));
+
+-- name: laskutusluvalliset-hintaryhmat
+SELECT * FROM vv_hyvaksytyt_tilaukset;

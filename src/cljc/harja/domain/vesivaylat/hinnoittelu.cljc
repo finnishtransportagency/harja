@@ -90,13 +90,15 @@
 
 ;; Palvelut
 
+(s/def ::laskutuslupa? boolean?)
+
 (s/def ::hae-hintaryhmat-kysely
   (s/keys
     :req [::ur/id]))
 
 (s/def ::hae-hintaryhmat-vastaus
   (s/coll-of
-    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja?])))
+    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja? ::laskutuslupa?])))
 
 (s/def ::luo-hinnoittelu-kysely
   (s/keys
