@@ -453,6 +453,9 @@
     (fn [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
       (let [kohdeosat (:kohdeosat rivi)]
         [:div
+         ; TODO Toisen taulukon tallennus tyhjentää toisen tiedot. Tallennuspalvelu olettaa saavansa kaikki saman tien osat
+         ; Pitää muuttaa niin, että tallennuspalvelu olettaa saavansa vain saman tien osat tai eri tien osat,
+         ; TAI sitten ehkä (mieluummin) niin, että gridin tallennus lähettää molempien gridien payloadit?
          [yllapitokohdeosat
           {:otsikko "Kohteen tierekisteriosoitteet"
            :urakka urakka
