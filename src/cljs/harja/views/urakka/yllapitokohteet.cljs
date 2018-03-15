@@ -252,7 +252,7 @@
               [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys}
                {:nimi :tr-numero :muokattava? muokattava-tie?}
                {:nimi :tr-ajorata :muokattava? muokattava-ajorata-ja-kaista?}
-               {:nimi :tr-kaista  :muokattava? muokattava-ajorata-ja-kaista?}
+               {:nimi :tr-kaista :muokattava? muokattava-ajorata-ja-kaista?}
                {:nimi :tr-alkuosa}
                {:nimi :tr-alkuetaisyys}
                {:nimi :tr-loppuosa}
@@ -331,36 +331,39 @@
                                 :luokka "btn-xs"}]])}])))
 
 (defn yllapitokohdeosat [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn muokattava-tie? muokattava-ajorata-ja-kaista?]}]
-  (let [kirjoitusoikeus?
+  (let [virheet (atom nil)
+        kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id urakka))
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)]
-    [grid/muokkaus-grid
-     {:otsikko otsikko
-      :id "yllapitokohdeosat"
-      :voi-lisata? true
-      :piilota-toiminnot? true
-      :voi-kumota? false
-      :paneelikomponentit
-      [(fn []
-         (when tallenna-fn
-           [napit/palvelinkutsu-nappi
-            [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-            #(tallenna-fn (vals @kohdeosat-atom))
-            {:disabled (or #_(not (empty? @virheet)) ;; TODO tsekkaa virheet (diff masteriin ja tutki mistä tämä virheet-atom tulee)
-                         (not kirjoitusoikeus?))
-             :luokka "nappi-myonteinen grid-tallenna"
-             :virheviesti "Tallentaminen epäonnistui."
-             :kun-onnistuu tallennettu-fn}]))]}
-     (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
-                                   :muokkaa-kohdeosat! (fn [uudet-osat]
-                                                         (reset! kohdeosat-atom uudet-osat))
-                                   :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
-                                   :muokattava-tie? muokattava-tie?})
-     kohdeosat-atom]))
+    (fn [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn muokattava-tie? muokattava-ajorata-ja-kaista?]}]
+      [grid/muokkaus-grid
+       {:otsikko otsikko
+        :id "yllapitokohdeosat"
+        :virheet virheet
+        :voi-lisata? true
+        :piilota-toiminnot? true
+        :voi-kumota? false
+        :paneelikomponentit
+        [(fn []
+           (when tallenna-fn
+             [napit/palvelinkutsu-nappi
+              [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+              #(tallenna-fn (vals @kohdeosat-atom))
+              {:disabled (or (not (empty? @virheet))
+                             (not kirjoitusoikeus?))
+               :luokka "nappi-myonteinen grid-tallenna"
+               :virheviesti "Tallentaminen epäonnistui."
+               :kun-onnistuu tallennettu-fn}]))]}
+       (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
+                                     :muokkaa-kohdeosat! (fn [uudet-osat]
+                                                           (reset! kohdeosat-atom uudet-osat))
+                                     :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
+                                     :muokattava-tie? muokattava-tie?})
+       kohdeosat-atom])))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
   (let [sopimus-id (first @u/valittu-sopimusnumero)
