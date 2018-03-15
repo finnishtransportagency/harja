@@ -325,29 +325,28 @@
                                {:ikoni (ikonit/livicon-trash)
                                 :luokka "btn-xs"}]])}])))
 
-(defn yllapitokohdeosat [{:keys [otsikko kohdeosat tallenna-fn tallennettu-fn]}]
-  (let [grid-data (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet kohdeosat)))]
-    (fn [{:keys [otsikko kohdeosat tallenna-fn tallennettu-fn]}]
-      [grid/muokkaus-grid
-       {:otsikko otsikko
-        :id "yllapitokohdeosat"
-        :voi-lisata? true
-        :piilota-toiminnot? true
-        :voi-kumota? false
-        :paneelikomponentit
-        [(fn []
-           [napit/palvelinkutsu-nappi
-            [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-            #(tallenna-fn (vals @grid-data))
-            {:disabled false ; TODO CHECK Oikeus ja se, ettei gridissä ole virheitä
-             :luokka "nappi-myonteinen grid-tallenna"
-             :virheviesti "Tallentaminen epäonnistui."
-             :kun-onnistuu tallennettu-fn}])]}
-       (yllapitokohdeosat-sarakkeet @grid-data
-                                    (fn [uudet-osat]
-                                      (log "UUDET OSAT: " (pr-str uudet-osat))
-                                      (reset! grid-data uudet-osat)))
-       grid-data])))
+(defn yllapitokohdeosat [{:keys [otsikko kohdeosat-atom tallenna-fn tallennettu-fn]}]
+  [grid/muokkaus-grid
+   {:otsikko otsikko
+    :id "yllapitokohdeosat"
+    :voi-lisata? true
+    :piilota-toiminnot? true
+    :voi-kumota? false
+    :paneelikomponentit
+    [(fn []
+       (when tallenna-fn
+         [napit/palvelinkutsu-nappi
+          [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+          #(tallenna-fn (vals @kohdeosat-atom))
+          {:disabled false ; TODO CHECK Oikeus ja se, ettei gridissä ole virheitä
+           :luokka "nappi-myonteinen grid-tallenna"
+           :virheviesti "Tallentaminen epäonnistui."
+           :kun-onnistuu tallennettu-fn}]))]}
+   (yllapitokohdeosat-sarakkeet @kohdeosat-atom
+                                (fn [uudet-osat]
+                                  (log "UUDET OSAT: " (pr-str uudet-osat))
+                                  (reset! kohdeosat-atom uudet-osat)))
+   kohdeosat-atom])
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
   (let [sopimus-id (first @u/valittu-sopimusnumero)
@@ -439,23 +438,27 @@
                                             kohde))
                                         @kohteet-atom))
                            (viesti/nayta! "Kohdeosat tallennettu!" :success)))]
-    [:div
-     [yllapitokohdeosat
-      {:otsikko "Kohteen tierekisteriosoitteet"
-       :kohdeosat (filter #(= (:tr-numero rivi) (:tr-numero %))
-                          kohdeosat)
-       :tallenna-fn tallenna-fn
-       :tallennettu-fn tallennettu-fn}]
-     [yllapitokohdeosat
-      {:otsikko "Muut tierekisteriosoitteet"
-       :kohdeosat (filter #(not= (:tr-numero rivi) (:tr-numero %))
-                          kohdeosat)
-       :tallenna-fn tallenna-fn
-       :tallennettu-fn tallennettu-fn}]
-     (when (= kohdetyyppi :paallystys)
-       [maaramuutokset {:yllapitokohde-id (:id rivi)
-                        :urakka-id (:id urakka)
-                        :yllapitokohteet-atom kohteet-atom}])]))
+    (fn [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
+      [:div
+       [yllapitokohdeosat
+        {:otsikko "Kohteen tierekisteriosoitteet"
+         :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                         (filter #(= (:tr-numero rivi) (:tr-numero %))
+                                                                 kohdeosat))))
+
+         :tallenna-fn tallenna-fn
+         :tallennettu-fn tallennettu-fn}]
+       [yllapitokohdeosat
+        {:otsikko "Muut tierekisteriosoitteet"
+         :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                         (filter #(not= (:tr-numero rivi) (:tr-numero %))
+                                                                 kohdeosat))))
+         :tallenna-fn tallenna-fn
+         :tallennettu-fn tallennettu-fn}]
+       (when (= kohdetyyppi :paallystys)
+         [maaramuutokset {:yllapitokohde-id (:id rivi)
+                          :urakka-id (:id urakka)
+                          :yllapitokohteet-atom kohteet-atom}])])))
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]

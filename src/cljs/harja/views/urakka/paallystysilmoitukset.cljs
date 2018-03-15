@@ -347,21 +347,9 @@
              [:figcaption
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
-         [grid/muokkaus-grid
+         [yllapitokohteet/yllapitokohdeosat
           {:otsikko "Tierekisteriosoitteet"
-           :voi-kumota? false
-           :muokkaa! (fn [kohteet virheet]
-                       (log "VIRHEITÄ: " (pr-str virheet))
-                       (muokkaa! (fn [lomake]
-                                   (-> lomake
-                                       (assoc-in [:ilmoitustiedot :osoitteet] kohteet)
-                                       (assoc-in [:virheet :alikohteet] virheet)))))
-           :rivinumerot? true
-           :voi-muokata? voi-muokata?
-           :virheet yllapitokohde-virheet}
-          (yllapitokohdeosat-sarakkeet (fn [uudet-osat]
-                                         (log "UUDET OSAT: " (pr-str uudet-osat))))
-          paallystystoimenpiteet]
+           :kohdeosat-atom paallystystoimenpiteet}]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
