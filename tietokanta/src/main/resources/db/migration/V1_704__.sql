@@ -13,6 +13,3 @@ ALTER TABLE vv_vikailmoitus DROP COLUMN "turvalaite-id";
 DROP TRIGGER IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger ON vv_vikailmoitus;
 DROP FUNCTION IF EXISTS vv_vikailmoituksen_turvalaite_id_trigger_proc();
 ALTER TABLE reimari_toimenpide ADD COLUMN turvalaitenro TEXT;
-UPDATE reimari_toimenpide SET muokattu = current_timestamp; -- Turvalaitenumerot päivittyvät uuteen kenttään
-ALTER TABLE reimari_toimenpide DROP COLUMN "turvalaite-id";
-DROP TABLE vv_turvalaite;
