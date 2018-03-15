@@ -471,7 +471,6 @@
                                                        (:tr-kaista rivi)))]
         [:div
          [yllapitokohdeosat
-          ; TODO Jos osia ei ole, ekan rivin lisäys ei assoccaa tienumeroa, ajorataa ja kaistaa 🙈
           {:otsikko "Kohteen tierekisteriosoitteet"
            :urakka urakka
            :muokattava-tie? (constantly false)
