@@ -432,9 +432,6 @@
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-
-    (log/debug "TALLENTELEPAS OSAT: " (pr-str osat))
-
     (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
                                                            {:urakka-id urakka-id
                                                             :sopimus-id sopimus-id
