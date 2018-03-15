@@ -435,7 +435,7 @@
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
-  ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa tsekataan jossain sora-tyyppi?
+  ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa tsekataan jossain sora-tyyppi? Kuka tietää miksi sellainen tarkistus edes on tehty?
   ; TODO Lisää validoinnit (ainakin se backendillä ollut päällekkäisyysvalidointi voidaan tuoda tähän, mitäs muuta?)
   ; Miten backend-validointi käyttäytyy POT-lomakkeessa?
   (let [tallenna-fn (fn [osatyyppi]
