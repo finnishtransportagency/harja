@@ -490,7 +490,6 @@
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(not= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
-           :yllapitokohde rivi
            :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
            :tallennettu-fn tallennettu-fn}]
          (when (= kohdetyyppi :paallystys)
