@@ -349,11 +349,10 @@
 
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
-           :muokattava-tie? (constantly false)
-           ;; TODO Estä ajoradan ja kaistan muokkaus sen mukaan onko niitä pääkohteella (jos on, ei sallita muokkausta)?
-           ;; Kuitenkin jos kyseessä on muu kohde (tienumero eri kuin pääkohteella), saa muokata ajorataa ja kaistaa aina?
+           ;; TODO Estä tien, ajoradan ja kaistan muokkaus sen mukaan onko kyseessä ns. muu kohde (= tienumero sama kuin pääkohteella)
            ;; Toinen vaihtoehto on laittaa muut kohdeosat omaan tauluun, mutta lähtökohtaisesti menisin tällä yhdellä
            ;; taulukolla, jos vain suinkin toimii. Joka tapauksessa POTin tietomallia ei mielestäni tarvitse/kannata muuttaa.
+           :muokattava-tie? (constantly true)
            :muokattava-ajorata-ja-kaista? (constantly true)
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet}]
