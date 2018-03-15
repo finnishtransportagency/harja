@@ -436,9 +436,6 @@
 
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
   ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa tsekataan jossain sora-tyyppi?
-  ; TODO HOX! Palvelinpuolelta on nyt puretty asetus, että pääkohteen muokkaus venyttää alikohteet
-  ; uuteen mittaan. Tätähän ei enää tarvitse tehdä, mutta ongelma muodostuu jos pääkohde muokataa
-  ; lyhyemäksi ja alikohteet menevät siitä yli. Sitten ollaan epävalidissa tilassa.
   ; TODO Lisää validoinnit (ainakin se backendillä ollut päällekkäisyysvalidointi voidaan tuoda tähän, mitäs muuta?)
   ; Miten backend-validointi käyttäytyy POT-lomakkeessa?
   (let [tallenna-fn (fn [osatyyppi]

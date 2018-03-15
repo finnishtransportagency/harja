@@ -541,7 +541,20 @@
                                                       :bitumi_indeksi bitumi-indeksi
                                                       :kaasuindeksi kaasuindeksi
                                                       :toteutunut_hinta toteutunut-hinta
-                                                      :muokkaaja (:id user)}))))
+                                                      :muokkaaja (:id user)})
+        ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
+        ; FIXME Tätä ei enää tarvitse tehdä, mutta ongelma muodostuu jos pääkohde muokataa
+        ; lyhyemäksi ja alikohteet menevät siitä yli. Sitten ollaan epävalidissa tilassa.
+        ; Ratkaisuehdotus 1: Ennen ylläpitokohteen tallennusta tutki, menevätkä alikohteet kohteesta yli, ja heitä validointiherja jos menee?
+        ; Ratkaisuehdotus 2: Venytä alikohteita vain silloin kun kohde lyhenee alusta tai lopusta lyhyemmäksi kuin samassa päässä oleva alikohde.
+        #_(let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :yllapitokohde-id id})
+              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kohde kohde kohdeosat)]
+          (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :yllapitokohde-id id
+                                               :osat korjatut-kohdeosat})))))
 
 (defn- validoi-tallennettavat-yllapitokohteet
   "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
