@@ -317,14 +317,10 @@
               :komponentti (fn [rivi {:keys [index]}]
                              [:div.tasaa-oikealle
                               [napit/yleinen-ensisijainen "Lisää osa"
-                               ; TODO Täytyy testata, että nappi käyttäytyy järkevästi eri tilanteissa
-                               ; Tässä on vielä vanhaa automatiikkaa jäljellä
                                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-arrow-down)
                                 :luokka "btn-xs"}]
                               [napit/kielteinen "Poista"
-                               ; TODO Täytyy testata, että nappi käyttäytyy järkevästi eri tilanteissa
-                               ; Tässä on vielä vanhaa automatiikkaa jäljellä
                                ; FIXME Ei anna poistaa jos on viimeinen kohdeosa 🤔
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-trash)
