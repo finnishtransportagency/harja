@@ -18,4 +18,4 @@ echo aaaa > ../.harja/anti-csrf-token
 touch ../.harja/{google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana}
 cd tietokanta && mvn flyway:migrate && cd -
 lein tuotanto-notest
-java -jar target/harja-jotain.jar
+java -jar target/harja-0.0.1-SNAPSHOT-standalone.jar
