@@ -352,7 +352,6 @@
              :kun-onnistuu tallennettu-fn}]))]}
      (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
                                    :muokkaa-kohdeosat! (fn [uudet-osat]
-                                                         (log "UUDET OSAT: " (pr-str uudet-osat))
                                                          (reset! kohdeosat-atom uudet-osat))
                                    :muokattava-tie? muokattava-tie?})
      kohdeosat-atom]))
@@ -431,9 +430,8 @@
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
-  (let [kohdeosat (:kohdeosat rivi)
-        tallenna-fn (fn [rivit]
-                      (log "TALLENTELE RIVIT: " (pr-str rivit))
+  ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa tsekataan jossain sora-tyyppi?
+  (let [tallenna-fn (fn [rivit]
                       (tiedot/tallenna-yllapitokohdeosat!
                         (:id urakka)
                         sopimus
@@ -448,31 +446,31 @@
                                         @kohteet-atom))
                            (viesti/nayta! "Kohdeosat tallennettu!" :success)))]
     (fn [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
-      (log "RENDAA KOHDEOSAT: " (pr-str (mapv #(dissoc % :sijainti) kohdeosat)))
-      [:div
-       [yllapitokohdeosat
-        {:otsikko "Kohteen tierekisteriosoitteet"
-         :urakka urakka
-         :muokattava-tie? (constantly false)
-         :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                                         (filter #(= (:tr-numero rivi) (:tr-numero %))
-                                                                 kohdeosat))))
+      (let [kohdeosat (:kohdeosat rivi)]
+        [:div
+         [yllapitokohdeosat
+          {:otsikko "Kohteen tierekisteriosoitteet"
+           :urakka urakka
+           :muokattava-tie? (constantly false)
+           :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                           (filter #(= (:tr-numero rivi) (:tr-numero %))
+                                                                   kohdeosat))))
 
-         :tallenna-fn tallenna-fn
-         :tallennettu-fn tallennettu-fn}]
-       [yllapitokohdeosat ; FIXME Uudet osat ei näy taulukossa seivauksen jälkeen?
-        {:otsikko "Muut tierekisteriosoitteet"
-         :urakka urakka
-         :muokattava-tie? (constantly true)
-         :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                                         (filter #(not= (:tr-numero rivi) (:tr-numero %))
-                                                                 kohdeosat))))
-         :tallenna-fn tallenna-fn
-         :tallennettu-fn tallennettu-fn}]
-       (when (= kohdetyyppi :paallystys)
-         [maaramuutokset {:yllapitokohde-id (:id rivi)
-                          :urakka-id (:id urakka)
-                          :yllapitokohteet-atom kohteet-atom}])])))
+           :tallenna-fn tallenna-fn
+           :tallennettu-fn tallennettu-fn}]
+         [yllapitokohdeosat ; FIXME Uudet osat ei näy taulukossa seivauksen jälkeen?
+          {:otsikko "Muut tierekisteriosoitteet"
+           :urakka urakka
+           :muokattava-tie? (constantly true)
+           :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                           (filter #(not= (:tr-numero rivi) (:tr-numero %))
+                                                                   kohdeosat))))
+           :tallenna-fn tallenna-fn
+           :tallennettu-fn tallennettu-fn}]
+         (when (= kohdetyyppi :paallystys)
+           [maaramuutokset {:yllapitokohde-id (:id rivi)
+                            :urakka-id (:id urakka)
+                            :yllapitokohteet-atom kohteet-atom}])]))))
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
   (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
