@@ -356,6 +356,7 @@
            ;; TODO Estä ajoradan ja kaistan muokkaus sen mukaan onko niitä pääkohteella (jos on, ei sallita muokkausta)?
            ;; Kuitenkin jos kyseessä on muu kohde (tienumero eri kuin pääkohteella), saa muokata ajorataa ja kaistaa aina?
            :muokattava-ajorata-ja-kaista? (constantly true)
+           :yllapitokohde nil ; TODO Passaa kohteen tiedot
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet}]
 

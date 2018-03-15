@@ -330,7 +330,7 @@
                                {:ikoni (ikonit/livicon-trash)
                                 :luokka "btn-xs"}]])}])))
 
-(defn yllapitokohdeosat [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn muokattava-tie? muokattava-ajorata-ja-kaista?]}]
+(defn yllapitokohdeosat [{:keys [urakka]}]
   (let [virheet (atom nil)
         kirjoitusoikeus?
         (case (:tyyppi urakka)
@@ -339,7 +339,8 @@
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)]
-    (fn [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn muokattava-tie? muokattava-ajorata-ja-kaista?]}]
+    (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
+                 muokattava-tie? muokattava-ajorata-ja-kaista?]}]
       [grid/muokkaus-grid
        {:otsikko otsikko
         :id "yllapitokohdeosat"
@@ -347,6 +348,11 @@
         :voi-lisata? true
         :piilota-toiminnot? true
         :voi-kumota? false
+        :uusi-rivi (fn [rivi]
+                     ;; Otetaan pääkohteen tie, ajorata ja kaista, jos on
+                     (assoc rivi :tr-numero (:tr-numero yllapitokohde)
+                                 :tr-ajorata (:tr-ajorata yllapitokohde)
+                                 :tr-kaista (:tr-kaista yllapitokohde)))
         :paneelikomponentit
         [(fn []
            (when tallenna-fn
@@ -473,7 +479,7 @@
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
-
+           :yllapitokohde rivi
            :tallenna-fn (tallenna-fn :kohteen-omat-kohdeosat)
            :tallennettu-fn tallennettu-fn}]
          [yllapitokohdeosat
@@ -484,6 +490,7 @@
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(not= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
+           :yllapitokohde rivi
            :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
            :tallennettu-fn tallennettu-fn}]
          (when (= kohdetyyppi :paallystys)
