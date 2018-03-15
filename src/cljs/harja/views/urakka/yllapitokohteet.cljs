@@ -325,7 +325,7 @@
                               [napit/kielteinen "Poista"
                                ; TODO Täytyy testata, että nappi käyttäytyy järkevästi eri tilanteissa
                                ; Tässä on vielä vanhaa automatiikkaa jäljellä
-                               ; FIXME Ei anna poistaa jos on viimeinen kohdeosa
+                               ; FIXME Ei anna poistaa jos on viimeinen kohdeosa 🤔
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-trash)
                                 :luokka "btn-xs"}]])}])))
@@ -435,7 +435,7 @@
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
-(defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
+(defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi kohdetyyppi]}]
   ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa tsekataan jossain sora-tyyppi? Kuka tietää miksi sellainen tarkistus edes on tehty?
   ; TODO Lisää validoinnit (ainakin se backendillä ollut päällekkäisyysvalidointi voidaan tuoda tähän, mitäs muuta?)
   ; Miten backend-validointi käyttäytyy POT-lomakkeessa?
@@ -443,7 +443,7 @@
                       (fn [rivit]
                         (tiedot/tallenna-yllapitokohdeosat!
                           {:urakka-id (:id urakka)
-                           :sopimus-id sopimus
+                           :sopimus-id sopimus-id
                            :yllapitokohde-id (:id rivi)
                            :osat rivit
                            :osatyyppi osatyyppi})))
@@ -456,7 +456,7 @@
                                             kohde))
                                         @kohteet-atom))
                            (viesti/nayta! "Kohdeosat tallennettu!" :success)))]
-    (fn [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
+    (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
       (let [kohdeosat (:kohdeosat rivi)
             kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
                                                        (:tr-kaista rivi)))]
@@ -538,7 +538,7 @@
                           :id
                           (fn [rivi]
                             [kohteen-vetolaatikko {:urakka urakka
-                                                   :sopimus (first @u/valittu-sopimusnumero)
+                                                   :sopimus-id (first @u/valittu-sopimusnumero)
                                                    :kohteet-atom kohteet-atom
                                                    :rivi rivi
                                                    :kohdetyyppi (:kohdetyyppi optiot)}])))
