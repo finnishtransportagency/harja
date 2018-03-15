@@ -159,7 +159,7 @@
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
 (defrecord MuutaHintaryhmanLaskutuslupaa [id tila])
-(defrecord LaskutuslupaTallennettu [tulos])
+(defrecord LaskutuslupaTallennettu [tulos id])
 (defrecord LaskutuslupaEiTallennettu [virhe])
 ;; Kartta
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
@@ -728,14 +728,24 @@
             ::kommentti/tila tila
             ::h/id id}
            {:onnistui ->LaskutuslupaTallennettu
+            :onnistui-parametrit [id]
             :epaonnistui ->LaskutuslupaEiTallennettu})
          (assoc :hintaryhman-laskutusluvan-tallennus-kaynnissa? true))
 
       app))
 
   LaskutuslupaTallennettu
-  (process-event [_ app]
-    (assoc app :hintaryhman-laskutusluvan-tallennus-kaynnissa? false))
+  (process-event [{id :id} app]
+    (-> app
+        (assoc :hintaryhman-laskutusluvan-tallennus-kaynnissa? false)
+        (update :hintaryhmat
+                (fn [ht]
+                  (map
+                    (fn [h]
+                      (if (= id (::h/id h))
+                        (update h ::h/laskutuslupa? not)
+                        h))
+                    ht)))))
 
   LaskutuslupaEiTallennettu
   (process-event [_ app]

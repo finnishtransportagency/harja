@@ -236,14 +236,26 @@
                 :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
                                                         oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                         (:id @nav/valittu-urakka)))}]]
-             [napit/yleinen-toissijainen
-              (ikonit/alert)
-              #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hyvaksytty))
-              #_(varmista-kayttajalta/varmista-kayttajalta
-                 {:otsikko "Muokkaa laskutuslupaa"
-                  :sisalto "Tilaus pitää hyväksyä, jotta se näkyy laskutusyhteenvedolla."
-                  :hyvaksy "Hyväksy"
-                  :toiminto-fn (fn [] (e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hyvaksytty)))})]])))]]))
+             (if (::h/laskutuslupa? hintaryhma)
+               [napit/yleinen-toissijainen
+                "Poista laskutuslupa"
+                #(varmista-kayttajalta/varmista-kayttajalta
+                   {:otsikko "Muokkaa laskutuslupaa"
+                    :sisalto (str "Tilauksella " (::h/nimi hintaryhma) " on laskutuslupa.")
+                    :hyvaksy "Poista laskutuslupa"
+                    :toiminto-fn (fn [] (e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hylatty)))})
+                {:ikoni (ikonit/save)
+                 :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app*)}]
+
+               [napit/yleinen-ensisijainen
+                "Anna laskutuslupa"
+                #(varmista-kayttajalta/varmista-kayttajalta
+                   {:otsikko "Muokkaa laskutuslupaa"
+                    :sisalto "Tilaus pitää hyväksyä, jotta se näkyy laskutusyhteenvedolla."
+                    :hyvaksy "Hyväksy"
+                    :toiminto-fn (fn [] (e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hyvaksytty)))})
+                {:ikoni (ikonit/save)
+                 :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app*)}])])))]]))
 
 (defn- toimenpidelomake [e! {:keys [valittu-toimenpide tallennus-kaynnissa?] :as app}]
   (let [uusi-toimenpide? (not (id-olemassa? (::to/id valittu-toimenpide)))]
