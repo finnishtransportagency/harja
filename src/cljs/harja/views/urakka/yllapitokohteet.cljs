@@ -436,11 +436,14 @@
 
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
   ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa tsekataan jossain sora-tyyppi?
-  (let [tallenna-fn (fn [rivit]
-                      (tiedot/tallenna-yllapitokohdeosat!
-                        (:id urakka)
-                        sopimus
-                        (:id rivi) rivit))
+  (let [tallenna-fn (fn [osatyyppi]
+                      (fn [rivit]
+                        (tiedot/tallenna-yllapitokohdeosat!
+                          {:urakka-id (:id urakka)
+                           :sopimus-id sopimus
+                           :yllapitokohde-id (:id rivi)
+                           :osat rivit
+                           :osatyyppi osatyyppi})))
         tallennettu-fn (fn [vastaus]
                          (let [yllapitokohde-uusilla-kohdeosilla (assoc rivi :kohdeosat vastaus)]
                            (reset! kohteet-atom
@@ -453,9 +456,6 @@
     (fn [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
       (let [kohdeosat (:kohdeosat rivi)]
         [:div
-         ; TODO Toisen taulukon tallennus tyhjentää toisen tiedot. Tallennuspalvelu olettaa saavansa kaikki saman tien osat
-         ; Pitää muuttaa niin, että tallennuspalvelu olettaa saavansa vain saman tien osat tai eri tien osat,
-         ; TAI sitten ehkä (mieluummin) niin, että gridin tallennus lähettää molempien gridien payloadit?
          [yllapitokohdeosat
           {:otsikko "Kohteen tierekisteriosoitteet"
            :urakka urakka
@@ -464,7 +464,7 @@
                                                            (filter #(= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
 
-           :tallenna-fn tallenna-fn
+           :tallenna-fn (tallenna-fn :kohteen-omat-kohdeosat)
            :tallennettu-fn tallennettu-fn}]
          [yllapitokohdeosat
           {:otsikko "Muut tierekisteriosoitteet"
@@ -473,7 +473,7 @@
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(not= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
-           :tallenna-fn tallenna-fn
+           :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
            :tallennettu-fn tallennettu-fn}]
          (when (= kohdetyyppi :paallystys)
            [maaramuutokset {:yllapitokohde-id (:id rivi)

@@ -52,11 +52,12 @@
                                       :vuosi vuosi
                                       :kohteet kohteet}))
 
-(defn tallenna-yllapitokohdeosat! [urakka-id sopimus-id yllapitokohde-id osat]
+(defn tallenna-yllapitokohdeosat! [{:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi]}]
   (k/post! :tallenna-yllapitokohdeosat {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
                                         :yllapitokohde-id yllapitokohde-id
-                                        :osat osat}))
+                                        :osat osat
+                                        :osatyyppi osatyyppi}))
 
 (defn hae-maaramuutokset [urakka-id yllapitokohde-id]
   (k/post! :hae-maaramuutokset {:urakka-id urakka-id
