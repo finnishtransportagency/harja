@@ -347,9 +347,14 @@
              [:figcaption
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
+         ;; TODO Mielestäni yksi taulukko täällä riittää, voi kokeilla siirtää muut kohteet omaan taulukkoon,
+         ;; mutta lähtökohtaisesti tekisin tämän yhdellä taulukolla ainakin ensin toimivaksi.
+         ;; POTin tietomalliin tällä ei tulisi olla vaikutusta
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
-           :muokattava-tie? (constantly true)
+           :muokattava-tie? (constantly false)
+           ;; TODO Estä ajoradan ja kaistan muokkaus sen mukaan onko niitä pääkohteella (jos on, ei sallita muokkausta)?
+           :muokattava-ajorata-ja-kaista? (constantly true)
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet}]
 
