@@ -313,12 +313,25 @@
               (fn [toistettava-rivi tama-rivi]
                 (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}])))
 
-(defn yllapitokohdeosat [{:keys [otsikko kohdeosat tallenna-fn]}]
-  [grid/grid
-   {:otsikko otsikko
-    :tallenna tallenna-fn} ;; TODO Oikeustarkistus!
-   yllapitokohdeosat-sarakkeet
-   kohdeosat])
+(defn yllapitokohdeosat [{:keys [otsikko kohdeosat tallenna-fn tallennettu-fn]}]
+  (let [grid-data (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet kohdeosat)))]
+    [grid/muokkaus-grid
+     {:otsikko otsikko
+      :id "yllapitokohdeosat"
+      :voi-lisata? false
+      :piilota-toiminnot? true
+      :voi-kumota? false
+      :paneelikomponentit
+      [(fn []
+         [napit/palvelinkutsu-nappi
+          [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+          #(tallenna-fn (vals @grid-data))
+          {:disabled false ; TODO CHECK Oikeus jne.
+           :luokka "nappi-myonteinen grid-tallenna"
+           :virheviesti "Tallentaminen epäonnistui."
+           :kun-onnistuu tallennettu-fn}])]}
+     yllapitokohdeosat-sarakkeet
+     grid-data]))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
   (let [sopimus-id (first @u/valittu-sopimusnumero)
@@ -396,32 +409,32 @@
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
   (let [kohdeosat (:kohdeosat rivi)
         tallenna-fn (fn [rivit]
-                      (go (let [vastaus (<! (tiedot/tallenna-yllapitokohdeosat!
-                                              (:id urakka)
-                                              sopimus
-                                              (:id rivi) rivit))]
-
-                            (if (k/virhe? vastaus)
-                              (viesti/nayta! "Tallennus epäonnistui!" :danger)
-                              ;; Liitä ylläpitokohteeseen uudet kohdeosat
-                              (let [yllapitokohde-uusilla-kohdeosilla (assoc rivi :kohdeosat vastaus)]
-                                (reset! kohteet-atom
-                                        (map (fn [kohde]
-                                               (if (= (:id kohde) (:id rivi))
-                                                 yllapitokohde-uusilla-kohdeosilla
-                                                 kohde))
-                                             @kohteet-atom)))))))]
+                      (tiedot/tallenna-yllapitokohdeosat!
+                        (:id urakka)
+                        sopimus
+                        (:id rivi) rivit))
+        tallennettu-fn (fn [vastaus]
+                         (let [yllapitokohde-uusilla-kohdeosilla (assoc rivi :kohdeosat vastaus)]
+                           (reset! kohteet-atom
+                                   (map (fn [kohde]
+                                          (if (= (:id kohde) (:id rivi))
+                                            yllapitokohde-uusilla-kohdeosilla
+                                            kohde))
+                                        @kohteet-atom))
+                           (viesti/nayta! "Kohdeosat tallennettu!" :success)))]
     [:div
      [yllapitokohdeosat
       {:otsikko "Kohteen tierekisteriosoitteet"
        :kohdeosat (filter #(= (:tr-numero rivi) (:tr-numero %))
                           kohdeosat)
-       :tallenna-fn tallenna-fn}]
+       :tallenna-fn tallenna-fn
+       :tallennettu-fn tallennettu-fn}]
      [yllapitokohdeosat
       {:otsikko "Muut tierekisteriosoitteet"
        :kohdeosat (filter #(not= (:tr-numero rivi) (:tr-numero %))
                           kohdeosat)
-       :tallenna-fn tallenna-fn}]
+       :tallenna-fn tallenna-fn
+       :tallennettu-fn tallennettu-fn}]
      (when (= kohdetyyppi :paallystys)
        [maaramuutokset {:yllapitokohde-id (:id rivi)
                         :urakka-id (:id urakka)
