@@ -536,6 +536,7 @@
                                                       :toteutunut_hinta toteutunut-hinta
                                                       :muokkaaja (:id user)})
         ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
+        ; FIXME Tätä ei enää tarvitse tehdä.....
         (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :yllapitokohde-id id})
