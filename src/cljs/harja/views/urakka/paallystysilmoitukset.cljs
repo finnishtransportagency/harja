@@ -354,6 +354,7 @@
           {:urakka urakka
            :muokattava-tie? (constantly false)
            ;; TODO Estä ajoradan ja kaistan muokkaus sen mukaan onko niitä pääkohteella (jos on, ei sallita muokkausta)?
+           ;; Kuitenkin jos kyseessä on muu kohde (tienumero eri kuin pääkohteella), saa muokata ajorataa ja kaistaa aina?
            :muokattava-ajorata-ja-kaista? (constantly true)
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet}]
