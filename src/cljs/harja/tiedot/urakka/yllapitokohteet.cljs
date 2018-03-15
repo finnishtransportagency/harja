@@ -154,6 +154,10 @@
         jalkeen (when-not (empty? avaimet-jalkeen)
                   (get kohdeosat (first avaimet-jalkeen)))]
     (cond
+      ;; Poistetaan ainoa kohdeosa
+      (= (count avaimet) 1)
+      {}
+
       ;; Poistetaan ensimmäistä, aseta ensimmäisen alku seuraavan aluksi
       (nil? ennen)
       (merge {1 (merge jalkeen

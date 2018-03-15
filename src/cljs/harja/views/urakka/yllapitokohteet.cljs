@@ -321,7 +321,6 @@
                                {:ikoni (ikonit/livicon-arrow-down)
                                 :luokka "btn-xs"}]
                               [napit/kielteinen "Poista"
-                               ; FIXME Ei anna poistaa jos on viimeinen kohdeosa 🤔
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-trash)
                                 :luokka "btn-xs"}]])}])))
@@ -447,9 +446,9 @@
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi kohdetyyppi]}]
-  ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa tsekataan jossain sora-tyyppi? Kuka tietää miksi sellainen tarkistus edes on tehty?
+  ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa disabloidaan rivien muokkaus jos on joku sora-tyyppi? 🤔
   ; TODO Lisää validoinnit (ainakin se backendillä ollut päällekkäisyysvalidointi voidaan tuoda tähän, mitäs muuta?)
-  ; Miten backend-validointi käyttäytyy POT-lomakkeessa?
+  ; POT-lomakkeeseen täytyy varmaan sitoa validointi POT-lomakkeen tallentamiseen
   (let [tallenna-fn (fn [osatyyppi]
                       (fn [rivit]
                         (tiedot/tallenna-yllapitokohdeosat!
