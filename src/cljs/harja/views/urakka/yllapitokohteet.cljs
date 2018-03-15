@@ -466,7 +466,7 @@
 
            :tallenna-fn tallenna-fn
            :tallennettu-fn tallennettu-fn}]
-         [yllapitokohdeosat ; FIXME Uudet osat ei näy taulukossa seivauksen jälkeen?
+         [yllapitokohdeosat
           {:otsikko "Muut tierekisteriosoitteet"
            :urakka urakka
            :muokattava-tie? (constantly true)
