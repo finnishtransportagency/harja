@@ -349,6 +349,7 @@
 
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
+           :muokattava-tie? (constantly true)
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet}]
 

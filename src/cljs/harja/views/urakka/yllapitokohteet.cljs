@@ -244,13 +244,13 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(defn yllapitokohdeosat-sarakkeet [kohdeosat muokkaa-kohdeosat!]
+(defn yllapitokohdeosat-sarakkeet [{:keys [kohdeosat muokkaa-kohdeosat! muokattava-tie?]}]
   (remove nil?
           (concat
             (tierekisteriosoite-sarakkeet
               tr-leveys
               [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys}
-               {:nimi :tr-numero} ;; FIXME Validoi, että on sama tie tai eri tie, riippuen taulukon tyypistä
+               {:nimi :tr-numero :muokattava? muokattava-tie?}
                {:nimi :tr-ajorata}
                {:nimi :tr-kaista}
                {:nimi :tr-alkuosa}
@@ -325,7 +325,7 @@
                                {:ikoni (ikonit/livicon-trash)
                                 :luokka "btn-xs"}]])}])))
 
-(defn yllapitokohdeosat [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn]}]
+(defn yllapitokohdeosat [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn muokattava-tie?]}]
   (let [kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
@@ -350,10 +350,11 @@
              :luokka "nappi-myonteinen grid-tallenna"
              :virheviesti "Tallentaminen epäonnistui."
              :kun-onnistuu tallennettu-fn}]))]}
-     (yllapitokohdeosat-sarakkeet @kohdeosat-atom
-                                  (fn [uudet-osat]
-                                    (log "UUDET OSAT: " (pr-str uudet-osat))
-                                    (reset! kohdeosat-atom uudet-osat)))
+     (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
+                                   :muokkaa-kohdeosat! (fn [uudet-osat]
+                                                         (log "UUDET OSAT: " (pr-str uudet-osat))
+                                                         (reset! kohdeosat-atom uudet-osat))
+                                   :muokattava-tie? muokattava-tie?})
      kohdeosat-atom]))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
@@ -451,6 +452,7 @@
        [yllapitokohdeosat
         {:otsikko "Kohteen tierekisteriosoitteet"
          :urakka urakka
+         :muokattava-tie? (constantly false)
          :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                          (filter #(= (:tr-numero rivi) (:tr-numero %))
                                                                  kohdeosat))))
@@ -460,6 +462,7 @@
        [yllapitokohdeosat
         {:otsikko "Muut tierekisteriosoitteet"
          :urakka urakka
+         :muokattava-tie? (constantly true)
          :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                          (filter #(not= (:tr-numero rivi) (:tr-numero %))
                                                                  kohdeosat))))
