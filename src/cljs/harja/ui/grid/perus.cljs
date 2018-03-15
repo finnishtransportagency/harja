@@ -451,8 +451,9 @@
 
                         (when-not (rivi-piilotetun-otsikon-alla? i (vec rivit) @piilotetut-valiotsikot)
                           (let [id (tunniste rivi)
-                                vetolaatikko-colspan (cond-> (inc (count skeema))
-                                                             piilota-toiminnot? dec)]
+                                vetolaatikko-colspan (if (or piilota-toiminnot? (nil? tallenna))
+                                                       (count skeema)
+                                                       (inc (count skeema)))]
                             [^{:key id}
                             [nayttorivi {:ohjaus ohjaus
                                          :vetolaatikot vetolaatikot

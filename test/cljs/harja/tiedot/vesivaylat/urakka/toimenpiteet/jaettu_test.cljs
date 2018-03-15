@@ -203,9 +203,9 @@
 
 (deftest turvalaitteet-kartalle
   (let [laitteet [{::tu/turvalaitenro 1
-                   ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}
+                   ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}
                   {::tu/turvalaitenro 2
-                   ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
+                   ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
         tila {:toimenpiteet [{::to/turvalaite {::tu/turvalaitenro 1}
                               ::to/id 1}
                              {::to/turvalaite {::tu/turvalaitenro 1}
@@ -427,7 +427,7 @@
            (e! (tiedot/->HaeToimenpiteidenTurvalaitteetKartalle nil)))))
 
   (testing "Haun valmistuminen"
-    (let [payload [{::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
+    (let [payload [{::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
           tulos (e! (tiedot/->TurvalaitteetKartalleHaettu payload #{1 2})
                     {:kartalle-haettavat-toimenpiteet #{1 2}})]
       (is (nil? (:kartalle-haettavat-toimenpiteet tulos)))
@@ -459,7 +459,7 @@
                                                       [mun-inc mun-inc])
                   {:numero 0
                    :turvalaitteet [{::tu/turvalaitenro 1
-                                    ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]})]
+                                    ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]})]
     (is (= 2 (:numero tulos)))
     (is (= #{1} (:korostetut-turvalaitteet tulos)))
     (is (= [{:harja.domain.vesivaylat.turvalaite/turvalaitenro 1,
