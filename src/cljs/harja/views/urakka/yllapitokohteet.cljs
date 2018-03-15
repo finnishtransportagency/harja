@@ -244,15 +244,15 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(defn yllapitokohdeosat-sarakkeet [{:keys [kohdeosat muokkaa-kohdeosat! muokattava-tie?]}]
+(defn yllapitokohdeosat-sarakkeet [{:keys [kohdeosat muokkaa-kohdeosat! muokattava-tie? muokattava-ajorata-ja-kaista?]}]
   (remove nil?
           (concat
             (tierekisteriosoite-sarakkeet
               tr-leveys
               [{:nimi :nimi :pituus-max 30 :leveys kohde-leveys}
                {:nimi :tr-numero :muokattava? muokattava-tie?}
-               {:nimi :tr-ajorata}
-               {:nimi :tr-kaista}
+               {:nimi :tr-ajorata :muokattava? muokattava-ajorata-ja-kaista?}
+               {:nimi :tr-kaista  :muokattava? muokattava-ajorata-ja-kaista?}
                {:nimi :tr-alkuosa}
                {:nimi :tr-alkuetaisyys}
                {:nimi :tr-loppuosa}
@@ -330,7 +330,7 @@
                                {:ikoni (ikonit/livicon-trash)
                                 :luokka "btn-xs"}]])}])))
 
-(defn yllapitokohdeosat [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn muokattava-tie?]}]
+(defn yllapitokohdeosat [{:keys [urakka otsikko kohdeosat-atom tallenna-fn tallennettu-fn muokattava-tie? muokattava-ajorata-ja-kaista?]}]
   (let [kirjoitusoikeus?
         (case (:tyyppi urakka)
           :paallystys
@@ -358,6 +358,7 @@
      (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
                                    :muokkaa-kohdeosat! (fn [uudet-osat]
                                                          (reset! kohdeosat-atom uudet-osat))
+                                   :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
                                    :muokattava-tie? muokattava-tie?})
      kohdeosat-atom]))
 
@@ -456,14 +457,16 @@
                                         @kohteet-atom))
                            (viesti/nayta! "Kohdeosat tallennettu!" :success)))]
     (fn [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
-      (let [kohdeosat (:kohdeosat rivi)]
+      (let [kohdeosat (:kohdeosat rivi)
+            kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
+                                                       (:tr-kaista rivi)))]
         [:div
          [yllapitokohdeosat
-          ; TODO Jos osia ei ole, ekan rivin lisäys ei assoccaa tienumeroa 🙈
+          ; TODO Jos osia ei ole, ekan rivin lisäys ei assoccaa tienumeroa, ajorataa ja kaistaa 🙈
           {:otsikko "Kohteen tierekisteriosoitteet"
            :urakka urakka
-           ; TODO Salli ajoradan ja kaistan muokkaus vain jos pääkohteella niitä ei ole
-           :muokattava-ajorata-ja-kaista? (constantly false)
+           :muokattava-tie? (constantly false)
+           :muokattava-ajorata-ja-kaista? (constantly (not kohteella-ajorata-ja-kaista?))
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
@@ -474,6 +477,7 @@
           {:otsikko "Muut tierekisteriosoitteet"
            :urakka urakka
            :muokattava-tie? (constantly true)
+           :muokattava-ajorata-ja-kaista? (constantly true)
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(not= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
