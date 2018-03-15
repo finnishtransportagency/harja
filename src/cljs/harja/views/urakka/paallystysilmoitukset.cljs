@@ -239,7 +239,7 @@
                                          (false? lukittu?)
                                          kirjoitusoikeus?)
                       :muokkaa! (fn [uusi]
-                                  #_(log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
+                                  (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                                   (muokkaa! merge uusi))}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
@@ -359,7 +359,8 @@
            :rivinumerot? true
            :voi-muokata? voi-muokata?
            :virheet yllapitokohde-virheet}
-          yllapitokohteet/yllapitokohdeosat-sarakkeet
+          (yllapitokohdeosat-sarakkeet (fn [uudet-osat]
+                                         (log "UUDET OSAT: " (pr-str uudet-osat))))
           paallystystoimenpiteet]
 
          [grid/muokkaus-grid

@@ -403,7 +403,6 @@
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata hyppy?
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
-  (log/debug "Päivitetään ylläpitokohdeosa")
   (q/paivita-yllapitokohdeosa<! db
                                 {:nimi nimi
                                  :tr_numero tr-numero

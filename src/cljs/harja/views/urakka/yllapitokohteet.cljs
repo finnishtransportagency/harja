@@ -244,7 +244,7 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(def yllapitokohdeosat-sarakkeet
+(defn yllapitokohdeosat-sarakkeet [kohdeosat muokkaa-kohdeosat!]
   (remove nil?
           (concat
             (tierekisteriosoite-sarakkeet
@@ -311,27 +311,43 @@
               :tayta-alas-toistuvasti? #(not (nil? %))
               :tayta-toistuvasti-fn
               (fn [toistettava-rivi tama-rivi]
-                (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}])))
+                (assoc tama-rivi :toimenpide (:toimenpide toistettava-rivi)))}
+             {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 20
+              :tasaa :keskita
+              :komponentti (fn [rivi {:keys [index]}]
+                             [:div.tasaa-oikealle
+                              [napit/yleinen-ensisijainen "Lisää osa"
+                               #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat (inc index)))
+                               {:ikoni (ikonit/livicon-arrow-down)
+                                :luokka "btn-xs"}]
+                              [napit/kielteinen "Poista"
+                               #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat (inc index)))
+                               {:ikoni (ikonit/livicon-trash)
+                                :luokka "btn-xs"}]])}])))
 
 (defn yllapitokohdeosat [{:keys [otsikko kohdeosat tallenna-fn tallennettu-fn]}]
   (let [grid-data (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet kohdeosat)))]
-    [grid/muokkaus-grid
-     {:otsikko otsikko
-      :id "yllapitokohdeosat"
-      :voi-lisata? false
-      :piilota-toiminnot? true
-      :voi-kumota? false
-      :paneelikomponentit
-      [(fn []
-         [napit/palvelinkutsu-nappi
-          [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-          #(tallenna-fn (vals @grid-data))
-          {:disabled false ; TODO CHECK Oikeus jne.
-           :luokka "nappi-myonteinen grid-tallenna"
-           :virheviesti "Tallentaminen epäonnistui."
-           :kun-onnistuu tallennettu-fn}])]}
-     yllapitokohdeosat-sarakkeet
-     grid-data]))
+    (fn [{:keys [otsikko kohdeosat tallenna-fn tallennettu-fn]}]
+      [grid/muokkaus-grid
+       {:otsikko otsikko
+        :id "yllapitokohdeosat"
+        :voi-lisata? true
+        :piilota-toiminnot? true
+        :voi-kumota? false
+        :paneelikomponentit
+        [(fn []
+           [napit/palvelinkutsu-nappi
+            [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+            #(tallenna-fn (vals @grid-data))
+            {:disabled false ; TODO CHECK Oikeus ja se, ettei gridissä ole virheitä
+             :luokka "nappi-myonteinen grid-tallenna"
+             :virheviesti "Tallentaminen epäonnistui."
+             :kun-onnistuu tallennettu-fn}])]}
+       (yllapitokohdeosat-sarakkeet @grid-data
+                                    (fn [uudet-osat]
+                                      (log "UUDET OSAT: " (pr-str uudet-osat))
+                                      (reset! grid-data uudet-osat)))
+       grid-data])))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
   (let [sopimus-id (first @u/valittu-sopimusnumero)
@@ -409,6 +425,7 @@
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
   (let [kohdeosat (:kohdeosat rivi)
         tallenna-fn (fn [rivit]
+                      (log "TALLENTELE RIVIT: " (pr-str rivit))
                       (tiedot/tallenna-yllapitokohdeosat!
                         (:id urakka)
                         sopimus
