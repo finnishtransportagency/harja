@@ -376,7 +376,7 @@
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma massamaara hyppy?]}]
+                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -395,12 +395,11 @@
                                :tyomenetelma tyomenetelma
                                :massamaara massamaara
                                :toimenpide toimenpide
-                               :hyppy (if (some? hyppy?) hyppy? false)
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
-                                         tr-loppuosa tr-loppuetaisyys tr-ajorata hyppy?
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
   (log/debug "Päivitetään ylläpitokohdeosa")
@@ -419,7 +418,6 @@
                                  :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
-                                 :hyppy (if (some? hyppy?) hyppy? false)
                                  :urakka urakka-id}))
 
 (defn tallenna-yllapitokohdeosat
@@ -432,17 +430,12 @@
   (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
 
-    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
-                                                           {:urakka-id urakka-id
-                                                            :sopimus-id sopimus-id
-                                                            :yllapitokohde-id yllapitokohde-id})
-          vanhat-osa-idt (into #{} (map :id) (hae-osat))
-          uudet-osa-idt (into #{} (keep :id) osat)
-          poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
+    (let [poistuneet-osat (filter :poistettu osat)
+          osat (filter (comp not :poistettu) osat)]
 
-      (doseq [id poistuneet-osa-idt]
+      (doseq [osa poistuneet-osat]
         (q/poista-yllapitokohdeosa! db {:urakka urakka-id
-                                        :id id}))
+                                        :id (:id osa)}))
 
       (log/debug "Tallennetaan ylläpitokohdeosat: " (pr-str osat) " Ylläpitokohde-id: " yllapitokohde-id)
       (doseq [osa osat]
@@ -450,7 +443,10 @@
           (paivita-yllapitokohdeosa db user urakka-id osa)
           (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
       (yy/paivita-yllapitourakan-geometria db urakka-id)
-      (let [yllapitokohdeosat (hae-osat)]
+      (let [yllapitokohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user
+                                                                     {:urakka-id urakka-id
+                                                                      :sopimus-id sopimus-id
+                                                                      :yllapitokohde-id yllapitokohde-id})]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
