@@ -18,3 +18,4 @@ CREATE TRIGGER vv_vikailmoituksen_toimenpide_id_trigger
   BEFORE INSERT OR UPDATE ON vv_vikailmoitus
   FOR EACH ROW
   EXECUTE PROCEDURE vv_vikailmoituksen_toimenpide_id_trigger_proc();
+
