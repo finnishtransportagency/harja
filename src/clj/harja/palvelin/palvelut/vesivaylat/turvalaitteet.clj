@@ -20,6 +20,7 @@
     ;; eli oikeustarkastusta ei tarvita. Jos lisätään esim urakan perusteella
     ;; haku, täytyy oikeustarkastusta harkita uudelleen.
     (oikeudet/ei-oikeustarkistusta!)
+    (println "haetaan" tiedot)
     (tu-q/hae-turvalaitteet-kartalle db tiedot)))
 
 (defn hae-turvalaitteet-tekstilla [db user tiedot]

@@ -596,7 +596,7 @@
                      (let [kaikkia-ei-piirretty? (> (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)]
                        [:div
                         (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take nayta-max-toimenpidetta (:toimenpiteet turvalaite)))]
-                          ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
+                          ^{:key (str (::tu/turvalaitenro turvalaite) "-" (::to/id toimenpide))}
                           [:div (str (if-let [s (or (::to/pvm toimenpide)
                                                     (::to/suoritettu toimenpide))]
                                        (pvm/pvm s)
