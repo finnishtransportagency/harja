@@ -101,11 +101,11 @@
   (into []
         (remove
           nil?
-          [(when nimi {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
-                       :leveys (or (:leveys nimi) (* perusleveys 2))
-                       :pituus-max 30
-                       :sisalto-kun-rivi-disabloitu (:sisalto-kun-rivi-disabloitu nimi)
-                       :muokattava? (or (:muokattava? nimi) (constantly true))})
+          [(when nimi
+             {:otsikko "Nimi" :nimi (:nimi nimi) :tyyppi :string
+              :leveys (or (:leveys nimi) (* perusleveys 2))
+              :pituus-max 30
+              :muokattava? (or (:muokattava? nimi) (constantly true))})
            {:otsikko "Tie\u00ADnu\u00ADme\u00ADro" :nimi (:nimi tie)
             :tyyppi :positiivinen-numero :leveys perusleveys :tasaa :oikea
             :validoi [[:ei-tyhja "Anna tienumero"]]
@@ -345,7 +345,7 @@
            [napit/palvelinkutsu-nappi
             [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
             #(tallenna-fn (vals @kohdeosat-atom))
-            {:disabled (or #_(not (empty? @virheet)) ;; TODO tsekkaa virheet
+            {:disabled (or #_(not (empty? @virheet)) ;; TODO tsekkaa virheet (diff masteriin ja tutki mistä tämä virheet-atom tulee)
                          (not kirjoitusoikeus?))
              :luokka "nappi-myonteinen grid-tallenna"
              :virheviesti "Tallentaminen epäonnistui."
