@@ -448,6 +448,7 @@
                                         @kohteet-atom))
                            (viesti/nayta! "Kohdeosat tallennettu!" :success)))]
     (fn [{:keys [urakka sopimus kohteet-atom rivi kohdetyyppi]}]
+      (log "RENDAA KOHDEOSAT: " (pr-str (mapv #(dissoc % :sijainti) kohdeosat)))
       [:div
        [yllapitokohdeosat
         {:otsikko "Kohteen tierekisteriosoitteet"
@@ -459,7 +460,7 @@
 
          :tallenna-fn tallenna-fn
          :tallennettu-fn tallennettu-fn}]
-       [yllapitokohdeosat
+       [yllapitokohdeosat ; FIXME Uudet osat ei näy taulukossa seivauksen jälkeen?
         {:otsikko "Muut tierekisteriosoitteet"
          :urakka urakka
          :muokattava-tie? (constantly true)
