@@ -206,6 +206,7 @@
          [napit/peruuta
           "Peruuta"
           #(e! (tiedot/->PeruHintaryhmanHinnoittelu))]]
+
         (when-not (tiedot/valiaikainen-hintaryhma? hintaryhma)
           (if (and (nil? hintaryhman-toimenpiteiden-yhteishinta)
                    (nil? hintaryhman-kokonaishinta)
@@ -214,6 +215,7 @@
              "Määrittele yksi hinta koko tilaukselle"
              #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
              {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
+
             [:div
              [:div.inline-block {:style {:margin-right "10px"}}
               (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
@@ -233,7 +235,15 @@
                {:ikoninappi? true
                 :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
                                                         oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                        (:id @nav/valittu-urakka)))}]]])))]]))
+                                                        (:id @nav/valittu-urakka)))}]]
+             [napit/yleinen-toissijainen
+              (ikonit/alert)
+              #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hyvaksytty))
+              #_(varmista-kayttajalta/varmista-kayttajalta
+                 {:otsikko "Muokkaa laskutuslupaa"
+                  :sisalto "Tilaus pitää hyväksyä, jotta se näkyy laskutusyhteenvedolla."
+                  :hyvaksy "Hyväksy"
+                  :toiminto-fn (fn [] (e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hyvaksytty)))})]])))]]))
 
 (defn- toimenpidelomake [e! {:keys [valittu-toimenpide tallennus-kaynnissa?] :as app}]
   (let [uusi-toimenpide? (not (id-olemassa? (::to/id valittu-toimenpide)))]
