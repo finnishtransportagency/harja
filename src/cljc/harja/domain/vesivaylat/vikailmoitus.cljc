@@ -16,7 +16,7 @@
                                  :harja.domain.vesivaylat.toimenpide/id)
     ::turvalaite (specql.rel/has-one ::turvalaite-id
                               :harja.domain.vesivaylat.turvalaite/turvalaite
-                              :harja.domain.vesivaylat.turvalaite/id)}])
+                              :harja.domain.vesivaylat.turvalaite/turvalaitenro)}])
 
 (def viittaus-idt
   #{::turvalaite-id
