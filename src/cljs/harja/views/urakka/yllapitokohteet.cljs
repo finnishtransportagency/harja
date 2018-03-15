@@ -360,6 +360,12 @@
               [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
               #(tallenna-fn (vals @kohdeosat-atom))
               {:disabled (or (not (empty? @virheet))
+                             (not (every? #(and (:tr-numero %)
+                                                (:tr-alkuosa %)
+                                                (:tr-alkuetaisyys %)
+                                                (:tr-loppuosa %)
+                                                (:tr-loppuetaisyys %))
+                                          (vals @kohdeosat-atom)))
                              (not kirjoitusoikeus?))
                :luokka "nappi-myonteinen grid-tallenna"
                :virheviesti "Tallentaminen epäonnistui."
