@@ -239,7 +239,7 @@
                                          (false? lukittu?)
                                          kirjoitusoikeus?)
                       :muokkaa! (fn [uusi]
-                                  #_(log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
+                                  (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                                   (muokkaa! merge uusi))}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
@@ -320,8 +320,7 @@
   (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
-      (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
-            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
+      (let [paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
             muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
@@ -349,19 +348,8 @@
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
-          {:voi-kumota? false
-           :muokkaa! (fn [kohteet virheet]
-                       (muokkaa! (fn [lomake]
-                                   (-> lomake
-                                       (assoc-in [:ilmoitustiedot :osoitteet] kohteet)
-                                       (assoc-in [:virheet :alikohteet] virheet)))))
-           :rivinumerot? true
-           :voi-muokata? voi-muokata?
-           :virheet yllapitokohde-virheet}
-          urakka tierekisteriosoitteet
-          (select-keys lomakedata-nyt
-                       #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-          @osan-pituus]
+          {:otsikko "Tierekisteriosoitteet"
+           :kohdeosat-atom paallystystoimenpiteet}]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
