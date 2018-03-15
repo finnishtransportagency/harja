@@ -459,10 +459,12 @@
       (let [kohdeosat (:kohdeosat rivi)]
         [:div
          [yllapitokohdeosat
+          ; TODO Jos osia ei ole, ekan rivin lisäys ei assoccaa tienumeroa 🙈
           {:otsikko "Kohteen tierekisteriosoitteet"
            :urakka urakka
            ; TODO Salli ajoradan ja kaistan muokkaus vain jos pääkohteella niitä ei ole
            :muokattava-tie? (constantly false)
+           :muokattava-ajorata-ja-kaista? (constantly false)
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
@@ -473,6 +475,7 @@
           {:otsikko "Muut tierekisteriosoitteet"
            :urakka urakka
            :muokattava-tie? (constantly true)
+           :muokattava-ajorata-ja-kaista? (constantly false)
            :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                            (filter #(not= (:tr-numero rivi) (:tr-numero %))
                                                                    kohdeosat))))
