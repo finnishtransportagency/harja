@@ -348,7 +348,8 @@
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
-          {:otsikko "Tierekisteriosoitteet"
+          {:urakka urakka
+           :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet}]
 
          [grid/muokkaus-grid
