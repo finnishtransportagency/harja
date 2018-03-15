@@ -41,10 +41,6 @@
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/nimi",
                     "type": "string"
                   },
-                  "hyppy": {
-                    "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/hyppy",
-                    "type": "boolean"
-                  },
                   "tunnus": {
                     "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/alikohteet/0/alikohde/tunnus",
                     "type": "string"

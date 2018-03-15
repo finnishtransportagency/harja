@@ -292,7 +292,7 @@ SELECT ypk.id,
        ST_Simplify(ypko.sijainti, :toleranssi) AS sijainti
   FROM yllapitokohde ypk
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
-       JOIN yllapitokohdeosa ypko ON (ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE AND ypko.hyppy IS NOT TRUE)
+       JOIN yllapitokohdeosa ypko ON (ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE)
  WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'

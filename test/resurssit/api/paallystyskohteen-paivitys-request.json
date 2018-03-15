@@ -47,7 +47,6 @@
             "id": 667
           },
           "nimi": "2. Testialikohde",
-          "hyppy": false,
           "sijainti": {
             "numero": 20,
             "aosa": 14,
@@ -66,7 +65,6 @@
             "id": 668
           },
           "nimi": "3. Testialikohde (joka on hyppy)",
-          "hyppy": true,
           "sijainti": {
             "numero": 20,
             "aosa": 17,

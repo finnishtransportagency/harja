@@ -207,7 +207,6 @@
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.
    Ottaa vectorin ylläpitokohteita ja palauttaa ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
    Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
-   Suodattaa pois kohdeosat, jotka on merkitty hypyksi.
 
    yllapitokohteet  Vector ylläpitokohteita, joilla on mukana ylläpitokohteen kohdeosat (:kohdeosat avaimessa)
    lomakedata       Päällystys- tai paikkausilmoituksen lomakkeen tiedot"

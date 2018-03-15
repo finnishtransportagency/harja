@@ -275,7 +275,6 @@ yllapitoluokkanimi->numero
   ;; Tämä transducer olettaa saavansa vectorin ylläpitokohteita ja palauttaa
   ;; ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
   ;; Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
-  ;; Suodattaa pois kohdeosat, jotka ovat hyppyjä.
   (comp
     (mapcat (fn [kohde]
               (keep (fn [kohdeosa]
@@ -283,7 +282,7 @@ yllapitoluokkanimi->numero
                                       :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
                                       :tila (:tila kohde)
                                       :yllapitokohde-id (:id kohde)))
-                    (filter #(not (true? (:hyppy? %))) (:kohdeosat kohde)))))
+                    (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
 
 (defn kohdenumero-str->kohdenumero-vec
