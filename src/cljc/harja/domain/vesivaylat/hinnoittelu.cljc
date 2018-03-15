@@ -7,6 +7,7 @@
     [harja.domain.vesivaylat.hinta :as hinta]
     [harja.domain.urakka :as ur]
     [harja.domain.vesivaylat.tyo :as tyo]
+    [harja.domain.vesivaylat.kommentti :as kommentti]
     [clojure.set :as set]
     [specql.rel :as rel]
 
@@ -144,3 +145,9 @@
 
 ;; Poistetut hintaryhmät-idt
 (s/def ::poista-tyhjat-hinnoittelut-vastaus (s/keys :req [::idt]))
+
+(s/def ::tallenna-hinnoittelun-kommentti-kysely (s/keys :req [::urakka-id
+                                                              ::kommentti/tila
+                                                              ::kommentti/kommentti
+                                                              ::id]))
+(s/def ::tallenna-hinnoittelun-kommentti-vastaus (s/keys :req []))

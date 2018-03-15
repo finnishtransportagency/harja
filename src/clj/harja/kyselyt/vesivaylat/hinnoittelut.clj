@@ -19,7 +19,10 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.tyo :as tyo]
-            [harja.domain.muokkaustiedot :as m]))
+            [harja.domain.muokkaustiedot :as m]
+            [harja.domain.vesivaylat.kommentti :as kommentti]))
+
+(defqueries "harja/kyselyt/vesivaylat/hinnoittelut.sql")
 
 (defn- vaadi-hinnoittelut-kuuluvat-urakkaan* [tulos hinnoittelu-idt urakka-id]
   (when (or
@@ -289,3 +292,21 @@
                         {::tyo/hinnoittelu-id hinnoittelu-id
                         ::m/luotu (pvm/nyt)
                         ::m/luoja-id (:id user)})))))
+
+(defn lisaa-kommentti! [db user tila kommentti hinnoittelu-id]
+  (specql/insert! db
+                  ::kommentti/hinnoittelun-kommentti
+                  {::kommentti/aika (pvm/nyt)
+                   ::kommentti/kommentti kommentti
+                   ::kommentti/tila tila
+                   ::kommentti/kayttaja-id (:id user)
+                   ::kommentti/hinnoittelu-id hinnoittelu-id}))
+
+(defn kommentoi-toimenpiteen-hintaryhmaa! [db user tila kommentti toimenpide-id]
+  (kommentoi-toimenpiteen-hintaryhmaa<!
+    db
+    {:aika (pvm/nyt)
+     :tila tila
+     :kommentti kommentti
+     :toimenpide_id toimenpide-id
+     :kayttaja_id (:id user)}))

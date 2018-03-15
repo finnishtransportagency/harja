@@ -5,6 +5,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.vesivaylat.hinnoittelut :as q]
+            [harja.tyokalut.tietoturva :as tietoturva]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.hinnoittelu :as h]
@@ -12,6 +13,7 @@
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
+            [harja.domain.vesivaylat.kommentti :as kommentti]
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
             [harja.id :as id]))
 
@@ -70,6 +72,9 @@
         (q/tallenna-hintaryhmalle-hinta! db user
                                          (::h/id tiedot)
                                          (::h/tallennettavat-hinnat tiedot))
+
+        (q/lisaa-kommentti! db user "muokattu" nil (::h/id tiedot))
+
         (hae-hintaryhmat db user urakka-id)))))
 
 (defn tallenna-toimenpiteelle-hinta! [db user tiedot]
@@ -99,7 +104,33 @@
              :user user
              :hinnoittelu-id hinnoittelu-id
              :tyot (::h/tallennettavat-tyot tiedot)})
+
+          ;; kirjoittamisen hetkellä ainostaan hintaryhmän, eli tilauksen, voi hyväksyä.
+          ;; Jos siis toimenpiteen hinnoittelua muokataan, "kommentoidaan" myös sen tilausta,
+          ;; jolloin tilaus pitää hyväksyä uudelleen laskulle
+          (q/kommentoi-toimenpiteen-hintaryhmaa! db user "muokattu" nil toimenpide-id)
+
           (q/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))))
+
+(defn tallenna-hinnoittelun-kommentti! [db user tiedot]
+  (let [urakka-id (::h/urakka-id tiedot)]
+    (assert urakka-id "Urakka-id puuttuu!")
+
+    ;; Hinnoittelu, jonka id on kommentin hinnoittelu-id,
+    ;; pitää kuulua urakkaan, jonka id on parametrina annettu urakka-id
+    (tietoturva/vaadi-linkitys
+      db
+      ::h/hinnoittelu
+      ::h/id
+      (::kommentti/hinnoittelu-id tiedot)
+      ::h/urakka-id
+      urakka-id)
+
+    (q/lisaa-kommentti! db
+                        user
+                        (::kommentti/tila tiedot)
+                        (::kommentti/kommentti tiedot)
+                        (::h/id tiedot))))
 
 (defrecord Hinnoittelut []
   component/Lifecycle
@@ -152,6 +183,13 @@
         (tallenna-toimenpiteelle-hinta! db user tiedot))
       {:kysely-spec ::h/tallenna-vv-toimenpiteen-hinta-kysely
        :vastaus-spec ::h/tallenna-vv-toimenpiteen-hinta-vastaus})
+
+    (julkaise-palvelu
+      http
+      :tallenna-hinnoittelun-kommentti
+      (fn [user tiedot]
+        (tallenna-hinnoittelun-kommentti! db user tiedot))
+      {:kysely-spec ::h/tallenna-hinnoittelun-kommentti-kysely})
 
     this)
 
