@@ -43,11 +43,16 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
+            [harja.domain.toimenpidekoodi :as tpk]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri.varusteet :as varusteet]
             [harja.domain.kanavat.kohteenosa :as osa]
             [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
+            [harja.domain.kanavat.kanavan-toimenpide :as kan-to]
+            [harja.domain.kanavat.hairiotilanne :as ht]
             [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
@@ -645,6 +650,52 @@
               (toimenpiteen-kentta "Kuittaaja" :kuittaaja)
               (toimenpiteen-kentta "Päivämäärä" :pvm)]
      :data kohde}))
+
+(defmethod infopaneeli-skeema :kan-hairiotilanne [hairiotilanne]
+  {:tyyppi :kan-hairiotilanne
+   :jarjesta-fn ::ht/havaintoaika
+   :otsikko (str
+              (pvm/pvm (::ht/havaintoaika hairiotilanne))
+              " "
+              (ht/fmt-korjauksen-tila (get-in hairiotilanne [::ht/korjauksen-tila]))
+              " häiriötilanne")
+   :tiedot [{:otsikko "Vikaluokka" :nimi ::ht/vikaluokka :tyyppi :string :fmt ht/fmt-vikaluokka}
+            {:otsikko "Syy" :nimi ::ht/syy :tyyppi :string}
+            {:otsikko "Korjaustoimenpide" :nimi ::ht/korjaustoimenpide :tyyppi :string}
+            {:otsikko "Korjausaika" :nimi ::ht/korjausaika-h :tyyppi :string}
+            {:otsikko "Odotusaika" :nimi ::ht/odotusaika-h :tyyppi :string}
+            {:otsikko "Ammattiliikenne lkm" :nimi ::ht/ammattiliikenne-lkm :tyyppi :string}
+            {:otsikko "Huviliikenne lkm" :nimi ::ht/huviliikenne-lkm :tyyppi :string}
+            {:otsikko "Kuittaaja" :hae (hakufunktio
+                                         #{[::ht/kuittaaja ::kayttaja/etunimi]
+                                           [::ht/kuittaaja ::kayttaja/sukunimi]}
+                                         (fn [ht]
+                                           (str
+                                             (get-in ht [::ht/kuittaaja ::kayttaja/etunimi])
+                                             " "
+                                             (get-in ht [::ht/kuittaaja ::kayttaja/sukunimi]))))}]
+   :data hairiotilanne})
+
+(defmethod infopaneeli-skeema :kan-toimenpide [toimenpide]
+  {:tyyppi :kan-toimenpide
+   :jarjesta-fn ::kan-to/pvm
+   :otsikko (str
+              (pvm/pvm (::kan-to/pvm toimenpide))
+              " "
+              (or
+                (get-in toimenpide [::kan-to/muu-toimenpide])
+                (get-in toimenpide [::kan-to/toimenpidekoodi ::tpk/nimi])))
+   :tiedot [{:otsikko "Tehtävä"
+             :tyyppi :string
+             :hae (hakufunktio #{[::kan-to/toimenpidekoodi ::tpk/nimi]} #(get-in % [::kan-to/toimenpidekoodi ::tpk/nimi]))}
+            {:otsikko "Pvm" :nimi ::kan-to/pvm :tyyppi :pvm}
+            {:otsikko "Huoltokohde"
+             :hae (hakufunktio #{[::kan-to/huoltokohde ::huoltokohde/nimi]}
+                               #(get-in % [::kan-to/huoltokohde ::huoltokohde/nimi]))
+             :tyyppi :string}
+            {:otsikko "Suorittaja" :nimi ::kan-to/suorittaja :tyyppi :string}
+            {:otsikko "Lisätieto" :nimi ::kan-to/lisatieto :tyyppi :string}]
+   :data toimenpide})
 
 (defmethod infopaneeli-skeema :kohde-hairiotilanne [kohde]
   (let [hairiotilanteen-kentta (fn [otsikko kentta]

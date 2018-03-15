@@ -88,9 +88,6 @@
 (def kuittaajan-tiedot
   #{[::kuittaaja kayttaja/perustiedot]})
 
-(def sijainti-tiedot
-  #{::sijainti})
-
 (def perustiedot
   #{::id
     ::tyyppi
@@ -99,7 +96,8 @@
     ::lisatieto
     ::suorittaja
     ::sopimus-id
-    ::toimenpideinstanssi-id})
+    ::toimenpideinstanssi-id
+    ::sijainti})
 
 (def perustiedot-viittauksineen
   (set/union perustiedot
@@ -108,8 +106,7 @@
              kohteenosan-tiedot
              huoltokohteen-tiedot
              toimenpiteen-tiedot
-             kuittaajan-tiedot
-             sijainti-tiedot))
+             kuittaajan-tiedot))
 
 (s/def ::hae-kanavatoimenpiteet-kysely
   (s/keys :req [::urakka-id

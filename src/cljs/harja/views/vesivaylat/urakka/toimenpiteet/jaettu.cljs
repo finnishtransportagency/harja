@@ -188,6 +188,18 @@
 (def sarake-vikakorjaus {:otsikko "Vika\u00ADkor\u00ADjaus" :nimi ::to/vikakorjauksia? :fmt fmt/totuus :leveys 4})
 (def sarake-vayla {:otsikko "Väy\u00ADlä" :nimi :vayla :hae (comp ::va/nimi ::to/vayla) :leveys 8})
 (def sarake-lisatieto {:otsikko "Li\u00ADsä\u00ADtie\u00ADto" :nimi ::to/lisatieto :leveys 10})
+(def sarake-komponentit {:otsikko "Komponentit" :nimi :komponentit
+                           ;; :komponentti on gridin parametrin nimi, ei liity turvalaitteiden komponentteihin
+                           :tyyppi :komponentti
+                           :komponentti (fn [rivi]
+                                          (let [komponentit (::to/komponentit rivi)]
+                                            (if (empty? komponentit)
+                                              "-"
+                                              ;; else
+                                              [:ul
+                                               (for* [k komponentit]
+                                                 [:li (to/toimenpide-komponentit-fmt k)])])))
+                           :leveys 10})
 (defn sarake-liitteet [e! app oikeus-fn]
   {:otsikko "Liit\u00ADteet" :nimi :liitteet :tyyppi :komponentti :leveys 5
    :komponentti (fn [rivi]
@@ -211,16 +223,16 @@
 
 (defn sarake-checkbox [e! {:keys [toimenpiteet] :as app}]
   (grid/rivinvalintasarake
-    {:otsikkovalinta? true
-     :kaikki-valittu?-fn #(tiedot/kaikki-valittu? (:toimenpiteet app))
-     :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
-     :rivi-valittu?-fn (fn [rivi]
-                         (:valittu? rivi))
-     :rivi-valittu-fn (fn [rivi uusi-arvo]
-                        (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
-                                                         :valinta uusi-arvo}
-                                                        toimenpiteet)))
-     :leveys 3}))
+   {:otsikkovalinta? true
+    :kaikki-valittu?-fn #(tiedot/kaikki-valittu? (:toimenpiteet app))
+    :otsikko-valittu-fn (fn [uusi-arvo] (e! (tiedot/->ValitseToimenpiteet uusi-arvo toimenpiteet)))
+    :rivi-valittu?-fn (fn [rivi]
+                        (:valittu? rivi))
+    :rivi-valittu-fn (fn [rivi uusi-arvo]
+                       (e! (tiedot/->ValitseToimenpide {:id (::to/id rivi)
+                                                        :valinta uusi-arvo}
+                                                       toimenpiteet)))
+    :leveys 3}))
 
 (defn vaylaotsikko [e! vaylan-toimenpiteet vayla vaylan-checkbox-sijainti]
   (grid/otsikko
