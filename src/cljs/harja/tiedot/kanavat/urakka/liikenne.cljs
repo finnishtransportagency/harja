@@ -102,7 +102,7 @@
 
 (defn hakuparametrit [app]
   ;; Ei nil arvoja
-  (when-let [urakka-idt (into #{} (keep #(when (:valittu? %)
+  (let [urakka-idt (into #{} (keep #(when (:valittu? %)
                                            (:id %))
                                         (get-in app [:valinnat :kayttajan-urakat])))]
     (into {} (filter val
@@ -379,7 +379,7 @@
   HaeLiikennetapahtumat
   (process-event [_ app]
     (if-not (:liikennetapahtumien-haku-kaynnissa? app)
-      (if-let [params (hakuparametrit app)]
+      (let [params (hakuparametrit app)]
         (-> app
             (tt/post! :hae-liikennetapahtumat
                       params
@@ -390,8 +390,7 @@
                        :lahetetty ->HaeLiikennetapahtumatKutsuLahetetty
                        :onnistui ->LiikennetapahtumatHaettu
                        :epaonnistui ->LiikennetapahtumatEiHaettu})
-            (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? true))
-        app)
+            (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? true)))
       app))
 
   HaeLiikennetapahtumatKutsuLahetetty
@@ -447,8 +446,6 @@
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
                                 (select-keys u valintojen-avaimet))
-          _ (println "APP VALINNAT: " (pr-str (:valinnat app)))
-          _ (println "UUDET VALINNAT: " (pr-str uudet-valinnat))
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
@@ -569,7 +566,6 @@
                                                (disj s id))))))
   AsetaAloitusTiedot
   (process-event [{:keys [aikavali]} app]
-    (println "AIKAVALI: " (pr-str aikavali))
     (let [kanava-hallintayksikko (some #(when (= (:nimi %) "Kanavat ja avattavat sillat")
                                           (:id %))
                                        @hallintayksikot/vaylamuodon-hallintayksikot)]
