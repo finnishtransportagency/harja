@@ -2,9 +2,9 @@
   (:require [harja.testi :as ht]
             [clojure.test :as t]
             clj-time.core
-            [harja.kyselyt.vesivaylat.vatu-turvalaitteet :as q-vatu-turvalaite]
-            [harja.domain.vesivaylat.vatu-turvalaite :as turvalaite]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaite-tuonti]))
+            [harja.kyselyt.vesivaylat.turvalaitteet :as q-vatu-turvalaite]
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.turvalaitteet :as turvalaite-tuonti])
+  (:import (org.postgis PGgeometry)))
 
 (t/use-fixtures :each (ht/laajenna-integraatiojarjestelmafixturea "jvh"))
 
@@ -27,11 +27,11 @@
    :the_geom "POINT(431153.667 7203743.451)"})
 
 (def referenssi-turvalaite-tietokannasta
-  {:turvalaitenro 6666666
+  {:turvalaitenro "6666666"
    :nimi "Loistava I"
    :sijainti "Nevernever"
    :tyyppi "Sektoriloisto"
-   :tarkenne "KIINTEÄ"
+   :kiintea true
    :tila "POISTETTU"
    :toimintatila "Poistettu käytöstä"
    :rakenne "Radiomasto"
@@ -40,12 +40,9 @@
    :omistaja "Kerttu Kilpikonna"
    :turvalaitenro_aiempi 1
    :paavayla "6666"
-   :koordinaatit "POINT(431153.667 7203743.451)"
-   :luoja "Integraatio"})
+   :koordinaatit (PGgeometry. "POINT(431153.667 7203743.451)")})
 
 (t/deftest vie-turvalaite-tietokantaan
   (turvalaite-tuonti/vie-turvalaite-entry (:db ht/jarjestelma) referenssi-turvalaite-shapefilestä)
-    (let [tallentunut-turvalaite (first(q-vatu-turvalaite/hae-turvalaite-tunnuksella (:db ht/jarjestelma) {:turvalaitenro 6666666}))]
+  (let [tallentunut-turvalaite (first (q-vatu-turvalaite/hae-turvalaite-tunnuksella (:db ht/jarjestelma) {:turvalaitenro "6666666"}))]
       (ht/tarkista-map-arvot referenssi-turvalaite-tietokannasta tallentunut-turvalaite)))
-
-

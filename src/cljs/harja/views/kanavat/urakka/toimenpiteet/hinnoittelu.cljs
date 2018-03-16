@@ -199,6 +199,34 @@
          ei-poistetut-tyot)]]
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]))
 
+
+(defn omakustannushintainen-tyo-hinnoittelurivi [e! hinta]
+  [:tr
+   [:td [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/yksikkohinta
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 9}]]
+   [:td.tasaa-oikealle [kentta-hinnalle e! hinta ::hinta/maara
+                        {:tyyppi :positiivinen-numero :kokonaisosan-maara 7}]]
+   [:td
+    [kentta-hinnalle e! hinta ::hinta/yksikko {:tyyppi :string :pituus-min 1}]]
+   [:td (fmt/euro (hinta/hinnan-kokonaishinta-yleiskustannuslisineen hinta))]
+   [:td.keskita [yleiskustannuslisakentta e! hinta]]
+   [:td.keskita
+    [ikonit/klikattava-roskis #(e! (tiedot/->PoistaHinnoiteltavaHintarivi hinta))]]])
+
+(defn- omakustannushintaiset-tyot [e! app*]
+  (let [omakustannushintaiset-tyot (tiedot/omakustannushintaiset-tyot app*)]
+    [:div.hinnoitteluosio.sopimushintaiset-tyot-osio
+     [valiotsikko "Omakustannushintaiset työt (ei indeksilaskentaa)"]
+     [:table
+      [hinnoittelu-header {:otsikko "Työ" :yk-lisa? true :yhteensa-otsikko? true :hinnoittelu-otsikot? true}]
+      [:tbody
+       (for* [okt-tyo omakustannushintaiset-tyot]
+             [omakustannushintainen-tyo-hinnoittelurivi e! okt-tyo])]]
+
+     [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaOmakustannushintainenTyorivi))]]))
+
+
 (defn muu-tyo-hinnoittelurivi [e! hinta]
   [:tr
    [:td [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}]]
@@ -222,9 +250,6 @@
       [:tbody
        (for* [muu-tyo muut-tyot]
          [muu-tyo-hinnoittelurivi e! muu-tyo])]]
-     ;; kutsuketju rivinlisäyksessä:
-     ;; tiedot/->LisaaMuuTyorivi -> lisaa-hintarivi-toimenpiteelle (ryhma "tyo")
-     ;; (huom lisaa-hintarivi, ei lisaa-tyorivi, vaikka kyseessä on ui:lla työ)
 
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaMuuTyorivi))]]))
 
@@ -283,6 +308,7 @@
 (defn- toimenpiteen-hinnoittelutaulukko [e! app*]
   [:div.vv-toimenpiteen-hinnoittelutiedot
    [sopimushintaiset-tyot e! app*]
+   [omakustannushintaiset-tyot e! app*]
    [muut-tyot e! app*]
    [materiaalit e! app*]
    [muut-hinnat e! app*]
@@ -392,6 +418,12 @@
                          (e! (tiedot/->TallennaToimenpiteenHinnoittelu (:hinnoittele-toimenpide app*))))
           :hyvaksy "Kyllä, ylikirjoita hinnoittelu"})
       {:luokka "btn-xs"
+       :disabled (or
+                   (not (tiedot/hinnoittelun-voi-tallentaa? app*))
+                   (:toimenpiteen-hinnoittelun-tallennus-kaynnissa? app*)
+                   (not (oikeudet/on-muu-oikeus? "hinnoittele-toimenpide"
+                                                 oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                 (:id @nav/valittu-urakka))))
        :ikoni (ikonit/livicon-pen)}]
 
      [napit/tallenna

@@ -36,27 +36,27 @@ VALUES
 -- TURVALAITTEET
 -- ***********************************************
 
-INSERT INTO vv_turvalaite
+INSERT INTO vatu_turvalaite
 (nimi, tyyppi, vaylat, turvalaitenro, sijainti)
 VALUES
 ('Hietasaaren pienempi poiju', 'poiju', '{66662}', '1234', point(417237, 7207744)::GEOMETRY);
 
-INSERT INTO vv_turvalaite
+INSERT INTO vatu_turvalaite
 (nimi, tyyppi, vaylat, turvalaitenro, sijainti)
 VALUES
 ('Hietasaaren poiju', 'poiju', '{66662}', '12345', point(419237, 7207744)::GEOMETRY);
 
-INSERT INTO vv_turvalaite
+INSERT INTO vatu_turvalaite
 (nimi, tyyppi, vaylat, turvalaitenro, sijainti)
 VALUES
 ('Hietasaaren viitta', 'viitta', '{66662}', '12346', point(418237, 7208744)::GEOMETRY);
 
-INSERT INTO vv_turvalaite
+INSERT INTO vatu_turvalaite
 (nimi, tyyppi, vaylat, kiintea, turvalaitenro, sijainti)
 VALUES
 ('Hietasaaren kyltti', 'tuntematon', '{66662}', TRUE, '12347', point(418237, 7206744)::GEOMETRY);
 
-INSERT INTO vv_turvalaite
+INSERT INTO vatu_turvalaite
 (nimi, tyyppi, vaylat, kiintea, turvalaitenro, sijainti)
 VALUES
 ('Akonniemen kyltti', 'tuntematon', '{66663}', TRUE, '123', point(418237, 7207744)::GEOMETRY);
@@ -72,12 +72,12 @@ VALUES
   ('Rentoselän pienempi poiju', 'poiju', '{66666}', '12350', point(417237, 7207744)::GEOMETRY);
 
 -- testitoimenpiteissä käytetyt turvalaitenro-viittaukset
-INSERT INTO vv_turvalaite (turvalaitenro, tyyppi, nimi, vaylat, sijainti) VALUES (8881, 'poiju', 'poiju 1', '{66661}', point(418137, 7207744)::GEOMETRY);
-INSERT INTO vv_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (8882, 'poiju', 'poiju 2', '{66661}', point(418337, 7207744)::GEOMETRY);
-INSERT INTO vv_turvalaite (turvalaitenro, tyyppi, nimi, vaylat, sijainti) VALUES (8884, 'poiju', 'poiju 4', '{66661}', point(418237, 7207844)::GEOMETRY);
-INSERT INTO vv_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (8890, 'poiju', 'poiju 10', '{66661}', point(418237, 7207644)::GEOMETRY);
-INSERT INTO vv_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (8891,'poiju', 'poiju 11', '{66661}', point(418227, 7207754)::GEOMETRY);
-INSERT INTO vv_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (666, 'poiju', 'poiju 666', '{66661}', point(418207, 7207704)::GEOMETRY);
+INSERT INTO vatu_turvalaite (turvalaitenro, tyyppi, nimi, vaylat, sijainti) VALUES (8881, 'poiju', 'poiju 1', '{66661}', point(418137, 7207744)::GEOMETRY);
+INSERT INTO vatu_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (8882, 'poiju', 'poiju 2', '{66661}', point(418337, 7207744)::GEOMETRY);
+INSERT INTO vatu_turvalaite (turvalaitenro, tyyppi, nimi, vaylat, sijainti) VALUES (8884, 'poiju', 'poiju 4', '{66661}', point(418237, 7207844)::GEOMETRY);
+INSERT INTO vatu_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (8890, 'poiju', 'poiju 10', '{66661}', point(418237, 7207644)::GEOMETRY);
+INSERT INTO vatu_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (8891,'poiju', 'poiju 11', '{66661}', point(418227, 7207754)::GEOMETRY);
+INSERT INTO vatu_turvalaite (turvalaitenro,  tyyppi, nimi, vaylat, sijainti) VALUES (666, 'poiju', 'poiju 666', '{66661}', point(418207, 7207704)::GEOMETRY);
 
 -- ***********************************************
 -- TURVALAITEKOMPONENTTITYYPIT
