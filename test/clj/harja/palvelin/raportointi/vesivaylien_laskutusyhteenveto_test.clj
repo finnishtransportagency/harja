@@ -51,8 +51,8 @@
                                 {:nimi :vesivaylien-laskutusyhteenveto
                                  :konteksti "urakka"
                                  :urakka-id (hae-helsingin-vesivaylaurakan-id)
-                                 :parametrit {:alkupvm (c/to-date (t/local-date 2016 8 1))
-                                              :loppupvm (c/to-date (t/local-date 2017 7 31))}})
+                                 :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
+                                              :loppupvm (c/to-date (t/local-date 2018 7 31))}})
         odotettu-otsikko "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL, Laskutusyhteenveto ajalta 01.08.2016 - 31.07.2017"
         saatu-otsikko (:nimi (second vastaus))
         taulukko-kauppamerenkulku (nth vastaus 2)
@@ -66,9 +66,9 @@
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 30.0M ""] taulukko-kauppamerenkulku-yhteensa))
-    (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 30.0M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Yhteensä" "" 60826.00M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 30M ""] taulukko-muu-vesiliikenne-yhteensa))
+    (is (= ["Kaikki yhteensä" 60856.00M] taulukko-yhteenveto-yhteensa))))
 
 (deftest raportin-suoritus-urakalle-toimii-pyhaselka
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
