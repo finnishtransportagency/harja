@@ -72,7 +72,7 @@
 (defrecord HaeLiikennetapahtumatKutsuLahetetty [])
 (defrecord LiikennetapahtumatHaettu [tulos])
 (defrecord LiikennetapahtumatEiHaettu [virhe])
-(defrecord HaeKayttajanKanavaUrakat [])
+(defrecord AsetaAloitusTiedot [aloitustiedot])
 (defrecord KayttajanUrakatHaettu [urakat])
 ;; Lomake
 (defrecord ValitseTapahtuma [tapahtuma])
@@ -108,8 +108,8 @@
     (into {} (filter val
                      (-> app :valinnat (dissoc :kayttajan-urakat) (assoc :urakka-idt urakka-idt))))))
 
-(defn nakymaan [e!]
-  (e! (->HaeKayttajanKanavaUrakat)))
+(defn nakymaan [e! aloitustiedot]
+  (e! (->AsetaAloitusTiedot aloitustiedot)))
 
 (defn palvelumuoto->str [tapahtuma]
   (str/join ", "
@@ -447,6 +447,8 @@
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
                                 (select-keys u valintojen-avaimet))
+          _ (println "APP VALINNAT: " (pr-str (:valinnat app)))
+          _ (println "UUDET VALINNAT: " (pr-str uudet-valinnat))
           haku (tuck/send-async! ->HaeLiikennetapahtumat)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
@@ -565,12 +567,15 @@
         (update :ketjutuksen-poistot (fn [s] (if (nil? s)
                                                #{}
                                                (disj s id))))))
-  HaeKayttajanKanavaUrakat
-  (process-event [_ app]
+  AsetaAloitusTiedot
+  (process-event [{:keys [aikavali]} app]
+    (println "AIKAVALI: " (pr-str aikavali))
     (let [kanava-hallintayksikko (some #(when (= (:nimi %) "Kanavat ja avattavat sillat")
                                           (:id %))
                                        @hallintayksikot/vaylamuodon-hallintayksikot)]
-      (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu})))
+      (-> app
+          (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu})
+          (assoc-in [:valinnat :aikavali] aikavali))))
 
   KayttajanUrakatHaettu
   (process-event [{urakat :urakat} app]
@@ -582,8 +587,10 @@
                                 (-> %
                                     (assoc :valittu? true)
                                     (dissoc % :urakkanro))
-                                (dissoc % :urakkanro)))))]
-      (assoc-in app [:valinnat :kayttajan-urakat] urakat)))
+                                (dissoc % :urakkanro)))))
+          app (assoc-in app [:valinnat :kayttajan-urakat] urakat)]
+      (tuck/process-event (->PaivitaValinnat (:valinnat app)) app)
+      app))
   UrakkaValittu
   (process-event [{{:keys [id]} :urakka valittu? :valittu?} app]
     (let [uudet-urakkavalinnat (map #(if (= (:id %) id)

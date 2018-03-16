@@ -474,11 +474,7 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           (tiedot/nakymaan e!)
-                           ;; Valintojen päivittäminen laukaisee myös liikennetapahtumien haun
-                           (e! (tiedot/->PaivitaValinnat {::ur/id (:urakka valinnat)
-                                                          ::sop/id (:sopimus valinnat)
-                                                          :aikavali (:aikavali valinnat)})))
+                           (tiedot/nakymaan e! valinnat))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {:keys [valittu-liikennetapahtuma] :as app}]
@@ -488,9 +484,7 @@
         [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))
 
 (defn liikennetapahtumat [e! app]
-  [liikenne* e! app {:urakka (:id @nav/valittu-urakka)
-                     :aikavali @u/valittu-aikavali
-                     :sopimus (first @u/valittu-sopimusnumero)}])
+  [liikenne* e! app {:aikavali @u/valittu-aikavali}])
 
 (defc liikenne []
   [tuck tiedot/tila liikennetapahtumat])

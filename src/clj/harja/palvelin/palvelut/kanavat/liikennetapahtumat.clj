@@ -18,9 +18,14 @@
   (q/hae-liikennetapahtumat db user (:hakuparametrit tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
-  (assert (::ur/id tiedot) "Urakka id puuttuu, ei voida hakea liikennetapahtumia!")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-liikenne user (::ur/id tiedot))
-  (q/hae-liikennetapahtumat db user tiedot))
+  (doseq [urakka-id (:urakka-idt tiedot)]
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-liikenne user urakka-id))
+  (let [vastaus
+        (q/hae-liikennetapahtumat db user tiedot)]
+    (println "")
+    (println "------------ VASTAUS KOKO HOMMAAN -----------")
+    (clojure.pprint/pprint vastaus)
+    vastaus))
 
 (defn hae-edelliset-tapahtumat [db user tiedot]
   (assert (::lt/urakka-id tiedot) "Urakka id puuttuu, ei voida hakea edellisiä tapahtumia!")

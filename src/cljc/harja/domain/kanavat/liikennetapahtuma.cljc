@@ -129,12 +129,13 @@
 
 (s/def ::alukset (s/coll-of ::lt-alus/liikennetapahtuman-alus))
 (s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
+(s/def ::urakka-idt (s/coll-of integer? :kind set?))
 
 (s/def ::hae-liikennetapahtumat-kysely (s/keys :opt [::kohde
                                                      ::lt-alus/laji
                                                      ::lt-alus/suunta
                                                      ::toiminto/toimenpiteet]
-                                               :req-un [:urakka-idt]
+                                               :req-un [::urakka-idt]
                                                :opt-un [::aikavali ::niput?]))
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req
