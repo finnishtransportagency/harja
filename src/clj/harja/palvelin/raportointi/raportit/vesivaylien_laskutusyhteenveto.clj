@@ -138,18 +138,39 @@
 
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         urakoiden-tiedot (mapv (fn [urakan-parametrit]
-                                 (println " urakan params" urakan-parametrit)
                                  (hinnoittelutiedot {:db db
                                                      :urakka-id (:urakka-id urakan-parametrit)
                                                      :alkupvm alkupvm
                                                      :loppupvm loppupvm}))
                                urakoiden-parametrit)
 
+        ;; Summaillaan ja liitetään eri urakoiden tiedot yhteen
+        yksikkohintaiset (apply concat (reduce conj [] (keep #(:yksikkohintaiset %) urakoiden-tiedot)))
+        kokonaishintaiset (reduce (fn [kokonaishintaiset jotain]
+                                    (let [{{suunniteltu-maara-k :suunniteltu-maara
+                                            toteutunut-maara-k :toteutunut-maara}
+                                           :kauppamerenkulku
+                                           {suunniteltu-maara-muu :suunniteltu-maara
+                                            toteutunut-maara-muu :toteutunut-maara}
+                                           :muu} kokonaishintaiset]
 
-        _ (println " urakoiden-tiedot  " urakoiden-tiedot)
-        ;FIXME: tähän reduce + himmeli
-        raportin-tiedot (apply merge-with (fnil + 0 0) urakoiden-tiedot)
-        _ (println " raportin tiedot  " raportin-tiedot)
+                                      {:kauppamerenkulku {:suunniteltu-maara suunniteltu-maara-k
+                                                          :toteutunut-maara toteutunut-maara-k}
+                                       :muu {:suunniteltu-maara suunniteltu-maara-muu
+                                             :toteutunut-maara toteutunut-maara-muu}}))
+                                  {:kauppamerenkulku {:suunniteltu-maara 0M
+                                                      :toteutunut-maara 0M}
+                                   :muu {:suunniteltu-maara 0M
+                                         :toteutunut-maara 0M}}
+                                  (keep #(:kokonaishintaiset %) urakoiden-tiedot))
+        sanktiot (reduce (fnil + 0 0) 0M (keep #(:sanktiot %) urakoiden-tiedot))
+        erilliskustannukset (reduce (fnil + 0 0) 0M (keep #(:erilliskustannukset %) urakoiden-tiedot))
+
+        ;; Luodaan raportin ymmärtämä mäppi
+        raportin-tiedot {:yksikkohintaiset yksikkohintaiset
+                         :kokonaishintaiset kokonaishintaiset
+                         :sanktiot sanktiot
+                         :erilliskustannukset erilliskustannukset}
         raportin-nimi "Laskutusyhteenveto"
         raportin-otsikko (raportin-otsikko alueen-nimi raportin-nimi alkupvm loppupvm)]
 

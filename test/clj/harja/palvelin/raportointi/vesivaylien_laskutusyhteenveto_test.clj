@@ -92,16 +92,16 @@
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 60030.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 60000.0M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 60030.0M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Kaikki yhteensä" 70000.0M] taulukko-yhteenveto-yhteensa))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
-                                {:nimi :kanavien-laskutusyhteenveto
+                                {:nimi :vesivaylien-laskutusyhteenveto
                                  :konteksti "hallintayksikko"
                                  :hallintayksikko-id (hae-sisavesivaylien-hallintayksikon-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2016 8 1))
@@ -115,13 +115,10 @@
         taulukko-yhteenveto (nth vastaus 4)
         taulukko-yhteenveto-yhteensa (yhteensa-rivi taulukko-yhteenveto)]
 
-     (println " vastaus " vastaus)
-
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    ;; FIXME: assertit kohdilleen eli oltava tuplamäärä yhteen urakkaan verrattuna
-    (is (= ["Yhteensä" "" 30.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 120000.0M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 30.0M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Kaikki yhteensä" 140000.0M] taulukko-yhteenveto-yhteensa))))
 

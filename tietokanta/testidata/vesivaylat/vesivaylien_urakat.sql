@@ -154,3 +154,4 @@ INSERT INTO toimenpidekoodi (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon kauppamerenkulku');
 INSERT INTO toimenpidekoodi (taso, emo, nimi)
 VALUES (3, 132, 'Rannikon muut');
+
