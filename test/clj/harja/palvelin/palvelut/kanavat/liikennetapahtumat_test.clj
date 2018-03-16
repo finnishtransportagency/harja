@@ -62,9 +62,9 @@
               vastaus))))))
 
 (deftest tapahtumien-haku-eri-filttereilla
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [saimaan-urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-        params {:urakka-idt #{urakka-id}}]
+        params {:urakka-idt #{saimaan-urakka-id}}]
 
     (testing "Aluslajit-suodatin toimii"
       (let [vastaus-kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -100,7 +100,30 @@
                                             +kayttaja-jvh+
                                             (merge params {::lt-alus/nimi "Antin onni"}))]
         (is (>= (count vastaus-kaikki) 1))
-        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))))
+        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))
+
+    (testing "Urakoiden valinta -suodatin toimii"
+      (let [joensuun-urakka-id (hae-joensuun-kanavaurakan-id)
+            vastaus-kaikki-urakat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-liikennetapahtumat
+                                                   +kayttaja-jvh+
+                                                  {:urakka-idt #{saimaan-urakka-id joensuun-urakka-id}})
+            vastaus-joensuun-urakka (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-liikennetapahtumat
+                                                    +kayttaja-jvh+
+                                                    {:urakka-idt #{joensuun-urakka-id}})
+            vastaus-saimaan-urakka (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-liikennetapahtumat
+                                                   +kayttaja-jvh+
+                                                   {:urakka-idt #{saimaan-urakka-id}})
+            vastaus-ei-urakoita-valittu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                         :hae-liikennetapahtumat
+                                                         +kayttaja-jvh+
+                                                        {:urakka-idt #{}})]
+        (is (= (count vastaus-kaikki-urakat) 9))
+        (is (= (count vastaus-joensuun-urakka) 2))
+        (is (= (count vastaus-saimaan-urakka) 7))
+        (is (= (count vastaus-ei-urakoita-valittu) 0))))))
 
 (deftest edellisten-tapahtumien-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)

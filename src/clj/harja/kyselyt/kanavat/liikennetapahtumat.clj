@@ -26,28 +26,15 @@
             [clojure.string :as str]))
 
 (defn- liita-kohteen-urakkatiedot [kohteiden-haku tapahtumat]
-  (println "-> 7. LIITÄ KOHTEEN URAKKATIEDOT")
-  (println "--> kohteiden-haku")
-  (println "")
-  (println "--> tapahtumat")
-  (clojure.pprint/pprint tapahtumat)
-  (println "")
-  (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))
-        vastaus (into []
-                      (map
-                        #(update % ::lt/kohde
-                                 (fn [kohde]
-                                   (if-let [kohteen-urakat (-> kohde ::kohde/id kohteet first ::kohde/urakat)]
-                                     (assoc kohde ::kohde/urakat kohteen-urakat)
-                                     (assoc kohde ::kohde/urakat []))))
-                        tapahtumat))]
-    (println "---> kohteet")
-    (clojure.pprint/pprint kohteet)
-    (println "")
-    (clojure.pprint/pprint vastaus)
-    (println "")
-    (println "---------------- 7.")
-    vastaus))
+  (let [kohteet (group-by ::kohde/id (kohteiden-haku (map ::lt/kohde tapahtumat)))]
+    (into []
+          (map
+            #(update % ::lt/kohde
+                     (fn [kohde]
+                       (if-let [kohteen-urakat (-> kohde ::kohde/id kohteet first ::kohde/urakat)]
+                         (assoc kohde ::kohde/urakat kohteen-urakat)
+                         (assoc kohde ::kohde/urakat []))))
+            tapahtumat))))
 
 (defn- urakat-idlla [urakka-idt tapahtuma]
   (update-in tapahtuma
@@ -58,69 +45,32 @@
                  urakat))))
 
 (defn- suodata-liikennetapahtuma-toimenpidetyypillä [tiedot tapahtumat]
-  (println "-> 5. SUODATA LIIKENNETAPAHTUMA TOIMENPIDETYYPILLÄ*")
-  (println "--> tiedot")
-  (clojure.pprint/pprint tiedot)
-  (println "")
-  (println "--> tapahtumat")
-  (clojure.pprint/pprint tapahtumat)
-  (println "")
-  (let [vastaus (filter #(let [toimenpidetyypit (::toiminto/toimenpiteet tiedot)]
-                           (if (empty? toimenpidetyypit)
-                             true
-                             (some toimenpidetyypit (map ::toiminto/toimenpide (::lt/toiminnot %)))))
-                        tapahtumat)]
-    (clojure.pprint/pprint vastaus)
-    (println "")
-    (println "---------------- 5.")
-    vastaus))
+  (filter #(let [toimenpidetyypit (::toiminto/toimenpiteet tiedot)]
+             (if (empty? toimenpidetyypit)
+               true
+               (some toimenpidetyypit (map ::toiminto/toimenpide (::lt/toiminnot %)))))
+          tapahtumat))
 
 (defn- suodata-liikennetapahtuma-aluksen-nimella [tiedot tapahtumat]
-  (println "-> 6. SUODATA LIIKENNETAPAHTUMA TOIMENPIDETYYPILLÄ*")
-  (println "--> tiedot")
-  (clojure.pprint/pprint tiedot)
-  (println "")
-  (println "--> tapahtumat")
-  (clojure.pprint/pprint tapahtumat)
-  (println "")
-  (let [vastaus (filter (fn [tapahtuma]
-                          (let [alus-nimi (::lt-alus/nimi tiedot)]
-                            (if (empty? alus-nimi)          ;; Voi olla nil tai ""
-                              true
-                              ;; Pidä tapahtuma, jos sen aluksissa ainakin yksi
-                              ;; alkaa annetulla nimellä
-                              (not (empty? (lt-alus/suodata-alukset-nimen-alulla
-                                             (::lt/alukset tapahtuma)
-                                             alus-nimi))))))
-                        tapahtumat)]
-    (clojure.pprint/pprint vastaus)
-    (println "")
-    (println "---------------- 6.")
-    vastaus))
+  (filter (fn [tapahtuma]
+            (let [alus-nimi (::lt-alus/nimi tiedot)]
+              (if (empty? alus-nimi)                        ;; Voi olla nil tai ""
+                true
+                ;; Pidä tapahtuma, jos sen aluksissa ainakin yksi
+                ;; alkaa annetulla nimellä
+                (not (empty? (lt-alus/suodata-alukset-nimen-alulla
+                               (::lt/alukset tapahtuma)
+                               alus-nimi))))))
+          tapahtumat))
 
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-idt]
-  (println "-> 4. HAE LIIKENNETAPAHTUMAT*")
-  (println "--> tiedot")
-  (clojure.pprint/pprint tiedot)
-  (println "")
-  (println "--> tapahtumat")
-  (clojure.pprint/pprint tapahtumat)
-  (println "")
-  (println "--> urakkatiedot-fn")
-  (println "--> urakka-id")
-  (clojure.pprint/pprint urakka-idt)
-  (println "")
-  (let [vastaus (->>
-          tapahtumat
-          (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
-          (suodata-liikennetapahtuma-aluksen-nimella tiedot)
-          (liita-kohteen-urakkatiedot urakkatiedot-fn)
-          (map (partial urakat-idlla urakka-idt))
-          (remove (comp empty? ::kohde/urakat ::lt/kohde)))]
-    (clojure.pprint/pprint vastaus)
-    (println "")
-    (println "---------------- 4.")
-    vastaus))
+  (->>
+    tapahtumat
+    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
+    (suodata-liikennetapahtuma-aluksen-nimella tiedot)
+    (liita-kohteen-urakkatiedot urakkatiedot-fn)
+    (map (partial urakat-idlla urakka-idt))
+    (remove (comp empty? ::kohde/urakat ::lt/kohde))))
 
 (def ilman-poistettuja-aluksia (map #(update % ::lt/alukset (partial remove ::m/poistettu?))))
 
@@ -130,84 +80,49 @@
                                (when-not (empty? (::lt/alukset t)) t)))))
 
 (defn- hae-tapahtumien-palvelumuodot* [osien-tiedot tapahtumat]
-  (println "-> 2. HAE TAPAHTUMIEN PALVELUMUODOT*")
-  (println "--> osien-tiedot")
-  (clojure.pprint/pprint osien-tiedot)
-  (println "")
-  (println "--> tapahtumat")
-  (clojure.pprint/pprint tapahtumat)
-  (println "")
   (let [id-ja-osat
         (->>
           osien-tiedot
           (group-by ::lt/id)
           (map (fn [[id osat]] [id (get-in osat [0 ::lt/toiminnot])]))
           (into {}))]
-    (println "--->id-ja-osat")
-    (clojure.pprint/pprint id-ja-osat)
-    (println "")
     (map
       (fn [tapahtuma]
         (assoc tapahtuma ::lt/toiminnot (id-ja-osat (::lt/id tapahtuma))))
       tapahtumat)))
 
 (defn hae-tapahtumien-palvelumuodot [db tapahtumat]
-  (let [vastaus
-        (hae-tapahtumien-palvelumuodot*
-          (specql/fetch db
-                        ::lt/liikennetapahtuma
-                        (set/union
-                          lt/perustiedot
-                          lt/toimintojen-tiedot)
-                        {::lt/id (op/in (map ::lt/id tapahtumat))})
-          tapahtumat)]
-    (clojure.pprint/pprint vastaus)
-    (println "")
-    (println "---------------- 2.")
-    vastaus))
+  (hae-tapahtumien-palvelumuodot*
+    (specql/fetch db
+                  ::lt/liikennetapahtuma
+                  (set/union
+                    lt/perustiedot
+                    lt/toimintojen-tiedot)
+                  {::lt/id (op/in (map ::lt/id tapahtumat))})
+    tapahtumat))
 
 (defn- hae-tapahtumien-kohdetiedot* [kohdetiedot tapahtumat]
-  (println "-> 3. HAE TAPAHTUMIEN KOHDETIEDOT*")
-  (println "--> kohdetiedot")
-  (clojure.pprint/pprint kohdetiedot)
-  (println "")
-  (println "--> tapahtumat")
-  (clojure.pprint/pprint tapahtumat)
-  (println "")
   (let [id-ja-kohde
         (->>
           kohdetiedot
           (group-by ::kohde/id))]
-    (println "---> id-ja-kohde")
-    (clojure.pprint/pprint id-ja-kohde)
     (map
       (fn [tapahtuma]
         (assoc tapahtuma ::lt/kohde (first (id-ja-kohde (::lt/kohde-id tapahtuma)))))
       tapahtumat)))
 
 (defn hae-tapahtumien-kohdetiedot [db tapahtumat]
-  (let [vastaus (hae-tapahtumien-kohdetiedot*
-          (specql/fetch db
-                        ::kohde/kohde
-                        (set/union
-                          kohde/perustiedot
-                          kohde/kohteenosat)
-                        {::kohde/id (op/in (map ::lt/kohde-id tapahtumat))
-                         ::m/poistettu? false})
-          tapahtumat)]
-    (clojure.pprint/pprint vastaus)
-    (println "")
-    (println "---------------- 3.")
-    vastaus))
+  (hae-tapahtumien-kohdetiedot*
+    (specql/fetch db
+                  ::kohde/kohde
+                  (set/union
+                    kohde/perustiedot
+                    kohde/kohteenosat)
+                  {::kohde/id (op/in (map ::lt/kohde-id tapahtumat))
+                   ::m/poistettu? false})
+    tapahtumat))
 
 (defn- hae-tapahtumien-perustiedot* [tapahtumat {:keys [niput?]}]
-  (println "-> 1. HAE TAPAHTUMIEN PERUSTIEDOT*")
-  (println "--> tapahtumat")
-  (clojure.pprint/pprint tapahtumat)
-  (println "")
-  (println "--> niput?")
-  (clojure.pprint/pprint niput?)
-  (println "")
   (into []
         (apply comp
                (remove nil?
@@ -222,38 +137,34 @@
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
         aluslajit (::lt-alus/aluslajit tiedot)
         suunta (::lt-alus/suunta tiedot)
-        [alku loppu] aikavali
-        vastaus (hae-tapahtumien-perustiedot*
-                  (specql/fetch db
-                                ::lt/liikennetapahtuma
-                                (set/union
-                                  lt/perustiedot
-                                  lt/kuittaajan-tiedot
-                                  lt/sopimuksen-tiedot
-                                  lt/alusten-tiedot
-                                  ;; Liikennetapahtumalle tarvitaan kohde JA kohteenosat, mutta specql
-                                  ;; bugittaa eikä saa palautettua kaikkea dataa. Liitetään kohdetiedot erikseen.
-                                  #{::lt/kohde-id})
-                                (op/and
-                                  (when (and alku loppu)
-                                    {::lt/aika (op/between alku loppu)})
-                                  (when kohde-id
-                                    {::lt/kohde-id kohde-id})
-                                  (op/and
-                                    {::m/poistettu? false
-                                     ::lt/urakka-id (op/in urakka-idt)}
-                                    (when (or suunta aluslajit)
-                                      {::lt/alukset (op/and
-                                                      (when suunta
-                                                        {::lt-alus/suunta suunta})
-                                                      {::lt-alus/laji (if (empty? aluslajit)
-                                                                        (op/in (map name lt-alus/aluslajit))
-                                                                        (op/in (map name aluslajit)))})}))))
-                  tiedot)]
-    (clojure.pprint/pprint vastaus)
-    (println "")
-    (println "---------------- 1.")
-    vastaus))
+        [alku loppu] aikavali]
+    (hae-tapahtumien-perustiedot*
+      (specql/fetch db
+                    ::lt/liikennetapahtuma
+                    (set/union
+                      lt/perustiedot
+                      lt/kuittaajan-tiedot
+                      lt/sopimuksen-tiedot
+                      lt/alusten-tiedot
+                      ;; Liikennetapahtumalle tarvitaan kohde JA kohteenosat, mutta specql
+                      ;; bugittaa eikä saa palautettua kaikkea dataa. Liitetään kohdetiedot erikseen.
+                      #{::lt/kohde-id})
+                    (op/and
+                      (when (and alku loppu)
+                        {::lt/aika (op/between alku loppu)})
+                      (when kohde-id
+                        {::lt/kohde-id kohde-id})
+                      (op/and
+                        {::m/poistettu? false
+                         ::lt/urakka-id (op/in urakka-idt)}
+                        (when (or suunta aluslajit)
+                          {::lt/alukset (op/and
+                                          (when suunta
+                                            {::lt-alus/suunta suunta})
+                                          {::lt-alus/laji (if (empty? aluslajit)
+                                                            (op/in (map name lt-alus/aluslajit))
+                                                            (op/in (map name aluslajit)))})}))))
+      tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
   (hae-liikennetapahtumat*
@@ -611,8 +522,6 @@
                                                        ::lt/alukset
                                                        ::lt/toiminnot))))]
 
-        (println "-----------------<>>_>_>_> UUSI TAPAHTUMA")
-        (clojure.pprint/pprint uusi-tapahtuma)
         (doseq [osa (::lt/toiminnot tapahtuma)]
           (tallenna-osa-tapahtumaan! db user osa uusi-tapahtuma))
 

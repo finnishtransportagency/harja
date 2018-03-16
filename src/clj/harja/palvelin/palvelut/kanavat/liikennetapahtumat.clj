@@ -20,12 +20,7 @@
 (defn hae-liikennetapahtumat [db user tiedot]
   (doseq [urakka-id (:urakka-idt tiedot)]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-liikenne user urakka-id))
-  (let [vastaus
-        (q/hae-liikennetapahtumat db user tiedot)]
-    (println "")
-    (println "------------ VASTAUS KOKO HOMMAAN -----------")
-    (clojure.pprint/pprint vastaus)
-    vastaus))
+  (q/hae-liikennetapahtumat db user tiedot))
 
 (defn hae-edelliset-tapahtumat [db user tiedot]
   (assert (::lt/urakka-id tiedot) "Urakka id puuttuu, ei voida hakea edellisiä tapahtumia!")
