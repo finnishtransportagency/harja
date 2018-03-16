@@ -34,7 +34,7 @@
                            :aikavali [nil nil]
                            :vaylatyyppi :kauppamerenkulku
                            :vaylanro nil
-                           :turvalaite-id nil
+                           :turvalaitenro nil
                            :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
@@ -811,7 +811,7 @@
   (testing "Hintaryhmän korostus"
     (let [tulos (e! (tiedot/->KorostaHintaryhmaKartalla {::h/id 1})
                     {:turvalaitteet [{::tu/turvalaitenro 1
-                                      ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
+                                      ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
                      :toimenpiteet [{::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 1}}
                                     {::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 2}}
                                     {::to/hintaryhma-id 2 ::to/turvalaite {::tu/turvalaitenro 1}}]})]

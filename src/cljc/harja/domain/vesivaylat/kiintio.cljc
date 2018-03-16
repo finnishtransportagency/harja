@@ -28,7 +28,7 @@
                                                :harja.domain.vesivaylat.toimenpide/suoritettu
                                                :harja.domain.vesivaylat.toimenpide/hintatyyppi
                                                [:harja.domain.vesivaylat.toimenpide/turvalaite
-                                                #{:harja.domain.vesivaylat.turvalaite/id
+                                                #{:harja.domain.vesivaylat.turvalaite/turvalaitenro
                                                   :harja.domain.vesivaylat.turvalaite/nimi
                                                   :harja.domain.vesivaylat.turvalaite/tyyppi}]
                                                :harja.domain.vesivaylat.toimenpide/reimari-tyolaji
@@ -80,4 +80,3 @@
 
 ;; Palauttaa liitettyjen toimenpiteiden id:t (samat jotka annettiin)
 (s/def ::irrota-toimenpiteet-kiintiosta-vastaus (s/keys :req [:harja.domain.vesivaylat.toimenpide/idt]))
-
