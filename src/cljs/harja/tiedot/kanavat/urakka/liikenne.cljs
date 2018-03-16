@@ -15,6 +15,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.hallintayksikot :as hallintayksikot]
 
             [harja.domain.urakka :as ur]
             [harja.domain.sopimus :as sop]
@@ -34,8 +35,7 @@
                  :tallennus-kaynnissa? false
                  :valittu-liikennetapahtuma nil
                  :tapahtumarivit nil
-                 :valinnat {::ur/id nil
-                            ::sop/id nil
+                 :valinnat {:kayttajan-urakat '()
                             :aikavali nil
                             ::lt/kohde nil
                             ::lt-alus/suunta nil
@@ -60,7 +60,7 @@
        ::sop/id (first @u/valittu-sopimusnumero)})))
 
 (def valintojen-avaimet
-  [::ur/id ::sop/id :aikavali ::lt/kohde
+  [:kayttajan-urakat :aikavali ::lt/kohde
    ::lt-alus/suunta ::lt-alus/aluslajit :niput?
    ::toiminto/toimenpiteet ::lt-alus/nimi])
 
@@ -72,6 +72,8 @@
 (defrecord HaeLiikennetapahtumatKutsuLahetetty [])
 (defrecord LiikennetapahtumatHaettu [tulos])
 (defrecord LiikennetapahtumatEiHaettu [virhe])
+(defrecord HaeKayttajanKanavaUrakat [])
+(defrecord KayttajanUrakatHaettu [urakat])
 ;; Lomake
 (defrecord ValitseTapahtuma [tapahtuma])
 (defrecord HaeEdellisetTiedot [tapahtuma])
@@ -91,6 +93,8 @@
 (defrecord KetjutusPoistettu [tulos id])
 (defrecord KetjutusEiPoistettu [virhe id])
 
+(defrecord UrakkaValittu [urakka valittu?])
+
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
           (fn [u]
@@ -98,9 +102,14 @@
 
 (defn hakuparametrit [app]
   ;; Ei nil arvoja
-  (when (and (::sop/id (:valinnat app))
-             (::ur/id (:valinnat app)))
-    (into {} (filter val (:valinnat app)))))
+  (when-let [urakka-idt (into #{} (keep #(when (:valittu? %)
+                                           (:id %))
+                                        (get-in app [:valinnat :kayttajan-urakat])))]
+    (into {} (filter val
+                     (-> app :valinnat (dissoc :kayttajan-urakat) (assoc :urakka-idt urakka-idt))))))
+
+(defn nakymaan [e!]
+  (e! (->HaeKayttajanKanavaUrakat)))
 
 (defn palvelumuoto->str [tapahtuma]
   (str/join ", "
@@ -555,4 +564,31 @@
     (-> app
         (update :ketjutuksen-poistot (fn [s] (if (nil? s)
                                                #{}
-                                               (disj s id)))))))
+                                               (disj s id))))))
+  HaeKayttajanKanavaUrakat
+  (process-event [_ app]
+    (let [kanava-hallintayksikko (some #(when (= (:nimi %) "Kanavat ja avattavat sillat")
+                                          (:id %))
+                                       @hallintayksikot/vaylamuodon-hallintayksikot)]
+      (tt/post! :kayttajan-urakat [kanava-hallintayksikko] {:onnistui ->KayttajanUrakatHaettu})))
+
+  KayttajanUrakatHaettu
+  (process-event [{urakat :urakat} app]
+    (let [urakat (when-not (empty? urakat)
+                   (->> urakat
+                        first
+                        :urakat
+                        (map #(if (= (:id %) @nav/valittu-urakka-id)
+                                (-> %
+                                    (assoc :valittu? true)
+                                    (dissoc % :urakkanro))
+                                (dissoc % :urakkanro)))))]
+      (assoc-in app [:valinnat :kayttajan-urakat] urakat)))
+  UrakkaValittu
+  (process-event [{{:keys [id]} :urakka valittu? :valittu?} app]
+    (let [uudet-urakkavalinnat (map #(if (= (:id %) id)
+                                       (assoc % :valittu? valittu?)
+                                       %)
+                                    (get-in app [:valinnat :kayttajan-urakat]))]
+      (tuck/process-event (->PaivitaValinnat {:kayttajan-urakat uudet-urakkavalinnat}) app)
+      (assoc-in app [:valinnat :kayttajan-urakat] uudet-urakkavalinnat))))

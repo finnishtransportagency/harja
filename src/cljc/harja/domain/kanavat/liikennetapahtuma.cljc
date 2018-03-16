@@ -130,11 +130,11 @@
 (s/def ::alukset (s/coll-of ::lt-alus/liikennetapahtuman-alus))
 (s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
 
-(s/def ::hae-liikennetapahtumat-kysely (s/keys :req [::ur/id ::sop/id]
-                                               :opt [::kohde
+(s/def ::hae-liikennetapahtumat-kysely (s/keys :opt [::kohde
                                                      ::lt-alus/laji
                                                      ::lt-alus/suunta
                                                      ::toiminto/toimenpiteet]
+                                               :req-un [:urakka-idt]
                                                :opt-un [::aikavali ::niput?]))
 (s/def ::hae-liikennetapahtumat-vastaus (s/coll-of
                                           (s/keys :req
