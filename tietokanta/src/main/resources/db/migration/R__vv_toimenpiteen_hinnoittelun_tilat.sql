@@ -25,9 +25,9 @@ CREATE VIEW vv_toimenpiteen_hinnoittelun_hintaryhma
 
 CREATE VIEW vv_laskutettavat_hinnoittelut
   AS
-    SELECT oman_hinnan_id
+    SELECT oman_hinnan_id AS id
     FROM vv_toimenpiteen_hinnoittelun_hintaryhma
       JOIN vv_hyvaksytyt_tilaukset ON "hinnoittelu-id" = hintaryhman_id
     UNION
-    SELECT "hinnoittelu-id"
+    SELECT "hinnoittelu-id" AS id
     FROM vv_hyvaksytyt_tilaukset;
