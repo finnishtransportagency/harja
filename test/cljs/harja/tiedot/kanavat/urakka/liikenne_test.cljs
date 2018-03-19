@@ -28,18 +28,12 @@
            1234))))
 
 (deftest hakuparametrit
-  (testing "Jos urakka-id ja sopimus-id ei ole asetettu, palautetaan nil"
-    (is (= nil
-           (tiedot/hakuparametrit {:valinnat {:foo nil :bar 1}}))))
+  (is (= {:urakka-idt #{1}}
+         (tiedot/hakuparametrit {:valinnat {:kayttajan-urakat '({:id 1 :valittu? true} {:id 2 :valittu? false})}})))
 
-  (is (= {::ur/id 1 ::sop/id 1}
-         (tiedot/hakuparametrit {:valinnat {::ur/id 1 ::sop/id 1}})))
-
-  (is (= {::ur/id 1
-          ::sop/id 1
+  (is (= {:urakka-idt #{1}
           :bar 2}
-         (tiedot/hakuparametrit {:valinnat {::ur/id 1
-                                            ::sop/id 1
+         (tiedot/hakuparametrit {:valinnat {:kayttajan-urakat '({:id 1 :valittu? true})
                                             :foo nil
                                             :bar 2}}))))
 
@@ -501,24 +495,7 @@
               :valinnat {::ur/id 1 ::sop/id 1}}
              (e! (tiedot/->HaeLiikennetapahtumat)
                  {:liikennetapahtumien-haku-kaynnissa? true
-                  :valinnat {::ur/id 1 ::sop/id 1}})))))
-
-  (testing "Haku ei lähde jos sopimus-id tai urakka-id puuttuu"
-    (vaadi-async-kutsut
-      #{}
-      (is (= {:liikennetapahtumien-haku-kaynnissa? false
-              :valinnat {::ur/id nil ::sop/id 1}}
-             (e! (tiedot/->HaeLiikennetapahtumat)
-                 {:liikennetapahtumien-haku-kaynnissa? false
-                  :valinnat {::ur/id nil ::sop/id 1}}))))
-
-    (vaadi-async-kutsut
-      #{}
-      (is (= {:liikennetapahtumien-haku-kaynnissa? false
-              :valinnat {::ur/id 1 ::sop/id nil}}
-             (e! (tiedot/->HaeLiikennetapahtumat)
-                 {:liikennetapahtumien-haku-kaynnissa? false
-                  :valinnat {::ur/id 1 ::sop/id nil}}))))))
+                  :valinnat {::ur/id 1 ::sop/id 1}}))))))
 
 (deftest tapahtumat-haettu
   (let [tapahtuma1 {::lt/kohde {::kohde/kohdekokonaisuus {::kok/nimi "Saimaa"}
