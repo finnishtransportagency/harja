@@ -305,13 +305,6 @@
                                (>= (:tr-alkuetaisyys tr-vali2) (:tr-loppuetaisyys tr-vali1)))))]
     (boolean (not ei-leikkaa?))))
 
-(defn kohdeosat-paalekkain? [osa-yksi osa-kaksi]
-  (if (and (= (:tr-numero osa-yksi) (:tr-numero osa-kaksi))
-           (= (:tr-ajorata osa-yksi) (:tr-ajorata osa-kaksi))
-           (= (:tr-kaista osa-yksi) (:tr-kaista osa-kaksi)))
-    (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi)
-    false))
-
 (defn pistemainen? [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}]
   (or (and (number? tr-alkuosa)
            (number? tr-alkuetaisyys)
@@ -323,6 +316,16 @@
            (number? tr-loppuetaisyys)
            (= tr-loppuosa tr-alkuosa)
            (= tr-loppuetaisyys tr-alkuetaisyys))))
+
+(defn kohdeosat-paalekkain? [osa-yksi osa-kaksi]
+  (if (and (= (:tr-numero osa-yksi) (:tr-numero osa-kaksi))
+           (= (:tr-ajorata osa-yksi) (:tr-ajorata osa-kaksi))
+           (= (:tr-kaista osa-yksi) (:tr-kaista osa-kaksi)))
+    (cond
+      (pistemainen? osa-yksi) (tr-vali-paakohteen-sisalla? osa-kaksi osa-yksi)
+      (pistemainen? osa-kaksi) (tr-vali-paakohteen-sisalla? osa-yksi osa-kaksi)
+      :else (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi))
+    false))
 
 (defn alikohteet-tayttamaan-kohde
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
