@@ -12,7 +12,7 @@
   (:import (org.postgis PGgeometry)))
 
 (defqueries "harja/kyselyt/tarkastukset.sql"
-  {:positional? true})
+            {:positional? true})
 
 (define-tables
   ;; Määritellään tässä nimiavaruudessa, linkkitaulu on lähinnä sisäiseen käyttöön
@@ -21,10 +21,12 @@
    {"tarkastus" ::tarkastus-id
     "yllapitokohde" ::yllapitokohde-id}])
 
-(defn- paivita-tarkastuksen-yllapitokohde! [db tarkastus-id yllapitokohde-id]
+(defn paivita-tarkastuksen-yllapitokohde! [db tarkastus-id yllapitokohde-id]
   (if (nil? yllapitokohde-id)
     (delete! db ::tarkastus-yllapitokohde {::tarkastus-id tarkastus-id})
-    (upsert! db ::tarkastus-yllapitokohde
+    (upsert! db
+             ::tarkastus-yllapitokohde
+             #{::tarkastus-id}
              {::tarkastus-id tarkastus-id
               ::yllapitokohde-id yllapitokohde-id})))
 
@@ -51,9 +53,9 @@
                 :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))}]
 
     (do
-     (log/debug "Luodaan uusi tarkastus" tarkastus " jonka params: " params)
-     (luo-tarkastus<! db params)
-     (luodun-tarkastuksen-id db))))
+      (log/debug "Luodaan uusi tarkastus" tarkastus " jonka params: " params)
+      (luo-tarkastus<! db params)
+      (luodun-tarkastuksen-id db))))
 
 (defn- paivita-tarkastus*
   [db user urakka-id {:keys [id lahde aika tr tyyppi tarkastaja sijainti
