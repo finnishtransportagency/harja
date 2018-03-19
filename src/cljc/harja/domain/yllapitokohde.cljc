@@ -300,6 +300,8 @@ yllapitoluokkanimi->numero
   [kohde]
   ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
          :tie :tr-numero :tienumero
+         :ajr :tr-ajorata :ajorata
+         :kaista :tr-kaista
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
 

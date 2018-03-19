@@ -1,10 +1,15 @@
 (ns harja.views.urakka.yllapitokohteet
   "Ylläpitokohteet"
   (:require [reagent.core :refer [atom] :as r]
+            [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko vihje]]
+            [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
+            [harja.ui.napit :as napit]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.validointi :as validointi]
+            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko vihje] :as yleiset]
             [harja.fmt :as fmt]
             [harja.loki :refer [log logt tarkkaile!]]
             [clojure.string :as str]
@@ -14,21 +19,14 @@
             [harja.domain.paallystysilmoitus :as pot]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.tiedot.urakka.yhatuonti :as yha]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.napit :as napit]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.yllapitokohteet :as tiedot]
             [harja.tiedot.urakka :as u]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.viesti :as viesti]
-            [harja.tiedot.urakka :as urakka]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.validointi :as validointi]
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.kentat :as kentat])
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -244,7 +242,8 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(defn yllapitokohdeosat-sarakkeet [{:keys [kohdeosat muokkaa-kohdeosat! muokattava-tie? muokattava-ajorata-ja-kaista?]}]
+(defn yllapitokohdeosat-sarakkeet [{:keys [kohdeosat muokkaa-kohdeosat! muokattava-tie? muokattava-ajorata-ja-kaista?
+                                           kirjoitusoikeus?]}]
   (remove nil?
           (concat
             (tierekisteriosoite-sarakkeet
@@ -258,38 +257,38 @@
                {:nimi :tr-loppuosa}
                {:nimi :tr-loppuetaisyys}])
             [(assoc paallystys-tiedot/paallyste-grid-skeema
-               :leveys paallyste-leveys
-               :tayta-alas? #(not (nil? %))
-               :tayta-fn (fn [lahtorivi tama-rivi]
-                           (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
-               :tayta-sijainti :ylos
-               :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille"
-               :tayta-alas-toistuvasti? #(not (nil? %))
-               :tayta-toistuvasti-fn
-               (fn [toistettava-rivi tama-rivi]
-                 (assoc tama-rivi :paallystetyyppi (:paallystetyyppi toistettava-rivi))))
+                    :leveys paallyste-leveys
+                    :tayta-alas? #(not (nil? %))
+                    :tayta-fn (fn [lahtorivi tama-rivi]
+                                (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
+                    :tayta-sijainti :ylos
+                    :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille"
+                    :tayta-alas-toistuvasti? #(not (nil? %))
+                    :tayta-toistuvasti-fn
+                    (fn [toistettava-rivi tama-rivi]
+                      (assoc tama-rivi :paallystetyyppi (:paallystetyyppi toistettava-rivi))))
              (assoc paallystys-tiedot/raekoko-grid-skeema
-               :leveys raekoko-leveys
-               :tayta-alas? #(not (nil? %))
-               :tayta-fn (fn [lahtorivi tama-rivi]
-                           (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
-               :tayta-sijainti :ylos
-               :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
-               :tayta-alas-toistuvasti? #(not (nil? %))
-               :tayta-toistuvasti-fn
-               (fn [toistettava-rivi tama-rivi]
-                 (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
+                    :leveys raekoko-leveys
+                    :tayta-alas? #(not (nil? %))
+                    :tayta-fn (fn [lahtorivi tama-rivi]
+                                (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
+                    :tayta-sijainti :ylos
+                    :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
+                    :tayta-alas-toistuvasti? #(not (nil? %))
+                    :tayta-toistuvasti-fn
+                    (fn [toistettava-rivi tama-rivi]
+                      (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
              (assoc paallystys-tiedot/tyomenetelma-grid-skeema
-               :leveys tyomenetelma-leveys
-               :tayta-alas? #(not (nil? %))
-               :tayta-fn (fn [lahtorivi tama-rivi]
-                           (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
-               :tayta-sijainti :ylos
-               :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
-               :tayta-alas-toistuvasti? #(not (nil? %))
-               :tayta-toistuvasti-fn
-               (fn [toistettava-rivi tama-rivi]
-                 (assoc tama-rivi :tyomenetelma (:tyomenetelma toistettava-rivi))))
+                    :leveys tyomenetelma-leveys
+                    :tayta-alas? #(not (nil? %))
+                    :tayta-fn (fn [lahtorivi tama-rivi]
+                                (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
+                    :tayta-sijainti :ylos
+                    :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
+                    :tayta-alas-toistuvasti? #(not (nil? %))
+                    :tayta-toistuvasti-fn
+                    (fn [toistettava-rivi tama-rivi]
+                      (assoc tama-rivi :tyomenetelma (:tyomenetelma toistettava-rivi))))
              {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
               :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
               :tayta-alas? #(not (nil? %))
@@ -319,13 +318,15 @@
                               [napit/yleinen-ensisijainen "Lisää osa"
                                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-arrow-down)
+                                :disabled (not kirjoitusoikeus?)
                                 :luokka "btn-xs"}]
                               [napit/kielteinen "Poista"
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-trash)
+                                :disabled (not kirjoitusoikeus?)
                                 :luokka "btn-xs"}]])}])))
 
-(defn yllapitokohdeosat [{:keys [urakka]}]
+(defn yllapitokohdeosat [{:keys [urakka jarjesta-kun-kasketaan kohdeosat-atom]}]
   (let [virheet (atom nil)
         kirjoitusoikeus?
         (case (:tyyppi urakka)
@@ -335,19 +336,32 @@
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
-                 muokattava-tie? muokattava-ajorata-ja-kaista?]}]
+                 muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
+                 jarjesta-kun-kasketaan]}]
       [grid/muokkaus-grid
-       {:otsikko otsikko
+       {:tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
+                                          [:div
+                                           [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
+                                           (when kirjoitusoikeus?
+                                             [:div {:style {:display "inline-block"
+                                                            :float "right"}}
+                                              [napit/yleinen-ensisijainen "Lisää osa"
+                                               #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1))
+                                               {:ikoni (ikonit/livicon-arrow-down)
+                                                :luokka "btn-xs"}]])])
+        :otsikko otsikko
         :id "yllapitokohdeosat"
         :virheet virheet
-        :voi-lisata? true
+        :voi-lisata? false
+        :jarjesta-avaimen-mukaan (when jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan)
+        :jarjesta-kun-kasketaan (when jarjesta-kun-kasketaan jarjesta-kun-kasketaan)
         :piilota-toiminnot? true
         :voi-kumota? false
         :uusi-rivi (fn [rivi]
                      ;; Otetaan pääkohteen tie, ajorata ja kaista, jos on
                      (assoc rivi :tr-numero (:tr-numero yllapitokohde)
-                                 :tr-ajorata (:tr-ajorata yllapitokohde)
-                                 :tr-kaista (:tr-kaista yllapitokohde)))
+                            :tr-ajorata (:tr-ajorata yllapitokohde)
+                            :tr-kaista (:tr-kaista yllapitokohde)))
         :paneelikomponentit
         [(fn []
            (when tallenna-fn
@@ -364,12 +378,20 @@
                              (not kirjoitusoikeus?))
                :luokka "nappi-myonteinen grid-tallenna"
                :virheviesti "Tallentaminen epäonnistui."
-               :kun-onnistuu tallennettu-fn}]))]}
+               :kun-onnistuu #(do
+                                (tallennettu-fn)
+                                (reset! kohdeosat-atom
+                                        (into (sorted-map)
+                                              (zipmap (iterate inc 1)
+                                                      (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]}
        (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
                                      :muokkaa-kohdeosat! (fn [uudet-osat]
-                                                           (reset! kohdeosat-atom uudet-osat))
+                                                           (reset! kohdeosat-atom (if jarjesta-kun-kasketaan
+                                                                                    (vary-meta uudet-osat assoc :jarjesta-gridissa true)
+                                                                                    uudet-osat)))
                                      :muokattava-ajorata-ja-kaista? muokattava-ajorata-ja-kaista?
-                                     :muokattava-tie? muokattava-tie?})
+                                     :muokattava-tie? muokattava-tie?
+                                     :kirjoitusoikeus? kirjoitusoikeus?})
        kohdeosat-atom])))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
@@ -465,10 +487,16 @@
                                             yllapitokohde-uusilla-kohdeosilla
                                             kohde))
                                         @kohteet-atom))
-                           (viesti/nayta! "Kohdeosat tallennettu!" :success)))]
+                           (viesti/nayta! "Kohdeosat tallennettu!" :success)))
+        kohdeosat (:kohdeosat rivi)
+        kohteen-osat (atom (into (sorted-map) (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                                        (filter #(= (:tr-numero rivi) (:tr-numero %))
+                                                                                kohdeosat)))))
+        muut-osat (atom (into (sorted-map) (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                                     (filter #(not= (:tr-numero rivi) (:tr-numero %))
+                                                                             kohdeosat)))))]
     (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
-      (let [kohdeosat (:kohdeosat rivi)
-            kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
+      (let [kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
                                                        (:tr-kaista rivi)))]
         [:div
          [yllapitokohdeosat
@@ -476,22 +504,22 @@
            :urakka urakka
            :muokattava-tie? (constantly false)
            :muokattava-ajorata-ja-kaista? (constantly (not kohteella-ajorata-ja-kaista?))
-           :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                                           (filter #(= (:tr-numero rivi) (:tr-numero %))
-                                                                   kohdeosat))))
+           :kohdeosat-atom kohteen-osat
            :yllapitokohde rivi
            :tallenna-fn (tallenna-fn :kohteen-omat-kohdeosat)
-           :tallennettu-fn tallennettu-fn}]
+           :tallennettu-fn tallennettu-fn
+           :jarjesta-avaimen-mukaan identity}]
+         [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
          [yllapitokohdeosat
           {:otsikko "Muut tierekisteriosoitteet"
            :urakka urakka
            :muokattava-tie? (constantly true)
            :muokattava-ajorata-ja-kaista? (constantly true)
-           :kohdeosat-atom (atom (zipmap (iterate inc 1) (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                                           (filter #(not= (:tr-numero rivi) (:tr-numero %))
-                                                                   kohdeosat))))
+           :kohdeosat-atom muut-osat
            :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
-           :tallennettu-fn tallennettu-fn}]
+           :tallennettu-fn tallennettu-fn
+           :jarjesta-avaimen-mukaan identity}]
+         [debug/debug @muut-osat {:otsikko "Muut tierekisteriosoitteet"}]
          (when (= kohdetyyppi :paallystys)
            [maaramuutokset {:yllapitokohde-id (:id rivi)
                             :urakka-id (:id urakka)
@@ -519,8 +547,8 @@
   tallenna          Funktio tallennusnapille
   kun-onnistuu      Funktio tallennuksen onnistumiselle"
   [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
-  (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
-        tr-virheet (atom {}) ;; virheelliset TR sijainnit
+  (let [tr-sijainnit (atom {})                              ;; onnistuneesti haetut TR-sijainnit
+        tr-virheet (atom {})                                ;; virheelliset TR sijainnit
         tallenna (reaction
                    (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? yha-sidottu?)
                      :ei-mahdollinen

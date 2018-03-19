@@ -133,12 +133,14 @@
                    :tr-ajorata (:tr-ajorata rivi)
                    :tr-kaista (:tr-kaista rivi)
                    :toimenpide ""}]
-    (-> kohdeosat
-        (assoc-in [key :tr-loppuosa] nil)
-        (assoc-in [key :tr-loppuetaisyys] nil)
-        (assoc (inc key) uusi-rivi)
-        (merge (zipmap (map inc avaimet-jalkeen)
-                       (map #(get kohdeosat %) avaimet-jalkeen))))))
+    (if (empty? kohdeosat)
+      {key uusi-rivi}
+      (-> kohdeosat
+          (assoc-in [key :tr-loppuosa] nil)
+          (assoc-in [key :tr-loppuetaisyys] nil)
+          (assoc (inc key) uusi-rivi)
+          (merge (zipmap (map inc avaimet-jalkeen)
+                         (map #(get kohdeosat %) avaimet-jalkeen)))))))
 
 (defn poista-kohdeosa
   "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus

@@ -7,7 +7,7 @@
 (defn voi-avata? [item]
   (some #(% item) [map? coll?]))
 
-(defmulti debug-show (fn [item path open-paths toggle!]
+(defmulti debug-show (fn [item path open-paths toggle! options]
                        (cond
                          (map? item) :map
                          (coll? item) :coll
@@ -38,8 +38,10 @@
        "\u25b6")]
     [:td " "]))
 
-(defmethod debug-show :coll [data path open-paths toggle!]
+(defmethod debug-show :coll [data path open-paths toggle! options]
   [:table.debug-coll
+   (when (:otsikko options)
+     [:caption (:otsikko options)])
    [:thead [:th "#"] [:th " "] [:th "Value"]]
    [:tbody
     (doall
@@ -52,8 +54,10 @@
          [:td [show-value value (conj path i) open-paths toggle!]]])
       data))]])
 
-(defmethod debug-show :map [data path open-paths toggle!]
+(defmethod debug-show :map [data path open-paths toggle! options]
   [:table.debug-map
+   (when (:otsikko options)
+     [:caption (:otsikko options)])
    [:thead
     [:tr [:th "Key"] [:th " "] [:th "Value"]]]
    [:tbody
@@ -69,7 +73,7 @@
 (defmethod debug-show :pr-str [data p _ _]
   [:span (pr-str data)])
 
-(defn debug [item]
+(defn debug [item options]
   (let [open-paths (r/atom #{})
         toggle! #(swap! open-paths
                         (fn [paths]
@@ -78,4 +82,4 @@
                             (conj paths %))))]
     (fn [item]
       [:div.debug
-       [debug-show item [] @open-paths toggle!]])))
+       [debug-show item [] @open-paths toggle! options]])))
