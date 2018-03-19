@@ -129,7 +129,6 @@
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
 (defn muunnettavat-alikohteet [kohteen-tienumero alikohteet]
-  (def parametrit alikohteet)
   (mapv #(let [alikohde (:alikohde %)]
            (-> alikohde
                (assoc :ulkoinen-id (get-in alikohde [:tunniste :id]))
@@ -152,7 +151,6 @@
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
-          _ (def nykyinen-kohde kohde)
           muunnettavat-alikohteet (muunnettavat-alikohteet kohteen-tienumero (:alikohteet kohde))
           muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
           karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
