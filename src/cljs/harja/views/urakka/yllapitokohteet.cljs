@@ -225,16 +225,14 @@
                           id-ja-arvo))))
         data))
 
-(defn validoi-kohdeosien-paallekkyys [kohdeosat-atom virheet-atom]
+(defn validoi-kohdeosien-paallekkyys [kohdeosat-tila virheet-atom]
   (let [gridin-tila (keep (fn [[indeksi kohdeosa]]
                             (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
                                        (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
                               [indeksi (assoc kohdeosa :valiaikainen-id indeksi)]))
-                         @kohdeosat-atom)
+                          kohdeosat-tila)
         gridin-virheet @virheet-atom
         paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain (map second gridin-tila) :valiaikainen-id)
-        _ (println "PÄÄLLEKKÄISET OSAT")
-        _ (cljs.pprint/pprint paallekkaiset-osat)
         gridin-paallekkaiset-osat (flatten (keep (fn [[avain rivi]]
                                                    (let [rivin-paallekkaiset-osat
                                                          (keep #(let [{id-1 :valiaikainen-id nimi-1 :nimi} (-> % :kohteet first)
@@ -252,8 +250,6 @@
                                                      (if (empty? rivin-paallekkaiset-osat)
                                                        nil rivin-paallekkaiset-osat)))
                                                  gridin-tila))
-        _ (println "GRIDIN PÄÄLLEKKÄISET OSAT")
-        _ (cljs.pprint/pprint gridin-paallekkaiset-osat)
         poista-korjatut-virheet (indexed-map-loop map
                                                   (fn [rivin-virheet]
                                                     (indexed-map-loop keep
@@ -320,7 +316,7 @@
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
 (defn yllapitokohdeosat-sarakkeet [{:keys [kohdeosat muokkaa-kohdeosat! muokattava-tie? muokattava-ajorata-ja-kaista?
-                                           kirjoitusoikeus? validoi hae-fn]}]
+                                           kirjoitusoikeus? validoi hae-fn voi-muokata?]}]
   (remove nil?
           (concat
             (tierekisteriosoite-sarakkeet
@@ -399,12 +395,14 @@
                               [napit/yleinen-ensisijainen "Lisää osa"
                                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-arrow-down)
-                                :disabled (not kirjoitusoikeus?)
+                                :disabled (or (not kirjoitusoikeus?)
+                                              (not voi-muokata?))
                                 :luokka "btn-xs"}]
                               [napit/kielteinen "Poista"
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-trash)
-                                :disabled (not kirjoitusoikeus?)
+                                :disabled (or (not kirjoitusoikeus?)
+                                              (not voi-muokata?))
                                 :luokka "btn-xs"}]])}])))
 
 (defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
@@ -415,16 +413,12 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
-(defn yllapitokohdeosat [{:keys [urakka jarjesta-kun-kasketaan kohdeosat-atom validoinnit]}]
+(defn yllapitokohdeosat [{:keys [urakka jarjesta-kun-kasketaan kohdeosat-atom validoinnit voi-muokata? virhe-viesti]}]
   (let [virheet (atom nil)
+        voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
         tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
-        ;; Käytetään cljs:n atomia, koska muuten tulee mystistä warningia konsoliin:
-        ;; "Reactive deref not supported in lazy seq, it should be wrapped in doall"
-        ;; Doalliin wrappaaminen ei vain auta. Tätä atomia muutenkin päivitetään joka muokkauksella
-        ;; ja sitä käytetään validoinnissa, jota myöskin kutsutaan joka muokkauksella, niin sen ei
-        ;; itsessään tarvitse triggeröidä mitään
-        osan-pituudet-teille (cljs.core/atom nil)
+        osan-pituudet-teille (atom nil)
         validoi-kohteen-osoite (fn [kentta arvo rivi]
                                  (validoi-yllapitokohteen-osoite @osan-pituudet-teille kentta arvo rivi))
         tien-osat-riville (fn [rivi]
@@ -448,17 +442,17 @@
        {:tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                           [:div
                                            [:div {:style {:display "inline-block"}} "Ei kohdeosia"]
-                                           (when kirjoitusoikeus?
+                                           (when (and kirjoitusoikeus? voi-muokata?)
                                              [:div {:style {:display "inline-block"
                                                             :float "right"}}
                                               [napit/yleinen-ensisijainen "Lisää osa"
                                                #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1))
                                                {:ikoni (ikonit/livicon-arrow-down)
                                                 :luokka "btn-xs"}]])])
+        :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
+        :virhe-viesti virhe-viesti
         :muutos (fn [grid]
-                  #_(when muokkaa!
-                    (muokkaa! (grid/hae-muokkaustila grid)))
-                  (validoi-kohdeosien-paallekkyys kohdeosat-atom virheet)
+                  (validoi-kohdeosien-paallekkyys (grid/hae-muokkaustila grid) virheet)
                   (hae-osan-pituudet grid osan-pituudet-teille)
                   (validoi-tr-osoite grid tr-sijainnit tr-virheet))
         :otsikko otsikko
@@ -487,7 +481,8 @@
                                                 (:tr-loppuosa %)
                                                 (:tr-loppuetaisyys %))
                                           (vals @kohdeosat-atom)))
-                             (not kirjoitusoikeus?))
+                             (not kirjoitusoikeus?)
+                             (not voi-muokata?))
                :luokka "nappi-myonteinen grid-tallenna"
                :virheviesti "Tallentaminen epäonnistui."
                :kun-onnistuu #(do
@@ -518,7 +513,8 @@
                                                                          (:tr-loppuosa validoinnit)))
                                                :tr-loppuetaisyys (vec (concat [backilta-tulleiden-virheiden-validointi (partial validoi-kohteen-osoite :tr-loppuetaisyys)]
                                                                               (:tr-loppuetaisyys validoinnit)))}
-                                     :hae-fn hae-fn})
+                                     :hae-fn hae-fn
+                                     :voi-muokata? voi-muokata?})
        kohdeosat-atom])))
 
 (defn maaramuutokset [{:keys [yllapitokohde-id urakka-id yllapitokohteet-atom] :as tiedot}]
@@ -631,8 +627,12 @@
         osa-kohteen-sisalla (fn [_ kohteen-osan-rivi _]
                               (when (and (:tr-alkuosa kohteen-osan-rivi) (:tr-alkuetaisyys kohteen-osan-rivi)
                                          (:tr-loppuosa kohteen-osan-rivi) (:tr-loppuetaisyys kohteen-osan-rivi))
-                                (when-not (tr/kohteenosa-paallekkain-paakohteen-kanssa? rivi kohteen-osan-rivi)
-                                  (str "Tämä osoite ei ole varsinaisen kohteen sisällä."))))]
+                                (when-not (tr/tr-vali-paakohteen-sisalla? rivi kohteen-osan-rivi)
+                                  (str "Tämä osoite ei ole varsinaisen kohteen sisällä."))))
+        voi-muokata? (not= (some #(when (= (:kohdenumero %) (:kohdenumero rivi))
+                                    (:tila %))
+                                 @paallystys-tiedot/paallystysilmoitukset)
+                           :lukittu)]
     (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
       (let [kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
                                                        (:tr-kaista rivi)))]
@@ -653,7 +653,10 @@
                          :tr-alkuosa [osa-kohteen-sisalla]
                          :tr-alkuetaisyys [osa-kohteen-sisalla]
                          :tr-loppuosa [osa-kohteen-sisalla]
-                         :tr-loppuetaisyys [osa-kohteen-sisalla]}}]
+                         :tr-loppuetaisyys [osa-kohteen-sisalla]}
+           :voi-muokata? voi-muokata?
+           :virhe-viesti (when-not voi-muokata?
+                           "Päällystysilmoitus hyväksytty, ei voi muokata!")}]
          [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
          [yllapitokohdeosat
           {:otsikko "Muut tierekisteriosoitteet"
@@ -670,7 +673,10 @@
                          :tr-alkuosa [osa-kohteen-ulkopuolella]
                          :tr-alkuetaisyys [osa-kohteen-ulkopuolella]
                          :tr-loppuosa [osa-kohteen-ulkopuolella]
-                         :tr-loppuetaisyys [osa-kohteen-ulkopuolella]}}]
+                         :tr-loppuetaisyys [osa-kohteen-ulkopuolella]}
+           :voi-muokata? voi-muokata?
+           :virhe-viesti (when-not voi-muokata?
+                           "Päällystysilmoitus hyväksytty, ei voi muokata!")}]
          [debug/debug @muut-osat {:otsikko "Muut tierekisteriosoitteet"}]
          (when (= kohdetyyppi :paallystys)
            [maaramuutokset {:yllapitokohde-id (:id rivi)

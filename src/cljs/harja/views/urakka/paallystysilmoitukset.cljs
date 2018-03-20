@@ -221,14 +221,13 @@
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
 
-
-(defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku jarjesta-kun-kasketaan?]
+(defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
   (let [polun-meta (meta (get-in lomakedata-nyt polku))
         polun-data (into (sorted-map)
                          (zipmap (iterate inc 1) (if (:jarjestetty-kerran? polun-meta)
                                                    (get-in lomakedata-nyt polku)
                                                    (yllapitokohde-domain/jarjesta-yllapitokohteet (get-in lomakedata-nyt polku)))))]
-    (r/wrap (with-meta polun-data (meta (get-in lomakedata-nyt polku)))
+    (r/wrap (with-meta polun-data polun-meta)
             (fn [uusi-arvo]
               (muokkaa!
                 #(assoc-in % polku
@@ -326,15 +325,16 @@
 
 
 (defn paallystysilmoitus-tekninen-osa
-  [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
-   voi-muokata? grid-wrap wrap-virheet muokkaa!]
+  [{urakka :urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt} :lomakedata-nyt
+    voi-muokata? :tekninen-osa-voi-muokata? alustatoimet-voi-muokata? :alustatoimet-voi-muokata? grid-wrap
+    :grid-wrap wrap-virheet :wrap-virheet muokkaa! :muokkaa!}]
   (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
-    (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
+    (fn [{:keys [urakka lomakedata-nyt tekninen-osa-voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]}]
       (let [paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
-            muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
+            muokkaus-mahdollista? (and tekninen-osa-voi-muokata? (empty? @yllapitokohde-virheet))
             jarjestys-fn #(if (not (nil? (:id %)))
                             [(:id %) 0 0 0]
                             ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
@@ -369,7 +369,8 @@
            :muokattava-ajorata-ja-kaista? (constantly true)
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet
-           :jarjesta-kun-kasketaan first}]
+           :jarjesta-kun-kasketaan first
+           :voi-muokata? muokkaus-mahdollista?}]
 
          [debug @paallystystoimenpiteet {:otsikko "Päällystystoimenpiteet"}]
 
@@ -382,7 +383,7 @@
            :voi-muokata? muokkaus-mahdollista?
            :virheet (wrap-virheet :paallystystoimenpide)
            :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                    voi-muokata?)
+                                    tekninen-osa-voi-muokata?)
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :rivinumerot? true
            :jarjesta jarjestys-fn}
@@ -505,7 +506,7 @@
            :voi-poistaa? (constantly false)
            :voi-muokata? muokkaus-mahdollista?
            :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                    voi-muokata?)
+                                    tekninen-osa-voi-muokata?)
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :virheet (wrap-virheet :kiviaines)
            :jarjesta jarjestys-fn}
@@ -686,9 +687,9 @@
          [paallystysilmoitus-perustiedot urakka lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
 
          [:div {:style {:float "right"}} [historia/kumoa historia]]
-         [paallystysilmoitus-tekninen-osa
-          urakka lomakedata-nyt tekninen-osa-voi-muokata? alustatoimet-voi-muokata?
-          grid-wrap wrap-virheet muokkaa!]
+         [paallystysilmoitus-tekninen-osa {:urakka urakka :lomakedata-nyt lomakedata-nyt :tekninen-osa-voi-muokata? tekninen-osa-voi-muokata?
+                                           :alustatoimet-voi-muokata? alustatoimet-voi-muokata? :grid-wrap grid-wrap :wrap-virheet wrap-virheet
+                                           :muokkaa! muokkaa!}]
 
          [yhteenveto lomakedata-nyt]
 
@@ -883,7 +884,7 @@
 
 (defn paallystysilmoitukset [urakka]
   (komp/luo
-    (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
+    (komp/lippu paallystys/paallystysilmoitukset-tai-kohteet-nakymassa?)
 
     (fn [urakka]
       [:div.paallystysilmoitukset
