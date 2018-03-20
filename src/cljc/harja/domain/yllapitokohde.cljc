@@ -71,6 +71,36 @@ yllapitoluokkanimi->numero
 (def +viallinen-yllapitokohdeosan-sijainti+ "viallinen-alikohteen-sijainti")
 (def +viallinen-alustatoimenpiteen-sijainti+ "viallinen-alustatoimenpiteen-sijainti")
 
+(defn kohdenumero-str->kohdenumero-vec
+  "Palauttaa \"301b\":n muodossa [301 \"b\"]"
+  [kohdenumero]
+  (when kohdenumero
+    (let [numero (re-find #"\d+" kohdenumero)
+          kirjain (re-find #"\D+" kohdenumero)]
+      [(when numero
+         (#?(:clj  Integer.
+             :cljs js/parseInt) numero))
+       kirjain])))
+
+(defn yllapitokohteen-jarjestys
+  [kohde]
+  ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+         :tie :tr-numero :tienumero
+         :ajr :tr-ajorata :ajorata
+         :kaista :tr-kaista
+         :aosa :tr-alkuosa
+         :aet :tr-alkuetaisyys) kohde))
+
+(defn- jarjesta-yllapitokohteet*
+  [kohteet]
+  (sort-by yllapitokohteen-jarjestys kohteet))
+
+(defn jarjesta-yllapitokohteet [yllapitokohteet]
+  (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
+        kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
+    (vec (concat (jarjesta-yllapitokohteet* kohteet-kohdenumerolla)
+                 (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))
+
 #?(:clj
    (defn tee-virhe [koodi viesti]
      {:koodi koodi :viesti viesti}))
@@ -286,36 +316,6 @@ yllapitoluokkanimi->numero
                                       :yllapitokohde-id (:id kohde)))
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
-
-(defn kohdenumero-str->kohdenumero-vec
-  "Palauttaa \"301b\":n muodossa [301 \"b\"]"
-  [kohdenumero]
-  (when kohdenumero
-    (let [numero (re-find #"\d+" kohdenumero)
-          kirjain (re-find #"\D+" kohdenumero)]
-      [(when numero
-         (#?(:clj  Integer.
-             :cljs js/parseInt) numero))
-       kirjain])))
-
-(defn yllapitokohteen-jarjestys
-  [kohde]
-  ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
-         :tie :tr-numero :tienumero
-         :ajr :tr-ajorata :ajorata
-         :kaista :tr-kaista
-         :aosa :tr-alkuosa
-         :aet :tr-alkuetaisyys) kohde))
-
-(defn- jarjesta-yllapitokohteet*
-  [kohteet]
-  (sort-by yllapitokohteen-jarjestys kohteet))
-
-(defn jarjesta-yllapitokohteet [yllapitokohteet]
-  (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
-        kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
-    (vec (concat (jarjesta-yllapitokohteet* kohteet-kohdenumerolla)
-                 (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
