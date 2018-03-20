@@ -301,20 +301,12 @@
                         ::m/luotu (pvm/nyt)
                         ::m/luoja-id (:id user)})))))
 
-(defn lisaa-kommentti! [db user tila kommentti hinnoittelu-id]
+(defn lisaa-kommentti! [db user tila kommentti pvm hinnoittelu-id]
   (specql/insert! db
                   ::kommentti/hinnoittelun-kommentti
                   {::kommentti/aika (pvm/nyt)
                    ::kommentti/kommentti kommentti
                    ::kommentti/tila tila
+                   ::kommentti/laskutus-pvm pvm
                    ::kommentti/kayttaja-id (:id user)
                    ::kommentti/hinnoittelu-id hinnoittelu-id}))
-
-(defn kommentoi-toimenpiteen-hintaryhmaa! [db user tila kommentti toimenpide-id]
-  (kommentoi-toimenpiteen-hintaryhmaa<!
-    db
-    {:aika (pvm/nyt)
-     :tila tila
-     :kommentti kommentti
-     :toimenpide_id toimenpide-id
-     :kayttaja_id (:id user)}))

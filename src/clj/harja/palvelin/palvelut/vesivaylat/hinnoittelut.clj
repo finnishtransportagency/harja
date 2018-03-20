@@ -73,7 +73,7 @@
                                          (::h/id tiedot)
                                          (::h/tallennettavat-hinnat tiedot))
 
-        (q/lisaa-kommentti! db user "muokattu" nil (::h/id tiedot))
+        (q/lisaa-kommentti! db user :muokattu nil nil (::h/id tiedot))
 
         (hae-hintaryhmat db user urakka-id)))))
 
@@ -105,10 +105,7 @@
              :hinnoittelu-id hinnoittelu-id
              :tyot (::h/tallennettavat-tyot tiedot)})
 
-          ;; kirjoittamisen hetkellä ainostaan hintaryhmän, eli tilauksen, voi hyväksyä.
-          ;; Jos siis toimenpiteen hinnoittelua muokataan, "kommentoidaan" myös sen tilausta,
-          ;; jolloin tilaus pitää hyväksyä uudelleen laskulle
-          (q/kommentoi-toimenpiteen-hintaryhmaa! db user "muokattu" nil toimenpide-id)
+          (q/lisaa-kommentti! db user :muokattu nil nil hinnoittelu-id)
 
           (q/hae-toimenpiteen-oma-hinnoittelu db toimenpide-id))))))
 
@@ -130,6 +127,7 @@
                         user
                         (::kommentti/tila tiedot)
                         (::kommentti/kommentti tiedot)
+                        (::kommentti/laskutus-pvm tiedot)
                         (::h/id tiedot))))
 
 (defrecord Hinnoittelut []
