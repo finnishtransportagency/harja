@@ -123,8 +123,8 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn tarkista-etteivat-alikohteet-mene-paallekkain [alikohteet]
-     (def nykyiset-alikohteet alikohteet)
-     (let [lisaa-virhe (fn [edellinen seuraava]
+     (let [alikohteet (sort-by (comp yllapitokohteen-jarjestys :sijainti) alikohteet)
+           lisaa-virhe (fn [edellinen seuraava]
                          (conj
                            (:virheet edellinen)
                            (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
@@ -135,9 +135,15 @@ yllapitoluokkanimi->numero
                           (let [edellinen-loppuosa (get-in edellinen [:edellinen :sijainti :losa])
                                 seuraava-alkuosa (get-in seuraava [:sijainti :aosa])
                                 edellinen-loppuetaisyys (get-in edellinen [:edellinen :sijainti :let])
-                                seuraava-alkuetaisyys (get-in seuraava [:sijainti :aet])]
+                                seuraava-alkuetaisyys (get-in seuraava [:sijainti :aet])
+                                edellinen-ajorata (get-in edellinen [:edellinen :sijainti :ajorata])
+                                seuraava-ajorata (get-in seuraava [:sijainti :ajorata])
+                                edellinen-kaista (get-in edellinen [:edellinen :sijainti :kaista])
+                                seuraava-kaista (get-in seuraava [:sijainti :kaista])]
                             (and
                               (= edellinen-loppuosa seuraava-alkuosa)
+                              (= edellinen-ajorata seuraava-ajorata)
+                              (= edellinen-kaista seuraava-kaista)
                               (> edellinen-loppuetaisyys seuraava-alkuetaisyys))))]
        (:virheet
          (reduce
@@ -148,27 +154,6 @@ yllapitoluokkanimi->numero
                (assoc edellinen :edellinen seuraava)))
            {:virheet [] :edellinen (first alikohteet)}
            (rest alikohteet))))))
-
-(tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
-                                                 :sijainti {:tie 20
-                                                            :numero 20
-                                                            :ajorata 1
-                                                            :ajr 1
-                                                            :kaista 1
-                                                            :aosa 1
-                                                            :aet 1
-                                                            :losa 3
-                                                            :let 1}}
-                                                {:tunniste {:id 2}
-                                                 :sijainti {:tie 20
-                                                            :numero 20
-                                                            :ajorata 1
-                                                            :ajr 1
-                                                            :kaista 1
-                                                            :aosa 3
-                                                            :aet 1
-                                                            :losa 4
-                                                            :let 100}}])
 
 #?(:clj
    (defn tarkista-alikohteiden-sijainnit [alikohteet]
@@ -323,7 +308,7 @@ yllapitoluokkanimi->numero
              :cljs js/parseInt) numero))
        kirjain])))
 
-(defn- yllapitokohteen-jarjestys
+(defn yllapitokohteen-jarjestys
   [kohde]
   ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
          :tie :tr-numero :tienumero

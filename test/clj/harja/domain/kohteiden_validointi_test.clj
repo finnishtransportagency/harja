@@ -38,24 +38,6 @@
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
         "Kohteen ulkopuolinen alikohde otettiin kiinni"))
 
-  (let [kohde {:aosa 1 :aet 1 :losa 5 :let 5}
-        alikohteet [{:tunnus "A"
-                     :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                    {:tunnus "B"
-                     :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}
-                    {:tunnus "C"
-                     :sijainti {:aosa 3, :aet 3, :losa 4, :let 1}}
-                    {:tunnus "D"
-                     :sijainti {:aosa 4, :aet 4, :losa 5, :let 5}}]]
-    (is (thrown+?
-          #(tasmaa-poikkeus
-             %
-             yllapitokohteet/+kohteissa-viallisia-sijainteja+
-             yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
-             "Alikohteet (tunnus: C ja tunnus: D) eivät muodosta yhteistä osuutta")
-          (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
-        "Alikohteet jotka eivät muodosta yhtenäistä osaa otettiin kiinni"))
-
   (let [kohde {:aosa 1 :aet 1 :losa 1 :let 1}
         alikohteet [{:tunnus "A"
                      :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
@@ -221,4 +203,139 @@
                                                                                      :aet 10
                                                                                      :losa 4
                                                                                      :let 100}}]))
-      "Päällekkäin menevät kohteet huomataan"))
+      "Päällekkäin menevät kohteet huomataan")
+
+  (is (= []
+         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 4}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 2
+                                                                                     :ajr 2
+                                                                                     :kaista 1
+                                                                                     :aosa 3
+                                                                                     :aet 1
+                                                                                     :losa 4
+                                                                                     :let 100}}
+                                                                         {:tunniste {:id 1}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 1
+                                                                                     :aet 1
+                                                                                     :losa 3
+                                                                                     :let 1}}
+                                                                         {:tunniste {:id 3}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 2
+                                                                                     :ajr 2
+                                                                                     :kaista 11
+                                                                                     :aosa 1
+                                                                                     :aet 1
+                                                                                     :losa 3
+                                                                                     :let 1}}
+                                                                         {:tunniste {:id 2}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 2
+                                                                                     :ajr 2
+                                                                                     :kaista 11
+                                                                                     :aosa 3
+                                                                                     :aet 1
+                                                                                     :losa 4
+                                                                                     :let 100}}]))
+      "Eri ajoradoilla ja kaistoilla olevat validit kohteet eivät palauta virhettä")
+
+  (is (= [{:koodi "viallinen-alikohteen-sijainti"
+           :viesti "Alikohteet (tunnus: 3 ja tunnus: 4) menevät päällekäin"}]
+         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 4}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 2
+                                                                                     :ajr 2
+                                                                                     :kaista 11
+                                                                                     :aosa 3
+                                                                                     :aet 1
+                                                                                     :losa 4
+                                                                                     :let 100}}
+                                                                         {:tunniste {:id 1}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 1
+                                                                                     :aet 1
+                                                                                     :losa 3
+                                                                                     :let 1}}
+                                                                         {:tunniste {:id 3}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 2
+                                                                                     :ajr 2
+                                                                                     :kaista 11
+                                                                                     :aosa 1
+                                                                                     :aet 1
+                                                                                     :losa 3
+                                                                                     :let 100}}
+                                                                         {:tunniste {:id 2}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 3
+                                                                                     :aet 1
+                                                                                     :losa 4
+                                                                                     :let 100}}]))
+      "Eri ajoradoilla ja kaistoilla olevat päällekkäin olevat kohteet huomataan"))
+
+(deftest jarjesta-yllapitokohteet
+  (let [yllapitokohteet [{:tunniste {:id 4}
+                          :sijainti {:tie 20
+                                     :numero 20
+                                     :ajorata 2
+                                     :ajr 2
+                                     :kaista 1
+                                     :aosa 3
+                                     :aet 1
+                                     :losa 4
+                                     :let 100}}
+                         {:tunniste {:id 1}
+                          :sijainti {:tie 20
+                                     :numero 20
+                                     :ajorata 1
+                                     :ajr 1
+                                     :kaista 1
+                                     :aosa 1
+                                     :aet 1
+                                     :losa 3
+                                     :let 1}}
+                         {:tunniste {:id 3}
+                          :sijainti {:tie 20
+                                     :numero 20
+                                     :ajorata 2
+                                     :ajr 2
+                                     :kaista 1
+                                     :aosa 1
+                                     :aet 1
+                                     :losa 3
+                                     :let 1}}
+                         {:tunniste {:id 2}
+                          :sijainti {:tie 20
+                                     :numero 20
+                                     :ajorata 1
+                                     :ajr 1
+                                     :kaista 1
+                                     :aosa 3
+                                     :aet 1
+                                     :losa 4
+                                     :let 100}}]
+        jarjestetyt (sort-by (comp yllapitokohteet/yllapitokohteen-jarjestys :sijainti) yllapitokohteet)]
+    (let [hae-tunniste (fn [n] (get-in (nth jarjestetyt n) [:tunniste :id]))]
+      (is (= 1 (hae-tunniste 0)))
+      (is (= 2 (hae-tunniste 1)))
+      (is (= 3 (hae-tunniste 2)))
+      (is (= 4 (hae-tunniste 3))))))
