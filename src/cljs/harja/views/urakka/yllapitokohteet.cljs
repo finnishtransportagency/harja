@@ -468,8 +468,8 @@
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi kohdetyyppi]}]
-  ; TODO Kohdetyyppi: Tarvitaanko sitä? Developissa disabloidaan rivien muokkaus jos on joku sora-tyyppi? 🤔
-  ; TODO Lisää validoinnit (ainakin se backendillä ollut päällekkäisyysvalidointi voidaan tuoda tähän, mitäs muuta?)
+  ; Todo: Päällystys 2.0. Kohdetyyppi: Tarvitaanko sitä? Developissa disabloidaan rivien muokkaus jos on joku sora-tyyppi? 🤔
+  ; Todo: Päällystys 2.0. Lisää validoinnit (ainakin se backendillä ollut päällekkäisyysvalidointi voidaan tuoda tähän, mitäs muuta?)
   ; POT-lomakkeeseen täytyy varmaan sitoa validointi POT-lomakkeen tallentamiseen
   (let [tallenna-fn (fn [osatyyppi]
                       (fn [rivit]

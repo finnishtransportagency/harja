@@ -360,7 +360,7 @@
 
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
-           ;; TODO Estä tien, ajoradan ja kaistan muokkaus tarvittaessa
+           ;; Todo: Päällystys 2.0 Estä tien, ajoradan ja kaistan muokkaus tarvittaessa
            ;; Toisaalta tätä ei välttämättä tarvitse tehdä jos sallitaan muuttaa kohteen oma alikohde muuksi vaihtamalla tienumero,
            ;; tai toisinpäin?
            ;; Toinen vaihtoehto on laittaa muut kohdeosat omaan tauluun, mutta lähtökohtaisesti menisin tällä yhdellä

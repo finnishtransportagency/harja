@@ -432,7 +432,7 @@
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    ;; TODO Testi osatyyppi filtterille
+    ;; Todo: Päällystys 2.0. Testi osatyyppi filtterille
     (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
           hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
                                                            {:urakka-id urakka-id
@@ -543,7 +543,7 @@
                                                       :toteutunut_hinta toteutunut-hinta
                                                       :muokkaaja (:id user)})
         ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
-        ; FIXME Tätä ei enää tarvitse tehdä, mutta ongelma muodostuu jos pääkohde muokataa
+        ; Todo: Päällystys 2.0. Tätä ei enää tarvitse tehdä, mutta ongelma muodostuu jos pääkohde muokataa
         ; lyhyemäksi ja alikohteet menevät siitä yli. Sitten ollaan epävalidissa tilassa.
         ; Ratkaisuehdotus 1: Ennen ylläpitokohteen tallennusta tutki, menevätkä alikohteet kohteesta yli, ja heitä validointiherja jos menee?
         ; Ratkaisuehdotus 2: Venytä alikohteita vain silloin kun kohde lyhenee alusta tai lopusta lyhyemmäksi kuin samassa päässä oleva alikohde.
