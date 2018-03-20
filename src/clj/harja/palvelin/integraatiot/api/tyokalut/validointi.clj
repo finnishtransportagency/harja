@@ -17,7 +17,7 @@
     [cheshire.core :as cheshire])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
-(declare tarkista-muut-alikohteet [db muut-alikohteet])
+(declare tarkista-muut-alikohteet)
 
 (defn tarkista-urakka [db urakka-id]
   (log/debug "Validoidaan urakkaa id:llä" urakka-id)
