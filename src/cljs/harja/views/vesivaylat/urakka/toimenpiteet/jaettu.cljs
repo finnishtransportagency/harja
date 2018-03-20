@@ -116,7 +116,7 @@
                                                       :lahde turvalaitehaku}
                                       :arvo-atom (r/wrap (get-in app [:valinnat :turvalaite])
                                                          (fn [uusi]
-                                                           (e! (PaivitaValinnatKonstruktori {:turvalaite-id (::tu/turvalaitenro uusi)}))))}]]
+                                                           (e! (PaivitaValinnatKonstruktori {:turvalaitenro (::tu/turvalaitenro uusi)}))))}]]
 
     (into
       [:div
