@@ -133,8 +133,12 @@
             :viesti "Alustatoimenpiteet sisältävät sijainteja, joita ei löydy tieverkolta"}])))))
 
 (defn tarkista-paallystysilmoitus [db kohde-id kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet]
-  (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
-  (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet))
+  (let [paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
+        paakohteen-alikohteet (filter paakohteen-sisalla? alikohteet)
+        muut-alikohteet (filter (comp not paakohteen-sisalla?) alikohteet)]
+    (tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
+    (tarkista-muut-alikohteet db muut-alikohteet)
+    (tarkista-alustatoimenpiteet db kohde-id kohteen-tienumero kohteen-sijainti alustatoimenpiteet)))
 
 (defn tarkista-tietyomaa [db id jarjestelma]
   (when (not (q-tietyomaat/onko-olemassa? db {:id id :jarjestelma jarjestelma}))
@@ -202,22 +206,23 @@
                           (concat (take i alikohteet) (drop (+ 1 i) alikohteet)))))))
 
 (defn tarkista-ovatko-tierekisterosoitteet-validit [db alikohteet]
-  (let [validi? (fn [{:keys [sijainti nimi tunniste]}]
-                         (let [numero (:numero sijainti)
-                               aosa (:aosa sijainti)
-                               aet (:aet sijainti)
-                               losa (:losa sijainti)
-                               loppuet (:let sijainti)]
-                           (if (q-tieverkko/onko-tierekisteriosoite-validi? db numero aosa aet losa loppuet)
-                             (when (not (q-tieverkko/ovatko-tierekisteriosoitteen-etaisyydet-validit? db numero aosa aet losa loppuet))
-                               {:koodi virheet/+virheellinen-sijainti+
-                                :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Etäisyydet ovat liian pitkiä."
-                                                nimi
-                                                (:id tunniste))})
-                             {:koodi virheet/+virheellinen-sijainti+
-                              :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Tietä tai osaa ei löydy."
-                                              nimi
-                                              (:id tunniste))})))]
+  (let [validi? (fn [{:keys [sijainti nimi tunniste tunnus]}]
+                  (let [numero (:numero sijainti)
+                        aosa (:aosa sijainti)
+                        aet (:aet sijainti)
+                        losa (:losa sijainti)
+                        loppuet (:let sijainti)
+                        tunniste (or tunnus (:id tunniste))]
+                    (if (q-tieverkko/onko-tierekisteriosoite-validi? db numero aosa aet losa loppuet)
+                      (when (not (q-tieverkko/ovatko-tierekisteriosoitteen-etaisyydet-validit? db numero aosa aet losa loppuet))
+                        {:koodi virheet/+virheellinen-sijainti+
+                         :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Etäisyydet ovat liian pitkiä."
+                                         nimi
+                                         tunniste)})
+                      {:koodi virheet/+virheellinen-sijainti+
+                       :viesti (format "Kohteen: %s (tunniste: %s) osoite ei ole validi. Tietä tai osaa ei löydy."
+                                       nimi
+                                       tunniste)})))]
     (filter (comp not nil?) (map validi? alikohteet))))
 
 (defn tarkista-muut-alikohteet [db muut-alikohteet]
