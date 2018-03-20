@@ -399,6 +399,7 @@
                     vetolaatikot uusi-id paneelikomponentit validoi-aina? disabloi-rivi? jarjesta-kun-kasketaan
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
+               virheet (or (:virheet opts) virheet-atom)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
                colspan (inc (count skeema))
@@ -434,7 +435,7 @@
                   [:th.toiminnot {:width "40px"} " "])]]
 
               (gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja
-                             :virheet virheet-atom :valiotsikot valiotsikot
+                             :virheet virheet :valiotsikot valiotsikot
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
                              :vetolaatikot vetolaatikot :nayta-virheet? nayta-virheet?
                              :nykyinen-fokus nykyinen-fokus :peru! peru!
