@@ -302,6 +302,23 @@
            (= tr-loppuosa tr-alkuosa)
            (= tr-loppuetaisyys tr-alkuetaisyys))))
 
+(defn kohdeosat-paalekkain? [osa-yksi osa-kaksi]
+  (if (and (= (:tr-numero osa-yksi) (:tr-numero osa-kaksi))
+           (= (:tr-ajorata osa-yksi) (:tr-ajorata osa-kaksi))
+           (= (:tr-kaista osa-yksi) (:tr-kaista osa-kaksi)))
+    (cond
+      (pistemainen? osa-yksi) (tr-vali-paakohteen-sisalla? osa-kaksi osa-yksi)
+      (pistemainen? osa-kaksi) (tr-vali-paakohteen-sisalla? osa-yksi osa-kaksi)
+      :else (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi))
+    false))
+
+(defn kohteenosa-paallekkain-paakohteen-kanssa? [paakohde kohteenosa]
+  (if (= (:tr-numero paakohde) (:tr-numero kohteenosa))
+    (if (pistemainen? kohteenosa)
+      (tr-vali-paakohteen-sisalla? paakohde kohteenosa)
+      (tr-vali-leikkaa-tr-valin? paakohde kohteenosa))
+    false))
+
 (defn alikohteet-tayttamaan-kohde
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
    Palauttaa korjatut kohteet. Olettaa, että pääkohde alikohteineen on samalla tiellä."
@@ -369,3 +386,23 @@
                       (geo/viivojen-paatepisteet-koskettavat-toisiaan? geo1-viiva geo2-viiva threshold))
                     geometria2-viivat))
             geometria1-viivat))))
+
+(defn kohdeosa-paalekkain-muiden-kohdeosien-kanssa
+  ([kohdeosa muut-kohdeosat] (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat :id))
+  ([kohdeosa muut-kohdeosat id-avain]
+   (keep #(when (kohdeosat-paalekkain? kohdeosa %)
+            {:viesti "Kohdeosa on päälekkäin toisen kohdeosan kanssa"
+             :validointivirhe :kohteet-paallekain
+             :kohteet (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys id-avain) [% kohdeosa])})
+         muut-kohdeosat)))
+
+(defn kohdeosat-keskenaan-paallekkain
+  ([kohdeosat] (kohdeosat-keskenaan-paallekkain kohdeosat :id))
+  ([kohdeosat id-avain]
+   (let [paallekkaiset (flatten (for [kohdeosa kohdeosat
+                                      :let [muut-kohdeosat (keep (fn [muu-kohdeosa]
+                                                                   (when-not (= (id-avain kohdeosa) (id-avain muu-kohdeosa))
+                                                                     muu-kohdeosa))
+                                                                 kohdeosat)]]
+                                  (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat id-avain)))]
+     (distinct paallekkaiset))))
