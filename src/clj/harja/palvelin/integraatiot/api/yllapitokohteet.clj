@@ -128,6 +128,15 @@
       {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
+(defn muunnettavat-alikohteet [kohteen-tienumero alikohteet]
+  (mapv #(let [alikohde (:alikohde %)]
+           (-> alikohde
+               (assoc :ulkoinen-id (get-in alikohde [:tunniste :id]))
+               (assoc-in [:sijainti :numero]
+                         (or (get-in alikohde [:sijainti :numero])
+                             kohteen-tienumero))))
+        alikohteet))
+
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
                      urakka-id
@@ -142,21 +151,21 @@
           kohde (-> (:yllapitokohde data)
                     (assoc :id kohde-id)
                     (assoc-in [:sijainti :tie] kohteen-tienumero))
-          muunnettavat-alikohteet (mapv #(-> (:alikohde %)
-                                             (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
-                                             (assoc-in [:sijainti :numero] kohteen-tienumero))
-                                        (:alikohteet kohde))
+          muunnettavat-alikohteet (muunnettavat-alikohteet kohteen-tienumero (:alikohteet kohde))
           muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
           karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
                           (when karttapvm (parametrit/pvm-aika karttapvm)))
           kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
-          kohteen-sijainti (:sijainti kohde)
-          alikohteet (:alikohteet kohde)]
 
-      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
+          kohteen-sijainti (:sijainti kohde)
+          paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
+          paakohteen-alikohteet (filter paakohteen-sisalla? (:alikohteet kohde))
+          muut-alikohteet (filter (comp not paakohteen-sisalla?) (:alikohteet kohde))]
+      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
+      (validointi/tarkista-muut-alikohteet db muut-alikohteet)
       (jdbc/with-db-transaction [db db]
         (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
-        (kasittely/paivita-alikohteet db kohde alikohteet)
+        (kasittely/paivita-alikohteet db kohde (concat paakohteen-alikohteet muut-alikohteet))
         (yy/paivita-yllapitourakan-geometria db urakka-id))
       (tee-kirjausvastauksen-body
         {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
