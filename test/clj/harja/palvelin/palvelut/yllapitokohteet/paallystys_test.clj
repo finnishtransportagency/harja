@@ -65,11 +65,11 @@
    :valmispvm-paallystys (pvm/luo-pvm 2005 9 2)
    :takuupvm (pvm/luo-pvm 2005 9 3)
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
-                                 :nimi "Tie 666"
-                                 :tr-numero 666
-                                 :tr-alkuosa 2
+                                 :nimi "Tie 20"
+                                 :tr-numero 20
+                                 :tr-alkuosa 26
                                  :tr-alkuetaisyys 3
-                                 :tr-loppuosa 4
+                                 :tr-loppuosa 27
                                  :tr-loppuetaisyys 5
                                  :tr-ajorata 1
                                  :tr-kaista 1
@@ -178,11 +178,11 @@
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :ilmoitustiedot
                                         {:osoitteet [{;; Alikohteen tiedot
-                                                      :nimi "Tie 666"
-                                                      :tr-numero 666
-                                                      :tr-alkuosa 2
+                                                      :nimi "Tie 20"
+                                                      :tr-numero 20
+                                                      :tr-alkuosa 26
                                                       :tr-alkuetaisyys 3
-                                                      :tr-loppuosa 4
+                                                      :tr-loppuosa 27
                                                       :tr-loppuetaisyys 5
                                                       :tr-ajorata 1
                                                       :tr-kaista 1
@@ -389,13 +389,13 @@
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
-                             :nimi "Tie 666"
+                             :nimi "Tie 20"
                              :kohdeosa-id 14
                              :hyppy? false
-                             :tr-numero 666
-                             :tr-alkuosa 2
+                             :tr-numero 20
+                             :tr-alkuosa 26
                              :tr-alkuetaisyys 3
-                             :tr-loppuosa 4
+                             :tr-loppuosa 27
                              :tr-loppuetaisyys 5
                              :tr-ajorata 1
                              :tr-kaista 1
@@ -458,13 +458,13 @@
                               :verkon-sijainti 1
                               :verkon-tarkoitus 1}]
               :osoitteet [{;; Alikohteen tiedot
-                           :nimi "Tie 666"
+                           :nimi "Tie 20"
                            :kohdeosa-id 14
                            :hyppy? true
-                           :tr-numero 666
-                           :tr-alkuosa 2
+                           :tr-numero 20
+                           :tr-alkuosa 26
                            :tr-alkuetaisyys 3
-                           :tr-loppuosa 4
+                           :tr-loppuosa 27
                            :tr-loppuetaisyys 5
                            :tr-ajorata 1
                            :tr-kaista 1
@@ -512,8 +512,22 @@
           paallystysilmoitus (-> (assoc pot-testidata
                                    :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:tekninen-osa :paatos] :hyvaksytty)
-                                 (assoc-in [:tekninen-osa :perustelu] "Hyvä ilmoitus!"))]
-
+                                 (assoc-in [:tekninen-osa :perustelu] "Hyvä ilmoitus!"))
+          paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet]
+                                        (fn [osoitteet]
+                                          [(assoc (first osoitteet)
+                                             :tr-numero 20
+                                             :tr-alkuosa 1
+                                             :tr-alkuetaisyys 1
+                                             :tr-loppuosa 1
+                                             :tr-loppuetaisyys 100)
+                                           (assoc (second osoitteet)
+                                             :tr-numero 20
+                                             :tr-alkuosa 1
+                                             :tr-alkuetaisyys 100
+                                             :tr-loppuosa 3
+                                             :tr-loppuetaisyys 0)]))]
+      
       (kutsu-palvelua (:http-palvelin jarjestelma)
                       :tallenna-paallystysilmoitus +kayttaja-jvh+
                       {:urakka-id urakka-id
@@ -531,8 +545,8 @@
         (is (= (get-in paallystysilmoitus-kannassa [:tekninen-osa :perustelu])
                (get-in paallystysilmoitus [:tekninen-osa :perustelu])))
 
-        ;; Tie 666 tiedot tallentuivat kantaan, mutta tie 555 ei koska oli poistettu
-        (is (some #(= (:nimi %) "Tie 666")
+        ;; Tie 20 tiedot tallentuivat kantaan, mutta tie 555 ei koska oli poistettu
+        (is (some #(= (:nimi %) "Tie 20")
                   (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet])))
         (is (not (some #(= (:nimi %) "Tie 555")
                        (get-in paallystysilmoitus-kannassa [:ilmoitustiedot :osoitteet]))))
@@ -548,14 +562,14 @@
                                 :verkon-sijainti 1
                                 :verkon-tarkoitus 1}]
                 :osoitteet [{;; Alikohteen tiedot
-                             :nimi "Tie 666"
+                             :nimi "Tie 20"
                              :kohdeosa-id 14
                              :hyppy? false
-                             :tr-numero 666
-                             :tr-alkuosa 2
-                             :tr-alkuetaisyys 3
-                             :tr-loppuosa 4
-                             :tr-loppuetaisyys 5
+                             :tr-numero 20
+                             :tr-alkuosa 1
+                             :tr-alkuetaisyys 1
+                             :tr-loppuosa 1
+                             :tr-loppuetaisyys 100
                              :tr-ajorata 1
                              :tr-kaista 1
                              :paallystetyyppi 1
@@ -615,10 +629,10 @@
             paallystysilmoitus (update-in paallystysilmoitus [:ilmoitustiedot :osoitteet]
                                           conj {;; Alikohteen tiedot
                                                 :nimi "Tie 123"
-                                                :tr-numero 666
-                                                :tr-alkuosa 2
+                                                :tr-numero 20
+                                                :tr-alkuosa 26
                                                 :tr-alkuetaisyys 3
-                                                :tr-loppuosa 4
+                                                :tr-loppuosa 27
                                                 :tr-loppuetaisyys 5
                                                 :tr-ajorata 1
                                                 :tr-kaista 1

@@ -253,3 +253,10 @@
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
+
+(defn hae-yllapitokohteen-muut-kohdeosat [db yllapitokohde-id]
+  (let [yllapitokohde (first (q/hae-yllapitokohde db {:id yllapitokohde-id}))
+        yllapitokohteen-osat (map #(clojure.set/rename-keys % {:id :kohdeosa-id})
+                                  (q/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt [yllapitokohde-id]}))]
+    (remove #(tr/kohteenosa-paallekkain-paakohteen-kanssa? yllapitokohde %)
+            yllapitokohteen-osat)))
