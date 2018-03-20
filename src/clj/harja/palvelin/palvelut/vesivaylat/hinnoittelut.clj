@@ -69,6 +69,9 @@
       (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/tallennettavat-hinnat tiedot)))
                                              (::h/id tiedot))
       (jdbc/with-db-transaction [db db]
+        (assert (not (q/hinnoittelu-laskutettu? db (::h/id tiedot)))
+                "Hintaryhmä on jo laskutettu, eli hintaa ei voi enää muokata.")
+
         (q/tallenna-hintaryhmalle-hinta! db user
                                          (::h/id tiedot)
                                          (::h/tallennettavat-hinnat tiedot))
@@ -94,6 +97,9 @@
         (q/vaadi-tyot-kuuluvat-toimenpiteeseen db olemassa-olevat-tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
+          (assert (not (q/hinnoittelu-laskutettu? db hinnoittelu-id))
+                  "Toimenpiteen hinnoittelu on jo laskutettu, eli hintaa ei voi enää muokata.")
+
           (q/tallenna-toimenpiteen-omat-hinnat!
             {:db db
              :user user
@@ -122,6 +128,9 @@
       (::kommentti/hinnoittelu-id tiedot)
       ::h/urakka-id
       urakka-id)
+
+    (assert (not (q/hinnoittelu-laskutettu? db (::h/id tiedot)))
+            "Hinnoittelu on jo laskutettu, eli tilaa ei voi enää muuttaa.")
 
     (q/lisaa-kommentti! db
                         user

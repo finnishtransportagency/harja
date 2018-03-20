@@ -91,6 +91,7 @@
 ;; Palvelut
 
 (s/def ::laskutuslupa? boolean?)
+(s/def ::laskutettu? boolean?)
 
 (s/def ::hae-hintaryhmat-kysely
   (s/keys
@@ -98,7 +99,7 @@
 
 (s/def ::hae-hintaryhmat-vastaus
   (s/coll-of
-    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja? ::laskutuslupa?])))
+    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja? ::laskutuslupa? ::laskutettu?])))
 
 (s/def ::luo-hinnoittelu-kysely
   (s/keys

@@ -3,6 +3,7 @@
             [clojure.spec.alpha :as s]
             [clojure.future :refer :all]
             [clojure.set :as set]
+            [clj-time.core :as time]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
@@ -20,7 +21,8 @@
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.vesivaylat.kommentti :as kommentti]))
+            [harja.domain.vesivaylat.kommentti :as kommentti]
+            [clj-time.core :as t]))
 
 (defqueries "harja/kyselyt/vesivaylat/hinnoittelut.sql")
 
@@ -124,11 +126,32 @@
   (when (hinnoitteluun-kuuluu-toimenpiteita? db hinnoittelu-id)
     (throw (RuntimeException. "Hinnoitteluun kuuluu toimenpiteitä."))))
 
+(defn- laskutetut-laskutusluvat
+  ([laskutusluvat]
+    (laskutetut-laskutusluvat laskutusluvat (t/now)))
+  ([laskutusluvat nyt]
+   (set (keep
+          (fn [{:keys [hinnoittelu-id laskutus-pvm]}]
+            (when (or (t/before? (t/first-day-of-the-month laskutus-pvm)
+                                 (t/first-day-of-the-month nyt))
+                      (t/equal? (t/first-day-of-the-month laskutus-pvm)
+                                (t/first-day-of-the-month nyt)))
+              hinnoittelu-id))
+          laskutusluvat))))
+
+(defn hinnoittelu-laskutettu? [db hinnoittelu-id]
+  (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
+        laskutetut (laskutetut-laskutusluvat laskutusluvat)]
+    (boolean (laskutetut hinnoittelu-id))))
+
 (defn liita-laskutuslupa-hintaryhmiin [db hintaryhmat]
-  (let [hyvaksytyt (set (map :hinnoittelu-id (laskutusluvalliset-hintaryhmat db)))]
+  (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
+        hyvaksytyt (set (keep :hinnoittelu-id laskutusluvat))
+        laskutetut (laskutetut-laskutusluvat laskutusluvat)]
     (map
       (fn [h]
-        (assoc h ::h/laskutuslupa? (boolean (hyvaksytyt (::h/id h)))))
+        (assoc h ::h/laskutuslupa? (boolean (hyvaksytyt (::h/id h)))
+                 ::h/laskutettu? (boolean (laskutetut (::h/id h)))))
       hintaryhmat)))
 
 (defn hae-hintaryhmat [db urakka-id]
@@ -302,6 +325,12 @@
                         ::m/luoja-id (:id user)})))))
 
 (defn lisaa-kommentti! [db user tila kommentti pvm hinnoittelu-id]
+  ;; Laskutusluvan voi antaa nykyiselle tai seuraaville kuukausille
+  (assert (or (t/after? (t/first-day-of-the-month pvm)
+                         (t/first-day-of-the-month (t/now)))
+              (t/equal? (t/first-day-of-the-month pvm)
+                        (t/first-day-of-the-month (t/now)))))
+
   (specql/insert! db
                   ::kommentti/hinnoittelun-kommentti
                   {::kommentti/aika (pvm/nyt)
