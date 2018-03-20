@@ -119,10 +119,10 @@
 
 
 (defonce hoitourakassa? (reaction (= :hoito (:tyyppi @nav/valittu-urakka))))
-(defonce vesivaylaurakassa? (reaction (or (urakka-domain/vesivayla-urakkatyypit (:tyyppi @nav/valittu-urakka))
-                                      (urakka-domain/vesivayla-urakkatyypit-raporttinakyma (:tyyppi @nav/valittu-urakka)))))
 
 (defonce valittu-urakkatyyppi (reaction (:arvo @nav/urakkatyyppi)))
+
+(defonce vesivaylaurakassa? (reaction (urakka-domain/vesivayla-urakkatyypit (:tyyppi @nav/valittu-urakka))))
 
 (defonce valittu-hoitokausi (reaction-writable
                               (when (= @valittu-urakkatyyppi :hoito)
@@ -251,7 +251,7 @@
          {:disabled @vapaa-aikavali?}
          (if (or hoitourakassa? vesivaylaurakassa?)
            (u/hoito-tai-sopimuskaudet ur)
-           (u/edelliset-hoitokaudet 5 true))
+           (u/edelliset-hoitokaudet 5 false urakkatyyppi))
          valittu-hoitokausi
          #(do
            (reset! valittu-hoitokausi %)
@@ -630,25 +630,31 @@
             :disabled (not voi-suorittaa?)}])]]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
-  [:span
-   [yleiset/livi-pudotusvalikko
-    {:valitse-fn nav/valitse-hallintayksikko!
-     :valinta    v-hal
-     :class      "raportti-alasveto"
-     :format-fn  (fnil hy/elynumero-ja-nimi {:nimi (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
-                                                     "Kaikki ELYt"
-                                                     "Valitse ELY")})}
-    (concat (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
-              [nil]
-              [])
-            @hy/vaylamuodon-hallintayksikot)]
-   " "
-   [yleiset/livi-pudotusvalikko
-    {:valitse-fn nav/vaihda-urakkatyyppi!
-     :valinta v-ur-tyyppi
-     :class "raportti-alasveto"
-     :format-fn :nimi}
-    nav/+urakkatyypit-ja-kaikki+]])
+  (let [vesivaylien-urakkatyypissa? (= :vesivayla (:arvo v-ur-tyyppi))]
+    [:span
+    [yleiset/livi-pudotusvalikko
+     {:valitse-fn nav/valitse-hallintayksikko!
+      :valinta v-hal
+      :class "raportti-alasveto"
+      :format-fn (fnil hy/elynumero-ja-nimi {:nimi (if vesivaylien-urakkatyypissa?
+                                                     "Valitse hallintayksikkö"
+                                                     (if (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                                                         "Kaikki ELYt"
+                                                         "Valitse ELY"))})}
+     (concat (if (and
+                   (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
+                   ;; vesiväylille ei haluta "Kaikki ELYt" vaihtoehtoa
+                   (not vesivaylien-urakkatyypissa?))
+               [nil]
+               [])
+             @hy/vaylamuodon-hallintayksikot)]
+    " "
+    [yleiset/livi-pudotusvalikko
+     {:valitse-fn nav/vaihda-urakkatyyppi!
+      :valinta v-ur-tyyppi
+      :class "raportti-alasveto"
+      :format-fn :nimi}
+     nav/+urakkatyypit-ja-kaikki+]]))
 
 (defn ei-raportteja-saatavilla-viesti [urakkatyyppi valittu-urakka]
   (if (and (nil? valittu-urakka)

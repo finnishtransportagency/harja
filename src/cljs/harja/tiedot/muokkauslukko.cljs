@@ -29,13 +29,9 @@
        (not= lukko :ei-lukittu)))
 
 (defn nakyma-lukittu? [lukko]
-  (log "[LUKKO] Tarkistetaan onko näkymä lukittu: " (pr-str lukko))
   (if (lukko-olemassa? lukko)
     (do
       (let [kayttajan-oma-lukko (kayttaja-omistaa-lukon? lukko)]
-        (log (str "[LUKKO] Nykyinen käyttäjä " (:id @istunto/kayttaja)))
-        (log (str "[LUKKO] Nykyinen lukko " (pr-str lukko)))
-        (log (str "[LUKKO] Nykyisen lukon omistaja " (:kayttaja lukko)))
         (log "[LUKKO] Käyttäjä omistaa lukon: " kayttajan-oma-lukko)
         (false? kayttajan-oma-lukko)))
     (do
@@ -56,7 +52,6 @@
    (str nakyma "_" item-id)))
 
 (defn- hae-lukko-idlla [lukko-id]
-  (log "[LUKKO] Haetaan lukko id:llä: " lukko-id)
   (k/post! :hae-lukko-idlla {:id lukko-id}))
 
 (defn- lukitse
@@ -66,11 +61,9 @@
 
 (defn- virkista-nykyinen-lukko [lukko-id]
   (go
-    (log "[LUKKO] Virkistetään nykyinen lukko")
     (reset! nykyinen-lukko (<! (k/post! :virkista-lukko {:id lukko-id})))))
 
 (defn vapauta-lukko [lukko-id]
-  (log "[LUKKO] Vapautetaan nykyinen lukko")
   (if (kayttaja-omistaa-lukon? @nykyinen-lukko)
     (k/post! :vapauta-lukko {:id lukko-id}))
   (reset! nykyinen-lukko nil)
@@ -79,7 +72,6 @@
 (defn- pollaa []
   (if @nykyinen-lukko
     (do
-      (log "[LUKKO] Suoritetaan pollaus nykyiselle lukolle: " (pr-str @nykyinen-lukko))
       (let [lukko-id (:id @nykyinen-lukko)]
         (when (kayttaja-omistaa-lukon? @nykyinen-lukko)
           (virkista-nykyinen-lukko lukko-id))))
@@ -88,7 +80,7 @@
           ;; Tällöin pitäisi kuitenkin päivittää näkymään uudet tiedot.
           ;; Toistaiseksi hyväksytään, että käyttäjän pitää palata näkymään takaisin kun
           ;; lukko on vapautunut ja uudet tiedot saatavilla.
-    (log "[LUKKO] Ei nykyistä lukkoa, ei pollata")))
+    ))
 
 (defn- aloita-pollaus []
   (if (false? @pollaus-kaynnissa)
@@ -107,21 +99,17 @@
 (defn paivita-lukko
   "Hakee lukon kannasta valitulla id:lla. Jos sitä ei ole, luo uuden."
   [lukko-id]
-  (log "[LUKKO] Päivitetään lukko")
-  (go (log "[LUKKO] Tarkistetaan lukon " lukko-id " tila tietokannasta")
+  (go
       (let [vanha-lukko (<! (hae-lukko-idlla lukko-id))]
         (if (lukko-olemassa? vanha-lukko)
           (do
-            (log "[LUKKO] Vanha lukko löytyi: " (pr-str vanha-lukko))
             (reset! nykyinen-lukko vanha-lukko)
             (aloita-pollaus))
           (do
-            (log "[LUKKO] Annetulla id:llä ei ole lukkoa. Lukitaan näkymä.")
             (let [uusi-lukko (<! (lukitse lukko-id))]
               (if (lukko-olemassa? uusi-lukko)
                 (do
-                  (log "[LUKKO] Näkymä lukittu. Uuden lukon tiedot: " (pr-str uusi-lukko))
                   (reset! nykyinen-lukko uusi-lukko)
                   (aloita-pollaus))
-                (do (log "[LUKKO] Lukitus epäonnistui, ilmeisesti joku muu ehti lukita näkymän!")
+                (do
                     (paivita-lukko lukko-id)))))))))

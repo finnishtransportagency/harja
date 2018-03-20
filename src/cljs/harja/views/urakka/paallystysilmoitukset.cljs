@@ -199,7 +199,12 @@
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet])
                                   ;; Poistetaan poistetut elementit
                                   (grid/poista-poistetut [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-poistetut [:ilmoitustiedot :alustatoimet]))]
+                                  (grid/poista-poistetut [:ilmoitustiedot :alustatoimet])
+
+                                  (update-in [:ilmoitustiedot :osoitteet] (fn [osoitteet]
+                                                                            (map (fn [osoite]
+                                                                                   (dissoc osoite :jarjestys-gridissa))
+                                                                                 osoitteet))))]
          (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
          (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
          (paallystys/tallenna-paallystysilmoitus! {:urakka-id urakka-id
@@ -217,12 +222,18 @@
        :kun-onnistuu tallennus-onnistui}]]))
 
 
-(defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
-  (r/wrap (zipmap (iterate inc 1) (get-in lomakedata-nyt polku))
-          (fn [uusi-arvo]
-            (muokkaa!
-              #(assoc-in % polku
-                         (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
+(defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku jarjesta-kun-kasketaan?]
+  (let [polun-meta (meta (get-in lomakedata-nyt polku))
+        polun-data (into (sorted-map)
+                         (zipmap (iterate inc 1) (if (:jarjestetty-kerran? polun-meta)
+                                                   (get-in lomakedata-nyt polku)
+                                                   (yllapitokohde-domain/jarjesta-yllapitokohteet (get-in lomakedata-nyt polku)))))]
+    (r/wrap (with-meta polun-data (meta (get-in lomakedata-nyt polku)))
+            (fn [uusi-arvo]
+              (muokkaa!
+                #(assoc-in % polku
+                           (with-meta (vec (grid/filteroi-uudet-poistetut uusi-arvo))
+                                      (meta uusi-arvo))))))))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
@@ -239,7 +250,7 @@
                                          (false? lukittu?)
                                          kirjoitusoikeus?)
                       :muokkaa! (fn [uusi]
-                                  #_(log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
+                                  (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                                   (muokkaa! merge uusi))}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
@@ -320,8 +331,7 @@
   (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
     (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
-      (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
-            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
+      (let [paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
             muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
@@ -349,19 +359,19 @@
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
-          {:voi-kumota? false
-           :muokkaa! (fn [kohteet virheet]
-                       (muokkaa! (fn [lomake]
-                                   (-> lomake
-                                       (assoc-in [:ilmoitustiedot :osoitteet] kohteet)
-                                       (assoc-in [:virheet :alikohteet] virheet)))))
-           :rivinumerot? true
-           :voi-muokata? voi-muokata?
-           :virheet yllapitokohde-virheet}
-          urakka tierekisteriosoitteet
-          (select-keys lomakedata-nyt
-                       #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-          @osan-pituus]
+          {:urakka urakka
+           ;; Todo: Päällystys 2.0 Estä tien, ajoradan ja kaistan muokkaus tarvittaessa
+           ;; Toisaalta tätä ei välttämättä tarvitse tehdä jos sallitaan muuttaa kohteen oma alikohde muuksi vaihtamalla tienumero,
+           ;; tai toisinpäin?
+           ;; Toinen vaihtoehto on laittaa muut kohdeosat omaan tauluun, mutta lähtökohtaisesti menisin tällä yhdellä
+           ;; taulukolla, jos vain suinkin toimii. Joka tapauksessa POTin tietomallia ei mielestäni tarvitse/kannata muuttaa.
+           :muokattava-tie? (constantly true)
+           :muokattava-ajorata-ja-kaista? (constantly true)
+           :otsikko "Tierekisteriosoitteet"
+           :kohdeosat-atom paallystystoimenpiteet
+           :jarjesta-kun-kasketaan first}]
+
+         [debug @paallystystoimenpiteet {:otsikko "Päällystystoimenpiteet"}]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"

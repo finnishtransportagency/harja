@@ -65,7 +65,6 @@
         {
           "alikohde": {
             "nimi": "2. testialikohde",
-            "hyppy": true,
             "tunnus": "A",
             "sijainti": {
               "aosa": 5,
