@@ -104,22 +104,13 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn tarkista-alikohteet-sisaltyvat-kohteeseen [kohde-id kohteen-sijainti alikohteet]
-     (mapv (fn [{:keys [tunnus sijainti]}]
+     (mapv (fn [{:keys [tunnus tunniste sijainti]}]
              (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
                (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                          (format "Alikohde (tunnus: %s) ei ole kohteen (id: %s) sisällä. Sijainti: %s." tunnus kohde-id sijainti))))
+                          (format "Alikohde (tunniste: %s) ei ole kohteen (tunniste: %s) sisällä."
+                                  (or tunnus (:id tunniste) )
+                                  kohde-id))))
            alikohteet)))
-
-#?(:clj
-   (defn tarkista-alikohteet-tayttavat-kohteen [kohde-id kohteen-sijainti alikohteet]
-     (let [ensimmainen (:sijainti (first alikohteet))
-           viimeinen (:sijainti (last alikohteet))]
-       (when (or (not= (:aosa kohteen-sijainti) (:aosa ensimmainen))
-                 (not= (:aet kohteen-sijainti) (:aet ensimmainen))
-                 (not= (:losa kohteen-sijainti) (:losa viimeinen))
-                 (not= (:let kohteen-sijainti) (:let viimeinen)))
-         [(tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                     (format "Alikohteet eivät täytä kohdetta (id: %s)" kohde-id))]))))
 
 #?(:clj
    (defn tarkista-etteivat-alikohteet-mene-paallekkain [alikohteet]
@@ -165,7 +156,6 @@ yllapitoluokkanimi->numero
        (concat
          (tarkista-alikohteiden-sijainnit alikohteet)
          (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
          (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
 #?(:clj
