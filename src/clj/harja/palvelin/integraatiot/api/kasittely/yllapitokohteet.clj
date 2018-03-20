@@ -52,7 +52,6 @@
     alikohteet))
 
 (defn paivita-kohde [db kohde-id kohteen-sijainti]
-  (./aprint  kohteen-sijainti)
   (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
     db (assoc (clojure.set/rename-keys
                 kohteen-sijainti
