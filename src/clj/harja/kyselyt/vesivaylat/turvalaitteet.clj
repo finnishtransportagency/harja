@@ -58,7 +58,7 @@
                           ::tu/vaylat}
                         (op/and
                           (when (not-empty turvalaitenumerot)
-                            {::tu/turvalaitenro (op/in turvalaitenumerot)})
+                            {::tu/turvalaitenro (op/in (remove nil? turvalaitenumerot))})
                           (when (not-empty vaylanumerot)
                             {::tu/vaylat (&& (vec vaylanumerot))}))))))
 
