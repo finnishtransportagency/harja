@@ -1,5 +1,10 @@
 [
   {
+    "date": "2018-03-20",
+    "title": "Varusteiden ja laitteiden inventointiohje lisätty",
+    "body": "<a href=\"documents/varusteiden-ja-laitteiden-inventointiohje-2018.pdf\">Ohjeen löydät täältä.</a>"
+  },
+  {
     "date": "2018-02-01",
     "title": "Uusi materiaalikoodi Harjaan: Natriumformiaatti",
     "body": "Nyt voit raportoida Natriumformiaatin käyttöä toteumissa. Formiaatit eivät ole materiaalityypiltään talvisuoloja eli niitä ei lasketa mukaan suolankäytön kokonaismäärään. Materiaalikoodien tiedot palautuvat yhä urakan tietojen mukana (APIssa /urakat/{id}."
