@@ -156,7 +156,6 @@
           karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
                           (when karttapvm (parametrit/pvm-aika karttapvm)))
           kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
-
           kohteen-sijainti (:sijainti kohde)
           paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
           paakohteen-alikohteet (filter paakohteen-sisalla? (:alikohteet kohde))

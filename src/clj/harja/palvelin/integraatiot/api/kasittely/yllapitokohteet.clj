@@ -52,12 +52,15 @@
     alikohteet))
 
 (defn paivita-kohde [db kohde-id kohteen-sijainti]
+  (./aprint  kohteen-sijainti)
   (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
     db (assoc (clojure.set/rename-keys
                 kohteen-sijainti
                 {:aosa :tr_alkuosa
                  :aet :tr_alkuetaisyys
                  :losa :tr_loppuosa
-                 :let :tr_loppuetaisyys})
+                 :let :tr_loppuetaisyys
+                 :ajr :tr_ajorata
+                 :kaista :tr_kaista})
          :id
          kohde-id)))
