@@ -383,9 +383,11 @@
     (is (= [] ei-loydy-vastaus) "Ahvenanmaan keskeltä ei löydy päällystyskohteita")
 
     (is (= 2 (count loytyy-vastaus)) "Yksi kohde löytyy pisteelle")
-    (is (= "Oulun ohitusramppi" (get-in loytyy-vastaus [0 :yllapitokohde :nimi])))
-    (is (= "308a" (get-in loytyy-vastaus [0 :yllapitokohde :kohdenumero])))
-    (is (= "Oulun kohdeosa" (get-in loytyy-vastaus [0 :nimi])))
+
+    (let [oulun-ohitusramppi (first (filter #(= "Oulun ohitusramppi" (get-in % [:yllapitokohde :nimi])) loytyy-vastaus))]
+      (is (= "Oulun ohitusramppi" (get-in  oulun-ohitusramppi [:yllapitokohde :nimi] )))
+      (is (= "308a" (get-in  oulun-ohitusramppi [:yllapitokohde :kohdenumero])))
+      (is (= "Oulun kohdeosa" (:nimi oulun-ohitusramppi))))
 
     (is (paneeli/skeeman-luonti-onnistuu-kaikille? loytyy-vastaus))))
 
@@ -408,56 +410,56 @@
 
 ; TODO: kunnes lisäoikeudet mukana logiikassa
 #_(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeus
-  ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
-  ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
-  (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
-        eka-ely (first elynumerot)]
+    ;; Käyttäjänä Oulun 2014 urakan vastuuhenkilö, jolla pitäisi olla Roolit-excelissä
+    ;; erikoisoikeus oman-urakan-ely --> näkyvyys ELY:n kaikkiin urakoihin
+    (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)
+          elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
+          eka-ely (first elynumerot)]
 
-    (is (= eka-ely 12))
-    (is (every? #(= % eka-ely) elynumerot)
-        "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
+      (is (= eka-ely 12))
+      (is (every? #(= % eka-ely) elynumerot)
+          "Pääsy vain omaan urakkaan ja sen ELY:n urakoihin --> kaikki ELY-numerot tulee olla samoja")))
 
 ; TODO: kunnes lisäoikeudet mukana logiikassa
 #_(deftest hae-urakat-tilannekuvaan-urakan-vastuuhenkilo-ilman-lisaoikeutta
-  ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
-  (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
-    (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
-      (is (every?
-            (fn [hy]
-              (every?
-                (fn [u] (some? (:alue u)))
-                (:urakat hy)))
-            vastaus))
-      (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
-             [{:tyyppi :hoito
-               :hallintayksikko {:id 12
-                                 :nimi "Pohjois-Pohjanmaa"
-                                 :elynumero 12}
-               :urakat #{{:id 4
-                          :nimi "Oulun alueurakka 2014-2019"
-                          :urakkanro "1238"
-                          :alue nil}}}])))))
+    ;; Ilman lisäoikeutta näkyvyys vain omaan urakkaan
+    (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+      (let [vastaus (hae-urakat-tilannekuvaan (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+        (is (every?
+              (fn [hy]
+                (every?
+                  (fn [u] (some? (:alue u)))
+                  (:urakat hy)))
+              vastaus))
+        (is (= (mapv (fn [hy] (update hy :urakat (fn [urt] (into #{} (map #(assoc % :alue nil) urt))))) vastaus)
+               [{:tyyppi :hoito
+                 :hallintayksikko {:id 12
+                                   :nimi "Pohjois-Pohjanmaa"
+                                   :elynumero 12}
+                 :urakat #{{:id 4
+                            :nimi "Oulun alueurakka 2014-2019"
+                            :urakkanro "1238"
+                            :alue nil}}}])))))
 
 ; TODO: kunnes lisäoikeudet mukana logiikassa
 #_(deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-lisaoikeudella-ja-ilman
-  (let [vastaus-ilman-lisaoikeutta
-        ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
-        (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
-          (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))
-        vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
-        (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
+    (let [vastaus-ilman-lisaoikeutta
+          ;; Ilman lisäoikeutta asiat tulee vain omasta urakasta
+          (with-redefs [oikeudet/tilannekuva-historia {:roolien-oikeudet {"vastuuhenkilo" #{"R"}}}]
+            (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia))
+          vastaus-lisaoikeudella ;; Oman urakan ELY -lisäoikeus pitäisi olla määritelty Roolit-excelissä
+          (hae-tk (oulun-2014-urakan-urakoitsijan-urakkavastaava) hakuargumentit-laaja-historia)]
 
-    ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
+      ;; Lisäoikeuden kanssa pitäisi asioita löytyä aina enemmän, koska haku useammasta urakasta
 
-    (is (> (count (:turvallisuuspoikkeamat vastaus-lisaoikeudella))
-           (count (:turvallisuuspoikkeamat vastaus-ilman-lisaoikeutta))))
+      (is (> (count (:turvallisuuspoikkeamat vastaus-lisaoikeudella))
+             (count (:turvallisuuspoikkeamat vastaus-ilman-lisaoikeutta))))
 
-    (is (> (count (:toteumat vastaus-lisaoikeudella))
-           (count (:toteumat vastaus-ilman-lisaoikeutta))))
+      (is (> (count (:toteumat vastaus-lisaoikeudella))
+             (count (:toteumat vastaus-ilman-lisaoikeutta))))
 
-    (is (> (count (:laatupoikkeamat vastaus-lisaoikeudella))
-           (count (:laatupoikkeamat vastaus-ilman-lisaoikeutta))))))
+      (is (> (count (:laatupoikkeamat vastaus-lisaoikeudella))
+             (count (:laatupoikkeamat vastaus-ilman-lisaoikeutta))))))
 
 (deftest hae-asiat-tilannekuvaan-urakan-vastuuhenkilo-liikaa-urakoita
   ;; Pyydetään hakemaan asiat tilannekuvaan kaikista urakoista, mutta saamme saman vastauksen kuin

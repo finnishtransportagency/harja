@@ -790,7 +790,7 @@
                                :icon (ikonit/numero-taulu-24 16 16)
                                :url   (str (k/wmts-polku-livi) "wmts")
                                :layer "liikennevirasto:PTP_HatkaPlus_Tienumerot"
-                               :default false}
+                               :default true}
                               {:type :wms
                                :id :enc-merikartta
                                :nimi "ENC merikartta"
