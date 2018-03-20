@@ -99,7 +99,7 @@
 (defn validoi-paallystysilmoitus [db urakka-id kohde paallystysilmoitus]
   (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde))
   (let [kohteen-sijainti (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-        alikohteet (:alikohteet paallystysilmoitus)
+        alikohteet (get-in  paallystysilmoitus [:yllapitokohde :alikohteet])
         alustatoimenpiteet (:alustatoimenpiteet paallystysilmoitus)
         kohteen-tienumero (:tr-numero kohde)]
     (validointi/tarkista-paallystysilmoitus db (:id kohde) kohteen-tienumero kohteen-sijainti alikohteet alustatoimenpiteet)))
