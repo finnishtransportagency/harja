@@ -151,3 +151,74 @@
   (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 2 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 1})))
   (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 4 :let 1})))
   (is (not (yllapitokohteet/alikohde-kohteen-sisalla? {:aosa 1 :aet 1 :losa 3 :let 1} {:aosa 1 :aet 1 :losa 3 :let 2}))))
+
+
+(deftest tarkista-etteivat-alikohteet-mene-paallekkain
+  (is (= []
+         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 1
+                                                                                     :aet 1
+                                                                                     :losa 3
+                                                                                     :let 1}}
+                                                                         {:tunniste {:id 2}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 3
+                                                                                     :aet 1
+                                                                                     :losa 4
+                                                                                     :let 100}}]))
+      "Toisiaan jatkavat kohteet eivät palauta virheitä")
+  (is (= []
+         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 1
+                                                                                     :aet 1
+                                                                                     :losa 3
+                                                                                     :let 1}}
+                                                                         {:tunniste {:id 2}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 4
+                                                                                     :aet 10
+                                                                                     :losa 4
+                                                                                     :let 100}}]))
+      "Hypylliset kohteet eivät palauta virheitä")
+
+  (is (= [{:koodi "viallinen-alikohteen-sijainti"
+           :viesti "Alikohteet (tunnus: 1 ja tunnus: 2) menevät päällekäin"}]
+         (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 1
+                                                                                     :aet 1
+                                                                                     :losa 3
+                                                                                     :let 100}}
+                                                                         {:tunniste {:id 2}
+                                                                          :sijainti {:tie 20
+                                                                                     :numero 20
+                                                                                     :ajorata 1
+                                                                                     :ajr 1
+                                                                                     :kaista 1
+                                                                                     :aosa 3
+                                                                                     :aet 10
+                                                                                     :losa 4
+                                                                                     :let 100}}]))
+      "Päällekkäin menevät kohteet huomataan"))

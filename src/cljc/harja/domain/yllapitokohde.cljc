@@ -7,7 +7,8 @@
     [clojure.spec.alpha :as s]
     [harja.pvm :as pvm]
     #?@(:clj
-        [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+        [
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
     [clojure.future :refer :all]
     [harja.pvm :as pvm]
     [clj-time.core :as t]
@@ -121,27 +122,53 @@ yllapitoluokkanimi->numero
                      (format "Alikohteet eivät täytä kohdetta (id: %s)" kohde-id))]))))
 
 #?(:clj
-   (defn tarkista-alikohteet-muodostavat-yhtenaisen-osuuden [alikohteet]
+   (defn tarkista-etteivat-alikohteet-mene-paallekkain [alikohteet]
+     (def nykyiset-alikohteet alikohteet)
      (let [lisaa-virhe (fn [edellinen seuraava]
                          (conj
                            (:virheet edellinen)
                            (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                                      (format "Alikohteet (tunnus: %s ja tunnus: %s) eivät muodosta yhteistä osuutta"
-                                              (or (:tunnus (:edellinen edellinen) (get-in (:edellinen edellinen) [:tunniste :id])) )
+                                      (format "Alikohteet (tunnus: %s ja tunnus: %s) menevät päällekäin"
+                                              (or (:tunnus (:edellinen edellinen) (get-in (:edellinen edellinen) [:tunniste :id])))
                                               (or (:tunnus seuraava) (get-in seuraava [:tunniste :id]))))))
-           seuraava-jatkaa-edellista? (fn [seuraava edellinen]
-                                        (and
-                                          (= (get-in edellinen [:edellinen :sijainti :losa]) (:aosa (:sijainti seuraava)))
-                                          (= (get-in edellinen [:edellinen :sijainti :let]) (:aet (:sijainti seuraava)))))]
+           paallekkain? (fn [seuraava edellinen]
+                          (let [edellinen-loppuosa (get-in edellinen [:edellinen :sijainti :losa])
+                                seuraava-alkuosa (get-in seuraava [:sijainti :aosa])
+                                edellinen-loppuetaisyys (get-in edellinen [:edellinen :sijainti :let])
+                                seuraava-alkuetaisyys (get-in seuraava [:sijainti :aet])]
+                            (and
+                              (= edellinen-loppuosa seuraava-alkuosa)
+                              (> edellinen-loppuetaisyys seuraava-alkuetaisyys))))]
        (:virheet
          (reduce
            (fn [edellinen seuraava]
-             (if (seuraava-jatkaa-edellista? seuraava edellinen)
-               (assoc edellinen :edellinen seuraava)
+             (if (paallekkain? seuraava edellinen)
                {:edellinen seuraava
-                :virheet (lisaa-virhe edellinen seuraava)}))
+                :virheet (lisaa-virhe edellinen seuraava)}
+               (assoc edellinen :edellinen seuraava)))
            {:virheet [] :edellinen (first alikohteet)}
            (rest alikohteet))))))
+
+(tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
+                                                 :sijainti {:tie 20
+                                                            :numero 20
+                                                            :ajorata 1
+                                                            :ajr 1
+                                                            :kaista 1
+                                                            :aosa 1
+                                                            :aet 1
+                                                            :losa 3
+                                                            :let 1}}
+                                                {:tunniste {:id 2}
+                                                 :sijainti {:tie 20
+                                                            :numero 20
+                                                            :ajorata 1
+                                                            :ajr 1
+                                                            :kaista 1
+                                                            :aosa 3
+                                                            :aet 1
+                                                            :losa 4
+                                                            :let 100}}])
 
 #?(:clj
    (defn tarkista-alikohteiden-sijainnit [alikohteet]
@@ -154,7 +181,7 @@ yllapitoluokkanimi->numero
          (tarkista-alikohteiden-sijainnit alikohteet)
          (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
          (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet)))))
+         (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
@@ -317,14 +344,14 @@ yllapitoluokkanimi->numero
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
-                            maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset                ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
-                            toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
 (defn yllapitokohde-tekstina
