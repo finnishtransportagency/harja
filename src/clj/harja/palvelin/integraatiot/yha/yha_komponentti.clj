@@ -110,7 +110,6 @@
 
 (defn hae-alikohteet [db kohde-id paallystysilmoitus]
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        alikohteet (filter (comp not :hyppy?) alikohteet) ; YHA ei vastaanota hyppy-kohteita
         osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
     (mapv (fn [alikohde]
             (let [id (:id alikohde)

@@ -207,6 +207,8 @@
   "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
   [kohde]
   ((juxt :tie :tr-numero :tienumero
+         :ajr :tr-ajorata :ajorata
+         :kaista :tr-kaista
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
 
