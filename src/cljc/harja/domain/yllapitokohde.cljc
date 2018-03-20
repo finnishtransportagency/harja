@@ -138,9 +138,35 @@ yllapitoluokkanimi->numero
              (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
                (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
                           (format "Alikohde (tunniste: %s) ei ole kohteen (tunniste: %s) sisällä."
-                                  (or tunnus (:id tunniste) )
+                                  (or tunnus (:id tunniste))
                                   kohde-id))))
            alikohteet)))
+
+
+#?(:clj
+   (defn tarkista-alikohteiden-ajoradat-ja-kaistat [kohde-id kohteen-sijainti alikohteet]
+     (let [ajorata #(or (:ajr %) (:tr-ajorata %) (:ajorata %))
+           kaista #(or (:kaista %) (:tr-kaista %))
+           paakohteen-ajorata (ajorata kohteen-sijainti)
+           paakohteen-kaista (kaista kohteen-sijainti)]
+       (if (and paakohteen-ajorata paakohteen-kaista)
+         (mapv (fn [{:keys [tunnus tunniste sijainti]}]
+                 (if (not= paakohteen-ajorata (ajorata sijainti))
+                   (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
+                              (format "Alikohteen (tunniste: %s) ajorata (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
+                                      (or tunnus (:id tunniste))
+                                      (ajorata sijainti)
+                                      kohde-id
+                                      paakohteen-ajorata))
+                   (when (not= paakohteen-kaista (kaista sijainti))
+                     (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
+                                (format "Alikohteen (tunniste: %s) kaista: (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
+                                        (or tunnus (:id tunniste))
+                                        (kaista sijainti)
+                                        kohde-id
+                                        (kaista kohteen-sijainti))))))
+               alikohteet)
+         []))))
 
 #?(:clj
    (defn tarkista-etteivat-alikohteet-mene-paallekkain [alikohteet]
@@ -186,6 +212,7 @@ yllapitoluokkanimi->numero
        (concat
          (tarkista-alikohteiden-sijainnit alikohteet)
          (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
+         (tarkista-alikohteiden-ajoradat-ja-kaistat kohde-id kohteen-sijainti alikohteet)
          (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
 #?(:clj

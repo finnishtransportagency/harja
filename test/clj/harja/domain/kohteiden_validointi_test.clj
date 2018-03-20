@@ -339,3 +339,40 @@
       (is (= 2 (hae-tunniste 1)))
       (is (= 3 (hae-tunniste 2)))
       (is (= 4 (hae-tunniste 3))))))
+
+(deftest tarkista-alikohteiden-ajoradat-ja-kaistat
+  (let [kohteen-sijainti {:tie 20
+                          :numero 20
+                          :ajorata 1
+                          :kaista 1
+                          :aosa 1
+                          :aet 100
+                          :losa 1
+                          :let 200}
+        alikohteet [{:tunniste {:id 2}
+                     :sijainti {:tie 20
+                                :numero 20
+                                :ajorata 1
+                                :kaista 1
+                                :aosa 3
+                                :aet 1
+                                :losa 4
+                                :let 100}}]]
+
+    (let [kohteen-sijainti (assoc kohteen-sijainti :ajorata 2)
+          odotettu-virhe [{:koodi "viallinen-alikohteen-sijainti",
+                           :viesti "Alikohteen (tunniste: 2) ajorata (1) ei ole pääkohteen (tunniste: 666) kanssa sama (2)."}]]
+      (is (= odotettu-virhe
+             (yllapitokohteet/tarkista-alikohteiden-ajoradat-ja-kaistat 666 kohteen-sijainti alikohteet))
+          "Kun pääkohteella on ajorata, pitää alikohteella sen olla sama"))
+
+    (let [kohteen-sijainti (assoc kohteen-sijainti :kaista 11)
+          odotettu-virhe [{:koodi "viallinen-alikohteen-sijainti",
+                           :viesti "Alikohteen (tunniste: 2) kaista: (1) ei ole pääkohteen (tunniste: 666) kanssa sama (11)."}]]
+      (is (= odotettu-virhe
+             (yllapitokohteet/tarkista-alikohteiden-ajoradat-ja-kaistat 666 kohteen-sijainti alikohteet))
+          "Kun pääkohteella on kaista, pitää alikohteilla sen olla sama"))
+
+    (let [kohteen-sijainti (dissoc kohteen-sijainti :ajorata :kaista)]
+      (is (= [] (yllapitokohteet/tarkista-alikohteiden-ajoradat-ja-kaistat 666 kohteen-sijainti alikohteet))
+          "Kun pääkohteella ei ole ajorataa tai kaistaa, ei alikohteiden ajoradalla ja kaistalla ole väliä"))))
