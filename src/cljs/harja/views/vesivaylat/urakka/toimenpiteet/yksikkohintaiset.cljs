@@ -200,6 +200,7 @@
           "Valmis"
           #(e! (tiedot/->TallennaHintaryhmanHinnoittelu (:hinnoittele-hintaryhma app*)))
           {:disabled (or (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)
+                         (::h/laskutettu? hintaryhma)
                          (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                        (:id @nav/valittu-urakka))))}]
@@ -214,8 +215,8 @@
             [napit/yleinen-ensisijainen
              "Määrittele yksi hinta koko tilaukselle"
              #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
-             {:disabled (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)}]
-
+             {:disabled (or (:hintaryhman-hinnoittelun-tallennus-kaynnissa? app*)
+                            (::h/laskutettu? hintaryhma))}]
             [:div
              [:div.inline-block {:style {:margin-right "10px"}}
               (if (zero? hintaryhman-toimenpiteiden-yhteishinta)
