@@ -358,7 +358,8 @@
                                      (urakat-q/hae-urakka db urakka-id)))
         urakat (urakat-q/hae-urakkatiedot-laskutusyhteenvetoon
                  db {:alkupvm alkupvm :loppupvm loppupvm
-                     :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id})
+                     :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id
+                     :urakkatyyppi (name (:urakkatyyppi parametrit))})
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                                       :urakka-nimi (:nimi %)
                                                       :indeksi (:indeksi %)) urakat)

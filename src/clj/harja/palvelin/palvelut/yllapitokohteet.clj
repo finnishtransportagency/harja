@@ -376,7 +376,7 @@
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
                                           tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
-                                          paallystetyyppi raekoko tyomenetelma massamaara hyppy?]}]
+                                          paallystetyyppi raekoko tyomenetelma massamaara]}]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
     (q/luo-yllapitokohdeosa<! db
@@ -395,12 +395,11 @@
                                :tyomenetelma tyomenetelma
                                :massamaara massamaara
                                :toimenpide toimenpide
-                               :hyppy (if (some? hyppy?) hyppy? false)
                                :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
-                                         tr-loppuosa tr-loppuetaisyys tr-ajorata hyppy?
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
   (log/debug "Päivitetään ylläpitokohdeosa")
@@ -419,24 +418,32 @@
                                  :massamaara massamaara
                                  :toimenpide toimenpide
                                  :id id
-                                 :hyppy (if (some? hyppy?) hyppy? false)
                                  :urakka urakka-id}))
 
 (defn tallenna-yllapitokohdeosat
   "Tallentaa ylläpitokohdeosat kantaan.
-   Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
+
+   Olettaa saavansa kohteen kaikki osat, ja tämän oletuksen varassa tarkistaa,
+   tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
+
    Palauttaa kohteen päivittyneet kohdeosat."
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat] :as tiedot}]
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-
-    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
+    ;; Todo: Päällystys 2.0. Testi osatyyppi filtterille
+    (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
+          hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
                                                            {:urakka-id urakka-id
                                                             :sopimus-id sopimus-id
                                                             :yllapitokohde-id yllapitokohde-id})
-          vanhat-osa-idt (into #{} (map :id) (hae-osat))
+          kaikki-osat (hae-kaikki-osat)
+          tarkasteltavat-osat (case osatyyppi
+                                :kohteen-omat-kohdeosat (filter #(= (:tr-numero %) kohteen-tienumero) kaikki-osat)
+                                :kohteen-muut-kohdeosat (filter #(not= (:tr-numero %) kohteen-tienumero) kaikki-osat)
+                                kaikki-osat)
+          vanhat-osa-idt (into #{} (map :id) tarkasteltavat-osat)
           uudet-osa-idt (into #{} (keep :id) osat)
           poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
@@ -450,7 +457,7 @@
           (paivita-yllapitokohdeosa db user urakka-id osa)
           (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
       (yy/paivita-yllapitourakan-geometria db urakka-id)
-      (let [yllapitokohdeosat (hae-osat)]
+      (let [yllapitokohdeosat (hae-kaikki-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
@@ -536,7 +543,11 @@
                                                       :toteutunut_hinta toteutunut-hinta
                                                       :muokkaaja (:id user)})
         ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
-        (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
+        ; Todo: Päällystys 2.0. Tätä ei enää tarvitse tehdä, mutta ongelma muodostuu jos pääkohde muokataa
+        ; lyhyemäksi ja alikohteet menevät siitä yli. Sitten ollaan epävalidissa tilassa.
+        ; Ratkaisuehdotus 1: Ennen ylläpitokohteen tallennusta tutki, menevätkä alikohteet kohteesta yli, ja heitä validointiherja jos menee?
+        ; Ratkaisuehdotus 2: Venytä alikohteita vain silloin kun kohde lyhenee alusta tai lopusta lyhyemmäksi kuin samassa päässä oleva alikohde.
+        #_(let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :yllapitokohde-id id})
               korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kohde kohde kohdeosat)]

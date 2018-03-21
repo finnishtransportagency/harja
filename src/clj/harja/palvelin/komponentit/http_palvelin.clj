@@ -283,11 +283,9 @@
              (some? csrf-token)
              (anti-csrf-q/kayttajan-csrf-sessio-voimassa? db kayttajanimi csrf-token (time/now)))
       (f req)
-      (do
-        (log/warn "Virheellinen CSRF-cookie varmennettavassa pyynnössä, palautetaan 403 - uri:" uri)
-        {:status 403
-         :headers {"Content-Type" "text/html"}
-         :body "Access denied"}))))
+      {:status 403
+       :headers {"Content-Type" "text/html"}
+       :body "Virheellinen CSRF-token"})))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true

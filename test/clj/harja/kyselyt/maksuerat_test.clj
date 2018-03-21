@@ -11,12 +11,12 @@
                    :lisatyo 1545.000000000000000000000000M
                    :muu 9000M
                    :sakko 5000M
-                   :tpi_id 36}
+                   :tpi_id 42}
                   {:kokonaishintainen 2000M
                    :lisatyo 0M
                    :muu 1000M
                    :sakko 0M
-                   :tpi_id 37}]]
+                   :tpi_id 43}]]
     (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
 
 (deftest hae-urakan-maksueran-summat-yksikkohintaiset-summat--teiden-hoidon-urakalle

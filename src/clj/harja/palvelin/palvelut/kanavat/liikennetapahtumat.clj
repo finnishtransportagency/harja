@@ -18,8 +18,8 @@
   (q/hae-liikennetapahtumat db user (:hakuparametrit tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
-  (assert (::ur/id tiedot) "Urakka id puuttuu, ei voida hakea liikennetapahtumia!")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-liikenne user (::ur/id tiedot))
+  (doseq [urakka-id (:urakka-idt tiedot)]
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kanavat-liikenne user urakka-id))
   (q/hae-liikennetapahtumat db user tiedot))
 
 (defn hae-edelliset-tapahtumat [db user tiedot]

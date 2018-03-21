@@ -23,14 +23,14 @@
 (deftest urakat-idlla
   (is (= {::lt/kohde {::kohde/urakat [{::ur/id 1}]}}
          (#'q/urakat-idlla
-           1
+           #{1}
            {::lt/kohde {::kohde/urakat [{::ur/id 1}
                                         {::ur/id 2}
                                         {::ur/id 3}]}})))
 
   (is (= {::lt/kohde {::kohde/urakat []}}
          (#'q/urakat-idlla
-           4
+           #{4}
            {::lt/kohde {::kohde/urakat [{::ur/id 1}
                                         {::ur/id 2}
                                         {::ur/id 3}]}}))))
@@ -46,7 +46,7 @@
                         {::kohde/id 2 ::kohde/urakat [{::ur/id 4}
                                                       {::ur/id 5}
                                                       {::ur/id 6}]}])
-           1))))
+           #{1}))))
 
 (deftest ilman-poistettuja
   (is (= [{:id 1 ::lt/alukset [{::m/poistettu? false :id 1}]}

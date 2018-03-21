@@ -6,11 +6,11 @@ function fail {
     if [ -z "$1" ];
     then
         echo " ---- "
-        echo "Voit avata raportin kommennolla: sh avaaunit.sh";
+        echo "Voit avata raportin skriptillä sh/avaa-yksikkotestien-tulokset.sh";
     else
         echo " ---- "
         echo "Raportti avattu selainikkunaan."
-        sh avaaunit.sh
+        sh sh/avaa-yksikkotestien-tulokset.sh
     fi
 
     exit 1

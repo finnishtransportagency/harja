@@ -77,7 +77,6 @@ SELECT
   ypko.tyomenetelma             AS "kohdeosa_tyomenetelma",
   ypko.massamaara               AS "kohdeosa_massamaara",
   ypko.toimenpide               AS "kohdeosa_toimenpide",
-  ypko.hyppy                    AS "kohdeosa_hyppy?",
   ypk.tr_numero                 AS "tr-numero",
   ypk.tr_alkuosa                AS "tr-alkuosa",
   ypk.tr_alkuetaisyys           AS "tr-alkuetaisyys",
