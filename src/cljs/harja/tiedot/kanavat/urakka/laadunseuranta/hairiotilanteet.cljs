@@ -11,7 +11,6 @@
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
-            [harja.ui.lomake :as lomake]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -48,6 +47,7 @@
 (defrecord MuokkaaMateriaaleja [materiaalit])
 (defrecord LisaaMateriaali [])
 (defrecord LisaaVirhe [virhe])
+(defrecord KytkePaikannusKaynnissa [])
 
 
 (def valinnat
@@ -65,6 +65,13 @@
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
      ::hairiotilanne/havaintoaika (pvm/nyt)}))
 
+(defn voi-tallentaa? [hairiotilanne]
+  (and
+    (or (::hairiotilanne/kohde hairiotilanne)
+        (::hairiotilanne/sijainti hairiotilanne))
+    (not (and (::hairiotilanne/kohde hairiotilanne)
+              (::hairiotilanne/sijainti hairiotilanne)))))
+
 (defn tallennettava-hairiotilanne [hairiotilanne]
   (let [hairiotilanne (-> hairiotilanne
                           (select-keys [::hairiotilanne/id
@@ -79,7 +86,8 @@
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
                                         ::muokkaustiedot/poistettu?
-                                        ::hairiotilanne/havaintoaika])
+                                        ::hairiotilanne/havaintoaika
+                                        ::hairiotilanne/sijainti])
                           (assoc ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
                                  ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])))]
@@ -308,4 +316,8 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe)))
+    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe))
+
+  KytkePaikannusKaynnissa
+  (process-event [_ app]
+    (update-in app [:valittu-hairiotilanne :paikannus-kaynnissa?] not)))

@@ -223,6 +223,14 @@
                             optiot
                             {:luokka (str "nappi-toissijainen" " " luokka)})]))
 
+(defn kielteinen
+  ([teksti toiminto] (kielteinen teksti toiminto {}))
+  ([teksti toiminto {:keys [disabled luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-kielteinen" " " luokka)
+                             :disabled disabled})]))
+
 (defn sulje
   ([toiminto] (yleinen-toissijainen "Sulje" toiminto {}))
   ([teksti toiminto {:keys [luokka] :as optiot}]

@@ -36,8 +36,11 @@
   [harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.kanavien-laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
+  [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
+
+;; HOX Muista lisätä uusi raportti myös Roolit-Exceliin!
 
 (def raportit
   [{:nimi :sanktioraportti-yllapito
@@ -286,9 +289,16 @@
     :kuvaus "Ylläpidon aikataulu"
     :urakkatyyppi #{:paallystys :tiemerkinta}}
 
+   {:nimi :vastaanottotarkastusraportti
+    :parametrit [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
+    :konteksti #{"urakka"}
+    :suorita #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
+    :kuvaus "Vastaanottotarkastusraportti"
+    :urakkatyyppi #{:paallystys}}
+
    {:nimi :vesivaylien-laskutusyhteenveto
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti #{"urakka"}
+    :konteksti #{"urakka" "hallintayksikko"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
     :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-ilman-kanavia}

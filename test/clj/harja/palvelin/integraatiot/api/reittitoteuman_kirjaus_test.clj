@@ -194,7 +194,8 @@
     (is (= 200 (:status vastaus)) "Toteuman poisto onnistuu")))
 
 (deftest materiaalin-kaytto-paivittyy-oikein
-  (let [hae-materiaalit #(q "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain")
+  (let [poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain")
+        hae-materiaalit #(q "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain")
         materiaalin-kaytto-ennen (hae-materiaalit)]
     (testing "Materiaalin käyttö on tyhjä aluksi"
       (is (empty? materiaalin-kaytto-ennen)))

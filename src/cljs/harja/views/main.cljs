@@ -36,7 +36,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.kartta-debug :refer [kartta-layers]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -204,6 +205,8 @@
         [urakat/urakat])]]]
    [modal/modal-container]
    [viesti-container]
+   (when @nav/kartta-nakyvissa?
+     [kartta-layers])
 
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,

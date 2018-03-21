@@ -249,9 +249,9 @@
   ([otsikko aikavalit valinnat-nyt] (aikavalivalitsin otsikko aikavalit valinnat-nyt nil))
   ([otsikko aikavalit valinnat-nyt kenttien-nimet] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet false))
   ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm]
-   (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:valokioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
+   (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:vakioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
          alkuaika (:alkuaika valinnat-nyt)
-         vakio-aikavalikentta {:nimi (or (:valokioaikavali kenttien-nimet) :vakioaikavali)
+         vakio-aikavalikentta {:nimi (or (:vakioaikavali kenttien-nimet) :vakioaikavali)
                                :otsikko otsikko
                                :fmt :nimi
                                :tyyppi :valinta

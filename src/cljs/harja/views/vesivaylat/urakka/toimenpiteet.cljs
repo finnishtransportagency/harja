@@ -30,10 +30,6 @@
                   (oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset id))
          [yks-hint/yksikkohintaiset-toimenpiteet])
 
-       "Erilliskustannukset" :erilliskustannukset
-       (when (and (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id))
-         [erilliskustannukset/erilliskustannusten-toteumat ur])
-
        "Kokonaishintaiset"
        :kanavien-kokonaishintaiset
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
@@ -46,4 +42,8 @@
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   (urakka-domain/kanavaurakka? ur)
                   (oikeudet/urakat-kanavat-lisatyot id))
-         [lisatyot/lisatyot])])))
+         [lisatyot/lisatyot])
+
+       "Erilliskustannukset" :erilliskustannukset
+       (when (and (oikeudet/urakat-toteumat-vesivaylaerilliskustannukset id))
+         [erilliskustannukset/erilliskustannusten-toteumat ur])])))

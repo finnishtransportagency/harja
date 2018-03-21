@@ -8,11 +8,11 @@
     [harja.pvm :as pvm]
     #?@(:clj
         [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-         [clojure.future :refer :all]
-         [harja.pvm :as pvm]
-         [clj-time.core :as t]
-         [taoensso.timbre :as log]
-         [clj-time.coerce :as c]])))
+    [clojure.future :refer :all]
+    [harja.pvm :as pvm]
+    [clj-time.core :as t]
+    [taoensso.timbre :as log]
+    [clj-time.coerce :as c]])))
 
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::kohdenumero (s/nilable string?))
@@ -300,6 +300,8 @@ yllapitoluokkanimi->numero
   [kohde]
   ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
          :tie :tr-numero :tienumero
+         :ajr :tr-ajorata :ajorata
+         :kaista :tr-kaista
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
 

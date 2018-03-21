@@ -353,38 +353,6 @@
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
       (is (= (+ maara-ennen-lisaysta 1) maara-lisayksen-jalkeen))
 
-      ;; Jos ylläpitokohteen osoitetta muutetaan, tarkistetaan, että myös alikohteen osoite muuttui
-      ;; Luodaan kohteelle testiä varten kohdeosa
-      (let [yllapitokohde-id (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = '" (:nimi yllapitokohde-testidata)) "';"))
-            _ (u (str "INSERT INTO yllapitokohdeosa (tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, yllapitokohde)
-                    VALUES ("
-                      (:tr-numero yllapitokohde-testidata) ","
-                      (:tr-alkuosa yllapitokohde-testidata) ","
-                      (:tr-alkuetaisyys yllapitokohde-testidata) ","
-                      (:tr-loppuosa yllapitokohde-testidata) ","
-                      (:tr-loppuetaisyys yllapitokohde-testidata) ","
-                      yllapitokohde-id ");"))
-            uusi-loppuosa 3
-            uusi-loppuetaisyys 100
-            _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                        :sopimus-id sopimus-id
-                                                                        :kohteet [(assoc yllapitokohde-testidata
-                                                                                    :id yllapitokohde-id
-                                                                                    :tr-loppuosa uusi-loppuosa
-                                                                                    :tr-loppuetaisyys uusi-loppuetaisyys)]})
-            kohdeosat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :yllapitokohteen-yllapitokohdeosat
-                                      +kayttaja-jvh+ {:urakka-id urakka-id
-                                                      :sopimus-id sopimus-id
-                                                      :yllapitokohde-id yllapitokohde-id})
-            kohdeosa (first kohdeosat)]
-
-        (is (= (:tr-alkuosa kohdeosa) (:tr-alkuosa yllapitokohde-testidata)))
-        (is (= (:tr-alkuetaisyys kohdeosa) (:tr-alkuetaisyys yllapitokohde-testidata)))
-        (is (= (:tr-loppuosa kohdeosa) uusi-loppuosa))
-        (is (= (:tr-loppuetaisyys kohdeosa) uusi-loppuetaisyys)))
-
       ;; Edelleen jos ylläpitokohde poistetaan, niin myös geometria päivittyy
       (let [lisatty-kohde (kohde-nimella kohteet-kannassa "Testiramppi4564ddf")
             _ (is lisatty-kohde "Lisätty kohde löytyi vastauksesta")
@@ -419,30 +387,92 @@
       (is (= kohteet-kannassa 1) "Kohde tallentui oikein"))))
 
 (deftest tallenna-paallekain-menevat-yllapitokohteet
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-yllapitokohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :sopimus-id sopimus-id
-                                 :vuosi 2017
-                                 :kohteet [{:kohdenumero 666
-                                            :nimi "Erkkipetteri"
-                                            :yllapitokohdetyotyyppi :paallystys
-                                            :tr-numero 20
-                                            :tr-alkuosa 1
-                                            :tr-alkuetaisyys 0
-                                            :tr-loppuosa 3
-                                            :tr-loppuetaisyys 0}]})]
+  (let [kohde-leppajarven-paalle {:kohdenumero 666
+                                  :nimi "Erkkipetteri"
+                                  :yhaid 666
+                                  :yllapitokohdetyotyyppi :paallystys
+                                  :tr-numero 20
+                                  :tr-alkuosa 1
+                                  :tr-alkuetaisyys 0
+                                  :tr-loppuosa 3
+                                  :tr-loppuetaisyys 0
+                                  :tr-ajorata 1
+                                  :tr-kaista 1}]
+    (testing "Päällekäin menevät kohteet samana vuonna"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet [kohde-leppajarven-paalle]})]
 
-    ;; Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle
-    ;; Pitäisi tulla validointivirhe
-    (is (= (:status vastaus) :validointiongelma))
-    (is (= (count (:validointivirheet vastaus)) 1))
-    (is (= (-> (:validointivirheet vastaus)
-               first
-               :validointivirhe)
-           :kohteet-paallekain))))
+        (is (= (:status vastaus) :validointiongelma)
+            "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampi päälle --> tulee herja")
+        (is (= (count (:validointivirheet vastaus)) 1))
+        (is (= (-> (:validointivirheet vastaus)
+                   first
+                   :validointivirhe)
+               :kohteet-paallekain))))
+
+    (testing "Päällekäin menevät kohteet eri vuonna"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2018
+                                     :kohteet [kohde-leppajarven-paalle]})]
+
+        (is (not= (:status vastaus) :validointiongelma)
+            "Kohteet menevät päällekäin, mutta eri vuonna --> ei herjaa")))
+
+    (testing "Päällekäin menevät osoitteet eri tiellä"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet [(assoc
+                                                 kohde-leppajarven-paalle
+                                                 :tr-numero 21)]})]
+
+        (is (not= (:status vastaus) :validointiongelma)
+            "Osoitteet menevät päällekäin, mutta eri tiellä --> ei herjaa")))
+
+    (testing "Päällekäin menevät osoitteet eri kaistalla"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet [(assoc
+                                                 kohde-leppajarven-paalle
+                                                 :tr-kaista 2)]})]
+
+        (is (not= (:status vastaus) :validointiongelma)
+            "Osoitteet menevät päällekäin, mutta eri kaistalla --> ei herjaa")))
+
+    (testing "Päällekäin menevät osoitteet eri ajoradalla"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet [(assoc
+                                                 kohde-leppajarven-paalle
+                                                 :tr-ajorata 2)]})]
+
+        (is (not= (:status vastaus) :validointiongelma)
+            "Osoitteet menevät päällekäin, mutta eri ajoradalla --> ei herjaa")))))
 
 (deftest yllapitokohteen-tallennus-vaaraan-urakkaan-ei-onnistu
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -553,7 +583,8 @@
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
-                                         AND poistettu IS NOT TRUE;")))
+                                         AND poistettu IS NOT TRUE
+                                         AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
         kohteet [{:id yllapitokohde-id
                   :nimi "Leppäjärven superramppi"
                   :kohdenumero "L666"
@@ -571,7 +602,8 @@
         maara-paivityksen-jalkeen (ffirst (q
                                             (str "SELECT count(*) FROM yllapitokohde
                                          WHERE urakka = " urakka-id " AND sopimus= " sopimus-id "
-                                         AND poistettu IS NOT TRUE;")))
+                                         AND poistettu IS NOT TRUE
+                                         AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
         vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven superramppi")]
     ;; Kohteiden määrä ei muuttunut
     (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
@@ -684,7 +716,8 @@
             maara-ennen-lisaysta (ffirst (q
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                " AND poistettu IS NOT TRUE;")))
+                                                " AND poistettu IS NOT TRUE
+                                                  AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             kohteet [{:id leppajarven-ramppi-id
                       :nimi "Leppäjärven superramppi"
                       :kohdenumero "666"
@@ -702,7 +735,8 @@
             maara-paivityksen-jalkeen (ffirst (q
                                                 (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                     " AND poistettu IS NOT TRUE;")))
+                                                     " AND poistettu IS NOT TRUE
+                                                     AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))
@@ -735,7 +769,8 @@
             maara-ennen-lisaysta (ffirst (q
                                            (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                " AND poistettu IS NOT TRUE;")))
+                                                " AND poistettu IS NOT TRUE
+                                                  AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             saate "Kohteen saateviesti"
             kohteet [{:id leppajarven-ramppi-id
                       :sahkopostitiedot {:kopio-itselle? true
@@ -753,7 +788,8 @@
             maara-paivityksen-jalkeen (ffirst (q
                                                 (str "SELECT count(*) FROM yllapitokohde
                                          WHERE suorittava_tiemerkintaurakka = " urakka-id
-                                                     " AND poistettu IS NOT TRUE;")))
+                                                     " AND poistettu IS NOT TRUE
+                                                     AND vuodet @> ARRAY [" vuosi "] :: INT [];")))
             vastaus-leppajarven-ramppi (kohde-nimella vastaus "Leppäjärven ramppi")]
         ;; Kohteiden määrä ei muuttunut
         (is (= maara-ennen-lisaysta maara-paivityksen-jalkeen (count vastaus)))

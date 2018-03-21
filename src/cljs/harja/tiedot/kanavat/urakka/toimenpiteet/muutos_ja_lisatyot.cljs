@@ -17,12 +17,10 @@
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka :as urakkatiedot])
@@ -99,6 +97,7 @@
 (defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
+(defrecord LisaaOmakustannushintainenTyorivi [])
 (defrecord LisaaMuuKulurivi [])
 (defrecord LisaaMuuTyorivi [])
 (defrecord LisaaMateriaaliKulurivi [])
@@ -141,6 +140,9 @@
   (let [tyo-hinnat (etsi-mapit (get-in app [:hinnoittele-toimenpide ::hinta/hinnat])
                                ::hinta/ryhma ryhma-kriteeri)]
     (ilman-poistettuja tyo-hinnat)))
+
+(defn omakustannushintaiset-tyot [app]
+  (hintaryhman-tyot app "oma"))
 
 (defn muut-tyot [app]
   (hintaryhman-tyot app "tyo"))
@@ -403,7 +405,7 @@
 
   ValitutSiirretty
   (process-event [_ app]
-    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+    (viesti/nayta! (toimenpiteet/toimenpiteiden-toiminto-suoritettu
                      (count (:valitut-toimenpide-idt app)) "siirretty") :success)
     (assoc app :toimenpiteiden-siirto-kaynnissa? false
                :valitut-toimenpide-idt #{}
@@ -471,6 +473,12 @@
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
     (lisaa-tyorivi-toimenpiteelle app))
+
+  LisaaOmakustannushintainenTyorivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma "oma"}
+      app))
 
   LisaaMuuKulurivi
   (process-event [_ app]

@@ -25,6 +25,7 @@
             [clj-time.coerce :as c]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
+            [harja.palvelin.palvelut.valitavoitteet.urakkakohtaiset-valitavoitteet :as valitavoitteet]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.id :refer [id-olemassa?]]
@@ -48,8 +49,13 @@
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan tiemerkintäurakalle osoitetut ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
-    (let [yllapitokohteet (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id})
-          yllapitokohteet (mapv (partial yy/lisaa-yllapitokohteelle-pituus db) yllapitokohteet)]
+    (let [yllapitokohteet (into []
+                                (map konv/alaviiva->rakenne)
+                                (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id}))
+          yllapitokohteet (mapv (partial yy/lisaa-yllapitokohteelle-pituus db) yllapitokohteet)
+          yllapitokohteet (konv/sarakkeet-vektoriin
+                            yllapitokohteet
+                            {:kohdeosa :kohdeosat})]
       yllapitokohteet)))
 
 (defn hae-urakan-yllapitokohteet-lomakkeelle [db user {:keys [urakka-id sopimus-id]}]
@@ -110,17 +116,32 @@
                        aikataulu)]
     aikataulu))
 
+(defn- lisaa-yllapitokohteille-valitavoitteet
+  "Lisää ylläpitokohteille välitavoitteet, mikäli käyttäjällä on oikeus nähdä urakan välitavoitteet"
+  [db user urakka-id yllapitokohteet]
+  (if (oikeudet/voi-lukea? oikeudet/urakat-valitavoitteet urakka-id user)
+    (let [urakan-valitavoitteet (valitavoitteet/hae-urakan-valitavoitteet db user urakka-id)]
+      (map (fn [yllapitokohde]
+             (let [kohteen-valitavoitteet (filter
+                                            #(= (:yllapitokohde-id %) (:id yllapitokohde))
+                                            urakan-valitavoitteet)]
+               (assoc yllapitokohde :valitavoitteet kohteen-valitavoitteet)))
+           yllapitokohteet))
+    yllapitokohteet))
+
 (defn hae-urakan-aikataulu [db user {:keys [urakka-id sopimus-id vuosi]}]
   (assert (and urakka-id sopimus-id) "anna urakka-id ja sopimus-id")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
   (log/debug "Haetaan aikataulutiedot urakalle: " urakka-id)
   (jdbc/with-db-transaction [db db]
     ;; Urakkatyypin mukaan näytetään vain tietyt asiat, joten erilliset kyselyt
-    (case (hae-urakkatyyppi db urakka-id)
-      :paallystys
-      (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
-      :tiemerkinta
-      (hae-tiemerkintaurakan-aikataulu db urakka-id vuosi))))
+    (let [aikataulu (case (hae-urakkatyyppi db urakka-id)
+                      :paallystys
+                      (hae-paallystysurakan-aikataulu {:db db :urakka-id urakka-id :sopimus-id sopimus-id :vuosi vuosi})
+                      :tiemerkinta
+                      (hae-tiemerkintaurakan-aikataulu db urakka-id vuosi))
+          aikataulu (lisaa-yllapitokohteille-valitavoitteet db user urakka-id aikataulu)]
+      aikataulu)))
 
 (defn hae-tiemerkinnan-suorittavat-urakat [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-aikataulu user urakka-id)
@@ -381,7 +402,6 @@
                                          tr-loppuosa tr-loppuetaisyys tr-ajorata
                                          tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}]
-
   (log/debug "Päivitetään ylläpitokohdeosa")
   (q/paivita-yllapitokohdeosa<! db
                                 {:nimi nimi
@@ -402,19 +422,28 @@
 
 (defn tallenna-yllapitokohdeosat
   "Tallentaa ylläpitokohdeosat kantaan.
-   Tarkistaa, tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
+
+   Olettaa saavansa kohteen kaikki osat, ja tämän oletuksen varassa tarkistaa,
+   tuleeko kohdeosat päivittää, poistaa vai luoda uutena.
+
    Palauttaa kohteen päivittyneet kohdeosat."
-  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat] :as tiedot}]
+  [db user {:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi] :as tiedot}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-
-    (let [hae-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
+    ;; Todo: Päällystys 2.0. Testi osatyyppi filtterille
+    (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
+          hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
                                                            {:urakka-id urakka-id
                                                             :sopimus-id sopimus-id
                                                             :yllapitokohde-id yllapitokohde-id})
-          vanhat-osa-idt (into #{} (map :id) (hae-osat))
+          kaikki-osat (hae-kaikki-osat)
+          tarkasteltavat-osat (case osatyyppi
+                                :kohteen-omat-kohdeosat (filter #(= (:tr-numero %) kohteen-tienumero) kaikki-osat)
+                                :kohteen-muut-kohdeosat (filter #(not= (:tr-numero %) kohteen-tienumero) kaikki-osat)
+                                kaikki-osat)
+          vanhat-osa-idt (into #{} (map :id) tarkasteltavat-osat)
           uudet-osa-idt (into #{} (keep :id) osat)
           poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
@@ -428,7 +457,7 @@
           (paivita-yllapitokohdeosa db user urakka-id osa)
           (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
       (yy/paivita-yllapitourakan-geometria db urakka-id)
-      (let [yllapitokohdeosat (hae-osat)]
+      (let [yllapitokohdeosat (hae-kaikki-osat)]
         (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
         (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
 
@@ -458,15 +487,17 @@
                                         :yllapitoluokka (if (map? yllapitoluokka)
                                                           (:numero yllapitoluokka)
                                                           yllapitoluokka)
-                                        :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                                        :arvonvahennykset arvonvahennykset
-                                        :bitumi_indeksi bitumi-indeksi
-                                        :kaasuindeksi kaasuindeksi
-                                        :toteutunut_hinta toteutunut-hinta
+
                                         :yllapitokohdetyyppi (when yllapitokohdetyyppi (name yllapitokohdetyyppi))
                                         :yllapitokohdetyotyyppi (when yllapitokohdetyotyyppi (name yllapitokohdetyotyyppi))
-                                        :vuodet (konv/seq->array [vuosi])})
-          _ (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})]
+                                        :vuodet (konv/seq->array [vuosi])})]
+      (q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})
+      (q/luo-yllapitokohteelle-kustannukset<! db {:yllapitokohde (:id kohde)
+                                                  :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                                  :arvonvahennykset arvonvahennykset
+                                                  :bitumi_indeksi bitumi-indeksi
+                                                  :kaasuindeksi kaasuindeksi
+                                                  :toteutunut_hinta toteutunut-hinta})
       (:id kohde))))
 
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
@@ -500,15 +531,23 @@
                                     :yllapitoluokka (if (map? yllapitoluokka)
                                                       (:numero yllapitoluokka)
                                                       yllapitoluokka)
-                                    :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
-                                    :arvonvanhennykset arvonvahennykset
-                                    :bitumi_indeksi bitumi-indeksi
-                                    :kaasuindeksi kaasuindeksi
-                                    :toteutunut_hinta toteutunut-hinta
+
                                     :id id
                                     :urakka urakka-id})
+        (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde id
+                                                      :urakka urakka-id
+                                                      :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                                      :arvonvahennykset arvonvahennykset
+                                                      :bitumi_indeksi bitumi-indeksi
+                                                      :kaasuindeksi kaasuindeksi
+                                                      :toteutunut_hinta toteutunut-hinta
+                                                      :muokkaaja (:id user)})
         ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
-        (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
+        ; Todo: Päällystys 2.0. Tätä ei enää tarvitse tehdä, mutta ongelma muodostuu jos pääkohde muokataa
+        ; lyhyemäksi ja alikohteet menevät siitä yli. Sitten ollaan epävalidissa tilassa.
+        ; Ratkaisuehdotus 1: Ennen ylläpitokohteen tallennusta tutki, menevätkä alikohteet kohteesta yli, ja heitä validointiherja jos menee?
+        ; Ratkaisuehdotus 2: Venytä alikohteita vain silloin kun kohde lyhenee alusta tai lopusta lyhyemmäksi kuin samassa päässä oleva alikohde.
+        #_(let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
                                                                         :sopimus-id sopimus-id
                                                                         :yllapitokohde-id id})
               korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kohde kohde kohdeosat)]
@@ -517,13 +556,19 @@
                                                :yllapitokohde-id id
                                                :osat korjatut-kohdeosat})))))
 
-(defn- validoi-tallennettava-yllapitokohteet [db tallennettavat-kohteet vuosi]
-  (let [saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
+(defn- validoi-tallennettavat-yllapitokohteet
+  "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
+  [db tallennettavat-kohteet vuosi]
+  (let [yha-kohteet (filter :yhaid tallennettavat-kohteet)
+        saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
     (reduce
       (fn [virheet tallennettava-kohde]
         (let [kohteen-virheet
               (remove nil? (map (fn [verrattava-kohde]
                                   (when (and (not= (:id tallennettava-kohde) (:id verrattava-kohde))
+                                             (and (= (:tr-numero tallennettava-kohde) (:tr-numero verrattava-kohde))
+                                                  (= (:tr-ajorata tallennettava-kohde) (:tr-ajorata verrattava-kohde))
+                                                  (= (:tr-kaista tallennettava-kohde) (:tr-kaista verrattava-kohde)))
                                              (tr/tr-vali-leikkaa-tr-valin? tallennettava-kohde verrattava-kohde))
                                     {:validointivirhe :kohteet-paallekain
                                      :kohteet [(select-keys tallennettava-kohde [:kohdenumero :nimi :urakka
@@ -537,14 +582,14 @@
             virheet
             (concat virheet kohteen-virheet))))
       []
-      tallennettavat-kohteet)))
+      yha-kohteet)))
 
 (defn tallenna-yllapitokohteet [db user {:keys [urakka-id sopimus-id vuosi kohteet]}]
   (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db user urakka-id)
   (doseq [kohde kohteet]
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:id kohde)))
   (jdbc/with-db-transaction [db db]
-    (let [validointivirheet (validoi-tallennettava-yllapitokohteet db kohteet vuosi)]
+    (let [validointivirheet (validoi-tallennettavat-yllapitokohteet db kohteet vuosi)]
       (if (empty? validointivirheet)
         (do (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
             (log/debug "Tallennetaan ylläpitokohteet: " (pr-str kohteet))

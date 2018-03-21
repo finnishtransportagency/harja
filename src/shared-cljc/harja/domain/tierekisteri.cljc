@@ -207,6 +207,8 @@
   "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
   [kohde]
   ((juxt :tie :tr-numero :tienumero
+         :ajr :tr-ajorata :ajorata
+         :kaista :tr-kaista
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
 
@@ -273,7 +275,7 @@
    Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin hieman osoitteen 1 tien sisällä,
    ei siis riitä, että pelkästään alku/loppu on samassa kohtaa.
 
-   Olettaa, että tr-välit ovat samalla tiellä."
+   Olettaa, että tr-välit ovat samalla tiellä (ja kaistalla ja ajoradalla)."
   [tr-vali1 tr-vali2]
   (let [tr-vali1 (tr-osoite-kasvusuuntaan tr-vali1)
         tr-vali2 (tr-osoite-kasvusuuntaan tr-vali2)

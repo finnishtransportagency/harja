@@ -34,11 +34,13 @@
   "Näyttää latausanimaatiokuvan ja optionaalisen viestin."
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
-  ([viesti opts]
+  ([viesti {:keys [luokka sama-rivi?] :as opts}]
    [:div {:class (str "ajax-loader " (when (:luokka opts) (:luokka opts)))}
     [:img {:src "images/ajax-loader.gif"}]
     (when viesti
-      [:div.viesti viesti])]))
+      (if sama-rivi?
+        [:span.viesti (str " " viesti)]
+        [:div.viesti viesti]))]))
 
 (defn ajax-loader-pieni
   "Näyttää pienen inline latausanimaatiokuvan ja optionaalisen viestin."
@@ -199,18 +201,21 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        (fn [this]
          (pudotusvalikon-korkeuden-kasittelija-fn this nil))}
 
-      (fn [{:keys [valinta format-fn valitse-fn class disabled
+      (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko]} vaihtoehdot]
         (let [term (atom "")
               format-fn (or format-fn str)
+              valitse-fn (or valitse-fn (constantly nil))
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))
               lista-item (fn [vaihtoehto]
                            [:li.harja-alasvetolistaitemi {:class (when li-luokka-fn (li-luokka-fn vaihtoehto))}
-                            (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
-                                                                (reset! auki? false)
-                                                                nil))])]
+                            (if itemit-komponentteja?
+                              vaihtoehto
+                              (linkki (format-fn vaihtoehto) #(do (valitse-fn vaihtoehto)
+                                                                                          (reset! auki? false)
+                                                                                          nil)))])]
           [:div.dropdown.livi-alasveto {:class (str class " " (when @auki? "open"))}
            [:button.nappi-alasveto
             {:class (when disabled "disabled")
@@ -269,7 +274,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                      (valitse-fn itemi)
                                      (reset! auki? false)))) nil))}
 
-            [:div.valittu (format-fn valinta)]
+            [:div.valittu (or naytettava-arvo (format-fn valinta))]
             [:span.livicon-chevron-down {:class (when disabled "disabled")}]]
            [:ul.dropdown-menu.livi-alasvetolista {:style (avautumissuunta-ja-korkeus-tyylit
                                                            @max-korkeus @avautumissuunta)}

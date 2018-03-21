@@ -130,8 +130,9 @@
                  :nimi nimi
                  :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
                  :yha_kohdenumero yha-kohdenumero
-                 :kohdenumero yha-kohdenumero})
-        _ (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})]
+                 :kohdenumero yha-kohdenumero})]
+    (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})
+    (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-kustannustaulu<! db {:yllapitokohde (:id kohde)})
     (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
       (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
       (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
@@ -208,11 +209,11 @@
         (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
 
 (defn laheta-kohteet-yhaan
-  "Lähettää annetut kohteet teknisine tietoineen YHA:n."
+  "Lähettää annetut kohteet teknisine tietoineen YHAan."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
-  (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
+  (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
   (let [lahetys-onnistui? (yha/laheta-kohteet yha urakka-id kohde-idt)
         paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     {:paallystysilmoitukset paivitetyt-ilmoitukset

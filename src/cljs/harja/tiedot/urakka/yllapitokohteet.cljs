@@ -10,7 +10,8 @@
     [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
     [harja.tiedot.navigaatio :as nav]
     [harja.ui.viesti :as viesti]
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [harja.tyokalut.local-storage :as local-storage])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -51,11 +52,12 @@
                                       :vuosi vuosi
                                       :kohteet kohteet}))
 
-(defn tallenna-yllapitokohdeosat! [urakka-id sopimus-id yllapitokohde-id osat]
+(defn tallenna-yllapitokohdeosat! [{:keys [urakka-id sopimus-id yllapitokohde-id osat osatyyppi]}]
   (k/post! :tallenna-yllapitokohdeosat {:urakka-id urakka-id
                                         :sopimus-id sopimus-id
                                         :yllapitokohde-id yllapitokohde-id
-                                        :osat osat}))
+                                        :osat osat
+                                        :osatyyppi osatyyppi}))
 
 (defn hae-maaramuutokset [urakka-id yllapitokohde-id]
   (k/post! :hae-maaramuutokset {:urakka-id urakka-id
@@ -131,12 +133,14 @@
                    :tr-ajorata (:tr-ajorata rivi)
                    :tr-kaista (:tr-kaista rivi)
                    :toimenpide ""}]
-    (-> kohdeosat
-        (assoc-in [key :tr-loppuosa] nil)
-        (assoc-in [key :tr-loppuetaisyys] nil)
-        (assoc (inc key) uusi-rivi)
-        (merge (zipmap (map inc avaimet-jalkeen)
-                       (map #(get kohdeosat %) avaimet-jalkeen))))))
+    (if (empty? kohdeosat)
+      {key uusi-rivi}
+      (-> kohdeosat
+          (assoc-in [key :tr-loppuosa] nil)
+          (assoc-in [key :tr-loppuetaisyys] nil)
+          (assoc (inc key) uusi-rivi)
+          (merge (zipmap (map inc avaimet-jalkeen)
+                         (map #(get kohdeosat %) avaimet-jalkeen)))))))
 
 (defn poista-kohdeosa
   "Poistaa valitun kohdeosan annetulla avaimella. Pidentää edellistä kohdeosaa niin, että sen pituus
@@ -152,6 +156,10 @@
         jalkeen (when-not (empty? avaimet-jalkeen)
                   (get kohdeosat (first avaimet-jalkeen)))]
     (cond
+      ;; Poistetaan ainoa kohdeosa
+      (= (count avaimet) 1)
+      {}
+
       ;; Poistetaan ensimmäistä, aseta ensimmäisen alku seuraavan aluksi
       (nil? ennen)
       (merge {1 (merge jalkeen
@@ -197,7 +205,10 @@
                       (viesti/nayta! "Tallennus onnistui. Tarkista myös muokkaamiesi tieosoitteiden alikohteet."
                                      :success viesti/viestin-nayttoaika-keskipitka)
                       (onnistui-fn (:yllapitokohteet vastaus)))
-                    (epaonnistui-fn vastaus)))))))))
+                    (do
+                      (viesti/nayta! "Tallennus epäonnistui!"
+                                     :danger viesti/viestin-nayttoaika-keskipitka)
+                      (epaonnistui-fn vastaus))))))))))
 
 (defn yllapitokohteet-kartalle
   "Ylläpitokohde näytetään kartalla 'kohdeosina'.

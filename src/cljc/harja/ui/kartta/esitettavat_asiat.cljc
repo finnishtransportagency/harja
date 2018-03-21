@@ -600,8 +600,11 @@
                 (pvm/pvm-aika-sek aika))
      :alue (assoc sijainti
              :fill true
+             :radius 50
              :color vari)}))
 
+;; Tätä käytetään hallintanäkymässä - jos haluat näyttää kohteenosia kartalla muualla,
+;; haluat mahdollisesti tehdä uuden metodin
 (defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]
   ;; Näyttää toteuman reittipisteet palloina
   (let [[ikoni teksti] (ulkoasu/kohteenosa-kohteiden-luonnissa osa osan-kohde-valittu?)]
@@ -613,6 +616,50 @@
       :alue (maarittele-feature osa
                                 ;; Ei haluta piirtää valitun kohteen osia isommalla, vain eri värillä
                                 false
+                                ikoni))))
+
+(defmethod asia-kartalle :kohde-toimenpide [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-toimenpide
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kan-toimenpide [toimenpide valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-toimenpide toimenpide)]
+    (assoc toimenpide
+      :type :kan-toimenpide
+      :nimi "Toimenpide"
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature toimenpide
+                                valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kan-hairiotilanne [hairiotilanne valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-hairiotilanne hairiotilanne)]
+    (assoc hairiotilanne
+      :type :kan-hairiotilanne
+      :nimi "Häiriötilanne"
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature hairiotilanne
+                                valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kohde-hairiotilanne [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-hairiotilanne
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
                                 ikoni))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]

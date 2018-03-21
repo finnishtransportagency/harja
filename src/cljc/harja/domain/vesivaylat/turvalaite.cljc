@@ -15,22 +15,35 @@
    {"nro" ::r-nro
     "nimi" ::r-nimi
     "ryhma" ::r-ryhma}]
-  ["vv_turvalaite" ::turvalaite
+  ["vatu_turvalaite" ::turvalaite
    harja.domain.muokkaustiedot/muokkaustiedot
-   harja.domain.muokkaustiedot/poistettu?-sarake])
-
-(def tyypit (s/describe ::tyyppi))
+   ;; harja.domain.muokkaustiedot/poistettu?-sarake
+   ])
 
 (def perustiedot
-  #{::id
+  #{::turvalaitenro
     ::nimi
+    ::koordinaatit
+    ::sijainti
     ::tyyppi
-    ::turvalaitenro
     ::kiintea
-    ::vaylat})
+    ::tila
+    ::vah_pvm
+    ::toimintatila
+    ::rakenne
+    ::navigointilaji
+    ::valaistu
+    ::omistaja
+    ::turvalaitenro_aiempi
+    ::paavayla
+    ::vaylat
+})
+
+(s/def ::turvalaitenumerot
+  (s/nilable (s/coll-of ::turvalaitenro)))
 
 (s/def ::hae-turvalaitteet-kartalle-kysely
-  (s/keys :req []))
+  (s/keys :req [] :opt-un [::turvalaitenumerot]))
 
 (s/def ::hae-turvalaitteet-kartalle-vastaus
   (s/nilable (s/coll-of ::turvalaite)))
