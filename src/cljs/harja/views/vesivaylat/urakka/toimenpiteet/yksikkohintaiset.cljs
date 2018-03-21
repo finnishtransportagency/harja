@@ -183,15 +183,22 @@
        first
        (pvm/aikavalin-kuukausivalit [(pvm/nyt) (time/plus (time/now) (time/months 8))]))]]])
 
-(defn- laskutuslupadialogi [e! teksti hinnoittelu]
+(defn- laskutuslupadialogi [e! {:keys [hintaryhman-laskutusluvan-tallennus-kaynnissa?] :as app} teksti hinnoittelu]
   (let [laskutus-kk-atomi (atom (or (::h/laskutus-pvm hinnoittelu) (time/plus (pvm/nyt) (time/months 1))))]
     (modal/nayta!
      {:otsikko "Muokkaa laskutuslupaa"
       :footer [:span
-               [napit/takaisin "Peruuta" #(modal/piilota!)]
+               [napit/takaisin
+                "Peruuta"
+                #(modal/piilota!)
+                {:disabled hintaryhman-laskutusluvan-tallennus-kaynnissa?}]
                [napit/peruuta "Hylkää"
-                #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hylatty nil))]
-               [napit/hyvaksy "Hyväksy" #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hyvaksytty @laskutus-kk-atomi))]]}
+                #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hylatty nil))
+                {:disabled hintaryhman-laskutusluvan-tallennus-kaynnissa?}]
+               [napit/hyvaksy
+                "Hyväksy"
+                #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hyvaksytty @laskutus-kk-atomi))
+                {:disabled hintaryhman-laskutusluvan-tallennus-kaynnissa?}]]}
      [laskutusdialogin-sisalto teksti hinnoittelu laskutus-kk-atomi])))
 
 (defn laskutuslupanappi [e! app hinnoittelu]
@@ -208,6 +215,7 @@
      [napit/yleinen-toissijainen
       ""
       #(laskutuslupadialogi e!
+                            app
                             (str "Tilauksella " (::h/nimi hinnoittelu) " on laskutuslupa.")
                             hinnoittelu)
       {:ikoni (ikonit/save)
@@ -217,7 +225,7 @@
     :else
     [napit/yleinen-ensisijainen
      "Laskutuslupa"
-     #(laskutuslupadialogi e! "Anna tilaukselle laskutuslupa" hinnoittelu)
+     #(laskutuslupadialogi e! app "Anna tilaukselle laskutuslupa" hinnoittelu)
      {:ikoni (ikonit/save)
       :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)}]))
 
