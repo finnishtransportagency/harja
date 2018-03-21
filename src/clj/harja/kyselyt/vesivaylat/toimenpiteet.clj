@@ -110,7 +110,7 @@
   ([db hinnoittelut] (liita-laskutuslupatiedot-hinnoitteluihin db hinnoittelut nil))
   ([db hinnoittelut polku]
    (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
-         hyvaksytyt (into {} (map (juxt :hinnoittelu-id :laskutus-pvm) laskutusluvat))
+         laskutus-pvmt (into {} (map (juxt :id :laskutus-pvm) laskutusluvat))
          laskutetut (laskutetut-laskutusluvat laskutusluvat)]
      (mapv
        (fn [h]
@@ -124,7 +124,7 @@
                  (if polku
                    (conj polku ::vv-hinnoittelu/laskutus-pvm)
                    [::vv-hinnoittelu/laskutus-pvm])
-                 (hyvaksytyt id))
+                 (laskutus-pvmt id))
 
                (assoc-in
                  (if polku
