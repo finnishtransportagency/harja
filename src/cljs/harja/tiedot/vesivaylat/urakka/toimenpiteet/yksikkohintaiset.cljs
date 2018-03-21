@@ -158,7 +158,7 @@
 (defrecord TallennaHintaryhmanHinnoittelu [tiedot])
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
-(defrecord MuutaHintaryhmanLaskutuslupaa [id tila])
+(defrecord MuutaHintaryhmanLaskutuslupaa [id tila pvm])
 (defrecord LaskutuslupaTallennettu [tulos id])
 (defrecord LaskutuslupaEiTallennettu [virhe])
 ;; Kartta
@@ -717,7 +717,7 @@
     (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false))
 
   MuutaHintaryhmanLaskutuslupaa
-  (process-event [{id :id tila :tila} app]
+  (process-event [{id :id tila :tila pvm :pvm} app]
 
     (if-not (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)
       (-> app
@@ -726,6 +726,7 @@
            {::h/urakka-id (get-in app [:valinnat :urakka-id])
             ::kommentti/kommentti nil
             ::kommentti/tila tila
+            ::kommentti/laskutus-pvm pvm
             ::h/id id}
            {:onnistui ->LaskutuslupaTallennettu
             :onnistui-parametrit [id]

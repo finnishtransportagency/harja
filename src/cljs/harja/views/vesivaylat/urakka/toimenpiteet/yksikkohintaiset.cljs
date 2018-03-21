@@ -1,12 +1,13 @@
 (ns harja.views.vesivaylat.urakka.toimenpiteet.yksikkohintaiset
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :refer [tuck]]
+            [cljs-time.core :as time]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as kok-hint]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu-tiedot]
             [harja.views.vesivaylat.urakka.toimenpiteet.toimenpiteen-hinnoittelu :as hinnoittelu-ui]
             [harja.ui.komponentti :as komp]
-            [harja.loki :refer [log]]
+            [harja.loki :as loki :refer [log]]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.yleiset :as yleiset]
@@ -31,7 +32,9 @@
             [harja.views.kartta :as kartta]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.pvm :as pvm]
-            [harja.id :refer [id-olemassa?]])
+            [harja.id :refer [id-olemassa?]]
+            [clojure.string :as str]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -163,6 +166,61 @@
    ^{:key "hinnoittelu"}
    [hinnoittelu e! app]])
 
+(defn laskutusdialogin-sisalto [teksti hinnoittelu laskutus-kk-atomi]
+  [:div
+   (str teksti)
+   [:div.label-ja-alasveto.kuukausi
+    [:span.alasvedon-otsikko "Kuukausi"]
+    [yleiset/livi-pudotusvalikko
+     {:valinta @laskutus-kk-atomi
+      :format-fn (fn [alkupvm]
+                   (if alkupvm
+                     (let [kk-teksti (pvm/kuukauden-nimi (pvm/kuukausi alkupvm))]
+                       (str (str/capitalize kk-teksti) " " (pvm/vuosi alkupvm)))
+                     "- Valitse laskutuskuukausi - "))
+      :valitse-fn (fn [arvo] (reset! laskutus-kk-atomi arvo))}
+     (map
+       first
+       (pvm/aikavalin-kuukausivalit [(pvm/nyt) (time/plus (time/now) (time/months 8))]))]]])
+
+(defn- laskutuslupadialogi [e! teksti hinnoittelu]
+  (let [laskutus-kk-atomi (atom (or (::h/laskutus-pvm hinnoittelu) (time/plus (pvm/nyt) (time/months 1))))]
+    (modal/nayta!
+     {:otsikko "Muokkaa laskutuslupaa"
+      :footer [:span
+               [napit/takaisin "Peruuta" #(modal/piilota!)]
+               [napit/peruuta "Hylkää"
+                #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hylatty nil))]
+               [napit/hyvaksy "Hyväksy" #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hyvaksytty @laskutus-kk-atomi))]]}
+     [laskutusdialogin-sisalto teksti hinnoittelu laskutus-kk-atomi])))
+
+(defn laskutuslupanappi [e! app hinnoittelu]
+  (cond
+    (nil? (::h/id hinnoittelu))
+    nil
+
+    (::h/laskutettu? hinnoittelu)
+    (str "Laskutettu " (pvm/pvm (::h/laskutus-pvm hinnoittelu)))
+
+    (::h/laskutus-pvm hinnoittelu)
+    [:span
+     (str "Laskutetaan " (pvm/pvm (::h/laskutus-pvm hinnoittelu)))
+     [napit/yleinen-toissijainen
+      ""
+      #(laskutuslupadialogi e!
+                            (str "Tilauksella " (::h/nimi hinnoittelu) " on laskutuslupa.")
+                            hinnoittelu)
+      {:ikoni (ikonit/save)
+       :ikoninappi? true
+       :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)}]]
+
+    :else
+    [napit/yleinen-ensisijainen
+     "Laskutuslupa"
+     #(laskutuslupadialogi e! "Anna tilaukselle laskutuslupa" hinnoittelu)
+     {:ikoni (ikonit/save)
+      :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)}]))
+
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
   (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])
         hintaryhman-toimenpiteet (:toimenpiteet app*)
@@ -237,26 +295,7 @@
                 :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
                                                         oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
                                                         (:id @nav/valittu-urakka)))}]]
-             (if (::h/laskutuslupa? hintaryhma)
-               [napit/yleinen-toissijainen
-                "Poista laskutuslupa"
-                #(varmista-kayttajalta/varmista-kayttajalta
-                   {:otsikko "Muokkaa laskutuslupaa"
-                    :sisalto (str "Tilauksella " (::h/nimi hintaryhma) " on laskutuslupa.")
-                    :hyvaksy "Poista laskutuslupa"
-                    :toiminto-fn (fn [] (e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hylatty)))})
-                {:ikoni (ikonit/save)
-                 :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app*)}]
-
-               [napit/yleinen-ensisijainen
-                "Anna laskutuslupa"
-                #(varmista-kayttajalta/varmista-kayttajalta
-                   {:otsikko "Muokkaa laskutuslupaa"
-                    :sisalto "Tilaus pitää hyväksyä, jotta se näkyy laskutusyhteenvedolla."
-                    :hyvaksy "Hyväksy"
-                    :toiminto-fn (fn [] (e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hintaryhma) :hyvaksytty)))})
-                {:ikoni (ikonit/save)
-                 :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app*)}])])))]]))
+             [laskutuslupanappi e! app* hintaryhma]])))]]))
 
 (defn- toimenpidelomake [e! {:keys [valittu-toimenpide tallennus-kaynnissa?] :as app}]
   (let [uusi-toimenpide? (not (id-olemassa? (::to/id valittu-toimenpide)))]
@@ -425,6 +464,11 @@
                       {:otsikko "Hinta" :tyyppi :komponentti :leveys 8
                        :komponentti (fn [rivi]
                                       [hinnoittelu-ui/hinnoittele-toimenpide e! app* rivi listaus-tunniste])}
+                      {:otsikko "Laskutuslupa"
+                       :tyyppi :komponentti
+                       :leveys 8
+                       :komponentti (fn [rivi]
+                                      [laskutuslupanappi e! app* (::to/oma-hinnoittelu rivi)])}
                       (jaettu/sarake-checkbox e! app*)]
                      :listaus-tunniste listaus-tunniste
                      :avaa-toimenpide-lomakkeelle #(e! (tiedot/->AvaaLomakkeelle %))
