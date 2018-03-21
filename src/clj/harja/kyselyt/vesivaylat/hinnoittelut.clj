@@ -22,7 +22,9 @@
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.kommentti :as kommentti]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.konversio :as konv]))
 
 (defqueries "harja/kyselyt/vesivaylat/hinnoittelut.sql")
 
@@ -132,9 +134,9 @@
   ([laskutusluvat nyt]
    (set (keep
           (fn [{:keys [hinnoittelu-id laskutus-pvm]}]
-            (when (or (t/before? (t/first-day-of-the-month laskutus-pvm)
+            (when (or (t/before? (t/first-day-of-the-month (pvm/joda-timeksi laskutus-pvm))
                                  (t/first-day-of-the-month nyt))
-                      (t/equal? (t/first-day-of-the-month laskutus-pvm)
+                      (t/equal? (t/first-day-of-the-month (pvm/joda-timeksi laskutus-pvm))
                                 (t/first-day-of-the-month nyt)))
               hinnoittelu-id))
           laskutusluvat))))
@@ -326,10 +328,11 @@
 
 (defn lisaa-kommentti! [db user tila kommentti pvm hinnoittelu-id]
   ;; Laskutusluvan voi antaa nykyiselle tai seuraaville kuukausille
-  (assert (or (t/after? (t/first-day-of-the-month pvm)
-                         (t/first-day-of-the-month (t/now)))
-              (t/equal? (t/first-day-of-the-month pvm)
-                        (t/first-day-of-the-month (t/now)))))
+  (let [pvm (pvm/joda-timeksi pvm)]
+    (assert (or (t/after? (t/first-day-of-the-month pvm)
+                          (t/first-day-of-the-month (t/now)))
+                (t/equal? (t/first-day-of-the-month pvm)
+                          (t/first-day-of-the-month (t/now))))))
 
   (specql/insert! db
                   ::kommentti/hinnoittelun-kommentti
