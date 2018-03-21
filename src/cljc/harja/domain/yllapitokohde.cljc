@@ -225,7 +225,6 @@ yllapitoluokkanimi->numero
            virheet (remove nil? (concat
                                   (validoi-sijainti kohteen-sijainti)
                                   (validoi-alikohteet kohde-id kohteen-sijainti alikohteet)))]
-
        (when (not (empty? virheet))
          (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
 

@@ -34,23 +34,9 @@
              %
              yllapitokohteet/+kohteissa-viallisia-sijainteja+
              yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
-             "Alikohde (tunnus: C) ei ole kohteen (id: 1) sisällä.")
+             "Alikohde (tunniste: C) ei ole kohteen (tunniste: 1) sisällä.")
           (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
-        "Kohteen ulkopuolinen alikohde otettiin kiinni"))
-
-  (let [kohde {:aosa 1 :aet 1 :losa 1 :let 1}
-        alikohteet [{:tunnus "A"
-                     :sijainti {:aosa 1, :aet 1, :losa 2, :let 2}}
-                    {:tunnus "B"
-                     :sijainti {:aosa 2, :aet 2, :losa 3, :let 3}}]]
-    (is (thrown+?
-          #(tasmaa-poikkeus
-             %
-             yllapitokohteet/+kohteissa-viallisia-sijainteja+
-             yllapitokohteet/+viallinen-yllapitokohdeosan-sijainti+
-             "Alikohteet eivät täytä kohdetta (id: 1)")
-          (yllapitokohteet/tarkista-kohteen-ja-alikohteiden-sijannit 1 kohde alikohteet))
-        "Alikohteet jotka eivät täytä kohdetta otettiin kiinni")))
+        "Kohteen ulkopuolinen alikohde otettiin kiinni")))
 
 (deftest tarkista-validi-kohde
   (let [kohde {:aosa 1 :aet 1 :losa 4 :let 4}
@@ -375,4 +361,4 @@
 
     (let [kohteen-sijainti (dissoc kohteen-sijainti :ajorata :kaista)]
       (is (= [] (yllapitokohteet/tarkista-alikohteiden-ajoradat-ja-kaistat 666 kohteen-sijainti alikohteet))
-          "Kun pääkohteella ei ole ajorataa tai kaistaa, ei alikohteiden ajoradalla ja kaistalla ole väliä"))))
+          "Kun pääkohteella ei ole ajorataa tai kaistaa, ei alikohteiden "))))
