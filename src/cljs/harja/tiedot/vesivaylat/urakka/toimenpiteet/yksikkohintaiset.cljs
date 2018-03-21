@@ -159,8 +159,8 @@
 (defrecord TallennaHintaryhmanHinnoittelu [tiedot])
 (defrecord HintaryhmanHinnoitteluTallennettu [vastaus])
 (defrecord HintaryhmanHinnoitteluEiTallennettu [virhe])
-(defrecord MuutaHintaryhmanLaskutuslupaa [id tila pvm])
-(defrecord LaskutuslupaTallennettu [tulos id])
+(defrecord MuutaHintaryhmanLaskutuslupaa [id tila pvm paivitys])
+(defrecord LaskutuslupaTallennettu [tulos id paivitys])
 (defrecord LaskutuslupaEiTallennettu [virhe])
 ;; Kartta
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
@@ -718,7 +718,7 @@
     (assoc app :hintaryhman-hinnoittelun-tallennus-kaynnissa? false))
 
   MuutaHintaryhmanLaskutuslupaa
-  (process-event [{id :id tila :tila pvm :pvm} app]
+  (process-event [{id :id tila :tila pvm :pvm paivitys :paivitys} app]
 
     (if-not (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)
       (-> app
@@ -730,15 +730,18 @@
             ::kommentti/laskutus-pvm pvm
             ::h/id id}
            {:onnistui ->LaskutuslupaTallennettu
-            :onnistui-parametrit [id]
+            :onnistui-parametrit [id paivitys]
             :epaonnistui ->LaskutuslupaEiTallennettu})
          (assoc :hintaryhman-laskutusluvan-tallennus-kaynnissa? true))
 
       app))
 
   LaskutuslupaTallennettu
-  (process-event [{id :id} app]
+  (process-event [{id :id p :paivitys} app]
     (when (modal/nakyvissa?) (modal/piilota!))
+    (tuck/action!
+      (fn [e!]
+        (e! p)))
     (-> app
         (assoc :hintaryhman-laskutusluvan-tallennus-kaynnissa? false)
         (update :hintaryhmat
