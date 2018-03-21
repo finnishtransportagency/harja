@@ -5,7 +5,9 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.vesivaylat.hinnoittelut :as q]
+            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
             [harja.tyokalut.tietoturva :as tietoturva]
+            [harja.id :as id]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.hinnoittelu :as h]
@@ -13,9 +15,7 @@
             [harja.domain.urakka :as ur]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.tyo :as tyo]
-            [harja.domain.vesivaylat.kommentti :as kommentti]
-            [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
-            [harja.id :as id]))
+            [harja.domain.vesivaylat.kommentti :as kommentti]))
 
 (defn hae-hintaryhmat [db user urakka-id]
   (when (ominaisuus-kaytossa? :vesivayla)
@@ -69,7 +69,7 @@
       (q/vaadi-hinnat-kuuluvat-hinnoitteluun db (set (map ::hinta/id (::h/tallennettavat-hinnat tiedot)))
                                              (::h/id tiedot))
       (jdbc/with-db-transaction [db db]
-        (assert (not (q/hinnoittelu-laskutettu? db (::h/id tiedot)))
+        (assert (not (to-q/hinnoittelu-laskutettu? db (::h/id tiedot)))
                 "Hintaryhmä on jo laskutettu, eli hintaa ei voi enää muokata.")
 
         (q/tallenna-hintaryhmalle-hinta! db user
@@ -97,7 +97,7 @@
         (q/vaadi-tyot-kuuluvat-toimenpiteeseen db olemassa-olevat-tyo-idt toimenpide-id))
       (jdbc/with-db-transaction [db db]
         (let [hinnoittelu-id (q/luo-toimenpiteelle-oma-hinnoittelu-jos-puuttuu db user toimenpide-id urakka-id)]
-          (assert (not (q/hinnoittelu-laskutettu? db hinnoittelu-id))
+          (assert (not (to-q/hinnoittelu-laskutettu? db hinnoittelu-id))
                   "Toimenpiteen hinnoittelu on jo laskutettu, eli hintaa ei voi enää muokata.")
 
           (q/tallenna-toimenpiteen-omat-hinnat!
@@ -129,7 +129,7 @@
       ::h/urakka-id
       urakka-id)
 
-    (assert (not (q/hinnoittelu-laskutettu? db (::h/id tiedot)))
+    (assert (not (to-q/hinnoittelu-laskutettu? db (::h/id tiedot)))
             "Hinnoittelu on jo laskutettu, eli tilaa ei voi enää muuttaa.")
 
     (q/lisaa-kommentti! db

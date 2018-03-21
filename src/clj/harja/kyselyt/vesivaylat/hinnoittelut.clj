@@ -3,18 +3,18 @@
             [clojure.spec.alpha :as s]
             [clojure.future :refer :all]
             [clojure.set :as set]
-            [clj-time.core :as time]
+            [clj-time.core :as t]
             [jeesql.core :refer [defqueries]]
             [specql.core :as specql]
             [specql.op :as op]
             [specql.rel :as rel]
-            [taoensso.timbre :as log]
 
+            [taoensso.timbre :as log]
             [harja.id :refer [id-olemassa?]]
+
             [harja.pvm :as pvm]
 
             [harja.kyselyt.vesivaylat.toimenpiteet :as to-q]
-
             [harja.domain.vesivaylat.hinnoittelu :as h]
             [harja.domain.vesivaylat.hinta :as hinta]
             [harja.domain.vesivaylat.toimenpide :as to]
@@ -22,11 +22,8 @@
             [harja.domain.vesivaylat.tyo :as tyo]
             [harja.domain.muokkaustiedot :as m]
             [harja.domain.vesivaylat.kommentti :as kommentti]
-            [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.konversio :as konv]))
-
-(defqueries "harja/kyselyt/vesivaylat/hinnoittelut.sql")
 
 (defn- vaadi-hinnoittelut-kuuluvat-urakkaan* [tulos hinnoittelu-idt urakka-id]
   (when (or
@@ -128,34 +125,6 @@
   (when (hinnoitteluun-kuuluu-toimenpiteita? db hinnoittelu-id)
     (throw (RuntimeException. "Hinnoitteluun kuuluu toimenpiteitä."))))
 
-(defn- laskutetut-laskutusluvat
-  ([laskutusluvat]
-    (laskutetut-laskutusluvat laskutusluvat (t/now)))
-  ([laskutusluvat nyt]
-   (set (keep
-          (fn [{:keys [hinnoittelu-id laskutus-pvm]}]
-            (when (or (t/before? (t/first-day-of-the-month (pvm/joda-timeksi laskutus-pvm))
-                                 (t/first-day-of-the-month nyt))
-                      (t/equal? (t/first-day-of-the-month (pvm/joda-timeksi laskutus-pvm))
-                                (t/first-day-of-the-month nyt)))
-              hinnoittelu-id))
-          laskutusluvat))))
-
-(defn hinnoittelu-laskutettu? [db hinnoittelu-id]
-  (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
-        laskutetut (laskutetut-laskutusluvat laskutusluvat)]
-    (boolean (laskutetut hinnoittelu-id))))
-
-(defn liita-laskutuslupa-hintaryhmiin [db hintaryhmat]
-  (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
-        hyvaksytyt (into {} (map (juxt :hinnoittelu-id :laskutus-pvm) laskutusluvat))
-        laskutetut (laskutetut-laskutusluvat laskutusluvat)]
-    (map
-      (fn [h]
-        (assoc h ::h/laskutus-pvm (hyvaksytyt (::h/id h))
-                 ::h/laskutettu? (boolean (laskutetut (::h/id h)))))
-      hintaryhmat)))
-
 (defn hae-hintaryhmat [db urakka-id]
   (->> (specql/fetch db
                      ::h/hinnoittelu
@@ -165,7 +134,7 @@
                       ::m/poistettu? false})
        (mapv #(assoc % ::h/hinnat (remove ::m/poistettu? (::h/hinnat %))))
        (mapv #(assoc % ::h/tyhja? (not (hinnoitteluun-kuuluu-toimenpiteita? db (::h/id %)))))
-       (liita-laskutuslupa-hintaryhmiin db)))
+       (to-q/liita-laskutuslupatiedot-hinnoitteluihin db)))
 
 (defn luo-hinnoittelu! [db user tiedot]
   (let [urakka-id (::ur/id tiedot)
