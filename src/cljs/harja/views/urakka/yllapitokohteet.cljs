@@ -405,19 +405,17 @@
                                               (not voi-muokata?))
                                 :luokka "btn-xs"}]])}])))
 
-(defn hae-osan-pituudet [grid osan-pituudet-teille-atom]
-  (let [tiet (into #{} (map (comp :tr-numero second)) (grid/hae-muokkaustila grid))]
+(defn hae-osan-pituudet [grid-state osan-pituudet-teille-atom]
+  (let [tiet (into #{} (map (comp :tr-numero second)) grid-state)]
     (doseq [tie tiet :when (not (contains? @osan-pituudet-teille-atom tie))]
       (go
         (let [pituudet (<! (vkm/tieosien-pituudet tie))]
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
-(defn yllapitokohdeosat [{:keys [urakka jarjesta-kun-kasketaan kohdeosat-atom validoinnit voi-muokata? virhe-viesti]}]
-  (let [virheet (atom nil)
+(defn yllapitokohdeosat [{:keys [urakka jarjesta-kun-kasketaan kohdeosat-atom virheet-atom validoinnit voi-muokata? virhe-viesti]}]
+  (let [virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
-        tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
-        tr-virheet (atom {}) ;; virheelliset TR sijainnit
         osan-pituudet-teille (atom nil)
         validoi-kohteen-osoite (fn [kentta arvo rivi]
                                  (validoi-yllapitokohteen-osoite @osan-pituudet-teille kentta arvo rivi))
@@ -434,10 +432,12 @@
           :paikkaus
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paikkauskohteet (:id urakka))
           false)
-        hae-fn (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))]
+        hae-fn (fn [rivi] (tr/laske-tien-pituus (tien-osat-riville rivi) rivi))
+        pituus (fn [osan-pituus tieosa]
+                 (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
                  muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
-                 jarjesta-kun-kasketaan]}]
+                 jarjesta-kun-kasketaan kohdetyyppi]}]
       [grid/muokkaus-grid
        {:tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                           [:div
@@ -453,8 +453,7 @@
         :virhe-viesti virhe-viesti
         :muutos (fn [grid]
                   (validoi-kohdeosien-paallekkyys (grid/hae-muokkaustila grid) virheet)
-                  (hae-osan-pituudet grid osan-pituudet-teille)
-                  (validoi-tr-osoite grid tr-sijainnit tr-virheet))
+                  (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille))
         :otsikko otsikko
         :id "yllapitokohdeosat"
         :virheet virheet
@@ -468,6 +467,8 @@
                      (assoc rivi :tr-numero (:tr-numero yllapitokohde)
                             :tr-ajorata (:tr-ajorata yllapitokohde)
                             :tr-kaista (:tr-kaista yllapitokohde)))
+        :renderoinnin-jalkeen (fn [grid-state]
+                                (hae-osan-pituudet grid-state osan-pituudet-teille))
         :paneelikomponentit
         [(fn []
            (when tallenna-fn
@@ -490,7 +491,17 @@
                                 (reset! kohdeosat-atom
                                         (into (sorted-map)
                                               (zipmap (iterate inc 1)
-                                                      (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]}
+                                                      (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]
+        :muokkaa-footer (fn [g]
+                          [:span#kohdeosien-pituus-yht
+                           "Tierekisterikohteiden pituus yhteensä: "
+                           (if (not (empty? @osan-pituudet-teille))
+                             (fmt/pituus (reduce + 0 (keep (fn [kohdeosa]
+                                                             (pituus (get @osan-pituudet-teille (:tr-numero kohdeosa)) kohdeosa))
+                                                           (vals (grid/hae-muokkaustila g)))))
+                             "-")
+                           (when (= kohdetyyppi :sora)
+                             [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
        (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
                                      :muokkaa-kohdeosat! (fn [uudet-osat]
                                                            (reset! kohdeosat-atom (if jarjesta-kun-kasketaan
@@ -656,7 +667,8 @@
                          :tr-loppuetaisyys [osa-kohteen-sisalla]}
            :voi-muokata? voi-muokata?
            :virhe-viesti (when-not voi-muokata?
-                           "Päällystysilmoitus hyväksytty, ei voi muokata!")}]
+                           "Päällystysilmoitus hyväksytty, ei voi muokata!")
+           :kohdetyyppi kohdetyyppi}]
          [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
          [yllapitokohdeosat
           {:otsikko "Muut tierekisteriosoitteet"
@@ -734,7 +746,7 @@
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (= (:status vastaus) :ok))
              :muutos (fn [grid]
-                       (hae-osan-pituudet grid osan-pituudet-teille)
+                       (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille)
                        (validoi-tr-osoite grid tr-sijainnit tr-virheet))
              :voi-lisata? (not yha-sidottu?)
              :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))

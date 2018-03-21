@@ -70,6 +70,7 @@
    :bitumi-indeksi nil
    :id 8
    :takuupvm nil
+   :kirjoitusoikeus? :kaikki
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
                                  :tr-numero 20
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
@@ -83,8 +84,8 @@
                                  :tr-numero 20
                                  :tr-alkuosa 3 :tr-alkuetaisyys 42
                                  :tr-loppuosa 3 :tr-loppuetaisyys 123
-                                 :kohdeosa-id 32 :tr-kaista nil
-                                 :tr-ajorata nil
+                                 :kohdeosa-id 32 :tr-kaista 1
+                                 :tr-ajorata 1
                                  :toimenpide "toka!"
                                  :nimi "piru 1.5"
                                  ;; Päällystetoimenpiteen tiedot
@@ -132,19 +133,16 @@
 
       ;; Muokataan toiseksi viimeisen osoiterivin loppua siten, että se menee viimeisin
       ;; rivin loppukohdan yli. Tämän pitäisi tehdä virhe viimeiselle riville.
-      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "5") ;; losa
+      (change (grid-solu "yllapitokohdeosat" 1 6 "input") "3") ;; losa
       (<! (paivita))
 
-      ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-      #_(change (grid-solu "yllapitokohdeosat" 1 8 "input") "123") ;; let
+      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "20") ;; let
       (<! (paivita))
 
-      ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-      #_ (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys])))
+      (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 2 :tr-alkuetaisyys])))
              "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
 
-      ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-      #_(is (disabled? :#tallenna-paallystysilmoitus))
+      (is (disabled? :#tallenna-paallystysilmoitus))
 
       (reset! lomake tila)
       (<! (paivita))
@@ -152,7 +150,7 @@
       (is (nil? (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys]))))))
 
 (deftest paallystysilmoituslomake
-    (let [urakka {:id 1}
+    (let [urakka {:id 1 :tyyppi :paallystys}
           lukko nil
           lomake (r/atom paallystysilmoituslomake-alkutila)
           historia (historia/historia lomake)
@@ -174,17 +172,15 @@
           (render [comp])
 
           ;; Tarkista, että tieosoite näkyy oikein
-          ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-          #_(is (= "piru 1"
-                 (some-> (grid-solu "yllapitokohdeosat" 0 1)
+          (is (= "piru 1"
+                 (some-> (grid-solu "yllapitokohdeosat" 0 0 "input")
                          .-value)))
 
           (<! pituudet-haettu)
 
           (<! (paivita))
 
-          ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-          #_(is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
+          (is (= "Tierekisterikohteiden pituus yhteensä: 10,00 km"
                  (some-> (sel1 :#kohdeosien-pituus-yht) .-innerText)))
 
 
@@ -199,16 +195,13 @@
 
             (<! (paivita))
 
-            ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-            #_(is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
+            (is (= 888 (get-in @lomake [:ilmoitustiedot :osoitteet 0 :rc%])))
 
-            ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-            #_(is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
+            (is (= (get-in @lomake [:virheet :paallystystoimenpide 1 :rc%])
                    '("Anna arvo välillä 0 - 100")))
 
             ;; Tallennus nappi disabled
-            ;; Todo: Päällystys 2.0 Ei toimi vielä uuden päällystyksen mallin kanssa
-            #_(is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
+            (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
             
             (<! (tarkista-asiatarkastus lomake))
             (reset! lomake tila-ok))

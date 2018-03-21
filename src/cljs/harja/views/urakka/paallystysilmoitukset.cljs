@@ -370,7 +370,9 @@
            :otsikko "Tierekisteriosoitteet"
            :kohdeosat-atom paallystystoimenpiteet
            :jarjesta-kun-kasketaan first
-           :voi-muokata? muokkaus-mahdollista?}]
+           :voi-muokata? muokkaus-mahdollista?
+           :kohdetyyppi (keyword (:yllapitokohdetyyppi lomakedata-nyt))
+           :virheet-atom yllapitokohde-virheet}]
 
          [debug @paallystystoimenpiteet {:otsikko "Päällystystoimenpiteet"}]
 
