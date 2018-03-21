@@ -285,7 +285,7 @@
       (f req)
       {:status 403
        :headers {"Content-Type" "text/html"}
-       :body "Access denied"})))
+       :body "Virheellinen CSRF-token"})))
 
 (defn- jaa-todennettaviin-ja-ei-todennettaviin [kasittelijat]
   (let [{ei-todennettavat true
