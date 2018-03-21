@@ -30,7 +30,8 @@
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tt]
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [harja.ui.modal :as modal])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -737,6 +738,7 @@
 
   LaskutuslupaTallennettu
   (process-event [{id :id} app]
+    (when (modal/nakyvissa?) (modal/piilota!))
     (-> app
         (assoc :hintaryhman-laskutusluvan-tallennus-kaynnissa? false)
         (update :hintaryhmat
