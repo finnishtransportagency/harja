@@ -146,11 +146,11 @@
 
 (defn liita-laskutuslupa-hintaryhmiin [db hintaryhmat]
   (let [laskutusluvat (laskutusluvalliset-hintaryhmat db)
-        hyvaksytyt (set (keep :hinnoittelu-id laskutusluvat))
+        hyvaksytyt (into {} (map (juxt :hinnoittelu-id :laskutus-pvm) laskutusluvat))
         laskutetut (laskutetut-laskutusluvat laskutusluvat)]
     (map
       (fn [h]
-        (assoc h ::h/laskutuslupa? (boolean (hyvaksytyt (::h/id h)))
+        (assoc h ::h/laskutus-pvm (hyvaksytyt (::h/id h))
                  ::h/laskutettu? (boolean (laskutetut (::h/id h)))))
       hintaryhmat)))
 

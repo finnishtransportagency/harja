@@ -14,7 +14,8 @@
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]]))
+        :cljs [[specql.impl.registry]])
+    [harja.pvm :as pvm])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -90,7 +91,7 @@
 
 ;; Palvelut
 
-(s/def ::laskutuslupa? boolean?)
+(s/def ::laskutus-pvm (s/nilable pvm/pvm?))
 (s/def ::laskutettu? boolean?)
 
 (s/def ::hae-hintaryhmat-kysely
@@ -99,7 +100,7 @@
 
 (s/def ::hae-hintaryhmat-vastaus
   (s/coll-of
-    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja? ::laskutuslupa? ::laskutettu?])))
+    (s/keys :req [::id ::nimi ::hintaryhma? ::tyhja? ::laskutus-pvm ::laskutettu?])))
 
 (s/def ::luo-hinnoittelu-kysely
   (s/keys
