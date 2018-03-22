@@ -638,11 +638,10 @@
                                          (:tr-loppuosa kohteen-osan-rivi) (:tr-loppuetaisyys kohteen-osan-rivi))
                                 (when-not (tr/tr-vali-paakohteen-sisalla? rivi kohteen-osan-rivi)
                                   (str "Osoite ei ole pääkohteen sisällä."))))
-        voi-muokata? (not= (some #(when (= (:kohdenumero %) (:kohdenumero rivi))
-                                    (:tila %))
+        voi-muokata? (not= (some #(when (= (:kohdenumero %) (:kohdenumero rivi)) (:tila %))
                                  @paallystys-tiedot/paallystysilmoitukset)
                            :lukittu)
-        virheeee (atom nil)]
+        virheet (atom nil)]
     (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
       (let [kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
                                                        (:tr-kaista rivi)))]
@@ -664,13 +663,12 @@
                          :tr-alkuetaisyys [osa-kohteen-sisalla]
                          :tr-loppuosa [osa-kohteen-sisalla]
                          :tr-loppuetaisyys [osa-kohteen-sisalla]}
-           :virheet-atom virheeee
+           :virheet-atom virheet
            :voi-muokata? voi-muokata?
-           :virhe-viesti (when-not voi-muokata?
-                           "Päällystysilmoitus hyväksytty, ei voi muokata!")
+           :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")
            :kohdetyyppi kohdetyyppi}]
          [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
-         [debug/debug @virheeee {:otsikko "Kohteen virheet"}]
+         [debug/debug @virheet {:otsikko "Kohteen virheet"}]
          [yllapitokohdeosat
           {:otsikko "Muut tierekisteriosoitteet"
            :urakka urakka
@@ -688,8 +686,7 @@
                          :tr-loppuosa [osa-kohteen-ulkopuolella]
                          :tr-loppuetaisyys [osa-kohteen-ulkopuolella]}
            :voi-muokata? voi-muokata?
-           :virhe-viesti (when-not voi-muokata?
-                           "Päällystysilmoitus hyväksytty, ei voi muokata!")}]
+           :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")}]
          [debug/debug @muut-osat {:otsikko "Muut tierekisteriosoitteet"}]
          (when (= kohdetyyppi :paallystys)
            [maaramuutokset {:yllapitokohde-id (:id rivi)
@@ -726,23 +723,23 @@
                                            ;; ainakin yhdellä kohteella ne on annettu
                                            ;; Näitä ei voi muokata itse, joten turha näyttää aina tyhjiä sarakkeita.
                                            (and yha-sidottu?
-                                                (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))]
+                                                (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))
+              paallystysilmoitus-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))]
           [:div.yllapitokohteet
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
                        [vasta-muokatut-lihavoitu]]
              :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
-             :vetolaatikot
-             (into {}
-                   (map (juxt
-                          :id
-                          (fn [rivi]
-                            [kohteen-vetolaatikko {:urakka urakka
-                                                   :sopimus-id (first @u/valittu-sopimusnumero)
-                                                   :kohteet-atom kohteet-atom
-                                                   :rivi rivi
-                                                   :kohdetyyppi (:kohdetyyppi optiot)}])))
-                   @kohteet-atom)
+             :vetolaatikot (into {}
+                                 (map (juxt
+                                        :id
+                                        (fn [rivi]
+                                          [kohteen-vetolaatikko {:urakka urakka
+                                                                 :sopimus-id (first @u/valittu-sopimusnumero)
+                                                                 :kohteet-atom kohteet-atom
+                                                                 :rivi rivi
+                                                                 :kohdetyyppi (:kohdetyyppi optiot)}])))
+                                 @kohteet-atom)
              :tallenna @tallenna
              :nollaa-muokkaustiedot-tallennuksen-jalkeen? (fn [vastaus]
                                                             (= (:status vastaus) :ok))
@@ -750,12 +747,12 @@
                        (hae-osan-pituudet (grid/hae-muokkaustila grid) osan-pituudet-teille)
                        (validoi-tr-osoite grid tr-sijainnit tr-virheet))
              :voi-lisata? (not yha-sidottu?)
+             :voi-muokata-rivia? paallystysilmoitus-lukittu?
              :esta-poistaminen? (fn [rivi] (not (:yllapitokohteen-voi-poistaa? rivi)))
-             :esta-poistaminen-tooltip
-             (fn [_]
-               (if yha-sidottu?
-                 "Kohdetta on muokattu tai sille on tehty kirjauksia."
-                 "Kohteelle on tehty kirjauksia."))}
+             :esta-poistaminen-tooltip (fn [_]
+                                         (if yha-sidottu?
+                                           "Kohdetta on muokattu tai sille on tehty kirjauksia."
+                                           "Kohteelle on tehty kirjauksia."))}
             (into []
                   (concat
                     [{:tyyppi :vetolaatikon-tila :leveys haitari-leveys}
