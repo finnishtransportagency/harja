@@ -168,7 +168,7 @@
 
 (defn laskutusdialogin-sisalto [teksti hinnoittelu laskutus-kk-atomi]
   [:div
-   (str teksti)
+   [:p (str teksti)]
    [:div.label-ja-alasveto.kuukausi
     [:span.alasvedon-otsikko "Kuukausi"]
     [yleiset/livi-pudotusvalikko
@@ -184,6 +184,22 @@
        (pvm/aikavalin-kuukausivalit [(time/first-day-of-the-month (pvm/nyt))
                                      (time/first-day-of-the-month (time/plus (time/now) (time/months 8)))]))]]])
 
+(defn laskutusdialogin-footer [e! paivitys-event hinnoittelu hintaryhman-laskutusluvan-tallennus-kaynnissa? laskutus-kk-atomi]
+  [:span
+   [napit/takaisin
+    "Peruuta"
+    #(modal/piilota!)
+    {:disabled hintaryhman-laskutusluvan-tallennus-kaynnissa?}]
+   [napit/peruuta "Hylkää"
+    #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hylatty nil paivitys-event))
+    {:disabled (or hintaryhman-laskutusluvan-tallennus-kaynnissa?
+                   (nil? (::h/laskutus-pvm hinnoittelu)))}]
+   [napit/hyvaksy
+    "Hyväksy"
+    #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hyvaksytty @laskutus-kk-atomi paivitys-event))
+    {:disabled (or hintaryhman-laskutusluvan-tallennus-kaynnissa?
+                   (= @laskutus-kk-atomi (::h/laskutus-pvm hinnoittelu)))}]])
+
 (defn- laskutuslupadialogi [e!
                             {:keys [hintaryhman-laskutusluvan-tallennus-kaynnissa?] :as app}
                             paivitys-event teksti hinnoittelu]
@@ -191,20 +207,7 @@
                                                                      (time/plus (pvm/nyt) (time/months 1)))))]
     (modal/nayta!
       {:otsikko "Muokkaa laskutuslupaa"
-       :footer [:span
-                [napit/takaisin
-                 "Peruuta"
-                 #(modal/piilota!)
-                 {:disabled hintaryhman-laskutusluvan-tallennus-kaynnissa?}]
-                [napit/peruuta "Hylkää"
-                 #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hylatty nil paivitys-event))
-                 {:disabled (or hintaryhman-laskutusluvan-tallennus-kaynnissa?
-                                (nil? (::h/laskutus-pvm hinnoittelu)))}]
-                [napit/hyvaksy
-                 "Hyväksy"
-                 #(e! (tiedot/->MuutaHintaryhmanLaskutuslupaa (::h/id hinnoittelu) :hyvaksytty @laskutus-kk-atomi paivitys-event))
-                 {:disabled (or hintaryhman-laskutusluvan-tallennus-kaynnissa?
-                                (= @laskutus-kk-atomi (::h/laskutus-pvm hinnoittelu)))}]]}
+       :footer [laskutusdialogin-footer e! paivitys-event hinnoittelu hintaryhman-laskutusluvan-tallennus-kaynnissa? laskutus-kk-atomi]}
      [laskutusdialogin-sisalto teksti hinnoittelu laskutus-kk-atomi])))
 
 (defn laskutuslupanappi [e! app hinnoittelu paivitys-event]
@@ -226,7 +229,9 @@
        #(laskutuslupadialogi e!
                              app
                              paivitys-event
-                             "Ei laskutuslupaa"
+                             (str "Toimenpiteellä tai tilauksella on laskutuslupa, eli se näkyy kuukauden "
+                                  (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu)))
+                                  " laskulla. Kyseinen kuukausi ei ole vielä mennyt, joten voit vielä muokata laskutuslupaa.")
                              hinnoittelu)
        {:ikoni (ikonit/livicon-document-full)
         :luokka "laskutuslupa-nappi"
@@ -236,7 +241,14 @@
      :else
      [napit/yleinen-ensisijainen
       "Laskutuslupa"
-      #(laskutuslupadialogi e! app paivitys-event "Anna laskutuslupa" hinnoittelu)
+      #(laskutuslupadialogi
+         e!
+         app
+         paivitys-event
+         "Toimenpiteellä tai tilauksella ei ole vielä laskutuslupaa, eli se ei näy laskutusyhteenvedossa.
+         Kun annat laskutusluvan, nämä hinnat tulevat näkyviin valitun kuukauden laskulle. Tilauksen könttäsummalle
+         ja riveittäin hinnoitelluille toimenpiteille pitää antaa omat laskutusluvat, ja luvat voivat olla eri kuukausille."
+         hinnoittelu)
       {:ikoni (ikonit/livicon-document-full)
        :luokka "laskutuslupa-nappi"
        :disabled nappi-disabloitu?}])))
