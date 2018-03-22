@@ -31,17 +31,34 @@
                    ::alkuosa ::alkuetaisyys]
           :opt-un [::loppuosa ::loppuetaisyys]))
 
-(defn normalisoi
-  "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
-  [osoite]
+
+(defn muunna-osoitteen-avaimet [tie-avain
+                                alkuosa-avain
+                                alkuetaisyys-avain
+                                loppuosa-avain
+                                loppuetaisyys-avain
+                                ajorata-avain
+                                kaista-avain
+                                osoite]
   (let [osoite (or osoite {})
         ks (fn [& avaimet]
              (some osoite avaimet))]
-    {::tie (ks ::tie :numero :tr-numero :tie)
-     ::aosa (ks ::aosa :alkuosa :tr-alkuosa :aosa)
-     ::aet (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
-     ::losa (ks ::losa :loppuosa :tr-loppuosa :losa)
-     ::let (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)}))
+    {tie-avain (ks ::tie :numero :tr-numero :tie)
+     alkuosa-avain (ks ::aosa :alkuosa :tr-alkuosa :aosa)
+     alkuetaisyys-avain (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
+     loppuosa-avain (ks ::losa :loppuosa :tr-loppuosa :losa)
+     loppuetaisyys-avain (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)
+     ajorata-avain (ks ::arj ::ajorata :ajr :ajorata)
+     kaista-avain (ks ::kaista :kaista)}))
+
+(defn normalisoi
+  "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
+  [osoite]
+  (muunna-osoitteen-avaimet ::tie ::aosa ::aet ::losa ::let ::ajorata :kaista osoite))
+
+(defn tr-alkuiseksi [osoite]
+  "Muuntaa osoitteen avaimet tr-prefiksatuiksi"
+  (muunna-osoitteen-avaimet :tr-tie :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista osoite))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (::tie (normalisoi tie1)) (::tie (normalisoi tie2))))
@@ -310,13 +327,6 @@
       (pistemainen? osa-yksi) (tr-vali-paakohteen-sisalla? osa-kaksi osa-yksi)
       (pistemainen? osa-kaksi) (tr-vali-paakohteen-sisalla? osa-yksi osa-kaksi)
       :else (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi))
-    false))
-
-(defn kohteenosa-paallekkain-paakohteen-kanssa? [paakohde kohteenosa]
-  (if (= (:tr-numero paakohde) (:tr-numero kohteenosa))
-    (if (pistemainen? kohteenosa)
-      (tr-vali-paakohteen-sisalla? paakohde kohteenosa)
-      (tr-vali-leikkaa-tr-valin? paakohde kohteenosa))
     false))
 
 (defn alikohteet-tayttamaan-kohde
