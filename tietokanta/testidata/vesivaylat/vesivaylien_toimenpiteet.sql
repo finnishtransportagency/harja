@@ -1117,6 +1117,22 @@ VALUES
     FROM kayttaja
     WHERE kayttajanimi = 'tero'));
 
+  INSERT INTO vv_hinnoittelu_kommentti
+  (tila, aika, "laskutus-pvm", "kayttaja-id", "hinnoittelu-id")
+  VALUES
+    ('hyvaksytty'::kommentin_tila,
+     NOW() - INTERVAL '3 months',
+     NOW() - INTERVAL '2 months',
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     (SELECT oman_hinnoittelun_id
+      FROM vv_toimenpiteen_hinnoittelut
+      WHERE toimenpiteen_id = (SELECT id
+                               FROM reimari_toimenpide
+                               WHERE lisatieto = 'Poijujen korjausta kuten on sovittu')
+            AND oman_hinnoittelun_id IS NOT NULL));
+
 -- ***********************************************
 -- TODO: ERIKSEEN TILATTU YKSIKKÖHINTAINEN TYÖ?
 -- ***********************************************
