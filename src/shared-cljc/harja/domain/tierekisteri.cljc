@@ -396,3 +396,23 @@
                       (geo/viivojen-paatepisteet-koskettavat-toisiaan? geo1-viiva geo2-viiva threshold))
                     geometria2-viivat))
             geometria1-viivat))))
+
+(defn kohdeosa-paalekkain-muiden-kohdeosien-kanssa
+  ([kohdeosa muut-kohdeosat] (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat :id))
+  ([kohdeosa muut-kohdeosat id-avain]
+   (keep #(when (kohdeosat-paalekkain? kohdeosa %)
+            {:viesti "Kohdeosa on päälekkäin toisen kohdeosan kanssa"
+             :validointivirhe :kohteet-paallekain
+             :kohteet (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys id-avain) [% kohdeosa])})
+         muut-kohdeosat)))
+
+(defn kohdeosat-keskenaan-paallekkain
+  ([kohdeosat] (kohdeosat-keskenaan-paallekkain kohdeosat :id))
+  ([kohdeosat id-avain]
+   (let [paallekkaiset (flatten (for [kohdeosa kohdeosat
+                                      :let [muut-kohdeosat (keep (fn [muu-kohdeosa]
+                                                                   (when-not (= (id-avain kohdeosa) (id-avain muu-kohdeosa))
+                                                                     muu-kohdeosa))
+                                                                 kohdeosat)]]
+                                  (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat id-avain)))]
+     (distinct paallekkaiset))))
