@@ -24,7 +24,7 @@
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
 (def kohdeluettelossa? (atom false))
-(def paallystysilmoitukset-nakymassa? (atom false))
+(def paallystysilmoitukset-tai-kohteet-nakymassa? (atom false))
 (def validointivirheet-modal (atom nil))
 
 (defn hae-paallystysilmoitukset [urakka-id sopimus-id vuosi]
@@ -46,7 +46,7 @@
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
                vuosi @urakka/valittu-urakan-vuosi
                [valittu-sopimus-id _] @urakka/valittu-sopimusnumero
-               nakymassa? @paallystysilmoitukset-nakymassa?]
+               nakymassa? @paallystysilmoitukset-tai-kohteet-nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-paallystysilmoitukset valittu-urakka-id valittu-sopimus-id vuosi))))
