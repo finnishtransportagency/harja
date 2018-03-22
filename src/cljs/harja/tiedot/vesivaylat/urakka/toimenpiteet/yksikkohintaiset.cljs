@@ -719,7 +719,7 @@
 
   MuutaHintaryhmanLaskutuslupaa
   (process-event [{id :id tila :tila pvm :pvm paivitys :paivitys} app]
-
+    ;; Paivitys on tuck-event, joka laukaistaan, kun laskutuslupa on onnistuneesti tallennettu
     (if-not (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)
       (-> app
          (tuck-tyokalut/post!
@@ -738,6 +738,11 @@
 
   LaskutuslupaTallennettu
   (process-event [{id :id p :paivitys} app]
+    ;; Paivitys on tuck-event, joka laukaistaan, kun laskutuslupa on onnistuneesti tallennettu
+    ;; Käytännössä HaeHintaryhmat tai HaeToimenpiteet
+    ;; Kysely ei voi suoraan palauttaa haluttuja tietoja, koska samaa tallennusta käytetään
+    ;; toimenpiteille ja hintaryhmille. Parametrisoimalla siitä olisi selvitty, mutta aikapaine
+    ;; painoi päälle
     (when (modal/nakyvissa?) (modal/piilota!))
     (tuck/action!
       (fn [e!]
