@@ -656,7 +656,7 @@
                                                 :numero 20}]
 
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-      (is (= 3 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
+      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
       (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
       (is (alikohteiden-tr-osoitteet oletettu-toisen-alikohteen-tr-osoite)
