@@ -299,7 +299,7 @@
                                vv-toimenpide/sopimus
                                vv-toimenpide/turvalaite
                                vv-toimenpide/vayla
-                               ;; vv-toimenpide/vikailmoitus
+                               vv-toimenpide/vikailmoitus
                                vv-toimenpide/kiintio
                                vv-toimenpide/reimari-kentat
                                vv-toimenpide/metatiedot
