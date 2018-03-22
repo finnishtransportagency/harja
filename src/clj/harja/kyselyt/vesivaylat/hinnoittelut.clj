@@ -297,11 +297,10 @@
 
 (defn lisaa-kommentti! [db user tila kommentti pvm hinnoittelu-id]
   ;; Laskutusluvan voi antaa nykyiselle tai seuraaville kuukausille
-  (let [pvm (pvm/joda-timeksi pvm)]
-    (assert (or (t/after? (t/first-day-of-the-month pvm)
-                          (t/first-day-of-the-month (t/now)))
-                (t/equal? (t/first-day-of-the-month pvm)
-                          (t/first-day-of-the-month (t/now))))))
+  (when pvm
+    (assert
+      (to-q/laskutuspvm-nyt-tai-tulevaisuudessa? (t/now) pvm)
+      "Laskutusluvan pitää olla tässä kuussa tai tulevaisuudessa"))
 
   (specql/insert! db
                   ::kommentti/hinnoittelun-kommentti

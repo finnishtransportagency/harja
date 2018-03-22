@@ -82,6 +82,18 @@
     toimenpide-idt
     urakka-id))
 
+(defn laskutuspvm-nyt-tai-tulevaisuudessa? [nyt pvm]
+  (let [kuukauden-alkuun #(-> %
+                              pvm/joda-timeksi
+                              pvm/suomen-aikavyohykkeeseen
+                              t/first-day-of-the-month
+                              t/with-time-at-start-of-day)]
+    (let [pvm (kuukauden-alkuun pvm)
+          nyt (kuukauden-alkuun nyt)]
+      (boolean
+        (or (t/after? pvm nyt)
+            (t/equal? pvm nyt))))))
+
 ;; Pitäis ehkä ennemminkin olla kyselyt/hinnoittelussa,
 ;; mutta tätä tarvittiin myös toimenpiteitä haettaessa, ja hinnoitteluista jo viitataan tähän namespaceen
 (defn- laskutetut-laskutusluvat
@@ -90,10 +102,7 @@
   ([laskutusluvat nyt]
    (set (keep
           (fn [{:keys [hinnoittelu-id laskutus-pvm]}]
-            (when (or (t/before? (t/first-day-of-the-month (pvm/joda-timeksi laskutus-pvm))
-                                 (t/first-day-of-the-month nyt))
-                      (t/equal? (t/first-day-of-the-month (pvm/joda-timeksi laskutus-pvm))
-                                (t/first-day-of-the-month nyt)))
+            (when (laskutuspvm-nyt-tai-tulevaisuudessa? (t/now) laskutus-pvm)
               hinnoittelu-id))
           laskutusluvat))))
 
