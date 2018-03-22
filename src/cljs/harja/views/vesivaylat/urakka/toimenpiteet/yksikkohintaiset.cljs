@@ -181,12 +181,14 @@
       :valitse-fn (fn [arvo] (reset! laskutus-kk-atomi arvo))}
      (map
        first
-       (pvm/aikavalin-kuukausivalit [(pvm/nyt) (time/plus (time/now) (time/months 8))]))]]])
+       (pvm/aikavalin-kuukausivalit [(time/first-day-of-the-month (pvm/nyt))
+                                     (time/first-day-of-the-month (time/plus (time/now) (time/months 8)))]))]]])
 
 (defn- laskutuslupadialogi [e!
                             {:keys [hintaryhman-laskutusluvan-tallennus-kaynnissa?] :as app}
                             paivitys-event teksti hinnoittelu]
-  (let [laskutus-kk-atomi (atom (or (::h/laskutus-pvm hinnoittelu) (time/plus (pvm/nyt) (time/months 1))))]
+  (let [laskutus-kk-atomi (atom (or (::h/laskutus-pvm hinnoittelu) (time/first-day-of-the-month
+                                                                     (time/plus (pvm/nyt) (time/months 1)))))]
     (modal/nayta!
       {:otsikko "Muokkaa laskutuslupaa"
        :footer [:span
@@ -206,33 +208,36 @@
      [laskutusdialogin-sisalto teksti hinnoittelu laskutus-kk-atomi])))
 
 (defn laskutuslupanappi [e! app hinnoittelu paivitys-event]
-  (cond
-    (nil? (::h/id hinnoittelu))
-    nil
+  (let [nappi-disabloitu? (or (:toimenpiteiden-haku-kaynnissa? app)
+                              (:hintaryhmien-haku-kaynnissa? app)
+                              (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app))]
+    (cond
+     (nil? (::h/id hinnoittelu))
+     nil
 
-    (::h/laskutettu? hinnoittelu)
-    (str "Laskutettu " (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))
+     (::h/laskutettu? hinnoittelu)
+     (str "Laskutettu " (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))
 
-    (::h/laskutus-pvm hinnoittelu)
-    [:span
-     (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))
-     [napit/yleinen-toissijainen
-      ""
-      #(laskutuslupadialogi e!
-                            app
-                            paivitys-event
-                            "Ei laskutuslupaa"
-                            hinnoittelu)
+     (::h/laskutus-pvm hinnoittelu)
+     [:span
+      (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))
+      [napit/yleinen-toissijainen
+       ""
+       #(laskutuslupadialogi e!
+                             app
+                             paivitys-event
+                             "Ei laskutuslupaa"
+                             hinnoittelu)
+       {:ikoni (ikonit/save)
+        :ikoninappi? true
+        :disabled nappi-disabloitu?}]]
+
+     :else
+     [napit/yleinen-ensisijainen
+      "Laskutuslupa"
+      #(laskutuslupadialogi e! app paivitys-event "Anna laskutuslupa" hinnoittelu)
       {:ikoni (ikonit/save)
-       :ikoninappi? true
-       :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)}]]
-
-    :else
-    [napit/yleinen-ensisijainen
-     "Laskutuslupa"
-     #(laskutuslupadialogi e! app paivitys-event "Anna laskutuslupa" hinnoittelu)
-     {:ikoni (ikonit/save)
-      :disabled (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app)}]))
+       :disabled nappi-disabloitu?}])))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
   (let [hinnoittelu-id (get-in app* [:hinnoittele-hintaryhma ::h/id])
