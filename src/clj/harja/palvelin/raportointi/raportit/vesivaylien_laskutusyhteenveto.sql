@@ -100,7 +100,9 @@ SELECT
                        END), 0)
    FROM vv_hinta
    WHERE "hinnoittelu-id" = oma_hinnoittelu.id
-         AND poistettu IS NOT TRUE)
+         AND poistettu IS NOT TRUE
+         AND "hinnoittelu-id" IN
+             (SELECT id FROM vv_hyvaksytyt_hinnoittelut WHERE "laskutus-pvm" BETWEEN :alkupvm AND :loppupvm))
     +
   (SELECT COALESCE(SUM(tyo.maara * yht.yksikkohinta), 0)
    FROM vv_tyo tyo
@@ -110,14 +112,16 @@ SELECT
                                       AND yht.alkupvm <= :alkupvm
                                       AND yht.loppupvm >= :loppupvm
    WHERE "hinnoittelu-id" = oma_hinnoittelu.id
-         AND tyo.poistettu IS NOT TRUE)
+         AND tyo.poistettu IS NOT TRUE
+         AND "hinnoittelu-id" IN
+             (SELECT id FROM vv_hyvaksytyt_hinnoittelut WHERE "laskutus-pvm" BETWEEN :alkupvm AND :loppupvm))
     AS "summa",
   (SELECT tyyppi
    FROM vv_vayla
    WHERE vaylanro =
          (SELECT "vaylanro"
           FROM reimari_toimenpide
-          WHERE vaylanro =
+          WHERE id =
                 (SELECT "toimenpide-id"
                  FROM vv_hinnoittelu_toimenpide
                  WHERE "hinnoittelu-id" = oma_hinnoittelu.id
