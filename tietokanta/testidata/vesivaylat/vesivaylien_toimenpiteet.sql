@@ -709,6 +709,19 @@ VALUES
                       FROM kayttaja
                       WHERE kayttajanimi = 'tero'));
 
+INSERT INTO vv_hinnoittelu_kommentti
+(tila, aika, "laskutus-pvm", "kayttaja-id", "hinnoittelu-id")
+  VALUES
+    ('hyvaksytty'::kommentin_tila,
+    NOW() - INTERVAL '2 months',
+     NOW() - INTERVAL '2 months',
+     (SELECT id
+      FROM kayttaja
+      WHERE kayttajanimi = 'tero'),
+     (SELECT id
+      FROM vv_hinnoittelu
+      WHERE nimi = 'Oulaisten meriväylän kunnostus'));
+
 INSERT INTO vv_hinnoittelu_toimenpide
 ("toimenpide-id", "hinnoittelu-id", luoja)
 VALUES
