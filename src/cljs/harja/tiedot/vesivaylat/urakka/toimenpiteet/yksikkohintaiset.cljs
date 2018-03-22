@@ -12,6 +12,9 @@
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
             [harja.domain.muokkaustiedot :as m]
+            [harja.domain.urakka :as urakka]
+            [harja.domain.sopimus :as sop]
+
             [harja.id :refer [id-olemassa?]]
             [cljs.core.async :as async :refer [<!]]
             [harja.pvm :as pvm]
@@ -24,8 +27,9 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [cljs.spec.alpha :as s]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
-            [harja.domain.urakka :as urakka]
-            [reagent.core :as r])
+            [reagent.core :as r]
+            [harja.tyokalut.tuck :as tt]
+            [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
@@ -33,6 +37,8 @@
   {::to/id nil
    ::h/hinnat nil
    ::h/tyot []})
+
+(def alustettu-toimenpide {})
 
 (def alustettu-hintaryhman-hinnoittelu
   {::h/id nil
@@ -74,7 +80,8 @@
          :korostetut-turvalaitteet nil
          ;; korostettu-hintaryhma on false, kun hintaryhmää ei ole korostettu,
          ;; koska "kokonaishintaisista siirrettyjen" hintaryhmän id:n täytyy olla nil
-         :korostettu-hintaryhma false}))
+         :korostettu-hintaryhma false
+         :valittu-toimenpide nil}))
 
 (defonce karttataso-yksikkohintaisten-turvalaitteet (r/cursor tila [:karttataso-nakyvissa?]))
 (defonce turvalaitteet-kartalla (r/cursor tila [:turvalaitteet-kartalla]))
@@ -153,6 +160,12 @@
 ;; Kartta
 (defrecord KorostaHintaryhmaKartalla [hintaryhma])
 (defrecord PoistaHintaryhmanKorostus [])
+
+(defrecord AvaaLomakkeelle [toimenpide])
+(defrecord ToimenpidettaMuokattu [toimenpide])
+(defrecord TallennaToimenpide [toimenpide])
+(defrecord ToimenpideTallennettu [vastaus])
+(defrecord ToimenpideEiTallennettu [virhe])
 
 (defn- hintakentta
   [hinta]
@@ -345,6 +358,40 @@
        %)
     (:toimenpiteet app)))
 
+(defn tallennusparametrit [toimenpide]
+  (-> toimenpide
+      (assoc ::to/sopimus-id (get-in toimenpide [::to/sopimus ::sop/id])
+             ::to/urakka-id (:id @nav/valittu-urakka)
+             ::to/hintatyyppi :yksikkohintainen)
+      (dissoc ::to/sopimus
+              ::to/urakka
+              ::to/turvalaite
+              ::to/liitteet
+              ::to/vikakorjauksia?
+              ::to/komponentit
+              ::to/pvm
+              ::to/oma-hinnoittelu
+              ::to/hintaryhma-id
+              :lihavoi
+              :valittu?)
+      (set/rename-keys {::to/tyolaji ::to/reimari-tyolaji
+                        ::to/tyoluokka ::to/reimari-tyoluokka
+                        ::to/toimenpide ::to/reimari-toimenpidetyyppi})
+      ;; Samalla nimellä voi palautua monta koodia.
+      ;; On epäselvää, onko esim eri "Poisto" toimenpidetyypeillä mitään eroa,
+      ;; jos on, se ei ainakaan näy käyttöliittymässä.
+      ;; Voitaneen siis toistaiseksi tehdä vaan naivi ratkaisu, missä valitaan "satunnaisesti"
+      ;; koodi.
+      (update ::to/reimari-tyolaji to/reimari-tyolaji-avain->koodi)
+      (update ::to/reimari-tyoluokka (comp first to/reimari-tyoluokka-avain->koodi))
+      (update ::to/reimari-toimenpidetyyppi (comp first to/reimari-toimenpidetyyppi-avain->koodi))))
+
+(defn haetut-toimenpiteet [vastaus]
+  (-> vastaus
+      jaettu/korosta-harjassa-luodut
+      hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
+      jaettu/toimenpiteet-aikajarjestyksessa))
+
 (extend-protocol tuck/Event
 
   Nakymassa?
@@ -406,9 +453,7 @@
   (process-event [{toimenpiteet :toimenpiteet} app]
     (let [turvalaitteet-kartalle (tuck/send-async! jaettu/->HaeToimenpiteidenTurvalaitteetKartalle)]
       (go (turvalaitteet-kartalle toimenpiteet))
-      (assoc app :toimenpiteet (-> toimenpiteet
-                                   hintaryhmattomat-toimenpiteet-valiaikaisiin-ryhmiin
-                                   jaettu/toimenpiteet-aikajarjestyksessa)
+      (assoc app :toimenpiteet (haetut-toimenpiteet toimenpiteet)
                  :toimenpiteiden-haku-kaynnissa? false)))
 
   ToimenpiteetEiHaettu
@@ -529,6 +574,7 @@
           tyot (or (::h/tyot toimenpiteen-oma-hinnoittelu) [])]
       (assoc app :hinnoittele-toimenpide
                  {::to/id toimenpide-id
+                  ::to/pvm (::to/pvm hinnoiteltava-toimenpide)
                   ::h/hinnat (toimenpiteen-hintakentat hinnat)
                   ::h/tyot tyot})))
 
@@ -680,4 +726,38 @@
   (process-event [_ app]
     (->> app
          (poista-hintaryhmien-korostus)
-         (jaettu/korosta-kartalla nil))))
+         (jaettu/korosta-kartalla nil)))
+
+  AvaaLomakkeelle
+  (process-event [{:keys [toimenpide]} app]
+    (assoc app :valittu-toimenpide toimenpide))
+
+  ToimenpidettaMuokattu
+  (process-event [{:keys [toimenpide]} app]
+    (assoc app :valittu-toimenpide toimenpide))
+
+  TallennaToimenpide
+  (process-event [{:keys [toimenpide]} {:keys [tallennus-kaynnissa?] :as app}]
+    (if-not tallennus-kaynnissa?
+      (-> app
+          (tuck-tyokalut/post! :tallenna-toimenpide
+                               {:tallennettava (tallennusparametrit toimenpide)
+                                :hakuehdot (set/rename-keys (:valinnat app) {:urakka-id ::to/urakka-id})}
+                               {:onnistui ->ToimenpideTallennettu
+                                :epaonnistui ->ToimenpideEiTallennettu})
+          (assoc :tallennus-kaynnissa? true))
+
+      app))
+
+  ToimenpideTallennettu
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+        (assoc :tallennus-kaynnissa? false
+               :valittu-toimenpide nil
+               :toimenpiteet (haetut-toimenpiteet vastaus))))
+
+  ToimenpideEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Virhe toimenpiteen tallennuksessa" :danger)
+    (-> app
+        (assoc :tallennus-kaynnissa? false))))

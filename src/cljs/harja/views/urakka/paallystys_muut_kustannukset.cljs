@@ -38,7 +38,8 @@
     :validoi [[:ei-tyhja "Anna kuvaus"]]
     :tyyppi :string :leveys kustannus-selite-leveys}
    {:otsikko "Summa" :nimi :hinta :fmt fmt/euro-opt
-    :tyyppi :numero :leveys kustannus-hinta-leveys}])
+    :tyyppi :numero :leveys kustannus-hinta-leveys
+    :validoi [[:ei-tyhja "Anna hinta"]]}])
 
 (defn muut-kustannukset [urakka]
   (komp/luo

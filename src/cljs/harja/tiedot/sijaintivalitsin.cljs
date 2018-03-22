@@ -15,4 +15,7 @@
 (def sijainti-kartalla
   (reaction
     (when @karttataso-sijainti
-      [{:alue (maarittele-feature @valittu-sijainti true (kartta-ikonit/pinni-ikoni "vihrea"))}])))
+      (let [feature (maarittele-feature @valittu-sijainti false (kartta-ikonit/pinni-ikoni "musta"))]
+        ;; Jos feature on nil, ei haluta näyttää mitään ja [{:alue nil}] aiheuttaa erroria luo-geometria funktiossa
+        (when feature
+          [{:alue feature}])))))

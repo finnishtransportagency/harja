@@ -17,12 +17,10 @@
             [harja.domain.kanavat.hinta :as hinta]
             [harja.domain.kanavat.tyo :as tyo]
             [harja.domain.kanavat.kommentti :as kommentti]
-            [harja.views.vesivaylat.urakka.toimenpiteet.jaettu :as jaettu]
             [harja.domain.muokkaustiedot :as m]
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.kanavat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as navigaatio]
             [harja.tiedot.urakka :as urakkatiedot])
@@ -99,6 +97,7 @@
 (defrecord AsetaTyorivilleTiedot [tiedot])
 (defrecord LisaaHinnoiteltavaTyorivi [])
 (defrecord LisaaHinnoiteltavaKomponenttirivi [])
+(defrecord LisaaOmakustannushintainenTyorivi [])
 (defrecord LisaaMuuKulurivi [])
 (defrecord LisaaMuuTyorivi [])
 (defrecord LisaaMateriaaliKulurivi [])
@@ -142,6 +141,9 @@
                                ::hinta/ryhma ryhma-kriteeri)]
     (ilman-poistettuja tyo-hinnat)))
 
+(defn omakustannushintaiset-tyot [app]
+  (hintaryhman-tyot app "oma"))
+
 (defn muut-tyot [app]
   (hintaryhman-tyot app "tyo"))
 
@@ -163,7 +165,8 @@
            (keep #(when (= (::materiaalit/toimenpide %) toimenpide-id)
                     {:nimi (::materiaalit/nimi materiaali)
                      :maara (- (::materiaalit/maara %))
-                     :materiaali-id (::materiaalit/id %)})
+                     :materiaali-id (::materiaalit/id %)
+                     :yksikko (::materiaalit/yksikko materiaali)})
                  (::materiaalit/muutokset materiaali)))
          materiaalit)))
 
@@ -294,12 +297,13 @@
                (get-in app [:hinnoittele-toimenpide ::hinta/hinnat]))))
 
 (defn materiaali->hinta
-  [{:keys [nimi maara materiaali-id]}]
+  [{:keys [nimi maara materiaali-id yksikko]}]
   {::hinta/otsikko nimi
    ::hinta/ryhma "materiaali"
    ::hinta/maara maara
    ::hinta/yksikkohinta 0
-   ::hinta/materiaali-id materiaali-id})
+   ::hinta/materiaali-id materiaali-id
+   ::hinta/yksikko yksikko})
 
 (extend-protocol tuck/Event
   Nakymassa?
@@ -401,7 +405,7 @@
 
   ValitutSiirretty
   (process-event [_ app]
-    (viesti/nayta! (toimenpiteet-view/toimenpiteiden-toiminto-suoritettu
+    (viesti/nayta! (toimenpiteet/toimenpiteiden-toiminto-suoritettu
                      (count (:valitut-toimenpide-idt app)) "siirretty") :success)
     (assoc app :toimenpiteiden-siirto-kaynnissa? false
                :valitut-toimenpide-idt #{}
@@ -469,6 +473,12 @@
   LisaaHinnoiteltavaTyorivi
   (process-event [_ app]
     (lisaa-tyorivi-toimenpiteelle app))
+
+  LisaaOmakustannushintainenTyorivi
+  (process-event [_ app]
+    (lisaa-hintarivi-toimenpiteelle
+      {::hinta/ryhma "oma"}
+      app))
 
   LisaaMuuKulurivi
   (process-event [_ app]

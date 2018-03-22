@@ -184,7 +184,7 @@ SELECT id,
   FROM urakka u
  WHERE :urakkaid::INTEGER IS NULL AND
        u.hallintayksikko = :hallintayksikkoid AND
-       u.tyyppi = 'hoito' AND
+       u.tyyppi = :urakkatyyppi::urakkatyyppi AND
        (u.alkupvm < :alkupvm AND u.loppupvm > :loppupvm OR
         u.alkupvm BETWEEN :alkupvm AND :loppupvm OR u.loppupvm BETWEEN :alkupvm AND :loppupvm) AND
        u.urakkanro IS NOT NULL
@@ -614,14 +614,14 @@ WHERE u.id = :id;
 
 -- name: hae-urakoiden-geometriat
 SELECT
-  ST_Simplify(u.alue, :toleranssi)          AS urakka_alue,
+  hoidon_paaurakan_geometria(u.id)          AS urakka_alue,
   u.id                                      AS urakka_id,
   CASE
   WHEN (u.tyyppi = 'hoito'::urakkatyyppi AND alueurakka.alue IS NOT NULL)
     THEN
       hoidon_alueurakan_geometria(alueurakka.alueurakkanro)
   ELSE
-    ST_Simplify(alueurakka.alue, :toleranssi)
+  hoidon_paaurakan_geometria(u.id)
   END AS alueurakka_alue
 FROM urakka u
   LEFT JOIN alueurakka ON u.urakkanro = alueurakka.alueurakkanro

@@ -26,7 +26,7 @@
 (def ^{:const true} oletus-toleranssi 50)
 
 (defn urakoiden-alueet
-  [db user oikeus-fn urakka-idt toleranssi]
+  [db user oikeus-fn urakka-idt]
   (when-not (empty? urakka-idt)
     (into []
           (comp
@@ -35,7 +35,7 @@
             (harja.geo/muunna-pg-tulokset :urakka_alue)
             (harja.geo/muunna-pg-tulokset :alueurakka_alue)
             (map konv/alaviiva->rakenne))
-          (q/hae-urakoiden-geometriat db (or toleranssi oletus-toleranssi) urakka-idt))))
+          (q/hae-urakoiden-geometriat db urakka-idt))))
 
 (defn hae-urakka-idt-sijainnilla
   "Hakee annetun tyyppisen urakan sijainnilla. Mikäli tyyppiä vastaavaa urakkaa ei löydy, haetaan alueella toimiva
@@ -143,17 +143,17 @@
 
 (defn hallintayksikon-urakat [db {organisaatio :organisaatio :as user} hallintayksikko-id]
   (log/debug "Haetaan hallintayksikön urakat: " hallintayksikko-id)
-  (if-not organisaatio
-    (do
-      (oikeudet/ei-oikeustarkistusta!)
-      [])
-    (let [urakat (oikeudet/kayttajan-urakat user)]
+  (let [urakat (oikeudet/kayttajan-urakat user)]
+    (if (and (nil? organisaatio) (empty? urakat))
+      (do
+        (oikeudet/ei-oikeustarkistusta!)
+        [])
       (into []
             urakka-xf
             (q/listaa-urakat-hallintayksikolle db
                                                {:hallintayksikko hallintayksikko-id
                                                 :kayttajan_org_id (:id organisaatio)
-                                                :kayttajan_org_tyyppi (name (:tyyppi organisaatio))
+                                                :kayttajan_org_tyyppi (when (:tyyppi organisaatio) (name (:tyyppi organisaatio)))
                                                 :sallitut_urakat (if (empty? urakat)
                                                                    ;; Jos ei urakoita, annetaan
                                                                    ;; dummy, jotta IN toimii
@@ -215,10 +215,10 @@
 
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
-    (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
-                                                                              {:urakka urakka-id})
-    :ok))
+                            (q/aseta-urakan-indeksi! db {:urakka urakka-id :indeksi nil})
+                            (laskutusyhteenveto-q/poista-urakan-kaikki-muistetut-laskutusyhteenvedot! db
+                                                                                                      {:urakka urakka-id})
+                            :ok))
 
 (defn- paivita-urakka! [db user urakka]
   (log/debug "Päivitetään urakkaa " (::u/nimi urakka))
@@ -323,12 +323,12 @@
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
 
     (jdbc/with-db-transaction [db db]
-      (let [sopimukset (::u/sopimukset urakka)
-            urakka (if (id-olemassa? (::u/id urakka))
-                     (paivita-urakka! db user urakka)
-                     (luo-uusi-urakka! db user urakka))]
-        (paivita-urakan-sopimukset! db user urakka sopimukset)
-        urakka))))
+                              (let [sopimukset (::u/sopimukset urakka)
+                                    urakka (if (id-olemassa? (::u/id urakka))
+                                             (paivita-urakka! db user urakka)
+                                             (luo-uusi-urakka! db user urakka))]
+                                (paivita-urakan-sopimukset! db user urakka sopimukset)
+                                urakka))))
 
 (defn hae-harjassa-luodut-urakat [db user]
   (when (ominaisuus-kaytossa? :vesivayla)

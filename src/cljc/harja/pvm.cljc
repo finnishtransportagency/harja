@@ -327,7 +327,8 @@
 (defn pvm-aika
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa"
   [pvm]
-  (formatoi fi-pvm-aika pvm))
+  (when pvm
+    (formatoi fi-pvm-aika pvm)))
 
 (defn pvm-aika-opt
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa tai tyhjä, jos nil."
@@ -768,6 +769,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    (defn aikavali-paivina [alku loppu]
      (t/in-days (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
 
+#?(:clj
+   (defn aikavali-sekuntteina [alku loppu]
+     (t/in-seconds (t/interval (joda-timeksi alku) (joda-timeksi loppu)))))
+
 (defn paivia-aikavalien-leikkauskohdassa
   "Ottaa kaksi aikaväliä ja kertoo, kuinka monta toisen aikavälin päivää osuu ensimmäiselle aikavälille."
   [[alkupvm loppupvm] [vali-alkupvm vali-loppupvm]]
@@ -800,11 +805,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (when (and eka toka)
     (paivia-valissa eka toka)))
 
-#?(:clj
-   (defn iso-8601->pvm
-     "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
-     [teksti]
-     (df/parse (df/formatter "yyyy-MM-dd") teksti)))
+(defn iso-8601->pvm
+  "Parsii annetun ISO-8601 (yyyy-MM-dd) formaatissa olevan merkkijonon päivämääräksi."
+  [teksti]
+  (df/parse (df/formatter "yyyy-MM-dd") teksti))
 
 #?(:clj
    (defn pvm->iso-8601
@@ -887,3 +891,10 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
    vuodesta on kyse."
   [pvm sama-vuosi]
   (pvm-opt pvm {:nayta-vuosi-fn #(not= (vuosi %) sama-vuosi)}))
+
+(defn paivat-aikavalissa [alku loppu]
+  (if (or (t/equal? alku loppu) (t/after? alku loppu))
+    [alku]
+    (sort (into [alku loppu]
+                (map #(t/plus alku (t/days %))
+                     (range 1 (t/in-days (t/interval alku loppu))))))))

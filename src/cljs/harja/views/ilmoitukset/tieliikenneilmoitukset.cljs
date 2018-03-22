@@ -28,7 +28,6 @@
             [harja.views.ilmoituskuittaukset :as kuittaukset]
             [harja.views.ilmoituksen-tiedot :as it]
             [harja.views.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset-view]
-            [harja.ui.ikonit :as ikonit]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.notifikaatiot :as notifikaatiot]
@@ -36,7 +35,8 @@
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -120,7 +120,18 @@
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
 
-   [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä" tiedot/aikavalit valinnat-nyt)
+   [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä"
+                               tiedot/aikavalit
+                               valinnat-nyt
+                               {:vakioaikavali :ilmoitettu-vakioaikavali
+                                :alkuaika :ilmoitettu-alkuaika
+                                :loppuaika :ilmoitettu-loppuaika})
+    (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
+                               tiedot/toimenpiteiden-aikavalit
+                               valinnat-nyt
+                               {:vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
+                                :alkuaika :toimenpiteet-aloitettu-alkuaika
+                                :loppuaika :toimenpiteet-aloitettu-loppuaika})
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
      :tyyppi :string
@@ -144,19 +155,16 @@
      :otsikko "Tunniste"
      :placeholder "Rajaa tunnisteella"
      :tyyppi :string}
-
-    (lomake/ryhma
-      {:rivi? true}
-      {:nimi :ilmoittaja-nimi
-       :palstoja 1
-       :otsikko "Ilmoittajan nimi"
-       :placeholder "Rajaa ilmoittajan nimellä"
-       :tyyppi :string}
-      {:nimi :ilmoittaja-puhelin
-       :palstoja 1
-       :otsikko "Ilmoittajan puhelinnumero"
-       :placeholder "Rajaa ilmoittajan puhelinnumerolla"
-       :tyyppi :puhelin})
+    {:nimi :ilmoittaja-nimi
+     :palstoja 1
+     :otsikko "Ilmoittajan nimi"
+     :placeholder "Rajaa ilmoittajan nimellä"
+     :tyyppi :string}
+    {:nimi :ilmoittaja-puhelin
+     :palstoja 1
+     :otsikko "Ilmoittajan puhelinnumero"
+     :placeholder "Rajaa ilmoittajan puhelinnumerolla"
+     :tyyppi :puhelin}
 
     (lomake/ryhma
       {:rivi? true}
@@ -267,6 +275,7 @@
          :leveys 2}
         {:otsikko "Sijainti" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
+         :tyyppi :pvm-aika
          :leveys 7}
 
         {:otsikko "Selitteet" :nimi :selitteet
@@ -282,7 +291,10 @@
            :hae #(let [selite (tilan-selite (:tila %))]
                  (if (:aiheutti-toimenpiteita %)
                    (str selite " (Toimenpitein)")
-                   selite))}]
+                   selite))}
+        {:otsikko "Toimenpiteet aloitettu" :nimi :toimenpiteet-aloitettu
+         :tyyppi :pvm :fmt pvm/pvm-aika
+         :leveys 6}]
        (mapv #(merge %
                      (when (:yhteydenottopyynto %)
                        {:lihavoi true})

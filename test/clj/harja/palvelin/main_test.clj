@@ -44,8 +44,8 @@
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
     :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
-    :turvalaitteiden-geometriahaku
     :vaylien-geometriahaku
+    :kanavasiltojen-geometriahaku
     :mobiili-laadunseuranta
     :api-urakan-tyotunnit
     :sopimukset
@@ -68,6 +68,7 @@
     :kan-hairio
     :kan-toimenpiteet
     :api-tieluvat
+    :api-paikkaukset
     :koordinaatit
     :tiedostopesula})
 

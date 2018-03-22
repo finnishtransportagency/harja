@@ -200,10 +200,12 @@
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
 
-(defn hae-suolatoteumat [db user {:keys [urakka-id sopimus-id alkupvm loppupvm]}]
+(defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (log/debug "kutsutaan hae-suolatoteumat: " {:urakka urakka-id
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm})
   (let [toteumat (q/hae-suolatoteumat db {:urakka urakka-id
-                                          :sopimus sopimus-id
                                           :alkupvm alkupvm
                                           :loppupvm loppupvm})
         manuaaliset (filter #(not (:koneellinen %)) toteumat)
@@ -212,7 +214,10 @@
         koneelliset (map #(let [toteumat (get ryhmitellyt-koneelliset %)]
                             (assoc % :toteumat toteumat
                                      :koneellinen true
-                                     :lisatieto (str/join ", " (map :lisatieto toteumat))
+                                     :lisatieto (str/join
+                                                  ", "
+                                                  (filter (fn [s] (and s (not (empty? (str/trim s)))))
+                                                          (map :lisatieto toteumat)))
                                      :maara (apply + (map :maara toteumat))))
                          (keys ryhmitellyt-koneelliset))
         kaikki (concat manuaaliset koneelliset)]
@@ -226,7 +231,7 @@
 (defn luo-suolatoteuma [db user urakka-id sopimus-id toteuma]
   (let [t (toteumat-q/luo-toteuma<!
             db urakka-id sopimus-id
-            (:alkanut toteuma) (:alkanut toteuma)
+            (:pvm toteuma) (:pvm toteuma)
             "kokonaishintainen"
             (:id user) "" ""
             (:lisatieto toteuma)
@@ -252,8 +257,8 @@
             (do
               (log/debug "päivitä toteuma materiaali id: " tmid)
               (toteumat-q/paivita-toteuma<! db
-                                            {:alkanut (:alkanut toteuma)
-                                             :paattynyt (or (:paattynyt toteuma) (:alkanut toteuma))
+                                            {:alkanut (:pvm toteuma)
+                                             :paattynyt (:pvm toteuma)
                                              :tyyppi "kokonaishintainen"
                                              :kayttaja (:id user)
                                              :suorittaja (:suorittajan-nimi toteuma)
@@ -274,7 +279,7 @@
                 (:maara toteuma) (:id user)
                 (:tmid toteuma) urakka-id)))))
       (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                             :alkupvm (:alkanut toteuma)}))
+                                                             :alkupvm (:pvm toteuma)}))
     true))
 
 (defrecord Materiaalit []
@@ -323,6 +328,7 @@
     (julkaise-palvelu (:http-palvelin this)
                       :hae-suolatoteumat
                       (fn [user tiedot]
+                        (log/debug "hae-suolatoteumat: tiedot" tiedot)
                         (hae-suolatoteumat (:db this) user tiedot)))
     (julkaise-palvelu (:http-palvelin this)
                       :hae-suolamateriaalit

@@ -11,7 +11,6 @@
             [harja.domain.vesivaylat.materiaali :as materiaalit]
             [harja.loki :refer [log tarkkaile!]]
             [harja.ui.viesti :as viesti]
-            [harja.ui.lomake :as lomake]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakkatiedot]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -48,6 +47,7 @@
 (defrecord MuokkaaMateriaaleja [materiaalit])
 (defrecord LisaaMateriaali [])
 (defrecord LisaaVirhe [virhe])
+(defrecord KytkePaikannusKaynnissa [])
 
 
 (def valinnat
@@ -65,6 +65,13 @@
                                 ::kayttaja/sukunimi (:sukunimi kayttaja)}
      ::hairiotilanne/havaintoaika (pvm/nyt)}))
 
+(defn voi-tallentaa? [hairiotilanne]
+  (and
+    (or (::hairiotilanne/kohde hairiotilanne)
+        (::hairiotilanne/sijainti hairiotilanne))
+    (not (and (::hairiotilanne/kohde hairiotilanne)
+              (::hairiotilanne/sijainti hairiotilanne)))))
+
 (defn tallennettava-hairiotilanne [hairiotilanne]
   (let [hairiotilanne (-> hairiotilanne
                           (select-keys [::hairiotilanne/id
@@ -79,7 +86,8 @@
                                         ::hairiotilanne/odotusaika-h
                                         ::hairiotilanne/ammattiliikenne-lkm
                                         ::muokkaustiedot/poistettu?
-                                        ::hairiotilanne/havaintoaika])
+                                        ::hairiotilanne/havaintoaika
+                                        ::hairiotilanne/sijainti])
                           (assoc ::hairiotilanne/urakka-id (:id @navigaatio/valittu-urakka)
                                  ::hairiotilanne/kohde-id (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/id])
                                  ::hairiotilanne/kohteenosa-id (get-in hairiotilanne [::hairiotilanne/kohteenosa ::osa/id])))]
@@ -87,9 +95,11 @@
 
 (defn tallennettava-materiaali [hairiotilanne]
   (let [materiaali-kirjaukset (::materiaalit/materiaalit hairiotilanne)
-        muokkaamattomat-materiaali-kirjaukset (::materiaalit/muokkaamattomat-materiaalit hairiotilanne)
+        muokkaamattomat-materiaali-kirjaukset (filter
+                                                #(= (::materiaalit/pvm %) (::hairiotilanne/havaintoaika hairiotilanne))
+                                                (::materiaalit/muokkaamattomat-materiaalit hairiotilanne))
         hairiotilanne-id (::hairiotilanne/id hairiotilanne)
-        paivamaara (::hairiotilanne/havaintoaika hairiotilanne)
+        korjaustoimenpide (::hairiotilanne/korjaustoimenpide hairiotilanne)
         kohteen-nimi (get-in hairiotilanne [::hairiotilanne/kohde ::kohde/nimi])]
     (transduce
       (comp
@@ -108,9 +118,9 @@
         (map :varaosa)
         ;; Lisätään lisätieto ja materiaalin pvm, koska se on required field. Materiaalia
         ;; muokatessa kumminkin ei vaihdeta pvm:ää
-        (map #(assoc % ::materiaalit/pvm (or (::materiaalit/pvm %) (pvm/nyt))
-                       ::materiaalit/lisatieto (str "Käytetty häiriötilanteessa " (pvm/pvm paivamaara)
-                                                    " kohteessa " kohteen-nimi)))
+        (map #(assoc % ::materiaalit/pvm (or (::hairiotilanne/havaintoaika hairiotilanne) (pvm/nyt))
+                       ::materiaalit/lisatieto  (str "Käytetty kohteen " kohteen-nimi " häiriötilanteen korjaamiseen."
+                                                     (when korjaustoimenpide (str " Korjaustoimenpide: " korjaustoimenpide)))))
         ;; Otetaan joitain vv_materiaalilistaus tietoja pois (muuten tulee herjaa palvelin päässä)
         (map #(dissoc %
                       ::materiaalit/maara-nyt
@@ -272,13 +282,15 @@
                                               ;; materiaalikirjaukset
                                               (filter #(= (::hairiotilanne/id hairiotilanne)
                                                           (::materiaalit/hairiotilanne %)))
-                                              ;; Varaosat gridissä on :maara ja :varaosa nimiset sarakkeet. Materiaalin
+                                              ;; Varaosat gridissä on :maara, :yksikko ja :varaosa nimiset sarakkeet. Materiaalin
                                               ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
                                               (map #(identity {:maara (- (::materiaalit/maara %))
+                                                               :yksikko (::materiaalit/yksikko materiaalilistaus)
                                                                :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                                                          ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
                                                                          ::materiaalit/pvm (::materiaalit/pvm %)
-                                                                         ::materiaalit/id (::materiaalit/id %)}})))
+                                                                         ::materiaalit/id (::materiaalit/id %)
+                                                                         ::materiaalit/yksikko (::materiaalit/yksikko materiaalilistaus)}})))
                                             conj (::materiaalit/muutokset materiaalilistaus)))
                                         materiaalit)]
       (-> app
@@ -304,4 +316,8 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe)))
+    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe))
+
+  KytkePaikannusKaynnissa
+  (process-event [_ app]
+    (update-in app [:valittu-hairiotilanne :paikannus-kaynnissa?] not)))

@@ -107,9 +107,10 @@
                  aloituskuittaukset))]
     aloituskuittauksia-annetuna-ajan-valissa))
 
-(defn aikavaliehto [{:keys [vakioaikavali aikavali alkuaika loppuaika]}]
-  (if aikavali
-    aikavali
+(defn aikavaliehto [hakuehdot vakioaikavali-avain alkuaika-avain loppuaika-avain]
+  (let [vakioaikavali (get hakuehdot vakioaikavali-avain)
+        alkuaika (get hakuehdot alkuaika-avain)
+        loppuaika (get hakuehdot loppuaika-avain)]
     (if-let [tunteja (:tunteja vakioaikavali)]
       [(c/to-date (pvm/tuntia-sitten tunteja)) (pvm/nyt)]
       [alkuaika loppuaika])))
@@ -121,11 +122,16 @@
                     aloituskuittauksen-ajankohta tr-numero tunniste
                     ilmoittaja-nimi ilmoittaja-puhelin vaikutukset] :as hakuehdot}
     max-maara]
-   (let [aikavali (aikavaliehto hakuehdot)
-         aikavali-alku (when (first aikavali)
-                         (konv/sql-timestamp (first aikavali)))
-         aikavali-loppu (when (second aikavali)
-                          (konv/sql-timestamp (second aikavali)))
+   (let [ilmoitettu-aikavali (or (:aikavali hakuehdot) (aikavaliehto hakuehdot :ilmoitettu-vakioaikavali :ilmoitettu-alkuaika :ilmoitettu-loppuaika))
+         ilmoitettu-aikavali-alku (when (first ilmoitettu-aikavali)
+                                    (konv/sql-timestamp (first ilmoitettu-aikavali)))
+         ilmoitettu-aikavali-loppu (when (second ilmoitettu-aikavali)
+                                     (konv/sql-timestamp (second ilmoitettu-aikavali)))
+         toimenpiteet-aloitettu-aikavali (aikavaliehto hakuehdot :toimenpiteet-aloitettu-vakioaikavali :toimenpiteet-aloitettu-alkuaika :toimenpiteet-aloitettu-loppuaika)
+         toimenpiteet-aloitettu-aikavali-alku (when (first toimenpiteet-aloitettu-aikavali)
+                                                (konv/sql-timestamp (first toimenpiteet-aloitettu-aikavali)))
+         toimenpiteet-aloitettu-aikavali-loppu (when (second toimenpiteet-aloitettu-aikavali)
+                                                 (konv/sql-timestamp (second toimenpiteet-aloitettu-aikavali)))
          urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
                   db user (fn [urakka-id kayttaja]
                             (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
@@ -138,18 +144,20 @@
                     :vesivayla :vesivayla-hoito
                     urakkatyyppi)
                   hallintayksikko
-                  (first aikavali) (second aikavali))
+                  (first ilmoitettu-aikavali) (second ilmoitettu-aikavali))
          _ (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
          tyypit (mapv name tyypit)
          selite-annettu? (boolean (and selite (first selite)))
          selite (if selite-annettu? (name (first selite)) "")
          tilat (into #{} tilat)
          vain-myohassa? (contains? vaikutukset :myohassa)
-         vain-toimenpiteita-aiheuttaneet? (contains? vaikutukset :aiheutti-toimenpiteita )
+         vain-toimenpiteita-aiheuttaneet? (contains? vaikutukset :aiheutti-toimenpiteita)
          debug-viesti (str "Haetaan ilmoituksia: "
                            (viesti urakat "urakoista" "ilman urakoita")
-                           (viesti aikavali-alku "alkaen" "ilman alkuaikaa")
-                           (viesti aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                           (viesti ilmoitettu-aikavali-alku "alkaen" "ilman alkuaikaa")
+                           (viesti ilmoitettu-aikavali-loppu "päättyen" "ilman päättymisaikaa")
+                           (viesti toimenpiteet-aloitettu-aikavali-alku "toimenpiteet alkaen" "ilman toimenpiteiden alkuaikaa")
+                           (viesti toimenpiteet-aloitettu-aikavali-loppu "toimenpiteet päättyen" "ilman toimenpiteiden päättymisaikaa")
                            (viesti tyypit "tyypeistä" "ilman tyyppirajoituksia")
                            (viesti kuittaustyypit "kuittaustyypeistä" "ilman kuittaustyyppirajoituksia")
                            (viesti aloituskuittauksen-ajankohta "aloituskuittausrajaksella: " "ilman aloituskuittausrajausta")
@@ -171,14 +179,18 @@
                    ilmoitus-xf
                    (q/hae-ilmoitukset db
                                       {:urakat urakat
-                                       :alku_annettu (hakuehto-annettu? aikavali-alku)
-                                       :loppu_annettu (hakuehto-annettu? aikavali-loppu)
+                                       :alku_annettu (hakuehto-annettu? ilmoitettu-aikavali-alku)
+                                       :loppu_annettu (hakuehto-annettu? ilmoitettu-aikavali-loppu)
+                                       :toimenpiteet_alku_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-alku)
+                                       :toimenpiteet_loppu_annettu (hakuehto-annettu? toimenpiteet-aloitettu-aikavali-loppu)
                                        :kuittaamattomat (contains? tilat :kuittaamaton)
                                        :vastaanotetut (contains? tilat :vastaanotettu)
                                        :aloitetut (contains? tilat :aloitettu)
                                        :lopetetut (contains? tilat :lopetettu)
-                                       :alku aikavali-alku
-                                       :loppu aikavali-loppu
+                                       :alku ilmoitettu-aikavali-alku
+                                       :loppu ilmoitettu-aikavali-loppu
+                                       :toimenpiteet_alku toimenpiteet-aloitettu-aikavali-alku
+                                       :toimenpiteet_loppu toimenpiteet-aloitettu-aikavali-loppu
                                        :tyypit_annettu (hakuehto-annettu? tyypit)
                                        :tyypit tyypit
                                        :teksti_annettu (hakuehto-annettu? hakuehto)
@@ -409,6 +421,11 @@
     (for [ilmoitustoimenpide ilmoitustoimenpiteet]
       (tallenna-ilmoitustoimenpide db tloik user ilmoitustoimenpide))))
 
+(defn tallenna-ilmoituksen-toimenpiteiden-aloitus [db user idt peruutettu?]
+  (if peruutettu?
+    (q/peruuta-ilmoitusten-toimenpiteiden-aloitukset! db idt)
+    (q/tallenna-ilmoitusten-toimenpiteiden-aloitukset! db idt)))
+
 (defrecord Ilmoitukset []
   component/Lifecycle
   (start [{db :db
@@ -429,11 +446,19 @@
     (julkaise-palvelu http :hae-ilmoituksia-idlla
                       (fn [user tiedot]
                         (hae-ilmoituksia-idlla db user tiedot)))
+    (julkaise-palvelu http :tallenna-ilmoituksen-toimenpiteiden-aloitus
+                      (fn [user idt]
+                        (tallenna-ilmoituksen-toimenpiteiden-aloitus db user idt false)))
+    (julkaise-palvelu http :peruuta-ilmoituksen-toimenpiteiden-aloitus
+                      (fn [user idt]
+                        (tallenna-ilmoituksen-toimenpiteiden-aloitus db user idt true)))
     this)
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :hae-ilmoitukset
                      :tallenna-ilmoitustoimenpiteet
-                     :hae-ilmoituksia-idlla)
+                     :hae-ilmoituksia-idlla
+                     :tallenna-ilmoituksen-toimenpiteiden-aloitus
+                     :peruuta-ilmoituksen-toimenpiteiden-aloitus)
     this))

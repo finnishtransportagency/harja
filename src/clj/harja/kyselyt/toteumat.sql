@@ -1026,3 +1026,10 @@ FROM liite l
   JOIN toteuma_liite tl ON l.id = tl.liite
 WHERE tl.toteuma = :toteumaid
 ORDER BY l.luotu ASC;
+
+-- name: hae-toteumien-reitit
+SELECT
+  id,
+  reitti as sijainti
+FROM toteuma
+WHERE urakka = :urakka-id AND id IN (:idt);

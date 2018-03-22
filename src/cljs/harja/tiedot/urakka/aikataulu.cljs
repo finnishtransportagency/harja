@@ -21,7 +21,8 @@
                    [cljs.core.async.macros :refer [go]]))
 
 
-(defonce modal-data (atom {}))
+(defonce valmis-tiemerkintaan-modal-data (atom {}))
+(defonce tiemerkinta-valmis-modal-data (atom {}))
 
 (defonce aikataulu-nakymassa? (atom false))
 
@@ -30,11 +31,13 @@
     :aikataulu-valinnat
     {:nayta-aikajana? true
      :nayta-tarkka-aikana? false
+     :nayta-valitavoitteet? false
      :jarjestys :aika}
     nil))
 
 (defonce nayta-aikajana? (r/cursor valinnat [:nayta-aikajana?]))
 (defonce nayta-tarkka-aikajana? (r/cursor valinnat [:nayta-tarkka-aikana?]))
+(defonce nayta-valitavoitteet? (r/cursor valinnat [:nayta-valitavoitteet?]))
 
 (defn toggle-nayta-aikajana! []
   (swap! valinnat update :nayta-aikajana? not))
@@ -51,14 +54,18 @@
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
 (defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm kopio-itselle? saate
-                                                      urakka-id sopimus-id vuosi]}]
+                                                      urakka-id sopimus-id vuosi muut-vastaanottajat]}]
   (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                     :tiemerkintapvm tiemerkintapvm
                                                     :kopio-itselle? kopio-itselle?
                                                     :saate saate
+                                                    :muut-vastaanottajat muut-vastaanottajat
                                                     :urakka-id urakka-id
                                                     :sopimus-id sopimus-id
                                                     :vuosi vuosi}))
+
+(def ^{:doc "Tähän säilötään modal-dialogista kohteelle asetettavat sähköpostitiedot palvelimelle tallennusta varten."}
+kohteiden-sahkopostitiedot (atom nil))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -144,12 +151,17 @@
         (epaonnistui-fn)
         (onnistui-fn vastaus)))))
 
+(defn- lisaa-kohteille-sahkopostilahetystiedot [kohteet]
+  (mapv (fn [kohde]
+         (assoc kohde :sahkopostitiedot (get @kohteiden-sahkopostitiedot (:id kohde))))
+       kohteet))
+
 (defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet onnistui-fn]
   (tallenna-yllapitokohteiden-aikataulu
     {:urakka-id urakka-id
      :sopimus-id sopimus-id
      :vuosi vuosi
-     :kohteet kohteet
+     :kohteet (lisaa-kohteille-sahkopostilahetystiedot kohteet)
      :onnistui-fn onnistui-fn
      :epaonnistui-fn #(viesti/nayta! "Tallennus epäonnistui!"
                                      :warning

@@ -1,3 +1,7 @@
+---------------------------------------------
+-- OULUN ALUEURAKKA
+---------------------------------------------
+
 -- Urakkakohtaiset
 
 INSERT INTO valitavoite (urakka, nimi, takaraja, valmis_pvm, valmis_kommentti, poistettu)
@@ -92,3 +96,45 @@ VALUES (null,
        1,
        'toistuva'::valitavoite_tyyppi,
        true);
+
+---------------------------------------------
+-- Muhoksen päällystysurakka
+---------------------------------------------
+
+INSERT INTO valitavoite (urakka, yllapitokohde, nimi, takaraja, valmis_pvm, valmis_kommentti, poistettu)
+VALUES ((SELECT id
+         FROM   urakka
+         WHERE  nimi = 'Muhoksen päällystysurakka'),
+        (SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'),
+        'Se iso kivi siirretty pois tieltä',
+        '2017-05-29',
+        '2017-05-29',
+        'Homma hoidettu hyvästi ennen tavoitepäivää!',
+        false),
+  ((SELECT id
+    FROM   urakka
+    WHERE  nimi = 'Muhoksen päällystysurakka'),
+   (SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi'),
+   'RP-työt tehty',
+   '2017-05-30',
+   NULL,
+   'Hyvää laatua toivottiin',
+   false),
+  ((SELECT id
+    FROM   urakka
+    WHERE  nimi = 'Muhoksen päällystysurakka'),
+   (SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi'),
+   'Koko homma paketissa',
+   '2017-06-05',
+   NULL,
+   NULL,
+   false),
+  ((SELECT id
+    FROM   urakka
+    WHERE  nimi = 'Muhoksen päällystysurakka'),
+   NULL,
+   'Koko homma valamis',
+   '2017-06-08',
+   NULL,
+   NULL,
+   false);

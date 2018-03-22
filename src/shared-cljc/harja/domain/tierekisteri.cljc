@@ -31,17 +31,34 @@
                    ::alkuosa ::alkuetaisyys]
           :opt-un [::loppuosa ::loppuetaisyys]))
 
-(defn normalisoi
-  "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
-  [osoite]
+
+(defn muunna-osoitteen-avaimet [tie-avain
+                                alkuosa-avain
+                                alkuetaisyys-avain
+                                loppuosa-avain
+                                loppuetaisyys-avain
+                                ajorata-avain
+                                kaista-avain
+                                osoite]
   (let [osoite (or osoite {})
         ks (fn [& avaimet]
              (some osoite avaimet))]
-    {::tie (ks ::tie :numero :tr-numero :tie)
-     ::aosa (ks ::aosa :alkuosa :tr-alkuosa :aosa)
-     ::aet (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
-     ::losa (ks ::losa :loppuosa :tr-loppuosa :losa)
-     ::let (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)}))
+    {tie-avain (ks ::tie :numero :tr-numero :tie)
+     alkuosa-avain (ks ::aosa :alkuosa :tr-alkuosa :aosa)
+     alkuetaisyys-avain (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
+     loppuosa-avain (ks ::losa :loppuosa :tr-loppuosa :losa)
+     loppuetaisyys-avain (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)
+     ajorata-avain (ks ::arj ::ajorata :ajr :ajorata)
+     kaista-avain (ks ::kaista :kaista)}))
+
+(defn normalisoi
+  "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
+  [osoite]
+  (muunna-osoitteen-avaimet ::tie ::aosa ::aet ::losa ::let ::ajorata :kaista osoite))
+
+(defn tr-alkuiseksi [osoite]
+  "Muuntaa osoitteen avaimet tr-prefiksatuiksi"
+  (muunna-osoitteen-avaimet :tr-tie :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista osoite))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (::tie (normalisoi tie1)) (::tie (normalisoi tie2))))
@@ -207,6 +224,8 @@
   "Palauttaa vectorin TR-osoitteen tiedoista. Voidaan käyttää järjestämään tieosoitteet järjestykseen."
   [kohde]
   ((juxt :tie :tr-numero :tienumero
+         :ajr :tr-ajorata :ajorata
+         :kaista :tr-kaista
          :aosa :tr-alkuosa
          :aet :tr-alkuetaisyys) kohde))
 
@@ -271,9 +290,9 @@
 (defn tr-vali-leikkaa-tr-valin?
   "Palauttaa true, mikäli jälkimmäinen tr-väli leikkaa ensimmäisen.
    Leikkaukseksi katsotaan tilanne, jossa osoitteen 2 tie kulkee ainakin hieman osoitteen 1 tien sisällä,
-   ei siis riitä, että peölkästään alku/loppu on samassa kohtaa.
+   ei siis riitä, että pelkästään alku/loppu on samassa kohtaa.
 
-   Olettaa, että tr-välit ovat samalla tiellä."
+   Olettaa, että tr-välit ovat samalla tiellä (ja kaistalla ja ajoradalla)."
   [tr-vali1 tr-vali2]
   (let [tr-vali1 (tr-osoite-kasvusuuntaan tr-vali1)
         tr-vali2 (tr-osoite-kasvusuuntaan tr-vali2)
@@ -299,6 +318,16 @@
            (number? tr-loppuetaisyys)
            (= tr-loppuosa tr-alkuosa)
            (= tr-loppuetaisyys tr-alkuetaisyys))))
+
+(defn kohdeosat-paalekkain? [osa-yksi osa-kaksi]
+  (if (and (= (:tr-numero osa-yksi) (:tr-numero osa-kaksi))
+           (= (:tr-ajorata osa-yksi) (:tr-ajorata osa-kaksi))
+           (= (:tr-kaista osa-yksi) (:tr-kaista osa-kaksi)))
+    (cond
+      (pistemainen? osa-yksi) (tr-vali-paakohteen-sisalla? osa-kaksi osa-yksi)
+      (pistemainen? osa-kaksi) (tr-vali-paakohteen-sisalla? osa-yksi osa-kaksi)
+      :else (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi))
+    false))
 
 (defn alikohteet-tayttamaan-kohde
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.

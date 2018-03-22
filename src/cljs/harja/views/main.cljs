@@ -16,8 +16,9 @@
             [harja.views.haku :as haku]
             [cljs.core.async :refer [put! close! chan timeout]]
 
-            ;; Pakollinen require, muuten frontin prod-käännös ei toimi
+            ;; Nämä on pakko requirettaa, muuten frontin prod-käännös ei toimi (joku ongelma kääntämisjärjestyksessä?)
             [harja.domain.vesivaylat.vatu-turvalaite :as vatu-turvalaite]
+            [harja.domain.paikkaus :as paikkaus-domain]
 
             [harja.views.urakat :as urakat]
             [harja.views.raportit :as raportit]
@@ -35,7 +36,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
             [harja.pvm :as pvm]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.ui.kartta-debug :refer [kartta-layers]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn kayttajatiedot [kayttaja]
@@ -203,6 +205,8 @@
         [urakat/urakat])]]]
    [modal/modal-container]
    [viesti-container]
+   (when @nav/kartta-nakyvissa?
+     [kartta-layers])
 
    ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
    ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
@@ -244,7 +248,6 @@
   []
   (varoita-jos-vanha-ie)
   (kuuntele-oikeusvirheita)
-  (hairiotiedot/tarkkaile-hairioilmoituksia!)
   (komp/luo
     (fn []
       (if @nav/render-lupa?

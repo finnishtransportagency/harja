@@ -277,9 +277,9 @@
                                          v)]
                                  (when (or (= v "")
                                            (when-not vaadi-ei-negatiivinen? (= v "-"))
-                                           (re-matches (if kokonaisluku?
-                                                         kokonaisluku-re-pattern
-                                                         desimaaliluku-re-pattern) v))
+                                           ;; Halutaan että käyttäjä voi muokata desimaaliluvun esim ",0" muotoon,
+                                           ;; mutta tätä välivaihetta ei tallenneta dataan
+                                           (re-matches #"[0-9,.-]+" v))
                                    (reset! teksti v)
 
                                    (let [numero (if kokonaisluku?
@@ -1145,21 +1145,21 @@
         paikannus-kaynnissa? (atom false)
 
         karttavalinta-kaynnissa? (atom false)]
-    (when paikannus-kaynnissa?
+    (when paikannus-kaynnissa?-atom
       (add-watch paikannus-kaynnissa?
-                 :paikannus?
-                 (fn [avain ref vanha uusi]
-                   (reset! paikannus-kaynnissa?-atom uusi))))
+        :paikannus?
+        (fn [avain ref vanha uusi]
+          (reset! paikannus-kaynnissa?-atom uusi))))
 
     (komp/luo
       (komp/sisaan #(do
                       (if (nil? @data)
                         (reset! sijaintivalitsin-tiedot/valittu-sijainti nil)
-                        (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti @data}))
-                      (karttatasot/taso-paalle! :sijaintivalitsin)))
+                        (reset! sijaintivalitsin-tiedot/valittu-sijainti {:sijainti @data}))))
       (komp/ulos #(karttatasot/taso-pois! :sijaintivalitsin))
       (fn [{disabled? :disabled?} data]
-        (let [paikannus-onnistui-fn (or paikannus-onnistui-fn
+        (let [vanha-sijainti (:sijainti @data)
+              paikannus-onnistui-fn (or paikannus-onnistui-fn
                                         (fn [sijainti]
                                           (let [coords (.-coords sijainti)
                                                 koordinaatit {:x (.-longitude coords)
@@ -1178,6 +1178,8 @@
               aloita-paikannus (fn [] (reset! paikannus-kaynnissa? true)
                                  (geo/nykyinen-geolokaatio
                                    #(do (lopeta-paikannus)
+                                        (when (not= vanha-sijainti %)
+                                          (karttatasot/taso-paalle! :sijaintivalitsin))
                                         (paikannus-onnistui-fn %))
                                    #(do (lopeta-paikannus)
                                         (paikannus-epaonnistui-fn %))))
@@ -1206,6 +1208,8 @@
                [sijaintivalitsin/sijaintivalitsin {:kun-peruttu #(lopeta-karttavalinta)
                                                    :kun-valmis #(do
                                                                   (lopeta-karttavalinta)
+                                                                  (when (not= vanha-sijainti %)
+                                                                    (karttatasot/taso-paalle! :sijaintivalitsin))
                                                                   (if (= :kayta-lomakkeen-atomia karttavalinta-tehty-fn)
                                                                     (reset! data {:type :point :coordinates %})
                                                                     (karttavalinta-tehty-fn
@@ -1240,6 +1244,14 @@
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])
+
+(defn tee-otsikko-ja-kentat [{:keys [otsikko luokka kentat]}]
+  [:span {:class (or luokka "label-ja-kentta")}
+   [:span.kentan-otsikko otsikko]
+   [:span
+    (for* [{:keys [kentta-params arvo-atom] :as kentta} kentat]
+      [:div.kentta
+       [tee-kentta kentta-params arvo-atom]])]])
 
 (defn nayta-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
   [:span {:class (or luokka "label-ja-kentta")}

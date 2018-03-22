@@ -9,6 +9,7 @@
             [clojure.test :refer-macros [deftest is testing]]
             [harja.loki :refer [log]]
             [harja.testutils.tuck-apurit :refer-macros [vaadi-async-kutsut] :refer [e!]]
+            [harja.testutils :refer [tarkista-map-arvot]]
             [harja.pvm :as pvm]
             [harja.domain.toteuma :as tot]
             [harja.domain.vesivaylat.toimenpide :as to]
@@ -23,6 +24,9 @@
             [cljs.spec.alpha :as s]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as jaetut-tiedot]))
 
+
+(def testiajon-alkupvm (pvm/nyt))
+
 (def testitila {:nakymassa? true
                 :infolaatikko-nakyvissa {}
                 :valinnat {:urakka-id nil
@@ -30,7 +34,7 @@
                            :aikavali [nil nil]
                            :vaylatyyppi :kauppamerenkulku
                            :vaylanro nil
-                           :turvalaite-id nil
+                           :turvalaitenro nil
                            :tyolaji :kiintea
                            :tyoluokka :kuljetuskaluston-huolto-ja-kunnossapito
                            :toimenpide :alukset-ja-veneet}
@@ -49,7 +53,7 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
+                                ::to/pvm testiajon-alkupvm
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
                                {::to/id 1
                                 ::to/tyolaji :viitat
@@ -57,7 +61,7 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
+                                ::to/pvm testiajon-alkupvm
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}
                                 ::to/oma-hinnoittelu {::h/hinnat [{::hinta/id 2
                                                                    ::hinta/otsikko "Yleiset materiaalit"
@@ -81,7 +85,7 @@
                                             ::va/vaylanro 1}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
+                                ::to/pvm testiajon-alkupvm
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
                                {::to/id 3
                                 ::to/tyolaji :viitat
@@ -89,7 +93,7 @@
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
+                                ::to/pvm testiajon-alkupvm
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
                                {::to/id 4
                                 ::to/tyolaji :kiinteat
@@ -97,7 +101,7 @@
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
+                                ::to/pvm testiajon-alkupvm
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
                                {::to/id 5
                                 ::to/tyolaji :poijut
@@ -105,7 +109,7 @@
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
+                                ::to/pvm testiajon-alkupvm
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}
                                {::to/id 6
                                 ::to/tyolaji :poijut
@@ -113,7 +117,7 @@
                                             ::va/vaylanro 2}
                                 ::to/tyoluokka :asennus-ja-huolto
                                 ::to/toimenpide :huoltotyo
-                                ::to/pvm (pvm/nyt)
+                                ::to/pvm testiajon-alkupvm
                                 ::to/liitteet [{:id 666}]
                                 ::to/turvalaite {::tu/nimi "Siitenluoto (16469)"}}]})
 
@@ -384,53 +388,55 @@
           uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 0)
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
-      (is (= (:hinnoittele-toimenpide uusi-tila)
-             {::to/id 0
-              ::h/hinnat
-              [{::hinta/id -1
-                ::hinta/otsikko
-                "Yleiset materiaalit"
-                ::hinta/summa 0
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id -2
-                ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 0
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id -3
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 0
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}]
-              ::h/tyot []}))))
+      (tarkista-map-arvot (:hinnoittele-toimenpide uusi-tila)
+                          {::to/id 0
+                           ::to/pvm testiajon-alkupvm
+                           ::h/hinnat
+                           [{::hinta/id -1
+                             ::hinta/otsikko
+                             "Yleiset materiaalit"
+                             ::hinta/summa 0
+                             ::hinta/ryhma :muu
+                             ::hinta/yleiskustannuslisa 0}
+                            {::hinta/id -2
+                             ::hinta/otsikko "Matkakulut"
+                             ::hinta/summa 0
+                             ::hinta/ryhma :muu
+                             ::hinta/yleiskustannuslisa 0}
+                            {::hinta/id -3
+                             ::hinta/otsikko "Muut kulut"
+                             ::hinta/summa 0
+                             ::hinta/ryhma :muu
+                             ::hinta/yleiskustannuslisa 0}]
+                           ::h/tyot []})))
 
   (testing "Aloita toimenpiteen hinnoittelu, aiemmat hinnoittelutiedot olemassa"
     (let [vanha-tila testitila
           uusi-tila (e! (tiedot/->AloitaToimenpiteenHinnoittelu 1)
                         vanha-tila)]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::to/id])))
-      (is (= (:hinnoittele-toimenpide uusi-tila)
-             {::to/id 1
-              ::h/hinnat
-              [{::hinta/id 2
-                ::hinta/otsikko "Yleiset materiaalit"
-                ::hinta/summa 2
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 3
-                ::hinta/otsikko "Matkakulut"
-                ::hinta/summa 3
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 0}
-               {::hinta/id 4
-                ::hinta/otsikko "Muut kulut"
-                ::hinta/summa 4
-                ::hinta/ryhma :muu
-                ::hinta/yleiskustannuslisa 12}]
-              ::h/tyot [{::tyo/id 1
-                         ::tyo/toimenpidekoodi-id 1
-                         ::tyo/maara 60}]})))))
+      (tarkista-map-arvot (:hinnoittele-toimenpide uusi-tila)
+                          {::to/id 1
+                           ::to/pvm testiajon-alkupvm
+                           ::h/hinnat
+                           [{::hinta/id 2
+                             ::hinta/otsikko "Yleiset materiaalit"
+                             ::hinta/summa 2
+                             ::hinta/ryhma :muu
+                             ::hinta/yleiskustannuslisa 0}
+                            {::hinta/id 3
+                             ::hinta/otsikko "Matkakulut"
+                             ::hinta/summa 3
+                             ::hinta/ryhma :muu
+                             ::hinta/yleiskustannuslisa 0}
+                            {::hinta/id 4
+                             ::hinta/otsikko "Muut kulut"
+                             ::hinta/summa 4
+                             ::hinta/ryhma :muu
+                             ::hinta/yleiskustannuslisa 12}]
+                           ::h/tyot [{::tyo/id 1
+                                      ::tyo/toimenpidekoodi-id 1
+                                      ::tyo/maara 60}]}))))
 
 (deftest kokonaishintaisiin-siirretty
   (let [vanha-tila testitila
@@ -483,26 +489,27 @@
                          (e! (tiedot/->AsetaHintakentalleTiedot {::hinta/id 2
                                                                  ::hinta/summa 666})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
-      (is (= (:hinnoittele-toimenpide uusi-tila)
-             {::to/id 1
-              ::h/hinnat [{::hinta/id 2
-                           ::hinta/otsikko "Yleiset materiaalit"
-                           ::hinta/summa 666
-                           ::hinta/ryhma :muu
-                           ::hinta/yleiskustannuslisa 0}
-                          {::hinta/id 3
-                           ::hinta/otsikko "Matkakulut"
-                           ::hinta/summa 3
-                           ::hinta/ryhma :muu
-                           ::hinta/yleiskustannuslisa 0}
-                          {::hinta/id 4
-                           ::hinta/otsikko "Muut kulut"
-                           ::hinta/summa 4
-                           ::hinta/ryhma :muu
-                           ::hinta/yleiskustannuslisa 12}]
-              ::h/tyot [{::tyo/id 1
-                         ::tyo/toimenpidekoodi-id 1
-                         ::tyo/maara 60}]}))))
+      (tarkista-map-arvot (:hinnoittele-toimenpide uusi-tila)
+                          {::to/id 1
+                           ::to/pvm testiajon-alkupvm
+                           ::h/hinnat [{::hinta/id 2
+                                        ::hinta/otsikko "Yleiset materiaalit"
+                                        ::hinta/summa 666
+                                        ::hinta/ryhma :muu
+                                        ::hinta/yleiskustannuslisa 0}
+                                       {::hinta/id 3
+                                        ::hinta/otsikko "Matkakulut"
+                                        ::hinta/summa 3
+                                        ::hinta/ryhma :muu
+                                        ::hinta/yleiskustannuslisa 0}
+                                       {::hinta/id 4
+                                        ::hinta/otsikko "Muut kulut"
+                                        ::hinta/summa 4
+                                        ::hinta/ryhma :muu
+                                        ::hinta/yleiskustannuslisa 12}]
+                           ::h/tyot [{::tyo/id 1
+                                      ::tyo/toimenpidekoodi-id 1
+                                      ::tyo/maara 60}]})))
 
   (testing "Hinnoittele kentän yleiskustannuslisä"
     (let [vanha-tila testitila
@@ -512,6 +519,7 @@
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
       (is (= (:hinnoittele-toimenpide uusi-tila)
              {::to/id 1
+              ::to/pvm testiajon-alkupvm
               ::h/hinnat [{::hinta/id 2
                            ::hinta/otsikko "Yleiset materiaalit"
                            ::hinta/summa 2
@@ -738,13 +746,14 @@
                          (e! (tiedot/->AsetaHintaryhmakentalleTiedot {::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
                                                                       ::hinta/summa 123})))]
       (is (nil? (get-in vanha-tila [:hinnoittele-toimenpide ::h/hinnat])))
-      (is (= (:hinnoittele-hintaryhma uusi-tila)
-             {::h/id 666
-              ::h/hinnat
-              [{::hinta/id 1
-                ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
-                ::hinta/summa 123
-                ::hinta/yleiskustannuslisa 0}]})))))
+      (tarkista-map-arvot (:hinnoittele-hintaryhma uusi-tila)
+         {::h/id 666
+          ::to/pvm testiajon-alkupvm
+          ::h/hinnat
+          [{::hinta/id 1
+            ::hinta/otsikko tiedot/hintaryhman-hintakentta-otsikko
+            ::hinta/summa 123
+            ::hinta/yleiskustannuslisa 0}]}))))
 
 (deftest hintaryhman-hinnoittelun-peruminen
   (let [vanha-tila testitila
@@ -802,7 +811,7 @@
   (testing "Hintaryhmän korostus"
     (let [tulos (e! (tiedot/->KorostaHintaryhmaKartalla {::h/id 1})
                     {:turvalaitteet [{::tu/turvalaitenro 1
-                                      ::tu/sijainti {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
+                                      ::tu/koordinaatit {:type :point, :coordinates [367529.053512741 7288034.99009309]}}]
                      :toimenpiteet [{::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 1}}
                                     {::to/hintaryhma-id 1 ::to/turvalaite {::tu/turvalaitenro 2}}
                                     {::to/hintaryhma-id 2 ::to/turvalaite {::tu/turvalaitenro 1}}]})]

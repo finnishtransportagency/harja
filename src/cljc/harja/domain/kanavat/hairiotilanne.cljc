@@ -51,21 +51,6 @@
        ::materiaali/maara
        ::materiaali/pvm}]})
 
-(def perustiedot+muokkaustiedot
-  #{::muokkaustiedot/muokattu
-    ::vikaluokka
-    ::muokkaustiedot/poistettu?
-    ::huviliikenne-lkm
-    ::korjaustoimenpide
-    ::paikallinen-kaytto?
-    ::havaintoaika
-    ::korjausaika-h
-    ::odotusaika-h
-    ::syy
-    ::id
-    ::korjauksen-tila
-    ::ammattiliikenne-lkm})
-
 (def perustiedot
   #{::vikaluokka
     ::huviliikenne-lkm
@@ -77,7 +62,8 @@
     ::syy
     ::id
     ::korjauksen-tila
-    ::ammattiliikenne-lkm})
+    ::ammattiliikenne-lkm
+    ::sijainti})
 
 (def viittaus-idt
   #{::urakka-id

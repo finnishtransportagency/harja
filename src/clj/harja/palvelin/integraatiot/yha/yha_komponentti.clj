@@ -29,7 +29,7 @@
   (laheta-kohteet [this urakka-id kohde-idt]))
 
 (defn kasittele-urakoiden-hakuvastaus [sisalto otsikot]
-  (log/debug format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
+  (log/debug (format "YHA palautti urakan kohdehaulle vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot))
   (let [vastaus (urakoiden-hakuvastaus/lue-sanoma sisalto)
         urakat (:urakat vastaus)
         virhe (:virhe vastaus)]
@@ -74,8 +74,8 @@
                                (map :kohde-yha-id virheet)))]
 
     (if onnistunut?
-      (log/info "Kohteiden lähetys YHA:n onnistui")
-      (log/error (str "Virheitä kohteiden lähetyksessä YHA:n: " virhe-viesti)))
+      (log/info "Kohteiden lähetys YHAan onnistui")
+      (log/error (str "Virheitä kohteiden lähetyksessä YHAan: " virhe-viesti)))
 
     (doseq [kohde kohteet]
       (let [kohde-id (:id (:kohde kohde))
@@ -85,7 +85,7 @@
             virhe-viesti (when (not kohteen-lahetys-onnistunut?)
                            (or (:selite virhe)
                                (str/join ", " (map :selite (filter #(nil? (:kohde-yha-id %)) virheet)))))]
-        
+
         (if kohteen-lahetys-onnistunut?
           (q-paallystys/lukitse-paallystysilmoitus! db {:yllapitokohde_id kohde-id})
           (do (log/error (format "Kohteen (id: %s) lähetys epäonnistui. Virhe: \"%s\"" kohde-id virhe-viesti))
@@ -189,7 +189,7 @@
 
    Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
-  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHA:n URL:lla: %s." urakka-id kohde-idt url))
+  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "yha" "kohteiden-lahetys" nil

@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.ilmoitukset-test
   (:require [clojure.test :refer :all]
             [clojure.set :as set]
+            [clojure.core.async :refer [go]]
 
             [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -267,8 +268,8 @@
         parametrit {:hallintayksikko nil
                     :urakka nil
                     :hoitokausi nil
-                    :alkuaika (c/to-date alkuaika)
-                    :loppuaika (c/to-date loppuaika)
+                    :ilmoitettu-alkuaika(c/to-date alkuaika)
+                    :ilmoitettu-loppuaika (c/to-date loppuaika)
                     :tyypit +ilmoitustyypit+
                     :tilat [:kuittaamaton :vastaanotettu :aloitettu :lopetettu]
                     :aloituskuittauksen-ajankohta :kaikki
@@ -323,3 +324,10 @@
             (:ilmoitustyyppi i)) "ilmoitustyyppi"))
     (is (= 501 (count ilmoitukset-palvelusta)) "Ilmoitusten lukumäärä") ;eka sivullinen eli 500+1 palautuu
     (is (= ilmoitusten-maara-suoraan-kannasta 10040) "Ilmoitusten lukumäärä")))
+
+(deftest ^:perf hae-ilmoitukset-kesto
+  (is (gatling-onnistuu-ajassa?
+        "Hae ilmoitukset"
+        {:concurrency 100
+         :timeout-in-ms 1500}
+        #(hae hae-ilmoitukset-parametrit))))

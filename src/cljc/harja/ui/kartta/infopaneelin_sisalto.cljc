@@ -34,7 +34,7 @@
             [taoensso.timbre :as log]
     #?(:cljs [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :refer [kuvaile-paatostyyppi]])
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.domain.turvallisuuspoikkeamat :as turpodomain]
+            [harja.domain.turvallisuuspoikkeama :as turpodomain]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.tierekisteri :as tr-domain]
@@ -43,8 +43,17 @@
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.vesivaylat.turvalaite :as tu]
             [harja.domain.vesivaylat.vayla :as v]
+            [harja.domain.toimenpidekoodi :as tpk]
+            [harja.domain.kayttaja :as kayttaja]
             [harja.fmt :as fmt]
-            [harja.domain.tierekisteri.varusteet :as varusteet]))
+            [harja.pvm :as pvm]
+            [harja.domain.tierekisteri.varusteet :as varusteet]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kohde :as kohde]
+            [harja.domain.kanavat.kanavan-huoltokohde :as huoltokohde]
+            [harja.domain.kanavat.kanavan-toimenpide :as kan-to]
+            [harja.domain.kanavat.hairiotilanne :as ht]
+            [harja.domain.kanavat.liikennetapahtuma :as liikenne]))
 
 (defmulti infopaneeli-skeema :tyyppi-kartalla)
 
@@ -587,7 +596,7 @@
                      (let [kaikkia-ei-piirretty? (> (count (:toimenpiteet turvalaite)) nayta-max-toimenpidetta)]
                        [:div
                         (for [toimenpide (sort-by ::to/suoritettu pvm/jalkeen? (take nayta-max-toimenpidetta (:toimenpiteet turvalaite)))]
-                          ^{:key (str (::tu/id turvalaite) "-" (::to/id toimenpide))}
+                          ^{:key (str (::tu/turvalaitenro turvalaite) "-" (::to/id toimenpide))}
                           [:div (str (if-let [s (or (::to/pvm toimenpide)
                                                     (::to/suoritettu toimenpide))]
                                        (pvm/pvm s)
@@ -600,6 +609,126 @@
                                      " muuta toimenpidettä.")])
                         ]))}]))
      :data turvalaite}))
+
+(defmethod infopaneeli-skeema :kohteenosa [osa]
+  {:tyyppi :kohteenosa
+   :jarjesta-fn (constantly false)
+   :otsikko (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde osa) osa)
+   :tiedot [{:otsikko "Kohde"
+             :tyyppi :string
+             :nimi (kohde/fmt-kohteen-nimi (::osa/kohde osa))}
+            (when (::osa/nimi osa)
+              {:otsikko "Nimi"
+               :tyyppi :string
+               :nimi ::osa/nimi})
+            {:otsikko "Tyyppi"
+             :tyyppi :string
+             :nimi ::osa/tyyppi
+             :fmt (comp string/capitalize osa/fmt-kohteenosa-tyyppi)}
+            {:otsikko "Oletuspalvelumuoto"
+             :nimi ::osa/oletuspalvelumuoto
+             :fmt liikenne/palvelumuoto->str
+             :tyyppi :string}]
+   :data osa})
+
+(defmethod infopaneeli-skeema :kohde-toimenpide [kohde]
+  (let [toimenpiteen-kentta (fn [otsikko kentta]
+                              (when (-> kohde :toimenpiteet kentta)
+                                {:otsikko otsikko
+                                 :tyyppi :string
+                                 :hae (hakufunktio :toimenpiteet #(-> % :toimenpiteet kentta))}))]
+    {:tyyppi :kohde
+     :jarjesta-fn (constantly false)
+     :otsikko (kohde/fmt-kohteen-nimi kohde)
+     :tiedot [(toimenpiteen-kentta "Kohteenosan tyyppi" :kohteenosan-tyyppi)
+              (toimenpiteen-kentta "Huoltokohde" :huoltokohde)
+              (if (-> kohde :toimenpiteet :muu-toimenpide)
+                (toimenpiteen-kentta "Toimenpide" :muu-toimenpide)
+                (toimenpiteen-kentta "Toimenpide" :toimenpide))
+              (toimenpiteen-kentta "Lisatieto" :lisatieto)
+              (toimenpiteen-kentta "Suorittaja" :suorittaja)
+              (toimenpiteen-kentta "Kuittaaja" :kuittaaja)
+              (toimenpiteen-kentta "Päivämäärä" :pvm)]
+     :data kohde}))
+
+(defmethod infopaneeli-skeema :kan-hairiotilanne [hairiotilanne]
+  {:tyyppi :kan-hairiotilanne
+   :jarjesta-fn ::ht/havaintoaika
+   :otsikko (str
+              (pvm/pvm (::ht/havaintoaika hairiotilanne))
+              " "
+              (ht/fmt-korjauksen-tila (get-in hairiotilanne [::ht/korjauksen-tila]))
+              " häiriötilanne")
+   :tiedot [{:otsikko "Vikaluokka" :nimi ::ht/vikaluokka :tyyppi :string :fmt ht/fmt-vikaluokka}
+            {:otsikko "Syy" :nimi ::ht/syy :tyyppi :string}
+            {:otsikko "Korjaustoimenpide" :nimi ::ht/korjaustoimenpide :tyyppi :string}
+            {:otsikko "Korjausaika" :nimi ::ht/korjausaika-h :tyyppi :string}
+            {:otsikko "Odotusaika" :nimi ::ht/odotusaika-h :tyyppi :string}
+            {:otsikko "Ammattiliikenne lkm" :nimi ::ht/ammattiliikenne-lkm :tyyppi :string}
+            {:otsikko "Huviliikenne lkm" :nimi ::ht/huviliikenne-lkm :tyyppi :string}
+            {:otsikko "Kuittaaja" :hae (hakufunktio
+                                         #{[::ht/kuittaaja ::kayttaja/etunimi]
+                                           [::ht/kuittaaja ::kayttaja/sukunimi]}
+                                         (fn [ht]
+                                           (str
+                                             (get-in ht [::ht/kuittaaja ::kayttaja/etunimi])
+                                             " "
+                                             (get-in ht [::ht/kuittaaja ::kayttaja/sukunimi]))))}]
+   :data hairiotilanne})
+
+(defmethod infopaneeli-skeema :kan-toimenpide [toimenpide]
+  {:tyyppi :kan-toimenpide
+   :jarjesta-fn ::kan-to/pvm
+   :otsikko (str
+              (pvm/pvm (::kan-to/pvm toimenpide))
+              " "
+              (or
+                (get-in toimenpide [::kan-to/muu-toimenpide])
+                (get-in toimenpide [::kan-to/toimenpidekoodi ::tpk/nimi])))
+   :tiedot [{:otsikko "Tehtävä"
+             :tyyppi :string
+             :hae (hakufunktio #{[::kan-to/toimenpidekoodi ::tpk/nimi]} #(get-in % [::kan-to/toimenpidekoodi ::tpk/nimi]))}
+            {:otsikko "Pvm" :nimi ::kan-to/pvm :tyyppi :pvm}
+            {:otsikko "Huoltokohde"
+             :hae (hakufunktio #{[::kan-to/huoltokohde ::huoltokohde/nimi]}
+                               #(get-in % [::kan-to/huoltokohde ::huoltokohde/nimi]))
+             :tyyppi :string}
+            {:otsikko "Suorittaja" :nimi ::kan-to/suorittaja :tyyppi :string}
+            {:otsikko "Lisätieto" :nimi ::kan-to/lisatieto :tyyppi :string}]
+   :data toimenpide})
+
+(defmethod infopaneeli-skeema :kohde-hairiotilanne [kohde]
+  (let [hairiotilanteen-kentta (fn [otsikko kentta]
+                                 (when (-> kohde :hairiot kentta)
+                                   {:otsikko otsikko
+                                    :tyyppi :string
+                                    :hae (hakufunktio :hairiot #(-> % :hairiot kentta))}))]
+    {:tyyppi :kohde
+     :jarjesta-fn (constantly false)
+     :otsikko (kohde/fmt-kohteen-nimi kohde)
+     :tiedot [(hairiotilanteen-kentta "Kohde" :kohde)
+              (hairiotilanteen-kentta "Havaintoaika" :havaintoaika)
+              (hairiotilanteen-kentta "Korjauksen tila" :korjauksen-tila)
+              (hairiotilanteen-kentta "Vikaluokka" :vikaluokka)
+              (hairiotilanteen-kentta "Korjaustoimenpide" :korjaustoimenpide)
+              (hairiotilanteen-kentta "Korjausaika (h)" :korjausaika-h)
+              (hairiotilanteen-kentta "Syy" :syy)
+              (hairiotilanteen-kentta "Kuittaaja" :kuittaaja)]
+     :data kohde}))
+
+(defmethod infopaneeli-skeema :suolatoteuma [suolatoteuma]
+  {:tyyppi :suolatoteuma
+   :jarjesta-fn (let [fn :alkanut]
+                  (if (fn suolatoteuma)
+                    fn
+                    (constantly false)))
+   :otsikko (str "Suolatoteuma" (when (:alkanut suolatoteuma)
+                                  (str " " (pvm/pvm (:alkanut suolatoteuma)))))
+   :tiedot [{:otsikko "Materiaali" :nimi :materiaali_nimi}
+            {:otsikko "Määrä (t)" :nimi :maara}
+            {:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika}
+            {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika}]
+   :data suolatoteuma})
 
 (defmethod infopaneeli-skeema :default [x]
   (log/warn "infopaneeli-skeema metodia ei implementoitu tyypille " (pr-str (:tyyppi-kartalla x))

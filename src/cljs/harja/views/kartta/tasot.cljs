@@ -3,6 +3,7 @@
   päällä/pois flägit ja osaa asettaa ne."
   (:require [reagent.core :refer [atom]]
             [cljs.core.async :refer [<!]]
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
@@ -31,8 +32,13 @@
             [harja.ui.kartta.varit.puhtaat :as varit]
             [harja.tiedot.tilannekuva.tienakyma :as tienakyma-tiedot]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset :as vv-yks]
-            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok])
-  (:require-macros [reagent.ratom :refer [reaction] :as ratom]
+            [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset :as vv-kok]
+            [harja.tiedot.kanavat.hallinta.kohteiden-luonti :as koht-luonti]
+            [harja.tiedot.urakka.toteumat.suola :as suolatoteumat]
+            [harja.tiedot.kanavat.kohteet-kartalla :as kan-kohteet]
+            [harja.tiedot.kanavat.urakka.toimenpiteet.kan-toimenpiteet-kartalla :as kan-toimenpiteet]
+            [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-kartalla :as kan-hairiot])
+  (:require-macros [reagent.ratom :refer [reaction run!] :as ratom]
                    [cljs.core.async.macros :refer [go]]))
 
 ;; Kaikki näytettävät karttatasot
@@ -61,7 +67,12 @@
     :tienakyma-valitut
     :tienakyma-muut
     :kokonaishintaisten-turvalaitteet
-    :yksikkohintaisten-turvalaitteet})
+    :yksikkohintaisten-turvalaitteet
+    :kohteenosat-kohteiden-luonnissa
+    :suolatoteumat
+    :kan-kohteet
+    :kan-toimenpiteet
+    :kan-hairiot})
 
 (def
   ^{:doc
@@ -122,7 +133,7 @@
   [hals v-hal v-ur sivu valilehti urakat-kartalla]
   (cond
     ;; Näillä sivuilla ei ikinä näytetä murupolun kautta valittujen organisaatiorajoja
-    (#{:tilannekuva} sivu)
+    (#{:tilannekuva :hallinta} sivu)
     nil
 
     ;; Ilmoituksissa ei haluta näyttää navigointiin
@@ -224,7 +235,12 @@
    :tienakyma-valitut tienakyma-tiedot/valitut-tulokset-kartalla
    :tienakyma-muut tienakyma-tiedot/muut-tulokset-kartalla
    :kokonaishintaisten-turvalaitteet vv-kok/turvalaitteet-kartalla
-   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla})
+   :yksikkohintaisten-turvalaitteet vv-yks/turvalaitteet-kartalla
+   :kohteenosat-kohteiden-luonnissa koht-luonti/kohteenosat-kartalla
+   :kan-kohteet kan-kohteet/kohteet-kartalla
+   :kan-toimenpiteet kan-toimenpiteet/toimenpiteet-kartalla
+   :kan-hairiot kan-hairiot/hairiot-kartalla
+   :suolatoteumat suolatoteumat/suolatoteumat-kartalla})
 
 (defn nayta-geometria!
   ([avain geometria] (nayta-geometria! avain geometria :nakyman-geometriat))
@@ -238,6 +254,9 @@
   ([avain] (poista-geometria! avain :nakyman-geometriat))
   ([avain taso]
    (swap! (taso geometrioiden-atomit) dissoc avain)))
+
+(run! (when-not @paneelin-tila/nayta-infopaneeli?
+        (poista-geometria! :klikattu-karttapiste :infopaneelin-merkki)))
 
 (defn nakyvat-geometriat-z-indeksilla
   "Palauttaa valitun aiheen geometriat z-indeksilla jos geometrian taso on päällä."
@@ -284,6 +303,11 @@
        :tienakyma-muut (taso :tienakyma-muut :tienakyma-muut 0.4)
        :kokonaishintaisten-turvalaitteet (taso :kokonaishintaisten-turvalaitteet)
        :yksikkohintaisten-turvalaitteet (taso :yksikkohintaisten-turvalaitteet)
+       :kohteenosat-kohteiden-luonnissa (taso :kohteenosat-kohteiden-luonnissa)
+       :kan-kohteet (taso :kan-kohteet)
+       :kan-toimenpiteet (taso :kan-toimenpiteet)
+       :kan-hairiot (taso :kan-hairiot)
+       :suolatoteumat (taso :suolatoteumat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
        :nakyman-geometriat
        (aseta-z-index (vec (vals @(geometrioiden-atomit :nakyman-geometriat)))
@@ -320,6 +344,11 @@
    :tienakyma-muut tienakyma-tiedot/karttataso-tienakyma
    :kokonaishintaisten-turvalaitteet vv-kok/karttataso-kokonaishintaisten-turvalaitteet
    :yksikkohintaisten-turvalaitteet vv-yks/karttataso-yksikkohintaisten-turvalaitteet
+   :kohteenosat-kohteiden-luonnissa koht-luonti/karttataso-kohteenosat-kohteen-luonnissa
+   :kan-kohteet kan-kohteet/karttataso-kohteet
+   :kan-toimenpiteet kan-toimenpiteet/karttataso-toimenpiteet-vapaassa-sijainnissa
+   :kan-hairiot kan-hairiot/karttataso-hairiotilanteet-vapaassa-sijainnissa
+   :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :nakyman-geometriat (atom true)
    :infopaneelin-merkki (atom true)})
 

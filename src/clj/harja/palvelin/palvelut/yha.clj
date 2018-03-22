@@ -77,9 +77,15 @@
                                  (into {} (map (juxt :yhaid identity) sidontatiedot))))]
     urakat))
 
-(defn- suodata-olemassaolevat-kohteet [db urakka-id kohteet]
-  (let [yha-idt (into #{} (map :yhaid (yha-q/hae-urakan-kohteiden-yha-idt db {:urakkaid urakka-id})))]
-    (filterv #(not (yha-idt (:yha-id %))) kohteet)))
+(defn- suodata-pois-harjassa-jo-olevat-kohteet [db kohteet-yhasta]
+  (let [jo-harjassa-olevat (set (map :yha-id (yha-q/hae-harjassa-olevat-yha-idt
+                                               db
+                                               {:annetut-yha-idt (mapv :yha-id kohteet-yhasta)})))]
+    (log/debug "Harjassa ovat jo kohteet YHA id:llä " jo-harjassa-olevat)
+    (filterv (fn kohteen-yha-id-ei-ole-harjassa [kohde]
+               (not (jo-harjassa-olevat (:yha-id kohde))))
+             kohteet-yhasta)))
+
 
 (defn- hae-yha-kohteet
   "Hakee kohteet YHA:sta ja palauttaa vain uudet, Harjasta puuttuvat kohteet."
@@ -88,7 +94,7 @@
   (log/debug "Haetaan kohteet yhasta")
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
         _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
-        uudet-kohteet (suodata-olemassaolevat-kohteet db urakka-id yha-kohteet)
+        uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
         _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
     uudet-kohteet))
 
@@ -124,8 +130,9 @@
                  :nimi nimi
                  :vuodet (konv/seq->array [(t/year (pvm/suomen-aikavyohykkeeseen (t/now)))])
                  :yha_kohdenumero yha-kohdenumero
-                 :kohdenumero yha-kohdenumero})
-        _ (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})]
+                 :kohdenumero yha-kohdenumero})]
+    (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})
+    (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-kustannustaulu<! db {:yllapitokohde (:id kohde)})
     (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus] :as alikohde} alikohteet]
       (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
       (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
@@ -202,11 +209,11 @@
         (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
 
 (defn laheta-kohteet-yhaan
-  "Lähettää annetut kohteet teknisine tietoineen YHA:n."
+  "Lähettää annetut kohteet teknisine tietoineen YHAan."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (tarkista-lahetettavat-kohteet db kohde-idt)
-  (log/debug (format "Lähetetään kohteet: %s YHA:n" kohde-idt))
+  (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
   (let [lahetys-onnistui? (yha/laheta-kohteet yha urakka-id kohde-idt)
         paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
     {:paallystysilmoitukset paivitetyt-ilmoitukset

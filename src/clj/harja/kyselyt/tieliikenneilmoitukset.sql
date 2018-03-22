@@ -22,6 +22,7 @@ SELECT
   ulompi_i.tr_alkuetaisyys,
   ulompi_i.tr_loppuetaisyys,
   ulompi_i."aiheutti-toimenpiteita",
+  ulompi_i."toimenpiteet-aloitettu",
   it.id                                                              AS kuittaus_id,
   it.kuitattu                                                        AS kuittaus_kuitattu,
   it.kuittaustyyppi                                                  AS kuittaus_kuittaustyyppi,
@@ -43,6 +44,12 @@ WHERE ulompi_i.id IN
        (:loppu_annettu IS FALSE AND sisempi_i.ilmoitettu  >= :alku) OR
        (:alku_annettu IS FALSE AND sisempi_i.ilmoitettu  <= :loppu) OR
        (sisempi_i.ilmoitettu  BETWEEN :alku AND :loppu)) AND
+
+      -- Tarkasta että ilmoituksen toimenpiteiden aloitus sopii hakuehtoihin
+      ((:toimenpiteet_alku_annettu IS FALSE AND :toimenpiteet_loppu_annettu IS FALSE) OR
+       (:toimenpiteet_loppu_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  >= :toimenpiteet_alku) OR
+       (:toimenpiteet_alku_annettu IS FALSE AND sisempi_i."toimenpiteet-aloitettu"  <= :toimenpiteet_loppu) OR
+       (sisempi_i."toimenpiteet-aloitettu"  BETWEEN :toimenpiteet_alku AND :toimenpiteet_loppu)) AND
 
       -- Tarkista ilmoituksen tilat
       ((:kuittaamattomat IS TRUE AND sisempi_i.tila = 'kuittaamaton' :: ilmoituksen_tila) OR
@@ -174,6 +181,7 @@ SELECT
 
   i.tunniste,
   i."aiheutti-toimenpiteita",
+  i."toimenpiteet-aloitettu",
 
   it.id                                    AS kuittaus_id,
   it.kuitattu                              AS kuittaus_kuitattu,
@@ -314,7 +322,9 @@ INSERT INTO ilmoitus
  selitteet,
  urakkatyyppi,
  tunniste,
- viestiid)
+ viestiid,
+ vastaanotettu,
+ "ilmoitettu-alunperin")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -328,7 +338,9 @@ VALUES
     :selitteet :: TEXT [],
     :urakkatyyppi :: URAKKATYYPPI,
    :tunniste,
-   :viestiid);
+   :viestiid,
+   :vastaanotettu :: TIMESTAMPTZ,
+   :ilmoitettu-alunperin :: TIMESTAMPTZ);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
@@ -563,3 +575,20 @@ SELECT exists(SELECT
               FROM ilmoitus
               WHERE ilmoitusid = :ilmoitusid AND
                     viestiid = :viestiid);
+
+-- name: ilmoituksen-alkuperainen-kesto
+SELECT extract(EPOCH FROM (SELECT vastaanotettu - "ilmoitettu-alunperin"
+                           FROM ilmoitus
+                           WHERE id = :id));
+
+-- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
+UPDATE ilmoitus
+SET "toimenpiteet-aloitettu" = now(),
+  "aiheutti-toimenpiteita"   = TRUE
+WHERE id in (:idt);
+
+-- name: peruuta-ilmoitusten-toimenpiteiden-aloitukset!
+UPDATE ilmoitus
+SET "toimenpiteet-aloitettu" = null,
+  "aiheutti-toimenpiteita"   = false
+WHERE id in (:idt);

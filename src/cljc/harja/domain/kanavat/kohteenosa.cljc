@@ -3,6 +3,7 @@
     [clojure.string :as str]
     [clojure.spec.alpha :as s]
     [specql.transform :as xf]
+    [harja.kyselyt.specql :as harja-specql]
     [clojure.set]
     [specql.rel :as rel]
     #?@(:clj  [
@@ -23,31 +24,51 @@
    harja.domain.muokkaustiedot/poistettu?-sarake
    {::kohde (specql.rel/has-one ::kohde-id
                                 :harja.domain.kanavat.kohde/kohde
-                                :harja.domain.kanavat.kohde/id)}])
+                                :harja.domain.kanavat.kohde/id)}
+   #?(:clj {::sijainti (specql.transform/transform (harja.kyselyt.specql/->Geometry))})])
 
 (def perustiedot
   #{::id
     ::tyyppi
     ::nimi
     ::oletuspalvelumuoto
-    ::kohde-id})
+    ::sijainti})
 
-(def fmt-kohdeosa-tyyppi
+(def kohteen-tiedot
+  #{[::kohde #{:harja.domain.kanavat.kohde/nimi
+               :harja.domain.kanavat.kohde/id}]})
+
+(def fmt-kohteenosa-tyyppi
   {:sulku "sulku"
    :silta "silta"
    :rautatiesilta "rautatiesilta"})
 
 
-(defn fmt-kohdeosa
-  "Palauttaa kohdeosan nimen tai tyypin formatoituna."
-  [kohdeosa]
-  (when-let [s (or (::nimi kohdeosa)
-                   (fmt-kohdeosa-tyyppi (::tyyppi kohdeosa)))]
-    (str/capitalize s)))
+(defn fmt-kohteenosa
+  "Palauttaa kohteenosan 'nimen', joka on nimettömälle osalle tyyppi, nimetylle osalle nimi, tyyppi."
+  [osa]
+  (let [nimi (::nimi osa)
+        tyyppi (fmt-kohteenosa-tyyppi (::tyyppi osa))]
+    (when (or nimi tyyppi)
+      (str/capitalize
+        (str nimi (when (and nimi tyyppi) ", ") tyyppi)))))
+
+(defn maantiesilta? [osa]
+  (= :silta (::tyyppi osa)))
+
+(defn rautatiesilta? [osa]
+  (= :rautatiesilta (::tyyppi osa)))
 
 (defn silta? [osa]
-  (or (= :silta (::tyyppi osa))
-      (= :rautatiesilta (::tyyppi osa))))
+  (or (maantiesilta? osa)
+      (rautatiesilta? osa)))
 
 (defn sulku? [osa]
   (= :sulku (::tyyppi osa)))
+
+(s/def ::hae-kohteenosat-vastaus (s/coll-of (s/keys :req [::id
+                                                          ::tyyppi
+                                                          ::sijainti]
+                                                    :opt [::kohde
+                                                          ::nimi
+                                                          ::oletuspalvelumuoto])))

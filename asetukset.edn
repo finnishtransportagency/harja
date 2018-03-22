@@ -130,6 +130,7 @@
                         :turvalaitteiden-osoite "https://ava.liikennevirasto.fi/harja/Turvalaitteet.shz"
                         :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
+                        ;;kanavasulut
                         :kanavien-shapefile "file://shp/Vesivaylien_kanavat/Kanavat.shp"
                         :kanavien-osoite "https://ava.liikennevirasto.fi/harja/Kanavat.shz"
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Kanavat.shz"}
@@ -185,13 +186,14 @@
  :ais-data {:url "https://meri.digitraffic.fi/api/v1/locations/latest"
             :sekunnin-valein 60}
 
- :turvalaitteet {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=turvalaitteet&OUTPUTFORMAT=application/json"
-                 :paivittainen-tarkistusaika [12 22 00]
-                 :paivitysvali-paivissa 60}
-
  :vaylat {:geometria-url "https://extranet.liikennevirasto.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]
           :paivitysvali-paivissa 60}
+
+ :kanavasillat {:geometria-url "http://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/1.2/rakenteet?sivu=%1&tuloksia-per-sivu=1000"
+                 :paivittainen-tarkistusaika [13 17 00]
+                 :paivitysvali-paivissa 60}
+
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
 

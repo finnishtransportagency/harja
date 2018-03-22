@@ -1,21 +1,24 @@
 (ns harja.ui.aikajana
   "Aikajananäkymä, jossa voi useita eri asioita näyttää aikajanalla.
   Vähän kuten paljon käytetty gantt kaavio."
-  (:require [clojure.spec.alpha :as s]
+  (:require
+    [clojure.spec.alpha :as s]
+    [harja.domain.valitavoite :as vt-domain]
     #?(:cljs [reagent.core :as r])
     #?(:cljs [harja.ui.dom :as dom])
-            [harja.pvm :as pvm]
+    [harja.pvm :as pvm]
     #?(:cljs [cljs-time.core :as t]
        :clj
-            [clj-time.core :as t])
+    [clj-time.core :as t])
     #?(:cljs [harja.ui.debug :as debug])
     #?(:cljs [cljs.core.async :refer [<!]]
        :clj
-            [clojure.core.async :refer [<! go]])
+    [clojure.core.async :refer [<! go]])
     #?(:clj
-            [clojure.future :refer :all])
+    [clojure.future :refer :all])
     #?(:clj
-            [harja.tyokalut.spec :refer [defn+]]))
+    [harja.tyokalut.spec :refer [defn+]])
+    [clojure.string :as str])
   #?(:cljs (:require-macros [harja.tyokalut.spec :refer [defn+]]
              [cljs.core.async.macros :refer [go]])))
 
@@ -152,7 +155,7 @@
         text]])))
 
 #?(:cljs
-   (defn- aikajana-ui-tila [rivit {:keys [muuta!] :as optiot} komponentti]
+   (defn- aikajana-ui-tila [rivit {:keys [muuta! ennen-muokkausta] :as optiot} komponentti]
      (r/with-let [tooltip (r/atom nil)
                   valitut-palkit (r/atom #{}) ;; Käytössä, jos valitaan erikseen (yleensä useita) palkkeja raahattavaksi
                   drag-kursori (r/atom nil) ; Nykyisen raahauksen kursorin tiedot
@@ -189,6 +192,8 @@
                              (reset! drag [{::alku (::alku jana)
                                             ::loppu (::loppu jana)
                                             ::drag (::drag jana)
+                                            ::sahkopostitiedot (::sahkopostitiedot jana)
+                                            ::kohde-nimi (::kohde-nimi jana)
                                             ::alkup-alku (::alku jana)
                                             ::alkup-loppu (::loppu jana)
                                             :avain avain}])
@@ -196,6 +201,8 @@
                              (reset! drag (map #(-> {::alku (::alku %)
                                                      ::loppu (::loppu %)
                                                      ::drag (::drag %)
+                                                     ::sahkopostitiedot (::sahkopostitiedot %)
+                                                     ::kohde-nimi (::kohde-nimi %)
                                                      ::alkup-alku (::alku %)
                                                      ::alkup-loppu (::loppu %)
                                                      :avain avain})
@@ -251,20 +258,28 @@
                                                    :default drag)))
                                              @drag)))))))
           :on-mouse-up! (fn [e]
-                          ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
-                          (when (and (not (.-ctrlKey e))
-                                     (empty? @drag))
-                            (reset! valitut-palkit #{}))
+                          (let [tyhjenna-muokkaustila! (fn []
+                                                         (reset! drag [])
+                                                         (reset! drag-kursori nil)
+                                                         (reset! lopetetaan-raahaus? false)
+                                                         (reset! valitut-palkit #{}))
+                                tallenna-muutos! (fn [_]
+                                                   (go
+                                                     (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
+                                                     (tyhjenna-muokkaustila!)))
+                                peru-muutos! (fn []
+                                               (tyhjenna-muokkaustila!))]
+                            ;; Ei raahata mitään, tehdään ohi klikkaus ilman CTRL:ää -> poista kaikki valinnat
+                            (when (and (not (.-ctrlKey e))
+                                       (empty? @drag))
+                              (reset! valitut-palkit #{}))
 
-                          ;; Tallenna muutos, jos raahattiin palkkeja
-                          (when-not (empty? @drag)
-                            (go
+                            ;; Käsittele muutos, jos raahattiin palkkeja
+                            (when-not (empty? @drag)
                               (reset! lopetetaan-raahaus? true)
-                              (<! (muuta! (map #(select-keys % #{::drag ::alku ::loppu}) @drag)))
-                              (reset! drag [])
-                              (reset! drag-kursori nil)
-                              (reset! lopetetaan-raahaus? false)
-                              (reset! valitut-palkit #{}))))
+                              (if ennen-muokkausta
+                                (ennen-muokkausta @drag tallenna-muutos! peru-muutos!)
+                                (tallenna-muutos!)))))
           :leveys (* 0.95 @dom/leveys)}]])))
 
 #?(:clj
@@ -455,7 +470,40 @@
                                      :y y :show-tooltip! show-tooltip!
                                      :paivan-leveys paivan-leveys
                                      :hide-tooltip! hide-tooltip! :reuna reuna
-                                     :vari vari :suunta (if alku :oikea :vasen)})))]))
+                                     :vari vari :suunta (if alku :oikea :vasen)})))
+
+                       ;; Välitavoitteet
+                       (map-indexed
+                         (fn [i valitavoite]
+                           (let [vari-kesken "#FFA500"
+                                 vari-valmis "#00cc25"
+                                 vari-myohassa "#da252e"
+                                 vari (case (vt-domain/valmiustila valitavoite)
+                                        :valmis vari-valmis
+                                        :myohassa vari-myohassa
+                                        vari-kesken)
+                                 x (paiva-x (:takaraja valitavoite))]
+                             (when (>= x alku-x)
+                               ^{:key i}
+                               [:rect {:x x
+                                       :y y
+                                       :width 5
+                                       :height korkeus
+                                       :fill vari
+                                       :fill-opacity 1.0
+                                       :on-mouse-over #(show-tooltip!
+                                                         {:x x
+                                                          :y (hover-y y)
+                                                          :text (str (:nimi valitavoite)
+                                                                     " ("
+                                                                     (str/lower-case
+                                                                       (vt-domain/valmiustilan-kuvaus-yksinkertainen
+                                                                         valitavoite))
+                                                                     ", takaraja "
+                                                                     (pvm/pvm (:takaraja valitavoite))
+                                                                     ")")})
+                                       :on-mouse-out hide-tooltip!}])))
+                         (filter :takaraja (::valitavoitteet rivi)))]))
                   ajat)
                 [:text {:x 0 :y (+ text-y-offset y)
                         :font-size 10}

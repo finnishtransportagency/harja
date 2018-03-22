@@ -135,7 +135,7 @@ E'Päällystysurakoissa pitää sitoa kustannuksia mm. bitumin ja kevyen poltto�
 COMMENT ON TABLE vv_vayla IS
 E'Väylä on vedessä oleva reitti, jonka varressa on turvalaitteita. Väylillä on nimi, tyyppi, ja sijainti. Tyyppi voi olla kauppamerenkulku tai muu. Koska turvalaitteiden pitää aina liittyä väylään, tyyppeihin voidaan joutua lisäämään myös "Virtuaaliväylä", joka ei ole oikeasti väylä. Tällaiset turvalaitteet ovat avomerellä.';
 
-COMMENT ON TABLE vv_turvalaite IS
+COMMENT ON TABLE vatu_turvalaite IS
 E'Turvalaitteet ovat vedessä olevia poijuja, viittoja, ja muita asioita. Kaikki vesiväylien toimenpiteet liittyvät aina turvalaitteisiin. Turvalaitteissa voi olla komponentteja, kuten aurinkopaneeleita, akkuja, jne. Turvlaaitteet liittyvät aina väylään.';
 
 COMMENT ON TABLE vv_vikailmoitus IS
@@ -216,5 +216,14 @@ COMMENT ON COLUMN kan_hairio.huviliikenne_lkm IS 'Huviliikennealusten määrä, 
 COMMENT ON COLUMN kan_hairio.korjaustoimenpide IS 'Vapaamuotoinen toimenpiteen kuvaus, esim. "Kamera resetoitu"';
 COMMENT ON COLUMN kan_hairio.paikallinen_kaytto IS 'Valitaan, onko siirrytty paikallliskäyttöön';
 
-Comment on table kan_toimenpide IS
-E'Kuvaa konkreettiset toimenpiteet joita on tehty tietyn kanavan kohteelle, eli sillalle tai sululle, jotka kohdistuvat taas tietttyyn huoltokohteeseen, kuten esim. hydrauliikkaan. Voivat olla hinnoittelultaan esim. kokonais- tai yksikköhintaisia.'
+COMMENT ON TABLE kan_toimenpide IS
+E'Kuvaa konkreettiset toimenpiteet joita on tehty tietyn kanavan kohteelle, eli sillalle tai sululle, jotka kohdistuvat taas tietttyyn huoltokohteeseen, kuten esim. hydrauliikkaan. Voivat olla hinnoittelultaan esim. kokonais- tai yksikköhintaisia.';
+
+-- Muut
+
+COMMENT ON TABLE kayttaja_anti_csrf_token IS E'Sisältää käyttäjän anti-CSRF tokenin tiedot. Jokaisella tokenilla on voimassaoloaika, ja niitä voi olla useita per käyttäjä (yksi per selainikkuna/-välilehti). Tarkempi tekninen toteutus dokumentoitu koodiin.';
+
+COMMENT ON TABLE yllapitokohteen_sahkopostitiedot IS
+E'Sisältää ylläpitokohteen sähköpostilähetystiedot.';
+COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
+COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.vastaanottajat IS 'Vastaanottajat, joille viesti tulisi ainakin lähettää. Viesti saattaa tyypistä riippuen sisältää myös muita vastaanottajia, joille viesti laitetaan aina (esim. tiemerkinnän valmistuminen ilmoitetaan tietyille FIM-käyttäjille)';

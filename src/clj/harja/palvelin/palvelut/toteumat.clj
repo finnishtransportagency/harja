@@ -76,7 +76,16 @@
             "yksikkohintainen"
             (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot   user urakka-id)
             "kokonaishintainen"
-            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id))]))
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot   user urakka-id)
+            ;; Kaikki seuraavat ovat pohjimmiltaan muutos- ja lisätöitä
+            "muutostyo"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
+            "lisatyo"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
+            "akillinen-hoitotyo"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id)
+            "vahinkojen-korjaukset"
+            (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-muutos-ja-lisatyot user urakka-id))]))
 
 (defn hae-urakan-toteuma [db user {:keys [urakka-id toteuma-id]}]
   (log/debug "Haetaan urakan toteuma id:llä: " toteuma-id)
@@ -769,36 +778,50 @@
                     :urakoitsija-id (get-in user [:organisaatio :id])}))
         {:tehtava :tehtavat} :id (constantly true)))))
 
+(defn hae-toteumien-reitit [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user (:urakka-id tiedot))
+  (let [idt (into [] (:idt tiedot))]
+    (toteumat-q/hae-toteumien-reitit db {:idt idt :urakka-id (:urakka-id tiedot)})))
+
+(defn- hae-toteuman-liitteet [db user {:keys [urakka-id toteuma-id oikeus]}]
+  (let [nst-joista-saa-kutsua-toteuman-liitteden-hakua #{'urakat-toteumat-varusteet}] ;; voit lisätä oikeuksia tarpeen mukaan
+    (when (nst-joista-saa-kutsua-toteuman-liitteden-hakua oikeus)
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
+      (oikeudet/vaadi-lukuoikeus (deref (ns-resolve 'harja.domain.oikeudet oikeus)) user urakka-id)
+      (toteumat-q/hae-toteuman-liitteet db toteuma-id))))
+
 (defrecord Toteumat []
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
+           db-replica :db-replica
            karttakuvat :karttakuvat
            tierekisteri :tierekisteri
            :as this}]
+    (assert (some? db-replica))
     (when karttakuvat
       (karttakuvat/rekisteroi-karttakuvan-lahde!
         karttakuvat :kokonaishintainen-toteuma
-        (partial #'hae-kokonaishintainen-toteuma-kartalle db)
-        (partial #'hae-kokonaishintaisen-toteuman-tiedot-kartalle db)
+        (partial #'hae-kokonaishintainen-toteuma-kartalle db-replica)
+        (partial #'hae-kokonaishintaisen-toteuman-tiedot-kartalle db-replica)
         "kht")
       (karttakuvat/rekisteroi-karttakuvan-lahde!
         karttakuvat :yksikkohintaiset-toteumat
-        (partial #'hae-yksikkohintaiset-toteumat-kartalle db)
-        (partial #'hae-yksikkohintaisen-toteuman-tiedot-kartalle db)
+        (partial #'hae-yksikkohintaiset-toteumat-kartalle db-replica)
+        (partial #'hae-yksikkohintaisen-toteuman-tiedot-kartalle db-replica)
         "yht"))
 
     (julkaise-palvelut
       http
       :urakan-toteuma
       (fn [user tiedot]
-        (hae-urakan-toteuma db user tiedot))
+        (hae-urakan-toteuma db-replica user tiedot))
       :urakan-toteumien-tehtavien-summat
       (fn [user tiedot]
-        (hae-urakan-toteumien-tehtavien-summat db user tiedot))
+        (hae-urakan-toteumien-tehtavien-summat db-replica user tiedot))
       :urakan-toteutuneet-tehtavat-toimenpidekoodilla
       (fn [user tiedot]
-        (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db user tiedot))
+        (hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla db-replica user tiedot))
       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
       (fn [user toteuma]
         (tallenna-toteuma-ja-yksikkohintaiset-tehtavat db user toteuma))
@@ -810,13 +833,13 @@
         (paivita-yk-hint-toiden-tehtavat db user tiedot))
       :urakan-erilliskustannukset
       (fn [user tiedot]
-        (hae-urakan-erilliskustannukset db user tiedot))
+        (hae-urakan-erilliskustannukset db-replica user tiedot))
       :tallenna-erilliskustannus
       (fn [user toteuma]
         (tallenna-erilliskustannus db user toteuma))
       :urakan-toteutuneet-muut-tyot
       (fn [user tiedot]
-        (hae-urakan-muut-tyot db user tiedot))
+        (hae-urakan-muut-tyot db-replica user tiedot))
       :tallenna-muiden-toiden-toteuma
       (fn [user toteuma]
         (tallenna-muiden-toiden-toteuma db user toteuma))
@@ -832,20 +855,28 @@
       :hae-kokonaishintaisen-toteuman-tiedot
       (fn [user {:keys [urakka-id pvm toimenpidekoodi toteuma-id]}]
         (if toteuma-id
-          (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id toteuma-id)
-          (hae-kokonaishintaisen-toteuman-tiedot db user urakka-id pvm toimenpidekoodi)))
+          (hae-kokonaishintaisen-toteuman-tiedot db-replica user urakka-id toteuma-id)
+          (hae-kokonaishintaisen-toteuman-tiedot db-replica user urakka-id pvm toimenpidekoodi)))
       :urakan-varustetoteumat
       (fn [user tiedot]
-        (hae-urakan-varustetoteumat tierekisteri db user tiedot))
+        (hae-urakan-varustetoteumat tierekisteri db-replica user tiedot))
       :tallenna-varustetoteuma
       (fn [user {:keys [hakuehdot toteuma]}]
         (tallenna-varustetoteuma tierekisteri db user hakuehdot toteuma))
       :hae-toteuman-reitti-ja-tr-osoite
       (fn [user tiedot]
-        (hae-toteuman-reitti-ja-tr-osoite db user tiedot))
+        (hae-toteuman-reitti-ja-tr-osoite db-replica user tiedot))
       :siirry-toteuma
       (fn [user toteuma-id]
-        (siirry-toteuma db user toteuma-id)))
+        (siirry-toteuma db-replica user toteuma-id))
+      :hae-toteumien-reitit
+      (fn [user tiedot]
+        (hae-toteumien-reitit db-replica user tiedot))
+      :hae-toteuman-liitteet
+      (fn [user {:keys [urakka-id toteuma-id oikeus]}]
+        (hae-toteuman-liitteet db user {:urakka-id urakka-id
+                                        :toteuma-id toteuma-id
+                                        :oikeus oikeus})))
     this)
 
   (stop [this]
@@ -868,5 +899,7 @@
       :urakan-varustetoteumat
       :hae-toteuman-reitti-ja-tr-osoite
       :siirry-toteuma
-      :tallenna-varustetoteuma)
+      :tallenna-varustetoteuma
+      :hae-toteumien-reitit
+      :hae-toteuman-liitteet)
     this))

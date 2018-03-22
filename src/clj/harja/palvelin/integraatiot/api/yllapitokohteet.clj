@@ -56,6 +56,7 @@
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
+            [harja.domain.yllapitokohde :as ypk-domain]
             [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
@@ -127,6 +128,15 @@
       {:koodi virheet/+viallinen-yllapitokohteen-aikataulu+
        :viesti "Tiemerkinnälle ei voi asettaa päivämäärää, päällystyksen valmistumisaika puuttuu."})))
 
+(defn muunnettavat-alikohteet [kohteen-tienumero alikohteet]
+  (mapv #(let [alikohde (:alikohde %)]
+           (-> alikohde
+               (assoc :ulkoinen-id (get-in alikohde [:tunniste :id]))
+               (assoc-in [:sijainti :numero]
+                         (or (get-in alikohde [:sijainti :numero])
+                             kohteen-tienumero))))
+        alikohteet))
+
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
                      urakka-id
@@ -138,27 +148,26 @@
     (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
     (validointi/tarkista-saako-kohteen-paivittaa db kohde-id)
     (let [kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid kohde-id})))
-         kohde (-> (:yllapitokohde data)
-                   (assoc :id kohde-id)
-                   (assoc-in [:sijainti :tie] kohteen-tienumero))
-         muunnettavat-alikohteet (mapv #(-> (:alikohde %)
-                                            (assoc :ulkoinen-id (get-in (:alikohde %) [:tunniste :id]))
-                                            (assoc-in [:sijainti :numero] kohteen-tienumero))
-                                       (:alikohteet kohde))
-         muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
-         karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
-                         (when karttapvm (parametrit/pvm-aika karttapvm)))
-         kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
-         kohteen-sijainti (:sijainti kohde)
-         alikohteet (:alikohteet kohde)]
-
-     (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti alikohteet)
-     (jdbc/with-db-transaction [db db]
-       (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
-       (kasittely/paivita-alikohteet db kohde alikohteet)
-       (yy/paivita-yllapitourakan-geometria db urakka-id))
-     (tee-kirjausvastauksen-body
-       {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
+          kohde (-> (:yllapitokohde data)
+                    (assoc :id kohde-id)
+                    (assoc-in [:sijainti :tie] kohteen-tienumero))
+          muunnettavat-alikohteet (muunnettavat-alikohteet kohteen-tienumero (:alikohteet kohde))
+          muunnettava-kohde (assoc kohde :alikohteet muunnettavat-alikohteet)
+          karttapvm (as-> (get-in muunnettava-kohde [:sijainti :karttapvm]) karttapvm
+                          (when karttapvm (parametrit/pvm-aika karttapvm)))
+          kohde (tieosoitteet/muunna-yllapitokohteen-tieosoitteet vkm db kohteen-tienumero karttapvm muunnettava-kohde)
+          kohteen-sijainti (:sijainti kohde)
+          paakohteen-sisalla? #(= kohteen-tienumero (or (get-in % [:sijainti :tie]) (get-in % [:sijainti :numero])))
+          paakohteen-alikohteet (filter paakohteen-sisalla? (:alikohteet kohde))
+          muut-alikohteet (filter (comp not paakohteen-sisalla?) (:alikohteet kohde))]
+      (validointi/tarkista-paallystysilmoituksen-kohde-ja-alikohteet db kohde-id kohteen-tienumero kohteen-sijainti paakohteen-alikohteet)
+      (validointi/tarkista-muut-alikohteet db muut-alikohteet)
+      (jdbc/with-db-transaction [db db]
+        (kasittely/paivita-kohde db kohde-id kohteen-sijainti)
+        (kasittely/paivita-alikohteet db kohde (concat paakohteen-alikohteet muut-alikohteet))
+        (yy/paivita-yllapitourakan-geometria db urakka-id))
+      (tee-kirjausvastauksen-body
+        {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
 
 (defn kirjaa-paallystysilmoitus [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
   (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
@@ -201,11 +210,13 @@
     (when (viestinta/valita-tieto-valmis-tiemerkintaan?
             vanha-tiemerkintapvm
             (json/pvm-string->joda-date (:valmis-tiemerkintaan aikataulu)))
-      (let [kohteen-tiedot (first (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                    db {:idt [kohde-id]}))
+      (let [kohteen-tiedot (first (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                    db [kohde-id]))
             kohteen-tiedot (yy/lisaa-yllapitokohteelle-pituus db kohteen-tiedot)]
         (viestinta/valita-tieto-kohteen-valmiudesta-tiemerkintaan
-          {:fim fim :email email :kohteen-tiedot kohteen-tiedot
+          {:fim fim
+           :email email
+           :kohteen-tiedot kohteen-tiedot
            :tiemerkintapvm (json/pvm-string->java-util-date (:valmis-tiemerkintaan aikataulu))
            :kayttaja kayttaja})))
 
@@ -222,8 +233,8 @@
   (let [kohteen-uudet-tiedot {:id kohde-id
                               :aikataulu-tiemerkinta-loppu (json/pvm-string->java-util-date
                                                              (:tiemerkinta-valmis aikataulu))}
-        nykyinen-kohde-kannassa (first (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                                  db {:idt [kohde-id]})))
+        nykyinen-kohde-kannassa (first (into [] (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                                  db [kohde-id])))
         valmistuneet-kohteet (viestinta/suodata-tiemerkityt-kohteet-viestintaan
                                [nykyinen-kohde-kannassa]
                                [kohteen-uudet-tiedot])]
@@ -237,11 +248,12 @@
        :id kohde-id})
 
     (viestinta/valita-tieto-tiemerkinnan-valmistumisesta
-      {:kayttaja kayttaja :fim fim
+      {:kayttaja kayttaja
+       :fim fim
+       :db db
        :email email
-       :valmistuneet-kohteet (into [] (yllapitokohteet-q/hae-yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                        db
-                                        {:idt (map :id valmistuneet-kohteet)}))})
+       :valmistuneet-kohteet (into [] (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                                        db (map :id valmistuneet-kohteet)))})
     {}))
 
 (defn- paivita-yllapitokohteen-aikataulu

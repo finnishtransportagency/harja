@@ -1,6 +1,6 @@
 (ns harja.ui.kartta.esitettavat-asiat
   (:require [clojure.string :as str]
-            #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
+    #?(:cljs [harja.ui.openlayers.edistymispalkki :as edistymispalkki])
             [taoensso.timbre :as log]
             [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.domain.laadunseuranta.tarkastus :as tarkastukset]
@@ -11,7 +11,10 @@
             [harja.pvm :as pvm]
             [harja.domain.tierekisteri :as tr]
             [harja.domain.tietyoilmoitus :as tietyoilmoitukset]
-            [harja.domain.vesivaylat.turvalaite :as tu]))
+            [harja.domain.vesivaylat.turvalaite :as tu]
+            [harja.domain.kanavat.kohteenosa :as osa]
+            [harja.domain.kanavat.kohde :as kohde]
+            [clojure.set :as set]))
 
 
 (defn- laske-skaala [valittu?]
@@ -83,7 +86,7 @@
                              ;; Oletusasetukset
                              {:tyyppi :merkki
                               :paikka [:loppu]
-                              :scale  (laske-skaala valittu?)
+                              :scale (laske-skaala valittu?)
                               :zindex zindex}
                              i)) merkit)}))
 
@@ -221,7 +224,7 @@
                             " ("
                             (str/lower-case (ilmoitukset/tilan-selite tila))
                             ")")
-               :img    ikoni}
+               :img ikoni}
       :alue (maarittele-feature ilmoitus valittu? ikoni))))
 
 (defmethod asia-kartalle :tiedoitus [ilmoitus valittu?]
@@ -247,7 +250,7 @@
       :type :laatupoikkeama
       :nimi (or (:nimi laatupoikkeama) otsikko)
       :selite {:teksti otsikko
-               :img    ikoni}
+               :img ikoni}
       :alue (maarittele-feature laatupoikkeama valittu?
                                 ikoni viiva))))
 
@@ -289,7 +292,7 @@
       :type :varustetoteuma
       :nimi (or (:tooltip varustetoteuma) "Varustetoteuma")
       :selite {:teksti "Varustetoteuma"
-               :img    ikoni}
+               :img ikoni}
       :alue (maarittele-feature varustetoteuma valittu?
                                 (ulkoasu/varustetoteuman-ikoni)))))
 
@@ -299,7 +302,7 @@
       :type :varuste
       :nimi (or (:tooltip varuste) "Varuste")
       :selite {:teksti "Varuste"
-               :img    ikoni}
+               :img ikoni}
       :alue (maarittele-feature varuste valittu?
                                 (ulkoasu/varusteen-ikoni)))))
 
@@ -333,7 +336,7 @@
         :type :turvallisuuspoikkeama
         :nimi (or (:nimi tp) "Turvallisuuspoikkeama")
         :selite {:teksti selite
-                 :img    ikoni}
+                 :img ikoni}
         :alue (maarittele-feature tp valittu? ikoni)))))
 
 (defmethod asia-kartalle :turvalaite [turvalaite valittu?]
@@ -346,6 +349,15 @@
                :img ikoni}
       :alue alue)))
 
+(defmethod asia-kartalle :suolatoteuma [suolatoteuma valittu?]
+  (let [viiva (ulkoasu/suolatoteuman-viiva)]
+    (assoc suolatoteuma
+      :type :suolatoteuma
+      :nimi "Suolatoteuma"
+      :selite {:teksti "Suolatoteuma"
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)}
+      :alue (maarittele-feature suolatoteuma false nil viiva))))
+
 (defn- yllapitokohde [tyyppi yllapitokohde valittu? teksti]
   (let [tila-kartalla (yllapitokohteet-domain/yllapitokohteen-tila-kartalla (:tila yllapitokohde))
         tila-teksti (str/lower-case (yllapitokohteet-domain/kuvaile-kohteen-tila-kartalla tila-kartalla))
@@ -354,7 +366,7 @@
     (assoc yllapitokohde
       :nimi (or (:nimi yllapitokohde) teksti)
       :selite {:teksti (str teksti " (" tila-teksti ")")
-               :vari   (viivojen-varit-leveimmasta-kapeimpaan viiva)}
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viiva)}
       :alue (maarittele-feature yllapitokohde valittu?
                                 ikoni
                                 viiva))))
@@ -382,41 +394,41 @@
     (nth ulkoasu/toteuma-varit-ja-nuolet (Math/abs (rem (hash tehtavan-nimi) varien-lkm)))))
 
 (def tehtavien-nimet
-  {"AURAUS JA SOHJONPOISTO"          "Auraus tai sohjonpoisto"
-   "SUOLAUS"                         "Suolaus"
+  {"AURAUS JA SOHJONPOISTO" "Auraus tai sohjonpoisto"
+   "SUOLAUS" "Suolaus"
    ;; Liuossuolausta ei ymmärtääkseni enää seurata, mutta kesälomien takia tässä on korjauksen
    ;; hetkellä pieni informaatiouupelo. Nämä rivit voi poistaa tulevaisuudessa, jos lukija
    ;; kokee tietävänsä asian varmaksi.
    ;;"LIUOSSUOLAUS"                    "Liuossuolaus"
-   "PISTEHIEKOITUS"                  "Pistehiekoitus"
-   "LINJAHIEKOITUS"                  "Linjahiekoitus"
-   "PINNAN TASAUS"                   "Pinnan tasaus"
-   "LUMIVALLIEN MADALTAMINEN"        "Lumivallien madaltaminen"
+   "PISTEHIEKOITUS" "Pistehiekoitus"
+   "LINJAHIEKOITUS" "Linjahiekoitus"
+   "PINNAN TASAUS" "Pinnan tasaus"
+   "LUMIVALLIEN MADALTAMINEN" "Lumivallien madaltaminen"
    "SULAMISVEDEN HAITTOJEN TORJUNTA" "Sulamisveden haittojen torjunta"
-   "AURAUSVIITOITUS JA KINOSTIMET"   "Aurausviitoitus ja kinostimet"
-   "LUMENSIIRTO"                     "Lumensiirto"
-   "PAANNEJAAN POISTO"               "Paannejään poisto"
-   "KELINTARKASTUS"                  "Talvihoito"
+   "AURAUSVIITOITUS JA KINOSTIMET" "Aurausviitoitus ja kinostimet"
+   "LUMENSIIRTO" "Lumensiirto"
+   "PAANNEJAAN POISTO" "Paannejään poisto"
+   "KELINTARKASTUS" "Talvihoito"
 
-   "TIESTOTARKASTUS"                 "Tiestötarkastus"
-   "KONEELLINEN NIITTO"              "Koneellinen niitto"
-   "KONEELLINEN VESAKONRAIVAUS"      "Koneellinen vesakonraivaus"
+   "TIESTOTARKASTUS" "Tiestötarkastus"
+   "KONEELLINEN NIITTO" "Koneellinen niitto"
+   "KONEELLINEN VESAKONRAIVAUS" "Koneellinen vesakonraivaus"
 
-   "LIIKENNEMERKKIEN PUHDISTUS"      "Liikennemerkkien puhdistus"
+   "LIIKENNEMERKKIEN PUHDISTUS" "Liikennemerkkien puhdistus"
 
-   "SORATEIDEN MUOKKAUSHOYLAYS"      "Sorateiden muokkaushöyläys"
-   "SORATEIDEN POLYNSIDONTA"         "Sorateiden pölynsidonta"
-   "SORATEIDEN TASAUS"               "Sorateiden tasaus"
-   "SORASTUS"                        "Sorastus"
+   "SORATEIDEN MUOKKAUSHOYLAYS" "Sorateiden muokkaushöyläys"
+   "SORATEIDEN POLYNSIDONTA" "Sorateiden pölynsidonta"
+   "SORATEIDEN TASAUS" "Sorateiden tasaus"
+   "SORASTUS" "Sorastus"
 
-   "HARJAUS"                         "Harjaus"
-   "PAALLYSTEIDEN PAIKKAUS"          "Päällysteiden paikkaus"
-   "PAALLYSTEIDEN JUOTOSTYOT"        "Päällysteiden juotostyöt"
+   "HARJAUS" "Harjaus"
+   "PAALLYSTEIDEN PAIKKAUS" "Päällysteiden paikkaus"
+   "PAALLYSTEIDEN JUOTOSTYOT" "Päällysteiden juotostyöt"
 
-   "SILTOJEN PUHDISTUS"              "Siltojen puhdistus"
+   "SILTOJEN PUHDISTUS" "Siltojen puhdistus"
 
-   "L- JA P-ALUEIDEN PUHDISTUS"      "L- ja P-alueiden puhdistus"
-   "MUU"                             "Muu"})
+   "L- JA P-ALUEIDEN PUHDISTUS" "L- ja P-alueiden puhdistus"
+   "MUU" "Muu"})
 
 (defn tehtavan-nimi [tehtavat]
   (str/join ", " (into []
@@ -502,7 +514,7 @@
         :type :toteuma
         :nimi nimi
         :selite {:teksti nimi
-                 :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+                 :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
         :alue (maarittele-feature reitti valittu?
                                   (if (:ei-nuolia? toteuma)
                                     nil
@@ -519,14 +531,14 @@
   (log/info "Asia kartalle: tietyömaa: " (pr-str aita))
   (let [viivat ulkoasu/tietyomaa]
     (assoc aita
-     :type :tietyomaa
-     :nimi "Tietyömaa"
-     :selite {:teksti "Tietyömaa"
-              :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
-     :alue (maarittele-feature {:sijainti (:geometria aita)}
-                               valittu?
-                               nil
-                               viivat))))
+      :type :tietyomaa
+      :nimi "Tietyömaa"
+      :selite {:teksti "Tietyömaa"
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+      :alue (maarittele-feature {:sijainti (:geometria aita)}
+                                valittu?
+                                nil
+                                viivat))))
 
 (defn tyokoneen-selite [tehtavat]
   {:teksti (tehtavan-nimi tehtavat)
@@ -536,19 +548,19 @@
 (defmethod asia-kartalle :tyokone [tyokone valittu?]
   (let [selite-teksti (tehtavan-nimi (:tehtavat tyokone))
         [viivat nuolen-vari] (tehtavan-viivat-ja-nuolitiedosto
-                              (:tehtavat tyokone) valittu?)
+                               (:tehtavat tyokone) valittu?)
         viivat (ulkoasu/tehtavan-viivat-tyokoneelle viivat)
         paikka (or (:reitti tyokone)
                    {:type :point
                     :coordinates (:sijainti tyokone)})]
     (assoc tyokone
-           :type :tyokone
-           :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
-           :selite {:teksti selite-teksti
-                    :vari   (viivojen-varit-leveimmasta-kapeimpaan viivat)}
-           :alue (maarittele-feature paikka valittu?
-                                     (ulkoasu/tyokoneen-nuoli nuolen-vari)
-                                     viivat))))
+      :type :tyokone
+      :nimi (or (:nimi tyokone) (str/capitalize (name (:tyokonetyyppi tyokone))))
+      :selite {:teksti selite-teksti
+               :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}
+      :alue (maarittele-feature paikka valittu?
+                                (ulkoasu/tyokoneen-nuoli nuolen-vari)
+                                viivat))))
 
 (defmethod asia-kartalle :tr-osoite-indikaattori [tr-osoite _]
   ;; TR-osoitteen indikaattori näyttää "raja-aidat" tieosoitevälille
@@ -564,37 +576,97 @@
         w 16
         viiva (fn [ang x y]
                 (vec
-                 (for [a [(+ ang (/ Math/PI 2))
-                          (- ang (/ Math/PI 2))]]
-                   [(+ x (* w (Math/cos a)))
-                    (+ y (* w (Math/sin a)))])))]
+                  (for [a [(+ ang (/ Math/PI 2))
+                           (- ang (/ Math/PI 2))]]
+                    [(+ x (* w (Math/cos a)))
+                     (+ y (* w (Math/sin a)))])))]
     (assoc tr-osoite
-           :alue {:type :geometry-collection
-                  :stroke {:color "black"
-                           :width 5}
-                  :geometries [{:type :line
-                                :points (viiva alku-ang alku-x alku-y)}
-                               {:type :line
-                                :points (viiva loppu-ang loppu-x loppu-y)}]})))
+      :alue {:type :geometry-collection
+             :stroke {:color "black"
+                      :width 5}
+             :geometries [{:type :line
+                           :points (viiva alku-ang alku-x alku-y)}
+                          {:type :line
+                           :points (viiva loppu-ang loppu-x loppu-y)}]})))
 
 (defmethod asia-kartalle :reittipiste [{:keys [sijainti aika tehtavat] :as reittipiste} valittu?]
   ;; Näyttää toteuman reittipisteet palloina
   (let [toimenpiteet (map :toimenpide tehtavat)
         [viivat _] (tehtavan-viivat-ja-nuolitiedosto
-                    toimenpiteet valittu?)
+                     toimenpiteet valittu?)
         vari (last (viivojen-varit-leveimmasta-kapeimpaan viivat))]
     {:type :reittipisteet
      :nimi (str (tehtavan-nimi toimenpiteet) "\n"
                 (pvm/pvm-aika-sek aika))
      :alue (assoc sijainti
-                  :fill true
-                  :color vari)}))
+             :fill true
+             :radius 50
+             :color vari)}))
+
+;; Tätä käytetään hallintanäkymässä - jos haluat näyttää kohteenosia kartalla muualla,
+;; haluat mahdollisesti tehdä uuden metodin
+(defmethod asia-kartalle :kohteenosa [osa osan-kohde-valittu?]
+  ;; Näyttää toteuman reittipisteet palloina
+  (let [[ikoni teksti] (ulkoasu/kohteenosa-kohteiden-luonnissa osa osan-kohde-valittu?)]
+    (assoc osa
+      :type :kohteenosa
+      :nimi (kohde/fmt-kohde-ja-osa-nimi (::osa/kohde osa) osa)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature osa
+                                ;; Ei haluta piirtää valitun kohteen osia isommalla, vain eri värillä
+                                false
+                                ikoni))))
+
+(defmethod asia-kartalle :kohde-toimenpide [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-toimenpide
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kan-toimenpide [toimenpide valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-toimenpide toimenpide)]
+    (assoc toimenpide
+      :type :kan-toimenpide
+      :nimi "Toimenpide"
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature toimenpide
+                                valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kan-hairiotilanne [hairiotilanne valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-hairiotilanne hairiotilanne)]
+    (assoc hairiotilanne
+      :type :kan-hairiotilanne
+      :nimi "Häiriötilanne"
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature hairiotilanne
+                                valittu?
+                                ikoni))))
+
+(defmethod asia-kartalle :kohde-hairiotilanne [kohde kohde-valittu?]
+  (let [[ikoni teksti] (ulkoasu/kan-kohde kohde)]
+    (assoc kohde
+      :type :kohde-hairiotilanne
+      :nimi (kohde/fmt-kohteen-nimi kohde)
+      :selite {:teksti teksti
+               :img ikoni}
+      :alue (maarittele-feature kohde
+                                kohde-valittu?
+                                ikoni))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi
     (log/warn "Kartan :tyyppi-kartalla ei ole tuettu: " (str tyyppi))
     (log/warn "Kartalla esitettävillä asioilla pitää olla :tyyppi-kartalla avain!, "
-          "sain: " (pr-str asia)))
+              "sain: " (pr-str asia)))
   nil)
 
 (defn- tallenna-selitteet-xf [selitteet]
@@ -636,9 +708,9 @@
   ([asiat valittu-fn]
    (kartalla-esitettavaan-muotoon asiat valittu-fn nil))
   ([asiat valittu-fn asia-xf]
-   ;; Haluamme näyttää edistymispalkin, mutta 100% valmius ei ole vielä siinä
-   ;; vaiheessa, kun koko data on lapioitu.
-   #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
+    ;; Haluamme näyttää edistymispalkin, mutta 100% valmius ei ole vielä siinä
+    ;; vaiheessa, kun koko data on lapioitu.
+    #?(:cljs (edistymispalkki/geometriataso-aloita-lataus! (* 2 (count asiat))))
    (let [extent (volatile! nil)
          selitteet (volatile! #{})]
      (with-meta
@@ -647,5 +719,5 @@
                    (geo/laske-extent-xf extent)
                    (tallenna-selitteet-xf selitteet))
              asiat)
-       {:extent    @extent
+       {:extent @extent
         :selitteet @selitteet}))))

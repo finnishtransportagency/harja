@@ -291,30 +291,21 @@
              (= (:koodi vastaus) :vkm-muunnos-epaonnistui-osittain))
         (modal/nayta!
           {:otsikko "Kaikkia kohteita ei voitu käsitellä"
-           :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                            (.preventDefault e)
-                                                            (modal/piilota!))}
-                    "Sulje"]}
+           :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
           {:otsikko "Kaikkia kohteita ei voitu käsitellä"
-           :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                            (.preventDefault e)
-                                                            (modal/piilota!))}
-                    "Sulje"]}
+           :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :vkm-muunnos-ja-kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
           {:otsikko "Kaikkia kohteita ei voitu käsitellä"
-           :footer [:button.nappi-toissijainen {:on-click (fn [e]
-                                                            (.preventDefault e)
-                                                            (modal/piilota!))}
-                    "Sulje"]}
+           :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)
                                         :epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
 
@@ -392,7 +383,7 @@
       [napit/palvelinkutsu-nappi
        (if (= 1 (count paallystysilmoitukset))
          (ikonit/teksti-ja-ikoni "Lähetä" (ikonit/livicon-arrow-right))
-         "Lähetä kaikki kohteet YHA:n")
+         "Lähetä kaikki kohteet YHAan")
        #(do
           (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohteet (id:t" (pr-str kohde-idt) ") YHA:n")
           (reset! paallystys/kohteet-yha-lahetyksessa kohde-idt)
@@ -409,8 +400,8 @@
         :kun-onnistuu (fn [vastaus]
                         (if (:lahetys-onnistui? vastaus)
                           (viesti/nayta! "Kohteet lähetetty onnistuneesti." :success)
-                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHA:n. Vastaus: " (pr-str vastaus))
+                          (do (log "[YHA] Lähetys epäonnistui osalle kohteista YHAan. Vastaus: " (pr-str vastaus))
                               (viesti/nayta! "Lähetys epäonnistui osalle kohteista. Tarkista kohteiden tiedot." :warning)))
                         (reset! paallystys/paallystysilmoitukset (:paallystysilmoitukset vastaus)))
-        :virheviesti "Ylläpitokohteen lähettäminen YHA:n epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
+        :virheviesti "Ylläpitokohteen lähettäminen YHAan epäonnistui teknisen virheen takia. Yritä myöhemmin uudestaan
                       tai ota yhteyttä Harjan asiakastukeen."}])))

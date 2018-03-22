@@ -54,7 +54,8 @@
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
             [harja.ui.openlayers.edistymispalkki :as edistymispalkki]
             [harja.tiedot.kartta :as tiedot]
-            [harja.ui.kartta.ikonit :as kartta-ikonit])
+            [harja.ui.kartta.ikonit :as kartta-ikonit]
+            [harja.ui.kartta-debug :refer [aseta-kartta-debug-sijainti]])
 
   (:require-macros [reagent.ratom :refer [reaction run!]]
                    [cljs.core.async.macros :refer [go go-loop]]))
@@ -146,6 +147,7 @@
                           ;; timeout, kartta oikeasti poistu, asetellaan -h paikkaan
                           (do                        ;; (log "KARTTA LÄHTI OIKEASTI")
                             (aseta-kartan-sijainti x (- @dom/korkeus) w h false)
+                            (aseta-kartta-debug-sijainti x (- @dom/korkeus) w h false)
                             (recur nil nil nil w h nil))))
                 paikka-elt (<! (dom/elementti-idlla-odota "kartan-paikka"))
                 [uusi-x uusi-y uusi-w uusi-h] (dom/sijainti paikka-elt)
@@ -160,6 +162,7 @@
               (let [naulattu? (neg? uusi-y)]
                                         ;(log "EKA KERTA")
                 (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
+                (aseta-kartta-debug-sijainti uusi-x uusi-offset-y uusi-w uusi-h naulattu?)
                 (when (or (not= w uusi-w) (not= h uusi-h))
                   (reagent/next-tick #(openlayers/invalidate-size!)))
                 (recur naulattu?
@@ -169,12 +172,14 @@
               ;; koko pitää asettaa
               (and (not naulattu?) (neg? uusi-y))
               (do (aseta-kartan-sijainti uusi-x uusi-y uusi-w uusi-h true)
+                  (aseta-kartta-debug-sijainti uusi-x uusi-y uusi-w uusi-h true)
                   (recur true
                          uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
               ;; Jos oli naulattu ja nyt on positiivinen, pitää naulat irroittaa
               (and naulattu? (pos? uusi-y))
               (do (aseta-kartan-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
+                  (aseta-kartta-debug-sijainti uusi-x uusi-offset-y uusi-w uusi-h false)
                   (recur false
                          uusi-x uusi-y uusi-w uusi-h uusi-offset-y))
 
@@ -495,8 +500,7 @@
 
 (defn kaynnista-infopaneeliin-haku-pisteesta! [tasot event asiat-pisteessa]
   (hae-asiat-pisteessa! tasot event asiat-pisteessa)
-  (reset! tiedot/nayta-infopaneeli? true))
-
+  (tiedot/nayta-infopaneeli!))
 
 (defn- piilota-infopaneeli-jos-muuttunut
   "Jos annetut geometriat ovat muuttuneet (pl. näkymän geometriat), piilota infopaneeli."
@@ -506,8 +510,7 @@
     ;; Kun karttatasoissa muuttuu jotain muuta kuin :nakyman-geometriat
     ;; (klikattu piste), piilotetaan infopaneeli ja poistetaan
     ;; klikattu piste näkymän geometrioista.
-    (reset! tiedot/nayta-infopaneeli? false)
-    (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki)))
+    (tiedot/piilota-infopaneeli!)))
 
 (defn- zoomaa-geometrioihin-jos-muuttunut
   "Zoomaa geometrioihin uudelleen, jos ne ovat muuttuneet."
@@ -542,6 +545,12 @@
   #_(piilota-infopaneeli-jos-muuttunut vanha uusi)
   (zoomaa-geometrioihin-jos-muuttunut vanha uusi))
 
+(defn- nayta-paneelissa?-fn
+  [item]
+  (if (contains? item :nayta-paneelissa?)
+    (:nayta-paneelissa? item)
+    true))
+
 (defn klikkauksesta-seuraavat-tapahtumat
   "Funktio palauttaa mäpin, joka sisältää ohjeet, miten kyseiseen select-tapahtumaan
   tulee reagoida.
@@ -564,11 +573,17 @@
   (let [monta? #(< 1 (count %))
         klikatut-organisaatiot (filter tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
         paallimmainen-organisatio (first klikatut-organisaatiot)
-        klikatut-asiat (remove tapahtuman-geometria-on-hallintayksikko-tai-urakka? items)
+        klikatut-asiat (remove #(or (tapahtuman-geometria-on-hallintayksikko-tai-urakka? %)
+                                    (not (nayta-paneelissa?-fn %)))
+                               items)
         urakka? #(= :ur (:type %))
         hallintayksikko? #(= :hy (:type %))
         valittu-organisaatio? #(tapahtuman-geometria-on-valittu-hallintayksikko-tai-urakka?
-                                val-ur-id val-hy-id %)]
+                                val-ur-id val-hy-id %)
+        avaa-paneeli?-sisaltava-item (some #(when (contains? % :avaa-paneeli?)
+                                              %)
+                                           items)
+        avaa-paneeli? (if (nil? avaa-paneeli?-sisaltava-item) true (:avaa-paneeli? avaa-paneeli?-sisaltava-item))]
     ;; Select tarkoittaa, että on klikattu jotain kartalla piirrettyä asiaa.
     ;; Tuplaklikkaukseen halutaan reagoida joko kohdentamalla tuplaklikattuun asiaan
     ;; ja avaamalla sen tiedot infopaneeliin (paitsi ilmoituksissa, missä avataan suoraan lomake),
@@ -579,6 +594,11 @@
     ;; haetaan esim kyseiselle tielle tietoja.
     ;;
     ;; Tuplaklikkauksissa eventin keskeyttäminen tarkoittaa, että zoomausta ei tehdä.
+
+    ;; Käyttäjä voi itse määrittää mitä tapahtuu, kun itemiä klikataan
+    (some #(when (contains? % :on-item-click)
+             ((:on-item-click %) %))
+          items)
     (cond
       ;; Ilmoituksissa ei haluta ikinä näyttää infopaneelia,
       ;; vaan valitaan klikattu ilmoitus
@@ -635,7 +655,7 @@
       (do
         (merge
           {:keskeyta-event? true
-          :avaa-paneeli? true
+          :avaa-paneeli? avaa-paneeli?
           :nayta-nama-paneelissa klikatut-asiat}
           (when tuplaklik? {:keskita-naihin klikatut-asiat}))))))
 
@@ -794,8 +814,7 @@
    [kartan-ohjelaatikko]
    (when @tiedot/infopaneeli-nakyvissa?
      [:div.kartan-infopaneeli
-      [infopaneeli/infopaneeli @asiat-pisteessa #(do (reset! tiedot/nayta-infopaneeli? false)
-                                                     (tasot/poista-geometria! :klikattu-karttapiste :infopaneelin-merkki))
+      [infopaneeli/infopaneeli @asiat-pisteessa tiedot/piilota-infopaneeli!
        tiedot/infopaneelin-linkkifunktiot]])
    (when-not @tiedot/infopaneeli-nakyvissa? ;; Peittää selitelaatikon, otetaan pois
      [kartan-ikonien-selitykset])

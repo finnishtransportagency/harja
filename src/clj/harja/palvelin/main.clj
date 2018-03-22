@@ -108,6 +108,7 @@
     [harja.palvelin.integraatiot.api.tiemerkintatoteuma :as api-tiemerkintatoteuma]
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
+    [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
 
     ;; Ajastetut tehtävät
     [harja.palvelin.ajastetut-tehtavat.paivystystarkistukset :as paivystystarkistukset]
@@ -118,8 +119,8 @@
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
-    [harja.palvelin.ajastetut-tehtavat.turvalaitteiden-geometriat :as turvalaitteiden-geometriat]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
+    [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
@@ -175,7 +176,7 @@
       :http-palvelin (component/using
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
-                       [:todennus :metriikka])
+                       [:todennus :metriikka :db])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
@@ -239,7 +240,7 @@
 
       ;; T-LOIK
       :tloik (component/using
-               (tloik/->Tloik (:tloik asetukset))
+               (tloik/->Tloik (:tloik asetukset) (:kehitysmoodi asetukset))
                [:sonja :db :integraatioloki :klusterin-tapahtumat
                 :sonja-sahkoposti :labyrintti])
 
@@ -320,7 +321,7 @@
                    [:http-palvelin :db :pois-kytketyt-ominaisuudet])
       :toteumat (component/using
                   (toteumat/->Toteumat)
-                  [:http-palvelin :db :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
+                  [:http-palvelin :db :db-replica :pois-kytketyt-ominaisuudet :karttakuvat :tierekisteri])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
                          [:http-palvelin :db :pois-kytketyt-ominaisuudet])
@@ -613,6 +614,10 @@
                       (api-tieluvat/->Tieluvat)
                         [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki :liitteiden-hallinta])
 
+      :api-paikkaukset (component/using
+        (api-paikkaukset/->Paikkaukset)
+        [:http-palvelin :db :pois-kytketyt-ominaisuudet :integraatioloki])
+
       ;; Ajastettu laskutusyhteenvetojen muodostus
       :laskutusyhteenvetojen-muodostus
       (component/using
@@ -623,19 +628,19 @@
                 (status/luo-status)
                 [:http-palvelin :db :pois-kytketyt-ominaisuudet :db-replica :sonja])
 
-      :turvalaitteiden-geometriahaku
+      :vaylien-geometriahaku
       (component/using
-        (let [asetukset (:turvalaitteet asetukset)]
-          (turvalaitteiden-geometriat/->TurvalaitteidenGeometriahaku
+        (let [asetukset (:vaylat asetukset)]
+          (vaylien-geometriat/->VaylienGeometriahaku
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))
         [:db :pois-kytketyt-ominaisuudet :http-palvelin :integraatioloki])
 
-      :vaylien-geometriahaku
+      :kanavasiltojen-geometriahaku
       (component/using
-        (let [asetukset (:vaylat asetukset)]
-          (vaylien-geometriat/->VaylienGeometriahaku
+        (let [asetukset (:kanavasillat asetukset)]
+          (kanavasiltojen-geometriat/->KanavasiltojenGeometriahaku
             (:geometria-url asetukset)
             (:paivittainen-tarkistusaika asetukset)
             (:paivitysvali-paivissa asetukset)))

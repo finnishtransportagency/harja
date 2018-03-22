@@ -10,7 +10,6 @@
             [harja.fmt :as fmt]
             [harja.domain.urakka :as urakka]))
 
-
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
 (defn raportin-otsikko
@@ -213,3 +212,12 @@
                   (if kkn-indeksiarvo
                     (str ": " (fmt/desimaaliluku (:arvo kkn-indeksiarvo) 1))
                     " puuttuu.")))])
+
+(defn osat [raportti]
+  ;; Pudotetaan pois :raportti keyword ja string tai map optiot.
+  ;; Palautetaan vain sen jälkeen tulevat raporttielementit
+  (remove nil?
+          (mapcat #(if (and (seq? %) (not (vector? %)))
+                     %
+                     [%])
+                  (drop 2 raportti))))

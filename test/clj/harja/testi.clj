@@ -2,6 +2,7 @@
   "Harjan testauksen apukoodia."
   (:require
     [clojure.test :refer :all]
+    [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
     [harja.kyselyt.urakat :as urk-q]
     [harja.palvelin.komponentit.todennus :as todennus]
@@ -19,7 +20,8 @@
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
-    [harja.pvm :as pvm])
+    [harja.pvm :as pvm]
+    [clj-gatling.core :as gatling])
   (:import (java.util Locale))
   (:import (org.postgresql.util PSQLException)))
 
@@ -298,7 +300,8 @@
                                                             :lisatieto :string
                                                             :id :string
                                                             :hairiotilanne :string
-                                                            :toimenpide :string))
+                                                            :toimenpide :string
+                                                            :luotu :string))
                                   ;; tyhja-nilliksi-fn:ta käytetään siten, että tyhjä string palautetaan nillinä.
                                   ;; Muussa tapauksessa käytetään annettua funktiota ihan normisti annettuun arvoon.
                                   ;; Tämä siksi, että Javan Integer funktio ei pidä tyhjistä stringeistä.
@@ -309,7 +312,8 @@
                                                    :maara (tyhja-string->nil (fn [x] (Integer. x)) (:maara %))
                                                    :id (tyhja-string->nil (fn [x] (Integer. x)) (:id %))
                                                    :hairiotilanne (tyhja-string->nil (fn [x] (Integer. x)) (:hairiotilanne %))
-                                                   :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))))))
+                                                   :toimenpide (tyhja-string->nil (fn [x] (Integer. x)) (:toimenpide %))
+                                                   :luotu (tyhja-string->nil pvm/dateksi (:pvm %))))))
                             conj [] (first materiaali-vector))
                 nimi (second materiaali-vector)]
             {:muutokset muutokset :nimi nimi}))
@@ -367,10 +371,30 @@
                    FROM   urakka
                    WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
 
+(defn hae-pyhaselan-vesivaylaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Pyhäselän urakka';"))))
+
+(defn hae-merivaylien-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Meriväylät';"))))
+
+(defn hae-sisavesivaylien-hallintayksikon-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Sisävesiväylät';"))))
+
 (defn hae-saimaan-kanavaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Saimaan kanava';"))))
+
+(defn hae-joensuun-kanavaurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Joensuun kanava';"))))
 
 (defn hae-saimaan-kanavaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
@@ -408,14 +432,14 @@
               WHERE u.nimi = 'Saimaan kanava' AND kk.nimi = 'Tikkalansaaren sulku';")))
 
 (defn hae-saimaan-kanavan-materiaalit []
-  (let [haku (q "SELECT muutokset, nimi
+  (let [haku (q "SELECT muutokset, nimi, yksikko
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Saimaan kanava');")
         saimaan-materiaalit (materiaali-haun-pg-Array->map haku)]
     saimaan-materiaalit))
 
 (defn hae-helsingin-vesivaylaurakan-materiaalit []
-  (let [haku (q "SELECT muutokset, nimi
+  (let [haku (q "SELECT muutokset, nimi, yksikko
                  FROM vv_materiaalilistaus
                  WHERE \"urakka-id\"  = (SELECT id FROM urakka WHERE nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL');")
         helsingin-materiaalit (materiaali-haun-pg-Array->map haku)]
@@ -1086,3 +1110,63 @@
     (with-open [out (java.io.ByteArrayOutputStream.)]
       (#'pdf-vienti/hiccup->pdf ff fo out)
       (.toByteArray out))))
+
+(defn- gatling-kutsu [kutsu]
+  (go (let [tulos (<! (go (log/with-level :warn (kutsu))))]
+        (if (and (some? tulos) (not-empty tulos))
+          true
+          false))))
+
+(defn gatling-onnistuu-ajassa?
+  "Ajaa nimetyn gatling-simulaation, ja kertoo, valmistuivatko skenaariot aikarajan sisällä.
+
+  Kiinnostavat optiot ovat:
+  - :timeout-in-ms  Kuinka pitkään jokainen pyyntö saa maksimissaan kestää.
+  - :concurrency    Montako kyselyä ajetaan rinnakkain. Oletuksena skenaarioiden lukumäärä.
+                    Käytännössä, jos kyselyn voi ajaa samoilla parametreilla monta kertaa,
+                    anna tämä luku. Jos joudut antamaan monta kyselyä eri parametreilla,
+                    tätä ei ole tarpeen antaa.
+  - :aja-raportti?  Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
+
+  Kutsuja voi antaa niin monta kuin haluaa. Jos kutsuja antaa monta, ne ajetaan rinnakkain.
+
+  Esim:
+  (is (gatling-onnistuu-ajassa?
+        \"Hae jutut\"
+        {:concurrency 10
+        :timeout-in-ms 100}
+        #(kutsu-palvelua :hae-jutut +jvh+ {:id 1})))"
+  [simulaation-nimi {:keys [aja-raportti?] :as opts} & kutsut]
+  ;; Tämä toteutus ohjaa tarkoituksella käyttöä tiettyyn suuntaan.
+  ;; Jos tarvitaan hienojakoisempaa toiminnallisuutta, esim monivaiheisia skenaarioita,
+  ;; joita ajetaan eri painoarvoilla, niin parempi kutsua gatlingia suoraan, tapauskohtaisesti.
+  (let [simulaatio {:name simulaation-nimi
+                    :scenarios
+                    (keep-indexed
+                      (fn [i kutsu]
+                        {:name (str "Skenaario #" i)
+                         :steps [{:name "Askel 1"
+                                  :request (fn [ctx]
+                                             ;; Ei tunnu toimivan lokitason laskeminen. Johtuukoha
+                                             ;; async-koodista vai mistä.
+                                             (log/with-level
+                                               :warn
+                                               (gatling-kutsu kutsu)))}]})
+                      kutsut)}
+        yhteenveto
+        (gatling/run
+          simulaatio
+          (merge
+            {:timeout-in-ms 10
+             :concurrency (count kutsut)
+             :requests (count kutsut)}
+            (when (and (false? aja-raportti?)
+                       (false? (ollaanko-jenkinsissa?)))
+              ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
+              ;; eli luodaan oma raportteri, joka ei tee mitään
+              {:reporter {:writer (fn [_ _ _])
+                          :generator (fn [simulation]
+                                       (println "Ran" simulation "without report"))}})
+            opts))]
+    (log/debug (str "Simulaatio " simulaation-nimi " valmistui: " yhteenveto ". Aikaraja oli " (:timeout-in-ms opts)))
+    (= 0 (:ko yhteenveto))))

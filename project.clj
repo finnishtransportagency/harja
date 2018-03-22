@@ -149,14 +149,17 @@
                  [com.atlassian.sourcemap/sourcemap "1.7.6"]
 
                  ;; Arbitrary precision math frontilla
-                 [cljsjs/big "3.1.3-1"]]
+                 [cljsjs/big "3.1.3-1"]
+
+                 [clj-gatling "0.11.0" :exclusions [[clj-time]]]]
 
   :profiles {:dev {:dependencies [[prismatic/dommy "1.1.0"]
                                   [cljs-react-test "0.1.4-SNAPSHOT"]
                                   [org.clojure/test.check "0.9.0"]
                                   [org.apache.pdfbox/pdfbox "2.0.8"]]
                    :plugins [[com.solita/lein-test-refresh-gui "0.10.3"]
-                             [test2junit "1.3.3"]]
+                             [test2junit "1.3.3"]
+                             [lein-eftest "0.5.0"]]
                    :test2junit-run-ant ~(not jenkinsissa?)
                    ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
                    ;; :resource-paths ["opt/sonic/7.6.2/*"]
@@ -334,6 +337,11 @@
                                "cljsbuild" "once" "prod,"
                                "cljsbuild" "once" "laadunseuranta-min,"
                                "less" "once," "uberjar"]}
+  :test-selectors { ;; lein test :perf
+                    ;; :all ajaa kaikki, älä kuitenkaan laita tänne :default :all, se ei toimi :)
+                   :no-perf (complement :perf)
+                   :perf :perf
+                   }
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa

@@ -18,8 +18,12 @@
             [harja.tiedot.hallinta.indeksit :as indeksit]
             [harja.views.urakka.paallystys-indeksit :as paallystys-indeksit]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
-            [harja.views.urakka.valinnat :as valinnat])
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.ui.modal :as modal]
+            [harja.domain.tierekisteri :as tr]
+            [harja.ui.napit :as napit])
   (:require-macros [reagent.ratom :refer [reaction]]
+                   [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defn- materiaalin-indeksisidontarivi
@@ -28,12 +32,12 @@
    [:span.tietokentta (paallystys-indeksit/raaka-aine-nimi (:raakaaine indeksi)) ": "]
    [:span.tietoarvo
     (str
-     (:indeksinimi indeksi)
-     (when (:arvo indeksi)
-       (str " (lähtötaso "
-            lahtotason-vuosi "/" lahtotason-kuukausi
-            ": "
-            (:arvo indeksi) " €/t)")))]])
+      (:indeksinimi indeksi)
+      (when (:arvo indeksi)
+        (str " (lähtötaso "
+             lahtotason-vuosi "/" lahtotason-kuukausi
+             ": "
+             (:arvo indeksi) " €/t)")))]])
 
 (defn indeksitiedot
   []
@@ -45,6 +49,35 @@
          ^{:key (:id idx)}
          [materiaalin-indeksisidontarivi idx])])))
 
+(defn- validointivirhe-kohteet-pallekkain [kohteet-paallekain-virheet]
+  [:div
+   [:p "Seuraavat saman vuoden kohteet menevät päällekkäin:"]
+   (for* [virhe kohteet-paallekain-virheet]
+     (let [kohteet (:kohteet virhe)
+           kohde1 (first kohteet)
+           kohde2 (second kohteet)]
+       [:ul
+        [:li (str (:kohdenumero kohde1) " " (:nimi kohde1)
+                  ", " (tr/tierekisteriosoite-tekstina kohde1 {:teksti-tie? false})
+                  ", " (:urakka kohde1))]
+        [:li (str (:kohdenumero kohde2) " " (:nimi kohde2)
+                  ", " (tr/tierekisteriosoite-tekstina kohde2 {:teksti-tie? false})
+                  ", " (:urakka kohde2))]]))])
+
+(defn validointivirheet-modal []
+  (let [modal-data @paallystys-tiedot/validointivirheet-modal ;; Pakko lukea eikä passata tänne, jotta ei aiheuta ridin renderiä
+        validointivirheet-ryhmittain (group-by :validointivirhe (:validointivirheet modal-data))
+        kohteet-paallekain-virheet (:kohteet-paallekain validointivirheet-ryhmittain)
+        sulje-fn #(swap! paallystys-tiedot/validointivirheet-modal assoc :nakyvissa? false)]
+    [modal/modal {:otsikko "Kohteiden tallennus epäonnistui!"
+                  :otsikko-tyyli :virhe
+                  :nakyvissa? (:nakyvissa? modal-data)
+                  :sulje-fn sulje-fn
+                  :footer [napit/sulje sulje-fn]}
+     [:div
+      (when (not (empty? kohteet-paallekain-virheet))
+        [validointivirhe-kohteet-pallekkain kohteet-paallekain-virheet])]]))
+
 (defn paallystyskohteet [ur]
   (let [hae-tietoja (fn [urakan-tiedot]
                       (go (if-let [ch (indeksit/hae-paallystysurakan-indeksitiedot (:id urakan-tiedot))]
@@ -52,51 +85,55 @@
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
-     (fn [ur]
-       [:div.paallystyskohteet
-        [kartta/kartan-paikka]
+      (fn [ur]
+        [:div.paallystyskohteet
+         [kartta/kartan-paikka]
 
-        [valinnat/urakan-vuosi ur]
-        [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-        [valinnat/tienumero yllapito-tiedot/tienumero]
+         [valinnat/urakan-vuosi ur]
+         [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+         [valinnat/tienumero yllapito-tiedot/tienumero]
 
-        [yllapitokohteet-view/yllapitokohteet
-         ur
-         paallystys-tiedot/yhan-paallystyskohteet
-         {:otsikko "YHA:sta tuodut päällystyskohteet"
-          :kohdetyyppi :paallystys
-          :yha-sidottu? true
-          :tallenna
-          (yllapitokohteet/kasittele-tallennettavat-kohteet!
-            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
-            :paallystys
-            #(reset! paallystys-tiedot/yllapitokohteet %))
-          :kun-onnistuu (fn [_]
-                          (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
+         [validointivirheet-modal]
 
-        [yllapitokohteet-view/yllapitokohteet
-         ur
+         [yllapitokohteet-view/yllapitokohteet
+          ur
+          paallystys-tiedot/yhan-paallystyskohteet
+          {:otsikko "YHA:sta tuodut päällystyskohteet"
+           :kohdetyyppi :paallystys
+           :yha-sidottu? true
+           :tallenna
+           (yllapitokohteet/kasittele-tallennettavat-kohteet!
+             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
+             :paallystys
+             #(reset! paallystys-tiedot/yllapitokohteet %)
+             #(reset! paallystys-tiedot/validointivirheet-modal (assoc % :nakyvissa? true)))
+           :kun-onnistuu (fn [_]
+                           (urakka/lukitse-urakan-yha-sidonta! (:id ur)))}]
+
+         [yllapitokohteet-view/yllapitokohteet
+          ur
           paallystys-tiedot/harjan-paikkauskohteet
           {:otsikko "Harjan paikkauskohteet ja muut kohteet"
-          :kohdetyyppi :paikkaus
-          :yha-sidottu? false
-          :tallenna
-          (yllapitokohteet/kasittele-tallennettavat-kohteet!
-            #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
-            :paikkaus
-            #(reset! paallystys-tiedot/yllapitokohteet %))}]
+           :kohdetyyppi :paikkaus
+           :yha-sidottu? false
+           :tallenna
+           (yllapitokohteet/kasittele-tallennettavat-kohteet!
+             #(oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
+             :paikkaus
+             #(reset! paallystys-tiedot/yllapitokohteet %) ;; TODO TESTI TÄLLE TALLENNUKSELLE (backend)
+             #(constantly nil))}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
 
-        [muut-kustannukset-view/muut-kustannukset ur]
+         [muut-kustannukset-view/muut-kustannukset ur]
 
-        [yllapitokohteet-view/yllapitokohteet-yhteensa
-         paallystys-tiedot/kaikki-kohteet {:nakyma :paallystys}]
+         [yllapitokohteet-view/yllapitokohteet-yhteensa
+          paallystys-tiedot/kaikki-kohteet {:nakyma :paallystys}]
 
-        [vihje-elementti [:span
-                          [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
-                          [:span.grid-solu-ennustettu "sinisellä"]
-                          [:span "."]]]
-        [indeksitiedot]
+         [vihje-elementti [:span
+                           [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
+                           [:span.grid-solu-ennustettu "sinisellä"]
+                           [:span "."]]]
+         [indeksitiedot]
 
-        [:div.kohdeluettelon-paivitys
-         [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
-         [yha/kohdeluettelo-paivitetty ur]]]))))
+         [:div.kohdeluettelon-paivitys
+          [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
+          [yha/kohdeluettelo-paivitetty ur]]]))))

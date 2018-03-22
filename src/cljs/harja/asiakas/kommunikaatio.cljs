@@ -2,7 +2,7 @@
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
             [ajax.core :refer [ajax-request transit-request-format transit-response-format] :as ajax]
-            [cljs.core.async :refer [put! close! chan timeout]]
+            [cljs.core.async :refer [<! >! put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
             [cognitect.transit :as t]
@@ -69,6 +69,10 @@
 
 (declare kasittele-yhteyskatkos)
 
+(defn yhteysvirhe? [vastaus]
+  ;; cljs-ajax kirjaston oma käsite: status 0 kun pyyntö ei mene lainkaan palvelimelle (verkkoyhteys poikki)
+  (= 0 (:status vastaus)))
+
 (defn- kasittele-palvelinvirhe [palvelu vastaus]
   ;; Normaalitilanteessa ei pitäisi koskaan tulla ei oikeutta -virhettä. Voi tulla esim. jos frontin
   ;; ja backendin oikeustarkistukset eivät ole yhteneväiset. Tällöin halutaan näyttää käyttäjälle tieto
@@ -77,38 +81,45 @@
     (tapahtumat/julkaise! {:aihe :ei-oikeutta
                            :viesti (str "Puutteelliset oikeudet kutsuttaessa palvelua " (pr-str palvelu))}))
 
-  (if (= 0 (:status vastaus)) ;; 0 status tulee kun ajax kutsu epäonnistuu, verkko on poikki
+  (if (yhteysvirhe? vastaus)
     (kasittele-yhteyskatkos palvelu vastaus)
     (log "Palvelu " (pr-str palvelu) " palautti virheen: " (pr-str vastaus)))
   (tapahtumat/julkaise! (assoc vastaus :aihe :palvelinvirhe)))
 
 (declare kasittele-istunto-vanhentunut)
 
-(defn extranet-virhe? [vastaus]
-  (= 0 (:status vastaus)))
-
 (defn- kysely [palvelu metodi parametrit
-               {:keys [transducer paasta-virhe-lapi? chan yritysten-maara] :as opts}]
+               {:keys [transducer paasta-virhe-lapi? chan yritysten-maara uudelleenyritys-timeout] :as opts}]
   (let [cb (fn [[_ vastaus]]
              (when (some? vastaus)
                (cond
                  (= (:status vastaus) 302)
+                 (do (kasittele-istunto-vanhentunut) ; Extranet-kirjautuminen vanhentunut
+                     (close! chan))
+
+                 (= (:status vastaus) 403) ; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
                  (do (kasittele-istunto-vanhentunut)
                      (close! chan))
 
+                 ;; Yhteysvirhe, jota halutaan yrittää uudelleen jos yrityksiä on vielä jäljellä
+                 (and (yhteysvirhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 5))
+                 (kysely palvelu metodi parametrit (assoc opts
+                                                     :yritysten-maara (let [yritysten-maara (:yritysten-maara opts)]
+                                                                        (+ (or yritysten-maara 0) 1))
+                                                     :uudelleenyritys-timeout
+                                                     (let [timeout (:uudelleenyritys-timeout opts)]
+                                                       (+ (or timeout 2000) 2000))))
+
                  (and (virhe? vastaus) (not paasta-virhe-lapi?))
                  (do (kasittele-palvelinvirhe palvelu vastaus)
-                     (close! chan))
+                     (close! chan)) ; Kutsujalle palautuu nil
 
-                 (and (extranet-virhe? vastaus) (contains? #{:post :get} metodi) (< yritysten-maara 4))
-                 (kysely palvelu metodi parametrit (update opts :yritysten-maara (fnil inc 0)))
-
-                 :default
+                 :default ; Pyyntö onnistui ja vastaus oli ok
                  (do (put! chan (if transducer (into [] transducer vastaus) vastaus))
-                     (close! chan)))
-               ;; else
-               (close! chan)))]
+                     (close! chan)))))]
     (go
+      (when uudelleenyritys-timeout
+        (<! (timeout uudelleenyritys-timeout)))
       (if-let [testipalvelu @testmode]
         (do
           (log "Haetaan testivastaus palvelulle: " palvelu)
@@ -323,8 +334,8 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       gstr/urlEncode))
 
 (defn varustekortti-url [alkupvm tietolaji tunniste]
-  (->
-    "https://testiextranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
+  (-> 
+    "https://extranet.liikennevirasto.fi/trkatselu/TrKatseluServlet?page=varuste&tpvm=<pvm>&tlaji=<tietolaji>&livitunniste=<tunniste>&act=haku"
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))

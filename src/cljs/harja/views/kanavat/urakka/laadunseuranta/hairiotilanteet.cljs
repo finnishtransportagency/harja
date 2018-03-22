@@ -20,6 +20,7 @@
 
             [harja.ui.valinnat :as valinnat]
             [harja.views.urakka.valinnat :as urakka-valinnat]
+            [harja.views.vesivaylat.urakka.materiaalit :as materiaali-view]
             [harja.ui.napit :as napit]
             [harja.fmt :as fmt]
             [harja.tiedot.navigaatio :as nav]
@@ -29,7 +30,10 @@
             [harja.domain.kayttaja :as kayttaja]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
-            [harja.domain.kanavat.kohteenosa :as kohteenosa])
+            [harja.domain.kanavat.kohteenosa :as kohteenosa]
+            [harja.views.kartta.tasot :as tasot]
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros
     [cljs.core.async.macros :refer [go]]
     [harja.makrot :refer [defc fnc]]
@@ -133,20 +137,25 @@
       :virheet virhe-atom
       :piilota-toiminnot? false
       :tyhja "Ei varaosia"
-      :otsikko "Varaosat"}
+      :otsikko "Varaosat"
+      :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
      [{:otsikko "Varaosa"
        :nimi :varaosa
-       :leveys 1
+       :leveys 3
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :valinta
        :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
        :valinnat materiaalit}
       {:otsikko "Käytettävä määrä"
        :nimi :maara
-       :leveys 1
+       :leveys 3
        :validoi [[:ei-tyhja "Tieto puuttuu"]]
        :tyyppi :positiivinen-numero
-       :kokonaisluku? true}]
+       :kokonaisluku? true}
+      {:otsikko "Yksikkö"
+       :nimi :yksikko
+       :leveys 1
+       :muokattava? (constantly false)}]
      (r/wrap
        (zipmap (range)
                (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
@@ -213,83 +222,6 @@
                      #(e! (tiedot/->LisaaMateriaali))
                      {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))
 
-(defn hairiolomakkeen-kentat [e! {:keys [valittu-hairiotilanne] :as app} kohteet]
-  (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
-        valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
-    [{:otsikko "Havaintoaika"
-      :nimi ::hairiotilanne/havaintoaika
-      :pakollinen? true
-      :tyyppi :pvm-aika
-      :fmt pvm/pvm-aika-opt}
-     {:otsikko "Kohde"
-      :nimi ::hairiotilanne/kohde
-      :tyyppi :valinta
-      :pakollinen? true
-      :uusi-rivi? true
-      :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "- Valitse kohde -")
-      :valinnat kohteet}
-     (when (::hairiotilanne/kohde valittu-hairiotilanne)
-       {:otsikko "Kohteen osa"
-        :nimi ::hairiotilanne/kohteenosa
-        :tyyppi :valinta
-        :valinta-nayta #(or (kohteenosa/fmt-kohdeosa %) "- Valitse osa -")
-        :valinnat (or valitun-kohteen-osat [])})
-     {:otsikko "Vikaluokka"
-      :nimi ::hairiotilanne/vikaluokka
-      :tyyppi :valinta
-      :pakollinen? true
-      :uusi-rivi? true
-      :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
-      :valinta-arvo :arvo
-      :valinnat [{:arvo :sahkotekninen_vika
-                  :nimi "Sähkötekninen vika"}
-                 {:arvo :konetekninen_vika
-                  :nimi "Konetekninen vika"}
-                 {:arvo :liikennevaurio
-                  :nimi "Liikennevaurio"}]}
-     {:otsikko "Häiriön syy"
-      :nimi ::hairiotilanne/syy
-      :palstoja 2
-      :pakollinen? true
-      :tyyppi :text
-      :koko [90 8]
-      :uusi-rivi? true}
-     (odottavan-liikenteen-kentat)
-     (korjauksen-kentat e! app)
-     {:otsikko "Kuittaaja"
-      :nimi ::hairiotilanne/kuittaaja
-      :tyyppi :string
-      :uusi-rivi? true
-      :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
-      :muokattava? (constantly false)}]))
-
-(defn hairiolomakkeen-toiminnot [e! {:keys [valittu-hairiotilanne
-                                            tallennus-kaynnissa?
-                                            valinnat] :as hairio-data}]
-  (fn [hairiotilanne]
-    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
-      [:div
-       [:div {:style {:width "100%"}}
-        [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
-       [napit/tallenna
-        "Tallenna"
-        #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
-        {:tallennus-kaynnissa? tallennus-kaynnissa?
-         :disabled (or
-                     (not oikeus?)
-                     (not (empty? (:varaosat-taulukon-virheet valittu-hairiotilanne)))
-                     (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
-
-       (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
-         [napit/poista
-          "Poista"
-          #(varmista-kayttajalta/varmista-kayttajalta
-             {:otsikko "Häiriötilanteen poistaminen"
-              :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
-              :hyvaksy "Poista"
-              :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
-              :disabled (not oikeus?)})])])))
-
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat] :as app} kohteet]
   [:div
    [napit/takaisin "Takaisin häiriölistaukseen"
@@ -299,8 +231,93 @@
      :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
      :validoi-alussa? true
      :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
-     :footer-fn (hairiolomakkeen-toiminnot e! app)}
-    (hairiolomakkeen-kentat e! app kohteet)
+     :footer-fn (fn [hairiotilanne]
+                  (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
+                    [:div
+                     [:div {:style {:width "100%"}}
+                      [lomake/nayta-puuttuvat-pakolliset-kentat hairiotilanne]]
+                     [napit/tallenna
+                      "Tallenna"
+                      #(e! (tiedot/->TallennaHairiotilanne hairiotilanne))
+                      {:tallennus-kaynnissa? tallennus-kaynnissa?
+                       :disabled (or
+                                   (not oikeus?)
+                                   (not (empty? (:varaosat-taulukon-virheet valittu-hairiotilanne)))
+                                   (not (tiedot/voi-tallentaa? valittu-hairiotilanne))
+                                   (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
+
+                     (when (not (nil? (::hairiotilanne/id valittu-hairiotilanne)))
+                       [napit/poista
+                        "Poista"
+                        #(varmista-kayttajalta/varmista-kayttajalta
+                           {:otsikko "Häiriötilanteen poistaminen"
+                            :sisalto [:div "Haluatko varmasti poistaa häiriötilanteen?"]
+                            :hyvaksy "Poista"
+                            :toiminto-fn (fn [] (e! (tiedot/->PoistaHairiotilanne hairiotilanne)))
+                            :disabled (not oikeus?)})])]))}
+    (let [valittu-kohde-id (get-in valittu-hairiotilanne [::hairiotilanne/kohde ::kohde/id])
+          valitun-kohteen-osat (::kohde/kohteenosat (kohde/kohde-idlla kohteet valittu-kohde-id))]
+      [{:otsikko "Havaintoaika"
+        :nimi ::hairiotilanne/havaintoaika
+        :pakollinen? true
+        :tyyppi :pvm-aika
+        :fmt pvm/pvm-aika-opt}
+       (lomake/ryhma
+         {:otsikko "Sijainti tai kohde"}
+         {:nimi ::hairiotilanne/sijainti
+          :otsikko "Sijainti"
+          :uusi-rivi? true
+          :tyyppi :sijaintivalitsin
+          :disabled? (not (nil? (::hairiotilanne/kohde valittu-hairiotilanne)))
+          ;; Pitää tietää onko haku käynnissä vai ei, jotta voidaan estää kohteen valinta
+          ;; haun aikana
+          :paikannus-kaynnissa?-atom (r/wrap (:paikannus-kaynnissa? valittu-hairiotilanne)
+                                             (fn [_]
+                                               #(e! (tiedot/->KytkePaikannusKaynnissa))))
+          :poista-valinta? true
+          :karttavalinta-tehty-fn :kayta-lomakkeen-atomia}
+         {:otsikko "Kohde"
+          :disabled? (or (some? (::hairiotilanne/sijainti valittu-hairiotilanne))
+                         (:paikannus-kaynnissa? valittu-hairiotilanne))
+          :nimi ::hairiotilanne/kohde
+          :tyyppi :valinta
+          :uusi-rivi? true
+          :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "Ei kohdetta")
+          :valinnat (into [nil] kohteet)})
+       (when (::hairiotilanne/kohde valittu-hairiotilanne)
+         {:otsikko "Kohteen osa"
+          :nimi ::hairiotilanne/kohteenosa
+          :tyyppi :valinta
+          :valinta-nayta #(or (kohteenosa/fmt-kohteenosa %) "Ei osaa")
+          :valinnat (or (into [nil] valitun-kohteen-osat) [])})
+       {:otsikko "Vikaluokka"
+        :nimi ::hairiotilanne/vikaluokka
+        :tyyppi :valinta
+        :pakollinen? true
+        :uusi-rivi? true
+        :valinta-nayta #(or (:nimi %) "- Valitse vikaluokka -")
+        :valinta-arvo :arvo
+        :valinnat [{:arvo :sahkotekninen_vika
+                    :nimi "Sähkötekninen vika"}
+                   {:arvo :konetekninen_vika
+                    :nimi "Konetekninen vika"}
+                   {:arvo :liikennevaurio
+                    :nimi "Liikennevaurio"}]}
+       {:otsikko "Häiriön syy"
+        :nimi ::hairiotilanne/syy
+        :palstoja 2
+        :pakollinen? true
+        :tyyppi :text
+        :koko [90 8]
+        :uusi-rivi? true}
+       (odottavan-liikenteen-kentat)
+       (korjauksen-kentat e! app)
+       {:otsikko "Kuittaaja"
+        :nimi ::hairiotilanne/kuittaaja
+        :tyyppi :string
+        :uusi-rivi? true
+        :hae #(kayttaja/kokonimi (::hairiotilanne/kuittaaja %))
+        :muokattava? (constantly false)}])
     valittu-hairiotilanne]])
 
 (defn hairiotilanteet* [e! app]
@@ -311,18 +328,32 @@
                            (e! (tiedot/->PaivitaValinnat
                                  {:urakka @nav/valittu-urakka
                                   :sopimus-id (first @u/valittu-sopimusnumero)
-                                  :aikavali @u/valittu-aikavali})))
-                      #(e! (tiedot/->NakymaSuljettu)))
+                                  :aikavali @u/valittu-aikavali}))
+                           (tasot/taso-paalle! :kan-kohteet)
+                           (tasot/taso-paalle! :kan-hairiot)
+                           (tasot/taso-pois! :organisaatio)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit!
+                             {:kan-hairiotilanne {:toiminto (fn [ht]
+                                                              (e! (tiedot/->ValitseHairiotilanne ht))
+                                                              (kartta-tiedot/piilota-infopaneeli!))
+                                                  :teksti "Avaa häiriötilanne"}}))
+                      #(e! (tiedot/->NakymaSuljettu)
+                           (tasot/taso-pois! :kan-kohteet)
+                           (tasot/taso-pois! :kan-hairiot)
+                           (tasot/taso-paalle! :organisaatio)
+                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
 
     (fn [e! {valittu-hairiotilanne :valittu-hairiotilanne :as app}]
-      @tiedot/valinnat ;; Reaktio on luettava komponentissa, muuten se ei päivity
-      [:div
-       [debug/debug app]
-       (if valittu-hairiotilanne
-         [hairiolomake e! app @kanavaurakka/kanavakohteet]
-         [:div
-          [suodattimet-ja-toiminnot e! app]
-          [hairiolista e! app]])])))
+      @tiedot/valinnat                                      ;; Reaktio on luettava komponentissa, muuten se ei päivity
+      [:span
+       [kartta/kartan-paikka]
+       [:div
+        [debug/debug app]
+        (if valittu-hairiotilanne
+          [hairiolomake e! app @kanavaurakka/kanavakohteet]
+          [:div
+           [suodattimet-ja-toiminnot e! app]
+           [hairiolista e! app]])]])))
 
 (defn hairiotilanteet []
   [tuck tiedot/tila hairiotilanteet*])

@@ -48,7 +48,8 @@
 
 (def perustiedot
   #{::id
-    ::nimi})
+    ::nimi
+    ::sijainti})
 
 (def kohde-ylos
   #{[::ylos perustiedot]})
@@ -77,11 +78,18 @@
   [kohde osa]
   (str
     (::nimi kohde)
-    (when-let [osa (osa/fmt-kohdeosa osa)]
-      (str ", " osa))))
+    (when-let [osa (osa/fmt-kohteenosa osa)]
+      (str (when (::nimi kohde) ", ") osa))))
 
 (defn kohde-sisaltaa-sulun? [kohde]
   (boolean (some osa/sulku? (::kohteenosat kohde))))
 
 (defn kohde-idlla [kohteet id]
   (first (filter #(= (::id %) id) kohteet)))
+
+(s/def ::tallenna-kohde-kysely (s/keys :req [::nimi
+                                             ::kohdekokonaisuus-id]
+                                       :opt [::id
+                                             ::kohteenosat]))
+
+(s/def ::tallenna-kohde-vastaus ::kok/hae-kohdekokonaisuudet-ja-kohteet-vastaus)

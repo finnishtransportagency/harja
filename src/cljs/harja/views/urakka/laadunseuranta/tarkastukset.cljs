@@ -461,7 +461,22 @@
                            [liitteet/liitteet-ja-lisays urakka-id (:liitteet tarkastus)
                             {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
                                                       #(swap! tarkastus-atom assoc :uusi-liite %))
-                             :uusi-liite-teksti "Lisää liite tarkastukseen"}])})
+                             :uusi-liite-teksti "Lisää liite tarkastukseen"
+                             :salli-poistaa-lisatty-liite? true
+                             :poista-lisatty-liite-fn #(swap! tarkastus-atom dissoc :uusi-liite)
+                             :salli-poistaa-tallennettu-liite? true
+                             :poista-tallennettu-liite-fn
+                             (fn [liite-id]
+                               (liitteet/poista-liite-kannasta
+                                 {:urakka-id urakka-id
+                                  :domain :tarkastus
+                                  :domain-id (:id tarkastus)
+                                  :liite-id liite-id
+                                  :poistettu-fn (fn []
+                                                  (swap! tarkastus-atom assoc :liitteet
+                                                         (filter (fn [liite]
+                                                                   (not= (:id liite) liite-id))
+                                                                 (:liitteet tarkastus))))}))}])})
          (when voi-kirjoittaa?
            {:rivi? true
             :uusi-rivi? true

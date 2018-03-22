@@ -183,23 +183,25 @@
   "Liittää ylläpitokohteisiin määrämuutoksien kokonaissumman"
   [db yllapitokohteet]
   (let [yllapitokohteiden-maaramuutokset (hae-yllapitokohteiden-maaramuutokset
-                                           db (map :id yllapitokohteet))]
-    (mapv (fn [yllapitokohde]
-            (if (= (:yllapitokohdetyotyyppi yllapitokohde) :paallystys)
-              (let [kohteen-maaramuutokset (filter #(= (:yllapitokohde-id %) (:id yllapitokohde))
-                                                   yllapitokohteiden-maaramuutokset)
-                    summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
-                    maaramuutokset (:tulos summatut-maaramuutokset)
-                    maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
-                (assoc yllapitokohde :maaramuutokset maaramuutokset
-                                     :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
-              yllapitokohde))
-          yllapitokohteet)))
+                                           db (map :id yllapitokohteet))
+        vastaus (mapv (fn [yllapitokohde]
+                        (if (= (:yllapitokohdetyotyyppi yllapitokohde) :paallystys)
+                          (let [kohteen-maaramuutokset (filter #(= (:yllapitokohde-id %) (:id yllapitokohde))
+                                                               yllapitokohteiden-maaramuutokset)
+                                summatut-maaramuutokset (paallystys-ja-paikkaus/summaa-maaramuutokset kohteen-maaramuutokset)
+                                maaramuutokset (:tulos summatut-maaramuutokset)
+                                maaramuutos-ennustettu? (:ennustettu? summatut-maaramuutokset)]
+                            (assoc yllapitokohde :maaramuutokset maaramuutokset
+                                                 :maaramuutokset-ennustettu? maaramuutos-ennustettu?))
+                          yllapitokohde))
+                      yllapitokohteet)]
+    vastaus))
 
 (def urakan-yllapitokohde-xf
   (comp
     yllapitokohteet-domain/yllapitoluokka-xf
     (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
+    (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
     (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
     (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
@@ -242,6 +244,9 @@
   (let [osien-pituudet (tr-haku/hae-osien-pituudet db {:tie tr-numero
                                                        :aosa tr-alkuosa
                                                        :losa tr-loppuosa})
+        _ (log/debug "LASKE PITUUS " osien-pituudet {:tie tr-numero
+                                                     :aosa tr-alkuosa
+                                                     :losa tr-loppuosa})
         pituus (tr/laske-tien-pituus osien-pituudet kohde)]
     (assoc kohde :pituus pituus)))
 

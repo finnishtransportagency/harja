@@ -5,20 +5,101 @@
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.atom :refer-macros [reaction<!]])
+            [harja.atom :refer-macros [reaction<!]]
+            [reagent.ratom :refer [reaction]]
+            [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(declare hae-toteumat hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
 
+(defonce suolatoteumissa? (atom false))
+
+(defonce suodatin-valinnat (atom {:suola "Kaikki"}))
+
+(defonce materiaalit
+  (reaction<! [hae? @suolatoteumissa?]
+              (when hae?
+                (hae-materiaalit))))
+
+(defonce
+  ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
+  valittu-aikavali (atom nil))
+
+(defonce toteumat
+  (reaction<! [hae? @suolatoteumissa?
+               urakka @nav/valittu-urakka
+               aikavali @valittu-aikavali]
+              {:nil-kun-haku-kaynnissa? true}
+              (when (and hae? urakka aikavali)
+                (go
+                  (into []
+                        ;; luodaan kaikille id
+                        (map-indexed (fn [i rivi] (assoc rivi :id i)))
+
+                        (<! (hae-toteumat (:id urakka) aikavali)))))))
+
+(defonce valitut-toteumat (atom #{}))
+
+(defonce valitut-toteumat-kartalla
+  (reaction<! [toteumat (distinct (map :tid @valitut-toteumat))
+               valittu-urakka @nav/valittu-urakka]
+              (when @nav/valittu-urakka
+                (hae-toteumien-reitit! (:id @nav/valittu-urakka) toteumat))))
 
 (defonce lampotilojen-hallinnassa? (atom false))
 
-(defn hae-toteumat [urakka-id sopimus-id [alkupvm loppupvm]]
+(def karttataso-suolatoteumat (atom false))
+
+(defonce suolatoteumat-kartalla
+  (reaction
+    (when @karttataso-suolatoteumat
+      (kartalla-esitettavaan-muotoon
+        (let [yksittaiset-toteumat (filter
+                                     #(valittu-suolatoteuma? %)
+                                     (apply concat (map :toteumat @toteumat)))]
+          (map #(assoc % :tyyppi-kartalla :suolatoteuma
+                         :sijainti (hae-toteuman-sijainti %)) yksittaiset-toteumat))
+        #(constantly false)))))
+
+(defn hae-toteuman-sijainti [toteuma]
+  (:sijainti (first (filter #(= (:tid toteuma) (:id %))
+                            @valitut-toteumat-kartalla))))
+
+(defn eriteltavat-toteumat [toteumat]
+  (map #(hash-map :tid (:tid %) :materiaali_nimi (:materiaali_nimi %)) toteumat))
+
+(defn valittu-suolatoteuma? [toteuma]
+  (contains? @valitut-toteumat {:tid (:tid toteuma)
+                                :materiaali_nimi (:materiaali_nimi toteuma)}))
+
+(defn valitse-suolatoteumat [toteumat]
+  (reset! valitut-toteumat
+          (into #{}
+                (concat @valitut-toteumat
+                        (eriteltavat-toteumat toteumat)))))
+
+(defn poista-valituista-suolatoteumista [toteumat]
+  (reset! valitut-toteumat
+          (into #{}
+                (remove (into #{}
+                              (eriteltavat-toteumat toteumat))
+                        @valitut-toteumat))))
+
+(defn hae-toteumat [urakka-id [alkupvm loppupvm]]
+  {:pre [(int? urakka-id)]}
   (k/post! :hae-suolatoteumat {:urakka-id urakka-id
-                               :sopimus-id sopimus-id
                                :alkupvm alkupvm
                                :loppupvm loppupvm}))
 
+(defn hae-toteumien-reitit! [urakka-id toteuma-idt]
+  {:pre [(int? urakka-id)]}
+  (when (not (empty? toteuma-idt))
+    (k/post! :hae-toteumien-reitit {:idt toteuma-idt :urakka-id urakka-id})))
+
 (defn tallenna-toteumat [urakka-id sopimus-id rivit]
+  {:pre [(int? urakka-id)]}
   (let [tallennettavat (into [] (->> rivit
                                      (filter (comp not :koskematon))
                                      (map #(assoc % :paattynyt (:alkanut %)))))]
@@ -64,15 +145,17 @@
                 (hae-teiden-hoitourakoiden-lampotilat valittu-hoitokausi))))
 
 (defn hae-urakan-suolasakot-ja-lampotilat [urakka-id]
+  {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-suolasakot-ja-lampotilat urakka-id))
 
 (defn aseta-suolasakon-kaytto [urakka-id kaytossa?]
+  {:pre [(int? urakka-id)]}
   (k/post! :aseta-suolasakon-kaytto {:urakka-id urakka-id
                                      :kaytossa? kaytossa?}))
 
 (defn tallenna-teiden-hoitourakoiden-lampotilat [hoitokausi lampotilat]
   (let [lampotilat (mapv #(assoc % :alkupvm (first hoitokausi)
-                                  :loppupvm (second hoitokausi))
+                                   :loppupvm (second hoitokausi))
                          (vec (vals lampotilat)))]
     (log "tallenna lämpötilat: " (pr-str lampotilat))
     (k/post! :tallenna-teiden-hoitourakoiden-lampotilat {:hoitokausi hoitokausi

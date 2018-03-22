@@ -6,19 +6,26 @@
             [harja.views.kartta.tasot :as tasot]
             [harja.loki :refer [log]]
             [harja.ui.kartta.apurit :refer [+koko-suomi-extent+]]
-            [harja.ui.openlayers :as openlayers])
+            [harja.ui.openlayers :as openlayers]
+            [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila]
+            [harja.ui.kartta.apurit :as apurit])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [reagent.ratom :refer [reaction]]))
 
 (def pida-geometria-nakyvilla-oletusarvo true)
 (defonce pida-geometriat-nakyvilla? (atom pida-geometria-nakyvilla-oletusarvo))
 
-(defonce nayta-infopaneeli? (atom false))
-(defonce infopaneeli-nakyvissa? (reaction (and @nayta-infopaneeli? @nav/kartta-nakyvissa?)))
+(defonce infopaneeli-nakyvissa? (reaction @paneelin-tila/infopaneeli-nakyvissa?))
 (defonce infopaneelin-linkkifunktiot (atom nil))
 
 (defn keskita-kartta-alueeseen! [alue]
   (reset! nav/kartan-extent alue))
+
+(defn piilota-infopaneeli! []
+  (paneelin-tila/piilota-infopaneeli!))
+
+(defn nayta-infopaneeli! []
+  (paneelin-tila/nayta-infopaneeli!))
 
 (defn kasittele-infopaneelin-linkit!
   "Infopaneelin skeemat saattavat sisältää 'linkkejä', jotka käsitellään
@@ -26,7 +33,7 @@
   mahdollistaa toteuman avaaminen lomakkeeseen infopaneelin kautta.
   Funktio ottaa parametriksi mäpin, jossa avaimet ovat :tyyppejä-kartalla
   (katso harja.ui.kartta.asioiden-tiedot), ja arvot ovat mappejä, jotka
-  sisältävät avaimet :toiminto ja :teksti. :toiminto -avaimen arvo on
+  sisältävät avaimet :toiminto ja :teksti tai :teksti-fn. :toiminto  ja :teksti-fn -avaimen arvo on
   funktio, joka saa parametrinaan valitun asian datan."
   [asetukset]
   (assert (or (nil? asetukset) (map? asetukset)) "Infopaneelin linkkiasetusten pitää olla mäppi tai nil")
@@ -61,7 +68,10 @@
                          (keep #(-> % meta :extent) (vals @tasot/geometriat-kartalle)))]
       (log "EXTENT TASOISTA: " (pr-str extent))
       (if (not-empty (tasot/aktiiviset-nakymien-tasot))
-        (when extent (keskita-kartta-alueeseen! (geo/laajenna-extent-prosentilla extent)))
+        (when extent (keskita-kartta-alueeseen! (-> extent
+                                                    geo/laajenna-extent-prosentilla
+                                                    (geo/laajenna-pinta-alaan (apurit/min-pinta-ala-automaattiselle-zoomille
+                                                                                @nav/valittu-urakka)))))
         (zoomaa-valittuun-hallintayksikkoon-tai-urakkaan)))))
 
 (defn kuuntele-valittua! [atomi]
