@@ -1,3 +1,9 @@
+;;; sallitaan HTTP, per leiningenin FAQ:
+;; never do this
+(require 'cemerick.pomegranate.aether)
+(cemerick.pomegranate.aether/register-wagon-factory!
+ "http" #(org.apache.maven.wagon.providers.http.HttpWagon.))
+(println "Clojure:" (clojure-version))
 (def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
                     (.getHostName (java.net.InetAddress/getLocalHost))))
 
@@ -5,7 +11,7 @@
   :description "Liikenneviraston Harja"
 
   :dependencies [[org.clojure/clojure "1.8.0"] ; TODO Voisi päivittää, mutta aiheuttaa runsaasti erilaisia ongelmia
-                 [org.clojure/clojurescript "1.9.660"] ; TODO Voisi päivittää, mutta aiheuttaa käännösongelmia eri ympäristöissä
+                 [org.clojure/clojurescript "1.9.908"]
 
                  ;;;;;;; Yleiset ;;;;;;;
                  [clojure-future-spec "1.9.0-alpha17"] ; TODO Voisi poistaa, kun Clojure 1.9 päivitys toimii.
@@ -168,7 +174,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
+  :plugins [[lein-cljsbuild "1.1.7"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
@@ -190,7 +196,7 @@
                            ;;:preamble ["reagent/react.js"]
                            :output-to "dev-resources/js/harja.js"
                            :output-dir "dev-resources/js/out"
-                           :libs ["src/js/kuvataso.js"]
+                           :libs ["src/js"]
                            :closure-output-charset "US-ASCII"
                            :recompile-dependents false
                            }}
@@ -202,8 +208,8 @@
                            :optimizations :none
                            :pretty-print true
                            :source-map true
-                           ;:parallel-build false Failaa randomisti
-                           :libs ["src/js/kuvataso.js"]
+                           :parallel-build false ;; Failaa randomisti
+                           :libs ["src/js"]
                            :closure-output-charset "US-ASCII"
                            :main harja.runner}
                 :notify-command ["./run-karma.sh"]}
@@ -222,7 +228,7 @@
                            :output-dir "resources/public/js/"
 
                            ;:parallel-build false Failaa randomisti
-                           :libs ["src/js/kuvataso.js"]
+                           :libs ["src/js"]
                            :closure-output-charset "US-ASCII"}}
 
                ;; Laadunseurannan buildit
