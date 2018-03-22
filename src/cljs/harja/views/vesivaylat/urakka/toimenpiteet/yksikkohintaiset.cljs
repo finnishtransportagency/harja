@@ -216,10 +216,10 @@
                               (:hintaryhman-laskutusluvan-tallennus-kaynnissa? app))]
     (cond
      (nil? (::h/id hinnoittelu))
-     nil
+     [:div ""]
 
      (::h/laskutettu? hinnoittelu)
-     (str "Laskutettu " (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))
+     [:div (str "Laskutettu " (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))]
 
      (::h/laskutus-pvm hinnoittelu)
      [:span.laskutuslupa-tiedot
@@ -324,9 +324,10 @@
                (ikonit/muokkaa)
                #(e! (tiedot/->AloitaHintaryhmanHinnoittelu (::h/id hintaryhma)))
                {:ikoninappi? true
-                :disabled (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
-                                                        oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
-                                                        (:id @nav/valittu-urakka)))}]]
+                :disabled (or (::h/laskutettu? hintaryhma)
+                              (not (oikeudet/on-muu-oikeus? "hinnoittele-tilaus"
+                                                            oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset
+                                                            (:id @nav/valittu-urakka))))}]]
              [laskutuslupanappi e! app* hintaryhma (tiedot/->HaeHintaryhmat)]])))]]))
 
 (defn- toimenpidelomake [e! {:keys [valittu-toimenpide tallennus-kaynnissa?] :as app}]
