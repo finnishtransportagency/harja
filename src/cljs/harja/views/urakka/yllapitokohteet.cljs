@@ -26,7 +26,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.tiedot.urakka.paallystys :as paallystys-tiedot])
+            [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [clojure.string :as string])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -218,49 +219,51 @@
                                                        :otsikko "Muiden kohteenosien tallennus epäonnistui!"
                                                        :validointivirheet vastaus})))
 
-(defn indexed-map-loop [loop-fn funktio data]
-  (into {} (loop-fn (fn [[avain arvo]]
-                      (let [id-ja-arvo [avain (funktio arvo)]]
-                        (when-not (-> id-ja-arvo second empty?)
-                          id-ja-arvo))))
-        data))
+
+(defn gridin-tila [kohdeosat-tila]
+  (keep (fn [[indeksi kohdeosa]]
+          (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
+                     (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
+            [indeksi (assoc kohdeosa :valiaikainen-id indeksi)]))
+        kohdeosat-tila))
+
+(defn gridin-paallekkaiset-osat [gridin-tila paallekkaiset-osat]
+  (flatten (keep (fn [[avain rivi]]
+                   (let [rivin-paallekkaiset-osat
+                         (keep #(let [{id-1 :valiaikainen-id nimi-1 :nimi} (-> % :kohteet first)
+                                      {id-2 :valiaikainen-id nimi-2 :nimi} (-> % :kohteet second)
+                                      rivin-id (:valiaikainen-id rivi)]
+                                  (when (or (= id-1 rivin-id) (= id-2 rivin-id))
+                                    {:rivi avain
+                                     :viesti (str "Kohteenosa on päälekkäin osan "
+                                                  (cond
+                                                    (= rivin-id id-1) nimi-2
+                                                    (= rivin-id id-2) nimi-1
+                                                    :else nil)
+                                                  " kanssa")}))
+                               paallekkaiset-osat)]
+                     (if (empty? rivin-paallekkaiset-osat)
+                       nil rivin-paallekkaiset-osat)))
+                 gridin-tila)))
+
+(defn virheet-ilman-paallekkaisyysvirheita [virheet]
+  (apply merge
+         (map (fn [rivi-id]
+                (let [kenttien-virheet (get virheet rivi-id)
+                      kenttien-avaimet (keys kenttien-virheet)
+                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päälekkäin osan"))]
+                  {rivi-id (apply merge (map (fn [kentan-avain]
+                                               {kentan-avain (filter paallekkaisyysvirhe? (get kenttien-virheet kentan-avain))})
+                                             kenttien-avaimet))}))
+              (keys virheet))))
 
 (defn validoi-kohdeosien-paallekkyys [kohdeosat-tila virheet-atom]
-  (let [gridin-tila (keep (fn [[indeksi kohdeosa]]
-                            (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
-                                       (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa))
-                              [indeksi (assoc kohdeosa :valiaikainen-id indeksi)]))
-                          kohdeosat-tila)
+  (let [gridin-tila (gridin-tila kohdeosat-tila)
         gridin-virheet @virheet-atom
         paallekkaiset-osat (tr/kohdeosat-keskenaan-paallekkain (map second gridin-tila) :valiaikainen-id)
-        gridin-paallekkaiset-osat (flatten (keep (fn [[avain rivi]]
-                                                   (let [rivin-paallekkaiset-osat
-                                                         (keep #(let [{id-1 :valiaikainen-id nimi-1 :nimi} (-> % :kohteet first)
-                                                                      {id-2 :valiaikainen-id nimi-2 :nimi} (-> % :kohteet second)
-                                                                      rivin-id (:valiaikainen-id rivi)]
-                                                                  (when (or (= id-1 rivin-id) (= id-2 rivin-id))
-                                                                    {:rivi avain
-                                                                     :viesti (str "Kohteenosa on päälekkäin osan "
-                                                                                  (cond
-                                                                                    (= rivin-id id-1) nimi-2
-                                                                                    (= rivin-id id-2) nimi-1
-                                                                                    :else nil)
-                                                                                  " kanssa")}))
-                                                               paallekkaiset-osat)]
-                                                     (if (empty? rivin-paallekkaiset-osat)
-                                                       nil rivin-paallekkaiset-osat)))
-                                                 gridin-tila))
-        poista-korjatut-virheet (indexed-map-loop map
-                                                  (fn [rivin-virheet]
-                                                    (indexed-map-loop keep
-                                                                      (fn [virheviestit]
-                                                                        (if-let [virheviesti (some #(re-find #"Kohteenosa on päälekkäin osan \w* kanssa" %)
-                                                                                                   virheviestit)]
-                                                                          (remove #(= % virheviesti) virheviestit)
-                                                                          virheviestit))
-                                                                      rivin-virheet))
-                                                  gridin-virheet)]
-    (reset! virheet-atom poista-korjatut-virheet)
+        gridin-paallekkaiset-osat (gridin-paallekkaiset-osat gridin-tila paallekkaiset-osat)
+        virheet (virheet-ilman-paallekkaisyysvirheita gridin-virheet)]
+    (reset! virheet-atom virheet)
     (doseq [paallekkainen-osa gridin-paallekkaiset-osat]
       (lisaa-virhe-riville {:virheet-atom virheet-atom :virhe paallekkainen-osa}))))
 
@@ -334,38 +337,38 @@
                {:nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validoi)}
                {:hae hae-fn}])
             [(assoc paallystys-tiedot/paallyste-grid-skeema
-                    :leveys paallyste-leveys
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :paallystetyyppi (:paallystetyyppi toistettava-rivi))))
+               :leveys paallyste-leveys
+               :tayta-alas? #(not (nil? %))
+               :tayta-fn (fn [lahtorivi tama-rivi]
+                           (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
+               :tayta-sijainti :ylos
+               :tayta-tooltip "Kopioi sama päällystetyyppi alla oleville riveille"
+               :tayta-alas-toistuvasti? #(not (nil? %))
+               :tayta-toistuvasti-fn
+               (fn [toistettava-rivi tama-rivi]
+                 (assoc tama-rivi :paallystetyyppi (:paallystetyyppi toistettava-rivi))))
              (assoc paallystys-tiedot/raekoko-grid-skeema
-                    :leveys raekoko-leveys
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
+               :leveys raekoko-leveys
+               :tayta-alas? #(not (nil? %))
+               :tayta-fn (fn [lahtorivi tama-rivi]
+                           (assoc tama-rivi :raekoko (:raekoko lahtorivi)))
+               :tayta-sijainti :ylos
+               :tayta-tooltip "Kopioi sama raekoko alla oleville riveille"
+               :tayta-alas-toistuvasti? #(not (nil? %))
+               :tayta-toistuvasti-fn
+               (fn [toistettava-rivi tama-rivi]
+                 (assoc tama-rivi :raekoko (:raekoko toistettava-rivi))))
              (assoc paallystys-tiedot/tyomenetelma-grid-skeema
-                    :leveys tyomenetelma-leveys
-                    :tayta-alas? #(not (nil? %))
-                    :tayta-fn (fn [lahtorivi tama-rivi]
-                                (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
-                    :tayta-sijainti :ylos
-                    :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
-                    :tayta-alas-toistuvasti? #(not (nil? %))
-                    :tayta-toistuvasti-fn
-                    (fn [toistettava-rivi tama-rivi]
-                      (assoc tama-rivi :tyomenetelma (:tyomenetelma toistettava-rivi))))
+               :leveys tyomenetelma-leveys
+               :tayta-alas? #(not (nil? %))
+               :tayta-fn (fn [lahtorivi tama-rivi]
+                           (assoc tama-rivi :tyomenetelma (:tyomenetelma lahtorivi)))
+               :tayta-sijainti :ylos
+               :tayta-tooltip "Kopioi sama työmenetelmä alla oleville riveille"
+               :tayta-alas-toistuvasti? #(not (nil? %))
+               :tayta-toistuvasti-fn
+               (fn [toistettava-rivi tama-rivi]
+                 (assoc tama-rivi :tyomenetelma (:tyomenetelma toistettava-rivi))))
              {:otsikko "Massa\u00ADmäärä (kg/m²)" :nimi :massamaara
               :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
               :tayta-alas? #(not (nil? %))
@@ -465,8 +468,8 @@
         :uusi-rivi (fn [rivi]
                      ;; Otetaan pääkohteen tie, ajorata ja kaista, jos on
                      (assoc rivi :tr-numero (:tr-numero yllapitokohde)
-                            :tr-ajorata (:tr-ajorata yllapitokohde)
-                            :tr-kaista (:tr-kaista yllapitokohde)))
+                                 :tr-ajorata (:tr-ajorata yllapitokohde)
+                                 :tr-kaista (:tr-kaista yllapitokohde)))
         :renderoinnin-jalkeen (fn [grid-state]
                                 (hae-osan-pituudet grid-state osan-pituudet-teille))
         :paneelikomponentit
@@ -638,7 +641,8 @@
         voi-muokata? (not= (some #(when (= (:kohdenumero %) (:kohdenumero rivi))
                                     (:tila %))
                                  @paallystys-tiedot/paallystysilmoitukset)
-                           :lukittu)]
+                           :lukittu)
+        virheeee (atom nil)]
     (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
       (let [kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
                                                        (:tr-kaista rivi)))]
@@ -660,11 +664,13 @@
                          :tr-alkuetaisyys [osa-kohteen-sisalla]
                          :tr-loppuosa [osa-kohteen-sisalla]
                          :tr-loppuetaisyys [osa-kohteen-sisalla]}
+           :virheet-atom virheeee
            :voi-muokata? voi-muokata?
            :virhe-viesti (when-not voi-muokata?
                            "Päällystysilmoitus hyväksytty, ei voi muokata!")
            :kohdetyyppi kohdetyyppi}]
          [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
+         [debug/debug @virheeee {:otsikko "Kohteen virheet"}]
          [yllapitokohdeosat
           {:otsikko "Muut tierekisteriosoitteet"
            :urakka urakka
