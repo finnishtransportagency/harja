@@ -211,8 +211,8 @@
         (lisaa-virhe-riville {:virheet-atom grid-virheet :virhe virhe})
         ;; Tallennetaan virhe tilaan
         (swap! muut-kohdeosat update (:rivi virhe) #(assoc %
-                                                           :paalekkain-oleva-kohde (-> virhe :kohteet first)
-                                                           :virhe-viesti (:viesti virhe)))))
+                                                      :paalekkain-oleva-kohde (-> virhe :kohteet first)
+                                                      :virhe-viesti (:viesti virhe)))))
     ;; Näytetään virhe modaalissa
     (reset! paallystys-tiedot/validointivirheet-modal {:nakyvissa? true
                                                        :otsikko "Muiden kohteenosien tallennus epäonnistui!"
@@ -413,7 +413,7 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
-(defn yllapitokohdeosat [{:keys [urakka jarjesta-kun-kasketaan kohdeosat-atom virheet-atom validoinnit voi-muokata? virhe-viesti]}]
+(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti]}]
   (let [virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
         osan-pituudet-teille (atom nil)
@@ -603,7 +603,6 @@
 
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi kohdetyyppi]}]
   ; Todo: Päällystys 2.0. Kohdetyyppi: Tarvitaanko sitä? Developissa disabloidaan rivien muokkaus jos on joku sora-tyyppi? 🤔
-  ; Todo: Päällystys 2.0. Lisää validoinnit (ainakin se backendillä ollut päällekkäisyysvalidointi voidaan tuoda tähän, mitäs muuta?)
   ; POT-lomakkeeseen täytyy varmaan sitoa validointi POT-lomakkeen tallentamiseen
   (let [tallenna-fn (fn [osatyyppi]
                       (fn [rivit]
@@ -623,23 +622,19 @@
                                         @kohteet-atom))
                            (viesti/nayta! "Kohdeosat tallennettu!" :success)))
         kohdeosat (:kohdeosat rivi)
-        indeksoi-osat #(into (sorted-map) (map (fn [[avain kohdeosa]]
-                                                 [avain (assoc kohdeosa :id avain)])
-                                            (zipmap (iterate inc 1) %)))
+        indeksoi-osat #(into (sorted-map) (map (fn [[avain kohdeosa]] [avain kohdeosa]) (zipmap (iterate inc 1) %)))
         kohteen-osat (atom (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                            (filter #(= (:tr-numero rivi) (:tr-numero %))
-                                                    kohdeosat))))
+                                            (filter #(= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
         muut-osat (atom (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                         (filter #(not= (:tr-numero rivi) (:tr-numero %))
-                                                 kohdeosat))))
+                                         (filter #(not= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
         osa-kohteen-ulkopuolella (fn [_ kohteen-osan-rivi _]
                                    (when (= (:tr-numero rivi) (:tr-numero kohteen-osan-rivi))
-                                     (str "Muilla kohteilla ei saa olla sama tienumero varsinaisen kohteen kanssa")))
+                                     (str "Muilla kohteilla ei saa olla sama tienumero pääkohteen kanssa")))
         osa-kohteen-sisalla (fn [_ kohteen-osan-rivi _]
                               (when (and (:tr-alkuosa kohteen-osan-rivi) (:tr-alkuetaisyys kohteen-osan-rivi)
                                          (:tr-loppuosa kohteen-osan-rivi) (:tr-loppuetaisyys kohteen-osan-rivi))
                                 (when-not (tr/tr-vali-paakohteen-sisalla? rivi kohteen-osan-rivi)
-                                  (str "Tämä osoite ei ole varsinaisen kohteen sisällä."))))
+                                  (str "Osoite ei ole pääkohteen sisällä."))))
         voi-muokata? (not= (some #(when (= (:kohdenumero %) (:kohdenumero rivi))
                                     (:tila %))
                                  @paallystys-tiedot/paallystysilmoitukset)
@@ -709,8 +704,8 @@
   tallenna          Funktio tallennusnapille
   kun-onnistuu      Funktio tallennuksen onnistumiselle"
   [urakka kohteet-atom {:keys [yha-sidottu?] :as optiot}]
-  (let [tr-sijainnit (atom {})                              ;; onnistuneesti haetut TR-sijainnit
-        tr-virheet (atom {})                                ;; virheelliset TR sijainnit
+  (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
+        tr-virheet (atom {}) ;; virheelliset TR sijainnit
         tallenna (reaction
                    (if (and @yha/yha-kohteiden-paivittaminen-kaynnissa? yha-sidottu?)
                      :ei-mahdollinen
