@@ -101,9 +101,9 @@
    (laskutetut-laskutusluvat laskutusluvat (t/now)))
   ([laskutusluvat nyt]
    (set (keep
-          (fn [{:keys [hinnoittelu-id laskutus-pvm]}]
-            (when (laskutuspvm-nyt-tai-tulevaisuudessa? (t/now) laskutus-pvm)
-              hinnoittelu-id))
+          (fn [{:keys [id laskutus-pvm]}]
+            (when (and laskutus-pvm (not (laskutuspvm-nyt-tai-tulevaisuudessa? nyt laskutus-pvm)))
+              id))
           laskutusluvat))))
 
 ;; Pitäis ehkä ennemminkin olla kyselyt/hinnoittelussa,
