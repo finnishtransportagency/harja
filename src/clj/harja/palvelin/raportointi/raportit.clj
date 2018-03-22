@@ -299,7 +299,7 @@
 
    {:nimi :vesivaylien-laskutusyhteenveto
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti #{"urakka"}
+    :konteksti #{"urakka" "hallintayksikko"}
     :kuvaus "Laskutusyhteenveto"
     :suorita #'harja.palvelin.raportointi.raportit.vesivaylien-laskutusyhteenveto/suorita
     :urakkatyyppi urakka-domain/vesivayla-urakkatyypit-ilman-kanavia}

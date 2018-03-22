@@ -10,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.lomake :as lomake]
-            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja totuus-ikoni]]
+            [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja totuus-ikoni] :as yleiset]
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.napit :as napit]
@@ -322,8 +322,9 @@
             :nimi ::lt/lisatieto})])
       valittu-liikennetapahtuma]]))
 
-(defn valinnat [e! app kohteet]
-  (let [kohde-atomi (partial tiedot/valinta-wrap e! app)
+(defn valinnat [e! {{:keys [kayttajan-urakat]} :valinnat :as app} kohteet]
+  (let [aikavali-atomi (partial tiedot/valinta-wrap e! app)
+        kohde-atomi (partial tiedot/valinta-wrap e! app)
         aluslaji-atomi (partial tiedot/valinta-wrap e! app)
         toimenpidetyyppi-atomi (partial tiedot/valinta-wrap e! app)
         aluksen-nimi-atomi (partial tiedot/valinta-wrap e! app)]
@@ -332,7 +333,26 @@
      ^{:key "valinnat"}
      [valinnat/valintaryhmat-3
       [:div
-       [suodattimet/urakan-sopimus-ja-hoitokausi-ja-aikavali @nav/valittu-urakka]
+       [:span.label-ja-kentta
+        [:span.kentan-otsikko "Urakat"]
+        [:div.kentta
+         [yleiset/livi-pudotusvalikko
+          {:naytettava-arvo (let [valittujen-urakoiden-maara (count (filter :valittu? kayttajan-urakat))]
+                              (str valittujen-urakoiden-maara (if (= 1 valittujen-urakoiden-maara)
+                                                                " urakka valittu"
+                                                                " urakkaa valittu")))
+           :itemit-komponentteja? true}
+          (mapv (fn [urakka]
+                  [:span
+                   (:nimi urakka)
+                   [:input {:style {:display "inline-block"
+                                    :float "right"}
+                            :type "checkbox"
+                            :checked (:valittu? urakka)
+                            :on-change #(let [valittu? (-> % .-target .-checked)]
+                                          (e! (tiedot/->UrakkaValittu urakka valittu?)))}]])
+                kayttajan-urakat)]]]
+       [valinnat/aikavali (aikavali-atomi :aikavali)]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Aluksen nimi"
          :kentta-params {:tyyppi :string}
@@ -454,10 +474,7 @@
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (tiedot/->PaivitaValinnat uusi))))
     (komp/sisaan-ulos #(do (e! (tiedot/->Nakymassa? true))
-                           ;; Valintojen päivittäminen laukaisee myös liikennetapahtumien haun
-                           (e! (tiedot/->PaivitaValinnat {::ur/id (:urakka valinnat)
-                                                          ::sop/id (:sopimus valinnat)
-                                                          :aikavali (:aikavali valinnat)})))
+                           (tiedot/nakymaan e! valinnat))
                       #(e! (tiedot/->Nakymassa? false)))
 
     (fn [e! {:keys [valittu-liikennetapahtuma] :as app}]
@@ -467,9 +484,7 @@
         [liikennetapahtumalomake e! app @kanavaurakka/kanavakohteet]))))
 
 (defn liikennetapahtumat [e! app]
-  [liikenne* e! app {:urakka (:id @nav/valittu-urakka)
-                     :aikavali @u/valittu-aikavali
-                     :sopimus (first @u/valittu-sopimusnumero)}])
+  [liikenne* e! app {:aikavali @u/valittu-aikavali}])
 
 (defc liikenne []
   [tuck tiedot/tila liikennetapahtumat])

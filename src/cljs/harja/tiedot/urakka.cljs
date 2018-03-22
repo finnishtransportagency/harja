@@ -115,14 +115,22 @@
 
 (defn edelliset-hoitokaudet
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
-  ([n] (edelliset-hoitokaudet n false))
-  ([n nykyinenkin?]
+  ([n] (edelliset-hoitokaudet n false :hoito))
+  ([n nykyinenkin? valittu-urakkatyyppi]
    (let [ensimmainen-vuosi (- (t/year (pvm/nyt)) n)
          viimeinen-vuosi (+ (t/year (pvm/nyt))
-                            (if nykyinenkin? 1 0))]
+                            (if nykyinenkin? 1 0))
+         hoitokauden-alkupvm-fn (fn [vuosi]
+                                  (if (= :vesivayla valittu-urakkatyyppi)
+                                    (pvm/vesivaylien-hoitokauden-alkupvm vuosi)
+                                    (pvm/hoitokauden-alkupvm vuosi)))
+         hoitokauden-loppupvm-fn (fn [vuosi]
+                                   (if (= :vesivayla valittu-urakkatyyppi)
+                                     (pvm/vesivaylien-hoitokauden-loppupvm vuosi)
+                                     (pvm/hoitokauden-loppupvm vuosi)))]
      (mapv (fn [vuosi]
-             [(pvm/hoitokauden-alkupvm vuosi)
-              (pvm/hoitokauden-loppupvm (inc vuosi))])
+             [(hoitokauden-alkupvm-fn vuosi)
+              (hoitokauden-loppupvm-fn (inc vuosi))])
            (range ensimmainen-vuosi viimeinen-vuosi)))))
 
 (defonce valitun-urakan-hoitokaudet

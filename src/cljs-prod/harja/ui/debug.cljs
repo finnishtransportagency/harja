@@ -1,5 +1,5 @@
 (ns harja.ui.debug)
 
-(defn debug [item]
+(defn debug [& args]
   ;; Tuotannossa debug inspektori ei tee mitään
   )

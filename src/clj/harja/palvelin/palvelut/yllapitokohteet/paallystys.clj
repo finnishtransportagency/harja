@@ -189,7 +189,7 @@
                                      (dissoc :tr-kaista :tr-ajorata :tr-loppuosa
                                              :tunnus :tr-alkuosa :tr-loppuetaisyys
                                              :nimi :tr-alkuetaisyys :tr-numero
-                                             :hyppy? :toimenpide :massamaara :raekoko
+                                             :toimenpide :massamaara :raekoko
                                              :paallystetyyppi :tyomenetelma)))
                                (:osoitteet ilmoitustiedot))]
     (assoc ilmoitustiedot :osoitteet paivitetyt-osoitteet)))

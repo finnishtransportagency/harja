@@ -37,15 +37,14 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once (compose-fixtures
+(use-fixtures :each (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
 (deftest tapahtumien-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-        params {::ur/id urakka-id
-                ::sop/id sopimus-id}
+        params {:urakka-idt #{urakka-id}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-liikennetapahtumat
                                 +kayttaja-jvh+
@@ -63,10 +62,9 @@
               vastaus))))))
 
 (deftest tapahtumien-haku-eri-filttereilla
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [saimaan-urakka-id (hae-saimaan-kanavaurakan-id)
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-        params {::ur/id urakka-id
-                ::sop/id sopimus-id}]
+        params {:urakka-idt #{saimaan-urakka-id}}]
 
     (testing "Aluslajit-suodatin toimii"
       (let [vastaus-kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -102,7 +100,30 @@
                                             +kayttaja-jvh+
                                             (merge params {::lt-alus/nimi "Antin onni"}))]
         (is (>= (count vastaus-kaikki) 1))
-        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))))
+        (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))
+
+    (testing "Urakoiden valinta -suodatin toimii"
+      (let [joensuun-urakka-id (hae-joensuun-kanavaurakan-id)
+            vastaus-kaikki-urakat (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-liikennetapahtumat
+                                                   +kayttaja-jvh+
+                                                  {:urakka-idt #{saimaan-urakka-id joensuun-urakka-id}})
+            vastaus-joensuun-urakka (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-liikennetapahtumat
+                                                    +kayttaja-jvh+
+                                                    {:urakka-idt #{joensuun-urakka-id}})
+            vastaus-saimaan-urakka (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-liikennetapahtumat
+                                                   +kayttaja-jvh+
+                                                   {:urakka-idt #{saimaan-urakka-id}})
+            vastaus-ei-urakoita-valittu (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                         :hae-liikennetapahtumat
+                                                         +kayttaja-jvh+
+                                                        {:urakka-idt #{}})]
+        (is (= (count vastaus-kaikki-urakat) 9))
+        (is (= (count vastaus-joensuun-urakka) 2))
+        (is (= (count vastaus-saimaan-urakka) 7))
+        (is (= (count vastaus-ei-urakoita-valittu) 0))))))
 
 (deftest edellisten-tapahtumien-haku
   (let [urakka-id (hae-saimaan-kanavaurakan-id)
@@ -154,8 +175,7 @@
           kohde-id (hae-kohde-palli)
           [kohteenosa-id tyyppi] (hae-kohteenosat-palli)
           _ (is (= tyyppi "silta") "Pällin kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
-          hakuparametrit {::ur/id urakka-id
-                          ::sop/id sopimus-id}
+          hakuparametrit {:urakka-idt #{urakka-id}}
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-liikennetapahtumat
                                  +kayttaja-jvh+
@@ -200,8 +220,7 @@
           laiva-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_alus WHERE nimi = 'HUPILAIVA'")))
           _ (is (some? laiva-id))
           _ (is (= tyyppi "sulku") "Kansolan kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
-          hakuparametrit {::ur/id urakka-id
-                          ::sop/id sopimus-id}
+          hakuparametrit {:urakka-idt #{urakka-id}}
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-liikennetapahtumat
                                  +kayttaja-jvh+
@@ -258,8 +277,7 @@
           _ (is (= tyyppi "sulku") "Kansolan kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
           kohde-id (hae-kohde-kansola)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR';")))
-          hakuparametrit {::ur/id urakka-id
-                          ::sop/id sopimus-id}
+          hakuparametrit {:urakka-idt #{urakka-id}}
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-liikennetapahtumat
                                  +kayttaja-jvh+
@@ -303,8 +321,7 @@
           kohde-id (hae-kohde-kansola)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR FOOBAR';")))
           laiva-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_alus WHERE nimi = 'TESTILAIVA'")))
-          hakuparametrit {::ur/id urakka-id
-                          ::sop/id sopimus-id}
+          hakuparametrit {:urakka-idt #{urakka-id}}
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-liikennetapahtumat
                                  +kayttaja-jvh+
@@ -357,8 +374,7 @@
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR FOOBAR';")))
           _ (is (some? tapahtuma-id))
           toiminto-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_toiminto WHERE \"liikennetapahtuma-id\"=" tapahtuma-id ";")))
-          hakuparametrit {::ur/id urakka-id
-                          ::sop/id sopimus-id}
+          hakuparametrit {:urakka-idt #{urakka-id}}
           laiva-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma_alus WHERE nimi = 'HUPILAIVA' AND \"liikennetapahtuma-id\"=" tapahtuma-id ";")))
           vanhat (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :hae-liikennetapahtumat
