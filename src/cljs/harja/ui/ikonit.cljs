@@ -558,6 +558,8 @@
   [:span.livicon-delete])
 (defn livicon-square []
   [:div.livicon-square])
+(defn livicon-document-full []
+  [:span.livicon-document-full])
 
 ;; Tiettyjen toimintojen vakioikonit
 

@@ -219,8 +219,8 @@
      (str "Laskutettu " (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))
 
      (::h/laskutus-pvm hinnoittelu)
-     [:span
-      (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))
+     [:span.laskutuslupa-tiedot
+      [:label.laskutuslupa-label (str/capitalize (pvm/kuukauden-nimi (pvm/kuukausi (::h/laskutus-pvm hinnoittelu))))]
       [napit/yleinen-toissijainen
        ""
        #(laskutuslupadialogi e!
@@ -228,7 +228,8 @@
                              paivitys-event
                              "Ei laskutuslupaa"
                              hinnoittelu)
-       {:ikoni (ikonit/save)
+       {:ikoni (ikonit/livicon-document-full)
+        :luokka "laskutuslupa-nappi"
         :ikoninappi? true
         :disabled nappi-disabloitu?}]]
 
@@ -236,7 +237,8 @@
      [napit/yleinen-ensisijainen
       "Laskutuslupa"
       #(laskutuslupadialogi e! app paivitys-event "Anna laskutuslupa" hinnoittelu)
-      {:ikoni (ikonit/save)
+      {:ikoni (ikonit/livicon-document-full)
+       :luokka "laskutuslupa-nappi"
        :disabled nappi-disabloitu?}])))
 
 (defn- hintaryhman-hinnoittelu [e! app* hintaryhma]
