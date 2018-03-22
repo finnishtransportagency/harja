@@ -27,7 +27,9 @@ SELECT
                               WHERE "hinnoittelu-id" = hintaryhma.id
                                     AND poistettu IS NOT TRUE)
                        AND poistettu IS NOT TRUE)
-                AND poistettu IS NOT TRUE)
+                AND poistettu IS NOT TRUE
+         AND "hinnoittelu-id" IN
+             (SELECT id FROM vv_hyvaksytyt_hinnoittelut WHERE "laskutus-pvm" BETWEEN :alkupvm AND :loppupvm))
          AND poistettu IS NOT TRUE)
   -- Hae hintaryhmään kuuluvien ei-poistettujen toimenpiteiden kaikki työt. Summaa kaikki yhteen.
   +
@@ -53,6 +55,8 @@ SELECT
                                     AND poistettu IS NOT TRUE)
                        AND poistettu IS NOT TRUE)
                 AND poistettu IS NOT TRUE)
+         AND "hinnoittelu-id" IN
+             (SELECT id FROM vv_hyvaksytyt_hinnoittelut WHERE "laskutus-pvm" BETWEEN :alkupvm AND :loppupvm)
          AND tyo.poistettu IS NOT TRUE)
     AS "summa",
   -- Hinnoitteluryhmät sisältävät useita reimari-toimenpiteitä
@@ -76,9 +80,7 @@ WHERE "urakka-id" = :urakkaid
       -- Hinnoittelulle on kirjattu toimenpiteitä valitulla aikavälillä
       AND EXISTS(SELECT id
                  FROM reimari_toimenpide
-                 WHERE suoritettu >= :alkupvm
-                       AND suoritettu <= :loppupvm
-                       AND hintatyyppi = 'yksikkohintainen'
+                 WHERE hintatyyppi = 'yksikkohintainen'
                        AND poistettu IS NOT TRUE
                        AND id IN (SELECT "toimenpide-id"
                                   FROM vv_hinnoittelu_toimenpide
@@ -147,9 +149,7 @@ WHERE "urakka-id" = :urakkaid
       -- Hinnoittelulle on kirjattu toimenpiteitä valitulla aikavälillä
       AND EXISTS(SELECT id
                  FROM reimari_toimenpide
-                 WHERE suoritettu >= :alkupvm
-                       AND suoritettu <= :loppupvm
-                       AND poistettu IS NOT TRUE
+                 WHERE poistettu IS NOT TRUE
                        AND hintatyyppi = 'yksikkohintainen'
                        AND id IN (SELECT "toimenpide-id"
                                   FROM vv_hinnoittelu_toimenpide
