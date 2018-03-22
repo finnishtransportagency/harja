@@ -1239,8 +1239,9 @@
         [:span.loppuosa loppuosa] " / "
         [:span.loppuetaisyys loppuetaisyys]])]))
 
-(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka]}]
-  [:span {:class (or luokka "label-ja-kentta")}
+(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit]}]
+  [:span {:class (or luokka "label-ja-kentta")
+          :style tyylit}
    [:span.kentan-otsikko otsikko]
    [:div.kentta
     [tee-kentta kentta-params arvo-atom]]])

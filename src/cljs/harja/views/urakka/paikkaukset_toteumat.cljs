@@ -7,22 +7,43 @@
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
+            [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]))
 
-(defn hakuehdot [e! app]
-  [kentat/tee-otsikollinen-kentta
-   {:otsikko "Tierekisteriosoite"
-    :kentta-params {:nimi :tierekisteriosoite :tyyppi :tierekisteriosoite
-                    :tyyli :rivitetty
-                    :pakollinen? true
-                    #_#_:validoi [(fn [osoite {sijainti :sijainti}]
-                                (when (and (tr-osoite-taytetty? osoite)
-                                           (nil? sijainti))
-                                  "Tarkista tierekisteriosoite"))]}
-    :arvo-atom (r/wrap (get-in app [:valinnat :tr])
-                       (fn [tr]
-                         (println "TR: " (pr-str tr))
-                         (e! (tiedot/->ValinnatTrMuokattu tr))))}])
+(defn hakuehdot [e! {:keys [urakan-paikkauskohteet] :as app}]
+  (let [tr-atomi (partial tiedot/valinta-wrap e! app)
+        aikavali-atomi (partial tiedot/valinta-wrap e! app)]
+    [:span
+     [kentat/tee-otsikollinen-kentta
+      {:otsikko "Tierekisteriosoite"
+       :kentta-params {:tyyppi :tierekisteriosoite
+                       :pakollinen? true
+                       #_#_:validoi [(fn [osoite {sijainti :sijainti}]
+                                       (when (and (tr-osoite-taytetty? osoite)
+                                                  (nil? sijainti))
+                                         "Tarkista tierekisteriosoite"))]}
+       :arvo-atom (tr-atomi :tr)
+       :tyylit {:width "fit-content"}}]
+     [valinnat/aikavali (aikavali-atomi :aikavali)]
+     [:span.label-ja-kentta
+      [:span.kentan-otsikko "Paikkauskohteet"]
+      [:div.kentta
+       [yleiset/livi-pudotusvalikko
+        {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? urakan-paikkauskohteet))]
+                            (str valittujen-paikkauskohteiden-maara (if (= 1 valittujen-paikkauskohteiden-maara)
+                                                              " paikkauskohde valittu"
+                                                              " paikkauskohdetta valittu")))
+         :itemit-komponentteja? true}
+        (mapv (fn [paikkauskohde]
+                [:label {:on-click #(.stopPropagation %)}
+                 (:nimi paikkauskohde)
+                 [:input {:style {:display "inline-block"
+                                  :float "right"}
+                          :type "checkbox"
+                          :checked (:valittu? paikkauskohde)
+                          :on-change #(let [valittu? (-> % .-target .-checked)]
+                                        (e! (tiedot/->UrakkaValittu paikkauskohde valittu?)))}]])
+              urakan-paikkauskohteet)]]]]))
 ;:alkuetaisyys
 ;:alkuosa
 ;:loppuetaisyys
