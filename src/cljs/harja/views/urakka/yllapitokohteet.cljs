@@ -318,8 +318,8 @@
         (when (= kentta :tr-loppuetaisyys)
           (validoi-osan-maksimipituus osan-pituudet :tr-loppuosa tr-loppuetaisyys kohde))))))
 
-(defn yllapitokohdeosat-sarakkeet [{:keys [kohdeosat muokkaa-kohdeosat! muokattava-tie? muokattava-ajorata-ja-kaista?
-                                           kirjoitusoikeus? validoi hae-fn voi-muokata?]}]
+(defn yllapitokohdeosat-sarakkeet [{:keys [yllapitokohdetyyppi kohdeosat muokkaa-kohdeosat! muokattava-tie?
+                                           muokattava-ajorata-ja-kaista? kirjoitusoikeus? validoi hae-fn voi-muokata?]}]
   (remove nil?
           (concat
             (tierekisteriosoite-sarakkeet
@@ -399,13 +399,15 @@
                                #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-arrow-down)
                                 :disabled (or (not kirjoitusoikeus?)
-                                              (not voi-muokata?))
+                                              (not voi-muokata?)
+                                              (= yllapitokohdetyyppi :sora))
                                 :luokka "btn-xs"}]
                               [napit/kielteinen "Poista"
                                #(muokkaa-kohdeosat! (tiedot/poista-kohdeosa kohdeosat (inc index)))
                                {:ikoni (ikonit/livicon-trash)
                                 :disabled (or (not kirjoitusoikeus?)
-                                              (not voi-muokata?))
+                                              (not voi-muokata?)
+                                              (= yllapitokohdetyyppi :sora))
                                 :luokka "btn-xs"}]])}])))
 
 (defn hae-osan-pituudet [grid-state osan-pituudet-teille-atom]
@@ -440,7 +442,7 @@
                  (tr/laske-tien-pituus osan-pituus tieosa))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
                  muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
-                 jarjesta-kun-kasketaan kohdetyyppi]}]
+                 jarjesta-kun-kasketaan]}]
       [grid/muokkaus-grid
        {:tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                           [:div
@@ -505,7 +507,8 @@
                              "-")
                            (when (= kohdetyyppi :sora)
                              [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
-       (yllapitokohdeosat-sarakkeet {:kohdeosat @kohdeosat-atom
+       (yllapitokohdeosat-sarakkeet {:yllapitokohdetyyppi (:yllapitokohdetyyppi yllapitokohde)
+                                     :kohdeosat @kohdeosat-atom
                                      :muokkaa-kohdeosat! (fn [uudet-osat]
                                                            (reset! kohdeosat-atom (if jarjesta-kun-kasketaan
                                                                                     (vary-meta uudet-osat assoc :jarjesta-gridissa true)
@@ -604,9 +607,7 @@
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
-(defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi kohdetyyppi]}]
-  ; Todo: Päällystys 2.0. Kohdetyyppi: Tarvitaanko sitä? Developissa disabloidaan rivien muokkaus jos on joku sora-tyyppi? 🤔
-  ; POT-lomakkeeseen täytyy varmaan sitoa validointi POT-lomakkeen tallentamiseen
+(defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi]}]
   (let [tallenna-fn (fn [osatyyppi]
                       (fn [rivit]
                         (tiedot/tallenna-yllapitokohdeosat!
