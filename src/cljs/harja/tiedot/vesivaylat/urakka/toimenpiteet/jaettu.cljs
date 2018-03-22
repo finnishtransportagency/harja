@@ -36,7 +36,7 @@
 (defrecord KorostaToimenpideKartalla [toimenpide lisa-funktiot])
 
 (def valintojen-avaimet [:urakka-id :sopimus-id :aikavali
-                         :vaylatyyppi :vaylanro :turvalaite-id
+                         :vaylatyyppi :vaylanro :turvalaitenro
                          :tyolaji :tyoluokka :toimenpide
                          :vain-vikailmoitukset?])
 
@@ -75,7 +75,7 @@
 (defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
                                                      vaylatyyppi vaylanro turvalaitenro
                                                      tyolaji tyoluokka toimenpide
-                                                     vain-vikailmoitukset? turvalaite] :as valinnat}]
+                                                     vain-vikailmoitukset?] :as valinnat}]
   (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
@@ -84,7 +84,6 @@
                                    ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
                                    ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
                                    ::to/reimari-toimenpidetyypit (when toimenpide (to/reimari-toimenpidetyyppi-avain->koodi toimenpide))
-                                   ::tu/turvalaitenro turvalaite
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?}))

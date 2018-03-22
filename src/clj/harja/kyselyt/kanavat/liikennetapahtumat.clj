@@ -36,12 +36,12 @@
                          (assoc kohde ::kohde/urakat []))))
             tapahtumat))))
 
-(defn- urakat-idlla [urakka-id tapahtuma]
+(defn- urakat-idlla [urakka-idt tapahtuma]
   (update-in tapahtuma
              [::lt/kohde ::kohde/urakat]
              (fn [urakat]
                (keep
-                 #(when (= (::ur/id %) urakka-id) %)
+                 #(when (urakka-idt (::ur/id %)) %)
                  urakat))))
 
 (defn- suodata-liikennetapahtuma-toimenpidetyypillä [tiedot tapahtumat]
@@ -54,7 +54,7 @@
 (defn- suodata-liikennetapahtuma-aluksen-nimella [tiedot tapahtumat]
   (filter (fn [tapahtuma]
             (let [alus-nimi (::lt-alus/nimi tiedot)]
-              (if (empty? alus-nimi) ;; Voi olla nil tai ""
+              (if (empty? alus-nimi)                        ;; Voi olla nil tai ""
                 true
                 ;; Pidä tapahtuma, jos sen aluksissa ainakin yksi
                 ;; alkaa annetulla nimellä
@@ -63,13 +63,13 @@
                                alus-nimi))))))
           tapahtumat))
 
-(defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-id]
+(defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-idt]
   (->>
     tapahtumat
     (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
     (suodata-liikennetapahtuma-aluksen-nimella tiedot)
     (liita-kohteen-urakkatiedot urakkatiedot-fn)
-    (map (partial urakat-idlla urakka-id))
+    (map (partial urakat-idlla urakka-idt))
     (remove (comp empty? ::kohde/urakat ::lt/kohde))))
 
 (def ilman-poistettuja-aluksia (map #(update % ::lt/alukset (partial remove ::m/poistettu?))))
@@ -133,8 +133,7 @@
         tapahtumat))
 
 (defn hae-tapahtumien-perustiedot [db {:keys [aikavali] :as tiedot}]
-  (let [urakka-id (::ur/id tiedot)
-        sopimus-id (::sop/id tiedot)
+  (let [urakka-idt (:urakka-idt tiedot)
         kohde-id (get-in tiedot [::lt/kohde ::kohde/id])
         aluslajit (::lt-alus/aluslajit tiedot)
         suunta (::lt-alus/suunta tiedot)
@@ -157,8 +156,7 @@
                         {::lt/kohde-id kohde-id})
                       (op/and
                         {::m/poistettu? false
-                         ::lt/urakka-id urakka-id
-                         ::lt/sopimus-id sopimus-id}
+                         ::lt/urakka-id (op/in urakka-idt)}
                         (when (or suunta aluslajit)
                           {::lt/alukset (op/and
                                           (when suunta
@@ -175,7 +173,7 @@
          (hae-tapahtumien-palvelumuodot db)
          (hae-tapahtumien-kohdetiedot db))
     (partial kohteet-q/hae-kohteiden-urakkatiedot db user)
-    (::ur/id tiedot)))
+    (:urakka-idt tiedot)))
 
 (defn- hae-kohteen-edellinen-tapahtuma* [tulokset]
   (first
@@ -360,7 +358,8 @@
 
 (defn tallenna-osa-tapahtumaan! [db user osa tapahtuma]
   (let [olemassa? (id-olemassa? (::toiminto/id osa))
-        osa (assoc osa ::toiminto/liikennetapahtuma-id (::lt/id tapahtuma))]
+        osa (assoc osa ::toiminto/liikennetapahtuma-id (::lt/id tapahtuma)
+                       ::toiminto/kohde-id (::lt/kohde-id tapahtuma))]
     (if olemassa?
       (do
         (vaadi-osa-kuuluu-tapahtumaan! db osa tapahtuma)
