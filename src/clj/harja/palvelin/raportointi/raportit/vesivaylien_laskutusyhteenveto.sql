@@ -16,9 +16,8 @@ SELECT
    FROM vv_hinta
    WHERE "hinnoittelu-id" IN
          -- Hinta kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
-         (SELECT ht."hinnoittelu-id"
-          FROM vv_hinnoittelu_toimenpide ht
-            JOIN vv_laskutettavat_hinnoittelut l ON ht."hinnoittelu-id" = l.id
+         (SELECT "hinnoittelu-id"
+          FROM vv_hinnoittelu_toimenpide
           WHERE "toimenpide-id" IN
                 -- Hae hintaryhmän kaikki ei-poistetut toimenpiteet
                 (SELECT id
@@ -42,9 +41,8 @@ SELECT
                                       AND yht.urakka = :urakkaid
    WHERE "hinnoittelu-id" IN
          -- Työ kuuluu toimenpiteeseen, joka kuuluu ko. hintaryhmään
-         (SELECT ht."hinnoittelu-id"
-          FROM vv_hinnoittelu_toimenpide ht
-            JOIN vv_laskutettavat_hinnoittelut l ON ht."hinnoittelu-id" = l.id
+         (SELECT "hinnoittelu-id"
+          FROM vv_hinnoittelu_toimenpide
           WHERE "toimenpide-id" IN
                 -- Hae hintaryhmän kaikki ei-poistetut toimenpiteet
                 (SELECT id
@@ -72,7 +70,6 @@ SELECT
                                     AND poistettu IS NOT TRUE))))
                                     AS vaylatyyppi
 FROM vv_hinnoittelu hintaryhma
-  JOIN vv_laskutettavat_hinnoittelut l ON hintaryhma.id = l.id
 WHERE "urakka-id" = :urakkaid
       AND hintaryhma.poistettu IS NOT TRUE
       AND hintaryhma IS TRUE
@@ -124,7 +121,6 @@ SELECT
                  WHERE "hinnoittelu-id" = oma_hinnoittelu.id
                        AND poistettu IS NOT TRUE))) AS vaylatyyppi
 FROM vv_hinnoittelu oma_hinnoittelu
-  JOIN vv_laskutettavat_hinnoittelut l ON oma_hinnoittelu.id = l.id
 WHERE "urakka-id" = :urakkaid
       AND poistettu IS NOT TRUE
       AND hintaryhma IS FALSE
