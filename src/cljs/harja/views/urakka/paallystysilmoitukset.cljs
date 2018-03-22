@@ -360,11 +360,6 @@
 
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
-           ;; Todo: Päällystys 2.0 Estä tien, ajoradan ja kaistan muokkaus tarvittaessa
-           ;; Toisaalta tätä ei välttämättä tarvitse tehdä jos sallitaan muuttaa kohteen oma alikohde muuksi vaihtamalla tienumero,
-           ;; tai toisinpäin?
-           ;; Toinen vaihtoehto on laittaa muut kohdeosat omaan tauluun, mutta lähtökohtaisesti menisin tällä yhdellä
-           ;; taulukolla, jos vain suinkin toimii. Joka tapauksessa POTin tietomallia ei mielestäni tarvitse/kannata muuttaa.
            :muokattava-tie? (constantly true)
            :muokattava-ajorata-ja-kaista? (constantly true)
            :otsikko "Tierekisteriosoitteet"
