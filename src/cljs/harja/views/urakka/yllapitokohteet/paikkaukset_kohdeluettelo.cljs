@@ -6,9 +6,7 @@
             [harja.views.urakka.paikkaukset-kustannukset :as kustannukset]
 
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.navigaatio :as nav]
-
-            [harja.tiedot.istunto :as istunto]))
+            [harja.tiedot.navigaatio :as nav]))
 
 (defn kohdeluettelo
   "Kohdeluettelo-pääkomponentti"
