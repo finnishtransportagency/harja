@@ -246,6 +246,7 @@
 
 (defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
   [:div.tiemerkinnan-yks-hint-tyot
+   [valinnat/urakan-vuosi urakka]
    [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
    [yhteenveto @tiemerkinnan-toteumat-atom]
    [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]])

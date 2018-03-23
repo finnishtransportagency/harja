@@ -118,9 +118,9 @@
                    :laskentakohteet (hae-laskentakohteet db user {:urakka urakka-id})}]
       vastaus)))
 
-(defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
+(defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id vuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
-  (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
+  (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id " vuosi " vuosi)
   (jdbc/with-db-transaction [db db]
     (let [toteumat (into []
                          (comp
@@ -129,7 +129,8 @@
                            (map #(assoc % :hinta (when-let [hinta (:hinta %)] (double hinta)))))
                          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                            db
-                           {:urakka urakka-id}))]
+                           {:urakka urakka-id
+                            :vuosi vuosi}))]
       toteumat)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot

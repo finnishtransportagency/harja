@@ -5,24 +5,27 @@
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as u]
             [harja.domain.tiemerkinta-toteumat :as d])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (defonce nakymassa? (atom false))
 
-(defn hae-yksikkohintaiset-tyot [urakka-id]
-  (k/post! :hae-tiemerkinnan-yksikkohintaiset-tyot {:urakka-id urakka-id}))
+(defn hae-yksikkohintaiset-tyot [urakka-id vuosi]
+  (k/post! :hae-tiemerkinnan-yksikkohintaiset-tyot {:urakka-id urakka-id
+                                                    :vuosi vuosi}))
 
 (defn hae-paallystysurakan-kohteet [urakka-id]
   (k/post! :tiemerkintaurakalle-osoitetut-yllapitokohteet {:urakka-id urakka-id}))
 
 (def tiemerkinnan-toteumat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
+               vuosi @u/valittu-urakan-vuosi
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
-              (when (and valittu-urakka-id nakymassa?)
-                (hae-yksikkohintaiset-tyot valittu-urakka-id))))
+              (when (and valittu-urakka-id nakymassa? vuosi)
+                (hae-yksikkohintaiset-tyot valittu-urakka-id vuosi))))
 
 (def paallystysurakan-kohteet
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
