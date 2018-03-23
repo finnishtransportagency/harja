@@ -361,29 +361,29 @@ INSERT INTO reimari_toimenpide_liite ("toimenpide-id", "liite-id", poistettu) VA
                                                                                              'POISTETTU LIITE EI SAA NÄKYÄ'),
                                                                                       TRUE);
 
-
-INSERT INTO vv_vikailmoitus
-("reimari-id", "reimari-lisatiedot", "reimari-turvalaitenro", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
- "reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
- "reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja",
- "toimenpide-id")
-VALUES
-  ('123', 'Hietasaaren viitta on kaatunut',
-          hietasaaren_viitta_turvalaitenro,
-          'ilmari vikailmoittaja', -- reimari-ilmoittaja
-          'ilmari.vi@example.com +55 5555 5555 5555 555 55', -- reimari-ilmoittajan-yhteystiedot
-          TRUE, -- reimari-epakunnossa?
-          '8478478', -- tyyppikoodi
-          '8884848', -- tilakoodi
-          '2017-04-02T12:12:12', -- havaittu
-          '2017-04-02T13:13:13', -- kirjattu
-          '2017-04-02T13:13:13', -- muokattu
-   '2017-04-02T13:13:13', -- luontiaika
-   'lauri luoja', -- luoja
-   'mikko muokkaaja', -- muokkaaja
-   testitoimenpide_2_id);
-update reimari_toimenpide set "reimari-viat" = '{"(123,8884848)"}'
+UPDATE reimari_toimenpide SET "reimari-viat" = '{"(123,8884848)"}'
 WHERE id = (SELECT id FROM reimari_toimenpide WHERE lisatieto = 'TESTITOIMENPIDE 2');
+
+  INSERT INTO vv_vikailmoitus
+  ("reimari-id", "reimari-lisatiedot", "reimari-turvalaitenro", "reimari-ilmoittaja", "reimari-ilmoittajan-yhteystieto",
+   "reimari-epakunnossa?", "reimari-tyyppikoodi", "reimari-tilakoodi",
+   "reimari-havaittu", "reimari-kirjattu", "reimari-muokattu", "reimari-luontiaika", "reimari-luoja", "reimari-muokkaaja",
+   "toimenpide-id")
+  VALUES
+    ('123', 'Hietasaaren viitta on kaatunut',
+            hietasaaren_viitta_turvalaitenro,
+            'ilmari vikailmoittaja', -- reimari-ilmoittaja
+            'ilmari.vi@example.com +55 5555 5555 5555 555 55', -- reimari-ilmoittajan-yhteystiedot
+            TRUE, -- reimari-epakunnossa?
+            '8478478', -- tyyppikoodi
+            '8884848', -- tilakoodi
+            '2017-04-02T12:12:12', -- havaittu
+            '2017-04-02T13:13:13', -- kirjattu
+            '2017-04-02T13:13:13', -- muokattu
+     '2017-04-02T13:13:13', -- luontiaika
+     'lauri luoja', -- luoja
+     'mikko muokkaaja', -- muokkaaja
+     testitoimenpide_2_id);
 
 -- ***********************************************
 -- KOKONAISHINTAISIIN SIIRRETYT, REIMARISTA YKSIKKÖHINTAISENA RAPORTOIDUT TYÖT
