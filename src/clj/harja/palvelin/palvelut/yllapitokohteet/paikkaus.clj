@@ -1,22 +1,24 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkaus
   "Paikkauksen palvelut"
   (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log]
-            [harja.domain.skeema :refer [Toteuma validoi]]
+            [cheshire.core :as cheshire]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.kommentit :as kommentit]
+            [taoensso.timbre :as log]
+            [specql.op :as op]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.paikkaus :as paikkaus]
             [harja.domain.paikkausilmoitus :as paikkausilmoitus-domain]
+            [harja.domain.skeema :refer [Toteuma validoi] :as skeema]
+            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.kyselyt.kommentit :as kommentit]
+            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.paikkaus :as q]
-            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.paallystys :as paallystys-q]
-            [cheshire.core :as cheshire]
-            [harja.domain.skeema :as skeema]
-            [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]))
 
 (defn hae-urakan-paikkausilmoitukset [db user {:keys [urakka-id sopimus-id vuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paikkausilmoitukset user urakka-id)
@@ -181,6 +183,27 @@
 
         (hae-urakan-paikkausilmoitukset c user {:urakka-id urakka-id
                                                 :sopimus-id sopimus-id})))))
+
+(defn hae-urakan-paikkauskohteet [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (let [kysely-params-tieosa (if-let [tr (:tr tiedot)]
+                               (assoc tiedot ::paikkaus/tierekisteriosoite
+                                             (cond-> {}
+                                                     (:numero tr) (assoc ::tierekisteri/tie (:numero tr))
+                                                     (:alkuosa tr) (assoc ::tierekisteri/aosa (:alkuosa tr))
+                                                     (:alkuetaisyys tr) (assoc ::tierekisteri/aet (:alkuetaisyys tr))
+                                                     (:loppuosa tr) (assoc ::tierekisteri/losa (:loppuosa tr))
+                                                     (:loppuetaisyys tr) (assoc ::tierekisteri/let (:loppuetaisyys tr))))
+                               tiedot)
+        kysely-params-aika (if-let [aikavali (:aikavali tiedot)]
+                             (assoc kysely-params-tieosa ::paikkaus/alkuaika (apply op/between aikavali))
+                             kysely-params-tieosa)
+        kysely-params-paikkaus-idt (if-let [paikkaus-idt (:paikkaus-idt tiedot)]
+                                     (assoc kysely-params-aika ::paikkaus/id (op/in paikkaus-idt))
+                                     kysely-params-aika)
+        kysely-params (dissoc kysely-params-paikkaus-idt :aikavali :paikkaus-idt :tr)]
+    (q/hae-paikkaukset db kysely-params)))
+
 (defrecord Paikkaus []
   component/Lifecycle
   (start [this]
@@ -195,6 +218,11 @@
       (julkaise-palvelu http :tallenna-paikkausilmoitus
                         (fn [user tiedot]
                           (tallenna-paikkausilmoitus db user tiedot)))
+      (julkaise-palvelu http :hae-urakan-paikkauskohteet
+                        (fn [user tiedot]
+                          (hae-urakan-paikkauskohteet db user tiedot))
+                        {:kysely-spec ::paikkaus/urakan-paikkauskohteet-kysely
+                         :vastaus-spec ::paikkaus/urakan-paikkauskohteet-vastaus})
       this))
 
   (stop [this]
@@ -202,5 +230,6 @@
       (:http-palvelin this)
       :urakan-paikkausilmoitukset
       :urakan-paikkausilmoitus-paikkauskohteella
-      :tallenna-paikkaussilmoitus)
+      :tallenna-paikkaussilmoitus
+      :urakan-paikkauskohteet)
     this))

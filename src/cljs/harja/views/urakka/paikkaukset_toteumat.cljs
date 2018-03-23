@@ -7,6 +7,7 @@
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
+            [harja.ui.komponentti :as komp]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]))
 
@@ -62,12 +63,7 @@
         skeema (into []
                      (concat
                        (yllapitokohteet/tierekisteriosoite-sarakkeet 8 tierekisteriosoite-sarakkeet)
-                       [{:otsikko "Tierekisteriosoite"
-                         :leveys 3
-                         ;:nimi ::lt/aika
-                         ;:fmt pvm/pvm-aika-opt
-                         }
-                        {:otsikko "Alku\u00ADaika"
+                       [{:otsikko "Alku\u00ADaika"
                          :leveys 3
                          ;:nimi ::lt/kohde
                          ;:fmt kohde/fmt-kohteen-nimi
@@ -110,7 +106,7 @@
                          :leveys 1
                          ;:nimi ::lt-alus/matkustajalkm
                          }
-                        {:otsikko "Pääl\u00ADlystys\u00ADkoh\u00ADteen nimi"
+                        {:otsikko "Paik\u00ADkaus\u00ADkoh\u00ADteen nimi"
                          :leveys 1
                          ;:nimi ::lt-alus/nippulkm
                          }]))]
@@ -128,12 +124,16 @@
         paikkaukset]])))
 
 (defn toteumat* [e! app]
-  [:span
-   [kartta/kartan-paikka]
-   [:div
-    [debug/debug app]
-    [hakuehdot e! app]
-    [paikkaukset e! app]]])
+  (komp/luo
+    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan))
+                      #(e! (tiedot/->NakymastaPois)))
+    (fn [e! app]
+      [:span
+       [kartta/kartan-paikka]
+       [:div
+        [debug/debug app]
+        [hakuehdot e! app]
+        [paikkaukset e! app]]])))
 
 (defn toteumat []
   [tuck/tuck tiedot/app toteumat*])
