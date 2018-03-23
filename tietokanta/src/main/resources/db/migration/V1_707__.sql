@@ -1,8 +1,6 @@
 CREATE OR REPLACE VIEW reimari_toimenpiteen_vika AS
    SELECT id AS tpid, (UNNEST("reimari-viat")).id AS vikaid FROM reimari_toimenpide;
 
-DROP FUNCTION IF EXISTS vv_vikailmoituksen_toimenpide_id_trigger_proc();
-
 CREATE OR REPLACE FUNCTION vv_vikailmoituksen_toimenpide_id_trigger_proc()
   RETURNS TRIGGER AS
 $$
