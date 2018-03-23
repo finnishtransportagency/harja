@@ -85,6 +85,7 @@
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
+      (komp/lippu paallystys-tiedot/paallystysilmoitukset-tai-kohteet-nakymassa?)
       (fn [ur]
         [:div.paallystyskohteet
          [kartta/kartan-paikka]
