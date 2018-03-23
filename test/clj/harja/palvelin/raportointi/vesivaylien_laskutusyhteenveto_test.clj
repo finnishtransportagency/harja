@@ -66,9 +66,9 @@
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 60826.00M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 2396.00M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 30M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 60856.00M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Kaikki yhteensä" 2426.00M] taulukko-yhteenveto-yhteensa))))
 
 (deftest raportin-suoritus-urakalle-toimii-pyhaselka
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -92,9 +92,9 @@
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 60000.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 0.0M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 70000.0M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Kaikki yhteensä" 10000.0M] taulukko-yhteenveto-yhteensa))))
 
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-hoitokausi-2016-2017
@@ -118,7 +118,7 @@
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 120000.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 0.0M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 140000.0M] taulukko-yhteenveto-yhteensa))))
+    (is (= ["Kaikki yhteensä" 20000.0M] taulukko-yhteenveto-yhteensa))))
 
