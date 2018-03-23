@@ -196,7 +196,10 @@
                                                      (:loppuetaisyys tr) (assoc ::tierekisteri/let (:loppuetaisyys tr))))
                                tiedot)
         kysely-params-aika (if-let [aikavali (:aikavali tiedot)]
-                             (assoc kysely-params-tieosa ::paikkaus/alkuaika (apply op/between aikavali))
+                             (assoc kysely-params-tieosa ::paikkaus/alkuaika (cond
+                                                                               (and (first aikavali) (not (second aikavali))) (op/>= (first aikavali))
+                                                                               (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
+                                                                               :else (apply op/between aikavali)))
                              kysely-params-tieosa)
         kysely-params-paikkaus-idt (if-let [paikkaus-idt (:paikkaus-idt tiedot)]
                                      (assoc kysely-params-aika ::paikkaus/id (op/in paikkaus-idt))

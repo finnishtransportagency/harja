@@ -1,6 +1,8 @@
 (ns harja.views.urakka.paikkaukset-toteumat
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
+            [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
@@ -11,7 +13,7 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]))
 
-(defn hakuehdot [e! {:keys [urakan-paikkauskohteet] :as app}]
+(defn hakuehdot [e! {:keys [valinnat] :as app}]
   (let [tr-atomi (partial tiedot/valinta-wrap e! app)
         aikavali-atomi (partial tiedot/valinta-wrap e! app)]
     [:span
@@ -26,6 +28,7 @@
        :arvo-atom (tr-atomi :tr)
        :tyylit {:width "fit-content"}}]
      [valinnat/aikavali (aikavali-atomi :aikavali)]
+     ;; TODO Tää filtteri ei vielä toimi
      [:span.label-ja-kentta
       [:span.kentan-otsikko "Paikkauskohteet"]
       [:div.kentta
@@ -43,79 +46,51 @@
                           :type "checkbox"
                           :checked (:valittu? paikkauskohde)
                           :on-change #(let [valittu? (-> % .-target .-checked)]
-                                        (e! (tiedot/->UrakkaValittu paikkauskohde valittu?)))}]])
-              urakan-paikkauskohteet)]]]]))
-;:alkuetaisyys
-;:alkuosa
-;:loppuetaisyys
-;:loppuosa
-;:numero
+                                        (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))}]])
+              (:urakan-paikkauskohteet valinnat))]]]]))
 
 (defn paikkaukset [e! app]
-  (let [tierekisteriosoite-sarakkeet [{:nimi :nimi :pituus-max 30}
-                                      {:nimi :tr-numero}
-                                      {:nimi :tr-ajorata}
-                                      {:nimi :tr-kaista}
-                                      {:nimi :tr-alkuosa}
-                                      {:nimi :tr-alkuetaisyys}
-                                      {:nimi :tr-loppuosa}
-                                      {:nimi :tr-loppuetaisyys}]
+  (let [tierekisteriosoite-sarakkeet [{:nimi ::paikkaus/nimi :pituus-max 30}
+                                      {:nimi ::tierekisteri/tie}
+                                      nil nil
+                                      {:nimi ::tierekisteri/aosa}
+                                      {:nimi ::tierekisteri/aet}
+                                      {:nimi ::tierekisteri/losa}
+                                      {:nimi ::tierekisteri/let}]
         skeema (into []
                      (concat
                        (yllapitokohteet/tierekisteriosoite-sarakkeet 8 tierekisteriosoite-sarakkeet)
                        [{:otsikko "Alku\u00ADaika"
                          :leveys 3
-                         ;:nimi ::lt/kohde
-                         ;:fmt kohde/fmt-kohteen-nimi
-                         }
+                         :nimi ::paikkaus/alkuaika}
                         {:otsikko "Loppu\u00ADaika"
                          :leveys 3
-                         ;:nimi :toimenpide
-                         ;:hae tiedot/toimenpide->str
-                         }
+                         :nimi ::paikkaus/loppuaika}
                         {:otsikko "Työ\u00ADmene\u00ADtelmä"
                          :leveys 1
-                         ;:nimi :sillan-avaus?
-                         ;:hae tiedot/silta-avattu?
-                         ;:fmt totuus-ikoni
-                         }
-                        {:otsikko "Pal\u00ADvelu\u00ADmuoto"
-                         :leveys 3
-                         ;:nimi :palvelumuoto-ja-lkm
-                         ;:hae tiedot/palvelumuoto->str
-                         }
+                         :nimi ::paikkaus/tyomenetelma}
                         {:otsikko "Massa\u00ADtyyp\u00ADpi"
                          :leveys 2
-                         ;:nimi ::lt-alus/suunta
-                         ;:fmt lt/suunta->str
-                         }
+                         :nimi ::paikkaus/massatyyppi}
                         {:otsikko "Leveys"
                          :leveys 3
-                         ;:nimi ::lt-alus/nimi
-                         }
+                         :nimi ::paikkaus/leveys}
                         {:otsikko "Massa\u00ADmenek\u00ADki"
                          :leveys 2
-                         ;:nimi ::lt-alus/laji
-                         ;:fmt lt-alus/aluslaji->laji-str
-                         }
+                         :nimi ::paikkaus/massamenekki}
                         {:otsikko "Raekoko"
                          :leveys 1
-                         ;:nimi ::lt-alus/lkm
-                         }
+                         :nimi ::paikkaus/raekoko}
                         {:otsikko "Kuula\u00ADmylly"
                          :leveys 1
-                         ;:nimi ::lt-alus/matkustajalkm
-                         }
-                        {:otsikko "Paik\u00ADkaus\u00ADkoh\u00ADteen nimi"
-                         :leveys 1
-                         ;:nimi ::lt-alus/nippulkm
-                         }]))]
+                         :nimi ::paikkaus/kuulamylly}]))]
     (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkaukset]}]
       [:div
        [grid/grid
         {:otsikko (if paikkauksien-haku-kaynnissa?
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien toteumat")
+         :tunniste ::paikkaus/id
          :sivuta grid/vakiosivutus
          :tyhja (if paikkauksien-haku-kaynnissa?
                   [yleiset/ajax-loader "Haku käynnissä"]
