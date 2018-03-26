@@ -432,7 +432,6 @@
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id yllapitokohde-id)
   (jdbc/with-db-transaction [db db]
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
-    ;; Todo: Päällystys 2.0. Testi osatyyppi filtterille
     (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
           hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
                                                            {:urakka-id urakka-id
@@ -458,8 +457,9 @@
           (luo-uusi-yllapitokohdeosa db user yllapitokohde-id osa)))
       (yy/paivita-yllapitourakan-geometria db urakka-id)
       (let [yllapitokohdeosat (hae-kaikki-osat)]
-        (log/debug "Tallennus suoritettu. Tuoreet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
-        (tr-domain/jarjesta-tiet yllapitokohdeosat)))))
+        (log/debug "Tallennus suoritettu. Uudet ylläpitokohdeosat: " (pr-str yllapitokohdeosat))
+        (tr-domain/jarjesta-tiet yllapitokohdeosat)
+        {:validointivirheet ["TESTI VIRHE!"]}))))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
                                {:keys [kohdenumero nimi
