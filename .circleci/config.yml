@@ -20,6 +20,7 @@ jobs:
           cd /tmp
           bash sisus.bash test $CIRCLE_BRANCH
 
+
 workflows:
   version: 2
   build_and_test:
