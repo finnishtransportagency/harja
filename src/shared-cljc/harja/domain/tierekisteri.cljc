@@ -374,6 +374,52 @@
          ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
          (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
 
+(defn alikohteet-tayttamaan-kutistunut-paakohde
+  "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita seuraavasti: mikäli jokin alikohde on pidempi kuin
+   pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään."
+  ([paakohde alikohteet]
+   ;; TODO Teepäs tämä
+   (cond
+     (empty? alikohteet)
+     []
+
+     (pistemainen? paakohde)
+     ;; Tunkataan ensimmäinen alikohde pistemäiseksi.
+     ;; Mikäli alikohteita on ollut useita, niin muiden tiedot häviää.
+     ;; Tälle ei oikein voi mitään, mikäli pätkäkohde muokataan pistemäiseksi
+     [(assoc (first alikohteet)
+        :tr-alkuosa (:tr-alkuosa paakohde)
+        :tr-alkuetaisyys (:tr-alkuetaisyys paakohde)
+        :tr-loppuosa (:tr-loppuosa paakohde)
+        :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))]
+
+     ;;  Oletuskeissi, jossa pääkohde on reitillinen. Muokkaus tehdään seuraavasti:
+     ;; - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
+     ;; - Tämän jälkeen ensimmäinen alikohde asetetaan alkamaan pääkohteen alusta ja viimeinen alikohde päättymään
+     ;; pääkohteen loppuun.
+     :default
+     (let [paakohde (tr-osoite-kasvusuuntaan paakohde)
+           alikohteet (map tr-osoite-kasvusuuntaan alikohteet)
+           alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
+           leikkaavat-alikohteet (filter #(tr-vali-leikkaa-tr-valin? paakohde %) alikohteet-jarjestyksessa)
+           ensimmainen-alikohde (first leikkaavat-alikohteet)
+           viimeinen-alikohde (last leikkaavat-alikohteet)
+           ensimmainen-alikohde-venytettyna (assoc ensimmainen-alikohde
+                                              :tr-alkuosa (:tr-alkuosa paakohde)
+                                              :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
+           viimeinen-alikohde-venytettyna (assoc viimeinen-alikohde
+                                            :tr-loppuosa (:tr-loppuosa paakohde)
+                                            :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
+           valiin-jaavat-aikohteet (or (butlast (rest leikkaavat-alikohteet)) [])]
+
+       (if (= ensimmainen-alikohde viimeinen-alikohde)
+         ;; Jos leikkaavia alikoihteita on vain yksi, palautetaan se venytettynä kattamaan koko pääkohde
+         [(assoc ensimmainen-alikohde-venytettyna
+            :tr-loppuosa (:tr-loppuosa viimeinen-alikohde-venytettyna)
+            :tr-loppuetaisyys (:tr-loppuetaisyys viimeinen-alikohde-venytettyna))]
+         ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
+         (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
+
 (defn tieosilla-maantieteellinen-jatkumo?
   "Palauttaa true, mikäli kahdella tieosalla on maantieteellinen jatkumo.
    Käytännössä tämä tarkoittaa sitä, että tieosien päätepisteet ovat riittävän lähellä toisiaan.
