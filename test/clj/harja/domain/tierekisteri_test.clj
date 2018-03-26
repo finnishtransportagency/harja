@@ -358,7 +358,7 @@
                  :tr-loppuosa 6
                  :tr-loppuetaisyys 600}))))
 
-(deftest korjaa-paakohteen-alikohteet
+(deftest tayta-paakohteen-alikohteet
 
   (is (= (tierekisteri/alikohteet-tayttamaan-kohde
            {:tr-numero 1
