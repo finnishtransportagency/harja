@@ -376,7 +376,9 @@
 
 (defn alikohteet-tayttamaan-kutistunut-paakohde
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita seuraavasti: mikäli jokin alikohde on pidempi kuin
-   pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään."
+   pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään.
+
+   Palauttaa korjatut kohteet. Olettaa, että pääkohde alikohteineen on samalla tiellä."
   ([paakohde alikohteet]
    ;; TODO Teepäs tämä
    (cond
