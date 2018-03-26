@@ -55,7 +55,8 @@
                                         :arvo-atom (atomi :luvan-numero)}]
        [kentat/tee-otsikollinen-kentta {:otsikko "Lupatyyppi"
                                         :kentta-params {:tyyppi :valinta
-                                                        :valinnat []}
+                                                        :valinnat (into [nil] tielupa/lupatyyppi-vaihtoehdot)
+                                                        :valinta-nayta #(or (tielupa/tyyppi-fmt %) "- Ei käytössä -")}
                                         :arvo-atom (atomi :lupatyyppi)}]
        [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
                                         :kentta-params {:tyyppi :valinta
