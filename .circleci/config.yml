@@ -1,15 +1,17 @@
 version: 2
 jobs:
   build:
+    docker:
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harjadb:latest
+      - name: harjadb
+
     steps:
       - run: |
           docker pull solita/harjadb
           docker pull solita/harja-testit
           docker run -p 127.0.0.1:5432:5432 --name harjadb -dit solita/harjadb
           docker run --link harjadb:postgres -p 127.0.0.1:3000:3000 -it solita/harja-testit back develop
-
-      - setup_remote_docker:
-          docker_layer_caching: true
 
 
 workflows:
