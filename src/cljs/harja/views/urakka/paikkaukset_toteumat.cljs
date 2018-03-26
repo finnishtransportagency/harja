@@ -20,7 +20,7 @@
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Tierekisteriosoite"
        :kentta-params {:tyyppi :tierekisteriosoite
-                       :pakollinen? true
+                       :tr-otsikot? false
                        #_#_:validoi [(fn [osoite {sijainti :sijainti}]
                                        (when (and (tr-osoite-taytetty? osoite)
                                                   (nil? sijainti))
