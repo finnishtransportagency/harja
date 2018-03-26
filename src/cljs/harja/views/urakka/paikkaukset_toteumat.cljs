@@ -10,6 +10,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
+            [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]))
 
@@ -49,8 +50,61 @@
                                         (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))}]])
               (:urakan-paikkauskohteet valinnat))]]]]))
 
+(defn paikkaukset-vetolaatikko
+  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}]
+  (let [nayta-numerot #(apply str (interpose ", " %))
+        skeema [{:otsikko "Ajo\u00ADrata"
+                 :leveys 1
+                 :nimi ::paikkaus/ajorata}
+                {:otsikko "Reu\u00ADnat"
+                 :leveys 1
+                 :nimi ::paikkaus/reunat
+                 :fmt nayta-numerot}
+                {:otsikko "Ajo\u00ADurat"
+                 :leveys 1
+                 :nimi ::paikkaus/ajourat
+                 :fmt nayta-numerot}
+                {:otsikko "Ajoura\u00ADvälit"
+                 :leveys 1
+                 :nimi ::paikkaus/ajouravalit
+                 :fmt nayta-numerot}
+                {:otsikko "Kes\u00ADkisau\u00ADmat"
+                 :leveys 1
+                 :nimi ::paikkaus/keskisaumat
+                 :fmt nayta-numerot}
+                {:otsikko "Esiin\u00ADtymä"
+                 :leveys 1
+                 :nimi ::paikkaus/esiintyma}
+                {:otsikko "Kuu\u00ADlamyl\u00ADly\u00ADarvo"
+                 :leveys 2
+                 :nimi ::paikkaus/kuulamyllyarvo}
+                {:otsikko "Muoto\u00ADarvo"
+                 :leveys 2
+                 :nimi ::paikkaus/muotoarvo}
+                {:otsikko "Side\u00ADaine\u00ADtyyp\u00ADpi"
+                 :leveys 2
+                 :nimi ::paikkaus/sideainetyyppi}
+                {:otsikko "Pitoi\u00ADsuus"
+                 :leveys 1
+                 :nimi ::paikkaus/pitoisuus}
+                {:otsikko "Lisä\u00ADaineet"
+                 :leveys 2
+                 :nimi ::paikkaus/lisa-aineet}]
+        yhdistetty [(apply merge {::paikkaus/id id} (concat tienkohdat materiaalit))]]
+    [:div
+     [grid/grid
+      {:otsikko "Tienkohdat & Materiaalit"
+       :tunniste ::paikkaus/id
+       :sivuta grid/vakiosivutus
+       :tyhja "Ei tietoja"}
+      skeema
+      yhdistetty]
+     [napit/yleinen-ensisijainen
+      "Siirry kustannuksiin"
+      #(e! (tiedot/->SiirryKustannuksiin id))]]))
+
 (defn paikkaukset [e! app]
-  (let [tierekisteriosoite-sarakkeet [{:nimi ::paikkaus/nimi :pituus-max 30}
+  (let [tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
                                       nil nil
                                       {:nimi ::tierekisteri/aosa}
@@ -59,32 +113,33 @@
                                       {:nimi ::tierekisteri/let}]
         skeema (into []
                      (concat
-                       (yllapitokohteet/tierekisteriosoite-sarakkeet 8 tierekisteriosoite-sarakkeet)
+                       [{:tyyppi :vetolaatikon-tila :leveys 1}]
+                       (yllapitokohteet/tierekisteriosoite-sarakkeet 5 tierekisteriosoite-sarakkeet)
                        [{:otsikko "Alku\u00ADaika"
-                         :leveys 3
+                         :leveys 5
                          :nimi ::paikkaus/alkuaika}
                         {:otsikko "Loppu\u00ADaika"
-                         :leveys 3
+                         :leveys 5
                          :nimi ::paikkaus/loppuaika}
                         {:otsikko "Työ\u00ADmene\u00ADtelmä"
-                         :leveys 1
+                         :leveys 5
                          :nimi ::paikkaus/tyomenetelma}
                         {:otsikko "Massa\u00ADtyyp\u00ADpi"
-                         :leveys 2
+                         :leveys 5
                          :nimi ::paikkaus/massatyyppi}
                         {:otsikko "Leveys"
-                         :leveys 3
+                         :leveys 5
                          :nimi ::paikkaus/leveys}
                         {:otsikko "Massa\u00ADmenek\u00ADki"
-                         :leveys 2
+                         :leveys 5
                          :nimi ::paikkaus/massamenekki}
                         {:otsikko "Raekoko"
-                         :leveys 1
+                         :leveys 5
                          :nimi ::paikkaus/raekoko}
                         {:otsikko "Kuula\u00ADmylly"
-                         :leveys 1
+                         :leveys 5
                          :nimi ::paikkaus/kuulamylly}]))]
-    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkaukset]}]
+    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkaukset-grid paikkauket-vetolaatikko]}]
       [:div
        [grid/grid
         {:otsikko (if paikkauksien-haku-kaynnissa?
@@ -94,9 +149,17 @@
          :sivuta grid/vakiosivutus
          :tyhja (if paikkauksien-haku-kaynnissa?
                   [yleiset/ajax-loader "Haku käynnissä"]
-                  "Ei paikkauksia")}
+                  "Ei paikkauksia")
+         :listaus-tunniste ::paikkaus/nimi
+         :vetolaatikot
+         (into {}
+               (map (juxt
+                      ::paikkaus/id
+                      (fn [rivi]
+                        [paikkaukset-vetolaatikko e! rivi])))
+               paikkauket-vetolaatikko)}
         skeema
-        paikkaukset]])))
+        paikkaukset-grid]])))
 
 (defn toteumat* [e! app]
   (komp/luo

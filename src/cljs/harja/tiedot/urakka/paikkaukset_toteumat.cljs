@@ -5,6 +5,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
+            [harja.ui.grid :as grid]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -12,21 +13,34 @@
 (def app (atom {:paikkauksien-haku-kaynnissa? false
                 :valinnat nil}))
 
-(defn kiinnostavat-tiedot [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
-                            :as paikkaus}]
+(defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
+                                 :as paikkaus}]
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma
-                                    ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
-                                    ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id})
+                                                               ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
+                                                               ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id})
         alkuaika {::paikkaus/alkuaika (pvm/pvm (::paikkaus/alkuaika paikkaus))}
         loppuaika {::paikkaus/loppuaika (pvm/pvm (::paikkaus/loppuaika paikkaus))}
         nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
     (merge sellaisenaan-naytettavat-arvot alkuaika loppuaika tierekisteriosoite nimi)))
+
+(defn kasittele-haettu-tulos
+  [tulos]
+  (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
+                                 tulos)
+        paikkaukset-grid (mapcat (fn [[otsikko paikkaukset]]
+                                   (cons (grid/otsikko otsikko) paikkaukset))
+                                 (group-by ::paikkaus/nimi kiinnostavat-tiedot))
+        paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
+                                     tulos)]
+    {:paikkaukset-grid paikkaukset-grid
+     :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])
 (defrecord PaivitaValinnat [uudet])
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
+(defrecord SiirryKustannuksiin [paikkaus-id])
 ;; Haut
 (defrecord HaePaikkaukset [])
 (defrecord EnsimmainenHaku [tulos])
@@ -48,7 +62,6 @@
                                 (select-keys u valintojen-avaimet))
           haku (tuck/send-async! ->HaePaikkaukset)]
       (go (haku uudet-valinnat))
-      ;(println "UUDET VALINNAT " (pr-str uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
   PaikkausValittu
   (process-event [{{:keys [id]} :paikkauskohde valittu? :valittu?} app]
@@ -96,27 +109,27 @@
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
-    (println "TULOS")
-    (cljs.pprint/pprint tulos)
     (let [paikkauskohteet (map (fn [paikkaus]
                                  {:nimi (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi])
                                   :id (::paikkaus/id paikkaus)
                                   :valittu? true})
                                tulos)
-          paikkaukset (map #(kiinnostavat-tiedot %)
-                           tulos)]
+          naytettavat-tiedot (kasittele-haettu-tulos tulos)]
       (-> app
-          (assoc :paikkaukset paikkaukset
-                 :paikkauksien-haku-kaynnissa? false)
+          (merge naytettavat-tiedot)
+          (assoc :paikkauksien-haku-kaynnissa? false)
           (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet))))
   PaikkauksetHaettu
   (process-event [{tulos :tulos} app]
-    (let [paikkaukset (map #(kiinnostavat-tiedot %)
-                           tulos)]
-      (assoc app
-             :paikkaukset paikkaukset
-             :paikkauksien-haku-kaynnissa? false)))
+    (let [naytettavat-tiedot (kasittele-haettu-tulos tulos)]
+      (-> app
+          (merge naytettavat-tiedot)
+          (assoc :paikkauksien-haku-kaynnissa? false))))
   PaikkauksetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
-    (assoc app :paikkauksien-haku-kaynnissa? false)))
+    (assoc app :paikkauksien-haku-kaynnissa? false))
+  SiirryKustannuksiin
+  (process-event [{paikkaus-id :paikkaus-id} app]
+    (js/console.log "SIIRTYMÄ NAPPIA PAINETTU")
+    app))
