@@ -22,34 +22,19 @@ jobs:
 
   e2e-testit:
     docker:
-      - image: cypress/base:6
+      - image: solita/napote-circleci
       - image: solita/harja-testit:latest
         command: ["back", "$CIRCLE_BRANCH"]
       - image: solita/harjadb:latest
     parallelism: 1
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - v1-npm-deps-{{ checksum "package.json" }}
-            - v1-npm-deps
-      - run: npm install
+      - run: cd ~/project && npm i cypress@1.x && $(npm bin)/cypress verify
       - save_cache:
           key: v1-npm-deps-{{ checksum "package.json" }}
           paths:
             - node_modules
-      - run:
-          name: Running E2E tests with JUnit reporter
-          command: npm run test-junit
-      - store_test_results:
-          path: junit-results
-      - run:
-          name: Running E2E tests with multiple reporters
-          command: npm run test-multiple
-      - store_test_results:
-          path: multiple-results
-      - store_artifacts:
-          path: cypress/videos
+      - run: $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
       - store_artifacts:
           path: cypress/screenshots
 
