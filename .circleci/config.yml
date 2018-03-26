@@ -1,16 +1,6 @@
 version: 2
 jobs:
-  phantom:
-    docker:
-      - image: solita/harja-testit:latest # eka image = "primary container"
-      - image: solita/harjadb:latest
-
-    steps:
-      - run: |
-          cd /tmp
-          bash sisus.bash test $CIRCLE_BRANCH
-
-            build:
+  front-testit:
     docker:
       - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harjadb:latest
@@ -20,9 +10,19 @@ jobs:
           cd /tmp
           bash sisus.bash phantom $CIRCLE_BRANCH
 
+  back-testit:
+    docker:
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harjadb:latest
+
+    steps:
+      - run: |
+          cd /tmp
+          bash sisus.bash test $CIRCLE_BRANCH
+
 workflows:
   version: 2
   build_and_test:
     jobs:
-      - test
-      - phantom
+      - back-testit
+      - front-testit
