@@ -5,6 +5,7 @@
     [harja.tiedot.tieluvat.tieluvat :as tiedot]
     [harja.ui.komponentti :as komp]
     [harja.ui.lomake :as lomake]
+    [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
     [harja.ui.grid :as grid]
     [harja.views.kartta :as kartta]
     [harja.ui.debug :as debug]
@@ -30,11 +31,13 @@
       :footer-fn (fn [lupa]
                    [napit/tallenna
                     "Tallenna tielupa"
-                    #(log "Tallenna!")
-                    {:disabled true}])}
-     {:otsikko "Pvm"
-      :tyyppi :pvm
-      :nimi ::tielupa/voimassaolon-alkupvm}]]))
+                    #(e! (tiedot/->TallennaTielupa (lomake/ilman-lomaketietoja lupa)))
+                    {:disabled (or true
+                                   (not (tiedot/voi-tallentaa? lupa))
+                                   (not (lomake/voi-tallentaa? lupa)))}])}
+     [{:otsikko "Pvm"
+       :tyyppi :pvm
+       :nimi ::tielupa/voimassaolon-alkupvm}]]]))
 
 (defn suodattimet [e! app]
   (let [atomi (partial tiedot/valinta-wrap e! app)]
@@ -65,14 +68,19 @@
                                         :kentta-params {:tyyppi :checkbox-group}
                                         :arvo-atom (atomi :tila)}]]]]))
 
-(defn tielupataulukko [e! {:keys [haetut-tieluvat] :as app}]
+(defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa?] :as app}]
   [:div
    [kartta/kartan-paikka]
    [debug/debug app]
    [suodattimet e! app]
    [grid/grid
     {:otsikko "Tienpidon luvat"
-     :tunniste ::tielupa/id}
+     :tunniste ::tielupa/id
+     :sivuta grid/vakiosivutus
+     :rivi-klikattu #(e! (tiedot/->ValitseTielupa %))
+     :tyhja (if tielupien-haku-kaynnissa?
+              [ajax-loader "Haku käynnissä"]
+              "Ei liikennetapahtumia")}
     [{:otsikko "Pvm"
       :leveys 1
       :tyyppi :pvm

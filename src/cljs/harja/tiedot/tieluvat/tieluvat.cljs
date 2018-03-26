@@ -15,6 +15,9 @@
 (defrecord TieluvatHaettu [tulos])
 (defrecord TieluvatEiHaettu [virhe])
 (defrecord ValitseTielupa [tielupa])
+(defrecord TallennaTielupa [lupa])
+(defrecord TielupaTallennettu [tulos])
+(defrecord TielupaEiTallennettu [virhe])
 
 (defn valinta-wrap [e! app polku]
   (r/wrap (get-in app [:valinnat polku])
@@ -23,6 +26,9 @@
 
 (defn hakuparametrit [app]
   {})
+
+(defn voi-tallentaa? [app]
+  true)
 
 (extend-protocol tuck/Event
 
@@ -62,4 +68,17 @@
 
   ValitseTielupa
   (process-event [{t :tielupa} app]
-    (assoc app :valittu-tielupa t)))
+    (assoc app :valittu-tielupa t))
+
+  TallennaTielupa
+  (process-event [{l :lupa} app]
+    app)
+
+  TielupaTallennettu
+  (process-event [{t :tulos} app]
+    (assoc app :tielupien-tallennus-kaynnissa? false))
+
+  TielupaEiTallennettu
+  (process-event [_ app]
+    (viesti/nayta! "Tieluvan tallennus epäonnistui!" :danger)
+    (assoc app :tielupien-tallennus-kaynnissa? false)))
