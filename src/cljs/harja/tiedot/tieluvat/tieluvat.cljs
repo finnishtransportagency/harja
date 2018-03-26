@@ -2,7 +2,10 @@
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tt]
-            [harja.ui.viesti :as viesti])
+            [cljs.core.async :refer [<!]]
+            [harja.ui.viesti :as viesti]
+            [harja.ui.protokollat :as protokollat]
+            [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def tila (atom {}))
@@ -29,6 +32,12 @@
 
 (defn voi-tallentaa? [app]
   true)
+
+(def hakijahaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [vastaus (<! (k/post! :hae-tielupien-hakijat {:hakuteksti teksti}))]
+            vastaus)))))
 
 (extend-protocol tuck/Event
 

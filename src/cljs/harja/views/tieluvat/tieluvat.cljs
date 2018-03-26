@@ -59,8 +59,10 @@
                                                         :valinta-nayta #(or (tielupa/tyyppi-fmt %) "- Ei käytössä -")}
                                         :arvo-atom (atomi :lupatyyppi)}]
        [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
-                                        :kentta-params {:tyyppi :valinta
-                                                        :valinnat []}
+                                        :kentta-params {:tyyppi :haku
+                                                        :nayta ::tielupa/hakija-nimi
+                                                        :hae-kun-yli-n-merkkia 2
+                                                        :lahde tiedot/hakijahaku}
                                         :arvo-atom (atomi :hakija)}]]
 
       [:div
