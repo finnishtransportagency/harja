@@ -39,9 +39,6 @@ pwd
 rm -vf asetukset.edn
 git checkout -b "t_$BRANCH" "origin/$BRANCH"
 git checkout asetukset.edn
-# sed -i -e 's!:palvelin "localhost"!:palvelin "harjadb"!' asetukset.edn
-# sed -i -e 's!"localhost"!"harjadb"!' test/clj/harja/testi.clj
-# sed -i -e 's!jdbc:postgresql://localhost/!jdbc:postgresql://harjadb/!' src/clj/harja/kyselyt/specql_db.clj tietokanta/pom.xml
 
 mkdir -p ../.harja
 echo aaaa > ../.harja/anti-csrf-token
