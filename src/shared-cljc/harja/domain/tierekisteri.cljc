@@ -404,13 +404,24 @@
            alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
            leikkaavat-alikohteet (filter #(tr-vali-leikkaa-tr-valin? paakohde %) alikohteet-jarjestyksessa)]
 
-       ;; TODO Käy jokainen pääkohdetta leikkaava alikohde läpi
-       ;; Mikäli on kokonaan kohteen sisällä, palaute kohde sellaisenaan
-       ;; Mikäli menee lopusta yli, venytä päättymään pääkohteen loppuun
-       ;; Mikäli menee alusta yli, venytä alkamaan pääkohteen alusta
+       (map (fn [alikohde]
+              (cond-> alikohde
+                      (< (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                      (assoc :tr-alkuosa (:tr-alkuosa paakohde)
+                             :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
 
+                      (and (= (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                           (< (:tr-alkuetaisyys alikohde) (:tr-alkuetaisyys paakohde)))
+                      (assoc :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
 
-       ))))
+                      (> (:tr-loppuosa alikohde) (:tr-loppuosa paakohde))
+                      (assoc :tr-loppuosa (:tr-loppuosa paakohde)
+                             :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
+
+                      (and (= (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                           (> (:tr-loppuetaisyys alikohde) (:tr-loppuetaisyys paakohde)))
+                      (assoc :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))))
+            leikkaavat-alikohteet)))))
 
 (defn tieosilla-maantieteellinen-jatkumo?
   "Palauttaa true, mikäli kahdella tieosalla on maantieteellinen jatkumo.
