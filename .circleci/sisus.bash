@@ -17,6 +17,12 @@ function cmd_test
     lein clean
     lein test
 }
+function cmd_test+phantom
+{
+    lein clean
+    lein test
+    lein doo phantom test once
+}
 
 function cmd_back
 {
@@ -25,7 +31,7 @@ function cmd_back
 }
 
 function cmd_help {
-    echo komennot: phantom, test, back, help
+    echo komennot: phantom, test, test+phantom, back, help
 }
 
 SUBCMD="$1"
