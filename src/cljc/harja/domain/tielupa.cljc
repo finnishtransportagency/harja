@@ -182,4 +182,9 @@
     ::vesihuoltolupa-silta-asennuksia
     ::johtoasennukset})
 
+(defn tyyppi-fmt [tyyppi]
+  (name tyyppi))
+
+(s/def ::hae-tieluvat-kysely any?)
+(s/def ::hae-tieluvat-vastaus any?)
 
