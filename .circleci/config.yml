@@ -24,7 +24,7 @@ jobs:
     docker:
       - image: solita/napote-circleci
       - image: solita/harja-testit:latest
-        command: ["back", "$CIRCLE_BRANCH"]
+        command: [back, $CIRCLE_BRANCH]
       - image: solita/harjadb:latest
     parallelism: 1
     steps:
