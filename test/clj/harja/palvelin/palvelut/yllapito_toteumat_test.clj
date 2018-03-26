@@ -99,7 +99,8 @@
   (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
-                                {:urakka-id urakka-id})]
+                                {:urakka-id urakka-id
+                                 :vuosi 2016})]
     (is (= (count vastaus) 3))))
 
 (deftest usean-tiemerkinnan-yks-hint-toteuman-tallennus-toimii
@@ -107,6 +108,7 @@
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)
         toteumien-maara 10
         pyynto {:urakka-id urakka-id
+                :vuosi 2017
                 :toteumat (->> (mapv (fn [_] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
                                      (range 1 (inc toteumien-maara)))
                                ;; Tee kohteista uusia
@@ -137,12 +139,15 @@
                                      (assoc toteuma
                                        :id nil
                                        :selite selite
+                                       :paivamaara (gen/generate (s/gen ::tt/paivamaara))
                                        :poistettu false)
                                      ;; Liitä ylläpitokohde jos satuttiin arpomaan se
                                      (if linkitettava-yllapitokohde-id
                                        (assoc toteuma :yllapitokohde-id linkitettava-yllapitokohde-id)
                                        (dissoc toteuma :yllapitokohde-id)))
+            _ (println "kirjattava toteuma " kirjattava-toteuma)
             pyynto {:urakka-id urakka-id
+                    :vuosi (pvm/vuosi (:paivamaara kirjattava-toteuma))
                     :toteumat [kirjattava-toteuma]}
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :tallenna-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
