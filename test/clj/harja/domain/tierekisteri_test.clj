@@ -304,24 +304,6 @@
                 :tr-alkuetaisyys 50
                 :tr-loppuosa 5
                 :tr-loppuetaisyys 300})))
-  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
-                {:tr-alkuosa 3
-                 :tr-alkuetaisyys 100
-                 :tr-loppuosa 5
-                 :tr-loppuetaisyys 200}
-                {:tr-alkuosa 2
-                 :tr-alkuetaisyys 200
-                 :tr-loppuosa 2
-                 :tr-loppuetaisyys 200})))
-  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
-               {:tr-alkuosa 3
-                :tr-alkuetaisyys 100
-                :tr-loppuosa 5
-                :tr-loppuetaisyys 200}
-               {:tr-alkuosa 2
-                :tr-alkuetaisyys 50
-                :tr-loppuosa 2
-                :tr-loppuetaisyys 200})))
 
   ;; Alikohde pääkohteen sisällä (osoite väärinpäin)
   (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
@@ -333,6 +315,15 @@
                 :tr-alkuetaisyys 50
                 :tr-loppuosa 2
                 :tr-loppuetaisyys 300})))
+  (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
+               {:tr-alkuosa 3
+                :tr-alkuetaisyys 100
+                :tr-loppuosa 5
+                :tr-loppuetaisyys 200}
+               {:tr-alkuosa 4
+                :tr-alkuetaisyys 50
+                :tr-loppuosa 4
+                :tr-loppuetaisyys 200})))
 
   ;; Alikohde alkaa ennen pääkohteen loppua
   (is (true? (tierekisteri/tr-vali-leikkaa-tr-valin?
@@ -416,6 +407,32 @@
            :tr-loppuetaisyys 200}
           {:id 3
            :tr-numero 1
+           :tr-alkuosa 4
+           :tr-alkuetaisyys 200
+           :tr-loppuosa 5
+           :tr-loppuetaisyys 200}]))
+
+  (is (= (tierekisteri/alikohteet-tayttamaan-kohde
+           {:tr-alkuosa 3
+            :tr-alkuetaisyys 100
+            :tr-loppuosa 5
+            :tr-loppuetaisyys 200}
+           [{:id 1
+             :tr-alkuosa 4
+             :tr-alkuetaisyys 50
+             :tr-loppuosa 4
+             :tr-loppuetaisyys 200}
+            {:id 2
+             :tr-alkuosa 4
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 4
+             :tr-loppuetaisyys 200}])
+         [{:id 1
+           :tr-alkuosa 3
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 4
+           :tr-loppuetaisyys 200}
+          {:id 2
            :tr-alkuosa 4
            :tr-alkuetaisyys 200
            :tr-loppuosa 5
@@ -576,25 +593,25 @@
             :tr-loppuosa 5
             :tr-loppuetaisyys 200}
            [{:id 1
-             :tr-alkuosa 2
+             :tr-alkuosa 4
              :tr-alkuetaisyys 50
-             :tr-loppuosa 2
+             :tr-loppuosa 4
              :tr-loppuetaisyys 200}
             {:id 2
-             :tr-alkuosa 2
+             :tr-alkuosa 4
              :tr-alkuetaisyys 200
-             :tr-loppuosa 2
+             :tr-loppuosa 4
              :tr-loppuetaisyys 200}])
          ;; Molemmat alikohteet ovat pääkohteen sisällä -> palautuvat sellaisenaan
          [{:id 1
-           :tr-alkuosa 2
+           :tr-alkuosa 4
            :tr-alkuetaisyys 50
-           :tr-loppuosa 2
+           :tr-loppuosa 4
            :tr-loppuetaisyys 200}
           {:id 2
-           :tr-alkuosa 2
+           :tr-alkuosa 4
            :tr-alkuetaisyys 200
-           :tr-loppuosa 2
+           :tr-loppuosa 4
            :tr-loppuetaisyys 200}]))
 
   (is (= (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde
