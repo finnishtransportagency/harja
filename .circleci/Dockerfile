@@ -15,5 +15,6 @@ RUN cd harja && lein deps && cd tietokanta && (mvn flyway:info > /dev/null 2>&1 
 RUN wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2 && tar -C /home/circleci -jxf phantomjs-2.1.1-linux-x86_64.tar.bz2
 ENV PATH="/home/circleci/phantomjs-2.1.1-linux-x86_64/bin:${PATH}"
 EXPOSE 3000
-COPY cypress-back-sisus.sh phantom-sisus.sh /tmp/
-CMD ["/bin/bash"]
+COPY sisus.bash /tmp/
+ENTRYPOINT ["bash", "/tmp/sisus.bash"]
+ CMD ["develop", "help"]
