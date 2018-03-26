@@ -175,7 +175,7 @@ yllapitoluokkanimi->numero
                          (conj
                            (:virheet edellinen)
                            (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                                      (format "Alikohteet (tunnus: %s ja tunnus: %s) menevät päällekäin"
+                                      (format "Alikohteet (tunnus: %s ja tunnus: %s) menevät päällekkäin"
                                               (or (:tunnus (:edellinen edellinen) (get-in (:edellinen edellinen) [:tunniste :id])))
                                               (or (:tunnus seuraava) (get-in seuraava [:tunniste :id]))))))
            paallekkain? (fn [seuraava edellinen]

@@ -168,7 +168,7 @@
       "Hypylliset kohteet eivät palauta virheitä")
 
   (is (= [{:koodi "viallinen-alikohteen-sijainti"
-           :viesti "Alikohteet (tunnus: 1 ja tunnus: 2) menevät päällekäin"}]
+           :viesti "Alikohteet (tunnus: 1 ja tunnus: 2) menevät päällekkäin"}]
          (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 1}
                                                                           :sijainti {:tie 20
                                                                                      :numero 20
@@ -235,7 +235,7 @@
       "Eri ajoradoilla ja kaistoilla olevat validit kohteet eivät palauta virhettä")
 
   (is (= [{:koodi "viallinen-alikohteen-sijainti"
-           :viesti "Alikohteet (tunnus: 3 ja tunnus: 4) menevät päällekäin"}]
+           :viesti "Alikohteet (tunnus: 3 ja tunnus: 4) menevät päällekkäin"}]
          (yllapitokohteet/tarkista-etteivat-alikohteet-mene-paallekkain [{:tunniste {:id 4}
                                                                           :sijainti {:tie 20
                                                                                      :numero 20
