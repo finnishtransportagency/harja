@@ -4,7 +4,7 @@ jobs:
     docker:
       - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harjadb:latest
-      - name: harjadb
+         - name: harjadb
 
     steps:
       - run: |
