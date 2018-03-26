@@ -418,9 +418,9 @@
                       (assoc :tr-loppuosa (:tr-loppuosa paakohde)
                              :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
 
-                      (and (= (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                      (and (= (:tr-loppuosa alikohde) (:tr-loppuosa paakohde))
                            (> (:tr-loppuetaisyys alikohde) (:tr-loppuetaisyys paakohde)))
-                      (assoc :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))))
+                      (assoc :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))))
             leikkaavat-alikohteet)))))
 
 (defn tieosilla-maantieteellinen-jatkumo?
