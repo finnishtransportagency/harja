@@ -36,7 +36,7 @@
 (defrecord KorostaToimenpideKartalla [toimenpide lisa-funktiot])
 
 (def valintojen-avaimet [:urakka-id :sopimus-id :aikavali
-                         :vaylatyyppi :vaylanro :turvalaite-id
+                         :vaylatyyppi :vaylanro :turvalaitenro
                          :tyolaji :tyoluokka :toimenpide
                          :vain-vikailmoitukset?])
 
@@ -73,18 +73,17 @@
        " " toiminto "."))
 
 (defn toimenpiteiden-hakukyselyn-argumentit [{:keys [urakka-id sopimus-id aikavali
-                                                     vaylatyyppi vaylanro turvalaite-id
+                                                     vaylatyyppi vaylanro turvalaitenro
                                                      tyolaji tyoluokka toimenpide
-                                                     vain-vikailmoitukset? turvalaite] :as valinnat}]
+                                                     vain-vikailmoitukset?] :as valinnat}]
   (spec-apurit/poista-nil-avaimet {::to/urakka-id urakka-id
                                    ::to/sopimus-id sopimus-id
                                    ::va/vaylatyyppi vaylatyyppi
                                    ::to/vaylanro vaylanro
-                                   ::to/turvalaite-id turvalaite-id
+                                   ::to/turvalaitenro turvalaitenro
                                    ::to/reimari-tyolaji (when tyolaji (to/reimari-tyolaji-avain->koodi tyolaji))
                                    ::to/reimari-tyoluokat (when tyoluokka (to/reimari-tyoluokka-avain->koodi tyoluokka))
                                    ::to/reimari-toimenpidetyypit (when toimenpide (to/reimari-toimenpidetyyppi-avain->koodi toimenpide))
-                                   ::tu/id turvalaite
                                    :alku (first aikavali)
                                    :loppu (second aikavali)
                                    :vikailmoitukset? vain-vikailmoitukset?}))
@@ -125,7 +124,7 @@
     (constantly false)
     (comp
       (map #(assoc % :tyyppi-kartalla :turvalaite))
-      (map #(set/rename-keys % {::tu/sijainti :sijainti}))
+      (map #(set/rename-keys % {::tu/koordinaatit :sijainti}))
       (map #(assoc % :toimenpiteet (turvalaitteen-toimenpiteet % app))))))
 
 (defn paivita-kartta [app]

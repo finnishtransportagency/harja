@@ -372,7 +372,8 @@
               ::to/pvm
               ::to/oma-hinnoittelu
               ::to/hintaryhma-id
-              :lihavoi)
+              :lihavoi
+              :valittu?)
       (set/rename-keys {::to/tyolaji ::to/reimari-tyolaji
                         ::to/tyoluokka ::to/reimari-tyoluokka
                         ::to/toimenpide ::to/reimari-toimenpidetyyppi})

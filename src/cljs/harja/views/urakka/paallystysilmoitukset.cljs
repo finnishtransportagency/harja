@@ -199,7 +199,12 @@
                                   (grid/poista-idt [:ilmoitustiedot :alustatoimet])
                                   ;; Poistetaan poistetut elementit
                                   (grid/poista-poistetut [:ilmoitustiedot :osoitteet])
-                                  (grid/poista-poistetut [:ilmoitustiedot :alustatoimet]))]
+                                  (grid/poista-poistetut [:ilmoitustiedot :alustatoimet])
+
+                                  (update-in [:ilmoitustiedot :osoitteet] (fn [osoitteet]
+                                                                            (map (fn [osoite]
+                                                                                   (dissoc osoite :jarjestys-gridissa))
+                                                                                 osoitteet))))]
          (log "[PÄÄLLYSTYS] Lomake-data: " (pr-str lomake))
          (log "[PÄÄLLYSTYS] Lähetetään data " (pr-str lahetettava-data))
          (paallystys/tallenna-paallystysilmoitus! {:urakka-id urakka-id
@@ -216,13 +221,18 @@
        :virheviesti "Tallentaminen epäonnistui"
        :kun-onnistuu tallennus-onnistui}]]))
 
-
 (defn- muokkaus-grid-wrap [lomakedata-nyt muokkaa! polku]
-  (r/wrap (zipmap (iterate inc 1) (get-in lomakedata-nyt polku))
-          (fn [uusi-arvo]
-            (muokkaa!
-              #(assoc-in % polku
-                         (vec (grid/filteroi-uudet-poistetut uusi-arvo)))))))
+  (let [polun-meta (meta (get-in lomakedata-nyt polku))
+        polun-data (into (sorted-map)
+                         (zipmap (iterate inc 1) (if (:jarjestetty-kerran? polun-meta)
+                                                   (get-in lomakedata-nyt polku)
+                                                   (yllapitokohde-domain/jarjesta-yllapitokohteet (get-in lomakedata-nyt polku)))))]
+    (r/wrap (with-meta polun-data polun-meta)
+            (fn [uusi-arvo]
+              (muokkaa!
+                #(assoc-in % polku
+                           (with-meta (vec (grid/filteroi-uudet-poistetut uusi-arvo))
+                                      (meta uusi-arvo))))))))
 
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
@@ -239,7 +249,7 @@
                                          (false? lukittu?)
                                          kirjoitusoikeus?)
                       :muokkaa! (fn [uusi]
-                                  #_(log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
+                                  (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                                   (muokkaa! merge uusi))}
        [{:otsikko "Kohde" :nimi :kohde
          :hae (fn [_]
@@ -315,16 +325,16 @@
 
 
 (defn paallystysilmoitus-tekninen-osa
-  [urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt}
-   voi-muokata? grid-wrap wrap-virheet muokkaa!]
+  [{urakka :urakka {tie :tr-numero aosa :tr-alkuosa losa :tr-loppuosa :as lomakedata-nyt} :lomakedata-nyt
+    voi-muokata? :tekninen-osa-voi-muokata? alustatoimet-voi-muokata? :alustatoimet-voi-muokata? grid-wrap
+    :grid-wrap wrap-virheet :wrap-virheet muokkaa! :muokkaa!}]
   (let [osan-pituus (atom {})]
     (go (reset! osan-pituus (<! (vkm/tieosien-pituudet tie aosa losa))))
-    (fn [urakka lomakedata-nyt voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]
-      (let [tierekisteriosoitteet (get-in lomakedata-nyt [:ilmoitustiedot :osoitteet])
-            paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
+    (fn [{:keys [urakka lomakedata-nyt tekninen-osa-voi-muokata? alustatoimet-voi-muokata? grid-wrap wrap-virheet muokkaa!]}]
+      (let [paallystystoimenpiteet (grid-wrap [:ilmoitustiedot :osoitteet])
             alustalle-tehdyt-toimet (grid-wrap [:ilmoitustiedot :alustatoimet])
             yllapitokohde-virheet (wrap-virheet :alikohteet)
-            muokkaus-mahdollista? (and voi-muokata? (empty? @yllapitokohde-virheet))
+            muokkaus-mahdollista? (and tekninen-osa-voi-muokata? (empty? @yllapitokohde-virheet))
             jarjestys-fn #(if (not (nil? (:id %)))
                             [(:id %) 0 0 0]
                             ((juxt :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys) %))]
@@ -349,19 +359,17 @@
               [:p "Voit toistaa kentän edelliset arvot alaspäin erillisellä napilla, joka ilmestyy aina kun kenttää ollaan muokkaamassa. Seuraavien rivien arvojen on oltava tyhjiä."]]]]]]
 
          [yllapitokohteet/yllapitokohdeosat
-          {:voi-kumota? false
-           :muokkaa! (fn [kohteet virheet]
-                       (muokkaa! (fn [lomake]
-                                   (-> lomake
-                                       (assoc-in [:ilmoitustiedot :osoitteet] kohteet)
-                                       (assoc-in [:virheet :alikohteet] virheet)))))
-           :rivinumerot? true
-           :voi-muokata? voi-muokata?
-           :virheet yllapitokohde-virheet}
-          urakka tierekisteriosoitteet
-          (select-keys lomakedata-nyt
-                       #{:tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
-          @osan-pituus]
+          {:urakka urakka
+           :muokattava-tie? (constantly true)
+           :muokattava-ajorata-ja-kaista? (constantly true)
+           :otsikko "Tierekisteriosoitteet"
+           :kohdeosat-atom paallystystoimenpiteet
+           :jarjesta-kun-kasketaan first
+           :voi-muokata? muokkaus-mahdollista?
+           :kohdetyyppi (keyword (:yllapitokohdetyyppi lomakedata-nyt))
+           :virheet-atom yllapitokohde-virheet}]
+
+         [debug @paallystystoimenpiteet {:otsikko "Päällystystoimenpiteet"}]
 
          [grid/muokkaus-grid
           {:otsikko "Päällystystoimenpiteen tiedot"
@@ -372,7 +380,7 @@
            :voi-muokata? muokkaus-mahdollista?
            :virheet (wrap-virheet :paallystystoimenpide)
            :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                    voi-muokata?)
+                                    tekninen-osa-voi-muokata?)
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :rivinumerot? true
            :jarjesta jarjestys-fn}
@@ -495,7 +503,7 @@
            :voi-poistaa? (constantly false)
            :voi-muokata? muokkaus-mahdollista?
            :virhe-viesti (when (and (not muokkaus-mahdollista?)
-                                    voi-muokata?)
+                                    tekninen-osa-voi-muokata?)
                            "Tierekisterikohteet taulukko on virheellisessä tilassa")
            :virheet (wrap-virheet :kiviaines)
            :jarjesta jarjestys-fn}
@@ -676,9 +684,9 @@
          [paallystysilmoitus-perustiedot urakka lomakedata-nyt lukittu? kirjoitusoikeus? muokkaa!]
 
          [:div {:style {:float "right"}} [historia/kumoa historia]]
-         [paallystysilmoitus-tekninen-osa
-          urakka lomakedata-nyt tekninen-osa-voi-muokata? alustatoimet-voi-muokata?
-          grid-wrap wrap-virheet muokkaa!]
+         [paallystysilmoitus-tekninen-osa {:urakka urakka :lomakedata-nyt lomakedata-nyt :tekninen-osa-voi-muokata? tekninen-osa-voi-muokata?
+                                           :alustatoimet-voi-muokata? alustatoimet-voi-muokata? :grid-wrap grid-wrap :wrap-virheet wrap-virheet
+                                           :muokkaa! muokkaa!}]
 
          [yhteenveto lomakedata-nyt]
 
@@ -873,7 +881,7 @@
 
 (defn paallystysilmoitukset [urakka]
   (komp/luo
-    (komp/lippu paallystys/paallystysilmoitukset-nakymassa?)
+    (komp/lippu paallystys/paallystysilmoitukset-tai-kohteet-nakymassa?)
 
     (fn [urakka]
       [:div.paallystysilmoitukset

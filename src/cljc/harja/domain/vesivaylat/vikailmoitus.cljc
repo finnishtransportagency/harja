@@ -16,7 +16,7 @@
                                  :harja.domain.vesivaylat.toimenpide/id)
     ::turvalaite (specql.rel/has-one ::turvalaite-id
                               :harja.domain.vesivaylat.turvalaite/turvalaite
-                              :harja.domain.vesivaylat.turvalaite/id)}])
+                              :harja.domain.vesivaylat.turvalaite/turvalaitenro)}])
 
 (def viittaus-idt
   #{::turvalaite-id
@@ -31,7 +31,12 @@
 
 (def perustiedot
   #{::reimari-id
-    ::reimari-lisatiedot})
+    ::reimari-lisatiedot
+    ::reimari-ilmoittaja
+    ::reimari-kirjattu
+    ::reimari-luoja
+    ::reimari-muokattu
+    ::reimari-muokkaaja})
 
 (def kaikki-kentat
   (clojure.set/union perustiedot reimari-kentat viittaukset viittaus-idt))

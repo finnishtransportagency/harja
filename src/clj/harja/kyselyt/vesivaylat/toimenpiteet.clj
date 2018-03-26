@@ -28,6 +28,7 @@
             [harja.domain.urakka :as ur]))
 
 (def toimenpiteet-xf
+
   (comp
     ;; reimari-prefixatut ovat Reimari-dataa (monet tekstikoodeja), Harjassa käytetään
     ;; useimmiten keywordeja ja siksi nimimuunnos
@@ -48,6 +49,7 @@
                           ::vv-toimenpide/toimenpide
                           ::vv-toimenpide/turvalaite
                           ::vv-toimenpide/vikakorjauksia?
+                          ::vv-toimenpide/vikailmoitukset
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/sopimus
@@ -173,7 +175,7 @@
 
 (defn- suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
-        (remove #(empty? (::vv-toimenpide/reimari-viat %)) toimenpiteet)
+        (remove #(empty? (::vv-toimenpide/vikailmoitukset %)) toimenpiteet)
         :default toimenpiteet))
 
 (defn- toimenpiteet-hintatiedoilla* [hinnoittelutiedot toimenpiteet]
@@ -281,14 +283,13 @@
         sopimus-id (::vv-toimenpide/sopimus-id tiedot)
         vaylatyyppi (::vv-vayla/vaylatyyppi tiedot)
         vaylanro (::vv-toimenpide/vaylanro tiedot)
-        turvalaite-id (::vv-toimenpide/turvalaite-id tiedot)
+        turvalaitenro (::vv-toimenpide/turvalaitenro tiedot)
         tyolaji (::vv-toimenpide/reimari-tyolaji tiedot)
         tyoluokat (::vv-toimenpide/reimari-tyoluokat tiedot)
         toimenpiteet (::vv-toimenpide/reimari-toimenpidetyypit tiedot)
         fetchattu (fetch db ::vv-toimenpide/reimari-toimenpide
                              (clojure.set/union
                                vv-toimenpide/perustiedot
-
                                ;; Haetaan liitteet erikseen,
                                ;; specql 0.6 versio ei osaa hakea 2 has-many
                                ;; joukkoa samalla tasolla
@@ -298,6 +299,7 @@
                                vv-toimenpide/sopimus
                                vv-toimenpide/turvalaite
                                vv-toimenpide/vayla
+                               vv-toimenpide/vikailmoitus
                                vv-toimenpide/kiintio
                                vv-toimenpide/reimari-kentat
                                vv-toimenpide/metatiedot
@@ -322,8 +324,8 @@
                                  {::vv-toimenpide/vayla {::vv-vayla/tyyppi vaylatyyppi}})
                                (when vaylanro
                                  {::vv-toimenpide/vaylanro vaylanro})
-                               (when turvalaite-id
-                                 {::vv-toimenpide/turvalaite-id turvalaite-id})
+                               (when turvalaitenro
+                                 {::vv-toimenpide/turvalaitenro turvalaitenro})
                                (when tyolaji
                                  {::vv-toimenpide/reimari-tyolaji tyolaji})
                                (when tyoluokat

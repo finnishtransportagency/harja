@@ -43,7 +43,7 @@
     ::nimi
     ::tyyppi})
 
-(def turvalaitteet #{[::turvalaitteet #{:harja.domain.vesivaylat.turvalaite/id}]})
+(def turvalaitteet #{[::turvalaitteet #{:harja.domain.vesivaylat.turvalaite/turvalaitenro}]})
 
 (def viittaukset (clojure.set/union turvalaitteet))
 

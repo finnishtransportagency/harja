@@ -229,6 +229,7 @@
          ei-poistetut-tyot)]]
      [rivinlisays "Lisää työrivi" #(e! (tiedot/->LisaaHinnoiteltavaTyorivi))]]))
 
+
 (defn muu-tyo-hinnoittelurivi [e! hinta]
   [:tr
    [:td [kentta-hinnalle e! hinta ::hinta/otsikko {:tyyppi :string}]]

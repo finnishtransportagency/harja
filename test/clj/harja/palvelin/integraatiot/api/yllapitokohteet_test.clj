@@ -12,10 +12,8 @@
             [harja.palvelin.integraatiot.vkm.vkm-test :refer [+testi-vkm+]]
             [harja.jms-test :refer [feikki-sonja]]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus-domain]
-            [clojure.walk :as walk]
             [clojure.core.async :refer [<!! timeout]]
             [clojure.string :as str]
-            [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.komponentit.sonja :as sonja]
@@ -55,23 +53,36 @@
                                         portti)
         data (cheshire/decode (:body vastaus) true)
         yllapitokohteet (mapv :yllapitokohde (:yllapitokohteet data))
-        leppajarven-ramppi (first (filter #(= (:nimi %) "Leppäjärven ramppi")
-                                          yllapitokohteet))]
+        leppajarven-ramppi-2017 (first (filter #(= (:nimi %) "Leppäjärven ramppi")
+                                               yllapitokohteet))
+        leppajarven-ramppi-2018 (first (filter #(= (:nimi %) "Leppäjärven ramppi 2018")
+                                               yllapitokohteet))]
+
+    (log/debug "leppajarven-ramppi-2018 " leppajarven-ramppi-2018)
 
     (is (= 200 (:status vastaus)))
-    (is (= 12 (count yllapitokohteet)))
-    (is (some? leppajarven-ramppi))
-    (is (some :hyppy (map :alikohde (:alikohteet leppajarven-ramppi)))
-        "Palautuu tieto hypyllisistä kohteista")
-    (is (some (comp not :hyppy) (map :alikohde (:alikohteet leppajarven-ramppi)))
-        "Palautuu tieto hypyttömistä kohteista")
-    (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi))))
-    (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi))))
-    (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi))))
-    (is (some? (:takuupvm (get-in leppajarven-ramppi [:aikataulu :paallystysilmoitus]))))))
+    (is (= 12 (count yllapitokohteet))
+        "Palautuu kaikkien vuosien kohteet (2017 & 2018)")
+
+    (testing "2017 kohde palautuu oikein"
+      (is (some? leppajarven-ramppi-2017))
+      (is (some? (:paallystys-aloitettu (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:paallystys-valmis (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:valmis-tiemerkintaan (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:tiemerkinta-aloitettu (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:tiemerkinta-valmis (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:kohde-valmis (:aikataulu leppajarven-ramppi-2017))))
+      (is (some? (:takuupvm (get-in leppajarven-ramppi-2017 [:aikataulu :paallystysilmoitus])))))
+
+    (testing "2018 kohde palautuu oikein"
+      (is (some? leppajarven-ramppi-2018))
+      (is (= (:sijainti leppajarven-ramppi-2018)
+             {:numero 20
+              :aosa 1
+              :aet 0
+              :losa 3
+              :let 0})
+          "Sijainti palautuu oikein, ilman ajorataa ja kaistaa"))))
 
 (deftest yllapitokohteiden-haku-ei-toimi-ilman-oikeuksia
   (let [muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)
@@ -95,10 +106,10 @@
                                          (-> "test/resurssit/api/paallystysilmoituksen_kirjaus.json"
                                              slurp
                                              (.replace "__VALMIS__" (str false))))
-        kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, hyppy, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
-        kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, hyppy, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+        kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
 
@@ -161,7 +172,6 @@
                                                    :tyomenetelma 72}]}))
       (is (= (dissoc kohdeosa-1-kannassa :id)
              {:massamaara nil
-              :hyppy false
               :nimi "1. testialikohde"
               :paallystetyyppi nil
               :raekoko nil
@@ -174,8 +184,7 @@
               :tyomenetelma nil
               :yllapitokohde kohde-id}))
       (is (= (dissoc kohdeosa-2-kannassa :id)
-             {:hyppy true
-              :massamaara nil
+             {:massamaara nil
               :nimi "2. testialikohde"
               :paallystetyyppi nil
               :raekoko nil
@@ -232,10 +241,10 @@
                                              FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))
           ilmoitustiedot-kannassa (konv/jsonb->clojuremap (first paallystysilmoitus))
           paallystysilmoitusten-maara-kannassa-jalkeen (ffirst (q "SELECT COUNT(*) FROM paallystysilmoitus"))
-          kohdeosa-1-kannassa (first (q-map (str "SELECT id, hyppy, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+          kohdeosa-1-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '1. testialikohde' LIMIT 1;")))
-          kohdeosa-2-kannassa (first (q-map (str "SELECT id, hyppy, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
+          kohdeosa-2-kannassa (first (q-map (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
         tr_loppuosa, tr_loppuetaisyys, toimenpide, paallystetyyppi, raekoko, tyomenetelma, massamaara
         FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id " AND nimi = '2. testialikohde' LIMIT 1;")))]
       ;; Pottien määrä pysyy samana
@@ -289,8 +298,7 @@
                            :tyomenetelma 72}]}))
 
       (is (= (dissoc kohdeosa-1-kannassa :id)
-             {:hyppy false
-              :massamaara nil
+             {:massamaara nil
               :nimi "1. testialikohde"
               :paallystetyyppi nil
               :raekoko nil
@@ -303,8 +311,7 @@
               :tyomenetelma nil
               :yllapitokohde kohde-id}))
       (is (= (dissoc kohdeosa-2-kannassa :id)
-             {:hyppy true
-              :massamaara nil
+             {:massamaara nil
               :nimi "2. testialikohde"
               :paallystetyyppi nil
               :raekoko nil
@@ -639,21 +646,17 @@
                                                      :kaista 1
                                                      :loppuet 666
                                                      :losa 14
-                                                     :numero 20
-                                                     :hyppy? false}
+                                                     :numero 20}
           oletettu-toisen-alikohteen-tr-osoite {:aet 666
                                                 :ajorata 1
                                                 :aosa 14
                                                 :kaista 1
                                                 :loppuet 1
                                                 :losa 17
-                                                :numero 20
-                                                :hyppy? false}]
+                                                :numero 20}]
 
       (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
-      (is (= 3 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
-      (is (= 2 (count (filter (comp not :hyppy?) alikohteiden-tr-osoitteet))) "2 alikohdetta on ei-hyppyjä")
-      (is (= 1 (count (filter :hyppy? alikohteiden-tr-osoitteet))) "1 alikohde on hyppy")
+      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
       (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
           "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
       (is (alikohteiden-tr-osoitteet oletettu-toisen-alikohteen-tr-osoite)
@@ -850,13 +853,42 @@
                                   :loppuet 100
                                   :ajorata 1
                                   :kaista 1}
-              odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1
-                                            :hyppy? false}
-              odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1
-                                            :hyppy? false}
+              odotettu-1-alikohteen-osoite {:numero 20, :aosa 1, :aet 1, :losa 1, :loppuet 100, :kaista 1, :ajorata 1}
+              odotettu-2-alikohteen-osoite {:numero 20, :aosa 1, :aet 100, :losa 4, :loppuet 100, :kaista 1, :ajorata 1}
               alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))]
 
           (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
           (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita on päivittynyt 1 kpl")
           (is (alikohteiden-tr-osoitteet odotettu-1-alikohteen-osoite))
           (is (alikohteiden-tr-osoitteet odotettu-2-alikohteen-osoite)))))))
+
+(deftest muutettavat-alikohteet
+  (let [alikohteet [{:alikohde {:tunniste {:id 1},
+                                :nimi "1. Testialikohde",
+                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide"}}
+                    {:alikohde {:tunniste {:id 2},
+                                :nimi "2. Testialikohde",
+                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide"}}
+                    {:alikohde {:tunniste {:id 3},
+                                :nimi "Testiramppi",
+                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide"}}]
+        oletetut-muunnettavat [{:tunniste {:id 1},
+                                :nimi "1. Testialikohde",
+                                :sijainti {:aosa 1, :aet 1, :losa 3, :let 1, :ajr 1, :kaista 1, :numero 666},
+                                :toimenpide "testitoimenpide",
+                                :ulkoinen-id 1}
+                               {:tunniste {:id 2},
+                                :nimi "2. Testialikohde",
+                                :sijainti {:aosa 3, :aet 1, :losa 4, :let 100, :ajr 1, :kaista 1, :numero 666},
+                                :toimenpide "testitoimenpide",
+                                :ulkoinen-id 2}
+                               {:tunniste {:id 3},
+                                :nimi "Testiramppi",
+                                :sijainti {:numero 21101, :aosa 1, :aet 1, :losa 1, :let 100, :ajr 1, :kaista 1},
+                                :toimenpide "testitoimenpide",
+                                :ulkoinen-id 3}]]
+    (is (= (api-yllapitokohteet/muunnettavat-alikohteet 666 alikohteet) oletetut-muunnettavat)
+        "Muunnos alikohteille tehdään oletetulla tavalla")))

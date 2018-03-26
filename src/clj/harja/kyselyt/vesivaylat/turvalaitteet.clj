@@ -18,7 +18,7 @@
             [clojure.string :as str]
             [harja.geo :as geo]))
 
-(defqueries "harja/kyselyt/vesivaylat/turvalaitteet.sql")
+(defqueries "harja/kyselyt/vesivaylat/vatu_turvalaitteet.sql")
 
 (defrecord &&op [values]
   op/Op
@@ -47,33 +47,24 @@
             (not-empty vaylanumerot))
     (into []
           (comp
-            (geo/muunna-pg-tulokset ::tu/sijainti))
+            (geo/muunna-pg-tulokset ::tu/koordinaatit))
           (specql/fetch db
                         ::tu/turvalaite
-                        #{::tu/id
+                        #{::tu/turvalaitenro
                           ::tu/nimi
-                          ::tu/sijainti
-                          ::tu/turvalaitenro
+                          ::tu/koordinaatit
                           ::tu/tyyppi
                           ::tu/kiintea
                           ::tu/vaylat}
                         (op/and
-                          {::m/poistettu? false}
                           (when (not-empty turvalaitenumerot)
-                            {::tu/turvalaitenro (op/in turvalaitenumerot)})
+                            {::tu/turvalaitenro (op/in (remove nil? turvalaitenumerot))})
                           (when (not-empty vaylanumerot)
                             {::tu/vaylat (&& (vec vaylanumerot))}))))))
 
 (defn hae-turvalaitteet-tekstilla [db {:keys [hakuteksti]}]
-  (let [hakuteksti-numerona (try
-                              (Integer. hakuteksti)
-                              (catch Exception e)
-                              ;; Ei onnistu, joten antaa olla
-                              )]
-    (vec (specql/fetch db ::tu/turvalaite
-                       #{::tu/id
-                         ::tu/nimi
-                         ::tu/turvalaitenro}
-                       (op/or {::tu/nimi (op/ilike (str hakuteksti "%"))}
-                              (when hakuteksti-numerona
-                                {::tu/turvalaitenro hakuteksti-numerona}))))))
+  (vec (specql/fetch db ::tu/turvalaite
+                     #{::tu/turvalaitenro
+                       ::tu/nimi}
+                     (op/or {::tu/nimi (op/ilike (str hakuteksti "%"))}
+                            {::tu/turvalaitenro (op/ilike (str hakuteksti "%"))}))))

@@ -7,7 +7,8 @@
     [clojure.spec.alpha :as s]
     [harja.pvm :as pvm]
     #?@(:clj
-        [[harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+        [
+    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
     [clojure.future :refer :all]
     [harja.pvm :as pvm]
     [clj-time.core :as t]
@@ -70,6 +71,36 @@ yllapitoluokkanimi->numero
 (def +viallinen-yllapitokohdeosan-sijainti+ "viallinen-alikohteen-sijainti")
 (def +viallinen-alustatoimenpiteen-sijainti+ "viallinen-alustatoimenpiteen-sijainti")
 
+(defn kohdenumero-str->kohdenumero-vec
+  "Palauttaa \"301b\":n muodossa [301 \"b\"]"
+  [kohdenumero]
+  (when kohdenumero
+    (let [numero (re-find #"\d+" kohdenumero)
+          kirjain (re-find #"\D+" kohdenumero)]
+      [(when numero
+         (#?(:clj  Integer.
+             :cljs js/parseInt) numero))
+       kirjain])))
+
+(defn yllapitokohteen-jarjestys
+  [kohde]
+  ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
+         :tie :tr-numero :tienumero
+         :ajr :tr-ajorata :ajorata
+         :kaista :tr-kaista
+         :aosa :tr-alkuosa
+         :aet :tr-alkuetaisyys) kohde))
+
+(defn- jarjesta-yllapitokohteet*
+  [kohteet]
+  (sort-by yllapitokohteen-jarjestys kohteet))
+
+(defn jarjesta-yllapitokohteet [yllapitokohteet]
+  (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
+        kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
+    (vec (concat (jarjesta-yllapitokohteet* kohteet-kohdenumerolla)
+                 (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))
+
 #?(:clj
    (defn tee-virhe [koodi viesti]
      {:koodi koodi :viesti viesti}))
@@ -103,43 +134,71 @@ yllapitoluokkanimi->numero
 
 #?(:clj
    (defn tarkista-alikohteet-sisaltyvat-kohteeseen [kohde-id kohteen-sijainti alikohteet]
-     (mapv (fn [{:keys [tunnus sijainti]}]
+     (mapv (fn [{:keys [tunnus tunniste sijainti]}]
              (when (not (alikohde-kohteen-sisalla? kohteen-sijainti sijainti))
                (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                          (format "Alikohde (tunnus: %s) ei ole kohteen (id: %s) sisällä. Sijainti: %s." tunnus kohde-id sijainti))))
+                          (format "Alikohde (tunniste: %s) ei ole kohteen (tunniste: %s) sisällä."
+                                  (or tunnus (:id tunniste))
+                                  kohde-id))))
            alikohteet)))
 
-#?(:clj
-   (defn tarkista-alikohteet-tayttavat-kohteen [kohde-id kohteen-sijainti alikohteet]
-     (let [ensimmainen (:sijainti (first alikohteet))
-           viimeinen (:sijainti (last alikohteet))]
-       (when (or (not= (:aosa kohteen-sijainti) (:aosa ensimmainen))
-                 (not= (:aet kohteen-sijainti) (:aet ensimmainen))
-                 (not= (:losa kohteen-sijainti) (:losa viimeinen))
-                 (not= (:let kohteen-sijainti) (:let viimeinen)))
-         [(tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                     (format "Alikohteet eivät täytä kohdetta (id: %s)" kohde-id))]))))
 
 #?(:clj
-   (defn tarkista-alikohteet-muodostavat-yhtenaisen-osuuden [alikohteet]
-     (let [lisaa-virhe (fn [edellinen seuraava]
+   (defn tarkista-alikohteiden-ajoradat-ja-kaistat [kohde-id kohteen-sijainti alikohteet]
+     (let [ajorata #(or (:ajr %) (:tr-ajorata %) (:ajorata %))
+           kaista #(or (:kaista %) (:tr-kaista %))
+           paakohteen-ajorata (ajorata kohteen-sijainti)
+           paakohteen-kaista (kaista kohteen-sijainti)]
+       (if (and paakohteen-ajorata paakohteen-kaista)
+         (mapv (fn [{:keys [tunnus tunniste sijainti]}]
+                 (if (not= paakohteen-ajorata (ajorata sijainti))
+                   (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
+                              (format "Alikohteen (tunniste: %s) ajorata (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
+                                      (or tunnus (:id tunniste))
+                                      (ajorata sijainti)
+                                      kohde-id
+                                      paakohteen-ajorata))
+                   (when (not= paakohteen-kaista (kaista sijainti))
+                     (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
+                                (format "Alikohteen (tunniste: %s) kaista: (%s) ei ole pääkohteen (tunniste: %s) kanssa sama (%s)."
+                                        (or tunnus (:id tunniste))
+                                        (kaista sijainti)
+                                        kohde-id
+                                        (kaista kohteen-sijainti))))))
+               alikohteet)
+         []))))
+
+#?(:clj
+   (defn tarkista-etteivat-alikohteet-mene-paallekkain [alikohteet]
+     (let [alikohteet (sort-by (comp yllapitokohteen-jarjestys :sijainti) alikohteet)
+           lisaa-virhe (fn [edellinen seuraava]
                          (conj
                            (:virheet edellinen)
                            (tee-virhe +viallinen-yllapitokohdeosan-sijainti+
-                                      (format "Alikohteet (tunnus: %s ja tunnus: %s) eivät muodosta yhteistä osuutta"
-                                              (:tunnus (:edellinen edellinen))
-                                              (:tunnus seuraava)))))
-           seuraava-jatkaa-edellista? (fn [seuraava edellinen]
-                                        (and
-                                          (= (get-in edellinen [:edellinen :sijainti :losa]) (:aosa (:sijainti seuraava)))
-                                          (= (get-in edellinen [:edellinen :sijainti :let]) (:aet (:sijainti seuraava)))))]
+                                      (format "Alikohteet (tunnus: %s ja tunnus: %s) menevät päällekäin"
+                                              (or (:tunnus (:edellinen edellinen) (get-in (:edellinen edellinen) [:tunniste :id])))
+                                              (or (:tunnus seuraava) (get-in seuraava [:tunniste :id]))))))
+           paallekkain? (fn [seuraava edellinen]
+                          (let [edellinen-loppuosa (get-in edellinen [:edellinen :sijainti :losa])
+                                seuraava-alkuosa (get-in seuraava [:sijainti :aosa])
+                                edellinen-loppuetaisyys (get-in edellinen [:edellinen :sijainti :let])
+                                seuraava-alkuetaisyys (get-in seuraava [:sijainti :aet])
+                                edellinen-ajorata (get-in edellinen [:edellinen :sijainti :ajorata])
+                                seuraava-ajorata (get-in seuraava [:sijainti :ajorata])
+                                edellinen-kaista (get-in edellinen [:edellinen :sijainti :kaista])
+                                seuraava-kaista (get-in seuraava [:sijainti :kaista])]
+                            (and
+                              (= edellinen-loppuosa seuraava-alkuosa)
+                              (= edellinen-ajorata seuraava-ajorata)
+                              (= edellinen-kaista seuraava-kaista)
+                              (> edellinen-loppuetaisyys seuraava-alkuetaisyys))))]
        (:virheet
          (reduce
            (fn [edellinen seuraava]
-             (if (seuraava-jatkaa-edellista? seuraava edellinen)
-               (assoc edellinen :edellinen seuraava)
+             (if (paallekkain? seuraava edellinen)
                {:edellinen seuraava
-                :virheet (lisaa-virhe edellinen seuraava)}))
+                :virheet (lisaa-virhe edellinen seuraava)}
+               (assoc edellinen :edellinen seuraava)))
            {:virheet [] :edellinen (first alikohteet)}
            (rest alikohteet))))))
 
@@ -153,8 +212,8 @@ yllapitoluokkanimi->numero
        (concat
          (tarkista-alikohteiden-sijainnit alikohteet)
          (tarkista-alikohteet-sisaltyvat-kohteeseen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteet-tayttavat-kohteen kohde-id kohteen-sijainti alikohteet)
-         (tarkista-alikohteet-muodostavat-yhtenaisen-osuuden alikohteet)))))
+         (tarkista-alikohteiden-ajoradat-ja-kaistat kohde-id kohteen-sijainti alikohteet)
+         (tarkista-etteivat-alikohteet-mene-paallekkain alikohteet)))))
 
 #?(:clj
    (defn tarkista-kohteen-ja-alikohteiden-sijannit
@@ -166,7 +225,6 @@ yllapitoluokkanimi->numero
            virheet (remove nil? (concat
                                   (validoi-sijainti kohteen-sijainti)
                                   (validoi-alikohteet kohde-id kohteen-sijainti alikohteet)))]
-
        (when (not (empty? virheet))
          (virheet/heita-poikkeus +kohteissa-viallisia-sijainteja+ virheet)))))
 
@@ -275,7 +333,6 @@ yllapitoluokkanimi->numero
   ;; Tämä transducer olettaa saavansa vectorin ylläpitokohteita ja palauttaa
   ;; ylläpitokohteiden kohdeosat valmiina näytettäväksi kartalle.
   ;; Palautuneilla kohdeosilla on pääkohteen tiedot :yllapitokohde avaimen takana.
-  ;; Suodattaa pois kohdeosat, jotka ovat hyppyjä.
   (comp
     (mapcat (fn [kohde]
               (keep (fn [kohdeosa]
@@ -283,47 +340,19 @@ yllapitoluokkanimi->numero
                                       :tyyppi-kartalla (:yllapitokohdetyotyyppi kohde)
                                       :tila (:tila kohde)
                                       :yllapitokohde-id (:id kohde)))
-                    (filter #(not (true? (:hyppy? %))) (:kohdeosat kohde)))))
+                    (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
-
-(defn kohdenumero-str->kohdenumero-vec
-  "Palauttaa \"301b\":n muodossa [301 \"b\"]"
-  [kohdenumero]
-  (when kohdenumero
-    (let [numero (re-find #"\d+" kohdenumero)
-          kirjain (re-find #"\D+" kohdenumero)]
-      [(when numero
-         (#?(:clj  Integer.
-             :cljs js/parseInt) numero))
-       kirjain])))
-
-(defn- yllapitokohteen-jarjestys
-  [kohde]
-  ((juxt #(kohdenumero-str->kohdenumero-vec (:kohdenumero %))
-         :tie :tr-numero :tienumero
-         :aosa :tr-alkuosa
-         :aet :tr-alkuetaisyys) kohde))
-
-(defn- jarjesta-yllapitokohteet*
-  [kohteet]
-  (sort-by yllapitokohteen-jarjestys kohteet))
-
-(defn jarjesta-yllapitokohteet [yllapitokohteet]
-  (let [kohteet-kohdenumerolla (filter #(not (str/blank? (:kohdenumero %))) yllapitokohteet)
-        kohteet-ilman-kohdenumeroa (filter #(str/blank? (:kohdenumero %)) yllapitokohteet)]
-    (vec (concat (jarjesta-yllapitokohteet* kohteet-kohdenumerolla)
-                 (tr-domain/jarjesta-tiet kohteet-ilman-kohdenumeroa)))))
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
                                              bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
-  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
-                            maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset                ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+  (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot ;; Sama kuin kohteen tarjoushinta
+                            maaramuutokset ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
+                            arvonvahennykset ;; Sama kuin arvonmuutokset
+                            sakot-ja-bonukset ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
-                            toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
+                            toteutunut-hinta ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
 (defn yllapitokohde-tekstina

@@ -70,6 +70,7 @@
    :bitumi-indeksi nil
    :id 8
    :takuupvm nil
+   :kirjoitusoikeus? :kaikki
    :ilmoitustiedot {:osoitteet [{;; Alikohteen tiedot
                                  :tr-numero 20
                                  :tr-alkuosa 1 :tr-alkuetaisyys 1
@@ -83,8 +84,8 @@
                                  :tr-numero 20
                                  :tr-alkuosa 3 :tr-alkuetaisyys 42
                                  :tr-loppuosa 3 :tr-loppuetaisyys 123
-                                 :kohdeosa-id 32 :tr-kaista nil
-                                 :tr-ajorata nil
+                                 :kohdeosa-id 32 :tr-kaista 1
+                                 :tr-ajorata 1
                                  :toimenpide "toka!"
                                  :nimi "piru 1.5"
                                  ;; Päällystetoimenpiteen tiedot
@@ -132,13 +133,13 @@
 
       ;; Muokataan toiseksi viimeisen osoiterivin loppua siten, että se menee viimeisin
       ;; rivin loppukohdan yli. Tämän pitäisi tehdä virhe viimeiselle riville.
-      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "5") ;; losa
+      (change (grid-solu "yllapitokohdeosat" 1 6 "input") "3") ;; losa
       (<! (paivita))
 
-      (change (grid-solu "yllapitokohdeosat" 1 8 "input") "123") ;; let
+      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "20") ;; let
       (<! (paivita))
-      
-      (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys])))
+
+      (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 2 :tr-alkuetaisyys])))
              "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
 
       (is (disabled? :#tallenna-paallystysilmoitus))
@@ -149,7 +150,7 @@
       (is (nil? (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys]))))))
 
 (deftest paallystysilmoituslomake
-    (let [urakka {:id 1}
+    (let [urakka {:id 1 :tyyppi :paallystys}
           lukko nil
           lomake (r/atom paallystysilmoituslomake-alkutila)
           historia (historia/historia lomake)
@@ -172,7 +173,7 @@
 
           ;; Tarkista, että tieosoite näkyy oikein
           (is (= "piru 1"
-                 (some-> (grid-solu "yllapitokohdeosat" 0 1)
+                 (some-> (grid-solu "yllapitokohdeosat" 0 0 "input")
                          .-value)))
 
           (<! pituudet-haettu)
@@ -201,7 +202,7 @@
 
             ;; Tallennus nappi disabled
             (is (some-> (sel1 :#tallenna-paallystysilmoitus) .-disabled))
-
+            
             (<! (tarkista-asiatarkastus lomake))
             (reset! lomake tila-ok))
 

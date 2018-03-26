@@ -47,7 +47,6 @@
             "id": 667
           },
           "nimi": "2. Testialikohde",
-          "hyppy": false,
           "sijainti": {
             "numero": 20,
             "aosa": 14,
@@ -58,25 +57,6 @@
             "kaista": 1
           },
           "toimenpide": "testitoimenpide"
-        }
-      },
-      {
-        "alikohde": {
-          "tunniste": {
-            "id": 668
-          },
-          "nimi": "3. Testialikohde (joka on hyppy)",
-          "hyppy": true,
-          "sijainti": {
-            "numero": 20,
-            "aosa": 17,
-            "aet": 1,
-            "losa": 17,
-            "let": 1,
-            "ajr": 1,
-            "kaista": 1
-          },
-          "toimenpide": "testitoimenpide3"
         }
       }
     ]
