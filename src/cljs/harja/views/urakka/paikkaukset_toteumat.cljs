@@ -145,6 +145,7 @@
         {:otsikko (if paikkauksien-haku-kaynnissa?
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien toteumat")
+         :salli-valiotsikoiden-piilotus? true
          :tunniste ::paikkaus/id
          :sivuta grid/vakiosivutus
          :tyhja (if paikkauksien-haku-kaynnissa?

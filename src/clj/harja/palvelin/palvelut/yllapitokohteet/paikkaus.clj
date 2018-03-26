@@ -190,10 +190,10 @@
                                (assoc tiedot ::paikkaus/tierekisteriosoite
                                              (cond-> {}
                                                      (:numero tr) (assoc ::tierekisteri/tie (:numero tr))
-                                                     (:alkuosa tr) (assoc ::tierekisteri/aosa (:alkuosa tr))
-                                                     (:alkuetaisyys tr) (assoc ::tierekisteri/aet (:alkuetaisyys tr))
-                                                     (:loppuosa tr) (assoc ::tierekisteri/losa (:loppuosa tr))
-                                                     (:loppuetaisyys tr) (assoc ::tierekisteri/let (:loppuetaisyys tr))))
+                                                     (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
+                                                     (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
+                                                     (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
+                                                     (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))))
                                tiedot)
         kysely-params-aika (if-let [aikavali (:aikavali tiedot)]
                              (assoc kysely-params-tieosa ::paikkaus/alkuaika (cond
@@ -201,10 +201,10 @@
                                                                                (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
                                                                                :else (apply op/between aikavali)))
                              kysely-params-tieosa)
-        kysely-params-paikkaus-idt (if-let [paikkaus-idt (:paikkaus-idt tiedot)]
-                                     (assoc kysely-params-aika ::paikkaus/id (op/in paikkaus-idt))
+        kysely-params-paikkaus-idt (if-let [paikkaus-nimet (:paikkaus-nimet tiedot)]
+                                     (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/nimi (op/in paikkaus-nimet)})
                                      kysely-params-aika)
-        kysely-params (dissoc kysely-params-paikkaus-idt :aikavali :paikkaus-idt :tr)]
+        kysely-params (dissoc kysely-params-paikkaus-idt :aikavali :paikkaus-nimet :tr)]
     (q/hae-paikkaukset db kysely-params)))
 
 (defrecord Paikkaus []

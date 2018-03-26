@@ -64,8 +64,8 @@
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
   PaikkausValittu
-  (process-event [{{:keys [id]} :paikkauskohde valittu? :valittu?} app]
-    (let [uudet-paikkausvalinnat (map #(if (= (:id %) id)
+  (process-event [{{:keys [nimi]} :paikkauskohde valittu? :valittu?} app]
+    (let [uudet-paikkausvalinnat (map #(if (= (:nimi %) nimi)
                                          (assoc % :valittu? valittu?)
                                          %)
                                       (get-in app [:valinnat :urakan-paikkauskohteet]))]
@@ -74,12 +74,12 @@
   HaePaikkaukset
   (process-event [_ app]
     (if-not (:paikkauksien-haku-kaynnissa? app)
-      (let [paikkaus-idt (into #{} (keep #(when (:valittu? %)
-                                            (:id %))
-                                         (get-in app [:valinnat :urakan-paikkauskohteet])))
+      (let [paikkauksien-nimet (into #{} (keep #(when (:valittu? %)
+                                                  (:nimi %))
+                                               (get-in app [:valinnat :urakan-paikkauskohteet])))
             params (-> (:valinnat app)
                        (dissoc :urakan-paikkauskohteet)
-                       (assoc :paikkaus-idt paikkaus-idt)
+                       (assoc :paikkaus-nimet paikkauksien-nimet)
                        (assoc ::paikkaus/urakka-id @nav/valittu-urakka-id))]
         (-> app
             (tt/post! :hae-urakan-paikkauskohteet
@@ -109,11 +109,14 @@
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
-    (let [paikkauskohteet (map (fn [paikkaus]
-                                 {:nimi (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi])
-                                  :id (::paikkaus/id paikkaus)
-                                  :valittu? true})
-                               tulos)
+    (let [paikkauskohteet (reduce (fn [paikkaukset paikkaus]
+                                    (if (some #(= (:nimi %) (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi]))
+                                              paikkaukset)
+                                      paikkaukset
+                                      (conj paikkaukset
+                                            {:nimi (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi])
+                                             :valittu? true})))
+                                  [] tulos)
           naytettavat-tiedot (kasittele-haettu-tulos tulos)]
       (-> app
           (merge naytettavat-tiedot)

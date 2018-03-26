@@ -96,10 +96,10 @@
     ::maara})
 
 (s/def ::aikavali (s/coll-of any? :kind? vector :count 2))
-(s/def ::paikkaus-idt (s/coll-of number? :kind set?))
+(s/def ::paikkaus-nimet (s/coll-of string? :kind set?))
 (s/def ::tr map?)
 
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
-                                               :opt-un [::aikavali ::paikkaus-idt ::tr]))
+                                               :opt-un [::aikavali ::paikkaus-nimet ::tr]))
 
 (s/def ::urakan-paikkauskohteet-vastaus any?)
