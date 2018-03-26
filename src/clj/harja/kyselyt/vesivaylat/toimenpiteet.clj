@@ -28,6 +28,7 @@
             [harja.domain.urakka :as ur]))
 
 (def toimenpiteet-xf
+
   (comp
     ;; reimari-prefixatut ovat Reimari-dataa (monet tekstikoodeja), Harjassa käytetään
     ;; useimmiten keywordeja ja siksi nimimuunnos
@@ -48,6 +49,7 @@
                           ::vv-toimenpide/toimenpide
                           ::vv-toimenpide/turvalaite
                           ::vv-toimenpide/vikakorjauksia?
+                          ::vv-toimenpide/vikailmoitukset
                           ::vv-toimenpide/reimari-urakoitsija
                           ::vv-toimenpide/reimari-sopimus
                           ::vv-toimenpide/sopimus
@@ -173,7 +175,7 @@
 
 (defn- suodata-vikakorjaukset [toimenpiteet vikailmoitukset?]
   (cond (true? vikailmoitukset?)
-        (remove #(empty? (::vv-toimenpide/reimari-viat %)) toimenpiteet)
+        (remove #(empty? (::vv-toimenpide/vikailmoitukset %)) toimenpiteet)
         :default toimenpiteet))
 
 (defn- toimenpiteet-hintatiedoilla* [hinnoittelutiedot toimenpiteet]
@@ -297,6 +299,7 @@
                                vv-toimenpide/sopimus
                                vv-toimenpide/turvalaite
                                vv-toimenpide/vayla
+                               vv-toimenpide/vikailmoitus
                                vv-toimenpide/kiintio
                                vv-toimenpide/reimari-kentat
                                vv-toimenpide/metatiedot
