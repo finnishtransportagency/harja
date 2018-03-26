@@ -235,7 +235,7 @@
                                       rivin-id (:valiaikainen-id rivi)]
                                   (when (or (= id-1 rivin-id) (= id-2 rivin-id))
                                     {:rivi avain
-                                     :viesti (str "Kohteenosa on päälekkäin osan "
+                                     :viesti (str "Kohteenosa on päällekkäin osan "
                                                   (cond
                                                     (= rivin-id id-1) nimi-2
                                                     (= rivin-id id-2) nimi-1
@@ -251,7 +251,7 @@
          (map (fn [rivi-id]
                 (let [kenttien-virheet (get virheet rivi-id)
                       kenttien-avaimet (keys kenttien-virheet)
-                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päälekkäin osan"))]
+                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päällekkäin osan"))]
                   {rivi-id (apply merge (map (fn [kentan-avain]
                                                {kentan-avain (filter paallekkaisyysvirhe? (get kenttien-virheet kentan-avain))})
                                              kenttien-avaimet))}))

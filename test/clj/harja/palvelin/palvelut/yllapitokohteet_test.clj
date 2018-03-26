@@ -398,7 +398,7 @@
                                   :tr-loppuetaisyys 0
                                   :tr-ajorata 1
                                   :tr-kaista 1}]
-    (testing "Päällekäin menevät kohteet samana vuonna"
+    (testing "päällekkäin menevät kohteet samana vuonna"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -416,7 +416,7 @@
                    :validointivirhe)
                :kohteet-paallekain))))
 
-    (testing "Päällekäin menevät kohteet eri vuonna"
+    (testing "päällekkäin menevät kohteet eri vuonna"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -427,9 +427,9 @@
                                      :kohteet [kohde-leppajarven-paalle]})]
 
         (is (not= (:status vastaus) :validointiongelma)
-            "Kohteet menevät päällekäin, mutta eri vuonna --> ei herjaa")))
+            "Kohteet menevät päällekkäin, mutta eri vuonna --> ei herjaa")))
 
-    (testing "Päällekäin menevät osoitteet eri tiellä"
+    (testing "päällekkäin menevät osoitteet eri tiellä"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -442,9 +442,9 @@
                                                  :tr-numero 21)]})]
 
         (is (not= (:status vastaus) :validointiongelma)
-            "Osoitteet menevät päällekäin, mutta eri tiellä --> ei herjaa")))
+            "Osoitteet menevät päällekkäin, mutta eri tiellä --> ei herjaa")))
 
-    (testing "Päällekäin menevät osoitteet eri kaistalla"
+    (testing "päällekkäin menevät osoitteet eri kaistalla"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -457,9 +457,9 @@
                                                  :tr-kaista 2)]})]
 
         (is (not= (:status vastaus) :validointiongelma)
-            "Osoitteet menevät päällekäin, mutta eri kaistalla --> ei herjaa")))
+            "Osoitteet menevät päällekkäin, mutta eri kaistalla --> ei herjaa")))
 
-    (testing "Päällekäin menevät osoitteet eri ajoradalla"
+    (testing "päällekkäin menevät osoitteet eri ajoradalla"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -472,7 +472,7 @@
                                                  :tr-ajorata 2)]})]
 
         (is (not= (:status vastaus) :validointiongelma)
-            "Osoitteet menevät päällekäin, mutta eri ajoradalla --> ei herjaa")))))
+            "Osoitteet menevät päällekkäin, mutta eri ajoradalla --> ei herjaa")))))
 
 (deftest yllapitokohteen-tallennus-vaaraan-urakkaan-ei-onnistu
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)

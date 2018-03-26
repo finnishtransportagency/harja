@@ -155,7 +155,7 @@
               (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (kasittele-urakoiden-hakuvastaus body headers))))))
 
-(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kayttajatunnus]
+(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id hakijan-tunnus]
   (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
     (let [url (str url (format "haeUrakanKohteet" yha-id))
           vuosi (pvm/vuosi (pvm/nyt))]
@@ -166,7 +166,7 @@
           (let [parametrit (-> {}
                                (lisaa-http-parametri "yha-id" yha-id)
                                (lisaa-http-parametri "vuosi" vuosi)
-                               (lisaa-http-parametri "kayttaja" kayttajatunnus))
+                               (lisaa-http-parametri "kayttaja" hakijan-tunnus))
                 http-asetukset {:metodi :GET
                                 :url url
                                 :parametrit parametrit
