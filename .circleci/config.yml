@@ -29,9 +29,9 @@ jobs:
     parallelism: 1
     steps:
       - checkout
-      - run: cd ~/project && npm i cypress@1.x && $(npm bin)/cypress verify
+      - run: cd ~/project && npm install && $(npm bin)/cypress verify
       - save_cache:
-          key: v1-npm-deps-{{ checksum "package.json" }}
+          key: v1-npm-deps-{{ checksum "package-lock.json" }}
           paths:
             - node_modules
       - run: $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
