@@ -10,7 +10,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
-                :valinnat {:tr nil}}))
+                :valinnat nil}))
 
 (defn kiinnostavat-tiedot [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
                             :as paikkaus}]
@@ -51,7 +51,7 @@
       ;(println "UUDET VALINNAT " (pr-str uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
   PaikkausValittu
-  (process-event [{id :id valittu? :valittu?} app]
+  (process-event [{{:keys [id]} :paikkauskohde valittu? :valittu?} app]
     (let [uudet-paikkausvalinnat (map #(if (= (:id %) id)
                                          (assoc % :valittu? valittu?)
                                          %)

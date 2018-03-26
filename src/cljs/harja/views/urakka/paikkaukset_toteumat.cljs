@@ -28,18 +28,18 @@
        :arvo-atom (tr-atomi :tr)
        :tyylit {:width "fit-content"}}]
      [valinnat/aikavali (aikavali-atomi :aikavali)]
-     ;; TODO Tää filtteri ei vielä toimi
      [:span.label-ja-kentta
       [:span.kentan-otsikko "Paikkauskohteet"]
       [:div.kentta
        [yleiset/livi-pudotusvalikko
-        {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? urakan-paikkauskohteet))]
+        {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? (:urakan-paikkauskohteet valinnat)))]
                             (str valittujen-paikkauskohteiden-maara (if (= 1 valittujen-paikkauskohteiden-maara)
                                                               " paikkauskohde valittu"
                                                               " paikkauskohdetta valittu")))
          :itemit-komponentteja? true}
         (mapv (fn [paikkauskohde]
-                [:label {:on-click #(.stopPropagation %)}
+                [:label {:on-click #(.stopPropagation %)
+                         :style {:width "100%"}}
                  (:nimi paikkauskohde)
                  [:input {:style {:display "inline-block"
                                   :float "right"}
