@@ -30,12 +30,15 @@
    :urakoitsija {:nimi "YIT Rakennus Oyj" :id 2}
    :hallintayksikko {:nimi "Pohjois-Pohjanmaa" :id 9}})
 
+(def vuosi-atom (atom 2017))
+
 (deftest yksikkohintaiset-tyot
   (komponenttitesti
     [tyy/yksikkohintaiset-tyot
      urakka
      (r/atom tiemerkinnan-toteumat)
-     (r/atom paallystyksen-kohteet)]
+     (r/atom paallystyksen-kohteet)
+     @vuosi-atom]
 
     (is (u/sel1 [:.tiemerkinnan-yks-hint-tyot]) "Tiemerkinnän yks. hint. työt mountattu")))
 

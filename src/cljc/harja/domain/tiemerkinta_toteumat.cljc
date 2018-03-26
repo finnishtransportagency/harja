@@ -46,7 +46,7 @@
 
 (s/def ::toteumat (s/coll-of ::tiemerkinnan-yksikkohintainen-tyo))
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-kysely
-  (s/keys :req-un [::urakka-id ::toteumat]))
+  (s/keys :req-un [::urakka-id ::vuosi ::toteumat]))
 
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-vastaus
   ::hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus)

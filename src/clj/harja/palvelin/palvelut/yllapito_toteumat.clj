@@ -134,7 +134,7 @@
       toteumat)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot
-  [db user {:keys [urakka-id toteumat]}]
+  [db user {:keys [urakka-id vuosi toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [id yllapitokohde-id] :as kohde} toteumat]
@@ -162,7 +162,8 @@
                                       :poistettu (or poistettu false)}))
           (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:urakka urakka-id})))))
-    (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
+    (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id
+                                                     :vuosi vuosi})))
 
 (defrecord YllapitoToteumat []
   component/Lifecycle
