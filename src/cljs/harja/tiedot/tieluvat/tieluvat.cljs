@@ -5,10 +5,17 @@
             [cljs.core.async :refer [<!]]
             [harja.ui.viesti :as viesti]
             [harja.ui.protokollat :as protokollat]
-            [harja.asiakas.kommunikaatio :as k])
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+
+            [harja.domain.tielupa :as tielupa])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(def tila (atom {}))
+(def tila (atom {:valinnat nil
+                 :valittu-tielupa nil
+                 :tielupien-haku-kaynnissa? false
+                 :tieluvan-tallennus-kaynnissa? false
+                 :nakymassa? false}))
 
 (def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :katselmuksen-tila :aikavali])
 
@@ -28,7 +35,22 @@
             (e! (->PaivitaValinnat {polku u})))))
 
 (defn hakuparametrit [app]
-  {})
+  (if-let [valinnat (:valinnat app)]
+    (or
+      (spec-apurit/poista-nil-avaimet
+       (assoc {} ::tielupa/hakija-nimi (:hakija valinnat)
+                 ::tielupa/tyyppi (:lupatyyppi valinnat)
+                 ::tielupa/ulkoinen-tunniste (let [numero (js/parseInt (:luvan-numero valinnat) 10)]
+                                               (when-not (js/isNaN numero) numero))
+                 ::tielupa/voimassaolon-alkupvm (first (:aikavali valinnat))
+                 ::tielupa/voimassaolon-loppupvm (second (:aikavali valinnat))
+                 ;; Näiden muoto vähän epäselvä
+                 ;:tr (:tr valinnat)
+                 ;:tila (:katselmuksen-tila valinnat)
+                 ))
+      {})
+
+    {}))
 
 (defn voi-tallentaa? [app]
   true)
@@ -85,9 +107,9 @@
 
   TielupaTallennettu
   (process-event [{t :tulos} app]
-    (assoc app :tielupien-tallennus-kaynnissa? false))
+    (assoc app :tieluvan-tallennus-kaynnissa? false))
 
   TielupaEiTallennettu
   (process-event [_ app]
     (viesti/nayta! "Tieluvan tallennus epäonnistui!" :danger)
-    (assoc app :tielupien-tallennus-kaynnissa? false)))
+    (assoc app :tieluvan-tallennus-kaynnissa? false)))

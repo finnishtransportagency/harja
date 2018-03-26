@@ -14,7 +14,8 @@
 
     [harja.domain.tielupa :as tielupa]
     [harja.ui.napit :as napit]
-    [clojure.string :as str])
+    [clojure.string :as str]
+    [harja.pvm :as pvm])
   (:require-macros
     [harja.makrot :refer [defc fnc]]
     [harja.tyokalut.ui :refer [for*]]))
@@ -55,7 +56,7 @@
                                         :arvo-atom (atomi :luvan-numero)}]
        [kentat/tee-otsikollinen-kentta {:otsikko "Lupatyyppi"
                                         :kentta-params {:tyyppi :valinta
-                                                        :valinnat (into [nil] tielupa/lupatyyppi-vaihtoehdot)
+                                                        :valinnat (into [nil] (sort tielupa/lupatyyppi-vaihtoehdot))
                                                         :valinta-nayta #(or (tielupa/tyyppi-fmt %) "- Ei käytössä -")}
                                         :arvo-atom (atomi :lupatyyppi)}]
        [kentat/tee-otsikollinen-kentta {:otsikko "Hakija"
@@ -92,6 +93,7 @@
     [{:otsikko "Pvm"
       :leveys 1
       :tyyppi :pvm
+      :fmt pvm/pvm-opt
       :nimi ::tielupa/voimassaolon-alkupvm}
      {:otsikko "Lupatyyppi"
       :leveys 1
@@ -104,7 +106,7 @@
       :nimi ::tielupa/hakija-nimi}
      {:otsikko "Luvan numero"
       :leveys 1
-      :tyyppi :string
+      :tyyppi :positiivinen-numero
       :nimi ::tielupa/ulkoinen-tunniste}
      {:otsikko "Tie"
       :leveys 1
