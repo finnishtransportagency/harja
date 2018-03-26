@@ -118,9 +118,9 @@
                    :laskentakohteet (hae-laskentakohteet db user {:urakka urakka-id})}]
       vastaus)))
 
-(defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id]}]
+(defn hae-tiemerkinnan-yksikkohintaiset-tyot [db user {:keys [urakka-id vuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
-  (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
+  (log/debug "Haetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id " vuosi " vuosi)
   (jdbc/with-db-transaction [db db]
     (let [toteumat (into []
                          (comp
@@ -129,11 +129,12 @@
                            (map #(assoc % :hinta (when-let [hinta (:hinta %)] (double hinta)))))
                          (q/hae-tiemerkintaurakan-yksikkohintaiset-tyot
                            db
-                           {:urakka urakka-id}))]
+                           {:urakka urakka-id
+                            :vuosi vuosi}))]
       toteumat)))
 
 (defn tallenna-tiemerkinnan-yksikkohintaiset-tyot
-  [db user {:keys [urakka-id toteumat]}]
+  [db user {:keys [urakka-id vuosi toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
     (doseq [{:keys [id yllapitokohde-id] :as kohde} toteumat]
@@ -161,7 +162,8 @@
                                       :poistettu (or poistettu false)}))
           (q/luo-tiemerkintaurakan-yksikkohintainen-tyo<!
             db (merge sql-parametrit {:urakka urakka-id})))))
-    (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id})))
+    (hae-tiemerkinnan-yksikkohintaiset-tyot db user {:urakka-id urakka-id
+                                                     :vuosi vuosi})))
 
 (defrecord YllapitoToteumat []
   component/Lifecycle

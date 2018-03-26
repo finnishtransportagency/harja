@@ -22,6 +22,7 @@
 (s/def ::tr-numero ::tr-domain/numero)
 (s/def ::hinta (s/and number? (comp not neg?) #(< % 10000000)))
 (s/def ::poistettu boolean?)
+(s/def ::vuosi int?)
 
 (s/def ::tiemerkinnan-yksikkohintainen-tyo
   (s/keys :req-un [::id ::selite ::hintatyyppi ::hinta
@@ -36,7 +37,7 @@
 (s/def ::urakka-id ::urakka/id)
 
 (s/def ::hae-tiemerkinnan-yksikkohintaiset-tyot-kysely
-  (s/keys :req-un [::urakka-id]))
+  (s/keys :req-un [::urakka-id ::vuosi]))
 
 (s/def ::hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus
   (s/coll-of ::tiemerkinnan-yksikkohintainen-tyo))
@@ -45,7 +46,7 @@
 
 (s/def ::toteumat (s/coll-of ::tiemerkinnan-yksikkohintainen-tyo))
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-kysely
-  (s/keys :req-un [::urakka-id ::toteumat]))
+  (s/keys :req-un [::urakka-id ::vuosi ::toteumat]))
 
 (s/def ::tallenna-tiemerkinnan-yksikkohintaiset-tyot-vastaus
   ::hae-tiemerkinnan-yksikkohintaiset-tyot-vastaus)
