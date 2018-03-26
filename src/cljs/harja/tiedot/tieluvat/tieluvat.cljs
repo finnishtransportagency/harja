@@ -10,7 +10,7 @@
 
 (def tila (atom {}))
 
-(def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :tila :aikavali])
+(def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :katselmuksen-tila :aikavali])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [uudet])
