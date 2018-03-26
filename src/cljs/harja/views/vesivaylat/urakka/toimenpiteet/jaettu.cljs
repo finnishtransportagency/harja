@@ -22,6 +22,7 @@
             [harja.domain.vesivaylat.turvalaitekomponentti :as tkomp]
             [harja.domain.vesivaylat.komponentin-tilamuutos :as komp-tila]
             [harja.domain.vesivaylat.komponenttityyppi :as ktyyppi]
+            [harja.domain.vesivaylat.vikailmoitus :as vika]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.jaettu :as tiedot]
             [harja.fmt :as fmt]
             [harja.ui.liitteet :as liitteet]
@@ -67,10 +68,28 @@
     "Työluokka" (to/reimari-tyoluokka-fmt (::to/tyoluokka toimenpide))
     "Toimenpide" (to/reimari-toimenpidetyyppi-fmt (::to/toimenpide toimenpide))
     "Lisätyö?" (to/reimari-lisatyo-fmt (::to/reimari-lisatyo? toimenpide))
-    "Päivämäärä ja aika" (pvm/pvm-opt (::to/pvm toimenpide))
+    "Päivämäärä ja aika" (pvm/pvm-aika-opt (::to/pvm toimenpide))
     "Turvalaite" (get-in toimenpide [::to/turvalaite ::tu/nimi])
     "Henkilömäärä" (::to/reimari-henkilo-lkm toimenpide)
     "Lisätiedot" (::to/lisatieto toimenpide)]
+   (when-let [vikailmoitukset (::to/vikailmoitukset toimenpide)]
+     [:div
+      [:h5 "VIKAILMOITUKSEN TIEDOT"]
+      (doall
+        (for [vi vikailmoitukset]
+         ^{:key (::vika/reimari-id vi)}
+         [yleiset/tietoja
+          {:otsikot-omalla-rivilla? true
+           :kavenna? true
+           :jata-kaventamatta #{}
+           :otsikot-samalla-rivilla #{}
+           :tyhja-rivi-otsikon-jalkeen #{}}
+          "Ilmoittaja"  (::vika/reimari-ilmoittaja vi)
+          "Luoja" (::vika/reimari-luoja vi)
+          "Kirjattu" (pvm/pvm-aika-opt (::vika/reimari-kirjattu vi))
+          "Muokkaaja"  (::vika/reimari-muokkaaja vi)
+          "Muokattu" (pvm/pvm-aika-opt (::vika/reimari-muokattu vi))
+          "Lisätiedot" (::vika/reimari-lisatiedot vi)]))])
    [:footer.livi-grid-infolaatikko-footer
     [:h5 "Turvalaitteen komponentit"]
     (if (empty? (::to/komponentit toimenpide))
