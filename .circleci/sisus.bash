@@ -44,6 +44,10 @@ mkdir -p ../.harja
 echo aaaa > ../.harja/anti-csrf-token
 touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana}
 # todo: kokeile lein trampoline "$@"
-cd tietokanta && mvn flyway:migrate && cd ..
-
+cd tietokanta
+mvn flyway:migrate
+psql -h localhost -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
+psql -h localhost -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;"
+psql -h localhost -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;"
+cd ..
 eval "cmd_$SUBCMD"
