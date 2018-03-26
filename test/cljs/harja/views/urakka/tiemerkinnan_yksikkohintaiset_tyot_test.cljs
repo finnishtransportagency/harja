@@ -5,7 +5,7 @@
             [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
                                      jvh-fixture]]
             [harja.domain.tiemerkinta-toteumat :as tt]
-            [harja.tiedot.urakka :as u]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [reagent.core :as r]
             [harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot :as tyy]
             [harja.pvm :as pvm])
@@ -37,7 +37,7 @@
      urakka
      (r/atom tiemerkinnan-toteumat)
      (r/atom paallystyksen-kohteet)
-     @u/valittu-urakan-vuosi]
+     @tiedot-urakka/valittu-urakan-vuosi]
 
     (is (u/sel1 [:.tiemerkinnan-yks-hint-tyot]) "Tiemerkinnän yks. hint. työt mountattu")))
 
