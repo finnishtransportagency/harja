@@ -36,7 +36,8 @@
             [yks-hint-tiemerkinta/yksikkohintaiset-tyot
              ur
              tyy-tiedot/tiemerkinnan-toteumat
-             tyy-tiedot/paallystysurakan-kohteet])
+             tyy-tiedot/paallystysurakan-kohteet
+             @u/valittu-urakan-vuosi])
 
           "Muut kustannukset"
           :muut
