@@ -7,6 +7,8 @@ jobs:
 
     steps:
       - run: |
+          cd /tmp
+          ls
           bash sisus.bash back $CIRCLE_BRANCH
 
 workflows:
