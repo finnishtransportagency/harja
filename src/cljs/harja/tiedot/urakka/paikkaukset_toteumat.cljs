@@ -90,7 +90,8 @@
                        :tunniste :hae-paikkaukset-toteumat-nakymaan
                        :lahetetty ->HaePaikkauksetKutsuLahetetty
                        :onnistui ->PaikkauksetHaettu
-                       :epaonnistui ->PaikkauksetEiHaettu})))
+                       :epaonnistui ->PaikkauksetEiHaettu})
+            (assoc :paikkauksien-haku-tulee-olemaan-kaynnissa? true)))
       app))
   HaePaikkauksetKutsuLahetetty
   (process-event [_ app]
@@ -127,11 +128,14 @@
     (let [naytettavat-tiedot (kasittele-haettu-tulos tulos)]
       (-> app
           (merge naytettavat-tiedot)
-          (assoc :paikkauksien-haku-kaynnissa? false))))
+          (assoc :paikkauksien-haku-kaynnissa? false
+                 :paikkauksien-haku-tulee-olemaan-kaynnissa? false))))
   PaikkauksetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
-    (assoc app :paikkauksien-haku-kaynnissa? false))
+    (assoc app
+           :paikkauksien-haku-kaynnissa? false
+           :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
   SiirryKustannuksiin
   (process-event [{paikkaus-id :paikkaus-id} app]
     (js/console.log "SIIRTYMÄ NAPPIA PAINETTU")

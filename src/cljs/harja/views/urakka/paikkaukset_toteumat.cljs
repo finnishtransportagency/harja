@@ -139,10 +139,10 @@
                         {:otsikko "Kuula\u00ADmylly"
                          :leveys 5
                          :nimi ::paikkaus/kuulamylly}]))]
-    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkaukset-grid paikkauket-vetolaatikko]}]
+    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkaukset-grid paikkauket-vetolaatikko]}]
       [:div
        [grid/grid
-        {:otsikko (if paikkauksien-haku-kaynnissa?
+        {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien toteumat")
          :salli-valiotsikoiden-piilotus? true
