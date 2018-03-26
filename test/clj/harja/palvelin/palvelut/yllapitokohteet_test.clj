@@ -413,6 +413,7 @@
                                          WHERE yllapitokohde = " leppajarven-ramppi-id ";")))
           urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
       (is (not (nil? kohteet-kannassa)))
+      (is (= (count (filter #(= (:nimi %) "Testiramppi4564ddf") kohteet-kannassa)) 1))
       (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
       (is (= vanha-kohdeosa-kannassa
              {:tr_numero 20
