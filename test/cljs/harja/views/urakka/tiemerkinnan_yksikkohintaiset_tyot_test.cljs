@@ -5,6 +5,7 @@
             [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
                                      jvh-fixture]]
             [harja.domain.tiemerkinta-toteumat :as tt]
+            [harja.tiedot.urakka :as u]
             [reagent.core :as r]
             [harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot :as tyy]
             [harja.pvm :as pvm])
@@ -30,15 +31,13 @@
    :urakoitsija {:nimi "YIT Rakennus Oyj" :id 2}
    :hallintayksikko {:nimi "Pohjois-Pohjanmaa" :id 9}})
 
-(def vuosi-atom (atom 2017))
-
 (deftest yksikkohintaiset-tyot
   (komponenttitesti
     [tyy/yksikkohintaiset-tyot
      urakka
      (r/atom tiemerkinnan-toteumat)
      (r/atom paallystyksen-kohteet)
-     @vuosi-atom]
+     @u/valittu-urakan-vuosi]
 
     (is (u/sel1 [:.tiemerkinnan-yks-hint-tyot]) "Tiemerkinnän yks. hint. työt mountattu")))
 
