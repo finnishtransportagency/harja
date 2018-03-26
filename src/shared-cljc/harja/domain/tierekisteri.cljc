@@ -401,7 +401,7 @@
   ([kohdeosa muut-kohdeosat] (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat :id))
   ([kohdeosa muut-kohdeosat id-avain]
    (keep #(when (kohdeosat-paalekkain? kohdeosa %)
-            {:viesti "Kohdeosa on päälekkäin toisen kohdeosan kanssa"
+            {:viesti "Kohdeosa on päällekkäin toisen kohdeosan kanssa"
              :validointivirhe :kohteet-paallekain
              :kohteet (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys id-avain) [% kohdeosa])})
          muut-kohdeosat)))

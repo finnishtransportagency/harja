@@ -320,12 +320,12 @@
             [1 2 3 4]
             false))))
 
-  (is (= [{::to/reimari-viat [{:foo :bar}] ::to/id 2}
-          {::to/reimari-viat [1 2 3] ::to/id 3}]
+  (is (= [{::to/vikailmoitukset [{:foo :bar}] ::to/id 2}
+          {::to/vikailmoitukset [1 2 3] ::to/id 3}]
          (#'q/suodata-vikakorjaukset
-           [{::to/reimari-viat [] ::to/id 1}
-            {::to/reimari-viat [{:foo :bar}] ::to/id 2}
-            {::to/reimari-viat [1 2 3] ::to/id 3}]
+           [{::to/vikailmoitukset [] ::to/id 1}
+            {::to/vikailmoitukset [{:foo :bar}] ::to/id 2}
+            {::to/vikailmoitukset [1 2 3] ::to/id 3}]
            true))))
 
 (deftest toimenpiteet-hintatiedoilla
