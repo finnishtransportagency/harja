@@ -205,3 +205,6 @@
 (s/def ::hae-tieluvat-kysely any?)
 (s/def ::hae-tieluvat-vastaus any?)
 
+(s/def ::hae-tielupien-hakijat-kysely any?)
+(s/def ::hae-tielupien-hakijat-vastaus any?)
+
