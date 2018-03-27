@@ -30,7 +30,7 @@ jobs:
           cd /tmp
           bash sisus.bash uberjar $CIRCLE_BRANCH
           cd /tmp/harja
-          tar cf testidata.tar cypress.json tietokanta
+          tar cf testidata.tar cypress cypress.json tietokanta
 
       - persist_to_workspace:
           root: /tmp/harja
