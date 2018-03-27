@@ -542,7 +542,17 @@
                                                       :bitumi_indeksi bitumi-indeksi
                                                       :kaasuindeksi kaasuindeksi
                                                       :toteutunut_hinta toteutunut-hinta
-                                                      :muokkaaja (:id user)}))))
+                                                      :muokkaaja (:id user)})
+
+        ;; Mikäli pääkohde kutistuu lyhyemmäksi kuin alikohteet, korjataan tilanne:
+        (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :yllapitokohde-id id})
+              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde kohdeosat)]
+          (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :yllapitokohde-id id
+                                               :osat korjatut-kohdeosat})))))
 
 (defn- validoi-tallennettavat-yllapitokohteet
   "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."

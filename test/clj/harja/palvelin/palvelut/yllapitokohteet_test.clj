@@ -367,6 +367,69 @@
         (is (nil? poistettu-kohde) "Poistettua kohdetta ei ole enää vastauksessa")
         (is (not= urakan-geometria-lisayksen-jalkeen urakan-geometria-poiston-jalkeen "Geometria päivittyi"))))))
 
+(deftest paivita-paallystyskohde-kantaan
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        urakan-geometria-ennen-muutosta (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERE id = " urakka-id ";"))
+        maara-ennen-lisaysta (ffirst (q
+                                       (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+        vanha-kohdeosa-kannassa (first (q-map
+                                         (str "SELECT
+                                      tr_numero,
+                                      tr_alkuosa,
+                                      tr_alkuetaisyys,
+                                      tr_loppuosa,
+                                      tr_loppuetaisyys
+                                      FROM yllapitokohdeosa
+                                         WHERE yllapitokohde = " leppajarven-ramppi-id ";")))]
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :sopimus-id sopimus-id
+                                                              :kohteet [(assoc yllapitokohde-testidata
+                                                                          :tr-numero 20
+                                                                          :tr-alkuosa 1
+                                                                          :tr-alkuetaisyys 0
+                                                                          :tr-loppuosa 1
+                                                                          :tr-loppuetaisyys 2
+                                                                          :id leppajarven-ramppi-id)]})
+    (let [maara-lisayksen-jalkeen (ffirst (q
+                                            (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+          kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :urakan-yllapitokohteet
+                                           +kayttaja-jvh+ {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id})
+          paivittynyt-kohdeosa-kannassa (first (q-map
+                                                 (str "SELECT
+                                      tr_numero,
+                                      tr_alkuosa,
+                                      tr_alkuetaisyys,
+                                      tr_loppuosa,
+                                      tr_loppuetaisyys
+                                      FROM yllapitokohdeosa
+                                         WHERE yllapitokohde = " leppajarven-ramppi-id ";")))
+          urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
+      (is (not (nil? kohteet-kannassa)))
+      (is (= (count (filter #(= (:nimi %) "Testiramppi4564ddf") kohteet-kannassa)) 1))
+      (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
+      (is (= vanha-kohdeosa-kannassa
+             {:tr_numero 20
+              :tr_alkuosa 1
+              :tr_alkuetaisyys 0
+              :tr_loppuosa 3
+              :tr_loppuetaisyys 0}))
+      (is (= paivittynyt-kohdeosa-kannassa
+             {:tr_numero 20
+              :tr_alkuosa 1
+              :tr_alkuetaisyys 0
+              :tr_loppuosa 1
+              :tr_loppuetaisyys 2})
+          "Pääkohdettä kutistettiin, kohdeosa kutistuu pääkohteen sisälle")
+      (is (= maara-ennen-lisaysta maara-lisayksen-jalkeen)))))
+
 (deftest tallenna-uusi-paallystyskohde-kantaan-vuodelle-2015
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
