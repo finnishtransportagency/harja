@@ -17,7 +17,7 @@
                  :tieluvan-tallennus-kaynnissa? false
                  :nakymassa? false}))
 
-(def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :katselmuksen-tila :aikavali])
+(def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :aikavali])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [uudet])
@@ -46,7 +46,6 @@
                  ::tielupa/voimassaolon-loppupvm (second (:aikavali valinnat))
                  ;; Näiden muoto vähän epäselvä
                  ;:tr (:tr valinnat)
-                 ;:tila (:katselmuksen-tila valinnat)
                  ))
       {})
 

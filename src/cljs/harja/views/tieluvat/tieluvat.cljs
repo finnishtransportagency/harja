@@ -67,15 +67,7 @@
                                         :arvo-atom (atomi :hakija)}]]
 
       [:div
-       [valinnat/aikavali (atomi :aikavali)]
-       [kentat/tee-otsikollinen-kentta {:otsikko "Tila"
-                                        :kentta-params {:tyyppi :checkbox-group
-                                                        :vaihtoehdot [:aloitus :loppu]
-                                                        :vaihtoehto-nayta (fn [tila]
-                                                                            (case tila
-                                                                              :aloitus "Aloituskatselmus tehty"
-                                                                              :loppu "Loppukatselmus tehty"))}
-                                        :arvo-atom (atomi :katselmuksen-tila)}]]]]))
+       [valinnat/aikavali (atomi :aikavali)]]]]))
 
 (defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa?] :as app}]
   [:div
