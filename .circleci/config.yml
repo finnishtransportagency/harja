@@ -49,15 +49,16 @@ jobs:
           at: /tmp/harja
       - deploy:
           command: |
-            pwd
-            ls /tmp/harja
-            tar xf testidata.tar
+            cd /tmp
+            mkdir cypress-run
+            cd cypress-run
+            tar xf /tmp/harja/testidata.tar
 
-            cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
+            cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost && cd ..
             java -jar target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
             for i in $(seq 10); do
-            curl localhost:3000 > /dev/null 2>&1 && break
-            echo "appis ei käynnissä, odotellaan..."
+              curl localhost:3000 > /dev/null 2>&1 && break
+              echo "appis ei käynnissä, odotellaan..."
             sleep 10
             done
 
