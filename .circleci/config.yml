@@ -48,11 +48,22 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/harja
+
+      - restore_cache:
+          keys:
+            - v2-npm-deps-
+
+      - run: |
+          mkdir -p /tmp/cypress-run && cd /tmp/cypress-run && npm i cypress@1.x && $(npm bin)/cypress verify
+
+      - save_cache:
+          key: v2-npm-deps-
+          paths:
+            - /tmp/cypress-run/node_modules
+
       - deploy:
           command: |
-            cd /tmp
-            mkdir cypress-run
-            cd cypress-run
+            cd /tmp/cypress-run
             tar xf /tmp/harja/testidata.tar
 
             cd tietokanta
