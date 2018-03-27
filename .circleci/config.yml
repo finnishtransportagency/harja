@@ -20,23 +20,46 @@ jobs:
           cd /tmp
           bash sisus.bash test $CIRCLE_BRANCH
 
+  prod-build:
+    docker:
+      - image: solita/harja-testit:latest # eka image = "primary container"
+      - image: solita/harjadb:latest
+
+    steps:
+      - run: |
+          cd /tmp
+          bash sisus.bash uberjar $CIRCLE_BRANCH
+          cd /tmp/harja
+          tar cf tietokanta.tar tietokanta
+
+      - persist_to_workspace:
+          root: /tmp/harja
+          paths:
+            - target/harja-0.0.1-SNAPSHOT-standalone.jar
+            - tietokanta.tar
+
   e2e-testit:
     docker:
       - image: solita/napote-circleci
-      - image: solita/harja-testit:latest
-        command: [back, $CIRCLE_BRANCH]
       - image: solita/harjadb:latest
     parallelism: 1
     steps:
       - checkout
-      - run: cd ~/project && npm i cypress@1.x && $(npm bin)/cypress verify
-      - save_cache:
-          key: v1-npm-deps-{{ checksum "package-lock.json" }}
-          paths:
-            - node_modules
-      - run: $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
-      - store_artifacts:
-          path: cypress/screenshots
+      - attach_workspace:
+          at: /tmp/harja
+      - run: |
+          pwd
+          ls /tmp/harja
+      # - run: |
+      #     sudo apt
+      #     cd ~/project && npm i cypress@1.x && $(npm bin)/cypress verify
+      # - save_cache:
+      #     key: v1-npm-deps-{{ checksum "package-lock.json" }}
+      #     paths:
+      #       - node_modules
+      # - run: $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
+      # - store_artifacts:
+      #     path: cypress/screenshots
 
 workflows:
   version: 2
@@ -44,4 +67,5 @@ workflows:
     jobs:
       - back-testit
       - front-testit
+      - prod-build
       - e2e-testit

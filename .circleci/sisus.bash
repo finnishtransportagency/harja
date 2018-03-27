@@ -30,6 +30,11 @@ function cmd_back
     java -jar target/harja-0.0.1-SNAPSHOT-standalone.jar
 }
 
+function cmd_uberjar
+{
+    lein tuotanto-notest
+}
+
 function cmd_help {
     echo komennot: phantom, test, test+phantom, back, help
 }
