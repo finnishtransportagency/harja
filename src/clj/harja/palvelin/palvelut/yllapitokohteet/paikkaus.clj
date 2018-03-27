@@ -201,10 +201,10 @@
                                                                                (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
                                                                                :else (apply op/between aikavali)))
                              kysely-params-tieosa)
-        kysely-params-paikkaus-idt (if-let [paikkaus-nimet (:paikkaus-nimet tiedot)]
-                                     (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/nimi (op/in paikkaus-nimet)})
+        kysely-params-paikkaus-idt (if-let [paikkaus-idt (:paikkaus-idt tiedot)]
+                                     (assoc kysely-params-aika ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)})
                                      kysely-params-aika)
-        kysely-params (dissoc kysely-params-paikkaus-idt :aikavali :paikkaus-nimet :tr)]
+        kysely-params (dissoc kysely-params-paikkaus-idt :aikavali :paikkaus-idt :tr)]
     (q/hae-paikkaukset db kysely-params)))
 
 (defrecord Paikkaus []

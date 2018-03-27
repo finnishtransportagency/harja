@@ -64,8 +64,8 @@
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
   PaikkausValittu
-  (process-event [{{:keys [nimi]} :paikkauskohde valittu? :valittu?} app]
-    (let [uudet-paikkausvalinnat (map #(if (= (:nimi %) nimi)
+  (process-event [{{:keys [id]} :paikkauskohde valittu? :valittu?} app]
+    (let [uudet-paikkausvalinnat (map #(if (= (:id %) id)
                                          (assoc % :valittu? valittu?)
                                          %)
                                       (get-in app [:valinnat :urakan-paikkauskohteet]))]
@@ -74,12 +74,12 @@
   HaePaikkaukset
   (process-event [_ app]
     (if-not (:paikkauksien-haku-kaynnissa? app)
-      (let [paikkauksien-nimet (into #{} (keep #(when (:valittu? %)
-                                                  (:nimi %))
+      (let [paikkauksien-idt (into #{} (keep #(when (:valittu? %)
+                                                  (:id %))
                                                (get-in app [:valinnat :urakan-paikkauskohteet])))
             params (-> (:valinnat app)
                        (dissoc :urakan-paikkauskohteet)
-                       (assoc :paikkaus-nimet paikkauksien-nimet)
+                       (assoc :paikkaus-idt paikkauksien-idt)
                        (assoc ::paikkaus/urakka-id @nav/valittu-urakka-id))]
         (-> app
             (tt/post! :hae-urakan-paikkauskohteet
@@ -111,11 +111,12 @@
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
     (let [paikkauskohteet (reduce (fn [paikkaukset paikkaus]
-                                    (if (some #(= (:nimi %) (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi]))
+                                    (if (some #(= (:id %) (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/id]))
                                               paikkaukset)
                                       paikkaukset
                                       (conj paikkaukset
-                                            {:nimi (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi])
+                                            {:id (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/id])
+                                             :nimi (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi])
                                              :valittu? true})))
                                   [] tulos)
           naytettavat-tiedot (kasittele-haettu-tulos tulos)]
