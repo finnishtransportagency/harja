@@ -10,8 +10,8 @@
             [harja.fmt :as fmt]
             [clojure.string :as str]
             [harja.ui.modal :as modal])
-
   (:require-macros [cljs.core.async.macros :refer [go]]
+                   [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
 
 (def navigaation-min-korkeus 47)
@@ -95,8 +95,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     :varoitus "varoitus"
                     :virhe "virhe"
                     :huomautus "huomautus")}
-     (for [v virheet]
-       ^{:key (hash v)}
+     (for* [v virheet]
        [:span
         (case tyyppi
           :huomautus (ikonit/livicon-info-circle)
