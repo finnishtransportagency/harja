@@ -529,7 +529,7 @@
                                      :vuosi 2017
                                      :kohteet [(assoc
                                                  kohde-leppajarven-paalle
-                                                 :tr-numero 21)]})]
+                                                 :tr-numero 8)]})]
 
         (is (not= (:status vastaus) :validointiongelma)
             "Osoitteet menevät päällekkäin, mutta eri tiellä --> ei herjaa")))
