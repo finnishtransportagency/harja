@@ -68,7 +68,7 @@ jobs:
             done
             echo "pätkä appiksen logia:"
             echo +++++++++++++++++++
-            tail -50 harja.output
+            tail -50 harja.out
             echo +++++++++++++++++++
             echo
 
