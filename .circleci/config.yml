@@ -73,6 +73,6 @@ workflows:
       - back-testit
       - front-testit
       - prod-build
-      - e2e-testit
-         requires:
+      - e2e-testit:
+          requires:
            - prod-build
