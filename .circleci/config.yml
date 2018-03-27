@@ -37,6 +37,7 @@ jobs:
           paths:
             - target/harja-0.0.1-SNAPSHOT-standalone.jar
             - testidata.tar
+            - asetukset.edn
 
   e2e-testit:
     docker:
@@ -60,7 +61,12 @@ jobs:
             psql -h localhost -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;"
             psql -h localhost -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;"
             cd ..
-            java -jar target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
+            cp /tmp/harja/asetukset.edn .
+            sed -i -e 's/:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
+            mkdir -p ../.harja
+            echo aaaa > ../.harja/anti-csrf-token
+            touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana}
+            java -jar /tmp/harja/target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
             for i in $(seq 10); do
               curl localhost:3000 > /dev/null 2>&1 && break
               echo "appis ei käynnissä, odotellaan..."
