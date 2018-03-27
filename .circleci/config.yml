@@ -47,7 +47,8 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/harja
-      - deploy: |
+      - deploy:
+          command: |
           pwd
           ls /tmp/harja
           tar xf testidata.tar
@@ -60,13 +61,8 @@ jobs:
             sleep 10
           done
 
-      - run: |
           cd /tmp/harja && npm i cypress@1.x && $(npm bin)/cypress verify
-      - save_cache:
-          key: v1-npm-deps-{{ checksum "package-lock.json" }}
-          paths:
-            - node_modules
-      - run: cd /tmp/harja && $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
+          cd /tmp/harja && $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
       - store_artifacts:
           path: cypress/screenshots
 
