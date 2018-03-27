@@ -63,6 +63,7 @@ jobs:
             cd ..
             cp /tmp/harja/asetukset.edn .
             sed -i -e 's/:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
+            sed -i -e 's/:kehitysmoodi true/:kehitysmoodi false/g' asetukset.edn
             mkdir -p ../.harja
             echo aaaa > ../.harja/anti-csrf-token
             touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana}
