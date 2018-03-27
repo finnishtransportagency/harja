@@ -95,7 +95,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     :varoitus "varoitus"
                     :virhe "virhe"
                     :huomautus "huomautus")}
-     (doall (for* [v (distinctvirheet)]
+     (doall (for* [v (distinct virheet)]
 
        [:span
         (case tyyppi
