@@ -30,7 +30,7 @@ jobs:
           cd /tmp
           bash sisus.bash uberjar $CIRCLE_BRANCH
           cd /tmp/harja
-          tar cf tietokanta.tar tietokanta
+          tar cf testidata.tar cypress.json tietokanta
 
       - persist_to_workspace:
           root: /tmp/harja
@@ -47,10 +47,10 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/harja
-      - run: |
+      - deploy: |
           pwd
           ls /tmp/harja
-          tar xf tietokanta.tar
+          tar xf testidata.tar
 
           cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost
           java -jar target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
@@ -61,12 +61,12 @@ jobs:
           done
 
       - run: |
-          cd ~/project && npm i cypress@1.x && $(npm bin)/cypress verify
+          cd /tmp/harja && npm i cypress@1.x && $(npm bin)/cypress verify
       - save_cache:
           key: v1-npm-deps-{{ checksum "package-lock.json" }}
           paths:
             - node_modules
-      - run: $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
+      - run: cd /tmp/harja && $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
       - store_artifacts:
           path: cypress/screenshots
 
