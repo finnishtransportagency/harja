@@ -84,6 +84,7 @@ FROM tiemerkinnan_yksikkohintainen_toteuma tyt
 WHERE
   poistettu IS NOT TRUE
   AND urakka = :urakka
+  AND (SELECT EXTRACT(YEAR FROM tyt.paivamaara) :: INTEGER) = :vuosi
   AND ((yllapitokohde IS NULL)
        OR
        (yllapitokohde IS NOT NULL

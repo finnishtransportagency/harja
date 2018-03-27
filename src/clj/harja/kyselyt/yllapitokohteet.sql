@@ -269,6 +269,8 @@ FROM yllapitokohde ypk
                                      AND ypko.poistettu IS NOT TRUE
 WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+                                     OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohteet-lomakkeelle

@@ -367,6 +367,69 @@
         (is (nil? poistettu-kohde) "Poistettua kohdetta ei ole enää vastauksessa")
         (is (not= urakan-geometria-lisayksen-jalkeen urakan-geometria-poiston-jalkeen "Geometria päivittyi"))))))
 
+(deftest paivita-paallystyskohde-kantaan
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+        urakan-geometria-ennen-muutosta (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERE id = " urakka-id ";"))
+        maara-ennen-lisaysta (ffirst (q
+                                       (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+        vanha-kohdeosa-kannassa (first (q-map
+                                         (str "SELECT
+                                      tr_numero,
+                                      tr_alkuosa,
+                                      tr_alkuetaisyys,
+                                      tr_loppuosa,
+                                      tr_loppuetaisyys
+                                      FROM yllapitokohdeosa
+                                         WHERE yllapitokohde = " leppajarven-ramppi-id ";")))]
+
+    (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                              :sopimus-id sopimus-id
+                                                              :kohteet [(assoc yllapitokohde-testidata
+                                                                          :tr-numero 20
+                                                                          :tr-alkuosa 1
+                                                                          :tr-alkuetaisyys 0
+                                                                          :tr-loppuosa 1
+                                                                          :tr-loppuetaisyys 2
+                                                                          :id leppajarven-ramppi-id)]})
+    (let [maara-lisayksen-jalkeen (ffirst (q
+                                            (str "SELECT count(*) FROM yllapitokohde
+                                         WHERE urakka = " urakka-id " AND sopimus= " sopimus-id ";")))
+          kohteet-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :urakan-yllapitokohteet
+                                           +kayttaja-jvh+ {:urakka-id urakka-id
+                                                           :sopimus-id sopimus-id})
+          paivittynyt-kohdeosa-kannassa (first (q-map
+                                                 (str "SELECT
+                                      tr_numero,
+                                      tr_alkuosa,
+                                      tr_alkuetaisyys,
+                                      tr_loppuosa,
+                                      tr_loppuetaisyys
+                                      FROM yllapitokohdeosa
+                                         WHERE yllapitokohde = " leppajarven-ramppi-id ";")))
+          urakan-geometria-lisayksen-jalkeen (ffirst (q "SELECT ST_ASTEXT(alue) FROM urakka WHERe id = " urakka-id ";"))]
+      (is (not (nil? kohteet-kannassa)))
+      (is (= (count (filter #(= (:nimi %) "Testiramppi4564ddf") kohteet-kannassa)) 1))
+      (is (not= urakan-geometria-ennen-muutosta urakan-geometria-lisayksen-jalkeen "Urakan geometria päivittyi"))
+      (is (= vanha-kohdeosa-kannassa
+             {:tr_numero 20
+              :tr_alkuosa 1
+              :tr_alkuetaisyys 0
+              :tr_loppuosa 3
+              :tr_loppuetaisyys 0}))
+      (is (= paivittynyt-kohdeosa-kannassa
+             {:tr_numero 20
+              :tr_alkuosa 1
+              :tr_alkuetaisyys 0
+              :tr_loppuosa 1
+              :tr_loppuetaisyys 2})
+          "Pääkohdettä kutistettiin, kohdeosa kutistuu pääkohteen sisälle")
+      (is (= maara-ennen-lisaysta maara-lisayksen-jalkeen)))))
+
 (deftest tallenna-uusi-paallystyskohde-kantaan-vuodelle-2015
   (let [urakka-id (hae-muhoksen-paallystysurakan-id)
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
@@ -398,7 +461,8 @@
                                   :tr-loppuetaisyys 0
                                   :tr-ajorata 1
                                   :tr-kaista 1}]
-    (testing "päällekkäin menevät kohteet samana vuonna"
+
+    (testing "Päällekkäin menevät kohteet samana vuonna"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -416,7 +480,33 @@
                    :validointivirhe)
                :kohteet-paallekain))))
 
-    (testing "päällekkäin menevät kohteet eri vuonna"
+    (testing "Kohde ei mene päällekäin Leppäjärven kanssa, koska se päivitetään samalla eri tielle"
+      (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+            sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+            leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :tallenna-yllapitokohteet +kayttaja-jvh+
+                                    {:urakka-id urakka-id
+                                     :sopimus-id sopimus-id
+                                     :vuosi 2017
+                                     :kohteet [kohde-leppajarven-paalle
+                                               ;; Päivitetään samalla Leppäjärven ramppi eri tielle
+                                               {:id leppajarven-ramppi-id
+                                                :kohdenumero 123
+                                                :nimi "Leppäjärven ramppi (päivitetty)"
+                                                :tr-numero 21
+                                                :tr-alkuosa 1
+                                                :tr-alkuetaisyys 0
+                                                :tr-loppuosa 3
+                                                :tr-loppuetaisyys 0
+                                                :tr-ajorata 1
+                                                :tr-kaista 1}]})]
+
+        (is (not= (:status vastaus) :validointiongelma)
+            "Yritetään tallentaa uusi ylläpitokohde, joka menee Leppäjärven rampin päälle.
+             Samalla tallennetaan kuitenkin myös uusi Leppäjärven ramppi, jossa tieosoite siirtyy. Ei tule Herjaa.")))
+
+    (testing "Päällekkäin menevät kohteet eri vuonna"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -429,7 +519,7 @@
         (is (not= (:status vastaus) :validointiongelma)
             "Kohteet menevät päällekkäin, mutta eri vuonna --> ei herjaa")))
 
-    (testing "päällekkäin menevät osoitteet eri tiellä"
+    (testing "Päällekkäin menevät osoitteet eri tiellä"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -439,12 +529,12 @@
                                      :vuosi 2017
                                      :kohteet [(assoc
                                                  kohde-leppajarven-paalle
-                                                 :tr-numero 21)]})]
+                                                 :tr-numero 8)]})]
 
         (is (not= (:status vastaus) :validointiongelma)
             "Osoitteet menevät päällekkäin, mutta eri tiellä --> ei herjaa")))
 
-    (testing "päällekkäin menevät osoitteet eri kaistalla"
+    (testing "Päällekkäin menevät osoitteet eri kaistalla"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -459,7 +549,7 @@
         (is (not= (:status vastaus) :validointiongelma)
             "Osoitteet menevät päällekkäin, mutta eri kaistalla --> ei herjaa")))
 
-    (testing "päällekkäin menevät osoitteet eri ajoradalla"
+    (testing "Päällekkäin menevät osoitteet eri ajoradalla"
       (let [urakka-id (hae-muhoksen-paallystysurakan-id)
             sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

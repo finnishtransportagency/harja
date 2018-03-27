@@ -45,13 +45,14 @@
   (jdbc/with-db-transaction [db db]
     (yy/hae-urakan-yllapitokohteet db tiedot)))
 
-(defn hae-tiemerkintaurakalle-osoitetut-yllapitokohteet [db user {:keys [urakka-id]}]
+(defn hae-tiemerkintaurakalle-osoitetut-yllapitokohteet [db user {:keys [urakka-id vuosi]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan tiemerkintäurakalle osoitetut ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
     (let [yllapitokohteet (into []
                                 (map konv/alaviiva->rakenne)
-                                (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id}))
+                                (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id
+                                                                                         :vuosi vuosi}))
           yllapitokohteet (mapv (partial yy/lisaa-yllapitokohteelle-pituus db) yllapitokohteet)
           yllapitokohteet (konv/sarakkeet-vektoriin
                             yllapitokohteet
@@ -439,17 +440,17 @@
         (do
           (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
           (let [hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
-                                                                        {:urakka-id urakka-id
-                                                                         :sopimus-id sopimus-id
-                                                                         :yllapitokohde-id yllapitokohde-id})
-                kaikki-osat (hae-kaikki-osat)
-                tarkasteltavat-osat (case osatyyppi
-                                      :kohteen-omat-kohdeosat (filter #(= (:tr-numero %) kohteen-tienumero) kaikki-osat)
-                                      :kohteen-muut-kohdeosat (filter #(not= (:tr-numero %) kohteen-tienumero) kaikki-osat)
-                                      kaikki-osat)
-                vanhat-osa-idt (into #{} (map :id) tarkasteltavat-osat)
-                uudet-osa-idt (into #{} (keep :id) osat)
-                poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
+                                                           {:urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :yllapitokohde-id yllapitokohde-id})
+          kaikki-osat (hae-kaikki-osat)
+          tarkasteltavat-osat (case osatyyppi
+                                :kohteen-omat-kohdeosat (filter #(= (:tr-numero %) kohteen-tienumero) kaikki-osat)
+                                :kohteen-muut-kohdeosat (filter #(not= (:tr-numero %) kohteen-tienumero) kaikki-osat)
+                                kaikki-osat)
+          vanhat-osa-idt (into #{} (map :id) tarkasteltavat-osat)
+          uudet-osa-idt (into #{} (keep :id) osat)
+          poistuneet-osa-idt (set/difference vanhat-osa-idt uudet-osa-idt)]
 
             (doseq [id poistuneet-osa-idt]
               (q/poista-yllapitokohdeosa! db {:urakka urakka-id
@@ -545,13 +546,32 @@
                                                       :bitumi_indeksi bitumi-indeksi
                                                       :kaasuindeksi kaasuindeksi
                                                       :toteutunut_hinta toteutunut-hinta
-                                                      :muokkaaja (:id user)}))))
+                                                      :muokkaaja (:id user)})
+
+        ;; Mikäli pääkohde kutistuu lyhyemmäksi kuin alikohteet, korjataan tilanne:
+        (let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :yllapitokohde-id id})
+              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kutistunut-paakohde kohde kohdeosat)]
+          (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :yllapitokohde-id id
+                                               :osat korjatut-kohdeosat})))))
 
 (defn- validoi-tallennettavat-yllapitokohteet
   "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
   [db tallennettavat-kohteet vuosi]
   (let [yha-kohteet (filter :yhaid tallennettavat-kohteet)
-        saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
+        verrattavat-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
+        ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
+        ;; vertailuun uusin tieto kohteista
+        verrattavat-kohteet (map
+                              (fn [verrattava-kohde]
+                                (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
+                                                                       tallennettavat-kohteet))]
+                                  kohde-payloadissa
+                                  verrattava-kohde))
+                              verrattavat-kohteet)]
     (reduce
       (fn [virheet tallennettava-kohde]
         (let [kohteen-virheet
@@ -568,7 +588,7 @@
                                                (select-keys verrattava-kohde [:kohdenumero :nimi :urakka
                                                                               :tr-numero :tr-alkuosa :tr-alkuetaisyys
                                                                               :tr-loppuosa :tr-loppuetaisyys])]}))
-                                saman-vuoden-kohteet))]
+                                verrattavat-kohteet))]
           (if (empty? kohteen-virheet)
             virheet
             (concat virheet kohteen-virheet))))
