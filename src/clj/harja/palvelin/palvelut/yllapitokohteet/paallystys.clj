@@ -474,6 +474,7 @@
           paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           paivitetyt-kohdeosat (yllapitokohteet/tallenna-yllapitokohdeosat
                                  db user {:urakka-id urakka-id :sopimus-id sopimus-id
+                                          :vuosi vuosi
                                           :yllapitokohde-id paallystyskohde-id
                                           :osat (map #(assoc % :id (:kohdeosa-id %))
                                                      (->> paallystysilmoitus

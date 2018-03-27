@@ -253,3 +253,33 @@
 (defn paivita-yllapitourakan-geometria [db urakka-id]
   (log/info "Päivitetään urakan " urakka-id " geometriat.")
   (q/paivita-paallystys-tai-paikkausurakan-geometria db {:urakka urakka-id}))
+
+(defn vaadi-etta-kohdeosat-eivat-mene-paallekkain [db vuosi muut-kohteet]
+  (let [tiet (distinct (map :tr-numero muut-kohteet))
+        kohdeosat (group-by (juxt :tr-numero :tr-ajorata :tr-kaista)
+                            (q/hae-yhden-vuoden-kohdeosat-teille db {:vuosi vuosi
+                                                                     :tiet tiet}))
+        virheet (map (fn [{tallennettava-id :id
+                           :keys [tr-numero tr-ajorata tr-kaista]
+                           :as tallennettava-kohde}]
+                       (let [kohteet-samalta-sijainnilta (get kohdeosat [tr-numero tr-ajorata tr-kaista])]
+                         (map (fn [{olemassa-oleva-id :id
+                                    :keys [urakan-nimi
+                                           paakohteen-nimi
+                                           yllapitokohteen-nimi]
+                                    :as olemassaoleva-kohde}]
+                                (when (and (not= olemassa-oleva-id tallennettava-id)
+                                           (tr/kohdeosat-paalekkain? olemassaoleva-kohde tallennettava-kohde))
+                                  (format "Kohde: '%s' menee päällekkäin urakan: '%s' kohteen: '%s' kohdeosan: '%s' kanssa."
+                                          (:nimi tallennettava-kohde)
+                                          urakan-nimi
+                                          paakohteen-nimi
+                                          yllapitokohteen-nimi)))
+                              kohteet-samalta-sijainnilta)))
+                     muut-kohteet)]
+    (->> virheet
+      (apply concat)
+      (filter (comp not nil?))
+      (seq))))
+
+

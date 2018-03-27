@@ -612,6 +612,7 @@
                         (tiedot/tallenna-yllapitokohdeosat!
                           {:urakka-id (:id urakka)
                            :sopimus-id sopimus-id
+                           :vuosi @u/valittu-urakan-vuosi
                            :yllapitokohde-id (:id rivi)
                            :osat rivit
                            :osatyyppi osatyyppi})))
