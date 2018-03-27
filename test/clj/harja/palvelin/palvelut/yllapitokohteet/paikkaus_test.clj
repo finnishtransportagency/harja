@@ -195,11 +195,14 @@
                                                 +kayttaja-jvh+
                                                 {::paikkaus/urakka-id urakka-id
                                                  :tr {:numero 20, :alkuosa 1, :alkuetaisyys 1, :loppuosa 1}})
+        testikohde-id (some #(when (= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi]))
+                               (get-in % [::paikkaus/paikkauskohde ::paikkaus/id]))
+                            paikkaukset)
         paikaukset-paikkauskohteet-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
                                                             :hae-urakan-paikkauskohteet
                                                             +kayttaja-jvh+
                                                             {::paikkaus/urakka-id urakka-id
-                                                             :paikkaus-nimet #{"Testikohde"}})]
+                                                             :paikkaus-idt #{testikohde-id}})]
     (is (= (count paikkaukset) 4))
     (is (= (count paikkaukset-tr-filtteri) 2))
     (is (empty? (remove #(= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])) paikaukset-paikkauskohteet-filtteri)))))
