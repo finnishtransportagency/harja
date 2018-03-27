@@ -95,7 +95,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                     :varoitus "varoitus"
                     :virhe "virhe"
                     :huomautus "huomautus")}
-     (for* [v virheet]
+     (for* [v (distinct virheet)]
        [:span
         (case tyyppi
           :huomautus (ikonit/livicon-info-circle)
