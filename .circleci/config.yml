@@ -54,13 +54,23 @@ jobs:
             cd cypress-run
             tar xf /tmp/harja/testidata.tar
 
-            cd tietokanta && mvn flyway:migrate && sh devdb_testidata.sh --localhost && cd ..
+            cd tietokanta
+            mvn flyway:migrate
+            psql -h localhost -U harja harja -X -q -a -v ON_ERROR_STOP=1 --pset pager=off -f testidata.sql > /dev/null
+            psql -h localhost -U harja harja -c "CREATE DATABASE harjatest_template WITH TEMPLATE harja OWNER harjatest;"
+            psql -h localhost -U harja harja -c "CREATE DATABASE harjatest WITH TEMPLATE harjatest_template OWNER harjatest;"
+            cd ..
             java -jar target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
             for i in $(seq 10); do
               curl localhost:3000 > /dev/null 2>&1 && break
               echo "appis ei käynnissä, odotellaan..."
-            sleep 10
+              sleep 10
             done
+            echo "pätkä appiksen logia:"
+            echo +++++++++++++++++++
+            tail -50 harja.output
+            echo +++++++++++++++++++
+            echo
 
             cd /tmp/cypress-run && npm i cypress@1.x && $(npm bin)/cypress verify
             cd /tmp/cypress-run && $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
