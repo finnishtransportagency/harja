@@ -25,7 +25,6 @@
             [harja.tiedot.urakka.aikataulu-test]
             [harja.views.kartta-test]
             [harja.tiedot.tilannekuva.tilannekuva-test]
-            [harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake-test]
             [harja.views.ilmoitukset.tietyoilmoituslomake-test]
             [harja.views.kartta.tasot-test]
@@ -80,7 +79,6 @@
            'harja.tiedot.urakka.aikataulu-test
            'harja.views.kartta-test
            'harja.tiedot.tilannekuva.tilannekuva-test
-           'harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot-test
            'harja.views.ilmoitukset.tietyoilmoitushakulomake-test
            'harja.views.ilmoitukset.tietyoilmoituslomake-test
            'harja.views.kartta.tasot-test
