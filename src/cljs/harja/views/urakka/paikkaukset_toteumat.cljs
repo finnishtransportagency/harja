@@ -12,7 +12,22 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [cljs.core.async :refer [<! timeout]])
+  (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(defn paikkauskohde-valinta [e! paikkauskohde]
+  [:label {:on-click #(.stopPropagation %)
+           :style {:width "100%"}
+           :id (str "paikkauskohde-label-" (:id paikkauskohde))}
+   (:nimi paikkauskohde)
+   [:input {:id (str "paikkauskohde-input-" (:id paikkauskohde))
+            :style {:display "inline-block"
+                    :float "right"}
+            :type "checkbox"
+            :checked (:valittu? paikkauskohde)
+            :on-change #(let [valittu? (-> % .-target .-checked)]
+                          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))}]])
 
 (defn hakuehdot [e! {:keys [valinnat] :as app}]
   (let [tr-atomi (partial tiedot/valinta-wrap e! app)
@@ -35,19 +50,12 @@
        [yleiset/livi-pudotusvalikko
         {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? (:urakan-paikkauskohteet valinnat)))]
                             (str valittujen-paikkauskohteiden-maara (if (= 1 valittujen-paikkauskohteiden-maara)
-                                                              " paikkauskohde valittu"
-                                                              " paikkauskohdetta valittu")))
-         :itemit-komponentteja? true}
+                                                                      " paikkauskohde valittu"
+                                                                      " paikkauskohdetta valittu")))
+         :itemit-komponentteja? true
+         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
         (mapv (fn [paikkauskohde]
-                [:label {:on-click #(.stopPropagation %)
-                         :style {:width "100%"}}
-                 (:nimi paikkauskohde)
-                 [:input {:style {:display "inline-block"
-                                  :float "right"}
-                          :type "checkbox"
-                          :checked (:valittu? paikkauskohde)
-                          :on-change #(let [valittu? (-> % .-target .-checked)]
-                                        (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))}]])
+                [paikkauskohde-valinta e! paikkauskohde])
               (:urakan-paikkauskohteet valinnat))]]]]))
 
 (defn paikkaukset-vetolaatikko

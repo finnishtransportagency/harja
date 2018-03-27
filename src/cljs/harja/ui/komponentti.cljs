@@ -190,12 +190,27 @@
        (callback vanhat (vec uudet))))})
 
 (defn klikattu-ulkopuolelle
-  "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen."
-  [ulkopuolella-fn]
-  (kuuntelija :body-klikkaus
-              (fn [this tapahtuma]
-                (when-not (dom/sisalla? this (:tapahtuma tapahtuma))
-                  (ulkopuolella-fn)))))
+  "Mixin, joka kutsuu annettua funktiota kun klikataan komponentin ulkopuolelle. Esim. hovereiden sulkemiseen.
+
+   :tarkista-komponentti?               Jos tätä käytetään, niin eventistä tarkistetaan ensin, että onko sen referoima
+                                        elementti enää mountattuna. On mahdollista, että react on kerennyt jo unmountata
+                                        elementin ja mountata sen takaisin jonkun eventin aiheuttaman päivityksen takia,
+                                        jolloinka dom/sisalla? funktio luulee, että eventin referoima node ei ole tämän
+                                        noden sisällä. Eventin triggeröivällä elementillä täytyy olla id asetettuna."
+  ([ulkopuolella-fn] (klikattu-ulkopuolelle ulkopuolella-fn nil))
+  ([ulkopuolella-fn {:keys [tarkista-komponentti?]}]
+   (let [tarkista-onko-komponentti-unmountattu (fn [tapahtuma]
+                                                 (if-let [elementti (-> (:tapahtuma tapahtuma) .-target .-id (js/document.getElementById))]
+                                                   (if (not= elementti (.-target (:tapahtuma tapahtuma)))
+                                                     elementti
+                                                     (.-target (:tapahtuma tapahtuma)))))]
+     (kuuntelija :body-klikkaus
+                 (fn [this tapahtuma]
+                   (when-not (if tarkista-komponentti?
+                               (dom/sisalla? this (tarkista-onko-komponentti-unmountattu tapahtuma)
+                                             {:elementti? true})
+                               (dom/sisalla? this (:tapahtuma tapahtuma)))
+                     (ulkopuolella-fn)))))))
 
 (defn ulos
   "Mixin, joka kutsuu annettua funktiota komponentin poistuessa."
