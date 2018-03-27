@@ -6,8 +6,7 @@
             [harja.kyselyt.tielupa :as q]))
 
 (defn hae-tieluvat [db user tiedot]
-  (let [hakuehdot tiedot]
-    (q/hae-tieluvat db hakuehdot)))
+  (q/hae-tieluvat-hakunakymaan db tiedot))
 
 (defn hae-tielupien-hakijat [db user hakuteksti]
   (q/hae-tielupien-hakijat db hakuteksti))
