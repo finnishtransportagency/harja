@@ -36,7 +36,7 @@ jobs:
           root: /tmp/harja
           paths:
             - target/harja-0.0.1-SNAPSHOT-standalone.jar
-            - tietokanta.tar
+            - testidata.tar
 
   e2e-testit:
     docker:
@@ -74,3 +74,5 @@ workflows:
       - front-testit
       - prod-build
       - e2e-testit
+         requires:
+           - prod-build
