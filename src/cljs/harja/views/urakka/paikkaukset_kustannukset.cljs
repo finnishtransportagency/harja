@@ -16,7 +16,8 @@
 
 (defn otsikkokomponentti
   [e! id]
-  [{:sijainti "80%"
+  [{:tyyli {:float "right"
+            :position "relative"}
     :sisalto
     (fn [_]
       [napit/yleinen-ensisijainen

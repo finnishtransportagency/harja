@@ -360,9 +360,9 @@
           (ikonit/livicon-minus)))
 
       (map-indexed
-        (fn [i {:keys [sijainti sisalto]}]
+        (fn [i {:keys [sijainti sisalto tyyli]}]
           ^{:key i}
-          [:div.grid-valiotsikko-custom-komponentti {:style {:top -2 :left sijainti}}
+          [:div.grid-valiotsikko-custom-komponentti {:style (or tyyli {:top -2 :left sijainti})}
            [sisalto {:id valiotsikko-id}]])
         otsikkokomponentit)
 
