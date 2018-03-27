@@ -436,9 +436,9 @@
     ;; Todo: Päällystys 2.0. Testi osatyyppi filtterille
     (let [kohteen-tienumero (:tr-numero (first (q/hae-yllapitokohde db {:id yllapitokohde-id})))
           hae-kaikki-osat #(hae-yllapitokohteen-yllapitokohdeosat db user
-                                                           {:urakka-id urakka-id
-                                                            :sopimus-id sopimus-id
-                                                            :yllapitokohde-id yllapitokohde-id})
+                                                                  {:urakka-id urakka-id
+                                                                   :sopimus-id sopimus-id
+                                                                   :yllapitokohde-id yllapitokohde-id})
           kaikki-osat (hae-kaikki-osat)
           tarkasteltavat-osat (case osatyyppi
                                 :kohteen-omat-kohdeosat (filter #(= (:tr-numero %) kohteen-tienumero) kaikki-osat)
@@ -558,7 +558,16 @@
   "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
   [db tallennettavat-kohteet vuosi]
   (let [yha-kohteet (filter :yhaid tallennettavat-kohteet)
-        saman-vuoden-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})]
+        verrattavat-kohteet (q/hae-yhden-vuoden-yha-kohteet db {:vuosi vuosi})
+        ;; Mikäli käyttäjä on tekemässä päivityksiä olemassa oleviin saman vuoden kohteisiin, otetaan
+        ;; vertailuun uusin tieto kohteista
+        verrattavat-kohteet (map
+                              (fn [verrattava-kohde]
+                                (if-let [kohde-payloadissa (first (filter #(= (:id %) (:id verrattava-kohde))
+                                                                       tallennettavat-kohteet))]
+                                  kohde-payloadissa
+                                  verrattava-kohde))
+                              verrattavat-kohteet)]
     (reduce
       (fn [virheet tallennettava-kohde]
         (let [kohteen-virheet
@@ -575,7 +584,7 @@
                                                (select-keys verrattava-kohde [:kohdenumero :nimi :urakka
                                                                               :tr-numero :tr-alkuosa :tr-alkuetaisyys
                                                                               :tr-loppuosa :tr-loppuetaisyys])]}))
-                                saman-vuoden-kohteet))]
+                                verrattavat-kohteet))]
           (if (empty? kohteen-virheet)
             virheet
             (concat virheet kohteen-virheet))))
