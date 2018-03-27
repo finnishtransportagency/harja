@@ -17,7 +17,8 @@
                  :tieluvan-tallennus-kaynnissa? false
                  :nakymassa? false}))
 
-(def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :aikavali])
+(def valintojen-avaimet [:tr :luvan-numero :lupatyyppi :hakija :voimassaolo :sijainti
+                         :myonnetty])
 
 (defrecord Nakymassa? [nakymassa?])
 (defrecord PaivitaValinnat [uudet])
@@ -42,11 +43,18 @@
                  ::tielupa/tyyppi (:lupatyyppi valinnat)
                  ::tielupa/ulkoinen-tunniste (let [numero (js/parseInt (:luvan-numero valinnat) 10)]
                                                (when-not (js/isNaN numero) numero))
-                 ::tielupa/voimassaolon-alkupvm (first (:aikavali valinnat))
-                 ::tielupa/voimassaolon-loppupvm (second (:aikavali valinnat))
+                 ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
+                 ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
+                 :myonnetty (:myonnetty valinnat)
                  ;; Näiden muoto vähän epäselvä
-                 ;:tr (:tr valinnat)
-                 ))
+                 ::tielupa/sijainnit
+                 {::tielupa/tie (get-in valinnat [:tr :tie])
+                  ::tielupa/aosa (get-in valinnat [:tr :aosa])
+                  ::tielupa/aet (get-in valinnat [:tr :aet])
+                  ::tielupa/losa (get-in valinnat [:tr :losa])
+                  ::tielupa/let (get-in valinnat [:tr :let])
+
+                  ::tielupa/geometria (:sijainti valinnat)}))
       {})
 
     {}))

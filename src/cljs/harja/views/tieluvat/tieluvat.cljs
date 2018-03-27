@@ -48,7 +48,8 @@
      [valinnat/valintaryhmat-3
       [:div
        [kentat/tee-otsikollinen-kentta {:otsikko "Tierekisteriosoiteväli"
-                                        :kentta-params {:tyyppi :tierekisteriosoite}
+                                        :kentta-params {:tyyppi :tierekisteriosoite
+                                                        :sijainti (atomi :sijainti)}
                                         :arvo-atom (atomi :tr)}]]
       [:div
        [kentat/tee-otsikollinen-kentta {:otsikko "Luvan numero"
@@ -67,7 +68,8 @@
                                         :arvo-atom (atomi :hakija)}]]
 
       [:div
-       [valinnat/aikavali (atomi :aikavali)]]]]))
+       [valinnat/aikavali (atomi :myonnetty) {:otsikko "Myönnetty välillä"}]
+       [valinnat/aikavali (atomi :voimassaolo) {:otsikko "Voimassaolon aikaväli"}]]]]))
 
 (defn tielupataulukko [e! {:keys [haetut-tieluvat tielupien-haku-kaynnissa?] :as app}]
   [:div
@@ -82,11 +84,21 @@
      :tyhja (if tielupien-haku-kaynnissa?
               [ajax-loader "Haku käynnissä"]
               "Ei liikennetapahtumia")}
-    [{:otsikko "Pvm"
+    [{:otsikko "Myönnetty"
+      :leveys 1
+      :tyyppi :pvm
+      :fmt pvm/pvm-opt
+      :nimi ::tielupa/myontamispvm}
+     {:otsikko "Voimassaolon alku"
       :leveys 1
       :tyyppi :pvm
       :fmt pvm/pvm-opt
       :nimi ::tielupa/voimassaolon-alkupvm}
+     {:otsikko "Voimassaolon loppu"
+      :leveys 1
+      :tyyppi :pvm
+      :fmt pvm/pvm-opt
+      :nimi ::tielupa/voimassaolon-loppupvm}
      {:otsikko "Lupatyyppi"
       :leveys 1
       :tyyppi :string
