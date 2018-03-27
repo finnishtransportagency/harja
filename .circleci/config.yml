@@ -62,8 +62,8 @@ jobs:
             sleep 10
             done
 
-            cd /tmp/harja && npm i cypress@1.x && $(npm bin)/cypress verify
-            cd /tmp/harja && $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
+            cd /tmp/cypress-run && npm i cypress@1.x && $(npm bin)/cypress verify
+            cd /tmp/cypress-run && $(npm bin)/cypress run --browser chrome  --spec cypress/integration/nakymien_avaus_spec.js
       - store_artifacts:
           path: cypress/screenshots
 
