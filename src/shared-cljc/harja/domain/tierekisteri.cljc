@@ -31,17 +31,34 @@
                    ::alkuosa ::alkuetaisyys]
           :opt-un [::loppuosa ::loppuetaisyys]))
 
-(defn normalisoi
-  "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
-  [osoite]
+
+(defn muunna-osoitteen-avaimet [tie-avain
+                                alkuosa-avain
+                                alkuetaisyys-avain
+                                loppuosa-avain
+                                loppuetaisyys-avain
+                                ajorata-avain
+                                kaista-avain
+                                osoite]
   (let [osoite (or osoite {})
         ks (fn [& avaimet]
              (some osoite avaimet))]
-    {::tie (ks ::tie :numero :tr-numero :tie)
-     ::aosa (ks ::aosa :alkuosa :tr-alkuosa :aosa)
-     ::aet (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
-     ::losa (ks ::losa :loppuosa :tr-loppuosa :losa)
-     ::let (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)}))
+    {tie-avain (ks ::tie :numero :tr-numero :tie)
+     alkuosa-avain (ks ::aosa :alkuosa :tr-alkuosa :aosa)
+     alkuetaisyys-avain (ks ::aet :alkuetaisyys :tr-alkuetaisyys :aet)
+     loppuosa-avain (ks ::losa :loppuosa :tr-loppuosa :losa)
+     loppuetaisyys-avain (ks ::let :loppuetaisyys :tr-loppuetaisyys :let)
+     ajorata-avain (ks ::arj ::ajorata :ajr :ajorata)
+     kaista-avain (ks ::kaista :kaista)}))
+
+(defn normalisoi
+  "Muuntaa ei-ns avaimet :harja.domain.tierekisteri avaimiksi."
+  [osoite]
+  (muunna-osoitteen-avaimet ::tie ::aosa ::aet ::losa ::let ::ajorata :kaista osoite))
+
+(defn tr-alkuiseksi [osoite]
+  "Muuntaa osoitteen avaimet tr-prefiksatuiksi"
+  (muunna-osoitteen-avaimet :tr-tie :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista osoite))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (::tie (normalisoi tie1)) (::tie (normalisoi tie2))))
@@ -302,6 +319,16 @@
            (= tr-loppuosa tr-alkuosa)
            (= tr-loppuetaisyys tr-alkuetaisyys))))
 
+(defn kohdeosat-paalekkain? [osa-yksi osa-kaksi]
+  (if (and (= (:tr-numero osa-yksi) (:tr-numero osa-kaksi))
+           (= (:tr-ajorata osa-yksi) (:tr-ajorata osa-kaksi))
+           (= (:tr-kaista osa-yksi) (:tr-kaista osa-kaksi)))
+    (cond
+      (pistemainen? osa-yksi) (tr-vali-paakohteen-sisalla? osa-kaksi osa-yksi)
+      (pistemainen? osa-kaksi) (tr-vali-paakohteen-sisalla? osa-yksi osa-kaksi)
+      :else (tr-vali-leikkaa-tr-valin? osa-yksi osa-kaksi))
+    false))
+
 (defn alikohteet-tayttamaan-kohde
   "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita niin, että alikohteet täyttävät koko pääkohteen.
    Palauttaa korjatut kohteet. Olettaa, että pääkohde alikohteineen on samalla tiellä."
@@ -369,3 +396,23 @@
                       (geo/viivojen-paatepisteet-koskettavat-toisiaan? geo1-viiva geo2-viiva threshold))
                     geometria2-viivat))
             geometria1-viivat))))
+
+(defn kohdeosa-paalekkain-muiden-kohdeosien-kanssa
+  ([kohdeosa muut-kohdeosat] (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat :id))
+  ([kohdeosa muut-kohdeosat id-avain]
+   (keep #(when (kohdeosat-paalekkain? kohdeosa %)
+            {:viesti "Kohdeosa on päällekkäin toisen kohdeosan kanssa"
+             :validointivirhe :kohteet-paallekain
+             :kohteet (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys id-avain) [% kohdeosa])})
+         muut-kohdeosat)))
+
+(defn kohdeosat-keskenaan-paallekkain
+  ([kohdeosat] (kohdeosat-keskenaan-paallekkain kohdeosat :id))
+  ([kohdeosat id-avain]
+   (let [paallekkaiset (flatten (for [kohdeosa kohdeosat
+                                      :let [muut-kohdeosat (keep (fn [muu-kohdeosa]
+                                                                   (when-not (= (id-avain kohdeosa) (id-avain muu-kohdeosa))
+                                                                     muu-kohdeosa))
+                                                                 kohdeosat)]]
+                                  (kohdeosa-paalekkain-muiden-kohdeosien-kanssa kohdeosa muut-kohdeosat id-avain)))]
+     (distinct paallekkaiset))))

@@ -267,6 +267,8 @@ FROM yllapitokohde ypk
                                      AND ypko.poistettu IS NOT TRUE
 WHERE
   ypk.suorittava_tiemerkintaurakka = :urakka
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+                                     OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-yllapitokohteet-lomakkeelle
@@ -447,7 +449,7 @@ VALUES (:yllapitokohde,
 -- name: luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
-                              tr_loppuosa, tr_loppuetaisyys, ulkoinen_id, sijainti)
+                              tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, ulkoinen_id, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
         :tr_numero,
@@ -455,6 +457,8 @@ VALUES (:yllapitokohde,
         :tr_alkuetaisyys,
         :tr_loppuosa,
         :tr_loppuetaisyys,
+        :tr_ajorata,
+        :tr_kaista,
         :ulkoinen-id,
         (SELECT tierekisteriosoitteelle_viiva AS geom
          FROM tierekisteriosoitteelle_viiva(CAST(:tr_numero AS INTEGER),

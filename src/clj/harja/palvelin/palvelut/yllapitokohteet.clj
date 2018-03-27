@@ -45,13 +45,14 @@
   (jdbc/with-db-transaction [db db]
     (yy/hae-urakan-yllapitokohteet db tiedot)))
 
-(defn hae-tiemerkintaurakalle-osoitetut-yllapitokohteet [db user {:keys [urakka-id]}]
+(defn hae-tiemerkintaurakalle-osoitetut-yllapitokohteet [db user {:keys [urakka-id vuosi]}]
   (yy/tarkista-urakkatyypin-mukainen-lukuoikeus db user urakka-id)
   (log/debug "Haetaan tiemerkintäurakalle osoitetut ylläpitokohteet.")
   (jdbc/with-db-transaction [db db]
     (let [yllapitokohteet (into []
                                 (map konv/alaviiva->rakenne)
-                                (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id}))
+                                (q/hae-tiemerkintaurakalle-osoitetut-yllapitokohteet db {:urakka urakka-id
+                                                                                         :vuosi vuosi}))
           yllapitokohteet (mapv (partial yy/lisaa-yllapitokohteelle-pituus db) yllapitokohteet)
           yllapitokohteet (konv/sarakkeet-vektoriin
                             yllapitokohteet
@@ -541,20 +542,7 @@
                                                       :bitumi_indeksi bitumi-indeksi
                                                       :kaasuindeksi kaasuindeksi
                                                       :toteutunut_hinta toteutunut-hinta
-                                                      :muokkaaja (:id user)})
-        ;; Muokataan alikohteet kattamaan edelleen koko pääkohde
-        ; Todo: Päällystys 2.0. Tätä ei enää tarvitse tehdä, mutta ongelma muodostuu jos pääkohde muokataa
-        ; lyhyemäksi ja alikohteet menevät siitä yli. Sitten ollaan epävalidissa tilassa.
-        ; Ratkaisuehdotus 1: Ennen ylläpitokohteen tallennusta tutki, menevätkä alikohteet kohteesta yli, ja heitä validointiherja jos menee?
-        ; Ratkaisuehdotus 2: Venytä alikohteita vain silloin kun kohde lyhenee alusta tai lopusta lyhyemmäksi kuin samassa päässä oleva alikohde.
-        #_(let [kohdeosat (hae-yllapitokohteen-yllapitokohdeosat db user {:urakka-id urakka-id
-                                                                        :sopimus-id sopimus-id
-                                                                        :yllapitokohde-id id})
-              korjatut-kohdeosat (tierekisteri/alikohteet-tayttamaan-kohde kohde kohdeosat)]
-          (tallenna-yllapitokohdeosat db user {:urakka-id urakka-id
-                                               :sopimus-id sopimus-id
-                                               :yllapitokohde-id id
-                                               :osat korjatut-kohdeosat})))))
+                                                      :muokkaaja (:id user)}))))
 
 (defn- validoi-tallennettavat-yllapitokohteet
   "Validoi, etteivät saman vuoden YHA-kohteet mene toistensa päälle."
