@@ -10,7 +10,7 @@ language: clojure
 jdk:
   - oraclejdk8
 before_install:
-  - sudo lein upgrade 2.7.1
+  - yes | sudo env LEIN_ROOT=true lein upgrade 2.7.1
   - lein version
   - (cd /tmp; echo '(+ 1 1)'|lein repl)
   - sh tietokanta/travis.sh
