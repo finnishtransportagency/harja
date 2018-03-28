@@ -1,8 +1,9 @@
 (ns harja.tiedot.tieluvat.tieluvat
   (:require [reagent.core :as r :refer [atom]]
             [tuck.core :as tuck]
-            [harja.tyokalut.tuck :as tt]
             [cljs.core.async :refer [<!]]
+            [harja.loki :refer [log]]
+            [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.protokollat :as protokollat]
             [harja.asiakas.kommunikaatio :as k]
@@ -39,22 +40,27 @@
   (if-let [valinnat (:valinnat app)]
     (or
       (spec-apurit/poista-nil-avaimet
-       (assoc {} ::tielupa/hakija-nimi (:hakija valinnat)
-                 ::tielupa/tyyppi (:lupatyyppi valinnat)
-                 ::tielupa/ulkoinen-tunniste (let [numero (js/parseInt (:luvan-numero valinnat) 10)]
-                                               (when-not (js/isNaN numero) numero))
-                 ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
-                 ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
-                 :myonnetty (:myonnetty valinnat)
-                 ;; Näiden muoto vähän epäselvä
-                 ::tielupa/sijainnit
-                 {::tielupa/tie (get-in valinnat [:tr :tie])
-                  ::tielupa/aosa (get-in valinnat [:tr :aosa])
-                  ::tielupa/aet (get-in valinnat [:tr :aet])
-                  ::tielupa/losa (get-in valinnat [:tr :losa])
-                  ::tielupa/let (get-in valinnat [:tr :let])
+        (assoc {} ::tielupa/hakija-nimi (:hakija valinnat)
+                  ::tielupa/tyyppi (:lupatyyppi valinnat)
+                  ::tielupa/ulkoinen-tunniste (let [numero (js/parseInt (:luvan-numero valinnat) 10)]
+                                                (when-not (js/isNaN numero) numero))
+                  ::tielupa/voimassaolon-alkupvm (first (:voimassaolo valinnat))
+                  ::tielupa/voimassaolon-loppupvm (second (:voimassaolo valinnat))
+                  :myonnetty (:myonnetty valinnat)
 
-                  ::tielupa/geometria (:sijainti valinnat)}))
+                  ::tielupa/sijainnit
+                  (let [tie (get-in valinnat [:tr :numero])
+                        aosa (get-in valinnat [:tr :alkuosa])
+                        aet (get-in valinnat [:tr :alkuetaisyys])
+                        losa (get-in valinnat [:tr :loppuosa])
+                        let (get-in valinnat [:tr :loppuetaisyys])]
+                    {::tielupa/tie tie
+                     ::tielupa/aosa aosa
+                     ::tielupa/aet aet
+                     ::tielupa/losa (when (and losa let) losa)
+                     ::tielupa/let (when (and losa let) let)
+
+                     ::tielupa/geometria (:sijainti valinnat)})))
       {})
 
     {}))
@@ -85,12 +91,14 @@
   HaeTieluvat
   (process-event [_ {:keys [tielupien-haku-kaynnissa?] :as app}]
     (if-not tielupien-haku-kaynnissa?
-      (-> app
-          (tt/post! :hae-tieluvat
-                    (hakuparametrit app)
-                    {:onnistui ->TieluvatHaettu
-                     :epaonnistui ->TieluvatEiHaettu})
-          (assoc :tielupien-haku-kaynnissa? true))
+      (let [parametrit (hakuparametrit app)]
+        (log "hakuparametrit" (pr-str parametrit))
+        (-> app
+            (tt/post! :hae-tieluvat
+                      parametrit
+                      {:onnistui ->TieluvatHaettu
+                       :epaonnistui ->TieluvatEiHaettu})
+            (assoc :tielupien-haku-kaynnissa? true)))
 
       app))
 

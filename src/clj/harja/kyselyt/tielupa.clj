@@ -31,58 +31,139 @@
          {rivi-loppu (op/between alku loppu)}
          {rivi-alku (op/<= alku) rivi-loppu (op/>= loppu)}))
 
+(defn sama-tie? [tie sijainti]
+  (= tie (get-in sijainti [::tielupa/tie])))
+
+(defn tr-piste-aiemmin-tai-sama? [osa-a et-a osa-b et-b]
+  (boolean
+    (or (< osa-a osa-b)
+        (and (= osa-a osa-b)
+             (<= et-a et-b)))))
+
+
+(defn valilla? [[aosa aet :as alku] [losa loet :as loppu] sijainti]
+  (let [[[aosa aet :as alku]
+         [losa loet :as loppu]]
+        ;; Varmistetaan, että alku on pienempi kuin loppu, yksinkertaistaa logiikkaa
+        (cond
+          ;; Vain alkuosa annettu
+          (nil? loet)
+          [alku loppu]
+
+          (> aosa losa)
+          [loppu alku]
+
+          (and (= aosa losa) (> aet loet))
+          [loppu alku]
+
+          :else
+          [alku loppu])
+
+        tl-aosa (get-in sijainti [::tielupa/aosa])
+        tl-aet (get-in sijainti [::tielupa/aet])
+        tl-losa (get-in sijainti [::tielupa/losa])
+        tl-let (get-in sijainti [::tielupa/let])]
+
+    (boolean
+      (cond
+        ;; Molemmat on pisteitä
+        (and (nil? losa) (nil? loet) (nil? tl-losa) (nil? tl-let))
+        (do (log/debug "Molemmat pisteitä")
+            (= aosa tl-aosa) (= aet tl-aet))
+
+        ;; Tielupa on piste, hakuehto on väli
+        (and (some? losa) (some? loet) (nil? tl-losa) (nil? tl-let))
+        (do (log/debug "Tielupa on piste, hakuehto on väli")
+            ;; Tieluvan ainoa piste on hakuehdon välissä
+            (and (tr-piste-aiemmin-tai-sama? aosa aet tl-aosa tl-aet)
+                 (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet losa loet)))
+
+        ;; Tielupa on väli, hakuehto on piste
+        (and (nil? losa) (nil? loet) (some? tl-losa) (some? tl-let))
+        (do (log/debug "Tielupa oli väli, hakuehto piste")
+            ;; Hakuehdon ainoa piste on tieluvan osoitteen välissä
+            (log/debug tl-aosa "/" tl-aet " " aosa "/" aet " " tl-losa "/" tl-let)
+            (log/debug (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet))
+            (log/debug (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let))
+            (and (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet)
+                 (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let)))
+
+        ;; Molemmat on välejä
+        (and (some? losa) (some? loet) (some? tl-losa) (some? tl-let))
+        (do (log/debug "Molemmat oli välejä")
+            (or
+              ;; hakuehdon alkupiste on tieluvan välissä
+              (and (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet)
+                   (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let))
+              ;; tieluvan alkupiste on hakuehdon välissä
+              (and (tr-piste-aiemmin-tai-sama? aosa aet tl-aosa tl-aet)
+                   (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet losa loet))))
+
+        :else
+        (do
+          (log/debug
+            (str tl-aosa "/" tl-aet "/" tl-losa "/" tl-let)
+            " - "
+            (pr-str alku) "/" (pr-str loppu))
+          false)))))
+
+
+(defn suodata-tieosoitteella [tieluvat sijainnit]
+  (log/debug (str "Suodatetaan " (count tieluvat) " tielupaa sijaintitiedoilla: " (pr-str sijainnit)))
+  (let [tie (::tielupa/tie sijainnit)
+        aosa (::tielupa/aosa sijainnit)
+        aet (::tielupa/aet sijainnit)
+        losa (::tielupa/losa sijainnit)
+        let (::tielupa/let sijainnit)]
+    (if (and tie aosa aet)
+      (filterv
+        ;; Tieluvalla voi (ilmeisesti) olla monta sijaintia.
+        ;; Jos yhdenkään sijainnin tr-osoite osuu hakuvälille, palautetaan lupa
+        (comp
+          (partial some
+                   (every-pred (partial valilla? [aosa aet] [losa let])
+                               (partial sama-tie? tie)))
+          ::tielupa/sijainnit)
+        tieluvat)
+
+      tieluvat)))
+
 (defn hae-tieluvat-hakunakymaan [db hakuehdot]
-  (let [hakuehdot (merge
-                    (dissoc hakuehdot ::tielupa/voimassaolon-loppupvm
-                            ::tielupa/voimassaolon-alkupvm)
-                    #_(let [alku (::tielupa/voimassaolon-alkupvm hakuehdot)
-                            loppu (::tielupa/voimassaolon-loppupvm hakuehdot)]
-                        (cond (and alku loppu)
-                              (op/or
-                                {::tielupa/voimassaolon-alkupvm (op/between alku loppu)}
-                                {::tielupa/voimassaolon-loppupvm (op/between alku loppu)}
-                                {::tielupa/voimassaolon-alkupvm (op/<= alku)
-                                 ::tielupa/voimassaolon-loppupvm (op/>= loppu)})
-                              alku
-                              {::tielupa/voimassaolon-alkupvm (op/<= alku)}
+  (log/debug (str "Hakuehdot " (pr-str hakuehdot)))
+  (->
+    (fetch db
+          ::tielupa/tielupa
+          (set/union
+            harja.domain.tielupa/perustiedot
+            harja.domain.tielupa/hakijan-tiedot
+            harja.domain.tielupa/urakoitsijan-tiedot
+            harja.domain.tielupa/liikenneohjaajan-tiedot
+            harja.domain.tielupa/tienpitoviranomaisen-tiedot
+            harja.domain.tielupa/johto-ja-kaapeliluvan-tiedot)
+          (op/and
+            (when-let [nimi (::tielupa/hakija-nimi hakuehdot)]
+              {::tielupa/hakija-nimi nimi})
+            (when-let [tyyppi (::tielupa/tyyppi hakuehdot)]
+              {::tielupa/tyyppi tyyppi})
+            (when-let [tunniste (::tielupa/ulkoinen-tunniste hakuehdot)]
+              {::tielupa/ulkoinen-tunniste tunniste})
+            (let [alku (::tielupa/voimassaolon-alkupvm hakuehdot)
+                  loppu (::tielupa/voimassaolon-loppupvm hakuehdot)]
+              (cond
+                (and alku loppu)
+                (overlaps? ::tielupa/voimassaolon-alkupvm
+                           ::tielupa/voimassaolon-loppupvm
+                           alku
+                           loppu)
 
-                              loppu
-                              {::tielupa/voimassaolon-loppupvm (op/>= loppu)}
+                :else nil))
+            (let [[alku loppu] (:myonnetty hakuehdot)]
+              (cond
+                (and alku loppu)
+                {::tielupa/myontamispvm (op/between alku loppu)}
 
-                              :else {})))])
-
-  (fetch db
-         ::tielupa/tielupa
-         (set/union
-           harja.domain.tielupa/perustiedot
-           harja.domain.tielupa/hakijan-tiedot
-           harja.domain.tielupa/urakoitsijan-tiedot
-           harja.domain.tielupa/liikenneohjaajan-tiedot
-           harja.domain.tielupa/tienpitoviranomaisen-tiedot
-           harja.domain.tielupa/johto-ja-kaapeliluvan-tiedot)
-         (op/and
-           (when-let [nimi (::tielupa/hakija-nimi hakuehdot)]
-             {::tielupa/hakija-nimi nimi})
-           (when-let [tyyppi (::tielupa/tyyppi hakuehdot)]
-             {::tielupa/tyyppi tyyppi})
-           (when-let [tunniste (::tielupa/ulkoinen-tunniste hakuehdot)]
-             {::tielupa/ulkoinen-tunniste tunniste})
-           (let [alku (::tielupa/voimassaolon-alkupvm hakuehdot)
-                 loppu (::tielupa/voimassaolon-loppupvm hakuehdot)]
-             (cond
-               (and alku loppu)
-               (overlaps? ::tielupa/voimassaolon-alkupvm
-                          ::tielupa/voimassaolon-loppupvm
-                          alku
-                          loppu)
-
-               :else nil))
-           (let [[alku loppu] (:myonnetty hakuehdot)]
-             (cond
-               (and alku loppu)
-               {::tielupa/myontamispvm (op/between alku loppu)}
-
-               :else nil)))))
+                :else nil))))
+    (suodata-tieosoitteella (::tielupa/sijainnit hakuehdot))))
 
 (defn hae-tielupien-hakijat [db hakuteksti]
   (set
