@@ -162,29 +162,6 @@
 
                               :default
                               (gen/choose 1 (get osien-pituus osa)))))))))
-(defspec
-  osan-katkaisu
-  100
-  (prop/for-all
-   [[osa [katkaisuosa katkaisuet]] (gen/bind (tierekisteriosoite 1 osien-pituus 1 3)
-                                             (partial tien-kohta osien-pituus))]
-
-   (let [vanhat-kohdeosat {1 osa}
-         uudet-kohdeosat (as-> vanhat-kohdeosat ko
-                           (yllapitokohteet/lisaa-uusi-kohdeosa ko 1)
-                           (yllapitokohteet/kasittele-paivittyneet-kohdeosat
-                            ko
-                            (-> ko
-                                (assoc-in [1 :tr-loppuosa] katkaisuosa)
-                                (assoc-in [1 :tr-loppuetaisyys] katkaisuet))))]
-     (is (= #{1 2} (avaimet uudet-kohdeosat))
-         "Osia on lisäyksen jälkeen 2")
-     (is (= [katkaisuosa katkaisuet] (loppu (get uudet-kohdeosat 1))))
-     (is (= [katkaisuosa katkaisuet] (alku (get uudet-kohdeosat 2)))
-         "Loppuosa on kopioitunut seuraavan rivin alkuosaksi")
-     (is (= (pituus-yht vanhat-kohdeosat)
-            (pituus-yht uudet-kohdeosat))
-         "Osan katkaisu ei vaikuta yhteenlaskettuun pituuteen"))))
 
 (deftest paallystyskohteiden-sorttaus
   (let [kohdenumeroita ["1" "308a" "11" "2" "L12" "300" nil "L11" "308b"]
