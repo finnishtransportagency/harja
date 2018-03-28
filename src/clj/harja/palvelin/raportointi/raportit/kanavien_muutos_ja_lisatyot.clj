@@ -55,41 +55,40 @@
 (defn- sarakkeet [tyyppi]
   (case tyyppi
     :muutos-ja-lisatyot
-    [{:leveys 9 :otsikko "Hip hei!"}
-     {:leveys 1 :otsikko "Pvm"}
-     {:leveys 1 :otsikko "Tehtava"}
-     {:leveys 1 :otsikko "Kohde"}
-     {:leveys 1 :otsikko "Kohteen osa"}
-     {:leveys 1 :otsikko "Huoltokohde"}
-     {:leveys 1 :otsikko "Lisätieto"}
-     {:leveys 1 :otsikko "Hinnoittelu"}
-     {:leveys 1 :otsikko "Summa" :fmt :raha}
-     {:leveys 1 :otsikko "Indeksi" :fmt :raha}]
+    [{:leveys 5 :otsikko "Pvm"}
+     {:leveys 8 :otsikko "Tehtava"}
+     {:leveys 8 :otsikko "Kohde"}
+     {:leveys 8 :otsikko "Kohteen osa"}
+     {:leveys 8 :otsikko "Huoltokohde"}
+     {:leveys 15 :otsikko "Lisätieto"}
+     {:leveys 8 :otsikko "Hinnoittelu"}
+     {:leveys 5 :otsikko "Summa" :fmt :raha}
+     {:leveys 5 :otsikko "Indeksi" :fmt :raha}]
     :muutos-ja-lisatyot-koko-maa
-    [{:leveys 3 :otsikko "TODO: URAKAN NIMI"}
-     {:leveys 1 :otsikko "Hinnoittelu"}
-     {:leveys 1 :otsikko "Summa" :fmt :raha}
-     {:leveys 1 :otsikko "Indeksi" :fmt :raha}])
+    [{:leveys 5 :otsikko "Hinnoittelu"}
+     {:leveys 5 :otsikko "Summa" :fmt :raha}
+     {:leveys 5 :otsikko "Indeksi" :fmt :raha}]
+    :yhteenveto)
   )
 
 
 
 (defn- kaikki-yhteensa-rivit [muutos-ja-lisatyot]
-  (let [kaikkien-kululajien-rivit muutos-ja-lisatyot
-        toimenpideinstansseittain (group-by :tpi-nimi kaikkien-kululajien-rivit)
+  (let [kaikkien-hintaryhmien-rivit muutos-ja-lisatyot
+        hintaryhmittain (group-by :hintaryhma kaikkien-hintaryhmien-rivit)
         rivit (conj
                 (into []
                       (concat
-                        (for [tpin-rivit toimenpideinstansseittain]
-                          [(key tpin-rivit)
+                        (for [hintaryhman-rivit hintaryhmittain]
+                          [(key hintaryhman-rivit)
                            ""
-                           (reduce + 0 (keep :toteutunut-maara (val tpin-rivit)))
+                           (reduce + 0 (keep :summa (val hintaryhman-rivit)))
                            ""]
                           )))
 
                 ["Yhteensä"
                  ""
-                 (reduce + 0 (keep :toteutunut-maara kaikkien-kululajien-rivit))
+                 (reduce + 0 (keep :summa kaikkien-hintaryhmien-rivit))
                  ""])]
     rivit))
 
@@ -141,9 +140,9 @@
     :muu-tyo "Muut työt (ei indeksilaskentaa)"
     :varaosat-ja-materiaalit "Varaosat ja materiaalit"
     :muut-kulut "Muut"
-    ""))
+    "Hintaryhmän nimi puuttuu"))
 
-(defn yksittaiset-toimenpiderivit
+(defn yksittaiset-tehtavarivit
   [konteksti tyot]
   (mapv #(rivi
            (pvm/pvm (:pvm %))
@@ -151,10 +150,10 @@
            (:kohde %)
            (:kohteenosa %)
            (:huoltokohde %)
-           (str (or (:otsikko %) "") (or (:lisatieto %) ""))
+           (str (or (:otsikko %) " ") (or (:lisatieto %) " "))
            (hintaryhman-otsikko (:hinnoittelu_ryhma %))
            (or (:summa %) ei-raha-summaa-info-solu)
-           (or (:maara %) indeksi-puuttuu-info-solu))       ;; TODO: hox että nää ei oo vielä oikein
+           (or 0 indeksi-puuttuu-info-solu)) ;; TODO
         tyot))
 
 
@@ -177,13 +176,17 @@
     (summarivi tietorivit tyyppi)))
 
 (defn- taulukko [otsikko tyyppi data]
+  (conj
   [:taulukko {:otsikko otsikko
               :tyhja (when (empty? data) "Ei raportoitavaa.")
               :sheet-nimi otsikko
-              :viimeinen-rivi-yhteenveto? true}
+              :viimeinen-rivi-yhteenveto? false}
    (sarakkeet tyyppi)
-   (yksittaiset-toimenpiderivit tyyppi data)
+   (yksittaiset-tehtavarivit tyyppi data)
    ])
+  )
+
+
 
 
 
@@ -213,18 +216,22 @@
 
 (defn hae-kanavien-muutos-ja-lisatyot-raportille
   [db {:keys [alkupvm loppupvm urakka kohde tehtava] :as parametrit}]
-  (let [hakuparametrit {:urakka urakka :alkupvm alkupvm :loppupvm loppupvm :kohde kohde :tehtava tehtava}
+  (let [hakuparametrit {:urakkaid urakka
+                        :alkupvm alkupvm
+                        :loppupvm loppupvm
+                        :kohde kohde :tehtava tehtava}
+        ;muutos-ja-lisatyot (if tehtava
+        ;                     (hae-kanavien-tehtavakohtaiset-muutos-ja-lisatyot db hakuparametrit)
+        ;                     (if kohde
+        ;                       (hae-kanavien-kohdekohtaiset-muutos-ja-lisatyot db hakuparametrit)
+        ;                       (if urakka
+        ;                         (hae-kanavien-urakkakohtaiset-muutos-ja-lisatyot db hakuparametrit)
+        ;                         (hae-kanavien-muutos-ja-lisatyot db hakuparametrit)
+        ;                         )))
 
-        muutos-ja-lisatyot (if tehtava
-                             (hae-kanavien-tehtavakohtaiset-muutos-ja-lisatyot db hakuparametrit)
-                             (if kohde
-                               (hae-kanavien-kohdekohtaiset-muutos-ja-lisatyot db hakuparametrit)
-                               (if urakka
-                                 (hae-kanavien-urakkakohtaiset-muutos-ja-lisatyot db hakuparametrit)
-                                 (hae-kanavien-muutos-ja-lisatyot db hakuparametrit)
-                                 )))]
-    (log/debug (prn-str "muutos-ja-lisatyot" muutos-ja-lisatyot))
-    (log/debug (prn-str "hakuparametrit" hakuparametrit))
+        ]
+    (println (prn-str "muutos-ja-lisatyot" muutos-ja-lisatyot))
+    (println (prn-str "hakuparametrit" parametrit))
     muutos-ja-lisatyot
     ))
 
@@ -237,6 +244,7 @@
 
         ;; kayta-ryhmittelya? (and (not urakoittain?) (not= :urakka konteksti))
 
+        hakuparametrit {:urakkaid urakka-id :alkupvm alkupvm :loppupvm loppupvm :kohdeid kohde-id :tehtavaid tehtava-id}
         raportin-kontekstin-nimi (case konteksti
                                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                                    :koko-maa "KOKO MAA")
@@ -253,37 +261,63 @@
 
         raportin-otsikko (raportin-otsikko raportin-kontekstin-nimi raportin-nimi alkupvm loppupvm) ;; TODO: tarkempien raporttien rajaavat tiedot: kohde, tehtava
 
-        ; hakuparametrit {:urakka urakka-id :alkupvm alkupvm :loppupvm loppupvm :kohde kohde-id :tehtava tehtava-id}
 
-        muutos-ja-lisatyot (hae-kanavien-muutos-ja-lisatyot-raportille db parametrit)
+        sort-avain (if (= konteksti :koko-maa) :urakka
+                                               (if (= konteksti :urakka) :tehtava))
+        muutos-ja-lisatyot (hae-kanavien-muutos-ja-lisatyot-raportille db hakuparametrit)
 
+        muutos-ja-lisatyot-tehtavan-mukaan (sort-by #(or (sort-avain (first %)) 100000)
+                                               (seq (group-by :tehtava
+                                                              muutos-ja-lisatyot)))
         ;muutos-ja-lisatyot (map #(assoc % :toteutunut-maara
         ;                                  (+ (:summat %)
         ;                                     (:summat_kan_hinta_yksikkohinnalla %)
         ;                                     (:summat_yht_yksikkohinnalla %)))
         ;                        (hae-muutos-ja-lisatyot db hakuparametrit))
 
+
+
+
         ]
 
     (log/debug "Kanavien muutos- ja lisätyöt, suorita: " parametrit)
 
 
+    ;; Konteksti: koko maa
+    ;; Ryhmittelys: urakka
+    ;; Järjestys: tehtävä
+    ;; Summa: hintaryhmä
+    ;; Yhteissumma: hintaryhmien summat yhteensä
+
+
+    ;; Konteksti: urakka
+    ;; Ryhmittely: -
+    ;; Rajaus: kohde
+    ;; Järjestys;
+
+    ;; Konteksti: urakka
+    ;; Ryhmittely: -
+    ;; Järjestys: pvm
+    ;; Summa: yksittäinen tehtävä
+    ;; Yhteissumma: urakan yksittäisten tehtävien summat yhteensä
+
+
     [:raportti {:orientaatio :landscape
                 :nimi raportin-otsikko}
 
+       (conj (when (not-empty muutos-ja-lisatyot)
+               (taulukko "Kanavien muutos- ja lisätyöt" :muutos-ja-lisatyot muutos-ja-lisatyot))
 
+        [:taulukko {:otsikko "Kaikki yhteensä XXX"
+                    :tyhja (when (empty? muutos-ja-lisatyot) "Ei raportoitavaa. XXXX")
+                    :sheet-nimi "Yhteensä XXX"
+                    :viimeinen-rivi-yhteenveto? false}
+         (sarakkeet :yhteenveto)
+         (kaikki-yhteensa-rivit muutos-ja-lisatyot)])]))
 
-     (let [kaikki-yht-rivit (kaikki-yhteensa-rivit muutos-ja-lisatyot)
-           sarakkeet (sarakkeet :muutos-ja-lisatyot)
-           toimenpiderivit (taulukko "Muutos- ja lisätyöt" :muutos-ja-lisatyot muutos-ja-lisatyot)
-       ]
-    [:taulukko {:otsikko "Kaikki yhteensä"
-                :tyhja (when (empty? kaikki-yht-rivit) "Ei raportoitavaa.")
-                :sheet-nimi "Yhteensä"
-                :viimeinen-rivi-yhteenveto? true}
-     sarakkeet
-     toimenpiderivit
-     ]) ] ))
+     ;;sarakkeet
+     ;;toimenpiderivit
+
 
 
 ;(defn hae-muutos-ja-lisatyot-aikavalille

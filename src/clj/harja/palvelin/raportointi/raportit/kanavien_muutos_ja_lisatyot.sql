@@ -9,7 +9,7 @@
    hk.nimi                                                        AS huoltokohde,
    ktp.lisatieto                                                  AS lisatieto,
    ''                                                             AS otsikko,
-   ''                                                             AS hinta_ryhma,
+   '-'                                                            AS hinta_ryhma,
    'sopimushintainen-tyo-tai-materiaali'                          AS hinnoittelu_ryhma,
    sopimus_tyo.id                                                 AS tyo_id,
    sopimus_tyo.maara                                              AS maara,
@@ -32,7 +32,8 @@
    JOIN yksikkohintainen_tyo tyo ON (tyo.tehtava = sopimus_tyo."toimenpidekoodi-id")
  WHERE
    ktp.tyyppi = 'muutos-lisatyo' AND
-   ktp.urakka = :urakka AND (ktp.pvm BETWEEN '2018-03-07' AND '2018-03-13')
+   ktp.urakka = :urakkaid
+   AND (ktp.pvm BETWEEN '2017-03-07' AND '2018-05-13')
  ORDER BY ktp.urakka, ktp."kohde-id", ktp.toimenpideinstanssi, ktp.toimenpidekoodi)
 UNION
 (SELECT
@@ -78,8 +79,8 @@ UNION
    LEFT OUTER JOIN vv_materiaali sopimus_materiaali ON sopimus_materiaali.id = hinnoiteltu_tyo."materiaali-id"
  WHERE
    ktp.tyyppi = 'muutos-lisatyo' AND
-   ktp.urakka = :urakka AND
-   (ktp.pvm BETWEEN '2018-03-07' AND '2018-03-13')
+   ktp.urakka = :urakkaid
+   AND (ktp.pvm BETWEEN '2017-03-07' AND '2018-05-13')
  ORDER BY ktp.urakka, ktp."kohde-id", ktp.toimenpideinstanssi, ktp.toimenpidekoodi);
 
 
@@ -104,7 +105,7 @@ from kan_toimenpide ktp
 WHERE
   tyyppi = 'muutos-lisatyo' AND
   urakka = 31 AND
-  toimenpidekoodi = :tehtava AND
+  toimenpidekoodi = :tehtavaid AND
   (pvm BETWEEN '2018-03-07' AND '2018-03-13')
 UNION
 select
@@ -124,7 +125,7 @@ from kan_toimenpide ktp
 WHERE
   tyyppi = 'muutos-lisatyo' AND
   urakka = 31 AND
-  toimenpidekoodi = :tehtava AND
+  toimenpidekoodi = :tehtavaid AND
   (pvm BETWEEN '2018-03-07' AND '2018-03-13');
 
 
@@ -192,9 +193,9 @@ from kan_toimenpide ktp
   JOIN  kan_tyo sopimus_tyo ON (sopimus_tyo.toimenpide = ktp.id AND sopimus_tyo.poistettu is not TRUE)
 WHERE
   tyyppi = 'muutos-lisatyo' AND
-  urakka = 31 AND
+  urakka = :urakkaid AND
   "kohde-id" = :kohde AND
-  toimenpidekoodi = :tehtava AND
+  toimenpidekoodi = :tehtavaid AND
   (pvm BETWEEN '2018-03-07' AND '2018-03-13')
 UNION
 select

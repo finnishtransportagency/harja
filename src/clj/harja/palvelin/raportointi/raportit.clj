@@ -312,10 +312,11 @@
     :urakkatyyppi urakka-domain/kanava-urakkatyypit}
 
    {:nimi :kanavien-muutos-ja-lisatyot
-    :parametrit [{:tyyppi "urakoittain", :konteksti "urakka", :pakollinen true, :nimi "Näytä kanavakokonaisuudet eriteltynä"}
-                 {:tyyppi "kohteittain", :konteksti "urakka", :pakollinen false, :nimi "Kohde"}
-                 {:tyyppi "tehtavittain", :konteksti "urakka", :pakollinen false, :nimi "Tehtava"}
-                 {:tyyppi "aikavali", :konteksti "urakka", :pakollinen true, :nimi "Aikaväli"}]
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
+                 ;;{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}
+                 ;;{:tyyppi "urakan-toimenpide", :konteksti nil, :pakollinen false, :nimi "Tehtävä"}
+                 ;;{:tyyppi "kohde", :konteksti nil, :pakollinen false, :nimi "Kohde"}
+                 ]
     :konteksti #{"koko maa" "urakka"}
     :kuvaus "Muutos- ja lisätyöt"
     :suorita #'harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot/suorita
