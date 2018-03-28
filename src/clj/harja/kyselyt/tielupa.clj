@@ -68,48 +68,33 @@
       (cond
         ;; Molemmat on pisteitä
         (and (nil? losa) (nil? loet) (nil? tl-losa) (nil? tl-let))
-        (do (log/debug "Molemmat pisteitä")
-            (= aosa tl-aosa) (= aet tl-aet))
+        (and (= aosa tl-aosa) (= aet tl-aet))
 
         ;; Tielupa on piste, hakuehto on väli
         (and (some? losa) (some? loet) (nil? tl-losa) (nil? tl-let))
-        (do (log/debug "Tielupa on piste, hakuehto on väli")
-            ;; Tieluvan ainoa piste on hakuehdon välissä
-            (and (tr-piste-aiemmin-tai-sama? aosa aet tl-aosa tl-aet)
-                 (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet losa loet)))
+        (and (tr-piste-aiemmin-tai-sama? aosa aet tl-aosa tl-aet)
+             (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet losa loet))
 
         ;; Tielupa on väli, hakuehto on piste
         (and (nil? losa) (nil? loet) (some? tl-losa) (some? tl-let))
-        (do (log/debug "Tielupa oli väli, hakuehto piste")
-            ;; Hakuehdon ainoa piste on tieluvan osoitteen välissä
-            (log/debug tl-aosa "/" tl-aet " " aosa "/" aet " " tl-losa "/" tl-let)
-            (log/debug (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet))
-            (log/debug (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let))
-            (and (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet)
-                 (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let)))
+        (and (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet)
+             (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let))
 
         ;; Molemmat on välejä
         (and (some? losa) (some? loet) (some? tl-losa) (some? tl-let))
-        (do (log/debug "Molemmat oli välejä")
-            (or
-              ;; hakuehdon alkupiste on tieluvan välissä
-              (and (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet)
-                   (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let))
-              ;; tieluvan alkupiste on hakuehdon välissä
-              (and (tr-piste-aiemmin-tai-sama? aosa aet tl-aosa tl-aet)
-                   (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet losa loet))))
+        (or
+          ;; hakuehdon alkupiste on tieluvan välissä
+          (and (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet aosa aet)
+               (tr-piste-aiemmin-tai-sama? aosa aet tl-losa tl-let))
+          ;; tieluvan alkupiste on hakuehdon välissä
+          (and (tr-piste-aiemmin-tai-sama? aosa aet tl-aosa tl-aet)
+               (tr-piste-aiemmin-tai-sama? tl-aosa tl-aet losa loet)))
 
         :else
-        (do
-          (log/debug
-            (str tl-aosa "/" tl-aet "/" tl-losa "/" tl-let)
-            " - "
-            (pr-str alku) "/" (pr-str loppu))
-          false)))))
+        false))))
 
 
 (defn suodata-tieosoitteella [tieluvat sijainnit]
-  (log/debug (str "Suodatetaan " (count tieluvat) " tielupaa sijaintitiedoilla: " (pr-str sijainnit)))
   (let [tie (::tielupa/tie sijainnit)
         aosa (::tielupa/aosa sijainnit)
         aet (::tielupa/aet sijainnit)
@@ -129,7 +114,6 @@
       tieluvat)))
 
 (defn hae-tieluvat-hakunakymaan [db hakuehdot]
-  (log/debug (str "Hakuehdot " (pr-str hakuehdot)))
   (->
     (fetch db
           ::tielupa/tielupa
