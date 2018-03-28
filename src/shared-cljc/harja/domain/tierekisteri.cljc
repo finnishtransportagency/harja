@@ -374,6 +374,55 @@
          ;; Muutoin venytetään ensimmäinen kohteen alkuun ja viimeinen kohteen loppuun
          (concat [ensimmainen-alikohde-venytettyna] valiin-jaavat-aikohteet [viimeinen-alikohde-venytettyna]))))))
 
+(defn alikohteet-tayttamaan-kutistunut-paakohde
+  "Ottaa pääkohteen ja sen alikohteet. Muokkaa alikohteita seuraavasti: mikäli jokin alikohde on pidempi kuin
+   pääkohde (alusta tai lopusta), kutistaa sen pääkohteen sisään.
+
+   Palauttaa korjatut kohteet. Olettaa, että pääkohde alikohteineen on samalla tiellä."
+  ([paakohde alikohteet]
+   (cond
+     (empty? alikohteet)
+     []
+
+     (pistemainen? paakohde)
+     ;; Tunkataan ensimmäinen alikohde pistemäiseksi.
+     ;; Mikäli alikohteita on ollut useita, niin muiden tiedot häviää.
+     ;; Tälle ei oikein voi mitään, mikäli pätkäkohde muokataan pistemäiseksi
+     [(assoc (first alikohteet)
+        :tr-alkuosa (:tr-alkuosa paakohde)
+        :tr-alkuetaisyys (:tr-alkuetaisyys paakohde)
+        :tr-loppuosa (:tr-loppuosa paakohde)
+        :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))]
+
+     ;;  Oletuskeissi, jossa pääkohde on reitillinen. Muokkaus tehdään seuraavasti:
+     ;; - Alikohteet, jotka ovat täysin pääkohteen ulkopuolella, poistetaan
+     ;; - Tämän jälkeen varmistetaan, että jokainen alikohde on pääkohteen sisällä. Mikäli menee jommasta
+     ;; kummasta päästä yli, kutistetaan kohteen sisälle.
+     :default
+     (let [paakohde (tr-osoite-kasvusuuntaan paakohde)
+           alikohteet (map tr-osoite-kasvusuuntaan alikohteet)
+           alikohteet-jarjestyksessa (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys) alikohteet)
+           leikkaavat-alikohteet (filter #(tr-vali-leikkaa-tr-valin? paakohde %) alikohteet-jarjestyksessa)]
+
+       (map (fn [alikohde]
+              (cond-> alikohde
+                      (< (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                      (assoc :tr-alkuosa (:tr-alkuosa paakohde)
+                             :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
+
+                      (and (= (:tr-alkuosa alikohde) (:tr-alkuosa paakohde))
+                           (< (:tr-alkuetaisyys alikohde) (:tr-alkuetaisyys paakohde)))
+                      (assoc :tr-alkuetaisyys (:tr-alkuetaisyys paakohde))
+
+                      (> (:tr-loppuosa alikohde) (:tr-loppuosa paakohde))
+                      (assoc :tr-loppuosa (:tr-loppuosa paakohde)
+                             :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))
+
+                      (and (= (:tr-loppuosa alikohde) (:tr-loppuosa paakohde))
+                           (> (:tr-loppuetaisyys alikohde) (:tr-loppuetaisyys paakohde)))
+                      (assoc :tr-loppuetaisyys (:tr-loppuetaisyys paakohde))))
+            leikkaavat-alikohteet)))))
+
 (defn tieosilla-maantieteellinen-jatkumo?
   "Palauttaa true, mikäli kahdella tieosalla on maantieteellinen jatkumo.
    Käytännössä tämä tarkoittaa sitä, että tieosien päätepisteet ovat riittävän lähellä toisiaan.

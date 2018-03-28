@@ -25,10 +25,10 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn toteutuneet-tiemerkinnat
-  [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet]
+  [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet vuosi]
   (komp/luo
     (komp/lippu tiedot/nakymassa?)
-    (fn [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet]
+    (fn [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet vuosi]
       (let [urakka-id (:id urakka)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteutus-yksikkohintaisettyot urakka-id)]
         [:div
@@ -42,6 +42,7 @@
                          (tiedot/tallenna-toteumat-grid
                            {:toteumat toteumat
                             :urakka-id urakka-id
+                            :vuosi vuosi
                             :tiemerkinnan-toteumat-atom tiemerkinnan-toteumat-atom
                             :paallystysurakan-kohteet paallystysurakan-kohteet
                             :epaonnistui-fn #(viesti/nayta! "Tallentaminen epäonnistui"
@@ -244,8 +245,9 @@
      "Kaikki yhteensä:"
      (fmt/euro-opt kaikki-yhteensa)]))
 
-(defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom]
+(defn yksikkohintaiset-tyot [urakka tiemerkinnan-toteumat-atom paallystysurakan-kohteet-atom vuosi]
   [:div.tiemerkinnan-yks-hint-tyot
-   [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom]
+   [valinnat/urakan-vuosi urakka]
+   [toteutuneet-tiemerkinnat urakka tiemerkinnan-toteumat-atom @paallystysurakan-kohteet-atom vuosi]
    [yhteenveto @tiemerkinnan-toteumat-atom]
    [paallystysurakan-kohteet urakka @paallystysurakan-kohteet-atom]])
