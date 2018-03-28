@@ -501,7 +501,8 @@
                                                                                  :sopimus-id sopimus-id
                                                                                  :vuosi vuosi})
             uudet-ilmoitukset (hae-urakan-paallystysilmoitukset db user {:urakka-id urakka-id
-                                                                         :sopimus-id sopimus-id})]
+                                                                         :sopimus-id sopimus-id
+                                                                         :vuosi vuosi})]
         {:yllapitokohteet yllapitokohteet
          :paallystysilmoitukset uudet-ilmoitukset}))))
 
