@@ -168,7 +168,7 @@
                  ["boundlessgeo" "https://repo.boundlessgeo.com/main/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]]
 
-  :plugins [[lein-cljsbuild "1.1.5"] ; TODO Voisi päivittää, mutta 1.1.7:n kanssa Travis ei saanut käännöstä tehtyä.
+  :plugins [[lein-cljsbuild "1.1.7"]
             [lein-less "1.7.5"]
             [lein-ancient "0.6.10"]
             [lein-figwheel "0.5.14"]
