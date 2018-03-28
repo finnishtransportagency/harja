@@ -139,7 +139,7 @@
                         {:otsikko "Kuula\u00ADmylly"
                          :leveys 5
                          :nimi ::paikkaus/kuulamylly}]))]
-    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkaukset-grid paikkauket-vetolaatikko]}]
+    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkaukset-grid paikkaukset-vetolaatikko]}]
       [:div
        [grid/grid
         {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
@@ -158,7 +158,7 @@
                       ::paikkaus/id
                       (fn [rivi]
                         [paikkaukset-vetolaatikko e! rivi])))
-               paikkauket-vetolaatikko)}
+               paikkaukset-vetolaatikko)}
         skeema
         paikkaukset-grid]])))
 
