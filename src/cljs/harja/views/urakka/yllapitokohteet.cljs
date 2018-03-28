@@ -647,6 +647,7 @@
         (fn [{:keys [rivi]}]
           ;; Jos pääkohde päivittyy, palvelin saattaa tehdä automaattisia korjauksia kohdeosiin.
           ;; Täten kohteen osat -atomi tulee resetoida vastaamaan päivitettyjä osia.
+          ;; FIXME Tämä lifecycle-eventti rikkoo tallennuksen...
           (reset! kohteen-osat (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                 (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))))
 
