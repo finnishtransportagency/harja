@@ -378,7 +378,7 @@
       (q/liita-kommentti<! db {:paallystysilmoitus paallystysilmoitus-id
                                :kommentti (:id kommentti)}))))
 
-(defn- lisaa-paallystysilmoitukseen-kohdeosien-idt
+(defn lisaa-paallystysilmoitukseen-kohdeosien-idt
   "Liittää päällystysilmoituksen osoitetietoihin vastaavan
    ylläpitokohdeosan id:n."
   [paallystysilmoitus paivitetyt-kohdeosat]
@@ -392,6 +392,8 @@
                                 (first
                                   (filter #(and
                                              (= (:tr-numero %) (:tr-numero osoite))
+                                             (or (nil? (:tr-ajorata osoite)) (= (:tr-ajorata %) (:tr-ajorata osoite)))
+                                             (or (nil? (:tr-kaista osoite)) (= (:tr-kaista %) (:tr-kaista osoite)))
                                              (= (:tr-alkuosa %) (:tr-alkuosa osoite))
                                              (= (:tr-alkuetaisyys %) (:tr-alkuetaisyys osoite))
                                              (= (:tr-loppuosa %) (:tr-loppuosa osoite))
@@ -432,7 +434,7 @@
           url (str "https://extranet.liikennevirasto.fi/harja#urakat/kohdeluettelo-paallystys/paallystysilmoitukset?"
                    "&hy=" hallintayksikko-id
                    "&u=" urakka-id)
-            kayttajaroolit (if sposti-urakan-valvojalle? #{"ely urakanvalvoja"} #{"urakan vastuuhenkilö"})
+          kayttajaroolit (if sposti-urakan-valvojalle? #{"ely urakanvalvoja"} #{"urakan vastuuhenkilö"})
           spostin-parametrit {:fim fim
                               :email email
                               :urakka-sampoid urakka-sampoid
