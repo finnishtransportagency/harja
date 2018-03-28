@@ -10,7 +10,7 @@ language: clojure
 jdk:
   - oraclejdk8
 before_install:
-  - yes | lein upgrade 2.7.1
+  - mkdir ~/leinbin && curl https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein | sed 's/LEIN_VERSION=.*/LEIN_VERSION=2.7.1/' > ~/bin/leinbin/lein && chmod +x ~/bin/leinbin/lein && PATH=$HOME/leinbin:$PATH ~/leinbin/lein self-install
   - lein version
   - (cd /tmp; echo '(+ 1 1)'|lein repl)
   - sh tietokanta/travis.sh
