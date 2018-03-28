@@ -343,12 +343,17 @@
           sopimus-id @muhoksen-paallystysurakan-paasopimuksen-id
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id
                                                   :valmis-kasiteltavaksi true)
-          maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))]
+          maara-ennen-lisaysta (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                               :sopimus-id sopimus-id
+                                                                               :vuosi 2017
+                                                                               :paallystysilmoitus paallystysilmoitus})]
 
-      (kutsu-palvelua (:http-palvelin jarjestelma)
-                      :tallenna-paallystysilmoitus +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                   :sopimus-id sopimus-id
-                                                                   :paallystysilmoitus paallystysilmoitus})
+      ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset
+      (is (= (count (:yllapitokohteet vastaus)) 6))
+      (is (= (count (:paallystysilmoitukset vastaus)) 6))
+
       (let [maara-lisayksen-jalkeen (ffirst (q (str "SELECT count(*) FROM paallystysilmoitus;")))
             paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-paallystysilmoitus-paallystyskohteella
