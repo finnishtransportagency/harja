@@ -491,12 +491,12 @@
                              (not voi-muokata?))
                :luokka "nappi-myonteinen grid-tallenna"
                :virheviesti "Tallentaminen epäonnistui."
-               :kun-onnistuu #(do
-                                (tallennettu-fn)
-                                (reset! kohdeosat-atom
-                                        (into (sorted-map)
-                                              (zipmap (iterate inc 1)
-                                                      (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]
+               :kun-onnistuu (fn [vastaus]
+                               (tallennettu-fn vastaus)
+                               (reset! kohdeosat-atom
+                                       (into (sorted-map)
+                                             (zipmap (iterate inc 1)
+                                                     (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]
         :muokkaa-footer (fn [g]
                           [:span#kohdeosien-pituus-yht
                            "Tierekisterikohteiden pituus yhteensä: "
@@ -647,7 +647,6 @@
         (fn [{:keys [rivi]}]
           ;; Jos pääkohde päivittyy, palvelin saattaa tehdä automaattisia korjauksia kohdeosiin.
           ;; Täten kohteen osat -atomi tulee resetoida vastaamaan päivitettyjä osia.
-          ;; FIXME Tämä lifecycle-eventti rikkoo tallennuksen...
           (reset! kohteen-osat (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
                                                 (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))))
 
