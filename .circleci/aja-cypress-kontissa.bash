@@ -3,7 +3,7 @@
 set -e
 set -x
 set -u
-mkdir -p /tmp/cypress-run; cd /tmp/cypress-run
+cd /tmp/cypress-run
 cp /jar/asetukset.edn .
 tar xf /jar/cypress.tar
 sed -i -e 's/:salli-oletuskayttaja. false/:salli-oletuskayttaja? true/g' asetukset.edn
@@ -14,7 +14,6 @@ echo aaaa > ../.harja/anti-csrf-token
 touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana}
 java -jar /jar/harja.jar > harja.out 2>&1 &
 javapid=$!
-npm i cypress@1.x && $(npm bin)/cypress verify
 for i in $(seq 4); do
     curl localhost:3000 > /dev/null 2>&1 && break
     if kill -0 $javapid; then

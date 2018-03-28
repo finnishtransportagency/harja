@@ -23,7 +23,7 @@ if unzip -q -v "$jarfile" > /dev/null 2>&1; then
     cp -v $jarfile $jardir/harja.jar
     tar -C $DIR/.. -cf $jardir/cypress.tar cypress.json cypress
     cp -v $DIR/aja-cypress-kontissa.bash $asetukset  $jardir/
-    docker run --link harjadb:postgres -v "$jardir:/jar" --rm solita/napote-circleci /jar/aja-cypress-kontissa.bash
+    docker run --link harjadb:postgres -v "$jardir:/jar" --rm solita/harja-cypress /jar/aja-cypress-kontissa.bash
 
 else
     echo "huono jar"

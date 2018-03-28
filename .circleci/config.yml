@@ -41,25 +41,13 @@ jobs:
 
   e2e-testit:
     docker:
-      - image: solita/napote-circleci
+      - image: solita/harja-cypress
       - image: solita/harjadb:latest
     parallelism: 1
     steps:
       - checkout
       - attach_workspace:
           at: /tmp/harja
-
-      - restore_cache:
-          keys:
-            - v2-npm-deps-
-
-      - run: |
-          mkdir -p /tmp/cypress-run && cd /tmp/cypress-run && npm i cypress@1.x && $(npm bin)/cypress verify
-
-      - save_cache:
-          key: v2-npm-deps-
-          paths:
-            - /tmp/cypress-run/node_modules
 
       - deploy:
           command: |
