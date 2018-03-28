@@ -133,7 +133,7 @@
                  :paikkauksien-haku-tulee-olemaan-kaynnissa? false))))
   PaikkauksetEiHaettu
   (process-event [_ app]
-    (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
+    (viesti/nayta! "Paikkausten haku epäonnistui!" :danger)
     (assoc app
            :paikkauksien-haku-kaynnissa? false
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
