@@ -360,6 +360,7 @@
 
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
+           :rivinumerot? true
            :muokattava-tie? (constantly true)
            :muokattava-ajorata-ja-kaista? (constantly true)
            :otsikko "Tierekisteriosoitteet"

@@ -418,8 +418,9 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
-(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti]}]
-  (let [virheet (or virheet-atom (atom nil))
+(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot?]}]
+  (let [rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
+        virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
         osan-pituudet-teille (atom nil)
         validoi-kohteen-osoite (fn [kentta arvo rivi]
@@ -454,6 +455,7 @@
                                                #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1))
                                                {:ikoni (ikonit/livicon-arrow-down)
                                                 :luokka "btn-xs"}]])])
+        :rivinumerot? rivinumerot?
         :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
         :virhe-viesti virhe-viesti
         :muutos (fn [grid]
