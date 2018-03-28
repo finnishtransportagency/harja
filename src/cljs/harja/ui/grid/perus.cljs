@@ -356,8 +356,8 @@
      [:td {:colSpan colspan}
       (when salli-valiotsikoiden-piilotus?
         (if (@piilotetut-valiotsikot valiotsikko-id)
-          (ikonit/livicon-plus)
-          (ikonit/livicon-minus)))
+          (ikonit/livicon-chevron-right)
+          (ikonit/livicon-chevron-down)))
 
       (map-indexed
         (fn [i {:keys [sijainti sisalto tyyli]}]

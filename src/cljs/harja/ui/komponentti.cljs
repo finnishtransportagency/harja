@@ -199,16 +199,21 @@
                                         noden sisällä. Eventin triggeröivällä elementillä täytyy olla id asetettuna."
   ([ulkopuolella-fn] (klikattu-ulkopuolelle ulkopuolella-fn nil))
   ([ulkopuolella-fn {:keys [tarkista-komponentti?]}]
-   (let [tarkista-onko-komponentti-unmountattu (fn [tapahtuma]
-                                                 (if-let [elementti (-> (:tapahtuma tapahtuma) .-target .-id (js/document.getElementById))]
-                                                   (if (not= elementti (.-target (:tapahtuma tapahtuma)))
-                                                     elementti
-                                                     (.-target (:tapahtuma tapahtuma)))))]
+   (let [tarkista-onko-komponentti-unmountattu (fn [tapahtuma elementin-id]
+                                                 (if (not= (js/document.getElementById elementin-id) (.-target (:tapahtuma tapahtuma)))
+                                                   (js/document.getElementById elementin-id)
+                                                   (.-target (:tapahtuma tapahtuma))))
+         tarkistettu-komponentti-sisalla? (fn [this tapahtuma]
+                                            (let [elementin-id (-> (:tapahtuma tapahtuma) .-target .-id)
+                                                  dom-elementti (js/document.getElementById elementin-id)
+                                                  tapahtuma-elementti (.-target (:tapahtuma tapahtuma))]
+                                              (if (and (not= "" elementin-id) (not= dom-elementti tapahtuma-elementti))
+                                                (dom/sisalla? this dom-elementti {:elementti? true})
+                                                (dom/sisalla? this (:tapahtuma tapahtuma)))))]
      (kuuntelija :body-klikkaus
                  (fn [this tapahtuma]
                    (when-not (if tarkista-komponentti?
-                               (dom/sisalla? this (tarkista-onko-komponentti-unmountattu tapahtuma)
-                                             {:elementti? true})
+                               (tarkistettu-komponentti-sisalla? this tapahtuma)
                                (dom/sisalla? this (:tapahtuma tapahtuma)))
                      (ulkopuolella-fn)))))))
 

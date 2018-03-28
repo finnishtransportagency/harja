@@ -14,9 +14,6 @@
    (let [dom (r/dom-node komponentti)
          elt (if elementti? tapahtuma (.-target tapahtuma))]
      (loop [ylempi (.-parentNode elt)]
-       (if ylempi
-         (println "YLEMPI: " (pr-str (.-innerHTML ylempi)))
-         (do (println "YELMPI ON NILL")))
        (if (or (nil? ylempi)
                (= ylempi js/document.body))
          false

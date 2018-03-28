@@ -45,18 +45,13 @@
        :tyylit {:width "fit-content"}}]
      [valinnat/aikavali (aikavali-atomi :aikavali)]
      [:span.label-ja-kentta
-      [:span.kentan-otsikko "Paikkauskohteet"]
+      [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
       [:div.kentta
-       [yleiset/livi-pudotusvalikko
-        {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? (:urakan-paikkauskohteet valinnat)))]
-                            (str valittujen-paikkauskohteiden-maara (if (= 1 valittujen-paikkauskohteiden-maara)
-                                                                      " paikkauskohde valittu"
-                                                                      " paikkauskohdetta valittu")))
-         :itemit-komponentteja? true
-         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-        (mapv (fn [paikkauskohde]
-                [paikkauskohde-valinta e! paikkauskohde])
-              (:urakan-paikkauskohteet valinnat))]]]]))
+       [valinnat/checkbox-pudotusvalikko
+        (:urakan-paikkauskohteet valinnat)
+        (fn [paikkauskohde valittu?]
+          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
+        [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn paikkaukset-vetolaatikko
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}]

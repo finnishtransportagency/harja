@@ -40,27 +40,15 @@
        :tyylit {:width "fit-content"}}]
      [valinnat/aikavali (aikavali-atomi :aikavali)]
      [:span.label-ja-kentta
-      [:span.kentan-otsikko "Paikkauskohteet"]
+      [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
       [:div.kentta
-       [yleiset/livi-pudotusvalikko
-        {:naytettava-arvo (let [valittujen-paikkauskohteiden-maara (count (filter :valittu? (:urakan-paikkauskohteet valinnat)))]
-                            (str valittujen-paikkauskohteiden-maara (if (= 1 valittujen-paikkauskohteiden-maara)
-                                                                      " paikkauskohde valittu"
-                                                                      " paikkauskohdetta valittu")))
-         :itemit-komponentteja? true}
-        (mapv (fn [paikkauskohde]
-                [:label {:on-click #(.stopPropagation %)
-                         :style {:width "100%"}}
-                 (:nimi paikkauskohde)
-                 [:input {:style {:display "inline-block"
-                                  :float "right"}
-                          :type "checkbox"
-                          :checked (:valittu? paikkauskohde)
-                          :on-change #(let [valittu? (-> % .-target .-checked)]
-                                        (e! (tiedot/->PaikkausValittu paikkauskohde valittu? (partial otsikkokomponentti e!))))}]])
-              (:urakan-paikkauskohteet valinnat))]]]]))
+       [valinnat/checkbox-pudotusvalikko
+        (:urakan-paikkauskohteet valinnat)
+        (fn [paikkauskohde valittu?]
+          (e! (tiedot/->PaikkausValittu paikkauskohde valittu? (partial otsikkokomponentti e!))))
+        [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
-(defn paikkaukset-vetolaatikko
+(defn yksikkohintaiset-kustannukset
   [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}]
   (let [nayta-numerot #(apply str (interpose ", " %))
         skeema [{:otsikko "Ajo\u00ADrata"
@@ -113,7 +101,7 @@
       "Siirry kustannuksiin"
       #(e! (tiedot/->SiirryKustannuksiin id))]]))
 
-(defn paikkaukset [e! app]
+(defn kokonaishintaiset-kustannukset [e! app]
   (let [tierekisteriosoite-sarakkeet [nil
                                       {:nimi ::tierekisteri/tie}
                                       nil nil
@@ -121,54 +109,43 @@
                                       {:nimi ::tierekisteri/aet}
                                       {:nimi ::tierekisteri/losa}
                                       {:nimi ::tierekisteri/let}]
-        skeema (into []
-                     (concat
-                       [{:tyyppi :vetolaatikon-tila :leveys 1}]
-                       (yllapitokohteet/tierekisteriosoite-sarakkeet 5 tierekisteriosoite-sarakkeet)
-                       [{:otsikko "Alku\u00ADaika"
-                         :leveys 5
-                         :nimi ::paikkaus/alkuaika}
-                        {:otsikko "Loppu\u00ADaika"
-                         :leveys 5
-                         :nimi ::paikkaus/loppuaika}
-                        {:otsikko "Työ\u00ADmene\u00ADtelmä"
-                         :leveys 5
-                         :nimi ::paikkaus/tyomenetelma}
-                        {:otsikko "Massa\u00ADtyyp\u00ADpi"
-                         :leveys 5
-                         :nimi ::paikkaus/massatyyppi}
-                        {:otsikko "Leveys"
-                         :leveys 5
-                         :nimi ::paikkaus/leveys}
-                        {:otsikko "Massa\u00ADmenek\u00ADki"
-                         :leveys 5
-                         :nimi ::paikkaus/massamenekki}
-                        {:otsikko "Raekoko"
-                         :leveys 5
-                         :nimi ::paikkaus/raekoko}
-                        {:otsikko "Kuula\u00ADmylly"
-                         :leveys 5
-                         :nimi ::paikkaus/kuulamylly}]))]
+        skeema [{:otsikko "Alku\u00ADaika"
+                 :leveys 5
+                 :nimi ::paikkaus/alkuaika}
+                {:otsikko "Loppu\u00ADaika"
+                 :leveys 5
+                 :nimi ::paikkaus/loppuaika}
+                {:otsikko "Työ\u00ADmene\u00ADtelmä"
+                 :leveys 5
+                 :nimi ::paikkaus/tyomenetelma}
+                {:otsikko "Massa\u00ADtyyp\u00ADpi"
+                 :leveys 5
+                 :nimi ::paikkaus/massatyyppi}
+                {:otsikko "Leveys"
+                 :leveys 5
+                 :nimi ::paikkaus/leveys}
+                {:otsikko "Massa\u00ADmenek\u00ADki"
+                 :leveys 5
+                 :nimi ::paikkaus/massamenekki}
+                {:otsikko "Raekoko"
+                 :leveys 5
+                 :nimi ::paikkaus/raekoko}
+                {:otsikko "Kuula\u00ADmylly"
+                 :leveys 5
+                 :nimi ::paikkaus/kuulamylly}]]
     (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkaukset-grid paikkauket-vetolaatikko]}]
       [:div
        [grid/grid
         {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
-                    "Paikkauksien toteumat")
+                    "Paikkauksien kokonaishintaiset kustannukset")
          :salli-valiotsikoiden-piilotus? true
          :tunniste ::paikkaus/id
+         :listaus-tunniste ::paikkaus/nimi
          :sivuta grid/vakiosivutus
          :tyhja (if paikkauksien-haku-kaynnissa?
                   [yleiset/ajax-loader "Haku käynnissä"]
-                  "Ei paikkauksia")
-         :listaus-tunniste ::paikkaus/nimi
-         :vetolaatikot
-         (into {}
-               (map (juxt
-                      ::paikkaus/id
-                      (fn [rivi]
-                        [paikkaukset-vetolaatikko e! rivi])))
-               paikkauket-vetolaatikko)}
+                  "Ei paikkauksia")}
         skeema
         paikkaukset-grid]])))
 
@@ -180,7 +157,8 @@
       [:div
        [debug/debug app]
        [hakuehdot e! app]
-       [paikkaukset e! app]])))
+       [kokonaishintaiset-kustannukset e! app]
+       [yksikkohintaiset-kustannukset e! app]])))
 
 (defn kustannukset []
   [tuck/tuck tiedot/app kustannukset*])
