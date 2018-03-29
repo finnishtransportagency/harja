@@ -418,6 +418,52 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
+(defn tallennusnappi [virheet kohdeosat-atom kirjoitusoikeus? voi-muokata?]
+  #_(when tallenna-fn
+    [napit/palvelinkutsu-nappi
+     [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
+     #(tallenna-fn (vals @kohdeosat-atom))
+     {:disabled (or (not (empty? @virheet))
+                    (not (every? #(and (:tr-numero %)
+                                       (:tr-alkuosa %)
+                                       (:tr-alkuetaisyys %)
+                                       (:tr-loppuosa %)
+                                       (:tr-loppuetaisyys %))
+                                 (vals @kohdeosat-atom)))
+                    (not kirjoitusoikeus?)
+                    (not voi-muokata?))
+      :luokka "nappi-myonteinen grid-tallenna"
+      :virheviesti "Tallentaminen epäonnistui."
+      :kun-onnistuu (fn [vastaus]
+                      (tallennettu-fn vastaus)
+                      (reset! kohdeosat-atom
+                              (into (sorted-map)
+                                    (zipmap (iterate inc 1)
+                                            (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}])
+  [:span
+   (log "Virheet ja kohdeosat")
+   (log (pr-str @virheet))
+   (log (pr-str @kohdeosat-atom))
+   (log (pr-str (or (not (empty? @virheet))
+                    (not (every? #(and (:tr-numero %)
+                                       (:tr-alkuosa %)
+                                       (:tr-alkuetaisyys %)
+                                       (:tr-loppuosa %)
+                                       (:tr-loppuetaisyys %))
+                                 (vals @kohdeosat-atom)))
+                    (not kirjoitusoikeus?)
+                    (not voi-muokata?))))
+   [:span (str "Disabled? " (pr-str (or (not (empty? @virheet))
+                                        (not (every? #(and (:tr-numero %)
+                                                           (:tr-alkuosa %)
+                                                           (:tr-alkuetaisyys %)
+                                                           (:tr-loppuosa %)
+                                                           (:tr-loppuetaisyys %))
+                                                     (vals @kohdeosat-atom)))
+                                        (not kirjoitusoikeus?)
+                                        (not voi-muokata?))))]
+   [:span "Virheet: " (pr-str @virheet)]])
+
 (defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti]}]
   (let [virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
@@ -475,28 +521,8 @@
         :renderoinnin-jalkeen (fn [grid-state]
                                 (hae-osan-pituudet grid-state osan-pituudet-teille))
         :paneelikomponentit
-        [(fn []
-           (when tallenna-fn
-             [napit/palvelinkutsu-nappi
-              [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
-              #(tallenna-fn (vals @kohdeosat-atom))
-              {:disabled (or (not (empty? @virheet))
-                             (not (every? #(and (:tr-numero %)
-                                                (:tr-alkuosa %)
-                                                (:tr-alkuetaisyys %)
-                                                (:tr-loppuosa %)
-                                                (:tr-loppuetaisyys %))
-                                          (vals @kohdeosat-atom)))
-                             (not kirjoitusoikeus?)
-                             (not voi-muokata?))
-               :luokka "nappi-myonteinen grid-tallenna"
-               :virheviesti "Tallentaminen epäonnistui."
-               :kun-onnistuu (fn [vastaus]
-                               (tallennettu-fn vastaus)
-                               (reset! kohdeosat-atom
-                                       (into (sorted-map)
-                                             (zipmap (iterate inc 1)
-                                                     (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]
+        [^{:key "Tallennusnappi"} ;; TODO: Parempi key jos on monta tallennusnappia näkyvissä?
+         [tallennusnappi virheet kohdeosat-atom kirjoitusoikeus? voi-muokata?]]
         :muokkaa-footer (fn [g]
                           [:span#kohdeosien-pituus-yht
                            "Tierekisterikohteiden pituus yhteensä: "

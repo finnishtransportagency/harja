@@ -52,7 +52,7 @@
       (when paneelikomponentit
         (map-indexed (fn [i komponentti]
                        ^{:key i}
-                       [komponentti])
+                       komponentti)
                      paneelikomponentit))])])
 
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivin-virheet rivi-index
