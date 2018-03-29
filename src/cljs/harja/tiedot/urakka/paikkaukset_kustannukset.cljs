@@ -83,7 +83,7 @@
                        (assoc :paikkaus-idt paikkauksien-idt)
                        (assoc ::paikkaus/urakka-id @nav/valittu-urakka-id))]
         (-> app
-            (tt/post! :hae-urakan-paikkauskohteet
+            (tt/post! :hae-paikkausurakan-kustannukset
                       params
                       ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
                       ;; liikaa requesteja ilman viivettä.
@@ -101,7 +101,7 @@
   Nakymaan
   (process-event [{otsikko-fn :otsikko-fn} app]
     (-> app
-        (tt/post! :hae-urakan-paikkauskohteet
+        (tt/post! :hae-paikkausurakan-kustannukset
                   {::paikkaus/urakka-id @nav/valittu-urakka-id}
                   {:onnistui ->EnsimmainenHaku
                    :onnistui-parametrit [otsikko-fn]

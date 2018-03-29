@@ -20,6 +20,7 @@
                                        ::paikkaus
                                        ::paikkauskohde-id)
     ::kustannukset (specql.rel/has-many ::id
+                                        ;; TODO Pitäskö olla ::paikkaustoteuma
                                         ::paikkauskustannus
                                         ::paikkauskohde-id)}]
   ["paikkaus" ::paikkaus
@@ -104,3 +105,8 @@
                                                :opt-un [::aikavali ::paikkaus-idt ::tr]))
 
 (s/def ::urakan-paikkauskohteet-vastaus any?)
+
+(s/def ::paikkausurakan-kustannukset-kysely (s/keys :req [::urakka-id]
+                                                    :opt-un [::aikavali ::paikkaus-idt ::tr]))
+
+(s/def ::paikkausurakan-kustannukset-vastaus any?)
