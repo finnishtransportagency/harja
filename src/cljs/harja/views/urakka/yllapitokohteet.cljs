@@ -396,7 +396,7 @@
               :komponentti (fn [rivi {:keys [index]}]
                              [:div.tasaa-oikealle
                               [napit/yleinen-ensisijainen "Lisää osa"
-                               #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat (inc index)))
+                               #(muokkaa-kohdeosat! (tiedot/lisaa-uusi-kohdeosa kohdeosat (inc index) {}))
                                {:ikoni (ikonit/livicon-arrow-down)
                                 :disabled (or (not kirjoitusoikeus?)
                                               (not voi-muokata?)
@@ -451,7 +451,7 @@
                                              [:div {:style {:display "inline-block"
                                                             :float "right"}}
                                               [napit/yleinen-ensisijainen "Lisää osa"
-                                               #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1))
+                                               #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1 yllapitokohde))
                                                {:ikoni (ikonit/livicon-arrow-down)
                                                 :luokka "btn-xs"}]])])
         :voi-muokata? (and kirjoitusoikeus? voi-muokata?)

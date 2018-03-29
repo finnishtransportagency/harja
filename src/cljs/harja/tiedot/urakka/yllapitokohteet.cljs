@@ -77,8 +77,14 @@
 (defn lisaa-uusi-kohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
-  [kohdeosat key]
+  [kohdeosat key yllapitokohde]
   (let [rivi (get kohdeosat key)
+        ;; Jos ennestään ei yhtään kohdeosaa täytetään ajorata ja kaista pääkohteelta
+        rivi (if rivi
+               rivi
+               {:tr-numero (:tr-numero yllapitokohde)
+                :tr-ajorata (:tr-ajorata yllapitokohde)
+                :tr-kaista (:tr-kaista yllapitokohde)})
         avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
         uusi-rivi {:nimi ""
                    :tr-numero (:tr-numero rivi)
@@ -102,16 +108,14 @@
   "Poistaa valitun kohdeosan annetulla avaimella. Huolehtii siitä, että osat pysyvät järjestyksessä
    eikä väliin jää puuttumaan avaimia."
   [kohdeosat key]
-  (let [avaimet (keys kohdeosat)
-        avaimet-ilman-poistettavaa (filter #(not= % key) avaimet)
-        uudet-avaimet (range 1 (inc (count avaimet-ilman-poistettavaa)))
-        tulos (map-indexed (fn [index uusi-avain]
-                                   (-> [uusi-avain (get kohdeosat (inc index))]))
-                                 uudet-avaimet)
+  (let [kohdeosat (dissoc kohdeosat key)
+        kohdeosat-uusilla-avaimilla (map-indexed (fn [index [vanha-avain rivi]]
+                                                   [(inc index) rivi])
+                                                 kohdeosat)
         tulos (reduce (fn [tulos [avain arvo]]
                         (assoc tulos avain arvo))
                       {}
-                      tulos)]
+                      kohdeosat-uusilla-avaimilla)]
     tulos))
 
 (defn kasittele-tallennettavat-kohteet! [oikeustarkistus-fn kohdetyyppi onnistui-fn epaonnistui-fn]
