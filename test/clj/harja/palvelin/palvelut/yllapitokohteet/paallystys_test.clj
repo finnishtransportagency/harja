@@ -760,3 +760,147 @@
       (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
       (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")
       (is @sahkopostin-vastaanottaja "vastuuhenkilo@example.com"))))
+
+(deftest lisaa-paallystysilmoitukseen-kohdeosien-id
+  (let [paallystysilmoitus {:ilmoitustiedot {:osoitteet [{:kohdeosa-id 1
+                                                          :nimi "1 A"
+                                                          :toimenpide-paallystetyyppi 1
+                                                          :tr-ajorata 1
+                                                          :tr-alkuetaisyys 1
+                                                          :tr-alkuosa 1
+                                                          :tr-kaista 1
+                                                          :tr-loppuetaisyys 1000
+                                                          :tr-loppuosa 1
+                                                          :tr-numero 20}
+                                                         {:kohdeosa-id 2
+                                                          :nimi "1 B"
+                                                          :toimenpide-paallystetyyppi 1
+                                                          :tr-ajorata 1
+                                                          :tr-alkuetaisyys 1500
+                                                          :tr-alkuosa 1
+                                                          :tr-kaista 1
+                                                          :tr-loppuetaisyys 0
+                                                          :tr-loppuosa 3
+                                                          :tr-numero 20}
+                                                         {:kohdeosa-id 3
+                                                          :nimi "2 A"
+                                                          :toimenpide-paallystetyyppi 1
+                                                          :tr-ajorata 2
+                                                          :tr-alkuetaisyys 1
+                                                          :tr-alkuosa 1
+                                                          :tr-kaista 21
+                                                          :tr-loppuetaisyys 1000
+                                                          :tr-loppuosa 1
+                                                          :tr-numero 20}
+                                                         {:kohdeosa-id 4
+                                                          :nimi "2 B"
+                                                          :toimenpide-paallystetyyppi 1
+                                                          :tr-ajorata 2
+                                                          :tr-alkuetaisyys 1500
+                                                          :tr-alkuosa 1
+                                                          :tr-kaista 21
+                                                          :tr-loppuetaisyys 0
+                                                          :tr-loppuosa 3
+                                                          :tr-numero 20}]}}
+        kohdeosat [{:id 1
+                    :nimi "1 A"
+                    :tr-ajorata 1
+                    :tr-alkuetaisyys 1
+                    :tr-alkuosa 1
+                    :tr-kaista 1
+                    :tr-loppuetaisyys 1000
+                    :tr-loppuosa 1
+                    :tr-numero 20}
+                   {:id 2
+                    :nimi "1 B"
+                    :tr-ajorata 1
+                    :tr-alkuetaisyys 1500
+                    :tr-alkuosa 1
+                    :tr-kaista 1
+                    :tr-loppuetaisyys 0
+                    :tr-loppuosa 3
+                    :tr-numero 20}
+                   {:id 3
+                    :nimi "2 A"
+                    :tr-ajorata 2
+                    :tr-alkuetaisyys 1
+                    :tr-alkuosa 1
+                    :tr-kaista 21
+                    :tr-loppuetaisyys 1000
+                    :tr-loppuosa 1
+                    :tr-numero 20}
+                   {:id 4
+                    :nimi "2 B"
+                    :tr-ajorata 2
+                    :tr-alkuetaisyys 1500
+                    :tr-alkuosa 1
+                    :tr-kaista 21
+                    :tr-loppuetaisyys 0
+                    :tr-loppuosa 3
+                    :tr-numero 20}]]
+    (is (= {:ilmoitustiedot {:osoitteet [{:kohdeosa-id 1, :nimi "1 A",
+                                          :toimenpide-paallystetyyppi 1, :tr-ajorata 1,
+                                          :tr-alkuetaisyys 1, :tr-alkuosa 1, :tr-kaista 1,
+                                          :tr-loppuetaisyys 1000, :tr-loppuosa 1,
+                                          :tr-numero 20}
+                                         {:kohdeosa-id 2, :nimi "1 B",
+                                          :toimenpide-paallystetyyppi 1, :tr-ajorata 1,
+                                          :tr-alkuetaisyys 1500, :tr-alkuosa 1,
+                                          :tr-kaista 1, :tr-loppuetaisyys 0,
+                                          :tr-loppuosa 3, :tr-numero 20}
+                                         {:kohdeosa-id 3, :nimi "2 A",
+                                          :toimenpide-paallystetyyppi 1, :tr-ajorata 2,
+                                          :tr-alkuetaisyys 1, :tr-alkuosa 1,
+                                          :tr-kaista 21, :tr-loppuetaisyys 1000,
+                                          :tr-loppuosa 1, :tr-numero 20}
+                                         {:kohdeosa-id 4, :nimi "2 B",
+                                          :toimenpide-paallystetyyppi 1, :tr-ajorata 2,
+                                          :tr-alkuetaisyys 1500, :tr-alkuosa 1,
+                                          :tr-kaista 21, :tr-loppuetaisyys 0,
+                                          :tr-loppuosa 3,
+                                          :tr-numero 20}]}}
+           (paallystys/lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus kohdeosat))
+        "Kohdeosille on lisätty id:t oikein, kun ajorata ja kaista ovat paikoillaan"))
+
+  (let [paallystysilmoitus {:ilmoitustiedot {:osoitteet [{:kohdeosa-id 1
+                                                          :nimi "1"
+                                                          :toimenpide-paallystetyyppi 1
+                                                          :tr-alkuetaisyys 1
+                                                          :tr-alkuosa 1
+                                                          :tr-loppuetaisyys 1000
+                                                          :tr-loppuosa 1
+                                                          :tr-numero 20}
+                                                         {:kohdeosa-id 3
+                                                          :nimi "2"
+                                                          :toimenpide-paallystetyyppi 1
+                                                          :tr-alkuetaisyys 1
+                                                          :tr-alkuosa 1
+                                                          :tr-loppuetaisyys 1000
+                                                          :tr-loppuosa 1
+                                                          :tr-numero 20}]}}
+        kohdeosat [{:id 1
+                    :nimi "1"
+                    :tr-alkuetaisyys 1
+                    :tr-alkuosa 1
+                    :tr-loppuetaisyys 1000
+                    :tr-loppuosa 1
+                    :tr-numero 20}
+                   {:id 2
+                    :nimi "2"
+                    :tr-alkuetaisyys 1500
+                    :tr-alkuosa 1
+                    :tr-loppuetaisyys 0
+                    :tr-loppuosa 3
+                    :tr-numero 20}]]
+    (is (= {:ilmoitustiedot {:osoitteet [{:kohdeosa-id 1, :nimi "1",
+                                          :toimenpide-paallystetyyppi 1,
+                                          :tr-alkuetaisyys 1, :tr-alkuosa 1,
+                                          :tr-loppuetaisyys 1000, :tr-loppuosa 1,
+                                          :tr-numero 20}
+                                         {:kohdeosa-id 1, :nimi "2",
+                                          :toimenpide-paallystetyyppi 1,
+                                          :tr-alkuetaisyys 1, :tr-alkuosa 1,
+                                          :tr-loppuetaisyys 1000, :tr-loppuosa 1,
+                                          :tr-numero 20}]}}
+           (paallystys/lisaa-paallystysilmoitukseen-kohdeosien-idt paallystysilmoitus kohdeosat))
+        "Kohdeosille on lisätty id:t oikein, kun ajorataa ja kaistaa ei ole")))
