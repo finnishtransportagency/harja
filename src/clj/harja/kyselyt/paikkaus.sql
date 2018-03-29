@@ -133,7 +133,16 @@ UPDATE yllapitokohteen_kustannukset
  WHERE yllapitokohde = :id;
 
 -- name: hae-paikkaustoteumat-tierekisteriosoitteella
-SELECT pt.*
+SELECT pt.kirjattu,
+       pt.selite,
+       pt.yksikko,
+       pt.yksikkohinta,
+       pt.maara,
+       pt.hinta,
+       pt.tyyppi,
+       pt.id              AS "paikkaustoteuma-id",
+       pk.id              AS "paikkauskohde-id",
+       pk.nimi
 FROM paikkaustoteuma pt
   JOIN paikkauskohde pk ON pt."paikkauskohde-id"=pk.id
   INNER JOIN paikkaus p ON p."ulkoinen-id"=pt."ulkoinen-id"
@@ -144,4 +153,5 @@ WHERE pt."urakka-id"=:urakka-id AND
       (:alkuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).aosa >= :alkuosa) AND
       (:alkuetaisyys :: INTEGER IS NULL OR (p.tierekisteriosoite).aet >= :alkuetaisyys) AND
       (:loppuosa :: INTEGER IS NULL OR (p.tierekisteriosoite).losa <= :loppuosa) AND
-      (:loppuetaisyys :: INTEGER IS NULL OR (p.tierekisteriosoite).let <= :loppuetaisyys)
+      (:loppuetaisyys :: INTEGER IS NULL OR (p.tierekisteriosoite).let <= :loppuetaisyys) AND
+      (:paikkaus-idt :: BIGINT IS NULL OR pk.id IN (:paikkaus-idt));

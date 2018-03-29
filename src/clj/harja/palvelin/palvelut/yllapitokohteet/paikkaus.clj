@@ -210,11 +210,15 @@
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
-                                :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil}]
-    (q/hae-paikkaustoteumat-tierekisteriosoitteella db (assoc (merge kysely-params-template (:tr tiedot))
-                                                         :urakka-id (::paikkaus/urakka-id tiedot)
-                                                         :alkuaika (first (:aikavali tiedot))
-                                                         :loppuaika (second (:aikavali tiedot))))))
+                                :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil}]
+    (if (and (not (nil? (:paikkaus-idt tiedot)))
+             (empty? (:paikkaus-idt tiedot)))
+      []
+      (q/hae-paikkaustoteumat-tierekisteriosoitteella db (assoc (merge kysely-params-template (:tr tiedot))
+                                                           :urakka-id (::paikkaus/urakka-id tiedot)
+                                                           :paikkaus-idt (:paikkaus-idt tiedot)
+                                                           :alkuaika (first (:aikavali tiedot))
+                                                           :loppuaika (second (:aikavali tiedot)))))))
 
 (defrecord Paikkaus []
   component/Lifecycle

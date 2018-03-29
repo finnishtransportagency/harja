@@ -154,7 +154,6 @@
          :tyhja (if paikkauksien-haku-kaynnissa?
                   [yleiset/ajax-loader "Haku käynnissä"]
                   "Ei paikkauksia")
-         :listaus-tunniste ::paikkaus/nimi
          :vetolaatikot
          (into {}
                (map (juxt

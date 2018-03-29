@@ -14,15 +14,11 @@
 (def app (atom {:paikkauksien-haku-kaynnissa? false
                 :valinnat nil}))
 
-(defn kiinnostavat-tiedot-grid [{tierekisteriosoite ::paikkaus/tierekisteriosoite paikkauskohde ::paikkaus/paikkauskohde
-                                 :as paikkaus}]
-  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma
-                                                               ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
-                                                               ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id})
-        alkuaika {::paikkaus/alkuaika (pvm/pvm (::paikkaus/alkuaika paikkaus))}
-        loppuaika {::paikkaus/loppuaika (pvm/pvm (::paikkaus/loppuaika paikkaus))}
-        paikkauskohde (select-keys paikkauskohde #{::paikkaus/nimi ::paikkaus/paikkauskohde-id})]
-    (merge sellaisenaan-naytettavat-arvot alkuaika loppuaika tierekisteriosoite paikkauskohde)))
+(defn kiinnostavat-tiedot-grid [paikkaus]
+  (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{:selite :yksikko :yksikkohinta :paikkaustoteuma-id
+                                                               :maara :hinta :tyyppi :paikkauskohde-id :nimi})
+        kirjausaika {:kirjattu (pvm/pvm (:kirjattu paikkaus))}]
+    (merge sellaisenaan-naytettavat-arvot kirjausaika)))
 
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu? otsikko-fn])
@@ -31,25 +27,28 @@
 (defrecord NakymastaPois [])
 (defrecord SiirryToimenpiteisiin [paikkaus-id])
 ;; Haut
-(defrecord HaePaikkaukset [otsikko-fn])
+(defrecord HaeKustannukset [otsikko-fn])
 (defrecord EnsimmainenHaku [tulos otsikko-fn])
-(defrecord PaikkauksetHaettu [tulos otsikko-fn])
-(defrecord PaikkauksetEiHaettu [])
-(defrecord HaePaikkauksetKutsuLahetetty [])
+(defrecord KustannuksetHaettu [tulos otsikko-fn])
+(defrecord KustannuksetEiHaettu [])
+(defrecord HaeKustannuksetKutsuLahetetty [])
 
 (defn kasittele-haettu-tulos
   [tulos otsikko-fn]
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
                                  tulos)
-        paikkaukset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                   (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikko-fn (::paikkaus/paikkauskohde-id (first paikkaukset)))}) paikkaukset))
-                                 (group-by ::paikkaus/nimi kiinnostavat-tiedot))
-        paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
-                                     tulos)]
-    {:paikkaukset-grid paikkaukset-grid
-     :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
+        kokonaishintaiset-tiedot (filter #(= (:tyyppi %) "kokonaishintainen") kiinnostavat-tiedot)
+        yksikkohintaiset-tiedot (filter #(= (:tyyppi %) "yksikkohintainen") kiinnostavat-tiedot)
+        kokonaishintaiset-grid (mapcat (fn [[otsikko paikkaukset]]
+                                   (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikko-fn (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
+                                 (group-by :nimi kokonaishintaiset-tiedot))
+        yksikkohintaset-grid (mapcat (fn [[otsikko paikkaukset]]
+                                        (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikko-fn (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
+                                      (group-by :nimi yksikkohintaiset-tiedot))]
+    {:yksikkohintaiset-grid yksikkohintaset-grid
+     :kokonaishintaiset-grid kokonaishintaiset-grid}))
 
-(defn valinta-wrap [e! app polku otsikko-fn]
+(defn valinta-wrap [e! app otsikko-fn polku]
   (r/wrap (get-in app [:valinnat polku])
           (fn [u]
             (e! (->PaivitaValinnat {polku u} otsikko-fn)))))
@@ -61,7 +60,7 @@
   (process-event [{u :uudet otsikko-fn :otsikko-fn} app]
     (let [uudet-valinnat (merge (:valinnat app)
                                 (select-keys u valintojen-avaimet))
-          haku (tuck/send-async! ->HaePaikkaukset otsikko-fn)]
+          haku (tuck/send-async! ->HaeKustannukset otsikko-fn)]
       (go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
   PaikkausValittu
@@ -72,7 +71,7 @@
                                       (get-in app [:valinnat :urakan-paikkauskohteet]))]
       (tuck/process-event (->PaivitaValinnat {:urakan-paikkauskohteet uudet-paikkausvalinnat} otsikko-fn) app)
       (assoc-in app [:valinnat :urakan-paikkauskohteet] uudet-paikkausvalinnat)))
-  HaePaikkaukset
+  HaeKustannukset
   (process-event [{otsikko-fn :otsikko-fn} app]
     (if-not (:paikkauksien-haku-kaynnissa? app)
       (let [paikkauksien-idt (into #{} (keep #(when (:valittu? %)
@@ -88,14 +87,14 @@
                       ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
                       ;; liikaa requesteja ilman viivettä.
                       {:viive 1000
-                       :tunniste :hae-paikkaukset-toteumat-nakymaan
-                       :lahetetty ->HaePaikkauksetKutsuLahetetty
-                       :onnistui ->PaikkauksetHaettu
+                       :tunniste :hae-paikkaukset-kustannukset-nakymaan
+                       :lahetetty ->HaeKustannuksetKutsuLahetetty
+                       :onnistui ->KustannuksetHaettu
                        :onnistui-parametrit [otsikko-fn]
-                       :epaonnistui ->PaikkauksetEiHaettu})
+                       :epaonnistui ->KustannuksetEiHaettu})
             (assoc :paikkauksien-haku-tulee-olemaan-kaynnissa? true)))
       app))
-  HaePaikkauksetKutsuLahetetty
+  HaeKustannuksetKutsuLahetetty
   (process-event [_ app]
     (assoc app :paikkauksien-haku-kaynnissa? true))
   Nakymaan
@@ -105,7 +104,7 @@
                   {::paikkaus/urakka-id @nav/valittu-urakka-id}
                   {:onnistui ->EnsimmainenHaku
                    :onnistui-parametrit [otsikko-fn]
-                   :epaonnistui ->PaikkauksetEiHaettu})
+                   :epaonnistui ->KustannuksetEiHaettu})
         (assoc :nakymassa? true
                :paikkauksien-haku-kaynnissa? true)))
   NakymastaPois
@@ -114,12 +113,12 @@
   EnsimmainenHaku
   (process-event [{tulos :tulos otsikko-fn :otsikko-fn} app]
     (let [paikkauskohteet (reduce (fn [paikkaukset paikkaus]
-                                    (if (some #(= (:id %) (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/id]))
+                                    (if (some #(= (:id %) (:paikkauskohde-id paikkaus))
                                               paikkaukset)
                                       paikkaukset
                                       (conj paikkaukset
-                                            {:id (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/id])
-                                             :nimi (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi])
+                                            {:id (:paikkauskohde-id paikkaus)
+                                             :nimi (:nimi paikkaus)
                                              :valittu? true})))
                                   [] tulos)
           naytettavat-tiedot (kasittele-haettu-tulos tulos otsikko-fn)]
@@ -127,14 +126,14 @@
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false)
           (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet))))
-  PaikkauksetHaettu
+  KustannuksetHaettu
   (process-event [{tulos :tulos otsikko-fn :otsikko-fn} app]
     (let [naytettavat-tiedot (kasittele-haettu-tulos tulos otsikko-fn)]
       (-> app
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false
                  :paikkauksien-haku-tulee-olemaan-kaynnissa? false))))
-  PaikkauksetEiHaettu
+  KustannuksetEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
     (assoc app

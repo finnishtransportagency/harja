@@ -1,11 +1,7 @@
 (ns harja.views.urakka.paikkaukset-kustannukset
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
-            [harja.views.kartta :as kartta]
-            [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -31,11 +27,7 @@
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Tierekisteriosoite"
        :kentta-params {:tyyppi :tierekisteriosoite
-                       :tr-otsikot? false
-                       #_#_:validoi [(fn [osoite {sijainti :sijainti}]
-                                       (when (and (tr-osoite-taytetty? osoite)
-                                                  (nil? sijainti))
-                                         "Tarkista tierekisteriosoite"))]}
+                       :tr-otsikot? false}
        :arvo-atom (tr-atomi :tr)
        :tyylit {:width "fit-content"}}]
      [valinnat/aikavali (aikavali-atomi :aikavali)]
@@ -49,105 +41,58 @@
         [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn yksikkohintaiset-kustannukset
-  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}]
-  (let [nayta-numerot #(apply str (interpose ", " %))
-        skeema [{:otsikko "Ajo\u00ADrata"
-                 :leveys 1
-                 :nimi ::paikkaus/ajorata}
-                {:otsikko "Reu\u00ADnat"
-                 :leveys 1
-                 :nimi ::paikkaus/reunat
-                 :fmt nayta-numerot}
-                {:otsikko "Ajo\u00ADurat"
-                 :leveys 1
-                 :nimi ::paikkaus/ajourat
-                 :fmt nayta-numerot}
-                {:otsikko "Ajoura\u00ADvälit"
-                 :leveys 1
-                 :nimi ::paikkaus/ajouravalit
-                 :fmt nayta-numerot}
-                {:otsikko "Kes\u00ADkisau\u00ADmat"
-                 :leveys 1
-                 :nimi ::paikkaus/keskisaumat
-                 :fmt nayta-numerot}
-                {:otsikko "Esiin\u00ADtymä"
-                 :leveys 1
-                 :nimi ::paikkaus/esiintyma}
-                {:otsikko "Kuu\u00ADlamyl\u00ADly\u00ADarvo"
+  [e! app]
+  (let [skeema [{:otsikko "Kirjaus\u00ADaika"
+                 :leveys 3
+                 :nimi :kirjattu}
+                {:otsikko "Selite"
+                 :leveys 5
+                 :nimi :selite}
+                {:otsikko "Määrä"
                  :leveys 2
-                 :nimi ::paikkaus/kuulamyllyarvo}
-                {:otsikko "Muoto\u00ADarvo"
+                 :nimi :maara}
+                {:otsikko "Yksikkö"
                  :leveys 2
-                 :nimi ::paikkaus/muotoarvo}
-                {:otsikko "Side\u00ADaine\u00ADtyyp\u00ADpi"
+                 :nimi :yksikko}
+                {:otsikko "Yksikkö\u00ADhinta"
                  :leveys 2
-                 :nimi ::paikkaus/sideainetyyppi}
-                {:otsikko "Pitoi\u00ADsuus"
-                 :leveys 1
-                 :nimi ::paikkaus/pitoisuus}
-                {:otsikko "Lisä\u00ADaineet"
-                 :leveys 2
-                 :nimi ::paikkaus/lisa-aineet}]
-        yhdistetty [(apply merge {::paikkaus/id id} (concat tienkohdat materiaalit))]]
-    [:div
-     [grid/grid
-      {:otsikko "Tienkohdat & Materiaalit"
-       :tunniste ::paikkaus/id
-       :sivuta grid/vakiosivutus
-       :tyhja "Ei tietoja"}
-      skeema
-      yhdistetty]
-     [napit/yleinen-ensisijainen
-      "Siirry kustannuksiin"
-      #(e! (tiedot/->SiirryKustannuksiin id))]]))
+                 :nimi :yksikkohinta}]]
+    (fn [_ {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
+                   yksikkohintaiset-grid]}]
+      [:div
+       [grid/grid
+        {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
+                    [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
+                    "Paikkauksien yksikköhintaiset kustannukset")
+         :tunniste :paikkaustoteuma-id
+         :salli-valiotsikoiden-piilotus? true
+         :sivuta grid/vakiosivutus
+         :tyhja "Ei yksikköhintaisia kustannuksia"}
+        skeema
+        yksikkohintaiset-grid]])))
 
 (defn kokonaishintaiset-kustannukset [e! app]
-  (let [tierekisteriosoite-sarakkeet [nil
-                                      {:nimi ::tierekisteri/tie}
-                                      nil nil
-                                      {:nimi ::tierekisteri/aosa}
-                                      {:nimi ::tierekisteri/aet}
-                                      {:nimi ::tierekisteri/losa}
-                                      {:nimi ::tierekisteri/let}]
-        skeema [{:otsikko "Alku\u00ADaika"
+  (let [skeema [{:otsikko "Kirjaus\u00ADaika"
                  :leveys 5
-                 :nimi ::paikkaus/alkuaika}
-                {:otsikko "Loppu\u00ADaika"
+                 :nimi :kirjattu}
+                {:otsikko "Selite"
                  :leveys 5
-                 :nimi ::paikkaus/loppuaika}
-                {:otsikko "Työ\u00ADmene\u00ADtelmä"
+                 :nimi :selite}
+                {:otsikko "Hinta"
                  :leveys 5
-                 :nimi ::paikkaus/tyomenetelma}
-                {:otsikko "Massa\u00ADtyyp\u00ADpi"
-                 :leveys 5
-                 :nimi ::paikkaus/massatyyppi}
-                {:otsikko "Leveys"
-                 :leveys 5
-                 :nimi ::paikkaus/leveys}
-                {:otsikko "Massa\u00ADmenek\u00ADki"
-                 :leveys 5
-                 :nimi ::paikkaus/massamenekki}
-                {:otsikko "Raekoko"
-                 :leveys 5
-                 :nimi ::paikkaus/raekoko}
-                {:otsikko "Kuula\u00ADmylly"
-                 :leveys 5
-                 :nimi ::paikkaus/kuulamylly}]]
-    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkaukset-grid paikkauket-vetolaatikko]}]
+                 :nimi :hinta}]]
+    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? kokonaishintaiset-grid]}]
       [:div
        [grid/grid
         {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
                     [yleiset/ajax-loader-pieni "Päivitetään listaa.."]
                     "Paikkauksien kokonaishintaiset kustannukset")
          :salli-valiotsikoiden-piilotus? true
-         :tunniste ::paikkaus/id
-         :listaus-tunniste ::paikkaus/nimi
+         :tunniste :paikkaustoteuma-id
          :sivuta grid/vakiosivutus
-         :tyhja (if paikkauksien-haku-kaynnissa?
-                  [yleiset/ajax-loader "Haku käynnissä"]
-                  "Ei paikkauksia")}
+         :tyhja "Ei kokonaishintaisia kustannuksia"}
         skeema
-        paikkaukset-grid]])))
+        kokonaishintaiset-grid]])))
 
 (defn kustannukset* [e! app]
   (komp/luo
