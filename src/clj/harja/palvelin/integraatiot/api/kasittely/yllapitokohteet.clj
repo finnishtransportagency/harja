@@ -61,7 +61,7 @@
         ;; päivittämään vain arvot: aosa, aet, losa, let.
 
         ;; Jatkossa ajorataa ja kaistaa ei ole pakko olla, vaan ne voidaan antaa alikohdetasolla.
-        ;; Ajorataa ja kaistaa voi myös päivittää API:sta.
+        ;; Ne voi voivat kuitenkin olla olemassa edelleen (vanhoilla kohteilla). Niitä voi myös päivittää API:sta.
         ;; Taaksepäinyhteensopivuuden vuoksi, mikäli pääkohdetta päivitetään ilman ajorataa ja kaistaa,
         ;; käytetään kannassa olevaa arvoa, mikäli sellainen on.
         kohteen-sijainti (if (and olemassa-oleva-ajorata-ja-kaista?
