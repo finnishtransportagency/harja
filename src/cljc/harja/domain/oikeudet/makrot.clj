@@ -44,7 +44,7 @@
                                xls/read-cell)]
             (when (and osio nakyma)
               {:osio osio :nakyma nakyma :rivi rivi})))
-        (range 7 100)))
+        (range 7 1000)))
 
 (defn- kanonisoi [teksti]
   (-> teksti

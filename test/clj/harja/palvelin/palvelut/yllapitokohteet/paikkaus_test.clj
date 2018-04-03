@@ -8,7 +8,8 @@
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
             [schema.core :as s]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.domain.paikkaus :as paikkaus]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -182,3 +183,33 @@
                                                                    :sopimus-id         sopimus-id
                                                                    :paikkausilmoitus paikkausilmoitus}))
           "Ilmoituksen hyväksyminen ilman oikeuksia ei saa onnistua"))))
+
+(deftest hae-urakan-paikkauskohteet-testi
+  (let [urakka-id @oulun-alueurakan-2014-2019-id
+        paikkaukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-urakan-paikkauskohteet
+                                    +kayttaja-jvh+
+                                    {::paikkaus/urakka-id urakka-id})
+        paikkaukset-tr-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                :hae-urakan-paikkauskohteet
+                                                +kayttaja-jvh+
+                                                {::paikkaus/urakka-id urakka-id
+                                                 :tr {:numero 20, :alkuosa 1, :alkuetaisyys 1, :loppuosa 1}})
+        testikohde-id (some #(when (= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi]))
+                               (get-in % [::paikkaus/paikkauskohde ::paikkaus/id]))
+                            paikkaukset)
+        paikaukset-paikkauskohteet-filtteri (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                            :hae-urakan-paikkauskohteet
+                                                            +kayttaja-jvh+
+                                                            {::paikkaus/urakka-id urakka-id
+                                                             :paikkaus-idt #{testikohde-id}})]
+    (is (= (count paikkaukset) 4))
+    (is (= (count paikkaukset-tr-filtteri) 2))
+    (is (empty? (remove #(= "Testikohde" (get-in % [::paikkaus/paikkauskohde ::paikkaus/nimi])) paikaukset-paikkauskohteet-filtteri)))))
+
+(deftest hae-urakan-paikkauskohteet-ei-toimi-ilman-oikeuksia
+  (let [urakka-id @oulun-alueurakan-2014-2019-id]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-urakan-paikkauskohteet
+                                           +kayttaja-seppo+
+                                           {::paikkaus/urakka-id urakka-id})))))

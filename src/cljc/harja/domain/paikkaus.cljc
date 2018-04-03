@@ -68,7 +68,8 @@
     ::raekoko
     ::kuulamylly
     [::paikkauskohde #{::nimi
-                       ::ulkoinen-id}]
+                       ::ulkoinen-id
+                       ::id}]
     [::tienkohdat #{::ajorata
                     ::reunat
                     ::ajourat
@@ -94,3 +95,12 @@
     ::yksikko
     ::yksikkohinta
     ::maara})
+
+(s/def ::aikavali (s/coll-of any? :kind? vector :count 2))
+(s/def ::paikkaus-idt (s/coll-of integer? :kind set?))
+(s/def ::tr map?)
+
+(s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
+                                               :opt-un [::aikavali ::paikkaus-idt ::tr]))
+
+(s/def ::urakan-paikkauskohteet-vastaus any?)
