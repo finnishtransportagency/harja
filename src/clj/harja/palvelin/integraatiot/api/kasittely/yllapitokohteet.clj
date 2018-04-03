@@ -9,11 +9,30 @@
             [harja.domain.paallystysilmoitus :as paallystysilmoitus])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
+;; Aiemmin pääkohteella oli pakko olla ajorata ja kaista. Näitä ei voinut muokata, eli API:sta pystyi
+;; päivittämään vain arvot: aosa, aet, losa, let. Kohteen alikohteet katsottiin olevan samalla ajoradalla
+;; ja kaistalla pääkohteen kanssa.
+;; Jatkossa (kaudella 2018) pääkohteen ajorataa ja kaistaa ei ole pakko olla, vaan ne voidaan antaa alikohdetasolla.
+;; Pääkohteen ajorataa ja kaistaa voidaan myös päivittää API:sta.
+;; Taaksepäinyhteensopivuuden vuoksi, mikäli pääkohdetta tai alikohdetta päivitetään ilman ajorataa ja kaistaa,
+;; käytetään kannassa olevaa pääkohteen ajorataa ja kaistaa, mikäli sellaiset löytyy.
+
 (defn paivita-alikohteet [db kohde alikohteet]
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
+
   (mapv
     (fn [alikohde]
       (let [sijainti (:sijainti alikohde)
+            paivityksessa-alikohteella-ajorata-ja-kaista? (boolean (and (:ajr sijainti) (:kaista sijainti)))
+            olemassa-oleva-paakohde (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)})
+            paakohteella-ajorata-ja-kaista? (boolean (and (:tr_ajorata olemassa-oleva-paakohde)
+                                                          (:tr_kaista olemassa-oleva-paakohde)))
+            alikohde (if (and paakohteella-ajorata-ja-kaista?
+                              (not paivityksessa-alikohteella-ajorata-ja-kaista?))
+                       (assoc alikohde
+                         :ajr (:tr_ajorata olemassa-oleva-paakohde)
+                         :kaista (:tr_kaista olemassa-oleva-paakohde))
+                       alikohde)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)
@@ -57,13 +76,6 @@
   (let [paivityksessa-ajorata-ja-kaista? (boolean (and (:ajr kohteen-sijainti) (:kaista kohteen-sijainti)))
         olemassa-oleva (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
         olemassa-oleva-ajorata-ja-kaista? (boolean (and (:tr_ajorata olemassa-oleva) (:tr_kaista olemassa-oleva)))
-        ;; Aiemmin pääkohteella oli pakko olla ajorata ja kaista. Näitä ei voinut muokata, eli API:sta pystyi
-        ;; päivittämään vain arvot: aosa, aet, losa, let.
-
-        ;; Jatkossa ajorataa ja kaistaa ei ole pakko olla, vaan ne voidaan antaa alikohdetasolla.
-        ;; Ne voi voivat kuitenkin olla olemassa edelleen (vanhoilla kohteilla). Niitä voi myös päivittää API:sta.
-        ;; Taaksepäinyhteensopivuuden vuoksi, mikäli pääkohdetta päivitetään ilman ajorataa ja kaistaa,
-        ;; käytetään kannassa olevaa arvoa, mikäli sellainen on.
         kohteen-sijainti (if (and olemassa-oleva-ajorata-ja-kaista?
                                   (not paivityksessa-ajorata-ja-kaista?))
                            (assoc kohteen-sijainti
