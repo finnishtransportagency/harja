@@ -235,7 +235,7 @@
                                       rivin-id (:valiaikainen-id rivi)]
                                   (when (or (= id-1 rivin-id) (= id-2 rivin-id))
                                     {:rivi avain
-                                     :viesti (str "Kohteenosa on päälekkäin osan "
+                                     :viesti (str "Kohteenosa on päällekkäin osan "
                                                   (cond
                                                     (= rivin-id id-1) nimi-2
                                                     (= rivin-id id-2) nimi-1
@@ -251,7 +251,7 @@
          (map (fn [rivi-id]
                 (let [kenttien-virheet (get virheet rivi-id)
                       kenttien-avaimet (keys kenttien-virheet)
-                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päälekkäin osan"))]
+                      paallekkaisyysvirhe? #(not (string/includes? % "Kohteenosa on päällekkäin osan"))]
                   {rivi-id (apply merge (map (fn [kentan-avain]
                                                {kentan-avain (filter paallekkaisyysvirhe? (get kenttien-virheet kentan-avain))})
                                              kenttien-avaimet))}))
@@ -491,12 +491,12 @@
                              (not voi-muokata?))
                :luokka "nappi-myonteinen grid-tallenna"
                :virheviesti "Tallentaminen epäonnistui."
-               :kun-onnistuu #(do
-                                (tallennettu-fn)
-                                (reset! kohdeosat-atom
-                                        (into (sorted-map)
-                                              (zipmap (iterate inc 1)
-                                                      (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]
+               :kun-onnistuu (fn [vastaus]
+                               (tallennettu-fn vastaus)
+                               (reset! kohdeosat-atom
+                                       (into (sorted-map)
+                                             (zipmap (iterate inc 1)
+                                                     (yllapitokohteet-domain/jarjesta-yllapitokohteet (vals @kohdeosat-atom))))))}]))]
         :muokkaa-footer (fn [g]
                           [:span#kohdeosien-pituus-yht
                            "Tierekisterikohteiden pituus yhteensä: "
@@ -625,12 +625,11 @@
                                             kohde))
                                         @kohteet-atom))
                            (viesti/nayta! "Kohdeosat tallennettu!" :success)))
-        kohdeosat (:kohdeosat rivi)
         indeksoi-osat #(into (sorted-map) (map (fn [[avain kohdeosa]] [avain kohdeosa]) (zipmap (iterate inc 1) %)))
         kohteen-osat (atom (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                            (filter #(= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
+                                            (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))
         muut-osat (atom (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
-                                         (filter #(not= (:tr-numero rivi) (:tr-numero %)) kohdeosat))))
+                                         (filter #(not= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))
         osa-kohteen-ulkopuolella (fn [_ kohteen-osan-rivi _]
                                    (when (= (:tr-numero rivi) (:tr-numero kohteen-osan-rivi))
                                      (str "Muilla kohteilla ei saa olla sama tienumero pääkohteen kanssa")))
@@ -643,56 +642,64 @@
                                  @paallystys-tiedot/paallystysilmoitukset)
                            :lukittu)
         virheet (atom nil)]
-    (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
-      (let [kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
-                                                       (:tr-kaista rivi)))]
-        [:div
-         [yllapitokohdeosat
-          {:otsikko "Kohteen tierekisteriosoitteet"
-           :urakka urakka
-           :muokattava-tie? (constantly false)
-           :muokattava-ajorata-ja-kaista? (constantly (not kohteella-ajorata-ja-kaista?))
-           :kohdeosat-atom kohteen-osat
-           :yllapitokohde rivi
-           :tallenna-fn (tallenna-fn :kohteen-omat-kohdeosat)
-           :tallennettu-fn tallennettu-fn
-           :jarjesta-avaimen-mukaan identity
-           :validoinnit {:tr-numero [osa-kohteen-sisalla]
-                         :tr-ajorata [osa-kohteen-sisalla]
-                         :tr-kaista [osa-kohteen-sisalla]
-                         :tr-alkuosa [osa-kohteen-sisalla]
-                         :tr-alkuetaisyys [osa-kohteen-sisalla]
-                         :tr-loppuosa [osa-kohteen-sisalla]
-                         :tr-loppuetaisyys [osa-kohteen-sisalla]}
-           :virheet-atom virheet
-           :voi-muokata? voi-muokata?
-           :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")
-           :kohdetyyppi kohdetyyppi}]
-         [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
-         [debug/debug @virheet {:otsikko "Kohteen virheet"}]
-         [yllapitokohdeosat
-          {:otsikko "Muut tierekisteriosoitteet"
-           :urakka urakka
-           :muokattava-tie? (constantly true)
-           :muokattava-ajorata-ja-kaista? (constantly true)
-           :kohdeosat-atom muut-osat
-           :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
-           :tallennettu-fn tallennettu-fn
-           :jarjesta-avaimen-mukaan identity
-           :validoinnit {:tr-numero [osa-kohteen-ulkopuolella]
-                         :tr-ajorata [osa-kohteen-ulkopuolella]
-                         :tr-kaista [osa-kohteen-ulkopuolella]
-                         :tr-alkuosa [osa-kohteen-ulkopuolella]
-                         :tr-alkuetaisyys [osa-kohteen-ulkopuolella]
-                         :tr-loppuosa [osa-kohteen-ulkopuolella]
-                         :tr-loppuetaisyys [osa-kohteen-ulkopuolella]}
-           :voi-muokata? voi-muokata?
-           :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")}]
-         [debug/debug @muut-osat {:otsikko "Muut tierekisteriosoitteet"}]
-         (when (= kohdetyyppi :paallystys)
-           [maaramuutokset {:yllapitokohde-id (:id rivi)
-                            :urakka-id (:id urakka)
-                            :yllapitokohteet-atom kohteet-atom}])]))))
+    (komp/luo
+      (komp/kun-muuttuu
+        (fn [{:keys [rivi]}]
+          ;; Jos pääkohde päivittyy, palvelin saattaa tehdä automaattisia korjauksia kohdeosiin.
+          ;; Täten kohteen osat -atomi tulee resetoida vastaamaan päivitettyjä osia.
+          (reset! kohteen-osat (indeksoi-osat (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                                                (filter #(= (:tr-numero rivi) (:tr-numero %)) (:kohdeosat rivi)))))))
+
+      (fn [{:keys [urakka kohteet-atom rivi kohdetyyppi]}]
+        (let [kohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata rivi)
+                                                         (:tr-kaista rivi)))]
+          [:div
+           [yllapitokohdeosat
+            {:otsikko "Kohteen tierekisteriosoitteet"
+             :urakka urakka
+             :muokattava-tie? (constantly false)
+             :muokattava-ajorata-ja-kaista? (constantly (not kohteella-ajorata-ja-kaista?))
+             :kohdeosat-atom kohteen-osat
+             :yllapitokohde rivi
+             :tallenna-fn (tallenna-fn :kohteen-omat-kohdeosat)
+             :tallennettu-fn tallennettu-fn
+             :jarjesta-avaimen-mukaan identity
+             :validoinnit {:tr-numero [osa-kohteen-sisalla]
+                           :tr-ajorata [osa-kohteen-sisalla]
+                           :tr-kaista [osa-kohteen-sisalla]
+                           :tr-alkuosa [osa-kohteen-sisalla]
+                           :tr-alkuetaisyys [osa-kohteen-sisalla]
+                           :tr-loppuosa [osa-kohteen-sisalla]
+                           :tr-loppuetaisyys [osa-kohteen-sisalla]}
+             :virheet-atom virheet
+             :voi-muokata? voi-muokata?
+             :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")
+             :kohdetyyppi kohdetyyppi}]
+           [debug/debug @kohteen-osat {:otsikko "Kohteen tierekisteriosoitteet"}]
+           [debug/debug @virheet {:otsikko "Kohteen virheet"}]
+           [yllapitokohdeosat
+            {:otsikko "Muut tierekisteriosoitteet"
+             :urakka urakka
+             :muokattava-tie? (constantly true)
+             :muokattava-ajorata-ja-kaista? (constantly true)
+             :kohdeosat-atom muut-osat
+             :tallenna-fn (tallenna-fn :kohteen-muut-kohdeosat)
+             :tallennettu-fn tallennettu-fn
+             :jarjesta-avaimen-mukaan identity
+             :validoinnit {:tr-numero [osa-kohteen-ulkopuolella]
+                           :tr-ajorata [osa-kohteen-ulkopuolella]
+                           :tr-kaista [osa-kohteen-ulkopuolella]
+                           :tr-alkuosa [osa-kohteen-ulkopuolella]
+                           :tr-alkuetaisyys [osa-kohteen-ulkopuolella]
+                           :tr-loppuosa [osa-kohteen-ulkopuolella]
+                           :tr-loppuetaisyys [osa-kohteen-ulkopuolella]}
+             :voi-muokata? voi-muokata?
+             :virhe-viesti (when-not voi-muokata? "Kohdetta ei voi muokata, sillä sen päällystysilmoitus on hyväksytty.")}]
+           [debug/debug @muut-osat {:otsikko "Muut tierekisteriosoitteet"}]
+           (when (= kohdetyyppi :paallystys)
+             [maaramuutokset {:yllapitokohde-id (:id rivi)
+                              :urakka-id (:id urakka)
+                              :yllapitokohteet-atom kohteet-atom}])])))))
 
 
 (defn- vasta-muokatut-lihavoitu []

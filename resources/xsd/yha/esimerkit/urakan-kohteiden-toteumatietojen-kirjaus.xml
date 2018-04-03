@@ -32,8 +32,6 @@
                     <aet>3</aet>
                     <losa>3</losa>
                     <let>3</let>
-                    <ajorata>0</ajorata>
-                    <kaista>11</kaista>
                 </tierekisteriosoitevali>
                 <alustalle-tehdyt-toimet>
                     <!--Zero or more repetitions:-->
@@ -45,6 +43,8 @@
                             <aet>3</aet>
                             <losa>3</losa>
                             <let>3</let>
+                            <ajorata>0</ajorata>
+                            <kaista>11</kaista>
                         </tierekisteriosoitevali>
                         <kasittelymenetelma>12</kasittelymenetelma>
                         <kasittelypaksuus>100</kasittelypaksuus>
