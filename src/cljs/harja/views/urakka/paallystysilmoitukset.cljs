@@ -263,6 +263,11 @@
          :fmt tierekisteri-domain/tierekisteriosoite-tekstina
          :muokattava? (constantly false)
          :palstoja 1}
+        (when (or (:tr-ajorata lomakedata-nyt) (:tr-kaista lomakedata-nyt))
+          {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :string :palstoja 1 :muokattava? (constantly false)})
+
+        (when (or (:tr-ajorata lomakedata-nyt) (:tr-kaista lomakedata-nyt))
+          {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :string :palstoja 1 :muokattava? (constantly false)})
         {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1
          :varoita [tarkista-takuu-pvm]}
