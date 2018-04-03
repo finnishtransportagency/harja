@@ -40,7 +40,7 @@
   (if-let [valinnat (:valinnat app)]
     (or
       (spec-apurit/poista-nil-avaimet
-        (assoc {} ::tielupa/hakija-nimi (:hakija valinnat)
+        (assoc {} ::tielupa/hakija-nimi (get-in valinnat [:hakija ::tielupa/hakija-nimi])
                   ::tielupa/tyyppi (:lupatyyppi valinnat)
                   ::tielupa/ulkoinen-tunniste (let [numero (js/parseInt (:luvan-numero valinnat) 10)]
                                                 (when-not (js/isNaN numero) numero))
