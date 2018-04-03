@@ -21,14 +21,14 @@
             ;; antaa alikohdetasolla. Taaksepäinyhteensopivuuden vuoksi tehdään niin, että mikäli
             ;; päivitetään alikohde ilman ajorataa ja kaistaa, asetetaan ne pääkohteelta, jos ne on.
             paivityksessa-alikohteella-ajorata-ja-kaista? (boolean (and (:ajr sijainti) (:kaista sijainti)))
-            olemassa-oleva-paakohde (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)})
-            paakohteella-ajorata-ja-kaista? (boolean (and (:tr_ajorata olemassa-oleva-paakohde)
-                                                          (:tr_kaista olemassa-oleva-paakohde)))
+            olemassa-oleva-paakohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)}))
+            paakohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata olemassa-oleva-paakohde)
+                                                          (:tr-kaista olemassa-oleva-paakohde)))
             alikohde (if (and paakohteella-ajorata-ja-kaista?
                               (not paivityksessa-alikohteella-ajorata-ja-kaista?))
                        (assoc alikohde
-                         :ajr (:tr_ajorata olemassa-oleva-paakohde)
-                         :kaista (:tr_kaista olemassa-oleva-paakohde))
+                         :ajr (:tr-ajorata olemassa-oleva-paakohde)
+                         :kaista (:tr-kaista olemassa-oleva-paakohde))
                        alikohde)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
