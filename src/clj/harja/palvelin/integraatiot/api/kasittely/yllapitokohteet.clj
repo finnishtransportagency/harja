@@ -54,14 +54,31 @@
     alikohteet))
 
 (defn paivita-kohde [db kohde-id kohteen-sijainti]
-  (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
-    db (assoc (clojure.set/rename-keys
-                kohteen-sijainti
-                {:aosa :tr_alkuosa
-                 :aet :tr_alkuetaisyys
-                 :losa :tr_loppuosa
-                 :let :tr_loppuetaisyys
-                 :ajr :tr_ajorata
-                 :kaista :tr_kaista})
-         :id
-         kohde-id)))
+  (let [paivityksessa-ajorata-ja-kaista? (boolean (and (:ajr kohteen-sijainti) (:kaista kohteen-sijainti)))
+        olemassa-oleva (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
+        olemassa-oleva-ajorata-ja-kaista? (boolean (and (:tr_ajorata olemassa-oleva) (:tr_kaista olemassa-oleva)))
+        ;; Aiemmin pääkohteella oli pakko olla ajorata ja kaista. Näitä ei voinut muokata, eli API:sta pystyi
+        ;; päivittämään vain arvot: aosa, aet, losa, let.
+
+        ;; Jatkossa ajorataa ja kaistaa ei ole pakko olla, vaan ne voidaan antaa alikohdetasolla.
+        ;; Ajorataa ja kaistaa voi myös päivittää API:sta.
+        ;; Taaksepäinyhteensopivuuden vuoksi, mikäli pääkohdetta päivitetään ilman ajorataa ja kaistaa,
+        ;; käytetään kannassa olevaa arvoa, mikäli sellainen on.
+        kohteen-sijainti (if (and olemassa-oleva-ajorata-ja-kaista?
+                                  (not paivityksessa-ajorata-ja-kaista?))
+                           (assoc kohteen-sijainti
+                             :ajr (:tr_ajorata olemassa-oleva)
+                             :kaista (:tr_kaista olemassa-oleva))
+                           kohteen-sijainti)]
+
+    (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
+      db (assoc (clojure.set/rename-keys
+                  kohteen-sijainti
+                  {:aosa :tr_alkuosa
+                   :aet :tr_alkuetaisyys
+                   :losa :tr_loppuosa
+                   :let :tr_loppuetaisyys
+                   :ajr :tr_ajorata
+                   :kaista :tr_kaista})
+           :id
+           kohde-id))))
