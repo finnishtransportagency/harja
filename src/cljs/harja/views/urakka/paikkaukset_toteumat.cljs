@@ -4,6 +4,7 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
             [harja.tiedot.urakka.paikkaukset-toteumat :as tiedot]
+            [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.ui.debug :as debug]
@@ -119,21 +120,28 @@
                                       {:nimi ::tierekisteri/aet}
                                       {:nimi ::tierekisteri/losa}
                                       {:nimi ::tierekisteri/let}]
+        aika-formatteri #(identity [:div
+                                    [:span {:style {:width "100%"
+                                                    :display "inline-block"}} 
+                                     (pvm/pvm %)]
+                                    [:span (str "klo. " (pvm/aika %))]])
         skeema (into []
                      (concat
                        [{:tyyppi :vetolaatikon-tila :leveys 1}]
                        (yllapitokohteet/tierekisteriosoite-sarakkeet 5 tierekisteriosoite-sarakkeet)
                        [{:otsikko "Alku\u00ADaika"
-                         :leveys 5
-                         :nimi ::paikkaus/alkuaika}
+                         :leveys 10
+                         :nimi ::paikkaus/alkuaika
+                         :fmt aika-formatteri}
                         {:otsikko "Loppu\u00ADaika"
-                         :leveys 5
-                         :nimi ::paikkaus/loppuaika}
+                         :leveys 10
+                         :nimi ::paikkaus/loppuaika
+                         :fmt aika-formatteri}
                         {:otsikko "Työ\u00ADmene\u00ADtelmä"
-                         :leveys 5
+                         :leveys 10
                          :nimi ::paikkaus/tyomenetelma}
                         {:otsikko "Massa\u00ADtyyp\u00ADpi"
-                         :leveys 5
+                         :leveys 10
                          :nimi ::paikkaus/massatyyppi}
                         {:otsikko "Leveys"
                          :leveys 5
