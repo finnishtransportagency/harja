@@ -41,11 +41,11 @@
         kokonaishintaiset-tiedot (filter #(= (:tyyppi %) "kokonaishintainen") kiinnostavat-tiedot)
         yksikkohintaiset-tiedot (filter #(= (:tyyppi %) "yksikkohintainen") kiinnostavat-tiedot)
         kokonaishintaiset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                   (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikko-fn (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
-                                 (group-by :nimi kokonaishintaiset-tiedot))
+                                         (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikko-fn (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
+                                       (group-by :nimi kokonaishintaiset-tiedot))
         yksikkohintaset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                        (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikko-fn (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
-                                      (group-by :nimi yksikkohintaiset-tiedot))]
+                                       (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikko-fn (:paikkauskohde-id (first paikkaukset)))}) paikkaukset))
+                                     (group-by :nimi yksikkohintaiset-tiedot))]
     {:yksikkohintaiset-grid yksikkohintaset-grid
      :kokonaishintaiset-grid kokonaishintaiset-grid}))
 
@@ -121,12 +121,16 @@
                                       (conj paikkaukset
                                             {:id (:paikkauskohde-id paikkaus)
                                              :nimi (:nimi paikkaus)
-                                             :valittu? (if (= (:id toteumista-tultu-kohde)
-                                                              (:paikkauskohde-id paikkaus))
-                                                         false
-                                                         true)})))
+                                             :valittu? (or (nil? toteumista-tultu-kohde)
+                                                           (= (:id toteumista-tultu-kohde)
+                                                              (:paikkauskohde-id paikkaus)))})))
                                   [] tulos)
-          naytettavat-tiedot (kasittele-haettu-tulos tulos otsikko-fn)]
+          naytettavat-tulokset (filter #(or (nil? toteumista-tultu-kohde)
+                                            (= (:id toteumista-tultu-kohde)
+                                               (:paikkauskohde-id %)))
+                                       tulos)
+          naytettavat-tiedot (kasittele-haettu-tulos naytettavat-tulokset otsikko-fn)]
+      (reset! yhteinen-tiedot/paikkauskohde nil)
       (-> app
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false)

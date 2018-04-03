@@ -32,7 +32,7 @@
         paikkaukset-grid (mapcat (fn [[otsikko paikkaukset]]
                                    (cons (grid/otsikko otsikko) paikkaukset))
                                  (group-by ::paikkaus/nimi kiinnostavat-tiedot))
-        paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
+        paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id ::paikkaus/paikkauskohde])
                                      tulos)]
     {:paikkaukset-grid paikkaukset-grid
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))

@@ -54,7 +54,8 @@
         [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn paikkaukset-vetolaatikko
-  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
+  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id
+       rivin-paikkauskohde ::paikkaus/paikkauskohde :as rivi}
    app]
   (let [nayta-numerot #(apply str (interpose ", " %))
         skeema [{:otsikko "Ajo\u00ADrata"
@@ -106,7 +107,7 @@
      [napit/yleinen-ensisijainen
       "Siirry kustannuksiin"
       #(e! (tiedot/->SiirryKustannuksiin (some (fn [paikkakohde]
-                                                 (when (= id (:id paikkakohde))
+                                                 (when (= (::paikkaus/id rivin-paikkauskohde) (:id paikkakohde))
                                                    paikkakohde))
                                                (get-in app [:valinnat :urakan-paikkauskohteet]))))]]))
 
