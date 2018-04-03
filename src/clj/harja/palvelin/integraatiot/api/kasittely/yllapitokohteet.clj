@@ -9,20 +9,17 @@
             [harja.domain.paallystysilmoitus :as paallystysilmoitus])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
-;; Aiemmin pääkohteella oli pakko olla ajorata ja kaista. Näitä ei voinut muokata, eli API:sta pystyi
-;; päivittämään vain arvot: aosa, aet, losa, let. Kohteen alikohteet katsottiin olevan samalla ajoradalla
-;; ja kaistalla pääkohteen kanssa.
-;; Jatkossa (kaudella 2018) pääkohteen ajorataa ja kaistaa ei ole pakko olla, vaan ne voidaan antaa alikohdetasolla.
-;; Pääkohteen ajorataa ja kaistaa voidaan myös päivittää API:sta.
-;; Taaksepäinyhteensopivuuden vuoksi, mikäli pääkohdetta tai alikohdetta päivitetään ilman ajorataa ja kaistaa,
-;; käytetään kannassa olevaa pääkohteen ajorataa ja kaistaa, mikäli sellaiset löytyy.
-
 (defn paivita-alikohteet [db kohde alikohteet]
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
 
   (mapv
     (fn [alikohde]
       (let [sijainti (:sijainti alikohde)
+            ;; Aiemmin pääkohteella oli pakko olla ajorata ja kaista, ja alikohteen katsottiin kuuluvan
+            ;; samalle ajoradalle ja kaistalle.
+            ;; Jatkossa (kaudella 2018) pääkohteella ei ole pakko olla ajorataa ja kaistaa, vaan ne voidaan
+            ;; antaa alikohdetasolla. Taaksepäinyhteensopivuuden vuoksi tehdään niin, että mikäli
+            ;; päivitetään alikohde ilman ajorataa ja kaistaa, asetetaan ne pääkohteelta, jos ne on.
             paivityksessa-alikohteella-ajorata-ja-kaista? (boolean (and (:ajr sijainti) (:kaista sijainti)))
             olemassa-oleva-paakohde (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)})
             paakohteella-ajorata-ja-kaista? (boolean (and (:tr_ajorata olemassa-oleva-paakohde)
@@ -73,24 +70,12 @@
     alikohteet))
 
 (defn paivita-kohde [db kohde-id kohteen-sijainti]
-  (let [paivityksessa-ajorata-ja-kaista? (boolean (and (:ajr kohteen-sijainti) (:kaista kohteen-sijainti)))
-        olemassa-oleva (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id})
-        olemassa-oleva-ajorata-ja-kaista? (boolean (and (:tr_ajorata olemassa-oleva) (:tr_kaista olemassa-oleva)))
-        kohteen-sijainti (if (and olemassa-oleva-ajorata-ja-kaista?
-                                  (not paivityksessa-ajorata-ja-kaista?))
-                           (assoc kohteen-sijainti
-                             :ajr (:tr_ajorata olemassa-oleva)
-                             :kaista (:tr_kaista olemassa-oleva))
-                           kohteen-sijainti)]
-
-    (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
-      db (assoc (clojure.set/rename-keys
-                  kohteen-sijainti
-                  {:aosa :tr_alkuosa
-                   :aet :tr_alkuetaisyys
-                   :losa :tr_loppuosa
-                   :let :tr_loppuetaisyys
-                   :ajr :tr_ajorata
-                   :kaista :tr_kaista})
-           :id
-           kohde-id))))
+  (q-yllapitokohteet/paivita-yllapitokohteen-sijainti!
+    db (assoc (clojure.set/rename-keys
+                kohteen-sijainti
+                {:aosa :tr_alkuosa
+                 :aet :tr_alkuetaisyys
+                 :losa :tr_loppuosa
+                 :let :tr_loppuetaisyys})
+         :id
+         kohde-id)))
