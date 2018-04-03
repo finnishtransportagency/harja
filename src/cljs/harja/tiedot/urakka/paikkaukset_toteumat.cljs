@@ -4,12 +4,11 @@
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.navigaatio.reitit :as reitit]
-            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteinen-tiedot]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
@@ -42,7 +41,7 @@
 (defrecord PaivitaValinnat [uudet])
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
-(defrecord SiirryKustannuksiin [paikkauskohde])
+(defrecord SiirryKustannuksiin [paikkauskohde-id])
 ;; Haut
 (defrecord HaePaikkaukset [])
 (defrecord EnsimmainenHaku [tulos])
@@ -112,20 +111,11 @@
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos} app]
-    (let [paikkauskohteet (reduce (fn [paikkaukset paikkaus]
-                                    (if (some #(= (:id %) (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/id]))
-                                              paikkaukset)
-                                      paikkaukset
-                                      (conj paikkaukset
-                                            {:id (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/id])
-                                             :nimi (get-in paikkaus [::paikkaus/paikkauskohde ::paikkaus/nimi])
-                                             :valittu? true})))
-                                  [] tulos)
-          naytettavat-tiedot (kasittele-haettu-tulos tulos)]
-      (-> app
-          (merge naytettavat-tiedot)
-          (assoc :paikkauksien-haku-kaynnissa? false)
-          (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet))))
+    (yhteiset-tiedot/ensimmaisen-haun-kasittely {:paikkauskohde-idn-polku [::paikkaus/paikkauskohde ::paikkaus/id]
+                                                 :paikkauskohde-nimen-polku [::paikkaus/paikkauskohde ::paikkaus/nimi]
+                                                 :kasittele-haettu-tulos kasittele-haettu-tulos
+                                                 :tulos tulos
+                                                 :app app}))
   PaikkauksetHaettu
   (process-event [{tulos :tulos} app]
     (let [naytettavat-tiedot (kasittele-haettu-tulos tulos)]
@@ -140,7 +130,7 @@
            :paikkauksien-haku-kaynnissa? false
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
   SiirryKustannuksiin
-  (process-event [{paikkauskohde :paikkauskohde} app]
-    (reset! yhteinen-tiedot/paikkauskohde paikkauskohde)
+  (process-event [{paikkauskohde-id :paikkauskohde-id} app]
+    (reset! yhteiset-tiedot/paikkauskohde-id paikkauskohde-id)
     (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
     (assoc app :nakymassa? false)))

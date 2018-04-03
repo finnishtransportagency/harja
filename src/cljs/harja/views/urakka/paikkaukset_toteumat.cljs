@@ -108,7 +108,7 @@
       "Siirry kustannuksiin"
       #(e! (tiedot/->SiirryKustannuksiin (some (fn [paikkakohde]
                                                  (when (= (::paikkaus/id rivin-paikkauskohde) (:id paikkakohde))
-                                                   paikkakohde))
+                                                   (:id paikkakohde)))
                                                (get-in app [:valinnat :urakan-paikkauskohteet]))))]]))
 
 (defn paikkaukset [e! app]

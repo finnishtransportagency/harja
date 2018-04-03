@@ -3,13 +3,12 @@
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteinen-tiedot]
+            [harja.tiedot.navigaatio.reitit :as reitit]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteiset-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]
-            [harja.ui.napit :as napit]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.tierekisteri :as tierekisteri])
+            [harja.domain.paikkaus :as paikkaus])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def app (atom {:paikkauksien-haku-kaynnissa? false
@@ -26,7 +25,7 @@
 (defrecord PaivitaValinnat [uudet otsikko-fn])
 (defrecord Nakymaan [otsikko-fn])
 (defrecord NakymastaPois [])
-(defrecord SiirryToimenpiteisiin [paikkaus-id])
+(defrecord SiirryToimenpiteisiin [paikkauskohde-id])
 ;; Haut
 (defrecord HaeKustannukset [otsikko-fn])
 (defrecord EnsimmainenHaku [tulos otsikko-fn])
@@ -35,7 +34,7 @@
 (defrecord HaeKustannuksetKutsuLahetetty [])
 
 (defn kasittele-haettu-tulos
-  [tulos otsikko-fn]
+  [otsikko-fn tulos]
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
                                  tulos)
         kokonaishintaiset-tiedot (filter #(= (:tyyppi %) "kokonaishintainen") kiinnostavat-tiedot)
@@ -113,31 +112,14 @@
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos otsikko-fn :otsikko-fn} app]
-    (let [toteumista-tultu-kohde @yhteinen-tiedot/paikkauskohde
-          paikkauskohteet (reduce (fn [paikkaukset paikkaus]
-                                    (if (some #(= (:id %) (:paikkauskohde-id paikkaus))
-                                              paikkaukset)
-                                      paikkaukset
-                                      (conj paikkaukset
-                                            {:id (:paikkauskohde-id paikkaus)
-                                             :nimi (:nimi paikkaus)
-                                             :valittu? (or (nil? toteumista-tultu-kohde)
-                                                           (= (:id toteumista-tultu-kohde)
-                                                              (:paikkauskohde-id paikkaus)))})))
-                                  [] tulos)
-          naytettavat-tulokset (filter #(or (nil? toteumista-tultu-kohde)
-                                            (= (:id toteumista-tultu-kohde)
-                                               (:paikkauskohde-id %)))
-                                       tulos)
-          naytettavat-tiedot (kasittele-haettu-tulos naytettavat-tulokset otsikko-fn)]
-      (reset! yhteinen-tiedot/paikkauskohde nil)
-      (-> app
-          (merge naytettavat-tiedot)
-          (assoc :paikkauksien-haku-kaynnissa? false)
-          (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet))))
+    (yhteiset-tiedot/ensimmaisen-haun-kasittely {:paikkauskohde-idn-polku [:paikkauskohde-id]
+                                                 :paikkauskohde-nimen-polku [:nimi]
+                                                 :kasittele-haettu-tulos (partial kasittele-haettu-tulos otsikko-fn)
+                                                 :tulos tulos
+                                                 :app app}))
   KustannuksetHaettu
   (process-event [{tulos :tulos otsikko-fn :otsikko-fn} app]
-    (let [naytettavat-tiedot (kasittele-haettu-tulos tulos otsikko-fn)]
+    (let [naytettavat-tiedot (kasittele-haettu-tulos otsikko-fn tulos)]
       (-> app
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false
@@ -149,6 +131,7 @@
            :paikkauksien-haku-kaynnissa? false
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
   SiirryToimenpiteisiin
-  (process-event [{paikkaus-id :paikkaus-id} app]
-    (js/console.log "SIIRTYMÄ NAPPIA PAINETTU")
-    app))
+  (process-event [{paikkauskohde-id :paikkauskohde-id} app]
+    (reset! yhteiset-tiedot/paikkauskohde-id paikkauskohde-id)
+    (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :toteumat)
+    (assoc app :nakymassa? false)))
