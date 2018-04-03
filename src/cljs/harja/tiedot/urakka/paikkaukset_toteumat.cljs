@@ -3,6 +3,8 @@
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.navigaatio.reitit :as reitit]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteinen-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]
@@ -40,7 +42,7 @@
 (defrecord PaivitaValinnat [uudet])
 (defrecord Nakymaan [])
 (defrecord NakymastaPois [])
-(defrecord SiirryKustannuksiin [paikkaus-id])
+(defrecord SiirryKustannuksiin [paikkauskohde])
 ;; Haut
 (defrecord HaePaikkaukset [])
 (defrecord EnsimmainenHaku [tulos])
@@ -138,6 +140,7 @@
            :paikkauksien-haku-kaynnissa? false
            :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
   SiirryKustannuksiin
-  (process-event [{paikkaus-id :paikkaus-id} app]
-    (js/console.log "SIIRTYMÄ NAPPIA PAINETTU")
-    app))
+  (process-event [{paikkauskohde :paikkauskohde} app]
+    (reset! yhteinen-tiedot/paikkauskohde paikkauskohde)
+    (swap! reitit/url-navigaatio assoc :kohdeluettelo-paikkaukset :kustannukset)
+    (assoc app :nakymassa? false)))

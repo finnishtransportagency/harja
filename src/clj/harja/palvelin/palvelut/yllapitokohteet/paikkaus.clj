@@ -211,6 +211,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
                                 :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil}]
+    (println "----> TIEDOT: " (pr-str tiedot))
     (if (and (not (nil? (:paikkaus-idt tiedot)))
              (empty? (:paikkaus-idt tiedot)))
       []

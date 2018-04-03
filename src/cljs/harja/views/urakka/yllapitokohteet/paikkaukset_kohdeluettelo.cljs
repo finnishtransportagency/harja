@@ -26,9 +26,9 @@
         "Toteumat"
         :toteumat
         (when (oikeudet/urakat-paikkaukset-toteumat (:id ur))
-          [toteumat/toteumat ur])
+          [toteumat/toteumat])
 
         "Kustannukset"
         :kustannukset
         (when (oikeudet/urakat-paikkaukset-kustannukset (:id ur))
-          [kustannukset/kustannukset ur])]])))
+          [kustannukset/kustannukset])]])))

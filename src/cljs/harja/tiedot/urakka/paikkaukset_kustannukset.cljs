@@ -3,6 +3,7 @@
             [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteinen-tiedot]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]
@@ -112,14 +113,18 @@
     (assoc app :nakymassa? false))
   EnsimmainenHaku
   (process-event [{tulos :tulos otsikko-fn :otsikko-fn} app]
-    (let [paikkauskohteet (reduce (fn [paikkaukset paikkaus]
+    (let [toteumista-tultu-kohde @yhteinen-tiedot/paikkauskohde
+          paikkauskohteet (reduce (fn [paikkaukset paikkaus]
                                     (if (some #(= (:id %) (:paikkauskohde-id paikkaus))
                                               paikkaukset)
                                       paikkaukset
                                       (conj paikkaukset
                                             {:id (:paikkauskohde-id paikkaus)
                                              :nimi (:nimi paikkaus)
-                                             :valittu? true})))
+                                             :valittu? (if (= (:id toteumista-tultu-kohde)
+                                                              (:paikkauskohde-id paikkaus))
+                                                         false
+                                                         true)})))
                                   [] tulos)
           naytettavat-tiedot (kasittele-haettu-tulos tulos otsikko-fn)]
       (-> app

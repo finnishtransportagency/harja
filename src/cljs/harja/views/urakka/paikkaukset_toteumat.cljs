@@ -54,7 +54,8 @@
         [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn paikkaukset-vetolaatikko
-  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}]
+  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
+   app]
   (let [nayta-numerot #(apply str (interpose ", " %))
         skeema [{:otsikko "Ajo\u00ADrata"
                  :leveys 1
@@ -104,7 +105,10 @@
       yhdistetty]
      [napit/yleinen-ensisijainen
       "Siirry kustannuksiin"
-      #(e! (tiedot/->SiirryKustannuksiin id))]]))
+      #(e! (tiedot/->SiirryKustannuksiin (some (fn [paikkakohde]
+                                                 (when (= id (:id paikkakohde))
+                                                   paikkakohde))
+                                               (get-in app [:valinnat :urakan-paikkauskohteet]))))]]))
 
 (defn paikkaukset [e! app]
   (let [tierekisteriosoite-sarakkeet [nil
@@ -142,7 +146,8 @@
                         {:otsikko "Kuula\u00ADmylly"
                          :leveys 5
                          :nimi ::paikkaus/kuulamylly}]))]
-    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa? paikkaukset-grid paikkauket-vetolaatikko]}]
+    (fn [e! {:keys [paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?
+                    paikkaukset-grid paikkauket-vetolaatikko] :as app}]
       [:div
        [grid/grid
         {:otsikko (if (or paikkauksien-haku-kaynnissa? paikkauksien-haku-tulee-olemaan-kaynnissa?)
@@ -159,7 +164,7 @@
                (map (juxt
                       ::paikkaus/id
                       (fn [rivi]
-                        [paikkaukset-vetolaatikko e! rivi])))
+                        [paikkaukset-vetolaatikko e! rivi app])))
                paikkauket-vetolaatikko)}
         skeema
         paikkaukset-grid]])))
@@ -177,4 +182,5 @@
         [paikkaukset e! app]]])))
 
 (defn toteumat []
-  [tuck/tuck tiedot/app toteumat*])
+  (fn []
+    [tuck/tuck tiedot/app toteumat*]))
