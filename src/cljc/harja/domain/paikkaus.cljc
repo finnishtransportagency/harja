@@ -3,6 +3,7 @@
     [clojure.spec.alpha :as s]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.kyselyt.specql :as harja-specql]
+    [harja.pvm :as pvm]
 
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
@@ -97,16 +98,19 @@
     ::yksikkohinta
     ::maara})
 
-(s/def ::aikavali (s/coll-of any? :kind? vector :count 2))
-(s/def ::paikkaus-idt (s/coll-of integer? :kind set?))
-(s/def ::tr map?)
+(s/def ::pvm (s/nilable (s/or :pvm pvm/pvm?
+                              :date  #(instance? #?(:cljs js/Date
+                                                    :clj  java.util.Date) %))))
+(s/def ::aikavali (s/nilable (s/coll-of ::pvm :kind? vector :count 2)))
+(s/def ::paikkaus-idt (s/nilable (s/coll-of integer? :kind set?)))
+(s/def ::tr (s/nilable map?))
 
 (s/def ::urakan-paikkauskohteet-kysely (s/keys :req [::urakka-id]
                                                :opt-un [::aikavali ::paikkaus-idt ::tr]))
 
-(s/def ::urakan-paikkauskohteet-vastaus any?)
+(s/def ::urakan-paikkauskohteet-vastaus (s/coll-of map?))
 
 (s/def ::paikkausurakan-kustannukset-kysely (s/keys :req [::urakka-id]
                                                     :opt-un [::aikavali ::paikkaus-idt ::tr]))
 
-(s/def ::paikkausurakan-kustannukset-vastaus any?)
+(s/def ::paikkausurakan-kustannukset-vastaus (s/coll-of map?))

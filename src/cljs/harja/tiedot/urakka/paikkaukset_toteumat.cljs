@@ -85,8 +85,6 @@
         (-> app
             (tt/post! :hae-urakan-paikkauskohteet
                       params
-                      ;; Checkbox-group ja aluksen nimen kirjoitus generoisi
-                      ;; liikaa requesteja ilman viivettä.
                       {:viive 1000
                        :tunniste :hae-paikkaukset-toteumat-nakymaan
                        :lahetetty ->HaePaikkauksetKutsuLahetetty
