@@ -111,7 +111,16 @@
   [data avainpolku muokkaa!]
   (r/wrap (get-in data avainpolku)
           (fn [uusi-arvo]
-            (muokkaa! #(assoc-in % avainpolku uusi-arvo)))))
+
+
+
+            (muokkaa! #(do
+                         (log "--->>> WRAP ARVO %" (pr-str %))
+                         (log "--->>> WRAP ARVO avainpolku" (pr-str avainpolku))
+                         (log "--->>> WRAP ARVO UUSI ARVO" (pr-str uusi-arvo))
+
+
+                         (assoc-in % avainpolku uusi-arvo))))))
 
 (defn wrap-vain-luku
   "Palauttaa wrap atomin, joka heittää virheen kirjoittaessa"

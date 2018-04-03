@@ -270,7 +270,8 @@
     (schema/optional-key :verkon-tarkoitus) +verkon-tarkoitus-tai-nil+
     (schema/optional-key :verkon-sijainti) +verkon-sijainti-tai-nil+
     (schema/optional-key :tekninen-toimenpide) +tekninen-toimenpide-tai-nil+
-    (schema/optional-key :poistettu) schema/Bool}])
+    (schema/optional-key :poistettu) schema/Bool
+    (schema/optional-key :id) schema/Int}])
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
 (def +paallystysilmoitus+

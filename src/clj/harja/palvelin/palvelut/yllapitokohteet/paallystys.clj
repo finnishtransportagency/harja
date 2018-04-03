@@ -337,7 +337,7 @@
               ilmoitustiedot (-> ilmoitustiedot
                                  (poista-ilmoitustiedoista-alikohteen-tiedot)
                                  (muunna-ilmoitustiedot-tallennusmuotoon))
-              _ (log/debug "PÄIVITETTÄVÄT ILMOITUSTIEDOT: " (pr-str ilmoitustiedot))
+              _ (log/debug "---->>>> PÄIVITETTÄVÄT ILMOITUSTIEDOT: " (pr-str ilmoitustiedot))
               _ (skeema/validoi pot-domain/+paallystysilmoitus+ ilmoitustiedot)
               encoodattu-ilmoitustiedot (cheshire/encode ilmoitustiedot)]
           (log/debug "Encoodattu ilmoitustiedot: " (pr-str encoodattu-ilmoitustiedot))

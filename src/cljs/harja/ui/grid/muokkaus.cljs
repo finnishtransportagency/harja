@@ -278,12 +278,17 @@
         ohjaus-fn (fn [muokatut virheet skeema]
                     (reify Grid
                       (lisaa-rivi! [this rivin-tiedot]
+                        ;; todo: tässä sidotaan virheet riville
                         (let [id (or (:id rivin-tiedot) (swap! uusi-id dec))
+                              _ (log "--->>> UUDEN RIVIN LISÄYS ID: " (pr-str id))
+                              _ (log "--->>> UUDEN RIVIN LISÄYS RIVIN TIEDOT: " (pr-str rivin-tiedot))
                               vanhat-tiedot @muokatut
                               vanhat-virheet @virheet
+                              _ (log "--->>> UUDEN RIVIN LISÄYS VANHAT VIRHEET" (pr-str vanhat-virheet))
                               uudet-tiedot (swap! muokatut assoc id
                                                   ((or uusi-rivi identity)
-                                                    (merge rivin-tiedot {:id id :koskematon true})))]
+                                                    (merge rivin-tiedot {:id id :koskematon true})))
+                              _ (log "--->>> UUDEN RIVIN LISÄYS UUDET TIEDOT" (pr-str uudet-tiedot))]
                           (swap! historia conj [vanhat-tiedot vanhat-virheet])
                           (when-not ulkoinen-validointi?
                             (swap! virheet (fn [virheet]
