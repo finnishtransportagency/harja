@@ -24,12 +24,12 @@
             olemassa-oleva-paakohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)}))
             paakohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata olemassa-oleva-paakohde)
                                                           (:tr-kaista olemassa-oleva-paakohde)))
-            alikohde (if (and paakohteella-ajorata-ja-kaista?
+            sijainti (if (and paakohteella-ajorata-ja-kaista?
                               (not paivityksessa-alikohteella-ajorata-ja-kaista?))
-                       (assoc alikohde
+                       (assoc sijainti
                          :ajr (:tr-ajorata olemassa-oleva-paakohde)
                          :kaista (:tr-kaista olemassa-oleva-paakohde))
-                       alikohde)
+                       sijainti)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)
