@@ -483,9 +483,9 @@
               {:disabled (or
                            ;; FIXME Disabloitu tämä check toistaiseksi, koska bugisuus estää käyttöä (HAR-7719)
                            ;; Johtunee melko varmasti siitä, että gridin tilaa muokataan ulkopuolelta.
-                           ;; Gridiä ei suunniteltu tähän tarpeeseen, joten virheitä saada päivitettyä oikeiksi.
+                           ;; Gridiä ei suunniteltu tähän tarpeeseen, joten virheitä ei saada päivitettyä oikeiksi.
                            ;; Vanhassa kohdeosat-koodissa tilan muokkauksessa ulkopuolelta
-                           ;; tehtiin aina uusi virhevalidointi gridille käsin.
+                           ;; tehtiin aina uusi virhevalidointi gridille käsin. Voisi kokeilla samaa nyt.
                            #_(not (empty? @virheet))
                              (not (every? #(and (:tr-numero %)
                                                 (:tr-alkuosa %)
