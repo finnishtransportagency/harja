@@ -133,13 +133,14 @@
 
       ;; Muokataan toiseksi viimeisen osoiterivin loppua siten, että se menee viimeisin
       ;; rivin loppukohdan yli. Tämän pitäisi tehdä virhe viimeiselle riville.
-      (change (grid-solu "yllapitokohdeosat" 1 6 "input") "3") ;; losa
+      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "3") ;; losa
       (<! (paivita))
 
-      (change (grid-solu "yllapitokohdeosat" 1 7 "input") "20") ;; let
+      (change (grid-solu "yllapitokohdeosat" 1 8 "input") "20") ;; let
       (<! (paivita))
 
-      (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys])))
+      (log "Lomake data" (pr-str @lomake))
+      (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 2 :tr-alkuetaisyys])))
              "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
 
       (is (disabled? :#tallenna-paallystysilmoitus))
