@@ -1,4 +1,5 @@
-(ns harja.tiedot.urakka.paikkaukset-yhteinen)
+(ns harja.tiedot.urakka.paikkaukset-yhteinen
+  (:require [reagent.core :as r]))
 
 (defonce paikkauskohde-id (atom nil))
 
@@ -20,9 +21,14 @@
                                           (= id
                                              (get-in % paikkauskohde-idn-polku)))
                                      tulos)
-        naytettavat-tiedot (kasittele-haettu-tulos naytettavat-tulokset)]
+        naytettavat-tiedot (kasittele-haettu-tulos naytettavat-tulokset app)]
     (reset! paikkauskohde-id nil)
     (-> app
         (merge naytettavat-tiedot)
         (assoc :paikkauksien-haku-kaynnissa? false)
         (assoc-in [:valinnat :urakan-paikkauskohteet] paikkauskohteet))))
+
+(defn valinta-wrap [app paivitys-fn polku]
+  (r/wrap (get-in app [:valinnat polku])
+          (fn [u]
+            (paivitys-fn {polku u}))))

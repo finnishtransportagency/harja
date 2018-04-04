@@ -2,27 +2,19 @@
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
+            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteinen-tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.yleiset :as yleiset]))
-
-(defn otsikkokomponentti
-  [e! id]
-  [{:tyyli {:float "right"
-            :position "relative"}
-    :sisalto
-    (fn [_]
-      [napit/yleinen-ensisijainen
-       "Siirry toimenpiteisiin"
-       #(e! (tiedot/->SiirryToimenpiteisiin id))])}])
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]))
 
 (defn hakuehdot [e! {:keys [valinnat] :as app}]
-  (let [tr-atomi (partial tiedot/valinta-wrap e! app (partial otsikkokomponentti e!))
-        aikavali-atomi (partial tiedot/valinta-wrap e! app (partial otsikkokomponentti e!))]
+  (let [tr-atomi (partial yhteinen-tiedot/valinta-wrap app #(e! (tiedot/->PaivitaValinnat %)))
+        aikavali-atomi (partial yhteinen-tiedot/valinta-wrap app #(e! (tiedot/->PaivitaValinnat %)))]
     [:span
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Tierekisteriosoite"
@@ -37,7 +29,7 @@
        [valinnat/checkbox-pudotusvalikko
         (:urakan-paikkauskohteet valinnat)
         (fn [paikkauskohde valittu?]
-          (e! (tiedot/->PaikkausValittu paikkauskohde valittu? (partial otsikkokomponentti e!))))
+          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
         [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn yksikkohintaiset-kustannukset
@@ -96,12 +88,16 @@
 
 (defn kustannukset* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial otsikkokomponentti e!)))
+    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti (fn [paikkauskohde-id]
+                                                                                          (e! (tiedot/->SiirryToimenpiteisiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
       [:div
        [debug/debug app]
-       [hakuehdot e! app]
+       [yhteinen-view/hakuehdot app
+        #(e! (tiedot/->PaivitaValinnat %))
+        (fn [paikkauskohde valittu?]
+          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))]
        [kokonaishintaiset-kustannukset e! app]
        [yksikkohintaiset-kustannukset e! app]])))
 
