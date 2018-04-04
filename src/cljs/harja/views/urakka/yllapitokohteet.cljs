@@ -443,7 +443,6 @@
                              (let [uudet-kohdeosat (if jarjesta-kun-kasketaan
                                                      (vary-meta uudet-osat assoc :jarjesta-gridissa true)
                                                      uudet-osat)
-                                   _ (log "UUDET KOHDEOSAT " (pr-str uudet-kohdeosat))
                                    uudet-virheet (into {}
                                                        (keep (fn [[id rivi]]
                                                                (let [rivin-virheet (validointi/validoi-rivi
