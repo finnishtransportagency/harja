@@ -6,7 +6,8 @@
     #?@(:clj  [
     [harja.kyselyt.specql-db :refer [define-tables]]
     [clojure.future :refer :all]]
-        :cljs [[specql.impl.registry]]))
+        :cljs [[specql.impl.registry]])
+    [clojure.string :as str])
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]]))
   #?(:clj
@@ -182,4 +183,28 @@
     ::vesihuoltolupa-silta-asennuksia
     ::johtoasennukset})
 
+(def lupatyypit*
+  ^{:private true}
+  {:johto-ja-kaapelilupa "johto- ja kaapelilupa"
+   :liittymalupa "liittymälupa"
+   :mainoslupa "mainoslupa"
+   :mainosilmoitus "mainosilmoitus"
+   :opastelupa "opastelupa"
+   :suoja-aluerakentamislupa "suoja-aluerakentamislupa"
+   :tilapainen-myyntilupa "tilapäinen-myyntilupa"
+   :tilapainen-liikennemerkkijarjestely "tilapäinen-liikennemerkkijärjestely"
+   :tietyolupa "tietyölupa"
+   :vesihuoltolupa "vesihuoltolupa"})
+
+(defn tyyppi-fmt [tyyppi]
+  (when-let [tyyppi (get lupatyypit* tyyppi)]
+    (str/capitalize tyyppi)))
+
+(def lupatyyppi-vaihtoehdot (keys lupatyypit*))
+
+(s/def ::hae-tieluvat-kysely any?)
+(s/def ::hae-tieluvat-vastaus any?)
+
+(s/def ::hae-tielupien-hakijat-kysely any?)
+(s/def ::hae-tielupien-hakijat-vastaus any?)
 
