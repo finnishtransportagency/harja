@@ -11,9 +11,25 @@
 
 (defn paivita-alikohteet [db kohde alikohteet]
   (q-yllapitokohteet/poista-yllapitokohteen-kohdeosat! db {:id (:id kohde)})
+
   (mapv
     (fn [alikohde]
       (let [sijainti (:sijainti alikohde)
+            ;; Aiemmin pääkohteella oli pakko olla ajorata ja kaista, ja alikohteen katsottiin kuuluvan
+            ;; samalle ajoradalle ja kaistalle.
+            ;; Jatkossa (kaudella 2018) pääkohteella ei ole pakko olla ajorataa ja kaistaa, vaan ne voidaan
+            ;; antaa alikohdetasolla. Taaksepäinyhteensopivuuden vuoksi tehdään niin, että mikäli
+            ;; päivitetään alikohde ilman ajorataa ja kaistaa, asetetaan ne pääkohteelta, jos ne on.
+            paivityksessa-alikohteella-ajorata-ja-kaista? (boolean (and (:ajr sijainti) (:kaista sijainti)))
+            olemassa-oleva-paakohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id (:id kohde)}))
+            paakohteella-ajorata-ja-kaista? (boolean (and (:tr-ajorata olemassa-oleva-paakohde)
+                                                          (:tr-kaista olemassa-oleva-paakohde)))
+            sijainti (if (and paakohteella-ajorata-ja-kaista?
+                              (not paivityksessa-alikohteella-ajorata-ja-kaista?))
+                       (assoc sijainti
+                         :ajr (:tr-ajorata olemassa-oleva-paakohde)
+                         :kaista (:tr-kaista olemassa-oleva-paakohde))
+                       sijainti)
             parametrit {:yllapitokohde (:id kohde)
                         :nimi (:nimi alikohde)
                         :tunnus (:tunnus alikohde)
@@ -60,8 +76,6 @@
                 {:aosa :tr_alkuosa
                  :aet :tr_alkuetaisyys
                  :losa :tr_loppuosa
-                 :let :tr_loppuetaisyys
-                 :ajr :tr_ajorata
-                 :kaista :tr_kaista})
+                 :let :tr_loppuetaisyys})
          :id
          kohde-id)))

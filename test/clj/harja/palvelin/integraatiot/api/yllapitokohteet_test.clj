@@ -666,6 +666,50 @@
         (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
             "Kaikilla alikohteilla on sijainti & tienumero")))))
 
+(deftest avoimen-yllapitokohteen-paivittaminen-ilman-alikohteen-ajorataa-ja-kaistaa-toimii
+  (let [urakka (hae-muhoksen-paallystysurakan-id)
+        kohde-id (hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus)
+        payload (slurp "test/resurssit/api/paallystyskohteen-paivitys-ilman-alikohteen-ajorataa-ja-kaistaa-request.json")
+        {status :status} (api-tyokalut/put-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde-id]
+                                                 kayttaja-paallystys portti
+                                                 payload)]
+    (is (= 200 status))
+
+    (let [kohteen-tr-osoite (hae-yllapitokohteen-tr-osoite kohde-id)
+          oletettu-tr-osoite {:aet 1
+                              :ajorata 1
+                              :aosa 14
+                              :kaista 1
+                              :loppuet 1
+                              :losa 17
+                              :numero 20}
+          alikohteiden-tr-osoitteet (into #{} (hae-yllapitokohteen-kohdeosien-tr-osoitteet kohde-id))
+          oletettu-ensimmaisen-alikohteen-tr-osoite {:aet 1
+                                                     :ajorata 1
+                                                     :aosa 14
+                                                     :kaista 1
+                                                     :loppuet 666
+                                                     :losa 14
+                                                     :numero 20}
+          oletettu-toisen-alikohteen-tr-osoite {:aet 666
+                                                :ajorata 1
+                                                :aosa 14
+                                                :kaista 1
+                                                :loppuet 1
+                                                :losa 17
+                                                :numero 20}]
+
+      (is (= oletettu-tr-osoite kohteen-tr-osoite) "Kohteen tierekisteriosoite on onnistuneesti päivitetty")
+      (is (= 2 (count alikohteiden-tr-osoitteet)) "Alikohteita palautuu tallennettu määrä")
+      (is (alikohteiden-tr-osoitteet oletettu-ensimmaisen-alikohteen-tr-osoite)
+          "Ensimmäisen alikohteen tierekisteriosite on päivittynyt oikein")
+      (is (alikohteiden-tr-osoitteet oletettu-toisen-alikohteen-tr-osoite)
+          "Toisen alikohteen tierekisteriosite on päivittynyt oikein")
+
+      (let [alikohteet (q-map (str "SELECT sijainti, tr_numero FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id))]
+        (is (every? #(and (not (nil? (:sijainti %))) (not (nil? (:tr_numero %)))) alikohteet)
+            "Kaikilla alikohteilla on sijainti & tienumero")))))
+
 (deftest paallystysilmoituksellisen-kohteen-paivitys-ei-onnistu
   (let [urakka (hae-muhoksen-paallystysurakan-id)
         kohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
