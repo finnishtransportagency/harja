@@ -262,6 +262,11 @@
          :fmt tierekisteri-domain/tierekisteriosoite-tekstina
          :muokattava? (constantly false)
          :palstoja 1}
+        (when (or (:tr-ajorata lomakedata-nyt) (:tr-kaista lomakedata-nyt))
+          {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :string :palstoja 1 :muokattava? (constantly false)})
+
+        (when (or (:tr-ajorata lomakedata-nyt) (:tr-kaista lomakedata-nyt))
+          {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :string :palstoja 1 :muokattava? (constantly false)})
         {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm :palstoja 1 :muokattava? (constantly false)}
         {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :palstoja 1
          :varoita [tarkista-takuu-pvm]}
@@ -360,6 +365,7 @@
 
          [yllapitokohteet/yllapitokohdeosat
           {:urakka urakka
+           :rivinumerot? true
            :muokattava-tie? (constantly true)
            :muokattava-ajorata-ja-kaista? (constantly true)
            :otsikko "Tierekisteriosoitteet"
@@ -577,6 +583,10 @@
           paallystystoimenpiteet]
 
          (let [tr-validaattori (partial tierekisteri-domain/tr-vali-paakohteen-sisalla-validaattori lomakedata-nyt)]
+           ;; FIXME Validoinni disabloitu, koska bugit estävät käyttöä (HAR-7712)
+           ;; Tämä vaikuttaa siltä, että itse validointi tuntuu toimivan oikein, mutta jostain syystä uuden rivin lisäys
+           ;; lisää rivin ylimmäksi, eikä alimmaksi, kuten pitäisi, eli järjestys menee väärin.
+           ;; Tästä syystä validointivirheet osuvat virheellisesti väärällä riville.
            [:div [grid/muokkaus-grid
                   {:otsikko "Alustalle tehdyt toimet"
                    :jarjesta jarjestys-fn
@@ -586,21 +596,27 @@
                    :virheet (wrap-virheet :alustalle-tehdyt-toimet)
                    :virheet-ylos? true}
                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
-                    :pituus-max 256 :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    :pituus-max 256
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :positiivinen-numero :leveys 10
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Let" :nimi :tr-loppuetaisyys :leveys 10 :tyyppi :positiivinen-numero
-                    :validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori] :tasaa :oikea
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"] tr-validaattori]
+                    :tasaa :oikea
                     :kokonaisluku? true}
                    {:otsikko "Pituus (m)" :nimi :pituus :leveys 10 :tyyppi :numero :tasaa :oikea
                     :muokattava? (constantly false)
                     :hae (partial tierekisteri-domain/laske-tien-pituus @osan-pituus)
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
+                    }
                    {:otsikko "Käsittely\u00ADmenetelmä"
                     :nimi :kasittelymenetelma
                     :tyyppi :valinta
@@ -611,11 +627,13 @@
                                        "- Valitse menetelmä -"))
                     :valinnat pot/+alustamenetelmat+
                     :leveys 30
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
+                    }
                    {:otsikko "Käsit\u00ADtely\u00ADpaks. (cm)" :nimi :paksuus :leveys 15
                     :tyyppi :positiivinen-numero :tasaa :oikea
                     :desimaalien-maara 0
-                    :validoi [[:ei-tyhja "Tieto puuttuu"]]}
+                    ;:validoi [[:ei-tyhja "Tieto puuttuu"]]
+                    }
                    {:otsikko "Verkko\u00ADtyyppi"
                     :nimi :verkkotyyppi
                     :tyyppi :valinta
