@@ -139,7 +139,7 @@
       (change (grid-solu "yllapitokohdeosat" 1 7 "input") "20") ;; let
       (<! (paivita))
 
-      (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 2 :tr-alkuetaisyys])))
+      (is (= (ilman-tavutusta (first (get-in @lomake [:virheet :alikohteet 3 :tr-alkuetaisyys])))
              "Alkuetäisyys ei voi olla loppuetäisyyden jälkeen"))
 
       (is (disabled? :#tallenna-paallystysilmoitus))
