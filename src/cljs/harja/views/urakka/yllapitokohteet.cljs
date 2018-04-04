@@ -513,7 +513,7 @@
                                                              (pituus (get @osan-pituudet-teille (:tr-numero kohdeosa)) kohdeosa))
                                                            (vals (grid/hae-muokkaustila g)))))
                              "-")
-                           (when (= kohdetyyppi :sora)
+                           (when (= (:yllapitokohdetyyppi yllapitokohde) :sora)
                              [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
        (yllapitokohdeosat-sarakkeet {:yllapitokohdetyyppi (:yllapitokohdetyyppi yllapitokohde)
                                      :kohdeosat @kohdeosat-atom
