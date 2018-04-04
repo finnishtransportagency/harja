@@ -399,9 +399,10 @@
           (log "Haettu osat tielle " tie ", vastaus: " (pr-str pituudet))
           (swap! osan-pituudet-teille-atom assoc tie pituudet))))))
 
-(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti muokattava-ajorata-ja-kaista?
+(defn yllapitokohdeosat [{:keys [urakka virheet-atom validoinnit voi-muokata? virhe-viesti rivinumerot? muokattava-ajorata-ja-kaista?
                                  muokattava-tie? jarjesta-kun-kasketaan kohdeosat-atom]}]
-  (let [virheet (or virheet-atom (atom nil))
+  (let [rivinumerot? (if (some? rivinumerot?) rivinumerot? false)
+        virheet (or virheet-atom (atom nil))
         voi-muokata? (if (some? voi-muokata?) voi-muokata? true)
         osan-pituudet-teille (atom nil)
         validoi-kohteen-osoite (fn [kentta arvo rivi]
@@ -464,6 +465,7 @@
                                                #(reset! kohdeosat-atom (tiedot/lisaa-uusi-kohdeosa @kohdeosat-atom 1))
                                                {:ikoni (ikonit/livicon-arrow-down)
                                                 :luokka "btn-xs"}]])])
+        :rivinumerot? rivinumerot?
         :voi-muokata? (and kirjoitusoikeus? voi-muokata?)
         :virhe-viesti virhe-viesti
         :muutos (fn [grid]
@@ -490,7 +492,13 @@
              [napit/palvelinkutsu-nappi
               [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]
               #(tallenna-fn (vals @kohdeosat-atom))
-              {:disabled (or (not (empty? @virheet))
+              {:disabled (or
+                           ;; FIXME Disabloitu tämä check toistaiseksi, koska bugisuus estää käyttöä (HAR-7719)
+                           ;; Johtunee melko varmasti siitä, että gridin tilaa muokataan ulkopuolelta.
+                           ;; Gridiä ei suunniteltu tähän tarpeeseen, joten virheitä ei saada päivitettyä oikeiksi.
+                           ;; Vanhassa kohdeosat-koodissa tilan muokkauksessa ulkopuolelta
+                           ;; tehtiin aina uusi virhevalidointi gridille käsin. Voisi kokeilla samaa nyt.
+                           #_(not (empty? @virheet))
                              (not (every? #(and (:tr-numero %)
                                                 (:tr-alkuosa %)
                                                 (:tr-alkuetaisyys %)
@@ -515,7 +523,7 @@
                                                              (pituus (get @osan-pituudet-teille (:tr-numero kohdeosa)) kohdeosa))
                                                            (vals (grid/hae-muokkaustila g)))))
                              "-")
-                           (when (= kohdetyyppi :sora)
+                           (when (= (:yllapitokohdetyyppi yllapitokohde) :sora)
                              [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
        (conj skeema
              {:otsikko "Toiminnot" :nimi :tr-muokkaus :tyyppi :komponentti :leveys 20

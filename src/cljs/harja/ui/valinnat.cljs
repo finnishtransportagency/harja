@@ -99,14 +99,14 @@
   ([valittu-aikavali-atom] (aikavali valittu-aikavali-atom nil))
   ([valittu-aikavali-atom {:keys [nayta-otsikko? aikavalin-rajoitus
                                   aloitusaika-pakota-suunta paattymisaika-pakota-suunta
-                                  lomake?]}]
+                                  lomake? otsikko]}]
    [:span {:class (if lomake?
                     "label-ja-aikavali-lomake"
                     "label-ja-aikavali")}
     (when (and (not lomake?)
                (or (nil? nayta-otsikko?)
                    (true? nayta-otsikko?)))
-      [:span.alasvedon-otsikko "Aikaväli"])
+      [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
     [:div.aikavali-valinnat
      [tee-kentta {:tyyppi :pvm :pakota-suunta aloitusaika-pakota-suunta}
       (r/wrap (first @valittu-aikavali-atom)
