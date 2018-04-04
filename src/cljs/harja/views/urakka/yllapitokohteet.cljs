@@ -472,7 +472,7 @@
                      (assoc rivi :tr-numero (:tr-numero yllapitokohde)
                                  :tr-ajorata (:tr-ajorata yllapitokohde)
                                  :tr-kaista (:tr-kaista yllapitokohde)))
-        :renderoinnin-jalkeen (fn [grid-state]
+        :luomisen-jalkeen (fn [grid-state]
                                 (hae-osan-pituudet grid-state osan-pituudet-teille))
         :paneelikomponentit
         [(fn []
