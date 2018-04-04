@@ -2,7 +2,6 @@
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [harja.tiedot.urakka.paikkaukset-kustannukset :as tiedot]
-            [harja.tiedot.urakka.paikkaukset-yhteinen :as yhteinen-tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -11,26 +10,6 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]))
-
-(defn hakuehdot [e! {:keys [valinnat] :as app}]
-  (let [tr-atomi (partial yhteinen-tiedot/valinta-wrap app #(e! (tiedot/->PaivitaValinnat %)))
-        aikavali-atomi (partial yhteinen-tiedot/valinta-wrap app #(e! (tiedot/->PaivitaValinnat %)))]
-    [:span
-     [kentat/tee-otsikollinen-kentta
-      {:otsikko "Tierekisteriosoite"
-       :kentta-params {:tyyppi :tierekisteriosoite
-                       :tr-otsikot? false}
-       :arvo-atom (tr-atomi :tr)
-       :tyylit {:width "fit-content"}}]
-     [valinnat/aikavali (aikavali-atomi :aikavali)]
-     [:span.label-ja-kentta
-      [:span.kentan-otsikko "Näytettävät paikkauskohteet"]
-      [:div.kentta
-       [valinnat/checkbox-pudotusvalikko
-        (:urakan-paikkauskohteet valinnat)
-        (fn [paikkauskohde valittu?]
-          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))
-        [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn yksikkohintaiset-kustannukset
   [e! app]
@@ -88,8 +67,10 @@
 
 (defn kustannukset* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti (fn [paikkauskohde-id]
-                                                                                          (e! (tiedot/->SiirryToimenpiteisiin paikkauskohde-id))))))
+    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti
+                                                       "Siirry toimenpiteisiin"
+                                                       (fn [paikkauskohde-id]
+                                                         (e! (tiedot/->SiirryToimenpiteisiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
       [:div

@@ -7,6 +7,7 @@
             [harja.pvm :as pvm]
             [harja.views.kartta :as kartta]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet]
+            [harja.views.urakka.paikkaukset-yhteinen :as yhteinen-view]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.ui.kentat :as kentat]
@@ -16,19 +17,6 @@
             [harja.ui.yleiset :as yleiset]
             [cljs.core.async :refer [<! timeout]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
-(defn paikkauskohde-valinta [e! paikkauskohde]
-  [:label {:on-click #(.stopPropagation %)
-           :style {:width "100%"}
-           :id (str "paikkauskohde-label-" (:id paikkauskohde))}
-   (:nimi paikkauskohde)
-   [:input {:id (str "paikkauskohde-input-" (:id paikkauskohde))
-            :style {:display "inline-block"
-                    :float "right"}
-            :type "checkbox"
-            :checked (:valittu? paikkauskohde)
-            :on-change #(let [valittu? (-> % .-target .-checked)]
-                          (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))}]])
 
 (defn hakuehdot [e! {:keys [valinnat] :as app}]
   (let [tr-atomi (partial tiedot/valinta-wrap e! app)
@@ -55,8 +43,7 @@
         [" paikkauskohde valittu" " paikkauskohdetta valittu"]]]]]))
 
 (defn paikkaukset-vetolaatikko
-  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id
-       rivin-paikkauskohde ::paikkaus/paikkauskohde :as rivi}
+  [e! {tienkohdat ::paikkaus/tienkohdat materiaalit ::paikkaus/materiaalit id ::paikkaus/id :as rivi}
    app]
   (let [nayta-numerot #(apply str (interpose ", " %))
         skeema [{:otsikko "Ajo\u00ADrata"
@@ -104,13 +91,7 @@
        :sivuta grid/vakiosivutus
        :tyhja "Ei tietoja"}
       skeema
-      yhdistetty]
-     [napit/yleinen-ensisijainen
-      "Siirry kustannuksiin"
-      #(e! (tiedot/->SiirryKustannuksiin (some (fn [paikkakohde]
-                                                 (when (= (::paikkaus/id rivin-paikkauskohde) (:id paikkakohde))
-                                                   (:id paikkakohde)))
-                                               (get-in app [:valinnat :urakan-paikkauskohteet]))))]]))
+      yhdistetty]]))
 
 (defn paikkaukset [e! app]
   (let [tierekisteriosoite-sarakkeet [nil
@@ -182,14 +163,20 @@
 
 (defn toteumat* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan))
+    (komp/sisaan-ulos #(e! (tiedot/->Nakymaan (partial yhteinen-view/otsikkokomponentti
+                                                       "Siirry kustannuksiin"
+                                                       (fn [paikkauskohde-id]
+                                                         (e! (tiedot/->SiirryKustannuksiin paikkauskohde-id))))))
                       #(e! (tiedot/->NakymastaPois)))
     (fn [e! app]
       [:span
        [kartta/kartan-paikka]
        [:div
         [debug/debug app]
-        [hakuehdot e! app]
+        [yhteinen-view/hakuehdot app
+         #(e! (tiedot/->PaivitaValinnat %))
+         (fn [paikkauskohde valittu?]
+           (e! (tiedot/->PaikkausValittu paikkauskohde valittu?)))]
         [paikkaukset e! app]]])))
 
 (defn toteumat []

@@ -17,18 +17,21 @@
                                  :as paikkaus}]
   (let [sellaisenaan-naytettavat-arvot (select-keys paikkaus #{::paikkaus/tyomenetelma ::paikkaus/alkuaika ::paikkaus/loppuaika
                                                                ::paikkaus/massatyyppi ::paikkaus/leveys ::paikkaus/massamenekki
-                                                               ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id})
+                                                               ::paikkaus/raekoko ::paikkaus/kuulamylly ::paikkaus/id
+                                                               ::paikkaus/paikkauskohde})
         nimi (select-keys paikkauskohde #{::paikkaus/nimi})]
     (merge sellaisenaan-naytettavat-arvot tierekisteriosoite nimi)))
 
 (defn kasittele-haettu-tulos
-  [tulos]
+  [tulos {otsikkokomponentti :otsikkokomponentti}]
   (let [kiinnostavat-tiedot (map #(kiinnostavat-tiedot-grid %)
                                  tulos)
         paikkaukset-grid (mapcat (fn [[otsikko paikkaukset]]
-                                   (cons (grid/otsikko otsikko) paikkaukset))
+                                   (cons (grid/otsikko otsikko {:otsikkokomponentit (otsikkokomponentti (get-in (first paikkaukset)
+                                                                                                                [::paikkaus/paikkauskohde ::paikkaus/id]))})
+                                         paikkaukset))
                                  (group-by ::paikkaus/nimi kiinnostavat-tiedot))
-        paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id ::paikkaus/paikkauskohde])
+        paikkauket-vetolaatikko (map #(select-keys % [::paikkaus/tienkohdat ::paikkaus/materiaalit ::paikkaus/id])
                                      tulos)]
     {:paikkaukset-grid paikkaukset-grid
      :paikkauket-vetolaatikko paikkauket-vetolaatikko}))
@@ -36,7 +39,7 @@
 ;; Muokkaukset
 (defrecord PaikkausValittu [paikkauskohde valittu?])
 (defrecord PaivitaValinnat [uudet])
-(defrecord Nakymaan [])
+(defrecord Nakymaan [otsikkokomponentti])
 (defrecord NakymastaPois [])
 (defrecord SiirryKustannuksiin [paikkauskohde-id])
 ;; Haut
@@ -93,14 +96,15 @@
   (process-event [_ app]
     (assoc app :paikkauksien-haku-kaynnissa? true))
   Nakymaan
-  (process-event [_ app]
+  (process-event [{otsikkokomponentti :otsikkokomponentti} app]
     (-> app
         (tt/post! :hae-urakan-paikkauskohteet
                   {::paikkaus/urakka-id @nav/valittu-urakka-id}
                   {:onnistui ->EnsimmainenHaku
                    :epaonnistui ->PaikkauksetEiHaettu})
         (assoc :nakymassa? true
-               :paikkauksien-haku-kaynnissa? true)))
+               :paikkauksien-haku-kaynnissa? true
+               :otsikkokomponentti otsikkokomponentti)))
   NakymastaPois
   (process-event [_ app]
     (assoc app :nakymassa? false))
@@ -113,7 +117,7 @@
                                                  :app app}))
   PaikkauksetHaettu
   (process-event [{tulos :tulos} app]
-    (let [naytettavat-tiedot (kasittele-haettu-tulos tulos)]
+    (let [naytettavat-tiedot (kasittele-haettu-tulos tulos app)]
       (-> app
           (merge naytettavat-tiedot)
           (assoc :paikkauksien-haku-kaynnissa? false

@@ -5,13 +5,13 @@
             [harja.ui.valinnat :as valinnat]))
 
 (defn otsikkokomponentti
-  [siirry-toimenpiteisiin-fn id]
+  [napin-teksti siirry-toimenpiteisiin-fn id]
   [{:tyyli {:float "right"
             :position "relative"}
     :sisalto
     (fn [_]
       [napit/yleinen-ensisijainen
-       "Siirry toimenpiteisiin"
+       napin-teksti
        #(siirry-toimenpiteisiin-fn id)])}])
 
 (defn hakuehdot [{:keys [valinnat] :as app} paivita-valinnat-fn paikkaus-valittu-fn]
