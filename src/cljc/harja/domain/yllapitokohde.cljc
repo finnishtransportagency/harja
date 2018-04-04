@@ -183,8 +183,10 @@ yllapitoluokkanimi->numero
                                 seuraava-alkuosa (get-in seuraava [:sijainti :aosa])
                                 edellinen-loppuetaisyys (get-in edellinen [:edellinen :sijainti :let])
                                 seuraava-alkuetaisyys (get-in seuraava [:sijainti :aet])
-                                edellinen-ajorata (get-in edellinen [:edellinen :sijainti :ajorata])
-                                seuraava-ajorata (get-in seuraava [:sijainti :ajorata])
+                                edellinen-ajorata (or (get-in edellinen [:edellinen :sijainti :ajorata])
+                                                      (get-in edellinen [:edellinen :sijainti :ajr]))
+                                seuraava-ajorata (or (get-in seuraava [:sijainti :ajorata])
+                                                     (get-in seuraava [:sijainti :ajr]))
                                 edellinen-kaista (get-in edellinen [:edellinen :sijainti :kaista])
                                 seuraava-kaista (get-in seuraava [:sijainti :kaista])]
                             (and
