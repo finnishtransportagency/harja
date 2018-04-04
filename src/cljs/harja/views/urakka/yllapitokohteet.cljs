@@ -453,8 +453,7 @@
                                (reset! kohdeosat-atom uudet-kohdeosat)
                                (reset! virheet uudet-virheet)))]
     (fn [{:keys [yllapitokohde otsikko kohdeosat-atom tallenna-fn tallennettu-fn
-                 muokattava-tie? muokattava-ajorata-ja-kaista? jarjesta-avaimen-mukaan
-                 jarjesta-kun-kasketaan]}]
+                 jarjesta-avaimen-mukaan jarjesta-kun-kasketaan]}]
       [grid/muokkaus-grid
          {:tyhja (if (nil? @kohdeosat-atom) [ajax-loader "Haetaan kohdeosia..."]
                                             [:div
