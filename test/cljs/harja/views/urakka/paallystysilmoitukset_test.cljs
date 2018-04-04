@@ -173,7 +173,7 @@
 
           ;; Tarkista, että tieosoite näkyy oikein
           (is (= "piru 1"
-                 (some-> (grid-solu "yllapitokohdeosat" 0 0 "input")
+                 (some-> (grid-solu "yllapitokohdeosat" 0 1 "input")
                          .-value)))
 
           (<! pituudet-haettu)
