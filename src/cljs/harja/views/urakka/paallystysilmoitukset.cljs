@@ -594,8 +594,8 @@
                    :voi-kumota? false
                    :uusi-id (inc (count @alustalle-tehdyt-toimet))
                    :muutos (fn [grid]
-                             (swap! lomakedata-nyt assoc-in [:ilmoitustiedot :alustatoimet]
-                                    (vals (grid/hae-muokkaustila grid))))
+                             (let [muokattava (grid-wrap [:ilmoitustiedot :alustatoimet])]
+                               (reset! muokattava (vals (grid/hae-muokkaustila grid)))))
                    ;:virheet (wrap-virheet :alustalle-tehdyt-toimet)
                    :virheet-ylos? true}
                   [{:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :positiivinen-numero :leveys 10
